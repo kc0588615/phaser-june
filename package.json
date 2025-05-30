@@ -25,18 +25,23 @@
         "dev": "node log.js dev & next dev -p 8080",
         "build": "node log.js build & next build",
         "dev-nolog": "next dev -p 8080",
-        "build-nolog": "next build"
+        "build-nolog": "next build",
+        "postinstall": "symlink-dir node_modules/cesium/Build/Cesium public/cesium"
     },
     "dependencies": {
+        "cesium": "^1.117.0",
         "next": "15.3.1",
         "phaser": "^3.90.0",
-        "react": "19.0.0",
-        "react-dom": "19.0.0"
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "resium": "^1.17.2"
     },
     "devDependencies": {
         "@types/node": "^20",
-        "@types/react": "^19",
-        "@types/react-dom": "^19",
-        "typescript": "^5"
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "symlink-dir": "^5.2.1",
+        "typescript": "^5",
+        "webpack": "^5.99.9"
     }
 }
