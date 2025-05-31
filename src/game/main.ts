@@ -7,7 +7,7 @@ import { Preloader } from './scenes/Preloader';
 
 // Find out more information about the Game Config at:
 // https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
-const config = {
+const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO, // AUTO selects WebGL if available, otherwise Canvas
     parent: 'game-container', // Matches the div id in index.html
     backgroundColor: '#1a1a2e', // Dark blue/purple background from webpack config
@@ -39,11 +39,9 @@ const config = {
     ]
 };
 
-const StartGame = (parent) => {
-
+const StartGame = (parent: string): Phaser.Game => {
     // Pass the updated config and the parent element ID
     return new Phaser.Game({ ...config, parent });
-
 }
 
 export default StartGame;

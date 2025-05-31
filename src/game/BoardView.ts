@@ -1,34 +1,44 @@
-// src/game/BoardView.js
+// src/game/BoardView.ts
 // View: Manages the visual representation (Phaser Sprites) and animations.
 
 import Phaser from 'phaser';
 import {
     AssetKeys,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
-    TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE
-} from './constants'; // Corrected path
+    TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE,
+    GemType
+} from './constants';
+import { MoveAction, MoveDirection } from './MoveAction';
+import { Coordinate } from './ExplodeAndReplacePhase';
+import { PuzzleGrid } from './BackendPuzzle';
+
+interface BoardConfig {
+    cols: number;
+    rows: number;
+    gemSize: number;
+    boardOffset: { x: number; y: number };
+}
+
+interface SpritePosition {
+    x: number;
+    y: number;
+}
+
+interface AnimationTarget {
+    sprite: Phaser.GameObjects.Sprite;
+    targetGridY: number;
+}
 
 export class BoardView {
-    /** @type {Phaser.Scene} */
-    scene;
-    /** @type {number} */
-    gridCols;
-    /** @type {number} */
-    gridRows;
-    /** @type {number} */
-    gemSize;
-    /** @type {{x: number, y: number}} */
-    boardOffset;
-    /** @type {Array<Array<Phaser.GameObjects.Sprite | null>>} */
-    gemsSprites = []; // The 2D array [x][y] mirroring the logical grid
-    /** @type {Phaser.GameObjects.Group} */
-    gemGroup; // Group for efficient management
+    private scene: Phaser.Scene;
+    private gridCols: number;
+    private gridRows: number;
+    private gemSize: number;
+    private boardOffset: { x: number; y: number };
+    private gemsSprites: (Phaser.GameObjects.Sprite | null)[][] = []; // The 2D array [x][y] mirroring the logical grid
+    private gemGroup: Phaser.GameObjects.Group; // Group for efficient management
 
-    /**
-     * @param {Phaser.Scene} scene The parent scene (Game.js).
-     * @param {object} config Contains cols, rows, gemSize, boardOffset.
-     */
-    constructor(scene, config) {
+    constructor(scene: Phaser.Scene, config: BoardConfig) {
         if (!scene || !(scene instanceof Phaser.Scene)) {
             throw new Error("BoardView requires a valid Phaser.Scene instance.");
         }
@@ -44,7 +54,7 @@ export class BoardView {
     // --- Public Methods (Called by Controller: Game.js) ---
 
     /** Creates the initial sprites based on the model state. */
-    createBoard(initialPuzzleState) {
+    createBoard(initialPuzzleState: PuzzleGrid): void {
         console.log("BoardView: Creating board visuals...");
         // <<< ADD LOG HERE to inspect the incoming argument >>>
         console.log(">>> BoardView: Received initialPuzzleState:",
@@ -87,7 +97,7 @@ export class BoardView {
     }
 
     /** Updates sprite positions and scales after resize/orientation change. */
-    updateVisualLayout(newGemSize, newBoardOffset) {
+    updateVisualLayout(newGemSize: number, newBoardOffset: { x: number; y: number }): void {
         console.log("BoardView: Updating visual layout.");
         this.gemSize = newGemSize;
         this.boardOffset = newBoardOffset;
@@ -109,7 +119,13 @@ export class BoardView {
     }
 
     /** Visually moves sprites during drag, handling wrapping. */
-    moveDraggingSprites(spritesToMove, startVisualPositions, deltaX, deltaY, direction) {
+    moveDraggingSprites(
+        spritesToMove: Phaser.GameObjects.Sprite[],
+        startVisualPositions: Array<{ x: number; y: number; gridX: number; gridY: number }>,
+        deltaX: number,
+        deltaY: number,
+        direction: MoveDirection
+    ): void {
         if (!spritesToMove || spritesToMove.length === 0 || !startVisualPositions) return;
 
         spritesToMove.forEach((sprite, i) => {
@@ -136,7 +152,7 @@ export class BoardView {
     }
 
     /** Instantly sets dragged sprites to their final grid positions. Assumes gemsSprites array is already updated. */
-    snapDraggedGemsToFinalGridPositions() {
+    snapDraggedGemsToFinalGridPositions(): void {
         console.log("BoardView: Snapping dragged gems visually.");
         this.iterateSprites((sprite, x, y) => {
             const targetPos = this.getSpritePosition(x, y);
@@ -149,16 +165,16 @@ export class BoardView {
         });
     }
 
-    /** Animates sprites back to their original start positions, sliding the row/column as a unit.
-     * @param {Phaser.GameObjects.Sprite[]} spritesToSnap The sprites in the row/column.
-     * @param {Array<{x: number, y: number, gridX: number, gridY: number}>} startPositions Original visual and logical positions.
-     * @param {'row' | 'col' | undefined} dragDirection The direction the drag occurred.
-     * @param {number} totalDeltaX The total X displacement from the start of the drag.
-     * @param {number} totalDeltaY The total Y displacement from the start of the drag.
-     */
-    snapBack(spritesToSnap, startPositions, dragDirection, totalDeltaX, totalDeltaY) {
+    /** Animates sprites back to their original start positions, sliding the row/column as a unit. */
+    snapBack(
+        spritesToSnap: Phaser.GameObjects.Sprite[],
+        startPositions: Array<{ x: number; y: number; gridX: number; gridY: number }>,
+        dragDirection: MoveDirection | undefined,
+        totalDeltaX: number,
+        totalDeltaY: number
+    ): Promise<void> {
         console.log(`BoardView: Starting snap back for ${dragDirection || 'direct'}. DeltaX: ${totalDeltaX}, DeltaY: ${totalDeltaY}`);
-        return new Promise((resolve) => {
+        return new Promise<void>((resolve) => {
             if (!spritesToSnap || spritesToSnap.length === 0 ||
                 !startPositions || startPositions.length === 0 ||
                 spritesToSnap.length !== startPositions.length) {
@@ -173,7 +189,7 @@ export class BoardView {
                 const directSnapPromises = spritesToSnap.map((sprite, i) => {
                     const startPosData = startPositions[i];
                     if (sprite && sprite.active && startPosData) {
-                        return new Promise((resolveDirectSnap) => {
+                        return new Promise<void>((resolveDirectSnap) => {
                             // Ensure logical grid coordinates are set before tweening
                             sprite.setData('gridX', startPosData.gridX);
                             sprite.setData('gridY', startPosData.gridY);
@@ -270,13 +286,13 @@ export class BoardView {
     }
 
     /** Animates gem explosions. Removes sprites from grid and destroys them. */
-    animateExplosions(matchCoords) {
+    animateExplosions(matchCoords: Coordinate[]): Promise<void> {
         console.log(`BoardView: Animating ${matchCoords.length} explosions.`);
-        return new Promise((resolve) => {
+        return new Promise<void>((resolve) => {
             if (!matchCoords || matchCoords.length === 0) { resolve(); return; }
 
-            const explosionPromises = [];
-            const explodedCoordsSet = new Set(); // Prevent double animation
+            const explosionPromises: Promise<void>[] = [];
+            const explodedCoordsSet = new Set<string>(); // Prevent double animation
 
             matchCoords.forEach(([x, y]) => {
                 const coordKey = `${x},${y}`;
@@ -287,7 +303,7 @@ export class BoardView {
                     explodedCoordsSet.add(coordKey);
                     this.gemsSprites[x][y] = null; // Remove reference immediately
 
-                    explosionPromises.push(new Promise((resolveExplosion) => {
+                    explosionPromises.push(new Promise<void>((resolveExplosion) => {
                         this.scene.tweens.killTweensOf(sprite);
                         this.scene.tweens.add({
                             targets: sprite,
@@ -315,12 +331,12 @@ export class BoardView {
     }
 
     /** Animates existing gems falling and new gems entering. Updates gemsSprites array. */
-    animateFalls(replacements, finalBackendState) {
+    animateFalls(replacements: Array<[number, GemType[]]>, finalBackendState: PuzzleGrid): Promise<void> {
         console.log("BoardView: Animating falls...");
-        return new Promise((resolve) => {
-            const fallPromises = [];
-            const newGrid = []; // Stores the final configuration of sprites
-            const spritesToAnimate = []; // { sprite, targetY }
+        return new Promise<void>((resolve) => {
+            const fallPromises: Promise<void>[] = [];
+            const newGrid: (Phaser.GameObjects.Sprite | null)[][] = []; // Stores the final configuration of sprites
+            const spritesToAnimate: AnimationTarget[] = []; // { sprite, targetY }
 
             // 1. Initialize newGrid structure
             for (let x = 0; x < this.gridCols; x++) {
@@ -405,7 +421,7 @@ export class BoardView {
                     TWEEN_DURATION_FALL_MAX   // Max duration
                 );
 
-                fallPromises.push(new Promise((resolveFall) => {
+                fallPromises.push(new Promise<void>((resolveFall) => {
                     this.scene.tweens.killTweensOf(sprite);
                     this.scene.tweens.add({
                         targets: sprite,
@@ -436,7 +452,7 @@ export class BoardView {
     }
 
     /** Updates the internal gemsSprites array structure after a move. */
-    updateGemsSpritesArrayAfterMove(moveAction) {
+    updateGemsSpritesArrayAfterMove(moveAction: MoveAction): void {
         // console.log("BoardView: Updating gemsSprites array structure."); // Less verbose
         const tempSprites = [];
         const { rowOrCol, index, amount } = moveAction;
@@ -482,7 +498,7 @@ export class BoardView {
     }
 
     /** Destroys all sprites and clears the board representation. */
-    destroyBoard() {
+    destroyBoard(): void {
         console.log("BoardView: Destroying board visuals...");
         this.gemGroup.clear(true, true); // Destroy children and remove them from group
         this.gemsSprites = [];
@@ -491,7 +507,7 @@ export class BoardView {
     // --- Internal Helper Methods ---
 
     /** Safely destroys a sprite (if active) and removes from group. */
-    safelyDestroySprite(sprite) {
+    private safelyDestroySprite(sprite: Phaser.GameObjects.Sprite | null): void {
         if (sprite && sprite.active) {
             // console.log(`Safely destroying sprite type ${sprite.getData('gemType')} at [${sprite.getData('gridX')}, ${sprite.getData('gridY')}]`);
             this.scene.tweens.killTweensOf(sprite);
@@ -500,7 +516,7 @@ export class BoardView {
     }
 
     /** Creates a single sprite, adds to group, stores data, places in gemsSprites array. */
-    createSprite(gridX, gridY, gemType, startVisualY = undefined) {
+    private createSprite(gridX: number, gridY: number, gemType: GemType, startVisualY?: number): Phaser.GameObjects.Sprite | null {
         const textureKey = AssetKeys.GEM_TEXTURE(gemType, 0); // Default frame
         if (!this.scene.textures.exists(textureKey)) {
             console.error(`Texture missing: ${textureKey}`); return null;
@@ -543,18 +559,18 @@ export class BoardView {
     }
 
     /** Gets the sprite at [x, y] if active, otherwise null. */
-    getSpriteAt(x, y) {
+    getSpriteAt(x: number, y: number): Phaser.GameObjects.Sprite | null {
         const sprite = this.gemsSprites[x]?.[y];
         return (sprite && sprite.active) ? sprite : null;
     }
 
     /** Returns the 2D array of sprite references. */
-    getGemsSprites() {
+    getGemsSprites(): (Phaser.GameObjects.Sprite | null)[][] {
         return this.gemsSprites;
     }
 
     /** Calculates the center visual coordinate for a grid cell. */
-    getSpritePosition(gridX, gridY) {
+    private getSpritePosition(gridX: number, gridY: number): SpritePosition {
         return {
             x: Math.round(this.boardOffset.x + gridX * this.gemSize + this.gemSize / 2),
             y: Math.round(this.boardOffset.y + gridY * this.gemSize + this.gemSize / 2)
@@ -562,13 +578,13 @@ export class BoardView {
     }
 
     /** Calculates the appropriate scale based on gemSize and texture width. */
-    calculateSpriteScale(sprite) {
+    private calculateSpriteScale(sprite: Phaser.GameObjects.Sprite): number {
         if (!sprite || !sprite.width || sprite.width === 0) return 1;
         return (this.gemSize / sprite.width) * 0.9; // 90% of cell size
     }
 
     /** Helper to iterate over all active sprites in the grid. */
-    iterateSprites(callback) {
+    private iterateSprites(callback: (sprite: Phaser.GameObjects.Sprite, x: number, y: number) => void): void {
         for (let x = 0; x < this.gemsSprites.length; x++) {
             if (!this.gemsSprites[x]) continue;
             for (let y = 0; y < this.gemsSprites[x].length; y++) {
@@ -581,7 +597,7 @@ export class BoardView {
     }
 
     /** Utility to sync sprite visual positions to their stored logical grid coords. */
-    syncSpritesToGridPositions() {
+    syncSpritesToGridPositions(): void {
          console.warn("BoardView: Attempting to sync sprites to logical grid positions.");
          this.iterateSprites((sprite, x, y) => {
               const logicalX = sprite.getData('gridX');

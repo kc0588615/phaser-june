@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import { AssetKeys } from '../constants'; // Path is correct relative to scenes/
+import { AssetKeys } from '../constants';
 
 export class MainMenu extends Phaser.Scene {
     constructor() {
         super('MainMenu');
     }
 
-    create() {
+    create(): void {
         console.log("MainMenu: create");
         const { width, height } = this.cameras.main;
         const centerX = width / 2;
@@ -60,7 +60,7 @@ export class MainMenu extends Phaser.Scene {
         this.input.once(Phaser.Input.Events.POINTER_DOWN, () => {
             console.log("MainMenu: Starting Game scene...");
             // Add a brief fade out effect (optional)
-             this.cameras.main.fadeOut(250, 0, 0, 0, (camera, progress) => {
+             this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                  if (progress === 1) {
                       this.scene.start('Game');
                  }
