@@ -6,17 +6,17 @@ import {
   Cartesian3,
   Color,
   Rectangle,
-  WebMercatorTilingScheme,
-  UrlTemplateImageryProvider,
-  TextureMinificationFilter,
-  TextureMagnificationFilter,
-  HeightReference,
+  ScreenSpaceEventHandler,
   ScreenSpaceEventType,
-  Math as CesiumMath,
+  defined,
+  Cartographic,
+  UrlTemplateImageryProvider,
+  WebMercatorTilingScheme,
   Credit,
-  Cartographic
+  Math as CesiumMath,
+  HeightReference
 } from 'cesium';
-import { EventBus } from '../game/EventBus.js'; // Adjust path as needed
+import { EventBus } from '../game/EventBus'; // Adjust path as needed
 
 // Configuration (Consider moving to a config file or passing as props)
 // const YOUR_CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZWRiZWM1OC02NGQ4LTQxN2UtYTJmMy01ZWRjMmM3YmEwN2YiLCJpZCI6Mjk1MzAwLCJpYXQiOjE3NDQ5OTk0MTh9.HBoveH42derVYybno6upJzVCOkxLDji6VOj2TqSwpjs'; // Replace with your token
