@@ -1,0 +1,2095 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+app/colormaps.py
+app/dependencies.py
+app/main.py
+cesium_titiler_test/.git/COMMIT_EDITMSG
+cesium_titiler_test/.git/config
+cesium_titiler_test/.git/description
+cesium_titiler_test/.git/HEAD
+cesium_titiler_test/.git/hooks/applypatch-msg.sample
+cesium_titiler_test/.git/hooks/commit-msg.sample
+cesium_titiler_test/.git/hooks/fsmonitor-watchman.sample
+cesium_titiler_test/.git/hooks/post-update.sample
+cesium_titiler_test/.git/hooks/pre-applypatch.sample
+cesium_titiler_test/.git/hooks/pre-commit.sample
+cesium_titiler_test/.git/hooks/pre-merge-commit.sample
+cesium_titiler_test/.git/hooks/pre-push.sample
+cesium_titiler_test/.git/hooks/pre-rebase.sample
+cesium_titiler_test/.git/hooks/pre-receive.sample
+cesium_titiler_test/.git/hooks/prepare-commit-msg.sample
+cesium_titiler_test/.git/hooks/push-to-checkout.sample
+cesium_titiler_test/.git/hooks/sendemail-validate.sample
+cesium_titiler_test/.git/hooks/update.sample
+cesium_titiler_test/.git/info/exclude
+cesium_titiler_test/.git/logs/HEAD
+cesium_titiler_test/.git/logs/refs/heads/main
+cesium_titiler_test/.git/refs/heads/main
+cesium_titiler_test/.gitattributes
+cesium_titiler_test/.gitignore
+cors_server.py
+directory_files_list.txt
+directory_tree.txt
+habitat_colormap.json
+index.html
+load_cog.ps1
+load_species_gym.ps1
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="cesium_titiler_test/.git/COMMIT_EDITMSG">
+Initial commit
+</file>
+
+<file path="cesium_titiler_test/.git/config">
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[lfs]
+	repositoryformatversion = 0
+</file>
+
+<file path="cesium_titiler_test/.git/description">
+Unnamed repository; edit this file 'description' to name the repository.
+</file>
+
+<file path="cesium_titiler_test/.git/HEAD">
+ref: refs/heads/main
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/applypatch-msg.sample">
+#!/bin/sh
+#
+# An example hook script to check the commit log message taken by
+# applypatch from an e-mail message.
+#
+# The hook should exit with non-zero status after issuing an
+# appropriate message if it wants to stop the commit.  The hook is
+# allowed to edit the commit message file.
+#
+# To enable this hook, rename this file to "applypatch-msg".
+
+. git-sh-setup
+commitmsg="$(git rev-parse --git-path hooks/commit-msg)"
+test -x "$commitmsg" && exec "$commitmsg" ${1+"$@"}
+:
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/commit-msg.sample">
+#!/bin/sh
+#
+# An example hook script to check the commit log message.
+# Called by "git commit" with one argument, the name of the file
+# that has the commit message.  The hook should exit with non-zero
+# status after issuing an appropriate message if it wants to stop the
+# commit.  The hook is allowed to edit the commit message file.
+#
+# To enable this hook, rename this file to "commit-msg".
+
+# Uncomment the below to add a Signed-off-by line to the message.
+# Doing this in a hook is a bad idea in general, but the prepare-commit-msg
+# hook is more suited to it.
+#
+# SOB=$(git var GIT_AUTHOR_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+# grep -qs "^$SOB" "$1" || echo "$SOB" >> "$1"
+
+# This example catches duplicate Signed-off-by lines.
+
+test "" = "$(grep '^Signed-off-by: ' "$1" |
+	 sort | uniq -c | sed -e '/^[ 	]*1[ 	]/d')" || {
+	echo >&2 Duplicate Signed-off-by lines.
+	exit 1
+}
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/fsmonitor-watchman.sample">
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use IPC::Open2;
+
+# An example hook script to integrate Watchman
+# (https://facebook.github.io/watchman/) with git to speed up detecting
+# new and modified files.
+#
+# The hook is passed a version (currently 2) and last update token
+# formatted as a string and outputs to stdout a new update token and
+# all files that have been modified since the update token. Paths must
+# be relative to the root of the working tree and separated by a single NUL.
+#
+# To enable this hook, rename this file to "query-watchman" and set
+# 'git config core.fsmonitor .git/hooks/query-watchman'
+#
+my ($version, $last_update_token) = @ARGV;
+
+# Uncomment for debugging
+# print STDERR "$0 $version $last_update_token\n";
+
+# Check the hook interface version
+if ($version ne 2) {
+	die "Unsupported query-fsmonitor hook version '$version'.\n" .
+	    "Falling back to scanning...\n";
+}
+
+my $git_work_tree = get_working_dir();
+
+my $retry = 1;
+
+my $json_pkg;
+eval {
+	require JSON::XS;
+	$json_pkg = "JSON::XS";
+	1;
+} or do {
+	require JSON::PP;
+	$json_pkg = "JSON::PP";
+};
+
+launch_watchman();
+
+sub launch_watchman {
+	my $o = watchman_query();
+	if (is_work_tree_watched($o)) {
+		output_result($o->{clock}, @{$o->{files}});
+	}
+}
+
+sub output_result {
+	my ($clockid, @files) = @_;
+
+	# Uncomment for debugging watchman output
+	# open (my $fh, ">", ".git/watchman-output.out");
+	# binmode $fh, ":utf8";
+	# print $fh "$clockid\n@files\n";
+	# close $fh;
+
+	binmode STDOUT, ":utf8";
+	print $clockid;
+	print "\0";
+	local $, = "\0";
+	print @files;
+}
+
+sub watchman_clock {
+	my $response = qx/watchman clock "$git_work_tree"/;
+	die "Failed to get clock id on '$git_work_tree'.\n" .
+		"Falling back to scanning...\n" if $? != 0;
+
+	return $json_pkg->new->utf8->decode($response);
+}
+
+sub watchman_query {
+	my $pid = open2(\*CHLD_OUT, \*CHLD_IN, 'watchman -j --no-pretty')
+	or die "open2() failed: $!\n" .
+	"Falling back to scanning...\n";
+
+	# In the query expression below we're asking for names of files that
+	# changed since $last_update_token but not from the .git folder.
+	#
+	# To accomplish this, we're using the "since" generator to use the
+	# recency index to select candidate nodes and "fields" to limit the
+	# output to file names only. Then we're using the "expression" term to
+	# further constrain the results.
+	my $last_update_line = "";
+	if (substr($last_update_token, 0, 1) eq "c") {
+		$last_update_token = "\"$last_update_token\"";
+		$last_update_line = qq[\n"since": $last_update_token,];
+	}
+	my $query = <<"	END";
+		["query", "$git_work_tree", {$last_update_line
+			"fields": ["name"],
+			"expression": ["not", ["dirname", ".git"]]
+		}]
+	END
+
+	# Uncomment for debugging the watchman query
+	# open (my $fh, ">", ".git/watchman-query.json");
+	# print $fh $query;
+	# close $fh;
+
+	print CHLD_IN $query;
+	close CHLD_IN;
+	my $response = do {local $/; <CHLD_OUT>};
+
+	# Uncomment for debugging the watch response
+	# open ($fh, ">", ".git/watchman-response.json");
+	# print $fh $response;
+	# close $fh;
+
+	die "Watchman: command returned no output.\n" .
+	"Falling back to scanning...\n" if $response eq "";
+	die "Watchman: command returned invalid output: $response\n" .
+	"Falling back to scanning...\n" unless $response =~ /^\{/;
+
+	return $json_pkg->new->utf8->decode($response);
+}
+
+sub is_work_tree_watched {
+	my ($output) = @_;
+	my $error = $output->{error};
+	if ($retry > 0 and $error and $error =~ m/unable to resolve root .* directory (.*) is not watched/) {
+		$retry--;
+		my $response = qx/watchman watch "$git_work_tree"/;
+		die "Failed to make watchman watch '$git_work_tree'.\n" .
+		    "Falling back to scanning...\n" if $? != 0;
+		$output = $json_pkg->new->utf8->decode($response);
+		$error = $output->{error};
+		die "Watchman: $error.\n" .
+		"Falling back to scanning...\n" if $error;
+
+		# Uncomment for debugging watchman output
+		# open (my $fh, ">", ".git/watchman-output.out");
+		# close $fh;
+
+		# Watchman will always return all files on the first query so
+		# return the fast "everything is dirty" flag to git and do the
+		# Watchman query just to get it over with now so we won't pay
+		# the cost in git to look up each individual file.
+		my $o = watchman_clock();
+		$error = $output->{error};
+
+		die "Watchman: $error.\n" .
+		"Falling back to scanning...\n" if $error;
+
+		output_result($o->{clock}, ("/"));
+		$last_update_token = $o->{clock};
+
+		eval { launch_watchman() };
+		return 0;
+	}
+
+	die "Watchman: $error.\n" .
+	"Falling back to scanning...\n" if $error;
+
+	return 1;
+}
+
+sub get_working_dir {
+	my $working_dir;
+	if ($^O =~ 'msys' || $^O =~ 'cygwin') {
+		$working_dir = Win32::GetCwd();
+		$working_dir =~ tr/\\/\//;
+	} else {
+		require Cwd;
+		$working_dir = Cwd::cwd();
+	}
+
+	return $working_dir;
+}
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/post-update.sample">
+#!/bin/sh
+#
+# An example hook script to prepare a packed repository for use over
+# dumb transports.
+#
+# To enable this hook, rename this file to "post-update".
+
+exec git update-server-info
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/pre-applypatch.sample">
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed
+# by applypatch from an e-mail message.
+#
+# The hook should exit with non-zero status after issuing an
+# appropriate message if it wants to stop the commit.
+#
+# To enable this hook, rename this file to "pre-applypatch".
+
+. git-sh-setup
+precommit="$(git rev-parse --git-path hooks/pre-commit)"
+test -x "$precommit" && exec "$precommit" ${1+"$@"}
+:
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/pre-commit.sample">
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed.
+# Called by "git commit" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message if
+# it wants to stop the commit.
+#
+# To enable this hook, rename this file to "pre-commit".
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# If you want to allow non-ASCII filenames set this variable to true.
+allownonascii=$(git config --type=bool hooks.allownonascii)
+
+# Redirect output to stderr.
+exec 1>&2
+
+# Cross platform projects tend to avoid non-ASCII filenames; prevent
+# them from being added to the repository. We exploit the fact that the
+# printable range starts at the space character and ends with tilde.
+if [ "$allownonascii" != "true" ] &&
+	# Note that the use of brackets around a tr range is ok here, (it's
+	# even required, for portability to Solaris 10's /usr/bin/tr), since
+	# the square bracket bytes happen to fall in the designated range.
+	test $(git diff-index --cached --name-only --diff-filter=A -z $against |
+	  LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0
+then
+	cat <<\EOF
+Error: Attempt to add a non-ASCII file name.
+
+This can cause problems if you want to work with people on other platforms.
+
+To be portable it is advisable to rename the file.
+
+If you know what you are doing you can disable this check using:
+
+  git config hooks.allownonascii true
+EOF
+	exit 1
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+exec git diff-index --check --cached $against --
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/pre-merge-commit.sample">
+#!/bin/sh
+#
+# An example hook script to verify what is about to be committed.
+# Called by "git merge" with no arguments.  The hook should
+# exit with non-zero status after issuing an appropriate message to
+# stderr if it wants to stop the merge commit.
+#
+# To enable this hook, rename this file to "pre-merge-commit".
+
+. git-sh-setup
+test -x "$GIT_DIR/hooks/pre-commit" &&
+        exec "$GIT_DIR/hooks/pre-commit"
+:
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/pre-push.sample">
+#!/bin/sh
+
+# An example hook script to verify what is about to be pushed.  Called by "git
+# push" after it has checked the remote status, but before anything has been
+# pushed.  If this script exits with a non-zero status nothing will be pushed.
+#
+# This hook is called with the following parameters:
+#
+# $1 -- Name of the remote to which the push is being done
+# $2 -- URL to which the push is being done
+#
+# If pushing without using a named remote those arguments will be equal.
+#
+# Information about the commits which are being pushed is supplied as lines to
+# the standard input in the form:
+#
+#   <local ref> <local oid> <remote ref> <remote oid>
+#
+# This sample shows how to prevent push of commits where the log message starts
+# with "WIP" (work in progress).
+
+remote="$1"
+url="$2"
+
+zero=$(git hash-object --stdin </dev/null | tr '[0-9a-f]' '0')
+
+while read local_ref local_oid remote_ref remote_oid
+do
+	if test "$local_oid" = "$zero"
+	then
+		# Handle delete
+		:
+	else
+		if test "$remote_oid" = "$zero"
+		then
+			# New branch, examine all commits
+			range="$local_oid"
+		else
+			# Update to existing branch, examine new commits
+			range="$remote_oid..$local_oid"
+		fi
+
+		# Check for WIP commit
+		commit=$(git rev-list -n 1 --grep '^WIP' "$range")
+		if test -n "$commit"
+		then
+			echo >&2 "Found WIP commit in $local_ref, not pushing"
+			exit 1
+		fi
+	fi
+done
+
+exit 0
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/pre-rebase.sample">
+#!/bin/sh
+#
+# Copyright (c) 2006, 2008 Junio C Hamano
+#
+# The "pre-rebase" hook is run just before "git rebase" starts doing
+# its job, and can prevent the command from running by exiting with
+# non-zero status.
+#
+# The hook is called with the following parameters:
+#
+# $1 -- the upstream the series was forked from.
+# $2 -- the branch being rebased (or empty when rebasing the current branch).
+#
+# This sample shows how to prevent topic branches that are already
+# merged to 'next' branch from getting rebased, because allowing it
+# would result in rebasing already published history.
+
+publish=next
+basebranch="$1"
+if test "$#" = 2
+then
+	topic="refs/heads/$2"
+else
+	topic=`git symbolic-ref HEAD` ||
+	exit 0 ;# we do not interrupt rebasing detached HEAD
+fi
+
+case "$topic" in
+refs/heads/??/*)
+	;;
+*)
+	exit 0 ;# we do not interrupt others.
+	;;
+esac
+
+# Now we are dealing with a topic branch being rebased
+# on top of master.  Is it OK to rebase it?
+
+# Does the topic really exist?
+git show-ref -q "$topic" || {
+	echo >&2 "No such branch $topic"
+	exit 1
+}
+
+# Is topic fully merged to master?
+not_in_master=`git rev-list --pretty=oneline ^master "$topic"`
+if test -z "$not_in_master"
+then
+	echo >&2 "$topic is fully merged to master; better remove it."
+	exit 1 ;# we could allow it, but there is no point.
+fi
+
+# Is topic ever merged to next?  If so you should not be rebasing it.
+only_next_1=`git rev-list ^master "^$topic" ${publish} | sort`
+only_next_2=`git rev-list ^master           ${publish} | sort`
+if test "$only_next_1" = "$only_next_2"
+then
+	not_in_topic=`git rev-list "^$topic" master`
+	if test -z "$not_in_topic"
+	then
+		echo >&2 "$topic is already up to date with master"
+		exit 1 ;# we could allow it, but there is no point.
+	else
+		exit 0
+	fi
+else
+	not_in_next=`git rev-list --pretty=oneline ^${publish} "$topic"`
+	/usr/bin/perl -e '
+		my $topic = $ARGV[0];
+		my $msg = "* $topic has commits already merged to public branch:\n";
+		my (%not_in_next) = map {
+			/^([0-9a-f]+) /;
+			($1 => 1);
+		} split(/\n/, $ARGV[1]);
+		for my $elem (map {
+				/^([0-9a-f]+) (.*)$/;
+				[$1 => $2];
+			} split(/\n/, $ARGV[2])) {
+			if (!exists $not_in_next{$elem->[0]}) {
+				if ($msg) {
+					print STDERR $msg;
+					undef $msg;
+				}
+				print STDERR " $elem->[1]\n";
+			}
+		}
+	' "$topic" "$not_in_next" "$not_in_master"
+	exit 1
+fi
+
+<<\DOC_END
+
+This sample hook safeguards topic branches that have been
+published from being rewound.
+
+The workflow assumed here is:
+
+ * Once a topic branch forks from "master", "master" is never
+   merged into it again (either directly or indirectly).
+
+ * Once a topic branch is fully cooked and merged into "master",
+   it is deleted.  If you need to build on top of it to correct
+   earlier mistakes, a new topic branch is created by forking at
+   the tip of the "master".  This is not strictly necessary, but
+   it makes it easier to keep your history simple.
+
+ * Whenever you need to test or publish your changes to topic
+   branches, merge them into "next" branch.
+
+The script, being an example, hardcodes the publish branch name
+to be "next", but it is trivial to make it configurable via
+$GIT_DIR/config mechanism.
+
+With this workflow, you would want to know:
+
+(1) ... if a topic branch has ever been merged to "next".  Young
+    topic branches can have stupid mistakes you would rather
+    clean up before publishing, and things that have not been
+    merged into other branches can be easily rebased without
+    affecting other people.  But once it is published, you would
+    not want to rewind it.
+
+(2) ... if a topic branch has been fully merged to "master".
+    Then you can delete it.  More importantly, you should not
+    build on top of it -- other people may already want to
+    change things related to the topic as patches against your
+    "master", so if you need further changes, it is better to
+    fork the topic (perhaps with the same name) afresh from the
+    tip of "master".
+
+Let's look at this example:
+
+		   o---o---o---o---o---o---o---o---o---o "next"
+		  /       /           /           /
+		 /   a---a---b A     /           /
+		/   /               /           /
+	       /   /   c---c---c---c B         /
+	      /   /   /             \         /
+	     /   /   /   b---b C     \       /
+	    /   /   /   /             \     /
+    ---o---o---o---o---o---o---o---o---o---o---o "master"
+
+
+A, B and C are topic branches.
+
+ * A has one fix since it was merged up to "next".
+
+ * B has finished.  It has been fully merged up to "master" and "next",
+   and is ready to be deleted.
+
+ * C has not merged to "next" at all.
+
+We would want to allow C to be rebased, refuse A, and encourage
+B to be deleted.
+
+To compute (1):
+
+	git rev-list ^master ^topic next
+	git rev-list ^master        next
+
+	if these match, topic has not merged in next at all.
+
+To compute (2):
+
+	git rev-list master..topic
+
+	if this is empty, it is fully merged to "master".
+
+DOC_END
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/pre-receive.sample">
+#!/bin/sh
+#
+# An example hook script to make use of push options.
+# The example simply echoes all push options that start with 'echoback='
+# and rejects all pushes when the "reject" push option is used.
+#
+# To enable this hook, rename this file to "pre-receive".
+
+if test -n "$GIT_PUSH_OPTION_COUNT"
+then
+	i=0
+	while test "$i" -lt "$GIT_PUSH_OPTION_COUNT"
+	do
+		eval "value=\$GIT_PUSH_OPTION_$i"
+		case "$value" in
+		echoback=*)
+			echo "echo from the pre-receive-hook: ${value#*=}" >&2
+			;;
+		reject)
+			exit 1
+		esac
+		i=$((i + 1))
+	done
+fi
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/prepare-commit-msg.sample">
+#!/bin/sh
+#
+# An example hook script to prepare the commit log message.
+# Called by "git commit" with the name of the file that has the
+# commit message, followed by the description of the commit
+# message's source.  The hook's purpose is to edit the commit
+# message file.  If the hook fails with a non-zero status,
+# the commit is aborted.
+#
+# To enable this hook, rename this file to "prepare-commit-msg".
+
+# This hook includes three examples. The first one removes the
+# "# Please enter the commit message..." help message.
+#
+# The second includes the output of "git diff --name-status -r"
+# into the message, just before the "git status" output.  It is
+# commented because it doesn't cope with --amend or with squashed
+# commits.
+#
+# The third example adds a Signed-off-by line to the message, that can
+# still be edited.  This is rarely a good idea.
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+/usr/bin/perl -i.bak -ne 'print unless(m/^. Please enter the commit message/..m/^#$/)' "$COMMIT_MSG_FILE"
+
+# case "$COMMIT_SOURCE,$SHA1" in
+#  ,|template,)
+#    /usr/bin/perl -i.bak -pe '
+#       print "\n" . `git diff --cached --name-status -r`
+# 	 if /^#/ && $first++ == 0' "$COMMIT_MSG_FILE" ;;
+#  *) ;;
+# esac
+
+# SOB=$(git var GIT_COMMITTER_IDENT | sed -n 's/^\(.*>\).*$/Signed-off-by: \1/p')
+# git interpret-trailers --in-place --trailer "$SOB" "$COMMIT_MSG_FILE"
+# if test -z "$COMMIT_SOURCE"
+# then
+#   /usr/bin/perl -i.bak -pe 'print "\n" if !$first_line++' "$COMMIT_MSG_FILE"
+# fi
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/push-to-checkout.sample">
+#!/bin/sh
+
+# An example hook script to update a checked-out tree on a git push.
+#
+# This hook is invoked by git-receive-pack(1) when it reacts to git
+# push and updates reference(s) in its repository, and when the push
+# tries to update the branch that is currently checked out and the
+# receive.denyCurrentBranch configuration variable is set to
+# updateInstead.
+#
+# By default, such a push is refused if the working tree and the index
+# of the remote repository has any difference from the currently
+# checked out commit; when both the working tree and the index match
+# the current commit, they are updated to match the newly pushed tip
+# of the branch. This hook is to be used to override the default
+# behaviour; however the code below reimplements the default behaviour
+# as a starting point for convenient modification.
+#
+# The hook receives the commit with which the tip of the current
+# branch is going to be updated:
+commit=$1
+
+# It can exit with a non-zero status to refuse the push (when it does
+# so, it must not modify the index or the working tree).
+die () {
+	echo >&2 "$*"
+	exit 1
+}
+
+# Or it can make any necessary changes to the working tree and to the
+# index to bring them to the desired state when the tip of the current
+# branch is updated to the new commit, and exit with a zero status.
+#
+# For example, the hook can simply run git read-tree -u -m HEAD "$1"
+# in order to emulate git fetch that is run in the reverse direction
+# with git push, as the two-tree form of git read-tree -u -m is
+# essentially the same as git switch or git checkout that switches
+# branches while keeping the local changes in the working tree that do
+# not interfere with the difference between the branches.
+
+# The below is a more-or-less exact translation to shell of the C code
+# for the default behaviour for git's push-to-checkout hook defined in
+# the push_to_deploy() function in builtin/receive-pack.c.
+#
+# Note that the hook will be executed from the repository directory,
+# not from the working tree, so if you want to perform operations on
+# the working tree, you will have to adapt your code accordingly, e.g.
+# by adding "cd .." or using relative paths.
+
+if ! git update-index -q --ignore-submodules --refresh
+then
+	die "Up-to-date check failed"
+fi
+
+if ! git diff-files --quiet --ignore-submodules --
+then
+	die "Working directory has unstaged changes"
+fi
+
+# This is a rough translation of:
+#
+#   head_has_history() ? "HEAD" : EMPTY_TREE_SHA1_HEX
+if git cat-file -e HEAD 2>/dev/null
+then
+	head=HEAD
+else
+	head=$(git hash-object -t tree --stdin </dev/null)
+fi
+
+if ! git diff-index --quiet --cached --ignore-submodules $head --
+then
+	die "Working directory has staged changes"
+fi
+
+if ! git read-tree -u -m "$commit"
+then
+	die "Could not update working tree to new HEAD"
+fi
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/sendemail-validate.sample">
+#!/bin/sh
+
+# An example hook script to validate a patch (and/or patch series) before
+# sending it via email.
+#
+# The hook should exit with non-zero status after issuing an appropriate
+# message if it wants to prevent the email(s) from being sent.
+#
+# To enable this hook, rename this file to "sendemail-validate".
+#
+# By default, it will only check that the patch(es) can be applied on top of
+# the default upstream branch without conflicts in a secondary worktree. After
+# validation (successful or not) of the last patch of a series, the worktree
+# will be deleted.
+#
+# The following config variables can be set to change the default remote and
+# remote ref that are used to apply the patches against:
+#
+#   sendemail.validateRemote (default: origin)
+#   sendemail.validateRemoteRef (default: HEAD)
+#
+# Replace the TODO placeholders with appropriate checks according to your
+# needs.
+
+validate_cover_letter () {
+	file="$1"
+	# TODO: Replace with appropriate checks (e.g. spell checking).
+	true
+}
+
+validate_patch () {
+	file="$1"
+	# Ensure that the patch applies without conflicts.
+	git am -3 "$file" || return
+	# TODO: Replace with appropriate checks for this patch
+	# (e.g. checkpatch.pl).
+	true
+}
+
+validate_series () {
+	# TODO: Replace with appropriate checks for the whole series
+	# (e.g. quick build, coding style checks, etc.).
+	true
+}
+
+# main -------------------------------------------------------------------------
+
+if test "$GIT_SENDEMAIL_FILE_COUNTER" = 1
+then
+	remote=$(git config --default origin --get sendemail.validateRemote) &&
+	ref=$(git config --default HEAD --get sendemail.validateRemoteRef) &&
+	worktree=$(mktemp --tmpdir -d sendemail-validate.XXXXXXX) &&
+	git worktree add -fd --checkout "$worktree" "refs/remotes/$remote/$ref" &&
+	git config --replace-all sendemail.validateWorktree "$worktree"
+else
+	worktree=$(git config --get sendemail.validateWorktree)
+fi || {
+	echo "sendemail-validate: error: failed to prepare worktree" >&2
+	exit 1
+}
+
+unset GIT_DIR GIT_WORK_TREE
+cd "$worktree" &&
+
+if grep -q "^diff --git " "$1"
+then
+	validate_patch "$1"
+else
+	validate_cover_letter "$1"
+fi &&
+
+if test "$GIT_SENDEMAIL_FILE_COUNTER" = "$GIT_SENDEMAIL_FILE_TOTAL"
+then
+	git config --unset-all sendemail.validateWorktree &&
+	trap 'git worktree remove -ff "$worktree"' EXIT &&
+	validate_series
+fi
+</file>
+
+<file path="cesium_titiler_test/.git/hooks/update.sample">
+#!/bin/sh
+#
+# An example hook script to block unannotated tags from entering.
+# Called by "git receive-pack" with arguments: refname sha1-old sha1-new
+#
+# To enable this hook, rename this file to "update".
+#
+# Config
+# ------
+# hooks.allowunannotated
+#   This boolean sets whether unannotated tags will be allowed into the
+#   repository.  By default they won't be.
+# hooks.allowdeletetag
+#   This boolean sets whether deleting tags will be allowed in the
+#   repository.  By default they won't be.
+# hooks.allowmodifytag
+#   This boolean sets whether a tag may be modified after creation. By default
+#   it won't be.
+# hooks.allowdeletebranch
+#   This boolean sets whether deleting branches will be allowed in the
+#   repository.  By default they won't be.
+# hooks.denycreatebranch
+#   This boolean sets whether remotely creating branches will be denied
+#   in the repository.  By default this is allowed.
+#
+
+# --- Command line
+refname="$1"
+oldrev="$2"
+newrev="$3"
+
+# --- Safety check
+if [ -z "$GIT_DIR" ]; then
+	echo "Don't run this script from the command line." >&2
+	echo " (if you want, you could supply GIT_DIR then run" >&2
+	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+	exit 1
+fi
+
+if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
+	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+	exit 1
+fi
+
+# --- Config
+allowunannotated=$(git config --type=bool hooks.allowunannotated)
+allowdeletebranch=$(git config --type=bool hooks.allowdeletebranch)
+denycreatebranch=$(git config --type=bool hooks.denycreatebranch)
+allowdeletetag=$(git config --type=bool hooks.allowdeletetag)
+allowmodifytag=$(git config --type=bool hooks.allowmodifytag)
+
+# check for no description
+projectdesc=$(sed -e '1q' "$GIT_DIR/description")
+case "$projectdesc" in
+"Unnamed repository"* | "")
+	echo "*** Project description file hasn't been set" >&2
+	exit 1
+	;;
+esac
+
+# --- Check types
+# if $newrev is 0000...0000, it's a commit to delete a ref.
+zero=$(git hash-object --stdin </dev/null | tr '[0-9a-f]' '0')
+if [ "$newrev" = "$zero" ]; then
+	newrev_type=delete
+else
+	newrev_type=$(git cat-file -t $newrev)
+fi
+
+case "$refname","$newrev_type" in
+	refs/tags/*,commit)
+		# un-annotated tag
+		short_refname=${refname##refs/tags/}
+		if [ "$allowunannotated" != "true" ]; then
+			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
+			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
+			exit 1
+		fi
+		;;
+	refs/tags/*,delete)
+		# delete tag
+		if [ "$allowdeletetag" != "true" ]; then
+			echo "*** Deleting a tag is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/tags/*,tag)
+		# annotated tag
+		if [ "$allowmodifytag" != "true" ] && git rev-parse $refname > /dev/null 2>&1
+		then
+			echo "*** Tag '$refname' already exists." >&2
+			echo "*** Modifying a tag is not allowed in this repository." >&2
+			exit 1
+		fi
+		;;
+	refs/heads/*,commit)
+		# branch
+		if [ "$oldrev" = "$zero" -a "$denycreatebranch" = "true" ]; then
+			echo "*** Creating a branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/heads/*,delete)
+		# delete branch
+		if [ "$allowdeletebranch" != "true" ]; then
+			echo "*** Deleting a branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	refs/remotes/*,commit)
+		# tracking branch
+		;;
+	refs/remotes/*,delete)
+		# delete tracking branch
+		if [ "$allowdeletebranch" != "true" ]; then
+			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
+			exit 1
+		fi
+		;;
+	*)
+		# Anything else (is there anything else?)
+		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
+		exit 1
+		;;
+esac
+
+# --- Finished
+exit 0
+</file>
+
+<file path="cesium_titiler_test/.git/info/exclude">
+# git ls-files --others --exclude-from=.git/info/exclude
+# Lines that start with '#' are comments.
+# For a project mostly in C, the following would be a good set of
+# exclude patterns (uncomment them if you want to use them):
+# *.[oa]
+# *~
+</file>
+
+<file path="cesium_titiler_test/.git/logs/HEAD">
+0000000000000000000000000000000000000000 d3048c563965059e03fb7fcc0d0d2d1965602605 kc0588615 <kc0588615@students.mclennan.edu> 1746321127 -0500	commit (initial): Initial commit
+</file>
+
+<file path="cesium_titiler_test/.git/logs/refs/heads/main">
+0000000000000000000000000000000000000000 d3048c563965059e03fb7fcc0d0d2d1965602605 kc0588615 <kc0588615@students.mclennan.edu> 1746321127 -0500	commit (initial): Initial commit
+</file>
+
+<file path="cesium_titiler_test/.git/refs/heads/main">
+d3048c563965059e03fb7fcc0d0d2d1965602605
+</file>
+
+<file path="cesium_titiler_test/.gitattributes">
+# Auto detect text files and perform LF normalization
+* text=auto
+</file>
+
+<file path="cesium_titiler_test/.gitignore">
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+</file>
+
+<file path=".gitignore">
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+
+/data/
+repomix-output.xml
+</file>
+
+<file path="app/colormaps.py">
+# app/colormaps.py
+import json
+import os
+from rio_tiler.colormap import cmap as default_cmap, parse_color
+
+# Get the directory where colormaps.py is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+print(f"[DEBUG] colormaps.py script_dir: {script_dir}") # Debug print
+
+# Construct the path to habitat_colormap.json (which should be one level up)
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+json_path = os.path.join(project_root, 'habitat_colormap.json')
+
+print(f"[DEBUG] Calculated project_root: {project_root}") # Debug print
+print(f"[DEBUG] Attempting to load colormap from: {json_path}") # Debug print
+print(f"[DEBUG] Does colormap file exist at path? {os.path.exists(json_path)}") # Debug print
+print(f"[DEBUG] Current Working Directory: {os.getcwd()}") # Debug print
+
+habitat_values = {}
+try:
+    with open(json_path, "r") as f:
+        habitat_values_str_keys = json.load(f)
+        # Convert string keys to integers and parse colors
+        habitat_values = {
+            int(k): parse_color(v) for k, v in habitat_values_str_keys.items()
+        }
+    print(f"[DEBUG] Successfully loaded {len(habitat_values)} entries from colormap.") # Debug print
+except FileNotFoundError:
+    print(f"[ERROR] habitat_colormap.json not found at calculated path: {json_path}.") # Error print
+except json.JSONDecodeError as e:
+    print(f"[ERROR] Error decoding {json_path}: {e}") # Error print
+except Exception as e:
+    print(f"[ERROR] An unexpected error occurred loading colormap: {e}") # Error print
+
+
+# Register the custom colormap with rio_tiler's cmap store
+# Only register if we successfully loaded values
+if habitat_values:
+    try:
+        # Ensure habitat_values is not empty before registering
+        if not habitat_values:
+             print("[WARN] habitat_values dictionary is empty. Skipping registration.")
+             custom_cmap = default_cmap
+        else:
+            custom_cmap = default_cmap.register({"habitat_custom": habitat_values})
+            print("[DEBUG] 'habitat_custom' colormap registered.")
+    except Exception as e:
+        print(f"[ERROR] Failed to register colormap: {e}")
+        custom_cmap = default_cmap
+else:
+    custom_cmap = default_cmap # Use the original default if loading failed
+    print("[WARN] 'habitat_custom' colormap NOT registered because loading failed or file was empty.")
+
+cmap_store = custom_cmap
+</file>
+
+<file path="app/dependencies.py">
+from titiler.core.dependencies import create_colormap_dependency
+from .colormaps import cmap_store # Import the cmap store where 'habitat_custom' is registered
+
+# Create the colormap dependency function using the registered store
+# This dependency will look for 'colormap_name' or 'colormap' query parameters
+# If 'colormap_name=habitat_custom' is passed, it will return our large colormap dict
+# If other names are passed, it will return rio-tiler defaults
+# If 'colormap={...}' is passed, it will parse the inline JSON (but we want to avoid this)
+ColorMapParams = create_colormap_dependency(cmap_store)
+</file>
+
+<file path="cors_server.py">
+import http.server
+import socketserver
+import os  # Added for better path handling
+
+PORT = 9000
+# Change directory to where the script is located,
+# so it serves files from the correct place
+web_dir = os.path.dirname(__file__)
+os.chdir(web_dir)
+
+
+class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        # Allow requests from any origin (*)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        # Add other CORS headers if needed (optional, but good practice)
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header(
+            "Access-Control-Allow-Headers", "X-Requested-With, Content-Type"
+        )
+        # Call the parent class's end_headers method
+        super().end_headers()
+
+    # Optional: Handle OPTIONS preflight requests for more complex scenarios
+    def do_OPTIONS(self):
+        self.send_response(200, "ok")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header(
+            "Access-Control-Allow-Headers", "X-Requested-With, Content-Type"
+        )
+        self.end_headers()
+
+
+# Use ThreadingTCPServer for better handling if needed, but TCPServer is fine for this
+# httpd = socketserver.ThreadingTCPServer(("", PORT), CORSRequestHandler)
+httpd = socketserver.TCPServer(("", PORT), CORSRequestHandler)
+
+print(
+    f"Serving HTTP on 0.0.0.0 port {PORT} (http://0.0.0.0:{PORT}/) from directory {web_dir} with CORS enabled..."
+)
+httpd.serve_forever()
+</file>
+
+<file path="directory_files_list.txt">
+File Listing for: D:\Downloads\april-phaser-main
+Generated on: 04/24/2025 23:43:14
+Ignoring Patterns: __pycache__, .venv, .git, .idea, build, dist, site-packages, *.pyc, *.pyd, *.pth, *.whl, *.dll, *.lib, __init__.py, __main__.py, *.cpython-312.pyc, *.cp312-win_amd64.pyd, *.cp312-win_amd64.lib, .gitignore, LICENSE*, METADATA, RECORD, WHEEL, INSTALLER
+----------------------------------------
+
+  +-- .babelrc
+  +-- directory_tree.txt
+  +-- index.html
+  +-- log.js
+  +-- package.json
+  +-- package-lock.json
+      +-- bg.png
+      +-- black_gem_0.png
+      +-- black_gem_1.png
+      +-- black_gem_2.png
+      +-- black_gem_3.png
+      +-- black_gem_4.png
+      +-- black_gem_5.png
+      +-- black_gem_6.png
+      +-- black_gem_7.png
+      +-- blue_gem_0.png
+      +-- blue_gem_1.png
+      +-- blue_gem_2.png
+      +-- blue_gem_3.png
+      +-- blue_gem_4.png
+      +-- blue_gem_5.png
+      +-- blue_gem_6.png
+      +-- blue_gem_7.png
+      +-- green_gem_0.png
+      +-- green_gem_1.png
+      +-- green_gem_2.png
+      +-- green_gem_3.png
+      +-- green_gem_4.png
+      +-- green_gem_5.png
+      +-- green_gem_6.png
+      +-- green_gem_7.png
+      +-- logo.png
+      +-- orange_gem_0.png
+      +-- orange_gem_1.png
+      +-- orange_gem_2.png
+      +-- orange_gem_3.png
+      +-- orange_gem_4.png
+      +-- orange_gem_5.png
+      +-- orange_gem_6.png
+      +-- orange_gem_7.png
+      +-- red_gem_0.png
+      +-- red_gem_1.png
+      +-- red_gem_2.png
+      +-- red_gem_3.png
+      +-- red_gem_4.png
+      +-- red_gem_5.png
+      +-- red_gem_6.png
+      +-- red_gem_7.png
+      +-- white_gem_0.png
+      +-- white_gem_1.png
+      +-- white_gem_2.png
+      +-- white_gem_3.png
+      +-- white_gem_4.png
+      +-- white_gem_5.png
+      +-- white_gem_6.png
+      +-- white_gem_7.png
+    +-- favicon.png
+    +-- style.css
+  +-- README.md
+  +-- screenshot.png
+    +-- constants.js
+      +-- BackendPuzzle.js
+      +-- BoardView.js
+      +-- ExplodeAndReplacePhase.js
+      +-- MoveAction.js
+    +-- main.js
+      +-- Boot.js
+      +-- constants.js
+      +-- Game.js
+      +-- GameOver.js
+      +-- MainMenu.js
+      +-- Preloader.js
+    +-- config.js
+    +-- config.prod.js
+</file>
+
+<file path="directory_tree.txt">
+Directory Structure for: C:\mapServer\tiTiler\cesium_titiler_test
+Generated on: 04/24/2025 20:47:05
+----------------------------------------
+
++-- app
++-- data
++-- cors_server.py
++-- directory_tree.txt
++-- habitat_colormap.json
++-- index.html
+  +-- colormaps.py
+  +-- dependencies.py
+  +-- habitat_colormap.json
+  +-- main.py
+  +-- habitat_webmerc.tif
+  +-- habitat_webmerc.tif.aux.xml
+  +-- test.ps1
+</file>
+
+<file path="habitat_colormap.json">
+{
+    "0":   [  0,  45, 225, 255],
+    "100": [ 10, 148,  28, 255],
+    "101": [ 17,  94,  78, 255],
+    "102": [  7, 161, 135, 255],
+    "103": [  0, 250, 192, 255],
+    "104": [ 39, 161, 112, 255],
+    "105": [157, 249,  65, 255],
+    "106": [ 42, 244,  52, 255],
+    "107": [160, 254, 204, 255],
+    "108": [103, 126,  45, 255],
+    "109": [  0, 196,  16, 255],
+    "200": [198, 255,  83, 255],
+    "201": [245, 233,  54, 255],
+    "202": [205, 255,  39, 255],
+    "300": [234, 160,  63, 255],
+    "301": [100,  88,   0, 255],
+    "302": [123, 122,  96, 255],
+    "303": [132, 167, 155, 255],
+    "304": [154, 221, 212, 255],
+    "305": [255, 233, 123, 255],
+    "306": [240, 166,  37, 255],
+    "307": [206, 155, 194, 255],
+    "308": [127,  29, 213, 255],
+    "400": [152, 250, 231, 255],
+    "401": [189, 238, 216, 255],
+    "402": [173, 196, 192, 255],
+    "403": [ 38,  71,  88, 255],
+    "404": [ 51, 185, 136, 255],
+    "405": [255, 245, 203, 255],
+    "406": [137, 232, 240, 255],
+    "407": [250, 203, 255, 255],
+    "500": [ 91, 181, 255, 255],
+    "501": [  0, 250, 250, 255],
+    "502": [214, 160, 249, 255],
+    "503": [191,  42, 232, 255],
+    "504": [ 49,  72, 114, 255],
+    "505": [ 14, 119, 217, 255],
+    "506": [110, 150, 196, 255],
+    "507": [  0, 173, 216, 255],
+    "508": [ 33, 142, 214, 255],
+    "509": [ 48,  31, 153, 255],
+    "510": [161, 230, 236, 255],
+    "511": [199, 225, 228, 255],
+    "512": [249, 233, 212, 255],
+    "513": [  0,  37, 252, 255],
+    "514": [ 22, 107, 149, 255],
+    "515": [ 70, 164, 192, 255],
+    "516": [ 62, 113, 224, 255],
+    "517": [156, 117, 208, 255],
+    "518": [255,   1, 188, 255],
+    "600": [165, 146, 131, 255],
+    "800": [255, 252, 225, 255],
+    "801": [255, 183,   1, 255],
+    "802": [228, 233, 212, 255],
+    "803": [218, 237, 245, 255],
+    "900": [153, 221, 247, 255],
+    "901": [209, 236, 247, 255],
+    "908": [253, 124, 110, 255],
+    "909": [134, 164, 117, 255],
+    "1000":[ 29, 162, 216, 255],
+    "1001":[ 23, 129, 172, 255],
+    "1002":[ 14,  81, 108, 255],
+    "1003":[  8,  48,  64, 255],
+    "1004":[  2,  16,  21, 255],
+    "1100":[127, 205, 255, 255],
+    "1101":[ 17, 153, 209, 255],
+    "1102":[ 96, 189, 227, 255],
+    "1103":[ 26, 145, 194, 255],
+    "1104":[  2, 116, 149, 255],
+    "1105":[107, 174, 214, 255],
+    "1106":[127,   0, 255, 255],
+    "1200":[ 76, 230, 230, 255],
+    "1206":[ 50,  18, 179, 255],
+    "1207":[124, 217, 204, 255],
+    "1400":[217,  80,  73, 255],
+    "1401":[255, 160, 131, 255],
+    "1402":[255, 131, 202, 255],
+    "1403":[255,   8,   0, 255],
+    "1404":[221, 203,  37, 255],
+    "1405":[  0,   0,   0, 255],
+    "1406":[255,  22,   1, 255],
+    "1700":[255, 255, 255, 255]
+  }
+</file>
+
+<file path="load_cog.ps1">
+# --- Configuration Variables ---
+$InputCog = "C:\OSGeo4W\geoTif\habitat_cog.tif"
+$OutputSql = "C:\Users\minos\load_habitat_full_512.sql" # Or your preferred path
+$DbTable = "public.habitat_raster_full_in_db"
+$TileSize = "512x512" # *** Adjusted based on gdalinfo ***
+$PgDb = "phaser"
+$PgUser = "postgres"
+$PgHost = "localhost"
+$PgPort = "5432"
+$PgPassword = "apple" # <-- Your PostgreSQL password here
+# Adjust memory based on your 32GB RAM. 8GB is a good starting point for index creation.
+$IndexMem = "24GB"
+$VacuumMem = "6GB" # Usually less memory needed for vacuum
+
+# --- Function for Checking Command Success ---
+function Check-CommandSuccess {
+    param(
+        [string]$CommandName
+    )
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "$CommandName failed with exit code $LASTEXITCODE."
+        # Optional: Pause script on error
+        # Read-Host "Press Enter to exit..."
+        exit $LASTEXITCODE
+    } else {
+        Write-Host "$CommandName completed successfully." -ForegroundColor Green
+    }
+}
+
+# --- Set Password Environment Variable ---
+# Setting it once for the duration of the script session
+$env:PGPASSWORD = $PgPassword
+Write-Host "PGPASSWORD environment variable set for this session." -ForegroundColor Magenta
+
+try { # Wrap the entire process to ensure PGPASSWORD gets cleared
+
+    # --- Phase 1: Generate SQL and Load Data ---
+    Write-Host "`n--- Phase 1: Starting Data Generation and Load ---" -ForegroundColor Yellow
+
+    Write-Host "Generating SQL for data insertion (using $TileSize tiles)..."
+    # Ensure raster2pgsql executable is in PATH or provide full path
+    $process = Start-Process raster2pgsql -ArgumentList "-s 3857 -F -t $TileSize ""$InputCog"" $DbTable" -RedirectStandardOutput $OutputSql -Wait -PassThru
+    $LASTEXITCODE = $process.ExitCode
+    Check-CommandSuccess "raster2pgsql SQL Generation"
+    Write-Host "SQL generation complete: $OutputSql"
+
+    Write-Host "Dropping existing table (if any) and executing SQL load..."
+    # Drop the table first IF it exists from a previous failed attempt
+    psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -c "DROP TABLE IF EXISTS $DbTable;"
+    Check-CommandSuccess "psql Drop Table"
+
+    # Execute the load script. This will be the most time-consuming disk I/O part.
+    psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -f $OutputSql
+    Check-CommandSuccess "psql Execute Load Script"
+
+    # -- Optional Speed Boost Section (If used, ensure PGPASSWORD is set) --
+    # Example for Option A:
+    # Write-Host "Executing SQL load with synchronous_commit=off..."
+    # $sqlCommitOff = @"
+    # BEGIN;
+    # SET LOCAL synchronous_commit = off;
+    # \i $OutputSql
+    # COMMIT;
+    # "@
+    # $sqlCommitOff | psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort
+    # Check-CommandSuccess "psql Load with synchronous_commit=off"
+
+    # Example for Option B (UNLOGGED):
+    # ... (Regenerate SQL first as before) ...
+    # Write-Host "Executing UNLOGGED table load..."
+    # psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -f $OutputSql
+    # Check-CommandSuccess "psql UNLOGGED Load"
+
+    Write-Host "--- Phase 1: Data insertion complete. ---" -ForegroundColor Green
+
+    # --- Cleanup the large SQL file AFTER successful load ---
+    Write-Host "Attempting to delete intermediate SQL file: $OutputSql"
+    Remove-Item -Path $OutputSql -ErrorAction SilentlyContinue -Force
+    if (Test-Path $OutputSql) {
+         Write-Warning "Could not delete $OutputSql. Please delete it manually to save space."
+    } else {
+         Write-Host "Successfully deleted $OutputSql." -ForegroundColor Cyan
+    }
+
+    # --- Phase 2: Create Spatial Index ---
+    Write-Host "`n--- Phase 2: Starting Spatial Index Creation ---" -ForegroundColor Yellow
+    Write-Host "Creating spatial index using $IndexMem memory (this may take a while)..."
+
+    $sqlIndex = @"
+SET statement_timeout = 0; -- Disable timeout for potentially long index creation
+SET maintenance_work_mem = '$IndexMem';
+CREATE INDEX ON $DbTable USING GIST (ST_ConvexHull(rast));
+RESET maintenance_work_mem;
+RESET statement_timeout;
+"@
+    $sqlIndex | psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort
+    Check-CommandSuccess "psql Create Index"
+
+    # --- IF YOU USED UNLOGGED TABLE in Phase 1, uncomment and run this NOW ---
+    # Write-Host "Changing table back to LOGGED..."
+    # psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -c "ALTER TABLE $DbTable SET LOGGED;"
+    # Check-CommandSuccess "psql ALTER TABLE SET LOGGED"
+
+    Write-Host "--- Phase 2: Spatial index creation complete. ---" -ForegroundColor Green
+
+
+    # --- Phase 3: Add Raster Constraints ---
+    Write-Host "`n--- Phase 3: Starting Constraint Addition ---" -ForegroundColor Yellow
+    Write-Host "Adding raster constraints..."
+    try {
+        psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -c "SELECT AddRasterConstraints('public'::name, '$DbTable'::name, 'rast'::name);" -ErrorAction Stop # Stop on error here
+        Check-CommandSuccess "psql Add Constraints"
+    } catch {
+        Write-Warning "Failed to add raster constraints. Check if table exists and has data. $_"
+        # Continue script as constraints might not be strictly critical, but investigate later.
+    }
+    Write-Host "--- Phase 3: Constraints added (or skipped on error). ---" -ForegroundColor Green
+
+
+    # --- Phase 4: Vacuum Analyze ---
+    Write-Host "`n--- Phase 4: Starting VACUUM ANALYZE ---" -ForegroundColor Yellow
+    Write-Host "Running VACUUM ANALYZE using $VacuumMem memory..."
+
+    $sqlVacuum = @"
+SET maintenance_work_mem = '$VacuumMem';
+VACUUM (VERBOSE, ANALYZE) $DbTable;
+RESET maintenance_work_mem;
+"@
+    $sqlVacuum | psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort
+    Check-CommandSuccess "psql Vacuum Analyze"
+
+    Write-Host "--- Phase 4: VACUUM ANALYZE complete. ---" -ForegroundColor Green
+    Write-Host "`n>>> Raster Loading Process Finished <<<" -ForegroundColor Cyan
+
+}
+finally {
+    # --- Clear Password Environment Variable ---
+    # IMPORTANT: Clear the password from the environment variable when script exits (normally or on error)
+    $env:PGPASSWORD = $null
+    Write-Host "PGPASSWORD environment variable cleared." -ForegroundColor Magenta
+}
+</file>
+
+<file path="load_species_gym.ps1">
+# --- Configuration (PowerShell) ---
+$ShapefilePath = "D:\ArcGIS\data\iucn\GYMNOPHIONA\GYMNOPHIONA.shp"
+$TargetTable = "public.iucn_gymnophiona_ranges"
+$TargetSrid = "4326"
+$PgDb = "phaser"
+$PgUser = "postgres"
+$PgHost = "localhost"
+$PgPort = "5432"
+$PgPassword = "apple"
+$PsqlExecutable = "C:\Program Files\PostgreSQL\17\bin\psql.exe" # <-- Adjust if needed!
+$Shp2pgsqlExecutable = "C:\Program Files\PostgreSQL\17\bin\shp2pgsql.exe" # <-- Explicit path recommended
+
+# --- Set Environment Variable ---
+$env:PGPASSWORD = $PgPassword
+
+try {
+    Write-Host "Loading shapefile $ShapefilePath into $TargetTable (SRID: $TargetSrid) using LATIN1 encoding..." -ForegroundColor Yellow # Added encoding note
+
+    # *** CHANGED -W UTF8 to -W LATIN1 ***
+    & $Shp2pgsqlExecutable -s $TargetSrid -I -W LATIN1 -c $ShapefilePath $TargetTable | & $PsqlExecutable -d $PgDb -U $PgUser -h $PgHost -p $PgPort
+
+    # Check Last Exit Code ($LASTEXITCODE automatic variable in PowerShell)
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "shp2pgsql or psql command failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+    } else {
+        # Add a check to see if the table actually exists now
+        $checkTableSql = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'iucn_gymnophiona_ranges');"
+        $tableExists = Invoke-Expression ("& '$PsqlExecutable' -d $PgDb -U $PgUser -h $PgHost -p $PgPort -t -c ""$checkTableSql""")
+        if ($tableExists -match 't') { # Check if result contains 't' for true
+             Write-Host "Shapefile loading process completed successfully. Table '$TargetTable' created." -ForegroundColor Green
+        } else {
+             Write-Warning "Shapefile loading command finished, but table '$TargetTable' was NOT created. Check shp2pgsql output/errors."
+        }
+    }
+}
+finally {
+    $env:PGPASSWORD = $null # Clear the password
+    Write-Host "PGPASSWORD environment variable cleared." -ForegroundColor Magenta
+}
+</file>
+
+<file path="app/main.py">
+# app/main.py
+import os
+import psycopg2  # Import database driver
+from fastapi import FastAPI, HTTPException, Query
+from starlette.middleware.cors import CORSMiddleware
+from titiler.core.factory import TilerFactory
+from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
+
+# Import the custom colormap dependency we created
+from .dependencies import ColorMapParams
+
+# --- Database Configuration ---
+# Define these variables BEFORE using them in the connection string
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "phaser")
+DB_USER = os.getenv("DB_USER", "postgres")
+# IMPORTANT: Use environment variables for passwords in production!
+DB_PASSWORD = os.getenv("DB_PASSWORD", "apple")  # Fallback for testing
+
+DATABASE_CONNECTION_STRING = f"dbname='{DB_NAME}' user='{DB_USER}' host='{DB_HOST}' port='{DB_PORT}' password='{DB_PASSWORD}'"
+
+# --- Environment Variable Setup ---
+allow_file_access = (
+    os.getenv("TITILER_API_ALLOW_FILE_ACCESS", "FALSE").lower() == "true"
+)
+if allow_file_access:
+    print("Warning: Local file access is enabled via TITILER_API_ALLOW_FILE_ACCESS.")
+proj_lib = os.getenv("PROJ_LIB")
+if proj_lib:
+    print(f"Using PROJ_LIB: {proj_lib}")
+else:
+    # Attempt to find a default location - adjust path if needed for your OSGeo4W install
+    default_proj_lib_paths = [
+        r"C:\OSGeo4W\share\proj",
+        r"C:\Program Files\PostgreSQL\17\share\contrib\postgis-3.4\proj",  # Check version number if needed
+        # Add other potential paths if needed
+    ]
+    found_proj_lib = None
+    for path in default_proj_lib_paths:
+        if os.path.exists(path):
+            found_proj_lib = path
+            break
+
+    if found_proj_lib:
+        os.environ["PROJ_LIB"] = found_proj_lib
+        print(f"PROJ_LIB not set, found and using default: {found_proj_lib}")
+    else:
+        # Check if the environment variable was set externally (e.g., by Activate.ps1)
+        external_proj_lib = os.environ.get("PROJ_LIB")
+        if external_proj_lib and os.path.exists(external_proj_lib):
+            print(f"PROJ_LIB found in environment: {external_proj_lib}")
+        else:
+            print(
+                "Warning: PROJ_LIB environment variable not set and default not found. CRS transformations may fail."
+            )
+
+
+# --- FastAPI App Initialization ---
+app = FastAPI(title="TiTiler + Game Backend API")
+
+# --- CORS Middleware ---
+# Add origins for CesiumJS frontend and Phaser/Vite dev server
+origins = [
+    "http://localhost:9000",  # CesiumJS server
+    "http://127.0.0.1:9000",
+    "http://localhost:3000",  # Vite default dev server
+    "http://127.0.0.1:3000",
+    "http://localhost:8080",  # Common alternative dev server port
+    "http://127.0.0.1:8080",
+    # Add your production frontend URL here eventually if needed
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Use the updated list
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],  # Allow relevant methods
+    allow_headers=["*"],  # Allow all standard headers
+)
+
+# --- TiTiler Factory with Custom Dependency ---
+# Use the custom colormap dependency created in dependencies.py
+cog = TilerFactory(colormap_dependency=ColorMapParams, router_prefix="/cog")
+app.include_router(cog.router, tags=["Cloud Optimized GeoTIFF"], prefix="/cog")
+add_exception_handlers(app, DEFAULT_STATUS_CODES)
+
+
+# --- Game API Endpoint ---
+@app.get(
+    "/api/location_info/", description="Query habitat and species info for a location"
+)
+async def query_location_info(
+    lon: float = Query(..., description="Longitude (EPSG:4326)"),
+    lat: float = Query(..., description="Latitude (EPSG:4326)"),
+):
+    """
+    Retrieves habitat types within a 1km radius and intersecting species ranges
+    within a 10km radius for a given longitude and latitude (EPSG:4326).
+    """
+    habitat_values = []
+    species_names = []
+    conn = None  # Initialize connection variable
+
+    # Define fixed buffer distances
+    HABITAT_BUFFER_METERS = 1000.0  # 1km for habitat sampling
+    SPECIES_BUFFER_METERS = 10000.0  # 10km for species range intersection
+
+    try:
+        # Connect to the database
+        conn = psycopg2.connect(DATABASE_CONNECTION_STRING)
+        conn.autocommit = True  # Recommended for read-only queries
+        cursor = conn.cursor()
+        print(
+            f"[DEBUG] Database connection successful for ({lon},{lat})."
+        )  # Debug print
+
+        # --- Query 1: Habitat Sampling (1km Buffer) ---
+        # Optimized query using ST_Clip and ST_ValueCount
+        habitat_query = """
+            WITH input_point AS (
+                SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326) AS geom_4326
+            ),
+            buffer_geom AS (
+                SELECT ST_Buffer(ST_Transform(geom_4326, 3857), %s) AS geom 
+                FROM input_point
+            )
+            SELECT (value_count).value
+            FROM buffer_geom,
+                 LATERAL (
+                     SELECT ST_ValueCount(ST_Clip(rast, 1, buffer_geom.geom, true), 1, false) AS value_count
+                     FROM public.habitat_raster_full_in_db
+                     WHERE ST_Intersects(rast, buffer_geom.geom)
+                 ) AS counted_values
+            WHERE (value_count).value IS NOT NULL
+              AND (value_count).value != 0 
+              AND (value_count).value != 1700;
+        """
+        cursor.execute(habitat_query, (lon, lat, HABITAT_BUFFER_METERS))
+        results = cursor.fetchall()
+        # Ensure values are integers (or floats if appropriate)
+        habitat_values = [int(row[0]) for row in results if row[0] is not None]
+        print(
+            f"[DEBUG] Found habitat values near ({lon},{lat}): {habitat_values}"
+        )  # Debug print
+
+        # --- Query 2: Species Intersection (10km Buffer) ---
+        # Using geography for accurate buffer on lon/lat
+        species_query = """
+            WITH input_point_geog AS (
+                -- Create input point directly as geography
+                SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography AS geog
+            ), buffered_point AS (
+                -- Buffer the geography point using fixed SPECIES_BUFFER_METERS
+                SELECT ST_Buffer(geog, %s) AS buffered_geog
+                FROM input_point_geog
+            )
+            SELECT DISTINCT ranges.sci_name -- Use DISTINCT in case buffer overlaps multiple parts of same range
+            FROM public.iucn_gymnophiona_ranges AS ranges, buffered_point -- Ensure this table name is correct
+            WHERE ST_Intersects(
+                ranges.geom::geography, -- Cast range geometry to geography for accurate intersection
+                buffered_point.buffered_geog -- Intersect with the buffered point geography
+            );
+        """
+        cursor.execute(species_query, (lon, lat, SPECIES_BUFFER_METERS))
+        results = cursor.fetchall()
+        species_names = [row[0] for row in results if row[0] is not None]
+        print(
+            f"[DEBUG] Found species near ({lon},{lat}): {species_names}"
+        )  # Debug print
+
+        cursor.close()
+
+    except psycopg2.Error as db_err:
+        print(f"Database Error connecting or querying: {db_err}")
+        # Provide a more generic error to the client for security
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    except Exception as e:
+        print(f"General Error in /api/location_info/: {e}")
+        # Provide a more generic error to the client
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred processing the location.",
+        )
+    finally:
+        if conn:
+            conn.close()
+            print("[DEBUG] Database connection closed.")
+
+    # Return the results
+    return {"habitats": habitat_values, "species": species_names}
+
+
+# --- Optional Root Endpoint ---
+@app.get("/", description="App Health Check")
+def read_root():
+    """Application root."""
+    return {"message": "TiTiler + Game Backend API is running!"}
+
+
+# --- Cleanup ---
+# Optional: Add shutdown event if needed for cleanup tasks
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     print("Shutting down...")
+#     # Add any cleanup logic here (e.g., closing connection pools if used)
+</file>
+
+<file path="index.html">
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cesium Game Map - Habitat/Species Query</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.118/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    }
+    #infoBox {
+      position: absolute; top: 10px; left: 10px; background: rgba(40, 40, 40, 0.8);
+      color: white; padding: 10px; border-radius: 5px; font-family: sans-serif;
+      font-size: 12px; max-width: 300px; display: none; z-index: 10;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <div id="infoBox"></div>
+
+  <script>
+    // 1. Cesium Ion Token
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZWRiZWM1OC02NGQ4LTQxN2UtYTJmMy01ZWRjMmM3YmEwN2YiLCJpZCI6Mjk1MzAwLCJpYXQiOjE3NDQ5OTk0MTh9.HBoveH42derVYybno6upJzVCOkxLDji6VOj2TqSwpjs'; // Use your actual token
+
+    // 2. Initialize Viewer
+    console.log("Initializing Cesium Viewer...");
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      baseLayerPicker: true, geocoder: false, timeline: false, animation: false,
+    });
+    console.log("Cesium Viewer initialized.");
+
+    // --- Configuration ---
+    const cogPath = "C:/OSGeo4W/geoTif/habitat_cog.tif";
+    const titilerBaseUrl = "http://localhost:8000";
+    const gameApiBaseUrl = "http://localhost:8000";
+    const habitatRadiusMeters = 1000.0; // Define radii here for consistency
+    const speciesRadiusMeters = 10000.0;
+
+    // --- 3. Add TiTiler Layer ---
+    const encodedURL = encodeURIComponent(cogPath);
+    const colormapName = "habitat_custom";
+    const tms = "WebMercatorQuad";
+    const tileJsonUrl = `${titilerBaseUrl}/cog/${tms}/tilejson.json?url=${encodedURL}&colormap_name=${colormapName}&nodata=0`;
+
+    console.log("Requesting TileJSON from:", tileJsonUrl);
+    fetch(tileJsonUrl)
+      .then(response => { /* ... (Error handling as before) ... */ if (!response.ok) { return response.text().then(text => { throw new Error(`TileJSON Error ${response.status}: ${text}`); }); } return response.json(); })
+      .then(tileJson => {
+        console.log("Received TileJSON:", tileJson);
+        if (!tileJson.tiles || tileJson.tiles.length === 0) { throw new Error("TileJSON missing 'tiles'."); }
+        const templateUrl = tileJson.tiles[0];
+        console.log("Using Template URL:", templateUrl);
+
+        const habitatImageryProvider = new Cesium.UrlTemplateImageryProvider({
+          url: templateUrl, tilingScheme: new Cesium.WebMercatorTilingScheme(),
+          tileWidth: 256, tileHeight: 256, minimumLevel: tileJson.minzoom || 0,
+          maximumLevel: tileJson.maxzoom || 18,
+          magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
+          minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
+          credit: new Cesium.Credit('IUCN Habitat Map')
+        });
+        const habitatLayer = viewer.imageryLayers.addImageryProvider(habitatImageryProvider);
+        habitatLayer.alpha = 0.7;
+
+         if (tileJson.bounds) { /* ... (Fly to bounds logic as before) ... */ const [west, south, east, north] = tileJson.bounds; if ([west, south, east, north].every(coord => typeof coord === 'number' && isFinite(coord))) { const rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north); const widthRad = Cesium.Rectangle.computeWidth(rectangle); const heightRad = Cesium.Rectangle.computeHeight(rectangle); if(widthRad < 0.01 && heightRad < 0.01) { Cesium.Rectangle.expand(rectangle, 0.05, 0.05, rectangle); } viewer.camera.flyTo({ destination: rectangle, duration: 1.5 }); console.log("Flying to bounds:", tileJson.bounds); } else { console.warn("Invalid TileJSON bounds.", tileJson.bounds); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-98.0, 39.0, 1e7) }); } } else { viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-98.0, 39.0, 1e7) }); console.log("TileJSON missing bounds."); }
+        console.log("Habitat imagery provider added.");
+      })
+      .catch(err => { console.error("Error loading habitat layer:", err); alert(`Failed habitat layer: ${err.message}`); });
+
+    // --- 4. Click Handler & Visualization ---
+    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    const infoBox = document.getElementById('infoBox');
+    let habitatCircleEntity = undefined; // Variable to hold the habitat circle entity
+    let speciesCircleEntity = undefined; // Variable to hold the species circle entity
+
+    handler.setInputAction(function(movement) {
+      console.log("Click detected at screen position:", movement.position);
+      infoBox.style.display = 'block';
+      infoBox.innerHTML = 'Getting coordinates...';
+
+      const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+
+      // --- Remove previous circles ---
+      if (habitatCircleEntity) {
+        viewer.entities.remove(habitatCircleEntity);
+        habitatCircleEntity = undefined;
+      }
+      if (speciesCircleEntity) {
+        viewer.entities.remove(speciesCircleEntity);
+        speciesCircleEntity = undefined;
+      }
+      // --- End Remove previous circles ---
+
+      if (cartesian) {
+        const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+        const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+
+        console.log(`World Coordinates (Lon, Lat): ${longitude}, ${latitude}`);
+        infoBox.innerHTML = `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...`;
+
+        // --- Draw visualization circles ---
+        // Habitat Circle (5km, Red)
+        habitatCircleEntity = viewer.entities.add({
+          position: cartesian,
+          ellipse: {
+            semiMinorAxis: habitatRadiusMeters, // 1000.0
+            semiMajorAxis: habitatRadiusMeters, // 1000.0
+            material: Cesium.Color.RED.withAlpha(0.2), // Semi-transparent red fill
+            outline: true,
+            outlineColor: Cesium.Color.RED,
+            outlineWidth: 2.0,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND // Drape on ground/globe
+          },
+        });
+        console.log("Drawing 5km habitat circle");
+
+        // Species Circle (10km, Blue)
+        speciesCircleEntity = viewer.entities.add({
+          position: cartesian,
+          ellipse: {
+            semiMinorAxis: speciesRadiusMeters, // 10000.0
+            semiMajorAxis: speciesRadiusMeters, // 10000.0
+            material: Cesium.Color.BLUE.withAlpha(0.15), // Semi-transparent blue fill
+            outline: true,
+            outlineColor: Cesium.Color.BLUE,
+            outlineWidth: 2.0,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND // Drape on ground/globe
+          },
+        });
+        console.log("Drawing 10km species circle");
+        // --- End Draw visualization circles ---
+
+
+        // --- 5. Call Backend API ---
+        const queryUrl = `${gameApiBaseUrl}/api/location_info/?lon=${longitude}&lat=${latitude}`;
+        console.log("Calling API:", queryUrl);
+
+        fetch(queryUrl)
+          .then(response => { /* ... (Error handling as before) ... */ if (!response.ok) { return response.text().then(text => { throw new Error(`API Error ${response.status}: ${text}`); }); } return response.json(); })
+          .then(data => {
+            console.log("API Response:", data);
+            let htmlContent = `<b>Location:</b> Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}<br>`;
+            htmlContent += `<b>Habitats (within ${habitatRadiusMeters/1000}km):</b> ${data.habitats.length > 0 ? data.habitats.join(', ') : 'None'}<br>`;
+            htmlContent += `<b>Species (near ${speciesRadiusMeters/1000}km):</b> ${data.species.length > 0 ? data.species.join(', ') : 'None'}`;
+            infoBox.innerHTML = htmlContent;
+
+            console.log("Game logic would trigger now with habitats:", data.habitats, "and species:", data.species);
+          })
+          .catch(err => {
+            console.error("Error calling game API:", err);
+            infoBox.innerHTML = `Error querying location: ${err.message}`;
+          });
+        // --- End Call Backend API ---
+
+      } else {
+        console.log("Clicked outside the globe.");
+        infoBox.innerHTML = 'Click on the globe to query location.';
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+    console.log("Click handler set up.");
+
+  </script>
+</body>
+
+</html>
+</file>
+
+</files>

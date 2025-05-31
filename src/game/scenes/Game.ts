@@ -1,63 +1,61 @@
-// src/game/scenes/Game.js
+// src/game/scenes/Game.ts
 import Phaser from 'phaser';
-import { BackendPuzzle } from '../BackendPuzzle'; // Ensure this path is correct
-import { MoveAction } from '../MoveAction';     // Ensure this path is correct
-import { BoardView } from '../BoardView';       // Ensure this path is correct
+import { BackendPuzzle } from '../BackendPuzzle';
+import { MoveAction, MoveDirection } from '../MoveAction';
+import { BoardView } from '../BoardView';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD, MOVE_THRESHOLD
-} from '../constants'; // Ensure this path is correct
-import { EventBus } from '../EventBus';
+} from '../constants';
+import { EventBus, EventPayloads } from '../EventBus';
+import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
+
+interface BoardOffset {
+    x: number;
+    y: number;
+}
+
+interface SpritePosition {
+    x: number;
+    y: number;
+    gridX: number;
+    gridY: number;
+}
 
 export class Game extends Phaser.Scene {
-
     // --- MVC Components ---
-    /** @type {BackendPuzzle | null} */
-    backendPuzzle = null;
-    /** @type {BoardView | null} */
-    boardView = null;
+    private backendPuzzle: BackendPuzzle | null = null;
+    private boardView: BoardView | null = null;
 
     // --- Controller State ---
-    /** @type {boolean} */
-    canMove = false; // Start false, true after board init
-    /** @type {boolean} */
-    isDragging = false;
-    /** @type {number} */
-    dragStartX = 0;
-    /** @type {number} */
-    dragStartY = 0;
-    /** @type {'row' | 'col' | null} */
-    dragDirection = null;
-    /** @type {number} */
-    dragStartPointerX = 0;
-    /** @type {number} */
-    dragStartPointerY = 0;
-    /** @type {Array<Phaser.GameObjects.Sprite>} */
-    draggingSprites = [];
-    /** @type {Array<{x: number, y: number, gridX: number, gridY: number}>} */
-    dragStartSpritePositions = [];
+    private canMove: boolean = false; // Start false, true after board init
+    private isDragging: boolean = false;
+    private dragStartX: number = 0;
+    private dragStartY: number = 0;
+    private dragDirection: MoveDirection | null = null;
+    private dragStartPointerX: number = 0;
+    private dragStartPointerY: number = 0;
+    private draggingSprites: Phaser.GameObjects.Sprite[] = [];
+    private dragStartSpritePositions: SpritePosition[] = [];
 
     // --- Layout ---
-    /** @type {number} */
-    gemSize = 64;
-    /** @type {{x: number, y: number}} */
-    boardOffset = { x: 0, y: 0 };
+    private gemSize: number = 64;
+    private boardOffset: BoardOffset = { x: 0, y: 0 };
 
     // --- Backend Data ---
-    /** @type {number[] | null} */
-    currentHabitatValues = null;
-    /** @type {string[] | null} */
-    currentSpeciesNames = null;
-    /** @type {boolean} */
-    isBoardInitialized = false;
-    /** @type {Phaser.GameObjects.Text | null} */
-    statusText = null;
+    private currentHabitatValues: number[] | null = null;
+    private currentSpeciesNames: string[] | null = null;
+    private isBoardInitialized: boolean = false;
+    private statusText: Phaser.GameObjects.Text | null = null;
+
+    // Touch event handlers
+    private _touchPreventDefaults: ((e: Event) => void) | null = null;
 
     constructor() {
         super('Game');
     }
 
-    create() {
+    create(): void {
         console.log("Game Scene: create");
         const { width, height } = this.scale;
 
@@ -68,20 +66,29 @@ export class Game extends Phaser.Scene {
         }
 
         if (typeof BackendPuzzle === 'undefined' || typeof MoveAction === 'undefined' || typeof BoardView === 'undefined') {
-             this.add.text(width / 2, height / 2, `Error: Game logic missing.\nCheck console.`, { color: '#ff0000', fontSize: '20px' }).setOrigin(0.5);
-             return;
+            this.add.text(width / 2, height / 2, `Error: Game logic missing.\nCheck console.`, { 
+                color: '#ff0000', 
+                fontSize: '20px' 
+            }).setOrigin(0.5);
+            return;
         }
 
-        this.statusText = this.add.text(width / 2, height / 2, "Waiting for location selection from map...",
-            { fontSize: '20px', color: '#ffffff', backgroundColor: '#000000aa', padding: { x: 10, y: 5 }, align: 'center' }
-        ).setOrigin(0.5).setDepth(100);
+        this.statusText = this.add.text(width / 2, height / 2, "Waiting for location selection from map...", {
+            fontSize: '20px',
+            color: '#ffffff',
+            backgroundColor: '#000000aa',
+            padding: { x: 10, y: 5 },
+            align: 'center'
+        }).setOrigin(0.5).setDepth(100);
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
         this.calculateBoardDimensions();
         this.boardView = new BoardView(this, {
-            cols: GRID_COLS, rows: GRID_ROWS,
-            gemSize: this.gemSize, boardOffset: this.boardOffset
+            cols: GRID_COLS,
+            rows: GRID_ROWS,
+            gemSize: this.gemSize,
+            boardOffset: this.boardOffset
         });
 
         this.input.addPointer(1);
@@ -101,7 +108,7 @@ export class Game extends Phaser.Scene {
         console.log("Game Scene: Create method finished. Waiting for Cesium data.");
     }
 
-    initializeBoardFromCesium(data) {
+    private initializeBoardFromCesium(data: EventPayloads['cesium-location-selected']): void {
         console.log("Game Scene: Received 'cesium-location-selected' data:", data);
         this.canMove = false; // Disable moves during reinitialization
         this.isBoardInitialized = false; // Mark as not ready
@@ -122,22 +129,15 @@ export class Game extends Phaser.Scene {
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
             }
             // The setHabitatInfluence in BackendPuzzle already regenerates the puzzleState
-            if (this.backendPuzzle.setHabitatInfluence) {
-                this.backendPuzzle.setHabitatInfluence(this.currentHabitatValues);
-            } else {
-                console.warn("BackendPuzzle does not have setHabitatInfluence. Board might not reflect habitat.");
-                 // If no setHabitatInfluence, we still need a board.
-                 // Ensure puzzleState is generated (constructor does this, or call reset if needed)
-                 if (!this.backendPuzzle.getGridState()) {
-                    this.backendPuzzle.reset(); // Fallback to ensure puzzleState exists
-                 }
-            }
+            this.backendPuzzle.setHabitatInfluence(this.currentHabitatValues);
 
             this.calculateBoardDimensions(); // Recalculate for current scale
             if (!this.boardView) { // Should exist from create()
-                 this.boardView = new BoardView(this, {
-                    cols: GRID_COLS, rows: GRID_ROWS,
-                    gemSize: this.gemSize, boardOffset: this.boardOffset
+                this.boardView = new BoardView(this, {
+                    cols: GRID_COLS,
+                    rows: GRID_ROWS,
+                    gemSize: this.gemSize,
+                    boardOffset: this.boardOffset
                 });
             } else {
                 // Ensure boardView is updated with current dimensions
@@ -149,7 +149,8 @@ export class Game extends Phaser.Scene {
             this.boardView.createBoard(this.backendPuzzle.getGridState());
 
             if (this.statusText && this.statusText.active) {
-                this.statusText.destroy(); this.statusText = null;
+                this.statusText.destroy();
+                this.statusText = null;
             }
             this.isBoardInitialized = true;
             this.canMove = true; // Board is ready, enable input
@@ -158,18 +159,27 @@ export class Game extends Phaser.Scene {
         } catch (error) {
             console.error("Game Scene: Error initializing board from Cesium data:", error);
             if (this.statusText && this.statusText.active) this.statusText.destroy();
-            this.statusText = this.add.text(width / 2, height / 2, `Error initializing board:\n${error.message}`, {
-                fontSize: '18px', color: '#ff4444', backgroundColor: '#000000cc',
-                align: 'center', padding: {x: 10, y: 5}, wordWrap: { width: width * 0.8 }
+            
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.statusText = this.add.text(width / 2, height / 2, `Error initializing board:\n${errorMessage}`, {
+                fontSize: '18px',
+                color: '#ff4444',
+                backgroundColor: '#000000cc',
+                align: 'center',
+                padding: { x: 10, y: 5 },
+                wordWrap: { width: width * 0.8 }
             }).setOrigin(0.5).setDepth(100);
             this.canMove = false;
             this.isBoardInitialized = false;
         }
     }
 
-    calculateBoardDimensions() {
+    private calculateBoardDimensions(): void {
         const { width, height } = this.scale;
-        if (width <= 0 || height <= 0) { console.warn("Invalid scale dimensions."); return; }
+        if (width <= 0 || height <= 0) {
+            console.warn("Invalid scale dimensions.");
+            return;
+        }
         const usableWidth = width * 0.95;
         const usableHeight = height * 0.90;
         const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
@@ -183,29 +193,29 @@ export class Game extends Phaser.Scene {
         };
     }
 
-    handleResize() {
+    private handleResize(): void {
         console.log("Game Scene: Resize detected.");
         this.calculateBoardDimensions();
         if (this.statusText && this.statusText.active) {
-             this.statusText.setPosition(this.scale.width / 2, this.scale.height / 2);
-             const textStyle = this.statusText.style;
-             if (textStyle.wordWrapWidth) { // Check if property exists before setting
-                this.statusText.style.setWordWrapWidth(this.scale.width * 0.8);
-             }
+            this.statusText.setPosition(this.scale.width / 2, this.scale.height / 2);
+            const textStyle = this.statusText.style;
+            if (textStyle && typeof textStyle.setWordWrapWidth === 'function') {
+                textStyle.setWordWrapWidth(this.scale.width * 0.8);
+            }
         }
         if (this.boardView) {
             this.boardView.updateVisualLayout(this.gemSize, this.boardOffset);
         }
     }
 
-    handlePointerDown(pointer) {
+    private handlePointerDown(pointer: Phaser.Input.Pointer): void {
         if (!this.canMove || !this.isBoardInitialized || !this.boardView || !this.backendPuzzle) return;
         if (this.isDragging) { // Should not happen if logic is correct, but as a safeguard
             console.warn("PointerDown while already dragging. Resetting drag state.");
             this.resetDragState(); // Reset internal flags
-             // Visually snap back any lingering sprites from a broken drag state
+            // Visually snap back any lingering sprites from a broken drag state
             if (this.boardView && this.draggingSprites.length > 0) {
-                 this.boardView.snapBack(this.draggingSprites, this.dragStartSpritePositions)
+                this.boardView.snapBack(this.draggingSprites, this.dragStartSpritePositions, undefined, 0, 0)
                     .catch(e => console.error("Error snapping back during PointerDown reset:", e));
             }
             this.draggingSprites = []; // Ensure these are clear
@@ -235,7 +245,7 @@ export class Game extends Phaser.Scene {
         this.dragStartSpritePositions = [];
     }
 
-    handlePointerMove(pointer) {
+    private handlePointerMove(pointer: Phaser.Input.Pointer): void {
         if (!this.isDragging || !this.canMove || !this.isBoardInitialized || !this.boardView) return;
         if (!pointer.isDown) {
             this.handlePointerUp(pointer); // Treat as pointer up if button released
@@ -250,7 +260,10 @@ export class Game extends Phaser.Scene {
         if (!this.dragDirection && (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD)) {
             this.dragDirection = Math.abs(deltaX) > Math.abs(deltaY) ? 'row' : 'col';
             const allSprites = this.boardView.getGemsSprites();
-            if (!allSprites) { this.cancelDrag("BoardView sprites unavailable"); return; }
+            if (!allSprites) {
+                this.cancelDrag("BoardView sprites unavailable");
+                return;
+            }
 
             const index = (this.dragDirection === 'row') ? this.dragStartY : this.dragStartX;
             const limit = (this.dragDirection === 'row') ? GRID_COLS : GRID_ROWS;
@@ -269,7 +282,10 @@ export class Game extends Phaser.Scene {
                     this.tweens.killTweensOf(sprite);
                 }
             }
-            if (this.draggingSprites.length === 0) { this.cancelDrag("No sprites in dragged line"); return; }
+            if (this.draggingSprites.length === 0) {
+                this.cancelDrag("No sprites in dragged line");
+                return;
+            }
         }
 
         if (this.dragDirection) {
@@ -279,7 +295,7 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    async handlePointerUp(pointer) {
+    private async handlePointerUp(pointer: Phaser.Input.Pointer): Promise<void> {
         // Store these values *before* calling resetDragState or any async operation
         const wasDragging = this.isDragging;
         const currentDragDirection = this.dragDirection;
@@ -310,7 +326,7 @@ export class Game extends Phaser.Scene {
             if (dSprites.length > 0 && this.boardView) {
                 // Pass currentDragDirection (which might be null) and calculated deltas.
                 // The snapBack in BoardView will need to handle a potentially null dragDirection gracefully.
-                await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection, deltaX, deltaY);
+                await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
             }
             return; // Do not proceed further
         }
@@ -318,10 +334,10 @@ export class Game extends Phaser.Scene {
         if (!currentDragDirection || dSprites.length === 0) {
             console.log("Pointer up: No valid drag determined or no sprites collected.");
             if (dSprites.length > 0 && this.boardView) {
-                 // currentDragDirection is null or dSprites is empty.
-                 // Pass currentDragDirection (which is likely null) and deltas (which might be small/zero).
-                 // snapBack should handle this by likely defaulting to a non-sliding snap if direction is missing.
-                 await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection, deltaX, deltaY);
+                // currentDragDirection is null or dSprites is empty.
+                // Pass currentDragDirection (which is likely null) and deltas (which might be small/zero).
+                // snapBack should handle this by likely defaulting to a non-sliding snap if direction is missing.
+                await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
             }
             return;
         }
@@ -333,7 +349,7 @@ export class Game extends Phaser.Scene {
         try {
             if (moveAction.amount === 0) {
                 console.log("Pointer up: No logical move threshold met, snapping back.");
-                await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection, deltaX, deltaY);
+                await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
             } else {
                 const hypotheticalMatches = this.backendPuzzle.getMatchesFromHypotheticalMove(moveAction);
 
@@ -344,23 +360,23 @@ export class Game extends Phaser.Scene {
                     await this.applyMoveAndHandleResults(moveAction);
                 } else {
                     console.log(`Pointer up: Move resulted in NO matches. Snapping back.`);
-                    await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection, deltaX, deltaY);
+                    await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
                 }
             }
         } catch (error) {
             console.error("Error processing pointer up:", error);
             if (dSprites.length > 0 && this.boardView) {
-                 await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection, deltaX, deltaY);
+                await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
             }
             if (this.boardView && this.backendPuzzle) {
-                this.boardView.syncSpritesToGridPositions(this.backendPuzzle.getGridState());
+                this.boardView.syncSpritesToGridPositions();
             }
         } finally {
             this.canMove = true;
         }
     }
 
-    async applyMoveAndHandleResults(moveAction) {
+    private async applyMoveAndHandleResults(moveAction: MoveAction): Promise<void> {
         if (!this.backendPuzzle || !this.boardView) return;
         const phaseResult = this.backendPuzzle.getNextExplodeAndReplacePhase([moveAction]); // This applies the move
         if (!phaseResult.isNothingToDo()) {
@@ -371,7 +387,7 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    async handleCascades() {
+    private async handleCascades(): Promise<void> {
         if (!this.backendPuzzle || !this.boardView) return;
         const cascadePhase = this.backendPuzzle.getNextExplodeAndReplacePhase([]);
         if (!cascadePhase.isNothingToDo()) {
@@ -380,20 +396,20 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    async animatePhase(phaseResult) {
-         if (!this.boardView) return;
-         try {
-             await this.boardView.animateExplosions(phaseResult.matches.flat());
-             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
-         } catch (error) {
-              console.error("Error during phase animation:", error);
-              if (this.boardView && this.backendPuzzle) {
-                this.boardView.syncSpritesToGridPositions(this.backendPuzzle.getGridState());
-              }
-         }
+    private async animatePhase(phaseResult: ExplodeAndReplacePhase): Promise<void> {
+        if (!this.boardView || !this.backendPuzzle) return;
+        try {
+            await this.boardView.animateExplosions(phaseResult.matches.flat());
+            await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
+        } catch (error) {
+            console.error("Error during phase animation:", error);
+            if (this.boardView && this.backendPuzzle) {
+                this.boardView.syncSpritesToGridPositions();
+            }
+        }
     }
 
-    resetDragState() {
+    private resetDragState(): void {
         this.isDragging = false;
         this.dragDirection = null;
         this.draggingSprites = []; // Ensure these are cleared
@@ -401,17 +417,17 @@ export class Game extends Phaser.Scene {
         // dragStartX, Y, etc., are fine to be overwritten on next POINTER_DOWN
     }
 
-    cancelDrag(reason = "Cancelled") {
+    private cancelDrag(reason: string = "Cancelled"): void {
         console.warn(`Drag cancelled: ${reason}`);
         if (this.boardView && this.draggingSprites.length > 0 && this.dragStartSpritePositions.length > 0) {
-            this.boardView.snapBack(this.draggingSprites, this.dragStartSpritePositions)
+            this.boardView.snapBack(this.draggingSprites, this.dragStartSpritePositions, undefined, 0, 0)
                 .catch(err => console.error("Error snapping back on cancel:", err));
         }
         this.resetDragState();
-        if(this.isBoardInitialized) this.canMove = true;
+        if (this.isBoardInitialized) this.canMove = true;
     }
 
-    calculateMoveAction(deltaX, deltaY, direction, startGridX, startGridY) {
+    private calculateMoveAction(deltaX: number, deltaY: number, direction: MoveDirection, startGridX: number, startGridY: number): MoveAction {
         let cellsMoved = 0;
         let index = 0;
         if (direction === 'row') {
@@ -428,40 +444,47 @@ export class Game extends Phaser.Scene {
         return new MoveAction(direction, index, amount);
     }
 
-    disableTouchScrolling() { /* ... same ... */
+    private disableTouchScrolling(): void {
         if (this.game.canvas) {
-             this.game.canvas.style.touchAction = 'none';
-             const opts = { passive: false };
-             const preventDefault = e => e.preventDefault();
-             this.game.canvas.addEventListener('touchstart', preventDefault, opts);
-             this.game.canvas.addEventListener('touchmove', preventDefault, opts);
-             this._touchPreventDefaults = preventDefault;
-        }
-    }
-    enableTouchScrolling() { /* ... same ... */
-        if (this.game.canvas) {
-            this.game.canvas.style.touchAction = 'auto';
-             if (this._touchPreventDefaults) {
-                 this.game.canvas.removeEventListener('touchstart', this._touchPreventDefaults);
-                 this.game.canvas.removeEventListener('touchmove', this._touchPreventDefaults);
-                 this._touchPreventDefaults = null;
-             }
+            this.game.canvas.style.touchAction = 'none';
+            const opts = { passive: false };
+            const preventDefault = (e: Event) => e.preventDefault();
+            this.game.canvas.addEventListener('touchstart', preventDefault, opts);
+            this.game.canvas.addEventListener('touchmove', preventDefault, opts);
+            this._touchPreventDefaults = preventDefault;
         }
     }
 
-    shutdown() {
+    private enableTouchScrolling(): void {
+        if (this.game.canvas) {
+            this.game.canvas.style.touchAction = 'auto';
+            if (this._touchPreventDefaults) {
+                this.game.canvas.removeEventListener('touchstart', this._touchPreventDefaults);
+                this.game.canvas.removeEventListener('touchmove', this._touchPreventDefaults);
+                this._touchPreventDefaults = null;
+            }
+        }
+    }
+
+    shutdown(): void {
         console.log("Game Scene: Shutting down...");
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-        this.input.removeAllListeners(Phaser.Input.Events.POINTER_DOWN); // More robust
+        this.input.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_MOVE);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_UP);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_UP_OUTSIDE);
         this.enableTouchScrolling();
 
-        if (this.boardView) { this.boardView.destroyBoard(); this.boardView = null; }
+        if (this.boardView) {
+            this.boardView.destroyBoard();
+            this.boardView = null;
+        }
         this.backendPuzzle = null;
-        if (this.statusText) { this.statusText.destroy(); this.statusText = null; }
+        if (this.statusText) {
+            this.statusText.destroy();
+            this.statusText = null;
+        }
 
         this.resetDragState(); // Clear drag state variables
         this.canMove = false;
@@ -471,30 +494,34 @@ export class Game extends Phaser.Scene {
         console.log("Game Scene: Shutdown complete.");
     }
 
-    verifyBoardState() { /* ... same ... */
-         if (!this.backendPuzzle || !this.boardView) return;
-         const modelState = this.backendPuzzle.getGridState();
-         const viewSprites = this.boardView.getGemsSprites();
-         let mismatches = 0;
-         for (let x = 0; x < GRID_COLS; x++) {
-             for (let y = 0; y < GRID_ROWS; y++) {
-                 const modelGem = modelState[x]?.[y];
-                 const viewSprite = viewSprites[x]?.[y];
-                 if (!modelGem && viewSprite && viewSprite.active) {
-                     console.warn(`Verify Mismatch: View sprite at [${x},${y}], Model empty.`); mismatches++;
-                 } else if (modelGem && (!viewSprite || !viewSprite.active)) {
-                     console.warn(`Verify Mismatch: Model gem '${modelGem.gemType}' at [${x},${y}], View no active sprite.`); mismatches++;
-                 } else if (modelGem && viewSprite && viewSprite.active) {
-                      if (viewSprite.getData('gemType') !== modelGem.gemType) {
-                          console.warn(`Verify Mismatch: Type diff at [${x},${y}]. M: ${modelGem.gemType}, V: ${viewSprite.getData('gemType')}`); mismatches++;
-                      }
-                      if (viewSprite.getData('gridX') !== x || viewSprite.getData('gridY') !== y) {
-                           console.warn(`Verify Mismatch: Sprite at [${x},${y}] thinks its pos is [${viewSprite.getData('gridX')},${viewSprite.getData('gridY')}]`); mismatches++;
-                      }
-                 }
-             }
-         }
-          if (mismatches === 0) console.log("Verify Board State: OK.");
-          else console.error(`Verify Board State: Found ${mismatches} Mismatches!`);
-     }
+    private verifyBoardState(): void {
+        if (!this.backendPuzzle || !this.boardView) return;
+        const modelState = this.backendPuzzle.getGridState();
+        const viewSprites = this.boardView.getGemsSprites();
+        let mismatches = 0;
+        for (let x = 0; x < GRID_COLS; x++) {
+            for (let y = 0; y < GRID_ROWS; y++) {
+                const modelGem = modelState[x]?.[y];
+                const viewSprite = viewSprites[x]?.[y];
+                if (!modelGem && viewSprite && viewSprite.active) {
+                    console.warn(`Verify Mismatch: View sprite at [${x},${y}], Model empty.`);
+                    mismatches++;
+                } else if (modelGem && (!viewSprite || !viewSprite.active)) {
+                    console.warn(`Verify Mismatch: Model gem '${modelGem.gemType}' at [${x},${y}], View no active sprite.`);
+                    mismatches++;
+                } else if (modelGem && viewSprite && viewSprite.active) {
+                    if (viewSprite.getData('gemType') !== modelGem.gemType) {
+                        console.warn(`Verify Mismatch: Type diff at [${x},${y}]. M: ${modelGem.gemType}, V: ${viewSprite.getData('gemType')}`);
+                        mismatches++;
+                    }
+                    if (viewSprite.getData('gridX') !== x || viewSprite.getData('gridY') !== y) {
+                        console.warn(`Verify Mismatch: Sprite at [${x},${y}] thinks its pos is [${viewSprite.getData('gridX')},${viewSprite.getData('gridY')}]`);
+                        mismatches++;
+                    }
+                }
+            }
+        }
+        if (mismatches === 0) console.log("Verify Board State: OK.");
+        else console.error(`Verify Board State: Found ${mismatches} Mismatches!`);
+    }
 }
