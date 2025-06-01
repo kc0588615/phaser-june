@@ -1,71 +1,26 @@
-// src/game/BackendPuzzle.js
-import { ExplodeAndReplacePhase } from './ExplodeAndReplacePhase';
-import { GEM_TYPES } from './constants';
+// src/game/BackendPuzzle.ts
+import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
+import { MoveAction } from './MoveAction';
+import { GEM_TYPES, GemType, HABITAT_GEM_MAP } from './constants';
 
-// ***** HABITAT-TO-GEM MAPPING *****
-// This defines how habitat pixel values from your raster correspond to gem types.
-// Ensure this aligns with your habitat_colormap.json values and desired game balance.
-// habitat_colormap.json has string keys, but these are numeric habitat class values.
-const HABITAT_GEM_MAP = {
-    // Example: IUCN Habitat Classification Scheme
-    // Class 1: Forests (various types)
-    100: 'green', 101: 'green', 102: 'green', 103: 'green', 104: 'green',
-    105: 'green', 106: 'green', 107: 'green', 108: 'green', 109: 'green',
-    // Class 2: Savannas
-    200: 'orange', 201: 'orange', 202: 'orange',
-    // Class 3: Shrublands
-    300: 'black', 301: 'black', 302: 'black', 303: 'black', 304: 'black',
-    305: 'black', 306: 'black', 307: 'black', 308: 'black',
-    // Class 4: Grasslands
-    // Consider a different gem, e.g., 'white' if you want to distinguish from Savannas
-    400: 'white', 401: 'white', 402: 'white', 403: 'white', 404: 'white',
-    405: 'white', 406: 'white', 407: 'white',
-    // Class 5: Wetlands (Inland)
-    500: 'blue', 501: 'blue', 502: 'blue', 503: 'blue', 504: 'blue',
-    505: 'blue', 506: 'blue', 507: 'blue', 508: 'blue', 509: 'blue',
-    510: 'blue', 511: 'blue', 512: 'blue', 513: 'blue', 514: 'blue',
-    515: 'blue', 516: 'blue', 517: 'blue', 518: 'blue',
-    // Class 6: Rocky Areas
-    600: 'black', // Or 'red' if you want to represent barren/rocky
-    // Class 8: Introduced Vegetation (could be mixed)
-    800: 'orange', 801: 'orange', 802: 'orange', 803: 'orange',
-    // Class 9: Other (Snow, Ice, Glaciers)
-    900: 'white', 901: 'white', 908: 'red', 909: 'green', // 908, 909 are specific from your JSON
-    // Class 10-12: Marine (Oceans, Coastal) - Predominantly Blue
-    1000: 'blue', 1001: 'blue', 1002: 'blue', 1003: 'blue', 1004: 'blue',
-    1100: 'blue', 1101: 'blue', 1102: 'blue', 1103: 'blue', 1104: 'blue',
-    1105: 'blue', 1106: 'blue',
-    1200: 'blue', 1206: 'blue', 1207: 'blue',
-    // Class 14: Artificial/Terrestrial (Urban, Agricultural)
-    1400: 'red', 1401: 'red', 1402: 'red', 1403: 'red', 1404: 'red',
-    1405: 'red', 1406: 'red',
-    // Special Values
-    0: 'blue',    // Typically NoData or Water in many classifications
-    1700: 'white' // Often NoData or a specific "out of bounds" value
-    // Add all relevant values from your habitat_colormap.json
-};
+// Type for a gem in the puzzle
+export interface Gem {
+    gemType: GemType;
+}
 
+// Type for the puzzle grid
+export type PuzzleGrid = (Gem | null)[][];
 
 export class BackendPuzzle {
-    /** @type {number} */
-    width;
-    /** @type {number} */
-    height;
-    /** @type {string[]} */
-    nextGemsToSpawn = [];
-    /** @type {Array<Array<{gemType: string} | null>>} */
-    puzzleState;
-    /** @type {number[] | null} */
-    currentHabitatInfluence = null; // Renamed for clarity
+    private puzzleState: PuzzleGrid;
+    private nextGemsToSpawn: GemType[] = [];
+    private currentHabitatInfluence: number[] | null = null;
 
-    /**
-     * @param {number} width
-     * @param {number} height
-     */
-    constructor(width, height) {
+    constructor(
+        public readonly width: number,
+        public readonly height: number
+    ) {
         console.log(`BackendPuzzle: Constructor (width=${width}, height=${height})`);
-        this.width = width;
-        this.height = height;
         // Initial puzzle state will be random, can be influenced later
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(width, height);
         console.log("BackendPuzzle: Initial puzzleState created.");
@@ -75,9 +30,9 @@ export class BackendPuzzle {
      * Sets the habitat influence for gem generation.
      * This also triggers a regeneration of the puzzle state if the board is
      * intended to reflect the new influence immediately.
-     * @param {number[] | null} habitatValues - Array of numeric habitat codes.
+     * @param habitatValues - Array of numeric habitat codes.
      */
-    setHabitatInfluence(habitatValues) {
+    setHabitatInfluence(habitatValues: number[] | null): void {
         if (Array.isArray(habitatValues)) {
             const validHabitats = habitatValues.filter(h => typeof h === 'number' && !isNaN(h));
             this.currentHabitatInfluence = validHabitats.length > 0 ? validHabitats : null;
@@ -93,32 +48,29 @@ export class BackendPuzzle {
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
     }
 
-    getGridState() {
+    getGridState(): PuzzleGrid {
         return this.puzzleState;
     }
 
     /**
      * Generates an initial grid state with no immediate matches,
      * potentially influenced by currentHabitatInfluence.
-     * @param {number} width
-     * @param {number} height
-     * @returns {Array<Array<{gemType: string} | null>>}
      */
-    getInitialPuzzleStateWithNoMatches(width, height) {
+    private getInitialPuzzleStateWithNoMatches(width: number, height: number): PuzzleGrid {
         console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches called.");
-        let grid = [];
+        const grid: PuzzleGrid = [];
 
         for (let x = 0; x < width; x++) {
             grid[x] = new Array(height).fill(null);
             for (let y = 0; y < height; y++) {
-                let gemType;
+                let gemType: GemType;
                 // Try to get gem type based on habitat influence for initial fill
                 // This makes the initial board reflect the selected area.
                 if (this.currentHabitatInfluence && this.currentHabitatInfluence.length > 0) {
                     // Pick one habitat value randomly from the available ones for this specific gem
                     const habitatValue = this.currentHabitatInfluence[Math.floor(Math.random() * this.currentHabitatInfluence.length)];
                     const mappedGemType = HABITAT_GEM_MAP[habitatValue];
-                    if (mappedGemType && GEM_TYPES.includes(mappedGemType)) {
+                    if (mappedGemType && (GEM_TYPES as readonly string[]).includes(mappedGemType)) {
                         gemType = mappedGemType;
                     } else {
                         // Fallback if habitat value not in map or maps to invalid type for this specific gem
@@ -139,8 +91,8 @@ export class BackendPuzzle {
                     const prevX1Type = grid[x - 1]?.[y]?.gemType;
                     const prevX2Type = grid[x - 2]?.[y]?.gemType;
 
-                    let yMatch = (y >= 2 && prevY1Type && prevY1Type === prevY2Type && prevY1Type === gemType);
-                    let xMatch = (x >= 2 && prevX1Type && prevX1Type === prevX2Type && prevX1Type === gemType);
+                    const yMatch = (y >= 2 && prevY1Type && prevY1Type === prevY2Type && prevY1Type === gemType);
+                    const xMatch = (x >= 2 && prevX1Type && prevX1Type === prevX2Type && prevX1Type === gemType);
 
                     if (!yMatch && !xMatch) {
                         break; // Found a suitable gemType
@@ -153,7 +105,7 @@ export class BackendPuzzle {
                     if (xMatch) possibleTypes = possibleTypes.filter(type => type !== prevX1Type);
 
                     if (possibleTypes.length > 0) {
-                        gemType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
+                        gemType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)] as GemType;
                     } else {
                         // Very rare, stick with the current random/habitat gem
                         if (attempts === 0) console.warn(`Initial fill at [${x},${y}] might create match, limited options.`);
@@ -165,33 +117,35 @@ export class BackendPuzzle {
                     console.warn(`Could not avoid initial match at [${x},${y}] after ${maxAttempts} attempts.`);
                 }
 
-                grid[x][y] = { gemType: gemType };
+                grid[x][y] = { gemType };
             }
         }
         console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches finished creating grid.");
         return grid;
     }
 
-
-    getNextExplodeAndReplacePhase(actions) {
-        for (let action of actions) {
+    getNextExplodeAndReplacePhase(actions: MoveAction[]): ExplodeAndReplacePhase {
+        for (const action of actions) {
             this.applyMoveToGrid(this.puzzleState, action);
         }
         const matches = this.getMatches(this.puzzleState);
-        const replacements = [];
+        const replacements: ColumnReplacement[] = [];
+        
         if (matches.length > 0) {
-            const explosionCounts = {};
-            const explodedCoords = new Set();
+            const explosionCounts: Record<number, number> = {};
+            const explodedCoords = new Set<string>();
             matches.forEach(match => match.forEach(([x, y]) => explodedCoords.add(`${x},${y}`)));
+            
             explodedCoords.forEach(coordStr => {
                 const [xStr] = coordStr.split(',');
                 const x = parseInt(xStr, 10);
                 explosionCounts[x] = (explosionCounts[x] || 0) + 1;
             });
+            
             for (let x = 0; x < this.width; x++) {
                 const count = explosionCounts[x] || 0;
                 if (count > 0) {
-                    const typesForCol = [];
+                    const typesForCol: GemType[] = [];
                     for (let i = 0; i < count; i++) {
                         // getNextGemToSpawnType will use habitatInfluence for *new* gems
                         typesForCol.push(this.getNextGemToSpawnType());
@@ -200,6 +154,7 @@ export class BackendPuzzle {
                 }
             }
         }
+        
         const phaseResult = new ExplodeAndReplacePhase(matches, replacements);
         if (!phaseResult.isNothingToDo()) {
             this.applyExplodeAndReplacePhase(phaseResult);
@@ -207,8 +162,8 @@ export class BackendPuzzle {
         return phaseResult;
     }
 
-    getMatchesFromHypotheticalMove(moveAction) {
-        let hypotheticalState;
+    getMatchesFromHypotheticalMove(moveAction: MoveAction): Match[] {
+        let hypotheticalState: PuzzleGrid;
         try {
             hypotheticalState = structuredClone(this.puzzleState);
         } catch (e) {
@@ -223,16 +178,16 @@ export class BackendPuzzle {
      * Returns the type of the next gem to spawn, influenced by habitats or randomly.
      * This is used when gems are falling in to replace matched ones.
      */
-    getNextGemToSpawnType() {
+    private getNextGemToSpawnType(): GemType {
         if (this.nextGemsToSpawn.length > 0) {
-            return this.nextGemsToSpawn.shift();
+            return this.nextGemsToSpawn.shift()!;
         }
 
         if (this.currentHabitatInfluence && this.currentHabitatInfluence.length > 0) {
             const habitatValue = this.currentHabitatInfluence[Math.floor(Math.random() * this.currentHabitatInfluence.length)];
             const mappedGemType = HABITAT_GEM_MAP[habitatValue];
 
-            if (mappedGemType && GEM_TYPES.includes(mappedGemType)) {
+            if (mappedGemType && (GEM_TYPES as readonly string[]).includes(mappedGemType)) {
                 // console.log(`Spawning gem '${mappedGemType}' based on habitat ${habitatValue}`);
                 return mappedGemType;
             } else {
@@ -245,15 +200,15 @@ export class BackendPuzzle {
         }
     }
 
-    addNextGemToSpawn(gemType) {
+    addNextGemToSpawn(gemType: GemType): void {
         this.nextGemsToSpawn.push(gemType);
     }
 
-    addNextGemsToSpawn(gemTypes) {
+    addNextGemsToSpawn(gemTypes: GemType[]): void {
         this.nextGemsToSpawn.push(...gemTypes);
     }
 
-    reset() {
+    reset(): void {
         // When resetting, we clear habitat influence and generate a purely random board.
         // The habitat influence will be set again by Game.js when a new location is selected.
         this.currentHabitatInfluence = null;
@@ -262,8 +217,7 @@ export class BackendPuzzle {
         console.log("BackendPuzzle reset: habitat influence cleared, new random board generated.");
     }
 
-    applyMoveToGrid(grid, moveAction) {
-        // ... (this method remains the same as your original)
+    private applyMoveToGrid(grid: PuzzleGrid, moveAction: MoveAction): void {
         const { rowOrCol, index, amount } = moveAction;
         if (amount === 0) return;
 
@@ -274,14 +228,14 @@ export class BackendPuzzle {
             const y = index;
             if (y < 0 || y >= this.height) return;
 
-            const currentRow = [];
+            const currentRow: (Gem | null)[] = [];
             for (let x = 0; x < width; x++) {
-                currentRow.push(grid[x]?.[y]);
+                currentRow.push(grid[x]?.[y] ?? null);
             }
-             if (currentRow.some(gem => gem === undefined)) {
-                  console.error(`Error reading row ${y} for move application.`);
-                  return;
-             }
+            if (currentRow.some(gem => gem === undefined)) {
+                console.error(`Error reading row ${y} for move application.`);
+                return;
+            }
             const newRow = [...currentRow.slice(-effectiveAmount), ...currentRow.slice(0, width - effectiveAmount)];
             for (let x = 0; x < width; x++) {
                 if (grid[x]) {
@@ -295,21 +249,22 @@ export class BackendPuzzle {
             const x = index;
             if (x < 0 || x >= this.width || !grid[x]) return;
             const currentCol = grid[x];
-             if (currentCol.some(gem => gem === undefined)) {
-                  console.error(`Error reading column ${x} for move application.`);
-                  return;
-             }
+            if (currentCol.some(gem => gem === undefined)) {
+                console.error(`Error reading column ${x} for move application.`);
+                return;
+            }
             const newCol = [...currentCol.slice(height - effectiveAmount), ...currentCol.slice(0, height - effectiveAmount)];
             grid[x] = newCol;
         }
     }
 
-    getMatches(puzzleState) {
-        // ... (this method remains the same as your original)
-        const matches = [];
+    private getMatches(puzzleState: PuzzleGrid): Match[] {
+        const matches: Match[] = [];
         if (!puzzleState || this.width === 0 || this.height === 0) return matches;
-        const getGemType = (x, y) => puzzleState[x]?.[y]?.gemType;
+        
+        const getGemType = (x: number, y: number): GemType | null => puzzleState[x]?.[y]?.gemType ?? null;
 
+        // Check vertical matches
         for (let x = 0; x < this.width; x++) {
             for (let y = 0; y < this.height - 2; ) {
                 const currentType = getGemType(x, y);
@@ -319,7 +274,7 @@ export class BackendPuzzle {
                     matchLength++;
                 }
                 if (matchLength >= 3) {
-                    const match = [];
+                    const match: Match = [];
                     for (let i = 0; i < matchLength; i++) {
                         match.push([x, y + i]);
                     }
@@ -328,16 +283,18 @@ export class BackendPuzzle {
                 y += matchLength;
             }
         }
+        
+        // Check horizontal matches
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width - 2; ) {
                 const currentType = getGemType(x, y);
-                 if (!currentType) { x++; continue; }
+                if (!currentType) { x++; continue; }
                 let matchLength = 1;
                 while (x + matchLength < this.width && getGemType(x + matchLength, y) === currentType) {
                     matchLength++;
                 }
                 if (matchLength >= 3) {
-                    const match = [];
+                    const match: Match = [];
                     for (let i = 0; i < matchLength; i++) {
                         match.push([x + i, y]);
                     }
@@ -349,26 +306,52 @@ export class BackendPuzzle {
         return matches;
     }
 
-    applyExplodeAndReplacePhase(phase) {
-        // ... (this method remains the same as your original)
+    private applyExplodeAndReplacePhase(phase: ExplodeAndReplacePhase): void {
         if (phase.isNothingToDo()) return;
-        const explodeCoords = new Set();
+        
+        const explodeCoords = new Set<string>();
         phase.matches.forEach(match => match.forEach(coord => explodeCoords.add(`${coord[0]},${coord[1]}`)));
         const replacementsMap = new Map(phase.replacements);
-        const newGrid = [];
+        const newGrid: PuzzleGrid = [];
+        
         for (let x = 0; x < this.width; x++) {
             newGrid[x] = [];
             const currentColumn = this.puzzleState[x] || [];
             const survivingGems = currentColumn.filter((gem, y) => !explodeCoords.has(`${x},${y}`));
             const newGemTypes = replacementsMap.get(x) || [];
-            const newGems = newGemTypes.map(type => ({ gemType: type }));
+            const newGems: Gem[] = newGemTypes.map(type => ({ gemType: type }));
             newGrid[x] = [...newGems, ...survivingGems];
+            
             if (newGrid[x].length !== this.height) {
                 console.error(`Backend Error: Column ${x} length mismatch after phase. Expected ${this.height}, got ${newGrid[x].length}. Fixing...`);
-                 while (newGrid[x].length < this.height) newGrid[x].push(null); // Pad with null
-                 if (newGrid[x].length > this.height) newGrid[x] = newGrid[x].slice(0, this.height); // Truncate
+                while (newGrid[x].length < this.height) newGrid[x].push(null); // Pad with null
+                if (newGrid[x].length > this.height) newGrid[x] = newGrid[x].slice(0, this.height); // Truncate
             }
         }
         this.puzzleState = newGrid;
+    }
+
+    /**
+     * Get the current score (placeholder for future implementation)
+     */
+    getScore(): number {
+        // TODO: Implement scoring system
+        return 0;
+    }
+
+    /**
+     * Get remaining moves (placeholder for future implementation)
+     */
+    getMovesRemaining(): number {
+        // TODO: Implement move counting system
+        return 30;
+    }
+
+    /**
+     * Check if game is over (placeholder for future implementation)
+     */
+    isGameOver(): boolean {
+        // TODO: Implement game over logic
+        return false;
     }
 }

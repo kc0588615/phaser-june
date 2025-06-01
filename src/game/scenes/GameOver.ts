@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import { AssetKeys } from '../constants'; // Path is correct relative to scenes/
+import { AssetKeys } from '../constants';
 
 export class GameOver extends Phaser.Scene {
     constructor() {
         super('GameOver');
     }
 
-    create() {
+    create(): void {
         console.log("GameOver: create");
         const { width, height } = this.cameras.main;
         const centerX = width / 2;
@@ -51,7 +51,7 @@ export class GameOver extends Phaser.Scene {
         // Input to return to Main Menu (or restart Game directly)
         this.input.once(Phaser.Input.Events.POINTER_DOWN, () => {
             console.log("GameOver: Returning to MainMenu...");
-             this.cameras.main.fadeOut(250, 0, 0, 0, (camera, progress) => {
+             this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                  if (progress === 1) {
                       this.scene.start('MainMenu');
                       // Or restart game: this.scene.start('Game');

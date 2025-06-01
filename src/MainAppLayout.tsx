@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing PhaserGame component
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
-import { EventBus } from './game/EventBus.js';      // If App.jsx itself needs to react to game events
+import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene

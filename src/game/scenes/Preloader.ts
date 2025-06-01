@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
-import { GEM_TYPES, ASSETS_PATH, AssetKeys, GEM_FRAME_COUNT } from '../constants'; // Path is correct relative to scenes/
+import { GEM_TYPES, ASSETS_PATH, AssetKeys, GEM_FRAME_COUNT, GemType } from '../constants';
 
 export class Preloader extends Phaser.Scene {
     constructor() {
         super('Preloader');
     }
 
-    preload() {
+    preload(): void {
         this.showLoadingProgress();
 
         // Set base path for assets relative to the 'public' folder
@@ -18,7 +18,7 @@ export class Preloader extends Phaser.Scene {
         this.load.image(AssetKeys.BACKGROUND, `${assetsFullPath}bg.png`); // Corrected key and filename
 
         // Load Gem Assets
-        GEM_TYPES.forEach(type => {
+        GEM_TYPES.forEach((type: GemType) => {
             for (let i = 0; i < GEM_FRAME_COUNT; i++) {
                 const key = AssetKeys.GEM_TEXTURE(type, i);
                 // Assuming gem files are named like 'black_gem_0.png', 'blue_gem_1.png' etc.
@@ -35,7 +35,7 @@ export class Preloader extends Phaser.Scene {
         // this.load.image('nonexistent', `${assetsFullPath}nonexistent.png`);
     }
 
-    showLoadingProgress() {
+    private showLoadingProgress(): void {
         const { width, height } = this.cameras.main;
         const progressBar = this.add.graphics();
         const progressBox = this.add.graphics();
@@ -62,8 +62,8 @@ export class Preloader extends Phaser.Scene {
             style: { font: '16px Arial', color: '#dddddd', align: 'center', wordWrap: { width: width * 0.8 } }
         }).setOrigin(0.5);
 
-        this.load.on('progress', (value) => {
-            percentText.setText(`${parseInt(value * 100)}%`);
+        this.load.on('progress', (value: number) => {
+            percentText.setText(`${Math.floor(value * 100)}%`);
             progressBar.clear();
             progressBar.fillStyle(0xeeeeee, 1); // Lighter gray bar
             // Adjust progress bar position and size relative to the box
@@ -73,14 +73,14 @@ export class Preloader extends Phaser.Scene {
             progressBar.fillRect(boxX + barMargin, boxY + barMargin, barWidth, barHeight);
         });
 
-        this.load.on('fileprogress', (file) => {
+        this.load.on('fileprogress', (file: Phaser.Loader.File) => {
             // Limit asset text length and show type
             const keyName = file.key.length > 40 ? file.key.substring(0, 37) + '...' : file.key;
              assetText.setText(`Loading ${file.type}: ${keyName}`);
              // console.log(`Loading ${file.type}: ${file.key} from ${file.url}`); // Debug loading path
         });
 
-         this.load.on('loaderror', (file) => {
+         this.load.on('loaderror', (file: Phaser.Loader.File) => {
              console.error(`Error loading asset: ${file.key} from ${file.url}`);
              assetText.setText(`Error loading: ${file.key}`).setColor('#ff0000');
              // Optionally stop the game or show an error message
@@ -94,20 +94,23 @@ export class Preloader extends Phaser.Scene {
             assetText.destroy();
             console.log("Preloader complete.");
             // Proceed only if no errors occurred (basic check)
-            // Safer check: ensure this.load.failed exists before checking its size
-            if (!this.load.inflight.size && (!this.load.failed || !this.load.failed.size)) {
+            // Check if there are any files still being loaded
+            if (!this.load.inflight || this.load.inflight.size === 0) {
                  this.create(); // Call create manually after ensuring completion
             } else {
-                 console.error(`Asset loading failed. ${this.load.failed.size} files failed.`);
+                 console.error(`Asset loading incomplete. ${this.load.inflight.size} files still in flight.`);
                  // Display a persistent error message?
-                 this.add.text(width / 2, height / 2, `Error loading assets.
-Check console.`, { color: '#ff0000', fontSize: '20px', align: 'center' }).setOrigin(0.5);
+                 this.add.text(width / 2, height / 2, `Error loading assets.\nCheck console.`, { 
+                     color: '#ff0000', 
+                     fontSize: '20px', 
+                     align: 'center' 
+                 }).setOrigin(0.5);
             }
         });
     }
 
     // create() is now called manually from the 'complete' handler
-    create() {
+    create(): void {
         console.log("Preloader: Starting MainMenu");
         // Add a small delay or fade before starting next scene (optional)
         this.time.delayedCall(100, () => {
