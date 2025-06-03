@@ -500,7 +500,9 @@ export class BoardView {
     /** Destroys all sprites and clears the board representation. */
     destroyBoard(): void {
         console.log("BoardView: Destroying board visuals...");
-        this.gemGroup.clear(true, true); // Destroy children and remove them from group
+        if (this.gemGroup) {
+            this.gemGroup.clear(true, true); // Destroy children and remove them from group
+        }
         this.gemsSprites = [];
     }
 
@@ -511,7 +513,9 @@ export class BoardView {
         if (sprite && sprite.active) {
             // console.log(`Safely destroying sprite type ${sprite.getData('gemType')} at [${sprite.getData('gridX')}, ${sprite.getData('gridY')}]`);
             this.scene.tweens.killTweensOf(sprite);
-            this.gemGroup.remove(sprite, true, true);
+            if (this.gemGroup) {
+                this.gemGroup.remove(sprite, true, true);
+            }
         }
     }
 
@@ -527,6 +531,10 @@ export class BoardView {
         const yPos = (startVisualY !== undefined) ? startVisualY : targetPos.y;
 
         // Add sprite via the group for automatic scene addition
+        if (!this.gemGroup) {
+            console.error("gemGroup not initialized");
+            return null;
+        }
         const sprite = this.gemGroup.create(xPos, yPos, textureKey);
         if (!sprite) { console.error(`Failed to create sprite ${textureKey}`); return null; }
 

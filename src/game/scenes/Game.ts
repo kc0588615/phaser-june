@@ -145,8 +145,12 @@ export class Game extends Phaser.Scene {
             }
 
             // Destroy old board sprites and create new ones based on the (potentially new) backendPuzzle state
-            if (this.boardView.destroyBoard) this.boardView.destroyBoard();
-            this.boardView.createBoard(this.backendPuzzle.getGridState());
+            if (this.boardView && this.boardView.destroyBoard) {
+                this.boardView.destroyBoard();
+            }
+            if (this.boardView) {
+                this.boardView.createBoard(this.backendPuzzle.getGridState());
+            }
 
             if (this.statusText && this.statusText.active) {
                 this.statusText.destroy();
