@@ -6,7 +6,7 @@ import {
     AssetKeys,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE,
-    GemType
+    GemType, GEM_FRAME_COUNT
 } from './constants';
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
@@ -305,17 +305,40 @@ export class BoardView {
 
                     explosionPromises.push(new Promise<void>((resolveExplosion) => {
                         this.scene.tweens.killTweensOf(sprite);
-                        this.scene.tweens.add({
-                            targets: sprite,
-                            alpha: 0,
-                            scale: sprite.scale * 0.5,
-                            angle: Phaser.Math.RND.angle(), // Random spin
-                            duration: TWEEN_DURATION_EXPLODE,
-                            ease: 'Quad.easeOut', // 'Expo.easeOut' is faster
-                            onComplete: () => {
-                                this.safelyDestroySprite(sprite); // Remove from group & destroy
-                                resolveExplosion();
-                            }
+                        
+                        // Get the gem type from sprite data
+                        const gemType = sprite.getData('gemType') as GemType;
+                        if (!gemType) {
+                            console.warn(`BoardView: No gem type data for sprite at [${x}, ${y}]`);
+                            this.safelyDestroySprite(sprite);
+                            resolveExplosion();
+                            return;
+                        }
+
+                        // Create frame animation for explosion
+                        const frameRate = 30; // 30 FPS for explosion animation
+                        const frameDuration = 1000 / frameRate; // Duration per frame in ms
+                        const totalFrames = GEM_FRAME_COUNT; // 8 frames (0-7)
+                        
+                        let currentFrame = 0;
+                        const explosionTimer = this.scene.time.addEvent({
+                            delay: frameDuration,
+                            callback: () => {
+                                if (currentFrame < totalFrames) {
+                                    // Update sprite texture to next frame
+                                    const textureKey = AssetKeys.GEM_TEXTURE(gemType, currentFrame);
+                                    if (this.scene.textures.exists(textureKey)) {
+                                        sprite.setTexture(textureKey);
+                                    }
+                                    currentFrame++;
+                                } else {
+                                    // Animation complete, destroy sprite
+                                    explosionTimer.destroy();
+                                    this.safelyDestroySprite(sprite);
+                                    resolveExplosion();
+                                }
+                            },
+                            repeat: totalFrames
                         });
                     }));
                 } else {
