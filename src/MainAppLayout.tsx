@@ -1,10 +1,11 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing PhaserGame component
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
+    const [cesiumMinimized, setCesiumMinimized] = useState(false);
 
     // This callback is for when PhaserGame signals that a scene is ready
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
@@ -15,26 +16,42 @@ function MainAppLayout() {
         }
     };
 
-    // --- Layout Styling --- (Copied from your App.jsx)
+    // --- Layout Styling --- (Updated for vertical layout)
     const appStyle: React.CSSProperties = {
         display: 'flex',
-        flexDirection: 'row', // Side-by-side: Cesium Map | Phaser Game + UI
+        flexDirection: 'column', // Vertical stack: Cesium Map on top, Phaser Game below
         width: '100vw',
         height: '100vh',
         overflow: 'hidden'
     };
     const cesiumContainerStyle: React.CSSProperties = {
-        flex: 1, // Adjust ratio as needed, e.g., flex: 2 for larger map
-        minWidth: '400px', // Ensure map is usable
-        height: '100%',
-        borderRight: '2px solid #555' // Visual separator
+        width: '100%',
+        height: cesiumMinimized ? '0%' : '30%', // Minimize completely or take 30% of screen
+        minHeight: '0px',
+        borderBottom: cesiumMinimized ? 'none' : '2px solid #555', // Hide border when minimized
+        position: 'relative',
+        transition: 'height 0.3s ease-in-out',
+        overflow: 'hidden' // Hide content when minimized
+    };
+    const minimizeButtonStyle: React.CSSProperties = {
+        position: cesiumMinimized ? 'fixed' : 'absolute',
+        top: '10px',
+        right: '10px',
+        zIndex: 1000,
+        padding: '5px 10px',
+        backgroundColor: 'rgba(42, 42, 42, 0.8)',
+        color: 'white',
+        border: '1px solid #555',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '14px'
     };
     const phaserAndUiContainerStyle: React.CSSProperties = {
-        flex: 1, // Adjust ratio as needed, e.g., flex: 1
-        minWidth: '400px', // Ensure game area is usable
+        flex: 1, // Take remaining space
+        minHeight: '400px', // Ensure game area is usable
         display: 'flex',
         flexDirection: 'column', // Stack Phaser game above other UI
-        height: '100%'
+        width: '100%'
     };
     const phaserGameWrapperStyle: React.CSSProperties = {
         width: '100%',
@@ -65,6 +82,12 @@ function MainAppLayout() {
     return (
         <div id="app-container" style={appStyle}>
             <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
+                <button 
+                    style={minimizeButtonStyle}
+                    onClick={() => setCesiumMinimized(!cesiumMinimized)}
+                >
+                    {cesiumMinimized ? '▼ Expand' : '▲ Minimize'}
+                </button>
                 <CesiumMap />
             </div>
 

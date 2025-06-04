@@ -43,8 +43,6 @@ export class Game extends Phaser.Scene {
     private boardOffset: BoardOffset = { x: 0, y: 0 };
 
     // --- Backend Data ---
-    private currentHabitatValues: number[] | null = null;
-    private currentSpeciesNames: string[] | null = null;
     private isBoardInitialized: boolean = false;
     private statusText: Phaser.GameObjects.Text | null = null;
 
@@ -115,21 +113,16 @@ export class Game extends Phaser.Scene {
         const { width, height } = this.scale;
 
         if (this.statusText && this.statusText.active) {
-            this.statusText.setText("Initializing game board with map data...");
+            this.statusText.setText("Initializing new game board...");
         }
 
         try {
-            if (!data || !data.habitats) {
-                throw new Error("Received incomplete data from CesiumMap for board initialization.");
-            }
-            this.currentHabitatValues = data.habitats || [];
-            this.currentSpeciesNames = data.species || [];
 
             if (!this.backendPuzzle) { // Should exist from create()
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
             }
-            // The setHabitatInfluence in BackendPuzzle already regenerates the puzzleState
-            this.backendPuzzle.setHabitatInfluence(this.currentHabitatValues);
+            // Regenerate the board with new random gems
+            this.backendPuzzle.regenerateBoard();
 
             this.calculateBoardDimensions(); // Recalculate for current scale
             if (!this.boardView) { // Should exist from create()
@@ -154,7 +147,7 @@ export class Game extends Phaser.Scene {
             }
             this.isBoardInitialized = true;
             this.canMove = true; // Board is ready, enable input
-            console.log("Game Scene: Board initialized/updated from Cesium data. Input enabled.");
+            console.log("Game Scene: Board initialized with random gems. Input enabled.");
 
         } catch (error) {
             console.error("Game Scene: Error initializing board from Cesium data:", error);
@@ -489,8 +482,6 @@ export class Game extends Phaser.Scene {
         this.resetDragState(); // Clear drag state variables
         this.canMove = false;
         this.isBoardInitialized = false;
-        this.currentHabitatValues = null;
-        this.currentSpeciesNames = null;
         console.log("Game Scene: Shutdown complete.");
     }
 

@@ -1,7 +1,7 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, GemType, HABITAT_GEM_MAP } from './constants';
+import { GEM_TYPES, GemType } from './constants';
 
 // Type for a gem in the puzzle
 export interface Gem {
@@ -14,7 +14,6 @@ export type PuzzleGrid = (Gem | null)[][];
 export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
     private nextGemsToSpawn: GemType[] = [];
-    private currentHabitatInfluence: number[] | null = null;
 
     constructor(
         public readonly width: number,
@@ -27,24 +26,11 @@ export class BackendPuzzle {
     }
 
     /**
-     * Sets the habitat influence for gem generation.
-     * This also triggers a regeneration of the puzzle state if the board is
-     * intended to reflect the new influence immediately.
-     * @param habitatValues - Array of numeric habitat codes.
+     * Regenerates the puzzle board with new random gems.
+     * Called when user clicks on the map to start a new game.
      */
-    setHabitatInfluence(habitatValues: number[] | null): void {
-        if (Array.isArray(habitatValues)) {
-            const validHabitats = habitatValues.filter(h => typeof h === 'number' && !isNaN(h));
-            this.currentHabitatInfluence = validHabitats.length > 0 ? validHabitats : null;
-        } else {
-            this.currentHabitatInfluence = null;
-        }
-        console.log("BackendPuzzle: Habitat influence set to:", this.currentHabitatInfluence);
-
-        // **IMPORTANT**: Regenerate the puzzle state to reflect the new influence for the initial board.
-        // This assumes that when habitat influence changes, the whole board should be fresh.
-        // If only new falling gems should be influenced, you would skip this line.
-        console.log("BackendPuzzle: Regenerating puzzle state with new habitat influence.");
+    regenerateBoard(): void {
+        console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
     }
 
@@ -53,69 +39,47 @@ export class BackendPuzzle {
     }
 
     /**
-     * Generates an initial grid state with no immediate matches,
-     * potentially influenced by currentHabitatInfluence.
+     * Generates an initial grid state with no immediate matches.
+     * Uses the algorithm from the Python match_three code.
      */
     private getInitialPuzzleStateWithNoMatches(width: number, height: number): PuzzleGrid {
         console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches called.");
         const grid: PuzzleGrid = [];
 
+        // Initialize empty grid
         for (let x = 0; x < width; x++) {
-            grid[x] = new Array(height).fill(null);
+            grid[x] = [];
+        }
+
+        // Fill the grid left-to-right, top-to-bottom
+        for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
-                let gemType: GemType;
-                // Try to get gem type based on habitat influence for initial fill
-                // This makes the initial board reflect the selected area.
-                if (this.currentHabitatInfluence && this.currentHabitatInfluence.length > 0) {
-                    // Pick one habitat value randomly from the available ones for this specific gem
-                    const habitatValue = this.currentHabitatInfluence[Math.floor(Math.random() * this.currentHabitatInfluence.length)];
-                    const mappedGemType = HABITAT_GEM_MAP[habitatValue];
-                    if (mappedGemType && (GEM_TYPES as readonly string[]).includes(mappedGemType)) {
-                        gemType = mappedGemType;
-                    } else {
-                        // Fallback if habitat value not in map or maps to invalid type for this specific gem
-                        gemType = GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
+                // Start with all possible gem types
+                let possibleGems = new Set(GEM_TYPES);
+
+                // Check if placing a gem would create a vertical match of 3
+                if (y >= 2) {
+                    const gem1 = grid[x][y - 1]?.gemType;
+                    const gem2 = grid[x][y - 2]?.gemType;
+                    if (gem1 && gem2 && gem1 === gem2) {
+                        // Remove this gem type from possible choices
+                        possibleGems.delete(gem1);
                     }
-                } else {
-                    // Fallback to purely random if no influence for initial fill
-                    gemType = GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
                 }
 
-                // Check against previously placed gems to avoid initial 3-in-a-row
-                // This loop tries a few times to find a non-matching gem.
-                let attempts = 0;
-                const maxAttempts = GEM_TYPES.length * 2; // Heuristic
-                while (attempts < maxAttempts) {
-                    const prevY1Type = grid[x]?.[y - 1]?.gemType;
-                    const prevY2Type = grid[x]?.[y - 2]?.gemType;
-                    const prevX1Type = grid[x - 1]?.[y]?.gemType;
-                    const prevX2Type = grid[x - 2]?.[y]?.gemType;
-
-                    const yMatch = (y >= 2 && prevY1Type && prevY1Type === prevY2Type && prevY1Type === gemType);
-                    const xMatch = (x >= 2 && prevX1Type && prevX1Type === prevX2Type && prevX1Type === gemType);
-
-                    if (!yMatch && !xMatch) {
-                        break; // Found a suitable gemType
+                // Check if placing a gem would create a horizontal match of 3
+                if (x >= 2) {
+                    const gem1 = grid[x - 1][y]?.gemType;
+                    const gem2 = grid[x - 2][y]?.gemType;
+                    if (gem1 && gem2 && gem1 === gem2) {
+                        // Remove this gem type from possible choices
+                        possibleGems.delete(gem1);
                     }
-
-                    // Try a different gem type if it would create an initial match
-                    // (and if habitat influence didn't already pick one)
-                    let possibleTypes = [...GEM_TYPES];
-                    if (yMatch) possibleTypes = possibleTypes.filter(type => type !== prevY1Type);
-                    if (xMatch) possibleTypes = possibleTypes.filter(type => type !== prevX1Type);
-
-                    if (possibleTypes.length > 0) {
-                        gemType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)] as GemType;
-                    } else {
-                        // Very rare, stick with the current random/habitat gem
-                        if (attempts === 0) console.warn(`Initial fill at [${x},${y}] might create match, limited options.`);
-                        break;
-                    }
-                    attempts++;
                 }
-                if (attempts >= maxAttempts) {
-                    console.warn(`Could not avoid initial match at [${x},${y}] after ${maxAttempts} attempts.`);
-                }
+
+                // Convert set to array and pick a random gem from remaining choices
+                const possibleGemsArray = Array.from(possibleGems);
+                const gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] as GemType;
 
                 grid[x][y] = { gemType };
             }
@@ -147,7 +111,6 @@ export class BackendPuzzle {
                 if (count > 0) {
                     const typesForCol: GemType[] = [];
                     for (let i = 0; i < count; i++) {
-                        // getNextGemToSpawnType will use habitatInfluence for *new* gems
                         typesForCol.push(this.getNextGemToSpawnType());
                     }
                     replacements.push([x, typesForCol]);
@@ -175,7 +138,7 @@ export class BackendPuzzle {
     }
 
     /**
-     * Returns the type of the next gem to spawn, influenced by habitats or randomly.
+     * Returns the type of the next gem to spawn randomly.
      * This is used when gems are falling in to replace matched ones.
      */
     private getNextGemToSpawnType(): GemType {
@@ -183,21 +146,8 @@ export class BackendPuzzle {
             return this.nextGemsToSpawn.shift()!;
         }
 
-        if (this.currentHabitatInfluence && this.currentHabitatInfluence.length > 0) {
-            const habitatValue = this.currentHabitatInfluence[Math.floor(Math.random() * this.currentHabitatInfluence.length)];
-            const mappedGemType = HABITAT_GEM_MAP[habitatValue];
-
-            if (mappedGemType && (GEM_TYPES as readonly string[]).includes(mappedGemType)) {
-                // console.log(`Spawning gem '${mappedGemType}' based on habitat ${habitatValue}`);
-                return mappedGemType;
-            } else {
-                // console.warn(`Habitat value ${habitatValue} (from influence list) not in HABITAT_GEM_MAP or maps to invalid type. Using random.`);
-                return GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
-            }
-        } else {
-            // Fallback to purely random if no influence available for new falling gems
-            return GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
-        }
+        // Always return a random gem type
+        return GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
     }
 
     addNextGemToSpawn(gemType: GemType): void {
@@ -209,12 +159,10 @@ export class BackendPuzzle {
     }
 
     reset(): void {
-        // When resetting, we clear habitat influence and generate a purely random board.
-        // The habitat influence will be set again by Game.js when a new location is selected.
-        this.currentHabitatInfluence = null;
+        // Generate a new random board
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
         this.nextGemsToSpawn = [];
-        console.log("BackendPuzzle reset: habitat influence cleared, new random board generated.");
+        console.log("BackendPuzzle reset: new random board generated.");
     }
 
     private applyMoveToGrid(grid: PuzzleGrid, moveAction: MoveAction): void {
