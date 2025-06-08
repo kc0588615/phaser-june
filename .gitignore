@@ -40,3 +40,6 @@ next-env.d.ts
 # Cesium
 /public/cesium
 repomix-output-*.xml
+
+# nextJS
+supabase_nextjs.txt

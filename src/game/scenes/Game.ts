@@ -45,12 +45,34 @@ export class Game extends Phaser.Scene {
     // --- Backend Data ---
     private isBoardInitialized: boolean = false;
     private statusText: Phaser.GameObjects.Text | null = null;
+    private scoreText: Phaser.GameObjects.Text | null = null;
+    private movesText: Phaser.GameObjects.Text | null = null;
 
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
 
     constructor() {
         super('Game');
+    }
+
+    update(): void {
+        if (!this.backendPuzzle || !this.isBoardInitialized) return;
+
+        // Update UI
+        if (this.scoreText) {
+            this.scoreText.setText(`Score: ${this.backendPuzzle.getScore()}`);
+        }
+        if (this.movesText) {
+            this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesRemaining()}`);
+        }
+
+        // Check game over
+        if (this.backendPuzzle.isGameOver() && this.canMove) {
+            this.canMove = false;
+            const finalScore = this.backendPuzzle.getScore();
+            console.log(`Game Over! Final score: ${finalScore}`);
+            this.scene.start('GameOver', { score: finalScore });
+        }
     }
 
     create(): void {
@@ -78,6 +100,22 @@ export class Game extends Phaser.Scene {
             padding: { x: 10, y: 5 },
             align: 'center'
         }).setOrigin(0.5).setDepth(100);
+
+        // Score display
+        this.scoreText = this.add.text(20, 20, 'Score: 0', {
+            fontSize: '20px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setDepth(100);
+
+        // Moves display
+        this.movesText = this.add.text(width - 20, 20, 'Moves: 50', {
+            fontSize: '20px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(1, 0).setDepth(100);
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -188,14 +226,22 @@ export class Game extends Phaser.Scene {
 
     private handleResize(): void {
         console.log("Game Scene: Resize detected.");
+        const { width, height } = this.scale;
         this.calculateBoardDimensions();
+        
         if (this.statusText && this.statusText.active) {
-            this.statusText.setPosition(this.scale.width / 2, this.scale.height / 2);
+            this.statusText.setPosition(width / 2, height / 2);
             const textStyle = this.statusText.style;
             if (textStyle && typeof textStyle.setWordWrapWidth === 'function') {
-                textStyle.setWordWrapWidth(this.scale.width * 0.8);
+                textStyle.setWordWrapWidth(width * 0.8);
             }
         }
+        
+        // Update UI positions
+        if (this.movesText) {
+            this.movesText.setPosition(width - 20, 20);
+        }
+        
         if (this.boardView) {
             this.boardView.updateVisualLayout(this.gemSize, this.boardOffset);
         }
@@ -477,6 +523,14 @@ export class Game extends Phaser.Scene {
         if (this.statusText) {
             this.statusText.destroy();
             this.statusText = null;
+        }
+        if (this.scoreText) {
+            this.scoreText.destroy();
+            this.scoreText = null;
+        }
+        if (this.movesText) {
+            this.movesText.destroy();
+            this.movesText = null;
         }
 
         this.resetDragState(); // Clear drag state variables

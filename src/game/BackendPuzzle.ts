@@ -14,6 +14,8 @@ export type PuzzleGrid = (Gem | null)[][];
 export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
     private nextGemsToSpawn: GemType[] = [];
+    private score: number = 0;
+    private movesRemaining: number = 50; // Simple game over condition
 
     constructor(
         public readonly width: number,
@@ -32,6 +34,20 @@ export class BackendPuzzle {
     regenerateBoard(): void {
         console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
+        this.score = 0;
+        this.movesRemaining = 50;
+    }
+
+    getScore(): number {
+        return this.score;
+    }
+
+    getMovesRemaining(): number {
+        return this.movesRemaining;
+    }
+
+    isGameOver(): boolean {
+        return this.movesRemaining <= 0;
     }
 
     getGridState(): PuzzleGrid {
@@ -257,6 +273,22 @@ export class BackendPuzzle {
     private applyExplodeAndReplacePhase(phase: ExplodeAndReplacePhase): void {
         if (phase.isNothingToDo()) return;
         
+        // Calculate score based on matched gems
+        let totalMatched = 0;
+        phase.matches.forEach(match => {
+            totalMatched += match.length;
+        });
+        
+        if (totalMatched > 0) {
+            // Basic scoring: 10 points per gem, with bonus for larger matches
+            const baseScore = totalMatched * 10;
+            const bonus = totalMatched > 3 ? (totalMatched - 3) * 5 : 0;
+            this.score += baseScore + bonus;
+            
+            // Decrement moves when a successful match is made
+            this.movesRemaining--;
+        }
+        
         const explodeCoords = new Set<string>();
         phase.matches.forEach(match => match.forEach(coord => explodeCoords.add(`${coord[0]},${coord[1]}`)));
         const replacementsMap = new Map(phase.replacements);
@@ -279,27 +311,4 @@ export class BackendPuzzle {
         this.puzzleState = newGrid;
     }
 
-    /**
-     * Get the current score (placeholder for future implementation)
-     */
-    getScore(): number {
-        // TODO: Implement scoring system
-        return 0;
-    }
-
-    /**
-     * Get remaining moves (placeholder for future implementation)
-     */
-    getMovesRemaining(): number {
-        // TODO: Implement move counting system
-        return 30;
-    }
-
-    /**
-     * Check if game is over (placeholder for future implementation)
-     */
-    isGameOver(): boolean {
-        // TODO: Implement game over logic
-        return false;
-    }
 }
