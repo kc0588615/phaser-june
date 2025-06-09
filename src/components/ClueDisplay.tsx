@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EventBus } from '../game/EventBus';
 import type { ClueData } from '../game/gemCategoryMapping';
+import { gemCategoryMapping } from '../game/gemCategoryMapping';
 import { GemLegend } from './GemLegend';
 
 interface ClueDisplayProps {
@@ -10,8 +11,13 @@ interface ClueDisplayProps {
 export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
   const [clues, setClues] = useState<ClueData[]>([]);
   const [selectedSpeciesName, setSelectedSpeciesName] = useState<string>('');
+  const [selectedSpeciesId, setSelectedSpeciesId] = useState<number>(0);
+  const [totalSpecies, setTotalSpecies] = useState<number>(0);
+  const [currentSpeciesIndex, setCurrentSpeciesIndex] = useState<number>(0);
   const [showLegend, setShowLegend] = useState<boolean>(false);
   const [isLoadingClue, setIsLoadingClue] = useState<boolean>(false);
+  const [allCluesRevealed, setAllCluesRevealed] = useState<boolean>(false);
+  const [allSpeciesCompleted, setAllSpeciesCompleted] = useState<boolean>(false);
 
   useEffect(() => {
     // Listen for clue reveals from the game
@@ -25,25 +31,57 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
     };
 
     // Listen for new game starts
-    const handleNewGame = (data: { speciesName: string }) => {
+    const handleNewGame = (data: { speciesName: string; speciesId: number; totalSpecies: number; currentIndex: number }) => {
       setClues([]);
       setSelectedSpeciesName(data.speciesName);
+      setSelectedSpeciesId(data.speciesId);
+      setTotalSpecies(data.totalSpecies);
+      setCurrentSpeciesIndex(data.currentIndex);
+      setAllCluesRevealed(false);
+      setAllSpeciesCompleted(false);
     };
 
     // Listen for game reset
     const handleGameReset = () => {
       setClues([]);
       setSelectedSpeciesName('');
+      setSelectedSpeciesId(0);
+      setTotalSpecies(0);
+      setCurrentSpeciesIndex(0);
+      setAllCluesRevealed(false);
+      setAllSpeciesCompleted(false);
+    };
+
+    // Listen for no species found
+    const handleNoSpeciesFound = () => {
+      setSelectedSpeciesName('No species found at this location');
+      setClues([]);
+    };
+
+    // Listen for all clues revealed
+    const handleAllCluesRevealed = () => {
+      setAllCluesRevealed(true);
+    };
+
+    // Listen for all species completed
+    const handleAllSpeciesCompleted = () => {
+      setAllSpeciesCompleted(true);
     };
 
     EventBus.on('clue-revealed', handleClueRevealed);
     EventBus.on('new-game-started', handleNewGame);
     EventBus.on('game-reset', handleGameReset);
+    EventBus.on('no-species-found', handleNoSpeciesFound);
+    EventBus.on('all-clues-revealed', handleAllCluesRevealed);
+    EventBus.on('all-species-completed', handleAllSpeciesCompleted);
 
     return () => {
       EventBus.off('clue-revealed', handleClueRevealed);
       EventBus.off('new-game-started', handleNewGame);
       EventBus.off('game-reset', handleGameReset);
+      EventBus.off('no-species-found', handleNoSpeciesFound);
+      EventBus.off('all-clues-revealed', handleAllCluesRevealed);
+      EventBus.off('all-species-completed', handleAllSpeciesCompleted);
     };
   }, []);
 
@@ -102,9 +140,9 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
   if (!selectedSpeciesName && clues.length === 0) {
     return (
       <div style={containerStyle}>
-        <h2>Game Controls / Info</h2>
-        <p>Selected location data will appear in the Phaser game board.</p>
-        <p>Interact with the Cesium map to choose a location.</p>
+        <h2>Species Discovery</h2>
+        <p>Click on the Cesium map to select a location and discover species.</p>
+        <p>Match gems to reveal clues about each species.</p>
         <button 
           style={legendButtonStyle}
           onClick={() => setShowLegend(!showLegend)}
@@ -120,7 +158,6 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
 
   return (
     <div style={containerStyle}>
-      <h2>Species Clues</h2>
       <button 
         style={legendButtonStyle}
         onClick={() => setShowLegend(!showLegend)}
@@ -128,53 +165,81 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
         {showLegend ? 'Hide Legend' : 'Show Legend'}
       </button>
       
-      {selectedSpeciesName && (
-        <p style={{ marginBottom: '15px', fontSize: '14px' }}>
-          Match gems to reveal clues about the selected species
-        </p>
+      {allSpeciesCompleted ? (
+        <>
+          <h2 style={{ color: '#00ff00' }}>All Species Discovered!</h2>
+          <p style={{ fontSize: '16px', marginBottom: '20px' }}>
+            Congratulations! You have discovered all {totalSpecies} species at this location.
+          </p>
+        </>
+      ) : (
+        <>
+          <h2 style={{ color: '#00ff00' }}>
+            Current Species: {selectedSpeciesName}
+          </h2>
+          {selectedSpeciesId > 0 && (
+            <p style={{ fontSize: '14px', color: '#aaa', marginBottom: '10px' }}>
+              ID: {selectedSpeciesId} | Species {currentSpeciesIndex} of {totalSpecies}
+            </p>
+          )}
+          {allCluesRevealed && (
+            <p style={{ fontSize: '14px', color: '#ffff00', marginBottom: '10px', fontStyle: 'italic' }}>
+              All clues revealed! Advancing to next species...
+            </p>
+          )}
+        </>
       )}
       
       {showLegend && (
         <GemLegend style={{ marginBottom: '15px' }} />
       )}
       
-      {clues.length === 0 && !isLoadingClue ? (
-        <p style={{ color: '#999', fontStyle: 'italic' }}>
-          No clues revealed yet. Start matching gems!
-        </p>
-      ) : (
-        <div>
-          {clues.map((clue, index) => (
-            <div key={index} style={clueItemStyle}>
-              <div style={headingStyle}>
-                {gemCategoryIcons[clue.category] || ''} {clue.heading}
-              </div>
-              <div style={clueTextStyle}>{clue.clue}</div>
-            </div>
-          ))}
-          {isLoadingClue && (
-            <div style={{ 
-              ...clueItemStyle, 
-              display: 'flex', 
-              alignItems: 'center',
-              backgroundColor: 'rgba(74, 144, 226, 0.1)',
-              borderLeft: '3px solid #4a90e2'
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid #f3f3f3',
-                borderTop: '2px solid #4a90e2',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                marginRight: '8px'
-              }}></div>
-              <span style={{ color: '#4a90e2', fontSize: '14px' }}>
-                Processing clue...
-              </span>
+      {!allSpeciesCompleted && (
+        <>
+          {clues.length === 0 && !isLoadingClue ? (
+            <p style={{ color: '#999', fontStyle: 'italic' }}>
+              Match gems to reveal clues about this species...
+            </p>
+          ) : (
+            <div>
+              {clues.map((clue, index) => {
+                const categoryInfo = Object.values(gemCategoryMapping).find(
+                  info => info.categoryName === ['Classification', 'Habitat', 'Geographic', 'Morphology', 'Diet', 'Behavior', 'Life Cycle', 'Conservation', 'Key Facts'][clue.category]
+                );
+                return (
+                  <div key={index} style={clueItemStyle}>
+                    <div style={headingStyle}>
+                      {categoryInfo?.icon || ''} {categoryInfo?.categoryName || ''}
+                    </div>
+                    <div style={clueTextStyle}>{clue.clue}</div>
+                  </div>
+                );
+              })}
+              {isLoadingClue && (
+                <div style={{ 
+                  ...clueItemStyle, 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                  borderLeft: '3px solid #4a90e2'
+                }}>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid #f3f3f3',
+                    borderTop: '2px solid #4a90e2',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginRight: '8px'
+                  }}></div>
+                  <span style={{ color: '#4a90e2', fontSize: '14px' }}>
+                    Processing clue...
+                  </span>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

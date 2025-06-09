@@ -5,7 +5,7 @@ export const GRID_COLS = 7 as const;
 export const GRID_ROWS = 8 as const;
 
 // --- Gem Configuration ---
-export const GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'pink'] as const;
+export const GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'pink', 'purple'] as const;
 export type GemType = typeof GEM_TYPES[number];
 
 export const GEM_FRAME_COUNT = 8 as const; // Number of frames per gem type (for explosion animation, etc.)

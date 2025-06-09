@@ -24,6 +24,8 @@
     "scripts": {
         "dev": "node log.js dev & next dev -p 8080",
         "build": "node log.js build & npm run typecheck && next build",
+        "serve": "npx serve dist -p 8080 -s",
+        "start": "npm run build && npm run serve",
         "dev-nolog": "next dev -p 8080",
         "build-nolog": "npm run typecheck && next build",
         "typecheck": "tsc --noEmit",

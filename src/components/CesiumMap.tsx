@@ -17,6 +17,8 @@ import {
   HeightReference
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
+import { speciesService } from '../lib/speciesService';
+import type { Species } from '../types/database';
 
 // Configuration (Consider moving to a config file or passing as props)
 // const YOUR_CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZWRiZWM1OC02NGQ4LTQxN2UtYTJmMy01ZWRjMmM3YmEwN2YiLCJpZCI6Mjk1MzAwLCJpYXQiOjE3NDQ5OTk0MTh9.HBoveH42derVYybno6upJzVCOkxLDji6VOj2TqSwpjs'; // Replace with your token
@@ -31,7 +33,13 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null); // Typed state
   const [clickedPosition, setClickedPosition] = useState<Cartesian3 | null>(null); // Cartesian3
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null); // { lon, lat }
-  const [infoBoxData, setInfoBoxData] = useState<any>({ habitats: [], species: [] }); // Consider defining a type for infoBoxData
+  const [infoBoxData, setInfoBoxData] = useState<{
+    lon?: number;
+    lat?: number;
+    habitats: string[];
+    species: Species[];
+    message?: string | null;
+  }>({ habitats: [], species: [] });
   const [showInfoBox, setShowInfoBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -127,42 +135,55 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       setInfoBoxData({ habitats: [], species: [], message: `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...` });
       setIsLoading(true);
 
-      const queryUrl = `${GAME_API_BASE_URL}/api/location_info/?lon=${longitude}&lat=${latitude}`;
-      console.log("Resium: Calling API:", queryUrl);
+      console.log("Resium: Calling speciesService for location:", longitude, latitude);
 
-      fetch(queryUrl)
-        .then(response => {
-          if (!response.ok) {
-            return response.text().then(text => { throw new Error(`API Error ${response.status}: ${text}`); });
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log("Resium: API Response:", data);
+      // Use local Supabase species service instead of external API
+      speciesService.getSpeciesAtPoint(longitude, latitude)
+        .then(result => {
+          console.log("Resium: Species service response:", result);
+          
+          // Extract habitat information from species data
+          const habitats = new Set<string>();
+          result.species.forEach(species => {
+            if (species.hab_desc) habitats.add(species.hab_desc);
+            if (species.aquatic) habitats.add('aquatic');
+            if (species.freshwater) habitats.add('freshwater');
+            if (species.terrestr || species.terrestria) habitats.add('terrestrial');
+            if (species.marine) habitats.add('marine');
+          });
+
+          const habitatList = Array.from(habitats);
+          
           setInfoBoxData({
             lon: longitude,
             lat: latitude,
-            habitats: data.habitats || [],
-            species: data.species || [],
+            habitats: habitatList,
+            species: result.species,
             message: null
           });
+          
+          // Emit event with actual species data for the game
           EventBus.emit('cesium-location-selected', {
             lon: longitude,
             lat: latitude,
-            habitats: data.habitats || [],
-            species: data.species || []
+            habitats: habitatList,
+            species: result.species
           });
         })
         .catch(err => {
-          console.error("Resium: Error calling game API:", err);
-          setInfoBoxData({ message: `Error: ${err.message}` });
+          console.error("Resium: Error calling species service:", err);
+          setInfoBoxData({ 
+            habitats: [], 
+            species: [], 
+            message: `Error: ${err.message || 'Failed to load species data'}` 
+          });
         })
         .finally(() => {
             setIsLoading(false);
         });
     } else {
       setShowInfoBox(true);
-      setInfoBoxData({ message: 'Click on the globe to query location.' });
+      setInfoBoxData({ habitats: [], species: [], message: 'Click on the globe to query location.' });
       setClickedPosition(null);
       setClickedLonLat(null);
     }
@@ -224,7 +245,11 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             <>
               <p><b>Location:</b> Lon: {infoBoxData.lon?.toFixed(4)}, Lat: {infoBoxData.lat?.toFixed(4)}</p>
               <p><b>Habitats (within {HABITAT_RADIUS_METERS / 1000}km):</b> {infoBoxData.habitats.length > 0 ? infoBoxData.habitats.join(', ') : 'None'}</p>
-              <p><b>Species (near {SPECIES_RADIUS_METERS / 1000}km):</b> {infoBoxData.species.length > 0 ? infoBoxData.species.join(', ') : 'None'}</p>
+              <p><b>Species (near {SPECIES_RADIUS_METERS / 1000}km):</b> {
+                infoBoxData.species.length > 0 
+                  ? infoBoxData.species.map(s => s.comm_name || s.sci_name || `Species ${s.ogc_fid}`).join(', ')
+                  : 'None'
+              }</p>
             </>
           )}
           {isLoading && <p><em>Loading...</em></p>}

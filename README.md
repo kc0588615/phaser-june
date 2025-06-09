@@ -1,5 +1,20 @@
 # Phaser Next.js Template
 
+## 🚨 IMPORTANT - How to Run This Game 🚨
+
+This project is configured as a **static export**. You MUST serve it as static files, NOT as a Next.js server app.
+
+### ✅ Correct way to run:
+```bash
+# Build and serve static files
+npm run serve
+```
+
+### ❌ DO NOT use:
+- `npm run dev` - This starts Next.js dev server and will cause "_document.js not found" errors
+
+---
+
 This is a Phaser 3 project template that uses the Next.js framework. It includes a bridge for React to Phaser game communication, hot-reloading for quick development workflow and scripts to generate production-ready builds.
 
 ### Versions
@@ -21,10 +36,12 @@ This template has been updated for:
 | Command | Description |
 |---------|-------------|
 | `npm install` | Install project dependencies |
-| `npm run dev` | Launch a development web server |
 | `npm run build` | Create a production build in the `dist` folder |
-| `npm run dev-nolog` | Launch a development web server without sending anonymous data (see "About log.js" below) |
-| `npm run build-nolog` | Create a production build in the `dist` folder without sending anonymous data (see "About log.js" below) |
+| `npm run serve` | **USE THIS TO RUN THE GAME** - Serves the static build on port 8080 |
+| `npm run start` | Build and serve in one command |
+| `npm run dev` | ⚠️ Development only - DO NOT use for running the game |
+| `npm run dev-nolog` | Development server without analytics |
+| `npm run build-nolog` | Build without analytics |
 
 ## Writing Code
 

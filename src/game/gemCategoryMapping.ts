@@ -7,15 +7,15 @@ export interface GemCategoryInfo {
 }
 
 export const gemCategoryMapping: Record<GemType, GemCategoryInfo> = {
-  [GemType.Red]: { categoryName: 'Classification', icon: '🧬' },
-  [GemType.Green]: { categoryName: 'Habitat', icon: '🌳' },
-  [GemType.Blue]: { categoryName: 'Geographic', icon: '🗺️' },
-  [GemType.Orange]: { categoryName: 'Morphology', icon: '🐾' }, // Combines Color/Pattern and Size/Shape
-  [GemType.Pink]: { categoryName: 'Diet', icon: '🌿' },
-  [GemType.White]: { categoryName: 'Behavior', icon: '💨' },
-  [GemType.Black]: { categoryName: 'Life Cycle', icon: '⏳' },
-  [GemType.Yellow]: { categoryName: 'Conservation', icon: '🛡️' },
-  [GemType.Purple]: { categoryName: 'Key Facts', icon: '❗' },
+  red: { categoryName: 'Classification', icon: '🧬' },
+  green: { categoryName: 'Habitat', icon: '🌳' },
+  blue: { categoryName: 'Geographic', icon: '🗺️' },
+  orange: { categoryName: 'Morphology', icon: '🐾' }, // Combines Color/Pattern and Size/Shape
+  pink: { categoryName: 'Diet', icon: '🌿' },
+  white: { categoryName: 'Behavior', icon: '💨' },
+  black: { categoryName: 'Life Cycle', icon: '⏳' },
+  yellow: { categoryName: 'Conservation', icon: '🛡️' },
+  purple: { categoryName: 'Key Facts', icon: '❗' },
 };
 
 export enum GemCategory {
@@ -27,7 +27,7 @@ export enum GemCategory {
   BEHAVIOR = 5,       // 💨 White gem
   LIFE_CYCLE = 6,     // ⏳ Black gem
   CONSERVATION = 7,   // 🛡️ Yellow gem
-  KEY_FACTS = 8       // ❗ Purple gem
+  KEY_FACTS = 8,      // ❗ Purple gem
 }
 
 export interface ClueData {
@@ -207,10 +207,7 @@ export class GemClueMapper {
     return lifeInfo.join(', ');
   }
 
-  /**
-   * Get conservation status and unique traits (for future 10-gem system)
-   */
-  static getConservationClue(species: Species): string {
+  private static getConservationClue(species: Species): string {
     if (species.cons_text) return species.cons_text;
     if (species.cons_code || species.category) {
       return `Conservation status: ${species.cons_code || species.category}`;
