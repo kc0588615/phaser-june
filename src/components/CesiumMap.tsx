@@ -19,12 +19,11 @@ import {
 import { EventBus } from '../game/EventBus';
 import { speciesService } from '../lib/speciesService';
 import type { Species } from '../types/database';
+import { getAppConfig } from '../utils/config';
 
-// Configuration (Consider moving to a config file or passing as props)
-// const YOUR_CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZWRiZWM1OC02NGQ4LTQxN2UtYTJmMy01ZWRjMmM3YmEwN2YiLCJpZCI6Mjk1MzAwLCJpYXQiOjE3NDQ5OTk0MTh9.HBoveH42derVYybno6upJzVCOkxLDji6VOj2TqSwpjs'; // Replace with your token
-const TITILER_BASE_URL = "http://localhost:8000"; // Your TiTiler backend
-const GAME_API_BASE_URL = "http://localhost:8000"; // Your Game API backend
-const COG_PATH = "C:/OSGeo4W/geoTif/habitat_cog.tif"; // Path accessible by TiTiler server
+// Configuration - using environment variables with fallbacks
+const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "http://localhost:8000";
+const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif";
 const HABITAT_RADIUS_METERS = 100000.0;
 const SPECIES_RADIUS_METERS = 10000.0;
 
@@ -53,28 +52,43 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   }, []);
 
   useEffect(() => {
-    const encodedCOGPath = encodeURIComponent(COG_PATH);
-    const colormapName = "habitat_custom"; // From your backend setup
-    const tms = "WebMercatorQuad";
-    const tileJsonUrl = `${TITILER_BASE_URL}/cog/${tms}/tilejson.json?url=${encodedCOGPath}&colormap_name=${colormapName}&nodata=0`;
+    // Load configuration and setup TiTiler imagery
+    const setupImagery = async () => {
+      try {
+        // Try to use dynamic config first, fallback to env vars
+        const config = await getAppConfig().catch(() => ({
+          cogUrl: COG_URL,
+          titilerBaseUrl: TITILER_BASE_URL
+        }));
 
-    console.log("Resium: Requesting TileJSON from:", tileJsonUrl);
-    fetch(tileJsonUrl)
-      .then(response => {
+        const encodedCOGUrl = encodeURIComponent(config.cogUrl);
+        const colormapName = "habitat_custom"; // From your backend setup
+        const tms = "WebMercatorQuad";
+        const tileJsonUrl = `${config.titilerBaseUrl}/cog/${tms}/tilejson.json?url=${encodedCOGUrl}&colormap_name=${colormapName}&nodata=0`;
+
+        console.log("Resium: Requesting TileJSON from:", tileJsonUrl);
+        const response = await fetch(tileJsonUrl);
+        
         if (!response.ok) {
-          return response.text().then(text => { throw new Error(`TileJSON Error ${response.status}: ${text}`); });
+          const text = await response.text();
+          throw new Error(`TileJSON Error ${response.status}: ${text}`);
         }
-        return response.json();
-      })
-      .then(tileJson => {
+        
+        const tileJson = await response.json();
         console.log("Resium: Received TileJSON:", tileJson);
         if (!tileJson.tiles || tileJson.tiles.length === 0) {
           throw new Error("TileJSON missing 'tiles' array or 'tiles' array is empty.");
         }
-        const templateUrl = tileJson.tiles[0];
+        let templateUrl = tileJson.tiles[0];
         if (!templateUrl) {
             throw new Error("TileJSON 'tiles' array does not contain a valid URL template.");
         }
+        
+        // Force HTTPS if the Azure endpoint returns HTTP URLs
+        if (templateUrl.startsWith('http://azure-local-dfgagqgub7fhb5fv')) {
+          templateUrl = templateUrl.replace('http://', 'https://');
+        }
+        
         console.log("Resium: Using Template URL:", templateUrl);
 
         const provider = new UrlTemplateImageryProvider({
@@ -112,11 +126,13 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         } else if (!tileJson.bounds) {
             console.log("Resium: TileJSON missing bounds. Default camera view used.");
         }
-      })
-      .catch(err => {
+      } catch (err: any) {
         console.error("Resium: Error loading habitat layer:", err);
         alert(`Failed to load habitat layer: ${err.message}`);
-      });
+      }
+    };
+
+    setupImagery();
   }, []); 
 
   // Test function for new approach (direct Supabase calls)
