@@ -119,6 +119,41 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       });
   }, []); 
 
+  // Test function for new approach (direct Supabase calls)
+  const testNewAPIRoute = async (lon: number, lat: number) => {
+    try {
+      console.log("Testing new Supabase approach...");
+      
+      // Test if the new Supabase function exists
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      
+      try {
+        const { data, error } = await supabase.rpc('query_location_simple', {
+          lon: lon,
+          lat: lat
+        });
+        
+        if (error) throw error;
+        console.log("New Supabase Function Response:", data);
+      } catch (rpcError) {
+        console.log("New function not available:", rpcError);
+        console.log("Would fall back to existing get_species_at_point function");
+      }
+      
+      // Compare with current method
+      const currentResult = await speciesService.getSpeciesAtPoint(lon, lat);
+      console.log("Current Supabase Service:", currentResult);
+      
+      console.log("Comparison complete - check console for results");
+    } catch (error) {
+      console.error("Supabase test failed:", error);
+    }
+  };
+
   const handleMapClick = useCallback((movement: any) => { // Typed movement
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
 
@@ -136,6 +171,9 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       setIsLoading(true);
 
       console.log("Resium: Calling speciesService for location:", longitude, latitude);
+
+      // Test the new API route alongside current method
+      testNewAPIRoute(longitude, latitude);
 
       // Use local Supabase species service instead of external API
       speciesService.getSpeciesAtPoint(longitude, latitude)

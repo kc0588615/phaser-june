@@ -31,34 +31,45 @@ export default async function handler(
   }
 
   try {
-    // For now, let's test with the existing get_species_at_point function
-    // Later we can create a more comprehensive query_location_info function
-    const { data: speciesData, error: speciesError } = await supabase.rpc('get_species_at_point', {
-      lon: longitude,
-      lat: latitude
-    });
+    // Try to use the new comprehensive function first
+    let result;
+    try {
+      const { data: comprehensiveData, error: comprehensiveError } = await supabase.rpc('query_location_simple', {
+        lon: longitude,
+        lat: latitude
+      });
 
-    if (speciesError) {
-      console.error('Species query error:', speciesError);
-      throw speciesError;
+      if (comprehensiveError) throw comprehensiveError;
+      result = comprehensiveData;
+    } catch (comprehensiveError) {
+      console.log('Comprehensive function not available, falling back to original method');
+      
+      // Fallback to original method
+      const { data: speciesData, error: speciesError } = await supabase.rpc('get_species_at_point', {
+        lon: longitude,
+        lat: latitude
+      });
+
+      if (speciesError) {
+        console.error('Species query error:', speciesError);
+        throw speciesError;
+      }
+
+      // Extract species names from the data
+      const species = speciesData?.map((s: any) => s.sci_name || s.comm_name || s.species_name) || [];
+
+      result = {
+        habitats: [100, 101, 200], // Mock habitat data
+        species: species,
+        debug: {
+          coordinates: { lon: longitude, lat: latitude },
+          speciesCount: species.length,
+          message: 'Using fallback method - original get_species_at_point function'
+        }
+      };
     }
 
-    // For habitats, we'll need to add this to Supabase later
-    // For testing, return mock habitat data
-    const mockHabitats = [100, 101, 200]; // Example habitat codes
-
-    // Extract species names from the data
-    const species = speciesData?.map((s: any) => s.sci_name || s.species_name) || [];
-
-    res.status(200).json({
-      habitats: mockHabitats,
-      species: species,
-      debug: {
-        coordinates: { lon: longitude, lat: latitude },
-        speciesCount: species.length,
-        message: 'Using existing Supabase function for species, mock data for habitats'
-      }
-    });
+    res.status(200).json(result);
 
   } catch (error) {
     console.error('Location query error:', error);
