@@ -22,7 +22,7 @@ import type { Species } from '../types/database';
 import { getAppConfig } from '../utils/config';
 
 // Configuration - using environment variables with fallbacks
-const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "http://localhost:8000";
+const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif";
 const HABITAT_RADIUS_METERS = 100000.0;
 const SPECIES_RADIUS_METERS = 10000.0;
@@ -63,8 +63,8 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
 
         const encodedCOGUrl = encodeURIComponent(config.cogUrl);
         const colormapName = "habitat_custom"; // From your backend setup
-        const tms = "WebMercatorQuad";
-        const tileJsonUrl = `${config.titilerBaseUrl}/cog/${tms}/tilejson.json?url=${encodedCOGUrl}&colormap_name=${colormapName}&nodata=0`;
+        const tileMatrixSetId = "WebMercatorQuad"; // Standard TMS for web mapping
+        const tileJsonUrl = `${config.titilerBaseUrl}/cog/${tileMatrixSetId}/tilejson.json?url=${encodedCOGUrl}&colormap_name=${colormapName}&nodata=0`;
 
         console.log("Resium: Requesting TileJSON from:", tileJsonUrl);
         const response = await fetch(tileJsonUrl);

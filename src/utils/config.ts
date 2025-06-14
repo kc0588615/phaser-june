@@ -14,7 +14,7 @@ export async function getAppConfig(): Promise<AppConfig> {
 
   try {
     // Try to fetch dynamic configuration from Azure endpoint
-    const apiBaseUrl = process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'http://localhost:8000';
+    const apiBaseUrl = process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net';
     const response = await fetch(`${apiBaseUrl}/api/config`);
     
     if (response.ok) {
@@ -26,8 +26,8 @@ export async function getAppConfig(): Promise<AppConfig> {
         console.warn('Dynamic config contains localhost URLs, using environment variables instead');
         cachedConfig = {
           cogUrl: process.env.NEXT_PUBLIC_COG_URL || dynamicConfig.cogUrl,
-          titilerBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'http://localhost:8000',
-          gameApiBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'http://localhost:8000'
+          titilerBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net',
+          gameApiBaseUrl: process.env.NEXT_PUBLIC_GAME_API_BASE_URL || process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net'
         };
         return cachedConfig;
       }
@@ -42,8 +42,8 @@ export async function getAppConfig(): Promise<AppConfig> {
   // Fallback to environment variables
   cachedConfig = {
     cogUrl: process.env.NEXT_PUBLIC_COG_URL || 'https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif',
-    titilerBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'http://localhost:8000',
-    gameApiBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'http://localhost:8000'
+    titilerBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net',
+    gameApiBaseUrl: process.env.NEXT_PUBLIC_GAME_API_BASE_URL || process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net'
   };
 
   return cachedConfig;
@@ -63,5 +63,5 @@ export function isProduction(): boolean {
 export function getApiUrl(): string {
   return isProduction() 
     ? 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net'
-    : process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'http://localhost:8000';
+    : process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net';
 }
