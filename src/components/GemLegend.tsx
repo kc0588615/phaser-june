@@ -8,10 +8,9 @@ export const GemLegend: React.FC<GemLegendProps> = ({ style }) => {
   const gemCategories = [
     { color: 'red', category: 'Classification', icon: '🧬', description: 'Taxonomic information' },
     { color: 'green', category: 'Habitat', icon: '🌳', description: 'Where it lives' },
-    { color: 'blue', category: 'Geographic', icon: '🗺️', description: 'Geographic range' },
+    { color: 'blue', category: 'Geographic & Habitat', icon: '🗺️', description: 'Geographic range & habitat' },
     { color: 'orange', category: 'Morphology', icon: '🐾', description: 'Physical appearance & dimensions' },
-    { color: 'pink', category: 'Diet', icon: '🌿', description: 'What it eats' },
-    { color: 'white', category: 'Behavior', icon: '💨', description: 'How it acts' },
+    { color: 'white', category: 'Behavior & Diet', icon: '💨', description: 'How it acts & what it eats' },
     { color: 'black', category: 'Life Cycle', icon: '⏳', description: 'Reproduction & lifespan' },
     { color: 'yellow', category: 'Conservation', icon: '🛡️', description: 'Conservation status' },
     { color: 'purple', category: 'Key Facts', icon: '❗', description: 'Unique identifying traits' }

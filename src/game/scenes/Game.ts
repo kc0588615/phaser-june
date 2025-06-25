@@ -568,10 +568,9 @@ export class Game extends Phaser.Scene {
         switch (gemType) {
             case 'red': return GemCategory.CLASSIFICATION;
             case 'green': return GemCategory.HABITAT;
-            case 'blue': return GemCategory.GEOGRAPHIC;
+            case 'blue': return GemCategory.GEOGRAPHIC; // Now includes habitat info
             case 'orange': return GemCategory.MORPHOLOGY; // Combines color/pattern and size/shape
-            case 'pink': return GemCategory.DIET;
-            case 'white': return GemCategory.BEHAVIOR;
+            case 'white': return GemCategory.BEHAVIOR; // Now includes diet info
             case 'black': return GemCategory.LIFE_CYCLE;
             case 'yellow': return GemCategory.CONSERVATION;
             case 'purple': return GemCategory.KEY_FACTS; // Uses key_fact1, key_fact2, key_fact3
