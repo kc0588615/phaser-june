@@ -1,297 +1,294 @@
-# Simplified Cloud Architecture for TiTiler
+# Simplified Cloud Architecture - Current Implementation
 
 ## Overview
 
-Since you already have Next.js and Supabase, we can create a minimal setup:
-- **Azure Blob Storage** → GeoTIFF file hosting
-- **Minimal TiTiler Server** → Only for tile generation (no custom APIs)
-- **Next.js API Routes** → Handle game logic using Supabase
+This document describes the **current implemented architecture** for the Phaser match-3 game with habitat visualization. The system has evolved to use **Supabase as the primary backend** with TiTiler for visualization only.
 
-## Architecture Components
+## Current Architecture Components
 
-### 1. Azure Blob Storage (Keep as-is)
-```bash
-# Simple container setup
-az storage container create \
-  --name geotiff \
-  --account-name yourstorageaccount \
-  --public-access blob
+### 1. **Supabase Database** (Primary Backend)
+- **Species Data**: `icaa` table with spatial geometries
+- **Raster Habitat Data**: `habitat_raster` table with PostGIS raster support
+- **Habitat Colormap**: `habitat_colormap` table for visualization mapping
+- **Spatial Functions**: Custom PostGIS functions for location-based queries
+
+### 2. **Next.js Frontend** (Static Export Mode)
+- **Cesium Integration**: 3D globe for location selection
+- **Phaser Game**: Match-3 puzzle with species clues
+- **Direct Supabase Calls**: No API routes needed (static export)
+- **TypeScript**: Strict typing with path aliases
+
+### 3. **TiTiler Server** (Visualization Only)
+- **Purpose**: Habitat raster tile generation for Cesium overlay
+- **Endpoint**: `https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net`
+- **Functionality**: COG tile serving with custom habitat colormap
+- **Source Data**: `https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif`
+
+### 4. **Azure Blob Storage** (Asset Storage)
+- **Habitat COG**: Cloud-optimized GeoTIFF for tile generation
+- **Public Access**: Direct access for TiTiler processing
+
+## Data Flow Architecture
+
+### User Interaction Flow
+```
+1. User clicks on Cesium globe
+   ↓
+2. Coordinates extracted (longitude, latitude)
+   ↓
+3. Parallel Supabase queries:
+   - Species: get_species_at_point(lon, lat) [10km radius]
+   - Habitats: get_habitat_distribution_10km(lon, lat) [10km radius]
+   ↓
+4. Results processed:
+   - Species data: Array of species objects
+   - Habitat data: Array of {habitat_type, percentage}
+   ↓
+5. Game initialization:
+   - Phaser game starts with species data
+   - Habitat data stored for green gem clues
+   ↓
+6. Match-3 gameplay:
+   - Each gem type reveals specific clue categories
+   - Green gems show raster habitat percentages
 ```
 
-Upload your GeoTIFF files:
-- `https://youraccount.blob.core.windows.net/geotiff/habitat_cog.tif`
-
-### 2. Minimal TiTiler Server
-
-#### Option A: Serverless with AWS Lambda or Azure Functions
-```python
-# titiler_lambda.py - Serverless TiTiler
-from mangum import Mangum
-from titiler.core.factory import TilerFactory
-from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
-import json
-
-# Load custom colormap
-with open('habitat_colormap.json', 'r') as f:
-    habitat_colormap = json.load(f)
-
-app = FastAPI()
-
-# Simple CORS for your Next.js app
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
-
-# Basic TiTiler with custom colormap
-cog = TilerFactory(
-    router_prefix="/cog",
-    colormap={
-        "habitat_custom": {int(k): v for k, v in habitat_colormap.items()}
-    }
-)
-app.include_router(cog.router, prefix="/cog")
-
-# Lambda handler
-handler = Mangum(app)
+### Clue System Architecture
+```
+Gem Colors → Clue Categories:
+🧬 Red     → Classification (genus, family, etc.)
+🌳 Green   → Raster Habitat (percentage data)
+🗺️ Blue    → Geographic + Species Habitat
+🐾 Orange  → Morphology (size, color, pattern)
+💨 White   → Behavior + Diet
+⏳ Black   → Life Cycle
+🛡️ Yellow  → Conservation Status
+❗ Purple  → Key Facts
 ```
 
-#### Option B: Minimal Docker Container
-```dockerfile
-# Dockerfile
-FROM tiangolo/uvicorn-gunicorn:python3.11-slim
+## Supabase Functions Implementation
 
-RUN pip install titiler.core
+### Core Spatial Functions
 
-COPY habitat_colormap.json /app/
-COPY main.py /app/
-
-ENV MODULE_NAME=main
-```
-
-```python
-# main.py - Minimal TiTiler
-from titiler.core.factory import TilerFactory
-from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
-from fastapi import FastAPI
-from starlette.middleware.cors import CORSMiddleware
-import json
-
-# Load colormap
-with open('habitat_colormap.json', 'r') as f:
-    habitat_values = json.load(f)
-    habitat_colormap = {int(k): v for k, v in habitat_values.items()}
-
-app = FastAPI(title="Minimal TiTiler")
-
-# CORS for your domains
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "https://yourapp.vercel.app"  # Your Next.js deployment
-    ],
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
-
-# Register colormap and create tile endpoint
-from rio_tiler.colormap import cmap
-custom_cmap = cmap.register({"habitat_custom": habitat_colormap})
-
-cog = TilerFactory(
-    colormap_dependency=lambda: custom_cmap,
-    router_prefix="/cog"
-)
-app.include_router(cog.router, prefix="/cog")
-
-@app.get("/")
-def root():
-    return {"message": "Minimal TiTiler Running"}
-```
-
-Deploy to:
-- **Azure Container Instances** (simplest, ~$30/month)
-- **Railway.app** (easy deployment, ~$5-20/month)
-- **Fly.io** (global edge, ~$5-20/month)
-
-### 3. Move Game Logic to Next.js
-
-Create API route: `src/pages/api/location-info.ts`
-
-```typescript
-// src/pages/api/location-info.ts
-import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { lon, lat } = req.query;
-  
-  if (!lon || !lat) {
-    return res.status(400).json({ error: 'Missing coordinates' });
-  }
-
-  const longitude = parseFloat(lon as string);
-  const latitude = parseFloat(lat as string);
-
-  try {
-    // Call Supabase RPC function for spatial query
-    const { data, error } = await supabase.rpc('query_location_info', {
-      lon: longitude,
-      lat: latitude
-    });
-
-    if (error) throw error;
-
-    res.status(200).json({
-      habitats: data.habitats || [],
-      species: data.species || []
-    });
-  } catch (error) {
-    console.error('Location query error:', error);
-    res.status(500).json({ error: 'Failed to query location' });
-  }
-}
-```
-
-Create Supabase function: `query_location_info`
-
+#### 1. Species Query Function
 ```sql
--- In Supabase SQL Editor
-CREATE OR REPLACE FUNCTION query_location_info(
-  lon float,
-  lat float
-) RETURNS json AS $$
-DECLARE
-  habitat_values integer[];
-  species_names text[];
+CREATE OR REPLACE FUNCTION get_species_at_point(lon float, lat float)
+RETURNS SETOF icaa AS $$
 BEGIN
-  -- Query habitats within 1km
-  WITH point AS (
-    SELECT ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography AS geog
-  ),
-  buffer_1km AS (
-    SELECT ST_Buffer(geog, 1000) AS geom FROM point
-  )
-  SELECT array_agg(DISTINCT habitat_type) INTO habitat_values
-  FROM habitats, buffer_1km
-  WHERE ST_Intersects(habitats.geom::geography, buffer_1km.geom);
-
-  -- Query species within 10km  
-  WITH point AS (
-    SELECT ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography AS geog
-  ),
-  buffer_10km AS (
-    SELECT ST_Buffer(geog, 10000) AS geom FROM point
-  )
-  SELECT array_agg(DISTINCT sci_name) INTO species_names
-  FROM icaa, buffer_10km
-  WHERE ST_Intersects(wkb_geometry::geography, buffer_10km.geom);
-
-  RETURN json_build_object(
-    'habitats', COALESCE(habitat_values, ARRAY[]::integer[]),
-    'species', COALESCE(species_names, ARRAY[]::text[])
-  );
+    RETURN QUERY
+    SELECT * FROM icaa
+    WHERE ST_Contains(wkb_geometry, ST_SetSRID(ST_MakePoint(lon, lat), 4326));
 END;
-$$ LANGUAGE plpgsql;
-
--- Grant execute permission
-GRANT EXECUTE ON FUNCTION query_location_info TO anon, authenticated;
+$$ LANGUAGE plpgsql STABLE;
 ```
 
-### 4. Update CesiumMap Component
+#### 2. Raster Habitat Distribution Function
+```sql
+CREATE OR REPLACE FUNCTION get_habitat_distribution_10km(lon float, lat float)
+RETURNS TABLE (
+    habitat_type text,
+    percentage numeric
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH center_point AS (
+        SELECT ST_SetSRID(ST_MakePoint(lon, lat), 4326) as geom
+    ),
+    search_area AS (
+        SELECT ST_Buffer(ST_Transform(p.geom, 3857), 10000) as geom_buffer
+        FROM center_point p
+    ),
+    bounds AS (
+        SELECT ST_Transform(s.geom_buffer, 4326) as geom
+        FROM search_area s
+    ),
+    clipped AS (
+        SELECT ST_Clip(rast, b.geom, 0, true) as clipped_rast
+        FROM habitat_raster, bounds b
+        WHERE ST_Intersects(ST_ConvexHull(rast), b.geom)
+    ),
+    counts AS (
+        SELECT (ST_ValueCount(clipped_rast, 1)).*
+        FROM clipped
+        WHERE clipped_rast IS NOT NULL
+    )
+    SELECT 
+        COALESCE(c.label, 'Unknown') as habitat_type,
+        ROUND(100.0 * SUM(p.count) / SUM(SUM(p.count)) OVER (), 2) as percentage
+    FROM counts p
+    LEFT JOIN habitat_colormap c ON p.value = c.value
+    WHERE p.value != 0 AND p.value IS NOT NULL
+    GROUP BY c.label
+    HAVING SUM(p.count) > 0
+    ORDER BY percentage DESC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+```
 
+## Frontend Integration
+
+### Species Service (TypeScript)
 ```typescript
-// src/components/CesiumMap.tsx
-const TITILER_URL = process.env.NEXT_PUBLIC_TITILER_URL || 'https://your-titiler.fly.dev';
-const BLOB_BASE_URL = 'https://youraccount.blob.core.windows.net/geotiff';
+// src/lib/speciesService.ts
+export const speciesService = {
+  async getSpeciesAtPoint(longitude: number, latitude: number): Promise<SpeciesQueryResult> {
+    const { data, error } = await supabase
+      .rpc('get_species_at_point', { lon: longitude, lat: latitude });
+    
+    if (error) {
+      console.error('Error querying species:', error);
+      return { species: [], count: 0 };
+    }
 
-// For tiles
-const cogUrl = `${BLOB_BASE_URL}/habitat_cog.tif`;
-const tileJsonUrl = `${TITILER_URL}/cog/WebMercatorQuad/tilejson.json?url=${encodeURIComponent(cogUrl)}&colormap_name=habitat_custom`;
-
-// For location queries - use your Next.js API
-const queryUrl = `/api/location-info?lon=${longitude}&lat=${latitude}`;
-```
-
-## Deployment Options Comparison
-
-### 1. Serverless Function (Cheapest)
-- **Azure Functions**: ~$0-5/month (pay per request)
-- **Vercel Edge Functions**: Included with Next.js
-- **Pros**: Nearly free, auto-scales
-- **Cons**: Cold starts, 10s timeout limits
-
-### 2. Container Services (Balanced)
-- **Railway.app**: ~$5/month, easy deploy
-- **Fly.io**: ~$5/month + global edge
-- **Azure Container Instance**: ~$30/month
-- **Pros**: Always warm, full control
-- **Cons**: Fixed monthly cost
-
-### 3. Minimal VPS (If needed)
-- **Oracle Cloud Free Tier**: Free (1 OCPU, 1GB RAM)
-- **DigitalOcean**: $6/month droplet
-- **Pros**: Full control, can host multiple services
-- **Cons**: You manage everything
-
-## Quick Start with Railway.app
-
-```bash
-# 1. Create minimal TiTiler app
-mkdir minimal-titiler && cd minimal-titiler
-
-# 2. Create requirements.txt
-cat > requirements.txt << EOF
-titiler.core==0.18.0
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-EOF
-
-# 3. Create main.py (from above)
-# 4. Copy your habitat_colormap.json
-
-# 5. Create railway.json
-cat > railway.json << EOF
-{
-  "build": {
-    "builder": "NIXPACKS"
+    return {
+      species: data || [],
+      count: data?.length || 0
+    };
   },
-  "deploy": {
-    "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT"
-  }
-}
-EOF
 
-# 6. Deploy
-railway login
-railway init
-railway up
+  async getRasterHabitatDistribution(longitude: number, latitude: number): Promise<RasterHabitatResult[]> {
+    const { data, error } = await supabase
+      .rpc('get_habitat_distribution_10km', { lon: longitude, lat: latitude });
+    
+    if (error) {
+      console.error('Error querying raster habitat distribution:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+};
 ```
 
-## Cost Summary
+### Cesium Map Integration
+- **Click Handler**: Extracts coordinates and triggers parallel queries
+- **Info Window**: Shows habitat count and top habitat type
+- **Visual Indicators**: 10km radius circles for both species and habitat queries
+- **Event System**: Communicates with Phaser game via EventBus
 
-**Simplified Architecture Total**: ~$10-40/month
-- Azure Blob Storage: $1-5/month
-- TiTiler Server: $0-30/month (depending on choice)
-- Supabase: Free tier or existing plan
-- Next.js: Existing Vercel deployment
+### Phaser Game Integration
+- **Species Management**: Handles multiple species per location
+- **Clue Generation**: Different logic for green gems (raster habitat) vs other gems
+- **Progress Tracking**: Manages revealed clues and species advancement
 
-**Compared to Original Proposal**: 80-90% cost reduction
+## Database Schema
 
-## Benefits
+### Key Tables
+```sql
+-- Species data with spatial geometries
+icaa (
+  ogc_fid INTEGER PRIMARY KEY,
+  wkb_geometry GEOMETRY,
+  sci_name TEXT,
+  comm_name TEXT,
+  -- ... 60+ habitat and trait columns
+)
 
-1. **No Duplicate APIs**: Use Supabase for all data queries
-2. **No PostgreSQL Management**: Supabase handles it
-3. **Simpler Deployment**: One small container or serverless function
-4. **Lower Costs**: Minimal infrastructure
-5. **Better Integration**: Native Next.js API routes
+-- Raster habitat data
+habitat_raster (
+  rid INTEGER PRIMARY KEY,
+  rast RASTER,
+  filename TEXT
+)
 
-This approach leverages your existing infrastructure (Next.js + Supabase) and only adds the minimal TiTiler component needed for tile generation.
+-- Habitat type labels for visualization
+habitat_colormap (
+  value INTEGER PRIMARY KEY,
+  label TEXT
+)
+```
+
+### Spatial Indexes
+```sql
+-- Species spatial index
+CREATE INDEX icaa_geom_idx ON icaa USING GIST(wkb_geometry);
+
+-- Raster spatial index
+CREATE INDEX habitat_raster_spatial_idx ON habitat_raster USING GIST(ST_ConvexHull(rast));
+```
+
+## Performance Optimizations
+
+### 1. **Query Efficiency**
+- Spatial indexes on all geometry columns
+- GIST indexes for raster convex hulls
+- Function marked as `STABLE` for query optimization
+
+### 2. **Frontend Optimizations**
+- Parallel API calls for species and habitat data
+- Efficient clue caching in game state
+- Minimal data transfer with targeted queries
+
+### 3. **Raster Processing**
+- 10km buffer queries balance performance vs coverage
+- Clipped raster processing reduces computation
+- Percentage calculations for meaningful habitat insights
+
+## Development Workflow
+
+### Local Development
+```bash
+# Start development server
+npm run dev
+
+# Type checking
+npm run typecheck
+
+# Environment variables required
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+NEXT_PUBLIC_TITILER_BASE_URL=titiler_endpoint
+```
+
+### Database Management
+- **Species Updates**: Direct Supabase SQL editor or migrations
+- **Raster Updates**: Upload new COG and update habitat_raster table
+- **Function Updates**: Deploy via Supabase SQL editor
+
+## Cost Structure
+
+### Current Monthly Costs
+- **Supabase**: Free tier or $25/month (Pro plan)
+- **TiTiler Server**: ~$30/month (Azure Container Instance)
+- **Azure Blob Storage**: ~$1-5/month
+- **Vercel Hosting**: Free tier (static export)
+
+**Total**: ~$30-60/month
+
+### Cost Optimizations
+- Static export eliminates Vercel function costs
+- Direct Supabase calls eliminate API route overhead
+- TiTiler only for visualization (could be optimized further)
+
+## Deployment Architecture
+
+### Production Stack
+```
+Vercel (Static Next.js) 
+    ↓ (direct calls)
+Supabase (PostgreSQL + PostGIS)
+    ↑ (data)
+Azure TiTiler (visualization tiles)
+    ↑ (COG data)
+Azure Blob Storage
+```
+
+### Environment Configuration
+- **Development**: Local Next.js → Supabase cloud
+- **Production**: Vercel static → Supabase cloud
+- **Database**: Supabase managed PostgreSQL with PostGIS
+
+## Future Optimizations
+
+### Potential Improvements
+1. **TiTiler Replacement**: Migrate to Supabase-based tile generation
+2. **Caching Layer**: Add Redis for frequently accessed spatial queries
+3. **Edge Functions**: Use Supabase Edge Functions for complex processing
+4. **Progressive Loading**: Implement streaming for large datasets
+
+### Scalability Considerations
+- **Database**: Supabase handles scaling automatically
+- **Frontend**: CDN distribution via Vercel
+- **Raster Processing**: Could move to Supabase compute if needed
+
+This architecture successfully combines modern geospatial capabilities with game mechanics while maintaining cost efficiency and development simplicity.

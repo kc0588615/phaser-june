@@ -6,6 +6,11 @@ export interface SpeciesQueryResult {
   count: number;
 }
 
+export interface RasterHabitatResult {
+  habitat_type: string;
+  percentage: number;
+}
+
 export const speciesService = {
   /**
    * Query species that intersect with a given point (longitude, latitude)
@@ -84,6 +89,27 @@ export const speciesService = {
       return data || [];
     } catch (error) {
       console.error('Error in getSpeciesByIds:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get habitat distribution within 10km of a point using raster data
+   */
+  async getRasterHabitatDistribution(longitude: number, latitude: number): Promise<RasterHabitatResult[]> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_habitat_distribution_10km', { lon: longitude, lat: latitude });
+      
+      if (error) {
+        console.error('Error querying raster habitat distribution:', error);
+        return [];
+      }
+
+      console.log(`Raster habitat query returned ${data?.length || 0} habitat types at (${longitude}, ${latitude})`);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getRasterHabitatDistribution:', error);
       return [];
     }
   },

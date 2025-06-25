@@ -9,9 +9,10 @@ import {
 } from '../constants';
 import { EventBus, EventPayloads } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
-import { GemClueMapper, GemCategory, gemCategoryMapping } from '../gemCategoryMapping';
+import { GemClueMapper, GemCategory, gemCategoryMapping, ClueData } from '../gemCategoryMapping';
 import { GemType } from '../constants';
 import type { Species } from '@/types/database';
+import type { RasterHabitatResult } from '@/lib/speciesService';
 
 interface BoardOffset {
     x: number;
@@ -57,6 +58,9 @@ export class Game extends Phaser.Scene {
     private revealedClues: Set<GemCategory> = new Set();
     private currentSpeciesIndex: number = 0;
     private allCluesRevealed: boolean = false;
+    // --- Raster Habitat Integration ---
+    private rasterHabitats: RasterHabitatResult[] = [];
+    private usedRasterHabitats: Set<string> = new Set();
 
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
@@ -171,6 +175,11 @@ export class Game extends Phaser.Scene {
             this.currentSpeciesIndex = 0;
             this.revealedClues.clear(); // Reset clues for new game
             this.allCluesRevealed = false;
+            
+            // Store raster habitat data for green gem clues
+            this.rasterHabitats = [...data.rasterHabitats];
+            this.usedRasterHabitats.clear(); // Reset used raster habitats for new game
+            console.log("Game Scene: Stored raster habitats:", this.rasterHabitats);
             
             if (this.currentSpecies.length > 0) {
                 // Select the species with lowest ogc_fid
@@ -511,7 +520,15 @@ export class Game extends Phaser.Scene {
                 this.revealedClues.add(category);
                 
                 // Generate clue for this category
-                const clueData = GemClueMapper.getClueForCategory(this.selectedSpecies, category);
+                let clueData;
+                if (category === GemCategory.HABITAT) {
+                    // Use raster habitat data for green gems
+                    clueData = this.generateRasterHabitatClue();
+                } else {
+                    // Use normal species-based clues for other categories
+                    clueData = GemClueMapper.getClueForCategory(this.selectedSpecies, category);
+                }
+                
                 if (clueData && clueData.clue) {
                     console.log("Game Scene: Revealing clue for category:", category, clueData);
                     EventBus.emit('clue-revealed', clueData);
@@ -544,6 +561,7 @@ export class Game extends Phaser.Scene {
             this.selectedSpecies = this.currentSpecies[this.currentSpeciesIndex];
             this.revealedClues.clear();
             this.allCluesRevealed = false;
+            this.usedRasterHabitats.clear(); // Reset used raster habitats for new species
             
             console.log("Game Scene: Advancing to next species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
             
@@ -635,6 +653,38 @@ export class Game extends Phaser.Scene {
         }
     }
 
+    /**
+     * Generate a raster habitat clue from the stored habitat distribution data
+     */
+    private generateRasterHabitatClue(): ClueData | null {
+        if (!this.selectedSpecies) return null;
+        
+        // Find the next unused habitat type from raster data
+        const availableHabitats = this.rasterHabitats.filter(
+            habitat => !this.usedRasterHabitats.has(habitat.habitat_type)
+        );
+        
+        if (availableHabitats.length === 0) {
+            console.log("Game Scene: No more raster habitat types available for clues");
+            return null;
+        }
+        
+        // Get the habitat with highest percentage (first one since they're sorted DESC)
+        const nextHabitat = availableHabitats[0];
+        this.usedRasterHabitats.add(nextHabitat.habitat_type);
+        
+        const clue = `Search Area is ${nextHabitat.percentage}% ${nextHabitat.habitat_type}`;
+        
+        console.log("Game Scene: Generated raster habitat clue:", clue);
+        
+        return {
+            category: GemCategory.HABITAT,
+            heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+            clue: clue,
+            speciesId: this.selectedSpecies.ogc_fid
+        };
+    }
+
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
@@ -673,6 +723,10 @@ export class Game extends Phaser.Scene {
         this.revealedClues.clear();
         this.currentSpeciesIndex = 0;
         this.allCluesRevealed = false;
+        
+        // Reset raster habitat data
+        this.rasterHabitats = [];
+        this.usedRasterHabitats.clear();
         
         // Emit game reset event
         EventBus.emit('game-reset', undefined);

@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing PhaserGame component
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
 import { ClueDisplay } from './components/ClueDisplay'; // Import the ClueDisplay component
-import { APITester } from './components/APITester'; // Import the APITester component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 
 function MainAppLayout() {
@@ -91,7 +90,6 @@ function MainAppLayout() {
                     {cesiumMinimized ? '▼ Expand' : '▲ Minimize'}
                 </button>
                 <CesiumMap />
-                <APITester />
             </div>
 
             <div id="phaser-and-ui-wrapper" style={phaserAndUiContainerStyle}>

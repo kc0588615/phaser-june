@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { Species } from '@/types/database';
+import type { RasterHabitatResult } from '@/lib/speciesService';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -9,6 +10,7 @@ export interface EventPayloads {
     lat: number;
     habitats: string[];
     species: Species[];
+    rasterHabitats: RasterHabitatResult[];
   };
   'game-score-updated': {
     score: number;

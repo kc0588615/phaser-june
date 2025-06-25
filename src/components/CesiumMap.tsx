@@ -24,7 +24,7 @@ import { getAppConfig } from '../utils/config';
 // Configuration - using environment variables with fallbacks
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif";
-const HABITAT_RADIUS_METERS = 100000.0;
+const HABITAT_RADIUS_METERS = 10000.0; // Updated to match raster query (10km)
 const SPECIES_RADIUS_METERS = 10000.0;
 
 const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
@@ -37,6 +37,9 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     lat?: number;
     habitats: string[];
     species: Species[];
+    rasterHabitats?: Array<{habitat_type: string; percentage: number}>;
+    habitatCount?: number;
+    topHabitat?: string;
     message?: string | null;
   }>({ habitats: [], species: [] });
   const [showInfoBox, setShowInfoBox] = useState(false);
@@ -135,40 +138,6 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     setupImagery();
   }, []); 
 
-  // Test function for new approach (direct Supabase calls)
-  const testNewAPIRoute = async (lon: number, lat: number) => {
-    try {
-      console.log("Testing new Supabase approach...");
-      
-      // Test if the new Supabase function exists
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      
-      try {
-        const { data, error } = await supabase.rpc('query_location_simple', {
-          lon: lon,
-          lat: lat
-        });
-        
-        if (error) throw error;
-        console.log("New Supabase Function Response:", data);
-      } catch (rpcError) {
-        console.log("New function not available:", rpcError);
-        console.log("Would fall back to existing get_species_at_point function");
-      }
-      
-      // Compare with current method
-      const currentResult = await speciesService.getSpeciesAtPoint(lon, lat);
-      console.log("Current Supabase Service:", currentResult);
-      
-      console.log("Comparison complete - check console for results");
-    } catch (error) {
-      console.error("Supabase test failed:", error);
-    }
-  };
 
   const handleMapClick = useCallback((movement: any) => { // Typed movement
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
@@ -188,40 +157,51 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
 
       console.log("Resium: Calling speciesService for location:", longitude, latitude);
 
-      // Test the new API route alongside current method
-      testNewAPIRoute(longitude, latitude);
-
-      // Use local Supabase species service instead of external API
-      speciesService.getSpeciesAtPoint(longitude, latitude)
-        .then(result => {
-          console.log("Resium: Species service response:", result);
+      // Use Supabase species service for location data
+      Promise.all([
+        speciesService.getSpeciesAtPoint(longitude, latitude),
+        speciesService.getRasterHabitatDistribution(longitude, latitude)
+      ])
+        .then(([speciesResult, rasterHabitats]) => {
+          console.log("Resium: Species service response:", speciesResult);
+          console.log("Resium: Raster habitat response:", rasterHabitats);
           
-          // Extract habitat information from species data
-          const habitats = new Set<string>();
-          result.species.forEach(species => {
-            if (species.hab_desc) habitats.add(species.hab_desc);
-            if (species.aquatic) habitats.add('aquatic');
-            if (species.freshwater) habitats.add('freshwater');
-            if (species.terrestr || species.terrestria) habitats.add('terrestrial');
-            if (species.marine) habitats.add('marine');
+          // Keep legacy habitat extraction for backward compatibility (if needed elsewhere)
+          const legacyHabitats = new Set<string>();
+          speciesResult.species.forEach(species => {
+            if (species.hab_desc) legacyHabitats.add(species.hab_desc);
+            if (species.aquatic) legacyHabitats.add('aquatic');
+            if (species.freshwater) legacyHabitats.add('freshwater');
+            if (species.terrestr || species.terrestria) legacyHabitats.add('terrestrial');
+            if (species.marine) legacyHabitats.add('marine');
           });
 
-          const habitatList = Array.from(habitats);
+          const habitatList = Array.from(legacyHabitats);
+          
+          // Process raster habitat data for info display
+          const habitatCount = rasterHabitats.length;
+          const topHabitat = rasterHabitats.length > 0 
+            ? `${rasterHabitats[0].habitat_type} (${rasterHabitats[0].percentage}%)`
+            : undefined;
           
           setInfoBoxData({
             lon: longitude,
             lat: latitude,
-            habitats: habitatList,
-            species: result.species,
+            habitats: habitatList, // Keep for legacy compatibility
+            species: speciesResult.species,
+            rasterHabitats: rasterHabitats,
+            habitatCount: habitatCount,
+            topHabitat: topHabitat,
             message: null
           });
           
-          // Emit event with actual species data for the game
+          // Emit event with actual species data and raster habitat data for the game
           EventBus.emit('cesium-location-selected', {
             lon: longitude,
             lat: latitude,
             habitats: habitatList,
-            species: result.species
+            species: speciesResult.species,
+            rasterHabitats: rasterHabitats
           });
         })
         .catch(err => {
@@ -298,7 +278,11 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           {infoBoxData.message ? <p>{infoBoxData.message}</p> : (
             <>
               <p><b>Location:</b> Lon: {infoBoxData.lon?.toFixed(4)}, Lat: {infoBoxData.lat?.toFixed(4)}</p>
-              <p><b>Habitats (within {HABITAT_RADIUS_METERS / 1000}km):</b> {infoBoxData.habitats.length > 0 ? infoBoxData.habitats.join(', ') : 'None'}</p>
+              <p><b>Habitats (within {HABITAT_RADIUS_METERS / 1000}km):</b> {
+                infoBoxData.habitatCount && infoBoxData.habitatCount > 0 
+                  ? `${infoBoxData.habitatCount} distinct types, top: ${infoBoxData.topHabitat}`
+                  : 'None detected'
+              }</p>
               <p><b>Species (near {SPECIES_RADIUS_METERS / 1000}km):</b> {
                 infoBoxData.species.length > 0 
                   ? infoBoxData.species.map(s => s.comm_name || s.sci_name || `Species ${s.ogc_fid}`).join(', ')
