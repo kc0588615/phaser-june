@@ -40,6 +40,8 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
+.env.example
+.github/workflows/azure-deploy.yml
 .gitignore
 app/colormaps.py
 app/dependencies.py
@@ -68,13 +70,18 @@ cesium_titiler_test/.git/logs/refs/heads/main
 cesium_titiler_test/.git/refs/heads/main
 cesium_titiler_test/.gitattributes
 cesium_titiler_test/.gitignore
+COG_CONFIGURATION.md
 cors_server.py
-directory_files_list.txt
-directory_tree.txt
+docker-compose.override.yml
+docker-compose.prod.yml
+docker-compose.yml
+docker-run.ps1
+Dockerfile
+Dockerfile.prod
 habitat_colormap.json
 index.html
-load_cog.ps1
-load_species_gym.ps1
+README.md
+requirements.txt
 </directory_structure>
 
 <files>
@@ -1203,77 +1210,213 @@ cython_debug/
 #.idea/
 </file>
 
-<file path=".gitignore">
-# Python cache
-__pycache__/
-*.pyc
+<file path="COG_CONFIGURATION.md">
+# COG Configuration Guide
 
-# Virtual Environments
-venv/
-env/
-ENV/
-.venv/
+## Overview
+Your app now supports configurable COG URLs through environment variables. This allows you to easily switch between local COG files and remote Azure Blob Storage COGs without changing code.
 
+## Configuration Options
 
-/data/
-repomix-output.xml
+### Option 1: Public Azure Blob (Recommended)
+If your blob is publicly accessible:
+```
+COG_URL=https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif
+```
+
+### Option 2: Private Azure Blob with SAS Token
+If your blob is private, use the full SAS URL:
+```
+COG_URL=https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif?sp=r&st=2025-06-13T20:58:01Z&se=2025-06-14T04:58:01Z&sv=2024-11-04&sr=c&sig=K%2FsxjRpPVAxLNjjyRykKgv9wPQF%2FNqgApF%2BIhIZs9Qo%3D
+```
+
+### Option 3: Local COG File (Default)
+If no environment variable is set, it defaults to:
+```
+COG_URL=/app/data/habitat_cog.tif
+```
+
+## How to Set the Environment Variable
+
+### For Docker Compose (Recommended)
+1. Edit `docker-compose.override.yml` (already created for you)
+2. Update the `COG_URL` value under the `environment` section
+3. Run: `docker-compose up --build`
+
+### For Azure Container Apps
+1. Go to your Azure Container App in the Azure Portal
+2. Navigate to **Configuration** → **Environment variables**
+3. Add a new environment variable:
+   - **Name**: `COG_URL`
+   - **Value**: `https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif`
+4. Save and restart your container app
+
+### For Docker Run Command
+```powershell
+docker run -p 8000:8000 -e COG_URL="https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif" your-image-name
+```
+
+## Testing the Configuration
+
+1. **Start your application**:
+   ```powershell
+   docker-compose up --build
+   ```
+
+2. **Check the configuration endpoint**:
+   Open http://localhost:8000/api/config in your browser
+   You should see:
+   ```json
+   {
+     "cogUrl": "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif",
+     "titilerBaseUrl": "http://localhost:8000",
+     "gameApiBaseUrl": "http://localhost:8000"
+   }
+   ```
+
+3. **Open the map**:
+   Open `index.html` in your browser or serve it through a web server
+   Check the browser console for messages like:
+   ```
+   Configuration loaded: {cogUrl: "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif", ...}
+   Using COG path: https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif
+   ```
+
+## Troubleshooting
+
+### If the COG doesn't load:
+1. Check that the Azure Blob URL is accessible (try opening it directly in a browser)
+2. Verify the SAS token hasn't expired (valid until 2025-06-14T04:58:01Z)
+3. Check the browser network tab for any CORS errors
+4. Verify the COG file format is valid
+
+### If configuration doesn't load:
+1. Ensure the backend is running on port 8000
+2. Check for CORS issues if serving the frontend from a different port
+3. Verify the `/api/config` endpoint is accessible
+
+## SAS Token Renewal
+Your current SAS token expires on **June 14, 2025 at 04:58:01 UTC**. To renew:
+1. Generate a new SAS token in Azure Storage
+2. Update the `COG_URL` environment variable
+3. Restart your application
 </file>
 
-<file path="app/colormaps.py">
-# app/colormaps.py
-import json
-import os
-from rio_tiler.colormap import cmap as default_cmap, parse_color
+<file path="docker-compose.override.yml">
+version: '3.8'
 
-# Get the directory where colormaps.py is located
-script_dir = os.path.dirname(os.path.abspath(__file__))
-print(f"[DEBUG] colormaps.py script_dir: {script_dir}") # Debug print
+services:
+  titiler-app:
+    environment:
+      # Set the COG URL to your Azure Blob Storage COG
+      # Use the public URL (without SAS token if the blob is public)
+      - COG_URL=https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif
+      
+      # If your blob is private, use the full SAS URL:
+      # - COG_URL=https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif?sp=r&st=2025-06-13T20:58:01Z&se=2025-06-14T04:58:01Z&sv=2024-11-04&sr=c&sig=K%2FsxjRpPVAxLNjjyRykKgv9wPQF%2FNqgApF%2BIhIZs9Qo%3D
+</file>
 
-# Construct the path to habitat_colormap.json (which should be one level up)
-project_root = os.path.abspath(os.path.join(script_dir, '..'))
-json_path = os.path.join(project_root, 'habitat_colormap.json')
+<file path=".env.example">
+# Database Configuration
+DB_HOST=your-azure-postgres-host.postgres.database.azure.com
+DB_PORT=5432
+DB_NAME=phaser
+DB_USER=postgres@your-server-name
+DB_PASSWORD=your-secure-password
 
-print(f"[DEBUG] Calculated project_root: {project_root}") # Debug print
-print(f"[DEBUG] Attempting to load colormap from: {json_path}") # Debug print
-print(f"[DEBUG] Does colormap file exist at path? {os.path.exists(json_path)}") # Debug print
-print(f"[DEBUG] Current Working Directory: {os.getcwd()}") # Debug print
+# TiTiler Configuration
+TITILER_API_ALLOW_FILE_ACCESS=true
 
-habitat_values = {}
-try:
-    with open(json_path, "r") as f:
-        habitat_values_str_keys = json.load(f)
-        # Convert string keys to integers and parse colors
-        habitat_values = {
-            int(k): parse_color(v) for k, v in habitat_values_str_keys.items()
-        }
-    print(f"[DEBUG] Successfully loaded {len(habitat_values)} entries from colormap.") # Debug print
-except FileNotFoundError:
-    print(f"[ERROR] habitat_colormap.json not found at calculated path: {json_path}.") # Error print
-except json.JSONDecodeError as e:
-    print(f"[ERROR] Error decoding {json_path}: {e}") # Error print
-except Exception as e:
-    print(f"[ERROR] An unexpected error occurred loading colormap: {e}") # Error print
+# Optional: PROJ Library Path (usually handled by the base image)
+# PROJ_LIB=/usr/share/proj
 
+# Azure Storage (if using for COG files)
+# AZURE_STORAGE_CONNECTION_STRING=your-connection-string
+# AZURE_STORAGE_CONTAINER=cog-files
+</file>
 
-# Register the custom colormap with rio_tiler's cmap store
-# Only register if we successfully loaded values
-if habitat_values:
-    try:
-        # Ensure habitat_values is not empty before registering
-        if not habitat_values:
-             print("[WARN] habitat_values dictionary is empty. Skipping registration.")
-             custom_cmap = default_cmap
-        else:
-            custom_cmap = default_cmap.register({"habitat_custom": habitat_values})
-            print("[DEBUG] 'habitat_custom' colormap registered.")
-    except Exception as e:
-        print(f"[ERROR] Failed to register colormap: {e}")
-        custom_cmap = default_cmap
-else:
-    custom_cmap = default_cmap # Use the original default if loading failed
-    print("[WARN] 'habitat_custom' colormap NOT registered because loading failed or file was empty.")
+<file path=".github/workflows/azure-deploy.yml">
+name: Build and Deploy to Azure
 
-cmap_store = custom_cmap
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  AZURE_CONTAINER_REGISTRY: your-registry.azurecr.io
+  CONTAINER_NAME: titiler-game-api
+  RESOURCE_GROUP: your-resource-group
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}
+        username: ${{ secrets.AZURE_ACR_USERNAME }}
+        password: ${{ secrets.AZURE_ACR_PASSWORD }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.prod
+        push: true
+        tags: |
+          ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:latest
+          ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy to Azure Container Instances
+      uses: azure/aci-deploy@v1
+      with:
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        dns-name-label: titiler-game-api-${{ github.run_number }}
+        image: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+        registry-login-server: ${{ env.AZURE_CONTAINER_REGISTRY }}
+        registry-username: ${{ secrets.AZURE_ACR_USERNAME }}
+        registry-password: ${{ secrets.AZURE_ACR_PASSWORD }}
+        name: titiler-game-api
+        location: 'East US'
+        cpu: 1
+        memory: 2
+        ports: 8000
+        protocol: TCP
+        environment-variables: |
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          TITILER_API_ALLOW_FILE_ACCESS=true
+        secure-environment-variables: |
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 </file>
 
 <file path="app/dependencies.py">
@@ -1333,106 +1476,169 @@ print(
 httpd.serve_forever()
 </file>
 
-<file path="directory_files_list.txt">
-File Listing for: D:\Downloads\april-phaser-main
-Generated on: 04/24/2025 23:43:14
-Ignoring Patterns: __pycache__, .venv, .git, .idea, build, dist, site-packages, *.pyc, *.pyd, *.pth, *.whl, *.dll, *.lib, __init__.py, __main__.py, *.cpython-312.pyc, *.cp312-win_amd64.pyd, *.cp312-win_amd64.lib, .gitignore, LICENSE*, METADATA, RECORD, WHEEL, INSTALLER
-----------------------------------------
+<file path="docker-compose.prod.yml">
+version: '3.8'
 
-  +-- .babelrc
-  +-- directory_tree.txt
-  +-- index.html
-  +-- log.js
-  +-- package.json
-  +-- package-lock.json
-      +-- bg.png
-      +-- black_gem_0.png
-      +-- black_gem_1.png
-      +-- black_gem_2.png
-      +-- black_gem_3.png
-      +-- black_gem_4.png
-      +-- black_gem_5.png
-      +-- black_gem_6.png
-      +-- black_gem_7.png
-      +-- blue_gem_0.png
-      +-- blue_gem_1.png
-      +-- blue_gem_2.png
-      +-- blue_gem_3.png
-      +-- blue_gem_4.png
-      +-- blue_gem_5.png
-      +-- blue_gem_6.png
-      +-- blue_gem_7.png
-      +-- green_gem_0.png
-      +-- green_gem_1.png
-      +-- green_gem_2.png
-      +-- green_gem_3.png
-      +-- green_gem_4.png
-      +-- green_gem_5.png
-      +-- green_gem_6.png
-      +-- green_gem_7.png
-      +-- logo.png
-      +-- orange_gem_0.png
-      +-- orange_gem_1.png
-      +-- orange_gem_2.png
-      +-- orange_gem_3.png
-      +-- orange_gem_4.png
-      +-- orange_gem_5.png
-      +-- orange_gem_6.png
-      +-- orange_gem_7.png
-      +-- red_gem_0.png
-      +-- red_gem_1.png
-      +-- red_gem_2.png
-      +-- red_gem_3.png
-      +-- red_gem_4.png
-      +-- red_gem_5.png
-      +-- red_gem_6.png
-      +-- red_gem_7.png
-      +-- white_gem_0.png
-      +-- white_gem_1.png
-      +-- white_gem_2.png
-      +-- white_gem_3.png
-      +-- white_gem_4.png
-      +-- white_gem_5.png
-      +-- white_gem_6.png
-      +-- white_gem_7.png
-    +-- favicon.png
-    +-- style.css
-  +-- README.md
-  +-- screenshot.png
-    +-- constants.js
-      +-- BackendPuzzle.js
-      +-- BoardView.js
-      +-- ExplodeAndReplacePhase.js
-      +-- MoveAction.js
-    +-- main.js
-      +-- Boot.js
-      +-- constants.js
-      +-- Game.js
-      +-- GameOver.js
-      +-- MainMenu.js
-      +-- Preloader.js
-    +-- config.js
-    +-- config.prod.js
+services:
+  titiler-app:
+    image: ${AZURE_CONTAINER_REGISTRY}/titiler-game-api:${IMAGE_TAG:-latest}
+    ports:
+      - "80:8000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - TITILER_API_ALLOW_FILE_ACCESS=true
+    volumes:
+      # For Azure, you'll need to use Azure File Storage or Blob Storage
+      # This is just a placeholder - configure based on your Azure storage setup
+      - azure-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  azure-data:
+    # Configure this based on your Azure storage solution
+    # For Azure File Share:
+    # driver: azure-file
+    # driver_opts:
+    #   share_name: cog-files
+    #   storage_account_name: yourstorageaccount
 </file>
 
-<file path="directory_tree.txt">
-Directory Structure for: C:\mapServer\tiTiler\cesium_titiler_test
-Generated on: 04/24/2025 20:47:05
-----------------------------------------
+<file path="docker-compose.yml">
+version: '3.8'
 
-+-- app
-+-- data
-+-- cors_server.py
-+-- directory_tree.txt
-+-- habitat_colormap.json
-+-- index.html
-  +-- colormaps.py
-  +-- dependencies.py
-  +-- habitat_colormap.json
-  +-- main.py
-  +-- habitat_webmerc.tif
-  +-- habitat_webmerc.tif.aux.xml
-  +-- test.ps1
+services:
+  titiler-app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_NAME=phaser
+      - DB_USER=postgres
+      - DB_PASSWORD=apple
+      - TITILER_API_ALLOW_FILE_ACCESS=true
+    volumes:
+      - "C:/OSGeo4W/geoTif:/app/data"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+</file>
+
+<file path="docker-run.ps1">
+# Docker Build and Run Script for TiTiler Game API
+# Usage: .\docker-run.ps1
+
+Write-Host "Building TiTiler Game API Docker Image..." -ForegroundColor Green
+
+# Build the Docker image
+docker build -t titiler-game-api .
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Docker image built successfully!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Starting container with docker-compose..." -ForegroundColor Yellow
+    
+    # Run with docker-compose
+    docker-compose up -d
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host ""
+        Write-Host "Container started successfully!" -ForegroundColor Green
+        Write-Host "API available at: http://localhost:8000" -ForegroundColor Cyan
+        Write-Host "Health check: http://localhost:8000/" -ForegroundColor Cyan
+        Write-Host "Open index.html in your browser to test the frontend" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "To view logs: docker-compose logs -f" -ForegroundColor Yellow
+        Write-Host "To stop: docker-compose down" -ForegroundColor Yellow
+    } else {
+        Write-Host "Failed to start container!" -ForegroundColor Red
+    }
+} else {
+    Write-Host "Failed to build Docker image!" -ForegroundColor Red
+}
+</file>
+
+<file path="Dockerfile">
+FROM ghcr.io/developmentseed/titiler:0.22.2
+
+# Install additional dependencies for PostgreSQL connectivity
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Create application directory
+WORKDIR /app
+
+# Copy application code
+COPY app/ /app/app/
+COPY habitat_colormap.json /app/habitat_colormap.json
+
+# Copy any data files (COG files) if they exist
+COPY data/ /app/data/
+
+# Set environment variables
+ENV PYTHONPATH="/app:$PYTHONPATH"
+ENV TITILER_API_ALLOW_FILE_ACCESS=true
+
+# Expose port
+EXPOSE 8000
+
+# Override the default TiTiler app with your custom app
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+</file>
+
+<file path="Dockerfile.prod">
+FROM ghcr.io/developmentseed/titiler:0.22.2
+
+# Install additional dependencies
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' --uid 1000 appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY app/ /app/app/
+COPY habitat_colormap.json /app/habitat_colormap.json
+
+# Create data directory for potential volume mounts
+RUN mkdir -p /app/data
+
+# Set ownership to non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Environment variables
+ENV PYTHONPATH="/app:$PYTHONPATH"
+ENV TITILER_API_ALLOW_FILE_ACCESS=true
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Run the application with optimized settings for production
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--access-log"]
 </file>
 
 <file path="habitat_colormap.json">
@@ -1522,208 +1728,291 @@ Generated on: 04/24/2025 20:47:05
   }
 </file>
 
-<file path="load_cog.ps1">
-# --- Configuration Variables ---
-$InputCog = "C:\OSGeo4W\geoTif\habitat_cog.tif"
-$OutputSql = "C:\Users\minos\load_habitat_full_512.sql" # Or your preferred path
-$DbTable = "public.habitat_raster_full_in_db"
-$TileSize = "512x512" # *** Adjusted based on gdalinfo ***
-$PgDb = "phaser"
-$PgUser = "postgres"
-$PgHost = "localhost"
-$PgPort = "5432"
-$PgPassword = "apple" # <-- Your PostgreSQL password here
-# Adjust memory based on your 32GB RAM. 8GB is a good starting point for index creation.
-$IndexMem = "24GB"
-$VacuumMem = "6GB" # Usually less memory needed for vacuum
+<file path="README.md">
+# TiTiler + Game Backend API - Docker Version
 
-# --- Function for Checking Command Success ---
-function Check-CommandSuccess {
-    param(
-        [string]$CommandName
-    )
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "$CommandName failed with exit code $LASTEXITCODE."
-        # Optional: Pause script on error
-        # Read-Host "Press Enter to exit..."
-        exit $LASTEXITCODE
-    } else {
-        Write-Host "$CommandName completed successfully." -ForegroundColor Green
-    }
-}
+This application is a dockerized version of the TiTiler-based habitat mapping and species query API.
 
-# --- Set Password Environment Variable ---
-# Setting it once for the duration of the script session
-$env:PGPASSWORD = $PgPassword
-Write-Host "PGPASSWORD environment variable set for this session." -ForegroundColor Magenta
+## Prerequisites
 
-try { # Wrap the entire process to ensure PGPASSWORD gets cleared
+- Docker Desktop installed and running
+- PostgreSQL database with habitat and species data accessible from Docker container
+- COG (Cloud Optimized GeoTIFF) files for the habitat data
 
-    # --- Phase 1: Generate SQL and Load Data ---
-    Write-Host "`n--- Phase 1: Starting Data Generation and Load ---" -ForegroundColor Yellow
+## Quick Start
 
-    Write-Host "Generating SQL for data insertion (using $TileSize tiles)..."
-    # Ensure raster2pgsql executable is in PATH or provide full path
-    $process = Start-Process raster2pgsql -ArgumentList "-s 3857 -F -t $TileSize ""$InputCog"" $DbTable" -RedirectStandardOutput $OutputSql -Wait -PassThru
-    $LASTEXITCODE = $process.ExitCode
-    Check-CommandSuccess "raster2pgsql SQL Generation"
-    Write-Host "SQL generation complete: $OutputSql"
+### 1. Build the Docker Image
 
-    Write-Host "Dropping existing table (if any) and executing SQL load..."
-    # Drop the table first IF it exists from a previous failed attempt
-    psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -c "DROP TABLE IF EXISTS $DbTable;"
-    Check-CommandSuccess "psql Drop Table"
+```powershell
+docker build -t titiler-game-api .
+```
 
-    # Execute the load script. This will be the most time-consuming disk I/O part.
-    psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -f $OutputSql
-    Check-CommandSuccess "psql Execute Load Script"
+### 2. Run with Docker Compose (Recommended)
 
-    # -- Optional Speed Boost Section (If used, ensure PGPASSWORD is set) --
-    # Example for Option A:
-    # Write-Host "Executing SQL load with synchronous_commit=off..."
-    # $sqlCommitOff = @"
-    # BEGIN;
-    # SET LOCAL synchronous_commit = off;
-    # \i $OutputSql
-    # COMMIT;
-    # "@
-    # $sqlCommitOff | psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort
-    # Check-CommandSuccess "psql Load with synchronous_commit=off"
+```powershell
+docker-compose up
+```
 
-    # Example for Option B (UNLOGGED):
-    # ... (Regenerate SQL first as before) ...
-    # Write-Host "Executing UNLOGGED table load..."
-    # psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -f $OutputSql
-    # Check-CommandSuccess "psql UNLOGGED Load"
+This will start the application on `http://localhost:8000`
 
-    Write-Host "--- Phase 1: Data insertion complete. ---" -ForegroundColor Green
+### 3. Run with Docker Command
 
-    # --- Cleanup the large SQL file AFTER successful load ---
-    Write-Host "Attempting to delete intermediate SQL file: $OutputSql"
-    Remove-Item -Path $OutputSql -ErrorAction SilentlyContinue -Force
-    if (Test-Path $OutputSql) {
-         Write-Warning "Could not delete $OutputSql. Please delete it manually to save space."
-    } else {
-         Write-Host "Successfully deleted $OutputSql." -ForegroundColor Cyan
-    }
+```powershell
+docker run -p 8000:8000 `
+  -e DB_HOST=host.docker.internal `
+  -e DB_PASSWORD=your_password `
+  -v "C:/path/to/your/cog/files:/app/data/external" `
+  titiler-game-api
+```
 
-    # --- Phase 2: Create Spatial Index ---
-    Write-Host "`n--- Phase 2: Starting Spatial Index Creation ---" -ForegroundColor Yellow
-    Write-Host "Creating spatial index using $IndexMem memory (this may take a while)..."
+## Configuration
 
-    $sqlIndex = @"
-SET statement_timeout = 0; -- Disable timeout for potentially long index creation
-SET maintenance_work_mem = '$IndexMem';
-CREATE INDEX ON $DbTable USING GIST (ST_ConvexHull(rast));
-RESET maintenance_work_mem;
-RESET statement_timeout;
-"@
-    $sqlIndex | psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort
-    Check-CommandSuccess "psql Create Index"
+### Environment Variables
 
-    # --- IF YOU USED UNLOGGED TABLE in Phase 1, uncomment and run this NOW ---
-    # Write-Host "Changing table back to LOGGED..."
-    # psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -c "ALTER TABLE $DbTable SET LOGGED;"
-    # Check-CommandSuccess "psql ALTER TABLE SET LOGGED"
+- `DB_HOST`: Database host (default: `host.docker.internal` for local PostgreSQL)
+- `DB_PORT`: Database port (default: `5432`)
+- `DB_NAME`: Database name (default: `phaser`)
+- `DB_USER`: Database user (default: `postgres`)
+- `DB_PASSWORD`: Database password (default: `apple`)
+- `TITILER_API_ALLOW_FILE_ACCESS`: Allow file access (default: `true`)
 
-    Write-Host "--- Phase 2: Spatial index creation complete. ---" -ForegroundColor Green
+### Volume Mounts
 
+If you have COG files outside the container, mount them:
 
-    # --- Phase 3: Add Raster Constraints ---
-    Write-Host "`n--- Phase 3: Starting Constraint Addition ---" -ForegroundColor Yellow
-    Write-Host "Adding raster constraints..."
-    try {
-        psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort -c "SELECT AddRasterConstraints('public'::name, '$DbTable'::name, 'rast'::name);" -ErrorAction Stop # Stop on error here
-        Check-CommandSuccess "psql Add Constraints"
-    } catch {
-        Write-Warning "Failed to add raster constraints. Check if table exists and has data. $_"
-        # Continue script as constraints might not be strictly critical, but investigate later.
-    }
-    Write-Host "--- Phase 3: Constraints added (or skipped on error). ---" -ForegroundColor Green
+```powershell
+-v "C:/OSGeo4W/geoTif:/app/data/external"
+```
 
+Then update the `cogPath` in `index.html` to use `/app/data/external/habitat_cog.tif`.
 
-    # --- Phase 4: Vacuum Analyze ---
-    Write-Host "`n--- Phase 4: Starting VACUUM ANALYZE ---" -ForegroundColor Yellow
-    Write-Host "Running VACUUM ANALYZE using $VacuumMem memory..."
+## File Structure
 
-    $sqlVacuum = @"
-SET maintenance_work_mem = '$VacuumMem';
-VACUUM (VERBOSE, ANALYZE) $DbTable;
-RESET maintenance_work_mem;
-"@
-    $sqlVacuum | psql -d $PgDb -U $PgUser -h $PgHost -p $PgPort
-    Check-CommandSuccess "psql Vacuum Analyze"
+```
+/app/
+├── app/
+│   ├── main.py              # Main FastAPI application
+│   ├── colormaps.py         # Custom colormap handling
+│   ├── dependencies.py     # TiTiler dependencies
+│   └── __init__.py
+├── habitat_colormap.json    # Habitat colormap definitions
+├── data/                    # Local COG files
+└── data/external/          # Mounted external COG files (if used)
+```
 
-    Write-Host "--- Phase 4: VACUUM ANALYZE complete. ---" -ForegroundColor Green
-    Write-Host "`n>>> Raster Loading Process Finished <<<" -ForegroundColor Cyan
+## API Endpoints
 
-}
-finally {
-    # --- Clear Password Environment Variable ---
-    # IMPORTANT: Clear the password from the environment variable when script exits (normally or on error)
-    $env:PGPASSWORD = $null
-    Write-Host "PGPASSWORD environment variable cleared." -ForegroundColor Magenta
-}
+- `GET /` - Health check
+- `GET /cog/{tms}/tilejson.json` - TiTiler tile JSON endpoint
+- `GET /cog/{tms}/{z}/{x}/{y}` - TiTiler tile endpoint
+- `GET /api/location_info/` - Query habitat and species info for coordinates
+
+## Frontend
+
+Open `index.html` in a web browser to test the Cesium-based frontend. Make sure to update the `cogPath` variable to match your COG file location within the container.
+
+## Troubleshooting
+
+### Database Connection Issues
+
+If you can't connect to your local PostgreSQL:
+
+1. Ensure PostgreSQL is running on your host machine
+2. Check that PostgreSQL accepts connections from Docker (usually requires updating `pg_hba.conf`)
+3. Verify the database credentials in environment variables
+
+### COG File Not Found
+
+1. Check the volume mount path
+2. Verify the file exists in the mounted directory
+3. Update the `cogPath` in `index.html` to match the container path
+
+### CORS Issues
+
+The application includes permissive CORS settings for development. For production, update the `origins` list in `app/main.py`.
+
+## Development
+
+To modify the application:
+
+1. Make changes to the source code
+2. Rebuild the Docker image: `docker build -t titiler-game-api .`
+3. Restart the container
+
+## Production Notes
+
+- Remove the wildcard (`*`) from CORS origins
+- Use proper secrets management for database passwords
+- Consider using a reverse proxy (nginx) for HTTPS
+- Mount COG files from a persistent volume or object storage
 </file>
 
-<file path="load_species_gym.ps1">
-# --- Configuration (PowerShell) ---
-$ShapefilePath = "D:\ArcGIS\data\iucn\GYMNOPHIONA\GYMNOPHIONA.shp"
-$TargetTable = "public.iucn_gymnophiona_ranges"
-$TargetSrid = "4326"
-$PgDb = "phaser"
-$PgUser = "postgres"
-$PgHost = "localhost"
-$PgPort = "5432"
-$PgPassword = "apple"
-$PsqlExecutable = "C:\Program Files\PostgreSQL\17\bin\psql.exe" # <-- Adjust if needed!
-$Shp2pgsqlExecutable = "C:\Program Files\PostgreSQL\17\bin\shp2pgsql.exe" # <-- Explicit path recommended
+<file path="requirements.txt">
+psycopg2-binary==2.9.9
+fastapi
+uvicorn[standard]
+titiler.core
+rio-tiler
+</file>
 
-# --- Set Environment Variable ---
-$env:PGPASSWORD = $PgPassword
+<file path=".gitignore">
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-try {
-    Write-Host "Loading shapefile $ShapefilePath into $TargetTable (SRID: $TargetSrid) using LATIN1 encoding..." -ForegroundColor Yellow # Added encoding note
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-    # *** CHANGED -W UTF8 to -W LATIN1 ***
-    & $Shp2pgsqlExecutable -s $TargetSrid -I -W LATIN1 -c $ShapefilePath $TargetTable | & $PsqlExecutable -d $PgDb -U $PgUser -h $PgHost -p $PgPort
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-    # Check Last Exit Code ($LASTEXITCODE automatic variable in PowerShell)
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "shp2pgsql or psql command failed with exit code $LASTEXITCODE."
-        exit $LASTEXITCODE
-    } else {
-        # Add a check to see if the table actually exists now
-        $checkTableSql = "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'iucn_gymnophiona_ranges');"
-        $tableExists = Invoke-Expression ("& '$PsqlExecutable' -d $PgDb -U $PgUser -h $PgHost -p $PgPort -t -c ""$checkTableSql""")
-        if ($tableExists -match 't') { # Check if result contains 't' for true
-             Write-Host "Shapefile loading process completed successfully. Table '$TargetTable' created." -ForegroundColor Green
-        } else {
-             Write-Warning "Shapefile loading command finished, but table '$TargetTable' was NOT created. Check shp2pgsql output/errors."
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# Environment variables
+.env.local
+.env.production
+
+# Large data files (don't commit COG files to git)
+*.tif
+*.tiff
+data/
+
+# Temporary files
+tmp/
+temp/
+
+# PowerShell scripts with sensitive data
+load_cog.ps1
+load_species_gym.ps1
+
+# Output files
+repomix-output.xml
+</file>
+
+<file path="app/colormaps.py">
+# app/colormaps.py
+import json
+import os
+
+from rio_tiler.colormap import cmap as default_cmap
+from rio_tiler.colormap import parse_color
+
+# For Docker environment, use absolute path from container root
+# In Docker, the colormap file is copied to /app/habitat_colormap.json
+json_path = "/app/habitat_colormap.json"
+
+# Fallback to relative path for local development
+if not os.path.exists(json_path):
+    # Get the directory where colormaps.py is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct the path to habitat_colormap.json (which should be one level up)
+    project_root = os.path.abspath(os.path.join(script_dir, ".."))
+    json_path = os.path.join(project_root, "habitat_colormap.json")
+
+print(f"[DEBUG] Attempting to load colormap from: {json_path}")
+print(f"[DEBUG] Does colormap file exist at path? {os.path.exists(json_path)}")
+print(f"[DEBUG] Current Working Directory: {os.getcwd()}")
+
+habitat_values = {}
+try:
+    with open(json_path, "r") as f:
+        habitat_values_str_keys = json.load(f)
+        # Convert string keys to integers and parse colors
+        habitat_values = {
+            int(k): parse_color(v) for k, v in habitat_values_str_keys.items()
         }
-    }
-}
-finally {
-    $env:PGPASSWORD = $null # Clear the password
-    Write-Host "PGPASSWORD environment variable cleared." -ForegroundColor Magenta
-}
+    print(
+        f"[DEBUG] Successfully loaded {len(habitat_values)} entries from colormap."
+    )  # Debug print
+except FileNotFoundError:
+    print(
+        f"[ERROR] habitat_colormap.json not found at calculated path: {json_path}."
+    )  # Error print
+except json.JSONDecodeError as e:
+    print(f"[ERROR] Error decoding {json_path}: {e}")  # Error print
+except Exception as e:
+    print(f"[ERROR] An unexpected error occurred loading colormap: {e}")  # Error print
+
+
+# Register the custom colormap with rio_tiler's cmap store
+# Only register if we successfully loaded values
+if habitat_values:
+    try:
+        # Ensure habitat_values is not empty before registering
+        if not habitat_values:
+            print("[WARN] habitat_values dictionary is empty. Skipping registration.")
+            custom_cmap = default_cmap
+        else:
+            custom_cmap = default_cmap.register({"habitat_custom": habitat_values})
+            print("[DEBUG] 'habitat_custom' colormap registered.")
+    except Exception as e:
+        print(f"[ERROR] Failed to register colormap: {e}")
+        custom_cmap = default_cmap
+else:
+    custom_cmap = default_cmap  # Use the original default if loading failed
+    print(
+        "[WARN] 'habitat_custom' colormap NOT registered because loading failed or file was empty."
+    )
+
+cmap_store = custom_cmap
 </file>
 
 <file path="app/main.py">
 # app/main.py
 import os
+
 import psycopg2  # Import database driver
 from fastapi import FastAPI, HTTPException, Query
 from starlette.middleware.cors import CORSMiddleware
-from titiler.core.factory import TilerFactory
 from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
+from titiler.core.factory import TilerFactory
 
 # Import the custom colormap dependency we created
 from .dependencies import ColorMapParams
 
 # --- Database Configuration ---
 # Define these variables BEFORE using them in the connection string
-DB_HOST = os.getenv("DB_HOST", "localhost")
+# Updated for Docker - use host.docker.internal for connecting to host PostgreSQL
+DB_HOST = os.getenv("DB_HOST", "host.docker.internal")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "phaser")
 DB_USER = os.getenv("DB_USER", "postgres")
@@ -1733,39 +2022,21 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "apple")  # Fallback for testing
 DATABASE_CONNECTION_STRING = f"dbname='{DB_NAME}' user='{DB_USER}' host='{DB_HOST}' port='{DB_PORT}' password='{DB_PASSWORD}'"
 
 # --- Environment Variable Setup ---
-allow_file_access = (
-    os.getenv("TITILER_API_ALLOW_FILE_ACCESS", "FALSE").lower() == "true"
-)
+# Allow file access by default in Docker
+allow_file_access = os.getenv("TITILER_API_ALLOW_FILE_ACCESS", "TRUE").lower() == "true"
 if allow_file_access:
     print("Warning: Local file access is enabled via TITILER_API_ALLOW_FILE_ACCESS.")
+
+# COG URL Configuration - can be local path or remote URL
+COG_URL = os.getenv("COG_URL", "/app/data/habitat_cog.tif")
+print(f"Using COG URL: {COG_URL}")
+
+# For Docker, PROJ_LIB is already configured in the base TiTiler image
 proj_lib = os.getenv("PROJ_LIB")
 if proj_lib:
     print(f"Using PROJ_LIB: {proj_lib}")
 else:
-    # Attempt to find a default location - adjust path if needed for your OSGeo4W install
-    default_proj_lib_paths = [
-        r"C:\OSGeo4W\share\proj",
-        r"C:\Program Files\PostgreSQL\17\share\contrib\postgis-3.4\proj",  # Check version number if needed
-        # Add other potential paths if needed
-    ]
-    found_proj_lib = None
-    for path in default_proj_lib_paths:
-        if os.path.exists(path):
-            found_proj_lib = path
-            break
-
-    if found_proj_lib:
-        os.environ["PROJ_LIB"] = found_proj_lib
-        print(f"PROJ_LIB not set, found and using default: {found_proj_lib}")
-    else:
-        # Check if the environment variable was set externally (e.g., by Activate.ps1)
-        external_proj_lib = os.environ.get("PROJ_LIB")
-        if external_proj_lib and os.path.exists(external_proj_lib):
-            print(f"PROJ_LIB found in environment: {external_proj_lib}")
-        else:
-            print(
-                "Warning: PROJ_LIB environment variable not set and default not found. CRS transformations may fail."
-            )
+    print("PROJ_LIB not explicitly set, using base image configuration")
 
 
 # --- FastAPI App Initialization ---
@@ -1773,6 +2044,7 @@ app = FastAPI(title="TiTiler + Game Backend API")
 
 # --- CORS Middleware ---
 # Add origins for CesiumJS frontend and Phaser/Vite dev server
+# Updated for Docker environment
 origins = [
     "http://localhost:9000",  # CesiumJS server
     "http://127.0.0.1:9000",
@@ -1780,7 +2052,9 @@ origins = [
     "http://127.0.0.1:3000",
     "http://localhost:8080",  # Common alternative dev server port
     "http://127.0.0.1:8080",
-    # Add your production frontend URL here eventually if needed
+    "http://localhost:8000",  # Docker port
+    "http://127.0.0.1:8000",
+    "*",  # Allow all origins for Docker testing - restrict in production
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -1909,6 +2183,17 @@ def read_root():
     return {"message": "TiTiler + Game Backend API is running!"}
 
 
+# --- Configuration Endpoint ---
+@app.get("/api/config", description="Get application configuration")
+def get_config():
+    """Return configuration values for the frontend."""
+    return {
+        "cogUrl": COG_URL,
+        "titilerBaseUrl": "http://localhost:8000",
+        "gameApiBaseUrl": "http://localhost:8000",
+    }
+
+
 # --- Cleanup ---
 # Optional: Add shutdown event if needed for cleanup tasks
 # @app.on_event("shutdown")
@@ -1942,7 +2227,6 @@ def read_root():
 <body>
   <div id="cesiumContainer"></div>
   <div id="infoBox"></div>
-
   <script>
     // 1. Cesium Ion Token
     Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZWRiZWM1OC02NGQ4LTQxN2UtYTJmMy01ZWRjMmM3YmEwN2YiLCJpZCI6Mjk1MzAwLCJpYXQiOjE3NDQ5OTk0MTh9.HBoveH42derVYybno6upJzVCOkxLDji6VOj2TqSwpjs'; // Use your actual token
@@ -1955,66 +2239,90 @@ def read_root():
     console.log("Cesium Viewer initialized.");
 
     // --- Configuration ---
-    const cogPath = "C:/OSGeo4W/geoTif/habitat_cog.tif";
-    const titilerBaseUrl = "http://localhost:8000";
-    const gameApiBaseUrl = "http://localhost:8000";
+    // Configuration will be loaded from the backend
+    let cogPath = "/app/data/habitat_cog.tif";  // Default fallback
+    let titilerBaseUrl = "http://localhost:8000";
+    let gameApiBaseUrl = "http://localhost:8000";
     const habitatRadiusMeters = 1000.0; // Define radii here for consistency
     const speciesRadiusMeters = 10000.0;
 
-    // --- 3. Add TiTiler Layer ---
-    const encodedURL = encodeURIComponent(cogPath);
-    const colormapName = "habitat_custom";
-    const tms = "WebMercatorQuad";
-    const tileJsonUrl = `${titilerBaseUrl}/cog/${tms}/tilejson.json?url=${encodedURL}&colormap_name=${colormapName}&nodata=0`;
-
-    console.log("Requesting TileJSON from:", tileJsonUrl);
-    fetch(tileJsonUrl)
-      .then(response => { /* ... (Error handling as before) ... */ if (!response.ok) { return response.text().then(text => { throw new Error(`TileJSON Error ${response.status}: ${text}`); }); } return response.json(); })
-      .then(tileJson => {
-        console.log("Received TileJSON:", tileJson);
-        if (!tileJson.tiles || tileJson.tiles.length === 0) { throw new Error("TileJSON missing 'tiles'."); }
-        const templateUrl = tileJson.tiles[0];
-        console.log("Using Template URL:", templateUrl);
-
-        const habitatImageryProvider = new Cesium.UrlTemplateImageryProvider({
-          url: templateUrl, tilingScheme: new Cesium.WebMercatorTilingScheme(),
-          tileWidth: 256, tileHeight: 256, minimumLevel: tileJson.minzoom || 0,
-          maximumLevel: tileJson.maxzoom || 18,
-          magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
-          minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
-          credit: new Cesium.Credit('IUCN Habitat Map')
-        });
-        const habitatLayer = viewer.imageryLayers.addImageryProvider(habitatImageryProvider);
-        habitatLayer.alpha = 0.7;
-
-         if (tileJson.bounds) { /* ... (Fly to bounds logic as before) ... */ const [west, south, east, north] = tileJson.bounds; if ([west, south, east, north].every(coord => typeof coord === 'number' && isFinite(coord))) { const rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north); const widthRad = Cesium.Rectangle.computeWidth(rectangle); const heightRad = Cesium.Rectangle.computeHeight(rectangle); if(widthRad < 0.01 && heightRad < 0.01) { Cesium.Rectangle.expand(rectangle, 0.05, 0.05, rectangle); } viewer.camera.flyTo({ destination: rectangle, duration: 1.5 }); console.log("Flying to bounds:", tileJson.bounds); } else { console.warn("Invalid TileJSON bounds.", tileJson.bounds); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-98.0, 39.0, 1e7) }); } } else { viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-98.0, 39.0, 1e7) }); console.log("TileJSON missing bounds."); }
-        console.log("Habitat imagery provider added.");
-      })
-      .catch(err => { console.error("Error loading habitat layer:", err); alert(`Failed habitat layer: ${err.message}`); });
-
-    // --- 4. Click Handler & Visualization ---
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    const infoBox = document.getElementById('infoBox');
-    let habitatCircleEntity = undefined; // Variable to hold the habitat circle entity
-    let speciesCircleEntity = undefined; // Variable to hold the species circle entity
-
-    handler.setInputAction(function(movement) {
-      console.log("Click detected at screen position:", movement.position);
-      infoBox.style.display = 'block';
-      infoBox.innerHTML = 'Getting coordinates...';
-
-      const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
-
-      // --- Remove previous circles ---
-      if (habitatCircleEntity) {
-        viewer.entities.remove(habitatCircleEntity);
-        habitatCircleEntity = undefined;
+    // Function to load configuration from backend
+    async function loadConfig() {
+      try {
+        const response = await fetch(`${titilerBaseUrl}/api/config`);
+        if (response.ok) {
+          const config = await response.json();
+          cogPath = config.cogUrl;
+          titilerBaseUrl = config.titilerBaseUrl;
+          gameApiBaseUrl = config.gameApiBaseUrl;
+          console.log("Configuration loaded:", config);
+        } else {
+          console.warn("Failed to load configuration, using defaults");
+        }
+      } catch (error) {
+        console.warn("Error loading configuration, using defaults:", error);
       }
-      if (speciesCircleEntity) {
-        viewer.entities.remove(speciesCircleEntity);
-        speciesCircleEntity = undefined;
-      }
-      // --- End Remove previous circles ---
+    }
+
+    // Function to initialize the map after config is loaded
+    async function initializeMap() {
+      // Load configuration first
+      await loadConfig();
+
+      // --- 3. Add TiTiler Layer ---
+      const encodedURL = encodeURIComponent(cogPath);
+      const colormapName = "habitat_custom";
+      const tms = "WebMercatorQuad";
+      const tileJsonUrl = `${titilerBaseUrl}/cog/${tms}/tilejson.json?url=${encodedURL}&colormap_name=${colormapName}&nodata=0`;      console.log("Using COG path:", cogPath);
+      console.log("Requesting TileJSON from:", tileJsonUrl);
+
+      fetch(tileJsonUrl)
+        .then(response => { /* ... (Error handling as before) ... */ if (!response.ok) { return response.text().then(text => { throw new Error(`TileJSON Error ${response.status}: ${text}`); }); } return response.json(); })
+        .then(tileJson => {
+          console.log("Received TileJSON:", tileJson);
+          if (!tileJson.tiles || tileJson.tiles.length === 0) { throw new Error("TileJSON missing 'tiles'."); }
+          const templateUrl = tileJson.tiles[0];
+          console.log("Using Template URL:", templateUrl);
+
+          const habitatImageryProvider = new Cesium.UrlTemplateImageryProvider({
+            url: templateUrl, tilingScheme: new Cesium.WebMercatorTilingScheme(),
+            tileWidth: 256, tileHeight: 256, minimumLevel: tileJson.minzoom || 0,
+            maximumLevel: tileJson.maxzoom || 18,
+            magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
+            minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
+            credit: new Cesium.Credit('IUCN Habitat Map')
+          });
+          const habitatLayer = viewer.imageryLayers.addImageryProvider(habitatImageryProvider);
+          habitatLayer.alpha = 0.7;
+
+           if (tileJson.bounds) { /* ... (Fly to bounds logic as before) ... */ const [west, south, east, north] = tileJson.bounds; if ([west, south, east, north].every(coord => typeof coord === 'number' && isFinite(coord))) { const rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north); const widthRad = Cesium.Rectangle.computeWidth(rectangle); const heightRad = Cesium.Rectangle.computeHeight(rectangle); if(widthRad < 0.01 && heightRad < 0.01) { Cesium.Rectangle.expand(rectangle, 0.05, 0.05, rectangle); } viewer.camera.flyTo({ destination: rectangle, duration: 1.5 }); console.log("Flying to bounds:", tileJson.bounds); } else { console.warn("Invalid TileJSON bounds.", tileJson.bounds); viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-98.0, 39.0, 1e7) }); } } else { viewer.camera.flyTo({ destination: Cesium.Cartesian3.fromDegrees(-98.0, 39.0, 1e7) }); console.log("TileJSON missing bounds."); }
+          console.log("Habitat imagery provider added.");
+        })
+        .catch(err => { console.error("Error loading habitat layer:", err); alert(`Failed habitat layer: ${err.message}`); });
+
+      // --- 4. Click Handler & Visualization ---
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      const infoBox = document.getElementById('infoBox');
+      let habitatCircleEntity = undefined; // Variable to hold the habitat circle entity
+      let speciesCircleEntity = undefined; // Variable to hold the species circle entity
+
+      handler.setInputAction(function(movement) {
+        console.log("Click detected at screen position:", movement.position);
+        infoBox.style.display = 'block';
+        infoBox.innerHTML = 'Getting coordinates...';
+
+        const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+
+        // --- Remove previous circles ---
+        if (habitatCircleEntity) {
+          viewer.entities.remove(habitatCircleEntity);
+          habitatCircleEntity = undefined;
+        }
+        if (speciesCircleEntity) {
+          viewer.entities.remove(speciesCircleEntity);
+          speciesCircleEntity = undefined;
+        }
+        // --- End Remove previous circles ---
 
       if (cartesian) {
         const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
@@ -2075,8 +2383,7 @@ def read_root():
           .catch(err => {
             console.error("Error calling game API:", err);
             infoBox.innerHTML = `Error querying location: ${err.message}`;
-          });
-        // --- End Call Backend API ---
+          });        // --- End Call Backend API ---
 
       } else {
         console.log("Clicked outside the globe.");
@@ -2085,6 +2392,13 @@ def read_root():
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     console.log("Click handler set up.");
+    
+    } // End of initializeMap function
+
+    // Initialize the map when the page loads
+    initializeMap().catch(error => {
+      console.error("Failed to initialize map:", error);
+    });
 
   </script>
 </body>

@@ -17,12 +17,13 @@ import {
   HeightReference
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
+import { speciesService } from '../lib/speciesService';
+import type { Species } from '../types/database';
+import { getAppConfig } from '../utils/config';
 
-// Configuration (Consider moving to a config file or passing as props)
-// const YOUR_CESIUM_ION_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiZWRiZWM1OC02NGQ4LTQxN2UtYTJmMy01ZWRjMmM3YmEwN2YiLCJpZCI6Mjk1MzAwLCJpYXQiOjE3NDQ5OTk0MTh9.HBoveH42derVYybno6upJzVCOkxLDji6VOj2TqSwpjs'; // Replace with your token
-const TITILER_BASE_URL = "http://localhost:8000"; // Your TiTiler backend
-const GAME_API_BASE_URL = "http://localhost:8000"; // Your Game API backend
-const COG_PATH = "C:/OSGeo4W/geoTif/habitat_cog.tif"; // Path accessible by TiTiler server
+// Configuration - using environment variables with fallbacks
+const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net";
+const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif";
 const HABITAT_RADIUS_METERS = 100000.0;
 const SPECIES_RADIUS_METERS = 10000.0;
 
@@ -31,7 +32,13 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null); // Typed state
   const [clickedPosition, setClickedPosition] = useState<Cartesian3 | null>(null); // Cartesian3
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null); // { lon, lat }
-  const [infoBoxData, setInfoBoxData] = useState<any>({ habitats: [], species: [] }); // Consider defining a type for infoBoxData
+  const [infoBoxData, setInfoBoxData] = useState<{
+    lon?: number;
+    lat?: number;
+    habitats: string[];
+    species: Species[];
+    message?: string | null;
+  }>({ habitats: [], species: [] });
   const [showInfoBox, setShowInfoBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,28 +52,43 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   }, []);
 
   useEffect(() => {
-    const encodedCOGPath = encodeURIComponent(COG_PATH);
-    const colormapName = "habitat_custom"; // From your backend setup
-    const tms = "WebMercatorQuad";
-    const tileJsonUrl = `${TITILER_BASE_URL}/cog/${tms}/tilejson.json?url=${encodedCOGPath}&colormap_name=${colormapName}&nodata=0`;
+    // Load configuration and setup TiTiler imagery
+    const setupImagery = async () => {
+      try {
+        // Try to use dynamic config first, fallback to env vars
+        const config = await getAppConfig().catch(() => ({
+          cogUrl: COG_URL,
+          titilerBaseUrl: TITILER_BASE_URL
+        }));
 
-    console.log("Resium: Requesting TileJSON from:", tileJsonUrl);
-    fetch(tileJsonUrl)
-      .then(response => {
+        const encodedCOGUrl = encodeURIComponent(config.cogUrl);
+        const colormapName = "habitat_custom"; // From your backend setup
+        const tileMatrixSetId = "WebMercatorQuad"; // Standard TMS for web mapping
+        const tileJsonUrl = `${config.titilerBaseUrl}/cog/${tileMatrixSetId}/tilejson.json?url=${encodedCOGUrl}&colormap_name=${colormapName}&nodata=0`;
+
+        console.log("Resium: Requesting TileJSON from:", tileJsonUrl);
+        const response = await fetch(tileJsonUrl);
+        
         if (!response.ok) {
-          return response.text().then(text => { throw new Error(`TileJSON Error ${response.status}: ${text}`); });
+          const text = await response.text();
+          throw new Error(`TileJSON Error ${response.status}: ${text}`);
         }
-        return response.json();
-      })
-      .then(tileJson => {
+        
+        const tileJson = await response.json();
         console.log("Resium: Received TileJSON:", tileJson);
         if (!tileJson.tiles || tileJson.tiles.length === 0) {
           throw new Error("TileJSON missing 'tiles' array or 'tiles' array is empty.");
         }
-        const templateUrl = tileJson.tiles[0];
+        let templateUrl = tileJson.tiles[0];
         if (!templateUrl) {
             throw new Error("TileJSON 'tiles' array does not contain a valid URL template.");
         }
+        
+        // Force HTTPS if the Azure endpoint returns HTTP URLs
+        if (templateUrl.startsWith('http://azure-local-dfgagqgub7fhb5fv')) {
+          templateUrl = templateUrl.replace('http://', 'https://');
+        }
+        
         console.log("Resium: Using Template URL:", templateUrl);
 
         const provider = new UrlTemplateImageryProvider({
@@ -104,12 +126,49 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         } else if (!tileJson.bounds) {
             console.log("Resium: TileJSON missing bounds. Default camera view used.");
         }
-      })
-      .catch(err => {
+      } catch (err: any) {
         console.error("Resium: Error loading habitat layer:", err);
         alert(`Failed to load habitat layer: ${err.message}`);
-      });
+      }
+    };
+
+    setupImagery();
   }, []); 
+
+  // Test function for new approach (direct Supabase calls)
+  const testNewAPIRoute = async (lon: number, lat: number) => {
+    try {
+      console.log("Testing new Supabase approach...");
+      
+      // Test if the new Supabase function exists
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      
+      try {
+        const { data, error } = await supabase.rpc('query_location_simple', {
+          lon: lon,
+          lat: lat
+        });
+        
+        if (error) throw error;
+        console.log("New Supabase Function Response:", data);
+      } catch (rpcError) {
+        console.log("New function not available:", rpcError);
+        console.log("Would fall back to existing get_species_at_point function");
+      }
+      
+      // Compare with current method
+      const currentResult = await speciesService.getSpeciesAtPoint(lon, lat);
+      console.log("Current Supabase Service:", currentResult);
+      
+      console.log("Comparison complete - check console for results");
+    } catch (error) {
+      console.error("Supabase test failed:", error);
+    }
+  };
 
   const handleMapClick = useCallback((movement: any) => { // Typed movement
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
@@ -127,42 +186,58 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       setInfoBoxData({ habitats: [], species: [], message: `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...` });
       setIsLoading(true);
 
-      const queryUrl = `${GAME_API_BASE_URL}/api/location_info/?lon=${longitude}&lat=${latitude}`;
-      console.log("Resium: Calling API:", queryUrl);
+      console.log("Resium: Calling speciesService for location:", longitude, latitude);
 
-      fetch(queryUrl)
-        .then(response => {
-          if (!response.ok) {
-            return response.text().then(text => { throw new Error(`API Error ${response.status}: ${text}`); });
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log("Resium: API Response:", data);
+      // Test the new API route alongside current method
+      testNewAPIRoute(longitude, latitude);
+
+      // Use local Supabase species service instead of external API
+      speciesService.getSpeciesAtPoint(longitude, latitude)
+        .then(result => {
+          console.log("Resium: Species service response:", result);
+          
+          // Extract habitat information from species data
+          const habitats = new Set<string>();
+          result.species.forEach(species => {
+            if (species.hab_desc) habitats.add(species.hab_desc);
+            if (species.aquatic) habitats.add('aquatic');
+            if (species.freshwater) habitats.add('freshwater');
+            if (species.terrestr || species.terrestria) habitats.add('terrestrial');
+            if (species.marine) habitats.add('marine');
+          });
+
+          const habitatList = Array.from(habitats);
+          
           setInfoBoxData({
             lon: longitude,
             lat: latitude,
-            habitats: data.habitats || [],
-            species: data.species || [],
+            habitats: habitatList,
+            species: result.species,
             message: null
           });
+          
+          // Emit event with actual species data for the game
           EventBus.emit('cesium-location-selected', {
             lon: longitude,
             lat: latitude,
-            habitats: data.habitats || [],
-            species: data.species || []
+            habitats: habitatList,
+            species: result.species
           });
         })
         .catch(err => {
-          console.error("Resium: Error calling game API:", err);
-          setInfoBoxData({ message: `Error: ${err.message}` });
+          console.error("Resium: Error calling species service:", err);
+          setInfoBoxData({ 
+            habitats: [], 
+            species: [], 
+            message: `Error: ${err.message || 'Failed to load species data'}` 
+          });
         })
         .finally(() => {
             setIsLoading(false);
         });
     } else {
       setShowInfoBox(true);
-      setInfoBoxData({ message: 'Click on the globe to query location.' });
+      setInfoBoxData({ habitats: [], species: [], message: 'Click on the globe to query location.' });
       setClickedPosition(null);
       setClickedLonLat(null);
     }
@@ -224,7 +299,11 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             <>
               <p><b>Location:</b> Lon: {infoBoxData.lon?.toFixed(4)}, Lat: {infoBoxData.lat?.toFixed(4)}</p>
               <p><b>Habitats (within {HABITAT_RADIUS_METERS / 1000}km):</b> {infoBoxData.habitats.length > 0 ? infoBoxData.habitats.join(', ') : 'None'}</p>
-              <p><b>Species (near {SPECIES_RADIUS_METERS / 1000}km):</b> {infoBoxData.species.length > 0 ? infoBoxData.species.join(', ') : 'None'}</p>
+              <p><b>Species (near {SPECIES_RADIUS_METERS / 1000}km):</b> {
+                infoBoxData.species.length > 0 
+                  ? infoBoxData.species.map(s => s.comm_name || s.sci_name || `Species ${s.ogc_fid}`).join(', ')
+                  : 'None'
+              }</p>
             </>
           )}
           {isLoading && <p><em>Loading...</em></p>}

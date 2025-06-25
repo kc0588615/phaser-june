@@ -37,27 +37,52 @@ export class MainMenu extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
 
-        // Start Instruction Text
-        const startText = this.add.text(centerX, centerY * 1.5, 'Click or Tap to Start', {
+        // Play Button
+        const playButton = this.add.text(centerX, centerY * 1.4, 'Play Game', {
             fontFamily: 'Arial',
-            fontSize: `${Math.min(width * 0.05, height * 0.06)}px`, // Responsive font size with 'px'
-            color: '#eeeeee',
-            align: 'center'
-        }).setOrigin(0.5);
+            fontSize: `${Math.min(width * 0.05, height * 0.06)}px`,
+            color: '#ffffff',
+            backgroundColor: '#4CAF50',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive();
 
-        // Simple pulse effect for the start text
+        // High Scores Button
+        const highScoresButton = this.add.text(centerX, centerY * 1.65, 'High Scores', {
+            fontFamily: 'Arial',
+            fontSize: `${Math.min(width * 0.04, height * 0.05)}px`,
+            color: '#ffffff',
+            backgroundColor: '#2196F3',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive();
+
+        // Button hover effects
+        playButton.on('pointerover', () => {
+            playButton.setStyle({ backgroundColor: '#5CBF60' });
+        });
+        playButton.on('pointerout', () => {
+            playButton.setStyle({ backgroundColor: '#4CAF50' });
+        });
+
+        highScoresButton.on('pointerover', () => {
+            highScoresButton.setStyle({ backgroundColor: '#42A5F5' });
+        });
+        highScoresButton.on('pointerout', () => {
+            highScoresButton.setStyle({ backgroundColor: '#2196F3' });
+        });
+
+        // Simple pulse effect for the play button
         this.tweens.add({
-            targets: startText,
-            alpha: 0.5,
+            targets: playButton,
+            scaleX: 1.05,
+            scaleY: 1.05,
             duration: 800,
             ease: 'Sine.easeInOut',
             yoyo: true,
             repeat: -1
         });
 
-
-        // Input listener to start the game
-        this.input.once(Phaser.Input.Events.POINTER_DOWN, () => {
+        // Play button click handler
+        playButton.on('pointerdown', () => {
             console.log("MainMenu: Starting Game scene...");
             // Add a brief fade out effect (optional)
              this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
@@ -65,6 +90,12 @@ export class MainMenu extends Phaser.Scene {
                       this.scene.start('Game');
                  }
              });
+        });
+
+        // High Scores button click handler
+        highScoresButton.on('pointerdown', () => {
+            console.log("MainMenu: Navigating to High Scores...");
+            window.location.href = '/highscores';
         });
     }
 }

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import type { Species } from '@/types/database';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -6,8 +7,8 @@ export interface EventPayloads {
   'cesium-location-selected': {
     lon: number;
     lat: number;
-    habitats: number[];
-    species: string[];
+    habitats: string[];
+    species: Species[];
   };
   'game-score-updated': {
     score: number;
@@ -15,7 +16,27 @@ export interface EventPayloads {
   };
   'game-over': {
     finalScore: number;
-    habitats: number[];
+    habitats: string[];
+  };
+  'clue-revealed': {
+    category: number;
+    heading: string;
+    clue: string;
+    speciesId: number;
+  };
+  'new-game-started': {
+    speciesName: string;
+    speciesId: number;
+    totalSpecies: number;
+    currentIndex: number;
+  };
+  'game-reset': undefined;
+  'no-species-found': {};
+  'all-clues-revealed': {
+    speciesId: number;
+  };
+  'all-species-completed': {
+    totalSpecies: number;
   };
 }
 

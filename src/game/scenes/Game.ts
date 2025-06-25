@@ -9,6 +9,9 @@ import {
 } from '../constants';
 import { EventBus, EventPayloads } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
+import { GemClueMapper, GemCategory, gemCategoryMapping } from '../gemCategoryMapping';
+import { GemType } from '../constants';
+import type { Species } from '@/types/database';
 
 interface BoardOffset {
     x: number;
@@ -45,12 +48,41 @@ export class Game extends Phaser.Scene {
     // --- Backend Data ---
     private isBoardInitialized: boolean = false;
     private statusText: Phaser.GameObjects.Text | null = null;
+    private scoreText: Phaser.GameObjects.Text | null = null;
+    private movesText: Phaser.GameObjects.Text | null = null;
+    
+    // --- Species Integration ---
+    private currentSpecies: Species[] = [];
+    private selectedSpecies: Species | null = null;
+    private revealedClues: Set<GemCategory> = new Set();
+    private currentSpeciesIndex: number = 0;
+    private allCluesRevealed: boolean = false;
 
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
 
     constructor() {
         super('Game');
+    }
+
+    update(): void {
+        if (!this.backendPuzzle || !this.isBoardInitialized) return;
+
+        // Update UI
+        if (this.scoreText) {
+            this.scoreText.setText(`Score: ${this.backendPuzzle.getScore()}`);
+        }
+        if (this.movesText) {
+            this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesRemaining()}`);
+        }
+
+        // Check game over
+        if (this.backendPuzzle.isGameOver() && this.canMove) {
+            this.canMove = false;
+            const finalScore = this.backendPuzzle.getScore();
+            console.log(`Game Over! Final score: ${finalScore}`);
+            this.scene.start('GameOver', { score: finalScore });
+        }
     }
 
     create(): void {
@@ -78,6 +110,23 @@ export class Game extends Phaser.Scene {
             padding: { x: 10, y: 5 },
             align: 'center'
         }).setOrigin(0.5).setDepth(100);
+
+        // Score display
+        this.scoreText = this.add.text(20, 20, 'Score: 0', {
+            fontSize: '20px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setDepth(100);
+
+        // Moves display
+        this.movesText = this.add.text(width - 20, 20, 'Moves: 50', {
+            fontSize: '20px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(1, 0).setDepth(100);
+
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -117,6 +166,29 @@ export class Game extends Phaser.Scene {
         }
 
         try {
+            // Sort species by ogc_fid (lowest first)
+            this.currentSpecies = [...data.species].sort((a, b) => a.ogc_fid - b.ogc_fid);
+            this.currentSpeciesIndex = 0;
+            this.revealedClues.clear(); // Reset clues for new game
+            this.allCluesRevealed = false;
+            
+            if (this.currentSpecies.length > 0) {
+                // Select the species with lowest ogc_fid
+                this.selectedSpecies = this.currentSpecies[0];
+                console.log("Game Scene: Selected species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+                
+                // Emit event to inform React components about the new game
+                EventBus.emit('new-game-started', {
+                    speciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                    speciesId: this.selectedSpecies.ogc_fid,
+                    totalSpecies: this.currentSpecies.length,
+                    currentIndex: this.currentSpeciesIndex + 1
+                });
+            } else {
+                this.selectedSpecies = null;
+                console.log("Game Scene: No species available for this location");
+                EventBus.emit('no-species-found', {});
+            }
 
             if (!this.backendPuzzle) { // Should exist from create()
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -188,14 +260,22 @@ export class Game extends Phaser.Scene {
 
     private handleResize(): void {
         console.log("Game Scene: Resize detected.");
+        const { width, height } = this.scale;
         this.calculateBoardDimensions();
+        
         if (this.statusText && this.statusText.active) {
-            this.statusText.setPosition(this.scale.width / 2, this.scale.height / 2);
+            this.statusText.setPosition(width / 2, height / 2);
             const textStyle = this.statusText.style;
             if (textStyle && typeof textStyle.setWordWrapWidth === 'function') {
-                textStyle.setWordWrapWidth(this.scale.width * 0.8);
+                textStyle.setWordWrapWidth(width * 0.8);
             }
         }
+        
+        // Update UI positions
+        if (this.movesText) {
+            this.movesText.setPosition(width - 20, 20);
+        }
+        
         if (this.boardView) {
             this.boardView.updateVisualLayout(this.gemSize, this.boardOffset);
         }
@@ -392,6 +472,9 @@ export class Game extends Phaser.Scene {
     private async animatePhase(phaseResult: ExplodeAndReplacePhase): Promise<void> {
         if (!this.boardView || !this.backendPuzzle) return;
         try {
+            // Generate clues based on matched gems before animating
+            this.processMatchedGemsForClues(phaseResult.matches);
+            
             await this.boardView.animateExplosions(phaseResult.matches.flat());
             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
         } catch (error) {
@@ -399,6 +482,100 @@ export class Game extends Phaser.Scene {
             if (this.boardView && this.backendPuzzle) {
                 this.boardView.syncSpritesToGridPositions();
             }
+        }
+    }
+
+    private processMatchedGemsForClues(matches: Coordinate[][]): void {
+        if (!this.selectedSpecies || matches.length === 0) return;
+
+        // Extract all gem types from matched coordinates
+        const matchedGemTypes = new Set<GemType>();
+        
+        for (const match of matches) {
+            for (const coord of match) {
+                if (this.backendPuzzle) {
+                    const [x, y] = coord;
+                    const gridState = this.backendPuzzle.getGridState();
+                    const gem = gridState[x]?.[y];
+                    if (gem) {
+                        matchedGemTypes.add(gem.gemType);
+                    }
+                }
+            }
+        }
+
+        // Convert gem types to categories and generate clues
+        for (const gemType of matchedGemTypes) {
+            const category = this.gemTypeToCategory(gemType);
+            if (category !== null && !this.revealedClues.has(category)) {
+                this.revealedClues.add(category);
+                
+                // Generate clue for this category
+                const clueData = GemClueMapper.getClueForCategory(this.selectedSpecies, category);
+                if (clueData && clueData.clue) {
+                    console.log("Game Scene: Revealing clue for category:", category, clueData);
+                    EventBus.emit('clue-revealed', clueData);
+                }
+            }
+        }
+
+        // Check if all clues are revealed (9 categories total)
+        if (this.revealedClues.size >= 9 && !this.allCluesRevealed) {
+            this.allCluesRevealed = true;
+            console.log("Game Scene: All clues revealed for species:", this.selectedSpecies.ogc_fid);
+            
+            // Emit event that all clues are revealed
+            EventBus.emit('all-clues-revealed', {
+                speciesId: this.selectedSpecies.ogc_fid
+            });
+            
+            // Advance to next species after a delay
+            this.time.delayedCall(2000, () => {
+                this.advanceToNextSpecies();
+            });
+        }
+    }
+
+    private advanceToNextSpecies(): void {
+        this.currentSpeciesIndex++;
+        
+        if (this.currentSpeciesIndex < this.currentSpecies.length) {
+            // Move to next species
+            this.selectedSpecies = this.currentSpecies[this.currentSpeciesIndex];
+            this.revealedClues.clear();
+            this.allCluesRevealed = false;
+            
+            console.log("Game Scene: Advancing to next species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+            
+            // Emit event for new species
+            EventBus.emit('new-game-started', {
+                speciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                speciesId: this.selectedSpecies.ogc_fid,
+                totalSpecies: this.currentSpecies.length,
+                currentIndex: this.currentSpeciesIndex + 1
+            });
+        } else {
+            // All species completed
+            console.log("Game Scene: All species completed!");
+            EventBus.emit('all-species-completed', {
+                totalSpecies: this.currentSpecies.length
+            });
+        }
+    }
+
+    private gemTypeToCategory(gemType: GemType): GemCategory | null {
+        // Map gem types to categories based on corrected color scheme
+        switch (gemType) {
+            case 'red': return GemCategory.CLASSIFICATION;
+            case 'green': return GemCategory.HABITAT;
+            case 'blue': return GemCategory.GEOGRAPHIC;
+            case 'orange': return GemCategory.MORPHOLOGY; // Combines color/pattern and size/shape
+            case 'pink': return GemCategory.DIET;
+            case 'white': return GemCategory.BEHAVIOR;
+            case 'black': return GemCategory.LIFE_CYCLE;
+            case 'yellow': return GemCategory.CONSERVATION;
+            case 'purple': return GemCategory.KEY_FACTS; // Uses key_fact1, key_fact2, key_fact3
+            default: return null;
         }
     }
 
@@ -478,10 +655,29 @@ export class Game extends Phaser.Scene {
             this.statusText.destroy();
             this.statusText = null;
         }
+        if (this.scoreText) {
+            this.scoreText.destroy();
+            this.scoreText = null;
+        }
+        if (this.movesText) {
+            this.movesText.destroy();
+            this.movesText = null;
+        }
 
         this.resetDragState(); // Clear drag state variables
         this.canMove = false;
         this.isBoardInitialized = false;
+        
+        // Reset species data
+        this.currentSpecies = [];
+        this.selectedSpecies = null;
+        this.revealedClues.clear();
+        this.currentSpeciesIndex = 0;
+        this.allCluesRevealed = false;
+        
+        // Emit game reset event
+        EventBus.emit('game-reset', undefined);
+        
         console.log("Game Scene: Shutdown complete.");
     }
 

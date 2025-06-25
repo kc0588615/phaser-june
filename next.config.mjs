@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'export',
+    // Conditionally enable static export only for production builds
+    // During development, we need server features like API routes
+    ...(process.env.NODE_ENV === 'production' && process.env.DISABLE_STATIC_EXPORT !== 'true' 
+        ? { output: 'export' } 
+        : {}),
     distDir: 'dist',
     // Add webpack configuration
     webpack: (config, { webpack }) => { // Destructure webpack from the second argument (options)
