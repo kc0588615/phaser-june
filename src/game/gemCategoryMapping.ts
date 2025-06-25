@@ -9,10 +9,9 @@ export interface GemCategoryInfo {
 export const gemCategoryMapping: Record<GemType, GemCategoryInfo> = {
   red: { categoryName: 'Classification', icon: '🧬' },
   green: { categoryName: 'Habitat', icon: '🌳' },
-  blue: { categoryName: 'Geographic', icon: '🗺️' },
+  blue: { categoryName: 'Geographic & Habitat', icon: '🗺️' }, // Now includes habitat info
   orange: { categoryName: 'Morphology', icon: '🐾' }, // Combines Color/Pattern and Size/Shape
-  pink: { categoryName: 'Diet', icon: '🌿' },
-  white: { categoryName: 'Behavior', icon: '💨' },
+  white: { categoryName: 'Behavior & Diet', icon: '💨' }, // Now includes diet info
   black: { categoryName: 'Life Cycle', icon: '⏳' },
   yellow: { categoryName: 'Conservation', icon: '🛡️' },
   purple: { categoryName: 'Key Facts', icon: '❗' },
@@ -21,10 +20,9 @@ export const gemCategoryMapping: Record<GemType, GemCategoryInfo> = {
 export enum GemCategory {
   CLASSIFICATION = 0,  // 🧬 Red gem
   HABITAT = 1,        // 🌳 Green gem
-  GEOGRAPHIC = 2,     // 🗺️ Blue gem
+  GEOGRAPHIC = 2,     // 🗺️ Blue gem (now includes habitat)
   MORPHOLOGY = 3,     // 🐾 Orange gem (combines Color/Pattern and Size/Shape)
-  DIET = 4,           // 🌿 Pink gem
-  BEHAVIOR = 5,       // 💨 White gem
+  BEHAVIOR = 5,       // 💨 White gem (now includes diet)
   LIFE_CYCLE = 6,     // ⏳ Black gem
   CONSERVATION = 7,   // 🛡️ Yellow gem
   KEY_FACTS = 8,      // ❗ Purple gem
@@ -57,16 +55,13 @@ export class GemClueMapper {
         clueData.clue = this.getHabitatClue(species);
         break;
       case GemCategory.GEOGRAPHIC:
-        clueData.clue = this.getGeographicClue(species);
+        clueData.clue = this.getGeographicAndHabitatClue(species);
         break;
       case GemCategory.MORPHOLOGY:
         clueData.clue = this.getMorphologyClue(species);
         break;
-      case GemCategory.DIET:
-        clueData.clue = this.getDietClue(species);
-        break;
       case GemCategory.BEHAVIOR:
-        clueData.clue = this.getBehaviorClue(species);
+        clueData.clue = this.getBehaviorAndDietClue(species);
         break;
       case GemCategory.LIFE_CYCLE:
         clueData.clue = this.getLifeCycleClue(species);
@@ -116,6 +111,33 @@ export class GemClueMapper {
     if (species.island) return `Found on islands`;
     if (species.origin === 1) return 'Native to its range';
     return '';
+  }
+
+  private static getGeographicAndHabitatClue(species: Species): string {
+    const clues: string[] = [];
+    
+    // Geographic info
+    if (species.geo_desc) clues.push(species.geo_desc);
+    else if (species.dist_comm) clues.push(species.dist_comm);
+    else if (species.island) clues.push(`Found on islands`);
+    else if (species.origin === 1) clues.push('Native to its range');
+    
+    // Habitat info (moved from green)
+    if (species.hab_desc) clues.push(species.hab_desc);
+    else {
+      const habitats: string[] = [];
+      if (species.aquatic || species.freshwater) habitats.push('freshwater');
+      if (species.terrestr || species.terrestria) habitats.push('terrestrial');
+      if (species.marine) habitats.push('marine');
+      
+      if (habitats.length > 0) {
+        clues.push(`Found in ${habitats.join(' and ')} habitats`);
+      } else if (species.hab_tags) {
+        clues.push(`Habitat: ${species.hab_tags}`);
+      }
+    }
+    
+    return clues.join('. ');
   }
 
   private static getMorphologyClue(species: Species): string {
@@ -192,6 +214,21 @@ export class GemClueMapper {
     if (species.behav_1) return species.behav_1;
     if (species.behav_2) return species.behav_2;
     return '';
+  }
+
+  private static getBehaviorAndDietClue(species: Species): string {
+    const clues: string[] = [];
+    
+    // Behavior info
+    if (species.behav_1) clues.push(species.behav_1);
+    else if (species.behav_2) clues.push(species.behav_2);
+    
+    // Diet info (moved from pink)
+    if (species.diet_type) clues.push(`Diet type: ${species.diet_type}`);
+    else if (species.diet_prey) clues.push(`Preys on: ${species.diet_prey}`);
+    else if (species.diet_flora) clues.push(`Eats plants: ${species.diet_flora}`);
+    
+    return clues.join('. ');
   }
 
   private static getLifeCycleClue(species: Species): string {
