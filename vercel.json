@@ -13,8 +13,6 @@
   "installCommand": "npm ci",
   "framework": "nextjs",
   "regions": ["cle1"],
-  "functions": {},
-  "crons": [],
   "headers": [
     {
       "source": "/cesium/(.*)",
