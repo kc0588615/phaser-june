@@ -3,7 +3,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import type { HighScore } from '@/types/database';
-import styles from '@/styles/Home.module.css';
 
 export default function HighScoresPage() {
   const [scores, setScores] = useState<HighScore[]>([]);
@@ -63,9 +62,9 @@ export default function HighScoresPage() {
         <link rel="icon" href="/favicon.png" />
       </Head>
 
-      <main className={styles.main}>
-        <div className={styles.container}>
-          <h1 className={styles.title}>🏆 Top High Scores</h1>
+      <main>
+        <div>
+          <h1>🏆 Top High Scores</h1>
           
           <div style={{ 
             maxWidth: '800px', 
