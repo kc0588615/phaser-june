@@ -1,21 +1,95 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Conditionally enable static export only for production builds
-    // During development, we need server features like API routes
-    ...(process.env.NODE_ENV === 'production' && process.env.DISABLE_STATIC_EXPORT !== 'true' 
-        ? { output: 'export' } 
-        : {}),
+    // Static export configuration for Vercel
+    output: 'export',
     distDir: 'dist',
-    // Add webpack configuration
-    webpack: (config, { webpack }) => { // Destructure webpack from the second argument (options)
+    trailingSlash: false,
+    
+    // Image optimization (required for static export)
+    images: {
+        unoptimized: true
+    },
+    
+    // Security headers
+    poweredByHeader: false,
+    
+    // Compression and optimization
+    compress: true,
+    generateEtags: true,
+    
+    // Webpack configuration
+    webpack: (config, { webpack, isServer }) => {
+        // Define global Cesium variable
         config.plugins.push(
             new webpack.DefinePlugin({
-                // Define CESIUM_BASE_URL as a global variable
                 'CESIUM_BASE_URL': JSON.stringify('/cesium/')
             })
         );
+        
+        // Client-side optimizations
+        if (!isServer) {
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                fs: false,
+                path: false,
+                crypto: false,
+                stream: false,
+                buffer: false,
+                process: false
+            };
+        }
+        
         return config;
     },
+    
+    // Headers for security and performance
+    async headers() {
+        return [
+            {
+                source: '/(.*)',
+                headers: [
+                    {
+                        key: 'X-Frame-Options',
+                        value: 'DENY'
+                    },
+                    {
+                        key: 'X-Content-Type-Options',
+                        value: 'nosniff'
+                    },
+                    {
+                        key: 'X-XSS-Protection',
+                        value: '1; mode=block'
+                    },
+                    {
+                        key: 'Referrer-Policy',
+                        value: 'strict-origin-when-cross-origin'
+                    }
+                ]
+            },
+            {
+                source: '/cesium/(.*)',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable'
+                    },
+                    {
+                        key: 'Access-Control-Allow-Origin',
+                        value: '*'
+                    }
+                ]
+            },
+            {
+                source: '/assets/(.*)',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable'
+                    }
+                ]
+            }
+        ];
+    }
 };
 
 export default nextConfig;

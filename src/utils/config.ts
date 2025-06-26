@@ -12,39 +12,19 @@ let cachedConfig: AppConfig | null = null;
 export async function getAppConfig(): Promise<AppConfig> {
   if (cachedConfig) return cachedConfig;
 
-  try {
-    // Try to fetch dynamic configuration from Azure endpoint
-    const apiBaseUrl = process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net';
-    const response = await fetch(`${apiBaseUrl}/api/config`);
-    
-    if (response.ok) {
-      const dynamicConfig = await response.json();
-      console.log('Loaded dynamic config from Azure:', dynamicConfig);
-      
-      // Override localhost URLs with environment variables if the dynamic config returns localhost
-      if (dynamicConfig.titilerBaseUrl?.includes('localhost')) {
-        console.warn('Dynamic config contains localhost URLs, using environment variables instead');
-        cachedConfig = {
-          cogUrl: process.env.NEXT_PUBLIC_COG_URL || dynamicConfig.cogUrl,
-          titilerBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net',
-          gameApiBaseUrl: process.env.NEXT_PUBLIC_GAME_API_BASE_URL || process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net'
-        };
-        return cachedConfig;
-      }
-      
-      cachedConfig = dynamicConfig;
-      return cachedConfig;
-    }
-  } catch (error) {
-    console.warn('Failed to load dynamic configuration, falling back to environment variables:', error);
-  }
-
-  // Fallback to environment variables
+  // For Vercel deployment, always use environment variables
+  // Dynamic config fetching is disabled to avoid build-time issues and CORS problems
   cachedConfig = {
     cogUrl: process.env.NEXT_PUBLIC_COG_URL || 'https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif',
     titilerBaseUrl: process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net',
     gameApiBaseUrl: process.env.NEXT_PUBLIC_GAME_API_BASE_URL || process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net'
   };
+
+  console.log('App config loaded from environment variables:', {
+    cogUrl: cachedConfig.cogUrl,
+    titilerBaseUrl: cachedConfig.titilerBaseUrl,
+    gameApiBaseUrl: cachedConfig.gameApiBaseUrl
+  });
 
   return cachedConfig;
 }
