@@ -46,7 +46,7 @@ const nextConfig = {
     async headers() {
         return [
             {
-                source: '/(.*)',
+                source: '/:path*',
                 headers: [
                     {
                         key: 'X-Frame-Options',
@@ -67,7 +67,7 @@ const nextConfig = {
                 ]
             },
             {
-                source: '/cesium/(.*)',
+                source: '/cesium/:path*',
                 headers: [
                     {
                         key: 'Cache-Control',
@@ -80,7 +80,7 @@ const nextConfig = {
                 ]
             },
             {
-                source: '/assets/(.*)',
+                source: '/assets/:path*',
                 headers: [
                     {
                         key: 'Cache-Control',
