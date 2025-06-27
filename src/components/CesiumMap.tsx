@@ -273,8 +273,8 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         <div style={{
           position: 'absolute', top: '10px', left: '10px',
           background: 'rgba(40,40,40,0.85)', color: 'white',
-          padding: '10px', borderRadius: '5px', fontFamily: 'sans-serif',
-          fontSize: '12px', maxWidth: '350px', zIndex: 1000, pointerEvents: 'none'
+          padding: '1px', borderRadius: '5px', fontFamily: 'sans-serif',
+          fontSize: '10px', maxWidth: '350px', zIndex: 1000, pointerEvents: 'none'
         }}>
           {infoBoxData.message ? <p>{infoBoxData.message}</p> : (
             <p><b>Species Count:</b> {infoBoxData.species.length}</p>
