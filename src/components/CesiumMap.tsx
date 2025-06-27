@@ -20,6 +20,7 @@ import { EventBus } from '../game/EventBus';
 import { speciesService } from '../lib/speciesService';
 import type { Species } from '../types/database';
 import { getAppConfig } from '../utils/config';
+import HabitatLegend from './HabitatLegend';
 
 // Configuration - using environment variables with fallbacks
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net";
@@ -276,22 +277,16 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           fontSize: '12px', maxWidth: '350px', zIndex: 1000, pointerEvents: 'none'
         }}>
           {infoBoxData.message ? <p>{infoBoxData.message}</p> : (
-            <>
-              <p><b>Location:</b> Lon: {infoBoxData.lon?.toFixed(4)}, Lat: {infoBoxData.lat?.toFixed(4)}</p>
-              <p><b>Habitats (within {HABITAT_RADIUS_METERS / 1000}km):</b> {
-                infoBoxData.habitatCount && infoBoxData.habitatCount > 0 
-                  ? `${infoBoxData.habitatCount} distinct types, top: ${infoBoxData.topHabitat}`
-                  : 'None detected'
-              }</p>
-              <p><b>Species (near {SPECIES_RADIUS_METERS / 1000}km):</b> {
-                infoBoxData.species.length > 0 
-                  ? infoBoxData.species.map(s => s.comm_name || s.sci_name || `Species ${s.ogc_fid}`).join(', ')
-                  : 'None'
-              }</p>
-            </>
+            <p><b>Species Count:</b> {infoBoxData.species.length}</p>
           )}
           {isLoading && <p><em>Loading...</em></p>}
         </div>
+      )}
+      {showInfoBox && infoBoxData.rasterHabitats && infoBoxData.rasterHabitats.length > 0 && (
+        <HabitatLegend 
+          habitats={infoBoxData.rasterHabitats}
+          radiusKm={HABITAT_RADIUS_METERS / 1000}
+        />
       )}
     </div>
   );
