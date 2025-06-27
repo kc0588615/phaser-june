@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getHabitatColor } from '../config/habitatColors';
 
 interface HabitatData {
   habitat_type: string;
@@ -10,12 +11,6 @@ interface HabitatLegendProps {
   habitats: HabitatData[];
   radiusKm: number;
 }
-
-const defaultColors = [
-  '#4CAF50', '#2196F3', '#FF9800', '#E91E63', 
-  '#9C27B0', '#00BCD4', '#8BC34A', '#FFC107',
-  '#795548', '#607D8B', '#3F51B5', '#009688'
-];
 
 export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -89,7 +84,7 @@ export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps
                   style={{
                     width: '15px',
                     height: '15px',
-                    backgroundColor: habitat.color || defaultColors[index % defaultColors.length],
+                    backgroundColor: habitat.color || getHabitatColor(habitat.habitat_type),
                     border: '1px solid #fff',
                     marginRight: '8px',
                     flexShrink: 0,
