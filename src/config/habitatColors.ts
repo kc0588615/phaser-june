@@ -1,112 +1,119 @@
+// src/config/habitatColors.ts
+
 // Habitat color mapping based on IUCN habitat codes
-// Colors should match the TiTiler backend colormap
+// Colors are from the official IUCN colormap and should match the TiTiler backend.
 export const habitatColorMap: Record<string, string> = {
   // Water
-  'Water': '#002DE1',
+  'Water': '#002de1',
   
-  // Forest types - Green shades
-  'Forest': '#0A941C',
-  'Forest - Boreal': '#115E4E',
-  'Forest - Subarctic': '#146E3E',
-  'Forest - Subantarctic': '#176E4E',
-  'Forest - Temperate': '#98FAE7',
-  'Forest - Subtropical-tropical dry': '#1A8E3E',
-  'Forest - Subtropical-tropical moist lowland': '#1D9E2E',
-  'Forest - Subtropical-tropical mangrove vegetation': '#20AE3E',
-  'Forest - Subtropical-tropical swamp': '#23BE2E',
-  'Forest - Subtropical-tropical moist montane': '#26CE3E',
+  // Forest types
+  'Forest': '#0a941c',
+  'Forest - Boreal': '#115e4e',
+  'Forest - Subarctic': '#07a187',
+  'Forest - Subantarctic': '#00fac0',
+  'Forest - Temperate': '#27a170',
+  'Forest - Subtropical-tropical dry': '#9df941',
+  'Forest - Subtropical-tropical moist lowland': '#2af434',
+  'Forest - Subtropical-tropical mangrove vegetation': '#a0fecc',
+  'Forest - Subtropical-tropical swamp': '#677e2d',
+  'Forest - Subtropical-tropical moist montane': '#00c410',
   
-  // Savanna - Yellow/Light green
-  'Savanna': '#C6FF53',
-  'Savanna - Dry': '#D6FF63',
-  'Savanna - Moist': '#E6FF73',
+  // Savanna
+  'Savanna': '#c6ff53',
+  'Savanna - Dry': '#f5e936',
+  'Savanna - Moist': '#cdff27',
   
-  // Shrubland - Brown/Orange shades
-  'Shrubland': '#7B7A60',
-  'Shrubland - Subarctic': '#8B8A70',
-  'Shrubland - Subantarctic': '#9B9A80',
-  'Shrubland - Boreal': '#6B6A50',
-  'Shrubland - Temperate': '#7B7A60',
-  'Shrubland - Subtropical-tropical dry': '#8B8A70',
-  'Shrubland - Subtropical-tropical moist': '#9B9A80',
-  'Shrubland - Subtropical-tropical high altitude': '#ABAA90',
-  'Shrubland - Mediterranean-type': '#BBBAA0',
+  // Shrubland
+  'Shrubland': '#eaa03f',
+  'Shrubland - Subarctic': '#645800',
+  'Shrubland - Subantarctic': '#7b7a60',
+  'Shrubland - Boreal': '#84a79b',
+  'Shrubland - Temperate': '#9addd4',
+  'Shrubland - Subtropical-tropical dry': '#ffe97b',
+  'Shrubland - Subtropical-tropical moist': '#f0a625',
+  'Shrubland - Subtropical-tropical high altitude': '#ce9bc2',
+  'Shrubland - Mediterranean-type': '#7f1dd5',
   
-  // Grassland - Light blue/Cyan shades
-  'Grassland': '#5BB5FF',
-  'Grassland - Tundra': '#4BA5EF',
-  'Grassland - Subarctic': '#3B95DF',
-  'Grassland - Subantarctic': '#2B85CF',
-  'Grassland - Temperate': '#5BB5FF',
-  'Grassland - Subtropical-tropical dry': '#6BC5FF',
-  'Grassland - Subtropical-tropical seasonally wet or flooded': '#7BD5FF',
-  'Grassland - Subtropical-tropical high altitude': '#8BE5FF',
+  // Grassland
+  'Grassland': '#98fae7',
+  'Grassland - Tundra': '#bdeed8',
+  'Grassland - Subarctic': '#adc4c0',
+  'Grassland - Subantarctic': '#264758',
+  'Grassland - Temperate': '#33b988',
+  'Grassland - Subtropical-tropical dry': '#fff5cb',
+  'Grassland - Subtropical-tropical seasonally wet or flooded': '#89e8f0',
+  'Grassland - Subtropical-tropical high altitude': '#facbff',
   
-  // Wetlands - Darker blue shades
-  'Wetlands (inland)': '#EA9F3F',
-  'Wetlands (inland) - Permanent rivers streams creeks': '#EA9F3F',
-  'Wetlands (inland) - Seasonal/intermittent/irregular rivers/streams/creeks': '#DAAF4F',
-  'Wetlands (inland) - Shrub dominated wetlands': '#CABF5F',
-  'Wetlands (inland) - Bogs/marshes/swamps/fens/peatlands': '#BACF6F',
-  'Wetlands (inland) - Permanent freshwater lakes': '#AADF7F',
-  'Wetlands (inland) - Seasonal/intermittent freshwater lakes (over 8 ha)': '#9AEF8F',
-  'Wetlands (inland) - Permanent freshwater marshes/pools (under 8 ha)': '#8AFF9F',
-  'Wetlands (inland) - Seasonal/intermittent freshwater marshes/pools (under 8 ha)': '#7AFFAF',
-  'Wetlands (inland) - Freshwater springs and oases': '#6AFFBF',
-  'Wetlands (inland) - Tundra wetlands': '#5AFFCF',
-  'Wetlands (inland) - Alpine wetlands': '#4AFFDF',
-  'Wetlands (inland) - Geothermal wetlands': '#3AFFEF',
-  'Wetlands (inland) - Permanent inland deltas': '#645800',
-  'Wetlands (inland) - Permanent saline brackish or alkaline lakes': '#2AFFFF',
-  'Wetlands (inland) - Seasonal/intermittent saline brackish or alkaline lakes and flats': '#1AEFFF',
-  'Wetlands (inland) - Permanent /saline / brackish or alkaline marshes/pools': '#0ADFFF',
-  'Wetlands (inland) - Seasonal/intermittent /saline / brackish or alkaline marshes/pools': '#00CFFF',
-  'Wetlands (inland) / Karst and other subterranean hydrological systems': '#00BFFF',
+  // Wetlands
+  'Wetlands (inland)': '#5bb5ff',
+  'Wetlands (inland) - Permanent rivers streams creeks': '#00fafa',
+  'Wetlands (inland) - Seasonal/intermittent/irregular rivers/streams/creeks': '#d6a0f9',
+  'Wetlands (inland) - Shrub dominated wetlands': '#bf2ae8',
+  'Wetlands (inland) - Bogs/marshes/swamps/fens/peatlands': '#314872',
+  'Wetlands (inland) - Permanent freshwater lakes': '#0e77d9',
+  'Wetlands (inland) - Seasonal/intermittent freshwater lakes (over 8 ha)': '#6e96c4',
+  'Wetlands (inland) - Permanent freshwater marshes/pools (under 8 ha)': '#00add8',
+  'Wetlands (inland) - Seasonal/intermittent freshwater marshes/pools (under 8 ha)': '#218ed6',
+  'Wetlands (inland) - Freshwater springs and oases': '#301f99',
+  'Wetlands (inland) - Tundra wetlands': '#a1e6ec',
+  'Wetlands (inland) - Alpine wetlands': '#c7e1e4',
+  'Wetlands (inland) - Geothermal wetlands': '#f9e9d4',
+  'Wetlands (inland) - Permanent inland deltas': '#0025fc',
+  'Wetlands (inland) - Permanent saline brackish or alkaline lakes': '#166b95',
+  'Wetlands (inland) - Seasonal/intermittent saline brackish or alkaline lakes and flats': '#46a4c0',
+  'Wetlands (inland) - Permanent /saline / brackish or alkaline marshes/pools': '#3e71e0',
+  'Wetlands (inland) - Seasonal/intermittent /saline / brackish or alkaline marshes/pools': '#9c75d0',
+  'Wetlands (inland) / Karst and other subterranean hydrological systems': '#ff01bc',
+
+  // Rocky Areas
+  'Rocky Areas': '#a59283',
   
-  // Rocky Areas - Gray
-  'Rocky Areas': '#7B7A60',
-  
-  // Desert - Orange/Yellow shades
-  'Desert': '#F0A625',
-  'Desert - Hot': '#FFB635',
-  'Desert - Temperate': '#FFC645',
-  'Desert - Cold': '#FFD655',
-  
-  // Marine - Blue shades
-  'Marine - Neritic': '#C6FF53',
-  'Marine - Neritic Pelagic': '#B6EF43',
-  'Marine - Coral Reefs': '#A6DF33',
-  'Marine - Seagrass (submerged)': '#96CF23',
-  'Marine - Oceanic': '#F5E936',
-  'Marine - Epipelagic': '#E5D926',
-  'Marine - Mesopelagic': '#D5C916',
-  'Marine - Bathypelagic': '#C5B906',
-  'Marine - Abyssopelagic': '#B5A900',
-  'Marine - Deep Ocean Floor': '#A59900',
-  'Marine - Continental Slope/Bathyl zone': '#958900',
-  'Marine - Abyssal Plain': '#857900',
-  'Marine - Abyssal Mountains/Hills': '#756900',
-  'Marine - Hadal/Deep Sea Trench': '#655900',
-  'Marine - Seamounts': '#554900',
-  'Marine - Deep Sea Vent': '#453900',
-  'Marine - Intertidal': '#352900',
-  'Marine - Tidepools': '#251900',
-  'Marine - Mangroves submerged Roots': '#150900',
-  
-  // Artificial/Agricultural - Purple/Pink shades
-  'Artificial - Terrestrial': '#CE9BC2',
-  'Arable land': '#F0A625',
-  'Pastureland': '#CE9BC2',
-  'Plantations': '#7F1DD5',
-  'Rural Gardens': '#8F2DE5',
-  'Urban Areas': '#0A941C',
-  'Subtropical/Tropical Heavily Degraded Former Forest': '#9F3DF5',
-  
-  // Unknown - Gray
-  'Unknown': '#808080'
+  // Desert
+  'Desert': '#fffce1',
+  'Desert - Hot': '#ffb701',
+  'Desert - Temperate': '#e4e9d4',
+  'Desert - Cold': '#daedf5',
+
+  // Marine
+  'Marine - Neritic': '#99ddf7',
+  'Marine - Neritic Pelagic': '#d1ecf7',
+  'Marine - Coral Reefs': '#fd7c6e',
+  'Marine - Seagrass (submerged)': '#86a475',
+  'Marine - Oceanic': '#1da2d8',
+  'Marine - Epipelagic': '#1781ac',
+  'Marine - Mesopelagic': '#0e516c',
+  'Marine - Bathypelagic': '#083040',
+  'Marine - Abyssopelagic': '#021015',
+  'Marine - Deep Ocean Floor': '#7fcdff',
+  'Marine - Continental Slope/Bathyl zone': '#1199d1',
+  'Marine - Abyssal Plain ': '#60bde3',
+  'Marine - Abyssal Mountains/Hills ': '#1a91c2',
+  'Marine - Hadal/Deep Sea Trench ': '#027495',
+  'Marine - Seamounts ': '#6baed6',
+  'Marine - Deep Sea Vent ': '#7F00FF',
+  'Marine - Intertidal': '#4ce6e6',
+  'Marine - Tidepools': '#3212b3',
+  'Marine - Mangroves submerged Roots': '#7cd9cc',
+
+  // Artificial/Terrestrial
+  'Artificial - Terrestrial': '#d95049',
+  'Arable land': '#ffa083',
+  'Pastureland': '#ff83ca',
+  'Plantations': '#FF0800',
+  'Rural Gardens': '#ddcb25',
+  'Urban Areas': '#000000',
+  'Subtropical/Tropical Heavily Degraded Former Forest': '#ff1601',
+
+  // Unknown
+  'Unknown': '#ffffff'
 };
 
-// Function to get color for a habitat type
+/**
+ * Gets the official IUCN hex color for a given habitat type.
+ * @param habitatType The string label of the habitat.
+ * @returns The hex color code as a string. Defaults to white ('#ffffff') if the habitat type is not found.
+ */
 export function getHabitatColor(habitatType: string): string {
-  return habitatColorMap[habitatType] || '#808080'; // Default to gray if not found
+  // The official color for 'Unknown' is white. This serves as a good default.
+  return habitatColorMap[habitatType] || '#ffffff';
 }
