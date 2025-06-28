@@ -118,6 +118,13 @@ export class BoardView {
         });
     }
 
+    /** Updates dimensions without animation (for use before board recreation). */
+    updateDimensions(newGemSize: number, newBoardOffset: { x: number; y: number }): void {
+        console.log("BoardView: Updating dimensions (no animation).");
+        this.gemSize = newGemSize;
+        this.boardOffset = newBoardOffset;
+    }
+
     /** Visually moves sprites during drag, handling wrapping. */
     moveDraggingSprites(
         spritesToMove: Phaser.GameObjects.Sprite[],

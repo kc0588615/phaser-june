@@ -8,6 +8,11 @@ function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
     const [cesiumMinimized, setCesiumMinimized] = useState(false);
 
+    // Emit layout change event when cesium minimized state changes
+    useEffect(() => {
+        EventBus.emit('layout-changed', { mapMinimized: cesiumMinimized });
+    }, [cesiumMinimized]);
+
     // This callback is for when PhaserGame signals that a scene is ready
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
@@ -56,20 +61,21 @@ function MainAppLayout() {
     };
     const phaserGameWrapperStyle: React.CSSProperties = {
         width: '100%',
-        height: 'calc(100% - 150px)', // Example: Game takes most space, 150px for UI below
+        height: cesiumMinimized ? '60%' : 'calc(100% - 150px)', // 60% when minimized to leave 40% for clues
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
     };
     const gameUiPanelStyle: React.CSSProperties = {
         width: '100%',
-        height: '150px', // Fixed height for UI panel
+        height: cesiumMinimized ? '40%' : '150px', // 40% when minimized, 150px normally
         padding: '10px',
         boxSizing: 'border-box',
         borderTop: '2px solid #555',
         overflowY: 'auto', // If UI content might exceed height
         backgroundColor: '#282c34', // Dark background for UI panel
-        color: 'white'
+        color: 'white',
+        transition: 'height 0.3s ease-in-out'
     };
 
     useEffect(() => {

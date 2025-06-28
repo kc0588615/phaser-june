@@ -40,6 +40,9 @@ export interface EventPayloads {
   'all-species-completed': {
     totalSpecies: number;
   };
+  'layout-changed': {
+    mapMinimized: boolean;
+  };
 }
 
 // Type-safe EventBus class
