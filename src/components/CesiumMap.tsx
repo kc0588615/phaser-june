@@ -111,7 +111,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           
           // Set showGroundAtmosphere on the globe
           if (viewer.scene && viewer.scene.globe) {
-            viewer.scene.globe.showGroundAtmosphere = true;
+            viewer.scene.globe.showGroundAtmosphere = false;
           }
           
           const [west, south, east, north] = tileJson.bounds;
