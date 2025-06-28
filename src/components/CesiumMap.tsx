@@ -107,6 +107,13 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         setImageryProvider(provider);
 
         if (viewerRef.current && viewerRef.current.cesiumElement && tileJson.bounds) {
+          const viewer = viewerRef.current.cesiumElement;
+          
+          // Set showGroundAtmosphere on the globe
+          if (viewer.scene && viewer.scene.globe) {
+            viewer.scene.globe.showGroundAtmosphere = true;
+          }
+          
           const [west, south, east, north] = tileJson.bounds;
           if ([west, south, east, north].every(coord => typeof coord === 'number' && isFinite(coord))) {
             const rectangle = Rectangle.fromDegrees(west, south, east, north);
@@ -119,7 +126,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
                 rectangle.east += 0.05;  // radians
                 rectangle.west -= 0.05;  // radians
             }
-            viewerRef.current.cesiumElement.camera.flyTo({
+            viewer.camera.flyTo({
               destination: rectangle,
               duration: 1.5
             });
