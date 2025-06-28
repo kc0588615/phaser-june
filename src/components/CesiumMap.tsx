@@ -280,20 +280,26 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         <div style={{
           position: 'absolute', top: '10px', left: '10px',
           background: 'rgba(40,40,40,0.85)', color: 'white',
-          padding: '1px', borderRadius: '5px', fontFamily: 'sans-serif',
-          fontSize: '10px', maxWidth: '350px', zIndex: 1000, pointerEvents: 'none'
+          padding: '5px', borderRadius: '5px', fontFamily: 'sans-serif',
+          fontSize: '12px', maxWidth: '350px', zIndex: 1000, pointerEvents: 'auto'
         }}>
-          {infoBoxData.message ? <p>{infoBoxData.message}</p> : (
-            <p><b>Species Count:</b> {infoBoxData.species.length}</p>
+          <div style={{ marginBottom: '5px' }}>
+            {infoBoxData.message ? <p style={{ margin: 0 }}>{infoBoxData.message}</p> : (
+              <p style={{ margin: 0 }}>
+                <b>Habitats:</b> {infoBoxData.rasterHabitats?.length || 0} &nbsp;&nbsp;
+                <b>Species:</b> {infoBoxData.species.length}
+              </p>
+            )}
+            {isLoading && <p style={{ margin: 0 }}><em>Loading...</em></p>}
+          </div>
+          
+          {infoBoxData.rasterHabitats && infoBoxData.rasterHabitats.length > 0 && (
+            <HabitatLegend 
+              habitats={infoBoxData.rasterHabitats}
+              radiusKm={HABITAT_RADIUS_METERS / 1000}
+            />
           )}
-          {isLoading && <p><em>Loading...</em></p>}
         </div>
-      )}
-      {showInfoBox && infoBoxData.rasterHabitats && infoBoxData.rasterHabitats.length > 0 && (
-        <HabitatLegend 
-          habitats={infoBoxData.rasterHabitats}
-          radiusKm={HABITAT_RADIUS_METERS / 1000}
-        />
       )}
     </div>
   );
