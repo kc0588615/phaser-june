@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing PhaserGame component
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
-import { ClueDisplay } from './components/ClueDisplay'; // Import the ClueDisplay component
+import { SpeciesPanel } from './components/SpeciesPanel'; // Import the SpeciesPanel component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 
 function MainAppLayout() {
@@ -104,7 +104,7 @@ function MainAppLayout() {
                 </div>
 
                 <div id="game-ui-panel" style={gameUiPanelStyle}>
-                    <ClueDisplay />
+                    <SpeciesPanel />
                 </div>
             </div>
         </div>

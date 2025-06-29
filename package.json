@@ -39,20 +39,33 @@
         "clean": "rm -rf .next dist public/cesium"
     },
     "dependencies": {
+        "@radix-ui/react-dialog": "^1.1.14",
+        "@radix-ui/react-menubar": "^1.1.15",
+        "@radix-ui/react-separator": "^1.1.7",
+        "@radix-ui/react-slot": "^1.2.3",
         "@supabase/ssr": "^0.6.1",
         "@supabase/supabase-js": "^2.49.10",
         "cesium": "^1.117.0",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.525.0",
         "next": "15.3.1",
         "phaser": "^3.90.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "resium": "^1.17.2"
+        "resium": "^1.17.2",
+        "tailwind-merge": "^3.3.1"
     },
     "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.11",
         "@types/node": "^20",
         "@types/react": "^18",
         "@types/react-dom": "^18",
+        "autoprefixer": "^10.4.21",
+        "postcss": "^8.5.6",
         "symlink-dir": "^5.2.1",
+        "tailwindcss": "^4.1.11",
+        "tailwindcss-animate": "^1.0.7",
         "typescript": "^5",
         "webpack": "^5.99.9"
     }
