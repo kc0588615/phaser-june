@@ -41,7 +41,7 @@ function MainAppLayout() {
     };
     const minimizeButtonStyle: React.CSSProperties = {
         position: cesiumMinimized ? 'fixed' : 'absolute',
-        top: '45px',
+        top: cesiumMinimized ?'10px': '45px',
         right: '10px',
         zIndex: 1000,
         padding: '5px 10px',
