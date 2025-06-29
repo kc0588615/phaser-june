@@ -126,3 +126,9 @@ body {
         color: rgba(255, 255, 255, 0.3);
     }
 }
+
+/* Spin animation for loading indicators */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
