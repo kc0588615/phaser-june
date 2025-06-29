@@ -119,7 +119,7 @@ export class Game extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(100);
 
         // Score display
-        this.scoreText = this.add.text(20, 20, 'Score: 0', {
+        this.scoreText = this.add.text(20, height - 25, 'Score: 0', {
             fontSize: '20px',
             color: '#ffffff',
             stroke: '#000000',
@@ -127,7 +127,7 @@ export class Game extends Phaser.Scene {
         }).setDepth(100);
 
         // Moves display
-        this.movesText = this.add.text(width - 20, 20, 'Moves: 50', {
+        this.movesText = this.add.text(width - 20, height - 25, 'Moves: 50', {
             fontSize: '20px',
             color: '#ffffff',
             stroke: '#000000',
@@ -312,7 +312,10 @@ export class Game extends Phaser.Scene {
         
         // Update UI positions
         if (this.movesText) {
-            this.movesText.setPosition(width - 20, 20);
+            this.movesText.setPosition(width - 20, height - 25);
+        }
+        if (this.scoreText) {
+            this.scoreText.setPosition(20, height - 25);
         }
         
         if (this.boardView) {
