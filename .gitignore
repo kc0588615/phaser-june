@@ -44,3 +44,6 @@ repomix-output-*.xml
 
 # nextJS
 supabase_nextjs.txt
+
+# Claude
+CLAUDE.md
