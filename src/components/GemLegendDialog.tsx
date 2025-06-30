@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { gemCategoryMapping } from '../game/gemCategoryMapping';
+import { CLUE_CONFIG, GemCategory } from '../game/clueConfig';
 
 interface GemLegendDialogProps {
   open: boolean;
@@ -53,20 +53,23 @@ export const GemLegendDialog: React.FC<GemLegendDialogProps> = ({ open, onOpenCh
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
-          {Object.entries(gemCategoryMapping).map(([gemId, info]) => (
-            <div key={gemId} style={legendItemStyle}>
-              <img
-                src={`/assets/${gemId}_gem_0.png`}
-                alt={`${info.categoryName} gem`}
-                style={gemIconStyle}
-              />
-              <div style={textStyle}>
-                <div style={categoryStyle}>
-                  {info.icon} {info.categoryName}
+          {Object.entries(CLUE_CONFIG).map(([categoryId, config]) => {
+            const category = parseInt(categoryId) as GemCategory;
+            return (
+              <div key={category} style={legendItemStyle}>
+                <img
+                  src={`/assets/${config.color}_gem_0.png`}
+                  alt={`${config.categoryName} gem`}
+                  style={gemIconStyle}
+                />
+                <div style={textStyle}>
+                  <div style={categoryStyle}>
+                    {config.icon} {config.categoryName}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </DialogContent>
     </Dialog>

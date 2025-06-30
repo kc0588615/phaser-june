@@ -9,8 +9,8 @@ import {
 } from '../constants';
 import { EventBus, EventPayloads } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
-import { GemClueMapper, GemCategory, gemCategoryMapping, ClueData } from '../gemCategoryMapping';
 import { GemType } from '../constants';
+import { GemCategory, CLUE_CONFIG, CluePayload } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 
@@ -493,9 +493,13 @@ export class Game extends Phaser.Scene {
 
     private async applyMoveAndHandleResults(moveAction: MoveAction): Promise<void> {
         if (!this.backendPuzzle || !this.boardView) return;
+        
+        // Capture grid state BEFORE applying the move to get original gem types
+        const gridStateBeforeMove = this.backendPuzzle.getGridState();
         const phaseResult = this.backendPuzzle.getNextExplodeAndReplacePhase([moveAction]); // This applies the move
+        
         if (!phaseResult.isNothingToDo()) {
-            await this.animatePhase(phaseResult);
+            await this.animatePhaseWithOriginalGems(phaseResult, gridStateBeforeMove);
             await this.handleCascades();
         } else {
             console.warn("applyMoveAndHandleResults: Move was applied, but backend reports no matches. This might be a logic discrepancy.");
@@ -504,17 +508,37 @@ export class Game extends Phaser.Scene {
 
     private async handleCascades(): Promise<void> {
         if (!this.backendPuzzle || !this.boardView) return;
+        
+        // Capture grid state BEFORE checking for cascade matches
+        const gridStateBeforeCascade = this.backendPuzzle.getGridState();
         const cascadePhase = this.backendPuzzle.getNextExplodeAndReplacePhase([]);
+        
         if (!cascadePhase.isNothingToDo()) {
-            await this.animatePhase(cascadePhase);
+            await this.animatePhaseWithOriginalGems(cascadePhase, gridStateBeforeCascade);
             await this.handleCascades();
+        }
+    }
+
+    private async animatePhaseWithOriginalGems(phaseResult: ExplodeAndReplacePhase, originalGridState: any): Promise<void> {
+        if (!this.boardView || !this.backendPuzzle) return;
+        try {
+            // Process clues using original gem types
+            this.processMatchedGemsWithOriginalTypes(phaseResult.matches, originalGridState);
+            
+            await this.boardView.animateExplosions(phaseResult.matches.flat());
+            await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
+        } catch (error) {
+            console.error("Error during phase animation:", error);
+            if (this.boardView && this.backendPuzzle) {
+                this.boardView.syncSpritesToGridPositions();
+            }
         }
     }
 
     private async animatePhase(phaseResult: ExplodeAndReplacePhase): Promise<void> {
         if (!this.boardView || !this.backendPuzzle) return;
         try {
-            // Generate clues based on matched gems before animating
+            // Process clues using current grid state (fallback method)
             this.processMatchedGemsForClues(phaseResult.matches);
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
@@ -527,19 +551,83 @@ export class Game extends Phaser.Scene {
         }
     }
 
+    private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
+        if (!this.selectedSpecies || matches.length === 0) return;
+
+        // Debug: Log all matches
+        console.log("Game Scene: Processing matches with original gem types:", matches.length, "match groups");
+        
+        // Extract all gem types from matched coordinates using original grid state
+        const matchedGemTypes = new Set<GemType>();
+        
+        for (const match of matches) {
+            console.log("Game Scene: Match group with", match.length, "gems at coords:", match);
+            for (const coord of match) {
+                const [x, y] = coord;
+                const gem = originalGridState[x]?.[y];
+                if (gem) {
+                    console.log(`Game Scene: Original gem at [${x},${y}] was ${gem.gemType}`);
+                    matchedGemTypes.add(gem.gemType);
+                }
+            }
+        }
+
+        // Convert gem types to categories and generate clues
+        for (const gemType of matchedGemTypes) {
+            const category = this.gemTypeToCategory(gemType);
+            if (category !== null && !this.revealedClues.has(category)) {
+                this.revealedClues.add(category);
+                
+                // Generate clue for this category
+                let clueData: CluePayload | null = null;
+                if (category === GemCategory.HABITAT) {
+                    // Use raster habitat data for green gems
+                    clueData = this.generateRasterHabitatClue();
+                } else {
+                    // Use CLUE_CONFIG for species-based clues
+                    const config = CLUE_CONFIG[category];
+                    if (config) {
+                        const clueText = config.getClue(this.selectedSpecies);
+                        if (clueText) {
+                            clueData = {
+                                category,
+                                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                                clue: clueText,
+                                speciesId: this.selectedSpecies.ogc_fid,
+                                name: config.categoryName,
+                                icon: config.icon,
+                                color: config.color
+                            };
+                        }
+                    }
+                }
+                
+                if (clueData && clueData.clue) {
+                    console.log("Game Scene: Revealing clue for category:", category, clueData);
+                    EventBus.emit('clue-revealed', clueData);
+                }
+            }
+        }
+    }
+
     private processMatchedGemsForClues(matches: Coordinate[][]): void {
         if (!this.selectedSpecies || matches.length === 0) return;
 
+        // Debug: Log all matches
+        console.log("Game Scene: Processing matches:", matches.length, "match groups");
+        
         // Extract all gem types from matched coordinates
         const matchedGemTypes = new Set<GemType>();
         
         for (const match of matches) {
+            console.log("Game Scene: Match group with", match.length, "gems at coords:", match);
             for (const coord of match) {
                 if (this.backendPuzzle) {
                     const [x, y] = coord;
                     const gridState = this.backendPuzzle.getGridState();
                     const gem = gridState[x]?.[y];
                     if (gem) {
+                        console.log(`Game Scene: Gem at [${x},${y}] is ${gem.gemType}`);
                         matchedGemTypes.add(gem.gemType);
                     }
                 }
@@ -553,13 +641,27 @@ export class Game extends Phaser.Scene {
                 this.revealedClues.add(category);
                 
                 // Generate clue for this category
-                let clueData;
+                let clueData: CluePayload | null = null;
                 if (category === GemCategory.HABITAT) {
                     // Use raster habitat data for green gems
                     clueData = this.generateRasterHabitatClue();
                 } else {
-                    // Use normal species-based clues for other categories
-                    clueData = GemClueMapper.getClueForCategory(this.selectedSpecies, category);
+                    // Use CLUE_CONFIG for species-based clues
+                    const config = CLUE_CONFIG[category];
+                    if (config) {
+                        const clueText = config.getClue(this.selectedSpecies);
+                        if (clueText) {
+                            clueData = {
+                                category,
+                                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                                clue: clueText,
+                                speciesId: this.selectedSpecies.ogc_fid,
+                                name: config.categoryName,
+                                icon: config.icon,
+                                color: config.color
+                            };
+                        }
+                    }
                 }
                 
                 if (clueData && clueData.clue) {
@@ -689,7 +791,7 @@ export class Game extends Phaser.Scene {
     /**
      * Generate a raster habitat clue from the stored habitat distribution data
      */
-    private generateRasterHabitatClue(): ClueData | null {
+    private generateRasterHabitatClue(): CluePayload | null {
         if (!this.selectedSpecies) return null;
         
         // Find the next unused habitat type from raster data
@@ -710,11 +812,15 @@ export class Game extends Phaser.Scene {
         
         console.log("Game Scene: Generated raster habitat clue:", clue);
         
+        const habitatConfig = CLUE_CONFIG[GemCategory.HABITAT];
         return {
             category: GemCategory.HABITAT,
             heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
             clue: clue,
-            speciesId: this.selectedSpecies.ogc_fid
+            speciesId: this.selectedSpecies.ogc_fid,
+            name: habitatConfig.categoryName,
+            icon: habitatConfig.icon,
+            color: habitatConfig.color
         };
     }
 

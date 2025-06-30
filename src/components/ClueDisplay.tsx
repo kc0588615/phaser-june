@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { EventBus } from '../game/EventBus';
-import type { ClueData } from '../game/gemCategoryMapping';
-import { gemCategoryMapping } from '../game/gemCategoryMapping';
+import type { CluePayload } from '../game/clueConfig';
 import { GemLegend } from './GemLegend';
 
 interface ClueDisplayProps {
@@ -9,7 +8,7 @@ interface ClueDisplayProps {
 }
 
 export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
-  const [clues, setClues] = useState<ClueData[]>([]);
+  const [clues, setClues] = useState<CluePayload[]>([]);
   const [selectedSpeciesName, setSelectedSpeciesName] = useState<string>('');
   const [selectedSpeciesId, setSelectedSpeciesId] = useState<number>(0);
   const [totalSpecies, setTotalSpecies] = useState<number>(0);
@@ -21,7 +20,7 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
 
   useEffect(() => {
     // Listen for clue reveals from the game
-    const handleClueRevealed = (clueData: ClueData) => {
+    const handleClueRevealed = (clueData: CluePayload) => {
       setIsLoadingClue(true);
       // Simulate a brief loading state for clue processing
       setTimeout(() => {
@@ -111,17 +110,6 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
     color: '#e0e0e0'
   };
 
-  const gemCategoryIcons: { [key: number]: string } = {
-    0: '🧬', // Classification
-    1: '🌳', // Habitat
-    2: '🗺️', // Geographic
-    3: '🐾', // Morphology (combines Color/Pattern and Size/Shape)
-    4: '🌿', // Diet
-    5: '💨', // Behavior
-    6: '⏳', // Life Cycle
-    7: '🛡️', // Conservation
-    8: '❗', // Key Facts
-  };
 
   const legendButtonStyle: React.CSSProperties = {
     position: 'absolute',
@@ -202,19 +190,17 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
             </p>
           ) : (
             <div>
-              {clues.map((clue, index) => {
-                const categoryInfo = Object.values(gemCategoryMapping).find(
-                  info => info.categoryName === ['Classification', 'Habitat', 'Geographic', 'Morphology', 'Diet', 'Behavior', 'Life Cycle', 'Conservation', 'Key Facts'][clue.category]
-                );
-                return (
-                  <div key={index} style={clueItemStyle}>
-                    <div style={headingStyle}>
-                      {categoryInfo?.icon || ''} {categoryInfo?.categoryName || ''}
-                    </div>
-                    <div style={clueTextStyle}>{clue.clue}</div>
+              {clues.map((clue, index) => (
+                <div key={index} style={{
+                  ...clueItemStyle,
+                  borderLeft: `3px solid ${clue.color}`
+                }}>
+                  <div style={headingStyle}>
+                    {clue.icon} {clue.name}
                   </div>
-                );
-              })}
+                  <div style={clueTextStyle}>{clue.clue}</div>
+                </div>
+              ))}
               {isLoadingClue && (
                 <div style={{ 
                   ...clueItemStyle, 

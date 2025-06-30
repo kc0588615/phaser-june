@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
+import type { CluePayload } from './clueConfig';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -20,12 +21,7 @@ export interface EventPayloads {
     finalScore: number;
     habitats: string[];
   };
-  'clue-revealed': {
-    category: number;
-    heading: string;
-    clue: string;
-    speciesId: number;
-  };
+  'clue-revealed': CluePayload;
   'new-game-started': {
     speciesName: string;
     speciesId: number;
