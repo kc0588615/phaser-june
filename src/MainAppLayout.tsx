@@ -3,6 +3,7 @@ import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing Phas
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
 import { SpeciesPanel } from './components/SpeciesPanel'; // Import the SpeciesPanel component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
+import { Toaster } from 'sonner';
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
@@ -107,6 +108,21 @@ function MainAppLayout() {
                     <SpeciesPanel />
                 </div>
             </div>
+            
+            <Toaster
+                position="bottom-right"
+                richColors
+                theme="dark"
+                closeButton
+                toastOptions={{
+                    classNames: {
+                        toast: "bg-slate-800 border-slate-700 text-slate-100",
+                        title: "text-cyan-300",
+                        description: "text-slate-300",
+                        actionButton: "bg-slate-600 text-white hover:bg-slate-500",
+                    },
+                }}
+            />
         </div>
     );
 }
