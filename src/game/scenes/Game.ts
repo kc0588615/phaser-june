@@ -65,8 +65,6 @@ export class Game extends Phaser.Scene {
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
     
-    // Layout state
-    private isMapMinimized: boolean = false;
 
     constructor() {
         super('Game');
@@ -153,7 +151,6 @@ export class Game extends Phaser.Scene {
         this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.handlePointerUp, this);
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
-        EventBus.on('layout-changed', this.handleLayoutChange, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -259,15 +256,8 @@ export class Game extends Phaser.Scene {
             return;
         }
         
-        // Define constants for UI space
-        const TOP_UI_OFFSET = 60; // Space for score/moves text at top
-        
         const usableWidth = width * 0.95;
-        
-        // When map is minimized, use more vertical space but leave room at top for UI
-        const usableHeight = this.isMapMinimized 
-            ? height - TOP_UI_OFFSET - 20  // Almost full height minus top UI
-            : height * 0.90;               // Original logic
+        const usableHeight = height * 0.90;
         
         const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
         const sizeFromHeight = Math.floor(usableHeight / GRID_ROWS);
@@ -275,26 +265,10 @@ export class Game extends Phaser.Scene {
         const boardWidth = GRID_COLS * this.gemSize;
         const boardHeight = GRID_ROWS * this.gemSize;
         
-        // X offset is still centered
-        const boardOffsetX = Math.round((width - boardWidth) / 2);
-        
-        // Y offset changes based on map minimized state
-        const boardOffsetY = this.isMapMinimized
-            ? TOP_UI_OFFSET  // Position right below top UI when map minimized
-            : Math.round((height - boardHeight) / 2); // Center vertically normally
-        
         this.boardOffset = {
-            x: boardOffsetX,
-            y: boardOffsetY
+            x: Math.round((width - boardWidth) / 2),
+            y: Math.round((height - boardHeight) / 2)
         };
-    }
-    
-    private handleLayoutChange(data: { mapMinimized: boolean }): void {
-        console.log(`Game Scene: Layout changed - Map minimized = ${data.mapMinimized}`);
-        this.isMapMinimized = data.mapMinimized;
-        
-        // Trigger a resize/recalculation to update board position
-        this.handleResize();
     }
 
     private handleResize(): void {
@@ -827,7 +801,6 @@ export class Game extends Phaser.Scene {
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
-        EventBus.off('layout-changed', this.handleLayoutChange, this);
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_MOVE);

@@ -7,12 +7,7 @@ import { Toaster } from 'sonner';
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
-    const [cesiumMinimized, setCesiumMinimized] = useState(false);
-
-    // Emit layout change event when cesium minimized state changes
-    useEffect(() => {
-        EventBus.emit('layout-changed', { mapMinimized: cesiumMinimized });
-    }, [cesiumMinimized]);
+    const [showMap, setShowMap] = useState(true); // Toggle state for map/clue view
 
     // This callback is for when PhaserGame signals that a scene is ready
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
@@ -23,26 +18,35 @@ function MainAppLayout() {
         }
     };
 
-    // --- Layout Styling --- (Updated for vertical layout)
+    // --- Layout Styling --- (Updated for game-first design)
     const appStyle: React.CSSProperties = {
         display: 'flex',
-        flexDirection: 'column', // Vertical stack: Cesium Map on top, Phaser Game below
+        flexDirection: 'column', // Vertical stack: Phaser Game on top, Cesium Map below
         width: '100vw',
         height: '100vh',
         overflow: 'hidden'
     };
+    const phaserGameWrapperStyle: React.CSSProperties = {
+        width: '100%',
+        height: '60%', // Phaser game takes 60% of screen
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    };
     const cesiumContainerStyle: React.CSSProperties = {
         width: '100%',
-        height: cesiumMinimized ? '0%' : '30%', // Minimize completely or take 30% of screen
+        height: '40%', // Bottom area takes 40% of screen
         minHeight: '0px',
-        borderBottom: cesiumMinimized ? 'none' : '2px solid #555', // Hide border when minimized
+        borderTop: '2px solid #555', // Border at top of bottom container
         position: 'relative',
-        transition: 'height 0.3s ease-in-out',
-        overflow: 'hidden' // Hide content when minimized
+        overflow: 'hidden',
+        backgroundColor: '#0f172a', // Dark background to match SpeciesPanel
+        display: 'flex',
+        flexDirection: 'column'
     };
     const minimizeButtonStyle: React.CSSProperties = {
-        position: cesiumMinimized ? 'fixed' : 'absolute',
-        top: cesiumMinimized ?'10px': '45px',
+        position: 'absolute',
+        top: '10px',
         right: '10px',
         zIndex: 1000,
         padding: '5px 10px',
@@ -52,31 +56,6 @@ function MainAppLayout() {
         borderRadius: '4px',
         cursor: 'pointer',
         fontSize: '14px'
-    };
-    const phaserAndUiContainerStyle: React.CSSProperties = {
-        flex: 1, // Take remaining space
-        minHeight: '400px', // Ensure game area is usable
-        display: 'flex',
-        flexDirection: 'column', // Stack Phaser game above other UI
-        width: '100%'
-    };
-    const phaserGameWrapperStyle: React.CSSProperties = {
-        width: '100%',
-        height: cesiumMinimized ? '60%' : 'calc(100% - 150px)', // 60% when minimized to leave 40% for clues
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-    };
-    const gameUiPanelStyle: React.CSSProperties = {
-        width: '100%',
-        height: cesiumMinimized ? '40%' : '150px', // 40% when minimized, 150px normally
-        padding: '10px',
-        boxSizing: 'border-box',
-        borderTop: '2px solid #555',
-        overflowY: 'auto', // If UI content might exceed height
-        backgroundColor: '#282c34', // Dark background for UI panel
-        color: 'white',
-        transition: 'height 0.3s ease-in-out'
     };
 
     useEffect(() => {
@@ -89,22 +68,37 @@ function MainAppLayout() {
 
     return (
         <div id="app-container" style={appStyle}>
+            <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
+                <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+            </div>
+
             <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
                 <button 
                     style={minimizeButtonStyle}
-                    onClick={() => setCesiumMinimized(!cesiumMinimized)}
+                    onClick={() => {
+                        setShowMap(!showMap);
+                        console.log('Toggle button clicked - showMap:', !showMap);
+                    }}
                 >
-                    {cesiumMinimized ? '▼ Expand' : '▲ Minimize'}
+                    {showMap ? 'Show Clues' : 'Show Map'}
                 </button>
-                <CesiumMap />
-            </div>
-
-            <div id="phaser-and-ui-wrapper" style={phaserAndUiContainerStyle}>
-                <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
-                    <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+                
+                {/* Keep both components mounted but show/hide with CSS */}
+                <div style={{ 
+                    display: showMap ? 'block' : 'none',
+                    height: '100%',
+                    width: '100%'
+                }}>
+                    <CesiumMap />
                 </div>
-
-                <div id="game-ui-panel" style={gameUiPanelStyle}>
+                
+                <div style={{ 
+                    display: showMap ? 'none' : 'block',
+                    height: '100%', 
+                    width: '100%',
+                    overflow: 'auto',
+                    position: 'relative'
+                }}>
                     <SpeciesPanel />
                 </div>
             </div>

@@ -54,6 +54,8 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
   };
 
   useEffect(() => {
+    console.log('SpeciesPanel: Component mounted, setting up event listeners');
+    
     // Listen for clue reveals from the game
     const handleClueRevealed = (clueData: CluePayload) => {
       setClues(prev => {
@@ -67,6 +69,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
 
     // Listen for new game starts
     const handleNewGame = (data: { speciesName: string; speciesId: number; totalSpecies: number; currentIndex: number }) => {
+      console.log('SpeciesPanel: Received new-game-started event:', data);
       setClues([]);
       setDiscoveredClues([]);
       setSelectedSpeciesName(data.speciesName);
