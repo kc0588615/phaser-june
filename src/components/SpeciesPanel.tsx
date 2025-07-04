@@ -2,15 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { EventBus } from '../game/EventBus';
 import type { CluePayload } from '../game/clueConfig';
 import { GemLegendDialog } from './GemLegendDialog';
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarShortcut,
-  MenubarTrigger
-} from "@/components/ui/menubar";
 
 interface SpeciesPanelProps {
   style?: React.CSSProperties;
@@ -100,7 +91,8 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     height: '100%',
     backgroundColor: '#1a1a1a',
     borderRadius: '8px',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    position: 'relative'
   };
 
   const contentStyle: React.CSSProperties = {
@@ -129,86 +121,28 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     color: '#e0e0e0'
   };
 
-  // Navigation functions (placeholders for future implementation)
-  const handlePreviousSpecies = () => {
-    console.log('Previous species - to be implemented');
-  };
-
-  const handleNextSpecies = () => {
-    console.log('Next species - to be implemented');
-  };
-
-  const handleGoToNotebook = () => {
-    console.log('Go to notebook - to be implemented');
-  };
-
-  const handleToggleDetails = () => {
-    console.log('Toggle details - to be implemented');
+  const legendButtonStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: '10px',
+    right: '10px',
+    padding: '5px 10px',
+    backgroundColor: '#4a90e2',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    zIndex: 10
   };
 
   return (
     <div style={containerStyle}>
-      <Menubar className="rounded-none border-b border-gray-700">
-        <MenubarMenu>
-          <MenubarTrigger>Species</MenubarTrigger>
-          <MenubarContent>
-            {selectedSpeciesName ? (
-              <>
-                <MenubarItem disabled>
-                  Current: {selectedSpeciesName}
-                </MenubarItem>
-                {selectedSpeciesId > 0 && (
-                  <MenubarItem disabled>
-                    ID: {selectedSpeciesId} | #{currentSpeciesIndex} of {totalSpecies}
-                  </MenubarItem>
-                )}
-                <MenubarSeparator />
-              </>
-            ) : (
-              <MenubarItem disabled>No species selected</MenubarItem>
-            )}
-            <MenubarItem disabled>Select Species...</MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-        
-        <MenubarMenu>
-          <MenubarTrigger>View</MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem onClick={() => setLegendOpen(true)}>
-              Show Legend <MenubarShortcut>⌘L</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem onClick={handleToggleDetails}>
-              Toggle Details
-            </MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-        
-        <MenubarMenu>
-          <MenubarTrigger>Navigate</MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem onClick={handlePreviousSpecies} disabled={currentSpeciesIndex <= 1}>
-              Previous Species <MenubarShortcut>←</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem onClick={handleNextSpecies} disabled={currentSpeciesIndex >= totalSpecies}>
-              Next Species <MenubarShortcut>→</MenubarShortcut>
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem onClick={handleGoToNotebook}>
-              Go to Notebook
-            </MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-
-        <MenubarMenu>
-          <MenubarTrigger>Help</MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem>About Game</MenubarItem>
-            <MenubarItem>Controls Guide</MenubarItem>
-            <MenubarItem>Keyboard Shortcuts</MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-      </Menubar>
-
+      <button 
+        style={legendButtonStyle}
+        onClick={() => setLegendOpen(true)}
+      >
+        Show Legend
+      </button>
       <div style={contentStyle}>
         {!selectedSpeciesName && clues.length === 0 ? (
           <>
