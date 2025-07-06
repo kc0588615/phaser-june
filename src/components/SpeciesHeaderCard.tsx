@@ -51,17 +51,30 @@ export const SpeciesHeaderCard: React.FC<SpeciesHeaderCardProps> = ({
 
       {/* Discovered Clues Row */}
       {discoveredClues.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
-          {discoveredClues.map((clue, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-1 px-2 py-1 bg-slate-700 rounded-md"
-              style={{ borderLeft: `3px solid ${clue.color}` }}
-            >
-              <span className="text-sm">{clue.icon}</span>
-              <span className="text-xs text-slate-300">{clue.name}</span>
-            </div>
-          ))}
+        <div className="flex gap-1 items-center">
+          {discoveredClues.map((clue, index) => {
+            // Map gem colors to colored dot emojis
+            const colorToDot: Record<string, string> = {
+              'red': '🔴',
+              'green': '🟢',
+              'blue': '🔵',
+              'orange': '🟠',
+              'yellow': '🟡',
+              'black': '⚫',
+              'white': '⚪',
+              'purple': '🟣'
+            };
+            
+            return (
+              <span
+                key={index}
+                className="text-base"
+                title={`${clue.name} (${clue.icon})`}
+              >
+                {colorToDot[clue.color] || '⚪'}
+              </span>
+            );
+          })}
         </div>
       )}
     </div>
