@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { EventBus } from '../game/EventBus';
 import type { CluePayload } from '../game/clueConfig';
 import { GemLegendDialog } from './GemLegendDialog';
+import { SpeciesHeaderCard } from './SpeciesHeaderCard';
+import { DenseClueGrid } from './DenseClueGrid';
+import { ClueSheet } from './ClueSheet';
 
 interface SpeciesPanelProps {
   style?: React.CSSProperties;
@@ -14,24 +18,60 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
   const [totalSpecies, setTotalSpecies] = useState<number>(0);
   const [currentSpeciesIndex, setCurrentSpeciesIndex] = useState<number>(0);
   const [legendOpen, setLegendOpen] = useState<boolean>(false);
-  const [isLoadingClue, setIsLoadingClue] = useState<boolean>(false);
   const [allCluesRevealed, setAllCluesRevealed] = useState<boolean>(false);
   const [allSpeciesCompleted, setAllSpeciesCompleted] = useState<boolean>(false);
+  const [discoveredClues, setDiscoveredClues] = useState<Array<{
+    name: string;
+    color: string;
+    icon: string;
+  }>>([]);
+
+  // Function to show clue toast and add to discovered row
+  const showClueToast = (clue: CluePayload) => {
+    // Add to discovered clues row (avoid duplicates)
+    setDiscoveredClues((prev) => {
+      const exists = prev.some((c) => c.name === clue.name);
+      if (exists) return prev;
+      return [
+        ...prev,
+        {
+          name: clue.name,
+          color: clue.color,
+          icon: clue.icon,
+        },
+      ];
+    });
+
+    // Show the toast
+    toast(clue.name, {
+      description: clue.clue,
+      icon: clue.icon,
+      duration: 5000,
+      style: {
+        borderLeft: `4px solid ${clue.color}`,
+      },
+    });
+  };
 
   useEffect(() => {
+    console.log('SpeciesPanel: Component mounted, setting up event listeners');
+    
     // Listen for clue reveals from the game
     const handleClueRevealed = (clueData: CluePayload) => {
-      setIsLoadingClue(true);
-      // Simulate a brief loading state for clue processing
-      setTimeout(() => {
-        setClues(prev => [...prev, clueData]);
-        setIsLoadingClue(false);
-      }, 500);
+      setClues(prev => {
+        // Avoid duplicates
+        if (prev.some(c => c.category === clueData.category)) return prev;
+        const newClues = [...prev, clueData];
+        showClueToast(clueData);
+        return newClues;
+      });
     };
 
     // Listen for new game starts
     const handleNewGame = (data: { speciesName: string; speciesId: number; totalSpecies: number; currentIndex: number }) => {
+      console.log('SpeciesPanel: Received new-game-started event:', data);
       setClues([]);
+      setDiscoveredClues([]);
       setSelectedSpeciesName(data.speciesName);
       setSelectedSpeciesId(data.speciesId);
       setTotalSpecies(data.totalSpecies);
@@ -43,6 +83,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     // Listen for game reset
     const handleGameReset = () => {
       setClues([]);
+      setDiscoveredClues([]);
       setSelectedSpeciesName('');
       setSelectedSpeciesId(0);
       setTotalSpecies(0);
@@ -55,16 +96,25 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     const handleNoSpeciesFound = () => {
       setSelectedSpeciesName('No species found at this location');
       setClues([]);
+      setDiscoveredClues([]);
     };
 
     // Listen for all clues revealed
     const handleAllCluesRevealed = () => {
       setAllCluesRevealed(true);
+      toast.success('All clues revealed!', {
+        description: 'Advancing to next species...',
+        duration: 3000,
+      });
     };
 
     // Listen for all species completed
     const handleAllSpeciesCompleted = () => {
       setAllSpeciesCompleted(true);
+      toast.success('Congratulations!', {
+        description: `You have discovered all ${totalSpecies} species at this location.`,
+        duration: 5000,
+      });
     };
 
     EventBus.on('clue-revealed', handleClueRevealed);
@@ -82,148 +132,46 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       EventBus.off('all-clues-revealed', handleAllCluesRevealed);
       EventBus.off('all-species-completed', handleAllSpeciesCompleted);
     };
-  }, []);
+  }, [totalSpecies]);
 
   const containerStyle: React.CSSProperties = {
     ...style,
+    height: '100%',
+    backgroundColor: '#0f172a',
+    padding: '6px',
+    boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
-    height: '100%',
-    backgroundColor: '#1a1a1a',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    position: 'relative'
+    gap: '6px',
   };
 
-  const contentStyle: React.CSSProperties = {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '16px'
-  };
-
-  const clueItemStyle: React.CSSProperties = {
-    marginBottom: '10px',
-    padding: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '4px',
-    borderLeft: '3px solid #4a90e2'
-  };
-
-  const headingStyle: React.CSSProperties = {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    marginBottom: '4px',
-    color: '#4a90e2'
-  };
-
-  const clueTextStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#e0e0e0'
-  };
-
-  const legendButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
-    padding: '5px 10px',
-    backgroundColor: '#4a90e2',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    zIndex: 10
-  };
+  const hasSelectedSpecies = selectedSpeciesId > 0 || (!!selectedSpeciesName && selectedSpeciesName !== 'No species found at this location');
 
   return (
     <div style={containerStyle}>
-      <button 
-        style={legendButtonStyle}
-        onClick={() => setLegendOpen(true)}
-      >
-        Show Legend
-      </button>
-      <div style={contentStyle}>
-        {!selectedSpeciesName && clues.length === 0 ? (
-          <>
-            <h2 style={{ color: '#00ff00' }}>Species Discovery</h2>
-            <p>Click on the Cesium map to select a location and discover species.</p>
-            <p>Match gems to reveal clues about each species.</p>
-          </>
-        ) : (
-          <>
-            {allSpeciesCompleted ? (
-              <>
-                <h2 style={{ color: '#00ff00' }}>All Species Discovered!</h2>
-                <p style={{ fontSize: '16px', marginBottom: '20px' }}>
-                  Congratulations! You have discovered all {totalSpecies} species at this location.
-                </p>
-              </>
-            ) : (
-              <>
-                <h2 style={{ color: '#00ff00' }}>
-                  Current Species: {selectedSpeciesName}
-                </h2>
-                {selectedSpeciesId > 0 && (
-                  <p style={{ fontSize: '14px', color: '#aaa', marginBottom: '10px' }}>
-                    ID: {selectedSpeciesId} | Species {currentSpeciesIndex} of {totalSpecies}
-                  </p>
-                )}
-                {allCluesRevealed && (
-                  <p style={{ fontSize: '14px', color: '#ffff00', marginBottom: '10px', fontStyle: 'italic' }}>
-                    All clues revealed! Advancing to next species...
-                  </p>
-                )}
-              </>
-            )}
-            
-            {!allSpeciesCompleted && (
-              <>
-                {clues.length === 0 && !isLoadingClue ? (
-                  <p style={{ color: '#999', fontStyle: 'italic' }}>
-                    Match gems to reveal clues about this species...
-                  </p>
-                ) : (
-                  <div>
-                    {clues.map((clue, index) => (
-                      <div key={index} style={{
-                        ...clueItemStyle,
-                        borderLeft: `3px solid ${clue.color}`
-                      }}>
-                        <div style={headingStyle}>
-                          {clue.icon} {clue.name}
-                        </div>
-                        <div style={clueTextStyle}>{clue.clue}</div>
-                      </div>
-                    ))}
-                    {isLoadingClue && (
-                      <div style={{ 
-                        ...clueItemStyle, 
-                        display: 'flex', 
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
-                        borderLeft: '3px solid #4a90e2'
-                      }}>
-                        <div style={{
-                          width: '16px',
-                          height: '16px',
-                          border: '2px solid #f3f3f3',
-                          borderTop: '2px solid #4a90e2',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite',
-                          marginRight: '8px'
-                        }}></div>
-                        <span style={{ color: '#4a90e2', fontSize: '14px' }}>
-                          Processing clue...
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
+      {/* Species Header with Horizontal Clue Indicators */}
+      <SpeciesHeaderCard
+        speciesName={allSpeciesCompleted ? 'All Species Discovered!' : selectedSpeciesName}
+        currentSpeciesIndex={currentSpeciesIndex}
+        totalSpecies={totalSpecies}
+        revealedClueCount={clues.length}
+        discoveredClues={discoveredClues}
+        onShowLegend={() => setLegendOpen(true)}
+      />
+
+      {/* Compact Field Notes List - Quick Reference */}
+      <DenseClueGrid 
+        clues={clues} 
+        hasSelectedSpecies={hasSelectedSpecies}
+      />
+
+      {/* Sheet Button for Detailed View */}
+      <div className="flex-shrink-0">
+        <ClueSheet 
+          clues={clues} 
+          speciesName={selectedSpeciesName} 
+          hasSelectedSpecies={hasSelectedSpecies}
+        />
       </div>
 
       <GemLegendDialog open={legendOpen} onOpenChange={setLegendOpen} />
