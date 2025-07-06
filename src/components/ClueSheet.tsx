@@ -32,7 +32,7 @@ export const ClueSheet: React.FC<ClueSheetProps> = ({ clues, speciesName, hasSel
           Field Notes ({clues.length})
         </Button>
       </SheetTrigger>
-      <SheetContent className="bg-slate-900 border-slate-700 text-slate-100">
+      <SheetContent className="bg-slate-900 border-slate-700 text-slate-100 sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="text-cyan-300">Field Notes</SheetTitle>
           <SheetDescription className="text-slate-400">

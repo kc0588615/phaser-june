@@ -5,7 +5,7 @@ import type { CluePayload } from '../game/clueConfig';
 import { GemLegendDialog } from './GemLegendDialog';
 import { SpeciesHeaderCard } from './SpeciesHeaderCard';
 import { DenseClueGrid } from './DenseClueGrid';
-import { ClueSheet } from './ClueSheet';
+import { ClueSheetWrapper } from './ClueSheetWrapper';
 
 interface SpeciesPanelProps {
   style?: React.CSSProperties;
@@ -167,7 +167,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
 
       {/* Sheet Button for Detailed View */}
       <div className="flex-shrink-0">
-        <ClueSheet 
+        <ClueSheetWrapper 
           clues={clues} 
           speciesName={selectedSpeciesName} 
           hasSelectedSpecies={hasSelectedSpecies}
