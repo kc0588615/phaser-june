@@ -132,3 +132,9 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Override Cesium fullscreen button position */
+.cesium-viewer .cesium-viewer-fullscreenContainer {
+  /* Only move the fullscreen button container up */
+  margin-bottom: 30px !important;
+}

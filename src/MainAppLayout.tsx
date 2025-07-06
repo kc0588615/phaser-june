@@ -46,7 +46,7 @@ function MainAppLayout() {
     };
     const minimizeButtonStyle: React.CSSProperties = {
         position: 'absolute',
-        top: '10px',
+        top: '45px',
         right: '10px',
         zIndex: 1000,
         padding: '5px 10px',
