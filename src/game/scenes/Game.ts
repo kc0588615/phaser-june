@@ -697,9 +697,9 @@ export class Game extends Phaser.Scene {
             case 'green': return GemCategory.HABITAT;
             case 'blue': return GemCategory.GEOGRAPHIC; // Now includes habitat info
             case 'orange': return GemCategory.MORPHOLOGY; // Combines color/pattern and size/shape
-            case 'white': return GemCategory.BEHAVIOR; // Now includes diet info
+            case 'white': return GemCategory.CONSERVATION;
             case 'black': return GemCategory.LIFE_CYCLE;
-            case 'yellow': return GemCategory.CONSERVATION;
+            case 'yellow': return GemCategory.BEHAVIOR; // Now includes diet info
             case 'purple': return GemCategory.KEY_FACTS; // Uses key_fact1, key_fact2, key_fact3
             default: return null;
         }

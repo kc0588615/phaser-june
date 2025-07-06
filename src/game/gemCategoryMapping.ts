@@ -11,9 +11,9 @@ export const gemCategoryMapping: Record<GemType, GemCategoryInfo> = {
   green: { categoryName: 'Habitat', icon: '🌳' },
   blue: { categoryName: 'Geographic & Habitat', icon: '🗺️' }, // Now includes habitat info
   orange: { categoryName: 'Morphology', icon: '🐾' }, // Combines Color/Pattern and Size/Shape
-  white: { categoryName: 'Behavior & Diet', icon: '💨' }, // Now includes diet info
+  white: { categoryName: 'Conservation', icon: '🛡️' },
   black: { categoryName: 'Life Cycle', icon: '⏳' },
-  yellow: { categoryName: 'Conservation', icon: '🛡️' },
+  yellow: { categoryName: 'Behavior & Diet', icon: '💨' }, // Now includes diet info
   purple: { categoryName: 'Key Facts', icon: '❗' },
 };
 
@@ -22,9 +22,9 @@ export enum GemCategory {
   HABITAT = 1,        // 🌳 Green gem
   GEOGRAPHIC = 2,     // 🗺️ Blue gem (now includes habitat)
   MORPHOLOGY = 3,     // 🐾 Orange gem (combines Color/Pattern and Size/Shape)
-  BEHAVIOR = 5,       // 💨 White gem (now includes diet)
+  BEHAVIOR = 5,       // 💨 Yellow gem (now includes diet)
   LIFE_CYCLE = 6,     // ⏳ Black gem
-  CONSERVATION = 7,   // 🛡️ Yellow gem
+  CONSERVATION = 7,   // 🛡️ White gem
   KEY_FACTS = 8,      // ❗ Purple gem
 }
 

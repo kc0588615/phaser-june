@@ -5,9 +5,9 @@ export enum GemCategory {
   HABITAT = 1,        // 🌳 Green gem
   GEOGRAPHIC = 2,     // 🗺️ Blue gem
   MORPHOLOGY = 3,     // 🐾 Orange gem
-  BEHAVIOR = 5,       // 💨 White gem
+  BEHAVIOR = 5,       // 💨 Yhite gem
   LIFE_CYCLE = 6,     // ⏳ Black gem
-  CONSERVATION = 7,   // 🛡️ Yellow gem
+  CONSERVATION = 7,   // 🛡️ White gem
   KEY_FACTS = 8,      // 🔮 Purple gem
 }
 
@@ -99,7 +99,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
   [GemCategory.MORPHOLOGY]: {
     color: 'orange',
     categoryName: 'Morphology',
-    icon: '🐾',
+    icon: '🐆',
     getClue: (species: Species) => {
       // Combine both color/pattern and size/shape information
       const morphologyInfo: string[] = [];
@@ -133,7 +133,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     },
   },
   [GemCategory.BEHAVIOR]: {
-    color: 'white',
+    color: 'yellow',
     categoryName: 'Behavior & Diet',
     icon: '💨',
     getClue: (species: Species) => {
@@ -169,7 +169,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     },
   },
   [GemCategory.CONSERVATION]: {
-    color: 'yellow',
+    color: 'white',
     categoryName: 'Conservation',
     icon: '🛡️',
     getClue: (species: Species) => {
@@ -184,7 +184,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
   [GemCategory.KEY_FACTS]: {
     color: 'purple',
     categoryName: 'Key Facts',
-    icon: '❗',
+    icon: '🔮',
     getClue: (species: Species) => {
       if (species.key_fact1) return species.key_fact1;
       if (species.key_fact2) return species.key_fact2;
