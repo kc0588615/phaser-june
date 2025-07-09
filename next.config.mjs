@@ -3,7 +3,7 @@ const nextConfig = {
     // Static export configuration for Vercel
     output: 'export',
     distDir: 'dist',
-    trailingSlash: false,
+    trailingSlash: true,
     
     // Image optimization (required for static export)
     images: {

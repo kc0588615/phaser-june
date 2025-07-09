@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import Head from 'next/head';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import type { HighScore } from '@/types/database';
+import SimpleLayout from '@/components/SimpleLayout';
+import { Button } from '@/components/ui/button';
 
 export default function HighScoresPage() {
   const [scores, setScores] = useState<HighScore[]>([]);
@@ -55,123 +56,81 @@ export default function HighScoresPage() {
   };
 
   return (
-    <>
-      <Head>
-        <title>High Scores - Match 3 Game</title>
-        <meta name="description" content="View the top scores in our Match 3 game" />
-        <link rel="icon" href="/favicon.png" />
-      </Head>
-
-      <main>
-        <div>
-          <h1>🏆 Top High Scores</h1>
-          
-          <div style={{ 
-            maxWidth: '800px', 
-            margin: '0 auto', 
-            background: 'rgba(26, 26, 46, 0.9)', 
-            padding: '2rem', 
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
-          }}>
-            {isLoading && (
-              <p style={{ textAlign: 'center', color: '#888' }}>Loading scores...</p>
-            )}
-            
-            {error && (
-              <p style={{ color: '#ff4444', textAlign: 'center' }}>
-                Error fetching scores: {error}
-              </p>
-            )}
-            
-            {!isLoading && !error && scores.length === 0 && (
-              <p style={{ textAlign: 'center', color: '#888' }}>
-                No scores yet. Be the first to play!
-              </p>
-            )}
-            
-            {!isLoading && !error && scores.length > 0 && (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ 
-                  width: '100%', 
-                  borderCollapse: 'collapse',
-                  color: 'white'
-                }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #444' }}>
-                      <th style={{ padding: '10px', textAlign: 'left' }}>Rank</th>
-                      <th style={{ padding: '10px', textAlign: 'left' }}>Player</th>
-                      <th style={{ padding: '10px', textAlign: 'right' }}>Score</th>
-                      <th style={{ padding: '10px', textAlign: 'right' }}>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scores.map((entry, index) => (
-                      <tr 
-                        key={entry.id} 
-                        style={{ 
-                          borderBottom: '1px solid #333',
-                          backgroundColor: index === 0 ? 'rgba(255, 215, 0, 0.1)' : 
-                                         index === 1 ? 'rgba(192, 192, 192, 0.1)' : 
-                                         index === 2 ? 'rgba(205, 127, 50, 0.1)' : 
-                                         'transparent'
-                        }}
-                      >
-                        <td style={{ padding: '10px' }}>
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                        </td>
-                        <td style={{ padding: '10px', fontWeight: index < 3 ? 'bold' : 'normal' }}>
-                          {entry.username}
-                        </td>
-                        <td style={{ 
-                          padding: '10px', 
-                          textAlign: 'right', 
-                          color: '#ffff00',
-                          fontWeight: 'bold',
-                          fontSize: '1.1rem'
-                        }}>
-                          {entry.score.toLocaleString()}
-                        </td>
-                        <td style={{ 
-                          padding: '10px', 
-                          textAlign: 'right',
-                          color: '#888',
-                          fontSize: '0.9rem'
-                        }}>
-                          {formatDate(entry.created_at)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+    <SimpleLayout 
+      title="🏆 Top High Scores" 
+      description="View the top scores in our Match 3 game"
+    >
+      <div className="bg-card/50 backdrop-blur-sm p-8 rounded-xl shadow-2xl border border-border">
+        {isLoading && (
+          <p className="text-center text-muted-foreground">Loading scores...</p>
+        )}
+        
+        {error && (
+          <p className="text-destructive text-center">
+            Error fetching scores: {error}
+          </p>
+        )}
+        
+        {!isLoading && !error && scores.length === 0 && (
+          <p className="text-center text-muted-foreground">
+            No scores yet. Be the first to play!
+          </p>
+        )}
+        
+        {!isLoading && !error && scores.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-border">
+                  <th className="p-3 text-left font-semibold">Rank</th>
+                  <th className="p-3 text-left font-semibold">Player</th>
+                  <th className="p-3 text-right font-semibold">Score</th>
+                  <th className="p-3 text-right font-semibold">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scores.map((entry, index) => (
+                  <tr 
+                    key={entry.id} 
+                    className={`
+                      border-b border-border/50 transition-colors
+                      ${index === 0 ? 'bg-yellow-500/10' : ''}
+                      ${index === 1 ? 'bg-gray-400/10' : ''}
+                      ${index === 2 ? 'bg-orange-600/10' : ''}
+                      hover:bg-accent/50
+                    `}
+                  >
+                    <td className="p-3">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                    </td>
+                    <td className={`p-3 ${index < 3 ? 'font-bold' : ''}`}>
+                      {entry.username}
+                    </td>
+                    <td className="p-3 text-right text-yellow-400 font-bold text-lg">
+                      {entry.score.toLocaleString()}
+                    </td>
+                    <td className="p-3 text-right text-muted-foreground text-sm">
+                      {formatDate(entry.created_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        )}
+      </div>
 
-          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <Link href="/" style={{ 
-              color: '#00bcd4', 
-              textDecoration: 'none', 
-              fontSize: '1.2rem',
-              padding: '10px 20px',
-              border: '2px solid #00bcd4',
-              borderRadius: '8px',
-              display: 'inline-block',
-              transition: 'all 0.3s'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#00bcd4';
-              e.currentTarget.style.color = '#000';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#00bcd4';
-            }}>
-              ← Back to Game
-            </Link>
-          </div>
-        </div>
-      </main>
-    </>
+      <div className="text-center mt-12">
+        <Link href="/">
+          <Button 
+            variant="outline" 
+            size="lg"
+            className="border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-background transition-all"
+          >
+            ← Back to Game
+          </Button>
+        </Link>
+      </div>
+    </SimpleLayout>
   );
 }
