@@ -2,12 +2,13 @@ import { useRef, useEffect, useState } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing PhaserGame component
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
 import { SpeciesPanel } from './components/SpeciesPanel'; // Import the SpeciesPanel component
+import SpeciesList from './components/SpeciesList'; // Import the SpeciesList component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 import { Toaster } from 'sonner';
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
-    const [showMap, setShowMap] = useState(true); // Toggle state for map/clue view
+    const [viewMode, setViewMode] = useState<'map' | 'clues' | 'species'>('map'); // View mode state
 
     // This callback is for when PhaserGame signals that a scene is ready
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
@@ -44,10 +45,9 @@ function MainAppLayout() {
         display: 'flex',
         flexDirection: 'column'
     };
-    const minimizeButtonStyle: React.CSSProperties = {
+    const buttonStyle: React.CSSProperties = {
         position: 'absolute',
         top: '45px',
-        right: '10px',
         zIndex: 1000,
         padding: '5px 10px',
         backgroundColor: 'rgba(42, 42, 42, 0.8)',
@@ -68,24 +68,51 @@ function MainAppLayout() {
 
     return (
         <div id="app-container" style={appStyle}>
-            <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
-                <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
-            </div>
+            {/* Show game layout - position off-screen when in species view */}
+            <div style={{ 
+                position: viewMode === 'species' ? 'absolute' : 'relative',
+                left: viewMode === 'species' ? '-9999px' : '0',
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+                height: '100%'
+            }}>
+                <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
+                    <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+                </div>
 
-            <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
-                <button 
-                    style={minimizeButtonStyle}
-                    onClick={() => {
-                        setShowMap(!showMap);
-                        console.log('Toggle button clicked - showMap:', !showMap);
-                    }}
-                >
-                    {showMap ? 'Show Clues' : 'Show Map'}
-                </button>
-                
-                {/* Keep both components mounted but show/hide with CSS */}
+                <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
                 <div style={{ 
-                    display: showMap ? 'block' : 'none',
+                    position: 'absolute', 
+                    top: '45px', 
+                    right: '10px', 
+                    zIndex: 1000,
+                    display: 'flex',
+                    gap: '8px'
+                }}>
+                    <button 
+                        style={{ 
+                            ...buttonStyle, 
+                            position: 'static'
+                        }}
+                        onClick={() => setViewMode('species')}
+                    >
+                        Species List
+                    </button>
+                    <button 
+                        style={{ 
+                            ...buttonStyle, 
+                            position: 'static'
+                        }}
+                        onClick={() => setViewMode(viewMode === 'map' ? 'clues' : 'map')}
+                    >
+                        {viewMode === 'map' ? 'Show Clues' : 'Show Map'}
+                    </button>
+                </div>
+                
+                {/* Keep all components mounted but show/hide with CSS */}
+                <div style={{ 
+                    display: viewMode === 'map' ? 'block' : 'none',
                     height: '100%',
                     width: '100%'
                 }}>
@@ -93,7 +120,7 @@ function MainAppLayout() {
                 </div>
                 
                 <div style={{ 
-                    display: showMap ? 'none' : 'block',
+                    display: viewMode === 'clues' ? 'block' : 'none',
                     height: '100%', 
                     width: '100%',
                     overflow: 'auto',
@@ -101,6 +128,40 @@ function MainAppLayout() {
                 }}>
                     <SpeciesPanel />
                 </div>
+            </div>
+            </div>
+
+            {/* Full-page species view */}
+            <div style={{ 
+                display: viewMode === 'species' ? 'block' : 'none',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                backgroundColor: '#0f172a',
+                zIndex: 2000
+            }}>
+                <button 
+                    style={{ 
+                        position: 'absolute',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: 1000,
+                        padding: '10px 20px',
+                        backgroundColor: 'rgba(14, 195, 201, 0.8)',
+                        color: '#000',
+                        border: '1px solid #0ec3c9',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                    }}
+                    onClick={() => setViewMode('map')}
+                >
+                    ← Back to Game
+                </button>
+                <SpeciesList />
             </div>
             
             <Toaster
