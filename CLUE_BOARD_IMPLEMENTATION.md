@@ -191,9 +191,9 @@ const colorMap: Record<string, string> = {
   'green': '#22c55e',   // Habitat
   'blue': '#3b82f6',    // Geographic
   'orange': '#f97316',  // Morphology
-  'white': '#e5e7eb',   // Behavior
+  'yellow': '#eab308',   // Behavior
   'black': '#1f2937',   // Life Cycle
-  'yellow': '#eab308',  // Conservation
+  'white': '#e5e7eb',  // Conservation
   'purple': '#a855f7'   // Key Facts
 };
 ```
