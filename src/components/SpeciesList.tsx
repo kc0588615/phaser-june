@@ -1,51 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
 import { Loader2 } from 'lucide-react';
-
-interface Species {
-  ogc_fid: number;
-  sci_name: string;
-  comm_name: string;
-  http_iucn: string | null;
-  kingdom: string;
-  phylum: string;
-  class: string;
-  order_: string;
-  family: string;
-  genus: string;
-  category: string;
-  cons_code: string;
-  cons_text: string;
-  marine: string;
-  terrestria: string;
-  freshwater: string;
-  hab_tags: string;
-  hab_desc: string;
-  geo_desc: string;
-  color_prim: string;
-  color_sec: string;
-  pattern: string;
-  size_min: number;
-  size_max: number;
-  weight_kg: number;
-  shape_desc: string;
-  diet_type: string;
-  diet_prey: string;
-  diet_flora: string;
-  behav_1: string;
-  behav_2: string;
-  lifespan: number;
-  maturity: string;
-  repro_type: string;
-  clutch_sz: string;
-  life_desc1: string;
-  life_desc2: string;
-  threats: string;
-  key_fact1: string;
-  key_fact2: string;
-  key_fact3: string;
-}
+import type { Species } from '@/types/database';
 
 export default function SpeciesList() {
   const [species, setSpecies] = useState<Species[]>([]);
@@ -58,24 +16,34 @@ export default function SpeciesList() {
 
   const fetchSpecies = async () => {
     try {
-      const { data, error: supabaseError } = await supabase
+      // First get all species IDs ordered by common name
+      const { data: speciesData, error: supabaseError } = await supabase
         .from('icaa')
-        .select(`
-          ogc_fid, sci_name, comm_name, http_iucn,
-          kingdom, phylum, class, order_, family, genus,
-          category, cons_code, cons_text,
-          marine, terrestria, freshwater, hab_tags, hab_desc,
-          geo_desc,
-          color_prim, color_sec, pattern, size_min, size_max, weight_kg, shape_desc,
-          diet_type, diet_prey, diet_flora, behav_1, behav_2,
-          lifespan, maturity, repro_type, clutch_sz, life_desc1, life_desc2,
-          threats,
-          key_fact1, key_fact2, key_fact3
-        `)
+        .select('ogc_fid, comm_name')
         .order('comm_name', { ascending: true });
 
       if (supabaseError) throw supabaseError;
-      setSpecies(data || []);
+      
+      if (speciesData && speciesData.length > 0) {
+        // Use speciesService to get full data including bioregions
+        const speciesIds = speciesData.map(s => s.ogc_fid);
+        const fullSpeciesData = await speciesService.getSpeciesByIds(speciesIds);
+        
+        // Create a map to preserve the original order
+        const orderMap = new Map(speciesData.map((s, idx) => [s.ogc_fid, idx]));
+        
+        // Sort the full data based on the original order
+        const sortedSpecies = fullSpeciesData.sort((a, b) => {
+          const aOrder = orderMap.get(a.ogc_fid) ?? 999;
+          const bOrder = orderMap.get(b.ogc_fid) ?? 999;
+          return aOrder - bOrder;
+        });
+        
+        setSpecies(sortedSpecies);
+      } else {
+        setSpecies([]);
+      }
+      
       setError(null);
     } catch (err: any) {
       setError(err.message);

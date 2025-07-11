@@ -5,10 +5,20 @@ export interface HighScore {
   created_at: string;
 }
 
+export interface Bioregion {
+  ogc_fid: number;
+  bioregio_1?: string;
+  realm?: string;
+  sub_realm?: string;
+  biome?: string;
+  wkb_geometry?: any;
+}
+
 export interface Species {
   ogc_fid: number;
   comm_name?: string;
   sci_name?: string;
+  http_iucn?: string | null;
   
   // Classification fields
   genus?: string;
@@ -33,6 +43,12 @@ export interface Species {
   dist_comm?: string;
   island?: boolean;
   origin?: number;
+  
+  // Bioregion fields (from oneearth_bioregion)
+  bioregio_1?: string;
+  realm?: string;
+  sub_realm?: string;
+  biome?: string;
   
   // Morphology fields
   pattern?: string;

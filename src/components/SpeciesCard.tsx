@@ -1,58 +1,10 @@
 import React from 'react';
-import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette } from "lucide-react"
+import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees } from "lucide-react"
+
+import type { Species } from '@/types/database';
 
 interface SpeciesCardProps {
-  species: {
-    sci_name: string;
-    comm_name: string;
-    http_iucn: string | null;
-    // Taxonomic info
-    kingdom: string;
-    phylum: string;
-    class: string;
-    order_: string;
-    family: string;
-    genus: string;
-    // Classification info
-    category: string;
-    cons_code: string;
-    cons_text: string;
-    // Habitat info
-    marine: string;
-    terrestria: string;
-    freshwater: string;
-    hab_tags: string;
-    hab_desc: string;
-    // Geographic info
-    geo_desc: string;
-    // Morphology info
-    color_prim: string;
-    color_sec: string;
-    pattern: string;
-    size_min: number;
-    size_max: number;
-    weight_kg: number;
-    shape_desc: string;
-    // Behavior info
-    diet_type: string;
-    diet_prey: string;
-    diet_flora: string;
-    behav_1: string;
-    behav_2: string;
-    // Life cycle info
-    lifespan: number;
-    maturity: string;
-    repro_type: string;
-    clutch_sz: string;
-    life_desc1: string;
-    life_desc2: string;
-    // Conservation info
-    threats: string;
-    // Key facts
-    key_fact1: string;
-    key_fact2: string;
-    key_fact3: string;
-  };
+  species: Species;
 }
 
 // Helper function to get conservation status color
@@ -292,6 +244,45 @@ export default function SpeciesCard({ species }: SpeciesCardProps) {
               Geographic Distribution
             </h3>
             <p style={{ fontSize: '14px', color: '#94a3b8' }}>{species.geo_desc}</p>
+          </div>
+        </>
+      )}
+
+      {/* Bioregion Information */}
+      {(hasValue(species.bioregio_1) || hasValue(species.realm) || hasValue(species.sub_realm) || hasValue(species.biome)) && (
+        <>
+          <div style={separatorStyle} />
+          <div style={sectionStyle}>
+            <h3 style={{ ...headingStyle, color: '#10b981' }}>
+              <Trees size={20} />
+              Ecoregion
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '14px' }}>
+              {hasValue(species.bioregio_1) && (
+                <div>
+                  <span style={{ fontWeight: '500', color: '#e2e8f0' }}>Bioregion:</span>
+                  <p style={{ color: '#94a3b8' }}>{species.bioregio_1}</p>
+                </div>
+              )}
+              {hasValue(species.realm) && (
+                <div>
+                  <span style={{ fontWeight: '500', color: '#e2e8f0' }}>Realm:</span>
+                  <p style={{ color: '#94a3b8' }}>{species.realm}</p>
+                </div>
+              )}
+              {hasValue(species.sub_realm) && (
+                <div>
+                  <span style={{ fontWeight: '500', color: '#e2e8f0' }}>Sub-realm:</span>
+                  <p style={{ color: '#94a3b8' }}>{species.sub_realm}</p>
+                </div>
+              )}
+              {hasValue(species.biome) && (
+                <div>
+                  <span style={{ fontWeight: '500', color: '#e2e8f0' }}>Biome:</span>
+                  <p style={{ color: '#94a3b8' }}>{species.biome}</p>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
