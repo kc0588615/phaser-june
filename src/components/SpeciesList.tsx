@@ -1,14 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
+import { CategoryGenusPicker } from '@/components/CategoryGenusPickerFixed';
 import { Loader2 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
+import type { JumpTarget } from '@/types/speciesBrowser';
 
 export default function SpeciesList() {
   const [species, setSpecies] = useState<Species[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
+  
+  const refs = useRef<Record<string, HTMLDivElement | null>>({});
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetchSpecies();
@@ -53,15 +62,69 @@ export default function SpeciesList() {
     }
   };
 
-  // Group species by type (currently all turtles)
-  const groupedSpecies = species.reduce((groups, sp) => {
-    const type = 'Turtles'; // As mentioned, currently only turtles in database
-    if (!groups[type]) {
-      groups[type] = [];
+  // Filter species by selected filter
+  const filteredSpecies = useMemo(() => {
+    if (!selectedFilter) return species;
+    
+    switch (selectedFilter.type) {
+      case 'ecoregion':
+        return species.filter(s => s.bioregio_1 === selectedFilter.value);
+      case 'realm':
+        return species.filter(s => s.realm === selectedFilter.value);
+      case 'biome':
+        return species.filter(s => s.biome === selectedFilter.value);
+      default:
+        return species;
     }
-    groups[type].push(sp);
-    return groups;
-  }, {} as Record<string, Species[]>);
+  }, [selectedFilter, species]);
+
+  // Group species by category and genus
+  const grouped = useMemo(() => groupSpeciesByCategory(filteredSpecies), [filteredSpecies]);
+  
+  // Extract unique ecoregions, realms, and biomes
+  const ecoregionList = useMemo(() => getEcoregions(species), [species]);
+  const realmList = useMemo(() => getRealms(species), [species]);
+  const biomeList = useMemo(() => getBiomes(species), [species]);
+
+  const setRef = (id: string) => (el: HTMLDivElement | null) => {
+    refs.current[id] = el;
+  };
+
+  const onJump = (target: JumpTarget) => {
+    if (target.type === 'ecoregion' || target.type === 'realm' || target.type === 'biome') {
+      setSelectedFilter({ type: target.type, value: target.value });
+      // Scroll to the grid top when filtering
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+      }
+      return;
+    }
+
+    // Handle category and genus navigation
+    let elementId: string;
+    if (target.type === 'category') {
+      elementId = target.value;
+    } else {
+      elementId = `${target.value.category}-${target.value.genus}`;
+    }
+
+    const element = refs.current[elementId];
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest',
+      });
+    }
+  };
+
+  const onClearFilter = () => {
+    setSelectedFilter(null);
+  };
 
   return (
     <div style={{ 
@@ -73,16 +136,48 @@ export default function SpeciesList() {
       width: '100%',
       boxSizing: 'border-box'
     }}>
-      <h1 style={{ 
-        fontSize: '48px', 
-        fontWeight: 'bold', 
-        textAlign: 'center', 
-        marginBottom: '48px',
-        marginTop: '40px',
-        color: '#f1f5f9'
-      }}>
-        🐢 Species Database
-      </h1>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ 
+          fontSize: '48px', 
+          fontWeight: 'bold', 
+          textAlign: 'center', 
+          marginBottom: '16px',
+          marginTop: '40px',
+          color: '#f1f5f9'
+        }}>
+          🐢 Species Database
+        </h1>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              Categories: {Object.keys(grouped).length}, 
+              Ecoregions: {ecoregionList.length}, 
+              Realms: {realmList.length}, 
+              Biomes: {biomeList.length}
+            </div>
+          )}
+          <CategoryGenusPicker
+            grouped={grouped}
+            ecoregionList={ecoregionList}
+            realmList={realmList}
+            biomeList={biomeList}
+            selectedFilter={selectedFilter}
+            onJump={onJump}
+            onClearFilter={onClearFilter}
+          />
+        </div>
+        {selectedFilter && (
+          <p style={{ 
+            fontSize: '14px', 
+            color: '#94a3b8', 
+            textAlign: 'center',
+            marginTop: '8px' 
+          }}>
+            Showing {filteredSpecies.length} species from {selectedFilter.value}
+          </p>
+        )}
+      </div>
 
       {isLoading && (
         <div style={{ 
@@ -120,32 +215,64 @@ export default function SpeciesList() {
       )}
       
       {!isLoading && !error && species.length > 0 && (
-        <div>
-          {Object.entries(groupedSpecies).map(([type, speciesList]) => (
-            <div key={type} style={{ marginBottom: '32px' }}>
-              <h2 style={{ 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: '#3b82f6', 
-                marginBottom: '24px' 
-              }}>
-                {type}
-              </h2>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 500px), 1fr))',
-                gap: '24px',
-                width: '100%',
-                maxWidth: '1400px',
-                margin: '0 auto'
-              }}>
-                {speciesList.map((sp) => (
-                  <SpeciesCard key={sp.ogc_fid} species={sp} />
-                ))}
+        <ScrollArea className="h-[calc(100vh-300px)]" ref={gridRef}>
+          <Accordion type="multiple" className="w-full space-y-4">
+            {Object.entries(grouped).map(([category, genera]) => (
+              <div key={category} ref={setRef(category)}>
+                <AccordionItem 
+                  value={category} 
+                  className="border rounded-lg"
+                  style={{ 
+                    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                    borderColor: '#475569'
+                  }}
+                >
+                <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                  <div className="flex items-center justify-between w-full">
+                    <h2 className="text-xl font-semibold" style={{ color: '#f1f5f9' }}>{category}</h2>
+                    <span className="text-sm text-muted-foreground mr-4" style={{ color: '#94a3b8' }}>
+                      {Object.values(genera).flat().length} species
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <div className="space-y-6">
+                    {Object.entries(genera).map(([genus, speciesList]) => (
+                      <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
+                        <div className="sticky top-0 py-2 border-b" style={{
+                          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                          backdropFilter: 'blur(10px)',
+                          borderColor: '#475569'
+                        }}>
+                          <h3 className="text-lg font-medium" style={{ color: '#94a3b8' }}>
+                            {genus} ({speciesList.length} species)
+                          </h3>
+                        </div>
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 500px), 1fr))',
+                          gap: '24px',
+                          width: '100%'
+                        }}>
+                          {speciesList.map((sp) => (
+                            <SpeciesCard key={sp.ogc_fid} species={sp} />
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
               </div>
+            ))}
+          </Accordion>
+
+          {Object.keys(grouped).length === 0 && (
+            <div style={{ textAlign: 'center', padding: '48px' }}>
+              <p style={{ color: '#94a3b8' }}>No species found for the selected filter.</p>
             </div>
-          ))}
-        </div>
+          )}
+        </ScrollArea>
       )}
       
       <div style={{ 
@@ -154,7 +281,7 @@ export default function SpeciesList() {
         paddingBottom: '20px'
       }}>
         <p style={{ fontSize: '14px', color: '#94a3b8' }}>
-          Total species: {species.length}
+          Total species: {filteredSpecies.length} {selectedFilter ? `(filtered from ${species.length})` : ''}
         </p>
       </div>
     </div>
