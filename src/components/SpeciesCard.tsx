@@ -98,11 +98,11 @@ export default function SpeciesCard({ species }: SpeciesCardProps) {
           {hasValue(species.cons_code) && (
             <span style={{ 
               ...badgeStyle, 
-              backgroundColor: getConservationColor(species.cons_code),
+              backgroundColor: getConservationColor(species.cons_code!),
               color: 'white',
               border: 'none'
             }}>
-              {getConservationLabel(species.cons_code)}
+              {getConservationLabel(species.cons_code!)}
             </span>
           )}
           {hasValue(species.http_iucn) && (
@@ -209,7 +209,7 @@ export default function SpeciesCard({ species }: SpeciesCardProps) {
             <div>
               {hasValue(species.hab_tags) && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-                  {species.hab_tags.split(',').map((tag, index) => (
+                  {species.hab_tags!.split(',').map((tag, index) => (
                     <span key={index} style={{ 
                       ...badgeStyle, 
                       backgroundColor: '#475569',
@@ -225,9 +225,9 @@ export default function SpeciesCard({ species }: SpeciesCardProps) {
                 <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '12px' }}>{species.hab_desc}</p>
               )}
               <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
-                {species.marine === 't' && <span style={{ ...badgeStyle, border: '1px solid #64748b', color: '#cbd5e1' }}>Marine</span>}
-                {species.terrestria === 't' && <span style={{ ...badgeStyle, border: '1px solid #64748b', color: '#cbd5e1' }}>Terrestrial</span>}
-                {species.freshwater === 't' && <span style={{ ...badgeStyle, border: '1px solid #64748b', color: '#cbd5e1' }}>Freshwater</span>}
+                {species.marine && <span style={{ ...badgeStyle, border: '1px solid #64748b', color: '#cbd5e1' }}>Marine</span>}
+                {species.terrestria && <span style={{ ...badgeStyle, border: '1px solid #64748b', color: '#cbd5e1' }}>Terrestrial</span>}
+                {species.freshwater && <span style={{ ...badgeStyle, border: '1px solid #64748b', color: '#cbd5e1' }}>Freshwater</span>}
               </div>
             </div>
           </div>

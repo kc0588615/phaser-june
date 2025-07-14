@@ -16,7 +16,9 @@ import {
   Math as CesiumMath,
   HeightReference,
   GeoJsonDataSource,
-  Color as CesiumColor
+  Color as CesiumColor,
+  ConstantProperty,
+  ColorMaterialProperty
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
 import { speciesService } from '../lib/speciesService';
@@ -207,14 +209,13 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           console.log("Resium: Species service response:", speciesResult);
           console.log("Resium: Raster habitat response:", rasterHabitats);
           
-          const results = [speciesResult, rasterHabitats];
           const cartographicLocation = {
             longitude: longitude,
             latitude: latitude
           };
 
-          const clickedSpecies = results[0];
-          const rasterHabitatData = results[1];
+          const clickedSpecies = speciesResult;
+          const rasterHabitatData = rasterHabitats;
 
           if (clickedSpecies.count > 0 && viewerRef.current) {
             const cesiumDataSource = viewerRef.current.cesiumElement.dataSources.getByName('species-data-source')[0];
@@ -251,10 +252,10 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
 
                   loadedEntities.entities.values.forEach(entity => {
                     if (entity.polygon) {
-                      entity.polygon.material = CesiumColor.YELLOW.withAlpha(0.5);
-                      entity.polygon.outline = true;
-                      entity.polygon.outlineColor = CesiumColor.YELLOW;
-                      entity.polygon.outlineWidth = 2;
+                      entity.polygon.material = new ColorMaterialProperty(CesiumColor.YELLOW.withAlpha(0.5));
+                      entity.polygon.outline = new ConstantProperty(true);
+                      entity.polygon.outlineColor = new ConstantProperty(CesiumColor.YELLOW);
+                      entity.polygon.outlineWidth = new ConstantProperty(2);
                     }
                   });
                 }
@@ -262,12 +263,25 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             }
 
             console.log('Clicked species:', clickedSpecies);
+            
+            // Build habitat list for backward compatibility
+            const legacyHabitats = new Set<string>();
+            clickedSpecies.species.forEach(species => {
+              if (species.hab_desc) legacyHabitats.add(species.hab_desc);
+              if (species.aquatic) legacyHabitats.add('aquatic');
+              if (species.freshwater) legacyHabitats.add('freshwater');
+              if (species.terrestr || species.terrestria) legacyHabitats.add('terrestrial');
+              if (species.marine) legacyHabitats.add('marine');
+            });
+            const habitatList = Array.from(legacyHabitats);
+            
             // Emit with the expected format - species array and rasterHabitats array
             EventBus.emit('cesium-location-selected', { 
               species: clickedSpecies.species, // Pass the array, not the wrapper object
               rasterHabitats: rasterHabitatData,
-              longitude: cartographicLocation.longitude,
-              latitude: cartographicLocation.latitude 
+              habitats: habitatList,
+              lon: cartographicLocation.longitude,
+              lat: cartographicLocation.latitude 
             });
           } else if (viewerRef.current) {
             // No species found - find and highlight the closest habitat
@@ -299,10 +313,10 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
               // Style the highlight polygon
               highlightDataSource.entities.values.forEach(entity => {
                 if (entity.polygon) {
-                  entity.polygon.material = CesiumColor.CYAN.withAlpha(0.7);
-                  entity.polygon.outline = true;
-                  entity.polygon.outlineColor = CesiumColor.CYAN;
-                  entity.polygon.outlineWidth = 3;
+                  entity.polygon.material = new ColorMaterialProperty(CesiumColor.CYAN.withAlpha(0.7));
+                  entity.polygon.outline = new ConstantProperty(true);
+                  entity.polygon.outlineColor = new ConstantProperty(CesiumColor.CYAN);
+                  entity.polygon.outlineWidth = new ConstantProperty(3);
                 }
               });
 
@@ -321,8 +335,9 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             EventBus.emit('cesium-location-selected', { 
               species: [], // Empty array when no species found
               rasterHabitats: rasterHabitatData,
-              longitude: cartographicLocation.longitude,
-              latitude: cartographicLocation.latitude 
+              habitats: [], // Empty habitats when no species found
+              lon: cartographicLocation.longitude,
+              lat: cartographicLocation.latitude 
             });
           }
           
