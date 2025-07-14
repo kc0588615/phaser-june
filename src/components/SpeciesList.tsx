@@ -127,30 +127,15 @@ export default function SpeciesList() {
   };
 
   return (
-    <div style={{ 
-      padding: '40px 20px 20px 20px',
-      overflowY: 'auto',
-      overflowX: 'hidden',
-      height: '100%',
-      backgroundColor: '#0f172a',
-      width: '100%',
-      boxSizing: 'border-box'
-    }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ 
-          fontSize: '48px', 
-          fontWeight: 'bold', 
-          textAlign: 'center', 
-          marginBottom: '16px',
-          marginTop: '40px',
-          color: '#f1f5f9'
-        }}>
+    <div className="py-10 px-5 pt-5 overflow-y-auto overflow-x-hidden h-full bg-background w-full box-border">
+      <div className="mb-6">
+        <h1 className="text-5xl font-bold text-center mb-4 mt-10 text-foreground">
           🐢 Species Database
         </h1>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div className="max-w-[600px] mx-auto">
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
-            <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+            <div className="text-xs text-gray-600 mb-2">
               Categories: {Object.keys(grouped).length}, 
               Ecoregions: {ecoregionList.length}, 
               Realms: {realmList.length}, 
@@ -168,48 +153,27 @@ export default function SpeciesList() {
           />
         </div>
         {selectedFilter && (
-          <p style={{ 
-            fontSize: '14px', 
-            color: '#94a3b8', 
-            textAlign: 'center',
-            marginTop: '8px' 
-          }}>
+          <p className="text-sm text-muted-foreground text-center mt-2">
             Showing {filteredSpecies.length} species from {selectedFilter.value}
           </p>
         )}
       </div>
 
       {isLoading && (
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          padding: '48px' 
-        }}>
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#3b82f6' }} />
-          <span style={{ marginLeft: '8px', color: '#94a3b8' }}>Loading species data...</span>
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading species data...</span>
         </div>
       )}
       
       {error && (
-        <div style={{ 
-          backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-          border: '1px solid rgba(239, 68, 68, 0.3)', 
-          borderRadius: '8px', 
-          padding: '16px',
-          color: '#ef4444',
-          marginBottom: '20px'
-        }}>
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive mb-5">
           Error loading species: {error}
         </div>
       )}
       
       {!isLoading && !error && species.length === 0 && (
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#94a3b8', 
-          padding: '48px' 
-        }}>
+        <p className="text-center text-muted-foreground p-12">
           No species found in the database.
         </p>
       )}
@@ -221,16 +185,12 @@ export default function SpeciesList() {
               <div key={category} ref={setRef(category)}>
                 <AccordionItem 
                   value={category} 
-                  className="border rounded-lg"
-                  style={{ 
-                    backgroundColor: 'rgba(30, 41, 59, 0.5)',
-                    borderColor: '#475569'
-                  }}
+                  className="border rounded-lg bg-secondary/50 border-secondary"
                 >
                 <AccordionTrigger className="px-4 py-3 hover:no-underline">
                   <div className="flex items-center justify-between w-full">
-                    <h2 className="text-xl font-semibold" style={{ color: '#f1f5f9' }}>{category}</h2>
-                    <span className="text-sm text-muted-foreground mr-4" style={{ color: '#94a3b8' }}>
+                    <h2 className="text-xl font-semibold text-foreground">{category}</h2>
+                    <span className="text-sm text-muted-foreground mr-4">
                       {Object.values(genera).flat().length} species
                     </span>
                   </div>
@@ -239,21 +199,12 @@ export default function SpeciesList() {
                   <div className="space-y-6">
                     {Object.entries(genera).map(([genus, speciesList]) => (
                       <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
-                        <div className="sticky top-0 py-2 border-b" style={{
-                          backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                          backdropFilter: 'blur(10px)',
-                          borderColor: '#475569'
-                        }}>
-                          <h3 className="text-lg font-medium" style={{ color: '#94a3b8' }}>
+                        <div className="sticky top-0 py-2 border-b bg-background/95 backdrop-blur-[10px] border-secondary">
+                          <h3 className="text-lg font-medium text-muted-foreground">
                             {genus} ({speciesList.length} species)
                           </h3>
                         </div>
-                        <div style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 500px), 1fr))',
-                          gap: '24px',
-                          width: '100%'
-                        }}>
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-6 w-full">
                           {speciesList.map((sp) => (
                             <SpeciesCard key={sp.ogc_fid} species={sp} />
                           ))}
@@ -268,19 +219,15 @@ export default function SpeciesList() {
           </Accordion>
 
           {Object.keys(grouped).length === 0 && (
-            <div style={{ textAlign: 'center', padding: '48px' }}>
-              <p style={{ color: '#94a3b8' }}>No species found for the selected filter.</p>
+            <div className="text-center p-12">
+              <p className="text-muted-foreground">No species found for the selected filter.</p>
             </div>
           )}
         </ScrollArea>
       )}
       
-      <div style={{ 
-        marginTop: '48px', 
-        textAlign: 'center',
-        paddingBottom: '20px'
-      }}>
-        <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+      <div className="mt-12 text-center pb-5">
+        <p className="text-sm text-muted-foreground">
           Total species: {filteredSpecies.length} {selectedFilter ? `(filtered from ${species.length})` : ''}
         </p>
       </div>

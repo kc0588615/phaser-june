@@ -86,13 +86,8 @@ export function CategoryGenusPicker({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between bg-secondary/90 border-secondary text-secondary-foreground"
           onClick={() => setOpen(!open)}
-          style={{
-            backgroundColor: 'rgba(30, 41, 59, 0.9)',
-            border: '1px solid #475569',
-            color: '#e2e8f0'
-          }}
         >
           {getDisplayValue()}
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -100,21 +95,15 @@ export function CategoryGenusPicker({
         
         {open && (
           <div 
-            className="absolute top-full mt-1 w-full z-50 rounded-md shadow-lg"
-            style={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #475569',
-              maxHeight: '400px',
-              overflow: 'hidden'
-            }}
+            className="absolute top-full mt-1 w-full z-50 rounded-md shadow-lg bg-secondary border border-secondary max-h-[400px] overflow-hidden"
           >
             <Command>
               <CommandInput 
                 placeholder="Search..." 
-                style={{ borderBottom: '1px solid #475569' }} 
+                className="border-b border-secondary" 
               />
               <CommandEmpty>No results found.</CommandEmpty>
-              <CommandList style={{ maxHeight: '350px', overflow: 'auto' }}>
+              <CommandList className="max-h-[350px] overflow-auto">
                 {/* Category and Genus Groups */}
                 {Object.entries(grouped).map(([category, genera]) => (
                   <CommandGroup key={category} heading={category}>
@@ -243,17 +232,11 @@ export function CategoryGenusPicker({
       {selectedFilter && (
         <Badge 
           variant="outline" 
-          className="w-fit"
-          style={{
-            backgroundColor: 'rgba(30, 41, 59, 0.9)',
-            border: '1px solid #475569',
-            color: '#e2e8f0'
-          }}
+          className="w-fit bg-secondary/90 border-secondary text-secondary-foreground"
         >
           <span className="mr-2">Filtered by: {selectedFilter.value}</span>
           <X 
-            className="h-3 w-3 cursor-pointer" 
-            style={{ color: '#ef4444' }}
+            className="h-3 w-3 cursor-pointer text-destructive"
             onClick={onClearFilter} 
           />
         </Badge>
