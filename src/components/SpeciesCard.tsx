@@ -1,10 +1,20 @@
 import React from 'react';
 import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees } from "lucide-react"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 import type { Species } from '@/types/database';
 
 interface SpeciesCardProps {
   species: Species;
+  category: string;
+  onNavigateToTop: () => void;
 }
 
 // Helper function to get conservation status color
@@ -34,22 +44,45 @@ const getConservationLabel = (code: string) => {
   }
 };
 
-export default function SpeciesCard({ species }: SpeciesCardProps) {
+export default function SpeciesCard({ species, category, onNavigateToTop }: SpeciesCardProps) {
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   return (
-    <div className="bg-card/90 border border-border rounded-xl p-6 mb-6 shadow-lg transition-all duration-200 w-full box-border">
+    <div className="bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg transition-all duration-200 w-full box-border">
+      {/* Breadcrumb Navigation */}
+      <div className="mb-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink 
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigateToTop();
+                }}
+                className="cursor-pointer hover:text-primary"
+              >
+                Select
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{category}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">
-            Turtles
+            {category}
           </span>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-1">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
           {species.comm_name || species.sci_name}
         </h2>
-        <p className="text-lg italic text-muted-foreground mb-2">
+        <p className="text-base sm:text-lg italic text-muted-foreground mb-2">
           {species.sci_name}
         </p>
         <div className="flex items-center gap-3">
@@ -80,43 +113,49 @@ export default function SpeciesCard({ species }: SpeciesCardProps) {
           <Shield size={20} />
           Taxonomy
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-          {hasValue(species.kingdom) && (
-            <div>
-              <span className="font-medium text-foreground">Kingdom:</span>
-              <p className="text-muted-foreground">{species.kingdom}</p>
-            </div>
-          )}
-          {hasValue(species.phylum) && (
-            <div>
-              <span className="font-medium text-foreground">Phylum:</span>
-              <p className="text-muted-foreground">{species.phylum}</p>
-            </div>
-          )}
-          {hasValue(species.class) && (
-            <div>
-              <span className="font-medium text-foreground">Class:</span>
-              <p className="text-muted-foreground">{species.class}</p>
-            </div>
-          )}
-          {hasValue(species.order_) && (
-            <div>
-              <span className="font-medium text-foreground">Order:</span>
-              <p className="text-muted-foreground">{species.order_}</p>
-            </div>
-          )}
-          {hasValue(species.family) && (
-            <div>
-              <span className="font-medium text-foreground">Family:</span>
-              <p className="text-muted-foreground">{species.family}</p>
-            </div>
-          )}
-          {hasValue(species.genus) && (
-            <div>
-              <span className="font-medium text-foreground">Genus:</span>
-              <p className="text-muted-foreground">{species.genus}</p>
-            </div>
-          )}
+        <div className="space-y-2 text-sm">
+          {/* First Row: Kingdom, Phylum, Class */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {hasValue(species.kingdom) && (
+              <div className="flex gap-1">
+                <span className="font-medium text-foreground">Kingdom:</span>
+                <span className="text-muted-foreground">{species.kingdom}</span>
+              </div>
+            )}
+            {hasValue(species.phylum) && (
+              <div className="flex gap-1">
+                <span className="font-medium text-foreground">Phylum:</span>
+                <span className="text-muted-foreground">{species.phylum}</span>
+              </div>
+            )}
+            {hasValue(species.class) && (
+              <div className="flex gap-1">
+                <span className="font-medium text-foreground">Class:</span>
+                <span className="text-muted-foreground">{species.class}</span>
+              </div>
+            )}
+          </div>
+          {/* Second Row: Order, Family, Genus */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {hasValue(species.order_) && (
+              <div className="flex gap-1">
+                <span className="font-medium text-foreground">Order:</span>
+                <span className="text-muted-foreground">{species.order_}</span>
+              </div>
+            )}
+            {hasValue(species.family) && (
+              <div className="flex gap-1">
+                <span className="font-medium text-foreground">Family:</span>
+                <span className="text-muted-foreground">{species.family}</span>
+              </div>
+            )}
+            {hasValue(species.genus) && (
+              <div className="flex gap-1">
+                <span className="font-medium text-foreground">Genus:</span>
+                <span className="text-muted-foreground">{species.genus}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

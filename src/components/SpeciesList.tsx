@@ -127,9 +127,9 @@ export default function SpeciesList() {
   };
 
   return (
-    <div className="py-10 px-5 pt-5 overflow-y-auto overflow-x-hidden h-full bg-background w-full box-border">
-      <div className="mb-6">
-        <h1 className="text-5xl font-bold text-center mb-4 mt-10 text-foreground">
+    <div className="flex flex-col h-full bg-slate-900 w-full relative">
+      <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-slate-900 relative z-50">
+        <h1 className="text-3xl sm:text-5xl font-bold text-center mb-4 text-foreground">
           🐢 Species Database
         </h1>
         <div className="max-w-[600px] mx-auto">
@@ -160,32 +160,39 @@ export default function SpeciesList() {
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center p-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Loading species data...</span>
+        <div className="flex-1 flex items-center justify-center px-5">
+          <div className="flex items-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading species data...</span>
+          </div>
         </div>
       )}
       
       {error && (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive mb-5">
-          Error loading species: {error}
+        <div className="flex-1 px-5 pt-4">
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive">
+            Error loading species: {error}
+          </div>
         </div>
       )}
       
       {!isLoading && !error && species.length === 0 && (
-        <p className="text-center text-muted-foreground p-12">
-          No species found in the database.
-        </p>
+        <div className="flex-1 flex items-center justify-center px-5">
+          <p className="text-center text-muted-foreground">
+            No species found in the database.
+          </p>
+        </div>
       )}
       
       {!isLoading && !error && species.length > 0 && (
-        <ScrollArea className="h-[calc(100vh-300px)]" ref={gridRef}>
+        <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full px-5" ref={gridRef}>
           <Accordion type="multiple" className="w-full space-y-4">
             {Object.entries(grouped).map(([category, genera]) => (
               <div key={category} ref={setRef(category)}>
                 <AccordionItem 
                   value={category} 
-                  className="border rounded-lg bg-secondary/50 border-secondary"
+                  className="border rounded-lg bg-slate-800/90 border-slate-700"
                 >
                 <AccordionTrigger className="px-4 py-3 hover:no-underline">
                   <div className="flex items-center justify-between w-full">
@@ -199,14 +206,32 @@ export default function SpeciesList() {
                   <div className="space-y-6">
                     {Object.entries(genera).map(([genus, speciesList]) => (
                       <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
-                        <div className="sticky top-0 py-2 border-b bg-background/95 backdrop-blur-[10px] border-secondary">
+                        <div className="sticky top-0 py-2 border-b bg-slate-900 backdrop-blur-[10px] border-slate-700 z-10">
                           <h3 className="text-lg font-medium text-muted-foreground">
                             {genus} ({speciesList.length} species)
                           </h3>
                         </div>
-                        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-6 w-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-4 sm:gap-6 w-full">
                           {speciesList.map((sp) => (
-                            <SpeciesCard key={sp.ogc_fid} species={sp} />
+                            <SpeciesCard 
+                              key={sp.ogc_fid} 
+                              species={sp} 
+                              category={category}
+                              onNavigateToTop={() => {
+                                // Scroll ScrollArea to top
+                                if (gridRef.current) {
+                                  const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');
+                                  if (scrollContainer) {
+                                    scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }
+                                }
+                                // Open dropdown after a small delay to ensure scroll completes
+                                setTimeout(() => {
+                                  const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                                  if (picker) picker.click();
+                                }, 300);
+                              }}
+                            />
                           ))}
                         </div>
                       </section>
@@ -224,13 +249,8 @@ export default function SpeciesList() {
             </div>
           )}
         </ScrollArea>
+        </div>
       )}
-      
-      <div className="mt-12 text-center pb-5">
-        <p className="text-sm text-muted-foreground">
-          Total species: {filteredSpecies.length} {selectedFilter ? `(filtered from ${species.length})` : ''}
-        </p>
-      </div>
     </div>
   );
 }

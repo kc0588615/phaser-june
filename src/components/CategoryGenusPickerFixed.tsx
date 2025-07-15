@@ -1,4 +1,5 @@
 import * as React from "react";
+import ReactDOM from "react-dom";
 import { Check, ChevronDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ export function CategoryGenusPicker({
   }, [open]);
 
   const handleSelect = (currentValue: string) => {
+    console.log("CategoryGenusPicker handleSelect called with:", currentValue);
     setOpen(false);
 
     if (currentValue.startsWith("ecoregion:")) {
@@ -83,34 +85,45 @@ export function CategoryGenusPicker({
     <div className="w-full space-y-3">
       <div className="relative" ref={dropdownRef}>
         <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between bg-secondary/90 border-secondary text-secondary-foreground"
-          onClick={() => setOpen(!open)}
-        >
-          {getDisplayValue()}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between bg-slate-800 border-slate-700 text-slate-100 hover:bg-slate-700"
+            onClick={() => setOpen(!open)}
+          >
+            {getDisplayValue()}
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
         
         {open && (
           <div 
-            className="absolute top-full mt-1 w-full z-50 rounded-md shadow-lg bg-secondary border border-secondary max-h-[400px] overflow-hidden"
+            className="dropdown-portal absolute z-[9999] rounded-md shadow-xl bg-slate-800 border border-slate-700 max-h-[80vh] overflow-hidden w-full mt-1 top-full left-0"
           >
-            <Command>
+            <Command 
+              shouldFilter={true}
+              onKeyDown={(e) => {
+                // Prevent default behavior if needed
+                if (e.key === "Escape") {
+                  setOpen(false);
+                }
+              }}
+            >
               <CommandInput 
                 placeholder="Search..." 
-                className="border-b border-secondary" 
+                className="border-b border-slate-700 bg-slate-800 text-slate-100" 
               />
               <CommandEmpty>No results found.</CommandEmpty>
-              <CommandList className="max-h-[350px] overflow-auto">
+              <CommandList className="max-h-[calc(80vh-60px)] overflow-auto">
                 {/* Category and Genus Groups */}
                 {Object.entries(grouped).map(([category, genera]) => (
                   <CommandGroup key={category} heading={category}>
                     <CommandItem
-                      key={category}
+                      key={`cat-${category}`}
                       value={category}
-                      onSelect={handleSelect}
+                      onSelect={(value) => {
+                        console.log("onSelect triggered with value:", value);
+                        handleSelect(value);
+                      }}
                     >
                       <Check
                         className={cn(
@@ -130,7 +143,10 @@ export function CategoryGenusPicker({
                       <CommandItem
                         key={`${category}-${genus}`}
                         value={`${category}-${genus}`}
-                        onSelect={handleSelect}
+                        onSelect={(value) => {
+                          console.log("Genus onSelect triggered with value:", value);
+                          handleSelect(value);
+                        }}
                         className="pl-6"
                       >
                         <Check
@@ -158,7 +174,10 @@ export function CategoryGenusPicker({
                       <CommandItem
                         key={eco}
                         value={`ecoregion:${eco}`}
-                        onSelect={handleSelect}
+                        onSelect={(value) => {
+                          console.log("Ecoregion onSelect triggered with value:", value);
+                          handleSelect(value);
+                        }}
                       >
                         <Check
                           className={cn(
@@ -182,7 +201,10 @@ export function CategoryGenusPicker({
                       <CommandItem
                         key={realm}
                         value={`realm:${realm}`}
-                        onSelect={handleSelect}
+                        onSelect={(value) => {
+                          console.log("Realm onSelect triggered with value:", value);
+                          handleSelect(value);
+                        }}
                       >
                         <Check
                           className={cn(
@@ -206,7 +228,10 @@ export function CategoryGenusPicker({
                       <CommandItem
                         key={biome}
                         value={`biome:${biome}`}
-                        onSelect={handleSelect}
+                        onSelect={(value) => {
+                          console.log("Biome onSelect triggered with value:", value);
+                          handleSelect(value);
+                        }}
                       >
                         <Check
                           className={cn(
