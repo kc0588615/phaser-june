@@ -7,6 +7,23 @@ module.exports = {
     './app/**/*.{js,ts,jsx,tsx}',
     './src/**/*.{js,ts,jsx,tsx}',
   ],
+  safelist: [
+    'bg-background',
+    'bg-card',
+    'bg-card/90',
+    'bg-secondary',
+    'bg-secondary/50',
+    'bg-secondary/90',
+    'text-foreground',
+    'text-muted-foreground',
+    'text-secondary-foreground',
+    'border-border',
+    'border-secondary',
+    'text-primary',
+    'bg-destructive/10',
+    'border-destructive/30',
+    'text-destructive',
+  ],
   prefix: "",
   theme: {
     container: {

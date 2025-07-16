@@ -14,7 +14,11 @@ import {
   WebMercatorTilingScheme,
   Credit,
   Math as CesiumMath,
-  HeightReference
+  HeightReference,
+  GeoJsonDataSource,
+  Color as CesiumColor,
+  ConstantProperty,
+  ColorMaterialProperty
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
 import { speciesService } from '../lib/speciesService';
@@ -27,6 +31,37 @@ const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://az
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif";
 const HABITAT_RADIUS_METERS = 10000.0; // Updated to match raster query (10km)
 const SPECIES_RADIUS_METERS = 10000.0;
+
+// Helper function to convert WKT to GeoJSON
+function wktToGeoJSON(wkt: any): any {
+  // This is a simplified WKT parser for POLYGON type
+  // In production, you might want to use a library like wellknown
+  try {
+    // Check if wkt is a string
+    if (typeof wkt !== 'string') {
+      console.error('WKT is not a string:', typeof wkt, wkt);
+      return null;
+    }
+    
+    if (wkt.startsWith('POLYGON')) {
+      const coordsMatch = wkt.match(/\(\((.+)\)\)/);
+      if (coordsMatch) {
+        const coordPairs = coordsMatch[1].split(',');
+        const coordinates = [coordPairs.map(pair => {
+          const [lon, lat] = pair.trim().split(' ').map(Number);
+          return [lon, lat];
+        })];
+        return {
+          type: 'Polygon',
+          coordinates
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error parsing WKT:', error);
+  }
+  return null;
+}
 
 const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const viewerRef = useRef<any>(null); // Typed viewerRef for Resium
@@ -170,9 +205,141 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         speciesService.getSpeciesAtPoint(longitude, latitude),
         speciesService.getRasterHabitatDistribution(longitude, latitude)
       ])
-        .then(([speciesResult, rasterHabitats]) => {
+        .then(async ([speciesResult, rasterHabitats]) => {
           console.log("Resium: Species service response:", speciesResult);
           console.log("Resium: Raster habitat response:", rasterHabitats);
+          
+          const cartographicLocation = {
+            longitude: longitude,
+            latitude: latitude
+          };
+
+          const clickedSpecies = speciesResult;
+          const rasterHabitatData = rasterHabitats;
+
+          if (clickedSpecies.count > 0 && viewerRef.current) {
+            const cesiumDataSource = viewerRef.current.cesiumElement.dataSources.getByName('species-data-source')[0];
+            if (cesiumDataSource) {
+              viewerRef.current.cesiumElement.dataSources.remove(cesiumDataSource);
+            }
+
+            const yellowDataSource = new GeoJsonDataSource('species-data-source');
+            await yellowDataSource.load({
+              type: 'FeatureCollection',
+              features: []
+            });
+
+            viewerRef.current.cesiumElement.dataSources.add(yellowDataSource);
+
+            for (const species of clickedSpecies.species) {
+              if (species.wkb_geometry) {
+                const geojson = wktToGeoJSON(species.wkb_geometry);
+                if (geojson) {
+                  const feature = {
+                    type: 'Feature' as const,
+                    properties: {
+                      ogc_fid: species.ogc_fid,
+                      comm_name: species.comm_name,
+                      sci_name: species.sci_name
+                    },
+                    geometry: geojson
+                  };
+
+                  const loadedEntities = await yellowDataSource.process({
+                    type: 'FeatureCollection',
+                    features: [feature]
+                  });
+
+                  loadedEntities.entities.values.forEach(entity => {
+                    if (entity.polygon) {
+                      entity.polygon.material = new ColorMaterialProperty(CesiumColor.YELLOW.withAlpha(0.5));
+                      entity.polygon.outline = new ConstantProperty(true);
+                      entity.polygon.outlineColor = new ConstantProperty(CesiumColor.YELLOW);
+                      entity.polygon.outlineWidth = new ConstantProperty(2);
+                    }
+                  });
+                }
+              }
+            }
+
+            console.log('Clicked species:', clickedSpecies);
+            
+            // Build habitat list for backward compatibility
+            const legacyHabitats = new Set<string>();
+            clickedSpecies.species.forEach(species => {
+              if (species.hab_desc) legacyHabitats.add(species.hab_desc);
+              if (species.aquatic) legacyHabitats.add('aquatic');
+              if (species.freshwater) legacyHabitats.add('freshwater');
+              if (species.terrestr || species.terrestria) legacyHabitats.add('terrestrial');
+              if (species.marine) legacyHabitats.add('marine');
+            });
+            const habitatList = Array.from(legacyHabitats);
+            
+            // Emit with the expected format - species array and rasterHabitats array
+            EventBus.emit('cesium-location-selected', { 
+              species: clickedSpecies.species, // Pass the array, not the wrapper object
+              rasterHabitats: rasterHabitatData,
+              habitats: habitatList,
+              lon: cartographicLocation.longitude,
+              lat: cartographicLocation.latitude 
+            });
+          } else if (viewerRef.current) {
+            // No species found - find and highlight the closest habitat
+            const closestHabitatGeometry = await speciesService.getClosestHabitat(
+              cartographicLocation.longitude,
+              cartographicLocation.latitude
+            );
+
+            if (closestHabitatGeometry) {
+              // Remove any existing highlight
+              const existingHighlight = viewerRef.current.cesiumElement.dataSources.getByName('habitat-highlight')[0];
+              if (existingHighlight) {
+                viewerRef.current.cesiumElement.dataSources.remove(existingHighlight);
+              }
+
+              // Create highlight data source
+              const highlightDataSource = new GeoJsonDataSource('habitat-highlight');
+              await highlightDataSource.load({
+                type: 'FeatureCollection',
+                features: [{
+                  type: 'Feature',
+                  properties: {},
+                  geometry: closestHabitatGeometry
+                }]
+              });
+
+              viewerRef.current.cesiumElement.dataSources.add(highlightDataSource);
+
+              // Style the highlight polygon
+              highlightDataSource.entities.values.forEach(entity => {
+                if (entity.polygon) {
+                  entity.polygon.material = new ColorMaterialProperty(CesiumColor.CYAN.withAlpha(0.7));
+                  entity.polygon.outline = new ConstantProperty(true);
+                  entity.polygon.outlineColor = new ConstantProperty(CesiumColor.CYAN);
+                  entity.polygon.outlineWidth = new ConstantProperty(3);
+                }
+              });
+
+              // Remove highlight after 3 seconds
+              setTimeout(() => {
+                if (viewerRef.current) {
+                  const highlight = viewerRef.current.cesiumElement.dataSources.getByName('habitat-highlight')[0];
+                  if (highlight) {
+                    viewerRef.current.cesiumElement.dataSources.remove(highlight);
+                  }
+                }
+              }, 3000);
+            }
+            
+            // Still emit the event even with no species, so the game knows
+            EventBus.emit('cesium-location-selected', { 
+              species: [], // Empty array when no species found
+              rasterHabitats: rasterHabitatData,
+              habitats: [], // Empty habitats when no species found
+              lon: cartographicLocation.longitude,
+              lat: cartographicLocation.latitude 
+            });
+          }
           
           // Keep legacy habitat extraction for backward compatibility (if needed elsewhere)
           const legacyHabitats = new Set<string>();
@@ -187,9 +354,9 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           const habitatList = Array.from(legacyHabitats);
           
           // Process raster habitat data for info display
-          const habitatCount = rasterHabitats.length;
-          const topHabitat = rasterHabitats.length > 0 
-            ? `${rasterHabitats[0].habitat_type} (${rasterHabitats[0].percentage}%)`
+          const habitatCount = rasterHabitatData.length;
+          const topHabitat = rasterHabitatData.length > 0 
+            ? `${rasterHabitatData[0].habitat_type} (${rasterHabitatData[0].percentage}%)`
             : undefined;
           
           setInfoBoxData({
@@ -197,19 +364,10 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             lat: latitude,
             habitats: habitatList, // Keep for legacy compatibility
             species: speciesResult.species,
-            rasterHabitats: rasterHabitats,
+            rasterHabitats: rasterHabitatData,
             habitatCount: habitatCount,
             topHabitat: topHabitat,
             message: null
-          });
-          
-          // Emit event with actual species data and raster habitat data for the game
-          EventBus.emit('cesium-location-selected', {
-            lon: longitude,
-            lat: latitude,
-            habitats: habitatList,
-            species: speciesResult.species,
-            rasterHabitats: rasterHabitats
           });
         })
         .catch(err => {

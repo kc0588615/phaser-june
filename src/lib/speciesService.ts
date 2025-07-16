@@ -86,9 +86,37 @@ export const speciesService = {
         return [];
       }
 
+      // Bioregion data now comes directly from the icaa table columns
+
       return data || [];
     } catch (error) {
       console.error('Error in getSpeciesByIds:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get bioregion data for multiple species
+   */
+  async getSpeciesBioregions(speciesIds: number[]): Promise<Array<{
+    species_id: number;
+    bioregio_1: string | null;
+    realm: string | null;
+    sub_realm: string | null;
+    biome: string | null;
+  }>> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_species_bioregions', { species_ids: speciesIds });
+      
+      if (error) {
+        console.error('Error fetching species bioregions:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getSpeciesBioregions:', error);
       return [];
     }
   },
@@ -139,6 +167,27 @@ export const speciesService = {
     } catch (error) {
       console.error('Error in getSpeciesGeoJSON:', error);
       return { type: 'FeatureCollection', features: [] };
+    }
+  },
+
+  /**
+   * Get the closest habitat polygon when no species are found at a point
+   */
+  async getClosestHabitat(longitude: number, latitude: number): Promise<any> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_closest_habitat', { lon: longitude, lat: latitude });
+      
+      if (error) {
+        console.error('Error finding closest habitat:', error);
+        return null;
+      }
+
+      console.log(`Found closest habitat at (${longitude}, ${latitude})`);
+      return data; // This will be GeoJSON geometry
+    } catch (error) {
+      console.error('Error in getClosestHabitat:', error);
+      return null;
     }
   }
 };
