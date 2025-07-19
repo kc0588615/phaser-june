@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
 import { CategoryGenusPicker } from '@/components/CategoryGenusPickerFixed';
+import { SpeciesTree } from '@/components/SpeciesTree';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -73,6 +74,14 @@ export default function SpeciesList() {
         return species.filter(s => s.realm === selectedFilter.value);
       case 'biome':
         return species.filter(s => s.biome === selectedFilter.value);
+      case 'class':
+        return species.filter(s => s.class === selectedFilter.value);
+      case 'order':
+        return species.filter(s => s.order_ === selectedFilter.value);
+      case 'genus':
+        return species.filter(s => s.genus === selectedFilter.value);
+      case 'species':
+        return species.filter(s => s.ogc_fid.toString() === selectedFilter.value);
       default:
         return species;
     }
@@ -126,6 +135,10 @@ export default function SpeciesList() {
     setSelectedFilter(null);
   };
 
+  const onTreeFilterSelect = (filter: { type: string; value: string; speciesData?: Species }) => {
+    setSelectedFilter({ type: filter.type, value: filter.value });
+  };
+
   return (
     <div className="flex flex-col h-full bg-slate-900 w-full relative">
       <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-slate-900 relative z-50">
@@ -153,11 +166,40 @@ export default function SpeciesList() {
           />
         </div>
         {selectedFilter && (
-          <p className="text-sm text-muted-foreground text-center mt-2">
-            Showing {filteredSpecies.length} species from {selectedFilter.value}
-          </p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <p className="text-sm text-muted-foreground">
+              Showing {filteredSpecies.length} species
+            </p>
+            <div className="flex items-center gap-1 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+              <span className="capitalize">{selectedFilter.type}:</span>
+              <span className="font-medium">
+                {selectedFilter.type === 'order' && selectedFilter.value === 'Testudines' ? 'Turtle - Testudines' :
+                 selectedFilter.type === 'order' && selectedFilter.value === 'Anura' ? 'Frog - Anura' :
+                 selectedFilter.value}
+              </span>
+              <button
+                onClick={onClearFilter}
+                className="ml-1 hover:text-blue-100 transition-colors"
+                aria-label="Clear filter"
+              >
+                ×
+              </button>
+            </div>
+          </div>
         )}
       </div>
+
+      {/* Species Tree View */}
+      {!isLoading && !error && species.length > 0 && (
+        <div className="px-5 pb-4">
+          <h2 className="text-lg font-semibold mb-3 text-foreground">Browse by Classification</h2>
+          <SpeciesTree 
+            species={species} 
+            onFilterSelect={onTreeFilterSelect}
+            selectedFilter={selectedFilter}
+          />
+        </div>
+      )}
 
       {isLoading && (
         <div className="flex-1 flex items-center justify-center px-5">
@@ -186,69 +228,92 @@ export default function SpeciesList() {
       
       {!isLoading && !error && species.length > 0 && (
         <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full px-5" ref={gridRef}>
-          <Accordion type="multiple" className="w-full space-y-4">
-            {Object.entries(grouped).map(([category, genera]) => (
-              <div key={category} ref={setRef(category)}>
-                <AccordionItem 
-                  value={category} 
-                  className="border rounded-lg bg-slate-800/90 border-slate-700"
-                >
-                <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                  <div className="flex items-center justify-between w-full">
-                    <h2 className="text-xl font-semibold text-foreground">{category}</h2>
-                    <span className="text-sm text-muted-foreground mr-4">
-                      {Object.values(genera).flat().length} species
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <div className="space-y-6">
-                    {Object.entries(genera).map(([genus, speciesList]) => (
-                      <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
-                        <div className="sticky top-0 py-2 border-b bg-slate-900 backdrop-blur-[10px] border-slate-700 z-10">
-                          <h3 className="text-lg font-medium text-muted-foreground">
-                            {genus} ({speciesList.length} species)
-                          </h3>
+          <ScrollArea className="h-full px-5" ref={gridRef}>
+            {/* Display single species when species filter is active */}
+            {selectedFilter?.type === 'species' && filteredSpecies.length === 1 ? (
+              <div className="max-w-4xl mx-auto py-8">
+                <SpeciesCard 
+                  species={filteredSpecies[0]} 
+                  category={filteredSpecies[0].order_ === 'Testudines' ? 'Turtles' : 
+                           filteredSpecies[0].order_ === 'Anura' ? 'Frogs' : 'Unknown'}
+                  onNavigateToTop={() => {
+                    // Scroll ScrollArea to top
+                    if (gridRef.current) {
+                      const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');
+                      if (scrollContainer) {
+                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              /* Display grouped species for other filters */
+              <>
+                <Accordion type="multiple" className="w-full space-y-4">
+                  {Object.entries(grouped).map(([category, genera]) => (
+                    <div key={category} ref={setRef(category)}>
+                      <AccordionItem 
+                        value={category} 
+                        className="border rounded-lg bg-slate-800/90 border-slate-700"
+                      >
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center justify-between w-full">
+                          <h2 className="text-xl font-semibold text-foreground">{category}</h2>
+                          <span className="text-sm text-muted-foreground mr-4">
+                            {Object.values(genera).flat().length} species
+                          </span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-4 sm:gap-6 w-full">
-                          {speciesList.map((sp) => (
-                            <SpeciesCard 
-                              key={sp.ogc_fid} 
-                              species={sp} 
-                              category={category}
-                              onNavigateToTop={() => {
-                                // Scroll ScrollArea to top
-                                if (gridRef.current) {
-                                  const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');
-                                  if (scrollContainer) {
-                                    scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                                  }
-                                }
-                                // Open dropdown after a small delay to ensure scroll completes
-                                setTimeout(() => {
-                                  const picker = document.querySelector('[role="combobox"]') as HTMLElement;
-                                  if (picker) picker.click();
-                                }, 300);
-                              }}
-                            />
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="space-y-6">
+                          {Object.entries(genera).map(([genus, speciesList]) => (
+                            <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
+                              <div className="sticky top-0 py-2 border-b bg-slate-900 backdrop-blur-[10px] border-slate-700 z-10">
+                                <h3 className="text-lg font-medium text-muted-foreground">
+                                  {genus} ({speciesList.length} species)
+                                </h3>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-4 sm:gap-6 w-full">
+                                {speciesList.map((sp) => (
+                                  <SpeciesCard 
+                                    key={sp.ogc_fid} 
+                                    species={sp} 
+                                    category={category}
+                                    onNavigateToTop={() => {
+                                      // Scroll ScrollArea to top
+                                      if (gridRef.current) {
+                                        const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');
+                                        if (scrollContainer) {
+                                          scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }
+                                      }
+                                      // Open dropdown after a small delay to ensure scroll completes
+                                      setTimeout(() => {
+                                        const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                                        if (picker) picker.click();
+                                      }, 300);
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </section>
                           ))}
                         </div>
-                      </section>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              </div>
-            ))}
-          </Accordion>
+                      </AccordionContent>
+                    </AccordionItem>
+                    </div>
+                  ))}
+                </Accordion>
 
-          {Object.keys(grouped).length === 0 && (
-            <div className="text-center p-12">
-              <p className="text-muted-foreground">No species found for the selected filter.</p>
-            </div>
-          )}
-        </ScrollArea>
+                {Object.keys(grouped).length === 0 && (
+                  <div className="text-center p-12">
+                    <p className="text-muted-foreground">No species found for the selected filter.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </ScrollArea>
         </div>
       )}
     </div>

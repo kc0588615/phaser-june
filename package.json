@@ -39,6 +39,8 @@
         "clean": "rm -rf .next dist public/cesium"
     },
     "dependencies": {
+        "@headless-tree/core": "^1.2.1",
+        "@headless-tree/react": "^1.2.1",
         "@radix-ui/react-accordion": "^1.2.11",
         "@radix-ui/react-dialog": "^1.1.14",
         "@radix-ui/react-menubar": "^1.1.15",
