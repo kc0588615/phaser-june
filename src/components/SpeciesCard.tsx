@@ -113,49 +113,43 @@ export default function SpeciesCard({ species, category, onNavigateToTop }: Spec
           <Shield size={20} />
           Taxonomy
         </h3>
-        <div className="space-y-2 text-sm">
-          {/* First Row: Kingdom, Phylum, Class */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            {hasValue(species.kingdom) && (
-              <div className="flex gap-1">
-                <span className="font-medium text-foreground">Kingdom:</span>
-                <span className="text-muted-foreground">{species.kingdom}</span>
-              </div>
-            )}
-            {hasValue(species.phylum) && (
-              <div className="flex gap-1">
-                <span className="font-medium text-foreground">Phylum:</span>
-                <span className="text-muted-foreground">{species.phylum}</span>
-              </div>
-            )}
-            {hasValue(species.class) && (
-              <div className="flex gap-1">
-                <span className="font-medium text-foreground">Class:</span>
-                <span className="text-muted-foreground">{species.class}</span>
-              </div>
-            )}
-          </div>
-          {/* Second Row: Order, Family, Genus */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            {hasValue(species.order_) && (
-              <div className="flex gap-1">
-                <span className="font-medium text-foreground">Order:</span>
-                <span className="text-muted-foreground">{species.order_}</span>
-              </div>
-            )}
-            {hasValue(species.family) && (
-              <div className="flex gap-1">
-                <span className="font-medium text-foreground">Family:</span>
-                <span className="text-muted-foreground">{species.family}</span>
-              </div>
-            )}
-            {hasValue(species.genus) && (
-              <div className="flex gap-1">
-                <span className="font-medium text-foreground">Genus:</span>
-                <span className="text-muted-foreground">{species.genus}</span>
-              </div>
-            )}
-          </div>
+        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+          {hasValue(species.kingdom) && (
+            <>
+              <span className="text-muted-foreground">Kingdom:</span>
+              <span className="text-foreground">{species.kingdom}</span>
+            </>
+          )}
+          {hasValue(species.phylum) && (
+            <>
+              <span className="text-muted-foreground">Phylum:</span>
+              <span className="text-foreground">{species.phylum}</span>
+            </>
+          )}
+          {hasValue(species.class) && (
+            <>
+              <span className="text-muted-foreground">Class:</span>
+              <span className="text-foreground">{species.class}</span>
+            </>
+          )}
+          {hasValue(species.order_) && (
+            <>
+              <span className="text-muted-foreground">Order:</span>
+              <span className="text-foreground">{species.order_}</span>
+            </>
+          )}
+          {hasValue(species.family) && (
+            <>
+              <span className="text-muted-foreground">Family:</span>
+              <span className="text-foreground">{species.family}</span>
+            </>
+          )}
+          {hasValue(species.genus) && (
+            <>
+              <span className="text-muted-foreground">Genus:</span>
+              <span className="text-foreground">{species.genus}</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -232,30 +226,30 @@ export default function SpeciesCard({ species, category, onNavigateToTop }: Spec
               <Trees size={20} />
               Ecoregion
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
               {hasValue(species.bioregio_1) && (
-                <div>
-                  <span className="font-medium text-foreground">Bioregion:</span>
-                  <p className="text-muted-foreground">{species.bioregio_1}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Bioregion:</span>
+                  <span className="text-foreground">{species.bioregio_1}</span>
+                </>
               )}
               {hasValue(species.realm) && (
-                <div>
-                  <span className="font-medium text-foreground">Realm:</span>
-                  <p className="text-muted-foreground">{species.realm}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Realm:</span>
+                  <span className="text-foreground">{species.realm}</span>
+                </>
               )}
               {hasValue(species.sub_realm) && (
-                <div>
-                  <span className="font-medium text-foreground">Sub-realm:</span>
-                  <p className="text-muted-foreground">{species.sub_realm}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Sub-realm:</span>
+                  <span className="text-foreground">{species.sub_realm}</span>
+                </>
               )}
               {hasValue(species.biome) && (
-                <div>
-                  <span className="font-medium text-foreground">Biome:</span>
-                  <p className="text-muted-foreground">{species.biome}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Biome:</span>
+                  <span className="text-foreground">{species.biome}</span>
+                </>
               )}
             </div>
           </div>
@@ -271,53 +265,53 @@ export default function SpeciesCard({ species, category, onNavigateToTop }: Spec
               <Palette size={20} />
               Physical Characteristics
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                {hasValue(species.color_prim) && (
-                  <div className="mb-3">
-                    <span className="font-medium text-sm text-foreground">Primary Color:</span>
-                    <p className="text-sm text-muted-foreground">{species.color_prim}</p>
-                  </div>
-                )}
-                {hasValue(species.color_sec) && (
-                  <div className="mb-3">
-                    <span className="font-medium text-sm text-foreground">Secondary Color:</span>
-                    <p className="text-sm text-muted-foreground">{species.color_sec}</p>
-                  </div>
-                )}
-                {hasValue(species.pattern) && (
-                  <div>
-                    <span className="font-medium text-sm text-foreground">Pattern:</span>
-                    <p className="text-sm text-muted-foreground">{species.pattern}</p>
-                  </div>
-                )}
-              </div>
-              <div>
-                {(hasValue(species.size_min) || hasValue(species.size_max)) && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <Ruler size={16} className="text-secondary" />
-                    <span className="font-medium text-sm text-foreground">Size Range:</span>
-                    <span className="text-sm text-muted-foreground">
-                      {hasValue(species.size_min) && hasValue(species.size_max) 
-                        ? `${species.size_min} - ${species.size_max} cm`
-                        : hasValue(species.size_min) ? `${species.size_min} cm` : `${species.size_max} cm`}
-                    </span>
-                  </div>
-                )}
-                {hasValue(species.weight_kg) && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <Weight size={16} className="text-secondary" />
-                    <span className="font-medium text-sm text-foreground">Weight:</span>
-                    <span className="text-sm text-muted-foreground">{species.weight_kg} kg</span>
-                  </div>
-                )}
-                {hasValue(species.shape_desc) && (
-                  <div>
-                    <span className="font-medium text-sm text-foreground">Shape:</span>
-                    <p className="text-sm text-muted-foreground">{species.shape_desc}</p>
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+              {hasValue(species.color_prim) && (
+                <>
+                  <span className="text-muted-foreground">Primary Color:</span>
+                  <span className="text-foreground">{species.color_prim}</span>
+                </>
+              )}
+              {hasValue(species.color_sec) && (
+                <>
+                  <span className="text-muted-foreground">Secondary Color:</span>
+                  <span className="text-foreground">{species.color_sec}</span>
+                </>
+              )}
+              {hasValue(species.pattern) && (
+                <>
+                  <span className="text-muted-foreground">Pattern:</span>
+                  <span className="text-foreground">{species.pattern}</span>
+                </>
+              )}
+              {(hasValue(species.size_min) || hasValue(species.size_max)) && (
+                <>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Ruler size={14} className="text-muted-foreground" />
+                    Size Range:
+                  </span>
+                  <span className="text-foreground">
+                    {hasValue(species.size_min) && hasValue(species.size_max) 
+                      ? `${species.size_min} - ${species.size_max} cm`
+                      : hasValue(species.size_min) ? `${species.size_min} cm` : `${species.size_max} cm`}
+                  </span>
+                </>
+              )}
+              {hasValue(species.weight_kg) && (
+                <>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Weight size={14} className="text-muted-foreground" />
+                    Weight:
+                  </span>
+                  <span className="text-foreground">{species.weight_kg} kg</span>
+                </>
+              )}
+              {hasValue(species.shape_desc) && (
+                <>
+                  <span className="text-muted-foreground">Shape:</span>
+                  <span className="text-foreground">{species.shape_desc}</span>
+                </>
+              )}
             </div>
           </div>
         </>
@@ -341,24 +335,40 @@ export default function SpeciesCard({ species, category, onNavigateToTop }: Spec
                 </div>
               )}
               {hasValue(species.diet_prey) && (
-                <p className="text-sm text-muted-foreground mb-2">
-                  <strong className="text-foreground">Prey:</strong> {species.diet_prey}
-                </p>
+                <div className="mb-3">
+                  <span className="text-sm text-muted-foreground block mb-1">Prey:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {species.diet_prey!.split(/[,;]/).map((item, index) => (
+                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
+                        {item.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
               {hasValue(species.diet_flora) && (
-                <p className="text-sm text-muted-foreground mb-2">
-                  <strong className="text-foreground">Plant Food:</strong> {species.diet_flora}
-                </p>
+                <div className="mb-3">
+                  <span className="text-sm text-muted-foreground block mb-1">Plant Food:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {species.diet_flora!.split(/[,;]/).map((item, index) => (
+                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
+                        {item.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
               {hasValue(species.behav_1) && (
-                <p className="text-sm text-muted-foreground mb-2">
-                  <strong className="text-foreground">Behavior:</strong> {species.behav_1}
-                </p>
+                <div className="mb-2">
+                  <span className="text-sm text-muted-foreground">Behavior:</span>
+                  <p className="text-sm text-foreground">{species.behav_1}</p>
+                </div>
               )}
               {hasValue(species.behav_2) && (
-                <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Additional Behavior:</strong> {species.behav_2}
-                </p>
+                <div>
+                  <span className="text-sm text-muted-foreground">Additional Behavior:</span>
+                  <p className="text-sm text-foreground">{species.behav_2}</p>
+                </div>
               )}
             </div>
           </div>
@@ -374,30 +384,30 @@ export default function SpeciesCard({ species, category, onNavigateToTop }: Spec
               <Clock size={20} />
               Life Cycle
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm mb-3">
               {hasValue(species.lifespan) && (
-                <div>
-                  <span className="font-medium text-sm text-foreground">Lifespan:</span>
-                  <p className="text-sm text-muted-foreground">{species.lifespan} years</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Lifespan:</span>
+                  <span className="text-foreground">{species.lifespan} years</span>
+                </>
               )}
               {hasValue(species.maturity) && (
-                <div>
-                  <span className="font-medium text-sm text-foreground">Sexual Maturity:</span>
-                  <p className="text-sm text-muted-foreground">{species.maturity}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Sexual Maturity:</span>
+                  <span className="text-foreground">{species.maturity}</span>
+                </>
               )}
               {hasValue(species.repro_type) && (
-                <div>
-                  <span className="font-medium text-sm text-foreground">Reproduction:</span>
-                  <p className="text-sm text-muted-foreground">{species.repro_type}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Reproduction:</span>
+                  <span className="text-foreground">{species.repro_type}</span>
+                </>
               )}
               {hasValue(species.clutch_sz) && (
-                <div>
-                  <span className="font-medium text-sm text-foreground">Clutch Size:</span>
-                  <p className="text-sm text-muted-foreground">{species.clutch_sz}</p>
-                </div>
+                <>
+                  <span className="text-muted-foreground">Clutch Size:</span>
+                  <span className="text-foreground">{species.clutch_sz}</span>
+                </>
               )}
             </div>
             {hasValue(species.life_desc1) && (
