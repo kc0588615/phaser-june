@@ -59,7 +59,7 @@ const AccordionCategory = memo(({
         {isOpen && (
           <div 
             className={cn(
-              "sticky top-0 z-40",
+              "sticky top-0 z-40 pointer-events-auto",
               hideSticky ? "hidden" : showStickyHeaders ? "block" : "hidden"
             )}
           >
@@ -153,30 +153,31 @@ export default function SpeciesList() {
     const scrollContainer = gridRef.current?.querySelector('[data-radix-scroll-area-viewport]');
     if (!scrollContainer) return;
 
+    let last = lastScrollTop.current;
+    const THRESH = 15; // Higher threshold to prevent mobile jitter
     const handleScroll = () => {
-      const currentScrollTop = scrollContainer.scrollTop;
+      const cur = scrollContainer.scrollTop;
+      const delta = cur - last;
+      
+      // Detect scroll direction with higher threshold to prevent jitter
+      if (delta < -THRESH && cur > 200) {
+        // Scrolling up with threshold and not near top
+        setShowStickyHeaders(true);
+      } else if (delta > THRESH) {
+        // Scrolling down with threshold
+        setShowStickyHeaders(false);
+      }
+      
+      last = cur;
       
       // Clear existing timeout
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
 
-      // Detect scroll direction with a threshold to prevent jitter
-      const scrollDelta = currentScrollTop - lastScrollTop.current;
-      
-      if (scrollDelta < -5 && currentScrollTop > 200) {
-        // Scrolling up with threshold and not near top
-        setShowStickyHeaders(true);
-      } else if (scrollDelta > 5) {
-        // Scrolling down with threshold
-        setShowStickyHeaders(false);
-      }
-
-      lastScrollTop.current = currentScrollTop;
-
       // Hide sticky headers after scrolling stops or when near top
       scrollTimeout.current = setTimeout(() => {
-        if (currentScrollTop <= 200) {
+        if (scrollContainer.scrollTop <= 200) {
           setShowStickyHeaders(false);
         }
       }, 2000);
