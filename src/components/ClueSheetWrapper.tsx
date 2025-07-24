@@ -37,7 +37,7 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
 
   // Reset when new game starts
   React.useEffect(() => {
-    if (speciesId > 0) {
+    if (speciesId && speciesId > 0) {
       setIsSpeciesDiscovered(false);
       setDiscoveredName('');
     }
