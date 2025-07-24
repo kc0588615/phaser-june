@@ -31,7 +31,9 @@ export const SpeciesHeaderCard: React.FC<SpeciesHeaderCardProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-cyan-300 font-semibold text-lg">
-            {speciesName || 'Select a location to discover species'}
+            {speciesName === 'Mystery Species' 
+              ? '🔍 Mystery Species - Match gems to reveal clues!' 
+              : (speciesName || 'Select a location to discover species')}
           </h3>
           {totalSpecies > 0 && (
             <p className="text-slate-400 text-sm">

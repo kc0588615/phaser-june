@@ -25,6 +25,9 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     color: string;
     icon: string;
   }>>([]);
+  const [isSpeciesDiscovered, setIsSpeciesDiscovered] = useState<boolean>(false);
+  const [discoveredSpeciesName, setDiscoveredSpeciesName] = useState<string>('');
+  const [hiddenSpeciesName, setHiddenSpeciesName] = useState<string>('');;
 
   // Function to show clue toast and add to discovered row
   const showClueToast = (clue: CluePayload) => {
@@ -68,7 +71,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     };
 
     // Listen for new game starts
-    const handleNewGame = (data: { speciesName: string; speciesId: number; totalSpecies: number; currentIndex: number }) => {
+    const handleNewGame = (data: { speciesName: string; speciesId: number; totalSpecies: number; currentIndex: number; hiddenSpeciesName?: string }) => {
       console.log('SpeciesPanel: Received new-game-started event:', data);
       setClues([]);
       setDiscoveredClues([]);
@@ -78,6 +81,9 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       setCurrentSpeciesIndex(data.currentIndex);
       setAllCluesRevealed(false);
       setAllSpeciesCompleted(false);
+      setIsSpeciesDiscovered(false);
+      setDiscoveredSpeciesName('');
+      setHiddenSpeciesName(data.hiddenSpeciesName || '');
     };
 
     // Listen for game reset
@@ -117,7 +123,47 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       });
     };
 
+    // Listen for species guess submission
+    const handleSpeciesGuess = (data: { guessedName: string; speciesId: number; isCorrect: boolean; actualName: string }) => {
+      console.log('Species guess received:', data, 'Current selectedSpeciesId:', selectedSpeciesId);
+      
+      if (data.isCorrect && data.speciesId === selectedSpeciesId) {
+        setIsSpeciesDiscovered(true);
+        setDiscoveredSpeciesName(data.actualName);
+        
+        // Show success toast
+        toast.success('Correct!', {
+          description: `You discovered the ${data.actualName}!`,
+          duration: 5000,
+        });
+        
+        // Store in localStorage for species list
+        try {
+          const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+          console.log('Current discovered species:', discovered);
+          
+          if (!discovered.find((s: any) => s.id === data.speciesId)) {
+            discovered.push({
+              id: data.speciesId,
+              name: data.actualName,
+              discoveredAt: new Date().toISOString()
+            });
+            localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
+            console.log('Updated discovered species:', discovered);
+            
+            // Trigger a custom event for Species List to update
+            window.dispatchEvent(new CustomEvent('species-discovered', { 
+              detail: { id: data.speciesId, name: data.actualName } 
+            }));
+          }
+        } catch (error) {
+          console.error('Error updating discovered species:', error);
+        }
+      }
+    };
+
     EventBus.on('clue-revealed', handleClueRevealed);
+    EventBus.on('species-guess-submitted', handleSpeciesGuess);
     EventBus.on('new-game-started', handleNewGame);
     EventBus.on('game-reset', handleGameReset);
     EventBus.on('no-species-found', handleNoSpeciesFound);
@@ -126,13 +172,14 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
 
     return () => {
       EventBus.off('clue-revealed', handleClueRevealed);
+      EventBus.off('species-guess-submitted', handleSpeciesGuess);
       EventBus.off('new-game-started', handleNewGame);
       EventBus.off('game-reset', handleGameReset);
       EventBus.off('no-species-found', handleNoSpeciesFound);
       EventBus.off('all-clues-revealed', handleAllCluesRevealed);
       EventBus.off('all-species-completed', handleAllSpeciesCompleted);
     };
-  }, [totalSpecies]);
+  }, [totalSpecies, selectedSpeciesId]);
 
   const containerStyle: React.CSSProperties = {
     ...style,
@@ -151,7 +198,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     <div style={containerStyle}>
       {/* Species Header with Horizontal Clue Indicators */}
       <SpeciesHeaderCard
-        speciesName={allSpeciesCompleted ? 'All Species Discovered!' : selectedSpeciesName}
+        speciesName={allSpeciesCompleted ? 'All Species Discovered!' : (isSpeciesDiscovered ? discoveredSpeciesName : selectedSpeciesName)}
         currentSpeciesIndex={currentSpeciesIndex}
         totalSpecies={totalSpecies}
         revealedClueCount={clues.length}
@@ -171,6 +218,8 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
           clues={clues} 
           speciesName={selectedSpeciesName} 
           hasSelectedSpecies={hasSelectedSpecies}
+          speciesId={selectedSpeciesId}
+          hiddenSpeciesName={hiddenSpeciesName}
         />
       </div>
 

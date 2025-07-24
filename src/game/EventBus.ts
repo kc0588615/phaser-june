@@ -27,6 +27,7 @@ export interface EventPayloads {
     speciesId: number;
     totalSpecies: number;
     currentIndex: number;
+    hiddenSpeciesName?: string;  // The real species name (hidden from player)
   };
   'game-reset': undefined;
   'no-species-found': {};
@@ -38,6 +39,12 @@ export interface EventPayloads {
   };
   'layout-changed': {
     mapMinimized: boolean;
+  };
+  'species-guess-submitted': {
+    guessedName: string;
+    speciesId: number;
+    isCorrect: boolean;
+    actualName: string;
   };
 }
 

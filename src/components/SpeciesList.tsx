@@ -19,7 +19,8 @@ const AccordionCategory = memo(({
   isOpen, 
   showStickyHeaders,
   onToggle,
-  setRef 
+  setRef,
+  discoveredSpecies
 }: {
   category: string;
   genera: Record<string, Species[]>;
@@ -27,6 +28,7 @@ const AccordionCategory = memo(({
   showStickyHeaders: boolean;
   onToggle: () => void;
   setRef: (id: string) => (el: HTMLDivElement | null) => void;
+  discoveredSpecies: Record<number, { name: string; discoveredAt: string }>;
 }) => {
   const [hideSticky, setHideSticky] = useState(true);
   const accordionRef = useRef<HTMLDivElement>(null);
@@ -107,6 +109,8 @@ const AccordionCategory = memo(({
                       key={sp.ogc_fid} 
                       species={sp} 
                       category={category}
+                      isDiscovered={!!discoveredSpecies[sp.ogc_fid]}
+                      discoveredAt={discoveredSpecies[sp.ogc_fid]?.discoveredAt}
                       onNavigateToTop={() => {
                         // Scroll ScrollArea to top
                         const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
@@ -138,6 +142,7 @@ export default function SpeciesList() {
   const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
   const [openAccordions, setOpenAccordions] = useState<string[]>([]);
   const [showStickyHeaders, setShowStickyHeaders] = useState(false);
+  const [discoveredSpecies, setDiscoveredSpecies] = useState<Record<number, { name: string; discoveredAt: string }>>({});
   
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -146,6 +151,51 @@ export default function SpeciesList() {
 
   useEffect(() => {
     fetchSpecies();
+    loadDiscoveredSpecies();
+  }, []);
+
+  // Function to load discovered species from localStorage
+  const loadDiscoveredSpecies = () => {
+    try {
+      const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+      const discoveredMap: Record<number, { name: string; discoveredAt: string }> = {};
+      discovered.forEach((d: any) => {
+        discoveredMap[d.id] = { name: d.name, discoveredAt: d.discoveredAt };
+      });
+      setDiscoveredSpecies(discoveredMap);
+      console.log('Loaded discovered species:', discovered);
+    } catch (error) {
+      console.error('Error loading discovered species:', error);
+    }
+  };
+
+  // Listen for storage changes to update discovered species
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'discoveredSpecies') {
+        loadDiscoveredSpecies();
+      }
+    };
+
+    // Also listen for focus to reload when switching tabs
+    const handleFocus = () => {
+      loadDiscoveredSpecies();
+    };
+
+    // Listen for custom species discovered event
+    const handleSpeciesDiscovered = () => {
+      loadDiscoveredSpecies();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('species-discovered', handleSpeciesDiscovered);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('species-discovered', handleSpeciesDiscovered);
+    };
   }, []);
 
   // Scroll direction detection
@@ -255,8 +305,52 @@ export default function SpeciesList() {
     }
   }, [selectedFilter, species]);
 
+  // Separate known and unknown species
+  const { knownSpecies, unknownSpecies } = useMemo(() => {
+    const known: Species[] = [];
+    const unknown: Species[] = [];
+    
+    filteredSpecies.forEach(sp => {
+      if (discoveredSpecies[sp.ogc_fid]) {
+        known.push(sp);
+      } else {
+        unknown.push(sp);
+      }
+    });
+    
+    return { knownSpecies: known, unknownSpecies: unknown };
+  }, [filteredSpecies, discoveredSpecies]);
+
   // Group species by category and genus
-  const grouped = useMemo(() => groupSpeciesByCategory(filteredSpecies), [filteredSpecies]);
+  const groupedKnown = useMemo(() => groupSpeciesByCategory(knownSpecies), [knownSpecies]);
+  const groupedUnknown = useMemo(() => groupSpeciesByCategory(unknownSpecies), [unknownSpecies]);
+  
+  // Combined grouped data for search component
+  const grouped = useMemo(() => {
+    const combined: Record<string, Record<string, Species[]>> = {};
+    
+    // Add known species
+    Object.entries(groupedKnown).forEach(([category, genera]) => {
+      combined[category] = { ...genera };
+    });
+    
+    // Add unknown species
+    Object.entries(groupedUnknown).forEach(([category, genera]) => {
+      if (combined[category]) {
+        Object.entries(genera).forEach(([genus, species]) => {
+          if (combined[category][genus]) {
+            combined[category][genus] = [...combined[category][genus], ...species];
+          } else {
+            combined[category][genus] = species;
+          }
+        });
+      } else {
+        combined[category] = genera;
+      }
+    });
+    
+    return combined;
+  }, [groupedKnown, groupedUnknown]);
   
   // Extract unique ecoregions, realms, and biomes
   const ecoregionList = useMemo(() => getEcoregions(species), [species]);
@@ -405,6 +499,8 @@ export default function SpeciesList() {
                   species={filteredSpecies[0]} 
                   category={filteredSpecies[0].order_ === 'Testudines' ? 'Turtles' : 
                            filteredSpecies[0].order_ === 'Anura' ? 'Frogs' : 'Unknown'}
+                  isDiscovered={!!discoveredSpecies[filteredSpecies[0].ogc_fid]}
+                  discoveredAt={discoveredSpecies[filteredSpecies[0].ogc_fid]?.discoveredAt}
                   onNavigateToTop={() => {
                     // Scroll ScrollArea to top
                     if (gridRef.current) {
@@ -419,31 +515,81 @@ export default function SpeciesList() {
             ) : (
               /* Display grouped species for other filters */
               <>
-                <Accordion 
-                  type="multiple" 
-                  className="w-full space-y-4"
-                  value={openAccordions}
-                  onValueChange={setOpenAccordions}
-                >
-                  {Object.entries(grouped).map(([category, genera]) => (
-                    <AccordionCategory
-                      key={category}
-                      category={category}
-                      genera={genera}
-                      isOpen={openAccordions.includes(category)}
-                      showStickyHeaders={showStickyHeaders}
-                      onToggle={() => {
-                        setOpenAccordions(prev => 
-                          prev.filter(c => c !== category)
-                        );
-                        setShowStickyHeaders(false);
-                      }}
-                      setRef={setRef}
-                    />
-                  ))}
-                </Accordion>
+                <div className="space-y-6">
+                  {/* Known Species Section */}
+                  {Object.keys(groupedKnown).length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-bold text-green-400 mb-4">
+                        🏆 Discovered Species ({knownSpecies.length})
+                      </h2>
+                      <Accordion
+                        type="multiple"
+                        className="w-full space-y-4"
+                        value={openAccordions}
+                        onValueChange={setOpenAccordions}
+                      >
+                        {Object.entries(groupedKnown).map(([category, genera]) => (
+                          <AccordionCategory
+                            key={`known-${category}`}
+                            category={category}
+                            genera={genera}
+                            isOpen={openAccordions.includes(`known-${category}`)}
+                            showStickyHeaders={showStickyHeaders}
+                            discoveredSpecies={discoveredSpecies}
+                            onToggle={() => {
+                              const key = `known-${category}`;
+                              setOpenAccordions(prev => 
+                                prev.includes(key) 
+                                  ? prev.filter(c => c !== key)
+                                  : [...prev, key]
+                              );
+                              setShowStickyHeaders(false);
+                            }}
+                            setRef={setRef}
+                          />
+                        ))}
+                      </Accordion>
+                    </div>
+                  )}
 
-                {Object.keys(grouped).length === 0 && (
+                  {/* Unknown Species Section */}
+                  {Object.keys(groupedUnknown).length > 0 && (
+                    <div>
+                      <h2 className="text-xl font-bold text-slate-400 mb-4">
+                        🔍 Unknown Species ({unknownSpecies.length})
+                      </h2>
+                      <Accordion
+                        type="multiple"
+                        className="w-full space-y-4"
+                        value={openAccordions}
+                        onValueChange={setOpenAccordions}
+                      >
+                        {Object.entries(groupedUnknown).map(([category, genera]) => (
+                          <AccordionCategory
+                            key={`unknown-${category}`}
+                            category={category}
+                            genera={genera}
+                            isOpen={openAccordions.includes(`unknown-${category}`)}
+                            showStickyHeaders={showStickyHeaders}
+                            discoveredSpecies={discoveredSpecies}
+                            onToggle={() => {
+                              const key = `unknown-${category}`;
+                              setOpenAccordions(prev => 
+                                prev.includes(key) 
+                                  ? prev.filter(c => c !== key)
+                                  : [...prev, key]
+                              );
+                              setShowStickyHeaders(false);
+                            }}
+                            setRef={setRef}
+                          />
+                        ))}
+                      </Accordion>
+                    </div>
+                  )}
+                </div>
+
+                {Object.keys(groupedKnown).length === 0 && Object.keys(groupedUnknown).length === 0 && (
                   <div className="text-center p-12">
                     <p className="text-muted-foreground">No species found for the selected filter.</p>
                   </div>

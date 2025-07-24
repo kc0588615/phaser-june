@@ -188,11 +188,13 @@ export class Game extends Phaser.Scene {
                 console.log("Game Scene: Selected species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
                 
                 // Emit event to inform React components about the new game
+                // Hide the species name - player needs to guess it
                 EventBus.emit('new-game-started', {
-                    speciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                    speciesName: 'Mystery Species',  // Hidden name for guessing game
                     speciesId: this.selectedSpecies.ogc_fid,
                     totalSpecies: this.currentSpecies.length,
-                    currentIndex: this.currentSpeciesIndex + 1
+                    currentIndex: this.currentSpeciesIndex + 1,
+                    hiddenSpeciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species'  // Store real name internally
                 });
             } else {
                 this.selectedSpecies = null;
@@ -675,11 +677,13 @@ export class Game extends Phaser.Scene {
             console.log("Game Scene: Advancing to next species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
             
             // Emit event for new species
+            // Hide the species name - player needs to guess it
             EventBus.emit('new-game-started', {
-                speciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                speciesName: 'Mystery Species',  // Hidden name for guessing game
                 speciesId: this.selectedSpecies.ogc_fid,
                 totalSpecies: this.currentSpecies.length,
-                currentIndex: this.currentSpeciesIndex + 1
+                currentIndex: this.currentSpeciesIndex + 1,
+                hiddenSpeciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species'  // Store real name internally
             });
         } else {
             // All species completed

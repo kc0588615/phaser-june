@@ -15,6 +15,8 @@ interface SpeciesCardProps {
   species: Species;
   category: string;
   onNavigateToTop: () => void;
+  isDiscovered?: boolean;
+  discoveredAt?: string;
 }
 
 // Helper function to get conservation status color
@@ -44,7 +46,7 @@ const getConservationLabel = (code: string) => {
   }
 };
 
-export default function SpeciesCard({ species, category, onNavigateToTop }: SpeciesCardProps) {
+export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt }: SpeciesCardProps) {
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   return (
@@ -78,6 +80,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop }: Spec
           <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">
             {category}
           </span>
+          {isDiscovered && (
+            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-green-600 text-white">
+              ✅ Known
+            </span>
+          )}
         </div>
         <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
           {species.comm_name || species.sci_name}

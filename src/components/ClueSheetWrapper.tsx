@@ -4,15 +4,57 @@ import { FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { CluePayload } from '../game/clueConfig';
+import { SpeciesGuessSelector } from './SpeciesGuessSelector';
+import { EventBus } from '@/game/EventBus';
 
 interface ClueSheetWrapperProps {
   clues: CluePayload[];
   speciesName: string;
   hasSelectedSpecies: boolean;
+  speciesId?: number;
+  hiddenSpeciesName?: string;
 }
 
-export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speciesName, hasSelectedSpecies }) => {
+export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speciesName, hasSelectedSpecies, speciesId, hiddenSpeciesName }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isSpeciesDiscovered, setIsSpeciesDiscovered] = React.useState(false);
+  const [discoveredName, setDiscoveredName] = React.useState('');
+
+  // Listen for species guess results
+  React.useEffect(() => {
+    const handleGuessResult = (data: any) => {
+      if (data.isCorrect && data.speciesId === speciesId) {
+        setIsSpeciesDiscovered(true);
+        setDiscoveredName(data.actualName);
+      }
+    };
+
+    EventBus.on('species-guess-submitted', handleGuessResult);
+    return () => {
+      EventBus.off('species-guess-submitted', handleGuessResult);
+    };
+  }, [speciesId]);
+
+  // Reset when new game starts
+  React.useEffect(() => {
+    if (speciesId > 0) {
+      setIsSpeciesDiscovered(false);
+      setDiscoveredName('');
+    }
+  }, [speciesId]);
+
+  // Listen for new game events to reset state
+  React.useEffect(() => {
+    const handleNewGame = () => {
+      setIsSpeciesDiscovered(false);
+      setDiscoveredName('');
+    };
+
+    EventBus.on('new-game-started', handleNewGame);
+    return () => {
+      EventBus.off('new-game-started', handleNewGame);
+    };
+  }, []);
 
   return (
     <>
@@ -24,7 +66,7 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
         onClick={() => setIsOpen(true)}
       >
         <FileText className="h-4 w-4 mr-2" />
-        Field Notes ({clues.length})
+        Guess Species ({clues.length} clues)
       </Button>
 
       {isOpen && typeof window !== 'undefined' && createPortal(
@@ -70,12 +112,28 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
                 ✕
               </button>
               <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#67e8f9', marginBottom: '8px' }}>
-                Field Notes
+                Species Detective 🔍
               </h2>
               <p style={{ fontSize: '14px', color: '#94a3b8' }}>
-                {speciesName || 'No species selected'}
+                {isSpeciesDiscovered ? `✅ ${discoveredName}` : (speciesName || 'No species selected')}
               </p>
             </div>
+            
+            {/* Species Guess Selector */}
+            {speciesName === 'Mystery Species' && speciesId && !isSpeciesDiscovered && (
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid #334155' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#67e8f9', marginBottom: '12px' }}>
+                  Guess the Species
+                </h3>
+                <SpeciesGuessSelector 
+                  key={`guess-${speciesId}`}
+                  speciesId={speciesId}
+                  disabled={false}
+                  hiddenSpeciesName={hiddenSpeciesName}
+                />
+              </div>
+            )}
+            
             <ScrollArea className="flex-1" style={{ padding: '24px' }}>
               {clues.length === 0 ? (
                 <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No clues discovered yet.</p>
