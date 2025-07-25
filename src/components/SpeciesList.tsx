@@ -333,6 +333,24 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
     return { knownSpecies: known, unknownSpecies: unknown };
   }, [filteredSpecies, discoveredSpecies]);
 
+  // Count species per order for discovered and unknown
+  const { knownCounts, unknownCounts } = useMemo(() => {
+    const knownOrderCounts: Record<string, number> = {};
+    const unknownOrderCounts: Record<string, number> = {};
+    
+    knownSpecies.forEach(sp => {
+      const order = sp.order_ || 'Unknown';
+      knownOrderCounts[order] = (knownOrderCounts[order] || 0) + 1;
+    });
+    
+    unknownSpecies.forEach(sp => {
+      const order = sp.order_ || 'Unknown';
+      unknownOrderCounts[order] = (unknownOrderCounts[order] || 0) + 1;
+    });
+    
+    return { knownCounts: knownOrderCounts, unknownCounts: unknownOrderCounts };
+  }, [knownSpecies, unknownSpecies]);
+
   // Group species by category and genus
   const groupedKnown = useMemo(() => groupSpeciesByCategory(knownSpecies), [knownSpecies]);
   const groupedUnknown = useMemo(() => groupSpeciesByCategory(unknownSpecies), [unknownSpecies]);
@@ -452,7 +470,7 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-gray-600 mb-2">
-              Categories: {getAllCategories().length}, 
+              Categories: {getAllCategories(species).length}, 
               Ecoregions: {ecoregionList.length}, 
               Realms: {realmList.length}, 
               Biomes: {biomeList.length}
@@ -536,8 +554,7 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
               <div className="max-w-4xl mx-auto py-8">
                 <SpeciesCard 
                   species={filteredSpecies[0]} 
-                  category={filteredSpecies[0].order_ === 'Testudines' ? 'Turtles' : 
-                           filteredSpecies[0].order_ === 'Anura' ? 'Frogs' : 'Unknown'}
+                  category={filteredSpecies[0].order_ || 'Unknown'}
                   isDiscovered={!!discoveredSpecies[filteredSpecies[0].ogc_fid]}
                   discoveredAt={discoveredSpecies[filteredSpecies[0].ogc_fid]?.discoveredAt}
                   onNavigateToTop={() => {
@@ -567,12 +584,13 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
                         value={openAccordions}
                         onValueChange={setOpenAccordions}
                       >
-                        {Object.entries(groupedKnown).map(([category, genera]) => {
-                          const accordionId = `known-${category}`;
+                        {Object.entries(groupedKnown).map(([order, genera]) => {
+                          const accordionId = `known-${order}`;
+                          const displayName = `${order}: ${knownCounts[order] || 0}`;
                           return (
                             <AccordionCategory
                               key={accordionId}
-                              category={category}
+                              category={displayName}
                               genera={genera}
                               isOpen={openAccordions.includes(accordionId)}
                               showStickyHeaders={showStickyHeaders}
@@ -606,12 +624,13 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
                         value={openAccordions}
                         onValueChange={setOpenAccordions}
                       >
-                        {Object.entries(groupedUnknown).map(([category, genera]) => {
-                          const accordionId = `unknown-${category}`;
+                        {Object.entries(groupedUnknown).map(([order, genera]) => {
+                          const accordionId = `unknown-${order}`;
+                          const displayName = `${order}: ${unknownCounts[order] || 0}`;
                           return (
                             <AccordionCategory
                               key={accordionId}
-                              category={category}
+                              category={displayName}
                               genera={genera}
                               isOpen={openAccordions.includes(accordionId)}
                               showStickyHeaders={showStickyHeaders}

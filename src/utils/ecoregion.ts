@@ -46,32 +46,25 @@ export function getBiomes(species: Species[]): string[] {
 }
 
 /**
- * Group species by category and genus
+ * Group species by order and genus
  */
 export function groupSpeciesByCategory(species: Species[]): Record<string, Record<string, Species[]>> {
   const grouped: Record<string, Record<string, Species[]>> = {};
   
   species.forEach(sp => {
-    // Use the actual order to determine category
-    let category = 'Unknown';
-    if (sp.order_ === 'Testudines') {
-      category = 'Turtles';
-    } else if (sp.order_ === 'Anura') {
-      category = 'Frogs';
-    }
-    // Add more categories as needed
-    
+    // Use the actual order as the category
+    const order = sp.order_ || 'Unknown';
     const genus = sp.genus || 'Unknown';
     
-    if (!grouped[category]) {
-      grouped[category] = {};
+    if (!grouped[order]) {
+      grouped[order] = {};
     }
     
-    if (!grouped[category][genus]) {
-      grouped[category][genus] = [];
+    if (!grouped[order][genus]) {
+      grouped[order][genus] = [];
     }
     
-    grouped[category][genus].push(sp);
+    grouped[order][genus].push(sp);
   });
   
   // Sort species within each genus by common name
@@ -134,29 +127,35 @@ export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Recor
  * Get display name for an order
  */
 export function getOrderDisplayName(order: string): string {
-  const orderMap: Record<string, string> = {
-    'Testudines': 'Turtle - Testudines',
-    'Anura': 'Frog - Anura'
-  };
-  return orderMap[order] || order;
+  // Return the order name as-is for now
+  // Can be enhanced later with display names if needed
+  return order;
 }
 
 /**
- * Get all possible categories
+ * Get all possible categories (orders) from species data
  */
-export function getAllCategories(): string[] {
-  return ['Turtles', 'Frogs'];
+export function getAllCategories(species?: Species[]): string[] {
+  if (!species || species.length === 0) {
+    // Return known orders as fallback
+    return ['Testudines', 'Anura'];
+  }
+  return getUniqueOrders(species);
 }
 
 /**
  * Map category names to order values
  */
 export function getCategoryOrderMapping(): Record<string, string> {
+  // Since we're now using order names directly, this maps order to itself
+  // and includes some legacy mappings for backward compatibility
   return {
     'Turtles': 'Testudines',
     'Turtle': 'Testudines',
     'Frogs': 'Anura',
-    'Frog': 'Anura'
+    'Frog': 'Anura',
+    'Testudines': 'Testudines',
+    'Anura': 'Anura'
   };
 }
 
@@ -180,9 +179,8 @@ export function getOrderFromCategory(category: string): string | null {
  * Get category name from order value
  */
 export function getCategoryFromOrder(order: string): string {
-  if (order === 'Testudines') return 'Turtles';
-  if (order === 'Anura') return 'Frogs';
-  return 'Unknown';
+  // Return the order name directly since we're using orders as categories
+  return order || 'Unknown';
 }
 
 /**
