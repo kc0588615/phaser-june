@@ -11,9 +11,13 @@ export const DenseClueGrid: React.FC<DenseClueGridProps> = ({ clues, hasSelected
     return (
       <div className="flex-1 bg-slate-800 rounded-lg p-4 flex items-center justify-center text-slate-400">
         <p className="text-center">
-          Click on the Cesium map to select a location and discover species.
+          Click the 'Show Map' button so you can click on the globe to find a habitat area.
           <br />
-          Match gems to reveal clues!
+          If you click and there's no overlapping habitat, then the nearest habitat area will flash light blue.
+          <br />
+          Click on this light blue area - it's a mystery species habitat!
+          <br />
+          Then match gems to reveal clues so you can guess the species!
         </p>
       </div>
     );

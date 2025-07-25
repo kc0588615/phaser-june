@@ -18,7 +18,7 @@ import {
   GeoJsonDataSource,
   Color as CesiumColor,
   ConstantProperty,
-  ColorMaterialProperty
+  ColorMaterialProperty,
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
 import { speciesService } from '../lib/speciesService';
@@ -88,6 +88,94 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     
     // Use environment variable for Ion token as configured in the migration plan
     Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN || 'YOUR_FALLBACK_TOKEN'; 
+  }, []);
+
+  // Add generic fullscreen button for entire application
+  useEffect(() => {
+    // Check if viewer is ready after a short delay to ensure it's fully initialized
+    const timer = setTimeout(() => {
+      if (viewerRef.current && viewerRef.current.cesiumElement) {
+        const viewer = viewerRef.current.cesiumElement;
+        
+        // Check if fullscreen button already exists to avoid duplicates
+        if (!viewer.container.querySelector('.app-fullscreen-button')) {
+          // Create a container div for the fullscreen button
+          const buttonContainer = document.createElement('div');
+          buttonContainer.className = 'app-fullscreen-button';
+          buttonContainer.style.position = 'absolute';
+          buttonContainer.style.bottom = '20px'; // Adjust this value as needed
+          buttonContainer.style.right = '10px';
+          buttonContainer.style.zIndex = '999';
+          
+          // Create button element
+          const button = document.createElement('button');
+          button.style.width = '40px';
+          button.style.height = '40px';
+          button.style.backgroundColor = 'rgba(48, 51, 54, 0.8)';
+          button.style.border = '1px solid #444';
+          button.style.borderRadius = '4px';
+          button.style.cursor = 'pointer';
+          button.style.display = 'flex';
+          button.style.alignItems = 'center';
+          button.style.justifyContent = 'center';
+          button.style.padding = '0';
+          button.style.transition = 'background-color 0.2s';
+          
+          // Add fullscreen SVG icon
+          button.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+            </svg>
+          `;
+          
+          // Add hover effect
+          button.onmouseenter = () => {
+            button.style.backgroundColor = 'rgba(48, 51, 54, 1)';
+          };
+          button.onmouseleave = () => {
+            button.style.backgroundColor = 'rgba(48, 51, 54, 0.8)';
+          };
+          
+          // Add click handler for fullscreen toggle
+          button.onclick = () => {
+            if (!document.fullscreenElement) {
+              document.documentElement.requestFullscreen().catch(err => {
+                console.error('Error attempting to enable fullscreen:', err.message);
+              });
+            } else {
+              document.exitFullscreen();
+            }
+          };
+          
+          // Update icon based on fullscreen state
+          const updateIcon = () => {
+            if (document.fullscreenElement) {
+              // Exit fullscreen icon
+              button.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+                </svg>
+              `;
+            } else {
+              // Enter fullscreen icon
+              button.innerHTML = `
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              `;
+            }
+          };
+          
+          // Listen for fullscreen changes
+          document.addEventListener('fullscreenchange', updateIcon);
+          
+          buttonContainer.appendChild(button);
+          viewer.container.appendChild(buttonContainer);
+        }
+      }
+    }, 500); // Small delay to ensure viewer is fully initialized
+    
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

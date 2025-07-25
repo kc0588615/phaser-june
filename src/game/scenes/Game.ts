@@ -108,12 +108,13 @@ export class Game extends Phaser.Scene {
             return;
         }
 
-        this.statusText = this.add.text(width / 2, height / 2, "Waiting for location selection from map...", {
-            fontSize: '20px',
+        this.statusText = this.add.text(width / 2, height / 2, "Welcome to Critter Connect!\n\nClick on the globe to find a habitat area\nfor a mystery species.\n\nIf the clicked location does not have a species,\nthe nearest species habitat area will flash blue!\n\nFill your Clue List by matching gems and\nguess the species when you're ready. Good luck!", {
+            fontSize: '16px',
             color: '#ffffff',
             backgroundColor: '#000000aa',
-            padding: { x: 10, y: 5 },
-            align: 'center'
+            padding: { x: 15, y: 10 },
+            align: 'center',
+            wordWrap: { width: Math.min(width * 0.8, 380) }
         }).setOrigin(0.5).setDepth(100);
 
         // Score display
@@ -282,7 +283,7 @@ export class Game extends Phaser.Scene {
             this.statusText.setPosition(width / 2, height / 2);
             const textStyle = this.statusText.style;
             if (textStyle && typeof textStyle.setWordWrapWidth === 'function') {
-                textStyle.setWordWrapWidth(width * 0.8);
+                textStyle.setWordWrapWidth(Math.min(width * 0.8, 380));
             }
         }
         
