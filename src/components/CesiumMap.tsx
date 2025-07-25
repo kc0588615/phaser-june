@@ -103,7 +103,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           const buttonContainer = document.createElement('div');
           buttonContainer.className = 'app-fullscreen-button';
           buttonContainer.style.position = 'absolute';
-          buttonContainer.style.bottom = '20px'; // Adjust this value as needed
+          buttonContainer.style.bottom = '40px'; // Adjust this value as needed
           buttonContainer.style.right = '10px';
           buttonContainer.style.zIndex = '999';
           
