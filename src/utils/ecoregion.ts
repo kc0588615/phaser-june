@@ -52,8 +52,15 @@ export function groupSpeciesByCategory(species: Species[]): Record<string, Recor
   const grouped: Record<string, Record<string, Species[]>> = {};
   
   species.forEach(sp => {
-    // Currently all species are turtles, but we'll make this flexible for future categories
-    const category = 'Turtles';
+    // Use the actual order to determine category
+    let category = 'Unknown';
+    if (sp.order_ === 'Testudines') {
+      category = 'Turtles';
+    } else if (sp.order_ === 'Anura') {
+      category = 'Frogs';
+    }
+    // Add more categories as needed
+    
     const genus = sp.genus || 'Unknown';
     
     if (!grouped[category]) {
@@ -79,4 +86,57 @@ export function groupSpeciesByCategory(species: Species[]): Record<string, Recor
   });
   
   return grouped;
+}
+
+/**
+ * Group species by taxonomic hierarchy (class -> order -> genus)
+ */
+export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Record<string, Record<string, Species[]>>> {
+  const grouped: Record<string, Record<string, Record<string, Species[]>>> = {};
+  
+  species.forEach(sp => {
+    const className = sp.class || 'Unknown';
+    const orderName = sp.order_ || 'Unknown';
+    const genus = sp.genus || 'Unknown';
+    
+    if (!grouped[className]) {
+      grouped[className] = {};
+    }
+    
+    if (!grouped[className][orderName]) {
+      grouped[className][orderName] = {};
+    }
+    
+    if (!grouped[className][orderName][genus]) {
+      grouped[className][orderName][genus] = [];
+    }
+    
+    grouped[className][orderName][genus].push(sp);
+  });
+  
+  // Sort species within each genus by common name
+  Object.values(grouped).forEach(orders => {
+    Object.values(orders).forEach(genera => {
+      Object.values(genera).forEach(speciesList => {
+        speciesList.sort((a, b) => {
+          const nameA = a.comm_name || a.sci_name || '';
+          const nameB = b.comm_name || b.sci_name || '';
+          return nameA.localeCompare(nameB);
+        });
+      });
+    });
+  });
+  
+  return grouped;
+}
+
+/**
+ * Get display name for an order
+ */
+export function getOrderDisplayName(order: string): string {
+  const orderMap: Record<string, string> = {
+    'Testudines': 'Turtle - Testudines',
+    'Anura': 'Frog - Anura'
+  };
+  return orderMap[order] || order;
 }

@@ -7,4 +7,5 @@ export type JumpTarget =
   | { type: "genus"; value: { category: string; genus: string } }
   | { type: "ecoregion"; value: string }
   | { type: "realm"; value: string }
-  | { type: "biome"; value: string };
+  | { type: "biome"; value: string }
+  | { type: "species"; value: string };

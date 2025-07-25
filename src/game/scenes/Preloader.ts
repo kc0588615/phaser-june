@@ -111,10 +111,10 @@ export class Preloader extends Phaser.Scene {
 
     // create() is now called manually from the 'complete' handler
     create(): void {
-        console.log("Preloader: Starting MainMenu");
+        console.log("Preloader: Starting Game");
         // Add a small delay or fade before starting next scene (optional)
         this.time.delayedCall(100, () => {
-             this.scene.start('MainMenu');
+             this.scene.start('Game');
         });
     }
 }

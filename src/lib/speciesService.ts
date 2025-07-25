@@ -143,6 +143,97 @@ export const speciesService = {
   },
 
   /**
+   * Get random species names for the guessing game
+   * @param count Number of species names to return
+   * @param excludeId Species ID to exclude (the correct answer)
+   */
+  async getRandomSpeciesNames(count: number = 15, excludeId?: number): Promise<string[]> {
+    try {
+      // Query random species from the database
+      const query = supabase
+        .from('icaa')
+        .select('comm_name, sci_name, ogc_fid');
+      
+      // Exclude the current species if provided
+      if (excludeId) {
+        query.neq('ogc_fid', excludeId);
+      }
+      
+      // Get random species
+      const { data, error } = await query
+        .limit(count * 2); // Get extra in case we need to filter
+      
+      if (error) {
+        console.error('Error fetching random species names:', error);
+        // Return fallback species names
+        return [
+          'Green Sea Turtle',
+          'Loggerhead Sea Turtle',
+          'Hawksbill Sea Turtle',
+          'Leatherback Sea Turtle',
+          'Olive Ridley Sea Turtle',
+          'Kemp\'s Ridley Sea Turtle',
+          'Flatback Sea Turtle',
+          'Eastern Box Turtle',
+          'Painted Turtle',
+          'Red-eared Slider',
+          'Snapping Turtle',
+          'Softshell Turtle',
+          'Wood Turtle',
+          'Bog Turtle',
+          'Spotted Turtle',
+        ];
+      }
+      
+      // Extract species names and shuffle
+      const speciesNames = (data || [])
+        .map(s => s.comm_name || s.sci_name || 'Unknown Species')
+        .filter(name => name !== 'Unknown Species')
+        .sort(() => Math.random() - 0.5)
+        .slice(0, count);
+      
+      // If we don't have enough, add some fallback names
+      if (speciesNames.length < count) {
+        const fallbacks = [
+          'Green Sea Turtle',
+          'Loggerhead Sea Turtle',
+          'Hawksbill Sea Turtle',
+          'Leatherback Sea Turtle',
+          'Olive Ridley Sea Turtle',
+        ];
+        
+        for (const fallback of fallbacks) {
+          if (speciesNames.length < count && !speciesNames.includes(fallback)) {
+            speciesNames.push(fallback);
+          }
+        }
+      }
+      
+      return speciesNames;
+    } catch (error) {
+      console.error('Error in getRandomSpeciesNames:', error);
+      // Return fallback species names
+      return [
+        'Green Sea Turtle',
+        'Loggerhead Sea Turtle',
+        'Hawksbill Sea Turtle',
+        'Leatherback Sea Turtle',
+        'Olive Ridley Sea Turtle',
+        'Kemp\'s Ridley Sea Turtle',
+        'Flatback Sea Turtle',
+        'Eastern Box Turtle',
+        'Painted Turtle',
+        'Red-eared Slider',
+        'Snapping Turtle',
+        'Softshell Turtle',
+        'Wood Turtle',
+        'Bog Turtle',
+        'Spotted Turtle',
+      ];
+    }
+  },
+
+  /**
    * Render species polygons on Cesium (returns GeoJSON)
    */
   async getSpeciesGeoJSON(speciesIds: number[]): Promise<any> {

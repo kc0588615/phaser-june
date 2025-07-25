@@ -78,7 +78,7 @@ export function CategoryGenusPicker({
       const typeLabel = selectedFilter.type.charAt(0).toUpperCase() + selectedFilter.type.slice(1);
       return `${typeLabel}: ${selectedFilter.value}`;
     }
-    return "Select category / genus / ecoregion...";
+    return "Select category / ecoregion...";
   };
 
   return (
@@ -114,58 +114,35 @@ export function CategoryGenusPicker({
               />
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandList className="max-h-[calc(80vh-60px)] overflow-auto">
-                {/* Category and Genus Groups */}
-                {Object.entries(grouped).map(([category, genera]) => (
-                  <CommandGroup key={category} heading={category}>
-                    <CommandItem
-                      key={`cat-${category}`}
-                      value={category}
-                      onSelect={(value) => {
-                        console.log("onSelect triggered with value:", value);
-                        handleSelect(value);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedFilter?.type === "category" && 
-                          selectedFilter?.value === category
-                            ? "opacity-100"
-                            : "opacity-0"
-                        )}
-                      />
-                      <span className="font-medium">{category} (all)</span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {Object.values(genera).flat().length} species
-                      </span>
-                    </CommandItem>
-                    {Object.entries(genera).map(([genus, species]) => (
+                {/* Category Groups (without genus items) */}
+                {Object.entries(grouped).length > 0 && (
+                  <CommandGroup heading="Categories">
+                    {Object.entries(grouped).map(([category, genera]) => (
                       <CommandItem
-                        key={`${category}-${genus}`}
-                        value={`${category}-${genus}`}
+                        key={`cat-${category}`}
+                        value={category}
                         onSelect={(value) => {
-                          console.log("Genus onSelect triggered with value:", value);
+                          console.log("onSelect triggered with value:", value);
                           handleSelect(value);
                         }}
-                        className="pl-6"
                       >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
-                            selectedFilter?.type === "genus" &&
-                            selectedFilter?.value === `${category}-${genus}`
+                            selectedFilter?.type === "category" && 
+                            selectedFilter?.value === category
                               ? "opacity-100"
                               : "opacity-0"
                           )}
                         />
-                        <span>{genus}</span>
+                        <span className="font-medium">{category}</span>
                         <span className="ml-auto text-xs text-muted-foreground">
-                          {species.length} species
+                          {Object.values(genera).flat().length} species
                         </span>
                       </CommandItem>
                     ))}
                   </CommandGroup>
-                ))}
+                )}
 
                 {/* Ecoregions Group */}
                 {ecoregionList.length > 0 && (

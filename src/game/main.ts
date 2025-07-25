@@ -33,7 +33,6 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [
         Boot,
         Preloader,
-        MainMenu,
         Game,
         GameOver
     ]
