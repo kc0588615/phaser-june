@@ -203,31 +203,30 @@ export default function SpeciesList() {
     const scrollContainer = gridRef.current?.querySelector('[data-radix-scroll-area-viewport]');
     if (!scrollContainer) return;
 
-    let last = lastScrollTop.current;
-    const THRESH = 15; // Higher threshold to prevent mobile jitter
     const handleScroll = () => {
-      const cur = scrollContainer.scrollTop;
-      const delta = cur - last;
-      
-      // Detect scroll direction with higher threshold to prevent jitter
-      if (delta < -THRESH && cur > 200) {
-        // Scrolling up with threshold and not near top
-        setShowStickyHeaders(true);
-      } else if (delta > THRESH) {
-        // Scrolling down with threshold
-        setShowStickyHeaders(false);
-      }
-      
-      last = cur;
+      const currentScrollTop = scrollContainer.scrollTop;
       
       // Clear existing timeout
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
 
+      // Detect scroll direction with a threshold to prevent jitter
+      const scrollDelta = currentScrollTop - lastScrollTop.current;
+      
+      if (scrollDelta < -5 && currentScrollTop > 200) {
+        // Scrolling up with threshold and not near top
+        setShowStickyHeaders(true);
+      } else if (scrollDelta > 5) {
+        // Scrolling down with threshold
+        setShowStickyHeaders(false);
+      }
+
+      lastScrollTop.current = currentScrollTop;
+
       // Hide sticky headers after scrolling stops or when near top
       scrollTimeout.current = setTimeout(() => {
-        if (scrollContainer.scrollTop <= 200) {
+        if (currentScrollTop <= 200) {
           setShowStickyHeaders(false);
         }
       }, 2000);
@@ -533,15 +532,14 @@ export default function SpeciesList() {
                             key={`known-${category}`}
                             category={category}
                             genera={genera}
-                            isOpen={openAccordions.includes(`known-${category}`)}
+                            isOpen={openAccordions.includes(category)}
                             showStickyHeaders={showStickyHeaders}
                             discoveredSpecies={discoveredSpecies}
                             onToggle={() => {
-                              const key = `known-${category}`;
                               setOpenAccordions(prev => 
-                                prev.includes(key) 
-                                  ? prev.filter(c => c !== key)
-                                  : [...prev, key]
+                                prev.includes(category) 
+                                  ? prev.filter(c => c !== category)
+                                  : [...prev, category]
                               );
                               setShowStickyHeaders(false);
                             }}
@@ -569,15 +567,14 @@ export default function SpeciesList() {
                             key={`unknown-${category}`}
                             category={category}
                             genera={genera}
-                            isOpen={openAccordions.includes(`unknown-${category}`)}
+                            isOpen={openAccordions.includes(category)}
                             showStickyHeaders={showStickyHeaders}
                             discoveredSpecies={discoveredSpecies}
                             onToggle={() => {
-                              const key = `unknown-${category}`;
                               setOpenAccordions(prev => 
-                                prev.includes(key) 
-                                  ? prev.filter(c => c !== key)
-                                  : [...prev, key]
+                                prev.includes(category) 
+                                  ? prev.filter(c => c !== category)
+                                  : [...prev, category]
                               );
                               setShowStickyHeaders(false);
                             }}
