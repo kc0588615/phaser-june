@@ -466,3 +466,112 @@ const boardMargin = isMobile ? 0.02 : 0.05;
 **Solution**: Limit concurrent tweens, use sprite pooling, debounce resize events
 
 This reference should provide everything needed to understand, debug, and extend the UI display system.
+
+---
+
+## Additional UI Components
+
+### Gem Legend Display
+
+The gem legend display shows users which gem colors correspond to which clue categories. This feature can be re-added to the UI in several ways:
+
+#### Implementation Components
+
+1. **GemLegendDialog Component** (`src/components/GemLegendDialog.tsx`)
+   - A modal dialog that displays all 8 gem types with their corresponding categories
+   - Shows gem images from `/assets/[color]_gem_0.png`
+   - Displays category icon and name from `CLUE_CONFIG`
+
+2. **GemLegend Component** (`src/components/GemLegend.tsx`)
+   - Can be used as an inline component instead of a dialog
+   - Same display logic but embedded directly in the UI
+
+#### Adding the Gem Legend to Your UI
+
+**Option 1: As a Modal Dialog with Info Button**
+```typescript
+// In your component that needs the legend (e.g., SpeciesPanel.tsx)
+import { GemLegendDialog } from './GemLegendDialog';
+import { Button } from '@/components/ui/button';
+import { Info } from 'lucide-react';
+
+// Add state
+const [legendOpen, setLegendOpen] = useState<boolean>(false);
+
+// In your JSX
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={() => setLegendOpen(true)}
+  className="text-slate-400 hover:text-cyan-300"
+>
+  <Info className="h-4 w-4" />
+</Button>
+
+<GemLegendDialog open={legendOpen} onOpenChange={setLegendOpen} />
+```
+
+**Option 2: As a Standalone Button in Game UI**
+```typescript
+// Add to MainAppLayout.tsx or create a new overlay component
+<div style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000 }}>
+  <Button onClick={() => setLegendOpen(true)}>
+    <Info className="mr-2 h-4 w-4" /> Gem Guide
+  </Button>
+</div>
+```
+
+**Option 3: As an Inline Component**
+```typescript
+// Use GemLegend component directly in a sidebar or panel
+import { GemLegend } from './GemLegend';
+
+<div className="gem-legend-container">
+  <h3>Gem Categories</h3>
+  <GemLegend />
+</div>
+```
+
+**Option 4: In the Main Menu or Settings**
+```typescript
+// Add to game settings or help menu
+<MenuItem onClick={() => setShowLegend(true)}>
+  View Gem Categories
+</MenuItem>
+```
+
+**Option 5: As a Collapsible Panel**
+```typescript
+// Using shadcn/ui Collapsible component
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+<Collapsible>
+  <CollapsibleTrigger>
+    <Button variant="ghost" size="sm">
+      <Info className="mr-2 h-4 w-4" /> Gem Guide
+    </Button>
+  </CollapsibleTrigger>
+  <CollapsibleContent>
+    <GemLegend />
+  </CollapsibleContent>
+</Collapsible>
+```
+
+#### Styling Considerations
+- The dialog uses dark theme styling matching the game's aesthetic
+- Gem images use `imageRendering: 'pixelated'` for crisp pixel art
+- Each gem is displayed at 32x32 pixels with category information
+- The dialog is scrollable for mobile devices
+
+#### EventBus Integration
+If you want to trigger the legend from game events:
+```typescript
+// Emit from Phaser
+EventBus.emit('show-gem-legend');
+
+// Listen in React
+useEffect(() => {
+  const handleShowLegend = () => setLegendOpen(true);
+  EventBus.on('show-gem-legend', handleShowLegend);
+  return () => EventBus.off('show-gem-legend', handleShowLegend);
+}, []);

@@ -396,7 +396,11 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         full 
         timeline={false}
         animation={false}
-        baseLayerPicker={true} 
+        homeButton={false}
+        fullscreenButton={false}
+        sceneModePicker={false}
+        navigationHelpButton={false}
+        baseLayerPicker={false}
         geocoder={false}
         onClick={handleMapClick}
       >

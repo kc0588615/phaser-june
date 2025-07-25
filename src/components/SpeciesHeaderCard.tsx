@@ -1,9 +1,8 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Info } from 'lucide-react';
 
 interface SpeciesHeaderCardProps {
   speciesName: string;
+  speciesId: number;
   currentSpeciesIndex: number;
   totalSpecies: number;
   revealedClueCount: number;
@@ -12,16 +11,15 @@ interface SpeciesHeaderCardProps {
     color: string;
     icon: string;
   }>;
-  onShowLegend: () => void;
 }
 
 export const SpeciesHeaderCard: React.FC<SpeciesHeaderCardProps> = ({
   speciesName,
+  speciesId,
   currentSpeciesIndex,
   totalSpecies,
   revealedClueCount,
   discoveredClues,
-  onShowLegend,
 }) => {
   const maxClues = 8; // Total number of gem categories
 
@@ -32,7 +30,7 @@ export const SpeciesHeaderCard: React.FC<SpeciesHeaderCardProps> = ({
         <div>
           <h3 className="text-cyan-300 font-semibold text-lg">
             {speciesName === 'Mystery Species' 
-              ? '🔍 Mystery Species - Match gems to reveal clues!' 
+              ? `🔍 Mystery Species #${speciesId}` 
               : (speciesName || 'Select a location to discover species')}
           </h3>
           {totalSpecies > 0 && (
@@ -41,14 +39,6 @@ export const SpeciesHeaderCard: React.FC<SpeciesHeaderCardProps> = ({
             </p>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onShowLegend}
-          className="text-slate-400 hover:text-cyan-300"
-        >
-          <Info className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Discovered Clues Row */}

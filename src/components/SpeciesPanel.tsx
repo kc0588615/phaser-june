@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { EventBus } from '../game/EventBus';
 import type { CluePayload } from '../game/clueConfig';
-import { GemLegendDialog } from './GemLegendDialog';
 import { SpeciesHeaderCard } from './SpeciesHeaderCard';
 import { DenseClueGrid } from './DenseClueGrid';
 import { ClueSheetWrapper } from './ClueSheetWrapper';
@@ -17,7 +16,6 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
   const [selectedSpeciesId, setSelectedSpeciesId] = useState<number>(0);
   const [totalSpecies, setTotalSpecies] = useState<number>(0);
   const [currentSpeciesIndex, setCurrentSpeciesIndex] = useState<number>(0);
-  const [legendOpen, setLegendOpen] = useState<boolean>(false);
   const [allCluesRevealed, setAllCluesRevealed] = useState<boolean>(false);
   const [allSpeciesCompleted, setAllSpeciesCompleted] = useState<boolean>(false);
   const [discoveredClues, setDiscoveredClues] = useState<Array<{
@@ -199,11 +197,11 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       {/* Species Header with Horizontal Clue Indicators */}
       <SpeciesHeaderCard
         speciesName={allSpeciesCompleted ? 'All Species Discovered!' : (isSpeciesDiscovered ? discoveredSpeciesName : selectedSpeciesName)}
+        speciesId={selectedSpeciesId}
         currentSpeciesIndex={currentSpeciesIndex}
         totalSpecies={totalSpecies}
         revealedClueCount={clues.length}
         discoveredClues={discoveredClues}
-        onShowLegend={() => setLegendOpen(true)}
       />
 
       {/* Compact Field Notes List - Quick Reference */}
@@ -223,7 +221,6 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
         />
       </div>
 
-      <GemLegendDialog open={legendOpen} onOpenChange={setLegendOpen} />
     </div>
   );
 };

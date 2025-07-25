@@ -84,7 +84,7 @@ function MainAppLayout() {
                 <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
                 <div style={{ 
                     position: 'absolute', 
-                    top: '45px', 
+                    top: '10px', 
                     right: '10px', 
                     zIndex: 1000,
                     display: 'flex',
@@ -92,8 +92,13 @@ function MainAppLayout() {
                 }}>
                     <button 
                         style={{ 
-                            ...buttonStyle, 
-                            position: 'static'
+                            padding: '5px 10px',
+                            backgroundColor: 'rgba(42, 42, 42, 0.8)',
+                            color: 'white',
+                            border: '1px solid #555',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '14px'
                         }}
                         onClick={() => setViewMode('species')}
                     >
@@ -101,12 +106,17 @@ function MainAppLayout() {
                     </button>
                     <button 
                         style={{ 
-                            ...buttonStyle, 
-                            position: 'static'
+                            padding: '5px 10px',
+                            backgroundColor: 'rgba(42, 42, 42, 0.8)',
+                            color: 'white',
+                            border: '1px solid #555',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '14px'
                         }}
                         onClick={() => setViewMode(viewMode === 'map' ? 'clues' : 'map')}
                     >
-                        {viewMode === 'map' ? 'Show Clues' : 'Show Map'}
+                        {viewMode === 'map' ? 'Clue List' : 'Show Map'}
                     </button>
                 </div>
                 
@@ -142,26 +152,7 @@ function MainAppLayout() {
                 backgroundColor: '#0f172a',
                 zIndex: 2000
             }}>
-                <button 
-                    style={{ 
-                        position: 'absolute',
-                        top: '20px',
-                        right: '20px',
-                        zIndex: 1000,
-                        padding: '10px 20px',
-                        backgroundColor: 'rgba(14, 195, 201, 0.8)',
-                        color: '#000',
-                        border: '1px solid #0ec3c9',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                        fontWeight: 'bold'
-                    }}
-                    onClick={() => setViewMode('map')}
-                >
-                    ← Back to Game
-                </button>
-                <SpeciesList />
+                <SpeciesList onBack={() => setViewMode('map')} />
             </div>
             
             <Toaster

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import type { GroupedSpecies, JumpTarget } from "@/types/speciesBrowser";
 import type { Species } from "@/types/database";
+import { getOrderFromCategory, getCategoryOrderMapping, getCategoryFromOrder, getUniqueGenera, getUniqueOrders } from "@/utils/ecoregion";
 
 interface SpeciesSearchInputProps {
   grouped: GroupedSpecies;
@@ -20,7 +21,7 @@ interface SpeciesSearchInputProps {
 interface SearchOption {
   value: string;
   label: string;
-  type: 'category' | 'genus' | 'ecoregion' | 'realm' | 'biome' | 'species';
+  type: 'category' | 'genus' | 'order' | 'ecoregion' | 'realm' | 'biome' | 'species';
   category?: string;
   speciesData?: Species;
 }
@@ -45,22 +46,33 @@ export function SpeciesSearchInput({
   const searchOptions = React.useMemo(() => {
     const options: SearchOption[] = [];
 
-    // Add categories
-    Object.entries(grouped).forEach(([category, genera]) => {
+    // Add category search options (both singular and plural forms)
+    const categoryMapping = getCategoryOrderMapping();
+    Object.keys(categoryMapping).forEach(categoryName => {
       options.push({
-        value: category,
-        label: category,
+        value: categoryName,
+        label: categoryName,
         type: 'category'
       });
+    });
 
-      // Add genera
-      Object.entries(genera).forEach(([genus]) => {
-        options.push({
-          value: `${category}-${genus}`,
-          label: genus,
-          type: 'genus',
-          category
-        });
+    // Add all unique genus values
+    const allGenera = getUniqueGenera(species);
+    allGenera.forEach(genus => {
+      options.push({
+        value: genus,
+        label: genus,
+        type: 'genus'
+      });
+    });
+
+    // Add all unique order values
+    const allOrders = getUniqueOrders(species);
+    allOrders.forEach(order => {
+      options.push({
+        value: order,
+        label: order,
+        type: 'order'
       });
     });
 
@@ -140,13 +152,18 @@ export function SpeciesSearchInput({
       onJump({ type: 'realm', value: option.label });
     } else if (option.type === 'biome') {
       onJump({ type: 'biome', value: option.label });
-    } else if (option.type === 'genus' && option.category) {
-      const genus = option.value.split('-')[1];
-      onJump({ type: 'genus', value: { category: option.category, genus } });
+    } else if (option.type === 'genus') {
+      onJump({ type: 'genus', value: option.value });
+    } else if (option.type === 'order') {
+      onJump({ type: 'order', value: option.value });
     } else if (option.type === 'species' && option.speciesData) {
       onJump({ type: 'species', value: option.speciesData.ogc_fid.toString() });
     } else if (option.type === 'category') {
-      onJump({ type: 'category', value: option.value });
+      // Convert category to order value for filtering
+      const orderValue = getOrderFromCategory(option.value);
+      if (orderValue) {
+        onJump({ type: 'order', value: orderValue });
+      }
     }
   };
 
@@ -184,6 +201,7 @@ export function SpeciesSearchInput({
     switch (type) {
       case 'category': return 'Category';
       case 'genus': return 'Genus';
+      case 'order': return 'Order';
       case 'species': return 'Species';
       case 'ecoregion': return 'Ecoregion';
       case 'realm': return 'Realm';
@@ -200,7 +218,7 @@ export function SpeciesSearchInput({
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search species, genus, category, or location..."
+            placeholder="Search species, genus, order, category or location"
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setSearchQuery(e.target.value);
@@ -213,7 +231,8 @@ export function SpeciesSearchInput({
               }
             }}
             onKeyDown={handleKeyDown}
-            className="w-full pl-10 pr-4 h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+            style={{ paddingLeft: '2.5rem' }}
+            className="w-full pr-4 h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
           />
         </div>
 
@@ -251,7 +270,9 @@ export function SpeciesSearchInput({
           variant="outline" 
           className="w-fit bg-blue-600/20 border-blue-600/50 text-blue-300"
         >
-          <span className="mr-2 capitalize">{selectedFilter.type}: {selectedFilter.value}</span>
+          <span className="mr-2 capitalize">
+            {selectedFilter.type}: {selectedFilter.value}
+          </span>
           <X 
             className="h-3 w-3 cursor-pointer hover:text-blue-100 transition-colors"
             onClick={onClearFilter} 

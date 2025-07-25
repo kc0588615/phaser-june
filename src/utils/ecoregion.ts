@@ -140,3 +140,77 @@ export function getOrderDisplayName(order: string): string {
   };
   return orderMap[order] || order;
 }
+
+/**
+ * Get all possible categories
+ */
+export function getAllCategories(): string[] {
+  return ['Turtles', 'Frogs'];
+}
+
+/**
+ * Map category names to order values
+ */
+export function getCategoryOrderMapping(): Record<string, string> {
+  return {
+    'Turtles': 'Testudines',
+    'Turtle': 'Testudines',
+    'Frogs': 'Anura',
+    'Frog': 'Anura'
+  };
+}
+
+/**
+ * Get order value from category name (case-insensitive)
+ */
+export function getOrderFromCategory(category: string): string | null {
+  const mapping = getCategoryOrderMapping();
+  const normalizedCategory = category.toLowerCase();
+  
+  for (const [key, value] of Object.entries(mapping)) {
+    if (key.toLowerCase() === normalizedCategory) {
+      return value;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Get category name from order value
+ */
+export function getCategoryFromOrder(order: string): string {
+  if (order === 'Testudines') return 'Turtles';
+  if (order === 'Anura') return 'Frogs';
+  return 'Unknown';
+}
+
+/**
+ * Extract unique genus values from species data
+ */
+export function getUniqueGenera(species: Species[]): string[] {
+  const genera = new Set<string>();
+  
+  species.forEach(sp => {
+    if (sp.genus && sp.genus !== 'NULL' && sp.genus !== 'null') {
+      genera.add(sp.genus);
+    }
+  });
+  
+  return Array.from(genera).sort();
+}
+
+/**
+ * Extract unique order values from species data
+ */
+export function getUniqueOrders(species: Species[]): string[] {
+  const orders = new Set<string>();
+  
+  species.forEach(sp => {
+    if (sp.order_ && sp.order_ !== 'NULL' && sp.order_ !== 'null') {
+      orders.add(sp.order_);
+    }
+  });
+  
+  return Array.from(orders).sort();
+}

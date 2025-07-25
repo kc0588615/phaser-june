@@ -4,11 +4,11 @@ import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
-import { Loader2, ChevronDown } from 'lucide-react';
+import { Loader2, ChevronDown, List } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
-import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory } from '@/utils/ecoregion';
+import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 
@@ -20,7 +20,8 @@ const AccordionCategory = memo(({
   showStickyHeaders,
   onToggle,
   setRef,
-  discoveredSpecies
+  discoveredSpecies,
+  accordionValue
 }: {
   category: string;
   genera: Record<string, Species[]>;
@@ -29,6 +30,7 @@ const AccordionCategory = memo(({
   onToggle: () => void;
   setRef: (id: string) => (el: HTMLDivElement | null) => void;
   discoveredSpecies: Record<number, { name: string; discoveredAt: string }>;
+  accordionValue: string;
 }) => {
   const [hideSticky, setHideSticky] = useState(true);
   const accordionRef = useRef<HTMLDivElement>(null);
@@ -54,7 +56,7 @@ const AccordionCategory = memo(({
   return (
     <div ref={setRef(category)} className="relative">
       <AccordionItem 
-        value={category} 
+        value={accordionValue} 
         className="border rounded-lg bg-slate-800/90 border-slate-700"
       >
         {/* Sticky Header - Shows above content when scrolling */}
@@ -135,7 +137,11 @@ const AccordionCategory = memo(({
   );
 });
 
-export default function SpeciesList() {
+interface SpeciesListProps {
+  onBack?: () => void;
+}
+
+export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
   const [species, setSpecies] = useState<Species[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -317,6 +323,13 @@ export default function SpeciesList() {
       }
     });
     
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Discovered species IDs:', Object.keys(discoveredSpecies));
+      console.log('Known species:', known.map(s => ({ id: s.ogc_fid, name: s.comm_name })));
+      console.log('Unknown species:', unknown.map(s => ({ id: s.ogc_fid, name: s.comm_name })));
+    }
+    
     return { knownSpecies: known, unknownSpecies: unknown };
   }, [filteredSpecies, discoveredSpecies]);
 
@@ -361,7 +374,8 @@ export default function SpeciesList() {
   };
 
   const onJump = (target: JumpTarget) => {
-    if (target.type === 'ecoregion' || target.type === 'realm' || target.type === 'biome' || target.type === 'species') {
+    if (target.type === 'ecoregion' || target.type === 'realm' || target.type === 'biome' || 
+        target.type === 'species' || target.type === 'order' || target.type === 'class') {
       setSelectedFilter({ type: target.type, value: target.value });
       // Scroll to the grid top when filtering
       if (gridRef.current) {
@@ -375,11 +389,28 @@ export default function SpeciesList() {
     }
 
     // Handle category and genus navigation
+    if (target.type === 'genus' && typeof target.value === 'string') {
+      // Simple genus filter
+      setSelectedFilter({ type: 'genus', value: target.value });
+      // Scroll to the grid top when filtering
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+      }
+      return;
+    }
+    
     let elementId: string;
     if (target.type === 'category') {
       elementId = target.value;
-    } else {
+    } else if (target.type === 'genus' && typeof target.value === 'object') {
       elementId = `${target.value.category}-${target.value.genus}`;
+    } else {
+      // Default case - should not happen
+      elementId = '';
     }
 
     const element = refs.current[elementId];
@@ -403,14 +434,25 @@ export default function SpeciesList() {
   return (
     <div className="flex flex-col h-full bg-slate-900 w-full relative">
       <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-slate-900 relative z-50">
-        <h1 className="text-3xl sm:text-5xl font-bold text-center mb-4 text-foreground">
-          🐢 Species Database
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-semibold text-cyan-300 flex items-center gap-2">
+            <List className="h-6 w-6" />
+            Species List
+          </h1>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md flex items-center gap-2 transition-colors"
+            >
+              ← Back to Game
+            </button>
+          )}
+        </div>
         <div className="max-w-[600px] mx-auto">
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-gray-600 mb-2">
-              Categories: {Object.keys(grouped).length}, 
+              Categories: {getAllCategories().length}, 
               Ecoregions: {ecoregionList.length}, 
               Realms: {realmList.length}, 
               Biomes: {biomeList.length}
@@ -435,9 +477,7 @@ export default function SpeciesList() {
             <div className="flex items-center gap-1 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
               <span className="capitalize">{selectedFilter.type}:</span>
               <span className="font-medium">
-                {selectedFilter.type === 'order' && selectedFilter.value === 'Testudines' ? 'Turtle - Testudines' :
-                 selectedFilter.type === 'order' && selectedFilter.value === 'Anura' ? 'Frog - Anura' :
-                 selectedFilter.value}
+                {selectedFilter.value}
               </span>
               <button
                 onClick={onClearFilter}
@@ -527,25 +567,29 @@ export default function SpeciesList() {
                         value={openAccordions}
                         onValueChange={setOpenAccordions}
                       >
-                        {Object.entries(groupedKnown).map(([category, genera]) => (
-                          <AccordionCategory
-                            key={`known-${category}`}
-                            category={category}
-                            genera={genera}
-                            isOpen={openAccordions.includes(category)}
-                            showStickyHeaders={showStickyHeaders}
-                            discoveredSpecies={discoveredSpecies}
-                            onToggle={() => {
-                              setOpenAccordions(prev => 
-                                prev.includes(category) 
-                                  ? prev.filter(c => c !== category)
-                                  : [...prev, category]
-                              );
-                              setShowStickyHeaders(false);
-                            }}
-                            setRef={setRef}
-                          />
-                        ))}
+                        {Object.entries(groupedKnown).map(([category, genera]) => {
+                          const accordionId = `known-${category}`;
+                          return (
+                            <AccordionCategory
+                              key={accordionId}
+                              category={category}
+                              genera={genera}
+                              isOpen={openAccordions.includes(accordionId)}
+                              showStickyHeaders={showStickyHeaders}
+                              discoveredSpecies={discoveredSpecies}
+                              accordionValue={accordionId}
+                              onToggle={() => {
+                                setOpenAccordions(prev => 
+                                  prev.includes(accordionId) 
+                                    ? prev.filter(c => c !== accordionId)
+                                    : [...prev, accordionId]
+                                );
+                                setShowStickyHeaders(false);
+                              }}
+                              setRef={setRef}
+                            />
+                          );
+                        })}
                       </Accordion>
                     </div>
                   )}
@@ -562,25 +606,29 @@ export default function SpeciesList() {
                         value={openAccordions}
                         onValueChange={setOpenAccordions}
                       >
-                        {Object.entries(groupedUnknown).map(([category, genera]) => (
-                          <AccordionCategory
-                            key={`unknown-${category}`}
-                            category={category}
-                            genera={genera}
-                            isOpen={openAccordions.includes(category)}
-                            showStickyHeaders={showStickyHeaders}
-                            discoveredSpecies={discoveredSpecies}
-                            onToggle={() => {
-                              setOpenAccordions(prev => 
-                                prev.includes(category) 
-                                  ? prev.filter(c => c !== category)
-                                  : [...prev, category]
-                              );
-                              setShowStickyHeaders(false);
-                            }}
-                            setRef={setRef}
-                          />
-                        ))}
+                        {Object.entries(groupedUnknown).map(([category, genera]) => {
+                          const accordionId = `unknown-${category}`;
+                          return (
+                            <AccordionCategory
+                              key={accordionId}
+                              category={category}
+                              genera={genera}
+                              isOpen={openAccordions.includes(accordionId)}
+                              showStickyHeaders={showStickyHeaders}
+                              discoveredSpecies={discoveredSpecies}
+                              accordionValue={accordionId}
+                              onToggle={() => {
+                                setOpenAccordions(prev => 
+                                  prev.includes(accordionId) 
+                                    ? prev.filter(c => c !== accordionId)
+                                    : [...prev, accordionId]
+                                );
+                                setShowStickyHeaders(false);
+                              }}
+                              setRef={setRef}
+                            />
+                          );
+                        })}
                       </Accordion>
                     </div>
                   )}
