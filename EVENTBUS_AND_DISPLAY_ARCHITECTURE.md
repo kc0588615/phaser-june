@@ -162,6 +162,7 @@ export interface EventPayloads {
     speciesId: number;
     totalSpecies: number;
     currentIndex: number;
+    hiddenSpeciesName?: string;  // The real species name (hidden from player)
   };
   
   'game-reset': undefined;
@@ -173,6 +174,13 @@ export interface EventPayloads {
   
   'all-species-completed': {
     totalSpecies: number;
+  };
+  
+  'species-guess-submitted': {
+    guessedName: string;
+    speciesId: number;
+    isCorrect: boolean;
+    actualName: string;
   };
 }
 ```
@@ -221,11 +229,22 @@ useEffect(() => {
 // In Phaser scene (Game.ts)
 create() {
     EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
+    EventBus.on('species-guess-submitted', this.handleSpeciesGuess, this);
 }
 
 shutdown() {
     EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
+    EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
 }
+
+// Species guess flow example
+// From React (SpeciesGuessSelector.tsx)
+EventBus.emit('species-guess-submitted', {
+    guessedName: selectedSpecies,
+    speciesId: speciesId,
+    isCorrect: correct,
+    actualName: hiddenSpeciesName
+});
 ```
 
 ## Key Components

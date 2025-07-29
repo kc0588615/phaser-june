@@ -152,6 +152,7 @@ export class Game extends Phaser.Scene {
         this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.handlePointerUp, this);
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
+        EventBus.on('species-guess-submitted', this.handleSpeciesGuess, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -658,10 +659,17 @@ export class Game extends Phaser.Scene {
                 speciesId: this.selectedSpecies.ogc_fid
             });
             
-            // Advance to next species after a delay
-            this.time.delayedCall(2000, () => {
-                this.advanceToNextSpecies();
-            });
+            // Don't automatically advance - wait for player to guess the species
+            if (this.statusText && this.statusText.active) {
+                this.statusText.setText('All clues revealed! Can you guess the species?');
+                
+                // Clear the message after a few seconds
+                this.time.delayedCall(3000, () => {
+                    if (this.statusText && this.statusText.active) {
+                        this.statusText.setText('');
+                    }
+                });
+            }
         }
     }
 
@@ -687,12 +695,87 @@ export class Game extends Phaser.Scene {
                 hiddenSpeciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species'  // Store real name internally
             });
         } else {
-            // All species completed
-            console.log("Game Scene: All species completed!");
-            EventBus.emit('all-species-completed', {
-                totalSpecies: this.currentSpecies.length
-            });
+            // This shouldn't happen as handleSpeciesGuess already handles the last species
+            console.log("Game Scene: Attempted to advance beyond last species");
         }
+    }
+
+    private handleSpeciesGuess(data: { guessedName: string; speciesId: number; isCorrect: boolean; actualName: string }): void {
+        console.log("Game Scene: Species guess received:", data);
+        
+        // Check if this guess is for the current species
+        if (!this.selectedSpecies || data.speciesId !== this.selectedSpecies.ogc_fid) {
+            console.log("Game Scene: Guess is for a different species, ignoring");
+            return;
+        }
+        
+        if (data.isCorrect) {
+            console.log("Game Scene: Correct species identified!");
+            
+            // Check if there are more species at this location
+            if (this.currentSpeciesIndex + 1 < this.currentSpecies.length) {
+                // Show success message and advance to next species after a delay
+                if (this.statusText && this.statusText.active) {
+                    this.statusText.setText(`Correct! You discovered the ${data.actualName}!\n\nPreparing next species...`);
+                }
+                
+                // Advance to next species after a short delay
+                this.time.delayedCall(3000, () => {
+                    this.advanceToNextSpecies();
+                    
+                    if (this.statusText && this.statusText.active) {
+                        this.statusText.setText('');
+                    }
+                });
+            } else {
+                // All species at this location discovered
+                console.log("Game Scene: All species at this location discovered!");
+                
+                if (this.statusText && this.statusText.active) {
+                    this.statusText.setText(`Correct! You discovered the ${data.actualName}!\n\nAll species at this location have been discovered.\n\nClick on the globe to select a new location.`);
+                }
+                
+                // Emit event to signal completion
+                EventBus.emit('all-species-completed', {
+                    totalSpecies: this.currentSpecies.length
+                });
+                
+                // Reset game state for new location selection
+                this.time.delayedCall(5000, () => {
+                    this.resetForNewLocation();
+                });
+            }
+        }
+    }
+
+    private resetForNewLocation(): void {
+        console.log("Game Scene: Resetting for new location selection");
+        
+        // Clear current species data
+        this.currentSpecies = [];
+        this.selectedSpecies = null;
+        this.currentSpeciesIndex = 0;
+        this.revealedClues.clear();
+        this.allCluesRevealed = false;
+        this.rasterHabitats = [];
+        this.usedRasterHabitats.clear();
+        
+        // Clear the board
+        if (this.boardView) {
+            this.boardView.destroyBoard();
+        }
+        
+        // Reset game state
+        this.canMove = false;
+        this.isBoardInitialized = false;
+        
+        // Update status text
+        if (this.statusText && this.statusText.active) {
+            this.statusText.setText("Great job!\n\nClick on the globe to find a new habitat area\nfor another mystery species.");
+        }
+        
+        // Emit reset event for React components
+        EventBus.emit('game-reset', undefined);
     }
 
     private gemTypeToCategory(gemType: GemType): GemCategory | null {
@@ -845,6 +928,10 @@ export class Game extends Phaser.Scene {
         // Reset raster habitat data
         this.rasterHabitats = [];
         this.usedRasterHabitats.clear();
+        
+        // Remove EventBus listeners
+        EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
+        EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
         
         // Emit game reset event
         EventBus.emit('game-reset', undefined);

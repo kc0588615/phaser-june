@@ -1,13 +1,17 @@
 # Species Discovery Feature Implementation
 
 ## Overview
-This document details the implementation of a species discovery/guessing game feature where players must deduce the identity of a "Mystery Species" by matching gems to reveal clues. Once correctly guessed, species are tracked as "discovered" and displayed in a separate section of the Species List.
+This document details the implementation of a species discovery/guessing game feature where players must deduce the identity of a "Mystery Species" by matching gems to reveal clues. The game supports multiple species per location with automatic progression.
 
 ## Feature Description
 - Species names are hidden from players (displayed as "Mystery Species")
 - Players match gems to reveal clues about the species
 - A dropdown selector allows players to guess from 10 candidate species
 - Correct guesses are celebrated and tracked persistently
+- **Multi-species locations**: When multiple species exist at a location:
+  - Species are presented one at a time (sorted by ogc_fid)
+  - Correct guess advances to next mystery species
+  - Last species completion prompts for new location
 - Discovered species appear in a "Known" section in the Species List
 - Uses localStorage for persistence (ready for future user account migration)
 
@@ -36,12 +40,18 @@ A React component that provides the species guessing interface.
 ## Files Modified
 
 ### 1. `/src/game/scenes/Game.ts`
-Modified to hide species names from players.
+Modified to hide species names and implement multi-species progression.
 
 **Changes:**
 - Line 191-198: Modified `new-game-started` event to emit "Mystery Species" instead of actual name
 - Line 681-687: Same modification for when advancing to next species
 - Added `hiddenSpeciesName` property to event payload containing the real species name
+- **New Game Loop Features:**
+  - Added `handleSpeciesGuess()` method to process guess validation
+  - Modified `advanceToNextSpecies()` to progress through species queue
+  - Added `resetForNewLocation()` to clear state when all species discovered
+  - Removed auto-advance on all clues revealed (waits for player guess)
+  - Tracks species progression with `currentSpeciesIndex`
 
 ### 2. `/src/game/EventBus.ts`
 Updated type definitions for new events.
@@ -166,6 +176,21 @@ Individual species card component.
 3. **Persistent Progress**:
    - Discovered species remain marked across sessions
    - Species List shows discovery statistics
+
+## Recent Bug Fixes
+
+1. **Duplicate "all-species-completed" Event**:
+   - Removed duplicate event emission from `advanceToNextSpecies()`
+   - Event now only emitted once from `handleSpeciesGuess()`
+
+2. **Duplicate Congratulations Toast**:
+   - Added React ref (`completionToastShownRef`) to track toast display
+   - Toast only shows once per location completion
+   - Ref resets when starting new location
+
+3. **Premature "All Species Discovered" Display**:
+   - Fixed state management to properly track species progression
+   - Header now correctly shows "Mystery Species" for subsequent species
 
 ## Future Enhancements
 

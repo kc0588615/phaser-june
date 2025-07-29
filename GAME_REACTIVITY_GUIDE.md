@@ -29,9 +29,12 @@ EventBus.on('event-name', (data) => { ... });
 
 | Event Name | Emitted By | Listened By | Purpose |
 |------------|------------|-------------|---------|
-| `cesium-location-selected` | `CesiumMap.tsx` (React) | `Game.ts` (Phaser) | React→Phaser: Start new board based on map click |
-| `clue-revealed` | `Game.ts` (Phaser) | `ClueDisplay.tsx` (React) | Phaser→React: Display unlocked clue |
-| `new-game-started` | `Game.ts` (Phaser) | `ClueDisplay.tsx` (React) | Phaser→React: Update species display |
+| `cesium-location-selected` | `CesiumMap.tsx` (React) | `Game.ts` (Phaser) | React→Phaser: Start new board with species array from map click |
+| `clue-revealed` | `Game.ts` (Phaser) | `SpeciesPanel.tsx`, `ClueDisplay.tsx` (React) | Phaser→React: Display unlocked clue |
+| `new-game-started` | `Game.ts` (Phaser) | `SpeciesPanel.tsx`, `ClueSheetWrapper.tsx`, `SpeciesGuessSelector.tsx` (React) | Phaser→React: Update species display for new/next mystery |
+| `species-guess-submitted` | `SpeciesGuessSelector.tsx` (React) | `Game.ts` (Phaser), `SpeciesPanel.tsx` (React) | React→Phaser: Validate guess and progress game |
+| `all-species-completed` | `Game.ts` (Phaser) | `SpeciesPanel.tsx` (React) | Phaser→React: All species at location discovered |
+| `game-reset` | `Game.ts` (Phaser) | `SpeciesPanel.tsx` (React) | Phaser→React: Clear state for new location |
 | `current-scene-ready` | `Game.ts` (Phaser) | `PhaserGame.tsx` (React) | Phaser→React: Scene ready notification |
 
 ### Extension Pattern:
