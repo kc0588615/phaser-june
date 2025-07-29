@@ -167,7 +167,6 @@ export const speciesService = {
         console.error('Error fetching random species names:', error);
         // Return fallback species names
         return [
-          'Green Sea Turtle',
           'Loggerhead Sea Turtle',
           'Hawksbill Sea Turtle',
           'Leatherback Sea Turtle',
@@ -195,7 +194,6 @@ export const speciesService = {
       // If we don't have enough, add some fallback names
       if (speciesNames.length < count) {
         const fallbacks = [
-          'Green Sea Turtle',
           'Loggerhead Sea Turtle',
           'Hawksbill Sea Turtle',
           'Leatherback Sea Turtle',
@@ -214,7 +212,6 @@ export const speciesService = {
       console.error('Error in getRandomSpeciesNames:', error);
       // Return fallback species names
       return [
-        'Green Sea Turtle',
         'Loggerhead Sea Turtle',
         'Hawksbill Sea Turtle',
         'Leatherback Sea Turtle',

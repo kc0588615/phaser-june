@@ -70,15 +70,23 @@ EventBus.emit('layout-changed', {
 
 ### Critical Event Flows
 
-1. **Species Selection**
-   - User selects species in React UI
-   - `species-selected` event → Phaser
-   - Game scene updates gem colors
+1. **Species Selection & Game Loop**
+   - User clicks location on Cesium map
+   - `cesium-location-selected` event → Phaser with species array
+   - Game loads first mystery species (sorted by ogc_fid)
+   - Player matches gems to reveal clues
+   - `clue-revealed` event → React for each new clue
+   - Player guesses species via SpeciesGuessSelector
+   - `species-guess-submitted` event → Phaser for validation
+   - If correct and more species exist: advance to next
+   - If correct and last species: prompt for new location
+   - `all-species-completed` event → React when all discovered
 
 2. **Match Detection**
    - Player makes match in Phaser
-   - `match-made` event → React
-   - ClueSheet updates with new info
+   - `match-made` event → React (if implemented)
+   - `clue-revealed` event → React with clue data
+   - ClueSheet and SpeciesPanel update with new info
 
 3. **Layout Changes**
    - User toggles map/panels
@@ -142,6 +150,26 @@ npm run build
 npm run serve
 # Access at http://localhost:8080
 ```
+
+## 🎮 Game Loop & Species Progression
+
+### Species Discovery Flow
+1. **Location Selection**: Player clicks on Cesium map
+2. **Species Queue**: Multiple species loaded (sorted by ogc_fid)
+3. **Mystery Species**: Each species presented as "Mystery Species"
+4. **Clue Collection**: Match gems to reveal clues about current species
+5. **Species Guess**: Player can guess at any time via dropdown
+6. **Progression Logic**:
+   - Correct guess + more species → Advance to next mystery
+   - Correct guess + last species → Complete location, prompt for new
+   - All clues revealed → Encourage guessing (no auto-advance)
+
+### Key Implementation Details
+- `Game.ts::handleSpeciesGuess()` - Manages species progression
+- `Game.ts::advanceToNextSpecies()` - Moves to next in queue
+- `Game.ts::resetForNewLocation()` - Clears state for new location
+- Species state tracked via `currentSpeciesIndex` and `currentSpecies[]`
+- Duplicate notifications prevented via React ref in SpeciesPanel
 
 ## 🎯 Common Development Tasks
 

@@ -25,7 +25,10 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
   }>>([]);
   const [isSpeciesDiscovered, setIsSpeciesDiscovered] = useState<boolean>(false);
   const [discoveredSpeciesName, setDiscoveredSpeciesName] = useState<string>('');
-  const [hiddenSpeciesName, setHiddenSpeciesName] = useState<string>('');;
+  const [hiddenSpeciesName, setHiddenSpeciesName] = useState<string>('');
+  
+  // Use a ref to track if we've already shown the completion toast
+  const completionToastShownRef = React.useRef<boolean>(false);
 
   // Function to show clue toast and add to discovered row
   const showClueToast = (clue: CluePayload) => {
@@ -82,6 +85,11 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       setIsSpeciesDiscovered(false);
       setDiscoveredSpeciesName('');
       setHiddenSpeciesName(data.hiddenSpeciesName || '');
+      
+      // Reset completion toast flag when starting a new location (currentIndex = 1)
+      if (data.currentIndex === 1) {
+        completionToastShownRef.current = false;
+      }
     };
 
     // Listen for game reset
@@ -94,6 +102,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       setCurrentSpeciesIndex(0);
       setAllCluesRevealed(false);
       setAllSpeciesCompleted(false);
+      completionToastShownRef.current = false;
     };
 
     // Listen for no species found
@@ -113,12 +122,17 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     };
 
     // Listen for all species completed
-    const handleAllSpeciesCompleted = () => {
+    const handleAllSpeciesCompleted = (data: { totalSpecies: number }) => {
       setAllSpeciesCompleted(true);
-      toast.success('Congratulations!', {
-        description: `You have discovered all ${totalSpecies} species at this location.`,
-        duration: 5000,
-      });
+      
+      // Only show toast if we haven't already shown it
+      if (!completionToastShownRef.current) {
+        completionToastShownRef.current = true;
+        toast.success('Congratulations!', {
+          description: `You have discovered all ${data.totalSpecies} species at this location.`,
+          duration: 5000,
+        });
+      }
     };
 
     // Listen for species guess submission
@@ -177,7 +191,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       EventBus.off('all-clues-revealed', handleAllCluesRevealed);
       EventBus.off('all-species-completed', handleAllSpeciesCompleted);
     };
-  }, [totalSpecies, selectedSpeciesId]);
+  }, []);
 
   const containerStyle: React.CSSProperties = {
     ...style,

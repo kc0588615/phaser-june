@@ -103,7 +103,6 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
       console.error('Failed to load candidate species:', error);
       // Fallback to hardcoded list
       const fallback = [
-        'Green Sea Turtle',
         'Loggerhead Sea Turtle',
         'Hawksbill Sea Turtle',
         'Leatherback Sea Turtle',
@@ -113,6 +112,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
         'Eastern Box Turtle',
         'Painted Turtle',
         'Red-eared Slider',
+        'Snapping Turtle',
       ];
       // Make sure hidden species is in fallback list
       if (hiddenSpeciesName && !fallback.includes(hiddenSpeciesName)) {
