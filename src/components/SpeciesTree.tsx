@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useTree } from '@headless-tree/react';
 import { syncDataLoaderFeature, selectionFeature, hotkeysCoreFeature } from '@headless-tree/core';
-import { groupSpeciesByTaxonomy, getOrderDisplayName } from '@/utils/ecoregion';
+import { groupSpeciesByTaxonomy, getOrderDisplayName, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
 import { ChevronRight, ChevronDown, FileText, Folder, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ interface SpeciesTreeProps {
 interface TreeNode {
   id: string;
   name: string;
-  type: 'class' | 'order' | 'genus' | 'species';
+  type: 'class' | 'order' | 'family' | 'species';
   children?: string[];
   speciesData?: Species;
 }
@@ -55,17 +55,17 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
         };
         classChildren.push(orderId);
         
-        Object.entries(genera).forEach(([genusName, speciesList]) => {
-          const genusId = `genus-${genusName}`;
-          const genusChildren: string[] = [];
+        Object.entries(genera).forEach(([familyName, speciesList]) => {
+          const familyId = `family-${familyName}`;
+          const familyChildren: string[] = [];
           
-          data[genusId] = {
-            id: genusId,
-            name: `${genusName} (${speciesList.length} species)`,
-            type: 'genus',
-            children: genusChildren
+          data[familyId] = {
+            id: familyId,
+            name: `${getFamilyDisplayNameFromSpecies(familyName)} (${speciesList.length})`,
+            type: 'family',
+            children: familyChildren
           };
-          orderChildren.push(genusId);
+          orderChildren.push(familyId);
           
           speciesList.forEach((sp) => {
             const speciesId = `species-${sp.ogc_fid}`;
@@ -75,7 +75,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
               type: 'species',
               speciesData: sp
             };
-            genusChildren.push(speciesId);
+            familyChildren.push(speciesId);
           });
         });
       });
@@ -118,10 +118,10 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
         value: itemData.speciesData.ogc_fid.toString(),
         speciesData: itemData.speciesData
       });
-    } else if (itemData?.type === 'genus') {
-      // Filter by genus
-      const genusName = itemData.name.split(' (')[0]; // Extract genus name without count
-      onFilterSelect({ type: 'genus', value: genusName });
+    } else if (itemData?.type === 'family') {
+      // Filter by family
+      const familyName = itemData.name.split(' (')[0]; // Extract family name without count
+      onFilterSelect({ type: 'family', value: familyName });
     } else if (itemData?.type === 'order') {
       // Filter by order
       const orderName = itemData.id.replace('order-', '');
@@ -161,7 +161,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
           if (selectedFilter) {
             if (selectedFilter.type === 'species' && itemData?.type === 'species') {
               isFilterMatch = itemData.speciesData?.ogc_fid.toString() === selectedFilter.value;
-            } else if (selectedFilter.type === 'genus' && itemData?.type === 'genus') {
+            } else if (selectedFilter.type === 'family' && itemData?.type === 'family') {
               isFilterMatch = itemData.name.split(' (')[0] === selectedFilter.value;
             } else if (selectedFilter.type === 'order' && itemData?.type === 'order') {
               isFilterMatch = itemData.id.replace('order-', '') === selectedFilter.value;
@@ -203,7 +203,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
                 "text-sm",
                 itemData?.type === 'class' && "font-semibold text-slate-200",
                 itemData?.type === 'order' && "font-medium text-slate-300",
-                itemData?.type === 'genus' && "text-slate-400",
+                itemData?.type === 'family' && "text-slate-400",
                 itemData?.type === 'species' && "text-slate-300 hover:text-slate-100"
               )}>
                 {item.getItemName()}

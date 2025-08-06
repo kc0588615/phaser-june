@@ -238,3 +238,177 @@ const observer = new IntersectionObserver(
    - Completely removes sticky header from display when not needed
 
 This approach ensures the sticky header appears in the correct position (above species cards) while preventing any empty space issues when scrolling back to the top.
+
+---
+
+## Taxonomy System Overhaul (December 2024)
+
+### Major Changes: Order→Genus to Order→Family Grouping
+
+#### Overview
+The species list was restructured to group species by **Order→Family** instead of **Order→Genus** to make the application more educationally appropriate for high school students. This change provides more meaningful groupings while maintaining scientific accuracy.
+
+#### Files Modified
+
+##### Core Grouping Logic
+1. **`src/utils/ecoregion.ts`**
+   - Updated `groupSpeciesByCategory()` to group by `sp.family` instead of `sp.genus`
+   - Updated `groupSpeciesByTaxonomy()` to use class→order→family hierarchy
+   - Added `getUniqueFamilies()` function alongside existing `getUniqueGenera()`
+   - Added `getFamilyDisplayNameFromSpecies()` helper function
+
+##### UI Components
+2. **`src/components/SpeciesList.tsx`**
+   - Added family filter support in `filteredSpecies` switch statement
+   - Updated accordion headers to display family names with common names
+   - Modified section headers to show families instead of genera
+   - Updated navigation handling for family jumps
+
+3. **`src/components/SpeciesTree.tsx`**
+   - Changed tree node type from 'genus' to 'family'
+   - Updated tree building logic to use family names
+   - Modified click handling and filter matching for families
+   - Updated display names to show family common names
+
+4. **`src/components/SpeciesSearchInput.tsx`**
+   - Added family search options with both scientific and common names
+   - Enhanced search filtering to include family common name searches
+   - Updated placeholder text to include "family"
+   - Added family type label handling
+
+##### Type Definitions
+5. **`src/types/speciesBrowser.ts`**
+   - Extended `JumpTarget` type to include family filtering support
+
+### Family Common Names System
+
+#### New Configuration File
+**`src/config/familyCommonNames.ts`** - Single source of truth for family name mappings
+
+Key features:
+- **18 family mappings** with scientific→common name translations
+- **Extended descriptions** for educational context
+- **Utility functions** for display, search, and validation
+
+```typescript
+// Example mappings
+'Testudinidae': 'tortoises',
+'Dendrobatidae': 'poison-dart (poison-arrow) frogs',
+'Emydidae': 'pond, marsh & terrapin turtles'
+```
+
+#### Core Functions
+```typescript
+getFamilyCommonName('Testudinidae')        // → 'tortoises'
+getFamilyDisplayName('Testudinidae')       // → 'Testudinidae (tortoises)'
+searchFamiliesByCommonName('turtle')       // → ['Carettochelyidae', 'Emydidae', ...]
+getFamilyDetails('Testudinidae')           // → Full mapping with description
+```
+
+#### Display Format Changes
+- **Before**: `"Testudinidae (3 species)"`
+- **After**: `"Testudinidae (tortoises) (3)"`
+
+### Enhanced Search Functionality
+
+#### Dual Search System
+The search now supports both scientific and common family names:
+- Type `"turtle"` → Find all turtle families with common names
+- Type `"poison"` → Find `"Dendrobatidae (poison-dart frogs)"`
+- Type `"softshell"` → Find `"Trionychidae (softshell turtles)"`
+
+#### Search Options Building
+```typescript
+// Scientific name option
+options.push({
+  value: family,
+  label: getFamilyDisplayNameFromSpecies(family), // "Testudinidae (tortoises)"
+  type: 'family'
+});
+
+// Common name option (if available)
+const commonName = getFamilyCommonName(family);
+if (commonName) {
+  options.push({
+    value: family,
+    label: commonName, // "tortoises"
+    type: 'family'
+  });
+}
+```
+
+#### Dynamic Family Search
+```typescript
+// Enhanced filtering with common name search
+const familyMatches = searchFamiliesByCommonName(searchQuery);
+familyMatches.forEach(scientificFamily => {
+  const commonName = getFamilyCommonName(scientificFamily);
+  if (commonName) {
+    filteredResults.push({
+      value: scientificFamily,
+      label: `${commonName} (${scientificFamily})`,
+      type: 'family'
+    });
+  }
+});
+```
+
+### Educational Impact
+
+#### High School Friendly Features
+- **Family groupings** are more meaningful than genus groupings for learning
+- **Common names** provide immediate recognition (`"tortoises"` vs `"Testudinidae"`)
+- **Progressive learning** from familiar terms to scientific names
+- **Contextual descriptions** available for deeper understanding
+
+#### Example User Experience
+- **Search "turtle"** → See multiple turtle families with common names
+- **Browse tree** → `"Testudinidae (tortoises) (3)"` instead of multiple genus entries
+- **Navigate easily** → Larger, more comprehensible groupings
+- **Learn progressively** → Scientific accuracy maintained with approachable presentation
+
+### Database Schema Support
+The existing `Species` interface already included the `family` field:
+```typescript
+interface Species {
+  // ... other fields
+  family?: string;  // Already existed - no schema changes needed
+  genus?: string;   // Preserved for compatibility
+  // ... other fields
+}
+```
+
+### Future Maintenance
+
+#### Adding New Families
+To add new family common names, update `src/config/familyCommonNames.ts`:
+
+```typescript
+export const FAMILY_COMMON_NAMES: Record<string, string> = {
+  // ... existing mappings
+  'NewFamilyName': 'common name description',
+};
+
+export const FAMILY_DETAILS: Record<string, FamilyMapping> = {
+  // ... existing details
+  'NewFamilyName': {
+    scientificName: 'NewFamilyName',
+    commonName: 'common name description',
+    description: 'Educational description for students'
+  },
+};
+```
+
+#### Compatibility Notes
+- **Genus filtering still works** - both family and genus filters are supported
+- **Existing data structure preserved** - no migration required
+- **Search backwards compatible** - old search patterns still function
+- **Tree navigation enhanced** - cleaner hierarchy for students
+
+### Performance Considerations
+- **Efficient lookups** - O(1) hash map access for family names
+- **Smart search** - Only triggers family search when initial results are limited
+- **Memoized components** - Accordion categories use React.memo for performance
+- **Clean build** - No TypeScript errors, successful production build
+
+This overhaul makes the species classification system significantly more approachable for the target high school audience while maintaining full scientific accuracy and expanding educational value.

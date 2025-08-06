@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import type { GroupedSpecies, JumpTarget } from "@/types/speciesBrowser";
 import type { Species } from "@/types/database";
-import { getOrderFromCategory, getCategoryOrderMapping, getCategoryFromOrder, getUniqueGenera, getUniqueOrders } from "@/utils/ecoregion";
+import { getOrderFromCategory, getCategoryOrderMapping, getCategoryFromOrder, getUniqueGenera, getUniqueFamilies, getUniqueOrders, getFamilyDisplayNameFromSpecies } from "@/utils/ecoregion";
+import { searchFamiliesByCommonName, getFamilyCommonName } from "@/config/familyCommonNames";
 
 interface SpeciesSearchInputProps {
   grouped: GroupedSpecies;
@@ -21,7 +22,7 @@ interface SpeciesSearchInputProps {
 interface SearchOption {
   value: string;
   label: string;
-  type: 'category' | 'genus' | 'order' | 'ecoregion' | 'realm' | 'biome' | 'species';
+  type: 'category' | 'genus' | 'family' | 'order' | 'ecoregion' | 'realm' | 'biome' | 'species';
   category?: string;
   speciesData?: Species;
 }
@@ -64,6 +65,27 @@ export function SpeciesSearchInput({
         label: genus,
         type: 'genus'
       });
+    });
+
+    // Add all unique family values with common names
+    const allFamilies = getUniqueFamilies(species);
+    allFamilies.forEach(family => {
+      // Add scientific name option
+      options.push({
+        value: family,
+        label: getFamilyDisplayNameFromSpecies(family),
+        type: 'family'
+      });
+      
+      // Add common name option if available
+      const commonName = getFamilyCommonName(family);
+      if (commonName) {
+        options.push({
+          value: family,
+          label: commonName,
+          type: 'family'
+        });
+      }
     });
 
     // Add all unique order values
@@ -119,9 +141,25 @@ export function SpeciesSearchInput({
     if (!searchQuery.trim()) return [];
     
     const query = searchQuery.toLowerCase();
-    return searchOptions
-      .filter(option => option.label.toLowerCase().includes(query))
-      .slice(0, 10); // Limit to 10 results
+    let filteredResults = searchOptions
+      .filter(option => option.label.toLowerCase().includes(query));
+    
+    // Also search for families by common name if query doesn't match existing options
+    if (filteredResults.length < 5) {
+      const familyMatches = searchFamiliesByCommonName(searchQuery);
+      familyMatches.forEach(scientificFamily => {
+        const commonName = getFamilyCommonName(scientificFamily);
+        if (commonName && !filteredResults.some(option => option.value === scientificFamily && option.type === 'family')) {
+          filteredResults.push({
+            value: scientificFamily,
+            label: `${commonName} (${scientificFamily})`,
+            type: 'family'
+          });
+        }
+      });
+    }
+    
+    return filteredResults.slice(0, 10); // Limit to 10 results
   }, [searchQuery, searchOptions]);
 
   // Handle click outside
@@ -154,6 +192,8 @@ export function SpeciesSearchInput({
       onJump({ type: 'biome', value: option.label });
     } else if (option.type === 'genus') {
       onJump({ type: 'genus', value: option.value });
+    } else if (option.type === 'family') {
+      onJump({ type: 'family', value: option.value });
     } else if (option.type === 'order') {
       onJump({ type: 'order', value: option.value });
     } else if (option.type === 'species' && option.speciesData) {
@@ -201,6 +241,7 @@ export function SpeciesSearchInput({
     switch (type) {
       case 'category': return 'Category';
       case 'genus': return 'Genus';
+      case 'family': return 'Family';
       case 'order': return 'Order';
       case 'species': return 'Species';
       case 'ecoregion': return 'Ecoregion';
@@ -218,7 +259,7 @@ export function SpeciesSearchInput({
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search species, genus, order, category or location"
+            placeholder="Search species, family, genus, order, category or location"
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setSearchQuery(e.target.value);

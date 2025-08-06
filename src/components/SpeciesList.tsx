@@ -8,7 +8,7 @@ import { Loader2, ChevronDown, List } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
-import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder } from '@/utils/ecoregion';
+import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 
@@ -78,7 +78,7 @@ const AccordionCategory = memo(({
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-muted-foreground">
-                    {Object.values(genera).flat().length} species
+                    ({Object.values(genera).flat().length})
                   </span>
                   <span className="text-xs text-blue-400 hover:text-blue-300">Click to collapse</span>
                 </div>
@@ -91,18 +91,18 @@ const AccordionCategory = memo(({
             <div className="flex items-center justify-between w-full">
               <h2 className="text-xl font-semibold text-foreground">{category}</h2>
               <span className="text-sm text-muted-foreground mr-4">
-                {Object.values(genera).flat().length} species
+                ({Object.values(genera).flat().length})
               </span>
             </div>
           </AccordionTrigger>
         </div>
         <AccordionContent className="px-4 pb-4">
           <div className="space-y-6">
-            {Object.entries(genera).map(([genus, speciesList]) => (
-              <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
+            {Object.entries(genera).map(([family, speciesList]) => (
+              <section key={family} ref={setRef(`${category}-${family}`)} className="space-y-4">
                 <div className="sticky top-12 py-2 border-b bg-slate-900 backdrop-blur-[10px] border-slate-700 z-30">
                   <h3 className="text-lg font-medium text-muted-foreground">
-                    {genus} ({speciesList.length} species)
+                    {getFamilyDisplayNameFromSpecies(family)} ({speciesList.length})
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-4 sm:gap-6 w-full">
@@ -341,6 +341,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
         return species.filter(s => s.order_ === selectedFilter.value);
       case 'genus':
         return species.filter(s => s.genus === selectedFilter.value);
+      case 'family':
+        return species.filter(s => s.family === selectedFilter.value);
       case 'species':
         return species.filter(s => s.ogc_fid.toString() === selectedFilter.value);
       default:
@@ -444,10 +446,24 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       return;
     }
 
-    // Handle category and genus navigation
+    // Handle category, genus, and family navigation
     if (target.type === 'genus' && typeof target.value === 'string') {
       // Simple genus filter
       setSelectedFilter({ type: 'genus', value: target.value });
+      // Scroll to the grid top when filtering
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+      }
+      return;
+    }
+    
+    if (target.type === 'family' && typeof target.value === 'string') {
+      // Simple family filter
+      setSelectedFilter({ type: 'family', value: target.value });
       // Scroll to the grid top when filtering
       if (gridRef.current) {
         gridRef.current.scrollIntoView({
@@ -464,6 +480,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       elementId = target.value;
     } else if (target.type === 'genus' && typeof target.value === 'object') {
       elementId = `${target.value.category}-${target.value.genus}`;
+    } else if (target.type === 'family' && typeof target.value === 'object') {
+      elementId = `${target.value.category}-${target.value.family}`;
     } else {
       // Default case - should not happen
       elementId = '';
