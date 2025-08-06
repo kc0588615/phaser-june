@@ -50,7 +50,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg transition-all duration-200 w-full box-border">
+    <div 
+      className="bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg transition-all duration-200 w-full box-border"
+      data-species-id={species.ogc_fid}
+    >
       {/* Breadcrumb Navigation */}
       <div className="mb-4">
         <Breadcrumb>

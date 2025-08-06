@@ -735,9 +735,11 @@ export class Game extends Phaser.Scene {
                     this.statusText.setText(`Correct! You discovered the ${data.actualName}!\n\nAll species at this location have been discovered.\n\nClick on the globe to select a new location.`);
                 }
                 
-                // Emit event to signal completion
-                EventBus.emit('all-species-completed', {
-                    totalSpecies: this.currentSpecies.length
+                // Emit event to signal completion after a delay to allow individual species toast to show first
+                this.time.delayedCall(1000, () => {
+                    EventBus.emit('all-species-completed', {
+                        totalSpecies: this.currentSpecies.length
+                    });
                 });
                 
                 // Reset game state for new location selection

@@ -46,6 +46,9 @@ export interface EventPayloads {
     isCorrect: boolean;
     actualName: string;
   };
+  'show-species-list': {
+    speciesId: number;
+  };
 }
 
 // Type-safe EventBus class

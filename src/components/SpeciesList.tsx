@@ -139,9 +139,10 @@ const AccordionCategory = memo(({
 
 interface SpeciesListProps {
   onBack?: () => void;
+  scrollToSpeciesId?: number | null;
 }
 
-export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
+export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListProps = {}) {
   const [species, setSpecies] = useState<Species[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -246,6 +247,43 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
       }
     };
   }, [isLoading]); // Re-attach when loading completes
+
+  // Effect to scroll to a specific species when scrollToSpeciesId is provided
+  useEffect(() => {
+    if (!scrollToSpeciesId || isLoading) return;
+
+    // Find the species in the data
+    const targetSpecies = species.find(s => s.ogc_fid === scrollToSpeciesId);
+    if (!targetSpecies) return;
+
+    // Determine which category the species belongs to
+    const categories = groupSpeciesByCategory([targetSpecies]);
+    const targetCategory = Object.keys(categories)[0];
+    
+    if (!targetCategory) return;
+
+    // Open the accordion for this category
+    setOpenAccordions(prev => {
+      if (!prev.includes(targetCategory)) {
+        return [...prev, targetCategory];
+      }
+      return prev;
+    });
+
+    // Scroll to the species after a short delay to allow accordion to open
+    setTimeout(() => {
+      const speciesElement = document.querySelector(`[data-species-id="${scrollToSpeciesId}"]`);
+      if (speciesElement) {
+        speciesElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add a highlight effect
+        speciesElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-900');
+        setTimeout(() => {
+          speciesElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-900');
+        }, 3000);
+      }
+    }, 300);
+  }, [scrollToSpeciesId, species, isLoading]);
 
   const fetchSpecies = async () => {
     try {
