@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef, memo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
+import FamilyCardStack from '@/components/FamilyCardStack';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
 import { Loader2, ChevronDown, List } from 'lucide-react';
@@ -97,80 +98,42 @@ const AccordionCategory = memo(({
           </AccordionTrigger>
         </div>
         <AccordionContent className="px-4 pb-4">
-          <div className="space-y-6">
+          <div className="space-y-4">
             {Object.entries(genera).map(([family, speciesList]) => (
-              <section key={family} ref={setRef(`${category}-${family}`)} className="space-y-4">
-                <Accordion type="single" collapsible>
-                  <AccordionItem 
-                    value={`family-${family}`} 
-                    className="border rounded-lg bg-slate-700/50 border-slate-600"
-                  >
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div key={family} ref={setRef(`${category}-${family}`)} className="border border-slate-600 rounded-lg bg-slate-800/30">
+                <Accordion type="multiple" className="w-full">
+                  <AccordionItem value={`${category}-${family}`} className="border-none">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-700/30">
                       <div className="flex items-center justify-between w-full">
-                        <h3 className="text-lg font-medium text-foreground">
-                          {getFamilyDisplayNameFromSpecies(family)}
-                        </h3>
+                        <h4 className="text-base font-medium text-foreground">{family}</h4>
                         <span className="text-sm text-muted-foreground mr-4">
-                          ({speciesList.length})
+                          ({speciesList.length} species)
                         </span>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                        {speciesList.map((sp, index) => {
-                          const isDiscovered = !!discoveredSpecies[sp.ogc_fid];
-                          return (
-                            <Accordion key={sp.ogc_fid} type="single" collapsible>
-                              <AccordionItem 
-                                value={sp.ogc_fid.toString()} 
-                                className="border-l-2 border-slate-600 pl-4 border-0 border-l-2"
-                              >
-                                <AccordionTrigger className="py-2 hover:no-underline text-left">
-                                  <div className="flex items-center justify-between w-full">
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-base text-foreground">
-                                        {sp.comm_name || sp.sci_name}
-                                      </span>
-                                      {isDiscovered && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-600 text-white">
-                                          ✅
-                                        </span>
-                                      )}
-                                    </div>
-                                    <span className="text-xs text-slate-400 mr-4">
-                                      {index + 1} of {speciesList.length}
-                                    </span>
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent className="pt-2 pb-4">
-                                  <SpeciesCard 
-                                    species={sp} 
-                                    category={category}
-                                    isDiscovered={isDiscovered}
-                                    discoveredAt={discoveredSpecies[sp.ogc_fid]?.discoveredAt}
-                                    onNavigateToTop={() => {
-                                      // Scroll ScrollArea to top
-                                      const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
-                                      if (gridRef) {
-                                        gridRef.scrollTo({ top: 0, behavior: 'smooth' });
-                                      }
-                                      // Open dropdown after a small delay to ensure scroll completes
-                                      setTimeout(() => {
-                                        const picker = document.querySelector('[role="combobox"]') as HTMLElement;
-                                        if (picker) picker.click();
-                                      }, 300);
-                                    }}
-                                  />
-                                </AccordionContent>
-                              </AccordionItem>
-                            </Accordion>
-                          );
-                        })}
-                      </div>
+                      <FamilyCardStack
+                        family={family}
+                        speciesList={speciesList}
+                        discoveredSpecies={discoveredSpecies}
+                        category={category}
+                        onNavigateToTop={() => {
+                          // Scroll ScrollArea to top
+                          const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
+                          if (gridRef) {
+                            gridRef.scrollTo({ top: 0, behavior: 'smooth' });
+                          }
+                          // Open dropdown after a small delay to ensure scroll completes
+                          setTimeout(() => {
+                            const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                            if (picker) picker.click();
+                          }, 300);
+                        }}
+                      />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-              </section>
+              </div>
             ))}
           </div>
         </AccordionContent>
