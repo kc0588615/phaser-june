@@ -412,3 +412,147 @@ export const FAMILY_DETAILS: Record<string, FamilyMapping> = {
 - **Clean build** - No TypeScript errors, successful production build
 
 This overhaul makes the species classification system significantly more approachable for the target high school audience while maintaining full scientific accuracy and expanding educational value.
+
+---
+
+## Expandable Family Structure Implementation (January 2025)
+
+### Overview
+The species list interface was further enhanced to provide a more intuitive browsing experience by making family names themselves expandable, creating a clean 3-level accordion hierarchy.
+
+### Changes Made
+
+#### **3-Level Accordion Hierarchy**
+**File**: `src/components/SpeciesList.tsx` (Lines 103-172)
+
+The species display was restructured to provide three levels of navigation:
+1. **Order Level**: `"Testudines: 5"` (previously existing)
+2. **Family Level**: `"Testudinidae (tortoises) (3)"` ← **Now expandable**
+3. **Species Level**: `"Desert Tortoise"` ← **Remains expandable**
+
+#### **Family Accordion Implementation**
+```typescript
+<Accordion type="single" collapsible>
+  <AccordionItem 
+    value={`family-${family}`} 
+    className="border rounded-lg bg-slate-700/50 border-slate-600"
+  >
+    <AccordionTrigger className="px-4 py-3 hover:no-underline">
+      <div className="flex items-center justify-between w-full">
+        <h3 className="text-lg font-medium text-foreground">
+          {getFamilyDisplayNameFromSpecies(family)}
+        </h3>
+        <span className="text-sm text-muted-foreground mr-4">
+          ({speciesList.length})
+        </span>
+      </div>
+    </AccordionTrigger>
+    <AccordionContent className="px-4 pb-4">
+      {/* Species accordion items */}
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
+```
+
+#### **Simplified Scroll Behavior**
+**Removed**: Complex progressive disclosure/infinite scroll system
+- Eliminated sentinel-based scroll detection
+- Removed complex intersection observers
+- Removed automatic species transitions
+- Simplified to standard accordion behavior
+
+**Rationale**: The previous scroll-activated progressive disclosure was causing reliability issues and user confusion. Standard accordion interactions provide a more predictable user experience.
+
+### User Experience Improvements
+
+#### **Before: Complex Auto-Scroll**
+- Species cards would auto-expand when scrolled past
+- Complex timing and intersection detection
+- Unpredictable behavior reported by users
+- Required extensive debugging infrastructure
+
+#### **After: Simple Click Navigation**
+- Family names show collapsed by default
+- Click family name to reveal species list
+- Click species name to view full details
+- Predictable, standard accordion behavior
+
+#### **Visual Hierarchy**
+```
+🏆 Discovered Species (5)
+├─ Testudines: 5 ▼                    ← Order (expandable)
+│  └─ Testudinidae (tortoises) (3) ▼  ← Family (expandable) - NEW
+│     ├─ Desert Tortoise ✅ ▶         ← Species (expandable)
+│     ├─ Galápagos Tortoise ▶  
+│     └─ Hermann's Tortoise ✅ ▶
+│  └─ Emydidae (pond turtles) (2) ▶   ← Family (collapsed)
+└─ Anura: 2 ▼
+   └─ Dendrobatidae (poison-dart frogs) (2) ▶
+```
+
+### Implementation Benefits
+
+#### **Improved Browsability**
+- **Family-level scanning**: Users can quickly scan family names without being overwhelmed by species lists
+- **Progressive disclosure**: Information revealed at appropriate granularity
+- **Educational flow**: Order → Family → Species follows taxonomic learning progression
+
+#### **Reduced Cognitive Load**
+- **Collapsed by default**: Clean initial view showing only family names and counts
+- **On-demand detail**: Species lists only appear when family is expanded
+- **Familiar interaction**: Standard accordion behavior matches user expectations
+
+#### **Performance Optimization**
+- **Reduced DOM complexity**: Species cards only rendered when family is expanded
+- **Eliminated scroll listeners**: No performance overhead from intersection observers
+- **Simplified state management**: Standard accordion state handling
+
+### Code Structure Changes
+
+#### **Component Hierarchy**
+```typescript
+AccordionCategory (Order Level)
+└─ AccordionContent
+   └─ section (Family Container)
+      └─ Accordion (Family Level) ← NEW
+         └─ AccordionItem
+            ├─ AccordionTrigger (Family Name)
+            └─ AccordionContent
+               └─ Accordion (Species Level)
+                  └─ AccordionItem
+                     ├─ AccordionTrigger (Species Name)
+                     └─ AccordionContent (SpeciesCard)
+```
+
+#### **Styling Updates**
+- **Family background**: `bg-slate-700/50` to distinguish from species items
+- **Proper nesting**: Visual indentation maintained through structure
+- **Consistent spacing**: `space-y-3` and `space-y-6` for hierarchy levels
+
+### Technical Details
+
+#### **Removed Components**
+- Progressive disclosure scroll detection (Lines ~35-163 previously)
+- Sentinel element creation and management
+- Complex intersection observer setup
+- Scroll transition state management
+- Debug logging infrastructure
+
+#### **Enhanced Components**
+- Family-level accordion with proper styling
+- Maintained species-level accordion functionality  
+- Preserved discovered species indicators
+- Kept species count displays and indexing
+
+### Future Maintenance Notes
+
+#### **Adding New Families**
+The expandable structure automatically handles new families through the existing `groupSpeciesByCategory` function - no additional configuration needed.
+
+#### **Customizing Family Display**
+Family names use `getFamilyDisplayNameFromSpecies()` from `src/utils/ecoregion.ts`, making it easy to update display formatting centrally.
+
+#### **Performance Monitoring**
+With the simplified structure, performance should be consistently good. The accordion pattern naturally handles large species lists by only rendering visible content.
+
+This implementation provides a more intuitive, reliable, and educationally appropriate browsing experience while maintaining all the taxonomic accuracy and family grouping benefits of the previous system.
