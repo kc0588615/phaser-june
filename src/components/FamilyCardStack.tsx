@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Keyboard, A11y } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
@@ -28,96 +28,169 @@ export default function FamilyCardStack({
   onNavigateToTop
 }: FamilyCardStackProps) {
   const swiperRef = useRef<SwiperType>();
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
 
-  // Generate unique IDs for navigation buttons
-  const prevButtonId = `swiper-prev-${family}`;
-  const nextButtonId = `swiper-next-${family}`;
-  const paginationId = `swiper-pagination-${family}`;
+  // Generate unique IDs for navigation buttons (slug-safe)
+  const slug = family.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+  const prevButtonId = `swiper-prev-${slug}`;
+  const nextButtonId = `swiper-next-${slug}`;
+  const paginationId = `swiper-pagination-${slug}`;
 
   const handleSlideChange = (swiper: SwiperType) => {
     setCurrentSlide(swiper.realIndex);
-    setIsBeginning(swiper.isBeginning);
-    setIsEnd(swiper.isEnd);
-  };
-
-  const goToSlide = (index: number) => {
-    if (swiperRef.current) {
-      swiperRef.current.slideTo(index);
+    // With loop enabled, beginning/end states are handled differently
+    if (speciesList.length > 1) {
+      setIsBeginning(false);
+      setIsEnd(false);
+    } else {
+      setIsBeginning(swiper.isBeginning);
+      setIsEnd(swiper.isEnd);
     }
   };
 
+  // Force Swiper to recalculate on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (swiperRef.current) {
+        setTimeout(() => {
+          swiperRef.current?.update();
+          swiperRef.current?.updateAutoHeight?.(0);
+        }, 100);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Also recalc on container size changes (accordion open/close, padding changes, etc.)
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      if (swiperRef.current) {
+        swiperRef.current.update();
+        swiperRef.current.updateAutoHeight?.(0);
+      }
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="relative bg-slate-700/50 border border-slate-600 rounded-lg overflow-hidden">
+    <div 
+      ref={containerRef}
+      className="relative bg-slate-700/50 border border-slate-600 rounded-lg overflow-visible w-full max-w-full"
+    >
       {/* Family Header */}
-      <div className="px-3 sm:px-4 py-3 bg-slate-800/70 border-b border-slate-600">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base sm:text-lg font-medium text-foreground truncate">
+      <div className="px-2 sm:px-3 md:px-4 py-3 bg-slate-800/70 border-b border-slate-600">
+        <div className="w-full">
+          {/* Family name - FORCED to wrap */}
+          <div className="w-full mb-2">
+            <h3 
+              className="leading-tight font-medium text-foreground"
+              style={{ 
+                fontSize: 'clamp(11px, 2.5vw, 16px)',
+                lineHeight: '1.2',
+                wordBreak: 'break-all',
+                overflowWrap: 'break-word',
+                hyphens: 'auto',
+                whiteSpace: 'normal',
+                width: '100%',
+                maxWidth: '100%'
+              }}
+            >
               {getFamilyDisplayNameFromSpecies(family)}
             </h3>
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {speciesList.length} species {speciesList.length > 1 ? '• Swipe to browse →' : ''}
-            </span>
           </div>
-          {speciesList.length > 1 && (
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              <button
-                id={prevButtonId}
-                className={`p-2 rounded-full transition-all touch-manipulation ${
-                  isBeginning 
-                    ? 'text-slate-500 cursor-not-allowed bg-slate-800/30' 
-                    : 'text-white bg-blue-600 hover:bg-blue-500 shadow-md hover:shadow-lg'
-                }`}
-                disabled={isBeginning}
-                aria-label="Previous species"
+          
+          {/* Counters - FORCED to wrap at narrow width */}
+          <div className="flex flex-wrap items-center justify-between gap-1" style={{ width: '100%' }}>
+            <span 
+              className="text-muted-foreground"
+              style={{ 
+                fontSize: 'clamp(9px, 2vw, 12px)',
+                whiteSpace: 'nowrap',
+                minWidth: 'max-content'
+              }}
+            >
+              {speciesList.length} species
+            </span>
+            {speciesList.length > 1 && (
+              <span 
+                className="text-slate-300 font-mono"
+                style={{ 
+                  fontSize: 'clamp(10px, 2vw, 12px)',
+                  whiteSpace: 'nowrap',
+                  minWidth: 'max-content'
+                }}
               >
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              <span className="text-xs text-slate-300 font-mono min-w-[2.5rem] text-center px-2">
                 {currentSlide + 1}/{speciesList.length}
               </span>
-              <button
-                id={nextButtonId}
-                className={`p-2 rounded-full transition-all touch-manipulation ${
-                  isEnd 
-                    ? 'text-slate-500 cursor-not-allowed bg-slate-800/30' 
-                    : 'text-white bg-blue-600 hover:bg-blue-500 shadow-md hover:shadow-lg'
-                }`}
-                disabled={isEnd}
-                aria-label="Next species"
-              >
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Swiper Container */}
-      <div className="relative">
+      <div
+        className="relative w-full overflow-visible px-2 sm:px-3"
+        style={{
+          paddingLeft: 'max(env(safe-area-inset-left, 0px), 8px)',
+          paddingRight: 'max(env(safe-area-inset-right, 0px), 8px)',
+        }}
+      >
         <Swiper
           modules={[Navigation, Pagination, Keyboard, A11y]}
+          onBeforeInit={(swiper) => {
+            // Bind external navigation reliably
+            if (swiper.params.navigation && typeof swiper.params.navigation === 'object') {
+              swiper.params.navigation.prevEl = `#${prevButtonId}`;
+              swiper.params.navigation.nextEl = `#${nextButtonId}`;
+            }
+          }}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
             // Ensure we start at slide 0 and update React state
             setTimeout(() => {
               if (swiper.activeIndex !== 0) {
-                swiper.slideTo(0, 0); // Go to slide 0 with no transition
+                swiper.slideTo(0, 0);
               }
               handleSlideChange(swiper);
-            }, 0);
+              // Force recalculate after layout settles
+              swiper.update();
+              swiper.updateAutoHeight?.(0);
+            }, 100);
           }}
-          onSlideChange={handleSlideChange}
+          onSlideChange={(swiper) => {
+            handleSlideChange(swiper);
+            // Force height recalculation on each slide change
+            setTimeout(() => {
+              swiper.update();
+              swiper.updateAutoHeight?.(0);
+            }, 50);
+          }}
+          onSlideChangeTransitionEnd={(swiper) => {
+            // Ensure proper height after transition completes
+            swiper.updateAutoHeight?.(0);
+          }}
           spaceBetween={0}
           slidesPerView={1}
           initialSlide={0}
+          loop={speciesList.length > 1}
           navigation={{
             prevEl: `#${prevButtonId}`,
             nextEl: `#${nextButtonId}`,
           }}
+          autoHeight
+          watchOverflow
+          observer
+          observeParents
+          observeSlideChildren
+          updateOnWindowResize
+          roundLengths
           pagination={speciesList.length > 1 ? {
             el: `#${paginationId}`,
             clickable: true,
@@ -130,22 +203,23 @@ export default function FamilyCardStack({
           }}
           touchRatio={1}
           threshold={5}
-          shortSwipes={true}
-          longSwipes={true}
-          allowTouchMove={true}
-          simulateTouch={true}
+          shortSwipes
+          longSwipes
+          allowTouchMove
+          simulateTouch
           touchStartPreventDefault={false}
           a11y={{
             prevSlideMessage: 'Previous species',
             nextSlideMessage: 'Next species',
           }}
-          className="family-card-swiper"
+          className="family-card-swiper !overflow-visible w-full mx-auto"
         >
-          {speciesList.map((species, index) => {
+          {speciesList.map((species) => {
             const isDiscovered = !!discoveredSpecies[species.ogc_fid];
             return (
-              <SwiperSlide key={species.ogc_fid}>
-                <div className="p-4">
+              <SwiperSlide key={species.ogc_fid} className="!h-auto w-full flex-shrink-0">
+                {/* Responsive card wrapper - fluid width with minimal padding */}
+                <div className="p-1 sm:p-2 w-full" style={{ maxWidth: '100%' }}>
                   <SpeciesCard
                     species={species}
                     category={category}
@@ -158,6 +232,71 @@ export default function FamilyCardStack({
             );
           })}
         </Swiper>
+
+        {/* Bottom control bar for mobile/tablet (always visible, no clipping) */}
+        {speciesList.length > 1 && (
+          <div
+            className="lg:hidden flex justify-center pt-2 pb-3 px-2"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}
+          >
+            <div className="bg-slate-900/85 border border-slate-700 rounded-full shadow-md backdrop-blur px-2 py-1.5 flex items-center gap-2 w-full">
+              <button
+                className={`px-2.5 py-1.5 rounded-full min-w-[56px] ${
+                  isBeginning ? 'bg-slate-800/60 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'
+                }`}
+                style={{ fontSize: 'clamp(9px, 2vw, 14px)' }}
+                disabled={isBeginning}
+                aria-label="Previous species"
+                onClick={() => swiperRef.current?.slidePrev()}
+              >
+                Prev
+              </button>
+              <span 
+                className="text-slate-300 font-mono px-2"
+                style={{ fontSize: 'clamp(9px, 2vw, 12px)' }}
+              >
+                {currentSlide + 1}/{speciesList.length}
+              </span>
+              <button
+                className={`px-2.5 py-1.5 rounded-full min-w-[56px] ${
+                  isEnd ? 'bg-slate-800/60 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'
+                }`}
+                style={{ fontSize: 'clamp(9px, 2vw, 14px)' }}
+                disabled={isEnd}
+                aria-label="Next species"
+                onClick={() => swiperRef.current?.slideNext()}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Side overlay arrows (desktop only) */}
+        {speciesList.length > 1 && (
+          <>
+            <button
+              id={prevButtonId}
+              className={`hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-[80] p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
+                isBeginning ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/90'
+              }`}
+              disabled={isBeginning}
+              aria-label="Previous species"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              id={nextButtonId}
+              className={`hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-[80] p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
+                isEnd ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/90'
+              }`}
+              disabled={isEnd}
+              aria-label="Next species"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
 
         {/* Pagination dots */}
         {speciesList.length > 1 && (

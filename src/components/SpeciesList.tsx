@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
 import FamilyCardStack from '@/components/FamilyCardStack';
+import SpeciesCarousel from '@/components/SpeciesCarousel';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
 import { Loader2, ChevronDown, List } from 'lucide-react';
@@ -69,31 +70,63 @@ const AccordionCategory = memo(({
             )}
           >
             <div 
-              className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-t-lg px-4 py-3 shadow-lg cursor-pointer hover:bg-slate-700/95 transition-colors"
+              className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-t-lg px-2 sm:px-4 py-3 shadow-lg cursor-pointer hover:bg-slate-700/95 transition-colors"
               onClick={onToggle}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ChevronDown className="w-5 h-5 text-blue-400 rotate-180" />
-                  <h2 className="text-lg font-semibold text-foreground">{category}</h2>
+              <div className="w-full">
+                {/* Category name - FORCED to wrap */}
+                <div className="flex items-start gap-2 mb-1 w-full">
+                  <ChevronDown className="w-3 h-3 mt-0.5 text-blue-400 rotate-180 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h2 
+                      className="leading-tight font-semibold text-foreground"
+                      style={{ 
+                        fontSize: 'clamp(11px, 2.5vw, 18px)',
+                        lineHeight: '1.2',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'break-word',
+                        hyphens: 'auto',
+                        whiteSpace: 'normal',
+                        width: '100%',
+                        maxWidth: '100%'
+                      }}
+                    >{category}</h2>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    ({Object.values(genera).flat().length})
-                  </span>
-                  <span className="text-xs text-blue-400 hover:text-blue-300">Click to collapse</span>
+                
+                {/* Counters - separate line on narrow screens */}
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted-foreground">
+                  <span>({Object.values(genera).flat().length})</span>
+                  <span className="hidden sm:inline text-blue-400 hover:text-blue-300">Click to collapse</span>
                 </div>
               </div>
             </div>
           </div>
         )}
         <div ref={accordionRef}>
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex items-center justify-between w-full">
-              <h2 className="text-xl font-semibold text-foreground">{category}</h2>
-              <span className="text-sm text-muted-foreground mr-4">
+          <AccordionTrigger className="px-2 sm:px-4 py-3 hover:no-underline">
+            <div className="w-full">
+              {/* Category name - FORCED to wrap */}
+              <div className="w-full mb-1">
+                <h2 
+                  className="leading-tight font-semibold text-foreground"
+                  style={{ 
+                    fontSize: 'clamp(12px, 3vw, 20px)',
+                    lineHeight: '1.2',
+                    wordBreak: 'break-all',
+                    overflowWrap: 'break-word',
+                    hyphens: 'auto',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%'
+                  }}
+                >{category}</h2>
+              </div>
+              
+              {/* Counter - separate line */}
+              <div className="text-xs text-muted-foreground">
                 ({Object.values(genera).flat().length})
-              </span>
+              </div>
             </div>
           </AccordionTrigger>
         </div>
@@ -103,33 +136,75 @@ const AccordionCategory = memo(({
               <div key={family} ref={setRef(`${category}-${family}`)} className="border border-slate-600 rounded-lg bg-slate-800/30">
                 <Accordion type="multiple" className="w-full">
                   <AccordionItem value={`${category}-${family}`} className="border-none">
-                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-700/30">
-                      <div className="flex items-center justify-between w-full">
-                        <h4 className="text-base font-medium text-foreground">{family}</h4>
-                        <span className="text-sm text-muted-foreground mr-4">
+                    <AccordionTrigger className="px-2 sm:px-4 py-3 hover:no-underline hover:bg-slate-700/30">
+                      <div className="w-full">
+                        {/* Family name - FORCED to wrap */}
+                        <div className="w-full mb-1">
+                          <h4 
+                            className="leading-tight font-medium text-foreground"
+                            style={{ 
+                              fontSize: 'clamp(10px, 2.5vw, 16px)',
+                              lineHeight: '1.2',
+                              wordBreak: 'break-all',
+                              overflowWrap: 'break-word',
+                              hyphens: 'auto',
+                              whiteSpace: 'normal',
+                              width: '100%',
+                              maxWidth: '100%'
+                            }}
+                          >{family}</h4>
+                        </div>
+                        
+                        {/* Species count - separate line */}
+                        <div className="text-xs text-muted-foreground">
                           ({speciesList.length} species)
-                        </span>
+                        </div>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
-                      <FamilyCardStack
-                        family={family}
-                        speciesList={speciesList}
-                        discoveredSpecies={discoveredSpecies}
-                        category={category}
-                        onNavigateToTop={() => {
-                          // Scroll ScrollArea to top
-                          const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
-                          if (gridRef) {
-                            gridRef.scrollTo({ top: 0, behavior: 'smooth' });
-                          }
-                          // Open dropdown after a small delay to ensure scroll completes
-                          setTimeout(() => {
-                            const picker = document.querySelector('[role="combobox"]') as HTMLElement;
-                            if (picker) picker.click();
-                          }, 300);
-                        }}
-                      />
+                      {/* Mobile/Tablet: Use carousel below lg breakpoint (1024px) */}
+                      <div className="lg:hidden">
+                        <SpeciesCarousel
+                          family={family}
+                          speciesList={speciesList}
+                          discoveredSpecies={discoveredSpecies}
+                          category={category}
+                          onNavigateToTop={() => {
+                            // Scroll ScrollArea to top
+                            const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
+                            if (gridRef) {
+                              gridRef.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                            // Open dropdown after a small delay to ensure scroll completes
+                            setTimeout(() => {
+                              const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                              if (picker) picker.click();
+                            }, 300);
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Desktop: Use original stack at lg breakpoint (1024px) and above */}
+                      <div className="hidden lg:block">
+                        <FamilyCardStack
+                          family={family}
+                          speciesList={speciesList}
+                          discoveredSpecies={discoveredSpecies}
+                          category={category}
+                          onNavigateToTop={() => {
+                            // Scroll ScrollArea to top
+                            const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
+                            if (gridRef) {
+                              gridRef.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                            // Open dropdown after a small delay to ensure scroll completes
+                            setTimeout(() => {
+                              const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                              if (picker) picker.click();
+                            }, 300);
+                          }}
+                        />
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -527,7 +602,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
             </button>
           )}
         </div>
-        <div className="max-w-[600px] mx-auto">
+        <div className="w-full">
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-gray-600 mb-2">
