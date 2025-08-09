@@ -52,7 +52,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
 
   return (
     <div 
-      className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border min-w-0 break-words"
+      className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border break-words"
       data-species-id={species.ogc_fid}
       style={{ 
         wordBreak: 'break-all', 

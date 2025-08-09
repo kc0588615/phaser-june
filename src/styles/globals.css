@@ -93,6 +93,18 @@
   }
 }
 
+/* Ensure Swiper slides maintain proper width and don't collapse */
+.family-card-swiper .swiper-wrapper {
+  display: flex !important;
+  align-items: stretch;
+}
+
+.family-card-swiper .swiper-slide {
+  flex: 0 0 100% !important; /* prevents shrinking to 0 */
+  width: 100% !important;    /* slide occupies full viewport width */
+  height: auto !important;
+}
+
 /* Global reset */
 * {
   margin: 0;

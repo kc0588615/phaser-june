@@ -56,8 +56,12 @@ export default function FamilyCardStack({
     const handleResize = () => {
       if (swiperRef.current) {
         setTimeout(() => {
-          swiperRef.current?.update();
-          swiperRef.current?.updateAutoHeight?.(0);
+          const s = swiperRef.current;
+          if (!s || s.destroyed) return;
+          s.update();
+          if (typeof s.updateAutoHeight === 'function') {
+            s.updateAutoHeight.call(s, 0);
+          }
         }, 100);
       }
     };
@@ -70,9 +74,11 @@ export default function FamilyCardStack({
   useEffect(() => {
     if (!containerRef.current) return;
     const ro = new ResizeObserver(() => {
-      if (swiperRef.current) {
-        swiperRef.current.update();
-        swiperRef.current.updateAutoHeight?.(0);
+      const s = swiperRef.current;
+      if (!s || s.destroyed) return;
+      s.update();
+      if (typeof s.updateAutoHeight === 'function') {
+        s.updateAutoHeight.call(s, 0);
       }
     });
     ro.observe(containerRef.current);
@@ -161,20 +167,26 @@ export default function FamilyCardStack({
               handleSlideChange(swiper);
               // Force recalculate after layout settles
               swiper.update();
-              swiper.updateAutoHeight?.(0);
+              if (typeof swiper.updateAutoHeight === 'function') {
+                swiper.updateAutoHeight.call(swiper, 0);
+              }
             }, 100);
           }}
           onSlideChange={(swiper) => {
             handleSlideChange(swiper);
             // Force height recalculation on each slide change
             setTimeout(() => {
-              swiper.update();
-              swiper.updateAutoHeight?.(0);
+              // Avoid re-entrant slideChange loops; only adjust height
+              if (typeof swiper.updateAutoHeight === 'function') {
+                swiper.updateAutoHeight.call(swiper, 0);
+              }
             }, 50);
           }}
           onSlideChangeTransitionEnd={(swiper) => {
             // Ensure proper height after transition completes
-            swiper.updateAutoHeight?.(0);
+            if (typeof swiper.updateAutoHeight === 'function') {
+              swiper.updateAutoHeight.call(swiper, 0);
+            }
           }}
           spaceBetween={0}
           slidesPerView={1}

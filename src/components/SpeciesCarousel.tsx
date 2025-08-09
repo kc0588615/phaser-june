@@ -109,20 +109,26 @@ export default function SpeciesCarousel({
               handleSlideChange(swiper);
               // Force recalculate after layout settles
               swiper.update();
-              swiper.updateAutoHeight?.(0);
+              if (typeof swiper.updateAutoHeight === 'function') {
+                swiper.updateAutoHeight.call(swiper, 0);
+              }
             }, 100);
           }}
           onSlideChange={(swiper) => {
             handleSlideChange(swiper);
             // Force height recalculation on each slide change
             setTimeout(() => {
-              swiper.update();
-              swiper.updateAutoHeight?.(0);
+              // Avoid re-entrant slideChange loops; only adjust height
+              if (typeof swiper.updateAutoHeight === 'function') {
+                swiper.updateAutoHeight.call(swiper, 0);
+              }
             }, 50);
           }}
           onSlideChangeTransitionEnd={(swiper) => {
             // Ensure proper height after transition completes
-            swiper.updateAutoHeight?.(0);
+            if (typeof swiper.updateAutoHeight === 'function') {
+              swiper.updateAutoHeight.call(swiper, 0);
+            }
           }}
           spaceBetween={8}
           slidesPerView={1}
