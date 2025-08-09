@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import type { Species } from '@/types/database';
-import '@/styles/species-card-mobile.css';
 
 interface SpeciesCardProps {
   species: Species;
