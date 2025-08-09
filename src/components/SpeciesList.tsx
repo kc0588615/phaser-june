@@ -133,7 +133,7 @@ const AccordionCategory = memo(({
         <AccordionContent className="px-4 pb-4">
           <div className="space-y-4">
             {Object.entries(genera).map(([family, speciesList]) => (
-              <div key={family} ref={setRef(`${category}-${family}`)} className="border border-slate-600 rounded-lg bg-slate-800/30">
+              <div key={`${category}-${family}`} ref={setRef(`${category}-${family}`)} className="border border-slate-600 rounded-lg bg-slate-800/30">
                 <Accordion type="multiple" className="w-full">
                   <AccordionItem value={`${category}-${family}`} className="border-none">
                     <AccordionTrigger className="px-2 sm:px-4 py-3 hover:no-underline hover:bg-slate-700/30">

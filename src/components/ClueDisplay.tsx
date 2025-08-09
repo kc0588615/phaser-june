@@ -191,7 +191,7 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
           ) : (
             <div>
               {clues.map((clue, index) => (
-                <div key={index} style={{
+                <div key={`clue-display-${clue.name}-${clue.clue.slice(0, 20)}`} style={{
                   ...clueItemStyle,
                   borderLeft: `3px solid ${clue.color}`
                 }}>

@@ -173,7 +173,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
           return (
             <div
               {...item.getProps()}
-              key={item.getId()}
+              key={`tree-item-${item.getId()}-${itemData?.type || 'unknown'}`}
               onClick={() => handleItemClick(item)}
               className={cn(
                 "flex items-center py-1 px-2 rounded cursor-pointer transition-colors",

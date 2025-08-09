@@ -59,7 +59,7 @@ export const SpeciesHeaderCard: React.FC<SpeciesHeaderCardProps> = ({
             
             return (
               <span
-                key={index}
+                key={`discovered-clue-${clue.name}-${clue.color}`}
                 className="text-base"
                 title={`${clue.name} (${clue.icon})`}
               >

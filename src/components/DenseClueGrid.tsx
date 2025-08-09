@@ -36,7 +36,7 @@ export const DenseClueGrid: React.FC<DenseClueGridProps> = ({ clues, hasSelected
       <div className="grid gap-2">
         {clues.map((clue, index) => (
           <div
-            key={index}
+            key={`clue-${clue.name}-${clue.clue.slice(0, 20)}-${index}`}
             className="bg-slate-700 rounded-md p-2 transition-all hover:bg-slate-600"
             style={{ borderLeft: `3px solid ${clue.color}` }}
           >

@@ -32,6 +32,7 @@ export default function FamilyCardStack({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
+  const [containerReady, setContainerReady] = useState(false);
 
   // Generate unique IDs for navigation buttons (slug-safe)
   const slug = family.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
@@ -51,6 +52,28 @@ export default function FamilyCardStack({
         swiperRef.current.destroy(true, true);
       }
     };
+  }, []);
+
+  // Container readiness detection with ResizeObserver
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const checkReady = () => {
+      // Mark ready only when element has layout
+      setContainerReady(el.clientWidth > 0);
+    };
+    const ro = new ResizeObserver(() => {
+      checkReady();
+      const s = swiperRef.current;
+      if (!s || s.destroyed) return;
+      s.update();
+      if (typeof s.updateAutoHeight === 'function') {
+        s.updateAutoHeight.call(s, 0);
+      }
+    });
+    checkReady();
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   const handleSlideChange = (swiper: SwiperType) => {
@@ -156,6 +179,7 @@ export default function FamilyCardStack({
 
       {/* Swiper Container */}
       <div
+        ref={containerRef}
         className="relative w-full overflow-visible px-2 sm:px-3"
         style={{
           paddingLeft: 'max(env(safe-area-inset-left, 0px), 8px)',
@@ -214,7 +238,8 @@ export default function FamilyCardStack({
             nextEl: `#${nextButtonId}`,
           }}
           autoHeight
-          watchOverflow
+          // Only watchOverflow when loop is disabled to avoid loop warnings
+          watchOverflow={!enableLoop}
           observer
           observeParents
           observeSlideChildren

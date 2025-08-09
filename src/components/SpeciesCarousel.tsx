@@ -152,7 +152,8 @@ export default function SpeciesCarousel({
           initialSlide={0}
           loop={enableLoop}
           autoHeight
-          watchOverflow
+          // Only watchOverflow when loop is disabled
+          watchOverflow={!enableLoop}
           observer
           observeParents
           observeSlideChildren

@@ -214,7 +214,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               {hasValue(species.hab_tags) && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {species.hab_tags!.split(',').map((tag, index) => (
-                    <span key={index} className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
+                    <span key={`habitat-${species.ogc_fid}-${tag.trim()}`} className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
                       {tag.trim()}
                     </span>
                   ))}
@@ -397,7 +397,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Prey:</span>
                   <div className="flex flex-wrap gap-1">
                     {species.diet_prey!.split(/[,;]/).map((item, index) => (
-                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
+                      <span key={`prey-${species.ogc_fid}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
                         {item.trim()}
                       </span>
                     ))}
@@ -409,7 +409,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Plant Food:</span>
                   <div className="flex flex-wrap gap-1">
                     {species.diet_flora!.split(/[,;]/).map((item, index) => (
-                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
+                      <span key={`flora-${species.ogc_fid}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
                         {item.trim()}
                       </span>
                     ))}
