@@ -32,10 +32,24 @@ export default function SpeciesCarousel({
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
 
+  // Enable loop only when there are enough slides to support it reliably.
+  // Using >= 3 avoids Swiper's "not enough for loop" warning across edge cases.
+  const enableLoop = speciesList.length >= 3;
+
+  // Cleanup effect to prevent crashes on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up any pending operations
+      if (swiperRef.current && !swiperRef.current.destroyed) {
+        swiperRef.current.destroy(true, true);
+      }
+    };
+  }, []);
+
   const handleSlideChange = (swiper: SwiperType) => {
     setCurrentSlide(swiper.realIndex);
     // With loop enabled, beginning/end states are handled differently
-    if (speciesList.length > 1) {
+    if (enableLoop) {
       setIsBeginning(false);
       setIsEnd(false);
     } else {
@@ -99,41 +113,44 @@ export default function SpeciesCarousel({
       {/* Swiper Container - Mobile-first with proper padding to prevent clipping */}
       <div className="relative w-full overflow-visible px-4 sm:px-6">
         <Swiper
+          key={`species-carousel-${enableLoop ? 'loop' : 'no-loop'}`} // force re-init if loop setting changes
           modules={[Navigation, A11y, Keyboard]}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
-            setTimeout(() => {
+            const timer = setTimeout(() => {
               if (swiper.activeIndex !== 0) {
                 swiper.slideTo(0, 0);
               }
               handleSlideChange(swiper);
               // Force recalculate after layout settles
-              swiper.update();
-              if (typeof swiper.updateAutoHeight === 'function') {
-                swiper.updateAutoHeight.call(swiper, 0);
+              if (!swiper.destroyed) {
+                swiper.update();
+                if (typeof swiper.updateAutoHeight === 'function') {
+                  swiper.updateAutoHeight.call(swiper, 0);
+                }
               }
             }, 100);
           }}
           onSlideChange={(swiper) => {
             handleSlideChange(swiper);
             // Force height recalculation on each slide change
-            setTimeout(() => {
+            const timer = setTimeout(() => {
               // Avoid re-entrant slideChange loops; only adjust height
-              if (typeof swiper.updateAutoHeight === 'function') {
+              if (!swiper.destroyed && typeof swiper.updateAutoHeight === 'function') {
                 swiper.updateAutoHeight.call(swiper, 0);
               }
             }, 50);
           }}
           onSlideChangeTransitionEnd={(swiper) => {
             // Ensure proper height after transition completes
-            if (typeof swiper.updateAutoHeight === 'function') {
+            if (!swiper.destroyed && typeof swiper.updateAutoHeight === 'function') {
               swiper.updateAutoHeight.call(swiper, 0);
             }
           }}
           spaceBetween={8}
           slidesPerView={1}
           initialSlide={0}
-          loop={speciesList.length > 1}
+          loop={enableLoop}
           autoHeight
           watchOverflow
           observer

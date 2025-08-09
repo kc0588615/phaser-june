@@ -39,10 +39,24 @@ export default function FamilyCardStack({
   const nextButtonId = `swiper-next-${slug}`;
   const paginationId = `swiper-pagination-${slug}`;
 
+  // Enable loop only when there are enough slides to support it reliably.
+  // Using >= 3 avoids Swiper's "not enough for loop" warning across edge cases.
+  const enableLoop = speciesList.length >= 3;
+
+  // Cleanup effect to prevent crashes on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up any pending operations
+      if (swiperRef.current && !swiperRef.current.destroyed) {
+        swiperRef.current.destroy(true, true);
+      }
+    };
+  }, []);
+
   const handleSlideChange = (swiper: SwiperType) => {
     setCurrentSlide(swiper.realIndex);
     // With loop enabled, beginning/end states are handled differently
-    if (speciesList.length > 1) {
+    if (enableLoop) {
       setIsBeginning(false);
       setIsEnd(false);
     } else {
@@ -149,6 +163,7 @@ export default function FamilyCardStack({
         }}
       >
         <Swiper
+          key={`${slug}-${enableLoop ? 'loop' : 'no-loop'}`} // force re-init if loop setting changes
           modules={[Navigation, Pagination, Keyboard, A11y]}
           onBeforeInit={(swiper) => {
             // Bind external navigation reliably
@@ -166,9 +181,11 @@ export default function FamilyCardStack({
               }
               handleSlideChange(swiper);
               // Force recalculate after layout settles
-              swiper.update();
-              if (typeof swiper.updateAutoHeight === 'function') {
-                swiper.updateAutoHeight.call(swiper, 0);
+              if (!swiper.destroyed) {
+                swiper.update();
+                if (typeof swiper.updateAutoHeight === 'function') {
+                  swiper.updateAutoHeight.call(swiper, 0);
+                }
               }
             }, 100);
           }}
@@ -177,21 +194,21 @@ export default function FamilyCardStack({
             // Force height recalculation on each slide change
             setTimeout(() => {
               // Avoid re-entrant slideChange loops; only adjust height
-              if (typeof swiper.updateAutoHeight === 'function') {
+              if (!swiper.destroyed && typeof swiper.updateAutoHeight === 'function') {
                 swiper.updateAutoHeight.call(swiper, 0);
               }
             }, 50);
           }}
           onSlideChangeTransitionEnd={(swiper) => {
             // Ensure proper height after transition completes
-            if (typeof swiper.updateAutoHeight === 'function') {
+            if (!swiper.destroyed && typeof swiper.updateAutoHeight === 'function') {
               swiper.updateAutoHeight.call(swiper, 0);
             }
           }}
           spaceBetween={0}
           slidesPerView={1}
           initialSlide={0}
-          loop={speciesList.length > 1}
+          loop={enableLoop}
           navigation={{
             prevEl: `#${prevButtonId}`,
             nextEl: `#${nextButtonId}`,
