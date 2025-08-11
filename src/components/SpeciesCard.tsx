@@ -54,7 +54,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border break-words"
       data-species-id={species.ogc_fid}
       style={{ 
-        wordBreak: 'break-all', 
+        wordBreak: 'break-word', 
         overflowWrap: 'anywhere',
         whiteSpace: 'normal',
         minWidth: '0',
@@ -181,11 +181,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             </h3>
             <div className="bg-orange-400/10 border border-orange-400/30 rounded-lg p-3 sm:p-4">
               <p 
-                className="text-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                className="text-foreground"
                 style={{ 
-                  fontSize: 'clamp(7px, 2.5vw, 14px)',
-                  lineHeight: '1.3',
-                  wordBreak: 'break-all',
+                  fontSize: 'clamp(12px, 3.5vw, 16px)',
+                  lineHeight: '1.4',
+                  wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
                   whiteSpace: 'normal',
                   width: '100%',
@@ -221,11 +221,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
               {hasValue(species.hab_desc) && (
                 <p 
-                  className="text-muted-foreground mb-3 max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                  className="text-muted-foreground mb-3"
                   style={{ 
-                    fontSize: 'clamp(7px, 2.5vw, 14px)',
-                    lineHeight: '1.3',
-                    wordBreak: 'break-all',
+                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
                     whiteSpace: 'normal',
                     width: '100%',
@@ -256,11 +256,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               Geographic Distribution
             </h3>
             <p 
-              className="text-muted-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+              className="text-muted-foreground"
               style={{ 
-                fontSize: 'clamp(7px, 2.5vw, 14px)',
-                lineHeight: '1.3',
-                wordBreak: 'break-all',
+                fontSize: 'clamp(12px, 3.5vw, 16px)',
+                lineHeight: '1.4',
+                wordBreak: 'break-word',
                 overflowWrap: 'anywhere',
                 whiteSpace: 'normal',
                 width: '100%',
@@ -424,11 +424,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     Behavior:
                   </span>
                   <p 
-                    className="text-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                    className="text-foreground"
                     style={{ 
-                      fontSize: 'clamp(7px, 2.5vw, 14px)',
-                      lineHeight: '1.3',
-                      wordBreak: 'break-all',
+                      fontSize: 'clamp(12px, 3.5vw, 16px)',
+                      lineHeight: '1.4',
+                      wordBreak: 'break-word',
                       overflowWrap: 'anywhere',
                       whiteSpace: 'normal',
                       width: '100%',
@@ -449,11 +449,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     Additional Behavior:
                   </span>
                   <p 
-                    className="text-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                    className="text-foreground"
                     style={{ 
-                      fontSize: 'clamp(7px, 2.5vw, 14px)',
-                      lineHeight: '1.3',
-                      wordBreak: 'break-all',
+                      fontSize: 'clamp(12px, 3.5vw, 16px)',
+                      lineHeight: '1.4',
+                      wordBreak: 'break-word',
                       overflowWrap: 'anywhere',
                       whiteSpace: 'normal',
                       width: '100%',
@@ -507,11 +507,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             </div>
             {hasValue(species.life_desc1) && (
               <p 
-                className="text-muted-foreground mb-2 max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                className="text-muted-foreground mb-2"
                 style={{ 
-                  fontSize: 'clamp(7px, 2.5vw, 14px)',
-                  lineHeight: '1.3',
-                  wordBreak: 'break-all',
+                  fontSize: 'clamp(12px, 3.5vw, 16px)',
+                  lineHeight: '1.4',
+                  wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
                   whiteSpace: 'normal',
                   width: '100%',
@@ -524,11 +524,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             )}
             {hasValue(species.life_desc2) && (
               <p 
-                className="text-muted-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                className="text-muted-foreground"
                 style={{ 
-                  fontSize: 'clamp(7px, 2.5vw, 14px)',
-                  lineHeight: '1.3',
-                  wordBreak: 'break-all',
+                  fontSize: 'clamp(12px, 3.5vw, 16px)',
+                  lineHeight: '1.4',
+                  wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
                   whiteSpace: 'normal',
                   width: '100%',
@@ -553,11 +553,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               Threats
             </h3>
             <p 
-              className="text-muted-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+              className="text-muted-foreground"
               style={{ 
-                fontSize: 'clamp(7px, 2.5vw, 14px)',
-                lineHeight: '1.3',
-                wordBreak: 'break-all',
+                fontSize: 'clamp(12px, 3.5vw, 16px)',
+                lineHeight: '1.4',
+                wordBreak: 'break-word',
                 overflowWrap: 'anywhere',
                 whiteSpace: 'normal',
                 width: '100%',
@@ -583,11 +583,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             <div>
               {hasValue(species.key_fact1) && (
                 <p 
-                  className="text-muted-foreground mb-2 max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                  className="text-muted-foreground mb-2"
                   style={{ 
-                    fontSize: 'clamp(7px, 2.5vw, 14px)',
-                    lineHeight: '1.3',
-                    wordBreak: 'break-all',
+                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
                     whiteSpace: 'normal',
                     width: '100%',
@@ -600,11 +600,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
               {hasValue(species.key_fact2) && (
                 <p 
-                  className="text-muted-foreground mb-2 max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                  className="text-muted-foreground mb-2"
                   style={{ 
-                    fontSize: 'clamp(7px, 2.5vw, 14px)',
-                    lineHeight: '1.3',
-                    wordBreak: 'break-all',
+                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
                     whiteSpace: 'normal',
                     width: '100%',
@@ -617,11 +617,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
               {hasValue(species.key_fact3) && (
                 <p 
-                  className="text-muted-foreground max-[500px]:text-[9px] max-[400px]:text-[8px] max-[360px]:text-[7px]"
+                  className="text-muted-foreground"
                   style={{ 
-                    fontSize: 'clamp(7px, 2.5vw, 14px)',
-                    lineHeight: '1.3',
-                    wordBreak: 'break-all',
+                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
                     whiteSpace: 'normal',
                     width: '100%',
