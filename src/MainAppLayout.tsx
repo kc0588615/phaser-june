@@ -9,6 +9,7 @@ import { Toaster } from 'sonner';
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
     const [viewMode, setViewMode] = useState<'map' | 'clues' | 'species'>('map'); // View mode state
+    const [scrollToSpeciesId, setScrollToSpeciesId] = useState<number | null>(null); // Track species to scroll to
 
     // This callback is for when PhaserGame signals that a scene is ready
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
@@ -18,6 +19,20 @@ function MainAppLayout() {
             phaserRef.current.scene = scene;
         }
     };
+
+    // Handle show-species-list event
+    useEffect(() => {
+        const handleShowSpeciesList = (data: { speciesId: number }) => {
+            setScrollToSpeciesId(data.speciesId);
+            setViewMode('species');
+        };
+
+        EventBus.on('show-species-list', handleShowSpeciesList);
+
+        return () => {
+            EventBus.off('show-species-list', handleShowSpeciesList);
+        };
+    }, []);
 
     // --- Layout Styling --- (Updated for game-first design)
     const appStyle: React.CSSProperties = {
@@ -152,7 +167,13 @@ function MainAppLayout() {
                 backgroundColor: '#0f172a',
                 zIndex: 2000
             }}>
-                <SpeciesList onBack={() => setViewMode('map')} />
+                <SpeciesList 
+                    onBack={() => {
+                        setViewMode('map');
+                        setScrollToSpeciesId(null);
+                    }} 
+                    scrollToSpeciesId={scrollToSpeciesId}
+                />
             </div>
             
             <Toaster

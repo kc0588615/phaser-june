@@ -141,7 +141,7 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {clues.map((clue, index) => (
                     <div
-                      key={index}
+                      key={`clue-${clue.name}-${clue.clue.slice(0, 20)}`}
                       style={{
                         backgroundColor: '#1e293b',
                         borderRadius: '8px',

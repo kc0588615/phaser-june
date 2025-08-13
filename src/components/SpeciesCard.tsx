@@ -50,7 +50,17 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-lg transition-all duration-200 w-full box-border">
+    <div 
+      className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border break-words"
+      data-species-id={species.ogc_fid}
+      style={{ 
+        wordBreak: 'break-word', 
+        overflowWrap: 'anywhere',
+        whiteSpace: 'normal',
+        minWidth: '0',
+        maxWidth: '100%'
+      }}
+    >
       {/* Breadcrumb Navigation */}
       <div className="mb-4">
         <Breadcrumb>
@@ -86,13 +96,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             </span>
           )}
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
+        <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground mb-1 break-words whitespace-normal leading-tight">
           {species.comm_name || species.sci_name}
         </h2>
-        <p className="text-base sm:text-lg italic text-muted-foreground mb-2">
+        <p className="text-xs sm:text-sm md:text-base lg:text-lg italic text-muted-foreground mb-2 break-words whitespace-normal leading-tight">
           {species.sci_name}
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {hasValue(species.cons_code) && (
             <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold text-white ${getConservationColor(species.cons_code!)}`}>
               {getConservationLabel(species.cons_code!)}
@@ -112,15 +122,15 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         </div>
       </div>
 
-      <div className="h-px bg-border my-6" />
+      <div className="h-px bg-border my-4 sm:my-6" />
 
       {/* Taxonomy Section */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-violet-400">
-          <Shield size={20} />
+      <div className="mb-4 sm:mb-6">
+        <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-violet-400">
+          <Shield className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           Taxonomy
         </h3>
-        <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm items-start break-words">
           {hasValue(species.kingdom) && (
             <>
               <span className="text-muted-foreground">Kingdom:</span>
@@ -163,14 +173,26 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Conservation Status */}
       {hasValue(species.cons_text) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-orange-400">
-              <AlertTriangle size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-orange-400">
+              <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Conservation Status
             </h3>
-            <div className="bg-orange-400/10 border border-orange-400/30 rounded-lg p-4">
-              <p className="text-sm text-foreground">
+            <div className="bg-orange-400/10 border border-orange-400/30 rounded-lg p-3 sm:p-4">
+              <p 
+                className="text-foreground"
+                style={{ 
+                  fontSize: 'clamp(12px, 3.5vw, 14px)',
+                  lineHeight: '1.4',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
+                  whiteSpace: 'normal',
+                  width: '100%',
+                  maxWidth: '100%',
+                  hyphens: 'auto'
+                }}
+              >
                 <strong>Conservation Notes:</strong> {species.cons_text}
               </p>
             </div>
@@ -181,26 +203,40 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Habitat Section */}
       {(hasValue(species.hab_tags) || hasValue(species.hab_desc) || hasValue(species.marine) || hasValue(species.terrestria) || hasValue(species.freshwater)) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-green-400">
-              <MapPin size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-green-400">
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Habitat
             </h3>
             <div>
               {hasValue(species.hab_tags) && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {species.hab_tags!.split(',').map((tag, index) => (
-                    <span key={index} className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
+                    <span key={`habitat-${species.ogc_fid}-${tag.trim()}`} className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
                       {tag.trim()}
                     </span>
                   ))}
                 </div>
               )}
               {hasValue(species.hab_desc) && (
-                <p className="text-sm text-muted-foreground mb-3">{species.hab_desc}</p>
+                <p 
+                  className="text-muted-foreground mb-3"
+                  style={{ 
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  {species.hab_desc}
+                </p>
               )}
-              <div className="flex gap-4 text-sm">
+              <div className="flex gap-4 text-xs sm:text-sm">
                 {species.marine && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Marine</span>}
                 {species.terrestria && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Terrestrial</span>}
                 {species.freshwater && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Freshwater</span>}
@@ -213,13 +249,27 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Geographic Distribution */}
       {hasValue(species.geo_desc) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-blue-400">
-              <Globe size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-blue-400">
+              <Globe className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Geographic Distribution
             </h3>
-            <p className="text-sm text-muted-foreground">{species.geo_desc}</p>
+            <p 
+              className="text-muted-foreground"
+              style={{ 
+                fontSize: 'clamp(12px, 3.5vw, 16px)',
+                lineHeight: '1.4',
+                wordBreak: 'break-word',
+                overflowWrap: 'anywhere',
+                whiteSpace: 'normal',
+                width: '100%',
+                maxWidth: '100%',
+                hyphens: 'auto'
+              }}
+            >
+              {species.geo_desc}
+            </p>
           </div>
         </>
       )}
@@ -227,13 +277,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Bioregion Information */}
       {(hasValue(species.bioregio_1) || hasValue(species.realm) || hasValue(species.sub_realm) || hasValue(species.biome)) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-emerald-400">
-              <Trees size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-emerald-400">
+              <Trees className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Ecoregion
             </h3>
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm items-start break-words">
               {hasValue(species.bioregio_1) && (
                 <>
                   <span className="text-muted-foreground">Bioregion:</span>
@@ -266,13 +316,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Physical Characteristics */}
       {(hasValue(species.color_prim) || hasValue(species.color_sec) || hasValue(species.pattern) || hasValue(species.size_min) || hasValue(species.size_max) || hasValue(species.weight_kg) || hasValue(species.shape_desc)) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-red-400">
-              <Palette size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-red-400">
+              <Palette className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Physical Characteristics
             </h3>
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm items-start break-words">
               {hasValue(species.color_prim) && (
                 <>
                   <span className="text-muted-foreground">Primary Color:</span>
@@ -327,10 +377,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Behavior & Diet */}
       {(hasValue(species.diet_type) || hasValue(species.diet_prey) || hasValue(species.diet_flora) || hasValue(species.behav_1) || hasValue(species.behav_2)) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-orange-400">
-              <Leaf size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-orange-400">
+              <Leaf className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Behavior & Diet
             </h3>
             <div>
@@ -343,10 +393,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
               {hasValue(species.diet_prey) && (
                 <div className="mb-3">
-                  <span className="text-sm text-muted-foreground block mb-1">Prey:</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Prey:</span>
                   <div className="flex flex-wrap gap-1">
                     {species.diet_prey!.split(/[,;]/).map((item, index) => (
-                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
+                      <span key={`prey-${species.ogc_fid}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
                         {item.trim()}
                       </span>
                     ))}
@@ -355,10 +405,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
               {hasValue(species.diet_flora) && (
                 <div className="mb-3">
-                  <span className="text-sm text-muted-foreground block mb-1">Plant Food:</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Plant Food:</span>
                   <div className="flex flex-wrap gap-1">
                     {species.diet_flora!.split(/[,;]/).map((item, index) => (
-                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
+                      <span key={`flora-${species.ogc_fid}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
                         {item.trim()}
                       </span>
                     ))}
@@ -366,15 +416,53 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 </div>
               )}
               {hasValue(species.behav_1) && (
-                <div className="mb-2">
-                  <span className="text-sm text-muted-foreground">Behavior:</span>
-                  <p className="text-sm text-foreground">{species.behav_1}</p>
+                <div className="mb-2 w-full">
+                  <span 
+                    className="text-muted-foreground block mb-1"
+                    style={{ fontSize: 'clamp(9px, 2vw, 12px)' }}
+                  >
+                    Behavior:
+                  </span>
+                  <p 
+                    className="text-foreground"
+                    style={{ 
+                      fontSize: 'clamp(12px, 3.5vw, 14px)',
+                      lineHeight: '1.4',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'anywhere',
+                      whiteSpace: 'normal',
+                      width: '100%',
+                      maxWidth: '100%',
+                      hyphens: 'auto'
+                    }}
+                  >
+                    {species.behav_1}
+                  </p>
                 </div>
               )}
               {hasValue(species.behav_2) && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Additional Behavior:</span>
-                  <p className="text-sm text-foreground">{species.behav_2}</p>
+                <div className="w-full">
+                  <span 
+                    className="text-muted-foreground block mb-1"
+                    style={{ fontSize: 'clamp(9px, 2vw, 12px)' }}
+                  >
+                    Additional Behavior:
+                  </span>
+                  <p 
+                    className="text-foreground"
+                    style={{ 
+                      fontSize: 'clamp(12px, 3.5vw, 14px)',
+                      lineHeight: '1.4',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'anywhere',
+                      whiteSpace: 'normal',
+                      width: '100%',
+                      maxWidth: '100%',
+                      hyphens: 'auto'
+                    }}
+                  >
+                    {species.behav_2}
+                  </p>
                 </div>
               )}
             </div>
@@ -385,13 +473,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Life Cycle */}
       {(hasValue(species.lifespan) || hasValue(species.maturity) || hasValue(species.repro_type) || hasValue(species.clutch_sz) || hasValue(species.life_desc1) || hasValue(species.life_desc2)) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-pink-400">
-              <Clock size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-pink-400">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Life Cycle
             </h3>
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm mb-3">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm mb-3 items-start break-words">
               {hasValue(species.lifespan) && (
                 <>
                   <span className="text-muted-foreground">Lifespan:</span>
@@ -418,10 +506,38 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
             </div>
             {hasValue(species.life_desc1) && (
-              <p className="text-sm text-muted-foreground mb-2">{species.life_desc1}</p>
+              <p 
+                className="text-muted-foreground mb-2"
+                style={{ 
+                  fontSize: 'clamp(12px, 3.5vw, 14px)',
+                  lineHeight: '1.4',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
+                  whiteSpace: 'normal',
+                  width: '100%',
+                  maxWidth: '100%',
+                  hyphens: 'auto'
+                }}
+              >
+                {species.life_desc1}
+              </p>
             )}
             {hasValue(species.life_desc2) && (
-              <p className="text-sm text-muted-foreground">{species.life_desc2}</p>
+              <p 
+                className="text-muted-foreground"
+                style={{ 
+                  fontSize: 'clamp(12px, 3.5vw, 14px)',
+                  lineHeight: '1.4',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'anywhere',
+                  whiteSpace: 'normal',
+                  width: '100%',
+                  maxWidth: '100%',
+                  hyphens: 'auto'
+                }}
+              >
+                {species.life_desc2}
+              </p>
             )}
           </div>
         </>
@@ -430,13 +546,27 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Threats */}
       {hasValue(species.threats) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-gray-400">
-              <AlertTriangle size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-gray-400">
+              <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Threats
             </h3>
-            <p className="text-sm text-muted-foreground">{species.threats}</p>
+            <p 
+              className="text-muted-foreground"
+              style={{ 
+                fontSize: 'clamp(12px, 3.5vw, 16px)',
+                lineHeight: '1.4',
+                wordBreak: 'break-word',
+                overflowWrap: 'anywhere',
+                whiteSpace: 'normal',
+                width: '100%',
+                maxWidth: '100%',
+                hyphens: 'auto'
+              }}
+            >
+              {species.threats}
+            </p>
           </div>
         </>
       )}
@@ -444,21 +574,63 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Key Facts */}
       {(hasValue(species.key_fact1) || hasValue(species.key_fact2) || hasValue(species.key_fact3)) && (
         <>
-          <div className="h-px bg-border my-6" />
-          <div className="mb-6">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2 text-yellow-400">
-              <Info size={20} />
+          <div className="h-px bg-border my-4 sm:my-6" />
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-yellow-400">
+              <Info className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               Key Facts
             </h3>
             <div>
               {hasValue(species.key_fact1) && (
-                <p className="text-sm text-muted-foreground mb-2">• {species.key_fact1}</p>
+                <p 
+                  className="text-muted-foreground mb-2"
+                  style={{ 
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  • {species.key_fact1}
+                </p>
               )}
               {hasValue(species.key_fact2) && (
-                <p className="text-sm text-muted-foreground mb-2">• {species.key_fact2}</p>
+                <p 
+                  className="text-muted-foreground mb-2"
+                  style={{ 
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  • {species.key_fact2}
+                </p>
               )}
               {hasValue(species.key_fact3) && (
-                <p className="text-sm text-muted-foreground">• {species.key_fact3}</p>
+                <p 
+                  className="text-muted-foreground"
+                  style={{ 
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
+                    lineHeight: '1.4',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  • {species.key_fact3}
+                </p>
               )}
             </div>
           </div>

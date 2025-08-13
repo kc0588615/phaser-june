@@ -1,5 +1,110 @@
 @import "tailwindcss";
 
+/* Swiper.js custom styles for family card stacks */
+.family-card-swiper {
+  --swiper-navigation-size: 24px;
+  --swiper-theme-color: #60a5fa; /* blue-400 */
+  overflow: hidden !important;
+}
+
+/* Let Swiper handle slide positioning naturally, just control visibility */
+.family-card-swiper .swiper-slide {
+  width: 100% !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Show only the active slide with full height */
+.family-card-swiper .swiper-slide-active {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.family-card-swiper .swiper-wrapper {
+  display: flex !important;
+  transition-property: transform !important;
+  height: auto !important;
+}
+
+.family-card-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  margin: 0 4px;
+}
+
+.family-card-swiper .swiper-pagination-bullet-active {
+  transform: scale(1.2);
+}
+
+/* Swiper.js custom styles for species cards */
+.swiper-pagination-custom .swiper-pagination-bullet {
+  width: 12px;
+  height: 12px;
+  background: rgba(148, 163, 184, 0.5); /* slate-400 with opacity */
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  transition: all 0.3s ease;
+  margin: 0 6px;
+}
+
+.swiper-pagination-custom .swiper-pagination-bullet-active {
+  background: #3b82f6; /* blue-500 */
+  border-color: #3b82f6;
+  transform: scale(1.2);
+}
+
+/* Cards effect customization */
+.swiper-cards .swiper-slide {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.swiper-cards .swiper-slide-shadow-left,
+.swiper-cards .swiper-slide-shadow-right {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
+}
+
+/* Touch and scroll improvements */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 640px) {
+  .family-card-swiper .swiper-wrapper {
+    touch-action: pan-x pan-y;
+  }
+}
+
+/* Ensure Swiper slides maintain proper width and don't collapse */
+.family-card-swiper .swiper-wrapper {
+  display: flex !important;
+  align-items: stretch;
+}
+
+.family-card-swiper .swiper-slide {
+  flex: 0 0 100% !important; /* prevents shrinking to 0 */
+  width: 100% !important;    /* slide occupies full viewport width */
+  height: auto !important;
+}
+
 /* Global reset */
 * {
   margin: 0;

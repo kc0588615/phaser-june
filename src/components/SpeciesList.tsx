@@ -2,13 +2,15 @@ import { useEffect, useState, useMemo, useRef, memo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
+import FamilyCardStack from '@/components/FamilyCardStack';
+import SpeciesCarousel from '@/components/SpeciesCarousel';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
 import { Loader2, ChevronDown, List } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
-import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder } from '@/utils/ecoregion';
+import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 
@@ -68,67 +70,145 @@ const AccordionCategory = memo(({
             )}
           >
             <div 
-              className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-t-lg px-4 py-3 shadow-lg cursor-pointer hover:bg-slate-700/95 transition-colors"
+              className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-t-lg px-2 sm:px-4 py-3 shadow-lg cursor-pointer hover:bg-slate-700/95 transition-colors"
               onClick={onToggle}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <ChevronDown className="w-5 h-5 text-blue-400 rotate-180" />
-                  <h2 className="text-lg font-semibold text-foreground">{category}</h2>
+              <div className="w-full">
+                {/* Category name - FORCED to wrap */}
+                <div className="flex items-start gap-2 mb-1 w-full">
+                  <ChevronDown className="w-3 h-3 mt-0.5 text-blue-400 rotate-180 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h2 
+                      className="leading-tight font-semibold text-foreground"
+                      style={{ 
+                        fontSize: 'clamp(11px, 2.5vw, 18px)',
+                        lineHeight: '1.2',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'break-word',
+                        hyphens: 'auto',
+                        whiteSpace: 'normal',
+                        width: '100%',
+                        maxWidth: '100%'
+                      }}
+                    >{category}</h2>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    {Object.values(genera).flat().length} species
-                  </span>
-                  <span className="text-xs text-blue-400 hover:text-blue-300">Click to collapse</span>
+                
+                {/* Counters - separate line on narrow screens */}
+                <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted-foreground">
+                  <span>({Object.values(genera).flat().length})</span>
+                  <span className="hidden sm:inline text-blue-400 hover:text-blue-300">Click to collapse</span>
                 </div>
               </div>
             </div>
           </div>
         )}
         <div ref={accordionRef}>
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex items-center justify-between w-full">
-              <h2 className="text-xl font-semibold text-foreground">{category}</h2>
-              <span className="text-sm text-muted-foreground mr-4">
-                {Object.values(genera).flat().length} species
-              </span>
+          <AccordionTrigger className="px-2 sm:px-4 py-3 hover:no-underline">
+            <div className="w-full">
+              {/* Category name - FORCED to wrap */}
+              <div className="w-full mb-1">
+                <h2 
+                  className="leading-tight font-semibold text-foreground"
+                  style={{ 
+                    fontSize: 'clamp(12px, 3vw, 20px)',
+                    lineHeight: '1.2',
+                    wordBreak: 'break-all',
+                    overflowWrap: 'break-word',
+                    hyphens: 'auto',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%'
+                  }}
+                >{category}</h2>
+              </div>
+              
+              {/* Counter - separate line */}
+              <div className="text-xs text-muted-foreground">
+                ({Object.values(genera).flat().length})
+              </div>
             </div>
           </AccordionTrigger>
         </div>
         <AccordionContent className="px-4 pb-4">
-          <div className="space-y-6">
-            {Object.entries(genera).map(([genus, speciesList]) => (
-              <section key={genus} ref={setRef(`${category}-${genus}`)} className="space-y-4">
-                <div className="sticky top-12 py-2 border-b bg-slate-900 backdrop-blur-[10px] border-slate-700 z-30">
-                  <h3 className="text-lg font-medium text-muted-foreground">
-                    {genus} ({speciesList.length} species)
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(min(100%,500px),1fr))] gap-4 sm:gap-6 w-full">
-                  {speciesList.map((sp) => (
-                    <SpeciesCard 
-                      key={sp.ogc_fid} 
-                      species={sp} 
-                      category={category}
-                      isDiscovered={!!discoveredSpecies[sp.ogc_fid]}
-                      discoveredAt={discoveredSpecies[sp.ogc_fid]?.discoveredAt}
-                      onNavigateToTop={() => {
-                        // Scroll ScrollArea to top
-                        const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
-                        if (gridRef) {
-                          gridRef.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                        // Open dropdown after a small delay to ensure scroll completes
-                        setTimeout(() => {
-                          const picker = document.querySelector('[role="combobox"]') as HTMLElement;
-                          if (picker) picker.click();
-                        }, 300);
-                      }}
-                    />
-                  ))}
-                </div>
-              </section>
+          <div className="space-y-4">
+            {Object.entries(genera).map(([family, speciesList]) => (
+              <div key={`${category}-${family}`} ref={setRef(`${category}-${family}`)} className="border border-slate-600 rounded-lg bg-slate-800/30">
+                <Accordion type="multiple" className="w-full">
+                  <AccordionItem value={`${category}-${family}`} className="border-none">
+                    <AccordionTrigger className="px-2 sm:px-4 py-3 hover:no-underline hover:bg-slate-700/30">
+                      <div className="w-full">
+                        {/* Family name - FORCED to wrap */}
+                        <div className="w-full mb-1">
+                          <h4 
+                            className="leading-tight font-medium text-foreground"
+                            style={{ 
+                              fontSize: 'clamp(10px, 2.5vw, 16px)',
+                              lineHeight: '1.2',
+                              wordBreak: 'break-all',
+                              overflowWrap: 'break-word',
+                              hyphens: 'auto',
+                              whiteSpace: 'normal',
+                              width: '100%',
+                              maxWidth: '100%'
+                            }}
+                          >{family}</h4>
+                        </div>
+                        
+                        {/* Species count - separate line */}
+                        <div className="text-xs text-muted-foreground">
+                          ({speciesList.length} species)
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      {/* Mobile/Tablet: Use carousel below lg breakpoint (1024px) */}
+                      <div className="lg:hidden">
+                        <SpeciesCarousel
+                          family={family}
+                          speciesList={speciesList}
+                          discoveredSpecies={discoveredSpecies}
+                          category={category}
+                          onNavigateToTop={() => {
+                            // Scroll ScrollArea to top
+                            const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
+                            if (gridRef) {
+                              gridRef.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                            // Open dropdown after a small delay to ensure scroll completes
+                            setTimeout(() => {
+                              const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                              if (picker) picker.click();
+                            }, 300);
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Desktop: Use original stack at lg breakpoint (1024px) and above */}
+                      <div className="hidden lg:block">
+                        <FamilyCardStack
+                          family={family}
+                          speciesList={speciesList}
+                          discoveredSpecies={discoveredSpecies}
+                          category={category}
+                          onNavigateToTop={() => {
+                            // Scroll ScrollArea to top
+                            const gridRef = document.querySelector('[data-radix-scroll-area-viewport]');
+                            if (gridRef) {
+                              gridRef.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                            // Open dropdown after a small delay to ensure scroll completes
+                            setTimeout(() => {
+                              const picker = document.querySelector('[role="combobox"]') as HTMLElement;
+                              if (picker) picker.click();
+                            }, 300);
+                          }}
+                        />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
             ))}
           </div>
         </AccordionContent>
@@ -139,9 +219,10 @@ const AccordionCategory = memo(({
 
 interface SpeciesListProps {
   onBack?: () => void;
+  scrollToSpeciesId?: number | null;
 }
 
-export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
+export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListProps = {}) {
   const [species, setSpecies] = useState<Species[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -247,6 +328,43 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
     };
   }, [isLoading]); // Re-attach when loading completes
 
+  // Effect to scroll to a specific species when scrollToSpeciesId is provided
+  useEffect(() => {
+    if (!scrollToSpeciesId || isLoading) return;
+
+    // Find the species in the data
+    const targetSpecies = species.find(s => s.ogc_fid === scrollToSpeciesId);
+    if (!targetSpecies) return;
+
+    // Determine which category the species belongs to
+    const categories = groupSpeciesByCategory([targetSpecies]);
+    const targetCategory = Object.keys(categories)[0];
+    
+    if (!targetCategory) return;
+
+    // Open the accordion for this category
+    setOpenAccordions(prev => {
+      if (!prev.includes(targetCategory)) {
+        return [...prev, targetCategory];
+      }
+      return prev;
+    });
+
+    // Scroll to the species after a short delay to allow accordion to open
+    setTimeout(() => {
+      const speciesElement = document.querySelector(`[data-species-id="${scrollToSpeciesId}"]`);
+      if (speciesElement) {
+        speciesElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add a highlight effect
+        speciesElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-900');
+        setTimeout(() => {
+          speciesElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-900');
+        }, 3000);
+      }
+    }, 300);
+  }, [scrollToSpeciesId, species, isLoading]);
+
   const fetchSpecies = async () => {
     try {
       // First get all species IDs ordered by common name
@@ -303,6 +421,8 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
         return species.filter(s => s.order_ === selectedFilter.value);
       case 'genus':
         return species.filter(s => s.genus === selectedFilter.value);
+      case 'family':
+        return species.filter(s => s.family === selectedFilter.value);
       case 'species':
         return species.filter(s => s.ogc_fid.toString() === selectedFilter.value);
       default:
@@ -406,10 +526,24 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
       return;
     }
 
-    // Handle category and genus navigation
+    // Handle category, genus, and family navigation
     if (target.type === 'genus' && typeof target.value === 'string') {
       // Simple genus filter
       setSelectedFilter({ type: 'genus', value: target.value });
+      // Scroll to the grid top when filtering
+      if (gridRef.current) {
+        gridRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest',
+        });
+      }
+      return;
+    }
+    
+    if (target.type === 'family' && typeof target.value === 'string') {
+      // Simple family filter
+      setSelectedFilter({ type: 'family', value: target.value });
       // Scroll to the grid top when filtering
       if (gridRef.current) {
         gridRef.current.scrollIntoView({
@@ -426,6 +560,8 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
       elementId = target.value;
     } else if (target.type === 'genus' && typeof target.value === 'object') {
       elementId = `${target.value.category}-${target.value.genus}`;
+    } else if (target.type === 'family' && typeof target.value === 'object') {
+      elementId = `${target.value.category}-${target.value.family}`;
     } else {
       // Default case - should not happen
       elementId = '';
@@ -466,7 +602,7 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
             </button>
           )}
         </div>
-        <div className="max-w-[600px] mx-auto">
+        <div className="w-full">
           {/* Debug info */}
           {process.env.NODE_ENV === 'development' && (
             <div className="text-xs text-gray-600 mb-2">

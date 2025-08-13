@@ -137,8 +137,10 @@ When modifying the `icaa` table structure, the following files need to be update
 - Modify any field-specific logic
 
 ### 4. Database Functions (PostgreSQL)
-- `get_species_at_point` - RPC function for spatial queries
+- `get_species_at_point` - Point-based spatial queries (deprecated in favor of radius queries)
+- `get_species_in_radius` - Circle intersection queries for species discovery
 - `get_habitat_distribution_10km` - Raster habitat analysis
+- `get_closest_habitat` - Finds nearest habitat polygon when no species found
 
 ## Guidelines for Database Changes
 
@@ -224,9 +226,112 @@ export interface Species {
 
 ## Spatial Queries and PostGIS
 
-### Current Implementation
+### Circle-Based Species Discovery (Current Implementation)
+
+The game uses **circle intersection queries** instead of point-based queries to find species habitats. This allows players to discover species whose habitats intersect with the 10km search radius, making gameplay more intuitive.
+
+#### `get_species_in_radius` Function
 ```sql
--- RPC function for species at point
+CREATE OR REPLACE FUNCTION public.get_species_in_radius(
+  lon double precision,
+  lat double precision,
+  radius_m double precision
+)
+RETURNS TABLE(
+  ogc_fid integer,
+  comm_name character varying,
+  sci_name character varying,
+  -- ... all other fields ...
+  wkb_geometry json  -- Returns GeoJSON for direct use in frontend
+)
+LANGUAGE sql STABLE PARALLEL SAFE AS
+$$
+  WITH center AS (
+    SELECT ST_SetSRID(ST_Point(lon, lat), 4326)::geography AS g
+  ),
+  circle AS (
+    SELECT ST_Buffer((SELECT g FROM center), radius_m)::geometry AS geom
+  )
+  SELECT 
+    s.ogc_fid,
+    s.comm_name,
+    s.sci_name,
+    -- ... other fields ...
+    ST_AsGeoJSON(s.wkb_geometry)::json as wkb_geometry  -- Key: Returns GeoJSON
+  FROM public.icaa s
+  JOIN circle c
+    ON ST_Intersects(s.wkb_geometry, c.geom);
+$$;
+```
+
+#### Key Design Decisions
+
+1. **Geography vs Geometry**: Uses PostGIS `geography` type for accurate meter-based buffering
+2. **GeoJSON Output**: Returns `ST_AsGeoJSON()` instead of WKT text for direct Cesium consumption
+3. **Intersection Logic**: Uses `ST_Intersects()` instead of `ST_Contains()` for broader discovery
+
+### Visual Highlighting System
+
+#### Red Highlighting (Species Found)
+When species are discovered, their **complete MULTIPOLYGON geometries** are highlighted in red:
+
+```typescript
+// Frontend processing (CesiumMap.tsx)
+for (const species of speciesResult.species) {
+  if (species.wkb_geometry) {
+    const feature = {
+      type: 'Feature',
+      properties: { ogc_fid: species.ogc_fid, comm_name: species.comm_name },
+      geometry: species.wkb_geometry  // Direct GeoJSON from database
+    };
+    features.push(feature);
+  }
+}
+
+// Load into Cesium as red polygons
+await redDataSource.load({ type: 'FeatureCollection', features });
+```
+
+#### Blue Highlighting (No Species Found)
+Uses the `get_closest_habitat` function that returns GeoJSON directly:
+
+```sql
+-- get_closest_habitat returns json type
+SELECT ST_AsGeoJSON(closest_polygon) FROM ...
+```
+
+### Geometry Data Flow
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   PostGIS       │    │    Supabase      │    │     Cesium      │
+│   MULTIPOLYGON  │ ─→ │    ST_AsGeoJSON  │ ─→ │  GeoJsonDataSource
+│   (wkb_geometry)│    │    (json)        │    │  Red/Blue Polygons
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+**Critical**: The geometry must be returned as **GeoJSON** (not WKT) to preserve complete MULTIPOLYGON structures for Cesium rendering.
+
+### Performance Optimizations
+
+#### Spatial Indexes
+```sql
+-- Essential for spatial query performance
+CREATE INDEX IF NOT EXISTS icaa_wkb_geometry_gix
+  ON public.icaa
+  USING gist (wkb_geometry);
+```
+
+#### Query Patterns
+- **10km radius**: Matches the visual search circles on the map
+- **Geography buffering**: Accurate meter-based distance calculations
+- **Parallel safe**: Functions can run in parallel for better performance
+
+### Legacy Implementation (Deprecated)
+
+#### Point-Based Queries
+```sql
+-- Old approach - only found species if click was exactly inside polygon
 CREATE OR REPLACE FUNCTION get_species_at_point(lon float, lat float)
 RETURNS SETOF icaa AS $$
 BEGIN
@@ -237,11 +342,294 @@ END;
 $$ LANGUAGE plpgsql;
 ```
 
-### Adding Spatial Indexes
-```sql
--- Improve query performance
-CREATE INDEX idx_icaa_geometry ON icaa USING GIST (wkb_geometry);
+**Why Circle Queries Are Better:**
+- More forgiving for players (intersects 10km radius vs exact point)
+- Matches visual search area shown on map
+- Discovers species in nearby habitats, not just at exact click location
+
+### Frontend Integration Notes
+
+#### Species Service
+```typescript
+// src/lib/speciesService.ts
+export async function getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number) {
+  const { data, error } = await supabase
+    .rpc('get_species_in_radius', { 
+      lon: longitude, 
+      lat: latitude, 
+      radius_m: radiusMeters 
+    });
+  
+  return {
+    species: data || [],
+    count: data?.length || 0
+  };
+}
 ```
+
+#### Map Click Handler
+```typescript
+// CesiumMap.tsx - Uses 10km radius constant
+const SPECIES_RADIUS_METERS = 10000.0;
+
+const [speciesResult, rasterResult] = await Promise.all([
+  speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
+  speciesService.getRasterHabitatDistribution(longitude, latitude)
+]);
+```
+
+### Troubleshooting Spatial Issues
+
+#### Common Problems
+
+1. **Polygons Not Appearing**
+   - Check if function returns GeoJSON (`ST_AsGeoJSON`) not WKT (`ST_AsText`)
+   - Verify geometry field name matches frontend expectations
+
+2. **Only Partial Polygons Show**
+   - Ensure WKT parser handles full MULTIPOLYGON, not just first ring
+   - Use GeoJSON directly to preserve complete geometry
+
+3. **No Species Found**
+   - Verify spatial index exists: `\d+ icaa` should show GIST index
+   - Check radius parameter (10000 = 10km)
+   - Confirm SRID 4326 is used consistently
+
+#### Debugging Queries
+```sql
+-- Test radius query manually
+SELECT ogc_fid, comm_name, ST_Area(wkb_geometry) as area_sqm
+FROM public.get_species_in_radius(-80.0, 25.0, 10000.0);
+
+-- Check geometry validity
+SELECT ogc_fid, ST_IsValid(wkb_geometry), ST_GeometryType(wkb_geometry)
+FROM icaa 
+WHERE ogc_fid = 23;
+```
+
+## Cesium Polygon Rendering
+
+### Visual Highlighting Implementation
+
+The application uses Cesium's `GeoJsonDataSource` to render species habitat polygons with visual highlighting. Understanding the rendering system is crucial for maintaining proper visualization.
+
+#### Polygon Highlighting Types
+
+1. **Red Highlighting** - Species found at location
+2. **Blue (Cyan) Highlighting** - Closest habitat when no species found
+
+#### Cesium Rendering Pipeline
+
+```typescript
+// Load GeoJSON directly from database
+const redDataSource = new GeoJsonDataSource('species-hit-highlight');
+await redDataSource.load({
+  type: 'FeatureCollection',
+  features: geoJsonFeatures  // Direct from ST_AsGeoJSON()
+});
+
+// Style polygons with proper depth handling
+redDataSource.entities.values.forEach(entity => {
+  if (entity.polygon) {
+    entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+    entity.polygon.outline = new ConstantProperty(true);
+    entity.polygon.outlineColor = new ConstantProperty(CesiumColor.RED);
+    entity.polygon.outlineWidth = new ConstantProperty(2);
+    
+    // Critical for overlapping polygons
+    entity.polygon.height = new ConstantProperty(1.0);
+    entity.polygon.extrudedHeight = new ConstantProperty(2.0);
+    entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+    entity.polygon.zIndex = new ConstantProperty(100);
+  }
+});
+```
+
+### Overlapping Polygon Issues
+
+#### Problem: Brazil Rendering Bug
+
+**Symptoms:**
+- Polygon boundaries appear but fill color doesn't render
+- Only outlines visible instead of solid color highlighting
+- Occurs specifically in areas with overlapping habitat polygons
+
+**Root Cause:**
+Cesium requires explicit z-index and height properties for proper depth sorting when polygons overlap. Without these properties:
+
+1. **Depth sorting conflicts** - Cesium can't determine rendering order
+2. **Transparency blending issues** - Multiple overlapping transparent materials cause artifacts
+3. **Z-fighting** - Polygons at same height level compete for pixels
+
+#### Solution: Explicit Depth Control
+
+**Implementation Pattern:**
+```typescript
+// Red polygons (species found) - Higher priority
+entity.polygon.height = new ConstantProperty(1.0);           // Slightly elevated
+entity.polygon.extrudedHeight = new ConstantProperty(2.0);   // Small extrusion
+entity.polygon.zIndex = new ConstantProperty(100);           // High render priority
+entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+
+// Blue polygons (closest habitat) - Lower priority  
+entity.polygon.height = new ConstantProperty(0.5);           // Lower elevation
+entity.polygon.extrudedHeight = new ConstantProperty(1.5);   // Smaller extrusion
+entity.polygon.zIndex = new ConstantProperty(50);            // Lower render priority
+```
+
+**Key Properties:**
+
+1. **`height`** - Base elevation above ground
+2. **`extrudedHeight`** - Creates slight 3D effect for visibility
+3. **`zIndex`** - Explicit rendering order (higher = on top)
+4. **`heightReference`** - Ensures proper ground clamping
+
+#### File Location
+**Primary Implementation:** `src/components/CesiumMap.tsx`
+- Lines 324-338: Red polygon styling (species found)
+- Lines 393-406: Blue polygon styling (closest habitat)
+
+### Cesium Rendering Best Practices
+
+#### 1. Z-Index Hierarchy
+
+Establish clear rendering order:
+```typescript
+// Suggested z-index values
+const Z_INDEX = {
+  BASE_IMAGERY: 0,           // TiTiler habitat raster
+  CLOSEST_HABITAT: 50,       // Blue highlight
+  SPECIES_HIGHLIGHT: 100,    // Red highlight
+  QUERY_CIRCLES: 150,        // Search radius indicators
+  UI_ELEMENTS: 200           // Click markers, labels
+};
+```
+
+#### 2. Height Differentiation
+
+Use subtle height differences to prevent z-fighting:
+```typescript
+const POLYGON_HEIGHTS = {
+  CLOSEST_HABITAT: 0.5,      // Just above ground
+  SPECIES_HIGHLIGHT: 1.0,    // Higher than closest habitat
+  EXTRUSION_HEIGHT_DIFF: 0.5 // Small extrusion for 3D effect
+};
+```
+
+#### 3. Alpha Values for Overlaps
+
+Balance visibility and transparency:
+```typescript
+const ALPHA_VALUES = {
+  SPECIES_HIGHLIGHT: 0.5,    // Semi-transparent red
+  CLOSEST_HABITAT: 0.7,      // More opaque blue
+  OUTLINE: 1.0               // Fully opaque outlines
+};
+```
+
+### Troubleshooting Polygon Rendering
+
+#### Issue: Fill Color Not Appearing
+
+**Diagnosis Steps:**
+1. Check browser console for Cesium errors
+2. Verify GeoJSON geometry is valid
+3. Confirm z-index and height properties are set
+4. Test with single polygon (non-overlapping area)
+
+**Common Fixes:**
+```typescript
+// Ensure all required properties are set
+entity.polygon.material = new ColorMaterialProperty(color);
+entity.polygon.height = new ConstantProperty(heightValue);
+entity.polygon.zIndex = new ConstantProperty(zIndexValue);
+entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+```
+
+#### Issue: Polygons Flickering
+
+**Cause:** Z-fighting between polygons at same height
+**Solution:** Use different height values for different polygon types
+
+#### Issue: Outlines Only, No Fill
+
+**Cause:** Missing or incorrect material property
+**Solution:** Verify `ColorMaterialProperty` is properly constructed:
+```typescript
+// Correct
+entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+
+// Incorrect - may cause rendering issues
+entity.polygon.material = CesiumColor.RED; // Wrong type
+```
+
+### Performance Considerations
+
+#### Polygon Count Optimization
+
+**Current Limits:**
+- Red highlighting: All species in 10km radius (typically 1-20 polygons)
+- Blue highlighting: Single closest habitat polygon
+- Total on screen: Usually < 50 polygons simultaneously
+
+**Memory Management:**
+```typescript
+// Always clean up previous highlights
+if (highlightedSpeciesSource) {
+  viewer.dataSources.remove(highlightedSpeciesSource, true);  // true = destroy
+  setHighlightedSpeciesSource(null);
+}
+```
+
+#### Complex Geometry Handling
+
+**MULTIPOLYGON Support:**
+- Database returns complete MULTIPOLYGON as GeoJSON
+- Cesium handles complex geometries automatically
+- No need to split into separate entities
+
+**Performance Tips:**
+1. Use `STABLE PARALLEL SAFE` in PostGIS functions
+2. Limit polygon complexity with `ST_Simplify()` if needed
+3. Remove data sources when not needed
+4. Set appropriate level-of-detail for complex coastlines
+
+### Integration with Database Functions
+
+#### Geometry Format Requirements
+
+**Critical:** Always return GeoJSON from database functions:
+```sql
+-- Correct - Returns GeoJSON for direct Cesium use
+SELECT ST_AsGeoJSON(wkb_geometry)::json as wkb_geometry
+FROM icaa;
+
+-- Incorrect - WKT requires parsing and loses precision
+SELECT ST_AsText(wkb_geometry) as wkb_geometry  -- Don't use
+FROM icaa;
+```
+
+#### Coordinate System Consistency
+
+**SRID 4326 Required:**
+- All geometries must use WGS84 (SRID 4326)
+- Cesium expects longitude/latitude coordinates
+- PostGIS functions handle projection automatically
+
+### Future Improvements
+
+#### Advanced Rendering Features
+
+1. **Dynamic LOD** - Simplify polygons based on zoom level
+2. **Clustering** - Group nearby small polygons
+3. **Fade Animations** - Smooth transitions between highlights
+4. **Custom Shaders** - Advanced visual effects for different species types
+
+#### Performance Optimizations
+
+1. **Polygon Caching** - Store frequently accessed geometries
+2. **Viewport Culling** - Only render polygons in view
+3. **Batch Processing** - Group polygon updates for better performance
 
 ## Environment Variables
 

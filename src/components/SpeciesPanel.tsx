@@ -29,6 +29,14 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
   
   // Use a ref to track if we've already shown the completion toast
   const completionToastShownRef = React.useRef<boolean>(false);
+  
+  // Use ref to track current species ID to avoid stale closure
+  const selectedSpeciesIdRef = React.useRef<number>(0);
+  
+  // Update ref when selectedSpeciesId changes
+  React.useEffect(() => {
+    selectedSpeciesIdRef.current = selectedSpeciesId;
+  }, [selectedSpeciesId]);
 
   // Function to show clue toast and add to discovered row
   const showClueToast = (clue: CluePayload) => {
@@ -137,15 +145,38 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
 
     // Listen for species guess submission
     const handleSpeciesGuess = (data: { guessedName: string; speciesId: number; isCorrect: boolean; actualName: string }) => {
-      console.log('Species guess received:', data, 'Current selectedSpeciesId:', selectedSpeciesId);
+      console.log('Species guess received:', data, 'Current selectedSpeciesId from ref:', selectedSpeciesIdRef.current);
       
-      if (data.isCorrect && data.speciesId === selectedSpeciesId) {
+      if (data.isCorrect && data.speciesId === selectedSpeciesIdRef.current) {
         setIsSpeciesDiscovered(true);
         setDiscoveredSpeciesName(data.actualName);
         
-        // Show success toast
+        // Show success toast with link
         toast.success('Correct!', {
-          description: `You discovered the ${data.actualName}!`,
+          description: (
+            <div>
+              You discovered the {data.actualName}!
+              <button
+                onClick={() => {
+                  // Emit event to show species list and scroll to species
+                  EventBus.emit('show-species-list', { speciesId: data.speciesId });
+                }}
+                style={{
+                  display: 'block',
+                  marginTop: '8px',
+                  color: '#60a5fa',
+                  textDecoration: 'underline',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                View in Species List
+              </button>
+            </div>
+          ),
           duration: 5000,
         });
         

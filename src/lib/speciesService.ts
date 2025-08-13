@@ -13,6 +13,34 @@ export interface RasterHabitatResult {
 
 export const speciesService = {
   /**
+   * Query species within a radius (circle intersection) of a given point
+   */
+  async getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number): Promise<SpeciesQueryResult> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_species_in_radius', { 
+          lon: longitude, 
+          lat: latitude, 
+          radius_m: radiusMeters 
+        });
+      
+      if (error) {
+        console.error('Error in circle-based species query:', error);
+        return { species: [], count: 0 };
+      }
+
+      console.log(`Circle query returned ${data?.length || 0} species within ${radiusMeters}m of (${longitude}, ${latitude})`);
+      return {
+        species: data || [],
+        count: data?.length || 0
+      };
+    } catch (error) {
+      console.error('Error in getSpeciesInRadius:', error);
+      return { species: [], count: 0 };
+    }
+  },
+
+  /**
    * Query species that intersect with a given point (longitude, latitude)
    */
   async getSpeciesAtPoint(longitude: number, latitude: number): Promise<SpeciesQueryResult> {

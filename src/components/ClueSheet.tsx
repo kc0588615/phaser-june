@@ -46,7 +46,7 @@ export const ClueSheet: React.FC<ClueSheetProps> = ({ clues, speciesName, hasSel
             <div className="space-y-3">
               {clues.map((clue, index) => (
                 <div
-                  key={index}
+                  key={`clue-sheet-${clue.name}-${clue.clue.slice(0, 20)}`}
                   className="bg-slate-800 rounded-lg p-4"
                   style={{ borderLeft: `4px solid ${clue.color}` }}
                 >

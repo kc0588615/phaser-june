@@ -74,7 +74,7 @@ export const GemLegend: React.FC<GemLegendProps> = ({ style }) => {
     <div style={containerStyle}>
       <div style={titleStyle}>Gem Categories</div>
       {gemCategories.map((item, index) => (
-        <div key={index} style={legendItemStyle}>
+        <div key={`gem-category-${item.color}-${item.category}`} style={legendItemStyle}>
           <div style={gemColorStyle(item.color)}></div>
           <span style={iconStyle}>{item.icon}</span>
           <div style={textContainerStyle}>

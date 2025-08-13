@@ -73,7 +73,7 @@ export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps
           ) : (
             sortedHabitats.map((habitat, index) => (
               <div
-                key={`${habitat.habitat_type}-${index}`}
+                key={`habitat-${habitat.habitat_type.replace(/[^a-zA-Z0-9]/g, '-')}`}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -102,7 +102,7 @@ export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps
                     // For the first part (category), display as-is
                     if (i === 0) {
                       return (
-                        <React.Fragment key={i}>
+                        <React.Fragment key={`habitat-category-${part.slice(0, 10).replace(/[^a-zA-Z0-9]/g, '-')}`}>
                           {part}
                         </React.Fragment>
                       );
@@ -113,7 +113,7 @@ export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps
                     if (words.length <= 2 && part.length <= 20) {
                       // Short descriptions stay on same line
                       return (
-                        <React.Fragment key={i}>
+                        <React.Fragment key={`habitat-short-desc-${part.slice(0, 10).replace(/[^a-zA-Z0-9]/g, '-')}`}>
                           {' - '}
                           {part}
                         </React.Fragment>
@@ -146,11 +146,11 @@ export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps
                     }
                     
                     return (
-                      <React.Fragment key={i}>
+                      <React.Fragment key={`habitat-long-desc-${part.slice(0, 10).replace(/[^a-zA-Z0-9]/g, '-')}`}>
                         {' - '}
                         <br />
                         {lines.map((line, lineIndex) => (
-                          <React.Fragment key={lineIndex}>
+                          <React.Fragment key={`habitat-line-${lineIndex}-${line.slice(0, 10).replace(/[^a-zA-Z0-9]/g, '-')}`}>
                             {lineIndex > 0 && <br />}
                             {line}
                           </React.Fragment>

@@ -1,4 +1,5 @@
 import type { Species } from '@/types/database';
+import { getFamilyDisplayName } from '@/config/familyCommonNames';
 
 /**
  * Extract unique ecoregions from species data
@@ -46,7 +47,7 @@ export function getBiomes(species: Species[]): string[] {
 }
 
 /**
- * Group species by order and genus
+ * Group species by order and family
  */
 export function groupSpeciesByCategory(species: Species[]): Record<string, Record<string, Species[]>> {
   const grouped: Record<string, Record<string, Species[]>> = {};
@@ -54,22 +55,22 @@ export function groupSpeciesByCategory(species: Species[]): Record<string, Recor
   species.forEach(sp => {
     // Use the actual order as the category
     const order = sp.order_ || 'Unknown';
-    const genus = sp.genus || 'Unknown';
+    const family = sp.family || 'Unknown';
     
     if (!grouped[order]) {
       grouped[order] = {};
     }
     
-    if (!grouped[order][genus]) {
-      grouped[order][genus] = [];
+    if (!grouped[order][family]) {
+      grouped[order][family] = [];
     }
     
-    grouped[order][genus].push(sp);
+    grouped[order][family].push(sp);
   });
   
-  // Sort species within each genus by common name
-  Object.values(grouped).forEach(genera => {
-    Object.values(genera).forEach(speciesList => {
+  // Sort species within each family by common name
+  Object.values(grouped).forEach(families => {
+    Object.values(families).forEach(speciesList => {
       speciesList.sort((a, b) => {
         const nameA = a.comm_name || a.sci_name || '';
         const nameB = b.comm_name || b.sci_name || '';
@@ -82,7 +83,7 @@ export function groupSpeciesByCategory(species: Species[]): Record<string, Recor
 }
 
 /**
- * Group species by taxonomic hierarchy (class -> order -> genus)
+ * Group species by taxonomic hierarchy (class -> order -> family)
  */
 export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Record<string, Record<string, Species[]>>> {
   const grouped: Record<string, Record<string, Record<string, Species[]>>> = {};
@@ -90,7 +91,7 @@ export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Recor
   species.forEach(sp => {
     const className = sp.class || 'Unknown';
     const orderName = sp.order_ || 'Unknown';
-    const genus = sp.genus || 'Unknown';
+    const family = sp.family || 'Unknown';
     
     if (!grouped[className]) {
       grouped[className] = {};
@@ -100,17 +101,17 @@ export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Recor
       grouped[className][orderName] = {};
     }
     
-    if (!grouped[className][orderName][genus]) {
-      grouped[className][orderName][genus] = [];
+    if (!grouped[className][orderName][family]) {
+      grouped[className][orderName][family] = [];
     }
     
-    grouped[className][orderName][genus].push(sp);
+    grouped[className][orderName][family].push(sp);
   });
   
-  // Sort species within each genus by common name
+  // Sort species within each family by common name
   Object.values(grouped).forEach(orders => {
-    Object.values(orders).forEach(genera => {
-      Object.values(genera).forEach(speciesList => {
+    Object.values(orders).forEach(families => {
+      Object.values(families).forEach(speciesList => {
         speciesList.sort((a, b) => {
           const nameA = a.comm_name || a.sci_name || '';
           const nameB = b.comm_name || b.sci_name || '';
@@ -196,6 +197,28 @@ export function getUniqueGenera(species: Species[]): string[] {
   });
   
   return Array.from(genera).sort();
+}
+
+/**
+ * Extract unique family values from species data
+ */
+export function getUniqueFamilies(species: Species[]): string[] {
+  const families = new Set<string>();
+  
+  species.forEach(sp => {
+    if (sp.family && sp.family !== 'NULL' && sp.family !== 'null') {
+      families.add(sp.family);
+    }
+  });
+  
+  return Array.from(families).sort();
+}
+
+/**
+ * Get display name for a family (with common name if available)
+ */
+export function getFamilyDisplayNameFromSpecies(family: string): string {
+  return getFamilyDisplayName(family);
 }
 
 /**
