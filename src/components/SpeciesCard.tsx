@@ -183,7 +183,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               <p 
                 className="text-foreground"
                 style={{ 
-                  fontSize: 'clamp(12px, 3.5vw, 16px)',
+                  fontSize: 'clamp(12px, 3.5vw, 14px)',
                   lineHeight: '1.4',
                   wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
@@ -223,7 +223,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 <p 
                   className="text-muted-foreground mb-3"
                   style={{ 
-                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
                     lineHeight: '1.4',
                     wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
@@ -426,7 +426,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   <p 
                     className="text-foreground"
                     style={{ 
-                      fontSize: 'clamp(12px, 3.5vw, 16px)',
+                      fontSize: 'clamp(12px, 3.5vw, 14px)',
                       lineHeight: '1.4',
                       wordBreak: 'break-word',
                       overflowWrap: 'anywhere',
@@ -451,7 +451,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   <p 
                     className="text-foreground"
                     style={{ 
-                      fontSize: 'clamp(12px, 3.5vw, 16px)',
+                      fontSize: 'clamp(12px, 3.5vw, 14px)',
                       lineHeight: '1.4',
                       wordBreak: 'break-word',
                       overflowWrap: 'anywhere',
@@ -509,7 +509,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               <p 
                 className="text-muted-foreground mb-2"
                 style={{ 
-                  fontSize: 'clamp(12px, 3.5vw, 16px)',
+                  fontSize: 'clamp(12px, 3.5vw, 14px)',
                   lineHeight: '1.4',
                   wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
@@ -526,7 +526,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               <p 
                 className="text-muted-foreground"
                 style={{ 
-                  fontSize: 'clamp(12px, 3.5vw, 16px)',
+                  fontSize: 'clamp(12px, 3.5vw, 14px)',
                   lineHeight: '1.4',
                   wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
@@ -585,7 +585,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 <p 
                   className="text-muted-foreground mb-2"
                   style={{ 
-                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
                     lineHeight: '1.4',
                     wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
@@ -602,7 +602,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 <p 
                   className="text-muted-foreground mb-2"
                   style={{ 
-                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
                     lineHeight: '1.4',
                     wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
@@ -619,7 +619,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 <p 
                   className="text-muted-foreground"
                   style={{ 
-                    fontSize: 'clamp(12px, 3.5vw, 16px)',
+                    fontSize: 'clamp(12px, 3.5vw, 14px)',
                     lineHeight: '1.4',
                     wordBreak: 'break-word',
                     overflowWrap: 'anywhere',

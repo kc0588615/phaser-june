@@ -32,36 +32,7 @@ const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.w
 const HABITAT_RADIUS_METERS = 10000.0; // Updated to match raster query (10km)
 const SPECIES_RADIUS_METERS = 10000.0;
 
-// Helper function to convert WKT to GeoJSON
-function wktToGeoJSON(wkt: any): any {
-  // This is a simplified WKT parser for POLYGON type
-  // In production, you might want to use a library like wellknown
-  try {
-    // Check if wkt is a string
-    if (typeof wkt !== 'string') {
-      console.error('WKT is not a string:', typeof wkt, wkt);
-      return null;
-    }
-    
-    if (wkt.startsWith('POLYGON')) {
-      const coordsMatch = wkt.match(/\(\((.+)\)\)/);
-      if (coordsMatch) {
-        const coordPairs = coordsMatch[1].split(',');
-        const coordinates = [coordPairs.map(pair => {
-          const [lon, lat] = pair.trim().split(' ').map(Number);
-          return [lon, lat];
-        })];
-        return {
-          type: 'Polygon',
-          coordinates
-        };
-      }
-    }
-  } catch (error) {
-    console.error('Error parsing WKT:', error);
-  }
-  return null;
-}
+// WKT parsing functions removed - now using GeoJSON directly from database
 
 const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const viewerRef = useRef<any>(null); // Typed viewerRef for Resium
@@ -80,6 +51,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   }>({ habitats: [], species: [] });
   const [showInfoBox, setShowInfoBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [highlightedSpeciesSource, setHighlightedSpeciesSource] = useState<GeoJsonDataSource | null>(null);
 
   useEffect(() => {
     // Crucial for Next.js: CESIUM_BASE_URL is defined in next.config.mjs and made global in global.d.ts
@@ -274,6 +246,12 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
 
     const viewer = viewerRef.current.cesiumElement;
+
+    // Clear previous red highlighted species polygons immediately on any new click
+    if (highlightedSpeciesSource) {
+      viewer.dataSources.remove(highlightedSpeciesSource, true);
+      setHighlightedSpeciesSource(null);
+    }
     const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
 
     if (cartesian) {
@@ -290,7 +268,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
 
       // Use Supabase species service for location data
       Promise.all([
-        speciesService.getSpeciesAtPoint(longitude, latitude),
+        speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
         speciesService.getRasterHabitatDistribution(longitude, latitude)
       ])
         .then(async ([speciesResult, rasterHabitats]) => {
@@ -306,23 +284,20 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           const rasterHabitatData = rasterHabitats;
 
           if (clickedSpecies.count > 0 && viewerRef.current) {
+            // Remove any existing species data source
             const cesiumDataSource = viewerRef.current.cesiumElement.dataSources.getByName('species-data-source')[0];
             if (cesiumDataSource) {
               viewerRef.current.cesiumElement.dataSources.remove(cesiumDataSource);
             }
 
-            const yellowDataSource = new GeoJsonDataSource('species-data-source');
-            await yellowDataSource.load({
-              type: 'FeatureCollection',
-              features: []
-            });
-
-            viewerRef.current.cesiumElement.dataSources.add(yellowDataSource);
+            // Create red highlighted species polygons for species hits
+            const redDataSource = new GeoJsonDataSource('species-hit-highlight');
+            const features: any[] = [];
 
             for (const species of clickedSpecies.species) {
               if (species.wkb_geometry) {
-                const geojson = wktToGeoJSON(species.wkb_geometry);
-                if (geojson) {
+                try {
+                  // Use geometry directly (now GeoJSON from database) like blue highlighting does
                   const feature = {
                     type: 'Feature' as const,
                     properties: {
@@ -330,24 +305,40 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
                       comm_name: species.comm_name,
                       sci_name: species.sci_name
                     },
-                    geometry: geojson
+                    geometry: species.wkb_geometry  // Direct GeoJSON geometry
                   };
-
-                  const loadedEntities = await yellowDataSource.process({
-                    type: 'FeatureCollection',
-                    features: [feature]
-                  });
-
-                  loadedEntities.entities.values.forEach(entity => {
-                    if (entity.polygon) {
-                      entity.polygon.material = new ColorMaterialProperty(CesiumColor.YELLOW.withAlpha(0.5));
-                      entity.polygon.outline = new ConstantProperty(true);
-                      entity.polygon.outlineColor = new ConstantProperty(CesiumColor.YELLOW);
-                      entity.polygon.outlineWidth = new ConstantProperty(2);
-                    }
-                  });
+                  features.push(feature);
+                } catch (geoError) {
+                  console.warn(`Failed to process geometry for species ${species.ogc_fid}:`, geoError);
                 }
               }
+            }
+
+            if (features.length > 0) {
+              await redDataSource.load({
+                type: 'FeatureCollection',
+                features
+              });
+              
+              // Style the polygons as red to indicate species hit
+              redDataSource.entities.values.forEach(entity => {
+                if (entity.polygon) {
+                  entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+                  entity.polygon.outline = new ConstantProperty(true);
+                  entity.polygon.outlineColor = new ConstantProperty(CesiumColor.RED);
+                  entity.polygon.outlineWidth = new ConstantProperty(2);
+                  // Fix for overlapping polygons: Add height and z-index properties
+                  entity.polygon.height = new ConstantProperty(1.0); // Slightly elevated
+                  entity.polygon.extrudedHeight = new ConstantProperty(2.0); // Small extrusion for visibility
+                  entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+                  // Ensure the polygon renders on top of base imagery
+                  entity.polygon.zIndex = new ConstantProperty(100);
+                }
+                entity.name = 'species-hit';
+              });
+
+              viewerRef.current.cesiumElement.dataSources.add(redDataSource);
+              setHighlightedSpeciesSource(redDataSource);
             }
 
             console.log('Clicked species:', clickedSpecies);
@@ -405,6 +396,12 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
                   entity.polygon.outline = new ConstantProperty(true);
                   entity.polygon.outlineColor = new ConstantProperty(CesiumColor.CYAN);
                   entity.polygon.outlineWidth = new ConstantProperty(3);
+                  // Fix for overlapping polygons: Add height and z-index properties
+                  entity.polygon.height = new ConstantProperty(0.5); // Slightly lower than red
+                  entity.polygon.extrudedHeight = new ConstantProperty(1.5); // Small extrusion for visibility
+                  entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+                  // Ensure the polygon renders on top of base imagery but below red polygons
+                  entity.polygon.zIndex = new ConstantProperty(50);
                 }
               });
 
@@ -475,7 +472,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       setClickedPosition(null);
       setClickedLonLat(null);
     }
-  }, [isLoading]);
+  }, [isLoading, highlightedSpeciesSource]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
