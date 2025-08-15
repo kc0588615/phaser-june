@@ -28,21 +28,65 @@ export interface CluePayload {
   color: string;
 }
 
+// ---- Progressive classification helpers ----
+const CLASSIFICATION_SEQUENCE: Array<keyof Species> = [
+  'phylum',
+  'class',
+  'order_',   // note underscore
+  'family',
+  'genus',
+  'sci_name'
+];
+
+// Tracks how many steps revealed per Species instance
+const classificationProgress = new WeakMap<Species, number>();
+
+function getNextClassificationClue(species: Species): string {
+  let progress = classificationProgress.get(species) ?? 0;
+
+  while (progress < CLASSIFICATION_SEQUENCE.length) {
+    const field = CLASSIFICATION_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    classificationProgress.set(species, progress);
+
+    if (value) {
+      // Format label based on field
+      switch (field) {
+        case 'phylum': return `Phylum: ${value}`;
+        case 'class': return `Class: ${value}`;
+        case 'order_': return `Order: ${value}`;
+        case 'family': return `Family: ${value}`;
+        case 'genus': return `Genus: ${value}`;
+        case 'sci_name': return `Scientific name: ${value}`;
+        default: return value;
+      }
+    }
+    // If value missing, loop to attempt next field (still counts toward progress)
+  }
+
+  return ''; // No more clues
+}
+
+export function isClassificationComplete(species: Species): boolean {
+  const progress = classificationProgress.get(species) ?? 0;
+  // Complete when we've iterated through entire sequence
+  return progress >= CLASSIFICATION_SEQUENCE.length;
+}
+
+export function resetClassificationProgress(species: Species) {
+  classificationProgress.delete(species);
+}
+
+// ------------------------------------------------
+
 export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
   [GemCategory.CLASSIFICATION]: {
     color: 'red',
     categoryName: 'Classification',
     icon: '🧬',
     getClue: (species: Species) => {
-      // Try to return the most specific classification available
-      if (species.genus) return `Genus: ${species.genus}`;
-      if (species.family) return `Family: ${species.family}`;
-      if (species.order_) return `Order: ${species.order_}`;
-      if (species.class) return `Class: ${species.class}`;
-      if (species.phylum) return `Phylum: ${species.phylum}`;
-      if (species.kingdom) return `Kingdom: ${species.kingdom}`;
-      if (species.tax_comm) return species.tax_comm;
-      return '';
+      return getNextClassificationClue(species); // progressive
     },
   },
   [GemCategory.HABITAT]: {

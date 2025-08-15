@@ -10,7 +10,7 @@ import {
 import { EventBus, EventPayloads } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
-import { GemCategory, CLUE_CONFIG, CluePayload } from '../clueConfig';
+import { GemCategory, CLUE_CONFIG, CluePayload, isClassificationComplete, resetClassificationProgress } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 
@@ -188,6 +188,9 @@ export class Game extends Phaser.Scene {
                 // Select the species with lowest ogc_fid
                 this.selectedSpecies = this.currentSpecies[0];
                 console.log("Game Scene: Selected species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+                
+                // Reset progressive classification for new species
+                resetClassificationProgress(this.selectedSpecies);
                 
                 // Emit event to inform React components about the new game
                 // Hide the species name - player needs to guess it
@@ -553,21 +556,15 @@ export class Game extends Phaser.Scene {
         // Convert gem types to categories and generate clues
         for (const gemType of matchedGemTypes) {
             const category = this.gemTypeToCategory(gemType);
-            if (category !== null && !this.revealedClues.has(category)) {
-                this.revealedClues.add(category);
-                
-                // Generate clue for this category
-                let clueData: CluePayload | null = null;
-                if (category === GemCategory.HABITAT) {
-                    // Use raster habitat data for green gems
-                    clueData = this.generateRasterHabitatClue();
-                } else {
-                    // Use CLUE_CONFIG for species-based clues
-                    const config = CLUE_CONFIG[category];
+            if (category !== null) {
+                // Special handling for CLASSIFICATION category (progressive)
+                if (category === GemCategory.CLASSIFICATION) {
+                    const config = CLUE_CONFIG[GemCategory.CLASSIFICATION];
                     if (config) {
                         const clueText = config.getClue(this.selectedSpecies);
                         if (clueText) {
-                            clueData = {
+                            // Emit clue (do NOT add to revealedClues yet)
+                            const clueData: CluePayload = {
                                 category,
                                 heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
                                 clue: clueText,
@@ -576,13 +573,53 @@ export class Game extends Phaser.Scene {
                                 icon: config.icon,
                                 color: config.color
                             };
+                            console.log("Game Scene: Revealing progressive classification clue:", clueData);
+                            EventBus.emit('clue-revealed', clueData);
+                            
+                            // Only mark as revealed when sequence is complete
+                            if (isClassificationComplete(this.selectedSpecies)) {
+                                this.revealedClues.add(GemCategory.CLASSIFICATION);
+                            }
+                        } else {
+                            // No more classification clues; ensure marked complete
+                            this.revealedClues.add(GemCategory.CLASSIFICATION);
                         }
                     }
+                    continue; // move to next category
                 }
                 
-                if (clueData && clueData.clue) {
-                    console.log("Game Scene: Revealing clue for category:", category, clueData);
-                    EventBus.emit('clue-revealed', clueData);
+                // Standard handling for other categories
+                if (!this.revealedClues.has(category)) {
+                    this.revealedClues.add(category);
+                    
+                    // Generate clue for this category
+                    let clueData: CluePayload | null = null;
+                    if (category === GemCategory.HABITAT) {
+                        // Use raster habitat data for green gems
+                        clueData = this.generateRasterHabitatClue();
+                    } else {
+                        // Use CLUE_CONFIG for species-based clues
+                        const config = CLUE_CONFIG[category];
+                        if (config) {
+                            const clueText = config.getClue(this.selectedSpecies);
+                            if (clueText) {
+                                clueData = {
+                                    category,
+                                    heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                                    clue: clueText,
+                                    speciesId: this.selectedSpecies.ogc_fid,
+                                    name: config.categoryName,
+                                    icon: config.icon,
+                                    color: config.color
+                                };
+                            }
+                        }
+                    }
+                    
+                    if (clueData && clueData.clue) {
+                        console.log("Game Scene: Revealing clue for category:", category, clueData);
+                        EventBus.emit('clue-revealed', clueData);
+                    }
                 }
             }
         }
@@ -615,21 +652,15 @@ export class Game extends Phaser.Scene {
         // Convert gem types to categories and generate clues
         for (const gemType of matchedGemTypes) {
             const category = this.gemTypeToCategory(gemType);
-            if (category !== null && !this.revealedClues.has(category)) {
-                this.revealedClues.add(category);
-                
-                // Generate clue for this category
-                let clueData: CluePayload | null = null;
-                if (category === GemCategory.HABITAT) {
-                    // Use raster habitat data for green gems
-                    clueData = this.generateRasterHabitatClue();
-                } else {
-                    // Use CLUE_CONFIG for species-based clues
-                    const config = CLUE_CONFIG[category];
+            if (category !== null) {
+                // Special handling for CLASSIFICATION category (progressive)
+                if (category === GemCategory.CLASSIFICATION) {
+                    const config = CLUE_CONFIG[GemCategory.CLASSIFICATION];
                     if (config) {
                         const clueText = config.getClue(this.selectedSpecies);
                         if (clueText) {
-                            clueData = {
+                            // Emit clue (do NOT add to revealedClues yet)
+                            const clueData: CluePayload = {
                                 category,
                                 heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
                                 clue: clueText,
@@ -638,13 +669,53 @@ export class Game extends Phaser.Scene {
                                 icon: config.icon,
                                 color: config.color
                             };
+                            console.log("Game Scene: Revealing progressive classification clue:", clueData);
+                            EventBus.emit('clue-revealed', clueData);
+                            
+                            // Only mark as revealed when sequence is complete
+                            if (isClassificationComplete(this.selectedSpecies)) {
+                                this.revealedClues.add(GemCategory.CLASSIFICATION);
+                            }
+                        } else {
+                            // No more classification clues; ensure marked complete
+                            this.revealedClues.add(GemCategory.CLASSIFICATION);
                         }
                     }
+                    continue; // move to next category
                 }
                 
-                if (clueData && clueData.clue) {
-                    console.log("Game Scene: Revealing clue for category:", category, clueData);
-                    EventBus.emit('clue-revealed', clueData);
+                // Standard handling for other categories
+                if (!this.revealedClues.has(category)) {
+                    this.revealedClues.add(category);
+                    
+                    // Generate clue for this category
+                    let clueData: CluePayload | null = null;
+                    if (category === GemCategory.HABITAT) {
+                        // Use raster habitat data for green gems
+                        clueData = this.generateRasterHabitatClue();
+                    } else {
+                        // Use CLUE_CONFIG for species-based clues
+                        const config = CLUE_CONFIG[category];
+                        if (config) {
+                            const clueText = config.getClue(this.selectedSpecies);
+                            if (clueText) {
+                                clueData = {
+                                    category,
+                                    heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                                    clue: clueText,
+                                    speciesId: this.selectedSpecies.ogc_fid,
+                                    name: config.categoryName,
+                                    icon: config.icon,
+                                    color: config.color
+                                };
+                            }
+                        }
+                    }
+                    
+                    if (clueData && clueData.clue) {
+                        console.log("Game Scene: Revealing clue for category:", category, clueData);
+                        EventBus.emit('clue-revealed', clueData);
+                    }
                 }
             }
         }
@@ -682,6 +753,9 @@ export class Game extends Phaser.Scene {
             this.revealedClues.clear();
             this.allCluesRevealed = false;
             this.usedRasterHabitats.clear(); // Reset used raster habitats for new species
+            
+            // Reset progressive classification for new species
+            resetClassificationProgress(this.selectedSpecies);
             
             console.log("Game Scene: Advancing to next species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
             

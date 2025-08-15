@@ -285,6 +285,128 @@ const [discoveredClues, setDiscoveredClues] = useState<Array<{
 - `lucide-react`: Existing - Icon components
 - `class-variance-authority`: Existing - Component variants
 
+## Progressive Classification System (Updated Implementation)
+
+### Overview
+The Classification category (red gems 🧬) now uses a progressive revelation system where successive matches reveal taxonomic information from broad to specific, rather than returning the most specific available information on the first match.
+
+### Sequence Design
+**Revelation Order** (skipping kingdom as requested):
+1. **1st Red Match**: `Phylum: [value]` (e.g., "Phylum: CHORDATA")
+2. **2nd Red Match**: `Class: [value]` (e.g., "Class: REPTILIA") 
+3. **3rd Red Match**: `Order: [value]` (e.g., "Order: TESTUDINES")
+4. **4th Red Match**: `Family: [value]` (e.g., "Family: EMYDIDAE")
+5. **5th Red Match**: `Genus: [value]` (e.g., "Genus: Emydoidea")
+6. **6th Red Match**: `Scientific name: [value]` (e.g., "Scientific name: Emydoidea blandingii")
+7. **7th+ Red Matches**: No output (sequence complete)
+
+### Technical Implementation
+
+#### Backend Logic (`src/game/clueConfig.ts`)
+```typescript
+// Classification sequence array
+const CLASSIFICATION_SEQUENCE: Array<keyof Species> = [
+  'phylum', 'class', 'order_', 'family', 'genus', 'sci_name'
+];
+
+// Progress tracking using WeakMap for memory efficiency
+const classificationProgress = new WeakMap<Species, number>();
+
+function getNextClassificationClue(species: Species): string {
+  let progress = classificationProgress.get(species) ?? 0;
+  
+  while (progress < CLASSIFICATION_SEQUENCE.length) {
+    const field = CLASSIFICATION_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    classificationProgress.set(species, progress);
+    
+    if (value) {
+      switch (field) {
+        case 'phylum': return `Phylum: ${value}`;
+        case 'class': return `Class: ${value}`;
+        case 'order_': return `Order: ${value}`;
+        case 'family': return `Family: ${value}`;
+        case 'genus': return `Genus: ${value}`;
+        case 'sci_name': return `Scientific name: ${value}`;
+        default: return value;
+      }
+    }
+    // Skip missing fields but still count progress
+  }
+  
+  return ''; // No more clues
+}
+```
+
+#### Game Logic Integration (`src/game/scenes/Game.ts`)
+The game scene treats Classification differently from other categories:
+- **Normal Categories**: Mark as revealed immediately, ignore subsequent matches
+- **Classification**: Allow multiple clues, only mark complete when sequence finishes
+
+```typescript
+// Special handling for progressive classification
+if (category === GemCategory.CLASSIFICATION) {
+  const clueText = config.getClue(this.selectedSpecies);
+  if (clueText) {
+    // Emit clue (do NOT add to revealedClues yet)
+    EventBus.emit('clue-revealed', clueData);
+    
+    // Only mark complete when sequence exhausted
+    if (isClassificationComplete(this.selectedSpecies)) {
+      this.revealedClues.add(GemCategory.CLASSIFICATION);
+    }
+  }
+}
+```
+
+#### UI Component Fix (`src/components/SpeciesPanel.tsx`)
+**Problem**: React component was filtering duplicate categories, blocking successive classification clues.
+
+**Solution**: Modified duplicate detection to allow multiple clues from Classification category:
+```typescript
+// Before: Filtered all duplicate categories
+if (prev.some(c => c.category === clueData.category)) return prev;
+
+// After: Special handling for Classification (category = 0)
+const isDuplicate = clueData.category === 0 ? 
+  prev.some(c => c.category === clueData.category && c.clue === clueData.clue) :
+  prev.some(c => c.category === clueData.category);
+```
+
+### State Management & Memory
+- **WeakMap Usage**: Progress tracking automatically garbage-collected when species objects are removed
+- **Species Reset**: Progress reset when advancing to new species via `resetClassificationProgress()`
+- **Data Resilience**: Gracefully handles missing database fields by skipping to next step
+
+### User Experience Benefits
+1. **Educational Value**: Builds understanding of taxonomic hierarchy 
+2. **Progressive Discovery**: Creates anticipation for more specific information
+3. **Replay Value**: Different species reveal classification information at different paces
+4. **Natural Flow**: Aligns with scientific classification from general to specific
+
+### Edge Cases Handled
+1. **Missing Data**: If any classification field is null/empty, system skips to next field while maintaining progress count
+2. **Species Changes**: Progress automatically resets when advancing to new species
+3. **UI Deduplication**: Prevents duplicate toast notifications for same clue text
+4. **Memory Management**: WeakMap ensures no memory leaks for species objects
+
+### Database Requirements
+**No SQL Changes Required** - System uses existing `icaa` table fields:
+- `phylum`, `class`, `order_`, `family`, `genus`, `sci_name`
+- All data already present in database
+
+### Future Developer Guidance
+To modify the classification sequence:
+1. **Change Order**: Update `CLASSIFICATION_SEQUENCE` array in `clueConfig.ts`
+2. **Add Fields**: Include new database fields in sequence and switch statement
+3. **Skip Categories**: Remove unwanted fields from sequence array
+4. **Reset Logic**: Ensure `resetClassificationProgress()` is called on species changes
+
+**Important**: The WeakMap approach ensures memory efficiency but requires species object identity to remain consistent throughout the game session.
+
 ## Summary
 
 The new clue board implementation provides a cleaner, more efficient interface while maintaining full functionality. The colored dot system maximizes space for clue content, toast notifications provide immediate feedback, and the modular component architecture ensures maintainability. The event-driven design maintains clean separation between game logic and UI, making the system extensible and testable.
+
+The progressive classification system enhances educational value by revealing taxonomic information in a scientifically logical sequence, from broad to specific, while maintaining robust state management and graceful error handling.

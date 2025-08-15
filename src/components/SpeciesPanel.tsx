@@ -71,8 +71,14 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     // Listen for clue reveals from the game
     const handleClueRevealed = (clueData: CluePayload) => {
       setClues(prev => {
-        // Avoid duplicates
-        if (prev.some(c => c.category === clueData.category)) return prev;
+        // For classification (progressive clues), avoid duplicates by clue text, not category
+        // For other categories, avoid duplicates by category
+        const isDuplicate = clueData.category === 0 ? // GemCategory.CLASSIFICATION = 0
+          prev.some(c => c.category === clueData.category && c.clue === clueData.clue) :
+          prev.some(c => c.category === clueData.category);
+        
+        if (isDuplicate) return prev;
+        
         const newClues = [...prev, clueData];
         showClueToast(clueData);
         return newClues;
