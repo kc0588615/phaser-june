@@ -33,7 +33,6 @@ export interface Species {
   hab_desc?: string;
   aquatic?: boolean;
   freshwater?: boolean;
-  terrestr?: boolean;
   terrestria?: boolean;
   marine?: boolean;
   hab_tags?: string;
