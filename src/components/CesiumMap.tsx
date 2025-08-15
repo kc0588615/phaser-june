@@ -349,7 +349,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
               if (species.hab_desc) legacyHabitats.add(species.hab_desc);
               if (species.aquatic) legacyHabitats.add('aquatic');
               if (species.freshwater) legacyHabitats.add('freshwater');
-              if (species.terrestr || species.terrestria) legacyHabitats.add('terrestrial');
+              if (species.terrestria) legacyHabitats.add('terrestrial');
               if (species.marine) legacyHabitats.add('marine');
             });
             const habitatList = Array.from(legacyHabitats);
@@ -432,7 +432,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             if (species.hab_desc) legacyHabitats.add(species.hab_desc);
             if (species.aquatic) legacyHabitats.add('aquatic');
             if (species.freshwater) legacyHabitats.add('freshwater');
-            if (species.terrestr || species.terrestria) legacyHabitats.add('terrestrial');
+            if (species.terrestria) legacyHabitats.add('terrestrial');
             if (species.marine) legacyHabitats.add('marine');
           });
 

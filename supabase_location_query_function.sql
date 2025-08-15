@@ -98,7 +98,7 @@ BEGIN
       'hab_desc', hab_desc,
       'aquatic', aquatic,
       'freshwater', freshwater,
-      'terrestr', terrestr,
+      'terrestria', terrestria,
       'marine', marine
     )
   ) INTO species_data

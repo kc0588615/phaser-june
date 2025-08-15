@@ -28,21 +28,320 @@ export interface CluePayload {
   color: string;
 }
 
+// ---- Progressive system helpers ----
+
+// Classification sequence
+const CLASSIFICATION_SEQUENCE: Array<keyof Species> = [
+  'tax_comm',   // Taxonomic comments/context first
+  'phylum',
+  'class',
+  'order_',     // note underscore
+  'family',
+  'genus',
+  'sci_name'
+];
+
+// Key Facts sequence
+const KEY_FACTS_SEQUENCE: Array<keyof Species> = [
+  'key_fact1',
+  'key_fact2', 
+  'key_fact3'
+];
+
+// Behavior sequence (includes diet fields)
+const BEHAVIOR_SEQUENCE: Array<keyof Species> = [
+  'behav_1',
+  'behav_2',
+  'diet_type',
+  'diet_prey',
+  'diet_flora'
+];
+
+// Life Cycle sequence
+const LIFE_CYCLE_SEQUENCE: Array<keyof Species> = [
+  'life_desc1',
+  'life_desc2'
+];
+
+// Conservation sequence
+const CONSERVATION_SEQUENCE: Array<keyof Species> = [
+  'cons_text',
+  'threats'
+];
+
+// Geographic sequence
+const GEOGRAPHIC_SEQUENCE: Array<keyof Species> = [
+  'geo_desc',
+  'dist_comm',
+  'hab_desc',
+  'hab_tags'
+];
+
+// Morphology sequence
+const MORPHOLOGY_SEQUENCE: Array<keyof Species> = [
+  'pattern',
+  'color_prim',
+  'color_sec', 
+  'shape_desc',
+  'size_max',
+  'weight_kg'
+];
+
+// Progress tracking using WeakMaps for memory efficiency
+const classificationProgress = new WeakMap<Species, number>();
+const keyFactsProgress = new WeakMap<Species, number>();
+const behaviorProgress = new WeakMap<Species, number>();
+const lifeCycleProgress = new WeakMap<Species, number>();
+const conservationProgress = new WeakMap<Species, number>();
+const geographicProgress = new WeakMap<Species, number>();
+const morphologyProgress = new WeakMap<Species, number>();
+
+function getNextClassificationClue(species: Species): string {
+  let progress = classificationProgress.get(species) ?? 0;
+
+  while (progress < CLASSIFICATION_SEQUENCE.length) {
+    const field = CLASSIFICATION_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    classificationProgress.set(species, progress);
+
+    if (value) {
+      // Format label based on field
+      switch (field) {
+        case 'tax_comm': return value; // Taxonomic comments are already complete sentences
+        case 'phylum': return `Phylum: ${value}`;
+        case 'class': return `Class: ${value}`;
+        case 'order_': return `Order: ${value}`;
+        case 'family': return `Family: ${value}`;
+        case 'genus': return `Genus: ${value}`;
+        case 'sci_name': return `Scientific name: ${value}`;
+        default: return value;
+      }
+    }
+    // If value missing, loop to attempt next field (still counts toward progress)
+  }
+
+  return ''; // No more clues
+}
+
+
+// Key Facts progressive function
+function getNextKeyFactClue(species: Species): string {
+  let progress = keyFactsProgress.get(species) ?? 0;
+
+  while (progress < KEY_FACTS_SEQUENCE.length) {
+    const field = KEY_FACTS_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    keyFactsProgress.set(species, progress);
+
+    if (value) {
+      return value; // Key facts are already complete sentences
+    }
+  }
+
+  return ''; // No more facts
+}
+
+// Behavior progressive function
+function getNextBehaviorClue(species: Species): string {
+  let progress = behaviorProgress.get(species) ?? 0;
+
+  while (progress < BEHAVIOR_SEQUENCE.length) {
+    const field = BEHAVIOR_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    behaviorProgress.set(species, progress);
+
+    if (value) {
+      switch (field) {
+        case 'behav_1': return value;
+        case 'behav_2': return value;
+        case 'diet_type': return `Diet type: ${value}`;
+        case 'diet_prey': return `Preys on: ${value}`;
+        case 'diet_flora': return `Eats plants: ${value}`;
+        default: return value;
+      }
+    }
+  }
+
+  return ''; // No more behavior clues
+}
+
+// Life Cycle progressive function
+function getNextLifeCycleClue(species: Species): string {
+  let progress = lifeCycleProgress.get(species) ?? 0;
+
+  while (progress < LIFE_CYCLE_SEQUENCE.length) {
+    const field = LIFE_CYCLE_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    lifeCycleProgress.set(species, progress);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return ''; // No more life cycle clues
+}
+
+// Conservation progressive function
+function getNextConservationClue(species: Species): string {
+  let progress = conservationProgress.get(species) ?? 0;
+
+  while (progress < CONSERVATION_SEQUENCE.length) {
+    const field = CONSERVATION_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    conservationProgress.set(species, progress);
+
+    if (value) {
+      switch (field) {
+        case 'cons_text': return value;
+        case 'threats': return `Threats: ${value}`;
+        default: return value;
+      }
+    }
+  }
+
+  return ''; // No more conservation clues
+}
+
+// Geographic progressive function
+function getNextGeographicClue(species: Species): string {
+  let progress = geographicProgress.get(species) ?? 0;
+
+  while (progress < GEOGRAPHIC_SEQUENCE.length) {
+    const field = GEOGRAPHIC_SEQUENCE[progress];
+    const value = species[field] as unknown as string | undefined;
+    progress++;
+    geographicProgress.set(species, progress);
+
+    if (value) {
+      switch (field) {
+        case 'geo_desc': return value;
+        case 'dist_comm': return value;
+        case 'hab_desc': return value;
+        case 'hab_tags': return `Habitat: ${value}`;
+        default: return value;
+      }
+    }
+  }
+
+  return ''; // No more geographic clues
+}
+
+// Morphology progressive function
+function getNextMorphologyClue(species: Species): string {
+  let progress = morphologyProgress.get(species) ?? 0;
+
+  while (progress < MORPHOLOGY_SEQUENCE.length) {
+    const field = MORPHOLOGY_SEQUENCE[progress];
+    const value = species[field] as unknown as string | number | undefined;
+    progress++;
+    morphologyProgress.set(species, progress);
+
+    if (value !== null && value !== undefined) {
+      switch (field) {
+        case 'pattern': return value as string;
+        case 'color_prim': return `Primary color: ${value}`;
+        case 'color_sec': return `Secondary color: ${value}`;
+        case 'shape_desc': return value as string;
+        case 'size_max': return `Maximum length: ${value} units`;
+        case 'weight_kg': return `Weight: ${value} kg`;
+        default: return String(value);
+      }
+    }
+  }
+
+  return ''; // No more morphology clues
+}
+
+// Completion check functions
+export function isClassificationComplete(species: Species): boolean {
+  const progress = classificationProgress.get(species) ?? 0;
+  return progress >= CLASSIFICATION_SEQUENCE.length;
+}
+
+export function isKeyFactsComplete(species: Species): boolean {
+  const progress = keyFactsProgress.get(species) ?? 0;
+  return progress >= KEY_FACTS_SEQUENCE.length;
+}
+
+export function isBehaviorComplete(species: Species): boolean {
+  const progress = behaviorProgress.get(species) ?? 0;
+  return progress >= BEHAVIOR_SEQUENCE.length;
+}
+
+export function isLifeCycleComplete(species: Species): boolean {
+  const progress = lifeCycleProgress.get(species) ?? 0;
+  return progress >= LIFE_CYCLE_SEQUENCE.length;
+}
+
+export function isConservationComplete(species: Species): boolean {
+  const progress = conservationProgress.get(species) ?? 0;
+  return progress >= CONSERVATION_SEQUENCE.length;
+}
+
+export function isGeographicComplete(species: Species): boolean {
+  const progress = geographicProgress.get(species) ?? 0;
+  return progress >= GEOGRAPHIC_SEQUENCE.length;
+}
+
+export function isMorphologyComplete(species: Species): boolean {
+  const progress = morphologyProgress.get(species) ?? 0;
+  return progress >= MORPHOLOGY_SEQUENCE.length;
+}
+
+// Reset functions for species changes
+export function resetClassificationProgress(species: Species) {
+  classificationProgress.delete(species);
+}
+
+export function resetKeyFactsProgress(species: Species) {
+  keyFactsProgress.delete(species);
+}
+
+export function resetBehaviorProgress(species: Species) {
+  behaviorProgress.delete(species);
+}
+
+export function resetLifeCycleProgress(species: Species) {
+  lifeCycleProgress.delete(species);
+}
+
+export function resetConservationProgress(species: Species) {
+  conservationProgress.delete(species);
+}
+
+export function resetGeographicProgress(species: Species) {
+  geographicProgress.delete(species);
+}
+
+export function resetMorphologyProgress(species: Species) {
+  morphologyProgress.delete(species);
+}
+
+export function resetAllProgressiveClues(species: Species) {
+  resetClassificationProgress(species);
+  resetKeyFactsProgress(species);
+  resetBehaviorProgress(species);
+  resetLifeCycleProgress(species);
+  resetConservationProgress(species);
+  resetGeographicProgress(species);
+  resetMorphologyProgress(species);
+}
+
+// ------------------------------------------------
+
 export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
   [GemCategory.CLASSIFICATION]: {
     color: 'red',
     categoryName: 'Classification',
     icon: '🧬',
     getClue: (species: Species) => {
-      // Try to return the most specific classification available
-      if (species.genus) return `Genus: ${species.genus}`;
-      if (species.family) return `Family: ${species.family}`;
-      if (species.order_) return `Order: ${species.order_}`;
-      if (species.class) return `Class: ${species.class}`;
-      if (species.phylum) return `Phylum: ${species.phylum}`;
-      if (species.kingdom) return `Kingdom: ${species.kingdom}`;
-      if (species.tax_comm) return species.tax_comm;
-      return '';
+      return getNextClassificationClue(species); // progressive
     },
   },
   [GemCategory.HABITAT]: {
@@ -50,18 +349,15 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Habitat',
     icon: '🌳',
     getClue: (species: Species) => {
-      if (species.hab_desc) return species.hab_desc;
-      
       const habitats: string[] = [];
       if (species.aquatic || species.freshwater) habitats.push('freshwater');
-      if (species.terrestr || species.terrestria) habitats.push('terrestrial');
+      if (species.terrestria) habitats.push('terrestrial');
       if (species.marine) habitats.push('marine');
       
       if (habitats.length > 0) {
         return `Found in ${habitats.join(' and ')} habitats`;
       }
       
-      if (species.hab_tags) return `Habitat: ${species.hab_tags}`;
       return '';
     },
   },
@@ -70,30 +366,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Geographic & Habitat',
     icon: '🗺️',
     getClue: (species: Species) => {
-      const clues: string[] = [];
-      
-      // Geographic info
-      if (species.geo_desc) clues.push(species.geo_desc);
-      else if (species.dist_comm) clues.push(species.dist_comm);
-      else if (species.island) clues.push(`Found on islands`);
-      else if (species.origin === 1) clues.push('Native to its range');
-      
-      // Habitat info
-      if (species.hab_desc) clues.push(species.hab_desc);
-      else {
-        const habitats: string[] = [];
-        if (species.aquatic || species.freshwater) habitats.push('freshwater');
-        if (species.terrestr || species.terrestria) habitats.push('terrestrial');
-        if (species.marine) habitats.push('marine');
-        
-        if (habitats.length > 0) {
-          clues.push(`Found in ${habitats.join(' and ')} habitats`);
-        } else if (species.hab_tags) {
-          clues.push(`Habitat: ${species.hab_tags}`);
-        }
-      }
-      
-      return clues.join('. ');
+      return getNextGeographicClue(species); // Progressive geographic clues
     },
   },
   [GemCategory.MORPHOLOGY]: {
@@ -101,35 +374,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Morphology',
     icon: '🐆',
     getClue: (species: Species) => {
-      // Combine both color/pattern and size/shape information
-      const morphologyInfo: string[] = [];
-      
-      // Add pattern information
-      if (species.pattern) morphologyInfo.push(species.pattern);
-      
-      // Add color information
-      const colors: string[] = [];
-      if (species.color_prim) colors.push(species.color_prim);
-      if (species.color_sec) colors.push(species.color_sec);
-      if (colors.length > 0) {
-        morphologyInfo.push(`Colors: ${colors.join(' and ')}`);
-      }
-      
-      // Add shape description
-      if (species.shape_desc) morphologyInfo.push(species.shape_desc);
-      
-      // Add size information
-      if (species.size_min && species.size_max) {
-        morphologyInfo.push(`Length: ${species.size_min}-${species.size_max} units`);
-      } else if (species.size_max) {
-        morphologyInfo.push(`Maximum length: ${species.size_max} units`);
-      }
-      
-      if (species.weight_kg) {
-        morphologyInfo.push(`Weight: ${species.weight_kg} kg`);
-      }
-      
-      return morphologyInfo.join('; ');
+      return getNextMorphologyClue(species); // Progressive morphology clues
     },
   },
   [GemCategory.BEHAVIOR]: {
@@ -137,18 +382,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Behavior & Diet',
     icon: '💨',
     getClue: (species: Species) => {
-      const clues: string[] = [];
-      
-      // Behavior info
-      if (species.behav_1) clues.push(species.behav_1);
-      else if (species.behav_2) clues.push(species.behav_2);
-      
-      // Diet info
-      if (species.diet_type) clues.push(`Diet type: ${species.diet_type}`);
-      else if (species.diet_prey) clues.push(`Preys on: ${species.diet_prey}`);
-      else if (species.diet_flora) clues.push(`Eats plants: ${species.diet_flora}`);
-      
-      return clues.join('. ');
+      return getNextBehaviorClue(species); // Progressive behavior and diet clues
     },
   },
   [GemCategory.LIFE_CYCLE]: {
@@ -156,9 +390,11 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Life Cycle',
     icon: '⏳',
     getClue: (species: Species) => {
-      if (species.life_desc1) return species.life_desc1;
-      if (species.life_desc2) return species.life_desc2;
+      // Try progressive life cycle descriptions first
+      const lifeCycleClue = getNextLifeCycleClue(species);
+      if (lifeCycleClue) return lifeCycleClue;
       
+      // Fallback to structured life info if no more descriptions
       const lifeInfo: string[] = [];
       if (species.lifespan) lifeInfo.push(`Lifespan: ${species.lifespan}`);
       if (species.maturity) lifeInfo.push(`Maturity: ${species.maturity}`);
@@ -173,11 +409,14 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Conservation',
     icon: '🛡️',
     getClue: (species: Species) => {
-      if (species.cons_text) return species.cons_text;
+      // Try progressive conservation clues first
+      const conservationClue = getNextConservationClue(species);
+      if (conservationClue) return conservationClue;
+      
+      // Fallback to conservation status if no more progressive clues
       if (species.cons_code || species.category) {
         return `Conservation status: ${species.cons_code || species.category}`;
       }
-      if (species.threats) return `Threats: ${species.threats}`;
       return '';
     },
   },
@@ -186,10 +425,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     categoryName: 'Key Facts',
     icon: '🔮',
     getClue: (species: Species) => {
-      if (species.key_fact1) return species.key_fact1;
-      if (species.key_fact2) return species.key_fact2;
-      if (species.key_fact3) return species.key_fact3;
-      return '';
+      return getNextKeyFactClue(species); // Progressive key facts
     },
   }
 };
