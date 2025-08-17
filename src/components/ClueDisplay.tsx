@@ -24,7 +24,7 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
       setIsLoadingClue(true);
       // Simulate a brief loading state for clue processing
       setTimeout(() => {
-        setClues(prev => [...prev, clueData]);
+        setClues(prev => [clueData, ...prev]);
         setIsLoadingClue(false);
       }, 500);
     };

@@ -24,7 +24,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       setIsLoadingClue(true);
       // Simulate a brief loading state for clue processing
       setTimeout(() => {
-        setClues(prev => [...prev, clueData]);
+        setClues(prev => [clueData, ...prev]);
         setIsLoadingClue(false);
       }, 500);
     };
