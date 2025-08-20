@@ -66,10 +66,10 @@ export default function SpeciesCarousel({
           {/* Family name - FORCED to wrap */}
           <div className="w-full mb-2">
             <h3 
-              className="leading-tight font-medium text-foreground"
+              className="leading-tight font-medium text-white"
               style={{ 
-                fontSize: 'clamp(11px, 2.5vw, 16px)',
-                lineHeight: '1.2',
+                fontSize: 'clamp(14px, 3vw, 18px)',
+                lineHeight: '1.3',
                 wordBreak: 'break-all',
                 overflowWrap: 'break-word',
                 hyphens: 'auto',

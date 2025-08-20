@@ -109,10 +109,10 @@ const AccordionCategory = memo(({
               {/* Category name - FORCED to wrap */}
               <div className="w-full mb-1">
                 <h2 
-                  className="leading-tight font-semibold text-foreground"
+                  className="leading-tight font-semibold text-white"
                   style={{ 
-                    fontSize: 'clamp(12px, 3vw, 20px)',
-                    lineHeight: '1.2',
+                    fontSize: 'clamp(16px, 4vw, 24px)',
+                    lineHeight: '1.3',
                     wordBreak: 'break-all',
                     overflowWrap: 'break-word',
                     hyphens: 'auto',

@@ -96,10 +96,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             </span>
           )}
         </div>
-        <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground mb-1 break-words whitespace-normal leading-tight">
+        <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2 break-words whitespace-normal leading-tight">
           {species.comm_name || species.sci_name}
         </h2>
-        <p className="text-xs sm:text-sm md:text-base lg:text-lg italic text-muted-foreground mb-2 break-words whitespace-normal leading-tight">
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl italic text-slate-200 mb-3 break-words whitespace-normal leading-relaxed">
           {species.sci_name}
         </p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -126,45 +126,45 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
 
       {/* Taxonomy Section */}
       <div className="mb-4 sm:mb-6">
-        <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-violet-400">
-          <Shield className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+        <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-violet-300">
+          <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
           Taxonomy
         </h3>
-        <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm items-start break-words">
+        <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
           {hasValue(species.kingdom) && (
             <>
-              <span className="text-muted-foreground">Kingdom:</span>
-              <span className="text-foreground">{species.kingdom}</span>
+              <span className="text-slate-300 font-medium">Kingdom:</span>
+              <span className="text-white">{species.kingdom}</span>
             </>
           )}
           {hasValue(species.phylum) && (
             <>
-              <span className="text-muted-foreground">Phylum:</span>
-              <span className="text-foreground">{species.phylum}</span>
+              <span className="text-slate-300 font-medium">Phylum:</span>
+              <span className="text-white">{species.phylum}</span>
             </>
           )}
           {hasValue(species.class) && (
             <>
-              <span className="text-muted-foreground">Class:</span>
-              <span className="text-foreground">{species.class}</span>
+              <span className="text-slate-300 font-medium">Class:</span>
+              <span className="text-white">{species.class}</span>
             </>
           )}
           {hasValue(species.order_) && (
             <>
-              <span className="text-muted-foreground">Order:</span>
-              <span className="text-foreground">{species.order_}</span>
+              <span className="text-slate-300 font-medium">Order:</span>
+              <span className="text-white">{species.order_}</span>
             </>
           )}
           {hasValue(species.family) && (
             <>
-              <span className="text-muted-foreground">Family:</span>
-              <span className="text-foreground">{species.family}</span>
+              <span className="text-slate-300 font-medium">Family:</span>
+              <span className="text-white">{species.family}</span>
             </>
           )}
           {hasValue(species.genus) && (
             <>
-              <span className="text-muted-foreground">Genus:</span>
-              <span className="text-foreground">{species.genus}</span>
+              <span className="text-slate-300 font-medium">Genus:</span>
+              <span className="text-white">{species.genus}</span>
             </>
           )}
         </div>
@@ -175,16 +175,14 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-orange-400">
-              <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-orange-300">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               Conservation Status
             </h3>
-            <div className="bg-orange-400/10 border border-orange-400/30 rounded-lg p-3 sm:p-4">
+            <div className="bg-orange-400/15 border border-orange-400/40 rounded-lg p-4 sm:p-5">
               <p 
-                className="text-foreground"
+                className="text-slate-100 text-sm sm:text-base leading-relaxed"
                 style={{ 
-                  fontSize: 'clamp(12px, 3.5vw, 14px)',
-                  lineHeight: '1.4',
                   wordBreak: 'break-word',
                   overflowWrap: 'anywhere',
                   whiteSpace: 'normal',
@@ -193,7 +191,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   hyphens: 'auto'
                 }}
               >
-                <strong>Conservation Notes:</strong> {species.cons_text}
+                <strong className="text-orange-200">Conservation Notes:</strong> {species.cons_text}
               </p>
             </div>
           </div>
@@ -205,8 +203,8 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-green-400">
-              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-green-300">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               Habitat
             </h3>
             <div>
@@ -221,10 +219,8 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               )}
               {hasValue(species.hab_desc) && (
                 <p 
-                  className="text-muted-foreground mb-3"
+                  className="text-slate-200 mb-4 text-sm sm:text-base leading-relaxed"
                   style={{ 
-                    fontSize: 'clamp(12px, 3.5vw, 14px)',
-                    lineHeight: '1.4',
                     wordBreak: 'break-word',
                     overflowWrap: 'anywhere',
                     whiteSpace: 'normal',
@@ -251,15 +247,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-blue-400">
-              <Globe className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-blue-300">
+              <Globe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               Geographic Distribution
             </h3>
             <p 
-              className="text-muted-foreground"
+              className="text-slate-200 text-sm sm:text-base leading-relaxed"
               style={{ 
-                fontSize: 'clamp(12px, 3.5vw, 16px)',
-                lineHeight: '1.4',
                 wordBreak: 'break-word',
                 overflowWrap: 'anywhere',
                 whiteSpace: 'normal',
@@ -279,33 +273,33 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-emerald-400">
-              <Trees className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-emerald-300">
+              <Trees className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               Ecoregion
             </h3>
-            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm items-start break-words">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
               {hasValue(species.bioregio_1) && (
                 <>
-                  <span className="text-muted-foreground">Bioregion:</span>
-                  <span className="text-foreground">{species.bioregio_1}</span>
+                  <span className="text-slate-300 font-medium">Bioregion:</span>
+                  <span className="text-white">{species.bioregio_1}</span>
                 </>
               )}
               {hasValue(species.realm) && (
                 <>
-                  <span className="text-muted-foreground">Realm:</span>
-                  <span className="text-foreground">{species.realm}</span>
+                  <span className="text-slate-300 font-medium">Realm:</span>
+                  <span className="text-white">{species.realm}</span>
                 </>
               )}
               {hasValue(species.sub_realm) && (
                 <>
-                  <span className="text-muted-foreground">Sub-realm:</span>
-                  <span className="text-foreground">{species.sub_realm}</span>
+                  <span className="text-slate-300 font-medium">Sub-realm:</span>
+                  <span className="text-white">{species.sub_realm}</span>
                 </>
               )}
               {hasValue(species.biome) && (
                 <>
-                  <span className="text-muted-foreground">Biome:</span>
-                  <span className="text-foreground">{species.biome}</span>
+                  <span className="text-slate-300 font-medium">Biome:</span>
+                  <span className="text-white">{species.biome}</span>
                 </>
               )}
             </div>
@@ -318,27 +312,27 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-red-400">
-              <Palette className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-red-300">
+              <Palette className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               Physical Characteristics
             </h3>
-            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm items-start break-words">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
               {hasValue(species.color_prim) && (
                 <>
-                  <span className="text-muted-foreground">Primary Color:</span>
-                  <span className="text-foreground">{species.color_prim}</span>
+                  <span className="text-slate-300 font-medium">Primary Color:</span>
+                  <span className="text-white">{species.color_prim}</span>
                 </>
               )}
               {hasValue(species.color_sec) && (
                 <>
-                  <span className="text-muted-foreground">Secondary Color:</span>
-                  <span className="text-foreground">{species.color_sec}</span>
+                  <span className="text-slate-300 font-medium">Secondary Color:</span>
+                  <span className="text-white">{species.color_sec}</span>
                 </>
               )}
               {hasValue(species.pattern) && (
                 <>
-                  <span className="text-muted-foreground">Pattern:</span>
-                  <span className="text-foreground">{species.pattern}</span>
+                  <span className="text-slate-300 font-medium">Pattern:</span>
+                  <span className="text-white">{species.pattern}</span>
                 </>
               )}
               {(hasValue(species.size_min) || hasValue(species.size_max)) && (
@@ -347,7 +341,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     <Ruler size={14} className="text-muted-foreground" />
                     Size Range:
                   </span>
-                  <span className="text-foreground">
+                  <span className="text-white">
                     {hasValue(species.size_min) && hasValue(species.size_max) 
                       ? `${species.size_min} - ${species.size_max} cm`
                       : hasValue(species.size_min) ? `${species.size_min} cm` : `${species.size_max} cm`}
@@ -360,13 +354,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     <Weight size={14} className="text-muted-foreground" />
                     Weight:
                   </span>
-                  <span className="text-foreground">{species.weight_kg} kg</span>
+                  <span className="text-white">{species.weight_kg} kg</span>
                 </>
               )}
               {hasValue(species.shape_desc) && (
                 <>
                   <span className="text-muted-foreground">Shape:</span>
-                  <span className="text-foreground">{species.shape_desc}</span>
+                  <span className="text-white">{species.shape_desc}</span>
                 </>
               )}
             </div>
