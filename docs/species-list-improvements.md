@@ -556,3 +556,107 @@ Family names use `getFamilyDisplayNameFromSpecies()` from `src/utils/ecoregion.t
 With the simplified structure, performance should be consistently good. The accordion pattern naturally handles large species lists by only rendering visible content.
 
 This implementation provides a more intuitive, reliable, and educationally appropriate browsing experience while maintaining all the taxonomic accuracy and family grouping benefits of the previous system.
+
+---
+
+## Search Category Mapping System (January 2025)
+
+### Overview
+The search functionality includes a category mapping system that allows users to search for animal groups using common terms (like "frogs" or "turtles") and automatically filters by the correct taxonomic order.
+
+### Implementation Location
+**File**: `src/utils/ecoregion.ts` - `getCategoryOrderMapping()` function (Lines 150-164)
+
+### Category to Order Mapping
+The search system maps common category names to their corresponding taxonomic orders in the database:
+
+```typescript
+export function getCategoryOrderMapping(): Record<string, string> {
+  // Note: Database values are in UPPERCASE
+  return {
+    'Turtles': 'TESTUDINES',
+    'Turtle': 'TESTUDINES', 
+    'Frogs': 'ANURA',
+    'Frog': 'ANURA',
+    'Testudines': 'TESTUDINES',  // Scientific name mapping
+    'Anura': 'ANURA',            // Scientific name mapping
+    'TESTUDINES': 'TESTUDINES',  // Database format mapping
+    'ANURA': 'ANURA'             // Database format mapping
+  };
+}
+```
+
+### Important: Case Sensitivity
+⚠️ **Critical Implementation Detail**: The database stores order values in **UPPERCASE** format (e.g., "ANURA", "TESTUDINES"), so the mapping function must return uppercase values to match the filtering logic in `SpeciesList.tsx`.
+
+### How Search Category Filtering Works
+
+1. **User searches** for a common term like "frogs"
+2. **Search input** calls `getOrderFromCategory("frogs")` 
+3. **Mapping function** returns "ANURA" (uppercase)
+4. **Filter applied** with `{ type: 'order', value: 'ANURA' }`
+5. **Species filtered** by `s.order_ === selectedFilter.value` comparison
+6. **Results displayed** showing all species where `order_ = "ANURA"`
+
+### Adding New Animal Categories
+
+When adding new animal categories to the system (e.g., "beetles" for order "COLEOPTERA"):
+
+#### Step 1: Update the Category Mapping
+**File**: `src/utils/ecoregion.ts` - `getCategoryOrderMapping()` function
+
+```typescript
+export function getCategoryOrderMapping(): Record<string, string> {
+  return {
+    // ... existing mappings ...
+    'Beetles': 'COLEOPTERA',
+    'Beetle': 'COLEOPTERA', 
+    'COLEOPTERA': 'COLEOPTERA',
+    'Coleoptera': 'COLEOPTERA'
+  };
+}
+```
+
+#### Step 2: Verify Database Schema
+Ensure your species data includes the new order in the `order_` field:
+- Database field: `order_` (with underscore)
+- Expected value: **UPPERCASE** format (e.g., "COLEOPTERA")
+- Filter logic: `species.filter(s => s.order_ === selectedFilter.value)`
+
+#### Step 3: Test the Integration
+1. Build and serve the application: `npm run build && npm run serve`
+2. Navigate to Species List
+3. Search for the new category term (e.g., "beetles")
+4. Verify the filter shows correct count and species
+
+### Example: Adding Birds (Order: AVES)
+
+```typescript
+// In getCategoryOrderMapping():
+'Birds': 'AVES',
+'Bird': 'AVES',
+'AVES': 'AVES', 
+'Aves': 'AVES'
+```
+
+**Requirements**:
+- Database must have species with `order_ = "AVES"`
+- Species count will appear as "AVES: X (X)" in the tree
+- Search for "birds" will filter to show only AVES species
+
+### Debugging Category Mapping Issues
+
+If search filtering shows "0 species" but the tree shows species exist:
+
+1. **Check database values**: Ensure `order_` field matches mapping output
+2. **Verify case sensitivity**: Database values must be UPPERCASE
+3. **Test mapping function**: `getOrderFromCategory("your-term")` should return uppercase
+4. **Check filter logic**: `SpeciesList.tsx` filters by `s.order_ === selectedFilter.value`
+
+### Related Files
+- **Search Input**: `src/components/SpeciesSearchInput.tsx` - Handles search UI and calls mapping
+- **Species List**: `src/components/SpeciesList.tsx` - Applies filters and displays results  
+- **Type Definitions**: `src/types/speciesBrowser.ts` - JumpTarget interface
+- **Database Types**: `src/types/database.ts` - Species interface with `order_` field
+
+This mapping system provides an intuitive way for users to discover species by common animal categories while maintaining precise taxonomic filtering.
