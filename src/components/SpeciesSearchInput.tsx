@@ -255,11 +255,11 @@ export function SpeciesSearchInput({
     <div className="w-full space-y-3">
       <div className="relative">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search species, family, genus, order, category or location"
+            placeholder="Search species, family, genus, order, location"
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setSearchQuery(e.target.value);
@@ -272,8 +272,8 @@ export function SpeciesSearchInput({
               }
             }}
             onKeyDown={handleKeyDown}
-            style={{ paddingLeft: '2.5rem' }}
-            className="w-full pr-4 h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+            style={{ paddingLeft: '2rem' }}
+            className="w-full pr-2 h-12 bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs"
           />
         </div>
 
@@ -285,7 +285,7 @@ export function SpeciesSearchInput({
           >
             {filteredOptions.map((option, index) => (
               <div
-                key={`${option.type}-${option.value}`}
+                key={`${option.type}-${option.value}-${option.label}`}
                 className={cn(
                   "px-4 py-3 cursor-pointer transition-colors border-b border-slate-700/50 last:border-0",
                   "hover:bg-slate-700",

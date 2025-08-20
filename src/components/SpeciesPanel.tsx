@@ -80,7 +80,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
         
         if (isDuplicate) return prev;
         
-        const newClues = [...prev, clueData];
+        const newClues = [clueData, ...prev];
         showClueToast(clueData);
         return newClues;
       });

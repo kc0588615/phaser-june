@@ -150,13 +150,16 @@ export function getAllCategories(species?: Species[]): string[] {
 export function getCategoryOrderMapping(): Record<string, string> {
   // Since we're now using order names directly, this maps order to itself
   // and includes some legacy mappings for backward compatibility
+  // Note: Database values are in UPPERCASE
   return {
-    'Turtles': 'Testudines',
-    'Turtle': 'Testudines',
-    'Frogs': 'Anura',
-    'Frog': 'Anura',
-    'Testudines': 'Testudines',
-    'Anura': 'Anura'
+    'Turtles': 'TESTUDINES',
+    'Turtle': 'TESTUDINES',
+    'Frogs': 'ANURA',
+    'Frog': 'ANURA',
+    'Testudines': 'TESTUDINES',
+    'Anura': 'ANURA',
+    'TESTUDINES': 'TESTUDINES',
+    'ANURA': 'ANURA'
   };
 }
 
