@@ -6,7 +6,7 @@ import FamilyCardStack from '@/components/FamilyCardStack';
 import SpeciesCarousel from '@/components/SpeciesCarousel';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
-import { Loader2, ChevronDown, List } from 'lucide-react';
+import { Loader2, ChevronDown, List, Book, BookOpen } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
@@ -229,6 +229,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
   const [openAccordions, setOpenAccordions] = useState<string[]>([]);
   const [showStickyHeaders, setShowStickyHeaders] = useState(false);
+  const [showClassification, setShowClassification] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<Record<number, { name: string; discoveredAt: string }>>({});
   
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -593,14 +594,23 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
             <List className="h-6 w-6" />
             Species List
           </h1>
-          {onBack && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={onBack}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md flex items-center gap-2 transition-colors"
+              onClick={() => setShowClassification(!showClassification)}
+              className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors"
+              aria-label={showClassification ? "Hide classification" : "Show classification"}
             >
-              ← Back to Game
+              {showClassification ? <BookOpen className="h-5 w-5" /> : <Book className="h-5 w-5" />}
             </button>
-          )}
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md flex items-center gap-2 transition-colors"
+              >
+                ← Back to Game
+              </button>
+            )}
+          </div>
         </div>
         <div className="w-full">
           {/* Debug info */}
@@ -646,7 +656,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       </div>
 
       {/* Species Tree View */}
-      {!isLoading && !error && species.length > 0 && (
+      {!isLoading && !error && species.length > 0 && showClassification && (
         <div className="px-5 pb-4">
           <h2 className="text-lg font-semibold mb-3 text-foreground">Browse by Classification</h2>
           <SpeciesTree 
