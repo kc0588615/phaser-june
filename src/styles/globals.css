@@ -241,3 +241,30 @@ body {
   /* Only move the fullscreen button container up */
   margin-bottom: 60px !important;
 }
+
+/* Line clamp utilities for better text truncation */
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.line-clamp-4 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.line-clamp-5 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+/* CSS-only sticky offset support */
+:root {
+  --sticky-offset: 80px;
+}

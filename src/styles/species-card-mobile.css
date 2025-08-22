@@ -23,7 +23,7 @@
     word-break: break-all !important;
     hyphens: auto !important;
     max-width: 100% !important;
-    font-size: 9px !important;
+    /* font-size removed to allow per-element clamp() sizing */
     line-height: 1.3 !important;
   }
 
@@ -58,7 +58,7 @@
   .species-card-mobile h4,
   .species-card-mobile h5,
   .species-card-mobile h6 {
-    font-size: 8px !important;
+    /* font-size removed to allow per-element clamp() sizing */
   }
 }
 
@@ -71,6 +71,6 @@
   .species-card-mobile h4,
   .species-card-mobile h5,
   .species-card-mobile h6 {
-    font-size: 7px !important;
+    /* font-size removed to allow per-element clamp() sizing */
   }
 }
