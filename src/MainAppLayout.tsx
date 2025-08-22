@@ -144,15 +144,17 @@ function MainAppLayout() {
                     <CesiumMap />
                 </div>
                 
-                <div style={{ 
-                    display: viewMode === 'clues' ? 'block' : 'none',
-                    height: '100%', 
-                    width: '100%',
-                    overflow: 'auto',
-                    position: 'relative'
-                }}>
-                    <SpeciesPanel toastsEnabled={viewMode === 'map'} />
-                </div>
+                {/* Always mounted SpeciesPanel - visible when viewMode === 'clues' */}
+                <SpeciesPanel 
+                    toastsEnabled={viewMode === 'map'} 
+                    style={{ 
+                        display: viewMode === 'clues' ? 'block' : 'none',
+                        height: '100%', 
+                        width: '100%',
+                        overflow: 'auto',
+                        position: 'relative'
+                    }}
+                />
             </div>
             </div>
 

@@ -33,16 +33,25 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
   
   // Use ref to track current species ID to avoid stale closure
   const selectedSpeciesIdRef = React.useRef<number>(0);
+  // Use ref to track current toastsEnabled value to avoid stale closure
+  const toastsEnabledRef = React.useRef<boolean>(toastsEnabled);
   
   // Update ref when selectedSpeciesId changes
   React.useEffect(() => {
     selectedSpeciesIdRef.current = selectedSpeciesId;
   }, [selectedSpeciesId]);
+  
+  // Update ref when toastsEnabled changes
+  React.useEffect(() => {
+    toastsEnabledRef.current = toastsEnabled;
+  }, [toastsEnabled]);
 
   const CLUE_TOAST_DURATION_MS = 5000;
 
   // Function to show clue toast and add to discovered row
   const showClueToast = (clue: CluePayload) => {
+    const currentToastsEnabled = toastsEnabledRef.current;
+    
     // Add to discovered clues row (avoid duplicates)
     setDiscoveredClues((prev) => {
       const exists = prev.some((c) => c.name === clue.name);
@@ -58,7 +67,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
     });
 
     // Show the toast only if toastsEnabled (Map view visible)
-    if (toastsEnabled) {
+    if (currentToastsEnabled) {
       const id = toast(clue.name, {
         description: clue.clue,
         icon: clue.icon,
@@ -246,7 +255,6 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
   }, []);
 
   const containerStyle: React.CSSProperties = {
-    ...style,
     height: '100%',
     backgroundColor: '#0f172a',
     padding: '6px',
@@ -254,6 +262,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
+    ...style,
   };
 
   const hasSelectedSpecies = selectedSpeciesId > 0 || (!!selectedSpeciesName && selectedSpeciesName !== 'No species found at this location');
