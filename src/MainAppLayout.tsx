@@ -151,7 +151,7 @@ function MainAppLayout() {
                     overflow: 'auto',
                     position: 'relative'
                 }}>
-                    <SpeciesPanel />
+                    <SpeciesPanel toastsEnabled={viewMode === 'map'} />
                 </div>
             </div>
             </div>
@@ -181,6 +181,8 @@ function MainAppLayout() {
                 richColors
                 theme="dark"
                 closeButton
+                expand
+                visibleToasts={3}
                 toastOptions={{
                     classNames: {
                         toast: "bg-slate-800 border-slate-700 text-slate-100",
