@@ -512,18 +512,18 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     refs.current[id] = el;
   };
 
+  const getViewport = () => {
+    const root = gridRef.current;
+    return (root?.querySelector('[data-radix-scroll-area-viewport]') as HTMLDivElement | null) ?? null;
+  };
+
   const onJump = (target: JumpTarget) => {
     if (target.type === 'ecoregion' || target.type === 'realm' || target.type === 'biome' || 
         target.type === 'species' || target.type === 'order' || target.type === 'class') {
       setSelectedFilter({ type: target.type, value: target.value });
-      // Scroll to the grid top when filtering
-      if (gridRef.current) {
-        gridRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-          inline: 'nearest',
-        });
-      }
+      // Scroll the ScrollArea viewport to top
+      const viewport = getViewport();
+      viewport?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -531,28 +531,18 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     if (target.type === 'genus' && typeof target.value === 'string') {
       // Simple genus filter
       setSelectedFilter({ type: 'genus', value: target.value });
-      // Scroll to the grid top when filtering
-      if (gridRef.current) {
-        gridRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-          inline: 'nearest',
-        });
-      }
+      // Scroll the ScrollArea viewport to top
+      const viewport = getViewport();
+      viewport?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     
     if (target.type === 'family' && typeof target.value === 'string') {
       // Simple family filter
       setSelectedFilter({ type: 'family', value: target.value });
-      // Scroll to the grid top when filtering
-      if (gridRef.current) {
-        gridRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-          inline: 'nearest',
-        });
-      }
+      // Scroll the ScrollArea viewport to top
+      const viewport = getViewport();
+      viewport?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     
@@ -569,12 +559,18 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     }
 
     const element = refs.current[elementId];
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest',
-      });
+    const viewport = getViewport();
+    if (element && viewport) {
+      // Compute offset within the viewport
+      const elTop = element.getBoundingClientRect().top;
+      const vpTop = viewport.getBoundingClientRect().top;
+      const current = viewport.scrollTop;
+      const top = current + (elTop - vpTop) - 8;
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      viewport.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
+    } else {
+      // fallback to native scroll
+      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 

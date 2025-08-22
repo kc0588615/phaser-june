@@ -1,0 +1,19 @@
+/* Uniform category header size across h2 and h4 */
+.category-title {
+  font-size: 0.875rem !important;   /* Tailwind text-sm */
+  line-height: 1.25rem !important;  /* Tailwind leading-5 */
+  font-weight: 500 !important;      /* Tailwind font-medium */
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+/* High contrast color variants for category headers */
+.category-title.red { color: #fca5a5 !important; }      /* red-300 - high contrast on dark */
+.category-title.green { color: #86efac !important; }    /* green-300 - high contrast on dark */
+.category-title.blue { color: #93c5fd !important; }     /* blue-300 - high contrast on dark */
+.category-title.orange { color: #fdba74 !important; }   /* orange-300 - high contrast on dark */
+.category-title.yellow { color: #fde047 !important; }   /* yellow-300 - high contrast on dark */
+.category-title.black { color: #d1d5db !important; }    /* gray-300 - high contrast for "black" on dark */
+.category-title.white { color: #f3f4f6 !important; }    /* gray-100 - high contrast on dark */
+.category-title.purple { color: #c4b5fd !important; }   /* purple-300 - high contrast on dark */

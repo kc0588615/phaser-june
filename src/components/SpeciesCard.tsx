@@ -8,8 +8,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-
+import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { iucnBadgeClasses, iucnLabel } from '@/lib/iucn';
 import type { Species } from '@/types/database';
+import '../styles/category-heading.css';
 
 interface SpeciesCardProps {
   species: Species;
@@ -19,35 +22,17 @@ interface SpeciesCardProps {
   discoveredAt?: string;
 }
 
-// Helper function to get conservation status color
-const getConservationColor = (code: string) => {
-  const upperCode = code?.toUpperCase();
-  switch (upperCode) {
-    case 'CR': return 'bg-red-600';
-    case 'EN': return 'bg-orange-600';
-    case 'VU': return 'bg-orange-500';
-    case 'NT': return 'bg-yellow-600';
-    case 'LC': return 'bg-green-600';
-    case 'DD': return 'bg-gray-500';
-    default: return 'bg-gray-500';
-  }
-};
-
-const getConservationLabel = (code: string) => {
-  const upperCode = code?.toUpperCase();
-  switch (upperCode) {
-    case 'CR': return 'CR - Critically Endangered';
-    case 'EN': return 'EN - Endangered';
-    case 'VU': return 'VU - Vulnerable';
-    case 'NT': return 'NT - Near Threatened';
-    case 'LC': return 'LC - Least Concern';
-    case 'DD': return 'DD - Data Deficient';
-    default: return code;
-  }
-};
 
 export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt }: SpeciesCardProps) {
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
+
+  // Category header classes with colors and emojis
+  const getCategoryHeader = (emoji: string, color: string, text: string) => (
+    <h4 className={`category-title ${color} mb-3`}>
+      <span>{emoji}</span>
+      {text}
+    </h4>
+  );
 
   return (
     <div 
@@ -96,28 +81,37 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             </span>
           )}
         </div>
-        <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2 break-words whitespace-normal leading-tight">
+        <h2 
+          className="font-bold text-white mb-2 break-words whitespace-normal leading-tight"
+          style={{ 
+            fontSize: 'clamp(18px, 5vw, 36px)',
+            lineHeight: '1.2'
+          }}
+        >
           {species.comm_name || species.sci_name}
         </h2>
-        <p className="text-base sm:text-lg md:text-xl lg:text-2xl italic text-slate-200 mb-3 break-words whitespace-normal leading-relaxed">
+        <p 
+          className="italic text-slate-200 mb-3 break-words whitespace-normal leading-relaxed"
+          style={{ 
+            fontSize: 'clamp(16px, 4.5vw, 30px)',
+            lineHeight: '1.3'
+          }}
+        >
           {species.sci_name}
         </p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {hasValue(species.cons_code) && (
-            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold text-white ${getConservationColor(species.cons_code!)}`}>
-              {getConservationLabel(species.cons_code!)}
+            <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold ${iucnBadgeClasses(species.cons_code!)}`}>
+              {species.cons_code} - {iucnLabel(species.cons_code!)}
             </span>
           )}
           {hasValue(species.http_iucn) && (
-            <a 
-              href={species.http_iucn!} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-sm text-primary hover:underline flex items-center gap-1"
-            >
-              <Globe size={12} />
-              IUCN Page
-            </a>
+            <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-white text-xs">
+              <Link href={species.http_iucn!} target="_blank" rel="noopener noreferrer" aria-label="Open IUCN page in a new tab">
+                <Globe className="w-3 h-3 mr-1" />
+                IUCN Page
+              </Link>
+            </Button>
           )}
         </div>
       </div>
@@ -126,47 +120,48 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
 
       {/* Taxonomy Section */}
       <div className="mb-4 sm:mb-6">
-        <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-violet-300">
-          <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-          Taxonomy
-        </h3>
-        <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
-          {hasValue(species.kingdom) && (
-            <>
-              <span className="text-slate-300 font-medium">Kingdom:</span>
-              <span className="text-white">{species.kingdom}</span>
-            </>
-          )}
-          {hasValue(species.phylum) && (
-            <>
-              <span className="text-slate-300 font-medium">Phylum:</span>
-              <span className="text-white">{species.phylum}</span>
-            </>
-          )}
-          {hasValue(species.class) && (
-            <>
-              <span className="text-slate-300 font-medium">Class:</span>
-              <span className="text-white">{species.class}</span>
-            </>
-          )}
-          {hasValue(species.order_) && (
-            <>
-              <span className="text-slate-300 font-medium">Order:</span>
-              <span className="text-white">{species.order_}</span>
-            </>
-          )}
-          {hasValue(species.family) && (
-            <>
-              <span className="text-slate-300 font-medium">Family:</span>
-              <span className="text-white">{species.family}</span>
-            </>
-          )}
-          {hasValue(species.genus) && (
-            <>
-              <span className="text-slate-300 font-medium">Genus:</span>
-              <span className="text-white">{species.genus}</span>
-            </>
-          )}
+        {getCategoryHeader('🧬', 'red', 'Taxonomy')}
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="space-y-2">
+            {hasValue(species.kingdom) && (
+              <div>
+                <span className="text-slate-400">Kingdom:</span>
+                <p className="font-medium">{species.kingdom}</p>
+              </div>
+            )}
+            {hasValue(species.class) && (
+              <div>
+                <span className="text-slate-400">Class:</span>
+                <p className="font-medium">{species.class}</p>
+              </div>
+            )}
+            {hasValue(species.family) && (
+              <div>
+                <span className="text-slate-400">Family:</span>
+                <p className="font-medium">{species.family}</p>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            {hasValue(species.phylum) && (
+              <div>
+                <span className="text-slate-400">Phylum:</span>
+                <p className="font-medium">{species.phylum}</p>
+              </div>
+            )}
+            {hasValue(species.order_) && (
+              <div>
+                <span className="text-slate-400">Order:</span>
+                <p className="font-medium">{species.order_}</p>
+              </div>
+            )}
+            {hasValue(species.genus) && (
+              <div>
+                <span className="text-slate-400">Genus:</span>
+                <p className="font-medium">{species.genus}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -175,10 +170,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-orange-300">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              Conservation Status
-            </h3>
+            {getCategoryHeader('🛡️', 'white', 'Conservation Status')}
             <div className="bg-orange-400/15 border border-orange-400/40 rounded-lg p-4 sm:p-5">
               <p 
                 className="text-slate-100 text-sm sm:text-base leading-relaxed"
@@ -203,10 +195,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-green-300">
-              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              Habitat
-            </h3>
+            {getCategoryHeader('🗺️', 'blue', 'Habitat')}
             <div>
               {hasValue(species.hab_tags) && (
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -247,10 +236,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-blue-300">
-              <Globe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              Geographic Distribution
-            </h3>
+            {getCategoryHeader('🗺️', 'blue', 'Geographic Distribution')}
             <p 
               className="text-slate-200 text-sm sm:text-base leading-relaxed"
               style={{ 
@@ -273,10 +259,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-emerald-300">
-              <Trees className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              Ecoregion
-            </h3>
+            {getCategoryHeader('🌳', 'green', 'Ecoregion')}
             <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
               {hasValue(species.bioregio_1) && (
                 <>
@@ -312,10 +295,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-red-300">
-              <Palette className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-              Physical Characteristics
-            </h3>
+            {getCategoryHeader('🐾', 'orange', 'Physical Characteristics')}
             <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
               {hasValue(species.color_prim) && (
                 <>
@@ -373,10 +353,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-orange-400">
-              <Leaf className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-              Behavior & Diet
-            </h3>
+            {getCategoryHeader('💨', 'yellow', 'Behavior & Diet')}
             <div>
               {hasValue(species.diet_type) && (
                 <div className="mb-2">
@@ -469,10 +446,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-pink-400">
-              <Clock className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-              Life Cycle
-            </h3>
+            {getCategoryHeader('⏳', 'black', 'Life Cycle')}
             <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm mb-3 items-start break-words">
               {hasValue(species.lifespan) && (
                 <>
@@ -542,10 +516,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-gray-400">
-              <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-              Threats
-            </h3>
+            {getCategoryHeader('🛡️', 'white', 'Threats')}
             <p 
               className="text-muted-foreground"
               style={{ 
@@ -570,10 +541,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
-            <h3 className="text-sm sm:text-base md:text-lg font-bold mb-2 sm:mb-3 flex items-center gap-2 text-yellow-400">
-              <Info className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-              Key Facts
-            </h3>
+            {getCategoryHeader('🔮', 'purple', 'Key Facts')}
             <div>
               {hasValue(species.key_fact1) && (
                 <p 
