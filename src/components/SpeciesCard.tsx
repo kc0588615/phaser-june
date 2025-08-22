@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { iucnBadgeClasses, iucnLabel } from '@/lib/iucn';
 import type { Species } from '@/types/database';
-import '../styles/category-heading.css';
 
 interface SpeciesCardProps {
   species: Species;
