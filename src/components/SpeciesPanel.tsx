@@ -8,9 +8,10 @@ import { ClueSheetWrapper } from './ClueSheetWrapper';
 
 interface SpeciesPanelProps {
   style?: React.CSSProperties;
+  toastsEnabled?: boolean;
 }
 
-export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
+export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled = true }) => {
   const [clues, setClues] = useState<CluePayload[]>([]);
   const [selectedSpeciesName, setSelectedSpeciesName] = useState<string>('');
   const [selectedSpeciesId, setSelectedSpeciesId] = useState<number>(0);
@@ -38,6 +39,8 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
     selectedSpeciesIdRef.current = selectedSpeciesId;
   }, [selectedSpeciesId]);
 
+  const CLUE_TOAST_DURATION_MS = 5000;
+
   // Function to show clue toast and add to discovered row
   const showClueToast = (clue: CluePayload) => {
     // Add to discovered clues row (avoid duplicates)
@@ -54,15 +57,26 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
       ];
     });
 
-    // Show the toast
-    toast(clue.name, {
-      description: clue.clue,
-      icon: clue.icon,
-      duration: 5000,
-      style: {
-        borderLeft: `4px solid ${clue.color}`,
-      },
-    });
+    // Show the toast only if toastsEnabled (Map view visible)
+    if (toastsEnabled) {
+      const id = toast(clue.name, {
+        description: clue.clue,
+        icon: clue.icon,
+        duration: CLUE_TOAST_DURATION_MS,
+        style: {
+          borderLeft: `4px solid ${clue.color}`,
+        },
+      });
+
+      // Guarantee it disappears even if clicked/touched (overrides any pause behavior)
+      window.setTimeout(() => {
+        try {
+          toast.dismiss(id);
+        } catch {
+          // already dismissed
+        }
+      }, CLUE_TOAST_DURATION_MS + 100); // small buffer to avoid racing the auto-close
+    }
   };
 
   useEffect(() => {
