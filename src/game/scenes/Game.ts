@@ -5,9 +5,10 @@ import { MoveAction, MoveDirection } from '../MoveAction';
 import { BoardView } from '../BoardView';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
-    DRAG_THRESHOLD, MOVE_THRESHOLD
+    DRAG_THRESHOLD, MOVE_THRESHOLD,
+    STREAK_STEP, STREAK_CAP, EARLY_BONUS_PER_SLOT, DEFAULT_TOTAL_CLUE_SLOTS
 } from '../constants';
-import { EventBus, EventPayloads } from '../EventBus';
+import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
 import { 
@@ -73,6 +74,12 @@ export class Game extends Phaser.Scene {
     // --- Raster Habitat Integration ---
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
+    
+    // --- Streak and Scoring ---
+    private streak: number = 0;
+    private seenClueCategories: Set<GemCategory> = new Set();
+    private turnBaseTotalScore: number = 0; // Accumulator for the current turn
+    private anyMatchThisTurn: boolean = false; // Track if any match occurred this turn
 
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
@@ -95,11 +102,80 @@ export class Game extends Phaser.Scene {
 
         // Check game over
         if (this.backendPuzzle.isGameOver() && this.canMove) {
-            this.canMove = false;
+            this.disableInputs();
             const finalScore = this.backendPuzzle.getScore();
+            this.emitHud();
             console.log(`Game Over! Final score: ${finalScore}`);
-            this.scene.start('GameOver', { score: finalScore });
+            this.time.delayedCall(100, () => {
+                this.scene.start('GameOver', { score: finalScore });
+            });
         }
+    }
+
+    private currentMultiplier(): number {
+        return Math.min(1 + (this.streak * STREAK_STEP), STREAK_CAP);
+    }
+
+    private emitHud(): void {
+        if (!this.backendPuzzle) return;
+        EventBus.emit(EVT_GAME_HUD_UPDATED, {
+            score: this.backendPuzzle.getScore(),
+            movesRemaining: this.backendPuzzle.getMovesRemaining(),
+            streak: this.streak,
+            multiplier: this.currentMultiplier(),
+        });
+    }
+
+    private disableInputs(): void {
+        this.canMove = false;
+    }
+
+    private handleRestart(): void {
+        this.disableInputs();
+        this.scene.restart();
+    }
+
+    private onMoveResolved(baseTurnScore: number, didAnyMatch: boolean): void {
+        if (!this.backendPuzzle) return;
+        
+        // Decrement moves exactly once per resolved move
+        this.backendPuzzle.decrementMoves(1);
+
+        // Apply base score - streak bonus will be applied only on correct guesses
+        // No more automatic streak incrementing on matches
+
+        // Emit HUD update
+        this.emitHud();
+
+        // Disable input and transition when moves hit 0
+        if (this.backendPuzzle.getMovesRemaining() <= 0) {
+            this.disableInputs();
+            this.emitHud();
+            const finalScore = this.backendPuzzle.getScore();
+            this.time.delayedCall(100, () => {
+                this.scene.start('GameOver', { score: finalScore });
+            });
+        }
+    }
+
+    private onWrongGuess(): void {
+        this.streak = 0;
+        this.emitHud();
+    }
+
+    private onCorrectGuess(totalClueSlotsForSpecies?: number): void {
+        if (!this.backendPuzzle) return;
+        
+        // Increment streak on correct guess
+        this.streak += 1;
+        
+        const total = totalClueSlotsForSpecies ?? DEFAULT_TOTAL_CLUE_SLOTS;
+        const revealed = Math.min(this.seenClueCategories.size, total);
+        const earlyBase = Math.max(0, total - revealed) * EARLY_BONUS_PER_SLOT;
+        const earlyWithStreak = Math.floor(earlyBase * this.currentMultiplier());
+        this.backendPuzzle.addBonusScore(earlyWithStreak);
+        this.seenClueCategories.clear();
+        this.emitHud();
     }
 
     // Helper function to check if a progressive category is complete
@@ -177,6 +253,13 @@ export class Game extends Phaser.Scene {
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
+        
+        // Initialize streak and scoring state
+        this.streak = 0;
+        this.seenClueCategories = new Set();
+        this.turnBaseTotalScore = 0;
+        this.anyMatchThisTurn = false;
+        
         this.calculateBoardDimensions();
         this.boardView = new BoardView(this, {
             cols: GRID_COLS,
@@ -194,6 +277,7 @@ export class Game extends Phaser.Scene {
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
         EventBus.on('species-guess-submitted', this.handleSpeciesGuess, this);
+        EventBus.on(EVT_GAME_RESTART, this.handleRestart, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -219,6 +303,12 @@ export class Game extends Phaser.Scene {
             this.currentSpeciesIndex = 0;
             this.revealedClues.clear(); // Reset clues for new game
             this.allCluesRevealed = false;
+            
+            // Reset streak and scoring state for new location
+            this.streak = 0;
+            this.seenClueCategories.clear();
+            this.turnBaseTotalScore = 0;
+            this.anyMatchThisTurn = false;
             
             // Store raster habitat data for green gem clues
             this.rasterHabitats = [...data.rasterHabitats];
@@ -278,6 +368,9 @@ export class Game extends Phaser.Scene {
             this.isBoardInitialized = true;
             this.canMove = true; // Board is ready, enable input
             console.log("Game Scene: Board initialized with random gems. Input enabled.");
+            
+            // Emit initial HUD state
+            this.emitHud();
 
         } catch (error) {
             console.error("Game Scene: Error initializing board from Cesium data:", error);
@@ -516,16 +609,28 @@ export class Game extends Phaser.Scene {
     private async applyMoveAndHandleResults(moveAction: MoveAction): Promise<void> {
         if (!this.backendPuzzle || !this.boardView) return;
         
+        // Reset turn tracking
+        this.turnBaseTotalScore = 0;
+        this.anyMatchThisTurn = false;
+        
         // Capture grid state BEFORE applying the move to get original gem types
         const gridStateBeforeMove = this.backendPuzzle.getGridState();
         const phaseResult = this.backendPuzzle.getNextExplodeAndReplacePhase([moveAction]); // This applies the move
         
         if (!phaseResult.isNothingToDo()) {
+            // Track turn score
+            const phaseScore = this.backendPuzzle.calculatePhaseBaseScore(phaseResult);
+            this.turnBaseTotalScore += phaseScore;
+            this.anyMatchThisTurn = true;
+            
             await this.animatePhaseWithOriginalGems(phaseResult, gridStateBeforeMove);
             await this.handleCascades();
         } else {
             console.warn("applyMoveAndHandleResults: Move was applied, but backend reports no matches. This might be a logic discrepancy.");
         }
+        
+        // Move is fully resolved, apply turn resolution
+        this.onMoveResolved(this.turnBaseTotalScore, this.anyMatchThisTurn);
     }
 
     private async handleCascades(): Promise<void> {
@@ -536,6 +641,11 @@ export class Game extends Phaser.Scene {
         const cascadePhase = this.backendPuzzle.getNextExplodeAndReplacePhase([]);
         
         if (!cascadePhase.isNothingToDo()) {
+            // Track cascade score
+            const cascadeScore = this.backendPuzzle.calculatePhaseBaseScore(cascadePhase);
+            this.turnBaseTotalScore += cascadeScore;
+            this.anyMatchThisTurn = true;
+            
             await this.animatePhaseWithOriginalGems(cascadePhase, gridStateBeforeCascade);
             await this.handleCascades();
         }
@@ -620,10 +730,12 @@ export class Game extends Phaser.Scene {
                             // Only mark as revealed when sequence is complete
                             if (this.isProgressiveCategoryComplete(category)) {
                                 this.revealedClues.add(category);
+                                this.seenClueCategories.add(category);
                             }
                         } else {
                             // No more clues for this progressive category; ensure marked complete
                             this.revealedClues.add(category);
+                            this.seenClueCategories.add(category);
                         }
                     }
                     continue; // move to next category
@@ -632,6 +744,7 @@ export class Game extends Phaser.Scene {
                 // Standard handling for other categories
                 if (!this.revealedClues.has(category)) {
                     this.revealedClues.add(category);
+                    this.seenClueCategories.add(category);
                     
                     // Generate clue for this category
                     let clueData: CluePayload | null = null;
@@ -716,10 +829,12 @@ export class Game extends Phaser.Scene {
                             // Only mark as revealed when sequence is complete
                             if (this.isProgressiveCategoryComplete(category)) {
                                 this.revealedClues.add(category);
+                                this.seenClueCategories.add(category);
                             }
                         } else {
                             // No more clues for this progressive category; ensure marked complete
                             this.revealedClues.add(category);
+                            this.seenClueCategories.add(category);
                         }
                     }
                     continue; // move to next category
@@ -728,6 +843,7 @@ export class Game extends Phaser.Scene {
                 // Standard handling for other categories
                 if (!this.revealedClues.has(category)) {
                     this.revealedClues.add(category);
+                    this.seenClueCategories.add(category);
                     
                     // Generate clue for this category
                     let clueData: CluePayload | null = null;
@@ -794,6 +910,7 @@ export class Game extends Phaser.Scene {
             this.revealedClues.clear();
             this.allCluesRevealed = false;
             this.usedRasterHabitats.clear(); // Reset used raster habitats for new species
+            this.seenClueCategories.clear(); // Reset for early guess bonus calculation
             
             // Reset all progressive clues for new species
             resetAllProgressiveClues(this.selectedSpecies);
@@ -826,6 +943,9 @@ export class Game extends Phaser.Scene {
         
         if (data.isCorrect) {
             console.log("Game Scene: Correct species identified!");
+            
+            // Apply early guess bonus with streak multiplier
+            this.onCorrectGuess(DEFAULT_TOTAL_CLUE_SLOTS);
             
             // Check if there are more species at this location
             if (this.currentSpeciesIndex + 1 < this.currentSpecies.length) {
@@ -862,6 +982,10 @@ export class Game extends Phaser.Scene {
                     this.resetForNewLocation();
                 });
             }
+        } else {
+            // Wrong guess - reset streak
+            console.log("Game Scene: Wrong guess - resetting streak");
+            this.onWrongGuess();
         }
     }
 
@@ -885,6 +1009,12 @@ export class Game extends Phaser.Scene {
         // Reset game state
         this.canMove = false;
         this.isBoardInitialized = false;
+        
+        // Reset streak and scoring state
+        this.streak = 0;
+        this.seenClueCategories.clear();
+        this.turnBaseTotalScore = 0;
+        this.anyMatchThisTurn = false;
         
         // Update status text
         if (this.statusText && this.statusText.active) {
@@ -1046,9 +1176,16 @@ export class Game extends Phaser.Scene {
         this.rasterHabitats = [];
         this.usedRasterHabitats.clear();
         
+        // Reset streak and scoring state
+        this.streak = 0;
+        this.seenClueCategories.clear();
+        this.turnBaseTotalScore = 0;
+        this.anyMatchThisTurn = false;
+        
         // Remove EventBus listeners
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
         EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
+        EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
         
         // Emit game reset event
         EventBus.emit('game-reset', undefined);

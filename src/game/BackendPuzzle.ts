@@ -1,7 +1,7 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, GemType } from './constants';
+import { GEM_TYPES, GemType, BASE_MOVES } from './constants';
 
 // Type for a gem in the puzzle
 export interface Gem {
@@ -15,7 +15,7 @@ export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
     private nextGemsToSpawn: GemType[] = [];
     private score: number = 0;
-    private movesRemaining: number = 50; // Simple game over condition
+    private movesRemaining: number = BASE_MOVES; // Simple game over condition
 
     constructor(
         public readonly width: number,
@@ -35,7 +35,7 @@ export class BackendPuzzle {
         console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
         this.score = 0;
-        this.movesRemaining = 50;
+        this.movesRemaining = BASE_MOVES;
     }
 
     getScore(): number {
@@ -52,6 +52,29 @@ export class BackendPuzzle {
 
     getGridState(): PuzzleGrid {
         return this.puzzleState;
+    }
+
+    addBonusScore(points: number): void {
+        if (points > 0) this.score += Math.floor(points);
+    }
+
+    decrementMoves(count: number = 1): number {
+        this.movesRemaining = Math.max(0, this.movesRemaining - Math.max(0, count));
+        return this.movesRemaining;
+    }
+
+    calculatePhaseBaseScore(phase: ExplodeAndReplacePhase): number {
+        let totalMatched = 0;
+        phase.matches.forEach(match => {
+            totalMatched += match.length;
+        });
+        
+        if (totalMatched > 0) {
+            const baseScore = totalMatched * 10;
+            const bonus = totalMatched > 3 ? (totalMatched - 3) * 5 : 0;
+            return baseScore + bonus;
+        }
+        return 0;
     }
 
     /**
@@ -285,8 +308,7 @@ export class BackendPuzzle {
             const bonus = totalMatched > 3 ? (totalMatched - 3) * 5 : 0;
             this.score += baseScore + bonus;
             
-            // Decrement moves when a successful match is made
-            this.movesRemaining--;
+            // Note: Moves are now decremented in Game.ts once per turn, not per match
         }
         
         const explodeCoords = new Set<string>();

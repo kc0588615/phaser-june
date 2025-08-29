@@ -79,26 +79,55 @@ export class GameOver extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
 
-        // Restart instruction
-         const restartText = this.add.text(centerX, centerY * 1.3, 'Click to Save Score & Restart', {
+        // Play Again button
+        const playAgainButton = this.add.text(centerX, centerY * 1.2, 'Play Again', {
             fontFamily: 'Arial',
-            fontSize: `${Math.min(width * 0.05, height * 0.06)}px`, // Ensure 'px' unit
-            color: '#eeeeee',
+            fontSize: `${Math.min(width * 0.06, height * 0.08)}px`,
+            color: '#ffffff',
+            backgroundColor: '#3b82f6',
+            padding: { x: 20, y: 10 },
             align: 'center'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
 
-        // Pulse effect
-        this.tweens.add({
-            targets: restartText,
-            alpha: 0.6,
-            duration: 900,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1
+        // Save Score button
+        const saveScoreButton = this.add.text(centerX, centerY * 1.5, 'Save Score & Menu', {
+            fontFamily: 'Arial',
+            fontSize: `${Math.min(width * 0.05, height * 0.06)}px`,
+            color: '#eeeeee',
+            backgroundColor: '#1e293b',
+            padding: { x: 16, y: 8 },
+            align: 'center'
+        }).setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+
+        // Hover effects
+        playAgainButton.on('pointerover', () => {
+            playAgainButton.setScale(1.05);
+        });
+        playAgainButton.on('pointerout', () => {
+            playAgainButton.setScale(1);
         });
 
-        // Input to save score and return to Main Menu
-        this.input.once(Phaser.Input.Events.POINTER_DOWN, async () => {
+        saveScoreButton.on('pointerover', () => {
+            saveScoreButton.setScale(1.05);
+        });
+        saveScoreButton.on('pointerout', () => {
+            saveScoreButton.setScale(1);
+        });
+
+        // Play Again handler - restart directly
+        playAgainButton.on('pointerup', () => {
+            console.log("GameOver: Restarting game...");
+            this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+                if (progress === 1) {
+                    this.scene.start('Game');
+                }
+            });
+        });
+
+        // Save Score handler
+        saveScoreButton.on('pointerup', async () => {
             const username = prompt("Enter your name to save score (2-25 characters):", "Player");
 
             if (username && username.trim()) {
