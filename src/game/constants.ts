@@ -2,7 +2,7 @@
 
 // --- Grid Configuration ---
 export const GRID_COLS = 7 as const;
-export const GRID_ROWS = 8 as const;
+export const GRID_ROWS = 7 as const; // Reduced from 8 to 7 to make room for owl
 
 // --- Gem Configuration ---
 export const GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'purple'] as const;

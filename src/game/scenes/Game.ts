@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import { BackendPuzzle } from '../BackendPuzzle';
 import { MoveAction, MoveDirection } from '../MoveAction';
 import { BoardView } from '../BoardView';
+import { OwlSprite } from '../ui/OwlSprite';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD, MOVE_THRESHOLD,
@@ -84,6 +85,8 @@ export class Game extends Phaser.Scene {
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
     
+    // Owl sprite
+    private owl?: OwlSprite;
 
     constructor() {
         super('Game');
@@ -250,6 +253,15 @@ export class Game extends Phaser.Scene {
             strokeThickness: 3
         }).setOrigin(1, 0).setDepth(100);
 
+        // Setup owl animations and create owl sprite
+        OwlSprite.setupAnimations(this);
+        // Calculate initial board position for owl alignment
+        this.calculateBoardDimensions();
+        this.owl = new OwlSprite(this, { 
+            scale: 2.5,  // Reduced from 4 to 2.5
+            boardOffsetX: this.boardOffset.x
+        });
+        this.owl.createAndRunIntro();
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -259,8 +271,6 @@ export class Game extends Phaser.Scene {
         this.seenClueCategories = new Set();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
-        
-        this.calculateBoardDimensions();
         this.boardView = new BoardView(this, {
             cols: GRID_COLS,
             rows: GRID_ROWS,
@@ -397,8 +407,10 @@ export class Game extends Phaser.Scene {
             return;
         }
         
+        // Keep original gem sizing by adjusting for reduced rows
+        // Original: 8 rows at 0.90 height. Now: 7 rows, so use (7/8) * 0.90 = 0.7875
         const usableWidth = width * 0.95;
-        const usableHeight = height * 0.90;
+        const usableHeight = height * 0.7875;  // Adjusted to maintain original gem size with 7 rows
         
         const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
         const sizeFromHeight = Math.floor(usableHeight / GRID_ROWS);
@@ -408,7 +420,7 @@ export class Game extends Phaser.Scene {
         
         this.boardOffset = {
             x: Math.round((width - boardWidth) / 2),
-            y: Math.round((height - boardHeight) / 2)
+            y: Math.round((height - boardHeight) / 2)  // Centered position
         };
     }
 
@@ -431,6 +443,11 @@ export class Game extends Phaser.Scene {
         }
         if (this.scoreText) {
             this.scoreText.setPosition(20, height - 25);
+        }
+        
+        // Update owl position on resize with new board offset
+        if (this.owl) {
+            this.owl.setBoardOffsetX(this.boardOffset.x);
         }
         
         if (this.boardView) {
