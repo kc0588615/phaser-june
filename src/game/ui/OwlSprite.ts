@@ -113,7 +113,8 @@ export class OwlSprite {
     private topLeftAnchor() {
         // Align owl's left edge directly with the board's left edge
         // Since owl origin is now (0, 1), no need for half-width adjustment
-        const x = this.boardOffsetX;  // Directly use board offset for flush alignment
+        // Using the same 12px margin as the board for consistent alignment
+        const x = this.boardOffsetX || 12;  // Use board offset or default 12px margin
         const y = this.margin + (32 * this.scale); // baseline so feet sit near the margin
         return { x, y };
     }

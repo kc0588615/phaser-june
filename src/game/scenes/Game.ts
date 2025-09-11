@@ -418,9 +418,12 @@ export class Game extends Phaser.Scene {
         const boardWidth = GRID_COLS * this.gemSize;
         const boardHeight = GRID_ROWS * this.gemSize;
         
+        // Small margin from left edge for visual consistency
+        const leftMargin = 12;
+        
         this.boardOffset = {
-            x: Math.round((width - boardWidth) / 2),
-            y: Math.round((height - boardHeight) / 2)  // Centered position
+            x: leftMargin,  // Flush with left edge (with small margin)
+            y: Math.round((height - boardHeight) / 2)  // Vertically centered
         };
     }
 
