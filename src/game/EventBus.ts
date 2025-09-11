@@ -49,6 +49,13 @@ export interface EventPayloads {
   'show-species-list': {
     speciesId: number;
   };
+  'game-hud-updated': {
+    score: number;
+    movesRemaining: number;
+    streak: number;
+    multiplier: number;
+  };
+  'game-restart': Record<string, never>;
 }
 
 // Type-safe EventBus class
@@ -93,3 +100,11 @@ class TypedEventBus extends Phaser.Events.EventEmitter {
 // Used to emit events between React components and Phaser scenes
 // https://newdocs.phaser.io/docs/3.70.0/Phaser.Events.EventEmitter
 export const EventBus = new TypedEventBus();
+
+// Export event names as constants for consistency
+export const EVT_GAME_HUD_UPDATED = 'game-hud-updated' as const;
+export const EVT_GAME_RESTART = 'game-restart' as const;
+
+// Re-export event types for convenience
+export type GameHudUpdatedEvent = EventPayloads['game-hud-updated'];
+export type GameRestartEvent = EventPayloads['game-restart'];

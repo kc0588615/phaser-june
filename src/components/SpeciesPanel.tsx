@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { EventBus } from '../game/EventBus';
+import { EventBus, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART, type GameHudUpdatedEvent } from '../game/EventBus';
 import type { CluePayload } from '../game/clueConfig';
 import { SpeciesHeaderCard } from './SpeciesHeaderCard';
 import { DenseClueGrid } from './DenseClueGrid';
@@ -27,6 +27,12 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
   const [isSpeciesDiscovered, setIsSpeciesDiscovered] = useState<boolean>(false);
   const [discoveredSpeciesName, setDiscoveredSpeciesName] = useState<string>('');
   const [hiddenSpeciesName, setHiddenSpeciesName] = useState<string>('');
+  const [hud, setHud] = useState<GameHudUpdatedEvent>({
+    score: 0,
+    movesRemaining: 0,
+    streak: 0,
+    multiplier: 1.0,
+  });
   
   // Use a ref to track if we've already shown the completion toast
   const completionToastShownRef = React.useRef<boolean>(false);
@@ -235,6 +241,10 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
       }
     };
 
+    const handleHudUpdate = (data: GameHudUpdatedEvent) => {
+      setHud(data);
+    };
+
     EventBus.on('clue-revealed', handleClueRevealed);
     EventBus.on('species-guess-submitted', handleSpeciesGuess);
     EventBus.on('new-game-started', handleNewGame);
@@ -242,6 +252,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
     EventBus.on('no-species-found', handleNoSpeciesFound);
     EventBus.on('all-clues-revealed', handleAllCluesRevealed);
     EventBus.on('all-species-completed', handleAllSpeciesCompleted);
+    EventBus.on(EVT_GAME_HUD_UPDATED, handleHudUpdate);
 
     return () => {
       EventBus.off('clue-revealed', handleClueRevealed);
@@ -251,6 +262,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
       EventBus.off('no-species-found', handleNoSpeciesFound);
       EventBus.off('all-clues-revealed', handleAllCluesRevealed);
       EventBus.off('all-species-completed', handleAllSpeciesCompleted);
+      EventBus.off(EVT_GAME_HUD_UPDATED, handleHudUpdate);
     };
   }, []);
 
@@ -267,8 +279,46 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
 
   const hasSelectedSpecies = selectedSpeciesId > 0 || (!!selectedSpeciesName && selectedSpeciesName !== 'No species found at this location');
 
+  const onRestart = () => EventBus.emit(EVT_GAME_RESTART, {});
+
   return (
     <div style={containerStyle}>
+      {/* Game HUD */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '8px 12px',
+        backgroundColor: '#1e293b',
+        borderRadius: '8px',
+        fontSize: '14px',
+        color: '#e2e8f0',
+        fontWeight: 500,
+      }}>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <span>Moves: {hud.movesRemaining}</span>
+          <span>Score: {hud.score}</span>
+          <span>Streak: x{hud.multiplier.toFixed(2)}</span>
+        </div>
+        {hud.movesRemaining === 0 && (
+          <button
+            onClick={onRestart}
+            style={{
+              padding: '4px 12px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 500,
+            }}
+          >
+            Restart
+          </button>
+        )}
+      </div>
+
       {/* Species Header with Horizontal Clue Indicators */}
       <SpeciesHeaderCard
         speciesName={allSpeciesCompleted ? 'All Species Discovered!' : (isSpeciesDiscovered ? discoveredSpeciesName : selectedSpeciesName)}
