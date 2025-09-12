@@ -257,9 +257,14 @@ export class Game extends Phaser.Scene {
         OwlSprite.setupAnimations(this);
         // Calculate initial board position for owl alignment
         this.calculateBoardDimensions();
+        
+        // Position owl based on screen size - always left-aligned for consistency
+        const isMobile = width < 768;
+        const owlOffsetX = isMobile ? this.boardOffset.x : Math.max(12, this.boardOffset.x - 100);
+        
         this.owl = new OwlSprite(this, { 
             scale: 2.5,  // Reduced from 4 to 2.5
-            boardOffsetX: this.boardOffset.x
+            boardOffsetX: owlOffsetX
         });
         this.owl.createAndRunIntro();
 
@@ -407,24 +412,47 @@ export class Game extends Phaser.Scene {
             return;
         }
         
-        // Keep original gem sizing by adjusting for reduced rows
-        // Original: 8 rows at 0.90 height. Now: 7 rows, so use (7/8) * 0.90 = 0.7875
-        const usableWidth = width * 0.95;
-        const usableHeight = height * 0.7875;  // Adjusted to maintain original gem size with 7 rows
+        // Responsive breakpoints
+        const MOBILE_BREAKPOINT = 768;
+        const MAX_GEM_SIZE = 80; // Maximum gem size for desktop
+        const MIN_GEM_SIZE = 24; // Minimum gem size for very small screens
         
+        // Determine if we're on mobile or desktop
+        const isMobile = width < MOBILE_BREAKPOINT;
+        
+        // Calculate usable space with different factors for mobile vs desktop
+        const usableWidth = isMobile ? width * 0.95 : width * 0.85;
+        const usableHeight = height * 0.7875; // Adjusted for 7 rows to maintain aspect ratio
+        
+        // Calculate gem size based on available space
         const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
         const sizeFromHeight = Math.floor(usableHeight / GRID_ROWS);
-        this.gemSize = Math.max(24, Math.min(sizeFromWidth, sizeFromHeight));
+        
+        // Use the smaller dimension but apply max/min constraints
+        const calculatedSize = Math.min(sizeFromWidth, sizeFromHeight);
+        this.gemSize = Math.max(MIN_GEM_SIZE, Math.min(calculatedSize, MAX_GEM_SIZE));
+        
+        // Calculate actual board dimensions
         const boardWidth = GRID_COLS * this.gemSize;
         const boardHeight = GRID_ROWS * this.gemSize;
         
-        // Small margin from left edge for visual consistency
-        const leftMargin = 12;
+        // Position board based on screen size
+        if (isMobile) {
+            // Mobile: Left-aligned with small margin for better space usage
+            const leftMargin = 12;
+            this.boardOffset = {
+                x: leftMargin,
+                y: Math.round((height - boardHeight) / 2)
+            };
+        } else {
+            // Desktop: Centered horizontally for classic game board appearance
+            this.boardOffset = {
+                x: Math.round((width - boardWidth) / 2),
+                y: Math.round((height - boardHeight) / 2)
+            };
+        }
         
-        this.boardOffset = {
-            x: leftMargin,  // Flush with left edge (with small margin)
-            y: Math.round((height - boardHeight) / 2)  // Vertically centered
-        };
+        console.log(`Board dimensions calculated: ${isMobile ? 'Mobile' : 'Desktop'} mode, gem size: ${this.gemSize}, position: (${this.boardOffset.x}, ${this.boardOffset.y})`);
     }
 
     private handleResize(): void {
@@ -448,9 +476,11 @@ export class Game extends Phaser.Scene {
             this.scoreText.setPosition(20, height - 25);
         }
         
-        // Update owl position on resize with new board offset
+        // Update owl position on resize based on screen size
         if (this.owl) {
-            this.owl.setBoardOffsetX(this.boardOffset.x);
+            const isMobile = width < 768;
+            const owlOffsetX = isMobile ? this.boardOffset.x : Math.max(12, this.boardOffset.x - 100);
+            this.owl.setBoardOffsetX(owlOffsetX);
         }
         
         if (this.boardView) {
