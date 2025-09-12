@@ -8,11 +8,13 @@ export class OwlSprite {
     private margin = 12;
     private introDone = false;
     private boardOffsetX: number = 0;
+    private boardOffsetY: number = 0;
 
-    constructor(scene: Phaser.Scene, opts?: { scale?: number, boardOffsetX?: number }) {
+    constructor(scene: Phaser.Scene, opts?: { scale?: number, boardOffsetX?: number, boardOffsetY?: number }) {
         this.scene = scene;
         this.scale = opts?.scale ?? 4;
         this.boardOffsetX = opts?.boardOffsetX ?? 0;
+        this.boardOffsetY = opts?.boardOffsetY ?? 0;
     }
 
     static setupAnimations(scene: Phaser.Scene): void {
@@ -66,7 +68,7 @@ export class OwlSprite {
 
         this.owl = this.scene.add.sprite(startX, startY, 'owl', 0)
             .setScale(scale)
-            .setOrigin(0, 1)  // Changed to left-bottom origin
+            .setOrigin(0, 0)  // Top-left origin for proper alignment
             .setDepth(200); // Above board/UI
 
         this.owl.setFlipX(true).play('owl_flying');
@@ -109,13 +111,32 @@ export class OwlSprite {
         this.boardOffsetX = offsetX;
         this.anchorTopLeft();
     }
+    
+    setBoardOffsetY(offsetY: number): void {
+        this.boardOffsetY = offsetY;
+        this.anchorTopLeft();
+    }
+    
+    setBoardOffsets(offsetX: number, offsetY: number): void {
+        this.boardOffsetX = offsetX;
+        this.boardOffsetY = offsetY;
+        this.anchorTopLeft();
+    }
 
     private topLeftAnchor() {
         // Align owl's left edge directly with the board's left edge
-        // Since owl origin is now (0, 1), no need for half-width adjustment
-        // Using the same 12px margin as the board for consistent alignment
-        const x = this.boardOffsetX || 12;  // Use board offset or default 12px margin
-        const y = this.margin + (32 * this.scale); // baseline so feet sit near the margin
+        // Owl origin is now (0, 0) for top-left alignment
+        // Adjust X to be flush with board edge (board has 12px margin, owl needs -18 to align)
+        const x = this.boardOffsetX - 30;  // This gives us x=-18 when boardOffsetX=12
+        
+        // Position owl above the board to avoid overlap
+        // Move down from current position by reducing the clearance
+        const clearance = 5; // Reduced clearance to move owl down
+        const owlHeight = 32 * this.scale; // Height of owl sprite
+        const y = this.boardOffsetY - clearance - owlHeight + 12; // Reduced from +15 to +12 to move up 3 pixels
+        
+        console.log(`Owl anchor position: x=${x} (boardOffsetX=${this.boardOffsetX}), y=${y}`);
+        
         return { x, y };
     }
 

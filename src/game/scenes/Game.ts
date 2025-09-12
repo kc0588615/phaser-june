@@ -258,13 +258,11 @@ export class Game extends Phaser.Scene {
         // Calculate initial board position for owl alignment
         this.calculateBoardDimensions();
         
-        // Position owl based on screen size - always left-aligned for consistency
-        const isMobile = width < 768;
-        const owlOffsetX = isMobile ? this.boardOffset.x : Math.max(12, this.boardOffset.x - 100);
-        
+        // Position owl flush with the left edge of the gameboard
         this.owl = new OwlSprite(this, { 
             scale: 2.5,  // Reduced from 4 to 2.5
-            boardOffsetX: owlOffsetX
+            boardOffsetX: this.boardOffset.x,  // Flush with board's left edge
+            boardOffsetY: this.boardOffset.y
         });
         this.owl.createAndRunIntro();
 
@@ -384,6 +382,11 @@ export class Game extends Phaser.Scene {
             this.canMove = true; // Board is ready, enable input
             console.log("Game Scene: Board initialized with random gems. Input enabled.");
             
+            // Update owl position after board initialization
+            if (this.owl) {
+                this.owl.setBoardOffsets(this.boardOffset.x, this.boardOffset.y);
+            }
+            
             // Emit initial HUD state
             this.emitHud();
 
@@ -476,11 +479,9 @@ export class Game extends Phaser.Scene {
             this.scoreText.setPosition(20, height - 25);
         }
         
-        // Update owl position on resize based on screen size
+        // Update owl position on resize - flush with board's left edge
         if (this.owl) {
-            const isMobile = width < 768;
-            const owlOffsetX = isMobile ? this.boardOffset.x : Math.max(12, this.boardOffset.x - 100);
-            this.owl.setBoardOffsetX(owlOffsetX);
+            this.owl.setBoardOffsets(this.boardOffset.x, this.boardOffset.y);
         }
         
         if (this.boardView) {
