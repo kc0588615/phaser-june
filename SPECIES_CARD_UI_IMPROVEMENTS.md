@@ -134,3 +134,61 @@ Each section retains its distinctive color for visual categorization:
 ## Summary
 
 The improvements successfully enhance visual hierarchy and mobile UX while preserving the dense, information-rich layout. The use of CSS Grid provides perfect alignment, the typography changes guide the eye to important data, and the tagged lists improve scannability. All changes are backward-compatible and maintain the existing design language.
+
+## Character-by-Character Line Break Fix
+
+### Issue Description
+Species with blank `color_sec` fields (specifically Chelonoidis abingdonii and Emydoidea blandingii) were displaying primary color text with each character on a new line in the Physical Characteristics section.
+
+### Root Cause
+The `species-card-mobile.css` file contained aggressive CSS rules with `!important` flags that forced `word-break: break-all` and `overflow-wrap: anywhere` on all spans within species cards. These rules were intended for mobile text wrapping but caused unintended character-level breaks in grid layouts.
+
+### Solution Implementation
+
+#### 1. CSS Exclusion Pattern
+- **File**: `src/styles/species-card-mobile.css`
+- **Changes**: Added `.grid-value` class exclusion to prevent aggressive text wrapping
+```css
+/* Exclude grid values from aggressive wrapping */
+.species-card-mobile span:not([class*="swiper"]):not(.grid-value) {
+  overflow-wrap: anywhere !important;
+  word-break: break-all !important;
+}
+
+/* Special handling for grid values */
+.species-card-mobile .grid-value {
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: keep-all !important;
+  hyphens: none !important;
+}
+```
+
+#### 2. Component Updates
+- **File**: `src/components/SpeciesCard.tsx`
+- **Changes**: Added `grid-value` class to all value spans in grid layouts
+- **Affected Sections**:
+  - Physical Characteristics (color_prim, color_sec, pattern, size, weight, shape)
+  - Ecoregion (bioregio_1, realm, sub_realm, biome)
+- **Pattern**:
+```tsx
+<span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+  {species.color_prim}
+</span>
+```
+
+#### 3. Parent Container Fix
+- **File**: `src/components/SpeciesCard.tsx` (line 42)
+- **Change**: Modified parent container from `overflowWrap: 'anywhere'` to `overflowWrap: 'break-word'`
+- **Reason**: Prevents cascading of aggressive character-level breaking to child elements
+
+### Technical Details
+- `word-break: keep-all` prevents breaks within words (especially useful for compound terms like "Black / Dark Brown")
+- `overflow-wrap: break-word` allows breaking between words when container is narrow
+- The `grid-value` class acts as a CSS hook to exempt these specific spans from mobile-optimized aggressive wrapping
+- Inline styles provide additional insurance against CSS cascade issues
+
+### Testing Notes
+- Fix specifically tested with Chelonoidis abingdonii and Emydoidea blandingii
+- Verified across multiple viewport widths (mobile, tablet, desktop)
+- Maintains proper text wrapping for long values while preventing character-level breaks

@@ -5,6 +5,7 @@ import { SpeciesPanel } from './components/SpeciesPanel'; // Import the SpeciesP
 import SpeciesList from './components/SpeciesList'; // Import the SpeciesList component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 import { Toaster } from 'sonner';
+import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
@@ -113,11 +114,15 @@ function MainAppLayout() {
                             border: '1px solid #555',
                             borderRadius: '4px',
                             cursor: 'pointer',
-                            fontSize: '14px'
+                            fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
                         }}
                         onClick={() => setViewMode('species')}
+                        title="Species List"
                     >
-                        Species List
+                        <PiBookOpenTextLight size={18} />
                     </button>
                     <button 
                         style={{ 
@@ -127,11 +132,15 @@ function MainAppLayout() {
                             border: '1px solid #555',
                             borderRadius: '4px',
                             cursor: 'pointer',
-                            fontSize: '14px'
+                            fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
                         }}
                         onClick={() => setViewMode(viewMode === 'map' ? 'clues' : 'map')}
+                        title={viewMode === 'map' ? 'Clue List' : 'Show Map'}
                     >
-                        {viewMode === 'map' ? 'Clue List' : 'Show Map'}
+                        {viewMode === 'map' ? <PiListMagnifyingGlass size={18} /> : <PiGlobeHemisphereWestThin size={18} />}
                     </button>
                 </div>
                 

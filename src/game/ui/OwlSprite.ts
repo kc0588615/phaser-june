@@ -123,6 +123,14 @@ export class OwlSprite {
         this.anchorTopLeft();
     }
 
+    setScale(scale: number): void {
+        this.scale = scale;
+        if (this.owl) {
+            this.owl.setScale(scale);
+            this.anchorTopLeft(); // Update position since scale affects positioning
+        }
+    }
+
     private topLeftAnchor() {
         // Align owl's left edge directly with the board's left edge
         // Owl origin is now (0, 0) for top-left alignment
@@ -133,7 +141,7 @@ export class OwlSprite {
         // Move down from current position by reducing the clearance
         const clearance = 5; // Reduced clearance to move owl down
         const owlHeight = 32 * this.scale; // Height of owl sprite
-        const y = this.boardOffsetY - clearance - owlHeight + 12; // Reduced from +15 to +12 to move up 3 pixels
+        const y = this.boardOffsetY - clearance - owlHeight + 14; // Reduced from +15 to +12 to move up 3 pixels, then +2 to move down
         
         console.log(`Owl anchor position: x=${x} (boardOffsetX=${this.boardOffsetX}), y=${y}`);
         
