@@ -19,10 +19,11 @@ interface SpeciesCardProps {
   onNavigateToTop: () => void;
   isDiscovered?: boolean;
   discoveredAt?: string;
+  speciesPositionLabel?: string;
 }
 
 
-export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt }: SpeciesCardProps) {
+export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt, speciesPositionLabel }: SpeciesCardProps) {
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   // Category header classes with colors and emojis
@@ -74,6 +75,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
           <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">
             {category}
           </span>
+          {speciesPositionLabel && (
+            <span className="text-xs text-muted-foreground">
+              {speciesPositionLabel}
+            </span>
+          )}
           {isDiscovered && (
             <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-green-600 text-white">
               ✅ Known

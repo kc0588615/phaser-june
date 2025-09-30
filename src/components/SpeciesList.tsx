@@ -10,19 +10,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
+import { getFamilyDisplayName } from '@/config/familyCommonNames';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 
 // Separate component to handle accordion category with sticky header
-const AccordionCategory = memo(({ 
-  category, 
-  genera, 
-  isOpen, 
+const AccordionCategory = memo(({
+  category,
+  genera,
+  isOpen,
   showStickyHeaders,
   onToggle,
   setRef,
   discoveredSpecies,
-  accordionValue
+  accordionValue,
+  discoveredCount,
+  totalCount
 }: {
   category: string;
   genera: Record<string, Species[]>;
@@ -32,6 +35,8 @@ const AccordionCategory = memo(({
   setRef: (id: string) => (el: HTMLDivElement | null) => void;
   discoveredSpecies: Record<number, { name: string; discoveredAt: string }>;
   accordionValue: string;
+  discoveredCount: number;
+  totalCount: number;
 }) => {
   const [hideSticky, setHideSticky] = useState(true);
   const accordionRef = useRef<HTMLDivElement>(null);
@@ -95,7 +100,7 @@ const AccordionCategory = memo(({
                 
                 {/* Counters - separate line on narrow screens */}
                 <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted-foreground">
-                  <span>({Object.values(genera).flat().length})</span>
+                  <span>({discoveredCount}/{totalCount})</span>
                   <span className="hidden sm:inline text-blue-400 hover:text-blue-300">Click to collapse</span>
                 </div>
               </div>
@@ -121,10 +126,10 @@ const AccordionCategory = memo(({
                   }}
                 >{category}</h2>
               </div>
-              
+
               {/* Counter - separate line */}
               <div className="text-xs text-muted-foreground">
-                ({Object.values(genera).flat().length})
+                ({discoveredCount}/{totalCount})
               </div>
             </div>
           </AccordionTrigger>
@@ -139,9 +144,9 @@ const AccordionCategory = memo(({
                       <div className="w-full">
                         {/* Family name - FORCED to wrap */}
                         <div className="w-full mb-1">
-                          <h4 
+                          <h4
                             className="leading-tight font-medium text-foreground"
-                            style={{ 
+                            style={{
                               fontSize: 'clamp(10px, 2.5vw, 16px)',
                               lineHeight: '1.2',
                               wordBreak: 'break-all',
@@ -151,9 +156,9 @@ const AccordionCategory = memo(({
                               width: '100%',
                               maxWidth: '100%'
                             }}
-                          >{family}</h4>
+                          >{getFamilyDisplayName(family)}</h4>
                         </div>
-                        
+
                         {/* Species count - separate line */}
                         <div className="text-xs text-muted-foreground">
                           ({speciesList.length} species)
@@ -435,21 +440,24 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   }, [filteredSpecies, discoveredSpecies]);
 
   // Count species per order for discovered and unknown
-  const { knownCounts, unknownCounts } = useMemo(() => {
+  const { knownCounts, unknownCounts, totalCounts } = useMemo(() => {
     const knownOrderCounts: Record<string, number> = {};
     const unknownOrderCounts: Record<string, number> = {};
-    
+    const totalOrderCounts: Record<string, number> = {};
+
     knownSpecies.forEach(sp => {
       const order = sp.order_ || 'Unknown';
       knownOrderCounts[order] = (knownOrderCounts[order] || 0) + 1;
+      totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
     });
-    
+
     unknownSpecies.forEach(sp => {
       const order = sp.order_ || 'Unknown';
       unknownOrderCounts[order] = (unknownOrderCounts[order] || 0) + 1;
+      totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
     });
-    
-    return { knownCounts: knownOrderCounts, unknownCounts: unknownOrderCounts };
+
+    return { knownCounts: knownOrderCounts, unknownCounts: unknownOrderCounts, totalCounts: totalOrderCounts };
   }, [knownSpecies, unknownSpecies]);
 
   // Group species by category and genus
@@ -708,7 +716,10 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                       >
                         {Object.entries(groupedKnown).map(([order, genera]) => {
                           const accordionId = `known-${order}`;
-                          const displayName = `${order}: ${knownCounts[order] || 0}`;
+                          const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
+                          const discoveredCount = knownCounts[order] || 0;
+                          const totalCount = totalCounts[order] || discoveredCount;
+                          const displayName = `${orderNameFormatted}: ${totalCount}`;
                           return (
                             <AccordionCategory
                               key={accordionId}
@@ -718,9 +729,11 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                               showStickyHeaders={showStickyHeaders}
                               discoveredSpecies={discoveredSpecies}
                               accordionValue={accordionId}
+                              discoveredCount={discoveredCount}
+                              totalCount={totalCount}
                               onToggle={() => {
-                                setOpenAccordions(prev => 
-                                  prev.includes(accordionId) 
+                                setOpenAccordions(prev =>
+                                  prev.includes(accordionId)
                                     ? prev.filter(c => c !== accordionId)
                                     : [...prev, accordionId]
                                 );
@@ -748,7 +761,10 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                       >
                         {Object.entries(groupedUnknown).map(([order, genera]) => {
                           const accordionId = `unknown-${order}`;
-                          const displayName = `${order}: ${unknownCounts[order] || 0}`;
+                          const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
+                          const discoveredCount = knownCounts[order] || 0;
+                          const totalCount = totalCounts[order] || (unknownCounts[order] || 0);
+                          const displayName = `${orderNameFormatted}: ${totalCount}`;
                           return (
                             <AccordionCategory
                               key={accordionId}
@@ -758,9 +774,11 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                               showStickyHeaders={showStickyHeaders}
                               discoveredSpecies={discoveredSpecies}
                               accordionValue={accordionId}
+                              discoveredCount={discoveredCount}
+                              totalCount={totalCount}
                               onToggle={() => {
-                                setOpenAccordions(prev => 
-                                  prev.includes(accordionId) 
+                                setOpenAccordions(prev =>
+                                  prev.includes(accordionId)
                                     ? prev.filter(c => c !== accordionId)
                                     : [...prev, accordionId]
                                 );
