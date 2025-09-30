@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo, useRef, memo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { speciesService } from '@/lib/speciesService';
 import SpeciesCard from '@/components/SpeciesCard';
 import FamilyCardStack from '@/components/FamilyCardStack';
 import SpeciesCarousel from '@/components/SpeciesCarousel';
@@ -368,38 +367,19 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
 
   const fetchSpecies = async () => {
     try {
-      // First get all species IDs ordered by common name
       const { data: speciesData, error: supabaseError } = await supabase
         .from('icaa')
-        .select('ogc_fid, comm_name')
+        .select('*')
         .order('comm_name', { ascending: true });
 
       if (supabaseError) throw supabaseError;
-      
-      if (speciesData && speciesData.length > 0) {
-        // Use speciesService to get full data including bioregions
-        const speciesIds = speciesData.map(s => s.ogc_fid);
-        const fullSpeciesData = await speciesService.getSpeciesByIds(speciesIds);
-        
-        // Create a map to preserve the original order
-        const orderMap = new Map(speciesData.map((s, idx) => [s.ogc_fid, idx]));
-        
-        // Sort the full data based on the original order
-        const sortedSpecies = fullSpeciesData.sort((a, b) => {
-          const aOrder = orderMap.get(a.ogc_fid) ?? 999;
-          const bOrder = orderMap.get(b.ogc_fid) ?? 999;
-          return aOrder - bOrder;
-        });
-        
-        setSpecies(sortedSpecies);
-      } else {
-        setSpecies([]);
-      }
-      
+
+      setSpecies(speciesData ?? []);
       setError(null);
     } catch (err: any) {
       setError(err.message);
       console.error('Error fetching species:', err);
+      setSpecies([]);
     } finally {
       setIsLoading(false);
     }

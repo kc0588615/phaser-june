@@ -120,47 +120,34 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Taxonomy Section */}
       <div className="mb-4 sm:mb-6">
         {getCategoryHeader('🧬', 'red', 'Taxonomy')}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="space-y-2">
-            {hasValue(species.kingdom) && (
-              <div>
-                <span className="text-slate-400">Kingdom:</span>
-                <p className="font-medium">{species.kingdom}</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm w-full">
+          {[
+            [
+              { label: 'Kingdom', value: species.kingdom },
+              { label: 'Order', value: species.order_ },
+            ],
+            [
+              { label: 'Phylum', value: species.phylum },
+              { label: 'Family', value: species.family },
+            ],
+            [
+              { label: 'Class', value: species.class },
+              { label: 'Genus', value: species.genus },
+            ],
+          ].map((row, rowIndex) =>
+            row.map(({ label, value }) => (
+              <div key={`${label}-${rowIndex}`} className="min-w-0">
+                {hasValue(value) ? (
+                  <div className="overflow-hidden">
+                    <span className="text-slate-400">{label}:</span>
+                    <p className="font-medium break-words whitespace-normal max-w-full">{value}</p>
+                  </div>
+                ) : (
+                  <div className="h-6" aria-hidden />
+                )}
               </div>
-            )}
-            {hasValue(species.class) && (
-              <div>
-                <span className="text-slate-400">Class:</span>
-                <p className="font-medium">{species.class}</p>
-              </div>
-            )}
-            {hasValue(species.family) && (
-              <div>
-                <span className="text-slate-400">Family:</span>
-                <p className="font-medium">{species.family}</p>
-              </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            {hasValue(species.phylum) && (
-              <div>
-                <span className="text-slate-400">Phylum:</span>
-                <p className="font-medium">{species.phylum}</p>
-              </div>
-            )}
-            {hasValue(species.order_) && (
-              <div>
-                <span className="text-slate-400">Order:</span>
-                <p className="font-medium">{species.order_}</p>
-              </div>
-            )}
-            {hasValue(species.genus) && (
-              <div>
-                <span className="text-slate-400">Genus:</span>
-                <p className="font-medium">{species.genus}</p>
-              </div>
-            )}
-          </div>
+            ))
+          )}
         </div>
       </div>
 
