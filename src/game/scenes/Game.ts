@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import { BackendPuzzle } from '../BackendPuzzle';
 import { MoveAction, MoveDirection } from '../MoveAction';
 import { BoardView } from '../BoardView';
+import { OwlSprite } from '../ui/OwlSprite';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD, MOVE_THRESHOLD,
@@ -84,6 +85,8 @@ export class Game extends Phaser.Scene {
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
     
+    // Owl sprite
+    private owl?: OwlSprite;
 
     constructor() {
         super('Game');
@@ -250,6 +253,24 @@ export class Game extends Phaser.Scene {
             strokeThickness: 3
         }).setOrigin(1, 0).setDepth(100);
 
+        // Setup owl animations and create owl sprite
+        OwlSprite.setupAnimations(this);
+        // Calculate initial board position for owl alignment
+        this.calculateBoardDimensions();
+        
+        // Calculate owl scale based on gem size (proportional scaling)
+        // Base scale is 2.5 when gem size is 58 (the reference size)
+        const referenceGemSize = 58;
+        const baseOwlScale = 2.5;
+        const owlScale = (this.gemSize / referenceGemSize) * baseOwlScale;
+        
+        // Position owl flush with the left edge of the gameboard
+        this.owl = new OwlSprite(this, { 
+            scale: owlScale,  // Dynamically scaled based on gem size
+            boardOffsetX: this.boardOffset.x,  // Flush with board's left edge
+            boardOffsetY: this.boardOffset.y
+        });
+        this.owl.createAndRunIntro();
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -259,8 +280,6 @@ export class Game extends Phaser.Scene {
         this.seenClueCategories = new Set();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
-        
-        this.calculateBoardDimensions();
         this.boardView = new BoardView(this, {
             cols: GRID_COLS,
             rows: GRID_ROWS,
@@ -369,6 +388,11 @@ export class Game extends Phaser.Scene {
             this.canMove = true; // Board is ready, enable input
             console.log("Game Scene: Board initialized with random gems. Input enabled.");
             
+            // Update owl position after board initialization
+            if (this.owl) {
+                this.owl.setBoardOffsets(this.boardOffset.x, this.boardOffset.y);
+            }
+            
             // Emit initial HUD state
             this.emitHud();
 
@@ -397,19 +421,49 @@ export class Game extends Phaser.Scene {
             return;
         }
         
-        const usableWidth = width * 0.95;
-        const usableHeight = height * 0.90;
+        // Responsive breakpoints
+        const MOBILE_BREAKPOINT = 768;
+        const MAX_GEM_SIZE = 80; // Maximum gem size for desktop
+        const MIN_GEM_SIZE = 24; // Minimum gem size for very small screens
         
+        // Determine if we're on mobile or desktop
+        const isMobile = width < MOBILE_BREAKPOINT;
+        
+        // Calculate usable space with different factors for mobile vs desktop
+        const usableWidth = isMobile ? width * 0.95 : width * 0.85;
+        const usableHeight = height * 0.7875; // Adjusted for 7 rows to maintain aspect ratio
+        
+        // Calculate gem size based on available space
         const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
         const sizeFromHeight = Math.floor(usableHeight / GRID_ROWS);
-        this.gemSize = Math.max(24, Math.min(sizeFromWidth, sizeFromHeight));
+        
+        // Use the smaller dimension but apply max/min constraints
+        const calculatedSize = Math.min(sizeFromWidth, sizeFromHeight);
+        this.gemSize = Math.max(MIN_GEM_SIZE, Math.min(calculatedSize, MAX_GEM_SIZE));
+        
+        // Calculate actual board dimensions
         const boardWidth = GRID_COLS * this.gemSize;
         const boardHeight = GRID_ROWS * this.gemSize;
         
+        // Position board based on screen size
+        // Calculate owl scale dynamically based on gem size
+        const referenceGemSize = 58;
+        const baseOwlScale = 2.5;
+        const dynamicOwlScale = (this.gemSize / referenceGemSize) * baseOwlScale;
+        const owlHeight = 32 * dynamicOwlScale;
+        const requiredTopMargin = Math.max(0, Math.round(owlHeight - 9));
+        const maxTopMargin = Math.max(height - boardHeight, 0);
+        const minTopMargin = Math.min(requiredTopMargin, maxTopMargin);
+        const preferredTop = Math.round((height - boardHeight) / 2);
+        const topOffset = Phaser.Math.Clamp(preferredTop, minTopMargin, maxTopMargin);
+
+        // Always center the board horizontally regardless of screen size
         this.boardOffset = {
             x: Math.round((width - boardWidth) / 2),
-            y: Math.round((height - boardHeight) / 2)
+            y: topOffset
         };
+        
+        console.log(`Board dimensions calculated: ${isMobile ? 'Mobile' : 'Desktop'} mode, gem size: ${this.gemSize}, position: (${this.boardOffset.x}, ${this.boardOffset.y})`);
     }
 
     private handleResize(): void {
@@ -431,6 +485,18 @@ export class Game extends Phaser.Scene {
         }
         if (this.scoreText) {
             this.scoreText.setPosition(20, height - 25);
+        }
+        
+        // Update owl scale and position on resize
+        if (this.owl) {
+            // Calculate new owl scale based on current gem size
+            const referenceGemSize = 58;
+            const baseOwlScale = 2.5;
+            const newOwlScale = (this.gemSize / referenceGemSize) * baseOwlScale;
+            
+            // Update owl scale and position
+            this.owl.setScale(newOwlScale);
+            this.owl.setBoardOffsets(this.boardOffset.x, this.boardOffset.y);
         }
         
         if (this.boardView) {

@@ -35,11 +35,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
 
   return (
     <div 
-      className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border break-words"
+      className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border"
       data-species-id={species.ogc_fid}
       style={{ 
         wordBreak: 'break-word', 
-        overflowWrap: 'anywhere',
+        overflowWrap: 'break-word',
         whiteSpace: 'normal',
         minWidth: '0',
         maxWidth: '100%'
@@ -120,47 +120,34 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       {/* Taxonomy Section */}
       <div className="mb-4 sm:mb-6">
         {getCategoryHeader('🧬', 'red', 'Taxonomy')}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="space-y-2">
-            {hasValue(species.kingdom) && (
-              <div>
-                <span className="text-slate-400">Kingdom:</span>
-                <p className="font-medium">{species.kingdom}</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm w-full">
+          {[
+            [
+              { label: 'Kingdom', value: species.kingdom },
+              { label: 'Order', value: species.order_ },
+            ],
+            [
+              { label: 'Phylum', value: species.phylum },
+              { label: 'Family', value: species.family },
+            ],
+            [
+              { label: 'Class', value: species.class },
+              { label: 'Genus', value: species.genus },
+            ],
+          ].map((row, rowIndex) =>
+            row.map(({ label, value }) => (
+              <div key={`${label}-${rowIndex}`} className="min-w-0">
+                {hasValue(value) ? (
+                  <div className="overflow-hidden">
+                    <span className="text-slate-400">{label}:</span>
+                    <p className="font-medium break-words whitespace-normal max-w-full">{value}</p>
+                  </div>
+                ) : (
+                  <div className="h-6" aria-hidden />
+                )}
               </div>
-            )}
-            {hasValue(species.class) && (
-              <div>
-                <span className="text-slate-400">Class:</span>
-                <p className="font-medium">{species.class}</p>
-              </div>
-            )}
-            {hasValue(species.family) && (
-              <div>
-                <span className="text-slate-400">Family:</span>
-                <p className="font-medium">{species.family}</p>
-              </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            {hasValue(species.phylum) && (
-              <div>
-                <span className="text-slate-400">Phylum:</span>
-                <p className="font-medium">{species.phylum}</p>
-              </div>
-            )}
-            {hasValue(species.order_) && (
-              <div>
-                <span className="text-slate-400">Order:</span>
-                <p className="font-medium">{species.order_}</p>
-              </div>
-            )}
-            {hasValue(species.genus) && (
-              <div>
-                <span className="text-slate-400">Genus:</span>
-                <p className="font-medium">{species.genus}</p>
-              </div>
-            )}
-          </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -259,29 +246,29 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
             {getCategoryHeader('🌳', 'green', 'Ecoregion')}
-            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start">
               {hasValue(species.bioregio_1) && (
                 <>
                   <span className="text-slate-300 font-medium">Bioregion:</span>
-                  <span className="text-white">{species.bioregio_1}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'normal', overflowWrap: 'normal' }}>{species.bioregio_1}</span>
                 </>
               )}
               {hasValue(species.realm) && (
                 <>
                   <span className="text-slate-300 font-medium">Realm:</span>
-                  <span className="text-white">{species.realm}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'normal', overflowWrap: 'normal' }}>{species.realm}</span>
                 </>
               )}
               {hasValue(species.sub_realm) && (
                 <>
                   <span className="text-slate-300 font-medium">Sub-realm:</span>
-                  <span className="text-white">{species.sub_realm}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'normal', overflowWrap: 'normal' }}>{species.sub_realm}</span>
                 </>
               )}
               {hasValue(species.biome) && (
                 <>
                   <span className="text-slate-300 font-medium">Biome:</span>
-                  <span className="text-white">{species.biome}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'normal', overflowWrap: 'normal' }}>{species.biome}</span>
                 </>
               )}
             </div>
@@ -295,23 +282,23 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
             {getCategoryHeader('🐾', 'orange', 'Physical Characteristics')}
-            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start break-words">
+            <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-3 sm:gap-x-4 gap-y-2 text-sm sm:text-base items-start">
               {hasValue(species.color_prim) && (
                 <>
                   <span className="text-slate-300 font-medium">Primary Color:</span>
-                  <span className="text-white">{species.color_prim}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{species.color_prim}</span>
                 </>
               )}
               {hasValue(species.color_sec) && (
                 <>
                   <span className="text-slate-300 font-medium">Secondary Color:</span>
-                  <span className="text-white">{species.color_sec}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{species.color_sec}</span>
                 </>
               )}
               {hasValue(species.pattern) && (
                 <>
                   <span className="text-slate-300 font-medium">Pattern:</span>
-                  <span className="text-white">{species.pattern}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{species.pattern}</span>
                 </>
               )}
               {(hasValue(species.size_min) || hasValue(species.size_max)) && (
@@ -320,7 +307,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     <Ruler size={14} className="text-muted-foreground" />
                     Size Range:
                   </span>
-                  <span className="text-white">
+                  <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
                     {hasValue(species.size_min) && hasValue(species.size_max) 
                       ? `${species.size_min} - ${species.size_max} cm`
                       : hasValue(species.size_min) ? `${species.size_min} cm` : `${species.size_max} cm`}
@@ -333,13 +320,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     <Weight size={14} className="text-muted-foreground" />
                     Weight:
                   </span>
-                  <span className="text-white">{species.weight_kg} kg</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{species.weight_kg} kg</span>
                 </>
               )}
               {hasValue(species.shape_desc) && (
                 <>
                   <span className="text-muted-foreground">Shape:</span>
-                  <span className="text-white">{species.shape_desc}</span>
+                  <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{species.shape_desc}</span>
                 </>
               )}
             </div>

@@ -2,7 +2,13 @@
 
 ## Quick Start for New Contributors
 
-This guide helps new developers quickly understand the codebase structure and start contributing to the Phaser-June habitat puzzle game.
+This guide helps new developers quickly understand the codebase structure and start contributing to the Phaser + Cesium + Supabase habitat puzzle game.
+
+Quick links:
+- Project README: `README.md`
+- Event system: `EVENTBUS_AND_DISPLAY_ARCHITECTURE.md`, `GAME_REACTIVITY_GUIDE.md`
+- Data & database: `DATABASE_USER_GUIDE.md`, `SPECIES_DATABASE_IMPLEMENTATION.md`
+- UI & styling: `SHADCN_IMPLEMENTATION_GUIDE.md`, `UI_DISPLAY_SYSTEM_REFERENCE.md`
 
 ## 🎮 Core Gameplay Architecture
 
@@ -131,6 +137,13 @@ npm install
 # Copy environment variables
 cp .env.example .env.local
 # Edit .env.local with required API keys
+# Required:
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   NEXT_PUBLIC_CESIUM_ION_TOKEN
+# Optional:
+#   NEXT_PUBLIC_TITILER_BASE_URL
+#   NEXT_PUBLIC_COG_URL
 ```
 
 ### 2. Database Setup
@@ -143,12 +156,12 @@ cp .env.example .env.local
 # Type checking (always run before commits)
 npm run typecheck
 
-# Build static site
-npm run build
+# Development server
+npm run dev        # http://localhost:8080
 
-# Serve locally
-npm run serve
-# Access at http://localhost:8080
+# Production build (static export)
+npm run build      # outputs to ./dist
+npm run serve      # serves ./dist on http://localhost:8080
 ```
 
 ## 🎮 Game Loop & Species Progression
@@ -238,13 +251,12 @@ preload() → create() → update()
 npm run typecheck
 npm run typecheck:watch
 
-# Building
+# Build & serve static export
 npm run build
-npm run build-nolog  # Without analytics
+npm run serve
 
-# Development
-npm run serve        # Static server
-npm run dev-nolog    # Dev without analytics
+# Development server
+npm run dev
 ```
 
 ## 📖 Documentation Catalog
