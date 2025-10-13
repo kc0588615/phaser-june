@@ -158,25 +158,42 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       </div>
 
       {/* Conservation Status */}
-      {hasValue(species.cons_text) && (
+      {(hasValue(species.cons_text) || hasValue(species.threats)) && (
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
             {getCategoryHeader('🛡️', 'white', 'Conservation Status')}
             <div className="bg-orange-400/15 border border-orange-400/40 rounded-lg p-4 sm:p-5">
-              <p 
-                className="text-slate-100 text-sm sm:text-base leading-relaxed"
-                style={{ 
-                  wordBreak: 'break-word',
-                  overflowWrap: 'anywhere',
-                  whiteSpace: 'normal',
-                  width: '100%',
-                  maxWidth: '100%',
-                  hyphens: 'auto'
-                }}
-              >
-                <strong className="text-orange-200">Conservation Notes:</strong> {species.cons_text}
-              </p>
+              {hasValue(species.cons_text) && (
+                <p
+                  className="text-slate-100 text-sm sm:text-base leading-relaxed mb-3"
+                  style={{
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  <strong className="text-orange-200">Conservation Notes:</strong> {species.cons_text}
+                </p>
+              )}
+              {hasValue(species.threats) && (
+                <p
+                  className="text-slate-100 text-sm sm:text-base leading-relaxed"
+                  style={{
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  <strong className="text-orange-200">Threats:</strong> {species.threats}
+                </p>
+              )}
             </div>
           </div>
         </>
@@ -499,31 +516,6 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 {species.life_desc2}
               </p>
             )}
-          </div>
-        </>
-      )}
-
-      {/* Threats */}
-      {hasValue(species.threats) && (
-        <>
-          <div className="h-px bg-border my-4 sm:my-6" />
-          <div className="mb-4 sm:mb-6">
-            {getCategoryHeader('🛡️', 'white', 'Threats')}
-            <p 
-              className="text-muted-foreground"
-              style={{ 
-                fontSize: 'clamp(12px, 3.5vw, 16px)',
-                lineHeight: '1.4',
-                wordBreak: 'break-word',
-                overflowWrap: 'anywhere',
-                whiteSpace: 'normal',
-                width: '100%',
-                maxWidth: '100%',
-                hyphens: 'auto'
-              }}
-            >
-              {species.threats}
-            </p>
           </div>
         </>
       )}
