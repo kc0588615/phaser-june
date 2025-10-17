@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef, memo } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useSpeciesData } from '@/hooks/useSpeciesData';
 import SpeciesCard from '@/components/SpeciesCard';
 import FamilyCardStack from '@/components/FamilyCardStack';
 import SpeciesCarousel from '@/components/SpeciesCarousel';
@@ -227,9 +227,9 @@ interface SpeciesListProps {
 }
 
 export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListProps = {}) {
-  const [species, setSpecies] = useState<Species[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use React Query hook for species data fetching with automatic retries and caching
+  const { data: species = [], isLoading, error, refetch, isFetching } = useSpeciesData();
+
   const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
   const [openAccordions, setOpenAccordions] = useState<string[]>([]);
   const [showStickyHeaders, setShowStickyHeaders] = useState(false);
@@ -242,7 +242,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    fetchSpecies();
     loadDiscoveredSpecies();
   }, []);
 
@@ -370,25 +369,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     }, 300);
   }, [scrollToSpeciesId, species, isLoading]);
 
-  const fetchSpecies = async () => {
-    try {
-      const { data: speciesData, error: supabaseError } = await supabase
-        .from('icaa')
-        .select('*')
-        .order('comm_name', { ascending: true });
-
-      if (supabaseError) throw supabaseError;
-
-      setSpecies(speciesData ?? []);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Error fetching species:', err);
-      setSpecies([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Filter species by selected filter
   const filteredSpecies = useMemo(() => {
@@ -662,8 +642,16 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       
       {error && (
         <div className="flex-1 px-5 pt-4">
-          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive">
-            Error loading species: {error}
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+            <p className="text-destructive font-semibold mb-2">Error loading species</p>
+            <p className="text-sm text-muted-foreground mb-3">{error.message || 'Unknown error occurred'}</p>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isFetching ? 'Retrying...' : 'Retry Now'}
+            </button>
           </div>
         </div>
       )}

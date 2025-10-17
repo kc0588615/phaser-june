@@ -167,8 +167,8 @@ function MainAppLayout() {
             </div>
             </div>
 
-            {/* Full-page species view */}
-            <div style={{ 
+            {/* Full-page species view - keep mounted to preserve state */}
+            <div style={{
                 display: viewMode === 'species' ? 'block' : 'none',
                 width: '100%',
                 height: '100%',
@@ -178,11 +178,11 @@ function MainAppLayout() {
                 backgroundColor: '#0f172a',
                 zIndex: 2000
             }}>
-                <SpeciesList 
+                <SpeciesList
                     onBack={() => {
                         setViewMode('map');
                         setScrollToSpeciesId(null);
-                    }} 
+                    }}
                     scrollToSpeciesId={scrollToSpeciesId}
                 />
             </div>
