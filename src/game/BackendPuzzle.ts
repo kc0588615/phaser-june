@@ -1,7 +1,7 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, GemType, BASE_MOVES } from './constants';
+import { GEM_TYPES, GemType, MAX_MOVES } from './constants';
 
 // Type for a gem in the puzzle
 export interface Gem {
@@ -15,7 +15,8 @@ export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
     private nextGemsToSpawn: GemType[] = [];
     private score: number = 0;
-    private movesRemaining: number = BASE_MOVES; // Simple game over condition
+    private movesUsed: number = 0;
+    private readonly maxMoves: number = MAX_MOVES;
 
     constructor(
         public readonly width: number,
@@ -35,7 +36,7 @@ export class BackendPuzzle {
         console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
         this.score = 0;
-        this.movesRemaining = BASE_MOVES;
+        this.movesUsed = 0;
     }
 
     getScore(): number {
@@ -43,11 +44,19 @@ export class BackendPuzzle {
     }
 
     getMovesRemaining(): number {
-        return this.movesRemaining;
+        return Math.max(0, this.maxMoves - this.movesUsed);
+    }
+
+    getMovesUsed(): number {
+        return this.movesUsed;
+    }
+
+    getMaxMoves(): number {
+        return this.maxMoves;
     }
 
     isGameOver(): boolean {
-        return this.movesRemaining <= 0;
+        return this.movesUsed >= this.maxMoves;
     }
 
     getGridState(): PuzzleGrid {
@@ -58,9 +67,13 @@ export class BackendPuzzle {
         if (points > 0) this.score += Math.floor(points);
     }
 
-    decrementMoves(count: number = 1): number {
-        this.movesRemaining = Math.max(0, this.movesRemaining - Math.max(0, count));
-        return this.movesRemaining;
+    registerMove(): number {
+        this.movesUsed = Math.min(this.maxMoves, this.movesUsed + 1);
+        return this.movesUsed;
+    }
+
+    resetMoves(): void {
+        this.movesUsed = 0;
     }
 
     calculatePhaseBaseScore(phase: ExplodeAndReplacePhase): number {
@@ -201,6 +214,7 @@ export class BackendPuzzle {
         // Generate a new random board
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
         this.nextGemsToSpawn = [];
+        this.movesUsed = 0;
         console.log("BackendPuzzle reset: new random board generated.");
     }
 

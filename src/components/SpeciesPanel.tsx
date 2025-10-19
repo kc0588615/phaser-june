@@ -30,8 +30,11 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
   const [hud, setHud] = useState<GameHudUpdatedEvent>({
     score: 0,
     movesRemaining: 0,
+    movesUsed: 0,
+    maxMoves: 0,
     streak: 0,
     multiplier: 1.0,
+    moveMultiplier: 1.0,
   });
   
   // Use a ref to track if we've already shown the completion toast
@@ -295,12 +298,15 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
         color: '#e2e8f0',
         fontWeight: 500,
       }}>
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <span>Moves: {hud.movesRemaining}</span>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <span>Moves: {hud.movesUsed}/{hud.maxMoves || '—'}</span>
           <span>Score: {hud.score}</span>
           <span>Streak: x{hud.multiplier.toFixed(2)}</span>
+          {hud.moveMultiplier && hud.moveMultiplier > 1.01 && (
+            <span>Move Bonus: x{hud.moveMultiplier.toFixed(2)}</span>
+          )}
         </div>
-        {hud.movesRemaining === 0 && (
+        {hud.maxMoves > 0 && hud.movesUsed >= hud.maxMoves && (
           <button
             onClick={onRestart}
             style={{

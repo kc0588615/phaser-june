@@ -41,9 +41,10 @@ Quick links:
 
 3. **src/game/scenes/Game.ts** - Main gameplay controller
    - Input handling (mouse/touch)
-   - Game flow orchestration
-   - Turn management
-   - Event emission to React
+   - Game flow orchestration and move summary tracking
+   - Turn management with combo multipliers & clue bonuses
+   - Pause overlay lifecycle (tweens/timeScale/input)
+   - Event emission to React (score, moves used/max, multipliers)
 
 4. **src/game/MoveAction.ts** - Gem swapping mechanics
    - Swap validation
@@ -63,41 +64,45 @@ The game uses a singleton EventBus for bidirectional communication:
 
 ```typescript
 // Phaser → React
-EventBus.emit('match-made', { 
-  gemTypes: matchedGems, 
-  clueCategory: category 
+EventBus.emit('game-hud-updated', {
+  score,
+  movesUsed,
+  maxMoves,
+  multiplier,        // streak-based multiplier
+  moveMultiplier     // per-move combo multiplier (optional)
 });
 
 // React → Phaser
-EventBus.emit('layout-changed', { 
-  mapMinimized: true 
-});
+EventBus.emit('layout-changed', { mapMinimized: true });
 ```
 
 ### Critical Event Flows
 
 1. **Species Selection & Game Loop**
    - User clicks location on Cesium map
-   - `cesium-location-selected` event → Phaser with species array
-   - Game loads first mystery species (sorted by ogc_fid)
-   - Player matches gems to reveal clues
-   - `clue-revealed` event → React for each new clue
+   - `cesium-location-selected` event → Phaser with species array & raster data
+   - Game loads first mystery species (sorted by ogc_fid) and resets move summary
+   - Player matches gems to reveal clues (multi-clue bursts supported)
    - Player guesses species via SpeciesGuessSelector
-   - `species-guess-submitted` event → Phaser for validation
-   - If correct and more species exist: advance to next
-   - If correct and last species: prompt for new location
-   - `all-species-completed` event → React when all discovered
+   - `species-guess-submitted` event → Phaser validates guess
+   - Correct guess advances to next species or prompts new location
+   - `all-species-completed` event → React when a location is cleared
 
-2. **Match Detection**
-   - Player makes match in Phaser
-   - `match-made` event → React (if implemented)
-   - `clue-revealed` event → React with clue data
-   - ClueSheet and SpeciesPanel update with new info
+2. **Move Resolution & HUD Synchronisation**
+   - Player performs a valid swap → `Game.ts::applyMoveAndHandleResults`
+   - Move summary aggregates largest match, cascades, colours
+   - Combo multiplier calculated (4-match = 2 clues, 5+ = all clues)
+   - `game-hud-updated` event → React with `movesUsed/maxMoves`, streak multiplier, move multiplier
 
 3. **Layout Changes**
    - User toggles map/panels
    - `layout-changed` event → Phaser
    - Game resizes canvas appropriately
+
+4. **Pause & Resume**
+   - Pause icon lives in `Game.ts::createPauseControls`
+   - Clicking pause invokes `togglePause(true)` → freezes tweens, sets `time.timeScale = 0`, shows overlay
+   - Overlay resume button emits `togglePause(false)` → restores time scale/input and replays HUD
 
 ## 📁 Project Structure
 
@@ -119,6 +124,9 @@ src/
 ├── pages/                  # Next.js pages
 │   ├── _app.tsx           # App wrapper
 │   └── index.tsx          # Main game page
+│
+├── hooks/                  # Custom React hooks
+│   └── useSpeciesData.ts   # React Query species fetching
 │
 └── lib/                    # Utilities & services
     ├── supabaseClient.ts   # Database connection
@@ -151,6 +159,14 @@ cp .env.example .env.local
 - Run SQL functions in root directory if needed
 - Verify species data is accessible
 
+**Data Fetching Architecture:**
+- Uses **React Query** (`@tanstack/react-query`) for all species data fetching
+- Automatic retries: 3 attempts with exponential backoff (1s, 2s, 4s delays)
+- Smart caching: 5-minute stale time, 10-minute garbage collection
+- Network resilience: Refetch on window focus and reconnect
+- Custom hook: `src/hooks/useSpeciesData.ts` encapsulates all fetch logic
+- Error recovery: Manual "Retry Now" button in SpeciesList error UI
+
 ### 3. Development Workflow
 ```bash
 # Type checking (always run before commits)
@@ -181,6 +197,10 @@ npm run serve      # serves ./dist on http://localhost:8080
 - `Game.ts::handleSpeciesGuess()` - Manages species progression
 - `Game.ts::advanceToNextSpecies()` - Moves to next in queue
 - `Game.ts::resetForNewLocation()` - Clears state for new location
+- `Game.ts::applyMoveAndHandleResults()` - Aggregates move summary, applies combo multipliers
+- `Game.ts::revealCluesForCategory()` / `revealAllCluesForCategory()` - Implements 4-match (2 clues) and 5-match (all clues) bonuses
+- `Game.ts::togglePause()` - Controls pause overlay and input freezing
+- `BackendPuzzle::registerMove()` - Increments moves used (counts up to `MAX_MOVES`)
 - Species state tracked via `currentSpeciesIndex` and `currentSpecies[]`
 - Duplicate notifications prevented via React ref in SpeciesPanel
 
@@ -216,11 +236,29 @@ npm run serve      # serves ./dist on http://localhost:8080
 - Check species state in SpeciesPanel
 - Verify clue updates in ClueSheet
 
+- **Move Resolution & Multipliers**
+  - Move summary captures largest match size, unique gem categories, cascades
+  - Combo multiplier rules (config in `constants.ts`):
+    - 4-match ⇒ `MULTIPLIER_LARGE_MATCH` + two clues for that category
+    - 5-match or greater ⇒ `MULTIPLIER_HUGE_MATCH` + all remaining clues
+    - Multi-colour matches ⇒ `MULTIPLIER_MULTI_CATEGORY`
+    - Consecutive same-colour matches ⇒ `MULTIPLIER_REPEAT_CATEGORY` + full clue burst
+  - `game-hud-updated` now publishes `movesUsed`, `maxMoves`, and `moveMultiplier`
+
+- **Pause Overlay**
+  - Pause button rendered in `createPauseControls()`
+  - Overlay freezes tweens (`this.tweens.pauseAll()`), timers (`timeScale = 0`), and hides board input
+  - Resume restores prior `canMove` state and removes overlay
+
 ### Common Issues
 1. **Gems not swapping**: Check `MoveAction.ts` validation
 2. **Clues not updating**: Verify EventBus connection
 3. **Layout issues**: Check z-index in components
-4. **Species not loading**: Verify Supabase connection
+4. **Species not loading**:
+   - Check browser console for React Query retry attempts
+   - Verify Supabase connection and env vars
+   - Use "Retry Now" button in SpeciesList error UI
+   - React Query will auto-retry 3 times with exponential backoff
 
 ## 📚 Key Concepts to Understand
 
@@ -243,6 +281,13 @@ preload() → create() → update()
 - Phaser owns game state
 - React owns UI state
 - EventBus keeps them in sync
+
+### 5. React Query Data Fetching
+- Replaces manual useState/useEffect patterns
+- Automatic retry logic with exponential backoff
+- Built-in caching and stale-while-revalidate
+- Request deduplication across components
+- See `src/hooks/useSpeciesData.ts` for implementation example
 
 ## 🔧 Tools & Commands
 
