@@ -268,3 +268,16 @@ body {
 :root {
   --sticky-offset: 80px;
 }
+
+/* Screen reader only utility (if not provided by Tailwind) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

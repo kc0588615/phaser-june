@@ -101,6 +101,14 @@ export class Game extends Phaser.Scene {
     // --- Raster Habitat Integration ---
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
+
+    // --- Player Tracking ---
+    private supabaseClient: any | null = null; // Cache client
+    private currentUserId: string | null = null; // Cache user ID
+    private currentSessionId: string | null = null; // Active session
+    private clueCountThisSpecies: number = 0; // Track clues for current species
+    private incorrectGuessesThisSpecies: number = 0; // Track wrong guesses
+    private speciesStartTime: number = 0; // Time when species started
     
     // --- Streak and Scoring ---
     private streak: number = 0;
@@ -348,7 +356,47 @@ export class Game extends Phaser.Scene {
         this.isBoardInitialized = false;
 
         EventBus.emit('current-scene-ready', this);
+
+        // Initialize player tracking
+        this.initializePlayerTracking();
+
         console.log("Game Scene: Create method finished. Waiting for Cesium data.");
+    }
+
+    private async initializePlayerTracking(): Promise<void> {
+        try {
+            // Dynamic imports to avoid SSR issues
+            const { supabaseBrowser } = await import('@/lib/supabase-browser');
+            const { startGameSession } = await import('@/lib/playerTracking');
+
+            // Cache Supabase client (reuse for all calls)
+            this.supabaseClient = supabaseBrowser();
+
+            // Get current user and cache ID
+            const { data: { user } } = await this.supabaseClient.auth.getUser();
+            if (user) {
+                this.currentUserId = user.id;
+
+                // Start or resume session
+                const sessionId = await startGameSession(user.id);
+                this.currentSessionId = sessionId;
+
+                console.log('Player tracking initialized:', { userId: user.id, sessionId });
+
+                // Register EventBus listeners for tracking
+                EventBus.on('clue-revealed', this.handleClueRevealed, this);
+                EventBus.on(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
+
+                // Register beforeunload handler (flush session on page close)
+                if (typeof window !== 'undefined') {
+                    window.addEventListener('beforeunload', this.handleBeforeUnload);
+                }
+            } else {
+                console.log('Guest user - tracking disabled');
+            }
+        } catch (error) {
+            console.error('Failed to initialize player tracking:', error);
+        }
     }
 
     private createPauseControls(): void {
@@ -498,6 +546,75 @@ export class Game extends Phaser.Scene {
             cascades: 0
         };
     }
+
+    // --- Player Tracking Event Handlers ---
+
+    private handleClueRevealed = async (payload: CluePayload): Promise<void> => {
+        if (!this.currentUserId || !this.selectedSpecies) return;
+
+        try {
+            const { trackClueUnlock } = await import('@/lib/playerTracking');
+
+            const wasNew = await trackClueUnlock(
+                this.currentUserId,
+                this.selectedSpecies.ogc_fid,
+                payload.category,
+                payload.field,
+                payload.value,
+                null // discovery_id will be linked later
+            );
+
+            if (wasNew) {
+                this.clueCountThisSpecies++;
+            }
+        } catch (error) {
+            console.error('Failed to track clue unlock:', error);
+        }
+    };
+
+    private handleHudUpdate = async (data: EventPayloads['game-hud-updated']): Promise<void> => {
+        if (!this.currentSessionId || !this.backendPuzzle) return;
+
+        try {
+            const { updateSessionProgress } = await import('@/lib/playerTracking');
+
+            // Count total species discovered in this session
+            const speciesDiscovered = this.currentSpeciesIndex; // Species completed before current
+
+            // Count total clues unlocked in session (all categories revealed)
+            const cluesUnlocked = this.revealedClues.size;
+
+            // Debounced update (10s delay, auto-batched)
+            await updateSessionProgress(
+                this.currentSessionId,
+                data.movesUsed,
+                data.score,
+                speciesDiscovered,
+                cluesUnlocked
+            );
+        } catch (error) {
+            console.error('Failed to update session progress:', error);
+        }
+    };
+
+    private handleBeforeUnload = async (): Promise<void> => {
+        if (!this.currentSessionId || !this.backendPuzzle) return;
+
+        try {
+            const { forceSessionUpdate } = await import('@/lib/playerTracking');
+
+            // Force immediate flush (bypass debounce)
+            await forceSessionUpdate(
+                this.currentSessionId,
+                this.backendPuzzle.getMovesUsed(),
+                this.backendPuzzle.getScore(),
+                this.currentSpeciesIndex,
+                this.revealedClues.size
+            );
+        } catch (error) {
+            console.error('Failed to flush session on unload:', error);
+        }
+    };
 
     private recordMatchesForSummary(matches: Coordinate[][], gridState?: any): void {
         if (!this.currentMoveSummary || !matches || matches.length === 0) return;
@@ -728,6 +845,11 @@ export class Game extends Phaser.Scene {
             this.currentMoveSummary = null;
             this.lastAppliedMoveMultiplier = 1;
             this.updateMultiplierText(1);
+
+            // Reset species tracking counters
+            this.clueCountThisSpecies = 0;
+            this.incorrectGuessesThisSpecies = 0;
+            this.speciesStartTime = Date.now();
             
             // Store raster habitat data for green gem clues
             this.rasterHabitats = [...data.rasterHabitats];
@@ -1278,7 +1400,7 @@ export class Game extends Phaser.Scene {
 
     private advanceToNextSpecies(): void {
         this.currentSpeciesIndex++;
-        
+
         if (this.currentSpeciesIndex < this.currentSpecies.length) {
             // Move to next species
             this.selectedSpecies = this.currentSpecies[this.currentSpeciesIndex];
@@ -1286,7 +1408,12 @@ export class Game extends Phaser.Scene {
             this.allCluesRevealed = false;
             this.usedRasterHabitats.clear(); // Reset used raster habitats for new species
             this.seenClueCategories.clear(); // Reset for early guess bonus calculation
-            
+
+            // Reset species tracking counters for new species
+            this.clueCountThisSpecies = 0;
+            this.incorrectGuessesThisSpecies = 0;
+            this.speciesStartTime = Date.now();
+
             // Reset all progressive clues for new species
             resetAllProgressiveClues(this.selectedSpecies);
             
@@ -1318,10 +1445,15 @@ export class Game extends Phaser.Scene {
         
         if (data.isCorrect) {
             console.log("Game Scene: Correct species identified!");
-            
+
+            // Track discovery if authenticated
+            if (this.currentUserId && this.backendPuzzle) {
+                this.trackDiscovery(data.speciesId);
+            }
+
             // Apply early guess bonus with streak multiplier
             this.onCorrectGuess(DEFAULT_TOTAL_CLUE_SLOTS);
-            
+
             // Check if there are more species at this location
             if (this.currentSpeciesIndex + 1 < this.currentSpecies.length) {
                 // Show success message and advance to next species after a delay
@@ -1360,7 +1492,55 @@ export class Game extends Phaser.Scene {
         } else {
             // Wrong guess - reset streak
             console.log("Game Scene: Wrong guess - resetting streak");
+            this.incorrectGuessesThisSpecies++;
             this.onWrongGuess();
+        }
+    }
+
+    private async trackDiscovery(speciesId: number): Promise<void> {
+        try {
+            const {
+                trackSpeciesDiscovery,
+                calculateTimeToDiscover,
+                forceSessionUpdate
+            } = await import('@/lib/playerTracking');
+
+            const timeToDiscover = calculateTimeToDiscover();
+
+            const discoveryId = await trackSpeciesDiscovery(
+                this.currentUserId!,
+                speciesId,
+                {
+                    sessionId: this.currentSessionId || undefined,
+                    timeToDiscoverSeconds: timeToDiscover || undefined,
+                    cluesUnlockedBeforeGuess: this.clueCountThisSpecies,
+                    incorrectGuessesCount: this.incorrectGuessesThisSpecies,
+                    scoreEarned: this.backendPuzzle!.getScore()
+                }
+            );
+
+            if (discoveryId) {
+                console.log('Species discovery tracked:', discoveryId);
+
+                // Force immediate session update (critical event)
+                if (this.currentSessionId) {
+                    await forceSessionUpdate(
+                        this.currentSessionId,
+                        this.backendPuzzle!.getMovesUsed(),
+                        this.backendPuzzle!.getScore(),
+                        this.currentSpeciesIndex + 1, // +1 because we just discovered one
+                        this.revealedClues.size
+                    );
+                }
+            }
+
+            // Reset per-species counters
+            this.clueCountThisSpecies = 0;
+            this.incorrectGuessesThisSpecies = 0;
+            this.speciesStartTime = Date.now();
+
+        } catch (error) {
+            console.error('Failed to track species discovery:', error);
         }
     }
 
@@ -1521,7 +1701,28 @@ export class Game extends Phaser.Scene {
 
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
+
+        // End session if active
+        if (this.currentSessionId && this.backendPuzzle) {
+            this.endSessionSync();
+        }
+
+        // Remove EventBus listeners
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
+        EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
+        EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
+
+        // Remove player tracking listeners if they exist
+        if (this.currentUserId) {
+            EventBus.off('clue-revealed', this.handleClueRevealed, this);
+            EventBus.off(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
+
+            // Remove beforeunload handler
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('beforeunload', this.handleBeforeUnload);
+            }
+        }
+
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_MOVE);
@@ -1587,16 +1788,34 @@ export class Game extends Phaser.Scene {
         this.seenClueCategories.clear();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
-        
-        // Remove EventBus listeners
-        EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
-        EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
-        EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
-        
+
+        // Clear tracking state
+        this.supabaseClient = null;
+        this.currentUserId = null;
+        this.currentSessionId = null;
+        this.clueCountThisSpecies = 0;
+        this.incorrectGuessesThisSpecies = 0;
+        this.speciesStartTime = 0;
+
         // Emit game reset event
         EventBus.emit('game-reset', undefined);
-        
+
         console.log("Game Scene: Shutdown complete.");
+    }
+
+    private endSessionSync(): void {
+        // Fire-and-forget session end (don't await in shutdown)
+        import('@/lib/playerTracking').then(({ endGameSession }) => {
+            if (this.currentSessionId && this.backendPuzzle) {
+                endGameSession(
+                    this.currentSessionId,
+                    this.backendPuzzle.getMovesUsed(),
+                    this.backendPuzzle.getScore()
+                ).catch(error => {
+                    console.error('Failed to end session:', error);
+                });
+            }
+        });
     }
 
     private verifyBoardState(): void {

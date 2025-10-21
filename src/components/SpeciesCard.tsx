@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees } from "lucide-react"
+import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees, CheckCircle, Search } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -80,20 +80,28 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
               {speciesPositionLabel}
             </span>
           )}
-          {isDiscovered && (
-            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-green-600 text-white">
-              ✅ Known
-            </span>
-          )}
         </div>
-        <h2 
+        <h2
           className="font-bold text-white mb-2 break-words whitespace-normal leading-tight"
-          style={{ 
+          style={{
             fontSize: 'clamp(18px, 5vw, 36px)',
             lineHeight: '1.2'
           }}
         >
-          {species.comm_name || species.sci_name}
+          <span className="inline-flex items-center gap-2">
+            {isDiscovered ? (
+              <>
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+                <span className="sr-only">Discovered: </span>
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5 text-slate-400 flex-shrink-0" aria-hidden="true" />
+                <span className="sr-only">Undiscovered: </span>
+              </>
+            )}
+            <span className={isDiscovered ? "text-green-400" : ""}>{species.comm_name || species.sci_name}</span>
+          </span>
         </h2>
         <p 
           className="italic text-slate-200 mb-3 break-words whitespace-normal leading-relaxed"

@@ -687,106 +687,70 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                 />
               </div>
             ) : (
-              /* Display grouped species for other filters */
-              <>
-                <div className="space-y-6">
-                  {/* Known Species Section */}
-                  {Object.keys(groupedKnown).length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-bold text-green-400 mb-4">
-                        🏆 Discovered Species ({knownSpecies.length})
-                      </h2>
-                      <Accordion
-                        type="multiple"
-                        className="w-full space-y-4"
-                        value={openAccordions}
-                        onValueChange={setOpenAccordions}
-                      >
-                        {Object.entries(groupedKnown).map(([order, genera]) => {
-                          const accordionId = `known-${order}`;
-                          const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
-                          const discoveredCount = knownCounts[order] || 0;
-                          const totalCount = totalCounts[order] || discoveredCount;
-                          const displayName = `${orderNameFormatted}: ${totalCount}`;
-                          return (
-                            <AccordionCategory
-                              key={accordionId}
-                              category={displayName}
-                              genera={genera}
-                              isOpen={openAccordions.includes(accordionId)}
-                              showStickyHeaders={showStickyHeaders}
-                              discoveredSpecies={discoveredSpecies}
-                              accordionValue={accordionId}
-                              discoveredCount={discoveredCount}
-                              totalCount={totalCount}
-                              onToggle={() => {
-                                setOpenAccordions(prev =>
-                                  prev.includes(accordionId)
-                                    ? prev.filter(c => c !== accordionId)
-                                    : [...prev, accordionId]
-                                );
-                                setShowStickyHeaders(false);
-                              }}
-                              setRef={setRef}
-                            />
-                          );
-                        })}
-                      </Accordion>
-                    </div>
-                  )}
-
-                  {/* Unknown Species Section */}
-                  {Object.keys(groupedUnknown).length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-400 mb-4">
-                        🔍 Unknown Species ({unknownSpecies.length})
-                      </h2>
-                      <Accordion
-                        type="multiple"
-                        className="w-full space-y-4"
-                        value={openAccordions}
-                        onValueChange={setOpenAccordions}
-                      >
-                        {Object.entries(groupedUnknown).map(([order, genera]) => {
-                          const accordionId = `unknown-${order}`;
-                          const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
-                          const discoveredCount = knownCounts[order] || 0;
-                          const totalCount = totalCounts[order] || (unknownCounts[order] || 0);
-                          const displayName = `${orderNameFormatted}: ${totalCount}`;
-                          return (
-                            <AccordionCategory
-                              key={accordionId}
-                              category={displayName}
-                              genera={genera}
-                              isOpen={openAccordions.includes(accordionId)}
-                              showStickyHeaders={showStickyHeaders}
-                              discoveredSpecies={discoveredSpecies}
-                              accordionValue={accordionId}
-                              discoveredCount={discoveredCount}
-                              totalCount={totalCount}
-                              onToggle={() => {
-                                setOpenAccordions(prev =>
-                                  prev.includes(accordionId)
-                                    ? prev.filter(c => c !== accordionId)
-                                    : [...prev, accordionId]
-                                );
-                                setShowStickyHeaders(false);
-                              }}
-                              setRef={setRef}
-                            />
-                          );
-                        })}
-                      </Accordion>
-                    </div>
-                  )}
+              /* Display unified species list */
+              <div className="space-y-6">
+                {/* Summary Stats Bar */}
+                <div className="mb-4 px-4 py-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">
+                      <span className="text-green-400 font-semibold">{knownSpecies.length}</span> discovered
+                    </span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-300">
+                      <span className="text-slate-400 font-semibold">{unknownSpecies.length}</span> undiscovered
+                    </span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-300">
+                      <span className="font-semibold">{filteredSpecies.length}</span> total
+                    </span>
+                  </div>
                 </div>
 
-                {Object.keys(groupedKnown).length === 0 && Object.keys(groupedUnknown).length === 0 && (
+                {/* Unified Accordion */}
+                <Accordion
+                  type="multiple"
+                  className="w-full space-y-4"
+                  value={openAccordions}
+                  onValueChange={setOpenAccordions}
+                >
+                  {Object.entries(grouped).map(([order, genera]) => {
+                    const accordionId = order;
+                    const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
+                    const discoveredCount = knownCounts[order] || 0;
+                    const totalCount = totalCounts[order] || Object.values(genera).reduce((sum, list) => sum + list.length, 0);
+                    const displayName = orderNameFormatted;
+
+                    return (
+                      <AccordionCategory
+                        key={accordionId}
+                        category={displayName}
+                        genera={genera}
+                        isOpen={openAccordions.includes(accordionId)}
+                        showStickyHeaders={showStickyHeaders}
+                        discoveredSpecies={discoveredSpecies}
+                        accordionValue={accordionId}
+                        discoveredCount={discoveredCount}
+                        totalCount={totalCount}
+                        onToggle={() => {
+                          setOpenAccordions(prev =>
+                            prev.includes(accordionId)
+                              ? prev.filter(c => c !== accordionId)
+                              : [...prev, accordionId]
+                          );
+                          setShowStickyHeaders(false);
+                        }}
+                        setRef={setRef}
+                      />
+                    );
+                  })}
+                </Accordion>
+
+                {Object.keys(grouped).length === 0 && (
                   <div className="text-center p-12">
                     <p className="text-muted-foreground">No species found for the selected filter.</p>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </ScrollArea>
         </div>
