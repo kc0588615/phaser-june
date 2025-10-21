@@ -94,10 +94,14 @@ export async function processOfflineQueue(playerId: string): Promise<void> {
           await trackClueUnlock(
             playerId,
             item.payload.speciesId,
-            item.payload.clueCategory,
-            item.payload.clueField,
-            item.payload.clueValue,
-            item.payload.discoveryId
+            typeof item.payload.clueCategory === 'string'
+              ? item.payload.clueCategory
+              : String(item.payload.clueCategory ?? 'unknown'),
+            typeof item.payload.clueField === 'string' && item.payload.clueField.length > 0
+              ? item.payload.clueField
+              : 'detail',
+            item.payload.clueValue ?? null,
+            item.payload.discoveryId ?? null
           );
           break;
         case 'discovery':
@@ -375,6 +379,8 @@ export async function trackClueUnlock(
  * Track a species discovery
  * Links all pending clues to this discovery
  */
+const UNIQUE_CONSTRAINT_VIOLATION = '23505';
+
 export async function trackSpeciesDiscovery(
   playerId: string,
   speciesId: number,
@@ -389,29 +395,76 @@ export async function trackSpeciesDiscovery(
   try {
     const supabase = supabaseBrowser();
 
-    const { data, error } = await supabase
+    const payload = {
+      player_id: playerId,
+      species_id: speciesId,
+      session_id: options.sessionId || currentSession?.id || null,
+      time_to_discover_seconds: options.timeToDiscoverSeconds,
+      clues_unlocked_before_guess: options.cluesUnlockedBeforeGuess,
+      incorrect_guesses_count: options.incorrectGuessesCount,
+      score_earned: options.scoreEarned,
+    };
+
+    type DiscoveryRecord = Pick<PlayerSpeciesDiscovery, 'id' | 'session_id'>;
+
+    const {
+      data: inserted,
+      error: insertError,
+    } = await supabase
       .from('player_species_discoveries')
-      .insert({
-        player_id: playerId,
-        species_id: speciesId,
-        session_id: options.sessionId || currentSession?.id || null,
-        time_to_discover_seconds: options.timeToDiscoverSeconds,
-        clues_unlocked_before_guess: options.cluesUnlockedBeforeGuess,
-        incorrect_guesses_count: options.incorrectGuessesCount,
-        score_earned: options.scoreEarned,
-      })
+      .insert(payload)
       .select()
       .single();
 
-    if (error) {
-      console.error('Error tracking species discovery:', error);
-      queueWrite('discovery', { speciesId, options });
+    let discovery = inserted as DiscoveryRecord | null;
+
+    if (insertError) {
+      if ((insertError as any).code === UNIQUE_CONSTRAINT_VIOLATION) {
+        console.info('Species discovery already recorded, using existing entry.', {
+          playerId,
+          speciesId,
+        });
+
+        const {
+          data: existing,
+          error: fetchError,
+        } = await supabase
+          .from('player_species_discoveries')
+          .select('id, session_id')
+          .eq('player_id', playerId)
+          .eq('species_id', speciesId)
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error('Failed to fetch existing species discovery after unique constraint violation.', fetchError);
+          queueWrite('discovery', { speciesId, options });
+          return null;
+        }
+
+        if (!existing) {
+          console.warn('Unique constraint violation occurred but existing discovery was not found. Queuing for retry.', {
+            playerId,
+            speciesId,
+          });
+          queueWrite('discovery', { speciesId, options });
+          return null;
+        }
+
+        discovery = existing as DiscoveryRecord;
+      } else {
+        console.error('Error tracking species discovery:', insertError);
+        queueWrite('discovery', { speciesId, options });
+        return null;
+      }
+    }
+
+    if (!discovery) {
       return null;
     }
 
     // Link pending clues to this discovery
     if (currentSession && currentSession.pendingClueIds.length > 0) {
-      await linkCluesToDiscovery(data.id, currentSession.pendingClueIds);
+      await linkCluesToDiscovery(discovery.id, currentSession.pendingClueIds);
       currentSession.pendingClueIds = [];
     }
 
@@ -425,7 +478,7 @@ export async function trackSpeciesDiscovery(
       updateLocalStorageDiscovery(speciesId);
     }
 
-    return data.id;
+    return discovery.id;
   } catch (err) {
     console.error('Failed to track species discovery:', err);
     queueWrite('discovery', { speciesId, options });

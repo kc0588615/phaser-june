@@ -35,6 +35,42 @@ import {
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 
+function slugify(value: string): string {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'unknown';
+}
+
+function getCategoryKey(category: GemCategory): string {
+    const config = CLUE_CONFIG[category];
+    if (config?.categoryName) {
+        return slugify(config.categoryName);
+    }
+    return `category_${category}`;
+}
+
+function deriveClueFieldAndValue(payload: CluePayload): { field: string; value: string | null } {
+    const rawField = (payload as any).field as string | undefined;
+    const rawValue = (payload as any).value as string | undefined;
+
+    if (rawField) {
+        return { field: slugify(rawField), value: rawValue ?? payload.clue ?? null };
+    }
+
+    const clueText = payload.clue ?? '';
+    const colonIndex = clueText.indexOf(':');
+    if (colonIndex > -1) {
+        const field = slugify(clueText.slice(0, colonIndex));
+        const value = clueText.slice(colonIndex + 1).trim() || null;
+        return { field: field || 'detail', value };
+    }
+
+    const fallbackField = payload.name ? slugify(payload.name) : 'detail';
+    return { field: fallbackField, value: clueText || null };
+}
+
 interface BoardOffset {
     x: number;
     y: number;
@@ -101,6 +137,8 @@ export class Game extends Phaser.Scene {
     // --- Raster Habitat Integration ---
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
+    private discoveredSpeciesIds: Set<number> = new Set();
+    private hasHydratedDiscoveries: boolean = false;
 
     // --- Player Tracking ---
     private supabaseClient: any | null = null; // Cache client
@@ -128,6 +166,68 @@ export class Game extends Phaser.Scene {
 
     constructor() {
         super('Game');
+    }
+
+    private loadDiscoveredSpeciesFromCache(): void {
+        if (typeof window === 'undefined') return;
+
+        try {
+            const raw = window.localStorage.getItem('discoveredSpecies');
+            if (!raw) return;
+
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return;
+
+            for (const entry of parsed) {
+                const id = Number((entry as any)?.id ?? entry);
+                if (Number.isFinite(id)) {
+                    this.discoveredSpeciesIds.add(id);
+                }
+            }
+        } catch (error) {
+            console.warn('Game Scene: Failed to load discovered species from storage:', error);
+        }
+    }
+
+    private async hydrateDiscoveredSpeciesFromBackend(userId: string): Promise<void> {
+        if (this.hasHydratedDiscoveries || !this.supabaseClient) {
+            return;
+        }
+
+        try {
+            const { data, error } = await this.supabaseClient
+                .from('player_species_discoveries')
+                .select('species_id')
+                .eq('player_id', userId);
+
+            if (error) {
+                console.warn('Game Scene: Failed to hydrate discovered species from Supabase:', error);
+            } else if (Array.isArray(data)) {
+                for (const record of data) {
+                    const id = Number((record as any)?.species_id);
+                    if (Number.isFinite(id)) {
+                        this.discoveredSpeciesIds.add(id);
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Game Scene: Error hydrating discovered species from Supabase:', error);
+        } finally {
+            this.hasHydratedDiscoveries = true;
+        }
+    }
+
+    private resetSpeciesTrackingCounters(): void {
+        this.clueCountThisSpecies = 0;
+        this.incorrectGuessesThisSpecies = 0;
+        this.speciesStartTime = Date.now();
+    }
+
+    private hasActiveDisplayList(): boolean {
+        const factory = this.add as Phaser.GameObjects.GameObjectFactory & { displayList?: Phaser.GameObjects.DisplayList | null };
+        const displayList = factory?.displayList ?? null;
+        const status = this.sys?.settings?.status ?? Phaser.Scenes.DESTROYED;
+        return !!displayList && status < Phaser.Scenes.SHUTDOWN;
     }
 
     update(): void {
@@ -357,6 +457,8 @@ export class Game extends Phaser.Scene {
 
         EventBus.emit('current-scene-ready', this);
 
+        this.loadDiscoveredSpeciesFromCache();
+
         // Initialize player tracking
         this.initializePlayerTracking();
 
@@ -367,21 +469,43 @@ export class Game extends Phaser.Scene {
         try {
             // Dynamic imports to avoid SSR issues
             const { supabaseBrowser } = await import('@/lib/supabase-browser');
-            const { startGameSession } = await import('@/lib/playerTracking');
+            const { startGameSession, processOfflineQueue } = await import('@/lib/playerTracking');
 
             // Cache Supabase client (reuse for all calls)
             this.supabaseClient = supabaseBrowser();
 
             // Get current user and cache ID
             const { data: { user } } = await this.supabaseClient.auth.getUser();
+
+            console.log('🔐 Auth check complete:', {
+                authenticated: !!user,
+                userId: user?.id,
+                email: user?.email
+            });
+
             if (user) {
                 this.currentUserId = user.id;
+
+                await this.hydrateDiscoveredSpeciesFromBackend(user.id);
+
+                console.log('📝 Starting game session for user:', user.id);
 
                 // Start or resume session
                 const sessionId = await startGameSession(user.id);
                 this.currentSessionId = sessionId;
 
-                console.log('Player tracking initialized:', { userId: user.id, sessionId });
+                console.log('📊 Player tracking initialized:', {
+                    userId: user.id,
+                    sessionId,
+                    mode: 'Supabase'
+                });
+
+                if (sessionId) {
+                    console.log('🔄 Processing offline queue...');
+                    await processOfflineQueue(user.id);
+                }
+
+                console.log('🎧 Registering EventBus listeners for authenticated tracking');
 
                 // Register EventBus listeners for tracking
                 EventBus.on('clue-revealed', this.handleClueRevealed, this);
@@ -392,7 +516,7 @@ export class Game extends Phaser.Scene {
                     window.addEventListener('beforeunload', this.handleBeforeUnload);
                 }
             } else {
-                console.log('Guest user - tracking disabled');
+                console.log('👤 Guest user - tracking disabled');
             }
         } catch (error) {
             console.error('Failed to initialize player tracking:', error);
@@ -439,6 +563,11 @@ export class Game extends Phaser.Scene {
     }
 
     private ensurePauseOverlay(): void {
+        if (!this.hasActiveDisplayList()) {
+            console.warn('Game Scene: Display list unavailable, skipping pause overlay setup.');
+            return;
+        }
+
         if (this.pauseOverlay) {
             this.pauseOverlay.destroy(true);
         }
@@ -448,10 +577,12 @@ export class Game extends Phaser.Scene {
         const centerX = this.boardOffset.x + boardWidth / 2;
         const centerY = this.boardOffset.y + boardHeight / 2;
 
+        const shouldBeVisible = this.isPaused;
+
         const overlayBg = this.add.rectangle(centerX, centerY, boardWidth + 40, boardHeight + 40, 0x050505, 0.65)
             .setOrigin(0.5)
             .setDepth(300)
-            .setVisible(false);
+            .setVisible(shouldBeVisible);
         overlayBg.setInteractive({ useHandCursor: false });
 
         const title = this.add.text(centerX, centerY - 40, 'Paused', {
@@ -460,14 +591,14 @@ export class Game extends Phaser.Scene {
             fontStyle: 'bold',
             stroke: '#000000',
             strokeThickness: 4
-        }).setOrigin(0.5).setDepth(301).setVisible(false);
+        }).setOrigin(0.5).setDepth(301).setVisible(shouldBeVisible);
 
         const resumeButton = this.add.text(centerX, centerY + 10, 'Resume', {
             fontSize: '22px',
             color: '#ffffff',
             backgroundColor: '#1d4ed8',
             padding: { x: 16, y: 10 }
-        }).setOrigin(0.5).setDepth(301).setVisible(false);
+        }).setOrigin(0.5).setDepth(301).setVisible(shouldBeVisible);
         resumeButton.setInteractive({ useHandCursor: true });
         resumeButton.on('pointerup', () => this.togglePause(false));
         resumeButton.on('pointerover', () => resumeButton.setBackgroundColor('#2563eb'));
@@ -475,7 +606,7 @@ export class Game extends Phaser.Scene {
 
         const container = this.add.container(0, 0, [overlayBg, title, resumeButton])
             .setDepth(300)
-            .setVisible(false);
+            .setVisible(shouldBeVisible);
         container.setScrollFactor(0);
 
         this.pauseOverlay = container;
@@ -485,7 +616,27 @@ export class Game extends Phaser.Scene {
     }
 
     private updatePauseOverlayLayout(): void {
-        if (!this.pauseOverlayBackground || !this.pauseOverlayTitle || !this.pauseOverlayResumeButton) return;
+        if (
+            !this.pauseOverlay ||
+            !this.pauseOverlayBackground ||
+            !this.pauseOverlayTitle ||
+            !this.pauseOverlayResumeButton ||
+            !this.pauseOverlayBackground.geom
+        ) {
+            // The overlay may have been destroyed by Phaser (geom null). Ensure it exists before resizing.
+            this.ensurePauseOverlay();
+        }
+
+        if (
+            !this.pauseOverlay ||
+            !this.pauseOverlayBackground ||
+            !this.pauseOverlayTitle ||
+            !this.pauseOverlayResumeButton ||
+            !this.pauseOverlayBackground.geom
+        ) {
+            return;
+        }
+
         const boardWidth = GRID_COLS * this.gemSize;
         const boardHeight = GRID_ROWS * this.gemSize;
         const centerX = this.boardOffset.x + boardWidth / 2;
@@ -550,25 +701,56 @@ export class Game extends Phaser.Scene {
     // --- Player Tracking Event Handlers ---
 
     private handleClueRevealed = async (payload: CluePayload): Promise<void> => {
-        if (!this.currentUserId || !this.selectedSpecies) return;
+        console.log('🔔 handleClueRevealed called:', {
+            hasCurrentUserId: !!this.currentUserId,
+            currentUserId: this.currentUserId,
+            hasSelectedSpecies: !!this.selectedSpecies,
+            speciesId: this.selectedSpecies?.ogc_fid,
+            category: payload.category,
+            clue: payload.clue
+        });
+
+        if (!this.currentUserId || !this.selectedSpecies) {
+            console.warn('⚠️ Skipping clue tracking:', {
+                reason: !this.currentUserId ? 'No currentUserId' : 'No selectedSpecies',
+                currentUserId: this.currentUserId,
+                selectedSpecies: this.selectedSpecies?.ogc_fid
+            });
+            return;
+        }
 
         try {
             const { trackClueUnlock } = await import('@/lib/playerTracking');
+            const clueCategory = getCategoryKey(payload.category);
+            const { field, value } = deriveClueFieldAndValue(payload);
+
+            console.log('📝 Calling trackClueUnlock with:', {
+                userId: this.currentUserId,
+                speciesId: this.selectedSpecies.ogc_fid,
+                category: clueCategory,
+                field,
+                value
+            });
 
             const wasNew = await trackClueUnlock(
                 this.currentUserId,
                 this.selectedSpecies.ogc_fid,
-                payload.category,
-                payload.field,
-                payload.value,
+                clueCategory,
+                field,
+                value,
                 null // discovery_id will be linked later
             );
 
             if (wasNew) {
                 this.clueCountThisSpecies++;
+                console.log(`✅ New clue tracked! Total for species: ${this.clueCountThisSpecies}`);
+            } else if (wasNew === false) {
+                console.log('ℹ️ Duplicate clue (already unlocked)');
+            } else {
+                console.warn('⚠️ trackClueUnlock returned null (error or queued)');
             }
         } catch (error) {
-            console.error('Failed to track clue unlock:', error);
+            console.error('❌ Failed to track clue unlock:', error);
         }
     };
 
@@ -824,6 +1006,13 @@ export class Game extends Phaser.Scene {
         this.isBoardInitialized = false; // Mark as not ready
         const { width, height } = this.scale;
 
+        if (!this.hasActiveDisplayList()) {
+            console.warn('Game Scene: Ignoring board initialization because the scene display list is unavailable.', {
+                sceneStatus: this.sys?.settings?.status
+            });
+            return;
+        }
+
         if (this.statusText && this.statusText.active) {
             this.statusText.setText("Initializing new game board...");
         }
@@ -926,17 +1115,26 @@ export class Game extends Phaser.Scene {
 
         } catch (error) {
             console.error("Game Scene: Error initializing board from Cesium data:", error);
-            if (this.statusText && this.statusText.active) this.statusText.destroy();
+            if (this.statusText && this.statusText.active) {
+                if (this.hasActiveDisplayList()) {
+                    this.statusText.destroy();
+                }
+                this.statusText = null;
+            }
             
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            this.statusText = this.add.text(width / 2, height / 2, `Error initializing board:\n${errorMessage}`, {
-                fontSize: '18px',
-                color: '#ff4444',
-                backgroundColor: '#000000cc',
-                align: 'center',
-                padding: { x: 10, y: 5 },
-                wordWrap: { width: width * 0.8 }
-            }).setOrigin(0.5).setDepth(100);
+            if (this.hasActiveDisplayList()) {
+                this.statusText = this.add.text(width / 2, height / 2, `Error initializing board:\n${errorMessage}`, {
+                    fontSize: '18px',
+                    color: '#ff4444',
+                    backgroundColor: '#000000cc',
+                    align: 'center',
+                    padding: { x: 10, y: 5 },
+                    wordWrap: { width: width * 0.8 }
+                }).setOrigin(0.5).setDepth(100);
+            } else {
+                console.warn('Game Scene: Skipping error text creation because the display list is unavailable.');
+            }
             this.canMove = false;
             this.isBoardInitialized = false;
         }
@@ -1498,6 +1696,14 @@ export class Game extends Phaser.Scene {
     }
 
     private async trackDiscovery(speciesId: number): Promise<void> {
+        if (this.discoveredSpeciesIds.has(speciesId)) {
+            console.log('Game Scene: Species discovery already tracked locally. Skipping duplicate persistence.', { speciesId });
+            this.resetSpeciesTrackingCounters();
+            return;
+        }
+
+        this.discoveredSpeciesIds.add(speciesId);
+
         try {
             const {
                 trackSpeciesDiscovery,
@@ -1533,14 +1739,10 @@ export class Game extends Phaser.Scene {
                     );
                 }
             }
-
-            // Reset per-species counters
-            this.clueCountThisSpecies = 0;
-            this.incorrectGuessesThisSpecies = 0;
-            this.speciesStartTime = Date.now();
-
         } catch (error) {
             console.error('Failed to track species discovery:', error);
+        } finally {
+            this.resetSpeciesTrackingCounters();
         }
     }
 

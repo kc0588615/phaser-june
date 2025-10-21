@@ -177,34 +177,39 @@ export async function fetchPlayerStatsByPlayerId(
 export async function getPlayerDisplayName(playerId?: string): Promise<string> {
   try {
     const supabase = supabaseBrowser();
+    let fallbackEmail: string | undefined;
 
     // If no playerId provided, get current user
     if (!playerId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return 'Player';
       playerId = user.id;
+      fallbackEmail = user.email ?? undefined;
     }
 
     // Try to get profile display name
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('username, email')
-      .eq('id', playerId)
-      .single();
+      .select('username')
+      .eq('user_id', playerId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn('Failed to fetch profile display name, falling back to auth user.', profileError);
+    }
 
     if (profile?.username) {
       return profile.username;
     }
 
     // Fallback to email
-    if (profile?.email) {
-      return profile.email.split('@')[0]; // Use email prefix
+    if (!fallbackEmail) {
+      const { data: { user } } = await supabase.auth.getUser();
+      fallbackEmail = user?.email ?? undefined;
     }
 
-    // Ultimate fallback
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.email) {
-      return user.email.split('@')[0];
+    if (fallbackEmail) {
+      return fallbackEmail.split('@')[0];
     }
 
     return 'Player';
