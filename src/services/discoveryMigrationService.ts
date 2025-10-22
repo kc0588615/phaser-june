@@ -36,18 +36,72 @@ export class DiscoveryMigrationService {
 
       console.log(`Migrating ${localDiscoveries.length} local discoveries...`);
 
-      // Prepare batch insert
-      const discoveries = localDiscoveries.map((d: any) => ({
-        user_id: userId,
-        species_id: d.id,
-        discovered_at: d.discoveredAt || new Date().toISOString(),
-        clues_unlocked_before_guess: 0, // Unknown for migrated data
-        incorrect_guesses_count: 0,      // Unknown for migrated data
-        score_earned: 0                   // Unknown for migrated data
-      }));
-
       // Create Supabase client
       const supabase = supabaseBrowser();
+
+      // Gather candidate species IDs (numeric only for the foreign key)
+      const candidateSpeciesIds = Array.from(
+        new Set(
+          localDiscoveries
+            .map((d: any) => Number(d.id))
+            .filter((id: number) => Number.isFinite(id))
+        )
+      );
+
+      console.log(`📋 Validating ${candidateSpeciesIds.length} unique species IDs:`, candidateSpeciesIds);
+
+      let validSpeciesIds = new Set<number>();
+
+      if (candidateSpeciesIds.length > 0) {
+        const { data: existingSpecies, error: speciesError } = await supabase
+          .from('icaa')
+          .select('ogc_fid')
+          .in('ogc_fid', candidateSpeciesIds);
+
+        if (speciesError) {
+          console.error('Failed to verify species existence for migration:', speciesError);
+          throw speciesError;
+        }
+
+        validSpeciesIds = new Set((existingSpecies ?? []).map((row: { ogc_fid: number }) => row.ogc_fid));
+        const invalidIds = candidateSpeciesIds.filter(id => !validSpeciesIds.has(id));
+
+        console.log(`✅ Found ${validSpeciesIds.size} valid species in database`);
+        if (invalidIds.length > 0) {
+          console.warn(`⚠️  Skipping ${invalidIds.length} invalid species IDs:`, invalidIds);
+        }
+      }
+
+      const discoveries = localDiscoveries
+        .map((d: any) => {
+          const parsedSpeciesId = Number(d.id);
+          if (!Number.isFinite(parsedSpeciesId)) {
+            return null;
+          }
+
+          if (!validSpeciesIds.has(parsedSpeciesId)) {
+            // Already logged in the summary above, no need for per-record warning
+            return null;
+          }
+
+          return {
+            player_id: userId,
+            species_id: parsedSpeciesId,
+            discovered_at: d.discoveredAt || new Date().toISOString(),
+            clues_unlocked_before_guess: 0, // Unknown for migrated data
+            incorrect_guesses_count: 0,     // Unknown for migrated data
+            score_earned: 0,                // Unknown for migrated data
+          };
+        })
+        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+      if (discoveries.length === 0) {
+        console.warn('⚠️  No valid local discoveries matched current species data. Marking as migrated.');
+        localStorage.setItem('discoveries_migrated', 'true');
+        return;
+      }
+
+      console.log(`💾 Upserting ${discoveries.length} valid discoveries to database...`);
 
       // Insert to database (UPSERT to handle duplicates)
       const { error } = await supabase
@@ -58,11 +112,11 @@ export class DiscoveryMigrationService {
         });
 
       if (error) {
-        console.error('Migration failed:', error);
+        console.error('❌ Migration failed:', error);
         throw error;
       }
 
-      console.log(`Successfully migrated ${localDiscoveries.length} discoveries`);
+      console.log(`✅ Successfully migrated ${discoveries.length} discoveries`);
 
       // Mark as migrated
       localStorage.setItem('discoveries_migrated', 'true');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import { Button } from '@/components/ui/button';
@@ -8,54 +8,88 @@ import { Button } from '@/components/ui/button';
 export default function AuthCallback() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    if (!router.isReady || processedRef.current) {
+      return;
+    }
+
+    processedRef.current = true;
+    let isCancelled = false;
+
     const handleCallback = async () => {
-      const supabase = supabaseBrowser();
+      try {
+        const supabase = supabaseBrowser();
 
-      // Check for OAuth errors in URL
-      const errorParam = router.query.error as string | undefined;
-      const errorDescription = router.query.error_description as string | undefined;
+        // Check for OAuth errors in URL
+        const rawError = router.query.error;
+        const rawErrorDescription = router.query.error_description;
+        const errorParam = Array.isArray(rawError) ? rawError[0] : rawError;
+        const errorDescription = Array.isArray(rawErrorDescription)
+          ? rawErrorDescription[0]
+          : rawErrorDescription;
 
-      if (errorParam) {
-        setError(errorDescription || errorParam);
-        return;
-      }
-
-      // Exchange PKCE code for session
-      const code = router.query.code as string | undefined;
-
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-
-        if (exchangeError) {
-          console.error('Code exchange error:', exchangeError);
-          setError(exchangeError.message);
+        if (errorParam) {
+          if (!isCancelled) {
+            setError(errorDescription || errorParam);
+          }
           return;
         }
-      }
 
-      // Successfully authenticated
-      const { data: { user } } = await supabase.auth.getUser();
+        // Wait for Supabase client to finish any automatic PKCE handling
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-      if (user) {
-        // Trigger migration if needed
-        const { DiscoveryMigrationService } = await import('@/services/discoveryMigrationService');
+        if (isCancelled) return;
 
-        if (DiscoveryMigrationService.needsMigration()) {
-          console.log('Migrating guest discoveries to database...');
-          await DiscoveryMigrationService.migrateLocalDiscoveries(user.id);
+        if (sessionError) {
+          console.error('Session retrieval error:', sessionError);
+          setError(sessionError.message);
+          return;
+        }
+
+        if (!session) {
+          setError('Authentication session not found. Please try signing in again.');
+          return;
+        }
+
+        // Successfully authenticated
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (isCancelled) return;
+
+        if (user) {
+          // Trigger migration if needed
+          const { DiscoveryMigrationService } = await import('@/services/discoveryMigrationService');
+
+          if (DiscoveryMigrationService.needsMigration()) {
+            console.log('Migrating guest discoveries to database...');
+            await DiscoveryMigrationService.migrateLocalDiscoveries(user.id);
+          }
+        }
+
+        if (!isCancelled) {
+          // Redirect home
+          router.replace('/');
+        }
+      } catch (callbackError) {
+        console.error('Authentication callback error:', callbackError);
+        if (!isCancelled) {
+          setError('An unexpected error occurred during authentication. Please try again.');
         }
       }
-
-      // Redirect home
-      router.replace('/');
     };
 
-    // Only run when router is ready and has query params
-    if (router.isReady) {
-      handleCallback();
-    }
+    handleCallback();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [router, router.isReady]);
 
   if (error) {
