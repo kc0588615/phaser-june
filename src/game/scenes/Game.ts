@@ -7,7 +7,14 @@ import { OwlSprite } from '../ui/OwlSprite';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD, MOVE_THRESHOLD,
-    STREAK_STEP, STREAK_CAP, EARLY_BONUS_PER_SLOT, DEFAULT_TOTAL_CLUE_SLOTS
+    STREAK_STEP, STREAK_CAP, EARLY_BONUS_PER_SLOT, DEFAULT_TOTAL_CLUE_SLOTS,
+    MAX_MOVES,
+    MOVE_LARGE_MATCH_THRESHOLD,
+    MOVE_HUGE_MATCH_THRESHOLD,
+    MULTIPLIER_LARGE_MATCH,
+    MULTIPLIER_HUGE_MATCH,
+    MULTIPLIER_MULTI_CATEGORY,
+    MULTIPLIER_REPEAT_CATEGORY
 } from '../constants';
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
@@ -28,6 +35,42 @@ import {
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 
+function slugify(value: string): string {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'unknown';
+}
+
+function getCategoryKey(category: GemCategory): string {
+    const config = CLUE_CONFIG[category];
+    if (config?.categoryName) {
+        return slugify(config.categoryName);
+    }
+    return `category_${category}`;
+}
+
+function deriveClueFieldAndValue(payload: CluePayload): { field: string; value: string | null } {
+    const rawField = (payload as any).field as string | undefined;
+    const rawValue = (payload as any).value as string | undefined;
+
+    if (rawField) {
+        return { field: slugify(rawField), value: rawValue ?? payload.clue ?? null };
+    }
+
+    const clueText = payload.clue ?? '';
+    const colonIndex = clueText.indexOf(':');
+    if (colonIndex > -1) {
+        const field = slugify(clueText.slice(0, colonIndex));
+        const value = clueText.slice(colonIndex + 1).trim() || null;
+        return { field: field || 'detail', value };
+    }
+
+    const fallbackField = payload.name ? slugify(payload.name) : 'detail';
+    return { field: fallbackField, value: clueText || null };
+}
+
 interface BoardOffset {
     x: number;
     y: number;
@@ -35,9 +78,17 @@ interface BoardOffset {
 
 interface SpritePosition {
     x: number;
-    y: number;
+   y: number;
     gridX: number;
     gridY: number;
+}
+
+interface MoveSummary {
+    largestMatch: number;
+    matchGroups: number;
+    categoriesMatched: Set<GemCategory>;
+    gemTypesMatched: Set<GemType>;
+    cascades: number;
 }
 
 export class Game extends Phaser.Scene {
@@ -65,22 +116,47 @@ export class Game extends Phaser.Scene {
     private statusText: Phaser.GameObjects.Text | null = null;
     private scoreText: Phaser.GameObjects.Text | null = null;
     private movesText: Phaser.GameObjects.Text | null = null;
+    private multiplierText: Phaser.GameObjects.Text | null = null;
+    private pauseButtonContainer: Phaser.GameObjects.Container | null = null;
+    private pauseButton: Phaser.GameObjects.Rectangle | null = null;
+    private pauseButtonLabel: Phaser.GameObjects.Text | null = null;
+    private pauseOverlay: Phaser.GameObjects.Container | null = null;
+    private pauseOverlayBackground: Phaser.GameObjects.Rectangle | null = null;
+    private pauseOverlayTitle: Phaser.GameObjects.Text | null = null;
+    private pauseOverlayResumeButton: Phaser.GameObjects.Text | null = null;
+    private isPaused: boolean = false;
+    private canMoveBeforePause: boolean = false;
     
     // --- Species Integration ---
     private currentSpecies: Species[] = [];
     private selectedSpecies: Species | null = null;
     private revealedClues: Set<GemCategory> = new Set();
+    private completedClueCategories: Set<GemCategory> = new Set();
     private currentSpeciesIndex: number = 0;
     private allCluesRevealed: boolean = false;
     // --- Raster Habitat Integration ---
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
+    private discoveredSpeciesIds: Set<number> = new Set();
+    private hasHydratedDiscoveries: boolean = false;
+
+    // --- Player Tracking ---
+    private supabaseClient: any | null = null; // Cache client
+    private currentUserId: string | null = null; // Cache user ID
+    private currentSessionId: string | null = null; // Active session
+    private clueCountThisSpecies: number = 0; // Track clues for current species
+    private incorrectGuessesThisSpecies: number = 0; // Track wrong guesses
+    private speciesStartTime: number = 0; // Time when species started
     
     // --- Streak and Scoring ---
     private streak: number = 0;
     private seenClueCategories: Set<GemCategory> = new Set();
     private turnBaseTotalScore: number = 0; // Accumulator for the current turn
     private anyMatchThisTurn: boolean = false; // Track if any match occurred this turn
+    private currentMoveSummary: MoveSummary | null = null;
+    private lastMoveCategories: Set<GemCategory> = new Set();
+    private lastAppliedMoveMultiplier: number = 1;
+    private isResolvingMove: boolean = false;
 
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
@@ -92,6 +168,68 @@ export class Game extends Phaser.Scene {
         super('Game');
     }
 
+    private loadDiscoveredSpeciesFromCache(): void {
+        if (typeof window === 'undefined') return;
+
+        try {
+            const raw = window.localStorage.getItem('discoveredSpecies');
+            if (!raw) return;
+
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return;
+
+            for (const entry of parsed) {
+                const id = Number((entry as any)?.id ?? entry);
+                if (Number.isFinite(id)) {
+                    this.discoveredSpeciesIds.add(id);
+                }
+            }
+        } catch (error) {
+            console.warn('Game Scene: Failed to load discovered species from storage:', error);
+        }
+    }
+
+    private async hydrateDiscoveredSpeciesFromBackend(userId: string): Promise<void> {
+        if (this.hasHydratedDiscoveries || !this.supabaseClient) {
+            return;
+        }
+
+        try {
+            const { data, error } = await this.supabaseClient
+                .from('player_species_discoveries')
+                .select('species_id')
+                .eq('player_id', userId);
+
+            if (error) {
+                console.warn('Game Scene: Failed to hydrate discovered species from Supabase:', error);
+            } else if (Array.isArray(data)) {
+                for (const record of data) {
+                    const id = Number((record as any)?.species_id);
+                    if (Number.isFinite(id)) {
+                        this.discoveredSpeciesIds.add(id);
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Game Scene: Error hydrating discovered species from Supabase:', error);
+        } finally {
+            this.hasHydratedDiscoveries = true;
+        }
+    }
+
+    private resetSpeciesTrackingCounters(): void {
+        this.clueCountThisSpecies = 0;
+        this.incorrectGuessesThisSpecies = 0;
+        this.speciesStartTime = Date.now();
+    }
+
+    private hasActiveDisplayList(): boolean {
+        const factory = this.add as Phaser.GameObjects.GameObjectFactory & { displayList?: Phaser.GameObjects.DisplayList | null };
+        const displayList = factory?.displayList ?? null;
+        const status = this.sys?.settings?.status ?? Phaser.Scenes.DESTROYED;
+        return !!displayList && status < Phaser.Scenes.SHUTDOWN;
+    }
+
     update(): void {
         if (!this.backendPuzzle || !this.isBoardInitialized) return;
 
@@ -100,11 +238,11 @@ export class Game extends Phaser.Scene {
             this.scoreText.setText(`Score: ${this.backendPuzzle.getScore()}`);
         }
         if (this.movesText) {
-            this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesRemaining()}`);
+            this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
         }
 
         // Check game over
-        if (this.backendPuzzle.isGameOver() && this.canMove) {
+        if (this.backendPuzzle.isGameOver() && this.canMove && !this.isPaused) {
             this.disableInputs();
             const finalScore = this.backendPuzzle.getScore();
             this.emitHud();
@@ -124,8 +262,11 @@ export class Game extends Phaser.Scene {
         EventBus.emit(EVT_GAME_HUD_UPDATED, {
             score: this.backendPuzzle.getScore(),
             movesRemaining: this.backendPuzzle.getMovesRemaining(),
+            movesUsed: this.backendPuzzle.getMovesUsed(),
+            maxMoves: this.backendPuzzle.getMaxMoves(),
             streak: this.streak,
             multiplier: this.currentMultiplier(),
+            moveMultiplier: this.lastAppliedMoveMultiplier,
         });
     }
 
@@ -138,20 +279,23 @@ export class Game extends Phaser.Scene {
         this.scene.restart();
     }
 
-    private onMoveResolved(baseTurnScore: number, didAnyMatch: boolean): void {
+    private onMoveResolved(baseTurnScore: number, didAnyMatch: boolean, moveMultiplier: number): void {
         if (!this.backendPuzzle) return;
-        
-        // Decrement moves exactly once per resolved move
-        this.backendPuzzle.decrementMoves(1);
 
-        // Apply base score - streak bonus will be applied only on correct guesses
-        // No more automatic streak incrementing on matches
+        this.lastAppliedMoveMultiplier = moveMultiplier;
+        this.updateMultiplierText(moveMultiplier);
 
-        // Emit HUD update
+        if (didAnyMatch) {
+            this.backendPuzzle.registerMove();
+            if (this.movesText) {
+                this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
+            }
+        }
+
         this.emitHud();
 
-        // Disable input and transition when moves hit 0
-        if (this.backendPuzzle.getMovesRemaining() <= 0) {
+        // Disable input and transition when moves hit limit
+        if (this.backendPuzzle.isGameOver()) {
             this.disableInputs();
             this.emitHud();
             const finalScore = this.backendPuzzle.getScore();
@@ -246,12 +390,20 @@ export class Game extends Phaser.Scene {
         }).setDepth(100);
 
         // Moves display
-        this.movesText = this.add.text(width - 20, height - 25, 'Moves: 50', {
+        this.movesText = this.add.text(width - 20, height - 25, `Moves: 0/${MAX_MOVES}`, {
             fontSize: '20px',
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 3
         }).setOrigin(1, 0).setDepth(100);
+
+        this.multiplierText = this.add.text(20, height - 55, '', {
+            fontSize: '18px',
+            color: '#ffe66d',
+            stroke: '#000000',
+            strokeThickness: 2
+        }).setDepth(100);
+        this.updateMultiplierText(1);
 
         // Setup owl animations and create owl sprite
         OwlSprite.setupAnimations(this);
@@ -286,6 +438,7 @@ export class Game extends Phaser.Scene {
             gemSize: this.gemSize,
             boardOffset: this.boardOffset
         });
+        this.createPauseControls();
 
         this.input.addPointer(1);
         this.disableTouchScrolling();
@@ -303,7 +456,548 @@ export class Game extends Phaser.Scene {
         this.isBoardInitialized = false;
 
         EventBus.emit('current-scene-ready', this);
+
+        this.loadDiscoveredSpeciesFromCache();
+
+        // Initialize player tracking
+        this.initializePlayerTracking();
+
         console.log("Game Scene: Create method finished. Waiting for Cesium data.");
+    }
+
+    private async initializePlayerTracking(): Promise<void> {
+        try {
+            // Dynamic imports to avoid SSR issues
+            const { supabaseBrowser } = await import('@/lib/supabase-browser');
+            const { startGameSession, processOfflineQueue } = await import('@/lib/playerTracking');
+
+            // Cache Supabase client (reuse for all calls)
+            this.supabaseClient = supabaseBrowser();
+
+            // Get current user and cache ID
+            const { data: { user } } = await this.supabaseClient.auth.getUser();
+
+            console.log('🔐 Auth check complete:', {
+                authenticated: !!user,
+                userId: user?.id,
+                email: user?.email
+            });
+
+            if (user) {
+                this.currentUserId = user.id;
+
+                await this.hydrateDiscoveredSpeciesFromBackend(user.id);
+
+                console.log('📝 Starting game session for user:', user.id);
+
+                // Start or resume session
+                const sessionId = await startGameSession(user.id);
+                this.currentSessionId = sessionId;
+
+                console.log('📊 Player tracking initialized:', {
+                    userId: user.id,
+                    sessionId,
+                    mode: 'Supabase'
+                });
+
+                if (sessionId) {
+                    console.log('🔄 Processing offline queue...');
+                    await processOfflineQueue(user.id);
+                }
+
+                console.log('🎧 Registering EventBus listeners for authenticated tracking');
+
+                // Register EventBus listeners for tracking
+                EventBus.on('clue-revealed', this.handleClueRevealed, this);
+                EventBus.on(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
+
+                // Register beforeunload handler (flush session on page close)
+                if (typeof window !== 'undefined') {
+                    window.addEventListener('beforeunload', this.handleBeforeUnload);
+                }
+            } else {
+                console.log('👤 Guest user - tracking disabled');
+            }
+        } catch (error) {
+            console.error('Failed to initialize player tracking:', error);
+        }
+    }
+
+    private createPauseControls(): void {
+        if (this.pauseButtonContainer) {
+            this.pauseButtonContainer.destroy(true);
+            this.pauseButtonContainer = null;
+            this.pauseButton = null;
+            this.pauseButtonLabel = null;
+        }
+
+        const buttonSize = 36;
+        const buttonBg = this.add.rectangle(0, 0, buttonSize, buttonSize, 0x000000, 0.45)
+            .setStrokeStyle(2, 0xffffff)
+            .setDepth(110);
+        buttonBg.setInteractive({ useHandCursor: true });
+        buttonBg.on('pointerover', () => buttonBg.setFillStyle(0x111111, 0.6));
+        buttonBg.on('pointerout', () => buttonBg.setFillStyle(0x000000, 0.45));
+        buttonBg.on('pointerup', () => {
+            if (!this.isPaused) {
+                this.togglePause(true);
+            }
+        });
+
+        const label = this.add.text(0, 0, 'II', {
+            fontSize: '18px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(111);
+
+        const container = this.add.container(0, 0, [buttonBg, label]).setDepth(110);
+        container.setScrollFactor(0);
+        container.setVisible(this.isBoardInitialized);
+
+        this.pauseButtonContainer = container;
+        this.pauseButton = buttonBg;
+        this.pauseButtonLabel = label;
+
+        this.ensurePauseOverlay();
+        this.positionPauseButton();
+    }
+
+    private ensurePauseOverlay(): void {
+        if (!this.hasActiveDisplayList()) {
+            console.warn('Game Scene: Display list unavailable, skipping pause overlay setup.');
+            return;
+        }
+
+        if (this.pauseOverlay) {
+            this.pauseOverlay.destroy(true);
+        }
+
+        const boardWidth = GRID_COLS * this.gemSize;
+        const boardHeight = GRID_ROWS * this.gemSize;
+        const centerX = this.boardOffset.x + boardWidth / 2;
+        const centerY = this.boardOffset.y + boardHeight / 2;
+
+        const shouldBeVisible = this.isPaused;
+
+        const overlayBg = this.add.rectangle(centerX, centerY, boardWidth + 40, boardHeight + 40, 0x050505, 0.65)
+            .setOrigin(0.5)
+            .setDepth(300)
+            .setVisible(shouldBeVisible);
+        overlayBg.setInteractive({ useHandCursor: false });
+
+        const title = this.add.text(centerX, centerY - 40, 'Paused', {
+            fontSize: '28px',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#000000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(301).setVisible(shouldBeVisible);
+
+        const resumeButton = this.add.text(centerX, centerY + 10, 'Resume', {
+            fontSize: '22px',
+            color: '#ffffff',
+            backgroundColor: '#1d4ed8',
+            padding: { x: 16, y: 10 }
+        }).setOrigin(0.5).setDepth(301).setVisible(shouldBeVisible);
+        resumeButton.setInteractive({ useHandCursor: true });
+        resumeButton.on('pointerup', () => this.togglePause(false));
+        resumeButton.on('pointerover', () => resumeButton.setBackgroundColor('#2563eb'));
+        resumeButton.on('pointerout', () => resumeButton.setBackgroundColor('#1d4ed8'));
+
+        const container = this.add.container(0, 0, [overlayBg, title, resumeButton])
+            .setDepth(300)
+            .setVisible(shouldBeVisible);
+        container.setScrollFactor(0);
+
+        this.pauseOverlay = container;
+        this.pauseOverlayBackground = overlayBg;
+        this.pauseOverlayTitle = title;
+        this.pauseOverlayResumeButton = resumeButton;
+    }
+
+    private updatePauseOverlayLayout(): void {
+        if (
+            !this.pauseOverlay ||
+            !this.pauseOverlayBackground ||
+            !this.pauseOverlayTitle ||
+            !this.pauseOverlayResumeButton ||
+            !this.pauseOverlayBackground.geom
+        ) {
+            // The overlay may have been destroyed by Phaser (geom null). Ensure it exists before resizing.
+            this.ensurePauseOverlay();
+        }
+
+        if (
+            !this.pauseOverlay ||
+            !this.pauseOverlayBackground ||
+            !this.pauseOverlayTitle ||
+            !this.pauseOverlayResumeButton ||
+            !this.pauseOverlayBackground.geom
+        ) {
+            return;
+        }
+
+        const boardWidth = GRID_COLS * this.gemSize;
+        const boardHeight = GRID_ROWS * this.gemSize;
+        const centerX = this.boardOffset.x + boardWidth / 2;
+        const centerY = this.boardOffset.y + boardHeight / 2;
+
+        this.pauseOverlayBackground
+            .setPosition(centerX, centerY)
+            .setSize(boardWidth + 40, boardHeight + 40);
+        this.pauseOverlayTitle.setPosition(centerX, centerY - 40);
+        this.pauseOverlayResumeButton.setPosition(centerX, centerY + 10);
+    }
+
+    private togglePause(shouldPause: boolean): void {
+        if (this.isPaused === shouldPause) return;
+        this.isPaused = shouldPause;
+
+        if (shouldPause) {
+            this.canMoveBeforePause = this.canMove;
+            this.canMove = false;
+            this.pauseButtonContainer?.setVisible(false);
+            this.tweens.pauseAll();
+            this.time.timeScale = 0;
+            this.input.mouse?.releasePointerLock();
+            this.pauseOverlay?.setVisible(true);
+            this.pauseOverlayBackground?.setVisible(true);
+            this.pauseOverlayTitle?.setVisible(true);
+            this.pauseOverlayResumeButton?.setVisible(true);
+        } else {
+            this.time.timeScale = 1;
+            this.tweens.resumeAll();
+            this.pauseOverlay?.setVisible(false);
+            this.pauseOverlayBackground?.setVisible(false);
+            this.pauseOverlayTitle?.setVisible(false);
+            this.pauseOverlayResumeButton?.setVisible(false);
+            this.pauseButtonContainer?.setVisible(true);
+            if (this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.isResolvingMove && this.canMoveBeforePause) {
+                this.canMove = true;
+            }
+            this.canMoveBeforePause = false;
+        }
+    }
+
+    private positionPauseButton(): void {
+        if (!this.pauseButtonContainer) return;
+        const boardWidth = GRID_COLS * this.gemSize;
+        const x = this.boardOffset.x + boardWidth - 18;
+        const y = this.boardOffset.y - 42;
+        this.pauseButtonContainer.setPosition(x, y);
+        this.updatePauseOverlayLayout();
+    }
+
+    private createEmptyMoveSummary(): MoveSummary {
+        return {
+            largestMatch: 0,
+            matchGroups: 0,
+            categoriesMatched: new Set(),
+            gemTypesMatched: new Set(),
+            cascades: 0
+        };
+    }
+
+    // --- Player Tracking Event Handlers ---
+
+    private handleClueRevealed = async (payload: CluePayload): Promise<void> => {
+        console.log('🔔 handleClueRevealed called:', {
+            hasCurrentUserId: !!this.currentUserId,
+            currentUserId: this.currentUserId,
+            hasSelectedSpecies: !!this.selectedSpecies,
+            speciesId: this.selectedSpecies?.ogc_fid,
+            category: payload.category,
+            clue: payload.clue
+        });
+
+        if (!this.currentUserId || !this.selectedSpecies) {
+            console.warn('⚠️ Skipping clue tracking:', {
+                reason: !this.currentUserId ? 'No currentUserId' : 'No selectedSpecies',
+                currentUserId: this.currentUserId,
+                selectedSpecies: this.selectedSpecies?.ogc_fid
+            });
+            return;
+        }
+
+        try {
+            const { trackClueUnlock } = await import('@/lib/playerTracking');
+            const clueCategory = getCategoryKey(payload.category);
+            const { field, value } = deriveClueFieldAndValue(payload);
+
+            console.log('📝 Calling trackClueUnlock with:', {
+                userId: this.currentUserId,
+                speciesId: this.selectedSpecies.ogc_fid,
+                category: clueCategory,
+                field,
+                value
+            });
+
+            const wasNew = await trackClueUnlock(
+                this.currentUserId,
+                this.selectedSpecies.ogc_fid,
+                clueCategory,
+                field,
+                value,
+                null // discovery_id will be linked later
+            );
+
+            if (wasNew) {
+                this.clueCountThisSpecies++;
+                console.log(`✅ New clue tracked! Total for species: ${this.clueCountThisSpecies}`);
+            } else if (wasNew === false) {
+                console.log('ℹ️ Duplicate clue (already unlocked)');
+            } else {
+                console.warn('⚠️ trackClueUnlock returned null (error or queued)');
+            }
+        } catch (error) {
+            console.error('❌ Failed to track clue unlock:', error);
+        }
+    };
+
+    private handleHudUpdate = async (data: EventPayloads['game-hud-updated']): Promise<void> => {
+        if (!this.currentSessionId || !this.backendPuzzle) return;
+
+        try {
+            const { updateSessionProgress } = await import('@/lib/playerTracking');
+
+            // Count total species discovered in this session
+            const speciesDiscovered = this.currentSpeciesIndex; // Species completed before current
+
+            // Count total clues unlocked in session (all categories revealed)
+            const cluesUnlocked = this.revealedClues.size;
+
+            // Debounced update (10s delay, auto-batched)
+            await updateSessionProgress(
+                this.currentSessionId,
+                data.movesUsed,
+                data.score,
+                speciesDiscovered,
+                cluesUnlocked
+            );
+        } catch (error) {
+            console.error('Failed to update session progress:', error);
+        }
+    };
+
+    private handleBeforeUnload = async (): Promise<void> => {
+        if (!this.currentSessionId || !this.backendPuzzle) return;
+
+        try {
+            const { forceSessionUpdate } = await import('@/lib/playerTracking');
+
+            // Force immediate flush (bypass debounce)
+            await forceSessionUpdate(
+                this.currentSessionId,
+                this.backendPuzzle.getMovesUsed(),
+                this.backendPuzzle.getScore(),
+                this.currentSpeciesIndex,
+                this.revealedClues.size
+            );
+        } catch (error) {
+            console.error('Failed to flush session on unload:', error);
+        }
+    };
+
+    private recordMatchesForSummary(matches: Coordinate[][], gridState?: any): void {
+        if (!this.currentMoveSummary || !matches || matches.length === 0) return;
+        this.currentMoveSummary.matchGroups += matches.length;
+        const state = gridState ?? this.backendPuzzle?.getGridState();
+        for (const match of matches) {
+            if (match.length > this.currentMoveSummary.largestMatch) {
+                this.currentMoveSummary.largestMatch = match.length;
+            }
+            for (const [x, y] of match) {
+                const gem = state?.[x]?.[y];
+                if (gem && gem.gemType) {
+                    this.currentMoveSummary.gemTypesMatched.add(gem.gemType);
+                    const category = this.gemTypeToCategory(gem.gemType);
+                    if (category !== null) {
+                        this.currentMoveSummary.categoriesMatched.add(category);
+                    }
+                }
+            }
+        }
+    }
+
+    private applyMoveBonuses(baseScore: number): { finalScore: number; multiplier: number; repeatedCategories: GemCategory[] } {
+        if (!this.currentMoveSummary || baseScore <= 0 || !this.anyMatchThisTurn) {
+            return { finalScore: baseScore, multiplier: 1, repeatedCategories: [] };
+        }
+
+        let multiplier = 1;
+        const repeatedCategories: GemCategory[] = [];
+        const summary = this.currentMoveSummary;
+
+        if (summary.largestMatch >= MOVE_HUGE_MATCH_THRESHOLD) {
+            multiplier *= MULTIPLIER_HUGE_MATCH;
+        } else if (summary.largestMatch >= MOVE_LARGE_MATCH_THRESHOLD) {
+            multiplier *= MULTIPLIER_LARGE_MATCH;
+        }
+
+        if (summary.categoriesMatched.size > 1) {
+            multiplier *= MULTIPLIER_MULTI_CATEGORY;
+        }
+
+        summary.categoriesMatched.forEach(category => {
+            if (this.lastMoveCategories.has(category)) {
+                repeatedCategories.push(category);
+            }
+        });
+        if (repeatedCategories.length > 0) {
+            multiplier *= MULTIPLIER_REPEAT_CATEGORY;
+        }
+
+        const finalScore = Math.round(baseScore * multiplier);
+        return { finalScore, multiplier, repeatedCategories };
+    }
+
+    private updateMultiplierText(multiplier: number): void {
+        if (!this.multiplierText) return;
+        if (multiplier > 1.01) {
+            this.multiplierText.setText(`Move x${multiplier.toFixed(2)}`);
+        } else {
+            this.multiplierText.setText('');
+        }
+    }
+
+    private revealAllCluesForCategory(category: GemCategory): void {
+        if (!this.selectedSpecies || this.completedClueCategories.has(category)) return;
+
+        if (category === GemCategory.HABITAT) {
+            let clue: CluePayload | null;
+            let emitted = 0;
+            let guard = 0;
+            while ((clue = this.generateRasterHabitatClue()) && guard < 20) {
+                EventBus.emit('clue-revealed', clue);
+                emitted++;
+                guard++;
+            }
+            if (emitted > 0) {
+                this.revealedClues.add(category);
+                this.seenClueCategories.add(category);
+            }
+            this.completedClueCategories.add(category);
+            return;
+        }
+
+        const config = CLUE_CONFIG[category];
+        if (!config) return;
+
+        let emitted = 0;
+        let guard = 0;
+        let lastClue: string | null = null;
+        let clueText = config.getClue(this.selectedSpecies);
+        while (clueText && guard < 20) {
+            if (clueText === lastClue) {
+                break;
+            }
+            const clueData: CluePayload = {
+                category,
+                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                clue: clueText,
+                speciesId: this.selectedSpecies.ogc_fid,
+                name: config.categoryName,
+                icon: config.icon,
+                color: config.color
+            };
+            EventBus.emit('clue-revealed', clueData);
+            emitted++;
+            guard++;
+            lastClue = clueText;
+            clueText = config.getClue(this.selectedSpecies);
+            if (this.isProgressiveCategory(category) && this.isProgressiveCategoryComplete(category)) {
+                break;
+            }
+        }
+
+        if (emitted > 0) {
+            this.revealedClues.add(category);
+            this.seenClueCategories.add(category);
+        }
+        this.completedClueCategories.add(category);
+    }
+
+    private revealCluesForCategory(category: GemCategory, desiredCount: number): void {
+        if (!this.selectedSpecies || desiredCount <= 0 || this.completedClueCategories.has(category)) return;
+
+        let emitted = 0;
+
+        if (category === GemCategory.HABITAT) {
+            for (let i = 0; i < desiredCount; i++) {
+                const clue = this.generateRasterHabitatClue();
+                if (!clue) {
+                    this.completedClueCategories.add(category);
+                    break;
+                }
+                EventBus.emit('clue-revealed', clue);
+                emitted++;
+            }
+            if (emitted > 0) {
+                this.revealedClues.add(category);
+                this.seenClueCategories.add(category);
+            }
+            return;
+        }
+
+        const config = CLUE_CONFIG[category];
+        if (!config) return;
+
+        if (this.isProgressiveCategory(category)) {
+            for (let i = 0; i < desiredCount; i++) {
+                const clueText = config.getClue(this.selectedSpecies);
+                if (!clueText) {
+                    this.completedClueCategories.add(category);
+                    break;
+                }
+                const clueData: CluePayload = {
+                    category,
+                    heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                    clue: clueText,
+                    speciesId: this.selectedSpecies.ogc_fid,
+                    name: config.categoryName,
+                    icon: config.icon,
+                    color: config.color
+                };
+                EventBus.emit('clue-revealed', clueData);
+                emitted++;
+                if (this.isProgressiveCategoryComplete(category)) {
+                    this.completedClueCategories.add(category);
+                    break;
+                }
+            }
+            if (emitted > 0) {
+                this.revealedClues.add(category);
+                this.seenClueCategories.add(category);
+            }
+            return;
+        }
+
+        for (let i = 0; i < desiredCount; i++) {
+            const clueText = config.getClue(this.selectedSpecies);
+            if (!clueText) {
+                this.completedClueCategories.add(category);
+                break;
+            }
+            const clueData: CluePayload = {
+                category,
+                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                clue: clueText,
+                speciesId: this.selectedSpecies.ogc_fid,
+                name: config.categoryName,
+                icon: config.icon,
+                color: config.color
+            };
+            EventBus.emit('clue-revealed', clueData);
+            emitted++;
+        }
+
+        if (emitted > 0) {
+            this.revealedClues.add(category);
+            this.seenClueCategories.add(category);
+        }
+        if (emitted < desiredCount) {
+            this.completedClueCategories.add(category);
+        }
     }
 
     private initializeBoardFromCesium(data: EventPayloads['cesium-location-selected']): void {
@@ -311,6 +1005,13 @@ export class Game extends Phaser.Scene {
         this.canMove = false; // Disable moves during reinitialization
         this.isBoardInitialized = false; // Mark as not ready
         const { width, height } = this.scale;
+
+        if (!this.hasActiveDisplayList()) {
+            console.warn('Game Scene: Ignoring board initialization because the scene display list is unavailable.', {
+                sceneStatus: this.sys?.settings?.status
+            });
+            return;
+        }
 
         if (this.statusText && this.statusText.active) {
             this.statusText.setText("Initializing new game board...");
@@ -321,6 +1022,7 @@ export class Game extends Phaser.Scene {
             this.currentSpecies = [...data.species].sort((a, b) => a.ogc_fid - b.ogc_fid);
             this.currentSpeciesIndex = 0;
             this.revealedClues.clear(); // Reset clues for new game
+            this.completedClueCategories.clear();
             this.allCluesRevealed = false;
             
             // Reset streak and scoring state for new location
@@ -328,6 +1030,15 @@ export class Game extends Phaser.Scene {
             this.seenClueCategories.clear();
             this.turnBaseTotalScore = 0;
             this.anyMatchThisTurn = false;
+            this.lastMoveCategories.clear();
+            this.currentMoveSummary = null;
+            this.lastAppliedMoveMultiplier = 1;
+            this.updateMultiplierText(1);
+
+            // Reset species tracking counters
+            this.clueCountThisSpecies = 0;
+            this.incorrectGuessesThisSpecies = 0;
+            this.speciesStartTime = Date.now();
             
             // Store raster habitat data for green gem clues
             this.rasterHabitats = [...data.rasterHabitats];
@@ -362,6 +1073,7 @@ export class Game extends Phaser.Scene {
             }
             // Regenerate the board with new random gems
             this.backendPuzzle.regenerateBoard();
+            this.backendPuzzle.resetMoves();
 
             this.calculateBoardDimensions(); // Recalculate for current scale
             if (!this.boardView) { // Should exist from create()
@@ -392,23 +1104,37 @@ export class Game extends Phaser.Scene {
             if (this.owl) {
                 this.owl.setBoardOffsets(this.boardOffset.x, this.boardOffset.y);
             }
+            this.positionPauseButton();
+            this.pauseButtonContainer?.setVisible(true);
+            if (this.movesText && this.backendPuzzle) {
+                this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
+            }
             
             // Emit initial HUD state
             this.emitHud();
 
         } catch (error) {
             console.error("Game Scene: Error initializing board from Cesium data:", error);
-            if (this.statusText && this.statusText.active) this.statusText.destroy();
+            if (this.statusText && this.statusText.active) {
+                if (this.hasActiveDisplayList()) {
+                    this.statusText.destroy();
+                }
+                this.statusText = null;
+            }
             
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            this.statusText = this.add.text(width / 2, height / 2, `Error initializing board:\n${errorMessage}`, {
-                fontSize: '18px',
-                color: '#ff4444',
-                backgroundColor: '#000000cc',
-                align: 'center',
-                padding: { x: 10, y: 5 },
-                wordWrap: { width: width * 0.8 }
-            }).setOrigin(0.5).setDepth(100);
+            if (this.hasActiveDisplayList()) {
+                this.statusText = this.add.text(width / 2, height / 2, `Error initializing board:\n${errorMessage}`, {
+                    fontSize: '18px',
+                    color: '#ff4444',
+                    backgroundColor: '#000000cc',
+                    align: 'center',
+                    padding: { x: 10, y: 5 },
+                    wordWrap: { width: width * 0.8 }
+                }).setOrigin(0.5).setDepth(100);
+            } else {
+                console.warn('Game Scene: Skipping error text creation because the display list is unavailable.');
+            }
             this.canMove = false;
             this.isBoardInitialized = false;
         }
@@ -486,6 +1212,10 @@ export class Game extends Phaser.Scene {
         if (this.scoreText) {
             this.scoreText.setPosition(20, height - 25);
         }
+        if (this.multiplierText) {
+            this.multiplierText.setPosition(20, height - 55);
+        }
+        this.positionPauseButton();
         
         // Update owl scale and position on resize
         if (this.owl) {
@@ -505,6 +1235,7 @@ export class Game extends Phaser.Scene {
     }
 
     private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+        if (this.isPaused) return;
         if (!this.canMove || !this.isBoardInitialized || !this.boardView || !this.backendPuzzle) return;
         if (this.isDragging) { // Should not happen if logic is correct, but as a safeguard
             console.warn("PointerDown while already dragging. Resetting drag state.");
@@ -542,6 +1273,7 @@ export class Game extends Phaser.Scene {
     }
 
     private handlePointerMove(pointer: Phaser.Input.Pointer): void {
+        if (this.isPaused) return;
         if (!this.isDragging || !this.canMove || !this.isBoardInitialized || !this.boardView) return;
         if (!pointer.isDown) {
             this.handlePointerUp(pointer); // Treat as pointer up if button released
@@ -592,6 +1324,7 @@ export class Game extends Phaser.Scene {
     }
 
     private async handlePointerUp(pointer: Phaser.Input.Pointer): Promise<void> {
+        if (this.isPaused) return;
         // Store these values *before* calling resetDragState or any async operation
         const wasDragging = this.isDragging;
         const currentDragDirection = this.dragDirection;
@@ -653,6 +1386,7 @@ export class Game extends Phaser.Scene {
                     console.log(`Pointer up: Committing move (Matches found)`);
                     this.boardView.updateGemsSpritesArrayAfterMove(moveAction);
                     this.boardView.snapDraggedGemsToFinalGridPositions();
+                    this.isResolvingMove = true;
                     await this.applyMoveAndHandleResults(moveAction);
                 } else {
                     console.log(`Pointer up: Move resulted in NO matches. Snapping back.`);
@@ -668,7 +1402,10 @@ export class Game extends Phaser.Scene {
                 this.boardView.syncSpritesToGridPositions();
             }
         } finally {
-            this.canMove = true;
+            this.isResolvingMove = false;
+            if (!this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver()) {
+                this.canMove = true;
+            }
         }
     }
 
@@ -678,6 +1415,7 @@ export class Game extends Phaser.Scene {
         // Reset turn tracking
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
+        this.currentMoveSummary = this.createEmptyMoveSummary();
         
         // Capture grid state BEFORE applying the move to get original gem types
         const gridStateBeforeMove = this.backendPuzzle.getGridState();
@@ -694,9 +1432,29 @@ export class Game extends Phaser.Scene {
         } else {
             console.warn("applyMoveAndHandleResults: Move was applied, but backend reports no matches. This might be a logic discrepancy.");
         }
-        
+
+        let multiplier = 1;
+        if (this.anyMatchThisTurn) {
+            const { finalScore, multiplier: computedMultiplier, repeatedCategories } = this.applyMoveBonuses(this.turnBaseTotalScore);
+            multiplier = computedMultiplier;
+            const bonus = Math.max(0, finalScore - this.turnBaseTotalScore);
+            if (bonus > 0) {
+                this.backendPuzzle.addBonusScore(bonus);
+            }
+            repeatedCategories.forEach(category => this.revealAllCluesForCategory(category));
+            this.turnBaseTotalScore = finalScore;
+        } else {
+            multiplier = 1;
+        }
+
+        this.lastMoveCategories = this.currentMoveSummary ? new Set(this.currentMoveSummary.categoriesMatched) : new Set();
+        this.currentMoveSummary = null;
+
         // Move is fully resolved, apply turn resolution
-        this.onMoveResolved(this.turnBaseTotalScore, this.anyMatchThisTurn);
+        this.onMoveResolved(this.turnBaseTotalScore, this.anyMatchThisTurn, multiplier);
+
+        // Reset flags for next move
+        this.anyMatchThisTurn = false;
     }
 
     private async handleCascades(): Promise<void> {
@@ -711,6 +1469,9 @@ export class Game extends Phaser.Scene {
             const cascadeScore = this.backendPuzzle.calculatePhaseBaseScore(cascadePhase);
             this.turnBaseTotalScore += cascadeScore;
             this.anyMatchThisTurn = true;
+            if (this.currentMoveSummary) {
+                this.currentMoveSummary.cascades += 1;
+            }
             
             await this.animatePhaseWithOriginalGems(cascadePhase, gridStateBeforeCascade);
             await this.handleCascades();
@@ -752,196 +1513,64 @@ export class Game extends Phaser.Scene {
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
         if (!this.selectedSpecies || matches.length === 0) return;
 
-        // Debug: Log all matches
-        console.log("Game Scene: Processing matches with original gem types:", matches.length, "match groups");
-        
-        // Extract all gem types from matched coordinates using original grid state
-        const matchedGemTypes = new Set<GemType>();
-        
+        this.recordMatchesForSummary(matches, originalGridState);
+
+        const categoryMaxMatch = new Map<GemCategory, number>();
+
         for (const match of matches) {
-            console.log("Game Scene: Match group with", match.length, "gems at coords:", match);
-            for (const coord of match) {
-                const [x, y] = coord;
-                const gem = originalGridState[x]?.[y];
-                if (gem) {
-                    console.log(`Game Scene: Original gem at [${x},${y}] was ${gem.gemType}`);
-                    matchedGemTypes.add(gem.gemType);
-                }
+            if (match.length === 0) continue;
+            const [firstX, firstY] = match[0];
+            const gem = originalGridState[firstX]?.[firstY];
+            if (!gem) continue;
+            const category = this.gemTypeToCategory(gem.gemType);
+            if (category === null) continue;
+            const current = categoryMaxMatch.get(category) ?? 0;
+            if (match.length > current) {
+                categoryMaxMatch.set(category, match.length);
             }
         }
 
-        // Convert gem types to categories and generate clues
-        for (const gemType of matchedGemTypes) {
-            const category = this.gemTypeToCategory(gemType);
-            if (category !== null) {
-                // Special handling for progressive categories
-                if (this.isProgressiveCategory(category)) {
-                    const config = CLUE_CONFIG[category];
-                    if (config) {
-                        const clueText = config.getClue(this.selectedSpecies);
-                        if (clueText) {
-                            // Emit clue (do NOT add to revealedClues yet)
-                            const clueData: CluePayload = {
-                                category,
-                                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
-                                clue: clueText,
-                                speciesId: this.selectedSpecies.ogc_fid,
-                                name: config.categoryName,
-                                icon: config.icon,
-                                color: config.color
-                            };
-                            console.log("Game Scene: Revealing progressive clue for category:", category, clueData);
-                            EventBus.emit('clue-revealed', clueData);
-                            
-                            // Only mark as revealed when sequence is complete
-                            if (this.isProgressiveCategoryComplete(category)) {
-                                this.revealedClues.add(category);
-                                this.seenClueCategories.add(category);
-                            }
-                        } else {
-                            // No more clues for this progressive category; ensure marked complete
-                            this.revealedClues.add(category);
-                            this.seenClueCategories.add(category);
-                        }
-                    }
-                    continue; // move to next category
-                }
-                
-                // Standard handling for other categories
-                if (!this.revealedClues.has(category)) {
-                    this.revealedClues.add(category);
-                    this.seenClueCategories.add(category);
-                    
-                    // Generate clue for this category
-                    let clueData: CluePayload | null = null;
-                    if (category === GemCategory.HABITAT) {
-                        // Use raster habitat data for green gems
-                        clueData = this.generateRasterHabitatClue();
-                    } else {
-                        // Use CLUE_CONFIG for species-based clues
-                        const config = CLUE_CONFIG[category];
-                        if (config) {
-                            const clueText = config.getClue(this.selectedSpecies);
-                            if (clueText) {
-                                clueData = {
-                                    category,
-                                    heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
-                                    clue: clueText,
-                                    speciesId: this.selectedSpecies.ogc_fid,
-                                    name: config.categoryName,
-                                    icon: config.icon,
-                                    color: config.color
-                                };
-                            }
-                        }
-                    }
-                    
-                    if (clueData && clueData.clue) {
-                        console.log("Game Scene: Revealing clue for category:", category, clueData);
-                        EventBus.emit('clue-revealed', clueData);
-                    }
-                }
+        categoryMaxMatch.forEach((maxLength, category) => {
+            if (maxLength >= MOVE_HUGE_MATCH_THRESHOLD) {
+                this.revealAllCluesForCategory(category);
+            } else {
+                const cluesToReveal = maxLength >= MOVE_LARGE_MATCH_THRESHOLD ? 2 : 1;
+                this.revealCluesForCategory(category, cluesToReveal);
             }
-        }
+        });
     }
 
     private processMatchedGemsForClues(matches: Coordinate[][]): void {
         if (!this.selectedSpecies || matches.length === 0) return;
 
-        // Debug: Log all matches
-        console.log("Game Scene: Processing matches:", matches.length, "match groups");
-        
-        // Extract all gem types from matched coordinates
-        const matchedGemTypes = new Set<GemType>();
-        
-        for (const match of matches) {
-            console.log("Game Scene: Match group with", match.length, "gems at coords:", match);
-            for (const coord of match) {
-                if (this.backendPuzzle) {
-                    const [x, y] = coord;
-                    const gridState = this.backendPuzzle.getGridState();
-                    const gem = gridState[x]?.[y];
-                    if (gem) {
-                        console.log(`Game Scene: Gem at [${x},${y}] is ${gem.gemType}`);
-                        matchedGemTypes.add(gem.gemType);
-                    }
+        this.recordMatchesForSummary(matches, this.backendPuzzle?.getGridState());
+
+        const categoryMaxMatch = new Map<GemCategory, number>();
+
+        if (this.backendPuzzle) {
+            const gridState = this.backendPuzzle.getGridState();
+            for (const match of matches) {
+                if (match.length === 0) continue;
+                const [firstX, firstY] = match[0];
+                const gem = gridState[firstX]?.[firstY];
+                if (!gem) continue;
+                const category = this.gemTypeToCategory(gem.gemType);
+                if (category === null) continue;
+                const current = categoryMaxMatch.get(category) ?? 0;
+                if (match.length > current) {
+                    categoryMaxMatch.set(category, match.length);
                 }
             }
         }
 
-        // Convert gem types to categories and generate clues
-        for (const gemType of matchedGemTypes) {
-            const category = this.gemTypeToCategory(gemType);
-            if (category !== null) {
-                // Special handling for progressive categories
-                if (this.isProgressiveCategory(category)) {
-                    const config = CLUE_CONFIG[category];
-                    if (config) {
-                        const clueText = config.getClue(this.selectedSpecies);
-                        if (clueText) {
-                            // Emit clue (do NOT add to revealedClues yet)
-                            const clueData: CluePayload = {
-                                category,
-                                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
-                                clue: clueText,
-                                speciesId: this.selectedSpecies.ogc_fid,
-                                name: config.categoryName,
-                                icon: config.icon,
-                                color: config.color
-                            };
-                            console.log("Game Scene: Revealing progressive clue for category:", category, clueData);
-                            EventBus.emit('clue-revealed', clueData);
-                            
-                            // Only mark as revealed when sequence is complete
-                            if (this.isProgressiveCategoryComplete(category)) {
-                                this.revealedClues.add(category);
-                                this.seenClueCategories.add(category);
-                            }
-                        } else {
-                            // No more clues for this progressive category; ensure marked complete
-                            this.revealedClues.add(category);
-                            this.seenClueCategories.add(category);
-                        }
-                    }
-                    continue; // move to next category
-                }
-                
-                // Standard handling for other categories
-                if (!this.revealedClues.has(category)) {
-                    this.revealedClues.add(category);
-                    this.seenClueCategories.add(category);
-                    
-                    // Generate clue for this category
-                    let clueData: CluePayload | null = null;
-                    if (category === GemCategory.HABITAT) {
-                        // Use raster habitat data for green gems
-                        clueData = this.generateRasterHabitatClue();
-                    } else {
-                        // Use CLUE_CONFIG for species-based clues
-                        const config = CLUE_CONFIG[category];
-                        if (config) {
-                            const clueText = config.getClue(this.selectedSpecies);
-                            if (clueText) {
-                                clueData = {
-                                    category,
-                                    heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
-                                    clue: clueText,
-                                    speciesId: this.selectedSpecies.ogc_fid,
-                                    name: config.categoryName,
-                                    icon: config.icon,
-                                    color: config.color
-                                };
-                            }
-                        }
-                    }
-                    
-                    if (clueData && clueData.clue) {
-                        console.log("Game Scene: Revealing clue for category:", category, clueData);
-                        EventBus.emit('clue-revealed', clueData);
-                    }
-                }
+        categoryMaxMatch.forEach((maxLength, category) => {
+            if (maxLength >= MOVE_HUGE_MATCH_THRESHOLD) {
+                this.revealAllCluesForCategory(category);
+            } else {
+                const cluesToReveal = maxLength >= MOVE_LARGE_MATCH_THRESHOLD ? 2 : 1;
+                this.revealCluesForCategory(category, cluesToReveal);
             }
-        }
+        });
 
         // Check if all clues are revealed (9 categories total)
         if (this.revealedClues.size >= 9 && !this.allCluesRevealed) {
@@ -969,7 +1598,7 @@ export class Game extends Phaser.Scene {
 
     private advanceToNextSpecies(): void {
         this.currentSpeciesIndex++;
-        
+
         if (this.currentSpeciesIndex < this.currentSpecies.length) {
             // Move to next species
             this.selectedSpecies = this.currentSpecies[this.currentSpeciesIndex];
@@ -977,7 +1606,12 @@ export class Game extends Phaser.Scene {
             this.allCluesRevealed = false;
             this.usedRasterHabitats.clear(); // Reset used raster habitats for new species
             this.seenClueCategories.clear(); // Reset for early guess bonus calculation
-            
+
+            // Reset species tracking counters for new species
+            this.clueCountThisSpecies = 0;
+            this.incorrectGuessesThisSpecies = 0;
+            this.speciesStartTime = Date.now();
+
             // Reset all progressive clues for new species
             resetAllProgressiveClues(this.selectedSpecies);
             
@@ -1009,10 +1643,15 @@ export class Game extends Phaser.Scene {
         
         if (data.isCorrect) {
             console.log("Game Scene: Correct species identified!");
-            
+
+            // Track discovery if authenticated
+            if (this.currentUserId && this.backendPuzzle) {
+                this.trackDiscovery(data.speciesId);
+            }
+
             // Apply early guess bonus with streak multiplier
             this.onCorrectGuess(DEFAULT_TOTAL_CLUE_SLOTS);
-            
+
             // Check if there are more species at this location
             if (this.currentSpeciesIndex + 1 < this.currentSpecies.length) {
                 // Show success message and advance to next species after a delay
@@ -1051,7 +1690,59 @@ export class Game extends Phaser.Scene {
         } else {
             // Wrong guess - reset streak
             console.log("Game Scene: Wrong guess - resetting streak");
+            this.incorrectGuessesThisSpecies++;
             this.onWrongGuess();
+        }
+    }
+
+    private async trackDiscovery(speciesId: number): Promise<void> {
+        if (this.discoveredSpeciesIds.has(speciesId)) {
+            console.log('Game Scene: Species discovery already tracked locally. Skipping duplicate persistence.', { speciesId });
+            this.resetSpeciesTrackingCounters();
+            return;
+        }
+
+        this.discoveredSpeciesIds.add(speciesId);
+
+        try {
+            const {
+                trackSpeciesDiscovery,
+                calculateTimeToDiscover,
+                forceSessionUpdate
+            } = await import('@/lib/playerTracking');
+
+            const timeToDiscover = calculateTimeToDiscover();
+
+            const discoveryId = await trackSpeciesDiscovery(
+                this.currentUserId!,
+                speciesId,
+                {
+                    sessionId: this.currentSessionId || undefined,
+                    timeToDiscoverSeconds: timeToDiscover || undefined,
+                    cluesUnlockedBeforeGuess: this.clueCountThisSpecies,
+                    incorrectGuessesCount: this.incorrectGuessesThisSpecies,
+                    scoreEarned: this.backendPuzzle!.getScore()
+                }
+            );
+
+            if (discoveryId) {
+                console.log('Species discovery tracked:', discoveryId);
+
+                // Force immediate session update (critical event)
+                if (this.currentSessionId) {
+                    await forceSessionUpdate(
+                        this.currentSessionId,
+                        this.backendPuzzle!.getMovesUsed(),
+                        this.backendPuzzle!.getScore(),
+                        this.currentSpeciesIndex + 1, // +1 because we just discovered one
+                        this.revealedClues.size
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('Failed to track species discovery:', error);
+        } finally {
+            this.resetSpeciesTrackingCounters();
         }
     }
 
@@ -1063,9 +1754,15 @@ export class Game extends Phaser.Scene {
         this.selectedSpecies = null;
         this.currentSpeciesIndex = 0;
         this.revealedClues.clear();
+        this.completedClueCategories.clear();
         this.allCluesRevealed = false;
         this.rasterHabitats = [];
         this.usedRasterHabitats.clear();
+        this.lastMoveCategories.clear();
+        this.currentMoveSummary = null;
+        this.lastAppliedMoveMultiplier = 1;
+        this.updateMultiplierText(1);
+        this.pauseButtonContainer?.setVisible(false);
         
         // Clear the board
         if (this.boardView) {
@@ -1081,6 +1778,11 @@ export class Game extends Phaser.Scene {
         this.seenClueCategories.clear();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
+        this.lastMoveCategories.clear();
+        this.currentMoveSummary = null;
+        this.lastAppliedMoveMultiplier = 1;
+        this.isResolvingMove = false;
+        this.backendPuzzle?.resetMoves();
         
         // Update status text
         if (this.statusText && this.statusText.active) {
@@ -1201,7 +1903,28 @@ export class Game extends Phaser.Scene {
 
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
+
+        // End session if active
+        if (this.currentSessionId && this.backendPuzzle) {
+            this.endSessionSync();
+        }
+
+        // Remove EventBus listeners
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
+        EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
+        EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
+
+        // Remove player tracking listeners if they exist
+        if (this.currentUserId) {
+            EventBus.off('clue-revealed', this.handleClueRevealed, this);
+            EventBus.off(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
+
+            // Remove beforeunload handler
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('beforeunload', this.handleBeforeUnload);
+            }
+        }
+
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_MOVE);
@@ -1226,6 +1949,25 @@ export class Game extends Phaser.Scene {
             this.movesText.destroy();
             this.movesText = null;
         }
+        if (this.multiplierText) {
+            this.multiplierText.destroy();
+            this.multiplierText = null;
+        }
+        if (this.pauseButtonContainer) {
+            this.pauseButtonContainer.destroy(true);
+            this.pauseButtonContainer = null;
+        }
+        this.pauseButton = null;
+        this.pauseButtonLabel = null;
+        if (this.pauseOverlay) {
+            this.pauseOverlay.destroy(true);
+            this.pauseOverlay = null;
+        }
+        this.pauseOverlayBackground = null;
+        this.pauseOverlayTitle = null;
+        this.pauseOverlayResumeButton = null;
+        this.isPaused = false;
+        this.canMoveBeforePause = false;
 
         this.resetDragState(); // Clear drag state variables
         this.canMove = false;
@@ -1235,6 +1977,7 @@ export class Game extends Phaser.Scene {
         this.currentSpecies = [];
         this.selectedSpecies = null;
         this.revealedClues.clear();
+        this.completedClueCategories.clear();
         this.currentSpeciesIndex = 0;
         this.allCluesRevealed = false;
         
@@ -1247,16 +1990,34 @@ export class Game extends Phaser.Scene {
         this.seenClueCategories.clear();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
-        
-        // Remove EventBus listeners
-        EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
-        EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
-        EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
-        
+
+        // Clear tracking state
+        this.supabaseClient = null;
+        this.currentUserId = null;
+        this.currentSessionId = null;
+        this.clueCountThisSpecies = 0;
+        this.incorrectGuessesThisSpecies = 0;
+        this.speciesStartTime = 0;
+
         // Emit game reset event
         EventBus.emit('game-reset', undefined);
-        
+
         console.log("Game Scene: Shutdown complete.");
+    }
+
+    private endSessionSync(): void {
+        // Fire-and-forget session end (don't await in shutdown)
+        import('@/lib/playerTracking').then(({ endGameSession }) => {
+            if (this.currentSessionId && this.backendPuzzle) {
+                endGameSession(
+                    this.currentSessionId,
+                    this.backendPuzzle.getMovesUsed(),
+                    this.backendPuzzle.getScore()
+                ).catch(error => {
+                    console.error('Failed to end session:', error);
+                });
+            }
+        });
     }
 
     private verifyBoardState(): void {

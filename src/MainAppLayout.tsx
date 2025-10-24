@@ -3,6 +3,7 @@ import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing Phas
 import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
 import { SpeciesPanel } from './components/SpeciesPanel'; // Import the SpeciesPanel component
 import SpeciesList from './components/SpeciesList'; // Import the SpeciesList component
+import UserMenu from './components/UserMenu'; // Import the UserMenu component
 import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
 import { Toaster } from 'sonner';
 import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
@@ -98,16 +99,18 @@ function MainAppLayout() {
                 </div>
 
                 <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
-                <div style={{ 
-                    position: 'absolute', 
-                    top: '10px', 
-                    right: '10px', 
+                <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
                     zIndex: 1000,
                     display: 'flex',
-                    gap: '8px'
+                    gap: '8px',
+                    alignItems: 'center'
                 }}>
-                    <button 
-                        style={{ 
+                    <UserMenu />
+                    <button
+                        style={{
                             padding: '5px 10px',
                             backgroundColor: 'rgba(42, 42, 42, 0.8)',
                             color: 'white',
@@ -124,8 +127,8 @@ function MainAppLayout() {
                     >
                         <PiBookOpenTextLight size={18} />
                     </button>
-                    <button 
-                        style={{ 
+                    <button
+                        style={{
                             padding: '5px 10px',
                             backgroundColor: 'rgba(42, 42, 42, 0.8)',
                             color: 'white',
@@ -167,8 +170,8 @@ function MainAppLayout() {
             </div>
             </div>
 
-            {/* Full-page species view */}
-            <div style={{ 
+            {/* Full-page species view - keep mounted to preserve state */}
+            <div style={{
                 display: viewMode === 'species' ? 'block' : 'none',
                 width: '100%',
                 height: '100%',
@@ -178,11 +181,11 @@ function MainAppLayout() {
                 backgroundColor: '#0f172a',
                 zIndex: 2000
             }}>
-                <SpeciesList 
+                <SpeciesList
                     onBack={() => {
                         setViewMode('map');
                         setScrollToSpeciesId(null);
-                    }} 
+                    }}
                     scrollToSpeciesId={scrollToSpeciesId}
                 />
             </div>

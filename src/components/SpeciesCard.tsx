@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees } from "lucide-react"
+import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees, CheckCircle, Search } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,10 +19,11 @@ interface SpeciesCardProps {
   onNavigateToTop: () => void;
   isDiscovered?: boolean;
   discoveredAt?: string;
+  speciesPositionLabel?: string;
 }
 
 
-export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt }: SpeciesCardProps) {
+export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt, speciesPositionLabel }: SpeciesCardProps) {
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   // Category header classes with colors and emojis
@@ -74,20 +75,33 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
           <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">
             {category}
           </span>
-          {isDiscovered && (
-            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-green-600 text-white">
-              ✅ Known
+          {speciesPositionLabel && (
+            <span className="text-xs text-muted-foreground">
+              {speciesPositionLabel}
             </span>
           )}
         </div>
-        <h2 
+        <h2
           className="font-bold text-white mb-2 break-words whitespace-normal leading-tight"
-          style={{ 
+          style={{
             fontSize: 'clamp(18px, 5vw, 36px)',
             lineHeight: '1.2'
           }}
         >
-          {species.comm_name || species.sci_name}
+          <span className="inline-flex items-center gap-2">
+            {isDiscovered ? (
+              <>
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+                <span className="sr-only">Discovered: </span>
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5 text-slate-400 flex-shrink-0" aria-hidden="true" />
+                <span className="sr-only">Undiscovered: </span>
+              </>
+            )}
+            <span className={isDiscovered ? "text-green-400" : ""}>{species.comm_name || species.sci_name}</span>
+          </span>
         </h2>
         <p 
           className="italic text-slate-200 mb-3 break-words whitespace-normal leading-relaxed"
@@ -152,25 +166,42 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       </div>
 
       {/* Conservation Status */}
-      {hasValue(species.cons_text) && (
+      {(hasValue(species.cons_text) || hasValue(species.threats)) && (
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
             {getCategoryHeader('🛡️', 'white', 'Conservation Status')}
             <div className="bg-orange-400/15 border border-orange-400/40 rounded-lg p-4 sm:p-5">
-              <p 
-                className="text-slate-100 text-sm sm:text-base leading-relaxed"
-                style={{ 
-                  wordBreak: 'break-word',
-                  overflowWrap: 'anywhere',
-                  whiteSpace: 'normal',
-                  width: '100%',
-                  maxWidth: '100%',
-                  hyphens: 'auto'
-                }}
-              >
-                <strong className="text-orange-200">Conservation Notes:</strong> {species.cons_text}
-              </p>
+              {hasValue(species.cons_text) && (
+                <p
+                  className="text-slate-100 text-sm sm:text-base leading-relaxed mb-3"
+                  style={{
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  <strong className="text-orange-200">Conservation Notes:</strong> {species.cons_text}
+                </p>
+              )}
+              {hasValue(species.threats) && (
+                <p
+                  className="text-slate-100 text-sm sm:text-base leading-relaxed"
+                  style={{
+                    wordBreak: 'break-word',
+                    overflowWrap: 'anywhere',
+                    whiteSpace: 'normal',
+                    width: '100%',
+                    maxWidth: '100%',
+                    hyphens: 'auto'
+                  }}
+                >
+                  <strong className="text-orange-200">Threats:</strong> {species.threats}
+                </p>
+              )}
             </div>
           </div>
         </>
@@ -493,31 +524,6 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 {species.life_desc2}
               </p>
             )}
-          </div>
-        </>
-      )}
-
-      {/* Threats */}
-      {hasValue(species.threats) && (
-        <>
-          <div className="h-px bg-border my-4 sm:my-6" />
-          <div className="mb-4 sm:mb-6">
-            {getCategoryHeader('🛡️', 'white', 'Threats')}
-            <p 
-              className="text-muted-foreground"
-              style={{ 
-                fontSize: 'clamp(12px, 3.5vw, 16px)',
-                lineHeight: '1.4',
-                wordBreak: 'break-word',
-                overflowWrap: 'anywhere',
-                whiteSpace: 'normal',
-                width: '100%',
-                maxWidth: '100%',
-                hyphens: 'auto'
-              }}
-            >
-              {species.threats}
-            </p>
           </div>
         </>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef, memo } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useSpeciesData } from '@/hooks/useSpeciesData';
 import SpeciesCard from '@/components/SpeciesCard';
 import FamilyCardStack from '@/components/FamilyCardStack';
 import SpeciesCarousel from '@/components/SpeciesCarousel';
@@ -10,19 +10,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
+import { getFamilyDisplayName } from '@/config/familyCommonNames';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 
 // Separate component to handle accordion category with sticky header
-const AccordionCategory = memo(({ 
-  category, 
-  genera, 
-  isOpen, 
+const AccordionCategory = memo(({
+  category,
+  genera,
+  isOpen,
   showStickyHeaders,
   onToggle,
   setRef,
   discoveredSpecies,
-  accordionValue
+  accordionValue,
+  discoveredCount,
+  totalCount
 }: {
   category: string;
   genera: Record<string, Species[]>;
@@ -32,6 +35,8 @@ const AccordionCategory = memo(({
   setRef: (id: string) => (el: HTMLDivElement | null) => void;
   discoveredSpecies: Record<number, { name: string; discoveredAt: string }>;
   accordionValue: string;
+  discoveredCount: number;
+  totalCount: number;
 }) => {
   const [hideSticky, setHideSticky] = useState(true);
   const accordionRef = useRef<HTMLDivElement>(null);
@@ -95,7 +100,7 @@ const AccordionCategory = memo(({
                 
                 {/* Counters - separate line on narrow screens */}
                 <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-muted-foreground">
-                  <span>({Object.values(genera).flat().length})</span>
+                  <span>({discoveredCount}/{totalCount})</span>
                   <span className="hidden sm:inline text-blue-400 hover:text-blue-300">Click to collapse</span>
                 </div>
               </div>
@@ -121,10 +126,10 @@ const AccordionCategory = memo(({
                   }}
                 >{category}</h2>
               </div>
-              
+
               {/* Counter - separate line */}
               <div className="text-xs text-muted-foreground">
-                ({Object.values(genera).flat().length})
+                ({discoveredCount}/{totalCount})
               </div>
             </div>
           </AccordionTrigger>
@@ -139,9 +144,9 @@ const AccordionCategory = memo(({
                       <div className="w-full">
                         {/* Family name - FORCED to wrap */}
                         <div className="w-full mb-1">
-                          <h4 
+                          <h4
                             className="leading-tight font-medium text-foreground"
-                            style={{ 
+                            style={{
                               fontSize: 'clamp(10px, 2.5vw, 16px)',
                               lineHeight: '1.2',
                               wordBreak: 'break-all',
@@ -151,9 +156,9 @@ const AccordionCategory = memo(({
                               width: '100%',
                               maxWidth: '100%'
                             }}
-                          >{family}</h4>
+                          >{getFamilyDisplayName(family)}</h4>
                         </div>
-                        
+
                         {/* Species count - separate line */}
                         <div className="text-xs text-muted-foreground">
                           ({speciesList.length} species)
@@ -222,9 +227,9 @@ interface SpeciesListProps {
 }
 
 export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListProps = {}) {
-  const [species, setSpecies] = useState<Species[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use React Query hook for species data fetching with automatic retries and caching
+  const { data: species = [], isLoading, error, refetch, isFetching } = useSpeciesData();
+
   const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
   const [openAccordions, setOpenAccordions] = useState<string[]>([]);
   const [showStickyHeaders, setShowStickyHeaders] = useState(false);
@@ -237,7 +242,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    fetchSpecies();
     loadDiscoveredSpecies();
   }, []);
 
@@ -365,25 +369,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     }, 300);
   }, [scrollToSpeciesId, species, isLoading]);
 
-  const fetchSpecies = async () => {
-    try {
-      const { data: speciesData, error: supabaseError } = await supabase
-        .from('icaa')
-        .select('*')
-        .order('comm_name', { ascending: true });
-
-      if (supabaseError) throw supabaseError;
-
-      setSpecies(speciesData ?? []);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Error fetching species:', err);
-      setSpecies([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Filter species by selected filter
   const filteredSpecies = useMemo(() => {
@@ -435,21 +420,24 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   }, [filteredSpecies, discoveredSpecies]);
 
   // Count species per order for discovered and unknown
-  const { knownCounts, unknownCounts } = useMemo(() => {
+  const { knownCounts, unknownCounts, totalCounts } = useMemo(() => {
     const knownOrderCounts: Record<string, number> = {};
     const unknownOrderCounts: Record<string, number> = {};
-    
+    const totalOrderCounts: Record<string, number> = {};
+
     knownSpecies.forEach(sp => {
       const order = sp.order_ || 'Unknown';
       knownOrderCounts[order] = (knownOrderCounts[order] || 0) + 1;
+      totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
     });
-    
+
     unknownSpecies.forEach(sp => {
       const order = sp.order_ || 'Unknown';
       unknownOrderCounts[order] = (unknownOrderCounts[order] || 0) + 1;
+      totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
     });
-    
-    return { knownCounts: knownOrderCounts, unknownCounts: unknownOrderCounts };
+
+    return { knownCounts: knownOrderCounts, unknownCounts: unknownOrderCounts, totalCounts: totalOrderCounts };
   }, [knownSpecies, unknownSpecies]);
 
   // Group species by category and genus
@@ -654,8 +642,16 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       
       {error && (
         <div className="flex-1 px-5 pt-4">
-          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive">
-            Error loading species: {error}
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+            <p className="text-destructive font-semibold mb-2">Error loading species</p>
+            <p className="text-sm text-muted-foreground mb-3">{error.message || 'Unknown error occurred'}</p>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isFetching ? 'Retrying...' : 'Retry Now'}
+            </button>
           </div>
         </div>
       )}
@@ -691,96 +687,70 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                 />
               </div>
             ) : (
-              /* Display grouped species for other filters */
-              <>
-                <div className="space-y-6">
-                  {/* Known Species Section */}
-                  {Object.keys(groupedKnown).length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-bold text-green-400 mb-4">
-                        🏆 Discovered Species ({knownSpecies.length})
-                      </h2>
-                      <Accordion
-                        type="multiple"
-                        className="w-full space-y-4"
-                        value={openAccordions}
-                        onValueChange={setOpenAccordions}
-                      >
-                        {Object.entries(groupedKnown).map(([order, genera]) => {
-                          const accordionId = `known-${order}`;
-                          const displayName = `${order}: ${knownCounts[order] || 0}`;
-                          return (
-                            <AccordionCategory
-                              key={accordionId}
-                              category={displayName}
-                              genera={genera}
-                              isOpen={openAccordions.includes(accordionId)}
-                              showStickyHeaders={showStickyHeaders}
-                              discoveredSpecies={discoveredSpecies}
-                              accordionValue={accordionId}
-                              onToggle={() => {
-                                setOpenAccordions(prev => 
-                                  prev.includes(accordionId) 
-                                    ? prev.filter(c => c !== accordionId)
-                                    : [...prev, accordionId]
-                                );
-                                setShowStickyHeaders(false);
-                              }}
-                              setRef={setRef}
-                            />
-                          );
-                        })}
-                      </Accordion>
-                    </div>
-                  )}
-
-                  {/* Unknown Species Section */}
-                  {Object.keys(groupedUnknown).length > 0 && (
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-400 mb-4">
-                        🔍 Unknown Species ({unknownSpecies.length})
-                      </h2>
-                      <Accordion
-                        type="multiple"
-                        className="w-full space-y-4"
-                        value={openAccordions}
-                        onValueChange={setOpenAccordions}
-                      >
-                        {Object.entries(groupedUnknown).map(([order, genera]) => {
-                          const accordionId = `unknown-${order}`;
-                          const displayName = `${order}: ${unknownCounts[order] || 0}`;
-                          return (
-                            <AccordionCategory
-                              key={accordionId}
-                              category={displayName}
-                              genera={genera}
-                              isOpen={openAccordions.includes(accordionId)}
-                              showStickyHeaders={showStickyHeaders}
-                              discoveredSpecies={discoveredSpecies}
-                              accordionValue={accordionId}
-                              onToggle={() => {
-                                setOpenAccordions(prev => 
-                                  prev.includes(accordionId) 
-                                    ? prev.filter(c => c !== accordionId)
-                                    : [...prev, accordionId]
-                                );
-                                setShowStickyHeaders(false);
-                              }}
-                              setRef={setRef}
-                            />
-                          );
-                        })}
-                      </Accordion>
-                    </div>
-                  )}
+              /* Display unified species list */
+              <div className="space-y-6">
+                {/* Summary Stats Bar */}
+                <div className="mb-4 px-4 py-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">
+                      <span className="text-green-400 font-semibold">{knownSpecies.length}</span> discovered
+                    </span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-300">
+                      <span className="text-slate-400 font-semibold">{unknownSpecies.length}</span> undiscovered
+                    </span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-slate-300">
+                      <span className="font-semibold">{filteredSpecies.length}</span> total
+                    </span>
+                  </div>
                 </div>
 
-                {Object.keys(groupedKnown).length === 0 && Object.keys(groupedUnknown).length === 0 && (
+                {/* Unified Accordion */}
+                <Accordion
+                  type="multiple"
+                  className="w-full space-y-4"
+                  value={openAccordions}
+                  onValueChange={setOpenAccordions}
+                >
+                  {Object.entries(grouped).map(([order, genera]) => {
+                    const accordionId = order;
+                    const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
+                    const discoveredCount = knownCounts[order] || 0;
+                    const totalCount = totalCounts[order] || Object.values(genera).reduce((sum, list) => sum + list.length, 0);
+                    const displayName = orderNameFormatted;
+
+                    return (
+                      <AccordionCategory
+                        key={accordionId}
+                        category={displayName}
+                        genera={genera}
+                        isOpen={openAccordions.includes(accordionId)}
+                        showStickyHeaders={showStickyHeaders}
+                        discoveredSpecies={discoveredSpecies}
+                        accordionValue={accordionId}
+                        discoveredCount={discoveredCount}
+                        totalCount={totalCount}
+                        onToggle={() => {
+                          setOpenAccordions(prev =>
+                            prev.includes(accordionId)
+                              ? prev.filter(c => c !== accordionId)
+                              : [...prev, accordionId]
+                          );
+                          setShowStickyHeaders(false);
+                        }}
+                        setRef={setRef}
+                      />
+                    );
+                  })}
+                </Accordion>
+
+                {Object.keys(grouped).length === 0 && (
                   <div className="text-center p-12">
                     <p className="text-muted-foreground">No species found for the selected filter.</p>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </ScrollArea>
         </div>

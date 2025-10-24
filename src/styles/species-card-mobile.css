@@ -1,6 +1,6 @@
 /* Force aggressive text wrapping for SpeciesCard at narrow widths */
 /* Exclude Swiper elements and grid values to prevent layout interference */
-@media (max-width: 500px) {
+@media (max-width: 1023px) {
   .species-card-mobile *:not(.swiper):not(.swiper-wrapper):not(.swiper-slide):not([class*="swiper"]):not(.grid-value) {
     white-space: normal !important;
     overflow-wrap: anywhere !important;

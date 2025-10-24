@@ -530,8 +530,33 @@ export class BoardView {
     /** Destroys all sprites and clears the board representation. */
     destroyBoard(): void {
         console.log("BoardView: Destroying board visuals...");
-        this.gemGroup.clear(true, true); // Destroy children and remove them from group
+
+        // Destroy all sprites referenced in the grid cache
+        for (let x = 0; x < this.gemsSprites.length; x++) {
+            const column = this.gemsSprites[x];
+            if (!column) continue;
+
+            for (let y = 0; y < column.length; y++) {
+                const sprite = column[y];
+                if (!sprite) continue;
+
+                this.scene.tweens.killTweensOf(sprite);
+                if (sprite.active && typeof sprite.destroy === 'function') {
+                    sprite.destroy();
+                }
+            }
+        }
+
         this.gemsSprites = [];
+
+        // Clear Phaser group without recreating it
+        if (this.gemGroup) {
+            try {
+                this.gemGroup.clear(false);
+            } catch (error) {
+                console.warn("BoardView: gemGroup.clear() failed, continuing without raising.", error);
+            }
+        }
     }
 
     // --- Internal Helper Methods ---
@@ -541,7 +566,11 @@ export class BoardView {
         if (sprite && sprite.active) {
             // console.log(`Safely destroying sprite type ${sprite.getData('gemType')} at [${sprite.getData('gridX')}, ${sprite.getData('gridY')}]`);
             this.scene.tweens.killTweensOf(sprite);
-            this.gemGroup.remove(sprite, true, true);
+            if (this.gemGroup) {
+                this.gemGroup.remove(sprite, true, true);
+            } else {
+                sprite.destroy();
+            }
         }
     }
 
@@ -557,7 +586,17 @@ export class BoardView {
         const yPos = (startVisualY !== undefined) ? startVisualY : targetPos.y;
 
         // Add sprite via the group for automatic scene addition
-        const sprite = this.gemGroup.create(xPos, yPos, textureKey);
+        let group = this.gemGroup;
+        if (!group || !group.scene) {
+            if (!this.scene || !(this.scene as any).add) {
+                console.error("BoardView: Scene add factory unavailable. Cannot create sprite.");
+                return null;
+            }
+            group = this.scene.add.group();
+            this.gemGroup = group;
+        }
+
+        const sprite = group.create(xPos, yPos, textureKey);
         if (!sprite) { console.error(`Failed to create sprite ${textureKey}`); return null; }
 
         sprite.setOrigin(0.5);

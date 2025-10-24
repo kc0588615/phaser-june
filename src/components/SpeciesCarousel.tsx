@@ -60,44 +60,13 @@ export default function SpeciesCarousel({
 
   return (
     <div className="relative bg-slate-700/50 border border-slate-600 rounded-lg overflow-visible w-full max-w-full">
-      {/* Family Header */}
-      <div className="px-2 sm:px-3 py-3 bg-slate-800/70 border-b border-slate-600">
-        <div className="w-full">
-          {/* Family name - FORCED to wrap */}
-          <div className="w-full mb-2">
-            <h3 
-              className="leading-tight font-medium text-white"
-              style={{ 
-                fontSize: 'clamp(14px, 3vw, 18px)',
-                lineHeight: '1.3',
-                wordBreak: 'break-all',
-                overflowWrap: 'break-word',
-                hyphens: 'auto',
-                whiteSpace: 'normal',
-                width: '100%',
-                maxWidth: '100%'
-              }}
-            >
-              {getFamilyDisplayNameFromSpecies(family)}
-            </h3>
-          </div>
-          
-          {/* Counters - FORCED to wrap at narrow width */}
-          <div className="flex flex-wrap items-center justify-between gap-1" style={{ width: '100%' }}>
-            <span 
-              className="text-muted-foreground"
-              style={{ 
-                fontSize: 'clamp(9px, 2vw, 12px)',
-                whiteSpace: 'nowrap',
-                minWidth: 'max-content'
-              }}
-            >
-              {speciesList.length} species
-            </span>
-            {speciesList.length > 1 && (
-              <span 
-                className="text-slate-300 font-mono"
-                style={{ 
+      {/* Slide counter - FORCED to wrap at narrow width */}
+      <div className="px-2 sm:px-3 py-2 bg-slate-800/70 border-b border-slate-600">
+        <div className="flex flex-wrap items-center justify-center gap-1" style={{ width: '100%' }}>
+          {speciesList.length > 1 && (
+            <span
+              className="text-slate-300 font-mono"
+              style={{
                   fontSize: 'clamp(10px, 2vw, 12px)',
                   whiteSpace: 'nowrap',
                   minWidth: 'max-content'
@@ -106,7 +75,6 @@ export default function SpeciesCarousel({
                 {currentSlide + 1}/{speciesList.length}
               </span>
             )}
-          </div>
         </div>
       </div>
 
@@ -178,7 +146,7 @@ export default function SpeciesCarousel({
           }}
           className="mobile-species-swiper !overflow-visible w-full"
         >
-          {speciesList.map((species) => {
+          {speciesList.map((species, index) => {
             const isDiscovered = !!discoveredSpecies[species.ogc_fid];
             return (
               <SwiperSlide key={species.ogc_fid} className="!h-auto w-full flex-shrink-0">
@@ -187,6 +155,7 @@ export default function SpeciesCarousel({
                   <SpeciesCard
                     species={species}
                     category={category}
+                    speciesPositionLabel={`Species ${index + 1} of ${speciesList.length}`}
                     isDiscovered={isDiscovered}
                     discoveredAt={discoveredSpecies[species.ogc_fid]?.discoveredAt}
                     onNavigateToTop={onNavigateToTop}
