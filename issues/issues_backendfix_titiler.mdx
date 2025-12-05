@@ -1,0 +1,183 @@
+# TiTiler Backend URL Path Issue
+
+**Status:** Resolved
+**Priority:** Medium
+**Component:** AWS TiTiler Infrastructure
+**Created:** 2025-12-01
+**Resolved:** 2025-12-02
+
+## Issue Summary
+
+AWS TiTiler deployment returns incorrect tile URLs in TileJSON response, causing 404 errors when Cesium attempts to load habitat tiles.
+
+## Problem Details
+
+### Expected Behavior
+TileJSON endpoint should return tile URLs with full path including `/cog` prefix:
+```
+https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png
+```
+
+### Actual Behavior
+TileJSON response returns tile URLs missing `/cog` prefix:
+```json
+{
+  "tiles": [
+    "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=..."
+  ]
+}
+```
+
+### Result
+Cesium makes requests to `/tiles/...` which returns 404. Correct endpoint is `/cog/tiles/...`.
+
+## Error Details
+
+**Console Error:**
+```
+GET https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/tiles/WebMercatorQuad/0/0/0.png?url=...
+404 (Not Found)
+```
+
+**Affected Endpoint:**
+```
+https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/cog/WebMercatorQuad/tilejson.json?url=https%3A%2F%2Fhabitat-cog.s3.us-east-2.amazonaws.com%2Fhabitat_cog.tif&colormap_name=habitat_custom&nodata=0
+```
+
+## Temporary Workaround (Frontend)
+
+Added path correction in `src/components/CesiumMap.tsx:186-189`:
+
+```tsx
+// Fix AWS TileJSON response: tile URLs missing /cog prefix
+if (templateUrl.includes('j8dwwxhoad.execute-api.us-east-2.amazonaws.com/tiles/')) {
+  templateUrl = templateUrl.replace('/tiles/', '/cog/tiles/');
+}
+```
+
+## Backend Fix Needed
+
+The AWS TiTiler deployment needs to be configured to include the correct path prefix in TileJSON responses.
+
+### Potential Root Causes
+
+1. **API Gateway Path Mapping Issue**
+   - Base path `/cog` not properly configured
+   - Stage deployment configuration missing path context
+
+2. **TiTiler Configuration**
+   - Missing `root_path` or `path_prefix` environment variable
+   - TiTiler not aware of API Gateway base path
+
+3. **Lambda Function Configuration**
+   - Environment variables not set correctly
+   - FastAPI app not configured with proper root path
+
+### Required Changes
+
+#### Option 1: TiTiler Environment Variables
+Set the `ROOT_PATH` environment variable in Lambda:
+```bash
+ROOT_PATH=/cog
+```
+
+Or in TiTiler configuration:
+```python
+app = TilerFactory(
+    router_prefix="/cog",
+    # ... other config
+)
+```
+
+#### Option 2: API Gateway Configuration
+Ensure API Gateway stage properly forwards the base path context to Lambda:
+- Custom domain mapping with base path `/cog`
+- Stage variables for `basePath`
+- Lambda proxy integration configured correctly
+
+#### Option 3: TileJSON Template Override
+Configure TiTiler to use custom TileJSON template that includes correct URL structure.
+
+## Testing the Fix
+
+After backend changes, verify:
+
+1. **TileJSON Response:**
+```bash
+curl "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/cog/WebMercatorQuad/tilejson.json?url=https%3A%2F%2Fhabitat-cog.s3.us-east-2.amazonaws.com%2Fhabitat_cog.tif&colormap_name=habitat_custom&nodata=0"
+```
+
+Expected `tiles` array:
+```json
+{
+  "tiles": [
+    "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=..."
+  ]
+}
+```
+
+2. **Direct Tile Request:**
+```bash
+curl "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/cog/tiles/WebMercatorQuad/0/0/0.png?url=https%3A%2F%2Fhabitat-cog.s3.us-east-2.amazonaws.com%2Fhabitat_cog.tif&colormap_name=habitat_custom&nodata=0"
+```
+
+Should return PNG image data (not 404).
+
+3. **Frontend Integration:**
+   - Remove workaround from `CesiumMap.tsx`
+   - Verify Cesium map loads habitat tiles without errors
+   - Check browser console for correct tile URLs
+
+## References
+
+- **TiTiler Documentation:** https://developmentseed.org/titiler/
+- **API Gateway Base Path Mapping:** https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html
+- **FastAPI Sub-Applications:** https://fastapi.tiangolo.com/advanced/sub-applications/
+
+## Related Files
+
+- `src/components/CesiumMap.tsx:186-189` (temporary workaround)
+- `.env.example` (TiTiler base URL configuration)
+- AWS Lambda TiTiler deployment configuration
+
+## Resolution Checklist
+
+- [x] Identify AWS TiTiler deployment configuration
+- [x] Set `router_prefix="/cog"` in TilerFactory constructor
+- [x] Verify TileJSON returns correct tile URLs with `/cog` prefix
+- [x] Test direct tile requests return valid images
+- [x] Remove frontend workaround from `CesiumMap.tsx`
+- [x] Test Cesium map tile rendering
+- [x] Deploy changes to production
+- [x] Close issue
+
+## Resolution
+
+**Fixed:** 2025-12-02
+
+### Backend Fix
+Added `router_prefix="/cog"` to TilerFactory constructor in TiTiler deployment:
+
+```python
+cog = TilerFactory(
+    colormap_dependency=ColorMapParams,
+    router_prefix="/cog",  # Fix for base path
+)
+app.include_router(cog.router, tags=["Cloud Optimized GeoTIFF"], prefix="/cog")
+```
+
+This configuration ensures TileJSON responses generate tile URLs with the correct `/cog` prefix.
+
+### Frontend Cleanup
+Removed temporary workaround from `src/components/CesiumMap.tsx` (lines 186-189):
+- Deleted URL string replacement logic
+- Changed `let templateUrl` to `const templateUrl` (no modification needed)
+
+### Verification
+```bash
+# TileJSON now returns correct URLs
+curl "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com/cog/WebMercatorQuad/tilejson.json?..."
+# Returns: "tiles":["...amazonaws.com/cog/tiles/WebMercatorQuad/{z}/{x}/{y}@1x?..."]
+```
+
+No frontend patches required. Cesium loads habitat tiles directly from correct URLs.

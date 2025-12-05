@@ -27,8 +27,8 @@ import { getAppConfig } from '../utils/config';
 import HabitatLegend from './HabitatLegend';
 
 // Configuration - using environment variables with fallbacks
-const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://azure-local-dfgagqgub7fhb5fv.eastus-01.azurewebsites.net";
-const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://azurecog.blob.core.windows.net/cogtif/habitat_cog.tif";
+const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
+const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif";
 const HABITAT_RADIUS_METERS = 10000.0; // Updated to match raster query (10km)
 const SPECIES_RADIUS_METERS = 10000.0;
 
@@ -178,16 +178,11 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         if (!tileJson.tiles || tileJson.tiles.length === 0) {
           throw new Error("TileJSON missing 'tiles' array or 'tiles' array is empty.");
         }
-        let templateUrl = tileJson.tiles[0];
+        const templateUrl = tileJson.tiles[0];
         if (!templateUrl) {
             throw new Error("TileJSON 'tiles' array does not contain a valid URL template.");
         }
-        
-        // Force HTTPS if the Azure endpoint returns HTTP URLs
-        if (templateUrl.startsWith('http://azure-local-dfgagqgub7fhb5fv')) {
-          templateUrl = templateUrl.replace('http://', 'https://');
-        }
-        
+
         console.log("Resium: Using Template URL:", templateUrl);
 
         const provider = new UrlTemplateImageryProvider({
