@@ -1,6 +1,6 @@
 // src/components/CesiumMap.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Viewer, ImageryLayer, Entity, EllipseGraphics } from 'resium';
+import { Viewer, ImageryLayer, Entity, EllipseGraphics, RectangleGraphics } from 'resium';
 import {
   Ion,
   Cartesian3,
@@ -38,6 +38,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const viewerRef = useRef<any>(null); // Typed viewerRef for Resium
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null); // Typed state
   const [clickedPosition, setClickedPosition] = useState<Cartesian3 | null>(null); // Cartesian3
+  const [queryBounds, setQueryBounds] = useState<Rectangle | null>(null); // Bounding box for habitat query
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null); // { lon, lat }
   const [infoBoxData, setInfoBoxData] = useState<{
     lon?: number;
@@ -250,11 +251,21 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
 
     if (cartesian) {
-      setClickedPosition(cartesian); 
+      setClickedPosition(cartesian);
       const cartographic = Cartographic.fromCartesian(cartesian);
       const longitude = CesiumMath.toDegrees(cartographic.longitude);
       const latitude = CesiumMath.toDegrees(cartographic.latitude);
       setClickedLonLat({ lon: longitude, lat: latitude });
+
+      // Compute bounding box matching TiTiler query (10km half-width)
+      const metersPerDegreeLat = 111320;
+      const metersPerDegreeLon = 111320 * Math.cos(latitude * Math.PI / 180);
+      const deltaLat = HABITAT_RADIUS_METERS / metersPerDegreeLat;
+      const deltaLon = HABITAT_RADIUS_METERS / metersPerDegreeLon;
+      setQueryBounds(Rectangle.fromDegrees(
+        longitude - deltaLon, latitude - deltaLat,
+        longitude + deltaLon, latitude + deltaLat
+      ));
       setShowInfoBox(true);
       setInfoBoxData({ habitats: [], species: [], message: `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...` });
       setIsLoading(true);
@@ -466,6 +477,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       setInfoBoxData({ habitats: [], species: [], message: 'Click on the globe to query location.' });
       setClickedPosition(null);
       setClickedLonLat(null);
+      setQueryBounds(null);
     }
   }, [isLoading, highlightedSpeciesSource]);
 
@@ -491,31 +503,17 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           />
         )}
 
-        {clickedPosition && (
-          <>
-            <Entity position={clickedPosition} name="Habitat Query Radius">
-              <EllipseGraphics
-                semiMinorAxis={HABITAT_RADIUS_METERS}
-                semiMajorAxis={HABITAT_RADIUS_METERS}
-                material={Color.RED.withAlpha(0.2)}
-                outline
-                outlineColor={Color.RED}
-                outlineWidth={2}
-                heightReference={HeightReference.CLAMP_TO_GROUND}
-              />
-            </Entity>
-            <Entity position={clickedPosition} name="Species Query Radius">
-              <EllipseGraphics
-                semiMinorAxis={SPECIES_RADIUS_METERS}
-                semiMajorAxis={SPECIES_RADIUS_METERS}
-                material={Color.BLUE.withAlpha(0.15)}
-                outline
-                outlineColor={Color.BLUE}
-                outlineWidth={2}
-                heightReference={HeightReference.CLAMP_TO_GROUND}
-              />
-            </Entity>
-          </>
+        {queryBounds && (
+          <Entity name="Habitat Query Bounds">
+            <RectangleGraphics
+              coordinates={queryBounds}
+              material={Color.RED.withAlpha(0.2)}
+              outline
+              outlineColor={Color.RED}
+              outlineWidth={2}
+              heightReference={HeightReference.CLAMP_TO_GROUND}
+            />
+          </Entity>
         )}
       </Viewer>
       {showInfoBox && (

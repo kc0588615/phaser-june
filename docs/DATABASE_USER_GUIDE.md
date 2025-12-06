@@ -139,8 +139,50 @@ When modifying the `icaa` table structure, the following files need to be update
 ### 4. Database Functions (PostgreSQL)
 - `get_species_at_point` - Point-based spatial queries (deprecated in favor of radius queries)
 - `get_species_in_radius` - Circle intersection queries for species discovery
-- `get_habitat_distribution_10km` - Raster habitat analysis
 - `get_closest_habitat` - Finds nearest habitat polygon when no species found
+
+**Deprecated:**
+- `get_habitat_distribution_10km` - **Replaced by TiTiler COG statistics** (Dec 2025)
+
+### 5. External Services
+
+#### TiTiler (Habitat Raster Analysis)
+Habitat distribution within a 10km bounding box of clicked points uses TiTiler for categorical statistics on Cloud Optimized GeoTIFF (COG).
+
+**Configuration (`.env.local`):**
+```bash
+NEXT_PUBLIC_TITILER_BASE_URL=https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com
+NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif
+```
+
+**Implementation:** `src/lib/speciesService.ts` → `getRasterHabitatDistribution()`
+
+**Flow:**
+1. User clicks map → lon/lat captured
+2. Create 10km bounding box GeoJSON (`createBboxGeoJSON()`)
+3. POST to `/cog/statistics?categorical=true&max_size=512` with bbox geometry
+4. Parse histogram: `[[counts], [values]]` format (numpy style)
+5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with Supabase `habitat_colormap` fallback)
+6. Return `{habitat_type, percentage}[]` sorted by percentage descending
+
+**Visual sync:** CesiumMap shows red rectangle (`RectangleGraphics`) matching exact bbox sent to TiTiler.
+
+**Key files:**
+- `src/lib/speciesService.ts` - TiTiler query logic, colormap lookup
+- `src/components/CesiumMap.tsx` - Visual bbox rendering, click handling
+- `src/components/HabitatLegend.tsx` - Habitat type display with color chips
+- `src/config/habitatColors.ts` - Habitat label → color mapping
+
+**Benefits vs. old Supabase RPC:**
+- No `habitat_raster` table storage required
+- Direct COG access from S3
+- Serverless TiTiler scales independently
+- Raster updates = swap COG file (no DB migration)
+
+**Related Table:**
+- `habitat_colormap` - Maps integer habitat codes to labels (value → label)
+
+**See also:** [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) for full migration details
 
 ## Guidelines for Database Changes
 
