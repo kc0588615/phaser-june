@@ -208,7 +208,8 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       )}
 
       {/* Habitat Section */}
-      {(hasValue(species.hab_tags) || hasValue(species.hab_desc) || hasValue(species.marine) || hasValue(species.terrestria) || hasValue(species.freshwater)) && (
+      {/* NOTE: habitat flags are VARCHAR "true"/"false" in DB, not booleans */}
+      {(hasValue(species.hab_tags) || hasValue(species.hab_desc) || species.marine === 'true' || species.terrestria === 'true' || species.freshwater === 'true') && (
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
@@ -239,9 +240,9 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 </p>
               )}
               <div className="flex gap-4 text-xs sm:text-sm">
-                {species.marine && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Marine</span>}
-                {species.terrestria && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Terrestrial</span>}
-                {species.freshwater && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Freshwater</span>}
+                {species.marine === 'true' && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Marine</span>}
+                {species.terrestria === 'true' && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Terrestrial</span>}
+                {species.freshwater === 'true' && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Freshwater</span>}
               </div>
             </div>
           </div>

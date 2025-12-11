@@ -118,17 +118,18 @@ export interface Species {
   tax_comm?: string;
   
   // Habitat fields
+  // NOTE: Database stores these as VARCHAR strings "true"/"false", not booleans
   hab_desc?: string;
-  aquatic?: boolean;
-  freshwater?: boolean;
-  terrestria?: boolean;
-  marine?: boolean;
+  aquatic?: string;    // "true" or "false" string
+  freshwater?: string; // "true" or "false" string
+  terrestria?: string; // "true" or "false" string
+  marine?: string;     // "true" or "false" string
   hab_tags?: string;
   
   // Geographic fields
   geo_desc?: string;
   dist_comm?: string;
-  island?: boolean;
+  island?: string;  // "true" or "false" string in DB
   origin?: number;
   
   // Bioregion fields (from oneearth_bioregion)
