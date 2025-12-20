@@ -1,10 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Static export configuration for Vercel
-    // Static export configuration for Vercel
-    // output: 'export', // Removed to enable server runtime for Prisma/Clerk
+    // Server runtime enabled for Prisma/API routes
+    // (removed output: 'export')
 
-    distDir: 'dist',
     trailingSlash: true,
 
     // Image optimization (required for static export)

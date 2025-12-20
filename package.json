@@ -31,7 +31,7 @@
         "build": "npm run typecheck && next build",
         "build-local": "node log.js build & npm run typecheck && next build",
         "vercel-build": "prisma generate && npm run typecheck && next build",
-        "serve": "npx serve dist -p 8080 -s",
+        "serve": "next start -p 8080",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
         "typecheck:watch": "tsc --noEmit --watch",
