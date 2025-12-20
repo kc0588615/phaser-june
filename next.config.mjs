@@ -1,22 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Static export configuration for Vercel
-    output: 'export',
+    // Static export configuration for Vercel
+    // output: 'export', // Removed to enable server runtime for Prisma/Clerk
+
     distDir: 'dist',
     trailingSlash: true,
-    
+
     // Image optimization (required for static export)
     images: {
         unoptimized: true
     },
-    
+
     // Security headers
     poweredByHeader: false,
-    
+
     // Compression and optimization
     compress: true,
     generateEtags: true,
-    
+
     // Webpack configuration
     webpack: (config, { webpack, isServer }) => {
         // Define global Cesium variable
@@ -25,7 +27,7 @@ const nextConfig = {
                 'CESIUM_BASE_URL': JSON.stringify('/cesium/')
             })
         );
-        
+
         // Client-side optimizations
         if (!isServer) {
             config.resolve.fallback = {
@@ -38,10 +40,10 @@ const nextConfig = {
                 process: false
             };
         }
-        
+
         return config;
     },
-    
+
     // Headers for security and performance
     async headers() {
         return [
