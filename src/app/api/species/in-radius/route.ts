@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const lon = parseFloat(searchParams.get('lon') || '');
     const lat = parseFloat(searchParams.get('lat') || '');
-    const radius = parseFloat(searchParams.get('radius') || '10000');
+    const radiusParam = parseFloat(searchParams.get('radius') || '10000');
 
     if (isNaN(lon) || isNaN(lat)) {
       return NextResponse.json(
@@ -20,6 +20,10 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Validate radius: must be positive and capped at 500km to prevent timeouts
+    const MAX_RADIUS = 500000; // 500km
+    const radius = Math.min(Math.max(radiusParam || 10000, 1), MAX_RADIUS);
 
     // PostGIS spatial query using ST_DWithin on geography type
     const species = await prisma.$queryRaw<Array<{

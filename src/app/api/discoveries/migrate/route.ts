@@ -57,25 +57,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ migrated: 0 });
     }
 
-    // Upsert discoveries
-    let migrated = 0;
-    for (const discovery of validDiscoveries) {
-      try {
-        await prisma.playerSpeciesDiscovery.upsert({
-          where: {
-            player_species_unique: {
-              player_id: discovery.player_id,
-              species_id: discovery.species_id,
-            },
-          },
-          create: discovery,
-          update: {}, // Don't update if exists
-        });
-        migrated++;
-      } catch (err) {
-        console.error('Failed to upsert discovery:', err);
-      }
-    }
+    // Bulk insert, skip duplicates based on unique constraint
+    const result = await prisma.playerSpeciesDiscovery.createMany({
+      data: validDiscoveries,
+      skipDuplicates: true,
+    });
+    const migrated = result.count;
 
     console.log(`[API /discoveries/migrate] Migrated ${migrated} discoveries for user ${userId}`);
     return NextResponse.json({ migrated });
