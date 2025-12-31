@@ -4,7 +4,7 @@ const nextConfig = {
     // (removed output: 'export')
 
     trailingSlash: true,
-    distDir: 'dist',
+    // distDir removed - Vercel requires default '.next' directory
 
     // Image optimization (required for static export)
     images: {
