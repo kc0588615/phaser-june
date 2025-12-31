@@ -350,7 +350,7 @@ model OneEarthBioregion {
 // =============================================================================
 
 model HighScore {
-  id         String    @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username   String    @db.Text
   score      Int
   created_at DateTime? @default(now()) @map("created_at")

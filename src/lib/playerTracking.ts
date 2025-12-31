@@ -1,15 +1,11 @@
-import { supabaseBrowser } from '@/lib/supabase-browser';
-import type {
-  PlayerGameSession,
-  PlayerSpeciesDiscovery,
-  PlayerClueUnlock
-} from '@/types/database';
+// =============================================================================
+// PLAYER TRACKING SERVICE - Prisma Version
+// =============================================================================
+// Syncs game events to Postgres with offline queue and proper session management.
+// Migrated from Supabase client to Prisma.
+// =============================================================================
 
-/**
- * Player Tracking Service V2
- * Syncs game events to Supabase with offline queue and proper session management
- * Fixes based on Codex review
- */
+import { prisma } from '@/lib/prisma';
 
 // Session tracking
 interface SessionState {
@@ -132,23 +128,22 @@ export async function processOfflineQueue(playerId: string): Promise<void> {
  */
 export async function startGameSession(playerId: string): Promise<string | null> {
   try {
-    const supabase = supabaseBrowser();
-
     // Check for existing open session (prevent duplicates)
-    const { data: existingSession } = await supabase
-      .from('player_game_sessions')
-      .select('*')
-      .eq('player_id', playerId)
-      .is('ended_at', null)
-      .order('started_at', { ascending: false })
-      .limit(1)
-      .single();
+    const existingSession = await prisma.playerGameSession.findFirst({
+      where: {
+        player_id: playerId,
+        ended_at: null,
+      },
+      orderBy: { started_at: 'desc' },
+    });
 
     if (existingSession) {
       // Resume existing session
       currentSession = {
         id: existingSession.id,
-        startTime: new Date(existingSession.started_at).getTime(),
+        startTime: existingSession.started_at
+          ? new Date(existingSession.started_at).getTime()
+          : Date.now(),
         speciesStartTime: Date.now(),
         pendingClueIds: [],
       };
@@ -156,32 +151,25 @@ export async function startGameSession(playerId: string): Promise<string | null>
     }
 
     // Create new session
-    const { data, error } = await supabase
-      .from('player_game_sessions')
-      .insert({
+    const session = await prisma.playerGameSession.create({
+      data: {
         player_id: playerId,
-        started_at: new Date().toISOString(),
+        started_at: new Date(),
         total_moves: 0,
         total_score: 0,
         species_discovered_in_session: 0,
         clues_unlocked_in_session: 0,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error starting game session:', error);
-      return null;
-    }
+      },
+    });
 
     currentSession = {
-      id: data.id,
+      id: session.id,
       startTime: Date.now(),
       speciesStartTime: Date.now(),
       pendingClueIds: [],
     };
 
-    return data.id;
+    return session.id;
   } catch (err) {
     console.error('Failed to start game session:', err);
     return null;
@@ -197,16 +185,14 @@ export async function endGameSession(
   finalScore: number
 ): Promise<void> {
   try {
-    const supabase = supabaseBrowser();
-
-    await supabase
-      .from('player_game_sessions')
-      .update({
-        ended_at: new Date().toISOString(),
+    await prisma.playerGameSession.update({
+      where: { id: sessionId },
+      data: {
+        ended_at: new Date(),
         total_moves: finalMoves,
         total_score: finalScore,
-      })
-      .eq('id', sessionId);
+      },
+    });
 
     currentSession = null;
 
@@ -245,17 +231,15 @@ export async function updateSessionProgress(
   // Debounce: wait 10 seconds before writing
   sessionUpdateTimer = setTimeout(async () => {
     try {
-      const supabase = supabaseBrowser();
-
-      await supabase
-        .from('player_game_sessions')
-        .update({
+      await prisma.playerGameSession.update({
+        where: { id: sessionId },
+        data: {
           total_moves: moves,
           total_score: score,
           species_discovered_in_session: speciesDiscovered,
           clues_unlocked_in_session: cluesUnlocked,
-        })
-        .eq('id', sessionId);
+        },
+      });
     } catch (err) {
       console.error('Failed to update session progress:', err);
       queueWrite('session_update', {
@@ -285,17 +269,15 @@ export async function forceSessionUpdate(
   }
 
   try {
-    const supabase = supabaseBrowser();
-
-    await supabase
-      .from('player_game_sessions')
-      .update({
+    await prisma.playerGameSession.update({
+      where: { id: sessionId },
+      data: {
         total_moves: moves,
         total_score: score,
         species_discovered_in_session: speciesDiscovered,
         clues_unlocked_in_session: cluesUnlocked,
-      })
-      .eq('id', sessionId);
+      },
+    });
   } catch (err) {
     console.error('Failed to force session update:', err);
     queueWrite('session_update', {
@@ -321,47 +303,41 @@ export async function trackClueUnlock(
   discoveryId: string | null = null
 ): Promise<boolean | null> {
   try {
-    const supabase = supabaseBrowser();
-
-    const { data, error } = await supabase
-      .from('player_clue_unlocks')
-      .insert({
+    // Use upsert to handle duplicates gracefully
+    const clue = await prisma.playerClueUnlock.upsert({
+      where: {
+        player_clue_unique: {
+          player_id: playerId,
+          species_id: speciesId,
+          clue_category: clueCategory,
+          clue_field: clueField,
+        },
+      },
+      create: {
         player_id: playerId,
         species_id: speciesId,
         discovery_id: discoveryId,
         clue_category: clueCategory,
         clue_field: clueField,
         clue_value: clueValue,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      // Duplicate key = clue already unlocked
-      if (error.message.includes('duplicate key')) {
-        return false;
-      }
-
-      console.error('Error tracking clue unlock:', error);
-
-      // Queue for retry
-      queueWrite('clue', {
-        speciesId,
-        clueCategory,
-        clueField,
-        clueValue,
-        discoveryId,
-      });
-
-      return null;
-    }
+      },
+      update: {
+        // If already exists, just update discovery_id if provided
+        ...(discoveryId ? { discovery_id: discoveryId } : {}),
+      },
+    });
 
     // Store clue ID for later discovery_id linking
     if (!discoveryId && currentSession) {
-      currentSession.pendingClueIds.push(data.id);
+      currentSession.pendingClueIds.push(clue.id);
     }
 
-    return true;
+    // Check if this was a create (new) or update (existing)
+    // If unlocked_at matches within 1 second, it's likely new
+    const isNew = clue.unlocked_at
+      ? Date.now() - new Date(clue.unlocked_at).getTime() < 1000
+      : true;
+    return isNew;
   } catch (err) {
     console.error('Failed to track clue unlock:', err);
     queueWrite('clue', {
@@ -379,8 +355,6 @@ export async function trackClueUnlock(
  * Track a species discovery
  * Links all pending clues to this discovery
  */
-const UNIQUE_CONSTRAINT_VIOLATION = '23505';
-
 export async function trackSpeciesDiscovery(
   playerId: string,
   speciesId: number,
@@ -393,83 +367,51 @@ export async function trackSpeciesDiscovery(
   }
 ): Promise<string | null> {
   try {
-    const supabase = supabaseBrowser();
+    const sessionId = options.sessionId || currentSession?.id || null;
+    const pendingClueIds = currentSession?.pendingClueIds || [];
 
-    const payload = {
-      player_id: playerId,
-      species_id: speciesId,
-      session_id: options.sessionId || currentSession?.id || null,
-      time_to_discover_seconds: options.timeToDiscoverSeconds,
-      clues_unlocked_before_guess: options.cluesUnlockedBeforeGuess,
-      incorrect_guesses_count: options.incorrectGuessesCount,
-      score_earned: options.scoreEarned,
-    };
+    // Use transaction for atomic operation
+    const result = await prisma.$transaction(async (tx) => {
+      // Upsert discovery (idempotent)
+      const discovery = await tx.playerSpeciesDiscovery.upsert({
+        where: {
+          player_species_unique: {
+            player_id: playerId,
+            species_id: speciesId,
+          },
+        },
+        create: {
+          player_id: playerId,
+          species_id: speciesId,
+          session_id: sessionId,
+          time_to_discover_seconds: options.timeToDiscoverSeconds,
+          clues_unlocked_before_guess: options.cluesUnlockedBeforeGuess,
+          incorrect_guesses_count: options.incorrectGuessesCount,
+          score_earned: options.scoreEarned,
+        },
+        update: {
+          // If already discovered, update score
+          score_earned: options.scoreEarned,
+        },
+      });
 
-    type DiscoveryRecord = Pick<PlayerSpeciesDiscovery, 'id' | 'session_id'>;
-
-    const {
-      data: inserted,
-      error: insertError,
-    } = await supabase
-      .from('player_species_discoveries')
-      .insert(payload)
-      .select()
-      .single();
-
-    let discovery = inserted as DiscoveryRecord | null;
-
-    if (insertError) {
-      if ((insertError as any).code === UNIQUE_CONSTRAINT_VIOLATION) {
-        console.info('Species discovery already recorded, using existing entry.', {
-          playerId,
-          speciesId,
+      // Link pending clues to this discovery
+      if (pendingClueIds.length > 0) {
+        await tx.playerClueUnlock.updateMany({
+          where: {
+            id: { in: pendingClueIds },
+            discovery_id: null,
+          },
+          data: { discovery_id: discovery.id },
         });
-
-        const {
-          data: existing,
-          error: fetchError,
-        } = await supabase
-          .from('player_species_discoveries')
-          .select('id, session_id')
-          .eq('player_id', playerId)
-          .eq('species_id', speciesId)
-          .maybeSingle();
-
-        if (fetchError) {
-          console.error('Failed to fetch existing species discovery after unique constraint violation.', fetchError);
-          queueWrite('discovery', { speciesId, options });
-          return null;
-        }
-
-        if (!existing) {
-          console.warn('Unique constraint violation occurred but existing discovery was not found. Queuing for retry.', {
-            playerId,
-            speciesId,
-          });
-          queueWrite('discovery', { speciesId, options });
-          return null;
-        }
-
-        discovery = existing as DiscoveryRecord;
-      } else {
-        console.error('Error tracking species discovery:', insertError);
-        queueWrite('discovery', { speciesId, options });
-        return null;
       }
-    }
 
-    if (!discovery) {
-      return null;
-    }
+      return discovery;
+    });
 
-    // Link pending clues to this discovery
-    if (currentSession && currentSession.pendingClueIds.length > 0) {
-      await linkCluesToDiscovery(discovery.id, currentSession.pendingClueIds);
-      currentSession.pendingClueIds = [];
-    }
-
-    // Reset species timer for next species
+    // Clear pending clues
     if (currentSession) {
+      currentSession.pendingClueIds = [];
       currentSession.speciesStartTime = Date.now();
     }
 
@@ -478,30 +420,11 @@ export async function trackSpeciesDiscovery(
       updateLocalStorageDiscovery(speciesId);
     }
 
-    return discovery.id;
+    return result.id;
   } catch (err) {
     console.error('Failed to track species discovery:', err);
     queueWrite('discovery', { speciesId, options });
     return null;
-  }
-}
-
-/**
- * Link pending clues to a discovery
- */
-async function linkCluesToDiscovery(
-  discoveryId: string,
-  clueIds: string[]
-): Promise<void> {
-  try {
-    const supabase = supabaseBrowser();
-
-    await supabase
-      .from('player_clue_unlocks')
-      .update({ discovery_id: discoveryId })
-      .in('id', clueIds);
-  } catch (err) {
-    console.error('Failed to link clues to discovery:', err);
   }
 }
 
@@ -550,39 +473,20 @@ export async function getClueCountForSpecies(
   speciesId: number
 ): Promise<number> {
   try {
-    const supabase = supabaseBrowser();
-
-    const { count, error } = await supabase
-      .from('player_clue_unlocks')
-      .select('*', { count: 'exact', head: true })
-      .eq('player_id', playerId)
-      .eq('species_id', speciesId);
-
-    if (error) {
-      console.error('Error getting clue count:', error);
-      return 0;
-    }
-
-    return count || 0;
+    const count = await prisma.playerClueUnlock.count({
+      where: {
+        player_id: playerId,
+        species_id: speciesId,
+      },
+    });
+    return count;
   } catch (err) {
     console.error('Failed to get clue count:', err);
     return 0;
   }
 }
 
-// Initialize offline queue on module load
+// Initialize offline queue on module load (browser only)
 if (typeof window !== 'undefined') {
   loadOfflineQueue();
-
-  // Process queue on visibility change (tab focus)
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && offlineQueue.length > 0) {
-      // Get current user and process queue
-      const supabase = supabaseBrowser();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await processOfflineQueue(user.id);
-      }
-    }
-  });
 }

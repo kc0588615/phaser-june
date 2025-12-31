@@ -1,0 +1,56 @@
+services:
+  # PostgreSQL + PostGIS
+  db:
+    image: postgis/postgis:17-3.5
+    container_name: postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-phaser_june}
+    volumes:
+      # Production: use Hetzner Volume path (must exist + be writable by UID 999)
+      - ${PGDATA_PATH:-./pgdata}:/var/lib/postgresql/data
+      # Init scripts run ONCE on first start (empty data dir). Extensions only.
+      - ./init:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "5432"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-phaser_june}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Connection Pooler (public with TLS for Vercel)
+  pgbouncer:
+    image: edoburu/pgbouncer
+    container_name: pgbouncer
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-phaser_june}"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 20
+      LISTEN_ADDR: "*"
+      LISTEN_PORT: "6432"
+      AUTH_TYPE: scram-sha-256
+      # TLS for public exposure
+      CLIENT_TLS_SSLMODE: require
+      CLIENT_TLS_KEY_FILE: /etc/pgbouncer/certs/privkey.pem
+      CLIENT_TLS_CERT_FILE: /etc/pgbouncer/certs/fullchain.pem
+    ports:
+      - "6432:6432"
+    volumes:
+      # Mount Let's Encrypt certs (created by certbot on host)
+      - /etc/letsencrypt/live/${DB_DOMAIN:-db.critterconnect.org}:/etc/pgbouncer/certs:ro
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

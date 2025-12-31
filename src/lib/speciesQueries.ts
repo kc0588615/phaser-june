@@ -1,36 +1,14 @@
 // =============================================================================
-// SPECIES QUERIES - Hybrid Prisma + Supabase Approach
+// SPECIES QUERIES - Prisma + Raw SQL for PostGIS
 // =============================================================================
 // This file provides type-safe database queries for species data.
 //
-// ARCHITECTURE DECISION:
-// ----------------------
-// We use a HYBRID approach combining two tools:
-//
-// 1. PRISMA - For non-spatial queries (listing, filtering, relations)
-//    - Type-safe with autocompletion
-//    - Great for simple CRUD operations
-//    - Generates TypeScript types automatically
-//
-// 2. SUPABASE RPCs - For PostGIS spatial queries (radius search, point lookup)
-//    - PostGIS functions like ST_DWithin, ST_Contains, ST_Intersects
-//    - Prisma doesn't natively support PostGIS geometry types
-//    - RPCs encapsulate complex spatial logic server-side
-//
-// WHEN TO USE WHICH:
-// ------------------
-// | Operation                    | Tool        | Reason                      |
-// |------------------------------|-------------|------------------------------|
-// | List all species             | Prisma      | Simple SELECT, type-safe     |
-// | Get species by ID            | Prisma      | Single record fetch          |
-// | Species within radius        | Supabase RPC| PostGIS ST_DWithin          |
-// | Species at point (click)     | Supabase RPC| PostGIS ST_Contains         |
-// | Player discoveries + species | Prisma      | Relations, joins             |
-// | Bioregion intersection       | Supabase RPC| PostGIS ST_Intersects       |
+// ARCHITECTURE:
+// - Prisma for non-spatial queries (listing, filtering, relations)
+// - Prisma $queryRaw for PostGIS spatial queries
 // =============================================================================
 
 import { prisma, type ICAA } from '@/lib/prisma';
-import { supabase } from '@/lib/supabaseClient';
 
 // =============================================================================
 // PRISMA QUERIES - Non-spatial operations with type safety
@@ -179,113 +157,91 @@ export async function getSpeciesByRealm(realm: string) {
 }
 
 // =============================================================================
-// SUPABASE RPC QUERIES - PostGIS spatial operations
+// POSTGIS SPATIAL QUERIES - Using Prisma $queryRaw
 // =============================================================================
 
 /**
  * Finds species within a radius of a geographic point.
  * Uses PostGIS ST_DWithin for efficient spatial query.
- *
- * This is the primary query for map clicks - finds all species
- * whose habitat polygons intersect a circle around the click point.
- *
- * @param lon - Longitude (WGS84)
- * @param lat - Latitude (WGS84)
- * @param radiusMeters - Search radius in meters (default: 10km)
- * @returns Array of species records with geometry as GeoJSON
- *
- * @example
- * ```typescript
- * // User clicks on map at coordinates
- * const species = await getSpeciesInRadius(-122.4194, 37.7749, 10000);
- * console.log(`Found ${species.length} species in 10km radius`);
- * ```
  */
 export async function getSpeciesInRadius(
   lon: number,
   lat: number,
   radiusMeters: number = 10000
 ) {
-  const { data, error } = await supabase.rpc('get_species_in_radius', {
-    lon,
-    lat,
-    radius_m: radiusMeters,
-  });
+  const results = await prisma.$queryRaw<ICAA[]>`
+    SELECT *
+    FROM icaa
+    WHERE wkb_geometry IS NOT NULL
+      AND ST_DWithin(
+        wkb_geometry::geography,
+        ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+        ${radiusMeters}
+      )
+  `;
 
-  if (error) {
-    console.error('[speciesQueries] get_species_in_radius failed:', error);
-    throw error;
-  }
-
-  return data || [];
+  return results;
 }
 
 /**
  * Finds species whose habitat polygon contains a specific point.
- * More precise than radius search - returns only direct hits.
- *
  * Uses PostGIS ST_Contains to check point-in-polygon.
- *
- * @param lon - Longitude (WGS84)
- * @param lat - Latitude (WGS84)
- * @returns Array of species at that exact location
  */
 export async function getSpeciesAtPoint(lon: number, lat: number) {
-  const { data, error } = await supabase.rpc('get_species_at_point', {
-    lon,
-    lat,
-  });
+  const results = await prisma.$queryRaw<ICAA[]>`
+    SELECT *
+    FROM icaa
+    WHERE wkb_geometry IS NOT NULL
+      AND ST_Contains(
+        wkb_geometry,
+        ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)
+      )
+  `;
 
-  if (error) {
-    console.error('[speciesQueries] get_species_at_point failed:', error);
-    throw error;
-  }
-
-  return data || [];
+  return results;
 }
 
 /**
- * Gets the closest habitat polygon to a point.
+ * Gets the closest species habitat to a point.
  * Used when no species are found at the click location.
- *
- * Returns GeoJSON geometry of the nearest species habitat.
- *
- * @param lon - Longitude (WGS84)
- * @param lat - Latitude (WGS84)
- * @returns GeoJSON geometry object or null
  */
 export async function getClosestHabitat(lon: number, lat: number) {
-  const { data, error } = await supabase.rpc('get_closest_habitat', {
-    lon,
-    lat,
-  });
+  const results = await prisma.$queryRaw<ICAA[]>`
+    SELECT *
+    FROM icaa
+    WHERE wkb_geometry IS NOT NULL
+    ORDER BY wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
+    LIMIT 1
+  `;
 
-  if (error) {
-    console.error('[speciesQueries] get_closest_habitat failed:', error);
-    throw error;
-  }
-
-  return data;
+  return results[0] || null;
 }
 
 /**
  * Gets bioregion information for a list of species.
- * Uses spatial intersection with OneEarth bioregion polygons.
- *
- * @param speciesIds - Array of species ogc_fid values
- * @returns Bioregion data for each species (realm, biome, etc.)
+ * Returns data from the icaa table's bioregion columns.
  */
 export async function getSpeciesBioregions(speciesIds: number[]) {
-  const { data, error } = await supabase.rpc('get_species_bioregions', {
-    species_ids: speciesIds,
+  if (speciesIds.length === 0) return [];
+
+  const species = await prisma.iCAA.findMany({
+    where: { ogc_fid: { in: speciesIds } },
+    select: {
+      ogc_fid: true,
+      bioregio_1: true,
+      realm: true,
+      sub_realm: true,
+      biome: true,
+    },
   });
 
-  if (error) {
-    console.error('[speciesQueries] get_species_bioregions failed:', error);
-    throw error;
-  }
-
-  return data || [];
+  return species.map(s => ({
+    species_id: s.ogc_fid,
+    bioregio_1: s.bioregio_1,
+    realm: s.realm,
+    sub_realm: s.sub_realm,
+    biome: s.biome,
+  }));
 }
 
 // =============================================================================

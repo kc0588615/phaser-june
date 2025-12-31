@@ -4,6 +4,7 @@ const nextConfig = {
     // (removed output: 'export')
 
     trailingSlash: true,
+    distDir: 'dist',
 
     // Image optimization (required for static export)
     images: {
