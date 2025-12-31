@@ -1,4 +1,3 @@
-import { supabase } from './supabaseClient';
 import type { Species } from '@/types/database';
 
 export interface SpeciesQueryResult {
@@ -59,23 +58,21 @@ const STATIC_HABITAT_CODE_TO_LABEL: Record<number, string> = {
 // Track unknown codes once per session to avoid log spam
 const loggedUnknownCodes = new Set<number>();
 
-// Runtime cache of habitat_colormap from Supabase (source of truth for new codes)
+// Runtime cache of habitat_colormap from API
 let habitatColormapCache: Record<number, string> | null = null;
 
 async function getHabitatColormap(): Promise<Record<number, string>> {
   if (habitatColormapCache) return habitatColormapCache;
 
   try {
-    const { data, error } = await supabase
-      .from('habitat_colormap')
-      .select('value, label');
-
-    if (error || !data) {
-      console.error('Failed to fetch habitat_colormap:', error);
+    const response = await fetch('/api/habitat/colormap');
+    if (!response.ok) {
+      console.error('Failed to fetch habitat_colormap:', response.statusText);
       habitatColormapCache = {};
       return habitatColormapCache;
     }
 
+    const data = await response.json();
     const map: Record<number, string> = {};
     for (const row of data) {
       map[row.value] = row.label;
@@ -92,16 +89,11 @@ async function getHabitatColormap(): Promise<Record<number, string>> {
 
 /**
  * Create a bounding box polygon from a point
- * @param longitude Center longitude
- * @param latitude Center latitude
- * @param radiusMeters Half-width/height in meters
- * @returns GeoJSON Polygon feature and bbox bounds for visual sync
  */
 function createBboxGeoJSON(longitude: number, latitude: number, radiusMeters: number): {
   feature: any;
   bounds: { west: number; south: number; east: number; north: number };
 } {
-  // Approximate degrees per meter at this latitude
   const metersPerDegreeLat = 111320;
   const metersPerDegreeLon = 111320 * Math.cos(latitude * Math.PI / 180);
 
@@ -134,26 +126,24 @@ function createBboxGeoJSON(longitude: number, latitude: number, radiusMeters: nu
 
 export const speciesService = {
   /**
-   * Query species within a radius (circle intersection) of a given point
+   * Query species within a radius of a given point
    */
   async getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number): Promise<SpeciesQueryResult> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_species_in_radius', { 
-          lon: longitude, 
-          lat: latitude, 
-          radius_m: radiusMeters 
-        });
-      
-      if (error) {
-        console.error('Error in circle-based species query:', error);
+      const response = await fetch(
+        `/api/species/in-radius?lon=${longitude}&lat=${latitude}&radius=${radiusMeters}`
+      );
+
+      if (!response.ok) {
+        console.error('Error in circle-based species query:', response.statusText);
         return { species: [], count: 0 };
       }
 
-      console.log(`Circle query returned ${data?.length || 0} species within ${radiusMeters}m of (${longitude}, ${latitude})`);
+      const data = await response.json();
+      console.log(`Circle query returned ${data.count || 0} species within ${radiusMeters}m of (${longitude}, ${latitude})`);
       return {
-        species: data || [],
-        count: data?.length || 0
+        species: data.species || [],
+        count: data.count || 0
       };
     } catch (error) {
       console.error('Error in getSpeciesInRadius:', error);
@@ -162,56 +152,24 @@ export const speciesService = {
   },
 
   /**
-   * Query species that intersect with a given point (longitude, latitude)
+   * Query species that intersect with a given point
    */
   async getSpeciesAtPoint(longitude: number, latitude: number): Promise<SpeciesQueryResult> {
     try {
-      // Try to use the RPC function if it exists
-      // If not, fall back to a simple query for MVP
-      try {
-        const { data: rpcData, error: rpcError } = await supabase
-          .rpc('get_species_at_point', { lon: longitude, lat: latitude });
-        
-        if (!rpcError && rpcData) {
-          console.log(`Spatial query returned ${rpcData.length} species at (${longitude}, ${latitude})`);
-          return {
-            species: rpcData as Species[],
-            count: rpcData.length
-          };
-        } else if (rpcError) {
-          console.error('RPC error:', rpcError);
-        }
-      } catch (rpcErr) {
-        console.log('RPC function not available, using fallback query', rpcErr);
-      }
-      
-      // Fallback: fetch a subset of species for MVP
-      const { data, error, count } = await supabase
-        .from('icaa')
-        .select('*', { count: 'exact' })
-        .limit(10) // Limit to 10 species for MVP
-        .order('ogc_fid', { ascending: true });
+      const response = await fetch(
+        `/api/species/at-point?lon=${longitude}&lat=${latitude}`
+      );
 
-      if (error) {
-        console.error('Error querying species:', error);
+      if (!response.ok) {
+        console.error('Error in point species query:', response.statusText);
         return { species: [], count: 0 };
       }
 
-      // TODO: In production, create a PostgreSQL function like:
-      // CREATE OR REPLACE FUNCTION get_species_at_point(lon float, lat float)
-      // RETURNS SETOF icaa AS $$
-      // BEGIN
-      //   RETURN QUERY
-      //   SELECT * FROM icaa
-      //   WHERE ST_Contains(wkb_geometry, ST_SetSRID(ST_MakePoint(lon, lat), 4326));
-      // END;
-      // $$ LANGUAGE plpgsql;
-      //
-      // Then call it with: supabase.rpc('get_species_at_point', { lon: longitude, lat: latitude })
-
+      const data = await response.json();
+      console.log(`Spatial query returned ${data.count || 0} species at (${longitude}, ${latitude})`);
       return {
-        species: data || [],
-        count: count || 0
+        species: data.species || [],
+        count: data.count || 0
       };
     } catch (error) {
       console.error('Error in getSpeciesAtPoint:', error);
@@ -224,20 +182,15 @@ export const speciesService = {
    */
   async getSpeciesByIds(ids: number[]): Promise<Species[]> {
     try {
-      const { data, error } = await supabase
-        .from('icaa')
-        .select('*')
-        .in('ogc_fid', ids)
-        .order('ogc_fid', { ascending: true });
+      const response = await fetch(`/api/species/by-ids?ids=${ids.join(',')}`);
 
-      if (error) {
-        console.error('Error fetching species by IDs:', error);
+      if (!response.ok) {
+        console.error('Error fetching species by IDs:', response.statusText);
         return [];
       }
 
-      // Bioregion data now comes directly from the icaa table columns
-
-      return data || [];
+      const data = await response.json();
+      return data.species || [];
     } catch (error) {
       console.error('Error in getSpeciesByIds:', error);
       return [];
@@ -255,15 +208,15 @@ export const speciesService = {
     biome: string | null;
   }>> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_species_bioregions', { species_ids: speciesIds });
-      
-      if (error) {
-        console.error('Error fetching species bioregions:', error);
+      const response = await fetch(`/api/species/bioregions?ids=${speciesIds.join(',')}`);
+
+      if (!response.ok) {
+        console.error('Error fetching species bioregions:', response.statusText);
         return [];
       }
 
-      return data || [];
+      const data = await response.json();
+      return data.bioregions || [];
     } catch (error) {
       console.error('Error in getSpeciesBioregions:', error);
       return [];
@@ -283,21 +236,18 @@ export const speciesService = {
         return [];
       }
 
-      // Create 10km bounding box (matches visual on map)
-      const radiusMeters = 10000; // 10km half-width
+      const radiusMeters = 10000;
       const { feature: bboxFeature } = createBboxGeoJSON(longitude, latitude, radiusMeters);
 
-      // Create FeatureCollection for TiTiler POST
       const featureCollection = {
         type: "FeatureCollection",
         features: [bboxFeature]
       };
 
-      // POST to TiTiler statistics endpoint
       const url = new URL(`${titilerBaseUrl}/cog/statistics`);
       url.searchParams.set('url', cogUrl);
       url.searchParams.set('categorical', 'true');
-      url.searchParams.set('max_size', '512'); // Balance performance vs accuracy
+      url.searchParams.set('max_size', '512');
 
       const response = await fetch(url.toString(), {
         method: 'POST',
@@ -314,8 +264,6 @@ export const speciesService = {
 
       const statsData = await response.json();
 
-      // Parse response - TiTiler returns statistics per feature
-      // Format: { "features": [{ "properties": { "statistics": { "b1": { "histogram": [[values], [counts]], ... } } } }] }
       if (!statsData.features || statsData.features.length === 0) {
         console.log('No statistics data returned from TiTiler');
         return [];
@@ -327,14 +275,12 @@ export const speciesService = {
         return [];
       }
 
-      // Get band 1 histogram (assuming single-band classification raster)
       const band1Stats = featureStats.b1 || featureStats['1'];
       if (!band1Stats || !band1Stats.histogram) {
         console.log('No histogram data in band statistics');
         return [];
       }
 
-      // Prefer categorical counts (exact class → pixel counts) over histograms (binned)
       const categories: Record<string, number> | undefined = band1Stats.categorical || band1Stats.categories;
       const results: RasterHabitatResult[] = [];
       let totalPixels = 0;
@@ -345,32 +291,28 @@ export const speciesService = {
           const habitatCode = Number(codeStr);
           if (!Number.isFinite(habitatCode)) continue;
           const percentage = (count / totalPixels) * 100;
-          if (percentage < 0.1 || habitatCode === 0) continue; // skip negligible + water
+          if (percentage < 0.1 || habitatCode === 0) continue;
           results.push({ habitat_type: `__PENDING__${habitatCode}`, percentage });
         }
       } else if (band1Stats.histogram) {
-        // TiTiler histogram format: [[counts], [values]] (numpy histogram style)
         const [counts, values] = band1Stats.histogram;
         totalPixels = counts.reduce((sum: number, c: number) => sum + c, 0);
 
-        // For categorical rasters, histogram values ARE the exact pixel values
-        // Aggregate directly by code (no snapping needed for integer class rasters)
         const codeAggregates: Record<number, number> = {};
         for (let i = 0; i < values.length; i++) {
-          const habitatCode = Math.round(values[i]); // ensure integer
+          const habitatCode = Math.round(values[i]);
           const count = counts[i];
-          if (count === 0 || habitatCode === 0) continue; // skip empty + water
-
+          if (count === 0 || habitatCode === 0) continue;
           codeAggregates[habitatCode] = (codeAggregates[habitatCode] || 0) + count;
         }
 
         for (const [codeStr, count] of Object.entries(codeAggregates)) {
           const percentage = (count / totalPixels) * 100;
-          if (percentage < 0.01) continue; // lower threshold to catch all types
+          if (percentage < 0.01) continue;
           results.push({ habitat_type: `__PENDING__${codeStr}`, percentage });
         }
       } else {
-        console.warn('No categorical or histogram data returned from TiTiler; habitat stats empty.');
+        console.warn('No categorical or histogram data returned from TiTiler');
         return [];
       }
 
@@ -379,21 +321,19 @@ export const speciesService = {
         return [];
       }
 
-      // Merge dynamic colormap (Supabase) over static fallback
       const remoteColormap = await getHabitatColormap();
       const habitatLabelMap: Record<number, string> = {
         ...STATIC_HABITAT_CODE_TO_LABEL,
         ...remoteColormap
       };
 
-      // Resolve labels and clean results
       const resolved: RasterHabitatResult[] = [];
       for (const r of results) {
         const habitatCode = Number(r.habitat_type.replace('__PENDING__', ''));
         const habitatLabel = habitatLabelMap[habitatCode];
         if (!habitatLabel && !loggedUnknownCodes.has(habitatCode)) {
           loggedUnknownCodes.add(habitatCode);
-          console.warn(`[Habitat] Unknown code ${habitatCode} - add to habitat_colormap + static maps`);
+          console.warn(`[Habitat] Unknown code ${habitatCode} - add to habitat_colormap`);
         }
         resolved.push({
           habitat_type: habitatLabel || `Unknown (${habitatCode})`,
@@ -401,7 +341,6 @@ export const speciesService = {
         });
       }
 
-      // Sort by percentage descending
       resolved.sort((a, b) => b.percentage - a.percentage);
 
       console.log(`TiTiler habitat query returned ${resolved.length} habitat types at (${longitude}, ${latitude})`);
@@ -415,90 +354,44 @@ export const speciesService = {
 
   /**
    * Get random species names for the guessing game
-   * @param count Number of species names to return
-   * @param excludeId Species ID to exclude (the correct answer)
    */
   async getRandomSpeciesNames(count: number = 15, excludeId?: number): Promise<string[]> {
     try {
-      // Query random species from the database
-      const query = supabase
-        .from('icaa')
-        .select('comm_name, sci_name, ogc_fid');
-      
-      // Exclude the current species if provided
-      if (excludeId) {
-        query.neq('ogc_fid', excludeId);
+      const params = new URLSearchParams({ count: count.toString() });
+      if (excludeId) params.set('exclude', excludeId.toString());
+
+      const response = await fetch(`/api/species/random-names?${params}`);
+
+      if (!response.ok) {
+        console.error('Error fetching random species names:', response.statusText);
+        return this.getFallbackNames();
       }
-      
-      // Get random species
-      const { data, error } = await query
-        .limit(count * 2); // Get extra in case we need to filter
-      
-      if (error) {
-        console.error('Error fetching random species names:', error);
-        // Return fallback species names
-        return [
-          'Loggerhead Sea Turtle',
-          'Hawksbill Sea Turtle',
-          'Leatherback Sea Turtle',
-          'Olive Ridley Sea Turtle',
-          'Kemp\'s Ridley Sea Turtle',
-          'Flatback Sea Turtle',
-          'Eastern Box Turtle',
-          'Painted Turtle',
-          'Red-eared Slider',
-          'Snapping Turtle',
-          'Softshell Turtle',
-          'Wood Turtle',
-          'Bog Turtle',
-          'Spotted Turtle',
-        ];
-      }
-      
-      // Extract species names and shuffle
-      const speciesNames = (data || [])
-        .map(s => s.comm_name || s.sci_name || 'Unknown Species')
-        .filter(name => name !== 'Unknown Species')
-        .sort(() => Math.random() - 0.5)
-        .slice(0, count);
-      
-      // If we don't have enough, add some fallback names
-      if (speciesNames.length < count) {
-        const fallbacks = [
-          'Loggerhead Sea Turtle',
-          'Hawksbill Sea Turtle',
-          'Leatherback Sea Turtle',
-          'Olive Ridley Sea Turtle',
-        ];
-        
-        for (const fallback of fallbacks) {
-          if (speciesNames.length < count && !speciesNames.includes(fallback)) {
-            speciesNames.push(fallback);
-          }
-        }
-      }
-      
-      return speciesNames;
+
+      const data = await response.json();
+      return data.names || this.getFallbackNames();
     } catch (error) {
       console.error('Error in getRandomSpeciesNames:', error);
-      // Return fallback species names
-      return [
-        'Loggerhead Sea Turtle',
-        'Hawksbill Sea Turtle',
-        'Leatherback Sea Turtle',
-        'Olive Ridley Sea Turtle',
-        'Kemp\'s Ridley Sea Turtle',
-        'Flatback Sea Turtle',
-        'Eastern Box Turtle',
-        'Painted Turtle',
-        'Red-eared Slider',
-        'Snapping Turtle',
-        'Softshell Turtle',
-        'Wood Turtle',
-        'Bog Turtle',
-        'Spotted Turtle',
-      ];
+      return this.getFallbackNames();
     }
+  },
+
+  getFallbackNames(): string[] {
+    return [
+      'Loggerhead Sea Turtle',
+      'Hawksbill Sea Turtle',
+      'Leatherback Sea Turtle',
+      'Olive Ridley Sea Turtle',
+      'Kemp\'s Ridley Sea Turtle',
+      'Flatback Sea Turtle',
+      'Eastern Box Turtle',
+      'Painted Turtle',
+      'Red-eared Slider',
+      'Snapping Turtle',
+      'Softshell Turtle',
+      'Wood Turtle',
+      'Bog Turtle',
+      'Spotted Turtle',
+    ];
   },
 
   /**
@@ -506,11 +399,8 @@ export const speciesService = {
    */
   async getSpeciesGeoJSON(speciesIds: number[]): Promise<any> {
     try {
-      // For MVP, we'll fetch the species data but not the actual geometry
-      // The geometry rendering will be handled by the Cesium integration
       const species = await this.getSpeciesByIds(speciesIds);
-      
-      // Convert to basic GeoJSON structure
+
       return {
         type: 'FeatureCollection',
         features: species.map(sp => ({
@@ -520,7 +410,7 @@ export const speciesService = {
             comm_name: sp.comm_name,
             sci_name: sp.sci_name
           },
-          geometry: null // Geometry will be handled separately
+          geometry: null
         }))
       };
     } catch (error) {
@@ -531,19 +421,25 @@ export const speciesService = {
 
   /**
    * Get the closest habitat polygon when no species are found at a point
+   * Uses PostGIS nearest-neighbor search with no distance limit
    */
   async getClosestHabitat(longitude: number, latitude: number): Promise<any> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_closest_habitat', { lon: longitude, lat: latitude });
-      
-      if (error) {
-        console.error('Error finding closest habitat:', error);
+      const response = await fetch(
+        `/api/species/closest?lon=${longitude}&lat=${latitude}`
+      );
+
+      if (!response.ok) {
+        console.error('Error finding closest habitat:', response.statusText);
         return null;
       }
 
-      console.log(`Found closest habitat at (${longitude}, ${latitude})`);
-      return data; // This will be GeoJSON geometry
+      const data = await response.json();
+      if (data.geometry) {
+        console.log(`Closest habitat: ${data.species?.comm_name} (${data.species?.distance_km}km away)`);
+        return data.geometry;
+      }
+      return null;
     } catch (error) {
       console.error('Error in getClosestHabitat:', error);
       return null;

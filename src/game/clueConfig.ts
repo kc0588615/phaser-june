@@ -350,14 +350,16 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     icon: '🌳',
     getClue: (species: Species) => {
       const habitats: string[] = [];
-      if (species.aquatic || species.freshwater) habitats.push('freshwater');
-      if (species.terrestria) habitats.push('terrestrial');
-      if (species.marine) habitats.push('marine');
-      
+      // NOTE: DB stores these as strings "true"/"false", not booleans
+      // Must use explicit string comparison, not truthy checks
+      if (species.aquatic === 'true' || species.freshwater === 'true') habitats.push('freshwater');
+      if (species.terrestria === 'true') habitats.push('terrestrial');
+      if (species.marine === 'true') habitats.push('marine');
+
       if (habitats.length > 0) {
         return `Found in ${habitats.join(' and ')} habitats`;
       }
-      
+
       return '';
     },
   },

@@ -56,6 +56,7 @@ This is the entry point for engineers joining the Phaser + Next.js + Cesium + Su
 - [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md) — schema and species data sourcing.
 - [USER_ACCOUNTS_MIGRATION_PLAN.md](./USER_ACCOUNTS_MIGRATION_PLAN.md) — auth migration steps.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from Supabase raster.
+- [PRISMA_VERCEL_MIGRATION.md](./PRISMA_VERCEL_MIGRATION.md) — Prisma ORM + Vercel server runtime setup.
 
 **Player Tracking & Stats**
 - [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Supabase writes.

@@ -1,10 +1,9 @@
 import Phaser from 'phaser';
 import { AssetKeys } from '../constants';
-import { supabase } from '@/lib/supabaseClient';
 
 export class GameOver extends Phaser.Scene {
     private finalScore: number = 0;
-    
+
     constructor() {
         super('GameOver');
     }
@@ -21,21 +20,20 @@ export class GameOver extends Phaser.Scene {
                 return false;
             }
 
-            const { data, error } = await supabase
-                .from('high_scores')
-                .insert([{ 
-                    username: trimmedUsername, 
-                    score
-                }])
-                .select()
-                .single();
+            const response = await fetch('/api/highscores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: trimmedUsername, score }),
+            });
 
-            if (error) {
-                console.error("Supabase Error:", error.message);
-                alert(`Error saving score: ${error.message}`);
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                console.error("API Error:", error.error || response.statusText);
+                alert(`Error saving score: ${error.error || 'Unknown error'}`);
                 return false;
             }
-            
+
+            const data = await response.json();
             console.log("Score saved successfully!", data);
             return true;
         } catch (err: any) {
@@ -62,8 +60,8 @@ export class GameOver extends Phaser.Scene {
         // Game Over Text
         this.add.text(centerX, centerY * 0.6, 'Game Over', {
             fontFamily: 'Arial Black',
-            fontSize: `${Math.min(width * 0.1, height * 0.15)}px`, // Ensure 'px' unit
-            color: '#ff4444', // Red color
+            fontSize: `${Math.min(width * 0.1, height * 0.15)}px`,
+            color: '#ff4444',
             stroke: '#000000',
             strokeThickness: 8,
             align: 'center'
@@ -133,7 +131,7 @@ export class GameOver extends Phaser.Scene {
             if (username && username.trim()) {
                 await this.saveScore(username, this.finalScore);
             }
-            
+
             console.log("GameOver: Returning to MainMenu...");
             this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                 if (progress === 1) {

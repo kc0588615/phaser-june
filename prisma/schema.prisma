@@ -1,0 +1,359 @@
+// =============================================================================
+// PRISMA SCHEMA - Species Discovery Game
+// =============================================================================
+// This file defines the database structure as TypeScript-friendly models.
+// Prisma reads this to generate a type-safe client for database queries.
+//
+// BEGINNER NOTES:
+// - Each 'model' becomes a table in PostgreSQL
+// - @id marks the primary key
+// - @map("column_name") maps to existing DB column names
+// - @@map("table_name") maps to existing DB table names
+// - Relations like 'species ICAA @relation(...)' create typed joins
+//
+// WORKFLOW:
+// 1. Edit this file to change schema
+// 2. Run: npx prisma db push (sync to DB) or npx prisma migrate dev (create migration)
+// 3. Run: npx prisma generate (regenerate TypeScript types)
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  // Output location for generated client (default: node_modules/.prisma/client)
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Set in .env.local: postgresql://user:pass@host:5432/db
+}
+
+// =============================================================================
+// SPECIES TABLE (icaa)
+// Core species data with taxonomy, habitat, morphology, and conservation info.
+// NOTE: wkb_geometry (PostGIS) is excluded - use Supabase RPCs for spatial queries.
+// =============================================================================
+
+model ICAA {
+  // Primary key - auto-incrementing integer
+  ogc_fid Int @id @default(autoincrement()) @map("ogc_fid")
+
+  // ---------------------------------------------------------------------------
+  // IDENTITY - Basic species identification
+  // ---------------------------------------------------------------------------
+  id_no     Decimal? @map("id_no")     // IUCN species ID number
+  comm_name String?  @map("comm_name") // Common name (e.g., "Green Sea Turtle")
+  sci_name  String?  @map("sci_name")  // Scientific name (e.g., "Chelonia mydas")
+  tax_comm  String?  @map("tax_comm")  // Taxonomic comments
+  http_iucn String?  @map("http_iucn") // IUCN Red List URL
+
+  // ---------------------------------------------------------------------------
+  // TAXONOMY - 6-level biological classification hierarchy
+  // ---------------------------------------------------------------------------
+  kingdom String? @map("kingdom") // e.g., "Animalia"
+  phylum  String? @map("phylum")  // e.g., "Chordata"
+  class_  String? @map("class")   // e.g., "Reptilia" (class is reserved word)
+  order_  String? @map("order_")  // e.g., "Testudines" (order is reserved word)
+  family  String? @map("family")  // e.g., "Cheloniidae"
+  genus   String? @map("genus")   // e.g., "Chelonia"
+
+  // ---------------------------------------------------------------------------
+  // CONSERVATION STATUS - IUCN Red List categories
+  // ---------------------------------------------------------------------------
+  category  String? @map("category")  // IUCN code: CR, EN, VU, NT, LC, DD, EX, EW
+  cons_code String? @map("cons_code") // Conservation status code
+  cons_text String? @map("cons_text") // Detailed conservation description
+  threats   String? @map("threats")   // Known threats to species
+
+  // ---------------------------------------------------------------------------
+  // HABITAT - Environmental preferences
+  // ---------------------------------------------------------------------------
+  hab_desc   String? @map("hab_desc")   // Habitat description text
+  hab_tags   String? @map("hab_tags")   // Comma-separated habitat tags
+  marine     String? @map("marine")     // "true"/"false" - lives in ocean
+  terrestria String? @map("terrestria") // "true"/"false" - lives on land (legacy spelling)
+  freshwater String? @map("freshwater") // "true"/"false" - lives in freshwater
+  aquatic    String? @map("aquatic")    // "true"/"false" - aquatic lifestyle
+
+  // ---------------------------------------------------------------------------
+  // GEOGRAPHIC DISTRIBUTION
+  // ---------------------------------------------------------------------------
+  geo_desc  String?  @map("geo_desc")  // Geographic range description
+  dist_comm String?  @map("dist_comm") // Distribution comments
+  island    String?  @map("island")    // Island occurrence
+  origin    Decimal? @map("origin")    // Origin code
+  presence  Decimal? @map("presence")  // Presence status code
+  seasonal  Decimal? @map("seasonal")  // Seasonal occurrence code
+
+  // ---------------------------------------------------------------------------
+  // BIOREGION - OneEarth ecoregion classification
+  // ---------------------------------------------------------------------------
+  bioregio_1 String? @map("bioregio_1") // Bioregion code (e.g., "NA1")
+  realm      String? @map("realm")      // Major realm (e.g., "Nearctic", "Neotropic")
+  sub_realm  String? @map("sub_realm")  // Sub-realm classification
+  biome      String? @map("biome")      // Biome type (e.g., "Tropical Forests")
+
+  // ---------------------------------------------------------------------------
+  // MORPHOLOGY - Physical characteristics
+  // ---------------------------------------------------------------------------
+  color_prim String?  @map("color_prim") // Primary body color
+  color_sec  String?  @map("color_sec")  // Secondary color
+  pattern    String?  @map("pattern")    // Color pattern description
+  shape_desc String?  @map("shape_desc") // Body shape description
+  size_min   Decimal? @map("size_min")   // Minimum size (cm)
+  size_max   Decimal? @map("size_max")   // Maximum size (cm)
+  weight_kg  Decimal? @map("weight_kg")  // Weight in kilograms
+
+  // ---------------------------------------------------------------------------
+  // DIET & BEHAVIOR
+  // ---------------------------------------------------------------------------
+  diet_type  String? @map("diet_type")  // Diet category (carnivore, herbivore, etc.)
+  diet_prey  String? @map("diet_prey")  // Prey items consumed
+  diet_flora String? @map("diet_flora") // Plants consumed
+  behav_1    String? @map("behav_1")    // Primary behavior trait
+  behav_2    String? @map("behav_2")    // Secondary behavior trait
+
+  // ---------------------------------------------------------------------------
+  // LIFE CYCLE & REPRODUCTION
+  // ---------------------------------------------------------------------------
+  lifespan   Decimal? @map("lifespan")   // Lifespan in years
+  maturity   String?  @map("maturity")   // Age at sexual maturity
+  repro_type String?  @map("repro_type") // Reproduction type
+  clutch_sz  String?  @map("clutch_sz")  // Clutch/litter size
+  life_desc1 String?  @map("life_desc1") // Life cycle description 1
+  life_desc2 String?  @map("life_desc2") // Life cycle description 2
+
+  // ---------------------------------------------------------------------------
+  // KEY FACTS - Notable information for clues
+  // ---------------------------------------------------------------------------
+  key_fact1 String? @map("key_fact1") // Interesting fact 1
+  key_fact2 String? @map("key_fact2") // Interesting fact 2
+  key_fact3 String? @map("key_fact3") // Interesting fact 3
+
+  // ---------------------------------------------------------------------------
+  // METADATA & GEOMETRY (geometry excluded - use PostGIS RPCs)
+  // ---------------------------------------------------------------------------
+  compiler   String?  @map("compiler")   // Data compiler
+  yrcompiled Decimal? @map("yrcompiled") // Year compiled
+  citation   String?  @map("citation")   // Data citation
+  source     String?  @map("source")     // Data source
+  subspecies String?  @map("subspecies") // Subspecies name
+  subpop     String?  @map("subpop")     // Subpopulation
+  legend     String?  @map("legend")     // Map legend text
+  generalisd Decimal? @map("generalisd") // Generalization level
+  shape_leng Decimal? @map("shape_leng") // Shape length
+  shape_le_1 Decimal? @map("shape_le_1") // Shape length (alt)
+  shape_area Decimal? @map("shape_area") // Shape area
+
+  // NOTE: wkb_geometry excluded - PostGIS geometry type not supported by Prisma
+  // Use Supabase RPCs (get_species_in_radius, get_species_at_point) for spatial queries
+
+  // ---------------------------------------------------------------------------
+  // RELATIONS - Links to player tracking tables
+  // ---------------------------------------------------------------------------
+  discoveries PlayerSpeciesDiscovery[] // All discoveries of this species
+  clueUnlocks PlayerClueUnlock[]       // All clue unlocks for this species
+
+  @@map("icaa") // Maps to existing 'icaa' table in PostgreSQL
+}
+
+// =============================================================================
+// USER PROFILES
+// Linked to Supabase auth.users via trigger (handle_new_user)
+// =============================================================================
+
+model Profile {
+  user_id    String    @id @map("user_id") @db.Uuid // UUID from auth.users
+  username   String?   @unique                      // Display name
+  full_name  String?   @map("full_name")            // Full name
+  avatar_url String?   @map("avatar_url")           // Profile picture URL
+  created_at DateTime? @default(now()) @map("created_at")
+  updated_at DateTime? @default(now()) @map("updated_at")
+
+  // Relations
+  gameSessions PlayerGameSession[]
+  discoveries  PlayerSpeciesDiscovery[]
+  clueUnlocks  PlayerClueUnlock[]
+  stats        PlayerStats?
+
+  @@map("profiles")
+}
+
+// =============================================================================
+// PLAYER GAME SESSIONS
+// Tracks individual gameplay sessions with scores and progress
+// =============================================================================
+
+model PlayerGameSession {
+  id                           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id                    String?   @map("player_id") @db.Uuid
+  started_at                   DateTime? @default(now()) @map("started_at")
+  ended_at                     DateTime? @map("ended_at")
+  total_moves                  Int?      @default(0) @map("total_moves")
+  total_score                  Int?      @default(0) @map("total_score")
+  species_discovered_in_session Int?     @default(0) @map("species_discovered_in_session")
+  clues_unlocked_in_session    Int?      @default(0) @map("clues_unlocked_in_session")
+  created_at                   DateTime? @default(now()) @map("created_at")
+
+  // Relations
+  player      Profile?                 @relation(fields: [player_id], references: [user_id])
+  discoveries PlayerSpeciesDiscovery[]
+
+  @@map("player_game_sessions")
+}
+
+// =============================================================================
+// PLAYER SPECIES DISCOVERIES
+// Records when a player successfully identifies a species
+// =============================================================================
+
+model PlayerSpeciesDiscovery {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id                 String?   @map("player_id") @db.Uuid
+  species_id                Int?      @map("species_id")
+  session_id                String?   @map("session_id") @db.Uuid
+  discovered_at             DateTime? @default(now()) @map("discovered_at")
+  time_to_discover_seconds  Int?      @map("time_to_discover_seconds")
+  clues_unlocked_before_guess Int?    @default(0) @map("clues_unlocked_before_guess")
+  incorrect_guesses_count   Int?      @default(0) @map("incorrect_guesses_count")
+  score_earned              Int?      @default(0) @map("score_earned")
+
+  // Relations
+  player      Profile?           @relation(fields: [player_id], references: [user_id])
+  species     ICAA?              @relation(fields: [species_id], references: [ogc_fid])
+  session     PlayerGameSession? @relation(fields: [session_id], references: [id])
+  clueUnlocks PlayerClueUnlock[]
+
+  // Unique constraint: each player can only discover each species once
+  @@unique([player_id, species_id], name: "player_species_unique")
+  @@map("player_species_discoveries")
+}
+
+// =============================================================================
+// PLAYER CLUE UNLOCKS
+// Tracks individual clue reveals during gameplay
+// =============================================================================
+
+model PlayerClueUnlock {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  player_id     String?   @map("player_id") @db.Uuid
+  species_id    Int?      @map("species_id")
+  discovery_id  String?   @map("discovery_id") @db.Uuid
+  clue_category String    @map("clue_category") // e.g., "classification", "habitat", "morphology"
+  clue_field    String    @map("clue_field")    // e.g., "order_", "realm", "color_prim"
+  clue_value    String?   @map("clue_value")    // The actual clue content shown
+  unlocked_at   DateTime? @default(now()) @map("unlocked_at")
+
+  // Relations
+  player    Profile?                @relation(fields: [player_id], references: [user_id])
+  species   ICAA?                   @relation(fields: [species_id], references: [ogc_fid])
+  discovery PlayerSpeciesDiscovery? @relation(fields: [discovery_id], references: [id])
+
+  // Unique constraint: prevent duplicate clue unlocks
+  @@unique([player_id, species_id, clue_category, clue_field], name: "player_clue_unique")
+  @@map("player_clue_unlocks")
+}
+
+// =============================================================================
+// PLAYER STATS
+// Aggregated statistics and achievements per player (JSONB fields)
+// =============================================================================
+
+model PlayerStats {
+  player_id                       String    @id @map("player_id") @db.Uuid
+  total_species_discovered        Int?      @default(0) @map("total_species_discovered")
+  total_clues_unlocked            Int?      @default(0) @map("total_clues_unlocked")
+  total_score                     Int?      @default(0) @map("total_score")
+  total_moves_made                Int?      @default(0) @map("total_moves_made")
+  total_games_played              Int?      @default(0) @map("total_games_played")
+  total_play_time_seconds         Int?      @default(0) @map("total_play_time_seconds")
+
+  // Efficiency metrics
+  average_clues_per_discovery     Decimal?  @map("average_clues_per_discovery")
+  fastest_discovery_clues         Int?      @map("fastest_discovery_clues")
+  slowest_discovery_clues         Int?      @map("slowest_discovery_clues")
+  average_time_per_discovery_seconds Int?   @map("average_time_per_discovery_seconds")
+
+  // Taxonomic coverage (JSONB objects: {"Testudines": 5, "Anura": 2})
+  species_by_order    Json? @default("{}") @map("species_by_order")
+  species_by_family   Json? @default("{}") @map("species_by_family")
+  species_by_genus    Json? @default("{}") @map("species_by_genus")
+
+  // Geographic coverage (JSONB objects: {"Nearctic": 3, "Neotropic": 1})
+  species_by_realm     Json? @default("{}") @map("species_by_realm")
+  species_by_biome     Json? @default("{}") @map("species_by_biome")
+  species_by_bioregion Json? @default("{}") @map("species_by_bioregion")
+
+  // Habitat distribution counts
+  marine_species_count      Int? @default(0) @map("marine_species_count")
+  terrestrial_species_count Int? @default(0) @map("terrestrial_species_count")
+  freshwater_species_count  Int? @default(0) @map("freshwater_species_count")
+  aquatic_species_count     Int? @default(0) @map("aquatic_species_count")
+
+  // Conservation awareness (JSONB: {"CR": 1, "EN": 3, "VU": 2})
+  species_by_iucn_status Json? @default("{}") @map("species_by_iucn_status")
+
+  // Clue mastery (JSONB: {"classification": 10, "habitat": 8})
+  clues_by_category      Json?   @default("{}") @map("clues_by_category")
+  favorite_clue_category String? @map("favorite_clue_category")
+
+  // Timestamps
+  first_discovery_at DateTime? @map("first_discovery_at")
+  last_discovery_at  DateTime? @map("last_discovery_at")
+  created_at         DateTime? @default(now()) @map("created_at")
+  updated_at         DateTime? @default(now()) @map("updated_at")
+
+  // Relations
+  player Profile @relation(fields: [player_id], references: [user_id])
+
+  @@map("player_stats")
+}
+
+// =============================================================================
+// HABITAT COLORMAP
+// Maps integer pixel values to IUCN habitat classification labels
+// Used for TiTiler raster legend display
+// =============================================================================
+
+model HabitatColormap {
+  value Int    @id            // Habitat code (0, 100, 101, 200, etc.)
+  label String               // Human-readable name (e.g., "Forest", "Savanna")
+
+  @@map("habitat_colormap")
+}
+
+// =============================================================================
+// ONEEARTH BIOREGION (Read-only reference data)
+// Bioregion polygons for spatial intersection queries
+// NOTE: wkb_geometry excluded - use Supabase RPCs for spatial operations
+// =============================================================================
+
+model OneEarthBioregion {
+  ogc_fid    Int      @id @default(autoincrement())
+  objectid_1 Decimal? @map("objectid_1")
+  objectid_2 Decimal? @map("objectid_2")
+  bioregions String?  @map("bioregions") @db.VarChar
+  bioregio_1 String?  @map("bioregio_1") @db.VarChar
+  realm      String?  @map("realm") @db.VarChar
+  sub_realm  String?  @map("sub_realm") @db.VarChar
+  biome      String?  @map("biome") @db.VarChar
+  shape_leng Float?   @map("shape_leng")
+  shape_le_1 Decimal? @map("shape_le_1")
+  shape_area Float?   @map("shape_area")
+
+  // NOTE: wkb_geometry excluded - use get_species_bioregions RPC for spatial joins
+
+  @@map("oneearth_bioregion")
+}
+
+// =============================================================================
+// HIGH SCORES (Legacy leaderboard)
+// =============================================================================
+
+model HighScore {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username   String    @db.Text
+  score      Int
+  created_at DateTime? @default(now()) @map("created_at")
+
+  @@map("high_scores")
+}

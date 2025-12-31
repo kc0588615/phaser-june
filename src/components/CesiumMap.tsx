@@ -350,13 +350,14 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             console.log('Clicked species:', clickedSpecies);
             
             // Build habitat list for backward compatibility
+            // NOTE: DB stores these as strings "true"/"false", not booleans
             const legacyHabitats = new Set<string>();
             clickedSpecies.species.forEach(species => {
               if (species.hab_desc) legacyHabitats.add(species.hab_desc);
-              if (species.aquatic) legacyHabitats.add('aquatic');
-              if (species.freshwater) legacyHabitats.add('freshwater');
-              if (species.terrestria) legacyHabitats.add('terrestrial');
-              if (species.marine) legacyHabitats.add('marine');
+              if (species.aquatic === 'true') legacyHabitats.add('aquatic');
+              if (species.freshwater === 'true') legacyHabitats.add('freshwater');
+              if (species.terrestria === 'true') legacyHabitats.add('terrestrial');
+              if (species.marine === 'true') legacyHabitats.add('marine');
             });
             const habitatList = Array.from(legacyHabitats);
             
@@ -433,13 +434,14 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           }
           
           // Keep legacy habitat extraction for backward compatibility (if needed elsewhere)
+          // NOTE: DB stores these as strings "true"/"false", not booleans
           const legacyHabitats = new Set<string>();
           speciesResult.species.forEach(species => {
             if (species.hab_desc) legacyHabitats.add(species.hab_desc);
-            if (species.aquatic) legacyHabitats.add('aquatic');
-            if (species.freshwater) legacyHabitats.add('freshwater');
-            if (species.terrestria) legacyHabitats.add('terrestrial');
-            if (species.marine) legacyHabitats.add('marine');
+            if (species.aquatic === 'true') legacyHabitats.add('aquatic');
+            if (species.freshwater === 'true') legacyHabitats.add('freshwater');
+            if (species.terrestria === 'true') legacyHabitats.add('terrestrial');
+            if (species.marine === 'true') legacyHabitats.add('marine');
           });
 
           const habitatList = Array.from(legacyHabitats);
