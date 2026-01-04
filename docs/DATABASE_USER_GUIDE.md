@@ -1,4 +1,4 @@
-cla# Database User Guide
+# Database User Guide
 
 ## Overview
 
@@ -7,10 +7,10 @@ This guide provides comprehensive documentation for the database architecture us
 ## Current Database Architecture
 
 ### Technology Stack
-- **Database**: Supabase (PostgreSQL 15+ with PostGIS extension)
-- **Connection**: Supabase JavaScript Client
+- **Database**: PostgreSQL 15+ (Hetzner VPS) with PostGIS extension
+- **Connection**: Prisma ORM
 - **Spatial Features**: PostGIS for geographic queries
-- **Real-time**: Supabase subscriptions (high scores only)
+- **Real-time**: None (Standard REST/Server Actions)
 
 ### Database Tables
 

@@ -283,7 +283,7 @@ export async function executeRawQuery<T>(
 /**
  * Gets count of species by conservation status.
  *
- * @returns Object mapping IUCN codes to counts: { CR: 5, EN: 10, ... }
+ * @returns Object mapping IUCN codes to counts, e.g. `{ CR: 5, EN: 10, ... }`
  */
 export async function getSpeciesCountByStatus() {
   const results = await prisma.iCAA.groupBy({
@@ -307,7 +307,7 @@ export async function getSpeciesCountByStatus() {
 /**
  * Gets count of species by realm.
  *
- * @returns Object mapping realms to counts: { Nearctic: 15, Neotropic: 8, ... }
+ * @returns Object mapping realms to counts, e.g. `{ Nearctic: 15, Neotropic: 8, ... }`
  */
 export async function getSpeciesCountByRealm() {
   const results = await prisma.iCAA.groupBy({

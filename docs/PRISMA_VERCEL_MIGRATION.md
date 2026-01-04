@@ -1,16 +1,16 @@
 # Prisma + Vercel Server Runtime Migration
 
-Tracks issues encountered migrating from static export to server runtime for Prisma ORM support.
+Migration complete. Server runtime is the single source of truth and static export is intentionally disabled to support Prisma and API routes. This document records the issues and fixes from that migration.
 
 ## Summary
 
 | Issue | Status | Fix |
 |-------|--------|-----|
-| Static export + API routes | Resolved | Removed `output: 'export'` |
+| Static export + API routes | Complete | Removed `output: 'export'` |
 | ESLint 9 flat config | Resolved | Created `eslint.config.mjs`, deleted `.eslintrc.json` |
 | Vercel cached `outputDirectory` | Resolved | Removed `distDir`, updated `vercel.json` |
 | Next.js 15.3.1 vulnerability | Resolved | Updated to 16.1.0 |
-| Turbopack vs Webpack (Cesium) | Resolved | Added `--webpack` flag to build |
+| Turbopack vs Webpack (Cesium) | Resolved | Added `--webpack` flag to build scripts |
 
 ## Issue Details
 
@@ -92,11 +92,11 @@ npm install next@latest
 This build is using Turbopack, with a `webpack` config and no `turbopack` config
 ```
 
-**Fix:** Added `--webpack` flag in `vercel.json`:
+**Fix:** Added `--webpack` flag in build scripts and routed Vercel builds through them:
 ```json
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && next build --webpack"
+  "buildCommand": "npm run vercel-build"
 }
 ```
 
@@ -130,15 +130,15 @@ const nextConfig = {
 ```json
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && next build --webpack"
+  "buildCommand": "npm run vercel-build"
 }
 ```
 
 ### package.json scripts
 ```json
 {
-  "build": "npm run typecheck && next build",
-  "vercel-build": "prisma generate && npm run typecheck && next build",
+  "build": "npm run typecheck && next build --webpack",
+  "vercel-build": "prisma generate && npm run typecheck && next build --webpack",
   "serve": "next start -p 8080",
   "postinstall": "prisma generate && ..."
 }
@@ -151,13 +151,12 @@ const nextConfig = {
 ```
 BEFORE (Static Export):
   npm run build → dist/ (static HTML/JS/CSS) → CDN
-  Supabase SDK runs client-side
   No API routes possible
 
 AFTER (Server Runtime):
   npm run build → .next/ → Vercel Serverless Functions
   Prisma runs server-side (API routes, Server Components)
-  Supabase SDK still available client-side
+  Server runtime required for API routes and database access
 ```
 
 ---
@@ -169,8 +168,6 @@ Prisma is now available for:
 - Server Components (direct import)
 - Server Actions
 
-Existing Supabase SDK calls remain unchanged for client-side data fetching.
-
 ### Key Files
 - `prisma/schema.prisma` — database schema
 - `src/lib/speciesQueries.ts` — Prisma query functions
@@ -179,5 +176,5 @@ Existing Supabase SDK calls remain unchanged for client-side data fetching.
 ---
 
 ## Related Docs
-- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Supabase tables/RPCs
+- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — database tables, RPCs, TiTiler integration
 - [README.md](./README.md) — setup, env vars, scripts
