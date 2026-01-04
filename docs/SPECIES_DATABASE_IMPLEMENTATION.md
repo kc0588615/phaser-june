@@ -23,7 +23,7 @@ This document describes the implementation of the species database feature, whic
 **Purpose**: Displays a grid of all species from the database
 
 **Key Features**:
-- Fetches data from Supabase `icaa` table
+- Fetches data via Prisma from `icaa` table
 - Groups species by taxonomic categories (Turtles and Frogs)
 - Displays biodiversity statistics in development mode
 - Responsive grid layout with accordion UI
@@ -33,21 +33,22 @@ This document describes the implementation of the species database feature, whic
 
 **Data Fetching**:
 ```typescript
-const { data, error } = await supabase
-  .from('icaa')
-  .select(`
-    ogc_fid, sci_name, comm_name, http_iucn,
-    kingdom, phylum, class, order_, family, genus,
-    category, cons_code, cons_text,
-    marine, terrestria, freshwater, hab_tags, hab_desc,
-    geo_desc,
-    color_prim, color_sec, pattern, size_min, size_max, weight_kg, shape_desc,
-    diet_type, diet_prey, diet_flora, behav_1, behav_2,
-    lifespan, maturity, repro_type, clutch_sz, life_desc1, life_desc2,
-    threats,
-    key_fact1, key_fact2, key_fact3
-  `)
-  .order('comm_name', { ascending: true });
+// Using Prisma ORM (src/lib/speciesQueries.ts)
+const species = await prisma.icaa.findMany({
+  select: {
+    ogc_fid: true, sci_name: true, comm_name: true, http_iucn: true,
+    kingdom: true, phylum: true, class: true, order_: true, family: true, genus: true,
+    category: true, cons_code: true, cons_text: true,
+    marine: true, terrestria: true, freshwater: true, hab_tags: true, hab_desc: true,
+    geo_desc: true,
+    color_prim: true, color_sec: true, pattern: true, size_min: true, size_max: true, weight_kg: true, shape_desc: true,
+    diet_type: true, diet_prey: true, diet_flora: true, behav_1: true, behav_2: true,
+    lifespan: true, maturity: true, repro_type: true, clutch_sz: true, life_desc1: true, life_desc2: true,
+    threats: true,
+    key_fact1: true, key_fact2: true, key_fact3: true
+  },
+  orderBy: { comm_name: 'asc' }
+});
 ```
 
 ### 2. SpeciesCard Component (`src/components/SpeciesCard.tsx`)

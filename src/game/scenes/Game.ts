@@ -138,10 +138,8 @@ export class Game extends Phaser.Scene {
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
     private discoveredSpeciesIds: Set<number> = new Set();
-    private hasHydratedDiscoveries: boolean = false;
 
     // --- Player Tracking ---
-    private supabaseClient: any | null = null; // Cache client
     private currentUserId: string | null = null; // Cache user ID
     private currentSessionId: string | null = null; // Active session
     private clueCountThisSpecies: number = 0; // Track clues for current species
@@ -189,32 +187,9 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private async hydrateDiscoveredSpeciesFromBackend(userId: string): Promise<void> {
-        if (this.hasHydratedDiscoveries || !this.supabaseClient) {
-            return;
-        }
-
-        try {
-            const { data, error } = await this.supabaseClient
-                .from('player_species_discoveries')
-                .select('species_id')
-                .eq('player_id', userId);
-
-            if (error) {
-                console.warn('Game Scene: Failed to hydrate discovered species from Supabase:', error);
-            } else if (Array.isArray(data)) {
-                for (const record of data) {
-                    const id = Number((record as any)?.species_id);
-                    if (Number.isFinite(id)) {
-                        this.discoveredSpeciesIds.add(id);
-                    }
-                }
-            }
-        } catch (error) {
-            console.warn('Game Scene: Error hydrating discovered species from Supabase:', error);
-        } finally {
-            this.hasHydratedDiscoveries = true;
-        }
+    private async hydrateDiscoveredSpeciesFromBackend(_userId: string): Promise<void> {
+        // Auth is not configured yet; backend hydration is disabled.
+        return;
     }
 
     private resetSpeciesTrackingCounters(): void {
@@ -466,61 +441,9 @@ export class Game extends Phaser.Scene {
     }
 
     private async initializePlayerTracking(): Promise<void> {
-        try {
-            // Dynamic imports to avoid SSR issues
-            const { supabaseBrowser } = await import('@/lib/supabase-browser');
-            const { startGameSession, processOfflineQueue } = await import('@/lib/playerTracking');
-
-            // Cache Supabase client (reuse for all calls)
-            this.supabaseClient = supabaseBrowser();
-
-            // Get current user and cache ID
-            const { data: { user } } = await this.supabaseClient.auth.getUser();
-
-            console.log('🔐 Auth check complete:', {
-                authenticated: !!user,
-                userId: user?.id,
-                email: user?.email
-            });
-
-            if (user) {
-                this.currentUserId = user.id;
-
-                await this.hydrateDiscoveredSpeciesFromBackend(user.id);
-
-                console.log('📝 Starting game session for user:', user.id);
-
-                // Start or resume session
-                const sessionId = await startGameSession(user.id);
-                this.currentSessionId = sessionId;
-
-                console.log('📊 Player tracking initialized:', {
-                    userId: user.id,
-                    sessionId,
-                    mode: 'Supabase'
-                });
-
-                if (sessionId) {
-                    console.log('🔄 Processing offline queue...');
-                    await processOfflineQueue(user.id);
-                }
-
-                console.log('🎧 Registering EventBus listeners for authenticated tracking');
-
-                // Register EventBus listeners for tracking
-                EventBus.on('clue-revealed', this.handleClueRevealed, this);
-                EventBus.on(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
-
-                // Register beforeunload handler (flush session on page close)
-                if (typeof window !== 'undefined') {
-                    window.addEventListener('beforeunload', this.handleBeforeUnload);
-                }
-            } else {
-                console.log('👤 Guest user - tracking disabled');
-            }
-        } catch (error) {
-            console.error('Failed to initialize player tracking:', error);
-        }
+        // Auth is not configured yet; player tracking remains disabled.
+        this.currentUserId = null;
+        this.currentSessionId = null;
     }
 
     private createPauseControls(): void {
@@ -1992,7 +1915,6 @@ export class Game extends Phaser.Scene {
         this.anyMatchThisTurn = false;
 
         // Clear tracking state
-        this.supabaseClient = null;
         this.currentUserId = null;
         this.currentSessionId = null;
         this.clueCountThisSpecies = 0;

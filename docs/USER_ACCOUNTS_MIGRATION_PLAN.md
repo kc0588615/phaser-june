@@ -12,41 +12,32 @@ This document outlines the implementation plan for migrating from localStorage-b
 - No user identification or authentication
 
 ### Target State
-- User authentication via Supabase Auth
-- Species discoveries stored in PostgreSQL database
+- User authentication via Clerk
+- Species discoveries stored in PostgreSQL database (via Prisma)
 - Cross-device synchronization
 - Rich discovery metadata and statistics
 - Social features potential (leaderboards, sharing)
 
 ## Database Schema
 
-### 1. Users Table (Managed by Supabase Auth)
+### 1. Users Table (Managed by Clerk)
 ```sql
--- Automatically created by Supabase Auth
--- Contains: id, email, created_at, etc.
+-- Managed externally by Clerk
+-- Contains: id (string), email, created_at, etc.
 ```
 
 ### 2. User Profiles Table
 ```sql
-CREATE TABLE user_profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  username VARCHAR(50) UNIQUE,
-  display_name VARCHAR(100),
-  avatar_url TEXT,
-  total_discoveries INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
-
--- Policies
-CREATE POLICY "Users can view all profiles" ON user_profiles
-  FOR SELECT USING (true);
-
-CREATE POLICY "Users can update own profile" ON user_profiles
-  FOR UPDATE USING (auth.uid() = id);
+-- Managed via Prisma (schema.prisma)
+model UserProfile {
+  id              String   @id // Matches Clerk ID
+  username        String?  @unique
+  displayName     String?
+  avatarUrl       String?
+  totalDiscoveries Int     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
 ```
 
 ### 3. Species Discoveries Table

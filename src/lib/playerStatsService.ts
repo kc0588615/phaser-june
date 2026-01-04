@@ -2,11 +2,10 @@
 // PLAYER STATS SERVICE - Prisma Version
 // =============================================================================
 // Fetches aggregated player statistics from the player_stats table.
-// NOTE: Auth calls use Supabase temporarily until Phase 4 (Clerk migration).
+// NOTE: Auth is not wired yet. Clerk integration will provide user context.
 // =============================================================================
 
 import { prisma } from '@/lib/prisma';
-import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { PlayerStats } from '@/components/PlayerStatsDashboard/types';
 
 export interface FetchPlayerStatsOptions {
@@ -58,36 +57,14 @@ function transformToPlayerStats(
 }
 
 /**
- * Fetch player stats for the current authenticated user
- * NOTE: Uses Supabase auth temporarily (will migrate to Clerk in Phase 4)
+ * Fetch player stats for the current authenticated user.
+ * Auth is not configured yet, so this returns null.
  */
 export async function fetchPlayerStats(
   options: FetchPlayerStatsOptions = { includeRankings: true }
 ): Promise<PlayerStats | null> {
-  try {
-    // TODO: Replace with Clerk auth in Phase 4
-    const supabase = supabaseBrowser();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error('Not authenticated:', authError);
-      return null;
-    }
-
-    const data = await prisma.playerStats.findUnique({
-      where: { player_id: user.id },
-    });
-
-    if (!data) {
-      console.log('No stats found for player - likely new user');
-      return null;
-    }
-
-    return transformToPlayerStats(data);
-  } catch (err) {
-    console.error('Unexpected error fetching player stats:', err);
-    return null;
-  }
+  console.warn('fetchPlayerStats: auth not configured (Clerk planned).');
+  return null;
 }
 
 /**
@@ -115,22 +92,12 @@ export async function fetchPlayerStatsByPlayerId(
 }
 
 /**
- * Get player display name from profile
- * NOTE: Uses Supabase auth temporarily (will migrate to Clerk in Phase 4)
+ * Get player display name from profile.
+ * When playerId is not provided, returns a generic label until auth is wired.
  */
 export async function getPlayerDisplayName(playerId?: string): Promise<string> {
   try {
-    // TODO: Replace with Clerk auth in Phase 4
-    const supabase = supabaseBrowser();
-    let fallbackEmail: string | undefined;
-
-    // If no playerId provided, get current user
-    if (!playerId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return 'Player';
-      playerId = user.id;
-      fallbackEmail = user.email ?? undefined;
-    }
+    if (!playerId) return 'Player';
 
     // Try to get profile display name
     const profile = await prisma.profile.findUnique({
@@ -140,16 +107,6 @@ export async function getPlayerDisplayName(playerId?: string): Promise<string> {
 
     if (profile?.username) {
       return profile.username;
-    }
-
-    // Fallback to email
-    if (!fallbackEmail) {
-      const { data: { user } } = await supabase.auth.getUser();
-      fallbackEmail = user?.email ?? undefined;
-    }
-
-    if (fallbackEmail) {
-      return fallbackEmail.split('@')[0];
     }
 
     return 'Player';

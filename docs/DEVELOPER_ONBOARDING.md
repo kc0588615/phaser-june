@@ -1,6 +1,50 @@
 # Developer Onboarding
 
-This is the entry point for engineers joining the Phaser + Next.js + Cesium + Supabase project. It explains how the app is structured, what to read next, and where every doc lives.
+This is the entry point for engineers joining the Phaser + Next.js + Cesium + Prisma project. It explains how the app is structured, what to read next, and where every doc lives.
+
+---
+
+## Documentation Systems
+
+This repo has two documentation systems with different purposes:
+
+1) **LLM Context Docs (legacy)**  
+   Location: `/docs/` (this folder)  
+   - Flat markdown files created before the wiki
+   - Used for LLM context and historical design notes
+
+2) **Docusaurus Wiki (current)**  
+   Location: `/wiki/docs/`  
+   - Structured, deployable documentation site
+   - Sidebar-driven navigation and search
+
+## Wiki Documentation
+
+The project has a **Docusaurus wiki** for organized, searchable documentation:
+
+```bash
+cd wiki
+npm install
+npm run start    # http://localhost:3000
+```
+
+**Wiki Structure (Diátaxis Framework):**
+- `docs/getting-started/` — Quick setup, project structure
+- `docs/tutorials/` — Learning paths (Phaser scenes, EventBus, Cesium)
+- `docs/architecture/` — System design explanations
+- `docs/guides/` — Task-specific how-to recipes
+- `docs/reference/` — Lookup tables (events, schema, env vars)
+- `docs/api/` — Auto-generated TypeDoc API reference (served at `/docs/api`)
+
+**TypeDoc output path:** The TypeDoc plugin writes to `wiki/docs/api/`, so the API reference is part of the main Docusaurus docs plugin and is served at `/docs/api`.
+
+**Contributing to Docs:** See [`wiki/docs/CONTRIBUTING_DOCS.md`](../wiki/docs/CONTRIBUTING_DOCS.md) for:
+- Writing standards and style guide
+- TSDoc comment conventions for API generation
+- Frontmatter requirements
+- Code block and table formatting rules
+
+---
 
 ## 1) Start Here
 - Project overview & setup: [docs/README.md](./README.md) (install, env vars, scripts).
