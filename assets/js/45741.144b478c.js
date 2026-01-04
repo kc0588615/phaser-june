@@ -1,0 +1,1 @@
+(globalThis.webpackChunkwiki=globalThis.webpackChunkwiki||[]).push([[45741],{45741(){}}]);
