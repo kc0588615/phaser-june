@@ -105,7 +105,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
       setClues(prev => {
         // For progressive categories, avoid duplicates by clue text, not category
         // For other categories, avoid duplicates by category
-        const progressiveCategories = [0, 2, 3, 5, 6, 7, 8]; // CLASSIFICATION, GEOGRAPHIC, MORPHOLOGY, BEHAVIOR, LIFE_CYCLE, CONSERVATION, KEY_FACTS
+        const progressiveCategories = [0, 1, 2, 3, 5, 6, 7, 8]; // CLASSIFICATION, HABITAT, GEOGRAPHIC, MORPHOLOGY, BEHAVIOR, LIFE_CYCLE, CONSERVATION, KEY_FACTS
         const isDuplicate = progressiveCategories.includes(clueData.category) ?
           prev.some(c => c.category === clueData.category && c.clue === clueData.clue) :
           prev.some(c => c.category === clueData.category);
@@ -163,7 +163,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
     const handleAllCluesRevealed = () => {
       setAllCluesRevealed(true);
       toast.success('All clues revealed!', {
-        description: 'Advancing to next species...',
+        description: 'Make your guess when you\'re ready.',
         duration: 3000,
       });
     };

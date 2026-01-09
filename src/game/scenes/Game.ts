@@ -35,6 +35,8 @@ import {
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 
+const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
+
 function slugify(value: string): string {
     return value
         .toLowerCase()
@@ -800,6 +802,7 @@ export class Game extends Phaser.Scene {
                 this.seenClueCategories.add(category);
             }
             this.completedClueCategories.add(category);
+            this.checkAllCluesRevealed();
             return;
         }
 
@@ -838,6 +841,7 @@ export class Game extends Phaser.Scene {
             this.seenClueCategories.add(category);
         }
         this.completedClueCategories.add(category);
+        this.checkAllCluesRevealed();
     }
 
     private revealCluesForCategory(category: GemCategory, desiredCount: number): void {
@@ -859,6 +863,7 @@ export class Game extends Phaser.Scene {
                 this.revealedClues.add(category);
                 this.seenClueCategories.add(category);
             }
+            this.checkAllCluesRevealed();
             return;
         }
 
@@ -892,6 +897,7 @@ export class Game extends Phaser.Scene {
                 this.revealedClues.add(category);
                 this.seenClueCategories.add(category);
             }
+            this.checkAllCluesRevealed();
             return;
         }
 
@@ -920,6 +926,29 @@ export class Game extends Phaser.Scene {
         }
         if (emitted < desiredCount) {
             this.completedClueCategories.add(category);
+        }
+        this.checkAllCluesRevealed();
+    }
+
+    private checkAllCluesRevealed(): void {
+        if (!this.selectedSpecies || this.allCluesRevealed) return;
+        if (this.revealedClues.size < TOTAL_CLUE_CATEGORIES) return;
+
+        this.allCluesRevealed = true;
+        console.log("Game Scene: All clues revealed for species:", this.selectedSpecies.ogc_fid);
+
+        EventBus.emit('all-clues-revealed', {
+            speciesId: this.selectedSpecies.ogc_fid
+        });
+
+        if (this.statusText && this.statusText.active) {
+            this.statusText.setText('All clues revealed! Can you guess the species?');
+
+            this.time.delayedCall(3000, () => {
+                if (this.statusText && this.statusText.active) {
+                    this.statusText.setText('');
+                }
+            });
         }
     }
 
@@ -1461,6 +1490,8 @@ export class Game extends Phaser.Scene {
                 this.revealCluesForCategory(category, cluesToReveal);
             }
         });
+
+        this.checkAllCluesRevealed();
     }
 
     private processMatchedGemsForClues(matches: Coordinate[][]): void {
@@ -1494,29 +1525,7 @@ export class Game extends Phaser.Scene {
                 this.revealCluesForCategory(category, cluesToReveal);
             }
         });
-
-        // Check if all clues are revealed (9 categories total)
-        if (this.revealedClues.size >= 9 && !this.allCluesRevealed) {
-            this.allCluesRevealed = true;
-            console.log("Game Scene: All clues revealed for species:", this.selectedSpecies.ogc_fid);
-            
-            // Emit event that all clues are revealed
-            EventBus.emit('all-clues-revealed', {
-                speciesId: this.selectedSpecies.ogc_fid
-            });
-            
-            // Don't automatically advance - wait for player to guess the species
-            if (this.statusText && this.statusText.active) {
-                this.statusText.setText('All clues revealed! Can you guess the species?');
-                
-                // Clear the message after a few seconds
-                this.time.delayedCall(3000, () => {
-                    if (this.statusText && this.statusText.active) {
-                        this.statusText.setText('');
-                    }
-                });
-            }
-        }
+        this.checkAllCluesRevealed();
     }
 
     private advanceToNextSpecies(): void {
