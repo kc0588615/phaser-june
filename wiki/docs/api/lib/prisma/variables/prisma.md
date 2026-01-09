@@ -2,7 +2,7 @@
 
 > `const` **prisma**: `PrismaClient`\<`PrismaClientOptions`, `never`, `DefaultArgs`\>
 
-Defined in: [src/lib/prisma.ts:60](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/prisma.ts#L60)
+Defined in: [src/lib/prisma.ts:60](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/lib/prisma.ts#L60)
 
 Shared Prisma Client instance.
 

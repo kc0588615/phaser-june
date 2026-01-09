@@ -31,7 +31,7 @@ Complete reference for all environment variables used in the application.
 |------|------|------------------|----------|
 | **Minimal Local** | 2 min | None | UI only, no data |
 | **With Database** | 10 min | `DATABASE_URL` | Species data, tracking |
-| **Full Stack** | 15 min | All above + `CESIUM_ION_TOKEN` | 3D globe, geospatial |
+| **Full Stack** | 15 min | All above + `NEXT_PUBLIC_CESIUM_ION_TOKEN` | 3D globe, geospatial |
 | **Raster Data** | +5 min | Add `TITILER_*` | Habitat raster analysis |
 
 ### Minimal Local Run (No External Services)
@@ -49,7 +49,7 @@ The app will show placeholder data and the Cesium globe won't load, but React co
 
 ```bash
 cp .env.example .env.local
-# Edit .env.local with Supabase credentials
+# Edit .env.local with DATABASE_URL
 npm run dev
 ```
 
@@ -58,15 +58,16 @@ npm run dev
 Add Cesium token to enable the 3D globe:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+DATABASE_URL=postgresql://user:password@host:port/database?schema=public
 NEXT_PUBLIC_CESIUM_ION_TOKEN=your-cesium-token
+NEXT_PUBLIC_TITILER_BASE_URL=https://your-titiler-endpoint.com
+NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 ```
 
 ## Source File
 
 Environment variables are loaded in:
-- `src/lib/supabaseClient.ts` - Supabase config
+- `src/lib/prisma.ts` - Prisma client
 - `src/components/CesiumMap.tsx` - Cesium Ion token
 - `next.config.mjs` - Build-time variables
 
@@ -76,6 +77,6 @@ Check your setup:
 
 ```typescript
 // In browser console after app loads
-console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
 console.log('Cesium token present:', !!process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN);
+fetch('/api/species/catalog').then(r => console.log('Species API ok:', r.ok));
 ```

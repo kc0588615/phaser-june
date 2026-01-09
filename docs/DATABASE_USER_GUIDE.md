@@ -139,7 +139,7 @@ When modifying the `icaa` table structure, the following files need to be update
 ### 4. Database Functions (PostgreSQL)
 - `get_species_at_point` - Point-based spatial queries (deprecated in favor of radius queries)
 - `get_species_in_radius` - Circle intersection queries for species discovery
-- `get_closest_habitat` - Finds nearest habitat polygon when no species found
+- `/api/species/closest` - Finds nearest habitat polygon when no species found (PostGIS `<->`)
 
 **Deprecated:**
 - `get_habitat_distribution_10km` - **Replaced by TiTiler COG statistics** (Dec 2025)
@@ -162,7 +162,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 2. Create 10km bounding box GeoJSON (`createBboxGeoJSON()`)
 3. POST to `/cog/statistics?categorical=true&max_size=512` with bbox geometry
 4. Parse histogram: `[[counts], [values]]` format (numpy style)
-5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with Supabase `habitat_colormap` fallback)
+5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with database `habitat_colormap` fallback)
 6. Return `{habitat_type, percentage}[]` sorted by percentage descending
 
 **Visual sync:** CesiumMap shows red rectangle (`RectangleGraphics`) matching exact bbox sent to TiTiler.
@@ -173,7 +173,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 - `src/components/HabitatLegend.tsx` - Habitat type display with color chips
 - `src/config/habitatColors.ts` - Habitat label → color mapping
 
-**Benefits vs. old Supabase RPC:**
+**Benefits vs. legacy raster RPC:**
 - No `habitat_raster` table storage required
 - Direct COG access from S3
 - Serverless TiTiler scales independently
@@ -335,21 +335,21 @@ await redDataSource.load({ type: 'FeatureCollection', features });
 ```
 
 #### Blue Highlighting (No Species Found)
-Uses the `get_closest_habitat` function that returns GeoJSON directly:
+Uses the `/api/species/closest` API route, which returns GeoJSON directly:
 
 ```sql
--- get_closest_habitat returns json type
-SELECT ST_AsGeoJSON(closest_polygon) FROM ...
+-- API route uses ST_AsGeoJSON for geometry
+SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa ...
 ```
 
 ### Geometry Data Flow
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   PostGIS       │    │    Supabase      │    │     Cesium      │
-│   MULTIPOLYGON  │ ─→ │    ST_AsGeoJSON  │ ─→ │  GeoJsonDataSource
-│   (wkb_geometry)│    │    (json)        │    │  Red/Blue Polygons
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
+│   PostGIS       │    │  Next.js API + Prisma│    │     Cesium      │
+│   MULTIPOLYGON  │ ─→ │  ST_AsGeoJSON (json) │ ─→ │  GeoJsonDataSource
+│   (wkb_geometry)│    │  /api/species/*      │    │  Red/Blue Polygons
+└─────────────────┘    └──────────────────────┘    └─────────────────┘
 ```
 
 **Critical**: The geometry must be returned as **GeoJSON** (not WKT) to preserve complete MULTIPOLYGON structures for Cesium rendering.
@@ -395,16 +395,18 @@ $$ LANGUAGE plpgsql;
 ```typescript
 // src/lib/speciesService.ts
 export async function getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number) {
-  const { data, error } = await supabase
-    .rpc('get_species_in_radius', { 
-      lon: longitude, 
-      lat: latitude, 
-      radius_m: radiusMeters 
-    });
-  
+  const response = await fetch(
+    `/api/species/in-radius?lon=${longitude}&lat=${latitude}&radius=${radiusMeters}`
+  );
+
+  if (!response.ok) {
+    return { species: [], count: 0 };
+  }
+
+  const data = await response.json();
   return {
-    species: data || [],
-    count: data?.length || 0
+    species: data.species || [],
+    count: data.count || 0
   };
 }
 ```
@@ -676,8 +678,9 @@ FROM icaa;
 ## Environment Variables
 
 Database connection configured via:
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Anonymous/public key
+- `DATABASE_URL` - Postgres connection string (server-only)
+- `NEXT_PUBLIC_TITILER_BASE_URL` - TiTiler endpoint (optional)
+- `NEXT_PUBLIC_COG_URL` - Habitat COG URL (optional)
 
 ## Common Issues and Solutions
 
@@ -710,60 +713,6 @@ Database connection configured via:
 2. Track spatial query efficiency
 3. Optimize based on usage patterns
 
-## Would Drizzle ORM Benefit This Project?
+## ORM Choice
 
-### Current State Analysis
-- **Direct SQL**: Currently using Supabase client with minimal raw SQL
-- **Type Safety**: Manual TypeScript interfaces
-- **Migrations**: No formal migration system
-- **Schema**: Defined only in TypeScript interfaces
-
-### Benefits Drizzle Would Provide
-
-1. **Schema as Code**
-   - Define database schema in TypeScript
-   - Single source of truth for types and database
-   - Auto-generated types from schema
-
-2. **Migration Management**
-   ```typescript
-   // Define schema changes in code
-   export const icaa = pgTable('icaa', {
-     ogc_fid: serial('ogc_fid').primaryKey(),
-     comm_name: text('comm_name'),
-     // ... all fields with proper types
-   });
-   ```
-
-3. **Type-Safe Queries**
-   ```typescript
-   // Current approach (manual types)
-   const { data } = await supabase.from('icaa').select('*');
-   
-   // With Drizzle (automatic type inference)
-   const species = await db.select().from(icaa).where(eq(icaa.ogc_fid, 1));
-   ```
-
-4. **Migration Tracking**
-   - Version control for database changes
-   - Rollback capabilities
-   - Team collaboration on schema changes
-
-### Recommendation
-
-**Yes, Drizzle ORM would benefit this project** for the following reasons:
-
-1. **Growing Complexity**: With 70+ fields and plans to add more, manual type management becomes error-prone
-2. **Schema Evolution**: You plan to modify clue fields and add species
-3. **Type Safety**: Eliminate manual sync between database and TypeScript
-4. **Migration History**: Track all database changes over time
-5. **PostGIS Support**: Drizzle supports custom types for geometry
-
-### Implementation Considerations
-
-1. **Gradual Migration**: Can coexist with current Supabase client
-2. **Learning Curve**: Minimal for TypeScript developers
-3. **Initial Setup**: One-time effort to define schema
-4. **Compatibility**: Works well with Supabase PostgreSQL
-
-The investment in setting up Drizzle would pay dividends as you continue to evolve the database schema and add more complex queries.
+Prisma is the current ORM and schema source of truth. Use Prisma for CRUD and `$queryRaw` for PostGIS spatial queries. Revisit alternatives only if Prisma becomes a blocker for migrations or spatial workloads.

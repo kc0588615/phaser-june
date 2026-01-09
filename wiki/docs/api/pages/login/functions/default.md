@@ -2,7 +2,7 @@
 
 > **default**(): `Element`
 
-Defined in: [src/pages/login.tsx:8](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/pages/login.tsx#L8)
+Defined in: [src/pages/login.tsx:4](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/pages/login.tsx#L4)
 
 ## Returns
 

@@ -1,6 +1,6 @@
 # Class: MainMenu
 
-Defined in: [src/game/scenes/MainMenu.ts:4](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/scenes/MainMenu.ts#L4)
+Defined in: [src/game/scenes/MainMenu.ts:4](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/game/scenes/MainMenu.ts#L4)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [src/game/scenes/MainMenu.ts:4](https://github.com/kc0588615/phaser-
 
 > **new MainMenu**(): `MainMenu`
 
-Defined in: [src/game/scenes/MainMenu.ts:5](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/scenes/MainMenu.ts#L5)
+Defined in: [src/game/scenes/MainMenu.ts:5](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/game/scenes/MainMenu.ts#L5)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [src/game/scenes/MainMenu.ts:5](https://github.com/kc0588615/phaser-
 
 > **create**(): `void`
 
-Defined in: [src/game/scenes/MainMenu.ts:9](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/scenes/MainMenu.ts#L9)
+Defined in: [src/game/scenes/MainMenu.ts:9](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/game/scenes/MainMenu.ts#L9)
 
 #### Returns
 

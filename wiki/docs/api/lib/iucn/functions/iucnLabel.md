@@ -2,7 +2,7 @@
 
 > **iucnLabel**(`status`): `string`
 
-Defined in: [src/lib/iucn.ts:3](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/iucn.ts#L3)
+Defined in: [src/lib/iucn.ts:3](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/lib/iucn.ts#L3)
 
 ## Parameters
 

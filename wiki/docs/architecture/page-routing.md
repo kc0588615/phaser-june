@@ -1,13 +1,13 @@
 ---
 sidebar_position: 4
 title: Page Routing Infrastructure
-description: Next.js routing with static export configuration
+description: Next.js routing with server runtime configuration
 tags: [architecture, nextjs, routing]
 ---
 
 # Page Routing Infrastructure
 
-This document describes the page routing infrastructure using Next.js with static export configuration.
+This document describes the page routing infrastructure using Next.js server runtime (API routes + Prisma).
 
 ## Page Types
 
@@ -55,21 +55,22 @@ Provides:
 | `src/pages/_document.tsx` | HTML document structure with dark theme |
 | `src/styles/globals.css` | Global styles and Tailwind configuration |
 
-## Static Export Configuration
+## Server Runtime Configuration
 
 ### next.config.mjs
 
 ```javascript
 {
-  output: 'export',
-  distDir: 'dist',
-  trailingSlash: true,  // Critical for static hosting
-  images: { unoptimized: true }
+  trailingSlash: true,
+  images: { unoptimized: true },
+  webpack: (config, { webpack, isServer }) => {
+    // Cesium + client fallbacks
+  }
 }
 ```
 
 :::important trailingSlash
-Setting `trailingSlash: true` ensures pages export as `/pagename/index.html`, allowing static servers to properly route `/highscores` to `/highscores/index.html`.
+Setting `trailingSlash: true` keeps URL behavior consistent across pages.
 :::
 
 ## Adding New Pages
@@ -115,21 +116,16 @@ import { Button } from '@/components/ui/button';
 ## Build Output
 
 ```
-dist/
-├── index.html           # Home page
-├── highscores/
-│   └── index.html      # High scores page
-├── newpage/
-│   └── index.html      # Your new page
-└── _next/              # Static assets
+.next/
+├── server/              # Server runtime output
+└── static/              # Static assets
 ```
 
-## Static Export Limitations
+## Server Runtime Notes
 
-- No server-side rendering
-- No API routes (use external APIs like Supabase)
-- No dynamic routes without pre-generation
-- Headers/redirects require hosting configuration
+- API routes are available under `src/app/api/*`
+- Server-side rendering is supported if needed
+- Headers/redirects are handled in `next.config.mjs` or Vercel settings
 
 ## Common Issues
 

@@ -126,7 +126,7 @@ These files are essential to understand before making any game changes.
 - [ ] Session lifecycle (start → events → end)
 - [ ] Event types recorded
 - [ ] Local storage integration
-- [ ] Supabase write patterns
+- [ ] Prisma write patterns
 - [ ] Anonymous vs authenticated tracking
 
 **Expand:** `tracking-implementation.md`
@@ -259,12 +259,12 @@ These files are essential to understand before making any game changes.
 **Location:** `docs/guides/data/`
 
 **Needs:**
-- [ ] Supabase Auth integration
+- [ ] Clerk auth integration
 - [ ] Sign in/out flows
 - [ ] Profile creation
 - [ ] Protected routes (if any)
 
-**Expand:** `user-accounts-migration.md`
+**Expand:** New Clerk auth guide (Supabase-era doc archived at `archive/supabase/user-accounts-migration.md`)
 
 ---
 

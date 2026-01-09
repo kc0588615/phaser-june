@@ -1,5 +1,7 @@
 # User Accounts Implementation Plan
 
+> Archived (Supabase-era): kept for historical reference. The current auth direction is Clerk + Prisma (see `docs/README.md`).
+
 ## Overview
 This document outlines the implementation plan for migrating from localStorage-based species discovery tracking to a persistent user account system with database storage.
 

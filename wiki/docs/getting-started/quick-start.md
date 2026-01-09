@@ -102,7 +102,7 @@ When `npm run dev` succeeds, you should see:
 
 - **Phaser not loading:** Check browser console for asset 404s
 - **Cesium blank:** Verify `NEXT_PUBLIC_CESIUM_ION_TOKEN` is set
-- **No species data:** Check Supabase RPC functions exist
+- **No species data:** Check `/api/species/catalog` and `DATABASE_URL` connectivity
 
 ## Next Steps
 

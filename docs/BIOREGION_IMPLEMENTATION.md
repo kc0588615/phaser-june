@@ -8,14 +8,12 @@ Each species habitat polygon is spatially analyzed against the `oneearth_bioregi
 
 ## Setup Instructions
 
-To enable the bioregion feature, you need to create the following PostgreSQL functions in your Supabase database:
+Bioregion fields are stored directly on `icaa` and served via `/api/species/bioregions`. Use the SQL below to (re)compute those fields when refreshing the dataset.
 
-1. Go to your Supabase dashboard
-2. Navigate to SQL Editor
-3. Copy and paste the SQL functions below into the editor
-4. Click "Run" to create the functions
+1. Open your Postgres admin tool (psql, pgAdmin, etc.)
+2. Run the SQL functions below
 
-**IMPORTANT**: Without these functions, the ecoregion section will not appear in the species cards.
+**IMPORTANT**: Without populated bioregion columns, the ecoregion section will not appear in the species cards.
 
 ## Database Schema
 

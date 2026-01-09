@@ -2,7 +2,7 @@
 
 > **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `bioregions`: `object`[]; \}\>\>
 
-Defined in: [src/app/api/species/bioregions/route.ts:10](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/app/api/species/bioregions/route.ts#L10)
+Defined in: [src/app/api/species/bioregions/route.ts:10](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/app/api/species/bioregions/route.ts#L10)
 
 GET /api/species/bioregions?ids=1,2,3
 POST /api/species/bioregions \{ species_ids: [1, 2, 3] \}

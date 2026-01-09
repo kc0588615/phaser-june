@@ -2,12 +2,12 @@
 sidebar_position: 3
 title: Environment Setup
 description: Detailed configuration for all external services
-tags: [setup, supabase, cesium, titiler]
+tags: [setup, database, cesium, titiler]
 ---
 
 # Environment Setup
 
-This guide covers detailed configuration for Supabase, Cesium, and optional TiTiler integration.
+This guide covers detailed configuration for Postgres (Prisma), Cesium, and optional TiTiler integration.
 
 ## Environment Variables
 
@@ -55,26 +55,17 @@ npm run prisma:migrate
 
 The application expects these tables (see [Database Guide](/docs/guides/data/database-guide) for full schema):
 
-- `icaa_species` - Species information
+- `icaa` - Species information
 - `profiles` - Player profiles
-- `game_sessions` - Session tracking
-- `clue_discoveries` - Unlocked clues
-- `species_discoveries` - Identified species
+- `player_game_sessions` - Session tracking
+- `player_species_discoveries` - Identified species
+- `player_clue_unlocks` - Unlocked clues
+- `player_stats` - Aggregated stats
+- `habitat_colormap` - Habitat codes → labels (TiTiler)
+- `oneearth_bioregion` - Bioregion reference data (optional)
+- `high_scores` - Legacy leaderboard
 
-### 3. Required RPC Functions
-
-These PostgreSQL functions must exist:
-
-```sql
--- Get species at a location
-get_species_at_location(lon float, lat float, radius int)
-
--- Get random species for a game
-get_random_species(species_ids int[])
-
--- Record a clue discovery
-record_clue_discovery(session_id uuid, species_id int, clue_type text)
-```
+API routes under `/api/*` handle queries; no database RPCs are required.
 
 ## Cesium Ion Setup
 
@@ -114,16 +105,16 @@ Use a managed TiTiler instance or deploy to AWS Lambda.
 Run the app and check browser console for:
 
 ```
-✓ Supabase client initialized
+✓ Prisma client initialized
 ✓ Cesium viewer ready
 ✓ TiTiler endpoint accessible (if configured)
 ```
 
 ## Common Issues
 
-### "Supabase not configured"
+### "Database not configured"
 - Ensure `.env.local` exists (not `.env.example`)
-- Restart dev server after changing env vars
+- Set `DATABASE_URL` and restart the dev server
 
 ### "Cesium token invalid"
 - Check token hasn't expired

@@ -34,15 +34,15 @@ phaser-june/
 │   │   └── SpeciesList.tsx   # Species catalog
 │   │
 │   ├── lib/                # Services & utilities
-│   │   ├── supabaseClient.ts   # Database client
-│   │   ├── speciesService.ts   # Species RPC calls
+│   │   ├── prisma.ts           # Prisma client
+│   │   ├── speciesService.ts   # API-backed species queries
 │   │   └── playerTracking.ts   # Session telemetry
 │   │
 │   ├── hooks/              # React hooks
 │   │   └── useSpeciesData.ts   # React Query wrapper
 │   │
 │   ├── types/              # TypeScript definitions
-│   │   └── database.ts     # Supabase generated types
+│   │   └── database.ts     # Shared database types
 │   │
 │   ├── styles/             # Global styles
 │   │   └── globals.css     # Tailwind imports
@@ -92,8 +92,8 @@ phaser-june/
 
 | File | Purpose |
 |------|---------|
-| `src/lib/supabaseClient.ts` | Supabase client singleton |
-| `src/lib/speciesService.ts` | RPC wrappers for species queries |
+| `src/lib/prisma.ts` | Prisma client singleton |
+| `src/lib/speciesService.ts` | API wrappers for species queries |
 | `src/hooks/useSpeciesData.ts` | React Query caching layer |
 
 ## Import Aliases

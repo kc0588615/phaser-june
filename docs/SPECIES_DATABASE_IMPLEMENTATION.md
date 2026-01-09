@@ -220,9 +220,9 @@ The implementation uses the existing `icaa` table with 40+ fields covering:
 ### NPM Packages
 - `lucide-react` - Icon library for section headers
 
-### Supabase Integration
-- Uses existing `@/lib/supabaseClient` configuration
-- Real-time subscriptions commented out but available
+### Prisma Integration
+- Uses `@/lib/prisma` for server-side queries
+- API routes under `src/app/api/species/*` for client access
 - Error handling for database connection issues
 
 ## Removed Components

@@ -116,11 +116,11 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 ## 7. Vercel Configuration
 
-- [ ] Add environment variables in Vercel dashboard:
+- [x] Add environment variables in Vercel dashboard:
     ```
     DATABASE_URL=postgresql://postgres:PASSWORD@db.critterconnect.org:6432/phaser_june?sslmode=require&pgbouncer=true
     ```
-- [ ] Deploy and test
+- [x] Deploy and test
 
 ---
 
@@ -131,8 +131,8 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 - [ ] Login/logout works (Clerk) - skipped
 - [x] Map loads species (verified via Playwright - 22 species loaded)
 - [x] API endpoints working (catalog, in-radius, at-point, etc.)
-- [ ] Clicking map shows species details - manual test needed
-- [ ] Player stats load and persist - manual test needed
+- [x] Clicking map shows species details
+- [ ] Player stats load and persist - **blocked: requires Clerk auth**
 - [ ] Highscores display correctly - manual test needed
 
 ---

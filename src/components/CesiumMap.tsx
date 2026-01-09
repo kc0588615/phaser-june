@@ -272,7 +272,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
 
       console.log("Resium: Calling speciesService for location:", longitude, latitude);
 
-      // Use Supabase species service for location data
+      // Fetch species data for this location
       Promise.all([
         speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
         speciesService.getRasterHabitatDistribution(longitude, latitude)

@@ -2,4 +2,4 @@
 
 > `const` **SheetDescription**: `ForwardRefExoticComponent`\<`Omit`\<`DialogDescriptionProps` & `RefAttributes`\<`HTMLParagraphElement`\>, `"ref"`\> & `RefAttributes`\<`HTMLParagraphElement`\>\>
 
-Defined in: [src/components/ui/sheet.tsx:117](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/components/ui/sheet.tsx#L117)
+Defined in: [src/components/ui/sheet.tsx:117](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/components/ui/sheet.tsx#L117)

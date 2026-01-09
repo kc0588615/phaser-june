@@ -30,7 +30,7 @@ datasource db {
 // =============================================================================
 // SPECIES TABLE (icaa)
 // Core species data with taxonomy, habitat, morphology, and conservation info.
-// NOTE: wkb_geometry (PostGIS) is excluded - use Supabase RPCs for spatial queries.
+// NOTE: wkb_geometry (PostGIS) is excluded - use Prisma $queryRaw or API routes for spatial queries.
 // =============================================================================
 
 model ICAA {
@@ -130,7 +130,7 @@ model ICAA {
   key_fact3 String? @map("key_fact3") // Interesting fact 3
 
   // ---------------------------------------------------------------------------
-  // METADATA & GEOMETRY (geometry excluded - use PostGIS RPCs)
+  // METADATA & GEOMETRY (geometry excluded - use PostGIS via $queryRaw or API routes)
   // ---------------------------------------------------------------------------
   compiler   String?  @map("compiler")   // Data compiler
   yrcompiled Decimal? @map("yrcompiled") // Year compiled
@@ -145,7 +145,7 @@ model ICAA {
   shape_area Decimal? @map("shape_area") // Shape area
 
   // NOTE: wkb_geometry excluded - PostGIS geometry type not supported by Prisma
-  // Use Supabase RPCs (get_species_in_radius, get_species_at_point) for spatial queries
+  // Use PostGIS via Prisma $queryRaw or API routes (/api/species/*) for spatial queries
 
   // ---------------------------------------------------------------------------
   // RELATIONS - Links to player tracking tables
@@ -158,11 +158,11 @@ model ICAA {
 
 // =============================================================================
 // USER PROFILES
-// Linked to Supabase auth.users via trigger (handle_new_user)
+// Linked to auth provider user IDs (Clerk planned)
 // =============================================================================
 
 model Profile {
-  user_id    String    @id @map("user_id") @db.Uuid // UUID from auth.users
+  user_id    String    @id @map("user_id") @db.Uuid // UUID from auth provider
   username   String?   @unique                      // Display name
   full_name  String?   @map("full_name")            // Full name
   avatar_url String?   @map("avatar_url")           // Profile picture URL
@@ -324,7 +324,7 @@ model HabitatColormap {
 // =============================================================================
 // ONEEARTH BIOREGION (Read-only reference data)
 // Bioregion polygons for spatial intersection queries
-// NOTE: wkb_geometry excluded - use Supabase RPCs for spatial operations
+// NOTE: wkb_geometry excluded - use raw SQL/PostGIS when needed
 // =============================================================================
 
 model OneEarthBioregion {
@@ -340,7 +340,7 @@ model OneEarthBioregion {
   shape_le_1 Decimal? @map("shape_le_1")
   shape_area Float?   @map("shape_area")
 
-  // NOTE: wkb_geometry excluded - use get_species_bioregions RPC for spatial joins
+  // NOTE: wkb_geometry excluded - use raw SQL/PostGIS for spatial joins if needed
 
   @@map("oneearth_bioregion")
 }

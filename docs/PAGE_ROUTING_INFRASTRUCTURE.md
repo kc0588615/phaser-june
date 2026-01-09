@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the page routing infrastructure for the Phaser June game, which uses Next.js with static export configuration. The application supports both complex game pages and simple content pages.
+This document describes the page routing infrastructure for the Phaser June game, which uses Next.js server runtime (API routes + Prisma). The application supports both complex game pages and simple content pages.
 
 ## Architecture
 
@@ -39,22 +39,24 @@ interface SimpleLayoutProps {
 - `src/pages/_document.tsx` - HTML document structure with dark theme
 - `src/styles/globals.css` - Global styles and Tailwind configuration
 
-## Static Export Configuration
+## Server Runtime Configuration
 
 ### Next.js Config (`next.config.mjs`)
 ```javascript
 {
-  output: 'export',
-  distDir: 'dist',
-  trailingSlash: true,  // Critical for static hosting
-  images: { unoptimized: true }
+  trailingSlash: true,
+  images: { unoptimized: true },
+  webpack: (config, { webpack, isServer }) => {
+    // Cesium + client fallbacks
+  }
 }
 ```
 
 ### Important Notes
-- `trailingSlash: true` ensures pages are exported as `/pagename/index.html`
-- This allows static servers to properly route `/highscores` to `/highscores/index.html`
-- Headers defined in config won't work with static export
+- Server runtime is required for API routes and Prisma.
+- `trailingSlash: true` is kept for URL consistency across pages.
+- Builds use `next build --webpack` to keep Cesium’s webpack config.
+- Headers in `next.config.mjs` apply normally.
 
 ## Adding New Pages
 
@@ -97,19 +99,15 @@ import { Button } from '@/components/ui/button';
 ### Local Development
 ```bash
 npm run dev     # Development server (may have routing limitations)
-npm run build   # Build static site
-npm run serve   # Serve static build locally
+npm run build   # Build .next/ for server runtime
+npm run serve   # Run Next.js server locally
 ```
 
 ### Production Build Output
 ```
-dist/
-├── index.html           # Home page
-├── highscores/
-│   └── index.html      # High scores page
-├── newpage/
-│   └── index.html      # Your new page
-└── _next/              # Static assets
+.next/
+├── server/              # Server runtime output
+└── static/              # Static assets
 ```
 
 ## Common Issues and Solutions
@@ -129,11 +127,10 @@ dist/
 2. Apply Tailwind classes instead of inline styles
 3. Reference theme variables from `globals.css`
 
-### Static Export Limitations
-- No server-side rendering
-- No API routes (use external APIs)
-- No dynamic routes without pre-generation
-- Headers/redirects require hosting configuration
+### Server Runtime Notes
+- API routes are available under `src/app/api/*`
+- Server-side rendering is supported if needed
+- Headers/redirects are handled in `next.config.mjs` or Vercel settings
 
 ## Best Practices
 
@@ -147,7 +144,7 @@ dist/
 
 The high scores page demonstrates proper implementation:
 - Uses `SimpleLayout` for consistent structure
-- Implements real-time updates with Supabase
+- Fetches scores via `/api/highscores` (Prisma)
 - Handles loading and error states
 - Uses Tailwind for all styling
 - Provides navigation back to game

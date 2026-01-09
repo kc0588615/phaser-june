@@ -5,7 +5,7 @@
 
 ## Summary
 
-Migrated habitat distribution queries from Supabase `habitat_raster` table to TiTiler COG statistics endpoint. This removes database raster storage, improves scalability, and simplifies raster data updates.
+Migrated habitat distribution queries from legacy `habitat_raster` storage to TiTiler COG statistics endpoint. This removes database raster storage, improves scalability, and simplifies raster data updates.
 
 ## Changes Made
 
@@ -14,9 +14,9 @@ Migrated habitat distribution queries from Supabase `habitat_raster` table to Ti
 1. **src/lib/speciesService.ts**
    - Added `STATIC_HABITAT_CODE_TO_LABEL` mapping (~80 habitat types)
    - Added `createBboxGeoJSON()` helper for 10km bounding box
-   - Added `getHabitatColormap()` for Supabase fallback lookup
+   - Added `getHabitatColormap()` for database fallback lookup
    - Replaced `getRasterHabitatDistribution()` implementation:
-     - **Old:** Supabase RPC `get_habitat_distribution_10km`
+     - **Old:** legacy RPC `get_habitat_distribution_10km`
      - **New:** TiTiler POST `/cog/statistics?categorical=true`
    - Output interface unchanged: `RasterHabitatResult[]`
 
@@ -50,11 +50,11 @@ DROP TABLE IF EXISTS habitat_raster;
 
 ## Architecture
 
-### Before (Supabase)
+### Before (Legacy Raster RPC)
 ```
 User Click → CesiumMap (circle visual)
            ↓
-Supabase RPC: get_habitat_distribution_10km(lon, lat)
+Legacy RPC: get_habitat_distribution_10km(lon, lat)
            ↓
 Query habitat_raster table (PostGIS raster)
            ↓
@@ -125,7 +125,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 - [x] Click map locations in various biomes
 - [x] Verify habitat types return with correct colors
 - [x] Check histogram parsing (counts/values order)
-- [x] Compare results with Supabase RPC output
+- [x] Compare results with legacy RPC output
 - [x] Visual bbox matches TiTiler query area
 - [ ] Test edge cases: ocean, polar, land/water boundaries
 - [ ] Production traffic validation
@@ -143,7 +143,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 
 ```bash
 git revert <commit-hash>
-# Re-enable Supabase RPC if dropped
+# Re-enable legacy RPC if dropped
 ```
 
 ## Technical Notes

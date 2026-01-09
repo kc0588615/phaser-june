@@ -1,15 +1,14 @@
 # Player Tracking Implementation Summary
 
-## ✅ Implementation Complete
+## ✅ Implementation Complete (Awaiting Auth)
 
-All player tracking integration has been successfully implemented based on Codex review feedback.
+Core tracking logic is implemented, but writes are gated until auth provides a user ID.
 
 ## Changes Made
 
 ### 1. Game.ts - Player Tracking State (Lines 105-111)
 **Added tracking state properties:**
-- `supabaseClient` - Cached Supabase client (prevents repeated creation)
-- `currentUserId` - Cached user ID (prevents repeated auth calls)
+- `currentUserId` - Authenticated user ID (null until auth is wired)
 - `currentSessionId` - Active game session ID
 - `clueCountThisSpecies` - Tracks clues unlocked for current species
 - `incorrectGuessesThisSpecies` - Tracks wrong guesses per species
@@ -18,9 +17,8 @@ All player tracking integration has been successfully implemented based on Codex
 ### 2. Game.ts - initializePlayerTracking() (Lines 366-400)
 **Session initialization on scene create:**
 - Dynamically imports tracking modules (SSR-safe)
-- Caches Supabase client for reuse
-- Gets and caches current user ID
-- Starts or resumes game session
+- Auth currently disabled; `currentUserId` remains null until Clerk is wired
+- Starts or resumes game session once a user ID is available
 - Registers EventBus listeners for tracking events
 - Adds beforeunload handler for session flush on page close
 
@@ -81,7 +79,7 @@ All player tracking integration has been successfully implemented based on Codex
 
 **State cleanup** (Lines 1792-1798):
 - Clears all tracking state
-- Nulls Supabase client
+- Clears user/session IDs
 - Resets counters to 0
 
 **endSessionSync() helper** (Lines 1806-1819):
@@ -104,12 +102,11 @@ All player tracking integration has been successfully implemented based on Codex
 - Checks if migration needed
 - Returns true if local data exists + not migrated
 
-### 9. src/pages/auth/callback.tsx (Lines 38-52)
-**Migration trigger after OAuth:**
-- Gets authenticated user
-- Checks if migration needed
-- Runs migration before redirect
-- Logs migration status
+### 9. src/pages/auth/callback.tsx
+**Auth callback (currently disabled):**
+- Shows auth-disabled notice
+- Placeholder for future Clerk integration
+- Migration should run after successful auth (see `DiscoveryMigrationService`)
 
 ## Key Fixes from Codex Review
 
@@ -119,9 +116,9 @@ All player tracking integration has been successfully implemented based on Codex
 - Removing beforeunload listener in shutdown
 
 ### ✅ Performance Optimized
-- Caching Supabase client once per scene
-- Caching user ID once per scene
-- No repeated `supabaseBrowser()` or `getUser()` calls
+- Auth-gated tracking avoids writes for guests
+- Debounced session updates reduce database load
+- Offline queue retries failed writes
 
 ### ✅ Session Lifecycle Complete
 - `startGameSession()` in create()
@@ -137,7 +134,7 @@ All player tracking integration has been successfully implemented based on Codex
 
 ### ✅ Migration Service Fixed
 - SSR guards (`typeof window`)
-- Creates Supabase client properly
+- Uses `/api/discoveries/migrate` for backend writes
 - Migration flag prevents duplicates
 - Error handling with retry capability
 
@@ -165,10 +162,7 @@ Before marking complete, test:
 
 ## Database Requirements
 
-Ensure these tables exist (run SQL in order):
-
-1. `supabase_create_profiles_table.sql`
-2. `supabase_create_player_stats_system.sql`
+Ensure these tables exist (via Prisma migrations / `prisma/schema.prisma`):
 
 Required tables:
 - `profiles` - User profiles
@@ -205,8 +199,8 @@ Required tables:
 
 - `PLAYER_TRACKING_INTEGRATION_PLAN.md` - Detailed implementation plan
 - `src/lib/playerTracking.ts` - Tracking service API
+- `prisma/schema.prisma` - Database schema
 - `src/types/database.ts` - TypeScript interfaces
-- `supabase_create_player_stats_system.sql` - Database schema
 
 ---
 

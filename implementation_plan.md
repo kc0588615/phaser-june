@@ -11,7 +11,7 @@
 | Phase 4: Clerk Auth | ⏸️ Skipped | Auth still uses Supabase |
 | Phase 5: Cleanup | ✅ Complete | Build/typecheck passing |
 
-**Known Issue**: `/api/species/in-radius` returning 500 error - needs debugging.
+**Known Issue**: Player stats not loading - needs debugging.
 
 ---
 

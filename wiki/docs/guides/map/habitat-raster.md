@@ -7,7 +7,7 @@ tags: [guide, titiler, raster]
 
 # Habitat Raster Migration
 
-Migrate from Supabase raster to TiTiler COG processing.
+Migrate from legacy raster storage to TiTiler COG processing.
 
 ## TiTiler Point Query
 

@@ -67,14 +67,15 @@ private handleSpeciesGuess(data: GuessPayload) {
 
 ## Player Tracking Integration
 
-Discoveries are recorded to Supabase for stats:
+Discoveries are recorded via Prisma for stats:
 
 ```typescript
 async function recordDiscovery(speciesId: number) {
-  await supabase.rpc('record_species_discovery', {
-    p_session_id: currentSessionId,
-    p_species_id: speciesId,
-    p_guess_count: guessAttempts
+  await trackSpeciesDiscovery(playerId, speciesId, {
+    sessionId: currentSessionId,
+    cluesUnlockedBeforeGuess: clueCount,
+    incorrectGuessesCount: guessAttempts,
+    scoreEarned: scoreEarned
   });
 }
 ```

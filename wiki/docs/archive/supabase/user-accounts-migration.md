@@ -1,11 +1,14 @@
 ---
-sidebar_position: 5
 title: User Accounts Migration
 description: Auth migration steps
-tags: [guide, auth, migration]
+tags: [guide, auth, migration, archived]
 ---
 
 # User Accounts Migration Plan
+
+:::caution Archived
+This page documents the Supabase-era auth plan and is kept for historical reference only.
+:::
 
 Steps for migrating authentication.
 

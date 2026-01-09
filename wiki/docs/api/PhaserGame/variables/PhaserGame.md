@@ -2,4 +2,4 @@
 
 > `const` **PhaserGame**: `ForwardRefExoticComponent`\<`IProps` & `RefAttributes`\<[`IRefPhaserGame`](../interfaces/IRefPhaserGame.md)\>\>
 
-Defined in: [src/PhaserGame.tsx:16](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/PhaserGame.tsx#L16)
+Defined in: [src/PhaserGame.tsx:16](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/PhaserGame.tsx#L16)

@@ -160,14 +160,10 @@ src/components/PlayerStatsDashboard/
 
 ```typescript
 import { PlayerStatsDashboard } from '@/components/PlayerStatsDashboard'
-import type { PlayerStats } from '@/components/PlayerStatsDashboard'
+import { fetchPlayerStatsByPlayerId } from '@/lib/playerStatsService'
 
-// Fetch stats from Supabase
-const { data: stats } = await supabase
-  .from('player_stats')
-  .select('*')
-  .eq('playerId', userId)
-  .single()
+// Fetch stats via Prisma service (auth planned)
+const stats = await fetchPlayerStatsByPlayerId(userId)
 
 // Render dashboard
 <PlayerStatsDashboard

@@ -48,7 +48,7 @@ npm run start    # http://localhost:3000
 
 ## 1) Start Here
 - Project overview & setup: [docs/README.md](./README.md) (install, env vars, scripts).
-- Run the app: `npm install`, `cp .env.example .env.local`, set Supabase + Cesium env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
+- Run the app: `npm install`, `cp .env.example .env.local`, set database + Cesium env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
 
 ## 2) How the Codebase is Shaped
 - Layout host: `src/MainAppLayout.tsx` keeps Cesium map + Phaser canvas mounted; toggles view modes.
@@ -56,14 +56,14 @@ npm run start    # http://localhost:3000
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `MoveAction.ts` and `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
-- Data/auth: Supabase clients in `src/lib/*`, auth actions in `auth-actions.ts`, species RPCs in `speciesService.ts`, player tracking in `playerTracking.ts`.
+- Data/auth: Prisma client in `src/lib/prisma.ts`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`.
 
 ## 3) Recommended Reading Path
 1) **Core architecture:** [EVENTBUS_AND_DISPLAY_ARCHITECTURE.md](./EVENTBUS_AND_DISPLAY_ARCHITECTURE.md), [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md), [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [LAYOUT_RESTRUCTURE_IMPLEMENTATION.md](./LAYOUT_RESTRUCTURE_IMPLEMENTATION.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md), [species-list-improvements.md](./species-list-improvements.md).
-5) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md), [USER_ACCOUNTS_MIGRATION_PLAN.md](./USER_ACCOUNTS_MIGRATION_PLAN.md).
+5) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
 6) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
 7) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
 
@@ -96,14 +96,13 @@ npm run start    # http://localhost:3000
 - [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md) — also relevant for responsive UI.
 
 **Data, Auth, and Platform**
-- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Supabase tables, RPCs, TiTiler integration.
+- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Prisma queries, TiTiler integration.
 - [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md) — schema and species data sourcing.
-- [USER_ACCOUNTS_MIGRATION_PLAN.md](./USER_ACCOUNTS_MIGRATION_PLAN.md) — auth migration steps.
-- [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from Supabase raster.
+- [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from legacy raster storage.
 - [PRISMA_VERCEL_MIGRATION.md](./PRISMA_VERCEL_MIGRATION.md) — Prisma ORM + Vercel server runtime setup.
 
 **Player Tracking & Stats**
-- [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Supabase writes.
+- [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Prisma writes.
 - [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md) — rollout steps for tracking.
 - [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md) — stats UI integration.
 - [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md) — review of stats dashboard work.
@@ -118,6 +117,7 @@ npm run start    # http://localhost:3000
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — shared with map.
 
 **Archive / Historical (for reference only)**
+- [archive/supabase/USER_ACCOUNTS_MIGRATION_PLAN.md](./archive/supabase/USER_ACCOUNTS_MIGRATION_PLAN.md)
 - [archive/BOARD_POSITION_FIX.md](./archive/BOARD_POSITION_FIX.md)
 - [archive/MISSING_PROFILES_FIX.md](./archive/MISSING_PROFILES_FIX.md)
 - [archive/RESPONSIVE_BOARD_SCALING_FIX.md](./archive/RESPONSIVE_BOARD_SCALING_FIX.md)

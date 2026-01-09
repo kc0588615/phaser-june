@@ -29,31 +29,38 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 ```typescript
 // src/lib/speciesQueries.ts
 const species = await prisma.$queryRaw`
-  SELECT * FROM "icaa_species"
-  WHERE ST_DWithin(
-    geom,
-    ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326),
-    ${radius}
-  )
+  SELECT *
+  FROM icaa
+  WHERE wkb_geometry IS NOT NULL
+    AND ST_DWithin(
+      wkb_geometry::geography,
+      ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+      ${radius}
+    )
 `;
 ```
 
 ### By ID
 
 ```typescript
-const species = await prisma.icaa_species.findUnique({
-  where: { id: speciesId }
+const species = await prisma.iCAA.findUnique({
+  where: { ogc_fid: speciesId }
 });
 ```
 
 ### Search by Name
 
 ```typescript
-const { data } = await supabase
-  .from('icaa_species')
-  .select('id, common_name, sci_name')
-  .ilike('common_name', `%${searchTerm}%`)
-  .limit(10);
+const results = await prisma.iCAA.findMany({
+  where: {
+    OR: [
+      { comm_name: { contains: searchTerm, mode: 'insensitive' } },
+      { sci_name: { contains: searchTerm, mode: 'insensitive' } }
+    ]
+  },
+  select: { ogc_fid: true, comm_name: true, sci_name: true },
+  take: 10
+});
 ```
 
 ## Recording Game Data
@@ -61,25 +68,21 @@ const { data } = await supabase
 ### Start Session
 
 ```typescript
-const { data: session } = await supabase
-  .from('game_sessions')
-  .insert({
-    player_id: userId,
-    location_lon: lon,
-    location_lat: lat,
-    total_species: speciesCount
-  })
-  .select()
-  .single();
+import { startGameSession } from '@/lib/playerTracking';
+
+const sessionId = await startGameSession(userId);
 ```
 
 ### Record Discovery
 
 ```typescript
-await supabase.rpc('record_species_discovery', {
-  p_session_id: sessionId,
-  p_species_id: speciesId,
-  p_guess_count: attempts
+import { trackSpeciesDiscovery } from '@/lib/playerTracking';
+
+await trackSpeciesDiscovery(userId, speciesId, {
+  sessionId,
+  cluesUnlockedBeforeGuess: clueCount,
+  incorrectGuessesCount: attempts,
+  scoreEarned: score
 });
 ```
 

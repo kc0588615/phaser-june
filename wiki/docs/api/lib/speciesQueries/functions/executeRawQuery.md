@@ -2,7 +2,7 @@
 
 > **executeRawQuery**\<`T`\>(`query`, ...`values`): `Promise`\<`T`[]\>
 
-Defined in: [src/lib/speciesQueries.ts:271](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/speciesQueries.ts#L271)
+Defined in: [src/lib/speciesQueries.ts:271](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/lib/speciesQueries.ts#L271)
 
 Executes a raw SQL query using Prisma's $queryRaw.
 

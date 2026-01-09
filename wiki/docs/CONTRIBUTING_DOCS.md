@@ -136,7 +136,7 @@ npm run dev
 ```
 
 ```sql
-SELECT * FROM icaa_species;
+SELECT * FROM icaa;
 ```
 ````
 

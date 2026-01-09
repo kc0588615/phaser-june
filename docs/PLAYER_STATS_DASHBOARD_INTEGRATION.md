@@ -189,12 +189,8 @@ For display names:
 - `username` (text, nullable)
 - `email` (text, nullable)
 
-**Setup SQL**:
-```sql
--- Run these in order:
--- 1. supabase_create_profiles_table.sql
--- 2. supabase_create_player_stats_system.sql
-```
+**Schema Setup**:
+- Apply Prisma migrations (or `prisma db push`) to create `profiles`, `player_stats`, and related tables.
 
 ---
 
@@ -314,7 +310,7 @@ interface PlayerStats {
 ### Manual Testing Checklist
 
 #### Pre-Testing Setup
-- [ ] Ensure `player_stats` table exists in Supabase
+- [ ] Ensure `player_stats` table exists in Postgres (Prisma migrations applied)
 - [ ] Ensure `profiles` table exists
 - [ ] Run `npm install` for new dependencies
 - [ ] Run `npm run dev` to start dev server
@@ -401,13 +397,13 @@ interface PlayerStats {
 - Stats will populate after first discovery
 
 ### "Sign In Required" when authenticated
-- Check Supabase auth is working
-- Verify `supabase.auth.getUser()` returns user
+- Check auth provider is configured (Clerk planned)
+- Verify the app can resolve a user ID for the session
 - Check browser console for errors
 
 ### "Failed to load player statistics"
 - Check `player_stats` table exists
-- Verify RLS policies allow read access
+- Verify server role can read `player_stats`
 - Check network tab for 403/404 errors
 - Verify user ID matches `player_id` column
 
@@ -428,13 +424,13 @@ Before deploying to production:
 
 - [ ] Run `npm run build` - no errors
 - [ ] Run `npm run typecheck` - no PlayerStatsDashboard errors
-- [ ] Verify `player_stats` table exists in production Supabase
+- [ ] Verify `player_stats` table exists in production database
 - [ ] Verify `profiles` table exists
 - [ ] Test with real user accounts
 - [ ] Test empty state for new users
 - [ ] Test all 4 tabs render correctly
 - [ ] Test error states
-- [ ] Verify RLS policies allow authenticated reads
+- [ ] Verify API routes enforce expected read access
 
 ---
 

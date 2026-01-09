@@ -102,7 +102,6 @@ const sidebars: SidebarsConfig = {
             'guides/data/species-database',
             'guides/data/prisma-orm',
             'guides/data/prisma-vercel-migration',
-            'guides/data/user-accounts-migration',
           ],
         },
         {

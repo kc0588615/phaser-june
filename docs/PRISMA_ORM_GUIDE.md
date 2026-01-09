@@ -20,8 +20,8 @@ This guide explains how Prisma ORM is integrated into the Species Discovery Game
 npm install
 
 # 2. Add DATABASE_URL to .env.local
-# Get from Supabase: Project Settings > Database > Connection string > URI
-DATABASE_URL=postgresql://postgres.[ref]:[pass]@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+# Postgres connection string (Hetzner VPS or other host)
+DATABASE_URL=postgresql://user:password@host:port/database?schema=public
 
 # 3. Generate Prisma client
 npm run prisma:generate
@@ -37,27 +37,24 @@ prisma/
   schema.prisma       # Database schema definition
 src/lib/
   prisma.ts           # Singleton client (import this!)
-  speciesQueries.ts   # Hybrid Prisma + Supabase queries
+  speciesQueries.ts   # Prisma + raw SQL for PostGIS queries
   playerTrackingPrisma.ts  # Player tracking with transactions
 ```
 
-## Architecture: Hybrid Approach
+## Architecture: Prisma + PostGIS
 
-We use **both** Prisma and Supabase because:
-
-- **Prisma** excels at: type-safe CRUD, relations, transactions
-- **Supabase RPCs** required for: PostGIS spatial queries (geometry)
+We use Prisma for type-safe CRUD and Prisma `$queryRaw` for PostGIS spatial queries.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     Application Code                        │
 ├─────────────────────────────────────────────────────────────┤
 │  Species List/Details  │  Map Click (Spatial)  │  Player   │
-│  → Prisma findMany     │  → Supabase RPC       │  Tracking │
-│  → Prisma findUnique   │  get_species_in_radius│  → Prisma │
+│  → Prisma findMany     │  → $queryRaw (PostGIS) │  Tracking │
+│  → Prisma findUnique   │  ST_DWithin/Contains  │  → Prisma │
 ├─────────────────────────┼─────────────────────────┼──────────┤
-│       Prisma Client     │    Supabase Client     │  Prisma  │
-│  (Type-safe queries)    │  (PostGIS geometry)    │  (Trans) │
+│       Prisma Client     │  Prisma $queryRaw     │  Prisma  │
+│  (Type-safe queries)    │  (PostGIS geometry)   │  (Trans) │
 └─────────────────────────┴─────────────────────────┴──────────┘
                               │
                     PostgreSQL + PostGIS
@@ -84,7 +81,7 @@ const allSpecies = await getSpeciesCatalog();
 const turtle = await getSpeciesById(1);
 ```
 
-### Query Species (Spatial - Use Supabase RPC)
+### Query Species (Spatial - PostGIS via Prisma $queryRaw)
 
 ```typescript
 import { getSpeciesInRadius, getSpeciesAtPoint } from '@/lib/speciesQueries';
@@ -146,7 +143,7 @@ The `prisma/schema.prisma` file defines these models:
 | Model | Maps To | Purpose |
 |-------|---------|---------|
 | `ICAA` | `icaa` | Species data (taxonomy, habitat, conservation) |
-| `Profile` | `profiles` | User profiles (linked to Supabase auth) |
+| `Profile` | `profiles` | User profiles (linked to auth provider) |
 | `PlayerGameSession` | `player_game_sessions` | Game session tracking |
 | `PlayerSpeciesDiscovery` | `player_species_discoveries` | Species discovered |
 | `PlayerClueUnlock` | `player_clue_unlocks` | Clue reveal events |
@@ -240,11 +237,11 @@ import type { ICAA, PlayerStats } from '@prisma/client';
 |----------|------|--------|
 | List all species | Prisma | Simple SELECT |
 | Filter by realm/category | Prisma | WHERE clause |
-| Species in map radius | Supabase RPC | PostGIS ST_DWithin |
-| Species at click point | Supabase RPC | PostGIS ST_Contains |
+| Species in map radius | Prisma $queryRaw | PostGIS ST_DWithin |
+| Species at click point | Prisma $queryRaw | PostGIS ST_Contains |
 | Player discoveries with species | Prisma | Relations/includes |
 | Update stats atomically | Prisma | Transactions |
-| Complex spatial joins | Supabase RPC | PostGIS functions |
+| Complex spatial joins | Raw SQL / DB functions | PostGIS functions |
 
 ## Learning Resources
 
