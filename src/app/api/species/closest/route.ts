@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+interface ClosestSpeciesRow {
+  ogc_fid: number;
+  comm_name: string | null;
+  sci_name: string | null;
+  wkb_geometry: string | null;
+  distance_meters: number;
+  [key: string]: unknown;
+}
 
 /**
  * GET /api/species/closest?lon=-30&lat=20
@@ -21,13 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     // PostGIS nearest-neighbor query using <-> operator
-    const result = await prisma.$queryRaw<Array<{
-      ogc_fid: number;
-      comm_name: string | null;
-      sci_name: string | null;
-      wkb_geometry: string | null;
-      distance_meters: number;
-    }>>`
+    const result = await db.execute<ClosestSpeciesRow>(sql`
       SELECT
         ogc_fid,
         comm_name,
@@ -41,13 +45,15 @@ export async function GET(request: NextRequest) {
       WHERE wkb_geometry IS NOT NULL
       ORDER BY wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
       LIMIT 1
-    `;
+    `);
 
-    if (result.length === 0) {
+    // postgres.js returns RowList which is array-like
+    const rows = [...result] as ClosestSpeciesRow[];
+    if (rows.length === 0) {
       return NextResponse.json({ species: null, geometry: null });
     }
 
-    const closest = result[0];
+    const closest = rows[0];
     return NextResponse.json({
       species: {
         ogc_fid: closest.ogc_fid,

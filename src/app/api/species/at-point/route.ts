@@ -1,5 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+interface SpatialSpeciesRow {
+  ogc_fid: number;
+  comm_name: string | null;
+  sci_name: string | null;
+  category: string | null;
+  realm: string | null;
+  biome: string | null;
+  order_: string | null;
+  family: string | null;
+  genus: string | null;
+  diet_type: string | null;
+  color_prim: string | null;
+  hab_desc: string | null;
+  key_fact1: string | null;
+  key_fact2: string | null;
+  key_fact3: string | null;
+  wkb_geometry: string | null;
+  [key: string]: unknown;
+}
 
 /**
  * GET /api/species/at-point?lon=-122.4&lat=37.7
@@ -21,24 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     // PostGIS spatial query using ST_Contains
-    const species = await prisma.$queryRaw<Array<{
-      ogc_fid: number;
-      comm_name: string | null;
-      sci_name: string | null;
-      category: string | null;
-      realm: string | null;
-      biome: string | null;
-      order_: string | null;
-      family: string | null;
-      genus: string | null;
-      diet_type: string | null;
-      color_prim: string | null;
-      hab_desc: string | null;
-      key_fact1: string | null;
-      key_fact2: string | null;
-      key_fact3: string | null;
-      wkb_geometry: string | null;
-    }>>`
+    const species = await db.execute<SpatialSpeciesRow>(sql`
       SELECT
         ogc_fid,
         comm_name,
@@ -62,10 +66,10 @@ export async function GET(request: NextRequest) {
           wkb_geometry,
           ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)
         )
-    `;
+    `);
 
-    // Parse GeoJSON geometry strings
-    const result = species.map(s => ({
+    // Parse GeoJSON geometry strings (postgres.js returns RowList which is array-like)
+    const result = [...species].map((s: SpatialSpeciesRow) => ({
       ...s,
       wkb_geometry: s.wkb_geometry ? JSON.parse(s.wkb_geometry) : null,
     }));

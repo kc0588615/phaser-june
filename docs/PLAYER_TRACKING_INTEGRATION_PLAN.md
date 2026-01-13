@@ -1,8 +1,8 @@
-# Player Tracking Integration Plan (Prisma)
+# Player Tracking Integration Plan (Drizzle)
 
 ## Current State
 
-- Tracking service lives in `src/lib/playerTracking.ts` and uses Prisma + Postgres.
+- Tracking service lives in `src/lib/playerTracking.ts` and uses Drizzle + Postgres.
 - `src/game/scenes/Game.ts` has tracking hooks, but auth is not configured, so `currentUserId` stays null and writes are skipped.
 - Local discovery migration uses `src/services/discoveryMigrationService.ts` and `/api/discoveries/migrate`.
 
@@ -13,7 +13,7 @@
 - Set `currentUserId` from the auth provider (planned: Clerk).
 - Call `startGameSession(currentUserId)` and store `currentSessionId`.
 
-### 2) Wire EventBus Handlers to Prisma Tracking
+### 2) Wire EventBus Handlers to Drizzle Tracking
 
 - `handleClueRevealed` → `trackClueUnlock(...)`
 - `game-hud-updated` → `updateSessionProgress(...)` (debounced)

@@ -231,10 +231,23 @@ export interface PlayerStats {
 }
 ```
 
-## Constraints
+## Constraints & Indexes
 
-- `player_species_discoveries`: unique on `(player_id, species_id)`.
-- `player_clue_unlocks`: unique on `(player_id, species_id, clue_category, clue_field)`.
+Named constraints and indexes follow conventions:
+
+| Object | Name |
+|--------|------|
+| profiles username unique | `uq_profiles_username` |
+| player_species_discoveries unique | `uq_player_species_discoveries_player_species` |
+| player_clue_unlocks unique | `uq_player_clue_unlocks_player_species_category_field` |
+| player_game_sessions FK index | `ix_player_game_sessions_player_id` |
+| player_species_discoveries session index | `ix_player_species_discoveries_session_id` |
+| player_clue_unlocks discovery index | `ix_player_clue_unlocks_discovery_id` |
+| high_scores leaderboard | `ix_high_scores_score` |
+| icaa spatial | `ix_icaa_wkb_geometry` |
+| oneearth_bioregion spatial | `ix_oneearth_bioregion_wkb_geometry` |
+
+Foreign keys use `fk_tablename_column` naming (e.g., `fk_player_game_sessions_player_id`).
 
 ## Related Documentation
 

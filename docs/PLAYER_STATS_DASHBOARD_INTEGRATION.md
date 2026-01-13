@@ -190,7 +190,7 @@ For display names:
 - `email` (text, nullable)
 
 **Schema Setup**:
-- Apply Prisma migrations (or `prisma db push`) to create `profiles`, `player_stats`, and related tables.
+- Ensure required tables exist (SQL DDL or existing DB import) for `profiles`, `player_stats`, and related tables.
 
 ---
 
@@ -310,7 +310,7 @@ interface PlayerStats {
 ### Manual Testing Checklist
 
 #### Pre-Testing Setup
-- [ ] Ensure `player_stats` table exists in Postgres (Prisma migrations applied)
+- [ ] Ensure `player_stats` table exists in Postgres
 - [ ] Ensure `profiles` table exists
 - [ ] Run `npm install` for new dependencies
 - [ ] Run `npm run dev` to start dev server

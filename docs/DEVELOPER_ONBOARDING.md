@@ -1,6 +1,6 @@
 # Developer Onboarding
 
-This is the entry point for engineers joining the Phaser + Next.js + Cesium + Prisma project. It explains how the app is structured, what to read next, and where every doc lives.
+This is the entry point for engineers joining the Phaser + Next.js + Cesium + Drizzle project. It explains how the app is structured, what to read next, and where every doc lives.
 
 ---
 
@@ -56,7 +56,7 @@ npm run start    # http://localhost:3000
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `MoveAction.ts` and `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
-- Data/auth: Prisma client in `src/lib/prisma.ts`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`.
+- Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`.
 
 ## 3) Recommended Reading Path
 1) **Core architecture:** [EVENTBUS_AND_DISPLAY_ARCHITECTURE.md](./EVENTBUS_AND_DISPLAY_ARCHITECTURE.md), [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md), [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md).
@@ -96,13 +96,14 @@ npm run start    # http://localhost:3000
 - [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md) — also relevant for responsive UI.
 
 **Data, Auth, and Platform**
-- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Prisma queries, TiTiler integration.
+- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Drizzle queries, TiTiler integration.
 - [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md) — schema and species data sourcing.
+- [DRIZZLE_ORM_GUIDE.md](./DRIZZLE_ORM_GUIDE.md) — Drizzle usage patterns.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from legacy raster storage.
-- [PRISMA_VERCEL_MIGRATION.md](./PRISMA_VERCEL_MIGRATION.md) — Prisma ORM + Vercel server runtime setup.
+- [DRIZZLE_VERCEL_MIGRATION.md](./DRIZZLE_VERCEL_MIGRATION.md) — Drizzle + Vercel server runtime setup.
 
 **Player Tracking & Stats**
-- [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Prisma writes.
+- [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Drizzle writes.
 - [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md) — rollout steps for tracking.
 - [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md) — stats UI integration.
 - [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md) — review of stats dashboard work.

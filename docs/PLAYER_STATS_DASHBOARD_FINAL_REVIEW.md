@@ -162,7 +162,7 @@ src/components/PlayerStatsDashboard/
 import { PlayerStatsDashboard } from '@/components/PlayerStatsDashboard'
 import { fetchPlayerStatsByPlayerId } from '@/lib/playerStatsService'
 
-// Fetch stats via Prisma service (auth planned)
+// Fetch stats via Drizzle service (auth planned)
 const stats = await fetchPlayerStatsByPlayerId(userId)
 
 // Render dashboard

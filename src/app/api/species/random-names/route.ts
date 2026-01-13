@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { ne } from 'drizzle-orm';
+import { db, icaa } from '@/db';
 
 /**
  * GET /api/species/random-names?count=15&exclude=5
@@ -12,24 +13,24 @@ export async function GET(request: NextRequest) {
     const count = parseInt(searchParams.get('count') || '15', 10);
     const excludeId = searchParams.get('exclude');
 
-    // Build where clause
-    const where = excludeId
-      ? { ogc_fid: { not: parseInt(excludeId, 10) } }
-      : {};
+    // Build query
+    let query = db
+      .select({
+        ogcFid: icaa.ogcFid,
+        commName: icaa.commName,
+        sciName: icaa.sciName,
+      })
+      .from(icaa);
 
-    // Fetch all species names
-    const species = await prisma.iCAA.findMany({
-      where,
-      select: {
-        ogc_fid: true,
-        comm_name: true,
-        sci_name: true,
-      },
-    });
+    if (excludeId) {
+      query = query.where(ne(icaa.ogcFid, parseInt(excludeId, 10))) as typeof query;
+    }
+
+    const species = await query;
 
     // Extract names and shuffle
     const names = species
-      .map(s => s.comm_name || s.sci_name || 'Unknown Species')
+      .map(s => s.commName || s.sciName || 'Unknown Species')
       .filter(name => name !== 'Unknown Species')
       .sort(() => Math.random() - 0.5)
       .slice(0, count);

@@ -162,7 +162,7 @@ Before marking complete, test:
 
 ## Database Requirements
 
-Ensure these tables exist (via Prisma migrations / `prisma/schema.prisma`):
+Ensure these tables exist (via SQL DDL or existing imports):
 
 Required tables:
 - `profiles` - User profiles
@@ -199,7 +199,7 @@ Required tables:
 
 - `PLAYER_TRACKING_INTEGRATION_PLAN.md` - Detailed implementation plan
 - `src/lib/playerTracking.ts` - Tracking service API
-- `prisma/schema.prisma` - Database schema
+- `src/db/schema/*` - Drizzle schema mappings
 - `src/types/database.ts` - TypeScript interfaces
 
 ---

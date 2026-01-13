@@ -1,11 +1,12 @@
 // =============================================================================
-// PLAYER TRACKING SERVICE - Prisma Version
+// PLAYER TRACKING SERVICE - Drizzle Version
 // =============================================================================
 // Syncs game events to Postgres with offline queue and proper session management.
-// Migrated from Supabase client to Prisma.
+// Migrated from Prisma to Drizzle.
 // =============================================================================
 
-import { prisma } from '@/lib/prisma';
+import { eq, and, isNull, desc, inArray, count } from 'drizzle-orm';
+import { db, playerGameSessions, playerClueUnlocks, playerSpeciesDiscoveries } from '@/db';
 
 // Session tracking
 interface SessionState {
@@ -20,7 +21,7 @@ let currentSession: SessionState | null = null;
 // Offline queue for failed writes
 interface QueuedWrite {
   type: 'clue' | 'discovery' | 'session_update';
-  payload: any;
+  payload: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -64,7 +65,7 @@ function saveOfflineQueue(): void {
 /**
  * Add item to offline queue
  */
-function queueWrite(type: QueuedWrite['type'], payload: any): void {
+function queueWrite(type: QueuedWrite['type'], payload: Record<string, unknown>): void {
   offlineQueue.push({
     type,
     payload,
@@ -89,27 +90,33 @@ export async function processOfflineQueue(playerId: string): Promise<void> {
         case 'clue':
           await trackClueUnlock(
             playerId,
-            item.payload.speciesId,
+            item.payload.speciesId as number,
             typeof item.payload.clueCategory === 'string'
               ? item.payload.clueCategory
               : String(item.payload.clueCategory ?? 'unknown'),
             typeof item.payload.clueField === 'string' && item.payload.clueField.length > 0
               ? item.payload.clueField
               : 'detail',
-            item.payload.clueValue ?? null,
-            item.payload.discoveryId ?? null
+            (item.payload.clueValue as string | null) ?? null,
+            (item.payload.discoveryId as string | null) ?? null
           );
           break;
         case 'discovery':
-          await trackSpeciesDiscovery(playerId, item.payload.speciesId, item.payload.options);
+          await trackSpeciesDiscovery(playerId, item.payload.speciesId as number, item.payload.options as {
+            sessionId?: string;
+            timeToDiscoverSeconds?: number;
+            cluesUnlockedBeforeGuess: number;
+            incorrectGuessesCount: number;
+            scoreEarned: number;
+          });
           break;
         case 'session_update':
           await updateSessionProgress(
-            item.payload.sessionId,
-            item.payload.moves,
-            item.payload.score,
-            item.payload.speciesDiscovered,
-            item.payload.cluesUnlocked
+            item.payload.sessionId as string,
+            item.payload.moves as number,
+            item.payload.score as number,
+            item.payload.speciesDiscovered as number,
+            item.payload.cluesUnlocked as number
           );
           break;
       }
@@ -129,20 +136,26 @@ export async function processOfflineQueue(playerId: string): Promise<void> {
 export async function startGameSession(playerId: string): Promise<string | null> {
   try {
     // Check for existing open session (prevent duplicates)
-    const existingSession = await prisma.playerGameSession.findFirst({
-      where: {
-        player_id: playerId,
-        ended_at: null,
-      },
-      orderBy: { started_at: 'desc' },
-    });
+    const existingSessions = await db
+      .select()
+      .from(playerGameSessions)
+      .where(
+        and(
+          eq(playerGameSessions.playerId, playerId),
+          isNull(playerGameSessions.endedAt)
+        )
+      )
+      .orderBy(desc(playerGameSessions.startedAt))
+      .limit(1);
+
+    const existingSession = existingSessions[0];
 
     if (existingSession) {
       // Resume existing session
       currentSession = {
         id: existingSession.id,
-        startTime: existingSession.started_at
-          ? new Date(existingSession.started_at).getTime()
+        startTime: existingSession.startedAt
+          ? new Date(existingSession.startedAt).getTime()
           : Date.now(),
         speciesStartTime: Date.now(),
         pendingClueIds: [],
@@ -151,16 +164,19 @@ export async function startGameSession(playerId: string): Promise<string | null>
     }
 
     // Create new session
-    const session = await prisma.playerGameSession.create({
-      data: {
-        player_id: playerId,
-        started_at: new Date(),
-        total_moves: 0,
-        total_score: 0,
-        species_discovered_in_session: 0,
-        clues_unlocked_in_session: 0,
-      },
-    });
+    const result = await db
+      .insert(playerGameSessions)
+      .values({
+        playerId,
+        startedAt: new Date(),
+        totalMoves: 0,
+        totalScore: 0,
+        speciesDiscoveredInSession: 0,
+        cluesUnlockedInSession: 0,
+      })
+      .returning({ id: playerGameSessions.id });
+
+    const session = result[0];
 
     currentSession = {
       id: session.id,
@@ -185,14 +201,14 @@ export async function endGameSession(
   finalScore: number
 ): Promise<void> {
   try {
-    await prisma.playerGameSession.update({
-      where: { id: sessionId },
-      data: {
-        ended_at: new Date(),
-        total_moves: finalMoves,
-        total_score: finalScore,
-      },
-    });
+    await db
+      .update(playerGameSessions)
+      .set({
+        endedAt: new Date(),
+        totalMoves: finalMoves,
+        totalScore: finalScore,
+      })
+      .where(eq(playerGameSessions.id, sessionId));
 
     currentSession = null;
 
@@ -231,15 +247,15 @@ export async function updateSessionProgress(
   // Debounce: wait 10 seconds before writing
   sessionUpdateTimer = setTimeout(async () => {
     try {
-      await prisma.playerGameSession.update({
-        where: { id: sessionId },
-        data: {
-          total_moves: moves,
-          total_score: score,
-          species_discovered_in_session: speciesDiscovered,
-          clues_unlocked_in_session: cluesUnlocked,
-        },
-      });
+      await db
+        .update(playerGameSessions)
+        .set({
+          totalMoves: moves,
+          totalScore: score,
+          speciesDiscoveredInSession: speciesDiscovered,
+          cluesUnlockedInSession: cluesUnlocked,
+        })
+        .where(eq(playerGameSessions.id, sessionId));
     } catch (err) {
       console.error('Failed to update session progress:', err);
       queueWrite('session_update', {
@@ -269,15 +285,15 @@ export async function forceSessionUpdate(
   }
 
   try {
-    await prisma.playerGameSession.update({
-      where: { id: sessionId },
-      data: {
-        total_moves: moves,
-        total_score: score,
-        species_discovered_in_session: speciesDiscovered,
-        clues_unlocked_in_session: cluesUnlocked,
-      },
-    });
+    await db
+      .update(playerGameSessions)
+      .set({
+        totalMoves: moves,
+        totalScore: score,
+        speciesDiscoveredInSession: speciesDiscovered,
+        cluesUnlockedInSession: cluesUnlocked,
+      })
+      .where(eq(playerGameSessions.id, sessionId));
   } catch (err) {
     console.error('Failed to force session update:', err);
     queueWrite('session_update', {
@@ -303,29 +319,81 @@ export async function trackClueUnlock(
   discoveryId: string | null = null
 ): Promise<boolean | null> {
   try {
-    // Use upsert to handle duplicates gracefully
-    const clue = await prisma.playerClueUnlock.upsert({
-      where: {
-        player_clue_unique: {
-          player_id: playerId,
-          species_id: speciesId,
-          clue_category: clueCategory,
-          clue_field: clueField,
-        },
-      },
-      create: {
-        player_id: playerId,
-        species_id: speciesId,
-        discovery_id: discoveryId,
-        clue_category: clueCategory,
-        clue_field: clueField,
-        clue_value: clueValue,
-      },
-      update: {
-        // If already exists, just update discovery_id if provided
-        ...(discoveryId ? { discovery_id: discoveryId } : {}),
-      },
-    });
+    let clue: { id: string; unlockedAt: Date | null };
+
+    if (discoveryId) {
+      // If discoveryId provided, use onConflictDoUpdate to link it
+      const result = await db
+        .insert(playerClueUnlocks)
+        .values({
+          playerId,
+          speciesId,
+          discoveryId,
+          clueCategory,
+          clueField,
+          clueValue,
+        })
+        .onConflictDoUpdate({
+          target: [
+            playerClueUnlocks.playerId,
+            playerClueUnlocks.speciesId,
+            playerClueUnlocks.clueCategory,
+            playerClueUnlocks.clueField,
+          ],
+          set: { discoveryId },
+        })
+        .returning({
+          id: playerClueUnlocks.id,
+          unlockedAt: playerClueUnlocks.unlockedAt,
+        });
+      clue = result[0];
+    } else {
+      // No discoveryId - use onConflictDoNothing, then fetch existing if needed
+      const result = await db
+        .insert(playerClueUnlocks)
+        .values({
+          playerId,
+          speciesId,
+          clueCategory,
+          clueField,
+          clueValue,
+        })
+        .onConflictDoNothing({
+          target: [
+            playerClueUnlocks.playerId,
+            playerClueUnlocks.speciesId,
+            playerClueUnlocks.clueCategory,
+            playerClueUnlocks.clueField,
+          ],
+        })
+        .returning({
+          id: playerClueUnlocks.id,
+          unlockedAt: playerClueUnlocks.unlockedAt,
+        });
+
+      if (result.length > 0) {
+        // Insert succeeded (new clue)
+        clue = result[0];
+      } else {
+        // Conflict - fetch existing clue
+        const existing = await db
+          .select({
+            id: playerClueUnlocks.id,
+            unlockedAt: playerClueUnlocks.unlockedAt,
+          })
+          .from(playerClueUnlocks)
+          .where(
+            and(
+              eq(playerClueUnlocks.playerId, playerId),
+              eq(playerClueUnlocks.speciesId, speciesId),
+              eq(playerClueUnlocks.clueCategory, clueCategory),
+              eq(playerClueUnlocks.clueField, clueField)
+            )
+          )
+          .limit(1);
+        clue = existing[0];
+      }
+    }
 
     // Store clue ID for later discovery_id linking
     if (!discoveryId && currentSession) {
@@ -334,8 +402,8 @@ export async function trackClueUnlock(
 
     // Check if this was a create (new) or update (existing)
     // If unlocked_at matches within 1 second, it's likely new
-    const isNew = clue.unlocked_at
-      ? Date.now() - new Date(clue.unlocked_at).getTime() < 1000
+    const isNew = clue.unlockedAt
+      ? Date.now() - new Date(clue.unlockedAt).getTime() < 1000
       : true;
     return isNew;
   } catch (err) {
@@ -371,39 +439,41 @@ export async function trackSpeciesDiscovery(
     const pendingClueIds = currentSession?.pendingClueIds || [];
 
     // Use transaction for atomic operation
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       // Upsert discovery (idempotent)
-      const discovery = await tx.playerSpeciesDiscovery.upsert({
-        where: {
-          player_species_unique: {
-            player_id: playerId,
-            species_id: speciesId,
+      const discoveryResult = await tx
+        .insert(playerSpeciesDiscoveries)
+        .values({
+          playerId,
+          speciesId,
+          sessionId,
+          timeToDiscoverSeconds: options.timeToDiscoverSeconds,
+          cluesUnlockedBeforeGuess: options.cluesUnlockedBeforeGuess,
+          incorrectGuessesCount: options.incorrectGuessesCount,
+          scoreEarned: options.scoreEarned,
+        })
+        .onConflictDoUpdate({
+          target: [playerSpeciesDiscoveries.playerId, playerSpeciesDiscoveries.speciesId],
+          set: {
+            // If already discovered, update score
+            scoreEarned: options.scoreEarned,
           },
-        },
-        create: {
-          player_id: playerId,
-          species_id: speciesId,
-          session_id: sessionId,
-          time_to_discover_seconds: options.timeToDiscoverSeconds,
-          clues_unlocked_before_guess: options.cluesUnlockedBeforeGuess,
-          incorrect_guesses_count: options.incorrectGuessesCount,
-          score_earned: options.scoreEarned,
-        },
-        update: {
-          // If already discovered, update score
-          score_earned: options.scoreEarned,
-        },
-      });
+        })
+        .returning({ id: playerSpeciesDiscoveries.id });
+
+      const discovery = discoveryResult[0];
 
       // Link pending clues to this discovery
       if (pendingClueIds.length > 0) {
-        await tx.playerClueUnlock.updateMany({
-          where: {
-            id: { in: pendingClueIds },
-            discovery_id: null,
-          },
-          data: { discovery_id: discovery.id },
-        });
+        await tx
+          .update(playerClueUnlocks)
+          .set({ discoveryId: discovery.id })
+          .where(
+            and(
+              inArray(playerClueUnlocks.id, pendingClueIds),
+              isNull(playerClueUnlocks.discoveryId)
+            )
+          );
       }
 
       return discovery;
@@ -452,7 +522,7 @@ function updateLocalStorageDiscovery(speciesId: number): void {
   try {
     const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
 
-    if (!discovered.find((d: any) => d.id === speciesId)) {
+    if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
       discovered.push({
         id: speciesId,
         discoveredAt: new Date().toISOString(),
@@ -473,13 +543,16 @@ export async function getClueCountForSpecies(
   speciesId: number
 ): Promise<number> {
   try {
-    const count = await prisma.playerClueUnlock.count({
-      where: {
-        player_id: playerId,
-        species_id: speciesId,
-      },
-    });
-    return count;
+    const result = await db
+      .select({ count: count() })
+      .from(playerClueUnlocks)
+      .where(
+        and(
+          eq(playerClueUnlocks.playerId, playerId),
+          eq(playerClueUnlocks.speciesId, speciesId)
+        )
+      );
+    return result[0]?.count ?? 0;
   } catch (err) {
     console.error('Failed to get clue count:', err);
     return 0;

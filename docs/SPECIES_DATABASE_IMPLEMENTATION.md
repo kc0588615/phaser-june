@@ -23,7 +23,7 @@ This document describes the implementation of the species database feature, whic
 **Purpose**: Displays a grid of all species from the database
 
 **Key Features**:
-- Fetches data via Prisma from `icaa` table
+- Fetches data via Drizzle from `icaa` table
 - Groups species by taxonomic categories (Turtles and Frogs)
 - Displays biodiversity statistics in development mode
 - Responsive grid layout with accordion UI
@@ -33,22 +33,56 @@ This document describes the implementation of the species database feature, whic
 
 **Data Fetching**:
 ```typescript
-// Using Prisma ORM (src/lib/speciesQueries.ts)
-const species = await prisma.icaa.findMany({
-  select: {
-    ogc_fid: true, sci_name: true, comm_name: true, http_iucn: true,
-    kingdom: true, phylum: true, class: true, order_: true, family: true, genus: true,
-    category: true, cons_code: true, cons_text: true,
-    marine: true, terrestria: true, freshwater: true, hab_tags: true, hab_desc: true,
-    geo_desc: true,
-    color_prim: true, color_sec: true, pattern: true, size_min: true, size_max: true, weight_kg: true, shape_desc: true,
-    diet_type: true, diet_prey: true, diet_flora: true, behav_1: true, behav_2: true,
-    lifespan: true, maturity: true, repro_type: true, clutch_sz: true, life_desc1: true, life_desc2: true,
-    threats: true,
-    key_fact1: true, key_fact2: true, key_fact3: true
-  },
-  orderBy: { comm_name: 'asc' }
-});
+// Using Drizzle (src/lib/speciesQueries.ts)
+import { asc } from 'drizzle-orm';
+import { db, icaa } from '@/db';
+
+const species = await db
+  .select({
+    ogc_fid: icaa.ogcFid,
+    sci_name: icaa.sciName,
+    comm_name: icaa.commName,
+    http_iucn: icaa.httpIucn,
+    kingdom: icaa.kingdom,
+    phylum: icaa.phylum,
+    class: icaa.class,
+    order_: icaa.order,
+    family: icaa.family,
+    genus: icaa.genus,
+    category: icaa.category,
+    cons_code: icaa.consCode,
+    cons_text: icaa.consText,
+    marine: icaa.marine,
+    terrestria: icaa.terrestria,
+    freshwater: icaa.freshwater,
+    hab_tags: icaa.habTags,
+    hab_desc: icaa.habDesc,
+    geo_desc: icaa.geoDesc,
+    color_prim: icaa.colorPrim,
+    color_sec: icaa.colorSec,
+    pattern: icaa.pattern,
+    size_min: icaa.sizeMin,
+    size_max: icaa.sizeMax,
+    weight_kg: icaa.weightKg,
+    shape_desc: icaa.shapeDesc,
+    diet_type: icaa.dietType,
+    diet_prey: icaa.dietPrey,
+    diet_flora: icaa.dietFlora,
+    behav_1: icaa.behav1,
+    behav_2: icaa.behav2,
+    lifespan: icaa.lifespan,
+    maturity: icaa.maturity,
+    repro_type: icaa.reproType,
+    clutch_sz: icaa.clutchSz,
+    life_desc1: icaa.lifeDesc1,
+    life_desc2: icaa.lifeDesc2,
+    threats: icaa.threats,
+    key_fact1: icaa.keyFact1,
+    key_fact2: icaa.keyFact2,
+    key_fact3: icaa.keyFact3,
+  })
+  .from(icaa)
+  .orderBy(asc(icaa.commName));
 ```
 
 ### 2. SpeciesCard Component (`src/components/SpeciesCard.tsx`)
@@ -220,8 +254,8 @@ The implementation uses the existing `icaa` table with 40+ fields covering:
 ### NPM Packages
 - `lucide-react` - Icon library for section headers
 
-### Prisma Integration
-- Uses `@/lib/prisma` for server-side queries
+### Drizzle Integration
+- Uses `@/db` for server-side queries
 - API routes under `src/app/api/species/*` for client access
 - Error handling for database connection issues
 

@@ -15,7 +15,7 @@
     - [x] Deploy `docker-compose.yml` (PostGIS 17-3.5 + PgBouncer + TLS) <!-- id: 7 -->
     - [ ] Configure backups (pg_dump cron) - deferred <!-- id: 8 -->
     - [x] Export Supabase Data <!-- id: 9 -->
-    - [x] Apply Schema Migrations (Prisma) <!-- id: 10 -->
+    - [x] Apply Schema Migrations (SQL) <!-- id: 10 -->
     - [x] Fix `extensions.uuid_generate_v4()` → `gen_random_uuid()` <!-- id: 10b -->
     - [x] Import Data (22 species, 185 bioregions, 3 profiles, 82 habitat codes) <!-- id: 11 -->
     - [x] Fix geometry SRID/Z-dimension issues <!-- id: 11b -->
@@ -33,14 +33,14 @@
 
 - [x] Phase 3: Service Layer Refactor <!-- id: 19 -->
     - [x] `speciesService.ts` → uses /api/ routes <!-- id: 20 -->
-    - [x] `speciesQueries.ts` → Prisma $queryRaw <!-- id: 20b -->
-    - [x] `playerTracking.ts` → Prisma (kept same API) <!-- id: 21 -->
-    - [x] `playerStatsService.ts` → Prisma (auth still Supabase temp) <!-- id: 22 -->
+    - [x] `speciesQueries.ts` → Drizzle `db.execute(sql\`...\`)` <!-- id: 20b -->
+    - [x] `playerTracking.ts` → Drizzle (kept same API) <!-- id: 21 -->
+    - [x] `playerStatsService.ts` → Drizzle (auth still Supabase temp) <!-- id: 22 -->
     - [x] `useSpeciesData.ts` → /api/species/catalog <!-- id: 22b -->
     - [x] `GameOver.ts` → /api/highscores <!-- id: 22c -->
     - [x] `highscores.tsx` → /api/highscores <!-- id: 22d -->
     - [x] `discoveryMigrationService.ts` → /api/discoveries/migrate <!-- id: 22e -->
-    - [x] Delete obsolete `playerTrackingPrisma.ts` <!-- id: 22f -->
+    - [x] Delete obsolete legacy tracking file <!-- id: 22f -->
 
 - [ ] Phase 4: Authentication (Clerk) - SKIPPED <!-- id: 23 -->
     - [ ] Install `@clerk/nextjs` <!-- id: 24 -->
@@ -49,7 +49,7 @@
     - [ ] Migrate `profiles` table (add `clerk_user_id`) <!-- id: 27 -->
 
 - [x] Phase 5: Cleanup & Verification <!-- id: 28 -->
-    - [x] Migrate all database queries to Prisma/API routes <!-- id: 29 -->
+    - [x] Migrate all database queries to Drizzle/API routes <!-- id: 29 -->
     - [x] Remove Supabase DB dependencies <!-- id: 30 -->
     - [x] Build passes (`npm run build`) <!-- id: 30b -->
     - [x] Typecheck passes (`npm run typecheck`) <!-- id: 30c -->
@@ -64,14 +64,14 @@
 - **Connection**: PgBouncer on port 6432 with TLS
 - **MCP Server**: postgres-mcp on port 8000 (SSE transport)
 
-## Files Migrated from Supabase → Prisma/API
+## Files Migrated from Supabase → Drizzle/API
 
 | File | Status | Notes |
 |------|--------|-------|
 | `speciesService.ts` | ✅ Done | Uses /api/ routes |
-| `speciesQueries.ts` | ✅ Done | Prisma $queryRaw |
-| `playerTracking.ts` | ✅ Done | Prisma, same API |
-| `playerStatsService.ts` | ✅ Done | Prisma (auth temp) |
+| `speciesQueries.ts` | ✅ Done | Drizzle `db.execute(sql\`...\`)` |
+| `playerTracking.ts` | ✅ Done | Drizzle, same API |
+| `playerStatsService.ts` | ✅ Done | Drizzle (auth temp) |
 | `useSpeciesData.ts` | ✅ Done | /api/species/catalog |
 | `GameOver.ts` | ✅ Done | /api/highscores |
 | `highscores.tsx` | ✅ Done | /api/highscores |

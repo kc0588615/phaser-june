@@ -1,6 +1,6 @@
 # User Accounts Implementation Plan
 
-> Archived (Supabase-era): kept for historical reference. The current auth direction is Clerk + Prisma (see `docs/README.md`).
+> Archived (Supabase-era): kept for historical reference. The current auth direction is Clerk + Drizzle (see `docs/README.md`).
 
 ## Overview
 This document outlines the implementation plan for migrating from localStorage-based species discovery tracking to a persistent user account system with database storage.
@@ -15,7 +15,7 @@ This document outlines the implementation plan for migrating from localStorage-b
 
 ### Target State
 - User authentication via Clerk
-- Species discoveries stored in PostgreSQL database (via Prisma)
+- Species discoveries stored in PostgreSQL database (via Drizzle)
 - Cross-device synchronization
 - Rich discovery metadata and statistics
 - Social features potential (leaderboards, sharing)
@@ -30,7 +30,7 @@ This document outlines the implementation plan for migrating from localStorage-b
 
 ### 2. User Profiles Table
 ```sql
--- Managed via Prisma (schema.prisma)
+-- Managed via SQL DDL (Drizzle schema mappings in app)
 model UserProfile {
   id              String   @id // Matches Clerk ID
   username        String?  @unique

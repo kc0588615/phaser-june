@@ -9,6 +9,21 @@ tags: [guide, database, postgres, drizzle]
 
 Practical guide for querying species data and recording player progress.
 
+## Conventions
+
+App-owned tables follow these standards (import-owned tables like `icaa` may differ):
+
+- **Naming**: snake_case; tables plural, columns singular
+- **Primary keys**: `bigint GENERATED ALWAYS AS IDENTITY` (UUID only for external IDs)
+- **Timestamps**: `timestamptz` with `_at` suffix
+- **Booleans**: `is_` or `has_` prefix
+- **Types**: `text` (not varchar), `jsonb` (not json)
+- **Indexes**: `ix_tablename_columns`
+- **Unique**: `uq_tablename_columns`
+- **Foreign keys**: `fk_tablename_reference`
+
+See [full conventions in docs/DATABASE_USER_GUIDE.md](https://github.com/your-repo/docs/DATABASE_USER_GUIDE.md#conventions-and-best-practices).
+
 ## Drizzle Client Setup
 
 ```typescript
@@ -25,15 +40,10 @@ import { db } from '@/db';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 
+// Use the get_species_in_radius function with table alias
 const species = await db.execute(sql`
-  SELECT *
-  FROM icaa
-  WHERE wkb_geometry IS NOT NULL
-    AND ST_DWithin(
-      wkb_geometry::geography,
-      ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
-      ${radius}
-    )
+  SELECT r.ogc_fid, r.comm_name, r.sci_name
+  FROM public.get_species_in_radius(${lon}, ${lat}, ${radiusMeters}) r
 `);
 ```
 

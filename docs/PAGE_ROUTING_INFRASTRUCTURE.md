@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the page routing infrastructure for the Phaser June game, which uses Next.js server runtime (API routes + Prisma). The application supports both complex game pages and simple content pages.
+This document describes the page routing infrastructure for the Phaser June game, which uses Next.js server runtime (API routes + Drizzle). The application supports both complex game pages and simple content pages.
 
 ## Architecture
 
@@ -53,7 +53,7 @@ interface SimpleLayoutProps {
 ```
 
 ### Important Notes
-- Server runtime is required for API routes and Prisma.
+- Server runtime is required for API routes and database access.
 - `trailingSlash: true` is kept for URL consistency across pages.
 - Builds use `next build --webpack` to keep Cesium’s webpack config.
 - Headers in `next.config.mjs` apply normally.
@@ -144,7 +144,7 @@ npm run serve   # Run Next.js server locally
 
 The high scores page demonstrates proper implementation:
 - Uses `SimpleLayout` for consistent structure
-- Fetches scores via `/api/highscores` (Prisma)
+- Fetches scores via `/api/highscores` (Drizzle)
 - Handles loading and error states
 - Uses Tailwind for all styling
 - Provides navigation back to game

@@ -1,7 +1,7 @@
 // =============================================================================
 // API ROUTE: /api/species
 // =============================================================================
-// This is a Next.js App Router API route that demonstrates Prisma usage.
+// This is a Next.js App Router API route that demonstrates Drizzle usage.
 //
 // ENDPOINTS:
 // - GET /api/species           → List all species (catalog)
@@ -12,7 +12,7 @@
 //
 // WHY AN API ROUTE?
 // -----------------
-// While you can call Prisma directly from Server Components, API routes are
+// While you can call Drizzle directly from Server Components, API routes are
 // useful when:
 // - Client components need data (can't use server-only code)
 // - You want a REST API for other consumers (mobile apps, etc.)

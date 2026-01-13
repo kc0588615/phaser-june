@@ -8,7 +8,7 @@ This guide provides comprehensive documentation for the database architecture us
 
 ### Technology Stack
 - **Database**: PostgreSQL 15+ (Hetzner VPS) with PostGIS extension
-- **Connection**: Prisma ORM
+- **Connection**: Drizzle ORM (postgres.js)
 - **Spatial Features**: PostGIS for geographic queries
 - **Real-time**: None (Standard REST/Server Actions)
 
@@ -27,10 +27,70 @@ Primary table containing all species information with 70+ fields.
 - `wkb_geometry` (PostGIS geometry) - Polygon/multipolygon defining species range
 
 #### 2. `high_scores` Table
-- `id` (uuid) - Primary key
+- `id` (uuid; legacy, new app tables use bigint identity) - Primary key
 - `username` (string) - Player name
 - `score` (number) - Game score
-- `created_at` (timestamp) - Score submission time
+- `created_at` (timestamptz; migrate if legacy timestamp) - Score submission time
+
+## Conventions and Best Practices
+
+These conventions apply to app-owned tables and new schema changes. Import-owned tables
+(for example, `icaa` and `oneearth_bioregion`) may not comply; prefer views or staged
+transforms instead of renaming or retyping import columns.
+
+### Naming
+- Table names: lowercase, snake_case, plural (users, order_items)
+- Column names: lowercase, snake_case, singular (email, status)
+- Primary keys: `id` with `bigint GENERATED ALWAYS AS IDENTITY` (use UUID only for externally sourced IDs)
+- Foreign keys: `singular_table_id` (user_id)
+- Timestamps: `_at` suffix with `timestamptz`
+- Dates: `_on` suffix
+- Booleans: `is_` or `has_` prefix
+
+### Data Types
+- Use `text` for strings; use `CHECK` constraints if length matters
+- Use `timestamptz` for timestamps
+- Use `numeric` or integer cents for money; avoid `money`
+- Use `jsonb` for JSON data
+- Avoid `varchar(255)` or other arbitrary limits; use `text` unless a strict business rule requires a length check
+- Avoid `char(n)` (fixed-width, padded, usually slower)
+Rationale: Postgres stores `text`/`varchar` the same (varlena + TOAST), so length limits only add checks and schema debt.
+
+### Constraints and Indexes (Named)
+- Indexes: `ix_tablename_columns` (example: ix_users_email)
+- Foreign keys: `fk_tablename_reference` (example: fk_orders_user_id)
+- Unique constraints: `uq_tablename_columns` (example: uq_users_email)
+- Check constraints: `ck_tablename_rule` (example: ck_users_age_positive)
+
+### Querying
+- Always alias tables in raw SQL
+- Avoid `NOT IN (...)` with nullable columns; use `NOT EXISTS` or `LEFT JOIN ... IS NULL`
+- Avoid `BETWEEN` for timestamps; use `>=` and `<` bounds
+
+### Example: Compliant Tables
+```sql
+CREATE TABLE users (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT uq_users_email UNIQUE (email),
+  CONSTRAINT ck_users_email_valid CHECK (length(email) > 3)
+);
+
+CREATE TABLE orders (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id bigint NOT NULL,
+  total numeric(10, 2) NOT NULL,
+  placed_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT fk_orders_user_id
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE INDEX ix_orders_user_id ON orders (user_id);
+```
 
 ## ICAA Table Field Mappings
 
@@ -186,6 +246,19 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 
 ## Guidelines for Database Changes
 
+Follow the conventions above for app-owned tables. Treat import-owned tables as
+read-only; use views or staged transforms if you need canonical naming or types.
+
+### Schema Change Checklist
+
+Before you ship a schema change:
+- Confirm naming: plural tables, singular columns, `id`, `_at`/`_on`, `is_`/`has_`
+- Confirm types: `timestamptz`, `text`, `jsonb`, `numeric` or integer cents for money
+- Name constraints and indexes with `ix_`/`uq_`/`fk_`/`ck_` prefixes
+- Add indexes for FKs and hot query paths (especially leaderboard or radius queries)
+- Update types and usage: `src/db/types.ts`, `src/types/database.ts`, `src/game/clueConfig.ts`
+- Refresh introspection: `npm run db:introspect`
+
 ### Adding New Species
 
 1. **Required Fields:**
@@ -210,7 +283,7 @@ INSERT INTO icaa (
   'Example Species', 'Examplus specius', 'Examplus', 'Examplidae',
   'Forest habitats', 'Found in North America', 'Spotted pattern',
   'Omnivore', 'Lives 10-15 years', 'Least Concern', 'Unique feature',
-  ST_GeomFromText('POLYGON((...)))', 4326)
+  ST_GeomFromText('POLYGON((...))', 4326)
 );
 ```
 
@@ -346,7 +419,7 @@ SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa ...
 
 ```
 ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
-│   PostGIS       │    │  Next.js API + Prisma│    │     Cesium      │
+│   PostGIS       │    │  Next.js API + Drizzle│   │     Cesium      │
 │   MULTIPOLYGON  │ ─→ │  ST_AsGeoJSON (json) │ ─→ │  GeoJsonDataSource
 │   (wkb_geometry)│    │  /api/species/*      │    │  Red/Blue Polygons
 └─────────────────┘    └──────────────────────┘    └─────────────────┘
@@ -359,7 +432,8 @@ SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa ...
 #### Spatial Indexes
 ```sql
 -- Essential for spatial query performance
-CREATE INDEX IF NOT EXISTS icaa_wkb_geometry_gix
+-- Use ix_ prefix for new indexes (legacy names may differ)
+CREATE INDEX IF NOT EXISTS ix_icaa_wkb_geometry
   ON public.icaa
   USING gist (wkb_geometry);
 ```
@@ -715,4 +789,4 @@ Database connection configured via:
 
 ## ORM Choice
 
-Prisma is the current ORM and schema source of truth. Use Prisma for CRUD and `$queryRaw` for PostGIS spatial queries. Revisit alternatives only if Prisma becomes a blocker for migrations or spatial workloads.
+Drizzle is the current ORM. Use the query builder for CRUD and `db.execute(sql\`...\`)` for PostGIS spatial queries. Schema authority is hybrid: app tables are code-defined, spatial tables are import-owned and introspected for types.

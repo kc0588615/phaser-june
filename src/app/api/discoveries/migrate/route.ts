@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { inArray } from 'drizzle-orm';
+import { db, icaa, playerSpeciesDiscoveries } from '@/db';
 
 /**
  * POST /api/discoveries/migrate
@@ -24,45 +25,47 @@ export async function POST(request: NextRequest) {
 
     // Get valid species IDs
     const candidateIds = discoveries
-      .map((d: any) => Number(d.id))
+      .map((d: { id: unknown }) => Number(d.id))
       .filter((id: number) => Number.isFinite(id));
 
     if (candidateIds.length === 0) {
       return NextResponse.json({ migrated: 0 });
     }
 
-    const existingSpecies = await prisma.iCAA.findMany({
-      where: { ogc_fid: { in: candidateIds } },
-      select: { ogc_fid: true },
-    });
+    const existingSpecies = await db
+      .select({ ogcFid: icaa.ogcFid })
+      .from(icaa)
+      .where(inArray(icaa.ogcFid, candidateIds));
 
-    const validIds = new Set(existingSpecies.map(s => s.ogc_fid));
+    const validIds = new Set(existingSpecies.map(s => s.ogcFid));
 
     // Prepare valid discoveries
     const validDiscoveries = discoveries
-      .filter((d: any) => {
+      .filter((d: { id: unknown }) => {
         const id = Number(d.id);
         return Number.isFinite(id) && validIds.has(id);
       })
-      .map((d: any) => ({
-        player_id: userId,
-        species_id: Number(d.id),
-        discovered_at: d.discoveredAt ? new Date(d.discoveredAt) : new Date(),
-        clues_unlocked_before_guess: 0,
-        incorrect_guesses_count: 0,
-        score_earned: 0,
+      .map((d: { id: unknown; discoveredAt?: string }) => ({
+        playerId: userId,
+        speciesId: Number(d.id),
+        discoveredAt: d.discoveredAt ? new Date(d.discoveredAt) : new Date(),
+        cluesUnlockedBeforeGuess: 0,
+        incorrectGuessesCount: 0,
+        scoreEarned: 0,
       }));
 
     if (validDiscoveries.length === 0) {
       return NextResponse.json({ migrated: 0 });
     }
 
-    // Bulk insert, skip duplicates based on unique constraint
-    const result = await prisma.playerSpeciesDiscovery.createMany({
-      data: validDiscoveries,
-      skipDuplicates: true,
-    });
-    const migrated = result.count;
+    // Bulk insert, skip duplicates using onConflictDoNothing
+    const result = await db
+      .insert(playerSpeciesDiscoveries)
+      .values(validDiscoveries)
+      .onConflictDoNothing()
+      .returning({ id: playerSpeciesDiscoveries.id });
+
+    const migrated = result.length;
 
     console.log(`[API /discoveries/migrate] Migrated ${migrated} discoveries for user ${userId}`);
     return NextResponse.json({ migrated });
