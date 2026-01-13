@@ -13,7 +13,7 @@ Complete reference for all environment variables used in the application.
 
 | Variable | Description | Where to Get |
 |----------|-------------|--------------|
-| `DATABASE_URL` | Prisma connection string | Your Postgres provider (e.g., Hetzner) |
+| `DATABASE_URL` | Postgres connection string (Drizzle) | Your Postgres provider (e.g., Hetzner) |
 | `NEXT_PUBLIC_CESIUM_ION_TOKEN` | Cesium Ion access token | [cesium.com/ion](https://cesium.com/ion) → Access Tokens |
 
 ## Optional Variables
@@ -67,7 +67,8 @@ NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 ## Source File
 
 Environment variables are loaded in:
-- `src/lib/prisma.ts` - Prisma client
+- `src/db/index.ts` - Drizzle client
+- `drizzle.config.ts` - Drizzle CLI (introspection)
 - `src/components/CesiumMap.tsx` - Cesium Ion token
 - `next.config.mjs` - Build-time variables
 

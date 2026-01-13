@@ -7,7 +7,7 @@ tags: [architecture, nextjs, routing]
 
 # Page Routing Infrastructure
 
-This document describes the page routing infrastructure using Next.js server runtime (API routes + Prisma).
+This document describes the page routing infrastructure using Next.js server runtime (API routes + Drizzle).
 
 ## Page Types
 

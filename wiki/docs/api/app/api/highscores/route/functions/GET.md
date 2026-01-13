@@ -1,12 +1,12 @@
 # Function: GET()
 
-> **GET**(): `Promise`\<`NextResponse`\<\{ `scores`: `object`[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
+> **GET**(): `Promise`\<`NextResponse`\<\{ `scores`: `Record`\<`string`, `unknown`\>[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
 
-Defined in: [src/app/api/highscores/route.ts:8](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/app/api/highscores/route.ts#L8)
+Defined in: [src/app/api/highscores/route.ts:19](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/app/api/highscores/route.ts#L19)
 
 GET /api/highscores
 Returns top 50 high scores.
 
 ## Returns
 
-`Promise`\<`NextResponse`\<\{ `scores`: `object`[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
+`Promise`\<`NextResponse`\<\{ `scores`: `Record`\<`string`, `unknown`\>[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>

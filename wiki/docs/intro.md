@@ -21,7 +21,7 @@ Phaser-June is a web application that lets players explore Earth's biodiversity 
 | **UI Framework** | React + Next.js |
 | **3D Globe** | Cesium / Resium |
 | **Database** | PostgreSQL (Hetzner VPS) |
-| **ORM** | Prisma |
+| **ORM** | Drizzle (postgres.js) |
 | **Auth** | Clerk (TBD) |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **Raster Data** | TiTiler (COG processing) |

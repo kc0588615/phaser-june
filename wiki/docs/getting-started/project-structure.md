@@ -33,8 +33,13 @@ phaser-june/
 │   │   ├── SpeciesPanel.tsx  # Clue display
 │   │   └── SpeciesList.tsx   # Species catalog
 │   │
+│   ├── db/                # Drizzle client + schema
+│   │   ├── index.ts       # Drizzle client singleton
+│   │   ├── types.ts       # Inferred types
+│   │   └── schema/        # Table definitions
+│   │
 │   ├── lib/                # Services & utilities
-│   │   ├── prisma.ts           # Prisma client
+│   │   ├── speciesQueries.ts   # Drizzle + SQL queries
 │   │   ├── speciesService.ts   # API-backed species queries
 │   │   └── playerTracking.ts   # Session telemetry
 │   │
@@ -56,8 +61,8 @@ phaser-june/
 │
 ├── docs/                   # Source documentation (migrated to wiki)
 ├── wiki/                   # Docusaurus documentation site
-├── prisma/                 # Prisma schema & migrations
 │
+├── drizzle.config.ts       # Drizzle CLI config
 ├── next.config.mjs         # Next.js configuration
 ├── tailwind.config.ts      # Tailwind configuration
 ├── tsconfig.json           # TypeScript configuration
@@ -92,7 +97,8 @@ phaser-june/
 
 | File | Purpose |
 |------|---------|
-| `src/lib/prisma.ts` | Prisma client singleton |
+| `src/db/index.ts` | Drizzle client singleton |
+| `src/db/schema/*` | Table definitions (app tables + spatial mappings) |
 | `src/lib/speciesService.ts` | API wrappers for species queries |
 | `src/hooks/useSpeciesData.ts` | React Query caching layer |
 

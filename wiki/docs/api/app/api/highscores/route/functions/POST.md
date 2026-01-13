@@ -1,8 +1,8 @@
 # Function: POST()
 
-> **POST**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `score`: \{ \}; \}\>\>
+> **POST**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `score`: `Record`\<`string`, `unknown`\>; \}\>\>
 
-Defined in: [src/app/api/highscores/route.ts:29](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/app/api/highscores/route.ts#L29)
+Defined in: [src/app/api/highscores/route.ts:42](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/app/api/highscores/route.ts#L42)
 
 POST /api/highscores
 Save a new high score.
@@ -15,4 +15,4 @@ Save a new high score.
 
 ## Returns
 
-`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `score`: \{ \}; \}\>\>
+`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `score`: `Record`\<`string`, `unknown`\>; \}\>\>

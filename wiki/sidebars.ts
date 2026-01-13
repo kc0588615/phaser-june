@@ -100,8 +100,8 @@ const sidebars: SidebarsConfig = {
           items: [
             'guides/data/database-guide',
             'guides/data/species-database',
-            'guides/data/prisma-orm',
-            'guides/data/prisma-vercel-migration',
+            'guides/data/drizzle-orm',
+            'guides/data/drizzle-vercel-migration',
           ],
         },
         {

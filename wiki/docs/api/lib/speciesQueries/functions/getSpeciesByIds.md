@@ -1,11 +1,10 @@
 # Function: getSpeciesByIds()
 
-> **getSpeciesByIds**(`ids`): `Promise`\<`object`[]\>
+> **getSpeciesByIds**(`ids`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>
 
-Defined in: [src/lib/speciesQueries.ts:85](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/lib/speciesQueries.ts#L85)
+Defined in: [src/lib/speciesQueries.ts:126](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/lib/speciesQueries.ts#L126)
 
-Fetches multiple species by their IDs.
-Useful for batch operations or displaying selected species.
+Fetches multiple species by their IDs (excludes geometry).
 
 ## Parameters
 
@@ -13,8 +12,6 @@ Useful for batch operations or displaying selected species.
 
 `number`[]
 
-Array of species ogc_fid values
-
 ## Returns
 
-`Promise`\<`object`[]\>
+`Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>

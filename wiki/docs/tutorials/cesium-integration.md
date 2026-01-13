@@ -14,7 +14,7 @@ Learn how Critter Connect integrates CesiumJS for 3D globe visualization and geo
 CesiumJS provides the 3D globe where players select locations. When a player clicks the globe:
 
 1. Coordinates are captured
-2. Species at that location are queried via `/api/species/*` (Prisma + PostGIS)
+2. Species at that location are queried via `/api/species/*` (Drizzle + PostGIS)
 3. Habitat data is fetched from TiTiler (raster service)
 4. Data is sent to the game via EventBus
 
@@ -104,7 +104,7 @@ async function handleLocationSelect(lon: number, lat: number) {
 }
 ```
 
-## PostGIS Integration (Prisma + API Routes)
+## PostGIS Integration (Drizzle + API Routes)
 
 ### Species Query (API Route)
 
@@ -128,7 +128,10 @@ export async function getSpeciesInRadius(
 
 ```typescript
 // src/app/api/species/in-radius/route.ts
-const species = await prisma.$queryRaw`
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+const species = await db.execute(sql`
   SELECT
     ogc_fid,
     comm_name,
@@ -141,7 +144,7 @@ const species = await prisma.$queryRaw`
       ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
       ${radius}
     )
-`;
+`);
 ```
 
 ## TiTiler Raster Integration

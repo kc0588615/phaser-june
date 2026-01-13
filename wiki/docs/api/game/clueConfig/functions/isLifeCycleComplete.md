@@ -2,7 +2,7 @@
 
 > **isLifeCycleComplete**(`species`): `boolean`
 
-Defined in: [src/game/clueConfig.ts:277](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/game/clueConfig.ts#L277)
+Defined in: [src/game/clueConfig.ts:277](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/clueConfig.ts#L277)
 
 ## Parameters
 

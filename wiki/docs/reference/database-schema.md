@@ -1,13 +1,13 @@
 ---
 sidebar_position: 3
 title: Database Schema
-description: Postgres tables, Prisma models, and data types
-tags: [reference, database, postgres, prisma]
+description: Postgres tables, Drizzle schema, and data types
+tags: [reference, database, postgres, drizzle]
 ---
 
 # Database Schema Reference
 
-Reference for Postgres tables and Prisma models. The source of truth is `prisma/schema.prisma`.
+Reference for Postgres tables and Drizzle schema. App tables are defined in `src/db/schema/*`; spatial tables are import-owned and mirrored in `src/db/schema/species.ts` via introspection.
 
 ## Core Tables
 
@@ -66,7 +66,7 @@ Main species data table.
 | `key_fact3` | text | Key fact 3 |
 | `wkb_geometry` | geometry | PostGIS geometry (4326) |
 
-Note: `wkb_geometry` exists in Postgres but is excluded from Prisma models. Use PostGIS via Prisma `$queryRaw` or API routes (`/api/species/*`).
+Note: `wkb_geometry` exists in Postgres; non-spatial API endpoints exclude it to avoid large payloads. Spatial routes use PostGIS raw SQL via Drizzle.
 
 ### profiles
 
@@ -170,9 +170,9 @@ Aggregated per-player statistics. JSONB fields store map-style counts.
 | `value` | integer | Habitat code |
 | `label` | text | Habitat label |
 
-### onearth_bioregion
+### oneearth_bioregion
 
-Reference polygons for bioregions (geometry not exposed in Prisma).
+Reference polygons for bioregions (geometry not returned by non-spatial endpoints).
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -200,7 +200,7 @@ Legacy leaderboard table.
 ## Spatial Queries (PostGIS)
 
 - Geometry lives in `icaa.wkb_geometry` (4326).
-- Prisma does not expose PostGIS geometry types; use `$queryRaw` or the API routes.
+- Drizzle uses raw SQL via `db.execute(sql\`...\`)` for PostGIS queries.
 
 Example API usage:
 
@@ -240,4 +240,4 @@ export interface PlayerStats {
 
 - [Database User Guide](/docs/guides/data/database-guide)
 - [Species Database Implementation](/docs/guides/data/species-database)
-- [Prisma ORM Guide](/docs/guides/data/prisma-orm)
+- [Drizzle ORM Guide](/docs/guides/data/drizzle-orm)

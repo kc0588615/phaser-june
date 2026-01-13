@@ -1,8 +1,8 @@
 # Function: getSpeciesAtPoint()
 
-> **getSpeciesAtPoint**(`lon`, `lat`): `Promise`\<`object`[]\>
+> **getSpeciesAtPoint**(`lon`, `lat`): `Promise`\<`SpatialSpeciesRow`[]\>
 
-Defined in: [src/lib/speciesQueries.ts:190](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/lib/speciesQueries.ts#L190)
+Defined in: [src/lib/speciesQueries.ts:232](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/lib/speciesQueries.ts#L232)
 
 Finds species whose habitat polygon contains a specific point.
 Uses PostGIS ST_Contains to check point-in-polygon.
@@ -19,4 +19,4 @@ Uses PostGIS ST_Contains to check point-in-polygon.
 
 ## Returns
 
-`Promise`\<`object`[]\>
+`Promise`\<`SpatialSpeciesRow`[]\>

@@ -1,6 +1,6 @@
 # Interface: Profile
 
-Defined in: [src/types/database.ts:8](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L8)
+Defined in: [src/types/database.ts:8](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L8)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/database.ts:8](https://github.com/kc0588615/phaser-june/b
 
 > `optional` **avatar\_url**: `string`
 
-Defined in: [src/types/database.ts:12](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L12)
+Defined in: [src/types/database.ts:12](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L12)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/database.ts:12](https://github.com/kc0588615/phaser-june/
 
 > **created\_at**: `string`
 
-Defined in: [src/types/database.ts:13](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L13)
+Defined in: [src/types/database.ts:13](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L13)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/database.ts:13](https://github.com/kc0588615/phaser-june/
 
 > `optional` **full\_name**: `string`
 
-Defined in: [src/types/database.ts:11](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L11)
+Defined in: [src/types/database.ts:11](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L11)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/types/database.ts:11](https://github.com/kc0588615/phaser-june/
 
 > **updated\_at**: `string`
 
-Defined in: [src/types/database.ts:14](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L14)
+Defined in: [src/types/database.ts:14](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L14)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/types/database.ts:14](https://github.com/kc0588615/phaser-june/
 
 > **user\_id**: `string`
 
-Defined in: [src/types/database.ts:9](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L9)
+Defined in: [src/types/database.ts:9](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L9)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [src/types/database.ts:9](https://github.com/kc0588615/phaser-june/b
 
 > `optional` **username**: `string`
 
-Defined in: [src/types/database.ts:10](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/types/database.ts#L10)
+Defined in: [src/types/database.ts:10](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/types/database.ts#L10)

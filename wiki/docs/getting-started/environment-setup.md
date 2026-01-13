@@ -7,7 +7,7 @@ tags: [setup, database, cesium, titiler]
 
 # Environment Setup
 
-This guide covers detailed configuration for Postgres (Prisma), Cesium, and optional TiTiler integration.
+This guide covers detailed configuration for Postgres (Drizzle), Cesium, and optional TiTiler integration.
 
 ## Environment Variables
 
@@ -20,8 +20,8 @@ cp .env.example .env.local
 ### Required Variables
 
 ```env
-# Database - Prisma connection string
-DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
+# Database - Postgres connection string (Drizzle)
+DATABASE_URL="postgresql://user:password@host:port/database?schema=public&pgbouncer=true"
 
 # Cesium Ion - 3D globe rendering
 NEXT_PUBLIC_CESIUM_ION_TOKEN=your-cesium-ion-token
@@ -41,14 +41,18 @@ NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 
 ## Database Setup
 
-### 1. Configure Prisma
+### 1. Configure Drizzle
 
 1. Ensure you have a PostgreSQL database running (e.g., on Hetzner VPS).
 2. Set the `DATABASE_URL` in `.env.local`.
-3. Run migrations:
+3. Ensure schema is in place:
+
+- Spatial tables (`icaa`, `oneearth_bioregion`) are created by shapefile imports.
+- App tables are created via SQL migrations or manual DDL (Drizzle does not run migrations here).
+- Refresh types after schema changes:
 
 ```bash
-npm run prisma:migrate
+npx drizzle-kit introspect
 ```
 
 ### 2. Required Tables
@@ -105,7 +109,7 @@ Use a managed TiTiler instance or deploy to AWS Lambda.
 Run the app and check browser console for:
 
 ```
-✓ Prisma client initialized
+✓ Drizzle client reachable
 ✓ Cesium viewer ready
 ✓ TiTiler endpoint accessible (if configured)
 ```

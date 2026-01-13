@@ -1,25 +1,19 @@
 ---
 sidebar_position: 1
 title: Database User Guide
-description: Working with Postgres tables and Prisma queries
-tags: [guide, database, postgres, prisma]
+description: Working with Postgres tables and Drizzle queries
+tags: [guide, database, postgres, drizzle]
 ---
 
 # Database User Guide
 
 Practical guide for querying species data and recording player progress.
 
-## Prisma Client Setup
+## Drizzle Client Setup
 
 ```typescript
-// src/lib/prisma.ts
-import { PrismaClient } from '@prisma/client';
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-export const prisma = globalForPrisma.prisma || new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// src/db/index.ts
+import { db } from '@/db';
 ```
 
 ## Querying Species
@@ -28,7 +22,10 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 ```typescript
 // src/lib/speciesQueries.ts
-const species = await prisma.$queryRaw`
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+const species = await db.execute(sql`
   SELECT *
   FROM icaa
   WHERE wkb_geometry IS NOT NULL
@@ -37,30 +34,42 @@ const species = await prisma.$queryRaw`
       ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
       ${radius}
     )
-`;
+`);
 ```
 
 ### By ID
 
 ```typescript
-const species = await prisma.iCAA.findUnique({
-  where: { ogc_fid: speciesId }
-});
+import { eq } from 'drizzle-orm';
+import { db, icaa } from '@/db';
+
+const [species] = await db
+  .select()
+  .from(icaa)
+  .where(eq(icaa.ogcFid, speciesId))
+  .limit(1);
 ```
 
 ### Search by Name
 
 ```typescript
-const results = await prisma.iCAA.findMany({
-  where: {
-    OR: [
-      { comm_name: { contains: searchTerm, mode: 'insensitive' } },
-      { sci_name: { contains: searchTerm, mode: 'insensitive' } }
-    ]
-  },
-  select: { ogc_fid: true, comm_name: true, sci_name: true },
-  take: 10
-});
+import { ilike, or } from 'drizzle-orm';
+import { db, icaa } from '@/db';
+
+const results = await db
+  .select({
+    ogc_fid: icaa.ogcFid,
+    comm_name: icaa.commName,
+    sci_name: icaa.sciName,
+  })
+  .from(icaa)
+  .where(
+    or(
+      ilike(icaa.commName, `%${searchTerm}%`),
+      ilike(icaa.sciName, `%${searchTerm}%`)
+    )
+  )
+  .limit(10);
 ```
 
 ## Recording Game Data

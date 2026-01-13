@@ -1,8 +1,8 @@
 # Function: GET()
 
-> **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: \{ \}; \}\> \| `NextResponse`\<\{ `count`: `number`; `query`: `string`; `species`: `object`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
+> **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: [`Species`](../../../../../types/database/interfaces/Species.md); \}\> \| `NextResponse`\<\{ `count`: `number`; `query`: `string`; `species`: `object`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `realm`: `string`; `species`: [`Species`](../../../../../types/database/interfaces/Species.md)[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: [`Species`](../../../../../types/database/interfaces/Species.md)[]; `statuses`: `string`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
 
-Defined in: [src/app/api/species/route.ts:58](https://github.com/kc0588615/phaser-june/blob/1755769f9313e5c417051ecf2e0b01990a74cc73/src/app/api/species/route.ts#L58)
+Defined in: [src/app/api/species/route.ts:58](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/app/api/species/route.ts#L58)
 
 GET /api/species
 
@@ -20,7 +20,7 @@ Query Parameters:
 
 ## Returns
 
-`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: \{ \}; \}\> \| `NextResponse`\<\{ `count`: `number`; `query`: `string`; `species`: `object`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
+`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: [`Species`](../../../../../types/database/interfaces/Species.md); \}\> \| `NextResponse`\<\{ `count`: `number`; `query`: `string`; `species`: `object`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `realm`: `string`; `species`: [`Species`](../../../../../types/database/interfaces/Species.md)[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: [`Species`](../../../../../types/database/interfaces/Species.md)[]; `statuses`: `string`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
 
 ## Example
 

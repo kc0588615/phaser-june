@@ -67,7 +67,7 @@ private handleSpeciesGuess(data: GuessPayload) {
 
 ## Player Tracking Integration
 
-Discoveries are recorded via Prisma for stats:
+Discoveries are recorded via Drizzle for stats:
 
 ```typescript
 async function recordDiscovery(speciesId: number) {

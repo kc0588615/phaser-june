@@ -7,7 +7,7 @@ tags: [guide, tracking, analytics]
 
 # Player Tracking Implementation
 
-How player sessions and discoveries are tracked (Prisma + Postgres). Auth is not wired yet, so calls require a `playerId` once Clerk is integrated.
+How player sessions and discoveries are tracked (Drizzle + Postgres). Auth is not wired yet, so calls require a `playerId` once Clerk is integrated.
 
 ## Session Management
 

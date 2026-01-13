@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Phaser-June',
-  tagline: 'A biodiversity discovery game built with Phaser, React, Cesium & Prisma',
+  tagline: 'A biodiversity discovery game built with Phaser, React, Cesium & Drizzle',
   favicon: 'img/favicon.ico',
 
   future: {
