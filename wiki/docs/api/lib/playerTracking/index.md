@@ -7,7 +7,7 @@
 - [forceSessionUpdate](functions/forceSessionUpdate.md)
 - [getClueCountForSpecies](functions/getClueCountForSpecies.md)
 - [getCurrentSessionId](functions/getCurrentSessionId.md)
-- [processOfflineQueue](functions/processOfflineQueue.md)
+- [refreshPlayerStats](functions/refreshPlayerStats.md)
 - [startGameSession](functions/startGameSession.md)
 - [trackClueUnlock](functions/trackClueUnlock.md)
 - [trackSpeciesDiscovery](functions/trackSpeciesDiscovery.md)

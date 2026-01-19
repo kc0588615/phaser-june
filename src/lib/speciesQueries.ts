@@ -15,63 +15,63 @@ import type { Species } from '@/types/database';
 // Explicit snake_case column aliases (excludes wkb_geometry for payload size)
 const speciesColumns = {
   ogc_fid: icaa.ogcFid,
-  comm_name: icaa.commName,
-  sci_name: icaa.sciName,
-  tax_comm: icaa.taxComm,
-  http_iucn: icaa.httpIucn,
+  common_name: icaa.commonName,
+  scientific_name: icaa.scientificName,
+  taxonomic_comment: icaa.taxonomicComment,
+  iucn_url: icaa.iucnUrl,
   kingdom: icaa.kingdom,
   phylum: icaa.phylum,
   class: icaa.class,
-  order_: icaa.order,
+  taxon_order: icaa.taxonOrder,
   family: icaa.family,
   genus: icaa.genus,
   category: icaa.category,
-  cons_code: icaa.consCode,
-  cons_text: icaa.consText,
+  conservation_code: icaa.conservationCode,
+  conservation_text: icaa.conservationText,
   threats: icaa.threats,
-  hab_desc: icaa.habDesc,
-  hab_tags: icaa.habTags,
+  habitat_description: icaa.habitatDescription,
+  habitat_tags: icaa.habitatTags,
   marine: icaa.marine,
-  terrestria: icaa.terrestria,
+  terrestrial: icaa.terrestrial,
   freshwater: icaa.freshwater,
   aquatic: icaa.aquatic,
-  geo_desc: icaa.geoDesc,
-  dist_comm: icaa.distComm,
+  geographic_description: icaa.geographicDescription,
+  distribution_comment: icaa.distributionComment,
   island: icaa.island,
   origin: icaa.origin,
-  bioregio_1: icaa.bioregio1,
+  bioregion: icaa.bioregion,
   realm: icaa.realm,
-  sub_realm: icaa.subRealm,
+  subrealm: icaa.subrealm,
   biome: icaa.biome,
-  color_prim: icaa.colorPrim,
-  color_sec: icaa.colorSec,
+  color_primary: icaa.colorPrimary,
+  color_secondary: icaa.colorSecondary,
   pattern: icaa.pattern,
-  shape_desc: icaa.shapeDesc,
-  size_min: icaa.sizeMin,
-  size_max: icaa.sizeMax,
+  shape_description: icaa.shapeDescription,
+  size_min_cm: icaa.sizeMinCm,
+  size_max_cm: icaa.sizeMaxCm,
   weight_kg: icaa.weightKg,
   diet_type: icaa.dietType,
   diet_prey: icaa.dietPrey,
   diet_flora: icaa.dietFlora,
-  behav_1: icaa.behav1,
-  behav_2: icaa.behav2,
+  behavior_1: icaa.behavior1,
+  behavior_2: icaa.behavior2,
   lifespan: icaa.lifespan,
   maturity: icaa.maturity,
-  repro_type: icaa.reproType,
-  clutch_sz: icaa.clutchSz,
-  life_desc1: icaa.lifeDesc1,
-  life_desc2: icaa.lifeDesc2,
-  key_fact1: icaa.keyFact1,
-  key_fact2: icaa.keyFact2,
-  key_fact3: icaa.keyFact3,
+  reproduction_type: icaa.reproductionType,
+  clutch_size: icaa.clutchSize,
+  life_description_1: icaa.lifeDescription1,
+  life_description_2: icaa.lifeDescription2,
+  key_fact_1: icaa.keyFact1,
+  key_fact_2: icaa.keyFact2,
+  key_fact_3: icaa.keyFact3,
 };
 
 // Minimal columns for catalog listing
 const catalogColumns = {
   ogc_fid: icaa.ogcFid,
-  comm_name: icaa.commName,
-  sci_name: icaa.sciName,
-  order_: icaa.order,
+  common_name: icaa.commonName,
+  scientific_name: icaa.scientificName,
+  taxon_order: icaa.taxonOrder,
   family: icaa.family,
   genus: icaa.genus,
   kingdom: icaa.kingdom,
@@ -79,10 +79,10 @@ const catalogColumns = {
   class: icaa.class,
   realm: icaa.realm,
   biome: icaa.biome,
-  bioregio_1: icaa.bioregio1,
+  bioregion: icaa.bioregion,
   category: icaa.category,
   marine: icaa.marine,
-  terrestria: icaa.terrestria,
+  terrestrial: icaa.terrestrial,
   freshwater: icaa.freshwater,
   aquatic: icaa.aquatic,
 };
@@ -99,7 +99,7 @@ export async function getSpeciesCatalog() {
   return db
     .select(catalogColumns)
     .from(icaa)
-    .orderBy(asc(icaa.commName));
+    .orderBy(asc(icaa.commonName));
 }
 
 /**
@@ -128,7 +128,7 @@ export async function getSpeciesByIds(ids: number[]): Promise<Species[]> {
     .select(speciesColumns)
     .from(icaa)
     .where(inArray(icaa.ogcFid, ids))
-    .orderBy(asc(icaa.commName));
+    .orderBy(asc(icaa.commonName));
 
   return results as unknown as Species[];
 }
@@ -143,19 +143,19 @@ export async function searchSpecies(query: string) {
   return db
     .select({
       ogc_fid: icaa.ogcFid,
-      comm_name: icaa.commName,
-      sci_name: icaa.sciName,
+      common_name: icaa.commonName,
+      scientific_name: icaa.scientificName,
       category: icaa.category,
       realm: icaa.realm,
     })
     .from(icaa)
     .where(
       or(
-        ilike(icaa.commName, searchTerm),
-        ilike(icaa.sciName, searchTerm)
+        ilike(icaa.commonName, searchTerm),
+        ilike(icaa.scientificName, searchTerm)
       )
     )
-    .orderBy(asc(icaa.commName))
+    .orderBy(asc(icaa.commonName))
     .limit(20);
 }
 
@@ -167,7 +167,7 @@ export async function getSpeciesByConservationStatus(categories: string[]): Prom
     .select(speciesColumns)
     .from(icaa)
     .where(inArray(icaa.category, categories))
-    .orderBy(asc(icaa.commName));
+    .orderBy(asc(icaa.commonName));
 
   return results as unknown as Species[];
 }
@@ -180,7 +180,7 @@ export async function getSpeciesByRealm(realm: string): Promise<Species[]> {
     .select(speciesColumns)
     .from(icaa)
     .where(eq(icaa.realm, realm))
-    .orderBy(asc(icaa.commName));
+    .orderBy(asc(icaa.commonName));
 
   return results as unknown as Species[];
 }
@@ -191,12 +191,12 @@ export async function getSpeciesByRealm(realm: string): Promise<Species[]> {
 
 interface SpatialSpeciesRow {
   ogc_fid: number;
-  comm_name: string | null;
-  sci_name: string | null;
+  common_name: string | null;
+  scientific_name: string | null;
   category: string | null;
   realm: string | null;
   biome: string | null;
-  order_: string | null;
+  taxon_order: string | null;
   family: string | null;
   genus: string | null;
   [key: string]: unknown;
@@ -269,9 +269,9 @@ export async function getSpeciesBioregions(speciesIds: number[]) {
   const species = await db
     .select({
       ogc_fid: icaa.ogcFid,
-      bioregio_1: icaa.bioregio1,
+      bioregion: icaa.bioregion,
       realm: icaa.realm,
-      sub_realm: icaa.subRealm,
+      subrealm: icaa.subrealm,
       biome: icaa.biome,
     })
     .from(icaa)
@@ -279,9 +279,9 @@ export async function getSpeciesBioregions(speciesIds: number[]) {
 
   return species.map(s => ({
     species_id: s.ogc_fid,
-    bioregio_1: s.bioregio_1,
+    bioregion: s.bioregion,
     realm: s.realm,
-    sub_realm: s.sub_realm,
+    subrealm: s.subrealm,
     biome: s.biome,
   }));
 }

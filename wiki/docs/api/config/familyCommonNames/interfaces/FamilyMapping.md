@@ -1,6 +1,6 @@
 # Interface: FamilyMapping
 
-Defined in: [src/config/familyCommonNames.ts:15](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/config/familyCommonNames.ts#L15)
+Defined in: [src/config/familyCommonNames.ts:15](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/config/familyCommonNames.ts#L15)
 
 Family Common Names Configuration
 
@@ -23,7 +23,7 @@ getFamilyDisplayName('Testudinidae') // returns 'Testudinidae (tortoises)'
 
 > **commonName**: `string`
 
-Defined in: [src/config/familyCommonNames.ts:17](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/config/familyCommonNames.ts#L17)
+Defined in: [src/config/familyCommonNames.ts:17](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/config/familyCommonNames.ts#L17)
 
 ***
 
@@ -31,7 +31,7 @@ Defined in: [src/config/familyCommonNames.ts:17](https://github.com/kc0588615/ph
 
 > `optional` **description**: `string`
 
-Defined in: [src/config/familyCommonNames.ts:18](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/config/familyCommonNames.ts#L18)
+Defined in: [src/config/familyCommonNames.ts:18](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/config/familyCommonNames.ts#L18)
 
 ***
 
@@ -39,4 +39,4 @@ Defined in: [src/config/familyCommonNames.ts:18](https://github.com/kc0588615/ph
 
 > **scientificName**: `string`
 
-Defined in: [src/config/familyCommonNames.ts:16](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/config/familyCommonNames.ts#L16)
+Defined in: [src/config/familyCommonNames.ts:16](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/config/familyCommonNames.ts#L16)

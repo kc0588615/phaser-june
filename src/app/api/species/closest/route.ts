@@ -4,8 +4,8 @@ import { db } from '@/db';
 
 interface ClosestSpeciesRow {
   ogc_fid: number;
-  comm_name: string | null;
-  sci_name: string | null;
+  common_name: string | null;
+  scientific_name: string | null;
   wkb_geometry: string | null;
   distance_meters: number;
   [key: string]: unknown;
@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     const result = await db.execute<ClosestSpeciesRow>(sql`
       SELECT
         ogc_fid,
-        comm_name,
-        sci_name,
+        common_name,
+        scientific_name,
         ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry,
         ST_Distance(
           wkb_geometry::geography,
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       species: {
         ogc_fid: closest.ogc_fid,
-        comm_name: closest.comm_name,
-        sci_name: closest.sci_name,
+        common_name: closest.common_name,
+        scientific_name: closest.scientific_name,
         distance_km: Math.round(closest.distance_meters / 1000),
       },
       geometry: closest.wkb_geometry ? JSON.parse(closest.wkb_geometry) : null,

@@ -292,13 +292,14 @@ The Classification category (red gems 🧬) now uses a progressive revelation sy
 
 ### Sequence Design
 **Revelation Order** (skipping kingdom as requested):
-1. **1st Red Match**: `Phylum: [value]` (e.g., "Phylum: CHORDATA")
-2. **2nd Red Match**: `Class: [value]` (e.g., "Class: REPTILIA") 
-3. **3rd Red Match**: `Order: [value]` (e.g., "Order: TESTUDINES")
-4. **4th Red Match**: `Family: [value]` (e.g., "Family: EMYDIDAE")
-5. **5th Red Match**: `Genus: [value]` (e.g., "Genus: Emydoidea")
-6. **6th Red Match**: `Scientific name: [value]` (e.g., "Scientific name: Emydoidea blandingii")
-7. **7th+ Red Matches**: No output (sequence complete)
+1. **1st Red Match**: `Taxonomic comment` (full sentence if present)
+2. **2nd Red Match**: `Phylum: [value]` (e.g., "Phylum: CHORDATA")
+3. **3rd Red Match**: `Class: [value]` (e.g., "Class: REPTILIA") 
+4. **4th Red Match**: `Order: [value]` (e.g., "Order: TESTUDINES")
+5. **5th Red Match**: `Family: [value]` (e.g., "Family: EMYDIDAE")
+6. **6th Red Match**: `Genus: [value]` (e.g., "Genus: Emydoidea")
+7. **7th Red Match**: `Scientific name: [value]` (e.g., "Scientific name: Emydoidea blandingii")
+8. **8th+ Red Matches**: No output (sequence complete)
 
 ### Technical Implementation
 
@@ -306,7 +307,13 @@ The Classification category (red gems 🧬) now uses a progressive revelation sy
 ```typescript
 // Classification sequence array
 const CLASSIFICATION_SEQUENCE: Array<keyof Species> = [
-  'phylum', 'class', 'order_', 'family', 'genus', 'sci_name'
+  'taxonomic_comment',
+  'phylum',
+  'class',
+  'taxon_order',
+  'family',
+  'genus',
+  'scientific_name'
 ];
 
 // Progress tracking using WeakMap for memory efficiency
@@ -323,12 +330,13 @@ function getNextClassificationClue(species: Species): string {
     
     if (value) {
       switch (field) {
+        case 'taxonomic_comment': return value;
         case 'phylum': return `Phylum: ${value}`;
         case 'class': return `Class: ${value}`;
-        case 'order_': return `Order: ${value}`;
+        case 'taxon_order': return `Order: ${value}`;
         case 'family': return `Family: ${value}`;
         case 'genus': return `Genus: ${value}`;
-        case 'sci_name': return `Scientific name: ${value}`;
+        case 'scientific_name': return `Scientific name: ${value}`;
         default: return value;
       }
     }
@@ -393,7 +401,7 @@ const isDuplicate = clueData.category === 0 ?
 
 ### Database Requirements
 **No SQL Changes Required** - System uses existing `icaa` table fields:
-- `phylum`, `class`, `order_`, `family`, `genus`, `sci_name`
+- `taxonomic_comment`, `phylum`, `class`, `taxon_order`, `family`, `genus`, `scientific_name`
 - All data already present in database
 
 ### Future Developer Guidance

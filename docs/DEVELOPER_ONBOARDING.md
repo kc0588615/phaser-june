@@ -146,17 +146,17 @@ npm run start    # http://localhost:3000
 
 | Color (asset key) | Category | Icon | Clue source (progressive order) | Example output |
 | --- | --- | --- | --- | --- |
-| red | Classification | 🧬 | `tax_comm`, `phylum`, `class`, `order_`, `family`, `genus`, `sci_name` | `Genus: Panthera` |
+| red | Classification | 🧬 | `taxonomic_comment`, `phylum`, `class`, `taxon_order`, `family`, `genus`, `scientific_name` | `Genus: Panthera` |
 | green | Habitat (Cesium) | 🌳 | Cesium click `rasterHabitats` (`habitat_type` with `percentage`, uses returned order) | `Search Area is 62% Mangroves` |
-| blue | Geographic & Habitat text | 🗺️ | `geo_desc`, `dist_comm`, `hab_desc`, `hab_tags` | `Habitat: tropical rainforests` |
-| orange | Morphology | 🐆 | `pattern`, `color_prim`, `color_sec`, `shape_desc`, `size_max`, `weight_kg` | `Primary color: chestnut` |
-| yellow | Behavior & Diet | 💨 | `behav_1`, `behav_2`, `diet_type`, `diet_prey`, `diet_flora` | `Diet type: Carnivore` |
-| black | Life Cycle | ⏳ | `life_desc1`, `life_desc2`; fallback: `lifespan`, `maturity`, `repro_type`, `clutch_sz` | `Clutch size: 2-4 eggs` |
-| white | Conservation | 🛡️ | `cons_text`, `threats`; fallback: `cons_code` or `category` | `Threats: habitat loss` |
-| purple | Key Facts | 🔮 | `key_fact1`, `key_fact2`, `key_fact3` | `Has night vision` |
+| blue | Geographic & Habitat text | 🗺️ | `geographic_description`, `distribution_comment`, `habitat_description`, `habitat_tags` | `Habitat: tropical rainforests` |
+| orange | Morphology | 🐆 | `pattern`, `color_primary`, `color_secondary`, `shape_description`, `size_max_cm`, `weight_kg` | `Primary color: chestnut` |
+| yellow | Behavior & Diet | 💨 | `behavior_1`, `behavior_2`, `diet_type`, `diet_prey`, `diet_flora` | `Diet type: Carnivore` |
+| black | Life Cycle | ⏳ | `life_description_1`, `life_description_2`; fallback: `lifespan`, `maturity`, `reproduction_type`, `clutch_size` | `Clutch size: 2-4 eggs` |
+| white | Conservation | 🛡️ | `conservation_text`, `threats`; fallback: `conservation_code` or `category` | `Threats: habitat loss` |
+| purple | Key Facts | 🔮 | `key_fact_1`, `key_fact_2`, `key_fact_3` | `Has night vision` |
 
 Notes:
 - Behavior + diet clues are emitted by matching yellow gems. Conservation clues are emitted by matching white gems.
-- Habitat text fields (`hab_desc`, `hab_tags`) now ride with the blue Geographic gem. The green gem exclusively returns Cesium habitat legend values.
+- Habitat text fields (`habitat_description`, `habitat_tags`) now ride with the blue Geographic gem. The green gem exclusively returns Cesium habitat legend values.
 
 Use this doc as the hub: follow the recommended reading path, then dive into the specific files linked above before modifying the game.

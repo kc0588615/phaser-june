@@ -1,6 +1,6 @@
 # Interface: BadgeProps
 
-Defined in: [src/components/ui/badge.tsx:26](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/components/ui/badge.tsx#L26)
+Defined in: [src/components/ui/badge.tsx:26](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/ui/badge.tsx#L26)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [src/components/ui/badge.tsx:26](https://github.com/kc0588615/phaser
 
 > `optional` **variant**: `"default"` \| `"secondary"` \| `"destructive"` \| `"outline"` \| `null`
 
-Defined in: [src/components/ui/badge.tsx:10](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/components/ui/badge.tsx#L10)
+Defined in: [src/components/ui/badge.tsx:10](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/ui/badge.tsx#L10)
 
 #### Inherited from
 

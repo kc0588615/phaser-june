@@ -2,7 +2,7 @@
 
 > **calculateTimeToDiscover**(): `number` \| `null`
 
-Defined in: [src/lib/playerTracking.ts:504](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/lib/playerTracking.ts#L504)
+Defined in: [src/lib/playerTracking.ts:452](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/lib/playerTracking.ts#L452)
 
 Calculate time to discover in seconds (per species)
 

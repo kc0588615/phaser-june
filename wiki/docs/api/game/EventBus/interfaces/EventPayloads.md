@@ -1,6 +1,6 @@
 # Interface: EventPayloads
 
-Defined in: [src/game/EventBus.ts:7](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L7)
+Defined in: [src/game/EventBus.ts:7](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L7)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/game/EventBus.ts:7](https://github.com/kc0588615/phaser-june/bl
 
 > **all-clues-revealed**: `object`
 
-Defined in: [src/game/EventBus.ts:34](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L34)
+Defined in: [src/game/EventBus.ts:34](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L34)
 
 #### speciesId
 
@@ -20,7 +20,7 @@ Defined in: [src/game/EventBus.ts:34](https://github.com/kc0588615/phaser-june/b
 
 > **all-species-completed**: `object`
 
-Defined in: [src/game/EventBus.ts:37](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L37)
+Defined in: [src/game/EventBus.ts:37](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L37)
 
 #### totalSpecies
 
@@ -32,7 +32,7 @@ Defined in: [src/game/EventBus.ts:37](https://github.com/kc0588615/phaser-june/b
 
 > **cesium-location-selected**: `object`
 
-Defined in: [src/game/EventBus.ts:9](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L9)
+Defined in: [src/game/EventBus.ts:9](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L9)
 
 #### habitats
 
@@ -60,7 +60,7 @@ Defined in: [src/game/EventBus.ts:9](https://github.com/kc0588615/phaser-june/bl
 
 > **clue-revealed**: [`CluePayload`](../../clueConfig/interfaces/CluePayload.md)
 
-Defined in: [src/game/EventBus.ts:24](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L24)
+Defined in: [src/game/EventBus.ts:24](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L24)
 
 ***
 
@@ -68,7 +68,7 @@ Defined in: [src/game/EventBus.ts:24](https://github.com/kc0588615/phaser-june/b
 
 > **current-scene-ready**: `Scene`
 
-Defined in: [src/game/EventBus.ts:8](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L8)
+Defined in: [src/game/EventBus.ts:8](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L8)
 
 ***
 
@@ -76,7 +76,7 @@ Defined in: [src/game/EventBus.ts:8](https://github.com/kc0588615/phaser-june/bl
 
 > **game-hud-updated**: `object`
 
-Defined in: [src/game/EventBus.ts:52](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L52)
+Defined in: [src/game/EventBus.ts:52](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L52)
 
 #### maxMoves
 
@@ -112,7 +112,7 @@ Defined in: [src/game/EventBus.ts:52](https://github.com/kc0588615/phaser-june/b
 
 > **game-over**: `object`
 
-Defined in: [src/game/EventBus.ts:20](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L20)
+Defined in: [src/game/EventBus.ts:20](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L20)
 
 #### finalScore
 
@@ -128,7 +128,7 @@ Defined in: [src/game/EventBus.ts:20](https://github.com/kc0588615/phaser-june/b
 
 > **game-reset**: `undefined`
 
-Defined in: [src/game/EventBus.ts:32](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L32)
+Defined in: [src/game/EventBus.ts:32](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L32)
 
 ***
 
@@ -136,7 +136,7 @@ Defined in: [src/game/EventBus.ts:32](https://github.com/kc0588615/phaser-june/b
 
 > **game-restart**: `Record`\<`string`, `never`\>
 
-Defined in: [src/game/EventBus.ts:61](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L61)
+Defined in: [src/game/EventBus.ts:61](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L61)
 
 ***
 
@@ -144,7 +144,7 @@ Defined in: [src/game/EventBus.ts:61](https://github.com/kc0588615/phaser-june/b
 
 > **game-score-updated**: `object`
 
-Defined in: [src/game/EventBus.ts:16](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L16)
+Defined in: [src/game/EventBus.ts:16](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L16)
 
 #### movesRemaining
 
@@ -160,7 +160,7 @@ Defined in: [src/game/EventBus.ts:16](https://github.com/kc0588615/phaser-june/b
 
 > **layout-changed**: `object`
 
-Defined in: [src/game/EventBus.ts:40](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L40)
+Defined in: [src/game/EventBus.ts:40](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L40)
 
 #### mapMinimized
 
@@ -172,7 +172,7 @@ Defined in: [src/game/EventBus.ts:40](https://github.com/kc0588615/phaser-june/b
 
 > **new-game-started**: `object`
 
-Defined in: [src/game/EventBus.ts:25](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L25)
+Defined in: [src/game/EventBus.ts:25](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L25)
 
 #### currentIndex
 
@@ -200,7 +200,7 @@ Defined in: [src/game/EventBus.ts:25](https://github.com/kc0588615/phaser-june/b
 
 > **no-species-found**: `object`
 
-Defined in: [src/game/EventBus.ts:33](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L33)
+Defined in: [src/game/EventBus.ts:33](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L33)
 
 ***
 
@@ -208,7 +208,7 @@ Defined in: [src/game/EventBus.ts:33](https://github.com/kc0588615/phaser-june/b
 
 > **show-species-list**: `object`
 
-Defined in: [src/game/EventBus.ts:49](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L49)
+Defined in: [src/game/EventBus.ts:49](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L49)
 
 #### speciesId
 
@@ -220,7 +220,7 @@ Defined in: [src/game/EventBus.ts:49](https://github.com/kc0588615/phaser-june/b
 
 > **species-guess-submitted**: `object`
 
-Defined in: [src/game/EventBus.ts:43](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/EventBus.ts#L43)
+Defined in: [src/game/EventBus.ts:43](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/EventBus.ts#L43)
 
 #### actualName
 

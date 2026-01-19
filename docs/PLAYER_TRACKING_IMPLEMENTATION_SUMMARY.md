@@ -118,13 +118,13 @@ Core tracking logic is implemented, but writes are gated until auth provides a u
 ### ✅ Performance Optimized
 - Auth-gated tracking avoids writes for guests
 - Debounced session updates reduce database load
-- Offline queue retries failed writes
 
 ### ✅ Session Lifecycle Complete
 - `startGameSession()` in create()
 - `endGameSession()` in shutdown()
 - `forceSessionUpdate()` on beforeunload
 - `forceSessionUpdate()` on species discovery
+- `refreshPlayerStats()` runs after discovery and session end to keep aggregates in sync
 
 ### ✅ Correct Property References
 - `this.selectedSpecies.ogc_fid` (not `this.currentSpeciesId`)
@@ -157,7 +157,6 @@ Before marking complete, test:
 - [ ] Migration - flag prevents duplicate migrations
 - [ ] Session resume - existing open session resumed on reload
 - [ ] Memory - no duplicate listeners after scene restart
-- [ ] Offline queue - failed writes retried on reconnect
 - [ ] Leaderboard - materialized view updates after discoveries
 
 ## Database Requirements
@@ -171,6 +170,14 @@ Required tables:
 - `player_clue_unlocks` - Clue tracking (single source of truth)
 - `player_stats` - Aggregate statistics
 - `player_leaderboard` (view) - Rankings
+
+## One-Time Backfill
+
+If you ran migrations on an existing database, repair stats drift once:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
 
 ## Next Steps (Optional)
 

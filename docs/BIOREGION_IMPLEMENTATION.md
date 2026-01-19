@@ -20,9 +20,9 @@ Bioregion fields are stored directly on `icaa` and served via `/api/species/bior
 ### oneearth_bioregion Table
 Contains polygons representing different ecoregions with the following relevant fields:
 - `ogc_fid`: Primary key
-- `bioregio_1`: Bioregion name
+- `bioregion`: Bioregion code
 - `realm`: Major biogeographic realm
-- `sub_realm`: Sub-realm classification
+- `subrealm`: Sub-realm classification
 - `biome`: Biome type
 - `wkb_geometry`: Polygon geometry (SRID: 900914 - Spherical Mercator)
 
@@ -37,18 +37,18 @@ Returns bioregion data for a single species:
 ```sql
 CREATE OR REPLACE FUNCTION get_species_bioregion(species_id INT)
 RETURNS TABLE (
-  bioregio_1 TEXT,
+  bioregion TEXT,
   realm TEXT,
-  sub_realm TEXT,
+  subrealm TEXT,
   biome TEXT,
   overlap_area FLOAT
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
-    b.bioregio_1::TEXT,
+    b.bioregion::TEXT,
     b.realm::TEXT,
-    b.sub_realm::TEXT,
+    b.subrealm::TEXT,
     b.biome::TEXT,
     ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) / 1000000 as overlap_area
   FROM icaa s
@@ -67,9 +67,9 @@ Batch function for multiple species (more performant):
 CREATE OR REPLACE FUNCTION get_species_bioregions(species_ids INT[])
 RETURNS TABLE (
   species_id INT,
-  bioregio_1 TEXT,
+  bioregion TEXT,
   realm TEXT,
-  sub_realm TEXT,
+  subrealm TEXT,
   biome TEXT
 ) AS $$
 BEGIN
@@ -77,9 +77,9 @@ BEGIN
   WITH species_bioregion AS (
     SELECT DISTINCT ON (s.ogc_fid)
       s.ogc_fid as sp_id,
-      b.bioregio_1::TEXT as bio_1,
+      b.bioregion::TEXT as bio_1,
       b.realm::TEXT as r,
-      b.sub_realm::TEXT as sr,
+      b.subrealm::TEXT as sr,
       b.biome::TEXT as bi,
       ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) as overlap_area
     FROM icaa s
@@ -89,9 +89,9 @@ BEGIN
   )
   SELECT 
     sp_id as species_id,
-    bio_1 as bioregio_1,
+    bio_1 as bioregion,
     r as realm,
-    sr as sub_realm,
+    sr as subrealm,
     bi as biome
   FROM species_bioregion;
 END;

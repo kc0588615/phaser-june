@@ -17,8 +17,8 @@ export async function GET(request: NextRequest) {
     let query = db
       .select({
         ogcFid: icaa.ogcFid,
-        commName: icaa.commName,
-        sciName: icaa.sciName,
+        commonName: icaa.commonName,
+        scientificName: icaa.scientificName,
       })
       .from(icaa);
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     // Extract names and shuffle
     const names = species
-      .map(s => s.commName || s.sciName || 'Unknown Species')
+      .map(s => s.commonName || s.scientificName || 'Unknown Species')
       .filter(name => name !== 'Unknown Species')
       .sort(() => Math.random() - 0.5)
       .slice(0, count);

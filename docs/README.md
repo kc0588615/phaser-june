@@ -2,6 +2,8 @@
 
 A Next.js + React application that embeds a Phaser 3 puzzle game and a Cesium 3D map, with species and habitat data stored in Postgres via Drizzle ORM. Server runtime is required for API routes and database access. Auth is planned via Clerk (not implemented yet). UI built with Tailwind CSS and shadcn/ui.
 
+Note: The data layer was migrated from Prisma to Drizzle; Prisma is no longer used in this repo.
+
 ## Tech Stack
 
 - Phaser 3.90.0 for gameplay

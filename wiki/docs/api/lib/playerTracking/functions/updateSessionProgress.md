@@ -2,7 +2,7 @@
 
 > **updateSessionProgress**(`sessionId`, `moves`, `score`, `speciesDiscovered`, `cluesUnlocked`): `Promise`\<`void`\>
 
-Defined in: [src/lib/playerTracking.ts:235](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/lib/playerTracking.ts#L235)
+Defined in: [src/lib/playerTracking.ts:191](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/lib/playerTracking.ts#L191)
 
 Update session progress (DEBOUNCED)
 Batches rapid updates to reduce database load

@@ -122,9 +122,9 @@ Per-clue unlock records.
 | `id` | uuid | Primary key |
 | `player_id` | uuid | FK to profiles.user_id |
 | `species_id` | integer | FK to icaa.ogc_fid |
-| `discovery_id` | uuid | FK to player_species_discoveries.id |
+| `discovery_id` | uuid | FK to player_species_discoveries.id (nullable) |
 | `clue_category` | text | Category (classification, habitat, etc.) |
-| `clue_field` | text | Field name (order_, realm, etc.) |
+| `clue_field` | text | Field name (taxon_order, realm, etc.) |
 | `clue_value` | text | Display value |
 | `unlocked_at` | timestamptz | Unlock timestamp |
 
@@ -177,13 +177,13 @@ Reference polygons for bioregions (geometry not returned by non-spatial endpoint
 | Column | Type | Description |
 |--------|------|-------------|
 | `ogc_fid` | integer | Primary key |
-| `bioregions` | text | Region code |
-| `bioregio_1` | text | Bioregion label |
+| `bioregions` | text | Full bioregion name |
+| `bioregion` | text | Bioregion code (join key) |
 | `realm` | text | Realm |
-| `sub_realm` | text | Sub-realm |
+| `subrealm` | text | Sub-realm |
 | `biome` | text | Biome |
-| `shape_leng` | float | Shape length |
-| `shape_le_1` | numeric | Shape length (alt) |
+| `shape_length` | float | Shape length |
+| `shape_length_alt` | numeric | Shape length (alt) |
 | `shape_area` | float | Shape area |
 
 ### high_scores
@@ -193,6 +193,7 @@ Legacy leaderboard table.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
+| `player_id` | uuid | Optional FK to profiles.user_id |
 | `username` | text | Player display name |
 | `score` | integer | Score |
 | `created_at` | timestamptz | Created timestamp |
@@ -216,18 +217,27 @@ const data = await response.json();
 ```typescript
 export interface Species {
   ogc_fid: number;
-  comm_name?: string;
-  sci_name?: string;
+  common_name?: string;
+  scientific_name?: string;
   category?: string;
+  taxon_order?: string;
+  family?: string;
+  genus?: string;
   realm?: string;
   biome?: string;
+  bioregion?: string;
   wkb_geometry?: any;
 }
 
 export interface PlayerStats {
   player_id: string;
   total_species_discovered: number;
+  total_clues_unlocked: number;
   total_score: number;
+  total_moves_made: number;
+  total_games_played: number;
+  average_clues_per_discovery: number | null;
+  // ... more fields in src/types/database.ts
 }
 ```
 

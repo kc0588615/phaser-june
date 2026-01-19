@@ -8,9 +8,11 @@ This guide provides comprehensive documentation for the database architecture us
 
 ### Technology Stack
 - **Database**: PostgreSQL 15+ (Hetzner VPS) with PostGIS extension
-- **Connection**: Drizzle ORM (postgres.js)
+- **Connection**: Drizzle ORM (postgres.js). Prisma is no longer used.
 - **Spatial Features**: PostGIS for geographic queries
 - **Real-time**: None (Standard REST/Server Actions)
+
+See `docs/SHAPEFILE_BEST_PRACTICES.mdx` for pre-import guidance on spatial data fields and types.
 
 ### Database Tables
 
@@ -19,18 +21,29 @@ Primary table containing all species information with 70+ fields.
 
 **Key Identifiers:**
 - `ogc_fid` (number) - Primary key, unique identifier for each species
-- `comm_name` (string) - Common name
-- `sci_name` (string) - Scientific name
-- `tax_comm` (string) - Taxonomic common name
+- `common_name` (string) - Common name
+- `scientific_name` (string) - Scientific name
+- `taxonomic_comment` (string) - Taxonomic comments/context
 
 **Spatial Field:**
 - `wkb_geometry` (PostGIS geometry) - Polygon/multipolygon defining species range
 
 #### 2. `high_scores` Table
-- `id` (uuid; legacy, new app tables use bigint identity) - Primary key
-- `username` (string) - Player name
+- `id` (uuid) - Primary key
+- `player_id` (uuid, nullable) - Optional FK to `profiles.user_id` for authenticated players
+- `username` (string) - Player name (legacy/guest-friendly)
 - `score` (number) - Game score
-- `created_at` (timestamptz; migrate if legacy timestamp) - Score submission time
+- `created_at` (timestamptz) - Score submission time
+
+**Note:** `player_id` is optional so legacy anonymous scores remain valid.
+
+## Maintenance Tasks
+
+After applying schema migrations on an existing database, run the stats backfill once:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
 
 ## Conventions and Best Practices
 
@@ -100,81 +113,75 @@ The clue system directly depends on specific database fields. Here's the complet
 
 #### 1. Classification (Red Gems) 🧬
 **Database Fields Used:**
-- `genus` - Genus level classification
-- `family` - Family level classification
-- `order_` - Order level classification (note underscore)
-- `class` - Class level classification
+- `taxonomic_comment` - Taxonomic comments/context (revealed first)
 - `phylum` - Phylum level classification
-- `kingdom` - Kingdom level classification
-- `tax_comm` - Fallback taxonomic common name
+- `class` - Class level classification
+- `taxon_order` - Order level classification
+- `family` - Family level classification
+- `genus` - Genus level classification
+- `scientific_name` - Full scientific name (revealed last)
 
 **Clue Generation Logic:**
+Progressive revelation from least to most specific:
 ```typescript
-// Returns most specific classification available
-if (species.genus) return `Genus: ${species.genus}`;
-if (species.family) return `Family: ${species.family}`;
-// ... continues through hierarchy
+// Reveals taxonomy step by step
+'taxonomic_comment' → 'phylum' → 'class' → 'taxon_order' → 'family' → 'genus' → 'scientific_name'
 ```
 
 #### 2. Habitat (Green Gems) 🌳
 **Database Fields Used:**
-- `hab_desc` - Primary habitat description
 - `aquatic` (boolean) - Lives in water
 - `freshwater` (boolean) - Freshwater habitat
-- `terrestr` (boolean) - Terrestrial habitat
-- `terrestria` (boolean) - Alternative terrestrial flag
+- `terrestrial` (boolean) - Terrestrial habitat
 - `marine` (boolean) - Marine habitat
-- `hab_tags` - Habitat tags/keywords
 
-**Special Case:** Green gems can also use raster habitat data from external TiTiler service.
+**Special Case:** Green gems primarily use raster habitat data from TiTiler service for detailed habitat percentages.
 
 #### 3. Geographic & Habitat (Blue Gems) 🗺️
-**Database Fields Used:**
-- `geo_desc` - Geographic description
-- `dist_comm` - Distribution comments
-- `island` (boolean) - Island species flag
-- `origin` (number) - Origin type (1 = native)
-- Plus all habitat fields listed above
+**Database Fields Used (progressive):**
+- `geographic_description` - Geographic range description
+- `distribution_comment` - Distribution details
+- `habitat_description` - Habitat description
+- `habitat_tags` - Habitat tags/keywords
 
-#### 4. Morphology (Orange Gems) 🐾
-**Database Fields Used:**
+#### 4. Morphology (Orange Gems) 🐆
+**Database Fields Used (progressive):**
 - `pattern` - Pattern description
-- `color_prim` - Primary color
-- `color_sec` - Secondary color
-- `shape_desc` - Shape description
-- `size_min` (number) - Minimum size
-- `size_max` (number) - Maximum size
+- `color_primary` - Primary color
+- `color_secondary` - Secondary color
+- `shape_description` - Shape description
+- `size_max_cm` (number) - Maximum size in centimeters
 - `weight_kg` (number) - Weight in kilograms
 
-#### 5. Behavior & Diet (White Gems) 💨
-**Database Fields Used:**
-- `behav_1` - Primary behavior description
-- `behav_2` - Secondary behavior description
+#### 5. Behavior & Diet (Yellow Gems) 💨
+**Database Fields Used (progressive):**
+- `behavior_1` - Primary behavior description
+- `behavior_2` - Secondary behavior description
 - `diet_type` - Type of diet
 - `diet_prey` - Prey species
 - `diet_flora` - Plant diet
 
 #### 6. Life Cycle (Black Gems) ⏳
-**Database Fields Used:**
-- `life_desc1` - Primary life cycle description
-- `life_desc2` - Secondary life cycle description
-- `lifespan` - Lifespan information
-- `maturity` - Age at maturity
-- `repro_type` - Reproduction type
-- `clutch_sz` - Clutch/litter size
+**Database Fields Used (progressive):**
+- `life_description_1` - Primary life cycle description
+- `life_description_2` - Secondary life cycle description
+- `lifespan` - Lifespan information (fallback)
+- `maturity` - Age at maturity (fallback)
+- `reproduction_type` - Reproduction type (fallback)
+- `clutch_size` - Clutch/litter size (fallback)
 
-#### 7. Conservation (Yellow Gems) 🛡️
-**Database Fields Used:**
-- `cons_text` - Conservation status text
-- `cons_code` - Conservation code (IUCN)
-- `category` - Conservation category
+#### 7. Conservation (White Gems) 🛡️
+**Database Fields Used (progressive):**
+- `conservation_text` - Conservation status description
 - `threats` - Known threats
+- `conservation_code` - IUCN code (fallback)
+- `category` - Conservation category (fallback)
 
 #### 8. Key Facts (Purple Gems) 🔮
-**Database Fields Used:**
-- `key_fact1` - Primary key fact
-- `key_fact2` - Secondary key fact
-- `key_fact3` - Tertiary key fact
+**Database Fields Used (progressive):**
+- `key_fact_1` - Primary key fact
+- `key_fact_2` - Secondary key fact
+- `key_fact_3` - Tertiary key fact
 
 ## Files Affected by Database Changes
 
@@ -262,7 +269,7 @@ Before you ship a schema change:
 ### Adding New Species
 
 1. **Required Fields:**
-   - `comm_name` or `sci_name` (at least one)
+   - `common_name` or `scientific_name` (at least one)
    - `wkb_geometry` (for location-based queries)
    - At least one field per clue category for complete gameplay
 
@@ -275,9 +282,9 @@ Before you ship a schema change:
 3. **SQL Example:**
 ```sql
 INSERT INTO icaa (
-  comm_name, sci_name, genus, family, 
-  hab_desc, geo_desc, pattern, 
-  diet_type, life_desc1, cons_text, key_fact1,
+  common_name, scientific_name, genus, family,
+  habitat_description, geographic_description, pattern,
+  diet_type, life_description_1, conservation_text, key_fact_1,
   wkb_geometry
 ) VALUES (
   'Example Species', 'Examplus specius', 'Examplus', 'Examplidae',
@@ -354,8 +361,8 @@ CREATE OR REPLACE FUNCTION public.get_species_in_radius(
 )
 RETURNS TABLE(
   ogc_fid integer,
-  comm_name character varying,
-  sci_name character varying,
+  common_name text,
+  scientific_name text,
   -- ... all other fields ...
   wkb_geometry json  -- Returns GeoJSON for direct use in frontend
 )
@@ -367,10 +374,10 @@ $$
   circle AS (
     SELECT ST_Buffer((SELECT g FROM center), radius_m)::geometry AS geom
   )
-  SELECT 
+  SELECT
     s.ogc_fid,
-    s.comm_name,
-    s.sci_name,
+    s.common_name,
+    s.scientific_name,
     -- ... other fields ...
     ST_AsGeoJSON(s.wkb_geometry)::json as wkb_geometry  -- Key: Returns GeoJSON
   FROM public.icaa s
@@ -396,7 +403,7 @@ for (const species of speciesResult.species) {
   if (species.wkb_geometry) {
     const feature = {
       type: 'Feature',
-      properties: { ogc_fid: species.ogc_fid, comm_name: species.comm_name },
+      properties: { ogc_fid: species.ogc_fid, common_name: species.common_name },
       geometry: species.wkb_geometry  // Direct GeoJSON from database
     };
     features.push(feature);
@@ -516,7 +523,7 @@ const [speciesResult, rasterResult] = await Promise.all([
 #### Debugging Queries
 ```sql
 -- Test radius query manually
-SELECT ogc_fid, comm_name, ST_Area(wkb_geometry) as area_sqm
+SELECT ogc_fid, common_name, ST_Area(wkb_geometry) as area_sqm
 FROM public.get_species_in_radius(-80.0, 25.0, 10000.0);
 
 -- Check geometry validity

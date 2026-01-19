@@ -2,7 +2,7 @@
 
 > **forceSessionUpdate**(`sessionId`, `moves`, `score`, `speciesDiscovered`, `cluesUnlocked`): `Promise`\<`void`\>
 
-Defined in: [src/lib/playerTracking.ts:275](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/lib/playerTracking.ts#L275)
+Defined in: [src/lib/playerTracking.ts:227](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/lib/playerTracking.ts#L227)
 
 Force immediate session update (for critical events like species discovery)
 

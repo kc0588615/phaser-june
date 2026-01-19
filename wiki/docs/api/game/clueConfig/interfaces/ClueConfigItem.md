@@ -1,6 +1,6 @@
 # Interface: ClueConfigItem
 
-Defined in: [src/game/clueConfig.ts:14](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/clueConfig.ts#L14)
+Defined in: [src/game/clueConfig.ts:14](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/clueConfig.ts#L14)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/game/clueConfig.ts:14](https://github.com/kc0588615/phaser-june
 
 > **categoryName**: `string`
 
-Defined in: [src/game/clueConfig.ts:16](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/clueConfig.ts#L16)
+Defined in: [src/game/clueConfig.ts:16](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/clueConfig.ts#L16)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/game/clueConfig.ts:16](https://github.com/kc0588615/phaser-june
 
 > **color**: `string`
 
-Defined in: [src/game/clueConfig.ts:15](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/clueConfig.ts#L15)
+Defined in: [src/game/clueConfig.ts:15](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/clueConfig.ts#L15)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/game/clueConfig.ts:15](https://github.com/kc0588615/phaser-june
 
 > **getClue**: (`s`) => `string`
 
-Defined in: [src/game/clueConfig.ts:18](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/clueConfig.ts#L18)
+Defined in: [src/game/clueConfig.ts:18](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/clueConfig.ts#L18)
 
 #### Parameters
 
@@ -42,4 +42,4 @@ Defined in: [src/game/clueConfig.ts:18](https://github.com/kc0588615/phaser-june
 
 > **icon**: `string`
 
-Defined in: [src/game/clueConfig.ts:17](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/clueConfig.ts#L17)
+Defined in: [src/game/clueConfig.ts:17](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/clueConfig.ts#L17)

@@ -46,7 +46,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 
 const results = await db.execute(sql`
-  SELECT r.ogc_fid, r.comm_name
+  SELECT r.ogc_fid, r.common_name
   FROM public.get_species_in_radius(${lon}, ${lat}, ${radiusMeters}) r
 `);
 ```

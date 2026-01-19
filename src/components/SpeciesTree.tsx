@@ -71,7 +71,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
             const speciesId = `species-${sp.ogc_fid}`;
             data[speciesId] = {
               id: speciesId,
-              name: sp.comm_name || sp.sci_name || 'Unknown',
+              name: sp.common_name || sp.scientific_name || 'Unknown',
               type: 'species',
               speciesData: sp
             };

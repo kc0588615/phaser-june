@@ -202,9 +202,9 @@ export const speciesService = {
    */
   async getSpeciesBioregions(speciesIds: number[]): Promise<Array<{
     species_id: number;
-    bioregio_1: string | null;
+    bioregion: string | null;
     realm: string | null;
-    sub_realm: string | null;
+    subrealm: string | null;
     biome: string | null;
   }>> {
     try {
@@ -407,8 +407,8 @@ export const speciesService = {
           type: 'Feature',
           properties: {
             ogc_fid: sp.ogc_fid,
-            comm_name: sp.comm_name,
-            sci_name: sp.sci_name
+            common_name: sp.common_name,
+            scientific_name: sp.scientific_name
           },
           geometry: null
         }))
@@ -436,7 +436,7 @@ export const speciesService = {
 
       const data = await response.json();
       if (data.geometry) {
-        console.log(`Closest habitat: ${data.species?.comm_name} (${data.species?.distance_km}km away)`);
+        console.log(`Closest habitat: ${data.species?.common_name} (${data.species?.distance_km}km away)`);
         return data.geometry;
       }
       return null;

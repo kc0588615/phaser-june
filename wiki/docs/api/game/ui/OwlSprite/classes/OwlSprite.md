@@ -1,6 +1,6 @@
 # Class: OwlSprite
 
-Defined in: [src/game/ui/OwlSprite.ts:4](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L4)
+Defined in: [src/game/ui/OwlSprite.ts:4](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L4)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [src/game/ui/OwlSprite.ts:4](https://github.com/kc0588615/phaser-jun
 
 > **new OwlSprite**(`scene`, `opts?`): `OwlSprite`
 
-Defined in: [src/game/ui/OwlSprite.ts:13](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L13)
+Defined in: [src/game/ui/OwlSprite.ts:13](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L13)
 
 #### Parameters
 
@@ -40,7 +40,7 @@ Defined in: [src/game/ui/OwlSprite.ts:13](https://github.com/kc0588615/phaser-ju
 
 > **anchorTopLeft**(): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:104](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L104)
+Defined in: [src/game/ui/OwlSprite.ts:104](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L104)
 
 #### Returns
 
@@ -52,7 +52,7 @@ Defined in: [src/game/ui/OwlSprite.ts:104](https://github.com/kc0588615/phaser-j
 
 > **createAndRunIntro**(): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:61](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L61)
+Defined in: [src/game/ui/OwlSprite.ts:61](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L61)
 
 #### Returns
 
@@ -64,7 +64,7 @@ Defined in: [src/game/ui/OwlSprite.ts:61](https://github.com/kc0588615/phaser-ju
 
 > **isIntroComplete**(): `boolean`
 
-Defined in: [src/game/ui/OwlSprite.ts:157](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L157)
+Defined in: [src/game/ui/OwlSprite.ts:157](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L157)
 
 #### Returns
 
@@ -76,7 +76,7 @@ Defined in: [src/game/ui/OwlSprite.ts:157](https://github.com/kc0588615/phaser-j
 
 > **playAnimation**(`animationKey`): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:151](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L151)
+Defined in: [src/game/ui/OwlSprite.ts:151](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L151)
 
 #### Parameters
 
@@ -94,7 +94,7 @@ Defined in: [src/game/ui/OwlSprite.ts:151](https://github.com/kc0588615/phaser-j
 
 > **setBoardOffsets**(`offsetX`, `offsetY`): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:120](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L120)
+Defined in: [src/game/ui/OwlSprite.ts:120](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L120)
 
 #### Parameters
 
@@ -116,7 +116,7 @@ Defined in: [src/game/ui/OwlSprite.ts:120](https://github.com/kc0588615/phaser-j
 
 > **setBoardOffsetX**(`offsetX`): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:110](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L110)
+Defined in: [src/game/ui/OwlSprite.ts:110](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L110)
 
 #### Parameters
 
@@ -134,7 +134,7 @@ Defined in: [src/game/ui/OwlSprite.ts:110](https://github.com/kc0588615/phaser-j
 
 > **setBoardOffsetY**(`offsetY`): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:115](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L115)
+Defined in: [src/game/ui/OwlSprite.ts:115](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L115)
 
 #### Parameters
 
@@ -152,7 +152,7 @@ Defined in: [src/game/ui/OwlSprite.ts:115](https://github.com/kc0588615/phaser-j
 
 > **setScale**(`scale`): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:126](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L126)
+Defined in: [src/game/ui/OwlSprite.ts:126](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L126)
 
 #### Parameters
 
@@ -170,7 +170,7 @@ Defined in: [src/game/ui/OwlSprite.ts:126](https://github.com/kc0588615/phaser-j
 
 > `static` **setupAnimations**(`scene`): `void`
 
-Defined in: [src/game/ui/OwlSprite.ts:20](https://github.com/kc0588615/phaser-june/blob/dc88a140368b29a3e7c30936b266fd46ea76c6ee/src/game/ui/OwlSprite.ts#L20)
+Defined in: [src/game/ui/OwlSprite.ts:20](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/ui/OwlSprite.ts#L20)
 
 #### Parameters
 

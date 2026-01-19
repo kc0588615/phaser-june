@@ -4,20 +4,20 @@ import { db } from '@/db';
 
 interface SpatialSpeciesRow {
   ogc_fid: number;
-  comm_name: string | null;
-  sci_name: string | null;
+  common_name: string | null;
+  scientific_name: string | null;
   category: string | null;
   realm: string | null;
   biome: string | null;
-  order_: string | null;
+  taxon_order: string | null;
   family: string | null;
   genus: string | null;
   diet_type: string | null;
-  color_prim: string | null;
-  hab_desc: string | null;
-  key_fact1: string | null;
-  key_fact2: string | null;
-  key_fact3: string | null;
+  color_primary: string | null;
+  habitat_description: string | null;
+  key_fact_1: string | null;
+  key_fact_2: string | null;
+  key_fact_3: string | null;
   wkb_geometry: string | null;
   [key: string]: unknown;
 }
@@ -45,20 +45,20 @@ export async function GET(request: NextRequest) {
     const species = await db.execute<SpatialSpeciesRow>(sql`
       SELECT
         ogc_fid,
-        comm_name,
-        sci_name,
+        common_name,
+        scientific_name,
         category,
         realm,
         biome,
-        order_,
+        taxon_order,
         family,
         genus,
         diet_type,
-        color_prim,
-        hab_desc,
-        key_fact1,
-        key_fact2,
-        key_fact3,
+        color_primary,
+        habitat_description,
+        key_fact_1,
+        key_fact_2,
+        key_fact_3,
         ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry
       FROM icaa
       WHERE wkb_geometry IS NOT NULL

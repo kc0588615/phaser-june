@@ -138,7 +138,7 @@ The improvements successfully enhance visual hierarchy and mobile UX while prese
 ## Character-by-Character Line Break Fix
 
 ### Issue Description
-Species with blank `color_sec` fields (specifically Chelonoidis abingdonii and Emydoidea blandingii) were displaying primary color text with each character on a new line in the Physical Characteristics section.
+Species with blank `color_secondary` fields (specifically Chelonoidis abingdonii and Emydoidea blandingii) were displaying primary color text with each character on a new line in the Physical Characteristics section.
 
 ### Root Cause
 The `species-card-mobile.css` file contained aggressive CSS rules with `!important` flags that forced `word-break: break-all` and `overflow-wrap: anywhere` on all spans within species cards. These rules were intended for mobile text wrapping but caused unintended character-level breaks in grid layouts.
@@ -168,12 +168,12 @@ The `species-card-mobile.css` file contained aggressive CSS rules with `!importa
 - **File**: `src/components/SpeciesCard.tsx`
 - **Changes**: Added `grid-value` class to all value spans in grid layouts
 - **Affected Sections**:
-  - Physical Characteristics (color_prim, color_sec, pattern, size, weight, shape)
-  - Ecoregion (bioregio_1, realm, sub_realm, biome)
+  - Physical Characteristics (color_primary, color_secondary, pattern, size, weight, shape)
+  - Ecoregion (bioregion, realm, subrealm, biome)
 - **Pattern**:
 ```tsx
 <span className="text-white grid-value" style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
-  {species.color_prim}
+  {species.color_primary}
 </span>
 ```
 

@@ -38,9 +38,14 @@ await trackSpeciesDiscovery(playerId, speciesId, {
 });
 ```
 
-## Offline Queue
+## Stats Refresh
 
-Failed writes are queued in localStorage and retried via `processOfflineQueue(playerId)`.
+`player_stats` is refreshed after each species discovery and on session end.
+If you are migrating an existing database, run the one-time backfill:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
 
 ## Migration from Local Storage
 

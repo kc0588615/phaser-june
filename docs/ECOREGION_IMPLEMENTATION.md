@@ -143,9 +143,9 @@ Simple test component created to isolate popover issues.
 
 **Observations:**
 - Species interface already includes ecoregion fields (lines 47-51):
-  - `bioregio_1?: string`
+- `bioregion?: string`
   - `realm?: string`
-  - `sub_realm?: string`
+- `subrealm?: string`
   - `biome?: string`
 - No modifications needed
 

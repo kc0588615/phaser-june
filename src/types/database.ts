@@ -1,5 +1,6 @@
 export interface HighScore {
   id: string;
+  player_id?: string; // Optional FK to profiles for authenticated players
   username: string;
   score: number;
   created_at: string;
@@ -16,7 +17,7 @@ export interface Profile {
 
 export interface PlayerGameSession {
   id: string;
-  player_id: string;
+  player_id: string; // Required FK to profiles
   started_at: string;
   ended_at?: string;
   total_moves: number;
@@ -28,9 +29,9 @@ export interface PlayerGameSession {
 
 export interface PlayerSpeciesDiscovery {
   id: string;
-  player_id: string;
-  species_id: number;
-  session_id?: string;
+  player_id: string; // Required FK to profiles
+  species_id: number; // Required FK to icaa
+  session_id?: string; // Optional FK to player_game_sessions
   discovered_at: string;
   time_to_discover_seconds?: number;
   clues_unlocked_before_guess: number;
@@ -41,9 +42,9 @@ export interface PlayerSpeciesDiscovery {
 
 export interface PlayerClueUnlock {
   id: string;
-  player_id: string;
-  species_id: number;
-  discovery_id: string;
+  player_id: string; // Required FK to profiles
+  species_id: number; // Required FK to icaa
+  discovery_id?: string; // Optional FK to player_species_discoveries (linked after guess)
   clue_category: string;
   clue_field: string;
   clue_value?: string;
@@ -58,7 +59,7 @@ export interface PlayerStats {
   total_moves_made: number;
   total_games_played: number;
   total_play_time_seconds: number;
-  average_clues_per_discovery: number;
+  average_clues_per_discovery: number | null;
   fastest_discovery_clues?: number;
   slowest_discovery_clues?: number;
   average_time_per_discovery_seconds?: number;
@@ -95,86 +96,85 @@ export interface PlayerLeaderboard {
 
 export interface Bioregion {
   ogc_fid: number;
-  bioregio_1?: string;
+  bioregion?: string;
   realm?: string;
-  sub_realm?: string;
+  subrealm?: string;
   biome?: string;
   wkb_geometry?: any;
 }
 
 export interface Species {
   ogc_fid: number;
-  comm_name?: string;
-  sci_name?: string;
-  http_iucn?: string | null;
-  
+  common_name?: string;
+  scientific_name?: string;
+  iucn_url?: string | null;
+
   // Classification fields
   genus?: string;
   family?: string;
-  order_?: string;
+  taxon_order?: string;
   class?: string;
   phylum?: string;
   kingdom?: string;
-  tax_comm?: string;
-  
-  // Habitat fields
-  // NOTE: Database stores these as VARCHAR strings "true"/"false", not booleans
-  hab_desc?: string;
-  aquatic?: string;    // "true" or "false" string
-  freshwater?: string; // "true" or "false" string
-  terrestria?: string; // "true" or "false" string
-  marine?: string;     // "true" or "false" string
-  hab_tags?: string;
-  
+  taxonomic_comment?: string;
+
+  // Habitat fields (boolean)
+  habitat_description?: string;
+  aquatic?: boolean;
+  freshwater?: boolean;
+  terrestrial?: boolean;
+  marine?: boolean;
+  habitat_tags?: string;
+
   // Geographic fields
-  geo_desc?: string;
-  dist_comm?: string;
-  island?: string;  // "true" or "false" string in DB
+  geographic_description?: string;
+  distribution_comment?: string;
+  island?: boolean;
   origin?: number;
-  
+
   // Bioregion fields (from oneearth_bioregion)
-  bioregio_1?: string;
+  bioregion?: string;
   realm?: string;
-  sub_realm?: string;
+  subrealm?: string;
   biome?: string;
-  
+
   // Morphology fields
   pattern?: string;
-  color_prim?: string;
-  color_sec?: string;
-  shape_desc?: string;
-  size_min?: number;
-  size_max?: number;
+  color_primary?: string;
+  color_secondary?: string;
+  shape_description?: string;
+  size_min_cm?: number;
+  size_max_cm?: number;
   weight_kg?: number;
-  
+
   // Diet fields
   diet_type?: string;
   diet_prey?: string;
   diet_flora?: string;
-  
+
   // Behavior fields
-  behav_1?: string;
-  behav_2?: string;
-  
+  behavior_1?: string;
+  behavior_2?: string;
+
   // Life cycle fields
-  life_desc1?: string;
-  life_desc2?: string;
+  life_description_1?: string;
+  life_description_2?: string;
   lifespan?: string;
   maturity?: string;
-  repro_type?: string;
-  clutch_sz?: string;
-  
+  reproduction_type?: string;
+  clutch_size?: string;
+
   // Conservation fields
-  cons_text?: string;
-  cons_code?: string;
+  conservation_text?: string;
+  conservation_code?: string;
   category?: string;
   threats?: string;
-  
+
   // Key facts fields
-  key_fact1?: string;
-  key_fact2?: string;
-  key_fact3?: string;
-  
+  key_fact_1?: string;
+  key_fact_2?: string;
+  key_fact_3?: string;
+
   // Spatial geometry field (PostGIS)
   wkb_geometry?: any;
 }

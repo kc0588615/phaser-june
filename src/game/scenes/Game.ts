@@ -645,7 +645,7 @@ export class Game extends Phaser.Scene {
         }
 
         try {
-            const { trackClueUnlock } = await import('@/lib/playerTracking');
+            const { trackClueUnlock } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
             const clueCategory = getCategoryKey(payload.category);
             const { field, value } = deriveClueFieldAndValue(payload);
 
@@ -683,7 +683,7 @@ export class Game extends Phaser.Scene {
         if (!this.currentSessionId || !this.backendPuzzle) return;
 
         try {
-            const { updateSessionProgress } = await import('@/lib/playerTracking');
+            const { updateSessionProgress } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
 
             // Count total species discovered in this session
             const speciesDiscovered = this.currentSpeciesIndex; // Species completed before current
@@ -708,7 +708,7 @@ export class Game extends Phaser.Scene {
         if (!this.currentSessionId || !this.backendPuzzle) return;
 
         try {
-            const { forceSessionUpdate } = await import('@/lib/playerTracking');
+            const { forceSessionUpdate } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
 
             // Force immediate flush (bypass debounce)
             await forceSessionUpdate(
@@ -819,7 +819,7 @@ export class Game extends Phaser.Scene {
             }
             const clueData: CluePayload = {
                 category,
-                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
                 clue: clueText,
                 speciesId: this.selectedSpecies.ogc_fid,
                 name: config.categoryName,
@@ -879,7 +879,7 @@ export class Game extends Phaser.Scene {
                 }
                 const clueData: CluePayload = {
                     category,
-                    heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                    heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
                     clue: clueText,
                     speciesId: this.selectedSpecies.ogc_fid,
                     name: config.categoryName,
@@ -909,7 +909,7 @@ export class Game extends Phaser.Scene {
             }
             const clueData: CluePayload = {
                 category,
-                heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+                heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
                 clue: clueText,
                 speciesId: this.selectedSpecies.ogc_fid,
                 name: config.categoryName,
@@ -1000,7 +1000,7 @@ export class Game extends Phaser.Scene {
             if (this.currentSpecies.length > 0) {
                 // Select the species with lowest ogc_fid
                 this.selectedSpecies = this.currentSpecies[0];
-                console.log("Game Scene: Selected species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+                console.log("Game Scene: Selected species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
                 
                 // Reset all progressive clues for new species
                 resetAllProgressiveClues(this.selectedSpecies);
@@ -1012,7 +1012,7 @@ export class Game extends Phaser.Scene {
                     speciesId: this.selectedSpecies.ogc_fid,
                     totalSpecies: this.currentSpecies.length,
                     currentIndex: this.currentSpeciesIndex + 1,
-                    hiddenSpeciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species'  // Store real name internally
+                    hiddenSpeciesName: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species'  // Store real name internally
                 });
             } else {
                 this.selectedSpecies = null;
@@ -1547,7 +1547,7 @@ export class Game extends Phaser.Scene {
             // Reset all progressive clues for new species
             resetAllProgressiveClues(this.selectedSpecies);
             
-            console.log("Game Scene: Advancing to next species:", this.selectedSpecies.comm_name || this.selectedSpecies.sci_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+            console.log("Game Scene: Advancing to next species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
             
             // Emit event for new species
             // Hide the species name - player needs to guess it
@@ -1556,7 +1556,7 @@ export class Game extends Phaser.Scene {
                 speciesId: this.selectedSpecies.ogc_fid,
                 totalSpecies: this.currentSpecies.length,
                 currentIndex: this.currentSpeciesIndex + 1,
-                hiddenSpeciesName: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species'  // Store real name internally
+                hiddenSpeciesName: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species'  // Store real name internally
             });
         } else {
             // This shouldn't happen as handleSpeciesGuess already handles the last species
@@ -1641,7 +1641,7 @@ export class Game extends Phaser.Scene {
                 trackSpeciesDiscovery,
                 calculateTimeToDiscover,
                 forceSessionUpdate
-            } = await import('@/lib/playerTracking');
+            } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
 
             const timeToDiscover = calculateTimeToDiscover();
 
@@ -1824,7 +1824,7 @@ export class Game extends Phaser.Scene {
         const habitatConfig = CLUE_CONFIG[GemCategory.HABITAT];
         return {
             category: GemCategory.HABITAT,
-            heading: this.selectedSpecies.comm_name || this.selectedSpecies.sci_name || 'Unknown Species',
+            heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
             clue: clue,
             speciesId: this.selectedSpecies.ogc_fid,
             name: habitatConfig.categoryName,
@@ -1938,7 +1938,7 @@ export class Game extends Phaser.Scene {
 
     private endSessionSync(): void {
         // Fire-and-forget session end (don't await in shutdown)
-        import('@/lib/playerTracking').then(({ endGameSession }) => {
+        import(/* webpackIgnore: true */ '@/lib/playerTracking').then(({ endGameSession }) => {
             if (this.currentSessionId && this.backendPuzzle) {
                 endGameSession(
                     this.currentSessionId,

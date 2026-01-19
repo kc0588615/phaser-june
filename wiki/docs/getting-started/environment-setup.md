@@ -71,6 +71,14 @@ The application expects these tables (see [Database Guide](/docs/guides/data/dat
 
 API routes under `/api/*` handle queries; no database RPCs are required.
 
+### 3. One-Time Stats Backfill
+
+If you applied migrations to an existing database, refresh aggregates once:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
+
 ## Cesium Ion Setup
 
 ### 1. Get Token

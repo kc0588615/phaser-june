@@ -36,6 +36,7 @@
 ### 5) Close the Session
 
 - On scene shutdown or logout, call `endGameSession(...)`.
+- Session end triggers a stats refresh so aggregate totals stay current.
 
 ## Testing Checklist
 
@@ -49,4 +50,4 @@
 - [ ] Migration - flag prevents duplicate migrations
 - [ ] Session resume - existing open session resumed on reload
 - [ ] Memory - no duplicate listeners after scene restart
-- [ ] Offline queue - failed writes retried on reconnect
+- [ ] Backfill - run `npx tsx scripts/backfill-player-stats.ts` on existing DBs

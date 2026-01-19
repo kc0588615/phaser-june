@@ -308,8 +308,8 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
                     type: 'Feature' as const,
                     properties: {
                       ogc_fid: species.ogc_fid,
-                      comm_name: species.comm_name,
-                      sci_name: species.sci_name
+                      comm_name: species.common_name,
+                      sci_name: species.scientific_name
                     },
                     geometry: species.wkb_geometry  // Direct GeoJSON geometry
                   };
@@ -350,14 +350,14 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             console.log('Clicked species:', clickedSpecies);
             
             // Build habitat list for backward compatibility
-            // NOTE: DB stores these as strings "true"/"false", not booleans
+            // Habitat fields are now booleans
             const legacyHabitats = new Set<string>();
             clickedSpecies.species.forEach(species => {
-              if (species.hab_desc) legacyHabitats.add(species.hab_desc);
-              if (species.aquatic === 'true') legacyHabitats.add('aquatic');
-              if (species.freshwater === 'true') legacyHabitats.add('freshwater');
-              if (species.terrestria === 'true') legacyHabitats.add('terrestrial');
-              if (species.marine === 'true') legacyHabitats.add('marine');
+              if (species.habitat_description) legacyHabitats.add(species.habitat_description);
+              if (species.aquatic) legacyHabitats.add('aquatic');
+              if (species.freshwater) legacyHabitats.add('freshwater');
+              if (species.terrestrial) legacyHabitats.add('terrestrial');
+              if (species.marine) legacyHabitats.add('marine');
             });
             const habitatList = Array.from(legacyHabitats);
             
@@ -437,11 +437,11 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
           // NOTE: DB stores these as strings "true"/"false", not booleans
           const legacyHabitats = new Set<string>();
           speciesResult.species.forEach(species => {
-            if (species.hab_desc) legacyHabitats.add(species.hab_desc);
-            if (species.aquatic === 'true') legacyHabitats.add('aquatic');
-            if (species.freshwater === 'true') legacyHabitats.add('freshwater');
-            if (species.terrestria === 'true') legacyHabitats.add('terrestrial');
-            if (species.marine === 'true') legacyHabitats.add('marine');
+            if (species.habitat_description) legacyHabitats.add(species.habitat_description);
+            if (species.aquatic) legacyHabitats.add('aquatic');
+            if (species.freshwater) legacyHabitats.add('freshwater');
+            if (species.terrestrial) legacyHabitats.add('terrestrial');
+            if (species.marine) legacyHabitats.add('marine');
           });
 
           const habitatList = Array.from(legacyHabitats);

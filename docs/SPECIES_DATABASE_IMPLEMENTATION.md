@@ -40,49 +40,49 @@ import { db, icaa } from '@/db';
 const species = await db
   .select({
     ogc_fid: icaa.ogcFid,
-    sci_name: icaa.sciName,
-    comm_name: icaa.commName,
-    http_iucn: icaa.httpIucn,
+    scientific_name: icaa.scientificName,
+    common_name: icaa.commonName,
+    iucn_url: icaa.iucnUrl,
     kingdom: icaa.kingdom,
     phylum: icaa.phylum,
     class: icaa.class,
-    order_: icaa.order,
+    taxon_order: icaa.taxonOrder,
     family: icaa.family,
     genus: icaa.genus,
     category: icaa.category,
-    cons_code: icaa.consCode,
-    cons_text: icaa.consText,
-    marine: icaa.marine,
-    terrestria: icaa.terrestria,
-    freshwater: icaa.freshwater,
-    hab_tags: icaa.habTags,
-    hab_desc: icaa.habDesc,
-    geo_desc: icaa.geoDesc,
-    color_prim: icaa.colorPrim,
-    color_sec: icaa.colorSec,
+    conservation_code: icaa.conservationCode,
+    conservation_text: icaa.conservationText,
+    marine: icaa.marine,           // boolean
+    terrestrial: icaa.terrestrial, // boolean
+    freshwater: icaa.freshwater,   // boolean
+    habitat_tags: icaa.habitatTags,
+    habitat_description: icaa.habitatDescription,
+    geographic_description: icaa.geographicDescription,
+    color_primary: icaa.colorPrimary,
+    color_secondary: icaa.colorSecondary,
     pattern: icaa.pattern,
-    size_min: icaa.sizeMin,
-    size_max: icaa.sizeMax,
+    size_min_cm: icaa.sizeMinCm,
+    size_max_cm: icaa.sizeMaxCm,
     weight_kg: icaa.weightKg,
-    shape_desc: icaa.shapeDesc,
+    shape_description: icaa.shapeDescription,
     diet_type: icaa.dietType,
     diet_prey: icaa.dietPrey,
     diet_flora: icaa.dietFlora,
-    behav_1: icaa.behav1,
-    behav_2: icaa.behav2,
+    behavior_1: icaa.behavior1,
+    behavior_2: icaa.behavior2,
     lifespan: icaa.lifespan,
     maturity: icaa.maturity,
-    repro_type: icaa.reproType,
-    clutch_sz: icaa.clutchSz,
-    life_desc1: icaa.lifeDesc1,
-    life_desc2: icaa.lifeDesc2,
+    reproduction_type: icaa.reproductionType,
+    clutch_size: icaa.clutchSize,
+    life_description_1: icaa.lifeDescription1,
+    life_description_2: icaa.lifeDescription2,
     threats: icaa.threats,
-    key_fact1: icaa.keyFact1,
-    key_fact2: icaa.keyFact2,
-    key_fact3: icaa.keyFact3,
+    key_fact_1: icaa.keyFact1,
+    key_fact_2: icaa.keyFact2,
+    key_fact_3: icaa.keyFact3,
   })
   .from(icaa)
-  .orderBy(asc(icaa.commName));
+  .orderBy(asc(icaa.commonName));
 ```
 
 ### 2. SpeciesCard Component (`src/components/SpeciesCard.tsx`)
@@ -132,7 +132,7 @@ const species = await db
 
 **Statistics Tracked**:
 - **Categories**: Total number of taxonomic groups (currently 2: Turtles, Frogs)
-- **Ecoregions**: Unique ecological regions from `bioregio_1` field
+- **Ecoregions**: Unique ecological regions from `bioregion` field
 - **Realms**: Biogeographic realms (e.g., Nearctic, Neotropical)
 - **Biomes**: Major ecological communities (e.g., tropical rainforest, desert)
 
@@ -353,11 +353,11 @@ export function getCategoryFromOrder(order: string): string {
 
 4. **Update Grouping Logic** (`groupSpeciesByCategory`):
 ```typescript
-if (sp.order_ === 'Testudines') {
+if (sp.taxon_order === 'Testudines') {
   category = 'Turtles';
-} else if (sp.order_ === 'Anura') {
+} else if (sp.taxon_order === 'Anura') {
   category = 'Frogs';
-} else if (sp.order_ === 'Aves') {
+} else if (sp.taxon_order === 'Aves') {
   category = 'Birds';
 }
 ```
@@ -425,7 +425,7 @@ getCategoryFromOrder(order: string): string
 5. **Category Search Not Working**
    - Check that both singular and plural forms are in `getCategoryOrderMapping()`
    - Ensure the order value exists in the database
-   - Verify `order_` field (note underscore) is populated for species
+   - Verify `taxon_order` field is populated for species
 
 6. **Filter Shows Wrong Label**
    - Update `getCategoryFromOrder()` to include new order mappings
@@ -438,7 +438,7 @@ getCategoryFromOrder(order: string): string
 
 8. **Search Not Finding Genus/Order Values**
    - Ensure `getUniqueGenera()` and `getUniqueOrders()` are imported
-   - Check that species data has non-null genus and order_ fields
+   - Check that species data has non-null genus and taxon_order fields
    - Verify the search component receives the full species array
 
 ## Usage

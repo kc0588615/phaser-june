@@ -7,14 +7,14 @@ Added automatic ecoregion classification for species based on spatial analysis o
 
 ### 1. Database Schema Changes
 - **Added columns to `icaa` table** (src/types/database.ts:37-41):
-  - `bioregio_1?: string` - Primary bioregion name
+- `bioregion?: string` - Primary bioregion code
   - `realm?: string` - Major biogeographic realm
-  - `sub_realm?: string` - Sub-realm classification  
+- `subrealm?: string` - Sub-realm classification  
   - `biome?: string` - Biome type
 
 - **Created `Bioregion` interface** (src/types/database.ts:8-15):
   - Represents the oneearth_bioregion table structure
-  - Includes ogc_fid, bioregio_1, realm, sub_realm, biome, wkb_geometry
+- Includes ogc_fid, bioregion, realm, subrealm, biome, wkb_geometry
 
 - **Database migration executed**:
   - Added bioregion columns to icaa table
@@ -49,7 +49,7 @@ Added automatic ecoregion classification for species based on spatial analysis o
 
 1. **Biome field formatting**: Contains escaped characters (e.g., "Tropical \\& Subtropical")
 2. **Performance**: Initial implementation used RPC calls on every load (now resolved)
-3. **Type safety**: http_iucn field was missing from Species interface (fixed)
+3. **Type safety**: iucn_url field was missing from Species interface (fixed)
 4. **Build errors**: Fixed TypeScript errors in CesiumMap.tsx related to Species type
 
 ## Next Steps

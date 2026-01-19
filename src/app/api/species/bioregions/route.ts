@@ -63,9 +63,9 @@ async function getBioregionsForSpecies(speciesIds: number[]) {
   const species = await db
     .select({
       ogcFid: icaa.ogcFid,
-      bioregio1: icaa.bioregio1,
+      bioregion: icaa.bioregion,
       realm: icaa.realm,
-      subRealm: icaa.subRealm,
+      subrealm: icaa.subrealm,
       biome: icaa.biome,
     })
     .from(icaa)
@@ -73,9 +73,9 @@ async function getBioregionsForSpecies(speciesIds: number[]) {
 
   return species.map(s => ({
     species_id: s.ogcFid,
-    bioregio_1: s.bioregio1,
+    bioregion: s.bioregion,
     realm: s.realm,
-    sub_realm: s.subRealm,
+    subrealm: s.subrealm,
     biome: s.biome,
   }));
 }

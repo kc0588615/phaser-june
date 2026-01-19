@@ -1,0 +1,1172 @@
+# Shapefile Prep Best Practices
+
+This guide captures the recommended spatial data layout for pre-import editing
+and end-to-end geospatial ETL into PostGIS with quality gates.
+
+If you can switch formats, prefer GeoPackage (GPKG) over Shapefile. Shapefile has
+field-name length limits and weaker typing, so GPKG reduces post-import cleanup.
+
+---
+
+## Table of Contents
+
+1. [Global Rules](#global-rules)
+2. [Pipeline Overview](#pipeline-overview)
+3. [Schema Design: Normalized vs Denormalized](#schema-design-normalized-vs-denormalized)
+4. [ICAA Field Map](#icaa-species-spatial-table)
+5. [Staging Table Design](#staging-table-creation)
+6. [Import GeoPackage to Staging](#import-geopackage-to-staging)
+7. [Preflight Validation (Quality Gates)](#preflight-validation)
+8. [Geometry Normalization](#geometry-normalization)
+9. [Merge Strategies](#merge-to-production)
+10. [Normalization ETL (1NF Compliance)](#normalization-etl-1nf-compliance)
+11. [Post-Import Tasks](#post-import-bioregion-population)
+12. [Operational Controls](#operational-controls)
+13. [Backend/API Guidance](#backendapi-guidance)
+
+---
+
+## Global Rules
+
+- Geometry: use a single geometry type per layer (prefer MULTIPOLYGON).
+- SRID: 4326 for all geometries.
+- Nulls: use NULL, not empty strings or sentinel values.
+- Strings: plan to cast to `text` in Postgres; DBF length limits are not meaningful.
+- Booleans: schema uses native boolean type; import "true"/"false" strings and convert.
+- Reserved words: `taxon_order` replaces `order_`; `class` is used as-is (quoted in raw SQL).
+
+---
+
+## Pipeline Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        END-TO-END GEOSPATIAL ETL                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  Shapefile (.shp)                                                           │
+│      │                                                                      │
+│      ▼  Convert (ogr2ogr / QGIS export)                                     │
+│  GeoPackage (.gpkg)     ◄── Edit here, full column names, SRID 4326         │
+│      │                                                                      │
+│      ▼  Import (ogr2ogr -append)                                            │
+│  icaa_staging           ◄── UNLOGGED, no indexes, validate here             │
+│      │                                                                      │
+│      ├──────────────────┬───────────────────────────────────────────┐       │
+│      │                  │                                           │       │
+│      ▼                  ▼                                           ▼       │
+│  [DENORMALIZED]    [NORMALIZED - OPTIONAL]                                  │
+│  icaa (wide)       icaa (core) + child tables                               │
+│                    ├── species_behaviors                                    │
+│                    ├── species_key_facts                                    │
+│                    ├── species_life_descriptions                            │
+│                    ├── species_habitat_tags                                 │
+│                    └── species_threats                                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### When to Use ogr2ogr vs COPY
+
+| Method | Use Case | Pros | Cons |
+|--------|----------|------|------|
+| `ogr2ogr` | GeoPackage/Shapefile → Postgres | Handles geometry conversion, projection, type coercion | Slower for very large files |
+| `COPY` | CSV/TSV → Postgres | Fastest bulk load, minimal overhead | No geometry handling, requires WKT/WKB prep |
+
+**Recommendation**: Use `ogr2ogr` for initial spatial imports, `COPY` for non-spatial attribute updates.
+
+---
+
+## Schema Design: Normalized vs Denormalized
+
+### Current State: Denormalized (1NF Violations)
+
+The `icaa` table contains **repeating groups** that violate First Normal Form:
+
+| Pattern | Columns | Issue |
+|---------|---------|-------|
+| Numbered fields | `behavior_1`, `behavior_2` | Fixed slots, can't add behavior_3 |
+| Numbered fields | `key_fact_1`, `key_fact_2`, `key_fact_3` | Can't query "species with fact X" |
+| Numbered fields | `life_description_1`, `life_description_2` | Hard to search across all descriptions |
+| Packed list | `habitat_tags` (comma-separated text) | Can't index, can't query efficiently |
+| Packed list | `threats`, `diet_prey`, `diet_flora` | Same issues |
+
+### Trade-offs
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Denormalized** | Simpler import, fewer joins, matches shapefile structure | No per-item queries, fixed slots, redundant NULLs |
+| **Normalized** | Queryable, extensible, true 1NF, GIN indexable | More complex import, requires joins |
+
+### Recommendation
+
+- **Keep denormalized** if you only display data (current game use case)
+- **Normalize** if you need:
+  - "Find all species with behavior X"
+  - "Count species by key fact category"
+  - Full-text search across all facts/descriptions
+  - Future-proofing for variable-length lists
+
+---
+
+## ICAA (Species) Spatial Table
+
+Notes:
+- `ogc_fid` is the PK (import artifact); `species_id` is the IUCN species ID.
+- Habitat flags are boolean type in the database.
+- Field names below match current DB columns; shapefile aliases for 10-char limit.
+
+### Core Field Map
+
+DB Column -> Shapefile alias -> Type -> Notes
+
+```text
+# Identifiers
+species_id,id_no,numeric,IUCN species ID
+common_name,com_name,text,common name
+scientific_name,sci_name,text,scientific name
+taxonomic_comment,tax_comm,text,taxonomic comment
+iucn_url,http_iucn,text,IUCN RedList URL
+
+# Classification
+kingdom,kingdom,text,
+phylum,phylum,text,
+class,class,text,reserved word - quote in raw SQL
+taxon_order,order_,text,renamed from order_ to avoid reserved word
+family,family,text,
+genus,genus,text,
+
+# Conservation
+category,category,text,IUCN category label
+conservation_code,cons_code,text,IUCN code
+conservation_text,cons_txt,text,conservation status text
+threats,threats,text,
+
+# Habitat (boolean flags)
+marine,marine,boolean,convert "true"/"false" strings on import
+freshwater,freshwatr,boolean,
+terrestrial,terrestri,boolean,renamed from terrestria
+aquatic,aquatic,boolean,
+island,island,boolean,
+
+# Habitat (descriptive)
+habitat_description,hab_desc,text,
+habitat_tags,hab_tags,text,
+
+# Geography
+geographic_description,geo_desc,text,
+distribution_comment,dist_comm,text,
+origin,origin,numeric,code list (define)
+presence,presence,numeric,code list (define)
+seasonal,seasonal,numeric,code list (define)
+bioregion,bioreg_1,text,OneEarth bioregion code (renamed from bioregio_1)
+realm,realm,text,
+subrealm,sub_realm,text,renamed from sub_realm
+biome,biome,text,
+
+# Morphology
+color_primary,col_prim,text,
+color_secondary,col_sec,text,
+pattern,pattern,text,
+shape_description,shape_dsc,text,
+size_min_cm,size_min,numeric,centimeters
+size_max_cm,size_max,numeric,centimeters
+weight_kg,weight_kg,numeric,kilograms
+
+# Diet / Behavior (REPEATING GROUP - consider normalizing)
+diet_type,diet_type,text,
+diet_prey,diet_prey,text,
+diet_flora,diet_flr,text,
+behavior_1,behav_1,text,
+behavior_2,behav_2,text,
+
+# Life cycle (REPEATING GROUP - consider normalizing)
+lifespan,lifespan,text,or numeric if standardized
+maturity,maturity,text,
+reproduction_type,repro_typ,text,
+clutch_size,clutch_sz,text,or numeric if standardized
+life_description_1,life_ds1,text,
+life_description_2,life_ds2,text,
+
+# Key facts (REPEATING GROUP - consider normalizing)
+key_fact_1,key_fc1,text,
+key_fact_2,key_fc2,text,
+key_fact_3,key_fc3,text,
+```
+
+### Optional Metadata Fields
+
+```text
+compiler,compiler,text,
+year_compiled,yr_comp,numeric,year compiled
+citation,citation,text,
+source,source,text,
+subspecies,subsp,text,
+subpop,subpop,text,
+legend,legend,text,
+generalised,generlisd,numeric,renamed from generalisd (typo fix)
+shape_length,shape_len,numeric,computed by GIS
+shape_length_alt,shape_l1,numeric,computed by GIS (duplicate)
+shape_area,shape_ar,numeric,computed by GIS
+```
+
+## OneEarth Bioregion Spatial Table
+
+Notes:
+- `ogc_fid` is the PK; `objectid_1`/`objectid_2` are source artifacts.
+- `bioregion` is the join key used in icaa table (renamed from bioregio_1).
+
+```text
+# Identifiers
+ogc_fid,ogc_fid,integer,PK (import artifact)
+objectid_1,obj_id1,numeric,source artifact
+objectid_2,obj_id2,numeric,source artifact
+
+# Labels
+bioregions,bioregion,varchar,full bioregion name
+bioregion,bioreg_1,varchar,bioregion code (join key, renamed from bioregio_1)
+realm,realm,varchar,
+subrealm,sub_realm,varchar,
+biome,biome,varchar,
+
+# Geometry + GIS metadata
+shape_length,shape_len,double,computed by GIS
+shape_length_alt,shape_l1,numeric,computed by GIS (duplicate)
+shape_area,shape_ar,double,computed by GIS
+```
+
+---
+
+## Spatial Join: Populating bioregion (QGIS Alternative)
+
+If you prefer to populate bioregion fields in QGIS before import:
+
+1. Load both layers (icaa species, oneearth_bioregion)
+2. Use **Vector → Data Management Tools → Join Attributes by Location**
+3. Settings: geometric predicate = intersects, join type = largest overlap
+4. Export result to GeoPackage for import
+
+For SQL-based population after import, see **Post-Import: Bioregion Population** section below.
+
+---
+
+## Value Rules During Editing
+
+- Trim whitespace and normalize casing.
+- Use a controlled vocabulary for code fields (origin, presence, seasonal).
+- Avoid empty strings; use NULL for missing values.
+- Keep units explicit in column names if numeric values depend on units.
+
+---
+
+## Pre-Import: Add Constraints
+
+Run once before any import to enforce data integrity.
+
+**Preflight check** (run first to verify no blockers):
+
+```sql
+-- Check for NULLs or duplicates that would block constraint
+SELECT
+  COUNT(*) as total,
+  COUNT(species_id) as non_null,
+  COUNT(DISTINCT species_id) as unique_vals,
+  COUNT(*) - COUNT(DISTINCT species_id) as duplicates
+FROM icaa;
+-- If duplicates > 0 or non_null < total, fix data before adding constraint
+```
+
+**Add constraints** (only if preflight passes):
+
+```sql
+-- Unique constraint on species_id (enables safe merge key)
+-- This also creates an implicit index, so no separate CREATE INDEX needed
+ALTER TABLE icaa
+ADD CONSTRAINT uq_icaa_species_id UNIQUE (species_id);
+
+-- Prevent future NULLs (optional but recommended)
+ALTER TABLE icaa
+ALTER COLUMN species_id SET NOT NULL;
+```
+
+**Multiple polygons per species_id**: If your data legitimately has multiple polygons per
+species (e.g., disjoint ranges), you CANNOT use the merge strategy in this doc as-is.
+Options:
+1. **Dissolve in staging**: Aggregate polygons before merge using `ST_Union` grouped by species_id
+2. **Use ogc_fid as merge key**: Match on row ID instead, but this requires stable IDs from source
+3. **Delete + reinsert**: Drop all rows for a species_id, then insert new ones (risky for FKs)
+
+The current merge assumes 1:1 species_id mapping. Do not skip the constraint unless you
+also change the merge strategy.
+
+---
+
+## Staging Table Creation
+
+Use UNLOGGED table without indexes for fast bulk loads:
+
+```sql
+-- Drop if exists from previous import
+DROP TABLE IF EXISTS icaa_staging;
+
+-- Create unlogged staging table (no WAL overhead)
+CREATE UNLOGGED TABLE icaa_staging (
+  species_id numeric,
+  common_name text,
+  scientific_name text,
+  taxonomic_comment text,
+  iucn_url text,
+  kingdom text,
+  phylum text,
+  class text,
+  taxon_order text,
+  family text,
+  genus text,
+  category text,
+  conservation_code text,
+  conservation_text text,
+  threats text,
+  habitat_description text,
+  habitat_tags text,
+  marine text,  -- import as text, convert later
+  terrestrial text,
+  freshwater text,
+  aquatic text,
+  island text,
+  geographic_description text,
+  distribution_comment text,
+  origin numeric,
+  presence numeric,
+  seasonal numeric,
+  bioregion text,
+  realm text,
+  subrealm text,
+  biome text,
+  color_primary text,
+  color_secondary text,
+  pattern text,
+  shape_description text,
+  size_min_cm numeric,
+  size_max_cm numeric,
+  weight_kg numeric,
+  diet_type text,
+  diet_prey text,
+  diet_flora text,
+  behavior_1 text,
+  behavior_2 text,
+  lifespan numeric,
+  maturity text,
+  reproduction_type text,
+  clutch_size text,
+  life_description_1 text,
+  life_description_2 text,
+  key_fact_1 text,
+  key_fact_2 text,
+  key_fact_3 text,
+  compiler text,
+  year_compiled numeric,
+  citation text,
+  source text,
+  subspecies text,
+  subpop text,
+  legend text,
+  generalised numeric,
+  shape_length numeric,
+  shape_length_alt numeric,
+  shape_area numeric,
+  wkb_geometry geometry(MultiPolygon, 4326)  -- enforces type + SRID
+);
+```
+
+---
+
+## Import GeoPackage to Staging
+
+**Important**: Use `-append` to load into the precreated UNLOGGED table. Using `-overwrite`
+would drop and recreate the table, losing the UNLOGGED setting and geometry constraints.
+
+```bash
+# First, truncate the staging table (faster than DROP/CREATE, preserves structure)
+psql -c "TRUNCATE icaa_staging;" "postgresql://youruser@localhost/yourdb"
+
+# Then append data into the existing staging table
+ogr2ogr -f PostgreSQL \
+  "PG:host=localhost dbname=yourdb user=youruser" \
+  your_edited_file.gpkg \
+  -nln icaa_staging \
+  -append \
+  -nlt PROMOTE_TO_MULTI
+```
+
+**Flags explained**:
+- `-append`: Insert into existing table (preserves UNLOGGED + schema)
+- `-nlt PROMOTE_TO_MULTI`: Auto-convert POLYGON → MULTIPOLYGON during import
+
+---
+
+## Preflight Validation
+
+Run these checks BEFORE merging to production. These are **quality gates** that must pass.
+
+```sql
+-- 1. Check for NULL species_id (will fail merge)
+SELECT COUNT(*) as null_count
+FROM icaa_staging
+WHERE species_id IS NULL;
+
+-- 2. Check for duplicate species_id in staging
+SELECT species_id, COUNT(*) as dupes
+FROM icaa_staging
+GROUP BY species_id
+HAVING COUNT(*) > 1;
+
+-- 3. Check geometry validity
+SELECT COUNT(*) as invalid_geoms
+FROM icaa_staging
+WHERE NOT ST_IsValid(wkb_geometry);
+
+-- 4. Check geometry type (should all be MULTIPOLYGON)
+SELECT GeometryType(wkb_geometry) as geom_type, COUNT(*)
+FROM icaa_staging
+GROUP BY GeometryType(wkb_geometry);
+
+-- 5. Check SRID (should all be 4326)
+SELECT DISTINCT ST_SRID(wkb_geometry) as srid
+FROM icaa_staging;
+
+-- 6. Preview merge actions
+SELECT
+  COUNT(*) FILTER (WHERE i.ogc_fid IS NOT NULL) as will_update,
+  COUNT(*) FILTER (WHERE i.ogc_fid IS NULL) as will_insert
+FROM icaa_staging s
+LEFT JOIN icaa i ON s.species_id = i.species_id;
+
+-- 7. Data quality: check for empty strings that should be NULL
+SELECT
+  COUNT(*) FILTER (WHERE common_name = '') as empty_common_name,
+  COUNT(*) FILTER (WHERE scientific_name = '') as empty_sci_name,
+  COUNT(*) FILTER (WHERE behavior_1 = '') as empty_behavior_1
+FROM icaa_staging;
+```
+
+**Quality Gate Rules**:
+- Gate 1-2: MUST pass (merge will fail or corrupt data)
+- Gate 3-5: SHOULD pass (geometry issues cause query failures)
+- Gate 6: Informational (review before proceeding)
+- Gate 7: SHOULD fix (empty strings → NULL for consistency)
+
+---
+
+## Geometry Normalization
+
+Fix issues found in preflight. Note: If you used `-nlt PROMOTE_TO_MULTI` during import,
+POLYGON→MULTIPOLYGON conversion is already done.
+
+```sql
+-- Fix invalid geometries FIRST (ST_MakeValid can return GEOMETRYCOLLECTION)
+-- Use ST_CollectionExtract(..., 3) to extract only polygon components
+UPDATE icaa_staging
+SET wkb_geometry = ST_Multi(ST_CollectionExtract(ST_MakeValid(wkb_geometry), 3))
+WHERE NOT ST_IsValid(wkb_geometry);
+
+-- Convert POLYGON to MULTIPOLYGON (handles both 'POLYGON' and 'ST_Polygon' returns)
+UPDATE icaa_staging
+SET wkb_geometry = ST_Multi(wkb_geometry)
+WHERE upper(GeometryType(wkb_geometry)) LIKE '%POLYGON'
+  AND upper(GeometryType(wkb_geometry)) NOT LIKE '%MULTI%';
+
+-- Force SRID if missing or wrong
+UPDATE icaa_staging
+SET wkb_geometry = ST_SetSRID(wkb_geometry, 4326)
+WHERE ST_SRID(wkb_geometry) != 4326 OR ST_SRID(wkb_geometry) IS NULL;
+
+-- Verify all geometries are now valid MULTIPOLYGON
+SELECT COUNT(*) as remaining_issues
+FROM icaa_staging
+WHERE NOT ST_IsValid(wkb_geometry)
+   OR upper(GeometryType(wkb_geometry)) != 'MULTIPOLYGON';
+```
+
+### Safe ST_MakeValid Patterns
+
+```sql
+-- Pattern 1: Simple fix (may produce GEOMETRYCOLLECTION)
+ST_MakeValid(geom)
+
+-- Pattern 2: Extract polygons only (recommended)
+ST_Multi(ST_CollectionExtract(ST_MakeValid(geom), 3))
+
+-- Pattern 3: Buffer trick for stubborn geometries
+ST_Buffer(ST_Buffer(geom, 0.0001), -0.0001)
+
+-- Pattern 4: Simplify then validate (for overly complex geometries)
+ST_MakeValid(ST_SimplifyPreserveTopology(geom, 0.0001))
+```
+
+---
+
+## Merge to Production
+
+### Boolean Conversion Helper
+
+OGR/GPKG can emit booleans as: `true`, `TRUE`, `t`, `1`, `false`, `FALSE`, `f`, `0`.
+Use this pattern in the merge statements below:
+
+```sql
+-- Helper: convert text boolean to native boolean
+-- lower(s.marine) IN ('true', 't', '1', 'yes')
+```
+
+### Option A: UPDATE existing species (preserves ogc_fid)
+
+```sql
+UPDATE icaa i
+SET
+  common_name = s.common_name,
+  scientific_name = s.scientific_name,
+  taxonomic_comment = s.taxonomic_comment,
+  iucn_url = s.iucn_url,
+  kingdom = s.kingdom,
+  phylum = s.phylum,
+  class = s.class,
+  taxon_order = s.taxon_order,
+  family = s.family,
+  genus = s.genus,
+  category = s.category,
+  conservation_code = s.conservation_code,
+  conservation_text = s.conservation_text,
+  threats = s.threats,
+  habitat_description = s.habitat_description,
+  habitat_tags = s.habitat_tags,
+  marine = lower(s.marine) IN ('true', 't', '1', 'yes'),
+  terrestrial = lower(s.terrestrial) IN ('true', 't', '1', 'yes'),
+  freshwater = lower(s.freshwater) IN ('true', 't', '1', 'yes'),
+  aquatic = lower(s.aquatic) IN ('true', 't', '1', 'yes'),
+  island = lower(s.island) IN ('true', 't', '1', 'yes'),
+  geographic_description = s.geographic_description,
+  distribution_comment = s.distribution_comment,
+  origin = s.origin,
+  presence = s.presence,
+  seasonal = s.seasonal,
+  bioregion = s.bioregion,
+  realm = s.realm,
+  subrealm = s.subrealm,
+  biome = s.biome,
+  color_primary = s.color_primary,
+  color_secondary = s.color_secondary,
+  pattern = s.pattern,
+  shape_description = s.shape_description,
+  size_min_cm = s.size_min_cm,
+  size_max_cm = s.size_max_cm,
+  weight_kg = s.weight_kg,
+  diet_type = s.diet_type,
+  diet_prey = s.diet_prey,
+  diet_flora = s.diet_flora,
+  behavior_1 = s.behavior_1,
+  behavior_2 = s.behavior_2,
+  lifespan = s.lifespan,
+  maturity = s.maturity,
+  reproduction_type = s.reproduction_type,
+  clutch_size = s.clutch_size,
+  life_description_1 = s.life_description_1,
+  life_description_2 = s.life_description_2,
+  key_fact_1 = s.key_fact_1,
+  key_fact_2 = s.key_fact_2,
+  key_fact_3 = s.key_fact_3,
+  compiler = s.compiler,
+  year_compiled = s.year_compiled,
+  citation = s.citation,
+  source = s.source,
+  subspecies = s.subspecies,
+  subpop = s.subpop,
+  legend = s.legend,
+  generalised = s.generalised,
+  shape_length = s.shape_length,
+  shape_length_alt = s.shape_length_alt,
+  shape_area = s.shape_area,
+  wkb_geometry = s.wkb_geometry
+FROM icaa_staging s
+WHERE i.species_id = s.species_id;
+```
+
+### Option B: INSERT new species (Postgres assigns ogc_fid)
+
+```sql
+INSERT INTO icaa (
+  species_id, common_name, scientific_name, taxonomic_comment, iucn_url,
+  kingdom, phylum, class, taxon_order, family, genus,
+  category, conservation_code, conservation_text, threats,
+  habitat_description, habitat_tags,
+  marine, terrestrial, freshwater, aquatic, island,
+  geographic_description, distribution_comment,
+  origin, presence, seasonal,
+  bioregion, realm, subrealm, biome,
+  color_primary, color_secondary, pattern, shape_description,
+  size_min_cm, size_max_cm, weight_kg,
+  diet_type, diet_prey, diet_flora,
+  behavior_1, behavior_2,
+  lifespan, maturity, reproduction_type, clutch_size,
+  life_description_1, life_description_2,
+  key_fact_1, key_fact_2, key_fact_3,
+  compiler, year_compiled, citation, source,
+  subspecies, subpop, legend, generalised,
+  shape_length, shape_length_alt, shape_area,
+  wkb_geometry
+)
+SELECT
+  s.species_id, s.common_name, s.scientific_name, s.taxonomic_comment, s.iucn_url,
+  s.kingdom, s.phylum, s.class, s.taxon_order, s.family, s.genus,
+  s.category, s.conservation_code, s.conservation_text, s.threats,
+  s.habitat_description, s.habitat_tags,
+  lower(s.marine) IN ('true', 't', '1', 'yes'),
+  lower(s.terrestrial) IN ('true', 't', '1', 'yes'),
+  lower(s.freshwater) IN ('true', 't', '1', 'yes'),
+  lower(s.aquatic) IN ('true', 't', '1', 'yes'),
+  lower(s.island) IN ('true', 't', '1', 'yes'),
+  s.geographic_description, s.distribution_comment,
+  s.origin, s.presence, s.seasonal,
+  s.bioregion, s.realm, s.subrealm, s.biome,
+  s.color_primary, s.color_secondary, s.pattern, s.shape_description,
+  s.size_min_cm, s.size_max_cm, s.weight_kg,
+  s.diet_type, s.diet_prey, s.diet_flora,
+  s.behavior_1, s.behavior_2,
+  s.lifespan, s.maturity, s.reproduction_type, s.clutch_size,
+  s.life_description_1, s.life_description_2,
+  s.key_fact_1, s.key_fact_2, s.key_fact_3,
+  s.compiler, s.year_compiled, s.citation, s.source,
+  s.subspecies, s.subpop, s.legend, s.generalised,
+  s.shape_length, s.shape_length_alt, s.shape_area,
+  s.wkb_geometry
+FROM icaa_staging s
+WHERE NOT EXISTS (
+  SELECT 1 FROM icaa i WHERE i.species_id = s.species_id
+);
+```
+
+---
+
+## Normalization ETL (1NF Compliance)
+
+This section describes how to normalize the repeating groups into proper child tables.
+Run this **after** the standard merge to production.
+
+### Step 1: Create Normalized Child Tables
+
+```sql
+-- Species behaviors (replaces behavior_1, behavior_2)
+CREATE TABLE IF NOT EXISTS species_behaviors (
+  id SERIAL PRIMARY KEY,
+  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
+  behavior_index INTEGER NOT NULL,  -- 1, 2, etc.
+  behavior_text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (species_id, behavior_index)
+);
+
+CREATE INDEX ix_species_behaviors_species_id ON species_behaviors(species_id);
+
+-- Species key facts (replaces key_fact_1, key_fact_2, key_fact_3)
+CREATE TABLE IF NOT EXISTS species_key_facts (
+  id SERIAL PRIMARY KEY,
+  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
+  fact_index INTEGER NOT NULL,  -- 1, 2, 3, etc.
+  fact_text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (species_id, fact_index)
+);
+
+CREATE INDEX ix_species_key_facts_species_id ON species_key_facts(species_id);
+CREATE INDEX ix_species_key_facts_text_gin ON species_key_facts USING GIN(to_tsvector('english', fact_text));
+
+-- Species life descriptions (replaces life_description_1, life_description_2)
+CREATE TABLE IF NOT EXISTS species_life_descriptions (
+  id SERIAL PRIMARY KEY,
+  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
+  description_index INTEGER NOT NULL,
+  description_text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (species_id, description_index)
+);
+
+CREATE INDEX ix_species_life_descriptions_species_id ON species_life_descriptions(species_id);
+
+-- Species habitat tags (replaces comma-separated habitat_tags)
+CREATE TABLE IF NOT EXISTS species_habitat_tags (
+  id SERIAL PRIMARY KEY,
+  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
+  tag TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (species_id, tag)
+);
+
+CREATE INDEX ix_species_habitat_tags_species_id ON species_habitat_tags(species_id);
+CREATE INDEX ix_species_habitat_tags_tag ON species_habitat_tags(tag);
+
+-- Species threats (replaces threats text blob)
+CREATE TABLE IF NOT EXISTS species_threats (
+  id SERIAL PRIMARY KEY,
+  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
+  threat_text TEXT NOT NULL,
+  threat_category TEXT,  -- optional: 'habitat_loss', 'climate', 'hunting', etc.
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (species_id, threat_text)
+);
+
+CREATE INDEX ix_species_threats_species_id ON species_threats(species_id);
+CREATE INDEX ix_species_threats_category ON species_threats(threat_category) WHERE threat_category IS NOT NULL;
+```
+
+### Step 2: Populate Normalized Tables from Denormalized Data
+
+```sql
+-- Populate behaviors from behavior_1, behavior_2
+INSERT INTO species_behaviors (species_id, behavior_index, behavior_text)
+SELECT ogc_fid, 1, behavior_1
+FROM icaa
+WHERE behavior_1 IS NOT NULL AND TRIM(behavior_1) != ''
+ON CONFLICT (species_id, behavior_index) DO UPDATE SET behavior_text = EXCLUDED.behavior_text;
+
+INSERT INTO species_behaviors (species_id, behavior_index, behavior_text)
+SELECT ogc_fid, 2, behavior_2
+FROM icaa
+WHERE behavior_2 IS NOT NULL AND TRIM(behavior_2) != ''
+ON CONFLICT (species_id, behavior_index) DO UPDATE SET behavior_text = EXCLUDED.behavior_text;
+
+-- Populate key facts from key_fact_1, key_fact_2, key_fact_3
+INSERT INTO species_key_facts (species_id, fact_index, fact_text)
+SELECT ogc_fid, 1, key_fact_1
+FROM icaa
+WHERE key_fact_1 IS NOT NULL AND TRIM(key_fact_1) != ''
+ON CONFLICT (species_id, fact_index) DO UPDATE SET fact_text = EXCLUDED.fact_text;
+
+INSERT INTO species_key_facts (species_id, fact_index, fact_text)
+SELECT ogc_fid, 2, key_fact_2
+FROM icaa
+WHERE key_fact_2 IS NOT NULL AND TRIM(key_fact_2) != ''
+ON CONFLICT (species_id, fact_index) DO UPDATE SET fact_text = EXCLUDED.fact_text;
+
+INSERT INTO species_key_facts (species_id, fact_index, fact_text)
+SELECT ogc_fid, 3, key_fact_3
+FROM icaa
+WHERE key_fact_3 IS NOT NULL AND TRIM(key_fact_3) != ''
+ON CONFLICT (species_id, fact_index) DO UPDATE SET fact_text = EXCLUDED.fact_text;
+
+-- Populate life descriptions from life_description_1, life_description_2
+INSERT INTO species_life_descriptions (species_id, description_index, description_text)
+SELECT ogc_fid, 1, life_description_1
+FROM icaa
+WHERE life_description_1 IS NOT NULL AND TRIM(life_description_1) != ''
+ON CONFLICT (species_id, description_index) DO UPDATE SET description_text = EXCLUDED.description_text;
+
+INSERT INTO species_life_descriptions (species_id, description_index, description_text)
+SELECT ogc_fid, 2, life_description_2
+FROM icaa
+WHERE life_description_2 IS NOT NULL AND TRIM(life_description_2) != ''
+ON CONFLICT (species_id, description_index) DO UPDATE SET description_text = EXCLUDED.description_text;
+
+-- Populate habitat tags from comma-separated field
+INSERT INTO species_habitat_tags (species_id, tag)
+SELECT ogc_fid, TRIM(unnest(string_to_array(habitat_tags, ',')))
+FROM icaa
+WHERE habitat_tags IS NOT NULL AND TRIM(habitat_tags) != ''
+ON CONFLICT (species_id, tag) DO NOTHING;
+
+-- Populate threats from semicolon-delimited field (best practice delimiter)
+-- Semicolons are preferred for threat lists: "Habitat loss; Climate change; Hunting"
+INSERT INTO species_threats (species_id, threat_text)
+SELECT i.ogc_fid, TRIM(t.threat)
+FROM icaa i,
+LATERAL unnest(string_to_array(i.threats, ';')) AS t(threat)
+WHERE i.threats IS NOT NULL
+  AND TRIM(i.threats) != ''
+  AND TRIM(t.threat) != ''
+ON CONFLICT (species_id, threat_text) DO NOTHING;
+```
+
+### Step 3: Query Examples (Normalized)
+
+```sql
+-- Find all species with a specific behavior
+SELECT DISTINCT i.ogc_fid, i.common_name, i.scientific_name
+FROM icaa i
+JOIN species_behaviors b ON i.ogc_fid = b.species_id
+WHERE b.behavior_text ILIKE '%nocturnal%';
+
+-- Count species by key fact content (full-text search)
+SELECT i.common_name, f.fact_text
+FROM icaa i
+JOIN species_key_facts f ON i.ogc_fid = f.species_id
+WHERE to_tsvector('english', f.fact_text) @@ to_tsquery('english', 'endangered & habitat');
+
+-- Get all species with a specific habitat tag
+SELECT i.common_name, i.scientific_name
+FROM icaa i
+JOIN species_habitat_tags t ON i.ogc_fid = t.species_id
+WHERE t.tag = 'Forest';
+
+-- Count behaviors per species
+SELECT i.common_name, COUNT(b.id) as behavior_count
+FROM icaa i
+LEFT JOIN species_behaviors b ON i.ogc_fid = b.species_id
+GROUP BY i.ogc_fid, i.common_name
+ORDER BY behavior_count DESC;
+
+-- Find species by threat type
+SELECT DISTINCT i.common_name, i.conservation_code, t.threat_text
+FROM icaa i
+JOIN species_threats t ON i.ogc_fid = t.species_id
+WHERE t.threat_text ILIKE '%habitat loss%'
+   OR t.threat_category = 'habitat_loss';
+
+-- Count threats per species
+SELECT i.common_name, COUNT(t.id) as threat_count
+FROM icaa i
+LEFT JOIN species_threats t ON i.ogc_fid = t.species_id
+GROUP BY i.ogc_fid, i.common_name
+ORDER BY threat_count DESC;
+```
+
+### Step 4: Create Views for Backward Compatibility
+
+```sql
+-- View that reconstructs the denormalized format for existing code
+CREATE OR REPLACE VIEW icaa_with_behaviors AS
+SELECT
+  i.*,
+  (SELECT behavior_text FROM species_behaviors WHERE species_id = i.ogc_fid AND behavior_index = 1) AS behavior_1_normalized,
+  (SELECT behavior_text FROM species_behaviors WHERE species_id = i.ogc_fid AND behavior_index = 2) AS behavior_2_normalized,
+  (SELECT fact_text FROM species_key_facts WHERE species_id = i.ogc_fid AND fact_index = 1) AS key_fact_1_normalized,
+  (SELECT fact_text FROM species_key_facts WHERE species_id = i.ogc_fid AND fact_index = 2) AS key_fact_2_normalized,
+  (SELECT fact_text FROM species_key_facts WHERE species_id = i.ogc_fid AND fact_index = 3) AS key_fact_3_normalized,
+  (SELECT string_agg(tag, ', ' ORDER BY tag) FROM species_habitat_tags WHERE species_id = i.ogc_fid) AS habitat_tags_normalized,
+  (SELECT string_agg(threat_text, '. ' ORDER BY id) FROM species_threats WHERE species_id = i.ogc_fid) AS threats_normalized
+FROM icaa i;
+```
+
+### Step 5: Optional - Drop Denormalized Columns
+
+**Warning**: Only do this after updating all application code to use normalized tables.
+
+```sql
+-- DANGEROUS: Only run after app migration is complete
+-- ALTER TABLE icaa
+--   DROP COLUMN behavior_1,
+--   DROP COLUMN behavior_2,
+--   DROP COLUMN key_fact_1,
+--   DROP COLUMN key_fact_2,
+--   DROP COLUMN key_fact_3,
+--   DROP COLUMN life_description_1,
+--   DROP COLUMN life_description_2,
+--   DROP COLUMN habitat_tags,
+--   DROP COLUMN threats;
+```
+
+---
+
+## Post-Import: Bioregion Population
+
+If bioregion fields are empty, populate via spatial join. Assumes SRID 4326 for both tables.
+
+```sql
+-- Quick SRID sanity check
+SELECT 'icaa' as tbl, ST_SRID(wkb_geometry) as srid FROM icaa LIMIT 1
+UNION ALL
+SELECT 'oneearth_bioregion', ST_SRID(wkb_geometry) FROM oneearth_bioregion LIMIT 1;
+-- Both should return 4326
+```
+
+**Method choice**:
+| Method | Speed | Accuracy | Use when |
+|--------|-------|----------|----------|
+| Centroid | Fast | Lower (point may fall outside polygon) | Quick fill, most species |
+| Largest overlap | Slow | Higher (handles multi-bioregion spans) | Accuracy matters, large ranges |
+
+**Option A: Centroid method (fast)**
+
+```sql
+UPDATE icaa i
+SET
+  bioregion = b.bioregion,
+  realm = b.realm,
+  subrealm = b.subrealm,
+  biome = b.biome
+FROM oneearth_bioregion b
+WHERE ST_Intersects(ST_Centroid(i.wkb_geometry), b.wkb_geometry)
+  AND i.bioregion IS NULL;
+```
+
+**Option B: Largest overlap method (accurate)**
+
+Use for species with large ranges spanning multiple bioregions:
+
+```sql
+UPDATE icaa i
+SET
+  bioregion = sub.bioregion,
+  realm = sub.realm,
+  subrealm = sub.subrealm,
+  biome = sub.biome
+FROM (
+  SELECT DISTINCT ON (i2.ogc_fid)
+    i2.ogc_fid,
+    b.bioregion,
+    b.realm,
+    b.subrealm,
+    b.biome,
+    ST_Area(ST_Intersection(i2.wkb_geometry, b.wkb_geometry)) AS overlap
+  FROM icaa i2
+  JOIN oneearth_bioregion b ON ST_Intersects(i2.wkb_geometry, b.wkb_geometry)
+  WHERE i2.bioregion IS NULL
+  ORDER BY i2.ogc_fid, overlap DESC
+) sub
+WHERE i.ogc_fid = sub.ogc_fid;
+```
+
+**Fallback**: If centroid falls outside all bioregions (island edge case), use ST_PointOnSurface:
+
+```sql
+UPDATE icaa i
+SET bioregion = b.bioregion, realm = b.realm, subrealm = b.subrealm, biome = b.biome
+FROM oneearth_bioregion b
+WHERE ST_Intersects(ST_PointOnSurface(i.wkb_geometry), b.wkb_geometry)
+  AND i.bioregion IS NULL;
+```
+
+---
+
+## Post-Import: Verify FK Integrity
+
+```sql
+-- Should return 0 rows
+SELECT d.id, d.species_id as referenced_ogc_fid
+FROM player_species_discoveries d
+LEFT JOIN icaa i ON d.species_id = i.ogc_fid
+WHERE i.ogc_fid IS NULL;
+
+SELECT c.id, c.species_id as referenced_ogc_fid
+FROM player_clue_unlocks c
+LEFT JOIN icaa i ON c.species_id = i.ogc_fid
+WHERE i.ogc_fid IS NULL;
+```
+
+---
+
+## Post-Import: Index Strategy
+
+### Index Creation Timing
+
+Create indexes **after** bulk loads, not before:
+
+```sql
+-- GIST index for spatial queries (point-in-polygon, distance)
+CREATE INDEX IF NOT EXISTS ix_icaa_wkb_geometry ON icaa USING GIST(wkb_geometry);
+
+-- B-tree for common filters
+CREATE INDEX IF NOT EXISTS ix_icaa_conservation_code ON icaa(conservation_code);
+CREATE INDEX IF NOT EXISTS ix_icaa_realm ON icaa(realm);
+CREATE INDEX IF NOT EXISTS ix_icaa_family ON icaa(family);
+
+-- Composite for taxonomy queries
+CREATE INDEX IF NOT EXISTS ix_icaa_taxonomy ON icaa(kingdom, phylum, class, taxon_order, family, genus);
+```
+
+### ANALYZE/VACUUM Timing
+
+```sql
+-- After bulk load, update statistics
+ANALYZE icaa;
+
+-- If many rows were updated/deleted, reclaim space
+VACUUM ANALYZE icaa;
+
+-- For large tables with heavy updates, consider
+VACUUM (VERBOSE, ANALYZE) icaa;
+```
+
+### WAL Impact
+
+- UNLOGGED staging tables bypass WAL (faster, but not crash-safe)
+- Production tables are logged (slower, crash-safe)
+- For very large imports, consider temporarily increasing `wal_buffers` and `checkpoint_timeout`
+
+---
+
+## Operational Controls
+
+### Transactions and Rollback
+
+```sql
+-- Wrap entire import in transaction for atomic rollback
+BEGIN;
+
+-- ... all merge operations ...
+
+-- Verify before committing
+SELECT COUNT(*) FROM icaa;
+SELECT COUNT(*) FROM species_behaviors;
+
+-- If something went wrong
+-- ROLLBACK;
+
+-- If all looks good
+COMMIT;
+```
+
+### Audit Table
+
+```sql
+-- Track import history
+CREATE TABLE IF NOT EXISTS import_audit (
+  id SERIAL PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  operation TEXT NOT NULL,  -- 'INSERT', 'UPDATE', 'NORMALIZE'
+  rows_affected INTEGER NOT NULL,
+  source_file TEXT,
+  imported_by TEXT DEFAULT CURRENT_USER,
+  imported_at TIMESTAMPTZ DEFAULT NOW(),
+  notes TEXT
+);
+
+-- Example usage after merge
+INSERT INTO import_audit (table_name, operation, rows_affected, source_file, notes)
+VALUES ('icaa', 'UPDATE', 1500, 'species_2024_01.gpkg', 'Monthly IUCN update');
+```
+
+### Backup Before Import
+
+```bash
+# Backup production table before import
+pg_dump -t icaa -t species_behaviors -t species_key_facts \
+  -Fc -f backup_before_import_$(date +%Y%m%d).dump \
+  postgresql://user@localhost/dbname
+```
+
+---
+
+## Backend/API Guidance
+
+### Payload Trimming
+
+Don't return full geometry in list endpoints:
+
+```typescript
+// BAD: Returns geometry for all species
+const species = await db.select().from(icaa);
+
+// GOOD: Exclude geometry for list views
+const speciesList = await db
+  .select({
+    ogcFid: icaa.ogcFid,
+    commonName: icaa.commonName,
+    scientificName: icaa.scientificName,
+    conservationCode: icaa.conservationCode,
+    // No wkb_geometry
+  })
+  .from(icaa);
+```
+
+### Spatial Query Patterns
+
+```typescript
+// Point-in-polygon: Find species at a location
+const speciesAtPoint = await db.execute(sql`
+  SELECT ogc_fid, common_name, scientific_name
+  FROM icaa
+  WHERE ST_Contains(wkb_geometry, ST_SetSRID(ST_Point(${lon}, ${lat}), 4326))
+`);
+
+// Bounding box: Find species in viewport
+const speciesInBbox = await db.execute(sql`
+  SELECT ogc_fid, common_name, ST_AsGeoJSON(wkb_geometry) as geojson
+  FROM icaa
+  WHERE wkb_geometry && ST_MakeEnvelope(${minLon}, ${minLat}, ${maxLon}, ${maxLat}, 4326)
+  LIMIT 100
+`);
+
+// Distance: Find nearest species to a point
+const nearestSpecies = await db.execute(sql`
+  SELECT ogc_fid, common_name,
+         ST_Distance(wkb_geometry::geography, ST_SetSRID(ST_Point(${lon}, ${lat}), 4326)::geography) as distance_m
+  FROM icaa
+  ORDER BY wkb_geometry <-> ST_SetSRID(ST_Point(${lon}, ${lat}), 4326)
+  LIMIT 10
+`);
+```
+
+### Caching
+
+```typescript
+// Cache normalized lookup data (behaviors, facts) - changes rarely
+const behaviors = await redis.get(`species:${ogcFid}:behaviors`);
+if (!behaviors) {
+  const result = await db
+    .select()
+    .from(speciesBehaviors)
+    .where(eq(speciesBehaviors.speciesId, ogcFid));
+  await redis.setex(`species:${ogcFid}:behaviors`, 3600, JSON.stringify(result));
+}
+
+// Don't cache geometry - too large, changes with viewport
+```
+
+### Avoiding Geometry Bloat
+
+```typescript
+// Use ST_Simplify for display-only geometry
+const simplifiedGeom = await db.execute(sql`
+  SELECT ogc_fid,
+         ST_AsGeoJSON(ST_Simplify(wkb_geometry, 0.01)) as geojson_simplified
+  FROM icaa
+  WHERE ogc_fid = ${id}
+`);
+
+// Use ST_Envelope for quick bounding box
+const bbox = await db.execute(sql`
+  SELECT ST_AsGeoJSON(ST_Envelope(wkb_geometry)) as bbox
+  FROM icaa
+  WHERE ogc_fid = ${id}
+`);
+```
+
+---
+
+## Cleanup
+
+```sql
+DROP TABLE IF EXISTS icaa_staging;
+```
+
+---
+
+## Drizzle Re-Introspection
+
+If you add or rename columns in icaa, regenerate TypeScript types:
+
+```bash
+npm run db:introspect
+```
+
+This updates `src/db/schema/species.ts` and related type definitions. Only needed for
+schema changes, not for new rows.
+
+---
+
+## Boolean Conversion (Legacy - One-Time Only)
+
+**Note**: The `icaa` table already has boolean columns. This section is for historical
+reference only. Do NOT run this on an existing database - it will error.
+
+If you ever need to convert a fresh import where booleans came in as text:
+
+```sql
+-- ONLY for fresh tables with text columns, not production icaa
+ALTER TABLE icaa_fresh
+  ALTER COLUMN marine TYPE boolean USING (marine = 'true'),
+  ALTER COLUMN terrestrial TYPE boolean USING (terrestrial = 'true'),
+  ALTER COLUMN freshwater TYPE boolean USING (freshwater = 'true'),
+  ALTER COLUMN aquatic TYPE boolean USING (aquatic = 'true'),
+  ALTER COLUMN island TYPE boolean USING (island = 'true');
+```
+
+For the staging workflow, booleans are imported as text in `icaa_staging` and converted
+inline during the merge step (see `(s.marine = 'true')` in the INSERT/UPDATE statements).

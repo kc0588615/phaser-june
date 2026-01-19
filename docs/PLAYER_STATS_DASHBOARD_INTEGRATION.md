@@ -185,12 +185,18 @@ For leaderboard rankings:
 
 #### 3. `profiles` table
 For display names:
-- `id` (UUID)
+- `user_id` (UUID)
 - `username` (text, nullable)
-- `email` (text, nullable)
+- `full_name` (text, nullable)
+- `avatar_url` (text, nullable)
 
 **Schema Setup**:
 - Ensure required tables exist (SQL DDL or existing DB import) for `profiles`, `player_stats`, and related tables.
+- `player_stats` is refreshed after discoveries and session end; run a one-time backfill on existing DBs:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
 
 ---
 
