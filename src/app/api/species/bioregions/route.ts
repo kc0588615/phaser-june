@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { inArray } from 'drizzle-orm';
+import { db, icaa } from '@/db';
 
 /**
  * GET /api/species/bioregions?ids=1,2,3
@@ -59,24 +60,22 @@ export async function POST(request: NextRequest) {
 async function getBioregionsForSpecies(speciesIds: number[]) {
   // Get species with their pre-populated bioregion columns
   // (bioregion data is already stored in icaa table)
-  const species = await prisma.iCAA.findMany({
-    where: {
-      ogc_fid: { in: speciesIds },
-    },
-    select: {
-      ogc_fid: true,
-      bioregio_1: true,
-      realm: true,
-      sub_realm: true,
-      biome: true,
-    },
-  });
+  const species = await db
+    .select({
+      ogcFid: icaa.ogcFid,
+      bioregion: icaa.bioregion,
+      realm: icaa.realm,
+      subrealm: icaa.subrealm,
+      biome: icaa.biome,
+    })
+    .from(icaa)
+    .where(inArray(icaa.ogcFid, speciesIds));
 
   return species.map(s => ({
-    species_id: s.ogc_fid,
-    bioregio_1: s.bioregio_1,
+    species_id: s.ogcFid,
+    bioregion: s.bioregion,
     realm: s.realm,
-    sub_realm: s.sub_realm,
+    subrealm: s.subrealm,
     biome: s.biome,
   }));
 }

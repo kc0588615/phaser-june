@@ -32,26 +32,26 @@ export interface CluePayload {
 
 // Classification sequence
 const CLASSIFICATION_SEQUENCE: Array<keyof Species> = [
-  'tax_comm',   // Taxonomic comments/context first
+  'taxonomic_comment',   // Taxonomic comments/context first
   'phylum',
   'class',
-  'order_',     // note underscore
+  'taxon_order',
   'family',
   'genus',
-  'sci_name'
+  'scientific_name'
 ];
 
 // Key Facts sequence
 const KEY_FACTS_SEQUENCE: Array<keyof Species> = [
-  'key_fact1',
-  'key_fact2', 
-  'key_fact3'
+  'key_fact_1',
+  'key_fact_2',
+  'key_fact_3'
 ];
 
 // Behavior sequence (includes diet fields)
 const BEHAVIOR_SEQUENCE: Array<keyof Species> = [
-  'behav_1',
-  'behav_2',
+  'behavior_1',
+  'behavior_2',
   'diet_type',
   'diet_prey',
   'diet_flora'
@@ -59,31 +59,31 @@ const BEHAVIOR_SEQUENCE: Array<keyof Species> = [
 
 // Life Cycle sequence
 const LIFE_CYCLE_SEQUENCE: Array<keyof Species> = [
-  'life_desc1',
-  'life_desc2'
+  'life_description_1',
+  'life_description_2'
 ];
 
 // Conservation sequence
 const CONSERVATION_SEQUENCE: Array<keyof Species> = [
-  'cons_text',
+  'conservation_text',
   'threats'
 ];
 
 // Geographic sequence
 const GEOGRAPHIC_SEQUENCE: Array<keyof Species> = [
-  'geo_desc',
-  'dist_comm',
-  'hab_desc',
-  'hab_tags'
+  'geographic_description',
+  'distribution_comment',
+  'habitat_description',
+  'habitat_tags'
 ];
 
 // Morphology sequence
 const MORPHOLOGY_SEQUENCE: Array<keyof Species> = [
   'pattern',
-  'color_prim',
-  'color_sec', 
-  'shape_desc',
-  'size_max',
+  'color_primary',
+  'color_secondary',
+  'shape_description',
+  'size_max_cm',
   'weight_kg'
 ];
 
@@ -108,13 +108,13 @@ function getNextClassificationClue(species: Species): string {
     if (value) {
       // Format label based on field
       switch (field) {
-        case 'tax_comm': return value; // Taxonomic comments are already complete sentences
+        case 'taxonomic_comment': return value; // Taxonomic comments are already complete sentences
         case 'phylum': return `Phylum: ${value}`;
         case 'class': return `Class: ${value}`;
-        case 'order_': return `Order: ${value}`;
+        case 'taxon_order': return `Order: ${value}`;
         case 'family': return `Family: ${value}`;
         case 'genus': return `Genus: ${value}`;
-        case 'sci_name': return `Scientific name: ${value}`;
+        case 'scientific_name': return `Scientific name: ${value}`;
         default: return value;
       }
     }
@@ -155,8 +155,8 @@ function getNextBehaviorClue(species: Species): string {
 
     if (value) {
       switch (field) {
-        case 'behav_1': return value;
-        case 'behav_2': return value;
+        case 'behavior_1': return value;
+        case 'behavior_2': return value;
         case 'diet_type': return `Diet type: ${value}`;
         case 'diet_prey': return `Preys on: ${value}`;
         case 'diet_flora': return `Eats plants: ${value}`;
@@ -198,7 +198,7 @@ function getNextConservationClue(species: Species): string {
 
     if (value) {
       switch (field) {
-        case 'cons_text': return value;
+        case 'conservation_text': return value;
         case 'threats': return `Threats: ${value}`;
         default: return value;
       }
@@ -220,10 +220,10 @@ function getNextGeographicClue(species: Species): string {
 
     if (value) {
       switch (field) {
-        case 'geo_desc': return value;
-        case 'dist_comm': return value;
-        case 'hab_desc': return value;
-        case 'hab_tags': return `Habitat: ${value}`;
+        case 'geographic_description': return value;
+        case 'distribution_comment': return value;
+        case 'habitat_description': return value;
+        case 'habitat_tags': return `Habitat: ${value}`;
         default: return value;
       }
     }
@@ -245,10 +245,10 @@ function getNextMorphologyClue(species: Species): string {
     if (value !== null && value !== undefined) {
       switch (field) {
         case 'pattern': return value as string;
-        case 'color_prim': return `Primary color: ${value}`;
-        case 'color_sec': return `Secondary color: ${value}`;
-        case 'shape_desc': return value as string;
-        case 'size_max': return `Maximum length: ${value} units`;
+        case 'color_primary': return `Primary color: ${value}`;
+        case 'color_secondary': return `Secondary color: ${value}`;
+        case 'shape_description': return value as string;
+        case 'size_max_cm': return `Maximum length: ${value} cm`;
         case 'weight_kg': return `Weight: ${value} kg`;
         default: return String(value);
       }
@@ -350,11 +350,10 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     icon: '🌳',
     getClue: (species: Species) => {
       const habitats: string[] = [];
-      // NOTE: DB stores these as strings "true"/"false", not booleans
-      // Must use explicit string comparison, not truthy checks
-      if (species.aquatic === 'true' || species.freshwater === 'true') habitats.push('freshwater');
-      if (species.terrestria === 'true') habitats.push('terrestrial');
-      if (species.marine === 'true') habitats.push('marine');
+      // Habitat fields are now booleans
+      if (species.aquatic || species.freshwater) habitats.push('freshwater');
+      if (species.terrestrial) habitats.push('terrestrial');
+      if (species.marine) habitats.push('marine');
 
       if (habitats.length > 0) {
         return `Found in ${habitats.join(' and ')} habitats`;
@@ -395,14 +394,14 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
       // Try progressive life cycle descriptions first
       const lifeCycleClue = getNextLifeCycleClue(species);
       if (lifeCycleClue) return lifeCycleClue;
-      
+
       // Fallback to structured life info if no more descriptions
       const lifeInfo: string[] = [];
       if (species.lifespan) lifeInfo.push(`Lifespan: ${species.lifespan}`);
       if (species.maturity) lifeInfo.push(`Maturity: ${species.maturity}`);
-      if (species.repro_type) lifeInfo.push(`Reproduction: ${species.repro_type}`);
-      if (species.clutch_sz) lifeInfo.push(`Clutch size: ${species.clutch_sz}`);
-      
+      if (species.reproduction_type) lifeInfo.push(`Reproduction: ${species.reproduction_type}`);
+      if (species.clutch_size) lifeInfo.push(`Clutch size: ${species.clutch_size}`);
+
       return lifeInfo.join(', ');
     },
   },
@@ -414,10 +413,10 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
       // Try progressive conservation clues first
       const conservationClue = getNextConservationClue(species);
       if (conservationClue) return conservationClue;
-      
+
       // Fallback to conservation status if no more progressive clues
-      if (species.cons_code || species.category) {
-        return `Conservation status: ${species.cons_code || species.category}`;
+      if (species.conservation_code || species.category) {
+        return `Conservation status: ${species.conservation_code || species.category}`;
       }
       return '';
     },

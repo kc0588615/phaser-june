@@ -8,9 +8,11 @@ This guide provides comprehensive documentation for the database architecture us
 
 ### Technology Stack
 - **Database**: PostgreSQL 15+ (Hetzner VPS) with PostGIS extension
-- **Connection**: Prisma ORM
+- **Connection**: Drizzle ORM (postgres.js). Prisma is no longer used.
 - **Spatial Features**: PostGIS for geographic queries
 - **Real-time**: None (Standard REST/Server Actions)
+
+See `docs/SHAPEFILE_BEST_PRACTICES.mdx` for pre-import guidance on spatial data fields and types.
 
 ### Database Tables
 
@@ -19,18 +21,89 @@ Primary table containing all species information with 70+ fields.
 
 **Key Identifiers:**
 - `ogc_fid` (number) - Primary key, unique identifier for each species
-- `comm_name` (string) - Common name
-- `sci_name` (string) - Scientific name
-- `tax_comm` (string) - Taxonomic common name
+- `common_name` (string) - Common name
+- `scientific_name` (string) - Scientific name
+- `taxonomic_comment` (string) - Taxonomic comments/context
 
 **Spatial Field:**
 - `wkb_geometry` (PostGIS geometry) - Polygon/multipolygon defining species range
 
 #### 2. `high_scores` Table
 - `id` (uuid) - Primary key
-- `username` (string) - Player name
+- `player_id` (uuid, nullable) - Optional FK to `profiles.user_id` for authenticated players
+- `username` (string) - Player name (legacy/guest-friendly)
 - `score` (number) - Game score
-- `created_at` (timestamp) - Score submission time
+- `created_at` (timestamptz) - Score submission time
+
+**Note:** `player_id` is optional so legacy anonymous scores remain valid.
+
+## Maintenance Tasks
+
+After applying schema migrations on an existing database, run the stats backfill once:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
+
+## Conventions and Best Practices
+
+These conventions apply to app-owned tables and new schema changes. Import-owned tables
+(for example, `icaa` and `oneearth_bioregion`) may not comply; prefer views or staged
+transforms instead of renaming or retyping import columns.
+
+### Naming
+- Table names: lowercase, snake_case, plural (users, order_items)
+- Column names: lowercase, snake_case, singular (email, status)
+- Primary keys: `id` with `bigint GENERATED ALWAYS AS IDENTITY` (use UUID only for externally sourced IDs)
+- Foreign keys: `singular_table_id` (user_id)
+- Timestamps: `_at` suffix with `timestamptz`
+- Dates: `_on` suffix
+- Booleans: `is_` or `has_` prefix
+
+### Data Types
+- Use `text` for strings; use `CHECK` constraints if length matters
+- Use `timestamptz` for timestamps
+- Use `numeric` or integer cents for money; avoid `money`
+- Use `jsonb` for JSON data
+- Avoid `varchar(255)` or other arbitrary limits; use `text` unless a strict business rule requires a length check
+- Avoid `char(n)` (fixed-width, padded, usually slower)
+Rationale: Postgres stores `text`/`varchar` the same (varlena + TOAST), so length limits only add checks and schema debt.
+
+### Constraints and Indexes (Named)
+- Indexes: `ix_tablename_columns` (example: ix_users_email)
+- Foreign keys: `fk_tablename_reference` (example: fk_orders_user_id)
+- Unique constraints: `uq_tablename_columns` (example: uq_users_email)
+- Check constraints: `ck_tablename_rule` (example: ck_users_age_positive)
+
+### Querying
+- Always alias tables in raw SQL
+- Avoid `NOT IN (...)` with nullable columns; use `NOT EXISTS` or `LEFT JOIN ... IS NULL`
+- Avoid `BETWEEN` for timestamps; use `>=` and `<` bounds
+
+### Example: Compliant Tables
+```sql
+CREATE TABLE users (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT uq_users_email UNIQUE (email),
+  CONSTRAINT ck_users_email_valid CHECK (length(email) > 3)
+);
+
+CREATE TABLE orders (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id bigint NOT NULL,
+  total numeric(10, 2) NOT NULL,
+  placed_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT fk_orders_user_id
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE INDEX ix_orders_user_id ON orders (user_id);
+```
 
 ## ICAA Table Field Mappings
 
@@ -40,81 +113,75 @@ The clue system directly depends on specific database fields. Here's the complet
 
 #### 1. Classification (Red Gems) 🧬
 **Database Fields Used:**
-- `genus` - Genus level classification
-- `family` - Family level classification
-- `order_` - Order level classification (note underscore)
-- `class` - Class level classification
+- `taxonomic_comment` - Taxonomic comments/context (revealed first)
 - `phylum` - Phylum level classification
-- `kingdom` - Kingdom level classification
-- `tax_comm` - Fallback taxonomic common name
+- `class` - Class level classification
+- `taxon_order` - Order level classification
+- `family` - Family level classification
+- `genus` - Genus level classification
+- `scientific_name` - Full scientific name (revealed last)
 
 **Clue Generation Logic:**
+Progressive revelation from least to most specific:
 ```typescript
-// Returns most specific classification available
-if (species.genus) return `Genus: ${species.genus}`;
-if (species.family) return `Family: ${species.family}`;
-// ... continues through hierarchy
+// Reveals taxonomy step by step
+'taxonomic_comment' → 'phylum' → 'class' → 'taxon_order' → 'family' → 'genus' → 'scientific_name'
 ```
 
 #### 2. Habitat (Green Gems) 🌳
 **Database Fields Used:**
-- `hab_desc` - Primary habitat description
 - `aquatic` (boolean) - Lives in water
 - `freshwater` (boolean) - Freshwater habitat
-- `terrestr` (boolean) - Terrestrial habitat
-- `terrestria` (boolean) - Alternative terrestrial flag
+- `terrestrial` (boolean) - Terrestrial habitat
 - `marine` (boolean) - Marine habitat
-- `hab_tags` - Habitat tags/keywords
 
-**Special Case:** Green gems can also use raster habitat data from external TiTiler service.
+**Special Case:** Green gems primarily use raster habitat data from TiTiler service for detailed habitat percentages.
 
 #### 3. Geographic & Habitat (Blue Gems) 🗺️
-**Database Fields Used:**
-- `geo_desc` - Geographic description
-- `dist_comm` - Distribution comments
-- `island` (boolean) - Island species flag
-- `origin` (number) - Origin type (1 = native)
-- Plus all habitat fields listed above
+**Database Fields Used (progressive):**
+- `geographic_description` - Geographic range description
+- `distribution_comment` - Distribution details
+- `habitat_description` - Habitat description
+- `habitat_tags` - Habitat tags/keywords
 
-#### 4. Morphology (Orange Gems) 🐾
-**Database Fields Used:**
+#### 4. Morphology (Orange Gems) 🐆
+**Database Fields Used (progressive):**
 - `pattern` - Pattern description
-- `color_prim` - Primary color
-- `color_sec` - Secondary color
-- `shape_desc` - Shape description
-- `size_min` (number) - Minimum size
-- `size_max` (number) - Maximum size
+- `color_primary` - Primary color
+- `color_secondary` - Secondary color
+- `shape_description` - Shape description
+- `size_max_cm` (number) - Maximum size in centimeters
 - `weight_kg` (number) - Weight in kilograms
 
-#### 5. Behavior & Diet (White Gems) 💨
-**Database Fields Used:**
-- `behav_1` - Primary behavior description
-- `behav_2` - Secondary behavior description
+#### 5. Behavior & Diet (Yellow Gems) 💨
+**Database Fields Used (progressive):**
+- `behavior_1` - Primary behavior description
+- `behavior_2` - Secondary behavior description
 - `diet_type` - Type of diet
 - `diet_prey` - Prey species
 - `diet_flora` - Plant diet
 
 #### 6. Life Cycle (Black Gems) ⏳
-**Database Fields Used:**
-- `life_desc1` - Primary life cycle description
-- `life_desc2` - Secondary life cycle description
-- `lifespan` - Lifespan information
-- `maturity` - Age at maturity
-- `repro_type` - Reproduction type
-- `clutch_sz` - Clutch/litter size
+**Database Fields Used (progressive):**
+- `life_description_1` - Primary life cycle description
+- `life_description_2` - Secondary life cycle description
+- `lifespan` - Lifespan information (fallback)
+- `maturity` - Age at maturity (fallback)
+- `reproduction_type` - Reproduction type (fallback)
+- `clutch_size` - Clutch/litter size (fallback)
 
-#### 7. Conservation (Yellow Gems) 🛡️
-**Database Fields Used:**
-- `cons_text` - Conservation status text
-- `cons_code` - Conservation code (IUCN)
-- `category` - Conservation category
+#### 7. Conservation (White Gems) 🛡️
+**Database Fields Used (progressive):**
+- `conservation_text` - Conservation status description
 - `threats` - Known threats
+- `conservation_code` - IUCN code (fallback)
+- `category` - Conservation category (fallback)
 
 #### 8. Key Facts (Purple Gems) 🔮
-**Database Fields Used:**
-- `key_fact1` - Primary key fact
-- `key_fact2` - Secondary key fact
-- `key_fact3` - Tertiary key fact
+**Database Fields Used (progressive):**
+- `key_fact_1` - Primary key fact
+- `key_fact_2` - Secondary key fact
+- `key_fact_3` - Tertiary key fact
 
 ## Files Affected by Database Changes
 
@@ -139,7 +206,7 @@ When modifying the `icaa` table structure, the following files need to be update
 ### 4. Database Functions (PostgreSQL)
 - `get_species_at_point` - Point-based spatial queries (deprecated in favor of radius queries)
 - `get_species_in_radius` - Circle intersection queries for species discovery
-- `get_closest_habitat` - Finds nearest habitat polygon when no species found
+- `/api/species/closest` - Finds nearest habitat polygon when no species found (PostGIS `<->`)
 
 **Deprecated:**
 - `get_habitat_distribution_10km` - **Replaced by TiTiler COG statistics** (Dec 2025)
@@ -162,7 +229,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 2. Create 10km bounding box GeoJSON (`createBboxGeoJSON()`)
 3. POST to `/cog/statistics?categorical=true&max_size=512` with bbox geometry
 4. Parse histogram: `[[counts], [values]]` format (numpy style)
-5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with Supabase `habitat_colormap` fallback)
+5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with database `habitat_colormap` fallback)
 6. Return `{habitat_type, percentage}[]` sorted by percentage descending
 
 **Visual sync:** CesiumMap shows red rectangle (`RectangleGraphics`) matching exact bbox sent to TiTiler.
@@ -173,7 +240,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 - `src/components/HabitatLegend.tsx` - Habitat type display with color chips
 - `src/config/habitatColors.ts` - Habitat label → color mapping
 
-**Benefits vs. old Supabase RPC:**
+**Benefits vs. legacy raster RPC:**
 - No `habitat_raster` table storage required
 - Direct COG access from S3
 - Serverless TiTiler scales independently
@@ -186,10 +253,23 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 
 ## Guidelines for Database Changes
 
+Follow the conventions above for app-owned tables. Treat import-owned tables as
+read-only; use views or staged transforms if you need canonical naming or types.
+
+### Schema Change Checklist
+
+Before you ship a schema change:
+- Confirm naming: plural tables, singular columns, `id`, `_at`/`_on`, `is_`/`has_`
+- Confirm types: `timestamptz`, `text`, `jsonb`, `numeric` or integer cents for money
+- Name constraints and indexes with `ix_`/`uq_`/`fk_`/`ck_` prefixes
+- Add indexes for FKs and hot query paths (especially leaderboard or radius queries)
+- Update types and usage: `src/db/types.ts`, `src/types/database.ts`, `src/game/clueConfig.ts`
+- Refresh introspection: `npm run db:introspect`
+
 ### Adding New Species
 
 1. **Required Fields:**
-   - `comm_name` or `sci_name` (at least one)
+   - `common_name` or `scientific_name` (at least one)
    - `wkb_geometry` (for location-based queries)
    - At least one field per clue category for complete gameplay
 
@@ -202,15 +282,15 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 3. **SQL Example:**
 ```sql
 INSERT INTO icaa (
-  comm_name, sci_name, genus, family, 
-  hab_desc, geo_desc, pattern, 
-  diet_type, life_desc1, cons_text, key_fact1,
+  common_name, scientific_name, genus, family,
+  habitat_description, geographic_description, pattern,
+  diet_type, life_description_1, conservation_text, key_fact_1,
   wkb_geometry
 ) VALUES (
   'Example Species', 'Examplus specius', 'Examplus', 'Examplidae',
   'Forest habitats', 'Found in North America', 'Spotted pattern',
   'Omnivore', 'Lives 10-15 years', 'Least Concern', 'Unique feature',
-  ST_GeomFromText('POLYGON((...)))', 4326)
+  ST_GeomFromText('POLYGON((...))', 4326)
 );
 ```
 
@@ -281,8 +361,8 @@ CREATE OR REPLACE FUNCTION public.get_species_in_radius(
 )
 RETURNS TABLE(
   ogc_fid integer,
-  comm_name character varying,
-  sci_name character varying,
+  common_name text,
+  scientific_name text,
   -- ... all other fields ...
   wkb_geometry json  -- Returns GeoJSON for direct use in frontend
 )
@@ -294,10 +374,10 @@ $$
   circle AS (
     SELECT ST_Buffer((SELECT g FROM center), radius_m)::geometry AS geom
   )
-  SELECT 
+  SELECT
     s.ogc_fid,
-    s.comm_name,
-    s.sci_name,
+    s.common_name,
+    s.scientific_name,
     -- ... other fields ...
     ST_AsGeoJSON(s.wkb_geometry)::json as wkb_geometry  -- Key: Returns GeoJSON
   FROM public.icaa s
@@ -323,7 +403,7 @@ for (const species of speciesResult.species) {
   if (species.wkb_geometry) {
     const feature = {
       type: 'Feature',
-      properties: { ogc_fid: species.ogc_fid, comm_name: species.comm_name },
+      properties: { ogc_fid: species.ogc_fid, common_name: species.common_name },
       geometry: species.wkb_geometry  // Direct GeoJSON from database
     };
     features.push(feature);
@@ -335,21 +415,21 @@ await redDataSource.load({ type: 'FeatureCollection', features });
 ```
 
 #### Blue Highlighting (No Species Found)
-Uses the `get_closest_habitat` function that returns GeoJSON directly:
+Uses the `/api/species/closest` API route, which returns GeoJSON directly:
 
 ```sql
--- get_closest_habitat returns json type
-SELECT ST_AsGeoJSON(closest_polygon) FROM ...
+-- API route uses ST_AsGeoJSON for geometry
+SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa ...
 ```
 
 ### Geometry Data Flow
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   PostGIS       │    │    Supabase      │    │     Cesium      │
-│   MULTIPOLYGON  │ ─→ │    ST_AsGeoJSON  │ ─→ │  GeoJsonDataSource
-│   (wkb_geometry)│    │    (json)        │    │  Red/Blue Polygons
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
+│   PostGIS       │    │  Next.js API + Drizzle│   │     Cesium      │
+│   MULTIPOLYGON  │ ─→ │  ST_AsGeoJSON (json) │ ─→ │  GeoJsonDataSource
+│   (wkb_geometry)│    │  /api/species/*      │    │  Red/Blue Polygons
+└─────────────────┘    └──────────────────────┘    └─────────────────┘
 ```
 
 **Critical**: The geometry must be returned as **GeoJSON** (not WKT) to preserve complete MULTIPOLYGON structures for Cesium rendering.
@@ -359,7 +439,8 @@ SELECT ST_AsGeoJSON(closest_polygon) FROM ...
 #### Spatial Indexes
 ```sql
 -- Essential for spatial query performance
-CREATE INDEX IF NOT EXISTS icaa_wkb_geometry_gix
+-- Use ix_ prefix for new indexes (legacy names may differ)
+CREATE INDEX IF NOT EXISTS ix_icaa_wkb_geometry
   ON public.icaa
   USING gist (wkb_geometry);
 ```
@@ -395,16 +476,18 @@ $$ LANGUAGE plpgsql;
 ```typescript
 // src/lib/speciesService.ts
 export async function getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number) {
-  const { data, error } = await supabase
-    .rpc('get_species_in_radius', { 
-      lon: longitude, 
-      lat: latitude, 
-      radius_m: radiusMeters 
-    });
-  
+  const response = await fetch(
+    `/api/species/in-radius?lon=${longitude}&lat=${latitude}&radius=${radiusMeters}`
+  );
+
+  if (!response.ok) {
+    return { species: [], count: 0 };
+  }
+
+  const data = await response.json();
   return {
-    species: data || [],
-    count: data?.length || 0
+    species: data.species || [],
+    count: data.count || 0
   };
 }
 ```
@@ -440,7 +523,7 @@ const [speciesResult, rasterResult] = await Promise.all([
 #### Debugging Queries
 ```sql
 -- Test radius query manually
-SELECT ogc_fid, comm_name, ST_Area(wkb_geometry) as area_sqm
+SELECT ogc_fid, common_name, ST_Area(wkb_geometry) as area_sqm
 FROM public.get_species_in_radius(-80.0, 25.0, 10000.0);
 
 -- Check geometry validity
@@ -676,8 +759,9 @@ FROM icaa;
 ## Environment Variables
 
 Database connection configured via:
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Anonymous/public key
+- `DATABASE_URL` - Postgres connection string (server-only)
+- `NEXT_PUBLIC_TITILER_BASE_URL` - TiTiler endpoint (optional)
+- `NEXT_PUBLIC_COG_URL` - Habitat COG URL (optional)
 
 ## Common Issues and Solutions
 
@@ -710,60 +794,6 @@ Database connection configured via:
 2. Track spatial query efficiency
 3. Optimize based on usage patterns
 
-## Would Drizzle ORM Benefit This Project?
+## ORM Choice
 
-### Current State Analysis
-- **Direct SQL**: Currently using Supabase client with minimal raw SQL
-- **Type Safety**: Manual TypeScript interfaces
-- **Migrations**: No formal migration system
-- **Schema**: Defined only in TypeScript interfaces
-
-### Benefits Drizzle Would Provide
-
-1. **Schema as Code**
-   - Define database schema in TypeScript
-   - Single source of truth for types and database
-   - Auto-generated types from schema
-
-2. **Migration Management**
-   ```typescript
-   // Define schema changes in code
-   export const icaa = pgTable('icaa', {
-     ogc_fid: serial('ogc_fid').primaryKey(),
-     comm_name: text('comm_name'),
-     // ... all fields with proper types
-   });
-   ```
-
-3. **Type-Safe Queries**
-   ```typescript
-   // Current approach (manual types)
-   const { data } = await supabase.from('icaa').select('*');
-   
-   // With Drizzle (automatic type inference)
-   const species = await db.select().from(icaa).where(eq(icaa.ogc_fid, 1));
-   ```
-
-4. **Migration Tracking**
-   - Version control for database changes
-   - Rollback capabilities
-   - Team collaboration on schema changes
-
-### Recommendation
-
-**Yes, Drizzle ORM would benefit this project** for the following reasons:
-
-1. **Growing Complexity**: With 70+ fields and plans to add more, manual type management becomes error-prone
-2. **Schema Evolution**: You plan to modify clue fields and add species
-3. **Type Safety**: Eliminate manual sync between database and TypeScript
-4. **Migration History**: Track all database changes over time
-5. **PostGIS Support**: Drizzle supports custom types for geometry
-
-### Implementation Considerations
-
-1. **Gradual Migration**: Can coexist with current Supabase client
-2. **Learning Curve**: Minimal for TypeScript developers
-3. **Initial Setup**: One-time effort to define schema
-4. **Compatibility**: Works well with Supabase PostgreSQL
-
-The investment in setting up Drizzle would pay dividends as you continue to evolve the database schema and add more complex queries.
+Drizzle is the current ORM. Use the query builder for CRUD and `db.execute(sql\`...\`)` for PostGIS spatial queries. Schema authority is hybrid: app tables are code-defined, spatial tables are import-owned and introspected for types.

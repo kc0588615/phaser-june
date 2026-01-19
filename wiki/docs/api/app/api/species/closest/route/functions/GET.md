@@ -1,8 +1,8 @@
 # Function: GET()
 
-> **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `geometry`: `null`; `species`: `null`; \}\> \| `NextResponse`\<\{ `geometry`: `any`; `species`: \{ `comm_name`: `string` \| `null`; `distance_km`: `number`; `ogc_fid`: `number`; `sci_name`: `string` \| `null`; \}; \}\>\>
+> **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `geometry`: `null`; `species`: `null`; \}\> \| `NextResponse`\<\{ `geometry`: `any`; `species`: \{ `common_name`: `string` \| `null`; `distance_km`: `number`; `ogc_fid`: `number`; `scientific_name`: `string` \| `null`; \}; \}\>\>
 
-Defined in: [src/app/api/species/closest/route.ts:10](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/app/api/species/closest/route.ts#L10)
+Defined in: [src/app/api/species/closest/route.ts:20](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/app/api/species/closest/route.ts#L20)
 
 GET /api/species/closest?lon=-30&lat=20
 
@@ -17,4 +17,4 @@ Uses PostGIS \<-\> operator for efficient nearest-neighbor search.
 
 ## Returns
 
-`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `geometry`: `null`; `species`: `null`; \}\> \| `NextResponse`\<\{ `geometry`: `any`; `species`: \{ `comm_name`: `string` \| `null`; `distance_km`: `number`; `ogc_fid`: `number`; `sci_name`: `string` \| `null`; \}; \}\>\>
+`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `geometry`: `null`; `species`: `null`; \}\> \| `NextResponse`\<\{ `geometry`: `any`; `species`: \{ `common_name`: `string` \| `null`; `distance_km`: `number`; `ogc_fid`: `number`; `scientific_name`: `string` \| `null`; \}; \}\>\>

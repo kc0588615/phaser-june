@@ -376,7 +376,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     
     switch (selectedFilter.type) {
       case 'ecoregion':
-        return species.filter(s => s.bioregio_1 === selectedFilter.value);
+        return species.filter(s => s.bioregion === selectedFilter.value);
       case 'realm':
         return species.filter(s => s.realm === selectedFilter.value);
       case 'biome':
@@ -384,7 +384,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       case 'class':
         return species.filter(s => s.class === selectedFilter.value);
       case 'order':
-        return species.filter(s => s.order_ === selectedFilter.value);
+        return species.filter(s => s.taxon_order === selectedFilter.value);
       case 'genus':
         return species.filter(s => s.genus === selectedFilter.value);
       case 'family':
@@ -412,8 +412,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     // Debug logging
     if (process.env.NODE_ENV === 'development') {
       console.log('Discovered species IDs:', Object.keys(discoveredSpecies));
-      console.log('Known species:', known.map(s => ({ id: s.ogc_fid, name: s.comm_name })));
-      console.log('Unknown species:', unknown.map(s => ({ id: s.ogc_fid, name: s.comm_name })));
+      console.log('Known species:', known.map(s => ({ id: s.ogc_fid, name: s.common_name })));
+      console.log('Unknown species:', unknown.map(s => ({ id: s.ogc_fid, name: s.common_name })));
     }
     
     return { knownSpecies: known, unknownSpecies: unknown };
@@ -426,13 +426,13 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     const totalOrderCounts: Record<string, number> = {};
 
     knownSpecies.forEach(sp => {
-      const order = sp.order_ || 'Unknown';
+      const order = sp.taxon_order || 'Unknown';
       knownOrderCounts[order] = (knownOrderCounts[order] || 0) + 1;
       totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
     });
 
     unknownSpecies.forEach(sp => {
-      const order = sp.order_ || 'Unknown';
+      const order = sp.taxon_order || 'Unknown';
       unknownOrderCounts[order] = (unknownOrderCounts[order] || 0) + 1;
       totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
     });
@@ -672,7 +672,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
               <div className="max-w-4xl mx-auto py-8">
                 <SpeciesCard 
                   species={filteredSpecies[0]} 
-                  category={filteredSpecies[0].order_ || 'Unknown'}
+                  category={filteredSpecies[0].taxon_order || 'Unknown'}
                   isDiscovered={!!discoveredSpecies[filteredSpecies[0].ogc_fid]}
                   discoveredAt={discoveredSpecies[filteredSpecies[0].ogc_fid]?.discoveredAt}
                   onNavigateToTop={() => {

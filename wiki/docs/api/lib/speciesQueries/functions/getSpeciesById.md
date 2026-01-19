@@ -1,11 +1,10 @@
 # Function: getSpeciesById()
 
-> **getSpeciesById**(`ogcFid`): `Promise`\<\{ \} \| `null`\>
+> **getSpeciesById**(`ogcFid`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md) \| `null`\>
 
-Defined in: [src/lib/speciesQueries.ts:73](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/speciesQueries.ts#L73)
+Defined in: [src/lib/speciesQueries.ts:113](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/lib/speciesQueries.ts#L113)
 
-Fetches full species details by ID.
-Use for species detail view / modal display.
+Fetches full species details by ID (excludes geometry).
 
 ## Parameters
 
@@ -13,19 +12,6 @@ Use for species detail view / modal display.
 
 `number`
 
-The species unique identifier
-
 ## Returns
 
-`Promise`\<\{ \} \| `null`\>
-
-Full species record or null if not found
-
-## Example
-
-```typescript
-const turtle = await getSpeciesById(1);
-if (turtle) {
-  console.log(turtle.key_fact1, turtle.cons_text);
-}
-```
+`Promise`\<[`Species`](../../../types/database/interfaces/Species.md) \| `null`\>

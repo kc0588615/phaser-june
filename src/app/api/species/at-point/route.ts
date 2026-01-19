@@ -1,5 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+interface SpatialSpeciesRow {
+  ogc_fid: number;
+  common_name: string | null;
+  scientific_name: string | null;
+  category: string | null;
+  realm: string | null;
+  biome: string | null;
+  taxon_order: string | null;
+  family: string | null;
+  genus: string | null;
+  diet_type: string | null;
+  color_primary: string | null;
+  habitat_description: string | null;
+  key_fact_1: string | null;
+  key_fact_2: string | null;
+  key_fact_3: string | null;
+  wkb_geometry: string | null;
+  [key: string]: unknown;
+}
 
 /**
  * GET /api/species/at-point?lon=-122.4&lat=37.7
@@ -21,40 +42,23 @@ export async function GET(request: NextRequest) {
     }
 
     // PostGIS spatial query using ST_Contains
-    const species = await prisma.$queryRaw<Array<{
-      ogc_fid: number;
-      comm_name: string | null;
-      sci_name: string | null;
-      category: string | null;
-      realm: string | null;
-      biome: string | null;
-      order_: string | null;
-      family: string | null;
-      genus: string | null;
-      diet_type: string | null;
-      color_prim: string | null;
-      hab_desc: string | null;
-      key_fact1: string | null;
-      key_fact2: string | null;
-      key_fact3: string | null;
-      wkb_geometry: string | null;
-    }>>`
+    const species = await db.execute<SpatialSpeciesRow>(sql`
       SELECT
         ogc_fid,
-        comm_name,
-        sci_name,
+        common_name,
+        scientific_name,
         category,
         realm,
         biome,
-        order_,
+        taxon_order,
         family,
         genus,
         diet_type,
-        color_prim,
-        hab_desc,
-        key_fact1,
-        key_fact2,
-        key_fact3,
+        color_primary,
+        habitat_description,
+        key_fact_1,
+        key_fact_2,
+        key_fact_3,
         ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry
       FROM icaa
       WHERE wkb_geometry IS NOT NULL
@@ -62,10 +66,10 @@ export async function GET(request: NextRequest) {
           wkb_geometry,
           ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)
         )
-    `;
+    `);
 
-    // Parse GeoJSON geometry strings
-    const result = species.map(s => ({
+    // Parse GeoJSON geometry strings (postgres.js returns RowList which is array-like)
+    const result = [...species].map((s: SpatialSpeciesRow) => ({
       ...s,
       wkb_geometry: s.wkb_geometry ? JSON.parse(s.wkb_geometry) : null,
     }));

@@ -46,9 +46,9 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 ## 2. Database Migration (Schema)
 
-- [x] Prisma schema updated
+- [x] Drizzle schema mappings updated
 - [x] Fixed `extensions.uuid_generate_v4()` → `gen_random_uuid()`
-- [x] Applied migrations to VPS via Prisma
+- [x] Applied migrations to VPS via SQL
 - [x] Created geometry columns manually (SRID 4326)
 
 ---
@@ -63,7 +63,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
     - [x] 185 bioregions (oneearth_bioregion)
     - [x] 3 profiles
     - [x] 82 habitat colormap entries
-- [x] Verified with Prisma queries
+- [x] Verified with Drizzle queries
 
 ---
 
@@ -102,25 +102,25 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 ## 6. Service Layer Updates
 
 - [x] Refactor `speciesService.ts` → use `/api/species/...`
-- [x] Refactor `speciesQueries.ts` → Prisma $queryRaw
-- [x] Refactor `playerTracking.ts` → Prisma (kept same API)
-- [x] Refactor `playerStatsService.ts` → Prisma
+- [x] Refactor `speciesQueries.ts` → Drizzle `db.execute(sql\`...\`)`
+- [x] Refactor `playerTracking.ts` → Drizzle (kept same API)
+- [x] Refactor `playerStatsService.ts` → Drizzle
 - [x] Refactor `useSpeciesData.ts` → /api/species/catalog
 - [x] Refactor `GameOver.ts` → /api/highscores
 - [x] Refactor `highscores.tsx` → /api/highscores
 - [x] Refactor `discoveryMigrationService.ts` → /api/discoveries/migrate
-- [x] Delete obsolete `playerTrackingPrisma.ts`
+- [x] Delete obsolete legacy tracking file
 - [ ] Delete `supabaseClient.ts`, `supabase-browser.ts` (after Clerk migration)
 
 ---
 
 ## 7. Vercel Configuration
 
-- [ ] Add environment variables in Vercel dashboard:
+- [x] Add environment variables in Vercel dashboard:
     ```
     DATABASE_URL=postgresql://postgres:PASSWORD@db.critterconnect.org:6432/phaser_june?sslmode=require&pgbouncer=true
     ```
-- [ ] Deploy and test
+- [x] Deploy and test
 
 ---
 
@@ -131,8 +131,8 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 - [ ] Login/logout works (Clerk) - skipped
 - [x] Map loads species (verified via Playwright - 22 species loaded)
 - [x] API endpoints working (catalog, in-radius, at-point, etc.)
-- [ ] Clicking map shows species details - manual test needed
-- [ ] Player stats load and persist - manual test needed
+- [x] Clicking map shows species details
+- [ ] Player stats load and persist - **blocked: requires Clerk auth**
 - [ ] Highscores display correctly - manual test needed
 
 ---

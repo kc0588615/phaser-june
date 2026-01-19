@@ -21,5 +21,5 @@ See [Database Schema Reference](/docs/reference/database-schema) for full table 
 
 ```sql
 -- Spatial index
-CREATE INDEX idx_species_geom ON icaa_species USING GIST (geom);
+CREATE INDEX idx_icaa_geometry ON icaa USING GIST (wkb_geometry);
 ```

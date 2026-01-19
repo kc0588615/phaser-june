@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db, habitatColormap } from '@/db';
 
 /**
  * GET /api/habitat/colormap
@@ -7,12 +7,12 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET() {
   try {
-    const colormap = await prisma.habitatColormap.findMany({
-      select: {
-        value: true,
-        label: true,
-      },
-    });
+    const colormap = await db
+      .select({
+        value: habitatColormap.value,
+        label: habitatColormap.label,
+      })
+      .from(habitatColormap);
 
     return NextResponse.json(colormap);
   } catch (error) {

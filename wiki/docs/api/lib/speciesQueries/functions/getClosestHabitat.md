@@ -1,8 +1,8 @@
 # Function: getClosestHabitat()
 
-> **getClosestHabitat**(`lon`, `lat`): `Promise`\<\{ \}\>
+> **getClosestHabitat**(`lon`, `lat`): `Promise`\<`SpatialSpeciesRow`\>
 
-Defined in: [src/lib/speciesQueries.ts:208](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/speciesQueries.ts#L208)
+Defined in: [src/lib/speciesQueries.ts:250](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/lib/speciesQueries.ts#L250)
 
 Gets the closest species habitat to a point.
 Used when no species are found at the click location.
@@ -19,4 +19,4 @@ Used when no species are found at the click location.
 
 ## Returns
 
-`Promise`\<\{ \}\>
+`Promise`\<`SpatialSpeciesRow`\>

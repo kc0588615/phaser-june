@@ -11,18 +11,12 @@ Technical details for bioregion integration.
 
 ## Database
 
-```sql
-CREATE TABLE bioregions (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  geom GEOMETRY(MULTIPOLYGON, 4326)
-);
-```
+Bioregion fields are stored directly on `icaa` (`bioregio_1`, `realm`, `sub_realm`, `biome`).
+Reference polygons live in `oneearth_bioregion` for offline processing or reclassification.
 
 ## Querying
 
 ```typescript
-const { data } = await supabase.rpc('get_species_by_bioregion', {
-  bioregion_id: regionId
-});
+const response = await fetch(`/api/species/bioregions?ids=${ids.join(',')}`);
+const data = await response.json();
 ```

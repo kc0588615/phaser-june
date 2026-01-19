@@ -595,8 +595,8 @@ export function getCategoryOrderMapping(): Record<string, string> {
 2. **Search input** calls `getOrderFromCategory("frogs")` 
 3. **Mapping function** returns "ANURA" (uppercase)
 4. **Filter applied** with `{ type: 'order', value: 'ANURA' }`
-5. **Species filtered** by `s.order_ === selectedFilter.value` comparison
-6. **Results displayed** showing all species where `order_ = "ANURA"`
+5. **Species filtered** by `s.taxon_order === selectedFilter.value` comparison
+6. **Results displayed** showing all species where `taxon_order = "ANURA"`
 
 ### Adding New Animal Categories
 
@@ -618,10 +618,10 @@ export function getCategoryOrderMapping(): Record<string, string> {
 ```
 
 #### Step 2: Verify Database Schema
-Ensure your species data includes the new order in the `order_` field:
-- Database field: `order_` (with underscore)
+Ensure your species data includes the new order in the `taxon_order` field:
+- Database field: `taxon_order`
 - Expected value: **UPPERCASE** format (e.g., "COLEOPTERA")
-- Filter logic: `species.filter(s => s.order_ === selectedFilter.value)`
+- Filter logic: `species.filter(s => s.taxon_order === selectedFilter.value)`
 
 #### Step 3: Test the Integration
 1. Build and serve the application: `npm run build && npm run serve`
@@ -640,7 +640,7 @@ Ensure your species data includes the new order in the `order_` field:
 ```
 
 **Requirements**:
-- Database must have species with `order_ = "AVES"`
+- Database must have species with `taxon_order = "AVES"`
 - Species count will appear as "AVES: X (X)" in the tree
 - Search for "birds" will filter to show only AVES species
 
@@ -648,15 +648,15 @@ Ensure your species data includes the new order in the `order_` field:
 
 If search filtering shows "0 species" but the tree shows species exist:
 
-1. **Check database values**: Ensure `order_` field matches mapping output
+1. **Check database values**: Ensure `taxon_order` field matches mapping output
 2. **Verify case sensitivity**: Database values must be UPPERCASE
 3. **Test mapping function**: `getOrderFromCategory("your-term")` should return uppercase
-4. **Check filter logic**: `SpeciesList.tsx` filters by `s.order_ === selectedFilter.value`
+4. **Check filter logic**: `SpeciesList.tsx` filters by `s.taxon_order === selectedFilter.value`
 
 ### Related Files
 - **Search Input**: `src/components/SpeciesSearchInput.tsx` - Handles search UI and calls mapping
 - **Species List**: `src/components/SpeciesList.tsx` - Applies filters and displays results  
 - **Type Definitions**: `src/types/speciesBrowser.ts` - JumpTarget interface
-- **Database Types**: `src/types/database.ts` - Species interface with `order_` field
+- **Database Types**: `src/types/database.ts` - Species interface with `taxon_order` field
 
 This mapping system provides an intuitive way for users to discover species by common animal categories while maintaining precise taxonomic filtering.

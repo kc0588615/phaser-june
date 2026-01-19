@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { desc } from 'drizzle-orm';
+import { db, highScores } from '@/db';
+
+// Transform camelCase keys to snake_case for API response
+function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(obj)) {
+    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    result[snakeKey] = obj[key];
+  }
+  return result;
+}
 
 /**
  * GET /api/highscores
@@ -7,12 +18,14 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET() {
   try {
-    const scores = await prisma.highScore.findMany({
-      orderBy: { score: 'desc' },
-      take: 50,
-    });
+    const scores = await db
+      .select()
+      .from(highScores)
+      .orderBy(desc(highScores.score))
+      .limit(50);
 
-    return NextResponse.json({ scores });
+    const scoresSnake = scores.map(s => toSnakeCase(s as Record<string, unknown>));
+    return NextResponse.json({ scores: scoresSnake });
   } catch (error) {
     console.error('[API /highscores GET] Error:', error);
     return NextResponse.json(
@@ -47,14 +60,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newScore = await prisma.highScore.create({
-      data: {
-        username: trimmedUsername,
-        score,
-      },
-    });
+    const [newScore] = await db
+      .insert(highScores)
+      .values({ username: trimmedUsername, score })
+      .returning();
 
-    return NextResponse.json({ score: newScore });
+    return NextResponse.json({ score: toSnakeCase(newScore as Record<string, unknown>) });
   } catch (error) {
     console.error('[API /highscores POST] Error:', error);
     return NextResponse.json(

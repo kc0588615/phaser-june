@@ -1,8 +1,8 @@
 # Function: getSpeciesByConservationStatus()
 
-> **getSpeciesByConservationStatus**(`categories`): `Promise`\<`object`[]\>
+> **getSpeciesByConservationStatus**(`categories`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>
 
-Defined in: [src/lib/speciesQueries.ts:138](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/speciesQueries.ts#L138)
+Defined in: [src/lib/speciesQueries.ts:165](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/lib/speciesQueries.ts#L165)
 
 Filters species by conservation status (IUCN category).
 
@@ -12,14 +12,6 @@ Filters species by conservation status (IUCN category).
 
 `string`[]
 
-Array of IUCN codes: 'CR', 'EN', 'VU', 'NT', 'LC', 'DD', 'EX', 'EW'
-
 ## Returns
 
-`Promise`\<`object`[]\>
-
-## Example
-
-```typescript
-const endangered = await getSpeciesByConservationStatus(['CR', 'EN']);
-```
+`Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>

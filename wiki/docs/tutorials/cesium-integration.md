@@ -14,7 +14,7 @@ Learn how Critter Connect integrates CesiumJS for 3D globe visualization and geo
 CesiumJS provides the 3D globe where players select locations. When a player clicks the globe:
 
 1. Coordinates are captured
-2. Species at that location are queried from Supabase
+2. Species at that location are queried via `/api/species/*` (Drizzle + PostGIS)
 3. Habitat data is fetched from TiTiler (raster service)
 4. Data is sent to the game via EventBus
 
@@ -104,60 +104,47 @@ async function handleLocationSelect(lon: number, lat: number) {
 }
 ```
 
-## Supabase Integration
+## PostGIS Integration (Drizzle + API Routes)
 
-### Species Query RPC
+### Species Query (API Route)
 
 ```typescript
 // src/lib/speciesService.ts
-export async function getSpeciesAtLocation(
+export async function getSpeciesInRadius(
   lon: number,
   lat: number,
   radiusMeters: number
-): Promise<{ species: Species[]; habitats: string[] }> {
-  const { data, error } = await supabase.rpc('get_species_at_location', {
-    p_lon: lon,
-    p_lat: lat,
-    p_radius: radiusMeters
-  });
+) {
+  const response = await fetch(
+    `/api/species/in-radius?lon=${lon}&lat=${lat}&radius=${radiusMeters}`
+  );
 
-  if (error) throw error;
-  return data;
+  if (!response.ok) throw new Error('Failed to fetch species');
+  return response.json();
 }
 ```
 
-### The Database Function
+### API Route Query (PostGIS)
 
-```sql
-CREATE OR REPLACE FUNCTION get_species_at_location(
-  p_lon FLOAT,
-  p_lat FLOAT,
-  p_radius INT
-) RETURNS JSON AS $$
-  SELECT json_build_object(
-    'species', (
-      SELECT json_agg(s.*)
-      FROM icaa_species s
-      WHERE ST_DWithin(
-        s.geom,
-        ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography,
-        p_radius
-      )
-      LIMIT 10
-    ),
-    'habitats', (
-      SELECT array_agg(DISTINCT h.habitat_type)
-      FROM habitats h
-      WHERE ST_Intersects(
-        h.geom,
-        ST_Buffer(
-          ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography,
-          p_radius
-        )
-      )
+```typescript
+// src/app/api/species/in-radius/route.ts
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+const species = await db.execute(sql`
+  SELECT
+    ogc_fid,
+    comm_name,
+    sci_name,
+    ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry
+  FROM icaa
+  WHERE wkb_geometry IS NOT NULL
+    AND ST_DWithin(
+      wkb_geometry::geography,
+      ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+      ${radius}
     )
-  );
-$$ LANGUAGE sql;
+`);
 ```
 
 ## TiTiler Raster Integration
@@ -313,7 +300,7 @@ Add a pulsing marker at the clicked location:
 
 - Cesium provides 3D globe visualization
 - Click events capture lat/lon coordinates
-- Supabase RPCs query species at location
+- API routes query species at location using PostGIS
 - TiTiler provides raster habitat data
 - EventBus sends combined data to game
 

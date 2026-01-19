@@ -1,25 +1,34 @@
 ---
 sidebar_position: 1
 title: Database User Guide
-description: Working with Postgres tables and Prisma queries
-tags: [guide, database, postgres, prisma]
+description: Working with Postgres tables and Drizzle queries
+tags: [guide, database, postgres, drizzle]
 ---
 
 # Database User Guide
 
 Practical guide for querying species data and recording player progress.
 
-## Prisma Client Setup
+## Conventions
+
+App-owned tables follow these standards (import-owned tables like `icaa` may differ):
+
+- **Naming**: snake_case; tables plural, columns singular
+- **Primary keys**: `bigint GENERATED ALWAYS AS IDENTITY` (UUID only for external IDs)
+- **Timestamps**: `timestamptz` with `_at` suffix
+- **Booleans**: `is_` or `has_` prefix
+- **Types**: `text` (not varchar), `jsonb` (not json)
+- **Indexes**: `ix_tablename_columns`
+- **Unique**: `uq_tablename_columns`
+- **Foreign keys**: `fk_tablename_reference`
+
+See [full conventions in docs/DATABASE_USER_GUIDE.md](https://github.com/your-repo/docs/DATABASE_USER_GUIDE.md#conventions-and-best-practices).
+
+## Drizzle Client Setup
 
 ```typescript
-// src/lib/prisma.ts
-import { PrismaClient } from '@prisma/client';
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-export const prisma = globalForPrisma.prisma || new PrismaClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// src/db/index.ts
+import { db } from '@/db';
 ```
 
 ## Querying Species
@@ -28,31 +37,48 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 ```typescript
 // src/lib/speciesQueries.ts
-const species = await prisma.$queryRaw`
-  SELECT * FROM "icaa_species"
-  WHERE ST_DWithin(
-    geom,
-    ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326),
-    ${radius}
-  )
-`;
+import { sql } from 'drizzle-orm';
+import { db } from '@/db';
+
+// Use the get_species_in_radius function with table alias
+const species = await db.execute(sql`
+  SELECT r.ogc_fid, r.comm_name, r.sci_name
+  FROM public.get_species_in_radius(${lon}, ${lat}, ${radiusMeters}) r
+`);
 ```
 
 ### By ID
 
 ```typescript
-const species = await prisma.icaa_species.findUnique({
-  where: { id: speciesId }
-});
+import { eq } from 'drizzle-orm';
+import { db, icaa } from '@/db';
+
+const [species] = await db
+  .select()
+  .from(icaa)
+  .where(eq(icaa.ogcFid, speciesId))
+  .limit(1);
 ```
 
 ### Search by Name
 
 ```typescript
-const { data } = await supabase
-  .from('icaa_species')
-  .select('id, common_name, sci_name')
-  .ilike('common_name', `%${searchTerm}%`)
+import { ilike, or } from 'drizzle-orm';
+import { db, icaa } from '@/db';
+
+const results = await db
+  .select({
+    ogc_fid: icaa.ogcFid,
+    comm_name: icaa.commName,
+    sci_name: icaa.sciName,
+  })
+  .from(icaa)
+  .where(
+    or(
+      ilike(icaa.commName, `%${searchTerm}%`),
+      ilike(icaa.sciName, `%${searchTerm}%`)
+    )
+  )
   .limit(10);
 ```
 
@@ -61,25 +87,21 @@ const { data } = await supabase
 ### Start Session
 
 ```typescript
-const { data: session } = await supabase
-  .from('game_sessions')
-  .insert({
-    player_id: userId,
-    location_lon: lon,
-    location_lat: lat,
-    total_species: speciesCount
-  })
-  .select()
-  .single();
+import { startGameSession } from '@/lib/playerTracking';
+
+const sessionId = await startGameSession(userId);
 ```
 
 ### Record Discovery
 
 ```typescript
-await supabase.rpc('record_species_discovery', {
-  p_session_id: sessionId,
-  p_species_id: speciesId,
-  p_guess_count: attempts
+import { trackSpeciesDiscovery } from '@/lib/playerTracking';
+
+await trackSpeciesDiscovery(userId, speciesId, {
+  sessionId,
+  cluesUnlockedBeforeGuess: clueCount,
+  incorrectGuessesCount: attempts,
+  scoreEarned: score
 });
 ```
 

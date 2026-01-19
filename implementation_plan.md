@@ -1,5 +1,7 @@
 # Migration Plan: Supabase to Hetzner VPS + Clerk
 
+> Legacy note: this plan was written during the Prisma era and is kept for historical context. Use `docs/DRIZZLE_MIGRATION_PLAN.md` for the current Drizzle-based workflow.
+
 ## Current Status (Updated: 2025-12-31)
 
 | Phase | Status | Notes |
@@ -11,7 +13,7 @@
 | Phase 4: Clerk Auth | ⏸️ Skipped | Auth still uses Supabase |
 | Phase 5: Cleanup | ✅ Complete | Build/typecheck passing |
 
-**Known Issue**: `/api/species/in-radius` returning 500 error - needs debugging.
+**Known Issue**: Player stats not loading - needs debugging.
 
 ---
 

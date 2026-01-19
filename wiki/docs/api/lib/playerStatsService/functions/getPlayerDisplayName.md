@@ -2,10 +2,10 @@
 
 > **getPlayerDisplayName**(`playerId?`): `Promise`\<`string`\>
 
-Defined in: [src/lib/playerStatsService.ts:121](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/lib/playerStatsService.ts#L121)
+Defined in: [src/lib/playerStatsService.ts:101](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/lib/playerStatsService.ts#L101)
 
-Get player display name from profile
-NOTE: Uses Supabase auth temporarily (will migrate to Clerk in Phase 4)
+Get player display name from profile.
+When playerId is not provided, returns a generic label until auth is wired.
 
 ## Parameters
 

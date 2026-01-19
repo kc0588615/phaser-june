@@ -1,164 +1,206 @@
 // =============================================================================
-// SPECIES QUERIES - Prisma + Raw SQL for PostGIS
+// SPECIES QUERIES - Drizzle ORM + Raw SQL for PostGIS
 // =============================================================================
 // This file provides type-safe database queries for species data.
 //
 // ARCHITECTURE:
-// - Prisma for non-spatial queries (listing, filtering, relations)
-// - Prisma $queryRaw for PostGIS spatial queries
+// - Drizzle for non-spatial queries (listing, filtering)
+// - Drizzle sql`` template for PostGIS spatial queries
 // =============================================================================
 
-import { prisma, type ICAA } from '@/lib/prisma';
+import { eq, inArray, ilike, or, asc, desc, count, sql } from 'drizzle-orm';
+import { db, icaa } from '@/db';
+import type { Species } from '@/types/database';
+
+// Explicit snake_case column aliases (excludes wkb_geometry for payload size)
+const speciesColumns = {
+  ogc_fid: icaa.ogcFid,
+  common_name: icaa.commonName,
+  scientific_name: icaa.scientificName,
+  taxonomic_comment: icaa.taxonomicComment,
+  iucn_url: icaa.iucnUrl,
+  kingdom: icaa.kingdom,
+  phylum: icaa.phylum,
+  class: icaa.class,
+  taxon_order: icaa.taxonOrder,
+  family: icaa.family,
+  genus: icaa.genus,
+  category: icaa.category,
+  conservation_code: icaa.conservationCode,
+  conservation_text: icaa.conservationText,
+  threats: icaa.threats,
+  habitat_description: icaa.habitatDescription,
+  habitat_tags: icaa.habitatTags,
+  marine: icaa.marine,
+  terrestrial: icaa.terrestrial,
+  freshwater: icaa.freshwater,
+  aquatic: icaa.aquatic,
+  geographic_description: icaa.geographicDescription,
+  distribution_comment: icaa.distributionComment,
+  island: icaa.island,
+  origin: icaa.origin,
+  bioregion: icaa.bioregion,
+  realm: icaa.realm,
+  subrealm: icaa.subrealm,
+  biome: icaa.biome,
+  color_primary: icaa.colorPrimary,
+  color_secondary: icaa.colorSecondary,
+  pattern: icaa.pattern,
+  shape_description: icaa.shapeDescription,
+  size_min_cm: icaa.sizeMinCm,
+  size_max_cm: icaa.sizeMaxCm,
+  weight_kg: icaa.weightKg,
+  diet_type: icaa.dietType,
+  diet_prey: icaa.dietPrey,
+  diet_flora: icaa.dietFlora,
+  behavior_1: icaa.behavior1,
+  behavior_2: icaa.behavior2,
+  lifespan: icaa.lifespan,
+  maturity: icaa.maturity,
+  reproduction_type: icaa.reproductionType,
+  clutch_size: icaa.clutchSize,
+  life_description_1: icaa.lifeDescription1,
+  life_description_2: icaa.lifeDescription2,
+  key_fact_1: icaa.keyFact1,
+  key_fact_2: icaa.keyFact2,
+  key_fact_3: icaa.keyFact3,
+};
+
+// Minimal columns for catalog listing
+const catalogColumns = {
+  ogc_fid: icaa.ogcFid,
+  common_name: icaa.commonName,
+  scientific_name: icaa.scientificName,
+  taxon_order: icaa.taxonOrder,
+  family: icaa.family,
+  genus: icaa.genus,
+  kingdom: icaa.kingdom,
+  phylum: icaa.phylum,
+  class: icaa.class,
+  realm: icaa.realm,
+  biome: icaa.biome,
+  bioregion: icaa.bioregion,
+  category: icaa.category,
+  marine: icaa.marine,
+  terrestrial: icaa.terrestrial,
+  freshwater: icaa.freshwater,
+  aquatic: icaa.aquatic,
+};
 
 // =============================================================================
-// PRISMA QUERIES - Non-spatial operations with type safety
+// DRIZZLE QUERIES - Non-spatial operations with type safety
 // =============================================================================
 
 /**
  * Fetches species catalog for SpeciesList component.
  * Returns a minimal set of fields for efficient list rendering.
- *
- * @example
- * ```typescript
- * const species = await getSpeciesCatalog();
- * species.forEach(s => console.log(s.comm_name, s.realm));
- * ```
  */
 export async function getSpeciesCatalog() {
-  return prisma.iCAA.findMany({
-    select: {
-      ogc_fid: true,
-      comm_name: true,
-      sci_name: true,
-      order_: true,
-      family: true,
-      genus: true,
-      kingdom: true,
-      phylum: true,
-      class_: true,
-      realm: true,
-      biome: true,
-      bioregio_1: true,
-      category: true,     // IUCN conservation status
-      marine: true,
-      terrestria: true,
-      freshwater: true,
-      aquatic: true,
-    },
-    orderBy: { comm_name: 'asc' },
-  });
+  return db
+    .select(catalogColumns)
+    .from(icaa)
+    .orderBy(asc(icaa.commonName));
 }
 
 /**
  * Type for catalog items (subset of ICAA fields).
- * Inferred from getSpeciesCatalog return type.
  */
 export type SpeciesCatalogItem = Awaited<ReturnType<typeof getSpeciesCatalog>>[number];
 
 /**
- * Fetches full species details by ID.
- * Use for species detail view / modal display.
- *
- * @param ogcFid - The species unique identifier
- * @returns Full species record or null if not found
- *
- * @example
- * ```typescript
- * const turtle = await getSpeciesById(1);
- * if (turtle) {
- *   console.log(turtle.key_fact1, turtle.cons_text);
- * }
- * ```
+ * Fetches full species details by ID (excludes geometry).
  */
-export async function getSpeciesById(ogcFid: number): Promise<ICAA | null> {
-  return prisma.iCAA.findUnique({
-    where: { ogc_fid: ogcFid },
-  });
+export async function getSpeciesById(ogcFid: number): Promise<Species | null> {
+  const results = await db
+    .select(speciesColumns)
+    .from(icaa)
+    .where(eq(icaa.ogcFid, ogcFid))
+    .limit(1);
+
+  return (results[0] as unknown as Species) || null;
 }
 
 /**
- * Fetches multiple species by their IDs.
- * Useful for batch operations or displaying selected species.
- *
- * @param ids - Array of species ogc_fid values
+ * Fetches multiple species by their IDs (excludes geometry).
  */
-export async function getSpeciesByIds(ids: number[]) {
-  return prisma.iCAA.findMany({
-    where: {
-      ogc_fid: { in: ids },
-    },
-    orderBy: { comm_name: 'asc' },
-  });
+export async function getSpeciesByIds(ids: number[]): Promise<Species[]> {
+  const results = await db
+    .select(speciesColumns)
+    .from(icaa)
+    .where(inArray(icaa.ogcFid, ids))
+    .orderBy(asc(icaa.commonName));
+
+  return results as unknown as Species[];
 }
 
 /**
  * Searches species by common or scientific name.
  * Case-insensitive partial matching.
- *
- * @param query - Search term to match against names
- *
- * @example
- * ```typescript
- * const results = await searchSpecies('turtle');
- * // Returns species with "turtle" in common or scientific name
- * ```
  */
 export async function searchSpecies(query: string) {
   const searchTerm = `%${query}%`;
 
-  return prisma.iCAA.findMany({
-    where: {
-      OR: [
-        { comm_name: { contains: query, mode: 'insensitive' } },
-        { sci_name: { contains: query, mode: 'insensitive' } },
-      ],
-    },
-    select: {
-      ogc_fid: true,
-      comm_name: true,
-      sci_name: true,
-      category: true,
-      realm: true,
-    },
-    take: 20, // Limit results for performance
-    orderBy: { comm_name: 'asc' },
-  });
+  return db
+    .select({
+      ogc_fid: icaa.ogcFid,
+      common_name: icaa.commonName,
+      scientific_name: icaa.scientificName,
+      category: icaa.category,
+      realm: icaa.realm,
+    })
+    .from(icaa)
+    .where(
+      or(
+        ilike(icaa.commonName, searchTerm),
+        ilike(icaa.scientificName, searchTerm)
+      )
+    )
+    .orderBy(asc(icaa.commonName))
+    .limit(20);
 }
 
 /**
  * Filters species by conservation status (IUCN category).
- *
- * @param categories - Array of IUCN codes: 'CR', 'EN', 'VU', 'NT', 'LC', 'DD', 'EX', 'EW'
- *
- * @example
- * ```typescript
- * const endangered = await getSpeciesByConservationStatus(['CR', 'EN']);
- * ```
  */
-export async function getSpeciesByConservationStatus(categories: string[]) {
-  return prisma.iCAA.findMany({
-    where: {
-      category: { in: categories },
-    },
-    orderBy: { comm_name: 'asc' },
-  });
+export async function getSpeciesByConservationStatus(categories: string[]): Promise<Species[]> {
+  const results = await db
+    .select(speciesColumns)
+    .from(icaa)
+    .where(inArray(icaa.category, categories))
+    .orderBy(asc(icaa.commonName));
+
+  return results as unknown as Species[];
 }
 
 /**
  * Filters species by realm (biogeographic region).
- *
- * @param realm - Realm name like 'Nearctic', 'Neotropic', 'Indomalayan'
  */
-export async function getSpeciesByRealm(realm: string) {
-  return prisma.iCAA.findMany({
-    where: { realm },
-    orderBy: { comm_name: 'asc' },
-  });
+export async function getSpeciesByRealm(realm: string): Promise<Species[]> {
+  const results = await db
+    .select(speciesColumns)
+    .from(icaa)
+    .where(eq(icaa.realm, realm))
+    .orderBy(asc(icaa.commonName));
+
+  return results as unknown as Species[];
 }
 
 // =============================================================================
-// POSTGIS SPATIAL QUERIES - Using Prisma $queryRaw
+// POSTGIS SPATIAL QUERIES - Using Drizzle sql`` template
 // =============================================================================
+
+interface SpatialSpeciesRow {
+  ogc_fid: number;
+  common_name: string | null;
+  scientific_name: string | null;
+  category: string | null;
+  realm: string | null;
+  biome: string | null;
+  taxon_order: string | null;
+  family: string | null;
+  genus: string | null;
+  [key: string]: unknown;
+}
 
 /**
  * Finds species within a radius of a geographic point.
@@ -169,7 +211,7 @@ export async function getSpeciesInRadius(
   lat: number,
   radiusMeters: number = 10000
 ) {
-  const results = await prisma.$queryRaw<ICAA[]>`
+  const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT *
     FROM icaa
     WHERE wkb_geometry IS NOT NULL
@@ -178,9 +220,9 @@ export async function getSpeciesInRadius(
         ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
         ${radiusMeters}
       )
-  `;
+  `);
 
-  return results;
+  return [...results];
 }
 
 /**
@@ -188,7 +230,7 @@ export async function getSpeciesInRadius(
  * Uses PostGIS ST_Contains to check point-in-polygon.
  */
 export async function getSpeciesAtPoint(lon: number, lat: number) {
-  const results = await prisma.$queryRaw<ICAA[]>`
+  const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT *
     FROM icaa
     WHERE wkb_geometry IS NOT NULL
@@ -196,9 +238,9 @@ export async function getSpeciesAtPoint(lon: number, lat: number) {
         wkb_geometry,
         ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)
       )
-  `;
+  `);
 
-  return results;
+  return [...results];
 }
 
 /**
@@ -206,40 +248,40 @@ export async function getSpeciesAtPoint(lon: number, lat: number) {
  * Used when no species are found at the click location.
  */
 export async function getClosestHabitat(lon: number, lat: number) {
-  const results = await prisma.$queryRaw<ICAA[]>`
+  const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT *
     FROM icaa
     WHERE wkb_geometry IS NOT NULL
     ORDER BY wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
     LIMIT 1
-  `;
+  `);
 
-  return results[0] || null;
+  const rows = [...results];
+  return rows[0] || null;
 }
 
 /**
  * Gets bioregion information for a list of species.
- * Returns data from the icaa table's bioregion columns.
  */
 export async function getSpeciesBioregions(speciesIds: number[]) {
   if (speciesIds.length === 0) return [];
 
-  const species = await prisma.iCAA.findMany({
-    where: { ogc_fid: { in: speciesIds } },
-    select: {
-      ogc_fid: true,
-      bioregio_1: true,
-      realm: true,
-      sub_realm: true,
-      biome: true,
-    },
-  });
+  const species = await db
+    .select({
+      ogc_fid: icaa.ogcFid,
+      bioregion: icaa.bioregion,
+      realm: icaa.realm,
+      subrealm: icaa.subrealm,
+      biome: icaa.biome,
+    })
+    .from(icaa)
+    .where(inArray(icaa.ogcFid, speciesIds));
 
   return species.map(s => ({
     species_id: s.ogc_fid,
-    bioregio_1: s.bioregio_1,
+    bioregion: s.bioregion,
     realm: s.realm,
-    sub_realm: s.sub_realm,
+    subrealm: s.subrealm,
     biome: s.biome,
   }));
 }
@@ -249,31 +291,14 @@ export async function getSpeciesBioregions(speciesIds: number[]) {
 // =============================================================================
 
 /**
- * Executes a raw SQL query using Prisma's $queryRaw.
- *
- * USE WITH CAUTION:
- * - Only use for queries that can't be expressed with Prisma's query API
- * - Always use tagged template literals (not string concatenation!)
- * - Variables are automatically parameterized to prevent SQL injection
- *
- * @example
- * ```typescript
- * // Safe: using tagged template (parameterized)
- * const realm = 'Nearctic';
- * const results = await prisma.$queryRaw`
- *   SELECT ogc_fid, comm_name FROM icaa WHERE realm = ${realm}
- * `;
- *
- * // UNSAFE: never do this!
- * // const results = await prisma.$queryRawUnsafe(`SELECT * FROM icaa WHERE realm = '${userInput}'`);
- * ```
+ * Executes a raw SQL query using Drizzle's sql template.
+ * Always use tagged template literals (parameterized) for safety.
  */
-export async function executeRawQuery<T>(
-  query: TemplateStringsArray,
-  ...values: unknown[]
+export async function executeRawQuery<T extends Record<string, unknown>>(
+  query: ReturnType<typeof sql>
 ): Promise<T[]> {
-  // Prisma's $queryRaw with tagged template is SQL-injection safe
-  return prisma.$queryRaw(query, ...values) as Promise<T[]>;
+  const results = await db.execute<T>(query);
+  return [...results] as T[];
 }
 
 // =============================================================================
@@ -282,54 +307,53 @@ export async function executeRawQuery<T>(
 
 /**
  * Gets count of species by conservation status.
- *
- * @returns Object mapping IUCN codes to counts, e.g. `{ CR: 5, EN: 10, ... }`
  */
 export async function getSpeciesCountByStatus() {
-  const results = await prisma.iCAA.groupBy({
-    by: ['category'],
-    _count: { ogc_fid: true },
-    orderBy: { _count: { ogc_fid: 'desc' } },
-  });
+  const results = await db
+    .select({
+      category: icaa.category,
+      count: count(icaa.ogcFid),
+    })
+    .from(icaa)
+    .groupBy(icaa.category)
+    .orderBy(desc(count(icaa.ogcFid)));
 
-  // Transform to simple object
-  return results.reduce<Record<string, number>>(
-    (acc: Record<string, number>, item) => {
-      if (item.category) {
-        acc[item.category] = item._count.ogc_fid;
-      }
-      return acc;
-    },
-    {}
-  );
+  return results.reduce<Record<string, number>>((acc, item) => {
+    if (item.category) {
+      acc[item.category] = item.count;
+    }
+    return acc;
+  }, {});
 }
 
 /**
  * Gets count of species by realm.
- *
- * @returns Object mapping realms to counts, e.g. `{ Nearctic: 15, Neotropic: 8, ... }`
  */
 export async function getSpeciesCountByRealm() {
-  const results = await prisma.iCAA.groupBy({
-    by: ['realm'],
-    _count: { ogc_fid: true },
-    orderBy: { _count: { ogc_fid: 'desc' } },
-  });
+  const results = await db
+    .select({
+      realm: icaa.realm,
+      count: count(icaa.ogcFid),
+    })
+    .from(icaa)
+    .groupBy(icaa.realm)
+    .orderBy(desc(count(icaa.ogcFid)));
 
-  return results.reduce<Record<string, number>>(
-    (acc: Record<string, number>, item) => {
-      if (item.realm) {
-        acc[item.realm] = item._count.ogc_fid;
-      }
-      return acc;
-    },
-    {}
-  );
+  return results.reduce<Record<string, number>>((acc, item) => {
+    if (item.realm) {
+      acc[item.realm] = item.count;
+    }
+    return acc;
+  }, {});
 }
 
 /**
  * Gets total species count in database.
  */
 export async function getTotalSpeciesCount(): Promise<number> {
-  return prisma.iCAA.count();
+  const results = await db
+    .select({ count: count(icaa.ogcFid) })
+    .from(icaa);
+
+  return results[0]?.count ?? 0;
 }

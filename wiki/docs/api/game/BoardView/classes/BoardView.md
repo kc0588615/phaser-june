@@ -1,6 +1,6 @@
 # Class: BoardView
 
-Defined in: [src/game/BoardView.ts:32](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L32)
+Defined in: [src/game/BoardView.ts:32](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L32)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [src/game/BoardView.ts:32](https://github.com/kc0588615/phaser-june/
 
 > **new BoardView**(`scene`, `config`): `BoardView`
 
-Defined in: [src/game/BoardView.ts:41](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L41)
+Defined in: [src/game/BoardView.ts:41](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L41)
 
 #### Parameters
 
@@ -30,7 +30,7 @@ Defined in: [src/game/BoardView.ts:41](https://github.com/kc0588615/phaser-june/
 
 > **animateExplosions**(`matchCoords`): `Promise`\<`void`\>
 
-Defined in: [src/game/BoardView.ts:296](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L296)
+Defined in: [src/game/BoardView.ts:296](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L296)
 
 Animates gem explosions. Removes sprites from grid and destroys them.
 
@@ -50,7 +50,7 @@ Animates gem explosions. Removes sprites from grid and destroys them.
 
 > **animateFalls**(`replacements`, `finalBackendState`): `Promise`\<`void`\>
 
-Defined in: [src/game/BoardView.ts:364](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L364)
+Defined in: [src/game/BoardView.ts:364](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L364)
 
 Animates existing gems falling and new gems entering. Updates gemsSprites array.
 
@@ -74,7 +74,7 @@ Animates existing gems falling and new gems entering. Updates gemsSprites array.
 
 > **createBoard**(`initialPuzzleState`): `void`
 
-Defined in: [src/game/BoardView.ts:57](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L57)
+Defined in: [src/game/BoardView.ts:57](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L57)
 
 Creates the initial sprites based on the model state.
 
@@ -94,7 +94,7 @@ Creates the initial sprites based on the model state.
 
 > **destroyBoard**(): `void`
 
-Defined in: [src/game/BoardView.ts:531](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L531)
+Defined in: [src/game/BoardView.ts:531](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L531)
 
 Destroys all sprites and clears the board representation.
 
@@ -108,7 +108,7 @@ Destroys all sprites and clears the board representation.
 
 > **getGemsSprites**(): (`Sprite` \| `null`)[][]
 
-Defined in: [src/game/BoardView.ts:637](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L637)
+Defined in: [src/game/BoardView.ts:637](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L637)
 
 Returns the 2D array of sprite references.
 
@@ -122,7 +122,7 @@ Returns the 2D array of sprite references.
 
 > **getSpriteAt**(`x`, `y`): `Sprite` \| `null`
 
-Defined in: [src/game/BoardView.ts:631](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L631)
+Defined in: [src/game/BoardView.ts:631](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L631)
 
 Gets the sprite at [x, y] if active, otherwise null.
 
@@ -146,7 +146,7 @@ Gets the sprite at [x, y] if active, otherwise null.
 
 > **moveDraggingSprites**(`spritesToMove`, `startVisualPositions`, `deltaX`, `deltaY`, `direction`): `void`
 
-Defined in: [src/game/BoardView.ts:129](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L129)
+Defined in: [src/game/BoardView.ts:129](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L129)
 
 Visually moves sprites during drag, handling wrapping.
 
@@ -182,7 +182,7 @@ Visually moves sprites during drag, handling wrapping.
 
 > **snapBack**(`spritesToSnap`, `startPositions`, `dragDirection`, `totalDeltaX`, `totalDeltaY`): `Promise`\<`void`\>
 
-Defined in: [src/game/BoardView.ts:176](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L176)
+Defined in: [src/game/BoardView.ts:176](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L176)
 
 Animates sprites back to their original start positions, sliding the row/column as a unit.
 
@@ -218,7 +218,7 @@ Animates sprites back to their original start positions, sliding the row/column 
 
 > **snapDraggedGemsToFinalGridPositions**(): `void`
 
-Defined in: [src/game/BoardView.ts:162](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L162)
+Defined in: [src/game/BoardView.ts:162](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L162)
 
 Instantly sets dragged sprites to their final grid positions. Assumes gemsSprites array is already updated.
 
@@ -232,7 +232,7 @@ Instantly sets dragged sprites to their final grid positions. Assumes gemsSprite
 
 > **syncSpritesToGridPositions**(): `void`
 
-Defined in: [src/game/BoardView.ts:669](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L669)
+Defined in: [src/game/BoardView.ts:669](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L669)
 
 Utility to sync sprite visual positions to their stored logical grid coords.
 
@@ -246,7 +246,7 @@ Utility to sync sprite visual positions to their stored logical grid coords.
 
 > **updateDimensions**(`newGemSize`, `newBoardOffset`): `void`
 
-Defined in: [src/game/BoardView.ts:122](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L122)
+Defined in: [src/game/BoardView.ts:122](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L122)
 
 Updates dimensions without animation (for use before board recreation).
 
@@ -276,7 +276,7 @@ Updates dimensions without animation (for use before board recreation).
 
 > **updateGemsSpritesArrayAfterMove**(`moveAction`): `void`
 
-Defined in: [src/game/BoardView.ts:485](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L485)
+Defined in: [src/game/BoardView.ts:485](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L485)
 
 Updates the internal gemsSprites array structure after a move.
 
@@ -296,7 +296,7 @@ Updates the internal gemsSprites array structure after a move.
 
 > **updateVisualLayout**(`newGemSize`, `newBoardOffset`): `void`
 
-Defined in: [src/game/BoardView.ts:100](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/game/BoardView.ts#L100)
+Defined in: [src/game/BoardView.ts:100](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BoardView.ts#L100)
 
 Updates sprite positions and scales after resize/orientation change.
 

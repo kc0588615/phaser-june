@@ -185,15 +185,17 @@ For leaderboard rankings:
 
 #### 3. `profiles` table
 For display names:
-- `id` (UUID)
+- `user_id` (UUID)
 - `username` (text, nullable)
-- `email` (text, nullable)
+- `full_name` (text, nullable)
+- `avatar_url` (text, nullable)
 
-**Setup SQL**:
-```sql
--- Run these in order:
--- 1. supabase_create_profiles_table.sql
--- 2. supabase_create_player_stats_system.sql
+**Schema Setup**:
+- Ensure required tables exist (SQL DDL or existing DB import) for `profiles`, `player_stats`, and related tables.
+- `player_stats` is refreshed after discoveries and session end; run a one-time backfill on existing DBs:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
 ```
 
 ---
@@ -314,7 +316,7 @@ interface PlayerStats {
 ### Manual Testing Checklist
 
 #### Pre-Testing Setup
-- [ ] Ensure `player_stats` table exists in Supabase
+- [ ] Ensure `player_stats` table exists in Postgres
 - [ ] Ensure `profiles` table exists
 - [ ] Run `npm install` for new dependencies
 - [ ] Run `npm run dev` to start dev server
@@ -401,13 +403,13 @@ interface PlayerStats {
 - Stats will populate after first discovery
 
 ### "Sign In Required" when authenticated
-- Check Supabase auth is working
-- Verify `supabase.auth.getUser()` returns user
+- Check auth provider is configured (Clerk planned)
+- Verify the app can resolve a user ID for the session
 - Check browser console for errors
 
 ### "Failed to load player statistics"
 - Check `player_stats` table exists
-- Verify RLS policies allow read access
+- Verify server role can read `player_stats`
 - Check network tab for 403/404 errors
 - Verify user ID matches `player_id` column
 
@@ -428,13 +430,13 @@ Before deploying to production:
 
 - [ ] Run `npm run build` - no errors
 - [ ] Run `npm run typecheck` - no PlayerStatsDashboard errors
-- [ ] Verify `player_stats` table exists in production Supabase
+- [ ] Verify `player_stats` table exists in production database
 - [ ] Verify `profiles` table exists
 - [ ] Test with real user accounts
 - [ ] Test empty state for new users
 - [ ] Test all 4 tabs render correctly
 - [ ] Test error states
-- [ ] Verify RLS policies allow authenticated reads
+- [ ] Verify API routes enforce expected read access
 
 ---
 

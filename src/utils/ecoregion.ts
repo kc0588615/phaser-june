@@ -6,13 +6,13 @@ import { getFamilyDisplayName } from '@/config/familyCommonNames';
  */
 export function getEcoregions(species: Species[]): string[] {
   const ecoregions = new Set<string>();
-  
+
   species.forEach(sp => {
-    if (sp.bioregio_1 && sp.bioregio_1 !== 'NULL' && sp.bioregio_1 !== 'null') {
-      ecoregions.add(sp.bioregio_1);
+    if (sp.bioregion && sp.bioregion !== 'NULL' && sp.bioregion !== 'null') {
+      ecoregions.add(sp.bioregion);
     }
   });
-  
+
   return Array.from(ecoregions).sort();
 }
 
@@ -51,34 +51,34 @@ export function getBiomes(species: Species[]): string[] {
  */
 export function groupSpeciesByCategory(species: Species[]): Record<string, Record<string, Species[]>> {
   const grouped: Record<string, Record<string, Species[]>> = {};
-  
+
   species.forEach(sp => {
     // Use the actual order as the category
-    const order = sp.order_ || 'Unknown';
+    const order = sp.taxon_order || 'Unknown';
     const family = sp.family || 'Unknown';
-    
+
     if (!grouped[order]) {
       grouped[order] = {};
     }
-    
+
     if (!grouped[order][family]) {
       grouped[order][family] = [];
     }
-    
+
     grouped[order][family].push(sp);
   });
-  
+
   // Sort species within each family by common name
   Object.values(grouped).forEach(families => {
     Object.values(families).forEach(speciesList => {
       speciesList.sort((a, b) => {
-        const nameA = a.comm_name || a.sci_name || '';
-        const nameB = b.comm_name || b.sci_name || '';
+        const nameA = a.common_name || a.scientific_name || '';
+        const nameB = b.common_name || b.scientific_name || '';
         return nameA.localeCompare(nameB);
       });
     });
   });
-  
+
   return grouped;
 }
 
@@ -87,40 +87,40 @@ export function groupSpeciesByCategory(species: Species[]): Record<string, Recor
  */
 export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Record<string, Record<string, Species[]>>> {
   const grouped: Record<string, Record<string, Record<string, Species[]>>> = {};
-  
+
   species.forEach(sp => {
     const className = sp.class || 'Unknown';
-    const orderName = sp.order_ || 'Unknown';
+    const orderName = sp.taxon_order || 'Unknown';
     const family = sp.family || 'Unknown';
-    
+
     if (!grouped[className]) {
       grouped[className] = {};
     }
-    
+
     if (!grouped[className][orderName]) {
       grouped[className][orderName] = {};
     }
-    
+
     if (!grouped[className][orderName][family]) {
       grouped[className][orderName][family] = [];
     }
-    
+
     grouped[className][orderName][family].push(sp);
   });
-  
+
   // Sort species within each family by common name
   Object.values(grouped).forEach(orders => {
     Object.values(orders).forEach(families => {
       Object.values(families).forEach(speciesList => {
         speciesList.sort((a, b) => {
-          const nameA = a.comm_name || a.sci_name || '';
-          const nameB = b.comm_name || b.sci_name || '';
+          const nameA = a.common_name || a.scientific_name || '';
+          const nameB = b.common_name || b.scientific_name || '';
           return nameA.localeCompare(nameB);
         });
       });
     });
   });
-  
+
   return grouped;
 }
 
@@ -229,12 +229,12 @@ export function getFamilyDisplayNameFromSpecies(family: string): string {
  */
 export function getUniqueOrders(species: Species[]): string[] {
   const orders = new Set<string>();
-  
+
   species.forEach(sp => {
-    if (sp.order_ && sp.order_ !== 'NULL' && sp.order_ !== 'null') {
-      orders.add(sp.order_);
+    if (sp.taxon_order && sp.taxon_order !== 'NULL' && sp.taxon_order !== 'null') {
+      orders.add(sp.taxon_order);
     }
   });
-  
+
   return Array.from(orders).sort();
 }

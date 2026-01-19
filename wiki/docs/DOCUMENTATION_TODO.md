@@ -126,16 +126,16 @@ These files are essential to understand before making any game changes.
 - [ ] Session lifecycle (start → events → end)
 - [ ] Event types recorded
 - [ ] Local storage integration
-- [ ] Supabase write patterns
+- [ ] Drizzle write patterns
 - [ ] Anonymous vs authenticated tracking
 
 **Expand:** `tracking-implementation.md`
 
 ---
 
-### 7. Prisma Schema
+### 7. Drizzle Schema
 
-**Source:** `prisma/schema.prisma` (18KB)
+**Source:** `src/db/schema/*` (app tables + spatial mappings)
 **Current State:** Undocumented
 **Location:** `docs/reference/`
 
@@ -146,7 +146,7 @@ These files are essential to understand before making any game changes.
 - [ ] Enums
 - [ ] Migration patterns
 
-**Suggested File:** `prisma-schema-reference.md`
+**Suggested File:** `drizzle-schema-reference.md`
 
 ---
 
@@ -259,12 +259,12 @@ These files are essential to understand before making any game changes.
 **Location:** `docs/guides/data/`
 
 **Needs:**
-- [ ] Supabase Auth integration
+- [ ] Clerk auth integration
 - [ ] Sign in/out flows
 - [ ] Profile creation
 - [ ] Protected routes (if any)
 
-**Expand:** `user-accounts-migration.md`
+**Expand:** New Clerk auth guide (Supabase-era doc archived at `archive/supabase/user-accounts-migration.md`)
 
 ---
 

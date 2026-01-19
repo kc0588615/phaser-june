@@ -2,12 +2,12 @@
 sidebar_position: 3
 title: Environment Setup
 description: Detailed configuration for all external services
-tags: [setup, supabase, cesium, titiler]
+tags: [setup, database, cesium, titiler]
 ---
 
 # Environment Setup
 
-This guide covers detailed configuration for Supabase, Cesium, and optional TiTiler integration.
+This guide covers detailed configuration for Postgres (Drizzle), Cesium, and optional TiTiler integration.
 
 ## Environment Variables
 
@@ -20,8 +20,8 @@ cp .env.example .env.local
 ### Required Variables
 
 ```env
-# Database - Prisma connection string
-DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
+# Database - Postgres connection string (Drizzle)
+DATABASE_URL="postgresql://user:password@host:port/database?schema=public&pgbouncer=true"
 
 # Cesium Ion - 3D globe rendering
 NEXT_PUBLIC_CESIUM_ION_TOKEN=your-cesium-ion-token
@@ -41,39 +41,42 @@ NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 
 ## Database Setup
 
-### 1. Configure Prisma
+### 1. Configure Drizzle
 
 1. Ensure you have a PostgreSQL database running (e.g., on Hetzner VPS).
 2. Set the `DATABASE_URL` in `.env.local`.
-3. Run migrations:
+3. Ensure schema is in place:
+
+- Spatial tables (`icaa`, `oneearth_bioregion`) are created by shapefile imports.
+- App tables are created via SQL migrations or manual DDL (Drizzle does not run migrations here).
+- Refresh types after schema changes:
 
 ```bash
-npm run prisma:migrate
+npx drizzle-kit introspect
 ```
 
 ### 2. Required Tables
 
 The application expects these tables (see [Database Guide](/docs/guides/data/database-guide) for full schema):
 
-- `icaa_species` - Species information
+- `icaa` - Species information
 - `profiles` - Player profiles
-- `game_sessions` - Session tracking
-- `clue_discoveries` - Unlocked clues
-- `species_discoveries` - Identified species
+- `player_game_sessions` - Session tracking
+- `player_species_discoveries` - Identified species
+- `player_clue_unlocks` - Unlocked clues
+- `player_stats` - Aggregated stats
+- `habitat_colormap` - Habitat codes → labels (TiTiler)
+- `oneearth_bioregion` - Bioregion reference data (optional)
+- `high_scores` - Legacy leaderboard
 
-### 3. Required RPC Functions
+API routes under `/api/*` handle queries; no database RPCs are required.
 
-These PostgreSQL functions must exist:
+### 3. One-Time Stats Backfill
 
-```sql
--- Get species at a location
-get_species_at_location(lon float, lat float, radius int)
+If you applied migrations to an existing database, refresh aggregates once:
 
--- Get random species for a game
-get_random_species(species_ids int[])
-
--- Record a clue discovery
-record_clue_discovery(session_id uuid, species_id int, clue_type text)
+```bash
+npx tsx scripts/backfill-player-stats.ts
 ```
 
 ## Cesium Ion Setup
@@ -114,16 +117,16 @@ Use a managed TiTiler instance or deploy to AWS Lambda.
 Run the app and check browser console for:
 
 ```
-✓ Supabase client initialized
+✓ Drizzle client reachable
 ✓ Cesium viewer ready
 ✓ TiTiler endpoint accessible (if configured)
 ```
 
 ## Common Issues
 
-### "Supabase not configured"
+### "Database not configured"
 - Ensure `.env.local` exists (not `.env.example`)
-- Restart dev server after changing env vars
+- Set `DATABASE_URL` and restart the dev server
 
 ### "Cesium token invalid"
 - Check token hasn't expired

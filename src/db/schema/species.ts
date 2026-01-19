@@ -1,0 +1,117 @@
+// =============================================================================
+// SPATIAL TABLES - Introspected from DB (import-owned, do not edit for migrations)
+// Re-introspect after shapefile schema changes: npx drizzle-kit introspect
+// =============================================================================
+
+import {
+  boolean,
+  doublePrecision,
+  geometry,
+  index,
+  numeric,
+  pgTable,
+  serial,
+  text,
+  varchar,
+} from 'drizzle-orm/pg-core';
+
+export const icaa = pgTable(
+  'icaa',
+  {
+    ogcFid: serial('ogc_fid').primaryKey().notNull(),
+    speciesId: numeric('species_id', { precision: 65, scale: 30 }),
+    commonName: text('common_name'),
+    scientificName: text('scientific_name'),
+    taxonomicComment: text('taxonomic_comment'),
+    iucnUrl: text('iucn_url'),
+    kingdom: text(),
+    phylum: text(),
+    class: text(),
+    taxonOrder: text('taxon_order'),
+    family: text(),
+    genus: text(),
+    category: text(),
+    conservationCode: text('conservation_code'),
+    conservationText: text('conservation_text'),
+    threats: text(),
+    habitatDescription: text('habitat_description'),
+    habitatTags: text('habitat_tags'),
+    marine: boolean(),
+    terrestrial: boolean(),
+    freshwater: boolean(),
+    aquatic: boolean(),
+    geographicDescription: text('geographic_description'),
+    distributionComment: text('distribution_comment'),
+    island: boolean(),
+    origin: numeric({ precision: 65, scale: 30 }),
+    presence: numeric({ precision: 65, scale: 30 }),
+    seasonal: numeric({ precision: 65, scale: 30 }),
+    bioregion: text(),
+    realm: text(),
+    subrealm: text(),
+    biome: text(),
+    colorPrimary: text('color_primary'),
+    colorSecondary: text('color_secondary'),
+    pattern: text(),
+    shapeDescription: text('shape_description'),
+    sizeMinCm: numeric('size_min_cm', { precision: 65, scale: 30 }),
+    sizeMaxCm: numeric('size_max_cm', { precision: 65, scale: 30 }),
+    weightKg: numeric('weight_kg', { precision: 65, scale: 30 }),
+    dietType: text('diet_type'),
+    dietPrey: text('diet_prey'),
+    dietFlora: text('diet_flora'),
+    behavior1: text('behavior_1'),
+    behavior2: text('behavior_2'),
+    lifespan: numeric({ precision: 65, scale: 30 }),
+    maturity: text(),
+    reproductionType: text('reproduction_type'),
+    clutchSize: text('clutch_size'),
+    lifeDescription1: text('life_description_1'),
+    lifeDescription2: text('life_description_2'),
+    keyFact1: text('key_fact_1'),
+    keyFact2: text('key_fact_2'),
+    keyFact3: text('key_fact_3'),
+    compiler: text(),
+    yearCompiled: numeric('year_compiled', { precision: 65, scale: 30 }),
+    citation: text(),
+    source: text(),
+    subspecies: text(),
+    subpop: text(),
+    legend: text(),
+    generalised: numeric({ precision: 65, scale: 30 }),
+    shapeLength: numeric('shape_length', { precision: 65, scale: 30 }),
+    shapeLengthAlt: numeric('shape_length_alt', { precision: 65, scale: 30 }),
+    shapeArea: numeric('shape_area', { precision: 65, scale: 30 }),
+    wkbGeometry: geometry('wkb_geometry', { type: 'geometry', srid: 4326 }),
+  },
+  (table) => [
+    index('ix_icaa_wkb_geometry').using(
+      'gist',
+      table.wkbGeometry.asc().nullsLast().op('gist_geometry_ops_2d')
+    ),
+  ]
+);
+
+export const oneearthBioregion = pgTable(
+  'oneearth_bioregion',
+  {
+    ogcFid: serial('ogc_fid').primaryKey().notNull(),
+    objectid1: numeric('objectid_1', { precision: 65, scale: 30 }),
+    objectid2: numeric('objectid_2', { precision: 65, scale: 30 }),
+    bioregions: varchar(),
+    bioregion: varchar(),
+    realm: varchar(),
+    subrealm: varchar(),
+    biome: varchar(),
+    shapeLength: doublePrecision('shape_length'),
+    shapeLengthAlt: numeric('shape_length_alt', { precision: 65, scale: 30 }),
+    shapeArea: doublePrecision('shape_area'),
+    wkbGeometry: geometry('wkb_geometry', { type: 'multipolygon', srid: 4326 }),
+  },
+  (table) => [
+    index('ix_oneearth_bioregion_wkb_geometry').using(
+      'gist',
+      table.wkbGeometry.asc().nullsLast().op('gist_geometry_ops_2d')
+    ),
+  ]
+);

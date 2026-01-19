@@ -7,19 +7,19 @@ tags: [guide, stats, dashboard]
 
 # Player Stats Dashboard Integration
 
-Display player statistics.
+Display player statistics from `player_stats`. Auth is required; Clerk integration is planned.
 
 ## Query Stats
 
 ```typescript
-const { data } = await supabase.rpc('get_player_stats', {
-  p_player_id: userId
-});
+import { fetchPlayerStatsByPlayerId } from '@/lib/playerStatsService';
+
+const stats = await fetchPlayerStatsByPlayerId(userId);
 ```
 
 ## Display
 
 ```tsx
-<StatCard label="Species Found" value={stats.total_species_found} />
-<StatCard label="Total Games" value={stats.total_games} />
+<StatCard label="Species Found" value={stats.totalSpeciesDiscovered} />
+<StatCard label="Total Games" value={stats.totalGamesPlayed} />
 ```

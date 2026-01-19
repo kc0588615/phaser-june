@@ -1,6 +1,6 @@
 # Developer Onboarding
 
-This is the entry point for engineers joining the Phaser + Next.js + Cesium + Prisma project. It explains how the app is structured, what to read next, and where every doc lives.
+This is the entry point for engineers joining the Phaser + Next.js + Cesium + Drizzle project. It explains how the app is structured, what to read next, and where every doc lives.
 
 ---
 
@@ -48,7 +48,7 @@ npm run start    # http://localhost:3000
 
 ## 1) Start Here
 - Project overview & setup: [docs/README.md](./README.md) (install, env vars, scripts).
-- Run the app: `npm install`, `cp .env.example .env.local`, set Supabase + Cesium env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
+- Run the app: `npm install`, `cp .env.example .env.local`, set database + Cesium env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
 
 ## 2) How the Codebase is Shaped
 - Layout host: `src/MainAppLayout.tsx` keeps Cesium map + Phaser canvas mounted; toggles view modes.
@@ -56,14 +56,14 @@ npm run start    # http://localhost:3000
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `MoveAction.ts` and `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
-- Data/auth: Supabase clients in `src/lib/*`, auth actions in `auth-actions.ts`, species RPCs in `speciesService.ts`, player tracking in `playerTracking.ts`.
+- Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`.
 
 ## 3) Recommended Reading Path
 1) **Core architecture:** [EVENTBUS_AND_DISPLAY_ARCHITECTURE.md](./EVENTBUS_AND_DISPLAY_ARCHITECTURE.md), [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md), [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [LAYOUT_RESTRUCTURE_IMPLEMENTATION.md](./LAYOUT_RESTRUCTURE_IMPLEMENTATION.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md), [species-list-improvements.md](./species-list-improvements.md).
-5) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md), [USER_ACCOUNTS_MIGRATION_PLAN.md](./USER_ACCOUNTS_MIGRATION_PLAN.md).
+5) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
 6) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
 7) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
 
@@ -96,14 +96,14 @@ npm run start    # http://localhost:3000
 - [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md) — also relevant for responsive UI.
 
 **Data, Auth, and Platform**
-- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Supabase tables, RPCs, TiTiler integration.
+- [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Drizzle queries, TiTiler integration.
 - [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md) — schema and species data sourcing.
-- [USER_ACCOUNTS_MIGRATION_PLAN.md](./USER_ACCOUNTS_MIGRATION_PLAN.md) — auth migration steps.
-- [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from Supabase raster.
-- [PRISMA_VERCEL_MIGRATION.md](./PRISMA_VERCEL_MIGRATION.md) — Prisma ORM + Vercel server runtime setup.
+- [DRIZZLE_ORM_GUIDE.md](./DRIZZLE_ORM_GUIDE.md) — Drizzle usage patterns.
+- [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from legacy raster storage.
+- [DRIZZLE_VERCEL_MIGRATION.md](./DRIZZLE_VERCEL_MIGRATION.md) — Drizzle + Vercel server runtime setup.
 
 **Player Tracking & Stats**
-- [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Supabase writes.
+- [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Drizzle writes.
 - [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md) — rollout steps for tracking.
 - [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md) — stats UI integration.
 - [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md) — review of stats dashboard work.
@@ -118,6 +118,7 @@ npm run start    # http://localhost:3000
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — shared with map.
 
 **Archive / Historical (for reference only)**
+- [archive/supabase/USER_ACCOUNTS_MIGRATION_PLAN.md](./archive/supabase/USER_ACCOUNTS_MIGRATION_PLAN.md)
 - [archive/BOARD_POSITION_FIX.md](./archive/BOARD_POSITION_FIX.md)
 - [archive/MISSING_PROFILES_FIX.md](./archive/MISSING_PROFILES_FIX.md)
 - [archive/RESPONSIVE_BOARD_SCALING_FIX.md](./archive/RESPONSIVE_BOARD_SCALING_FIX.md)
@@ -145,17 +146,17 @@ npm run start    # http://localhost:3000
 
 | Color (asset key) | Category | Icon | Clue source (progressive order) | Example output |
 | --- | --- | --- | --- | --- |
-| red | Classification | 🧬 | `tax_comm`, `phylum`, `class`, `order_`, `family`, `genus`, `sci_name` | `Genus: Panthera` |
+| red | Classification | 🧬 | `taxonomic_comment`, `phylum`, `class`, `taxon_order`, `family`, `genus`, `scientific_name` | `Genus: Panthera` |
 | green | Habitat (Cesium) | 🌳 | Cesium click `rasterHabitats` (`habitat_type` with `percentage`, uses returned order) | `Search Area is 62% Mangroves` |
-| blue | Geographic & Habitat text | 🗺️ | `geo_desc`, `dist_comm`, `hab_desc`, `hab_tags` | `Habitat: tropical rainforests` |
-| orange | Morphology | 🐆 | `pattern`, `color_prim`, `color_sec`, `shape_desc`, `size_max`, `weight_kg` | `Primary color: chestnut` |
-| yellow | Behavior & Diet | 💨 | `behav_1`, `behav_2`, `diet_type`, `diet_prey`, `diet_flora` | `Diet type: Carnivore` |
-| black | Life Cycle | ⏳ | `life_desc1`, `life_desc2`; fallback: `lifespan`, `maturity`, `repro_type`, `clutch_sz` | `Clutch size: 2-4 eggs` |
-| white | Conservation | 🛡️ | `cons_text`, `threats`; fallback: `cons_code` or `category` | `Threats: habitat loss` |
-| purple | Key Facts | 🔮 | `key_fact1`, `key_fact2`, `key_fact3` | `Has night vision` |
+| blue | Geographic & Habitat text | 🗺️ | `geographic_description`, `distribution_comment`, `habitat_description`, `habitat_tags` | `Habitat: tropical rainforests` |
+| orange | Morphology | 🐆 | `pattern`, `color_primary`, `color_secondary`, `shape_description`, `size_max_cm`, `weight_kg` | `Primary color: chestnut` |
+| yellow | Behavior & Diet | 💨 | `behavior_1`, `behavior_2`, `diet_type`, `diet_prey`, `diet_flora` | `Diet type: Carnivore` |
+| black | Life Cycle | ⏳ | `life_description_1`, `life_description_2`; fallback: `lifespan`, `maturity`, `reproduction_type`, `clutch_size` | `Clutch size: 2-4 eggs` |
+| white | Conservation | 🛡️ | `conservation_text`, `threats`; fallback: `conservation_code` or `category` | `Threats: habitat loss` |
+| purple | Key Facts | 🔮 | `key_fact_1`, `key_fact_2`, `key_fact_3` | `Has night vision` |
 
 Notes:
 - Behavior + diet clues are emitted by matching yellow gems. Conservation clues are emitted by matching white gems.
-- Habitat text fields (`hab_desc`, `hab_tags`) now ride with the blue Geographic gem. The green gem exclusively returns Cesium habitat legend values.
+- Habitat text fields (`habitat_description`, `habitat_tags`) now ride with the blue Geographic gem. The green gem exclusively returns Cesium habitat legend values.
 
 Use this doc as the hub: follow the recommended reading path, then dive into the specific files linked above before modifying the game.

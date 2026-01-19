@@ -560,6 +560,98 @@ When providing this report to an AI for schema redesign, also share:
 
 ---
 
+## 13. Codex CLI Review (2026-01-10)
+
+External review via Codex CLI identified additional risks and refinements:
+
+### 13.1 Critical Issues
+
+| Issue | Location | Risk |
+|-------|----------|------|
+| **Type conversions lack parsing plan** | §5.1, §11 | TEXT→INT/ENUM casts will lose data (e.g., "about two years", "2-6 eggs"). Need backfill scripts + preserve raw values |
+| **Species key undefined** | §9.1 | `iucn_id_no` uniqueness/nullability unspecified; multi-range species handling unclear (multi-polygon vs multi-row) |
+
+### 13.2 High Priority Concerns
+
+| Issue | Impact |
+|-------|--------|
+| **Normalization slows spatial queries** | Joining `species`+`species_ranges`+`species_traits` for "species at point" adds latency. Need materialized view or denormalized `species_search` table |
+| **ENUMs too rigid** | `diet_type`, `presence`, `origin` may expand; lookup tables easier to modify than `ALTER TYPE ... ADD VALUE` |
+| **Renames break clients** | No compatibility layer (views/API versioning) for table/column renames in §9.2 |
+| **Auth/RLS underspecified** | Recreating `auth.uid()` isn't enough; need clear role/claims propagation model to avoid accidental public access |
+
+### 13.3 Medium Issues
+
+| Issue | Mitigation |
+|-------|------------|
+| **Index cleanup needs validation** | Stats reset on restart; use `pg_stat_statements`/query logs before dropping. Use `DROP INDEX CONCURRENTLY` |
+| **`player_stats` ownership unclear** | Choose: derived view vs trigger-maintained table. Current triggers don't handle DELETE |
+| **Constraints will fail existing data** | Backfill NULLs in `username`, close open sessions (`ended_at`) before adding NOT NULL/CHECK |
+
+### 13.4 Open Questions
+
+1. Is `iucn_id_no` guaranteed present and unique across all species/subspecies?
+2. Do species have multiple geometry ranges (multi-polygon vs multi-row)? Need per-range metadata?
+3. Top 3 read paths beyond "species at point"? (leaderboards, player stats, filters)
+4. Staying on PostgreSQL/PostGIS or different target DB?
+
+### 13.5 Recommended Implementation Order
+
+1. **Define stable species key** - Decide `iucn_id_no` uniqueness, range cardinality model, new FK constraints
+2. **Build data cleaning pipeline** - Parse free-text fields, preserve raw values, normalize casing
+3. **Define auth/RLS strategy** - Role/claims model for target DB before translating policies
+4. **Implement normalized schema** - Plus read-optimized view/materialized view for core spatial queries
+5. **Migrate data with backfills** - Close sessions, fill NULLs, add compatibility views for phased rollout
+6. **Index tuning** - Add new indexes for FK joins, drop redundant ones concurrently after workload validation
+
+### 13.6 Related Documentation
+
+- `docs/DATABASE_USER_GUIDE.md` - Current database usage patterns
+- `docs/DRIZZLE_VERCEL_MIGRATION.md` - Drizzle deployment notes
+- `docs/DRIZZLE_ORM_GUIDE.md` - Drizzle ORM patterns
+- `docs/SPECIES_DATABASE_IMPLEMENTATION.md` - Species data layer
+- `docs/PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md` - Player tracking schema
+- `docs/PLAYER_TRACKING_INTEGRATION_PLAN.md` - Tracking integration
+- `docs/archive/supabase/USER_ACCOUNTS_MIGRATION_PLAN.md` - Auth migration reference
+
+---
+
+## 14. Prisma vs Drizzle (PostGIS) (2026-01-10)
+
+Focused ORM comparison for spatial-heavy Postgres usage.
+
+**Status:** Drizzle is now the active ORM; Prisma references below are historical context.
+
+### 14.1 Current Usage Snapshot
+
+- 13 `prisma.$queryRaw` calls (PostGIS spatial queries)
+- 32 standard Prisma CRUD calls
+- ~29% raw SQL by count; spatial queries are core gameplay paths
+
+### 14.2 Key Findings
+
+| Factor | Prisma | Drizzle |
+|--------|--------|---------|
+| PostGIS support | No native PostGIS types; relies on `$queryRaw`/views | No native PostGIS types; SQL fragments feel natural |
+| Typed raw SQL | Manual `<T>` annotation | `sql<ReturnType>` composable with builder |
+| Runtime overhead | Query engine layer | Direct driver, thinner |
+| Migration tooling | Mature (Studio, migrate) | Catching up; drizzle-kit introspect works |
+| Ecosystem (2026) | Largest, most stable | Growing fast, fewer batteries-included |
+
+### 14.3 Verdict
+
+Neither ORM offers first-class PostGIS support; both rely on raw SQL for spatial
+ops. The decision is mostly ergonomics and tooling maturity, not spatial
+performance. PostGIS indexes and query plans drive the largest gains.
+
+### 14.4 Recommendation
+
+1. **Hybrid:** Keep Prisma for CRUD, use Drizzle (or raw `pg`) for spatial-heavy routes
+2. **Full migration:** Only if you want SQL-first standardization across the codebase
+3. **Performance priority:** Invest in GIST/SP-GiST indexes and query tuning before an ORM switch
+
+---
+
 **End of Report**
 
 Next steps: Share this document with AI + your specific requirements (scale, target platform, critical queries) for detailed schema redesign + migration SQL scripts.

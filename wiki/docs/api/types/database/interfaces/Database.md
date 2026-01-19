@@ -1,6 +1,6 @@
 # Interface: Database
 
-Defined in: [src/types/database.ts:182](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/types/database.ts#L182)
+Defined in: [src/types/database.ts:182](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L182)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/database.ts:182](https://github.com/kc0588615/phaser-june
 
 > **public**: `object`
 
-Defined in: [src/types/database.ts:183](https://github.com/kc0588615/phaser-june/blob/65b5d06c168bbb7e4e517656fc2aa3bc2d516eb1/src/types/database.ts#L183)
+Defined in: [src/types/database.ts:183](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L183)
 
 #### Tables
 

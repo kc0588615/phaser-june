@@ -1,15 +1,55 @@
 // =============================================================================
-// PLAYER TRACKING SERVICE - Prisma Version
+// PLAYER TRACKING SERVICE - Drizzle Version
 // =============================================================================
-// Syncs game events to Postgres with offline queue and proper session management.
-// Migrated from Supabase client to Prisma.
+// Syncs game events to Postgres with proper session management.
+// Server-only: client imports get no-op stubs to prevent build errors.
 // =============================================================================
 
-import { prisma } from '@/lib/prisma';
+// Client-side guard: export no-op functions to prevent postgres import in browser
+const isServer = typeof window === 'undefined';
+
+// Lazy-load server dependencies only when needed
+let db: any;
+let playerGameSessions: any;
+let playerClueUnlocks: any;
+let playerSpeciesDiscoveries: any;
+let playerStats: any;
+let icaa: any;
+let eq: any, and: any, isNull: any, desc: any, inArray: any, count: any, sum: any, sql: any;
+
+async function ensureServerDeps() {
+  if (!isServer) return false;
+  if (!db) {
+    const drizzleOps = await import('drizzle-orm');
+    eq = drizzleOps.eq;
+    and = drizzleOps.and;
+    isNull = drizzleOps.isNull;
+    desc = drizzleOps.desc;
+    inArray = drizzleOps.inArray;
+    count = drizzleOps.count;
+    sum = drizzleOps.sum;
+    sql = drizzleOps.sql;
+
+    let dbModule: any;
+    try {
+      dbModule = await import('@/db');
+    } catch (err) {
+      dbModule = await import('../db');
+    }
+    db = dbModule.db;
+    playerGameSessions = dbModule.playerGameSessions;
+    playerClueUnlocks = dbModule.playerClueUnlocks;
+    playerSpeciesDiscoveries = dbModule.playerSpeciesDiscoveries;
+    playerStats = dbModule.playerStats;
+    icaa = dbModule.icaa;
+  }
+  return true;
+}
 
 // Session tracking
 interface SessionState {
   id: string;
+  playerId: string;
   startTime: number;
   speciesStartTime: number; // Reset per species for time-to-discover
   pendingClueIds: string[]; // Clue IDs waiting for discovery_id
@@ -17,132 +57,40 @@ interface SessionState {
 
 let currentSession: SessionState | null = null;
 
-// Offline queue for failed writes
-interface QueuedWrite {
-  type: 'clue' | 'discovery' | 'session_update';
-  payload: any;
-  timestamp: number;
-}
-
-const offlineQueue: QueuedWrite[] = [];
-const QUEUE_STORAGE_KEY = 'player_tracking_queue';
-
 // Debounce timer for session updates
 let sessionUpdateTimer: NodeJS.Timeout | null = null;
 const SESSION_UPDATE_DEBOUNCE = 10000; // 10 seconds
-
-/**
- * Load offline queue from localStorage
- */
-function loadOfflineQueue(): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const stored = localStorage.getItem(QUEUE_STORAGE_KEY);
-    if (stored) {
-      const items = JSON.parse(stored);
-      offlineQueue.push(...items);
-    }
-  } catch (err) {
-    console.error('Failed to load offline queue:', err);
-  }
-}
-
-/**
- * Save offline queue to localStorage
- */
-function saveOfflineQueue(): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(offlineQueue));
-  } catch (err) {
-    console.error('Failed to save offline queue:', err);
-  }
-}
-
-/**
- * Add item to offline queue
- */
-function queueWrite(type: QueuedWrite['type'], payload: any): void {
-  offlineQueue.push({
-    type,
-    payload,
-    timestamp: Date.now(),
-  });
-  saveOfflineQueue();
-}
-
-/**
- * Process offline queue
- * Retry failed writes when connectivity returns
- */
-export async function processOfflineQueue(playerId: string): Promise<void> {
-  if (offlineQueue.length === 0) return;
-
-  const items = [...offlineQueue];
-  offlineQueue.length = 0; // Clear queue
-
-  for (const item of items) {
-    try {
-      switch (item.type) {
-        case 'clue':
-          await trackClueUnlock(
-            playerId,
-            item.payload.speciesId,
-            typeof item.payload.clueCategory === 'string'
-              ? item.payload.clueCategory
-              : String(item.payload.clueCategory ?? 'unknown'),
-            typeof item.payload.clueField === 'string' && item.payload.clueField.length > 0
-              ? item.payload.clueField
-              : 'detail',
-            item.payload.clueValue ?? null,
-            item.payload.discoveryId ?? null
-          );
-          break;
-        case 'discovery':
-          await trackSpeciesDiscovery(playerId, item.payload.speciesId, item.payload.options);
-          break;
-        case 'session_update':
-          await updateSessionProgress(
-            item.payload.sessionId,
-            item.payload.moves,
-            item.payload.score,
-            item.payload.speciesDiscovered,
-            item.payload.cluesUnlocked
-          );
-          break;
-      }
-    } catch (err) {
-      // Re-queue if still failing
-      offlineQueue.push(item);
-    }
-  }
-
-  saveOfflineQueue();
-}
 
 /**
  * Start or resume a game session
  * Handles React Strict Mode double-mounting
  */
 export async function startGameSession(playerId: string): Promise<string | null> {
+  if (!(await ensureServerDeps())) return null; // Client-side no-op
+
   try {
     // Check for existing open session (prevent duplicates)
-    const existingSession = await prisma.playerGameSession.findFirst({
-      where: {
-        player_id: playerId,
-        ended_at: null,
-      },
-      orderBy: { started_at: 'desc' },
-    });
+    const existingSessions = await db
+      .select()
+      .from(playerGameSessions)
+      .where(
+        and(
+          eq(playerGameSessions.playerId, playerId),
+          isNull(playerGameSessions.endedAt)
+        )
+      )
+      .orderBy(desc(playerGameSessions.startedAt))
+      .limit(1);
+
+    const existingSession = existingSessions[0];
 
     if (existingSession) {
       // Resume existing session
       currentSession = {
         id: existingSession.id,
-        startTime: existingSession.started_at
-          ? new Date(existingSession.started_at).getTime()
+        playerId,
+        startTime: existingSession.startedAt
+          ? new Date(existingSession.startedAt).getTime()
           : Date.now(),
         speciesStartTime: Date.now(),
         pendingClueIds: [],
@@ -151,19 +99,23 @@ export async function startGameSession(playerId: string): Promise<string | null>
     }
 
     // Create new session
-    const session = await prisma.playerGameSession.create({
-      data: {
-        player_id: playerId,
-        started_at: new Date(),
-        total_moves: 0,
-        total_score: 0,
-        species_discovered_in_session: 0,
-        clues_unlocked_in_session: 0,
-      },
-    });
+    const result = await db
+      .insert(playerGameSessions)
+      .values({
+        playerId,
+        startedAt: new Date(),
+        totalMoves: 0,
+        totalScore: 0,
+        speciesDiscoveredInSession: 0,
+        cluesUnlockedInSession: 0,
+      })
+      .returning({ id: playerGameSessions.id });
+
+    const session = result[0];
 
     currentSession = {
       id: session.id,
+      playerId,
       startTime: Date.now(),
       speciesStartTime: Date.now(),
       pendingClueIds: [],
@@ -184,15 +136,34 @@ export async function endGameSession(
   finalMoves: number,
   finalScore: number
 ): Promise<void> {
+  if (!(await ensureServerDeps())) return; // Client-side no-op
+
+  const playerId = currentSession?.playerId;
+  let resolvedPlayerId = playerId;
+
+  // DB fallback if session state missing (do not queue on lookup failure)
+  if (!resolvedPlayerId) {
+    try {
+      const rows = await db
+        .select({ playerId: playerGameSessions.playerId })
+        .from(playerGameSessions)
+        .where(eq(playerGameSessions.id, sessionId))
+        .limit(1);
+      resolvedPlayerId = rows[0]?.playerId ?? null;
+    } catch (err) {
+      console.error('Failed to resolve playerId for session end:', err);
+    }
+  }
+
   try {
-    await prisma.playerGameSession.update({
-      where: { id: sessionId },
-      data: {
-        ended_at: new Date(),
-        total_moves: finalMoves,
-        total_score: finalScore,
-      },
-    });
+    await db
+      .update(playerGameSessions)
+      .set({
+        endedAt: new Date(),
+        totalMoves: finalMoves,
+        totalScore: finalScore,
+      })
+      .where(eq(playerGameSessions.id, sessionId));
 
     currentSession = null;
 
@@ -201,14 +172,15 @@ export async function endGameSession(
       clearTimeout(sessionUpdateTimer);
       sessionUpdateTimer = null;
     }
+
+    // Refresh stats on session end (non-blocking)
+    if (resolvedPlayerId) {
+      refreshPlayerStats(resolvedPlayerId).catch((err) => {
+        console.error('Failed to refresh player stats on session end:', err);
+      });
+    }
   } catch (err) {
     console.error('Failed to end game session:', err);
-    queueWrite('session_update', {
-      sessionId,
-      moves: finalMoves,
-      score: finalScore,
-      ended: true,
-    });
   }
 }
 
@@ -223,6 +195,8 @@ export async function updateSessionProgress(
   speciesDiscovered: number,
   cluesUnlocked: number
 ): Promise<void> {
+  if (!isServer) return; // Client-side no-op
+
   // Clear existing timer
   if (sessionUpdateTimer) {
     clearTimeout(sessionUpdateTimer);
@@ -230,25 +204,19 @@ export async function updateSessionProgress(
 
   // Debounce: wait 10 seconds before writing
   sessionUpdateTimer = setTimeout(async () => {
+    if (!(await ensureServerDeps())) return;
     try {
-      await prisma.playerGameSession.update({
-        where: { id: sessionId },
-        data: {
-          total_moves: moves,
-          total_score: score,
-          species_discovered_in_session: speciesDiscovered,
-          clues_unlocked_in_session: cluesUnlocked,
-        },
-      });
+      await db
+        .update(playerGameSessions)
+        .set({
+          totalMoves: moves,
+          totalScore: score,
+          speciesDiscoveredInSession: speciesDiscovered,
+          cluesUnlockedInSession: cluesUnlocked,
+        })
+        .where(eq(playerGameSessions.id, sessionId));
     } catch (err) {
       console.error('Failed to update session progress:', err);
-      queueWrite('session_update', {
-        sessionId,
-        moves,
-        score,
-        speciesDiscovered,
-        cluesUnlocked,
-      });
     }
   }, SESSION_UPDATE_DEBOUNCE);
 }
@@ -263,30 +231,25 @@ export async function forceSessionUpdate(
   speciesDiscovered: number,
   cluesUnlocked: number
 ): Promise<void> {
+  if (!(await ensureServerDeps())) return; // Client-side no-op
+
   if (sessionUpdateTimer) {
     clearTimeout(sessionUpdateTimer);
     sessionUpdateTimer = null;
   }
 
   try {
-    await prisma.playerGameSession.update({
-      where: { id: sessionId },
-      data: {
-        total_moves: moves,
-        total_score: score,
-        species_discovered_in_session: speciesDiscovered,
-        clues_unlocked_in_session: cluesUnlocked,
-      },
-    });
+    await db
+      .update(playerGameSessions)
+      .set({
+        totalMoves: moves,
+        totalScore: score,
+        speciesDiscoveredInSession: speciesDiscovered,
+        cluesUnlockedInSession: cluesUnlocked,
+      })
+      .where(eq(playerGameSessions.id, sessionId));
   } catch (err) {
     console.error('Failed to force session update:', err);
-    queueWrite('session_update', {
-      sessionId,
-      moves,
-      score,
-      speciesDiscovered,
-      cluesUnlocked,
-    });
   }
 }
 
@@ -302,30 +265,84 @@ export async function trackClueUnlock(
   clueValue: string | null = null,
   discoveryId: string | null = null
 ): Promise<boolean | null> {
+  if (!(await ensureServerDeps())) return null; // Client-side no-op
+
   try {
-    // Use upsert to handle duplicates gracefully
-    const clue = await prisma.playerClueUnlock.upsert({
-      where: {
-        player_clue_unique: {
-          player_id: playerId,
-          species_id: speciesId,
-          clue_category: clueCategory,
-          clue_field: clueField,
-        },
-      },
-      create: {
-        player_id: playerId,
-        species_id: speciesId,
-        discovery_id: discoveryId,
-        clue_category: clueCategory,
-        clue_field: clueField,
-        clue_value: clueValue,
-      },
-      update: {
-        // If already exists, just update discovery_id if provided
-        ...(discoveryId ? { discovery_id: discoveryId } : {}),
-      },
-    });
+    let clue: { id: string; unlockedAt: Date | null };
+
+    if (discoveryId) {
+      // If discoveryId provided, use onConflictDoUpdate to link it
+      const result = await db
+        .insert(playerClueUnlocks)
+        .values({
+          playerId,
+          speciesId,
+          discoveryId,
+          clueCategory,
+          clueField,
+          clueValue,
+        })
+        .onConflictDoUpdate({
+          target: [
+            playerClueUnlocks.playerId,
+            playerClueUnlocks.speciesId,
+            playerClueUnlocks.clueCategory,
+            playerClueUnlocks.clueField,
+          ],
+          set: { discoveryId },
+        })
+        .returning({
+          id: playerClueUnlocks.id,
+          unlockedAt: playerClueUnlocks.unlockedAt,
+        });
+      clue = result[0];
+    } else {
+      // No discoveryId - use onConflictDoNothing, then fetch existing if needed
+      const result = await db
+        .insert(playerClueUnlocks)
+        .values({
+          playerId,
+          speciesId,
+          clueCategory,
+          clueField,
+          clueValue,
+        })
+        .onConflictDoNothing({
+          target: [
+            playerClueUnlocks.playerId,
+            playerClueUnlocks.speciesId,
+            playerClueUnlocks.clueCategory,
+            playerClueUnlocks.clueField,
+          ],
+        })
+        .returning({
+          id: playerClueUnlocks.id,
+          unlockedAt: playerClueUnlocks.unlockedAt,
+        });
+
+      if (result.length > 0) {
+        // Insert succeeded (new clue)
+        clue = result[0];
+      } else {
+        // Conflict - fetch existing clue
+        const existing = await db
+          .select({
+            id: playerClueUnlocks.id,
+            unlockedAt: playerClueUnlocks.unlockedAt,
+          })
+          .from(playerClueUnlocks)
+          .where(
+            and(
+              eq(playerClueUnlocks.playerId, playerId),
+              eq(playerClueUnlocks.speciesId, speciesId),
+              eq(playerClueUnlocks.clueCategory, clueCategory),
+              eq(playerClueUnlocks.clueField, clueField)
+            )
+          )
+          .limit(1);
+        clue = existing[0];
+      }
+    }
 
     // Store clue ID for later discovery_id linking
     if (!discoveryId && currentSession) {
@@ -334,19 +351,12 @@ export async function trackClueUnlock(
 
     // Check if this was a create (new) or update (existing)
     // If unlocked_at matches within 1 second, it's likely new
-    const isNew = clue.unlocked_at
-      ? Date.now() - new Date(clue.unlocked_at).getTime() < 1000
+    const isNew = clue.unlockedAt
+      ? Date.now() - new Date(clue.unlockedAt).getTime() < 1000
       : true;
     return isNew;
   } catch (err) {
     console.error('Failed to track clue unlock:', err);
-    queueWrite('clue', {
-      speciesId,
-      clueCategory,
-      clueField,
-      clueValue,
-      discoveryId,
-    });
     return null;
   }
 }
@@ -366,44 +376,48 @@ export async function trackSpeciesDiscovery(
     scoreEarned: number;
   }
 ): Promise<string | null> {
+  if (!(await ensureServerDeps())) return null; // Client-side no-op
+
   try {
     const sessionId = options.sessionId || currentSession?.id || null;
     const pendingClueIds = currentSession?.pendingClueIds || [];
 
     // Use transaction for atomic operation
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await db.transaction(async (tx: any) => {
       // Upsert discovery (idempotent)
-      const discovery = await tx.playerSpeciesDiscovery.upsert({
-        where: {
-          player_species_unique: {
-            player_id: playerId,
-            species_id: speciesId,
+      const discoveryResult = await tx
+        .insert(playerSpeciesDiscoveries)
+        .values({
+          playerId,
+          speciesId,
+          sessionId,
+          timeToDiscoverSeconds: options.timeToDiscoverSeconds,
+          cluesUnlockedBeforeGuess: options.cluesUnlockedBeforeGuess,
+          incorrectGuessesCount: options.incorrectGuessesCount,
+          scoreEarned: options.scoreEarned,
+        })
+        .onConflictDoUpdate({
+          target: [playerSpeciesDiscoveries.playerId, playerSpeciesDiscoveries.speciesId],
+          set: {
+            // If already discovered, update score
+            scoreEarned: options.scoreEarned,
           },
-        },
-        create: {
-          player_id: playerId,
-          species_id: speciesId,
-          session_id: sessionId,
-          time_to_discover_seconds: options.timeToDiscoverSeconds,
-          clues_unlocked_before_guess: options.cluesUnlockedBeforeGuess,
-          incorrect_guesses_count: options.incorrectGuessesCount,
-          score_earned: options.scoreEarned,
-        },
-        update: {
-          // If already discovered, update score
-          score_earned: options.scoreEarned,
-        },
-      });
+        })
+        .returning({ id: playerSpeciesDiscoveries.id });
+
+      const discovery = discoveryResult[0];
 
       // Link pending clues to this discovery
       if (pendingClueIds.length > 0) {
-        await tx.playerClueUnlock.updateMany({
-          where: {
-            id: { in: pendingClueIds },
-            discovery_id: null,
-          },
-          data: { discovery_id: discovery.id },
-        });
+        await tx
+          .update(playerClueUnlocks)
+          .set({ discoveryId: discovery.id })
+          .where(
+            and(
+              inArray(playerClueUnlocks.id, pendingClueIds),
+              isNull(playerClueUnlocks.discoveryId)
+            )
+          );
       }
 
       return discovery;
@@ -420,10 +434,14 @@ export async function trackSpeciesDiscovery(
       updateLocalStorageDiscovery(speciesId);
     }
 
+    // Refresh player_stats asynchronously (don't block return)
+    refreshPlayerStats(playerId).catch((err) => {
+      console.error('Failed to refresh player stats after discovery:', err);
+    });
+
     return result.id;
   } catch (err) {
     console.error('Failed to track species discovery:', err);
-    queueWrite('discovery', { speciesId, options });
     return null;
   }
 }
@@ -452,7 +470,7 @@ function updateLocalStorageDiscovery(speciesId: number): void {
   try {
     const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
 
-    if (!discovered.find((d: any) => d.id === speciesId)) {
+    if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
       discovered.push({
         id: speciesId,
         discoveredAt: new Date().toISOString(),
@@ -472,21 +490,228 @@ export async function getClueCountForSpecies(
   playerId: string,
   speciesId: number
 ): Promise<number> {
+  if (!(await ensureServerDeps())) return 0; // Client-side no-op
+
   try {
-    const count = await prisma.playerClueUnlock.count({
-      where: {
-        player_id: playerId,
-        species_id: speciesId,
-      },
-    });
-    return count;
+    const result = await db
+      .select({ count: count() })
+      .from(playerClueUnlocks)
+      .where(
+        and(
+          eq(playerClueUnlocks.playerId, playerId),
+          eq(playerClueUnlocks.speciesId, speciesId)
+        )
+      );
+    return result[0]?.count ?? 0;
   } catch (err) {
     console.error('Failed to get clue count:', err);
     return 0;
   }
 }
 
-// Initialize offline queue on module load (browser only)
-if (typeof window !== 'undefined') {
-  loadOfflineQueue();
+// =============================================================================
+// PLAYER STATS REFRESH
+// =============================================================================
+// Refreshes aggregated player_stats from source tables.
+// Called after discoveries to keep stats in sync.
+// =============================================================================
+
+/**
+ * Refresh player_stats from source tables (player_species_discoveries, player_clue_unlocks)
+ * Uses upsert to create or update the stats row.
+ */
+export async function refreshPlayerStats(playerId: string): Promise<boolean> {
+  if (!(await ensureServerDeps())) return false;
+
+  try {
+    // Get discovery stats with species details
+    const discoveries = await db
+      .select({
+        speciesId: playerSpeciesDiscoveries.speciesId,
+        scoreEarned: playerSpeciesDiscoveries.scoreEarned,
+        timeToDiscoverSeconds: playerSpeciesDiscoveries.timeToDiscoverSeconds,
+        cluesUnlockedBeforeGuess: playerSpeciesDiscoveries.cluesUnlockedBeforeGuess,
+        discoveredAt: playerSpeciesDiscoveries.discoveredAt,
+        // Join species data
+        taxonOrder: icaa.taxonOrder,
+        family: icaa.family,
+        genus: icaa.genus,
+        realm: icaa.realm,
+        biome: icaa.biome,
+        bioregion: icaa.bioregion,
+        marine: icaa.marine,
+        terrestrial: icaa.terrestrial,
+        freshwater: icaa.freshwater,
+        aquatic: icaa.aquatic,
+        conservationCode: icaa.conservationCode,
+      })
+      .from(playerSpeciesDiscoveries)
+      .leftJoin(icaa, eq(playerSpeciesDiscoveries.speciesId, icaa.ogcFid))
+      .where(eq(playerSpeciesDiscoveries.playerId, playerId));
+
+    // Get clue stats
+    const clues = await db
+      .select({
+        clueCategory: playerClueUnlocks.clueCategory,
+      })
+      .from(playerClueUnlocks)
+      .where(eq(playerClueUnlocks.playerId, playerId));
+
+    // Get session stats
+    const sessions = await db
+      .select({
+        totalMoves: playerGameSessions.totalMoves,
+        startedAt: playerGameSessions.startedAt,
+        endedAt: playerGameSessions.endedAt,
+      })
+      .from(playerGameSessions)
+      .where(eq(playerGameSessions.playerId, playerId));
+
+    // Calculate aggregates
+    const totalSpeciesDiscovered = discoveries.length;
+    const totalCluesUnlocked = clues.length;
+    const totalScore = discoveries.reduce((sum: number, d: any) => sum + (d.scoreEarned || 0), 0);
+    const totalMovesMade = sessions.reduce((sum: number, s: any) => sum + (s.totalMoves || 0), 0);
+    const totalGamesPlayed = sessions.length;
+
+    // Calculate play time
+    const totalPlayTimeSeconds = sessions.reduce((sum: number, s: any) => {
+      if (s.startedAt && s.endedAt) {
+        return sum + Math.floor((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 1000);
+      }
+      return sum;
+    }, 0);
+
+    // Calculate clue efficiency
+    const cluesPerDiscovery = discoveries.map((d: any) => d.cluesUnlockedBeforeGuess || 0);
+    const averageCluesPerDiscovery = totalSpeciesDiscovered > 0
+      ? cluesPerDiscovery.reduce((a: number, b: number) => a + b, 0) / totalSpeciesDiscovered
+      : null;
+    const fastestDiscoveryClues = cluesPerDiscovery.length > 0 ? Math.min(...cluesPerDiscovery) : null;
+    const slowestDiscoveryClues = cluesPerDiscovery.length > 0 ? Math.max(...cluesPerDiscovery) : null;
+
+    // Calculate time stats
+    const discoverTimes = discoveries
+      .map((d: any) => d.timeToDiscoverSeconds)
+      .filter((t: any) => t != null) as number[];
+    const averageTimePerDiscoverySeconds = discoverTimes.length > 0
+      ? Math.floor(discoverTimes.reduce((a, b) => a + b, 0) / discoverTimes.length)
+      : null;
+
+    // Build taxonomy/geography breakdowns
+    const speciesByOrder: Record<string, number> = {};
+    const speciesByFamily: Record<string, number> = {};
+    const speciesByGenus: Record<string, number> = {};
+    const speciesByRealm: Record<string, number> = {};
+    const speciesByBiome: Record<string, number> = {};
+    const speciesByBioregion: Record<string, number> = {};
+    const speciesByIucnStatus: Record<string, number> = {};
+
+    let marineSpeciesCount = 0;
+    let terrestrialSpeciesCount = 0;
+    let freshwaterSpeciesCount = 0;
+    let aquaticSpeciesCount = 0;
+
+    for (const d of discoveries) {
+      if (d.taxonOrder) speciesByOrder[d.taxonOrder] = (speciesByOrder[d.taxonOrder] || 0) + 1;
+      if (d.family) speciesByFamily[d.family] = (speciesByFamily[d.family] || 0) + 1;
+      if (d.genus) speciesByGenus[d.genus] = (speciesByGenus[d.genus] || 0) + 1;
+      if (d.realm) speciesByRealm[d.realm] = (speciesByRealm[d.realm] || 0) + 1;
+      if (d.biome) speciesByBiome[d.biome] = (speciesByBiome[d.biome] || 0) + 1;
+      if (d.bioregion) speciesByBioregion[d.bioregion] = (speciesByBioregion[d.bioregion] || 0) + 1;
+      if (d.conservationCode) speciesByIucnStatus[d.conservationCode] = (speciesByIucnStatus[d.conservationCode] || 0) + 1;
+      if (d.marine) marineSpeciesCount++;
+      if (d.terrestrial) terrestrialSpeciesCount++;
+      if (d.freshwater) freshwaterSpeciesCount++;
+      if (d.aquatic) aquaticSpeciesCount++;
+    }
+
+    // Build clue category breakdown
+    const cluesByCategory: Record<string, number> = {};
+    for (const c of clues) {
+      cluesByCategory[c.clueCategory] = (cluesByCategory[c.clueCategory] || 0) + 1;
+    }
+
+    // Determine favorite clue category
+    const favoriteClueCategory = Object.entries(cluesByCategory).length > 0
+      ? Object.entries(cluesByCategory).sort((a, b) => b[1] - a[1])[0][0]
+      : null;
+
+    // Get first/last discovery timestamps
+    const discoveryDates = discoveries
+      .map((d: any) => d.discoveredAt)
+      .filter((d: any) => d != null)
+      .sort((a: any, b: any) => new Date(a).getTime() - new Date(b).getTime());
+    const firstDiscoveryAt = discoveryDates[0] || null;
+    const lastDiscoveryAt = discoveryDates[discoveryDates.length - 1] || null;
+
+    // Upsert player_stats
+    await db
+      .insert(playerStats)
+      .values({
+        playerId,
+        totalSpeciesDiscovered,
+        totalCluesUnlocked,
+        totalScore,
+        totalMovesMade,
+        totalGamesPlayed,
+        totalPlayTimeSeconds,
+        averageCluesPerDiscovery: averageCluesPerDiscovery !== null ? averageCluesPerDiscovery.toString() : null,
+        fastestDiscoveryClues,
+        slowestDiscoveryClues,
+        averageTimePerDiscoverySeconds,
+        speciesByOrder,
+        speciesByFamily,
+        speciesByGenus,
+        speciesByRealm,
+        speciesByBiome,
+        speciesByBioregion,
+        marineSpeciesCount,
+        terrestrialSpeciesCount,
+        freshwaterSpeciesCount,
+        aquaticSpeciesCount,
+        speciesByIucnStatus,
+        cluesByCategory,
+        favoriteClueCategory,
+        firstDiscoveryAt,
+        lastDiscoveryAt,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: playerStats.playerId,
+        set: {
+          totalSpeciesDiscovered,
+          totalCluesUnlocked,
+          totalScore,
+          totalMovesMade,
+          totalGamesPlayed,
+          totalPlayTimeSeconds,
+          averageCluesPerDiscovery: averageCluesPerDiscovery !== null ? averageCluesPerDiscovery.toString() : null,
+          fastestDiscoveryClues,
+          slowestDiscoveryClues,
+          averageTimePerDiscoverySeconds,
+          speciesByOrder,
+          speciesByFamily,
+          speciesByGenus,
+          speciesByRealm,
+          speciesByBiome,
+          speciesByBioregion,
+          marineSpeciesCount,
+          terrestrialSpeciesCount,
+          freshwaterSpeciesCount,
+          aquaticSpeciesCount,
+          speciesByIucnStatus,
+          cluesByCategory,
+          favoriteClueCategory,
+          firstDiscoveryAt,
+          lastDiscoveryAt,
+          updatedAt: new Date(),
+        },
+      });
+
+    return true;
+  } catch (err) {
+    console.error('Failed to refresh player stats:', err);
+    return false;
+  }
 }

@@ -127,7 +127,7 @@ export function SpeciesSearchInput({
     species.forEach(sp => {
       options.push({
         value: `species:${sp.ogc_fid}`,
-        label: sp.comm_name || sp.sci_name || 'Unknown',
+        label: sp.common_name || sp.scientific_name || 'Unknown',
         type: 'species',
         speciesData: sp
       });

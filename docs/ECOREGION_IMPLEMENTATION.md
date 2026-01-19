@@ -143,9 +143,9 @@ Simple test component created to isolate popover issues.
 
 **Observations:**
 - Species interface already includes ecoregion fields (lines 47-51):
-  - `bioregio_1?: string`
+- `bioregion?: string`
   - `realm?: string`
-  - `sub_realm?: string`
+- `subrealm?: string`
   - `biome?: string`
 - No modifications needed
 
@@ -188,7 +188,7 @@ Simple test component created to isolate popover issues.
    - **Ecoregion/Realm/Biome**: Filters entire dataset
 
 ### Data Flow:
-1. `SpeciesList` fetches all species from Supabase
+1. `SpeciesList` fetches all species from `/api/species/catalog` (Drizzle)
 2. Utility functions extract unique ecoregions/realms/biomes
 3. Species are filtered if a filter is active
 4. Filtered species are grouped by category/genus
