@@ -2,7 +2,7 @@
 
 > **resetGeographicProgress**(`species`): `void`
 
-Defined in: [src/game/clueConfig.ts:318](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/clueConfig.ts#L318)
+Defined in: [src/game/clueConfig.ts:318](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L318)
 
 ## Parameters
 

@@ -1,6 +1,6 @@
 # Interface: PlayerStats
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:4](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L4)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:4](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L4)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:4](https://github.com/
 
 > **aquaticSpeciesCount**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:36](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L36)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:36](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L36)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:36](https://github.com
 
 > **averageCluesPerDiscovery**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:17](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L17)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:17](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L17)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:17](https://github.com
 
 > `optional` **averageTimePerDiscoverySeconds**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:20](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L20)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:20](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L20)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:20](https://github.com
 
 > **cluesByCategory**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:42](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L42)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:42](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L42)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:42](https://github.com
 
 > **createdAt**: `string`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:48](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L48)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:48](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L48)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:48](https://github.com
 
 > `optional` **fastestDiscoveryClues**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:18](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L18)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:18](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L18)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:18](https://github.com
 
 > `optional` **favoriteClueCategory**: `string`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:43](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L43)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:43](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L43)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:43](https://github.com
 
 > `optional` **firstDiscoveryAt**: `string`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:46](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L46)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:46](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L46)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:46](https://github.com
 
 > **freshwaterSpeciesCount**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:35](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L35)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:35](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L35)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:35](https://github.com
 
 > `optional` **lastDiscoveryAt**: `string`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:47](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L47)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:47](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L47)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:47](https://github.com
 
 > **marineSpeciesCount**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:33](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L33)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:33](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L33)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:33](https://github.com
 
 > **playerId**: `string`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:6](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L6)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:6](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L6)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:6](https://github.com/
 
 > `optional` **rankByDiscoveries**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:52](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L52)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:52](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L52)
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:52](https://github.com
 
 > `optional` **rankByEfficiency**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:54](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L54)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:54](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L54)
 
 ***
 
@@ -120,7 +120,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:54](https://github.com
 
 > `optional` **rankByScore**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:53](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L53)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:53](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L53)
 
 ***
 
@@ -128,7 +128,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:53](https://github.com
 
 > `optional` **slowestDiscoveryClues**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:19](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L19)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:19](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L19)
 
 ***
 
@@ -136,7 +136,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:19](https://github.com
 
 > **speciesByBiome**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:29](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L29)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:29](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L29)
 
 ***
 
@@ -144,7 +144,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:29](https://github.com
 
 > **speciesByBioregion**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:30](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L30)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:30](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L30)
 
 ***
 
@@ -152,7 +152,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:30](https://github.com
 
 > **speciesByFamily**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:24](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L24)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:24](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L24)
 
 ***
 
@@ -160,7 +160,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:24](https://github.com
 
 > **speciesByGenus**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:25](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L25)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:25](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L25)
 
 ***
 
@@ -168,7 +168,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:25](https://github.com
 
 > **speciesByIucnStatus**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:39](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L39)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:39](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L39)
 
 ***
 
@@ -176,7 +176,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:39](https://github.com
 
 > **speciesByOrder**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:23](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L23)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:23](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L23)
 
 ***
 
@@ -184,7 +184,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:23](https://github.com
 
 > **speciesByRealm**: `Record`\<`string`, `number`\>
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:28](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L28)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:28](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L28)
 
 ***
 
@@ -192,7 +192,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:28](https://github.com
 
 > **terrestrialSpeciesCount**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:34](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L34)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:34](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L34)
 
 ***
 
@@ -200,7 +200,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:34](https://github.com
 
 > **totalCluesUnlocked**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:10](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L10)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:10](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L10)
 
 ***
 
@@ -208,7 +208,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:10](https://github.com
 
 > **totalGamesPlayed**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:13](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L13)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:13](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L13)
 
 ***
 
@@ -216,7 +216,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:13](https://github.com
 
 > **totalMovesMade**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:12](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L12)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:12](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L12)
 
 ***
 
@@ -224,7 +224,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:12](https://github.com
 
 > **totalPlayTimeSeconds**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:14](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L14)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:14](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L14)
 
 ***
 
@@ -232,7 +232,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:14](https://github.com
 
 > **totalScore**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:11](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L11)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:11](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L11)
 
 ***
 
@@ -240,7 +240,7 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:11](https://github.com
 
 > **totalSpeciesDiscovered**: `number`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:9](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L9)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:9](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L9)
 
 ***
 
@@ -248,4 +248,4 @@ Defined in: [src/components/PlayerStatsDashboard/types.ts:9](https://github.com/
 
 > **updatedAt**: `string`
 
-Defined in: [src/components/PlayerStatsDashboard/types.ts:49](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/components/PlayerStatsDashboard/types.ts#L49)
+Defined in: [src/components/PlayerStatsDashboard/types.ts:49](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/components/PlayerStatsDashboard/types.ts#L49)

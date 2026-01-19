@@ -2,4 +2,4 @@
 
 > `const` **HABITAT\_GEM\_MAP**: `Partial`\<`Record`\<`number`, [`GemType`](../type-aliases/GemType.md)\>\>
 
-Defined in: [src/game/constants.ts:58](https://github.com/kc0588615/phaser-june/blob/88f818ff8b55f30bdc1204084c11cc57d6a82bbd/src/game/constants.ts#L58)
+Defined in: [src/game/constants.ts:58](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/constants.ts#L58)
