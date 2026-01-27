@@ -297,7 +297,7 @@ Before you ship a schema change:
    - Ensure geometry is valid PostGIS format
    - Test spatial queries after adding
 
-3. **SQL Example:**
+3. **SQL Example (import path):**
 ```sql
 INSERT INTO icaa (
   common_name, scientific_name, genus, family,
@@ -311,6 +311,9 @@ INSERT INTO icaa (
   ST_GeomFromText('POLYGON((...))', 4326)
 );
 ```
+
+**After insert:** run the normalization backfill (migration `005_normalized_biodiversity_backfill.sql`)
+or a targeted backfill to populate the normalized tables and `icaa_view`.
 
 ### Modifying Clue Fields
 
@@ -338,7 +341,11 @@ To add a `migration_pattern` field:
 
 1. **Database Migration:**
 ```sql
+-- Import column (shapefile source)
 ALTER TABLE icaa ADD COLUMN migration_pattern TEXT;
+
+-- Normalized storage (preferred for reads)
+ALTER TABLE taxon_profiles ADD COLUMN migration_pattern TEXT;
 ```
 
 2. **Update Type Definition:**
@@ -350,7 +357,11 @@ export interface Species {
 }
 ```
 
-3. **Update Clue Logic:**
+3. **Update Backfill + View:**
+   - Add to `005_normalized_biodiversity_backfill.sql` (map icaa → taxon_profiles)
+   - Add to `006_normalized_biodiversity_views.sql` so `icaa_view` exposes it
+
+4. **Update Clue Logic:**
 ```typescript
 // src/game/clueConfig.ts
 [GemCategory.BEHAVIOR]: {
@@ -398,7 +409,7 @@ $$
     s.scientific_name,
     -- ... other fields ...
     ST_AsGeoJSON(s.wkb_geometry)::json as wkb_geometry  -- Key: Returns GeoJSON
-  FROM public.icaa s
+  FROM public.icaa_view s
   JOIN circle c
     ON ST_Intersects(s.wkb_geometry, c.geom);
 $$;
@@ -437,7 +448,7 @@ Uses the `/api/species/closest` API route, which returns GeoJSON directly:
 
 ```sql
 -- API route uses ST_AsGeoJSON for geometry
-SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa ...
+SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa_view ...
 ```
 
 ### Geometry Data Flow
@@ -458,8 +469,8 @@ SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa ...
 ```sql
 -- Essential for spatial query performance
 -- Use ix_ prefix for new indexes (legacy names may differ)
-CREATE INDEX IF NOT EXISTS ix_icaa_wkb_geometry
-  ON public.icaa
+CREATE INDEX IF NOT EXISTS ix_taxon_ranges_wkb_geometry
+  ON public.taxon_ranges
   USING gist (wkb_geometry);
 ```
 
@@ -474,10 +485,10 @@ CREATE INDEX IF NOT EXISTS ix_icaa_wkb_geometry
 ```sql
 -- Old approach - only found species if click was exactly inside polygon
 CREATE OR REPLACE FUNCTION get_species_at_point(lon float, lat float)
-RETURNS SETOF icaa AS $$
+RETURNS SETOF icaa_view AS $$
 BEGIN
   RETURN QUERY
-  SELECT * FROM icaa
+  SELECT * FROM icaa_view
   WHERE ST_Contains(wkb_geometry, ST_SetSRID(ST_MakePoint(lon, lat), 4326));
 END;
 $$ LANGUAGE plpgsql;
@@ -534,7 +545,7 @@ const [speciesResult, rasterResult] = await Promise.all([
    - Use GeoJSON directly to preserve complete geometry
 
 3. **No Species Found**
-   - Verify spatial index exists: `\d+ icaa` should show GIST index
+   - Verify spatial index exists: `\d+ taxon_ranges` should show GIST index
    - Check radius parameter (10000 = 10km)
    - Confirm SRID 4326 is used consistently
 
@@ -546,7 +557,7 @@ FROM public.get_species_in_radius(-80.0, 25.0, 10000.0);
 
 -- Check geometry validity
 SELECT ogc_fid, ST_IsValid(wkb_geometry), ST_GeometryType(wkb_geometry)
-FROM icaa 
+FROM icaa_view
 WHERE ogc_fid = 23;
 ```
 
@@ -745,11 +756,11 @@ if (highlightedSpeciesSource) {
 ```sql
 -- Correct - Returns GeoJSON for direct Cesium use
 SELECT ST_AsGeoJSON(wkb_geometry)::json as wkb_geometry
-FROM icaa;
+FROM icaa_view;
 
 -- Incorrect - WKT requires parsing and loses precision
 SELECT ST_AsText(wkb_geometry) as wkb_geometry  -- Don't use
-FROM icaa;
+FROM icaa_view;
 ```
 
 #### Coordinate System Consistency

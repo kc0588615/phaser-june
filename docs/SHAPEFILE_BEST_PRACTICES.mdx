@@ -55,13 +55,17 @@ field-name length limits and weaker typing, so GPKG reduces post-import cleanup.
 │      ├──────────────────┬───────────────────────────────────────────┐       │
 │      │                  │                                           │       │
 │      ▼                  ▼                                           ▼       │
-│  [DENORMALIZED]    [NORMALIZED - OPTIONAL]                                  │
-│  icaa (wide)       icaa (core) + child tables                               │
-│                    ├── species_behaviors                                    │
-│                    ├── species_key_facts                                    │
-│                    ├── species_life_descriptions                            │
-│                    ├── species_habitat_tags                                 │
-│                    └── species_threats                                      │
+│  [DENORMALIZED]    [NORMALIZED - REQUIRED FOR READS]                        │
+│  icaa (wide)       taxa + taxon_* tables                                     │
+│                    ├── taxon_profiles                                       │
+│                    ├── taxon_ranges                                         │
+│                    ├── taxon_bioregions                                     │
+│                    ├── taxon_behaviors                                      │
+│                    ├── taxon_key_facts                                      │
+│                    ├── taxon_life_descriptions                              │
+│                    ├── taxon_habitat_tags                                   │
+│                    ├── taxon_threats                                        │
+│                    └── taxon_diet_items                                     │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -646,221 +650,155 @@ WHERE NOT EXISTS (
 
 ---
 
-## Normalization ETL (1NF Compliance)
+## Normalization ETL (Strict 3NF)
 
-This section describes how to normalize the repeating groups into proper child tables.
-Run this **after** the standard merge to production.
+This project now uses a normalized biodiversity backbone. Do **not** create the old
+`species_*` child tables. Use the migration-backed schema instead.
 
-### Step 1: Create Normalized Child Tables
+### Step 1: Create the Normalized Schema (Migration 004)
+
+Run the migrations in order:
 
 ```sql
--- Species behaviors (replaces behavior_1, behavior_2)
-CREATE TABLE IF NOT EXISTS species_behaviors (
-  id SERIAL PRIMARY KEY,
-  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
-  behavior_index INTEGER NOT NULL,  -- 1, 2, etc.
-  behavior_text TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (species_id, behavior_index)
-);
-
-CREATE INDEX ix_species_behaviors_species_id ON species_behaviors(species_id);
-
--- Species key facts (replaces key_fact_1, key_fact_2, key_fact_3)
-CREATE TABLE IF NOT EXISTS species_key_facts (
-  id SERIAL PRIMARY KEY,
-  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
-  fact_index INTEGER NOT NULL,  -- 1, 2, 3, etc.
-  fact_text TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (species_id, fact_index)
-);
-
-CREATE INDEX ix_species_key_facts_species_id ON species_key_facts(species_id);
-CREATE INDEX ix_species_key_facts_text_gin ON species_key_facts USING GIN(to_tsvector('english', fact_text));
-
--- Species life descriptions (replaces life_description_1, life_description_2)
-CREATE TABLE IF NOT EXISTS species_life_descriptions (
-  id SERIAL PRIMARY KEY,
-  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
-  description_index INTEGER NOT NULL,
-  description_text TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (species_id, description_index)
-);
-
-CREATE INDEX ix_species_life_descriptions_species_id ON species_life_descriptions(species_id);
-
--- Species habitat tags (replaces comma-separated habitat_tags)
-CREATE TABLE IF NOT EXISTS species_habitat_tags (
-  id SERIAL PRIMARY KEY,
-  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
-  tag TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (species_id, tag)
-);
-
-CREATE INDEX ix_species_habitat_tags_species_id ON species_habitat_tags(species_id);
-CREATE INDEX ix_species_habitat_tags_tag ON species_habitat_tags(tag);
-
--- Species threats (replaces threats text blob)
-CREATE TABLE IF NOT EXISTS species_threats (
-  id SERIAL PRIMARY KEY,
-  species_id INTEGER NOT NULL REFERENCES icaa(ogc_fid) ON DELETE CASCADE,
-  threat_text TEXT NOT NULL,
-  threat_category TEXT,  -- optional: 'habitat_loss', 'climate', 'hunting', etc.
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (species_id, threat_text)
-);
-
-CREATE INDEX ix_species_threats_species_id ON species_threats(species_id);
-CREATE INDEX ix_species_threats_category ON species_threats(threat_category) WHERE threat_category IS NOT NULL;
+-- 004_normalized_biodiversity_schema.sql
+-- 005_normalized_biodiversity_backfill.sql
+-- 006_normalized_biodiversity_views.sql
 ```
 
-### Step 2: Populate Normalized Tables from Denormalized Data
+Key tables created by `004`:
+- `taxa`, `taxon_names`, `taxon_name_usages`
+- `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`
+- `taxon_common_names`
+- `taxon_behaviors`, `taxon_key_facts`, `taxon_life_descriptions`
+- `taxon_habitat_tags`, `taxon_threats`, `taxon_diet_items`
+- `source_datasets`, `taxon_external_ids`, `conservation_statuses`, `taxon_conservation_assessments`
+
+### Step 2: Backfill from `icaa` (Migration 005)
+
+The backfill migration maps each `icaa.ogc_fid` to an internal `taxon_id` using the
+`taxon_external_ids` table (source = `ICAA`). Use this mapping for any manual fixes.
+
+Example inserts (same logic as the migration):
 
 ```sql
--- Populate behaviors from behavior_1, behavior_2
-INSERT INTO species_behaviors (species_id, behavior_index, behavior_text)
-SELECT ogc_fid, 1, behavior_1
-FROM icaa
-WHERE behavior_1 IS NOT NULL AND TRIM(behavior_1) != ''
-ON CONFLICT (species_id, behavior_index) DO UPDATE SET behavior_text = EXCLUDED.behavior_text;
+WITH icaa_taxa AS (
+  SELECT te.taxon_id, te.external_ref_id::integer AS ogc_fid
+  FROM taxon_external_ids te
+  JOIN source_datasets sd ON sd.id = te.source_id
+  WHERE sd.name = 'ICAA'
+)
+INSERT INTO taxon_behaviors (taxon_id, behavior_index, behavior_text)
+SELECT m.taxon_id, 1, i.behavior_1
+FROM icaa i
+JOIN icaa_taxa m ON m.ogc_fid = i.ogc_fid
+WHERE i.behavior_1 IS NOT NULL AND TRIM(i.behavior_1) != ''
+ON CONFLICT (taxon_id, behavior_index) DO UPDATE
+SET behavior_text = EXCLUDED.behavior_text;
 
-INSERT INTO species_behaviors (species_id, behavior_index, behavior_text)
-SELECT ogc_fid, 2, behavior_2
-FROM icaa
-WHERE behavior_2 IS NOT NULL AND TRIM(behavior_2) != ''
-ON CONFLICT (species_id, behavior_index) DO UPDATE SET behavior_text = EXCLUDED.behavior_text;
+WITH icaa_taxa AS (
+  SELECT te.taxon_id, te.external_ref_id::integer AS ogc_fid
+  FROM taxon_external_ids te
+  JOIN source_datasets sd ON sd.id = te.source_id
+  WHERE sd.name = 'ICAA'
+)
+INSERT INTO taxon_habitat_tags (taxon_id, tag)
+SELECT m.taxon_id, TRIM(x)
+FROM icaa i
+JOIN icaa_taxa m ON m.ogc_fid = i.ogc_fid
+CROSS JOIN LATERAL regexp_split_to_table(i.habitat_tags, '[,;]\\s*') AS x
+WHERE i.habitat_tags IS NOT NULL
+  AND TRIM(x) != ''
+ON CONFLICT (taxon_id, tag) DO NOTHING;
 
--- Populate key facts from key_fact_1, key_fact_2, key_fact_3
-INSERT INTO species_key_facts (species_id, fact_index, fact_text)
-SELECT ogc_fid, 1, key_fact_1
-FROM icaa
-WHERE key_fact_1 IS NOT NULL AND TRIM(key_fact_1) != ''
-ON CONFLICT (species_id, fact_index) DO UPDATE SET fact_text = EXCLUDED.fact_text;
-
-INSERT INTO species_key_facts (species_id, fact_index, fact_text)
-SELECT ogc_fid, 2, key_fact_2
-FROM icaa
-WHERE key_fact_2 IS NOT NULL AND TRIM(key_fact_2) != ''
-ON CONFLICT (species_id, fact_index) DO UPDATE SET fact_text = EXCLUDED.fact_text;
-
-INSERT INTO species_key_facts (species_id, fact_index, fact_text)
-SELECT ogc_fid, 3, key_fact_3
-FROM icaa
-WHERE key_fact_3 IS NOT NULL AND TRIM(key_fact_3) != ''
-ON CONFLICT (species_id, fact_index) DO UPDATE SET fact_text = EXCLUDED.fact_text;
-
--- Populate life descriptions from life_description_1, life_description_2
-INSERT INTO species_life_descriptions (species_id, description_index, description_text)
-SELECT ogc_fid, 1, life_description_1
-FROM icaa
-WHERE life_description_1 IS NOT NULL AND TRIM(life_description_1) != ''
-ON CONFLICT (species_id, description_index) DO UPDATE SET description_text = EXCLUDED.description_text;
-
-INSERT INTO species_life_descriptions (species_id, description_index, description_text)
-SELECT ogc_fid, 2, life_description_2
-FROM icaa
-WHERE life_description_2 IS NOT NULL AND TRIM(life_description_2) != ''
-ON CONFLICT (species_id, description_index) DO UPDATE SET description_text = EXCLUDED.description_text;
-
--- Populate habitat tags from comma-separated field
-INSERT INTO species_habitat_tags (species_id, tag)
-SELECT ogc_fid, TRIM(unnest(string_to_array(habitat_tags, ',')))
-FROM icaa
-WHERE habitat_tags IS NOT NULL AND TRIM(habitat_tags) != ''
-ON CONFLICT (species_id, tag) DO NOTHING;
-
--- Populate threats from semicolon-delimited field (best practice delimiter)
--- Semicolons are preferred for threat lists: "Habitat loss; Climate change; Hunting"
-INSERT INTO species_threats (species_id, threat_text)
-SELECT i.ogc_fid, TRIM(t.threat)
-FROM icaa i,
-LATERAL unnest(string_to_array(i.threats, ';')) AS t(threat)
+WITH icaa_taxa AS (
+  SELECT te.taxon_id, te.external_ref_id::integer AS ogc_fid
+  FROM taxon_external_ids te
+  JOIN source_datasets sd ON sd.id = te.source_id
+  WHERE sd.name = 'ICAA'
+)
+INSERT INTO taxon_threats (taxon_id, threat_text)
+SELECT m.taxon_id, TRIM(t.threat)
+FROM icaa i
+JOIN icaa_taxa m ON m.ogc_fid = i.ogc_fid
+CROSS JOIN LATERAL unnest(string_to_array(i.threats, ';')) AS t(threat)
 WHERE i.threats IS NOT NULL
   AND TRIM(i.threats) != ''
   AND TRIM(t.threat) != ''
-ON CONFLICT (species_id, threat_text) DO NOTHING;
+ON CONFLICT (taxon_id, threat_text) DO NOTHING;
 ```
+
+**Diet parsing**: `005_normalized_biodiversity_backfill.sql` uses a heuristic to decide
+whether `diet_prey`/`diet_flora` are list-like (split on comma/semicolon) or prose
+(split on semicolon only). Prefer the migration for consistency.
 
 ### Step 3: Query Examples (Normalized)
 
 ```sql
 -- Find all species with a specific behavior
-SELECT DISTINCT i.ogc_fid, i.common_name, i.scientific_name
-FROM icaa i
-JOIN species_behaviors b ON i.ogc_fid = b.species_id
+WITH icaa_taxa AS (
+  SELECT te.taxon_id, te.external_ref_id::integer AS ogc_fid
+  FROM taxon_external_ids te
+  JOIN source_datasets sd ON sd.id = te.source_id
+  WHERE sd.name = 'ICAA'
+)
+SELECT DISTINCT m.ogc_fid, tn.scientific_name, cn.name AS common_name
+FROM icaa_taxa m
+JOIN taxa t ON t.id = m.taxon_id
+JOIN taxon_names tn ON tn.id = t.accepted_name_id
+LEFT JOIN LATERAL (
+  SELECT name
+  FROM taxon_common_names cn
+  WHERE cn.taxon_id = t.id
+  ORDER BY cn.is_primary DESC, cn.created_at DESC
+  LIMIT 1
+) cn ON true
+JOIN taxon_behaviors b ON b.taxon_id = t.id
 WHERE b.behavior_text ILIKE '%nocturnal%';
 
--- Count species by key fact content (full-text search)
-SELECT i.common_name, f.fact_text
-FROM icaa i
-JOIN species_key_facts f ON i.ogc_fid = f.species_id
-WHERE to_tsvector('english', f.fact_text) @@ to_tsquery('english', 'endangered & habitat');
-
 -- Get all species with a specific habitat tag
-SELECT i.common_name, i.scientific_name
-FROM icaa i
-JOIN species_habitat_tags t ON i.ogc_fid = t.species_id
-WHERE t.tag = 'Forest';
+WITH icaa_taxa AS (
+  SELECT te.taxon_id, te.external_ref_id::integer AS ogc_fid
+  FROM taxon_external_ids te
+  JOIN source_datasets sd ON sd.id = te.source_id
+  WHERE sd.name = 'ICAA'
+)
+SELECT DISTINCT m.ogc_fid, tn.scientific_name
+FROM icaa_taxa m
+JOIN taxa t ON t.id = m.taxon_id
+JOIN taxon_names tn ON tn.id = t.accepted_name_id
+JOIN taxon_habitat_tags ht ON ht.taxon_id = t.id
+WHERE ht.tag = 'Forest';
 
--- Count behaviors per species
-SELECT i.common_name, COUNT(b.id) as behavior_count
-FROM icaa i
-LEFT JOIN species_behaviors b ON i.ogc_fid = b.species_id
-GROUP BY i.ogc_fid, i.common_name
-ORDER BY behavior_count DESC;
-
--- Find species by threat type
-SELECT DISTINCT i.common_name, i.conservation_code, t.threat_text
-FROM icaa i
-JOIN species_threats t ON i.ogc_fid = t.species_id
-WHERE t.threat_text ILIKE '%habitat loss%'
-   OR t.threat_category = 'habitat_loss';
-
--- Count threats per species
-SELECT i.common_name, COUNT(t.id) as threat_count
-FROM icaa i
-LEFT JOIN species_threats t ON i.ogc_fid = t.species_id
-GROUP BY i.ogc_fid, i.common_name
-ORDER BY threat_count DESC;
+-- Find species by threat text
+WITH icaa_taxa AS (
+  SELECT te.taxon_id, te.external_ref_id::integer AS ogc_fid
+  FROM taxon_external_ids te
+  JOIN source_datasets sd ON sd.id = te.source_id
+  WHERE sd.name = 'ICAA'
+)
+SELECT DISTINCT m.ogc_fid, tn.scientific_name, tt.threat_text
+FROM icaa_taxa m
+JOIN taxa t ON t.id = m.taxon_id
+JOIN taxon_names tn ON tn.id = t.accepted_name_id
+JOIN taxon_threats tt ON tt.taxon_id = t.id
+WHERE tt.threat_text ILIKE '%habitat loss%';
 ```
 
-### Step 4: Create Views for Backward Compatibility
+### Step 4: Compatibility View (Required for App Reads)
+
+`icaa_view` is created by migration `006` and exposes legacy columns derived from the
+normalized tables. Use this view for app reads:
 
 ```sql
--- View that reconstructs the denormalized format for existing code
-CREATE OR REPLACE VIEW icaa_with_behaviors AS
-SELECT
-  i.*,
-  (SELECT behavior_text FROM species_behaviors WHERE species_id = i.ogc_fid AND behavior_index = 1) AS behavior_1_normalized,
-  (SELECT behavior_text FROM species_behaviors WHERE species_id = i.ogc_fid AND behavior_index = 2) AS behavior_2_normalized,
-  (SELECT fact_text FROM species_key_facts WHERE species_id = i.ogc_fid AND fact_index = 1) AS key_fact_1_normalized,
-  (SELECT fact_text FROM species_key_facts WHERE species_id = i.ogc_fid AND fact_index = 2) AS key_fact_2_normalized,
-  (SELECT fact_text FROM species_key_facts WHERE species_id = i.ogc_fid AND fact_index = 3) AS key_fact_3_normalized,
-  (SELECT string_agg(tag, ', ' ORDER BY tag) FROM species_habitat_tags WHERE species_id = i.ogc_fid) AS habitat_tags_normalized,
-  (SELECT string_agg(threat_text, '. ' ORDER BY id) FROM species_threats WHERE species_id = i.ogc_fid) AS threats_normalized
-FROM icaa i;
+SELECT ogc_fid, common_name, scientific_name
+FROM icaa_view
+WHERE common_name ILIKE '%turtle%';
 ```
 
-### Step 5: Optional - Drop Denormalized Columns
+### Step 5: Keep `icaa` as Import-Only
 
-**Warning**: Only do this after updating all application code to use normalized tables.
-
-```sql
--- DANGEROUS: Only run after app migration is complete
--- ALTER TABLE icaa
---   DROP COLUMN behavior_1,
---   DROP COLUMN behavior_2,
---   DROP COLUMN key_fact_1,
---   DROP COLUMN key_fact_2,
---   DROP COLUMN key_fact_3,
---   DROP COLUMN life_description_1,
---   DROP COLUMN life_description_2,
---   DROP COLUMN habitat_tags,
---   DROP COLUMN threats;
-```
+`icaa` is still the raw import table for shapefiles. Do not drop its denormalized
+columns unless you are removing the shapefile import pipeline entirely.
 
 ---
 
@@ -1004,7 +942,7 @@ BEGIN;
 
 -- Verify before committing
 SELECT COUNT(*) FROM icaa;
-SELECT COUNT(*) FROM species_behaviors;
+SELECT COUNT(*) FROM taxon_behaviors;
 
 -- If something went wrong
 -- ROLLBACK;
@@ -1036,8 +974,11 @@ VALUES ('icaa', 'UPDATE', 1500, 'species_2024_01.gpkg', 'Monthly IUCN update');
 ### Backup Before Import
 
 ```bash
-# Backup production table before import
-pg_dump -t icaa -t species_behaviors -t species_key_facts \
+# Backup production tables before import
+pg_dump -t icaa -t taxa -t taxon_names -t taxon_external_ids \
+  -t taxon_profiles -t taxon_ranges -t taxon_bioregions \
+  -t taxon_behaviors -t taxon_key_facts -t taxon_life_descriptions \
+  -t taxon_habitat_tags -t taxon_threats -t taxon_diet_items \
   -Fc -f backup_before_import_$(date +%Y%m%d).dump \
   postgresql://user@localhost/dbname
 ```
@@ -1052,18 +993,18 @@ Don't return full geometry in list endpoints:
 
 ```typescript
 // BAD: Returns geometry for all species
-const species = await db.select().from(icaa);
+const species = await db.select().from(icaaView);
 
 // GOOD: Exclude geometry for list views
 const speciesList = await db
   .select({
-    ogcFid: icaa.ogcFid,
-    commonName: icaa.commonName,
-    scientificName: icaa.scientificName,
-    conservationCode: icaa.conservationCode,
+    ogcFid: icaaView.ogcFid,
+    commonName: icaaView.commonName,
+    scientificName: icaaView.scientificName,
+    conservationCode: icaaView.conservationCode,
     // No wkb_geometry
   })
-  .from(icaa);
+  .from(icaaView);
 ```
 
 ### Spatial Query Patterns
@@ -1072,14 +1013,14 @@ const speciesList = await db
 // Point-in-polygon: Find species at a location
 const speciesAtPoint = await db.execute(sql`
   SELECT ogc_fid, common_name, scientific_name
-  FROM icaa
+  FROM icaa_view
   WHERE ST_Contains(wkb_geometry, ST_SetSRID(ST_Point(${lon}, ${lat}), 4326))
 `);
 
 // Bounding box: Find species in viewport
 const speciesInBbox = await db.execute(sql`
   SELECT ogc_fid, common_name, ST_AsGeoJSON(wkb_geometry) as geojson
-  FROM icaa
+  FROM icaa_view
   WHERE wkb_geometry && ST_MakeEnvelope(${minLon}, ${minLat}, ${maxLon}, ${maxLat}, 4326)
   LIMIT 100
 `);
@@ -1088,7 +1029,7 @@ const speciesInBbox = await db.execute(sql`
 const nearestSpecies = await db.execute(sql`
   SELECT ogc_fid, common_name,
          ST_Distance(wkb_geometry::geography, ST_SetSRID(ST_Point(${lon}, ${lat}), 4326)::geography) as distance_m
-  FROM icaa
+  FROM icaa_view
   ORDER BY wkb_geometry <-> ST_SetSRID(ST_Point(${lon}, ${lat}), 4326)
   LIMIT 10
 `);
@@ -1100,10 +1041,15 @@ const nearestSpecies = await db.execute(sql`
 // Cache normalized lookup data (behaviors, facts) - changes rarely
 const behaviors = await redis.get(`species:${ogcFid}:behaviors`);
 if (!behaviors) {
-  const result = await db
-    .select()
-    .from(speciesBehaviors)
-    .where(eq(speciesBehaviors.speciesId, ogcFid));
+  const result = await db.execute(sql`
+    SELECT b.behavior_index, b.behavior_text
+    FROM taxon_behaviors b
+    JOIN taxon_external_ids te ON te.taxon_id = b.taxon_id
+    JOIN source_datasets sd ON sd.id = te.source_id
+    WHERE sd.name = 'ICAA'
+      AND te.external_ref_id::integer = ${ogcFid}
+    ORDER BY b.behavior_index
+  `);
   await redis.setex(`species:${ogcFid}:behaviors`, 3600, JSON.stringify(result));
 }
 
@@ -1117,14 +1063,14 @@ if (!behaviors) {
 const simplifiedGeom = await db.execute(sql`
   SELECT ogc_fid,
          ST_AsGeoJSON(ST_Simplify(wkb_geometry, 0.01)) as geojson_simplified
-  FROM icaa
+  FROM icaa_view
   WHERE ogc_fid = ${id}
 `);
 
 // Use ST_Envelope for quick bounding box
 const bbox = await db.execute(sql`
   SELECT ST_AsGeoJSON(ST_Envelope(wkb_geometry)) as bbox
-  FROM icaa
+  FROM icaa_view
   WHERE ogc_fid = ${id}
 `);
 ```
