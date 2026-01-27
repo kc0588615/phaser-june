@@ -9,83 +9,87 @@
 // =============================================================================
 
 import { eq, inArray, ilike, or, asc, desc, count, sql } from 'drizzle-orm';
-import { db, icaa } from '@/db';
+import { db, icaaView, ensureIcaaViewReady } from '@/db';
 import type { Species } from '@/types/database';
 
 // Explicit snake_case column aliases (excludes wkb_geometry for payload size)
 const speciesColumns = {
-  ogc_fid: icaa.ogcFid,
-  common_name: icaa.commonName,
-  scientific_name: icaa.scientificName,
-  taxonomic_comment: icaa.taxonomicComment,
-  iucn_url: icaa.iucnUrl,
-  kingdom: icaa.kingdom,
-  phylum: icaa.phylum,
-  class: icaa.class,
-  taxon_order: icaa.taxonOrder,
-  family: icaa.family,
-  genus: icaa.genus,
-  category: icaa.category,
-  conservation_code: icaa.conservationCode,
-  conservation_text: icaa.conservationText,
-  threats: icaa.threats,
-  habitat_description: icaa.habitatDescription,
-  habitat_tags: icaa.habitatTags,
-  marine: icaa.marine,
-  terrestrial: icaa.terrestrial,
-  freshwater: icaa.freshwater,
-  aquatic: icaa.aquatic,
-  geographic_description: icaa.geographicDescription,
-  distribution_comment: icaa.distributionComment,
-  island: icaa.island,
-  origin: icaa.origin,
-  bioregion: icaa.bioregion,
-  realm: icaa.realm,
-  subrealm: icaa.subrealm,
-  biome: icaa.biome,
-  color_primary: icaa.colorPrimary,
-  color_secondary: icaa.colorSecondary,
-  pattern: icaa.pattern,
-  shape_description: icaa.shapeDescription,
-  size_min_cm: icaa.sizeMinCm,
-  size_max_cm: icaa.sizeMaxCm,
-  weight_kg: icaa.weightKg,
-  diet_type: icaa.dietType,
-  diet_prey: icaa.dietPrey,
-  diet_flora: icaa.dietFlora,
-  behavior_1: icaa.behavior1,
-  behavior_2: icaa.behavior2,
-  lifespan: icaa.lifespan,
-  maturity: icaa.maturity,
-  reproduction_type: icaa.reproductionType,
-  clutch_size: icaa.clutchSize,
-  life_description_1: icaa.lifeDescription1,
-  life_description_2: icaa.lifeDescription2,
-  key_fact_1: icaa.keyFact1,
-  key_fact_2: icaa.keyFact2,
-  key_fact_3: icaa.keyFact3,
+  ogc_fid: icaaView.ogcFid,
+  common_name: icaaView.commonName,
+  scientific_name: icaaView.scientificName,
+  taxonomic_comment: icaaView.taxonomicComment,
+  iucn_url: icaaView.iucnUrl,
+  kingdom: icaaView.kingdom,
+  phylum: icaaView.phylum,
+  class: icaaView.class,
+  taxon_order: icaaView.taxonOrder,
+  family: icaaView.family,
+  genus: icaaView.genus,
+  category: icaaView.category,
+  conservation_code: icaaView.conservationCode,
+  conservation_text: icaaView.conservationText,
+  threats: icaaView.threats,
+  habitat_description: icaaView.habitatDescription,
+  habitat_tags: icaaView.habitatTags,
+  marine: icaaView.marine,
+  terrestrial: icaaView.terrestrial,
+  freshwater: icaaView.freshwater,
+  aquatic: icaaView.aquatic,
+  geographic_description: icaaView.geographicDescription,
+  distribution_comment: icaaView.distributionComment,
+  island: icaaView.island,
+  origin: icaaView.origin,
+  bioregion: icaaView.bioregion,
+  realm: icaaView.realm,
+  subrealm: icaaView.subrealm,
+  biome: icaaView.biome,
+  color_primary: icaaView.colorPrimary,
+  color_secondary: icaaView.colorSecondary,
+  pattern: icaaView.pattern,
+  shape_description: icaaView.shapeDescription,
+  size_min_cm: icaaView.sizeMinCm,
+  size_max_cm: icaaView.sizeMaxCm,
+  weight_kg: icaaView.weightKg,
+  diet_type: icaaView.dietType,
+  diet_prey: icaaView.dietPrey,
+  diet_flora: icaaView.dietFlora,
+  behavior_1: icaaView.behavior1,
+  behavior_2: icaaView.behavior2,
+  lifespan: icaaView.lifespan,
+  maturity: icaaView.maturity,
+  reproduction_type: icaaView.reproductionType,
+  clutch_size: icaaView.clutchSize,
+  life_description_1: icaaView.lifeDescription1,
+  life_description_2: icaaView.lifeDescription2,
+  key_fact_1: icaaView.keyFact1,
+  key_fact_2: icaaView.keyFact2,
+  key_fact_3: icaaView.keyFact3,
 };
 
 // Minimal columns for catalog listing
 const catalogColumns = {
-  ogc_fid: icaa.ogcFid,
-  common_name: icaa.commonName,
-  scientific_name: icaa.scientificName,
-  taxon_order: icaa.taxonOrder,
-  family: icaa.family,
-  genus: icaa.genus,
-  kingdom: icaa.kingdom,
-  phylum: icaa.phylum,
-  class: icaa.class,
-  realm: icaa.realm,
-  biome: icaa.biome,
-  bioregion: icaa.bioregion,
-  category: icaa.category,
-  marine: icaa.marine,
-  terrestrial: icaa.terrestrial,
-  freshwater: icaa.freshwater,
-  aquatic: icaa.aquatic,
+  ogc_fid: icaaView.ogcFid,
+  common_name: icaaView.commonName,
+  scientific_name: icaaView.scientificName,
+  taxon_order: icaaView.taxonOrder,
+  family: icaaView.family,
+  genus: icaaView.genus,
+  kingdom: icaaView.kingdom,
+  phylum: icaaView.phylum,
+  class: icaaView.class,
+  realm: icaaView.realm,
+  biome: icaaView.biome,
+  bioregion: icaaView.bioregion,
+  category: icaaView.category,
+  marine: icaaView.marine,
+  terrestrial: icaaView.terrestrial,
+  freshwater: icaaView.freshwater,
+  aquatic: icaaView.aquatic,
 };
+
+async function requireIcaaView() {
+  await ensureIcaaViewReady();
+}
 
 // =============================================================================
 // DRIZZLE QUERIES - Non-spatial operations with type safety
@@ -96,10 +100,11 @@ const catalogColumns = {
  * Returns a minimal set of fields for efficient list rendering.
  */
 export async function getSpeciesCatalog() {
+  await requireIcaaView();
   return db
     .select(catalogColumns)
-    .from(icaa)
-    .orderBy(asc(icaa.commonName));
+    .from(icaaView)
+    .orderBy(asc(icaaView.commonName));
 }
 
 /**
@@ -111,10 +116,11 @@ export type SpeciesCatalogItem = Awaited<ReturnType<typeof getSpeciesCatalog>>[n
  * Fetches full species details by ID (excludes geometry).
  */
 export async function getSpeciesById(ogcFid: number): Promise<Species | null> {
+  await requireIcaaView();
   const results = await db
     .select(speciesColumns)
-    .from(icaa)
-    .where(eq(icaa.ogcFid, ogcFid))
+    .from(icaaView)
+    .where(eq(icaaView.ogcFid, ogcFid))
     .limit(1);
 
   return (results[0] as unknown as Species) || null;
@@ -124,11 +130,12 @@ export async function getSpeciesById(ogcFid: number): Promise<Species | null> {
  * Fetches multiple species by their IDs (excludes geometry).
  */
 export async function getSpeciesByIds(ids: number[]): Promise<Species[]> {
+  await requireIcaaView();
   const results = await db
     .select(speciesColumns)
-    .from(icaa)
-    .where(inArray(icaa.ogcFid, ids))
-    .orderBy(asc(icaa.commonName));
+    .from(icaaView)
+    .where(inArray(icaaView.ogcFid, ids))
+    .orderBy(asc(icaaView.commonName));
 
   return results as unknown as Species[];
 }
@@ -138,24 +145,25 @@ export async function getSpeciesByIds(ids: number[]): Promise<Species[]> {
  * Case-insensitive partial matching.
  */
 export async function searchSpecies(query: string) {
+  await requireIcaaView();
   const searchTerm = `%${query}%`;
 
   return db
     .select({
-      ogc_fid: icaa.ogcFid,
-      common_name: icaa.commonName,
-      scientific_name: icaa.scientificName,
-      category: icaa.category,
-      realm: icaa.realm,
+      ogc_fid: icaaView.ogcFid,
+      common_name: icaaView.commonName,
+      scientific_name: icaaView.scientificName,
+      category: icaaView.category,
+      realm: icaaView.realm,
     })
-    .from(icaa)
+    .from(icaaView)
     .where(
       or(
-        ilike(icaa.commonName, searchTerm),
-        ilike(icaa.scientificName, searchTerm)
+        ilike(icaaView.commonName, searchTerm),
+        ilike(icaaView.scientificName, searchTerm)
       )
     )
-    .orderBy(asc(icaa.commonName))
+    .orderBy(asc(icaaView.commonName))
     .limit(20);
 }
 
@@ -163,11 +171,12 @@ export async function searchSpecies(query: string) {
  * Filters species by conservation status (IUCN category).
  */
 export async function getSpeciesByConservationStatus(categories: string[]): Promise<Species[]> {
+  await requireIcaaView();
   const results = await db
     .select(speciesColumns)
-    .from(icaa)
-    .where(inArray(icaa.category, categories))
-    .orderBy(asc(icaa.commonName));
+    .from(icaaView)
+    .where(inArray(icaaView.category, categories))
+    .orderBy(asc(icaaView.commonName));
 
   return results as unknown as Species[];
 }
@@ -176,11 +185,12 @@ export async function getSpeciesByConservationStatus(categories: string[]): Prom
  * Filters species by realm (biogeographic region).
  */
 export async function getSpeciesByRealm(realm: string): Promise<Species[]> {
+  await requireIcaaView();
   const results = await db
     .select(speciesColumns)
-    .from(icaa)
-    .where(eq(icaa.realm, realm))
-    .orderBy(asc(icaa.commonName));
+    .from(icaaView)
+    .where(eq(icaaView.realm, realm))
+    .orderBy(asc(icaaView.commonName));
 
   return results as unknown as Species[];
 }
@@ -211,9 +221,10 @@ export async function getSpeciesInRadius(
   lat: number,
   radiusMeters: number = 10000
 ) {
+  await requireIcaaView();
   const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT *
-    FROM icaa
+    FROM icaa_view
     WHERE wkb_geometry IS NOT NULL
       AND ST_DWithin(
         wkb_geometry::geography,
@@ -230,9 +241,10 @@ export async function getSpeciesInRadius(
  * Uses PostGIS ST_Contains to check point-in-polygon.
  */
 export async function getSpeciesAtPoint(lon: number, lat: number) {
+  await requireIcaaView();
   const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT *
-    FROM icaa
+    FROM icaa_view
     WHERE wkb_geometry IS NOT NULL
       AND ST_Contains(
         wkb_geometry,
@@ -248,9 +260,10 @@ export async function getSpeciesAtPoint(lon: number, lat: number) {
  * Used when no species are found at the click location.
  */
 export async function getClosestHabitat(lon: number, lat: number) {
+  await requireIcaaView();
   const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT *
-    FROM icaa
+    FROM icaa_view
     WHERE wkb_geometry IS NOT NULL
     ORDER BY wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
     LIMIT 1
@@ -264,18 +277,19 @@ export async function getClosestHabitat(lon: number, lat: number) {
  * Gets bioregion information for a list of species.
  */
 export async function getSpeciesBioregions(speciesIds: number[]) {
+  await requireIcaaView();
   if (speciesIds.length === 0) return [];
 
   const species = await db
     .select({
-      ogc_fid: icaa.ogcFid,
-      bioregion: icaa.bioregion,
-      realm: icaa.realm,
-      subrealm: icaa.subrealm,
-      biome: icaa.biome,
+      ogc_fid: icaaView.ogcFid,
+      bioregion: icaaView.bioregion,
+      realm: icaaView.realm,
+      subrealm: icaaView.subrealm,
+      biome: icaaView.biome,
     })
-    .from(icaa)
-    .where(inArray(icaa.ogcFid, speciesIds));
+    .from(icaaView)
+    .where(inArray(icaaView.ogcFid, speciesIds));
 
   return species.map(s => ({
     species_id: s.ogc_fid,
@@ -297,6 +311,7 @@ export async function getSpeciesBioregions(speciesIds: number[]) {
 export async function executeRawQuery<T extends Record<string, unknown>>(
   query: ReturnType<typeof sql>
 ): Promise<T[]> {
+  await requireIcaaView();
   const results = await db.execute<T>(query);
   return [...results] as T[];
 }
@@ -309,14 +324,15 @@ export async function executeRawQuery<T extends Record<string, unknown>>(
  * Gets count of species by conservation status.
  */
 export async function getSpeciesCountByStatus() {
+  await requireIcaaView();
   const results = await db
     .select({
-      category: icaa.category,
-      count: count(icaa.ogcFid),
+      category: icaaView.category,
+      count: count(icaaView.ogcFid),
     })
-    .from(icaa)
-    .groupBy(icaa.category)
-    .orderBy(desc(count(icaa.ogcFid)));
+    .from(icaaView)
+    .groupBy(icaaView.category)
+    .orderBy(desc(count(icaaView.ogcFid)));
 
   return results.reduce<Record<string, number>>((acc, item) => {
     if (item.category) {
@@ -330,14 +346,15 @@ export async function getSpeciesCountByStatus() {
  * Gets count of species by realm.
  */
 export async function getSpeciesCountByRealm() {
+  await requireIcaaView();
   const results = await db
     .select({
-      realm: icaa.realm,
-      count: count(icaa.ogcFid),
+      realm: icaaView.realm,
+      count: count(icaaView.ogcFid),
     })
-    .from(icaa)
-    .groupBy(icaa.realm)
-    .orderBy(desc(count(icaa.ogcFid)));
+    .from(icaaView)
+    .groupBy(icaaView.realm)
+    .orderBy(desc(count(icaaView.ogcFid)));
 
   return results.reduce<Record<string, number>>((acc, item) => {
     if (item.realm) {
@@ -351,9 +368,10 @@ export async function getSpeciesCountByRealm() {
  * Gets total species count in database.
  */
 export async function getTotalSpeciesCount(): Promise<number> {
+  await requireIcaaView();
   const results = await db
-    .select({ count: count(icaa.ogcFid) })
-    .from(icaa);
+    .select({ count: count(icaaView.ogcFid) })
+    .from(icaaView);
 
   return results[0]?.count ?? 0;
 }

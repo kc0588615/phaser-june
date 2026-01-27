@@ -11,7 +11,7 @@ Practical guide for querying species data and recording player progress.
 
 ## Conventions
 
-App-owned tables follow these standards (import-owned tables like `icaa` may differ):
+App-owned tables follow these standards (import-owned tables like `icaa` may differ). Application reads should use the `icaa_view` compatibility view.
 
 - **Naming**: snake_case; tables plural, columns singular
 - **Primary keys**: `bigint GENERATED ALWAYS AS IDENTITY` (UUID only for external IDs)
@@ -38,12 +38,19 @@ import { db } from '@/db';
 ```typescript
 // src/lib/speciesQueries.ts
 import { sql } from 'drizzle-orm';
-import { db } from '@/db';
+import { db, ensureIcaaViewReady } from '@/db';
 
-// Use the get_species_in_radius function with table alias
+await ensureIcaaViewReady();
+
 const species = await db.execute(sql`
-  SELECT r.ogc_fid, r.comm_name, r.sci_name
-  FROM public.get_species_in_radius(${lon}, ${lat}, ${radiusMeters}) r
+  SELECT ogc_fid, common_name, scientific_name
+  FROM icaa_view
+  WHERE wkb_geometry IS NOT NULL
+    AND ST_DWithin(
+      wkb_geometry::geography,
+      ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+      ${radiusMeters}
+    )
 `);
 ```
 
@@ -51,12 +58,14 @@ const species = await db.execute(sql`
 
 ```typescript
 import { eq } from 'drizzle-orm';
-import { db, icaa } from '@/db';
+import { db, icaaView, ensureIcaaViewReady } from '@/db';
+
+await ensureIcaaViewReady();
 
 const [species] = await db
   .select()
-  .from(icaa)
-  .where(eq(icaa.ogcFid, speciesId))
+  .from(icaaView)
+  .where(eq(icaaView.ogcFid, speciesId))
   .limit(1);
 ```
 
@@ -64,19 +73,21 @@ const [species] = await db
 
 ```typescript
 import { ilike, or } from 'drizzle-orm';
-import { db, icaa } from '@/db';
+import { db, icaaView, ensureIcaaViewReady } from '@/db';
+
+await ensureIcaaViewReady();
 
 const results = await db
   .select({
-    ogc_fid: icaa.ogcFid,
-    comm_name: icaa.commName,
-    sci_name: icaa.sciName,
+    ogc_fid: icaaView.ogcFid,
+    common_name: icaaView.commonName,
+    scientific_name: icaaView.scientificName,
   })
-  .from(icaa)
+  .from(icaaView)
   .where(
     or(
-      ilike(icaa.commName, `%${searchTerm}%`),
-      ilike(icaa.sciName, `%${searchTerm}%`)
+      ilike(icaaView.commonName, `%${searchTerm}%`),
+      ilike(icaaView.scientificName, `%${searchTerm}%`)
     )
   )
   .limit(10);

@@ -1,6 +1,6 @@
 # Interface: Gem
 
-Defined in: [src/game/BackendPuzzle.ts:7](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BackendPuzzle.ts#L7)
+Defined in: [src/game/BackendPuzzle.ts:7](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/BackendPuzzle.ts#L7)
 
 ## Properties
 
@@ -8,4 +8,4 @@ Defined in: [src/game/BackendPuzzle.ts:7](https://github.com/kc0588615/phaser-ju
 
 > **gemType**: `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`
 
-Defined in: [src/game/BackendPuzzle.ts:8](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/BackendPuzzle.ts#L8)
+Defined in: [src/game/BackendPuzzle.ts:8](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/BackendPuzzle.ts#L8)

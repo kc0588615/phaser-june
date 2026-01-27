@@ -400,7 +400,7 @@ const isDuplicate = clueData.category === 0 ?
 4. **Memory Management**: WeakMap ensures no memory leaks for species objects
 
 ### Database Requirements
-**No SQL Changes Required** - System uses existing `icaa` table fields:
+**No SQL Changes Required** - System uses `icaa_view` fields (compatibility view):
 - `taxonomic_comment`, `phylum`, `class`, `taxon_order`, `family`, `genus`, `scientific_name`
 - All data already present in database
 

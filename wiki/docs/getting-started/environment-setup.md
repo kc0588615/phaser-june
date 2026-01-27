@@ -48,6 +48,8 @@ NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 3. Ensure schema is in place:
 
 - Spatial tables (`icaa`, `oneearth_bioregion`) are created by shapefile imports.
+- Normalized biodiversity schema is created by migrations 004/005/006.
+- `icaa_view` is required at runtime; the app fails fast on startup if it is missing.
 - App tables are created via SQL migrations or manual DDL (Drizzle does not run migrations here).
 - Refresh types after schema changes:
 
@@ -59,7 +61,9 @@ npx drizzle-kit introspect
 
 The application expects these tables (see [Database Guide](/docs/guides/data/database-guide) for full schema):
 
-- `icaa` - Species information
+- `icaa` - Import-owned species table (shapefile source)
+- `icaa_view` - Compatibility view used by the app
+- Normalized biodiversity tables (`taxa`, `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`, etc.)
 - `profiles` - Player profiles
 - `player_game_sessions` - Session tracking
 - `player_species_discoveries` - Identified species

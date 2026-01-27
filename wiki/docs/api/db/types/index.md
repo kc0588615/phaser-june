@@ -5,6 +5,7 @@
 - [HabitatColormap](type-aliases/HabitatColormap.md)
 - [HighScore](type-aliases/HighScore.md)
 - [ICAA](type-aliases/ICAA.md)
+- [ICAAView](type-aliases/ICAAView.md)
 - [NewHighScore](type-aliases/NewHighScore.md)
 - [NewPlayerClueUnlock](type-aliases/NewPlayerClueUnlock.md)
 - [NewPlayerGameSession](type-aliases/NewPlayerGameSession.md)

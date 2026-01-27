@@ -14,7 +14,8 @@ let playerGameSessions: any;
 let playerClueUnlocks: any;
 let playerSpeciesDiscoveries: any;
 let playerStats: any;
-let icaa: any;
+let icaaView: any;
+let ensureIcaaViewReady: any;
 let eq: any, and: any, isNull: any, desc: any, inArray: any, count: any, sum: any, sql: any;
 
 async function ensureServerDeps() {
@@ -41,7 +42,8 @@ async function ensureServerDeps() {
     playerClueUnlocks = dbModule.playerClueUnlocks;
     playerSpeciesDiscoveries = dbModule.playerSpeciesDiscoveries;
     playerStats = dbModule.playerStats;
-    icaa = dbModule.icaa;
+    icaaView = dbModule.icaaView;
+    ensureIcaaViewReady = dbModule.ensureIcaaViewReady;
   }
   return true;
 }
@@ -523,6 +525,8 @@ export async function getClueCountForSpecies(
 export async function refreshPlayerStats(playerId: string): Promise<boolean> {
   if (!(await ensureServerDeps())) return false;
 
+  await ensureIcaaViewReady();
+
   try {
     // Get discovery stats with species details
     const discoveries = await db
@@ -533,20 +537,20 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         cluesUnlockedBeforeGuess: playerSpeciesDiscoveries.cluesUnlockedBeforeGuess,
         discoveredAt: playerSpeciesDiscoveries.discoveredAt,
         // Join species data
-        taxonOrder: icaa.taxonOrder,
-        family: icaa.family,
-        genus: icaa.genus,
-        realm: icaa.realm,
-        biome: icaa.biome,
-        bioregion: icaa.bioregion,
-        marine: icaa.marine,
-        terrestrial: icaa.terrestrial,
-        freshwater: icaa.freshwater,
-        aquatic: icaa.aquatic,
-        conservationCode: icaa.conservationCode,
+        taxonOrder: icaaView.taxonOrder,
+        family: icaaView.family,
+        genus: icaaView.genus,
+        realm: icaaView.realm,
+        biome: icaaView.biome,
+        bioregion: icaaView.bioregion,
+        marine: icaaView.marine,
+        terrestrial: icaaView.terrestrial,
+        freshwater: icaaView.freshwater,
+        aquatic: icaaView.aquatic,
+        conservationCode: icaaView.conservationCode,
       })
       .from(playerSpeciesDiscoveries)
-      .leftJoin(icaa, eq(playerSpeciesDiscoveries.speciesId, icaa.ogcFid))
+      .leftJoin(icaaView, eq(playerSpeciesDiscoveries.speciesId, icaaView.ogcFid))
       .where(eq(playerSpeciesDiscoveries.playerId, playerId));
 
     // Get clue stats
@@ -612,14 +616,35 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
     let freshwaterSpeciesCount = 0;
     let aquaticSpeciesCount = 0;
 
+    const UNKNOWN_BUCKET = 'Unknown';
+    const normalizeBucket = (value: unknown): string => {
+      if (value === null || value === undefined) return UNKNOWN_BUCKET;
+      const text = String(value).trim();
+      if (!text) return UNKNOWN_BUCKET;
+      const lowered = text.toLowerCase();
+      if (lowered === 'null' || lowered === 'n/a' || lowered === 'na' || lowered === 'unknown') {
+        return UNKNOWN_BUCKET;
+      }
+      return text;
+    };
+
     for (const d of discoveries) {
-      if (d.taxonOrder) speciesByOrder[d.taxonOrder] = (speciesByOrder[d.taxonOrder] || 0) + 1;
-      if (d.family) speciesByFamily[d.family] = (speciesByFamily[d.family] || 0) + 1;
-      if (d.genus) speciesByGenus[d.genus] = (speciesByGenus[d.genus] || 0) + 1;
-      if (d.realm) speciesByRealm[d.realm] = (speciesByRealm[d.realm] || 0) + 1;
-      if (d.biome) speciesByBiome[d.biome] = (speciesByBiome[d.biome] || 0) + 1;
-      if (d.bioregion) speciesByBioregion[d.bioregion] = (speciesByBioregion[d.bioregion] || 0) + 1;
-      if (d.conservationCode) speciesByIucnStatus[d.conservationCode] = (speciesByIucnStatus[d.conservationCode] || 0) + 1;
+      const taxonOrder = normalizeBucket(d.taxonOrder);
+      const family = normalizeBucket(d.family);
+      const genus = normalizeBucket(d.genus);
+      const realm = normalizeBucket(d.realm);
+      const biome = normalizeBucket(d.biome);
+      const bioregion = normalizeBucket(d.bioregion);
+      const conservationCode = normalizeBucket(d.conservationCode);
+
+      speciesByOrder[taxonOrder] = (speciesByOrder[taxonOrder] || 0) + 1;
+      speciesByFamily[family] = (speciesByFamily[family] || 0) + 1;
+      speciesByGenus[genus] = (speciesByGenus[genus] || 0) + 1;
+      speciesByRealm[realm] = (speciesByRealm[realm] || 0) + 1;
+      speciesByBiome[biome] = (speciesByBiome[biome] || 0) + 1;
+      speciesByBioregion[bioregion] = (speciesByBioregion[bioregion] || 0) + 1;
+      speciesByIucnStatus[conservationCode] =
+        (speciesByIucnStatus[conservationCode] || 0) + 1;
       if (d.marine) marineSpeciesCount++;
       if (d.terrestrial) terrestrialSpeciesCount++;
       if (d.freshwater) freshwaterSpeciesCount++;

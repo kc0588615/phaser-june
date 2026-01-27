@@ -129,15 +129,17 @@ export async function getSpeciesInRadius(
 ```typescript
 // src/app/api/species/in-radius/route.ts
 import { sql } from 'drizzle-orm';
-import { db } from '@/db';
+import { db, ensureIcaaViewReady } from '@/db';
+
+await ensureIcaaViewReady();
 
 const species = await db.execute(sql`
   SELECT
     ogc_fid,
-    comm_name,
-    sci_name,
+    common_name,
+    scientific_name,
     ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry
-  FROM icaa
+  FROM icaa_view
   WHERE wkb_geometry IS NOT NULL
     AND ST_DWithin(
       wkb_geometry::geography,

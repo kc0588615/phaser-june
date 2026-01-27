@@ -7,13 +7,20 @@ tags: [reference, database, postgres, drizzle]
 
 # Database Schema Reference
 
-Reference for Postgres tables and Drizzle schema. App tables are defined in `src/db/schema/*`; spatial tables are import-owned and mirrored in `src/db/schema/species.ts` via introspection.
+Reference for Postgres tables and Drizzle schema. App tables are defined in `src/db/schema/*`; spatial tables are import-owned and mirrored in `src/db/schema/species.ts` via introspection. The primary species read path is `icaa_view`, a compatibility view over normalized biodiversity tables.
 
 ## Core Tables
 
-### icaa
+### icaa_view (Compatibility View)
 
-Main species data table.
+Primary read model for species data. Exposes legacy columns but sources from normalized tables (`taxa`, `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`, etc.).
+
+Use `icaa_view` in application queries; a startup check fails fast if the view is missing.
+
+### icaa (Import-Owned Species Table)
+
+Raw shapefile import table. Keep for ingestion and backfill; avoid direct reads in app code.
+Column names may vary by shapefile export; see `src/db/schema/species.ts` for the current introspected column mapping.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -67,6 +74,18 @@ Main species data table.
 | `wkb_geometry` | geometry | PostGIS geometry (4326) |
 
 Note: `wkb_geometry` exists in Postgres; non-spatial API endpoints exclude it to avoid large payloads. Spatial routes use PostGIS raw SQL via Drizzle.
+
+### Normalized Biodiversity Tables (3NF)
+
+Core tables created by migrations 004/005/006:
+
+- `taxa`, `taxon_names`, `taxon_name_usages`
+- `source_datasets`, `taxon_external_ids`
+- `conservation_statuses`, `taxon_conservation_assessments`
+- `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`
+- `taxon_common_names`
+- `taxon_behaviors`, `taxon_key_facts`, `taxon_life_descriptions`
+- `taxon_habitat_tags`, `taxon_threats`, `taxon_diet_items`
 
 ### profiles
 
@@ -200,7 +219,7 @@ Legacy leaderboard table.
 
 ## Spatial Queries (PostGIS)
 
-- Geometry lives in `icaa.wkb_geometry` (4326).
+- Geometry lives in `taxon_ranges.wkb_geometry` (4326) and is exposed via `icaa_view.wkb_geometry`.
 - Drizzle uses raw SQL via `db.execute(sql\`...\`)` for PostGIS queries.
 
 Example API usage:
@@ -255,6 +274,7 @@ Named constraints and indexes follow conventions:
 | player_clue_unlocks discovery index | `ix_player_clue_unlocks_discovery_id` |
 | high_scores leaderboard | `ix_high_scores_score` |
 | icaa spatial | `ix_icaa_wkb_geometry` |
+| taxon_ranges spatial | `ix_taxon_ranges_wkb_geometry` |
 | oneearth_bioregion spatial | `ix_oneearth_bioregion_wkb_geometry` |
 
 Foreign keys use `fk_tablename_column` naming (e.g., `fk_player_game_sessions_player_id`).

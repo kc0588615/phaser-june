@@ -63,6 +63,7 @@
 - [db/schema/game](db/schema/game/index.md)
 - [db/schema/player](db/schema/player/index.md)
 - [db/schema/species](db/schema/species/index.md)
+- [db/schema/taxa](db/schema/taxa/index.md)
 - [db/types](db/types/index.md)
 - [game/BackendPuzzle](game/BackendPuzzle/index.md)
 - [game/BoardView](game/BoardView/index.md)

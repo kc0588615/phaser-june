@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides comprehensive documentation for the database architecture used in the Species Discovery Game, focusing on the `icaa` table structure, clue system dependencies, and guidelines for making database changes.
+This guide provides comprehensive documentation for the database architecture used in the Species Discovery Game, focusing on the `icaa_view` compatibility view, the normalized biodiversity schema, clue system dependencies, and guidelines for making database changes.
 
 ## Current Database Architecture
 
@@ -16,19 +16,37 @@ See `docs/SHAPEFILE_BEST_PRACTICES.mdx` for pre-import guidance on spatial data 
 
 ### Database Tables
 
-#### 1. `icaa` Table (Species Data)
-Primary table containing all species information with 70+ fields.
+#### 1. `icaa_view` (Compatibility View - Primary Read Path)
+The app reads species data through `icaa_view`, which exposes legacy columns while sourcing from the normalized tables (`taxa`, `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`, etc.).
+
+- Preserves existing column names used by the app
+- Backed by normalized tables for multi-source support
+- Required at runtime (startup check fails fast if missing via `ensureIcaaViewReady` in `src/db/index.ts`)
+
+See `docs/NORMALIZED_BIODIVERSITY_SCHEMA.md` for the full model and backfill rules.
+
+#### 2. Normalized Biodiversity Tables (Strict 3NF)
+Core tables for taxonomy, profiles, external IDs, and multi-value fields:
+
+- `taxa`, `taxon_names`, `taxon_name_usages`
+- `source_datasets`, `taxon_external_ids`
+- `conservation_statuses`, `taxon_conservation_assessments`
+- `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`
+- `taxon_common_names`
+- `taxon_behaviors`, `taxon_key_facts`, `taxon_life_descriptions`
+- `taxon_habitat_tags`, `taxon_threats`, `taxon_diet_items`
+
+These are created by migrations 004/005/006 and populated via the backfill script.
+
+#### 3. `icaa` Table (Import-Owned Species Data)
+Raw shapefile import table. Do not query directly in app code; use `icaa_view`.
+It remains the ingestion source for backfills and external data refreshes.
 
 **Key Identifiers:**
 - `ogc_fid` (number) - Primary key, unique identifier for each species
-- `common_name` (string) - Common name
-- `scientific_name` (string) - Scientific name
-- `taxonomic_comment` (string) - Taxonomic comments/context
+- `species_id` (number) - IUCN species ID (external)
 
-**Spatial Field:**
-- `wkb_geometry` (PostGIS geometry) - Polygon/multipolygon defining species range
-
-#### 2. `high_scores` Table
+#### 4. `high_scores` Table
 - `id` (uuid) - Primary key
 - `player_id` (uuid, nullable) - Optional FK to `profiles.user_id` for authenticated players
 - `username` (string) - Player name (legacy/guest-friendly)
@@ -105,11 +123,11 @@ CREATE TABLE orders (
 CREATE INDEX ix_orders_user_id ON orders (user_id);
 ```
 
-## ICAA Table Field Mappings
+## ICAA View Field Mappings
 
 ### Clue Category Dependencies
 
-The clue system directly depends on specific database fields. Here's the complete mapping:
+The clue system directly depends on specific database fields exposed by `icaa_view`. Here's the complete mapping:
 
 #### 1. Classification (Red Gems) 🧬
 **Database Fields Used:**
@@ -185,7 +203,7 @@ Progressive revelation from least to most specific:
 
 ## Files Affected by Database Changes
 
-When modifying the `icaa` table structure, the following files need to be updated:
+When modifying the biodiversity schema or `icaa_view`, the following files need to be updated:
 
 ### 1. Type Definitions
 **File:** `/src/types/database.ts`

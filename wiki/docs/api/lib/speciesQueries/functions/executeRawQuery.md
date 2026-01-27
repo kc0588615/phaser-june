@@ -2,7 +2,7 @@
 
 > **executeRawQuery**\<`T`\>(`query`): `Promise`\<`T`[]\>
 
-Defined in: [src/lib/speciesQueries.ts:297](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/lib/speciesQueries.ts#L297)
+Defined in: [src/lib/speciesQueries.ts:311](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesQueries.ts#L311)
 
 Executes a raw SQL query using Drizzle's sql template.
 Always use tagged template literals (parameterized) for safety.

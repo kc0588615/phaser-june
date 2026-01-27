@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inArray } from 'drizzle-orm';
-import { db, icaa, playerSpeciesDiscoveries } from '@/db';
+import { db, icaaView, ensureIcaaViewReady, playerSpeciesDiscoveries } from '@/db';
 
 /**
  * POST /api/discoveries/migrate
@@ -8,6 +8,7 @@ import { db, icaa, playerSpeciesDiscoveries } from '@/db';
  * Body: { userId: string, discoveries: Array<{ id: number, discoveredAt?: string }> }
  */
 export async function POST(request: NextRequest) {
+  await ensureIcaaViewReady();
   try {
     const body = await request.json();
     const { userId, discoveries } = body;
@@ -33,9 +34,9 @@ export async function POST(request: NextRequest) {
     }
 
     const existingSpecies = await db
-      .select({ ogcFid: icaa.ogcFid })
-      .from(icaa)
-      .where(inArray(icaa.ogcFid, candidateIds));
+      .select({ ogcFid: icaaView.ogcFid })
+      .from(icaaView)
+      .where(inArray(icaaView.ogcFid, candidateIds));
 
     const validIds = new Set(existingSpecies.map(s => s.ogcFid));
 

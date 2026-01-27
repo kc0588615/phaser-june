@@ -29,25 +29,34 @@ See [DATABASE_USER_GUIDE.md](/docs/guides/data/database-guide) for full conventi
 ## Client Usage
 
 ```typescript
-import { db, icaa } from '@/db';
+import { db, icaaView, ensureIcaaViewReady } from '@/db';
 import { eq } from 'drizzle-orm';
+
+await ensureIcaaViewReady();
 
 const species = await db
   .select()
-  .from(icaa)
-  .where(eq(icaa.family, 'FELIDAE'));
+  .from(icaaView)
+  .where(eq(icaaView.family, 'FELIDAE'));
 ```
 
 ## PostGIS Raw SQL
 
 ```typescript
 import { sql } from 'drizzle-orm';
-import { db } from '@/db';
+import { db, ensureIcaaViewReady } from '@/db';
 
-// Use radius function with table alias (best practice)
+await ensureIcaaViewReady();
+
 const results = await db.execute(sql`
-  SELECT r.ogc_fid, r.comm_name
-  FROM public.get_species_in_radius(${lon}, ${lat}, ${radiusMeters}) r
+  SELECT ogc_fid, common_name
+  FROM icaa_view
+  WHERE wkb_geometry IS NOT NULL
+    AND ST_DWithin(
+      wkb_geometry::geography,
+      ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+      ${radiusMeters}
+    )
 `);
 ```
 

@@ -2,7 +2,7 @@
 
 > **getCurrentSessionId**(): `string` \| `null`
 
-Defined in: [src/lib/playerTracking.ts:460](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/lib/playerTracking.ts#L460)
+Defined in: [src/lib/playerTracking.ts:462](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/playerTracking.ts#L462)
 
 Get current session ID
 

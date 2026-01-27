@@ -6,26 +6,21 @@ Added automatic ecoregion classification for species based on spatial analysis o
 ## What Was Done
 
 ### 1. Database Schema Changes
-- **Added columns to `icaa` table** (src/types/database.ts:37-41):
-- `bioregion?: string` - Primary bioregion code
-  - `realm?: string` - Major biogeographic realm
-- `subrealm?: string` - Sub-realm classification  
-  - `biome?: string` - Biome type
+- **Normalized bioregion storage** via `taxon_bioregions` + `oneearth_bioregion`, exposed through `icaa_view`.
+- `bioregion`, `realm`, `subrealm`, `biome` are now read from the compatibility view rather than raw `icaa` columns.
 
 - **Created `Bioregion` interface** (src/types/database.ts:8-15):
   - Represents the oneearth_bioregion table structure
 - Includes ogc_fid, bioregion, realm, subrealm, biome, wkb_geometry
 
 - **Database migration executed**:
-  - Added bioregion columns to icaa table
-  - Populated columns using spatial query finding maximum overlap area
-  - Handles SRID transformation (4326 → 900914)
+  - Added normalized tables (`taxon_bioregions`) and compatibility view (`icaa_view`)
+  - Populated records from legacy `icaa` data via backfill
+  - Maintains SRID transformation (4326 → 900914) for spatial joins
 
 ### 2. Service Layer Updates
-- **speciesService.ts modifications** (src/lib/speciesService.ts):
-  - `getSpeciesByIds()` (lines 76-91): Now returns bioregion data directly from icaa columns
-  - `getSpeciesBioregions()` (lines 117-137): RPC function wrapper (kept for backwards compatibility)
-  - Removed dynamic bioregion fetching since data is now stored in database
+- Species reads now use `icaa_view` (see `src/lib/speciesQueries.ts` and `/api/species/bioregions`).
+- Bioregion/realm/biome are returned from the view without additional RPC calls.
 
 ### 3. UI Component Updates
 - **SpeciesCard.tsx enhancements** (src/components/SpeciesCard.tsx):
@@ -58,7 +53,7 @@ Added automatic ecoregion classification for species based on spatial analysis o
 ```
 Task 1: Clean up biome field display
 - Remove escape characters from biome text in database
-- UPDATE icaa SET biome = REPLACE(biome, '\\&', '&');
+- UPDATE oneearth_bioregion SET biome = REPLACE(biome, '\\&', '&');
 ```
 
 ```

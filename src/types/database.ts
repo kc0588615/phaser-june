@@ -219,6 +219,9 @@ export interface Database {
       };
     };
     Views: {
+      icaa_view: {
+        Row: Species;
+      };
       top_scores: {
         Row: HighScore & { rank: number };
       };

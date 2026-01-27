@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
-import { db } from '@/db';
+import { db, ensureIcaaViewReady } from '@/db';
 
 interface SpatialSpeciesRow {
   ogc_fid: number;
@@ -29,6 +29,7 @@ interface SpatialSpeciesRow {
  * Uses PostGIS ST_Contains for point-in-polygon query.
  */
 export async function GET(request: NextRequest) {
+  await ensureIcaaViewReady();
   try {
     const { searchParams } = new URL(request.url);
     const lon = parseFloat(searchParams.get('lon') || '');
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
         key_fact_2,
         key_fact_3,
         ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry
-      FROM icaa
+      FROM icaa_view
       WHERE wkb_geometry IS NOT NULL
         AND ST_Contains(
           wkb_geometry,

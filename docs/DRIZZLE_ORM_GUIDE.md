@@ -11,7 +11,8 @@ This guide explains how Drizzle ORM is integrated into the Species Discovery Gam
 ## Schema Locations
 
 - App tables: `src/db/schema/player.ts`, `src/db/schema/game.ts`
-- Spatial tables (introspected): `src/db/schema/species.ts`
+- Spatial tables + compatibility view: `src/db/schema/species.ts` (`icaa`, `oneearth_bioregion`, `icaa_view`)
+- Normalized biodiversity tables: `src/db/schema/taxa.ts`
 - Types: `src/db/types.ts`
 
 ## Conventions
@@ -30,24 +31,34 @@ See `docs/DATABASE_USER_GUIDE.md` for full details and examples.
 ## Client Usage
 
 ```typescript
-import { db, icaa } from '@/db';
+import { db, icaaView, ensureIcaaViewReady } from '@/db';
 import { eq } from 'drizzle-orm';
+
+await ensureIcaaViewReady();
 
 const species = await db
   .select()
-  .from(icaa)
-  .where(eq(icaa.family, 'FELIDAE'));
+  .from(icaaView)
+  .where(eq(icaaView.family, 'FELIDAE'));
 ```
 
 ## PostGIS Queries
 
 ```typescript
 import { sql } from 'drizzle-orm';
-import { db } from '@/db';
+import { db, ensureIcaaViewReady } from '@/db';
+
+await ensureIcaaViewReady();
 
 const results = await db.execute(sql`
-  SELECT r.ogc_fid, r.common_name
-  FROM public.get_species_in_radius(${lon}, ${lat}, ${radiusMeters}) r
+  SELECT ogc_fid, common_name
+  FROM icaa_view
+  WHERE wkb_geometry IS NOT NULL
+    AND ST_DWithin(
+      wkb_geometry::geography,
+      ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+      ${radiusMeters}
+    )
 `);
 ```
 

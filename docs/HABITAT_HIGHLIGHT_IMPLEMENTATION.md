@@ -56,7 +56,7 @@ Options:
 **TODO 5: Performance Optimization**
 ```
 Task: Add spatial index if not exists
-SQL: CREATE INDEX IF NOT EXISTS idx_icaa_geometry ON icaa USING GIST (wkb_geometry);
+SQL: CREATE INDEX IF NOT EXISTS ix_taxon_ranges_wkb_geometry ON taxon_ranges USING GIST (wkb_geometry);
 Benefit: Faster nearest-neighbor queries
 ```
 

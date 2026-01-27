@@ -1,6 +1,6 @@
 # Interface: CluePayload
 
-Defined in: [src/game/clueConfig.ts:21](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L21)
+Defined in: [src/game/clueConfig.ts:21](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L21)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/game/clueConfig.ts:21](https://github.com/kc0588615/phaser-june
 
 > **category**: [`GemCategory`](../enumerations/GemCategory.md)
 
-Defined in: [src/game/clueConfig.ts:22](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L22)
+Defined in: [src/game/clueConfig.ts:22](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L22)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/game/clueConfig.ts:22](https://github.com/kc0588615/phaser-june
 
 > **clue**: `string`
 
-Defined in: [src/game/clueConfig.ts:24](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L24)
+Defined in: [src/game/clueConfig.ts:24](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L24)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/game/clueConfig.ts:24](https://github.com/kc0588615/phaser-june
 
 > **color**: `string`
 
-Defined in: [src/game/clueConfig.ts:28](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L28)
+Defined in: [src/game/clueConfig.ts:28](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L28)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/game/clueConfig.ts:28](https://github.com/kc0588615/phaser-june
 
 > **heading**: `string`
 
-Defined in: [src/game/clueConfig.ts:23](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L23)
+Defined in: [src/game/clueConfig.ts:23](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L23)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/game/clueConfig.ts:23](https://github.com/kc0588615/phaser-june
 
 > **icon**: `string`
 
-Defined in: [src/game/clueConfig.ts:27](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L27)
+Defined in: [src/game/clueConfig.ts:27](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L27)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/game/clueConfig.ts:27](https://github.com/kc0588615/phaser-june
 
 > **name**: `string`
 
-Defined in: [src/game/clueConfig.ts:26](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L26)
+Defined in: [src/game/clueConfig.ts:26](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L26)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: [src/game/clueConfig.ts:26](https://github.com/kc0588615/phaser-june
 
 > **speciesId**: `number`
 
-Defined in: [src/game/clueConfig.ts:25](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/game/clueConfig.ts#L25)
+Defined in: [src/game/clueConfig.ts:25](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/clueConfig.ts#L25)

@@ -8,12 +8,12 @@ Each species habitat polygon is spatially analyzed against the `oneearth_bioregi
 
 ## Setup Instructions
 
-Bioregion fields are stored directly on `icaa` and served via `/api/species/bioregions`. Use the SQL below to (re)compute those fields when refreshing the dataset.
+Bioregion fields are stored in normalized tables (`taxon_bioregions` + `oneearth_bioregion`) and exposed via `icaa_view` and `/api/species/bioregions`. Use the SQL below to (re)compute those fields when refreshing the dataset or to validate geometry-based classification.
 
 1. Open your Postgres admin tool (psql, pgAdmin, etc.)
 2. Run the SQL functions below
 
-**IMPORTANT**: Without populated bioregion columns, the ecoregion section will not appear in the species cards.
+**IMPORTANT**: Without populated `taxon_bioregions` records (and matching `oneearth_bioregion` rows), the ecoregion section will not appear in the species cards.
 
 ## Database Schema
 
@@ -26,8 +26,9 @@ Contains polygons representing different ecoregions with the following relevant 
 - `biome`: Biome type
 - `wkb_geometry`: Polygon geometry (SRID: 900914 - Spherical Mercator)
 
-### icaa Table (Species)
-- `wkb_geometry`: Species habitat polygon (SRID: 4326 - WGS84)
+### Geometry Source
+- `taxon_ranges.wkb_geometry` stores species habitat polygons (SRID: 4326 - WGS84)
+- `icaa_view.wkb_geometry` exposes the latest range geometry for legacy read paths
 
 ## SQL Functions
 
@@ -51,7 +52,7 @@ BEGIN
     b.subrealm::TEXT,
     b.biome::TEXT,
     ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) / 1000000 as overlap_area
-  FROM icaa s
+  FROM icaa_view s
   JOIN oneearth_bioregion b ON ST_Intersects(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)
   WHERE s.ogc_fid = species_id
   ORDER BY ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) DESC
@@ -82,7 +83,7 @@ BEGIN
       b.subrealm::TEXT as sr,
       b.biome::TEXT as bi,
       ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) as overlap_area
-    FROM icaa s
+    FROM icaa_view s
     JOIN oneearth_bioregion b ON ST_Intersects(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)
     WHERE s.ogc_fid = ANY(species_ids)
     ORDER BY s.ogc_fid, ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) DESC
@@ -112,11 +113,8 @@ $$ LANGUAGE plpgsql;
 
 ## Frontend Integration
 
-### Species Service (`speciesService.ts`)
-The `getSpeciesByIds` method now:
-1. Fetches species data
-2. Calls `getSpeciesBioregions` to get bioregion data
-3. Merges bioregion data into species objects
+### API Integration
+`/api/species/bioregions` reads bioregion data from `icaa_view`, which already joins `taxon_bioregions` to `oneearth_bioregion`.
 
 ### Species Card Component
 Displays bioregion information in a new "Ecoregion" section showing:

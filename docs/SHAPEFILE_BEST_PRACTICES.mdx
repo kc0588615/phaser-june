@@ -78,10 +78,11 @@ field-name length limits and weaker typing, so GPKG reduces post-import cleanup.
 ---
 
 ## Schema Design: Normalized vs Denormalized
+**Note (2026-01-27):** The project now uses a normalized biodiversity schema with a compatibility view (`icaa_view`). Shapefile imports still land in `icaa`, then migration `005_normalized_biodiversity_backfill.sql` populates normalized tables. Application reads go through `icaa_view`.
 
-### Current State: Denormalized (1NF Violations)
+### Current State: Normalized Core + Compatibility View
 
-The `icaa` table contains **repeating groups** that violate First Normal Form:
+The `icaa` import table still contains **repeating groups** that violate First Normal Form, but reads are served from normalized tables via `icaa_view`:
 
 | Pattern | Columns | Issue |
 |---------|---------|-------|
@@ -100,8 +101,8 @@ The `icaa` table contains **repeating groups** that violate First Normal Form:
 
 ### Recommendation
 
-- **Keep denormalized** if you only display data (current game use case)
-- **Normalize** if you need:
+- **Keep `icaa` denormalized for import** (matches shapefile structure).
+- **Use normalized tables + `icaa_view` for reads** when you need:
   - "Find all species with behavior X"
   - "Count species by key fact category"
   - Full-text search across all facts/descriptions

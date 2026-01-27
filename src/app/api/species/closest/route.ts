@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
-import { db } from '@/db';
+import { db, ensureIcaaViewReady } from '@/db';
 
 interface ClosestSpeciesRow {
   ogc_fid: number;
@@ -18,6 +18,7 @@ interface ClosestSpeciesRow {
  * Uses PostGIS <-> operator for efficient nearest-neighbor search.
  */
 export async function GET(request: NextRequest) {
+  await ensureIcaaViewReady();
   try {
     const { searchParams } = new URL(request.url);
     const lon = parseFloat(searchParams.get('lon') || '');
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
           wkb_geometry::geography,
           ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
         ) as distance_meters
-      FROM icaa
+      FROM icaa_view
       WHERE wkb_geometry IS NOT NULL
       ORDER BY wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
       LIMIT 1

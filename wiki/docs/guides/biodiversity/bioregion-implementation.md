@@ -11,7 +11,7 @@ Technical details for bioregion integration.
 
 ## Database
 
-Bioregion fields are stored directly on `icaa` (`bioregio_1`, `realm`, `sub_realm`, `biome`).
+Bioregion fields are stored in normalized tables (`taxon_bioregions` + `oneearth_bioregion`) and exposed via `icaa_view`.
 Reference polygons live in `oneearth_bioregion` for offline processing or reclassification.
 
 ## Querying

@@ -1,6 +1,6 @@
 # Interface: HighScore
 
-Defined in: [src/types/database.ts:1](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L1)
+Defined in: [src/types/database.ts:1](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L1)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/database.ts:1](https://github.com/kc0588615/phaser-june/b
 
 > **created\_at**: `string`
 
-Defined in: [src/types/database.ts:6](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L6)
+Defined in: [src/types/database.ts:6](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L6)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/database.ts:6](https://github.com/kc0588615/phaser-june/b
 
 > **id**: `string`
 
-Defined in: [src/types/database.ts:2](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L2)
+Defined in: [src/types/database.ts:2](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L2)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/database.ts:2](https://github.com/kc0588615/phaser-june/b
 
 > `optional` **player\_id**: `string`
 
-Defined in: [src/types/database.ts:3](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L3)
+Defined in: [src/types/database.ts:3](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L3)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/types/database.ts:3](https://github.com/kc0588615/phaser-june/b
 
 > **score**: `number`
 
-Defined in: [src/types/database.ts:5](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L5)
+Defined in: [src/types/database.ts:5](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L5)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [src/types/database.ts:5](https://github.com/kc0588615/phaser-june/b
 
 > **username**: `string`
 
-Defined in: [src/types/database.ts:4](https://github.com/kc0588615/phaser-june/blob/faa14c00324626a166934fb4b850bcca3146ae62/src/types/database.ts#L4)
+Defined in: [src/types/database.ts:4](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L4)
