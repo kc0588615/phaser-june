@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
+import type { ExpeditionData } from '@/types/expedition';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -12,6 +13,8 @@ export interface EventPayloads {
     habitats: string[];
     species: Species[];
     rasterHabitats: RasterHabitatResult[];
+    difficulty?: number;
+    obstacles?: string[];
   };
   'game-score-updated': {
     score: number;
@@ -59,6 +62,15 @@ export interface EventPayloads {
     moveMultiplier?: number;
   };
   'game-restart': Record<string, never>;
+  'expedition-data-ready': {
+    lon: number; lat: number;
+    expedition: ExpeditionData;
+    species: Species[];
+    rasterHabitats: RasterHabitatResult[];
+    habitats: string[];
+  };
+  'expedition-start': Record<string, never>;
+  'node-complete': { nodeIndex: number };
 }
 
 // Type-safe EventBus class

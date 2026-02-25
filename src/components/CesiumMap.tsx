@@ -1,5 +1,5 @@
 // src/components/CesiumMap.tsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, type MutableRefObject } from 'react';
 import { Viewer, ImageryLayer, Entity, EllipseGraphics, RectangleGraphics } from 'resium';
 import {
   Ion,
@@ -53,6 +53,38 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const [showInfoBox, setShowInfoBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedSpeciesSource, setHighlightedSpeciesSource] = useState<GeoJsonDataSource | null>(null);
+
+  // Track spatial layer data sources for cleanup
+  const spatialLayersRef = useRef<GeoJsonDataSource[]>([]);
+
+  // Block map clicks during active expedition run
+  const runPhaseRef: MutableRefObject<string> = useRef('idle');
+  useEffect(() => {
+    const onExpeditionReady = () => { runPhaseRef.current = 'briefing'; };
+    const onExpeditionStart = () => { runPhaseRef.current = 'in-run'; };
+    const onNodeComplete = () => { /* stays in-run until run completes or resets */ };
+    const onGameReset = () => {
+      runPhaseRef.current = 'idle';
+      // Remove spatial layer overlays
+      if (viewerRef.current?.cesiumElement) {
+        const viewer = viewerRef.current.cesiumElement;
+        for (const ds of spatialLayersRef.current) {
+          try { viewer.dataSources.remove(ds, true); } catch { /* already removed */ }
+        }
+        spatialLayersRef.current = [];
+      }
+    };
+    EventBus.on('expedition-data-ready', onExpeditionReady);
+    EventBus.on('expedition-start', onExpeditionStart);
+    EventBus.on('node-complete', onNodeComplete);
+    EventBus.on('game-reset', onGameReset);
+    return () => {
+      EventBus.off('expedition-data-ready', onExpeditionReady);
+      EventBus.off('expedition-start', onExpeditionStart);
+      EventBus.off('node-complete', onNodeComplete);
+      EventBus.off('game-reset', onGameReset);
+    };
+  }, []);
 
   useEffect(() => {
     // Crucial for Next.js: CESIUM_BASE_URL is defined in next.config.mjs and made global in global.d.ts
@@ -238,8 +270,81 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   }, []); 
 
 
+  // Load spatial GeoJSON layers (rivers, PAs, ICCA) onto the globe
+  const loadSpatialLayers = useCallback(async (lon: number, lat: number) => {
+    if (!viewerRef.current?.cesiumElement) return;
+    const viewer = viewerRef.current.cesiumElement;
+
+    // Clean up previous spatial layers
+    for (const ds of spatialLayersRef.current) {
+      try { viewer.dataSources.remove(ds, true); } catch { /* ok */ }
+    }
+    spatialLayersRef.current = [];
+
+    try {
+      const resp = await fetch(`/api/layers/near-point?lon=${lon}&lat=${lat}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      // Rivers — blue polylines
+      if (data.rivers?.features?.length > 0) {
+        const riverDs = new GeoJsonDataSource('spatial-rivers');
+        await riverDs.load(data.rivers);
+        riverDs.entities.values.forEach((e) => {
+          if (e.polyline) {
+            e.polyline.material = new ColorMaterialProperty(CesiumColor.fromCssColorString('#3b82f6').withAlpha(0.8));
+            e.polyline.width = new ConstantProperty(2);
+          }
+        });
+        viewer.dataSources.add(riverDs);
+        spatialLayersRef.current.push(riverDs);
+      }
+
+      // Protected areas — green semi-transparent polygons
+      if (data.protected_areas?.features?.length > 0) {
+        const paDs = new GeoJsonDataSource('spatial-pa');
+        await paDs.load(data.protected_areas);
+        paDs.entities.values.forEach((e) => {
+          if (e.polygon) {
+            e.polygon.material = new ColorMaterialProperty(CesiumColor.fromCssColorString('#22c55e').withAlpha(0.25));
+            e.polygon.outline = new ConstantProperty(true);
+            e.polygon.outlineColor = new ConstantProperty(CesiumColor.fromCssColorString('#22c55e'));
+            e.polygon.outlineWidth = new ConstantProperty(1);
+          }
+        });
+        viewer.dataSources.add(paDs);
+        spatialLayersRef.current.push(paDs);
+      }
+
+      // ICCA — orange points
+      if (data.icca?.features?.length > 0) {
+        const iccaDs = new GeoJsonDataSource('spatial-icca');
+        await iccaDs.load(data.icca);
+        iccaDs.entities.values.forEach((e) => {
+          if (e.point) {
+            e.point.color = new ConstantProperty(CesiumColor.fromCssColorString('#f97316'));
+            e.point.pixelSize = new ConstantProperty(10);
+            e.point.outlineColor = new ConstantProperty(CesiumColor.WHITE);
+            e.point.outlineWidth = new ConstantProperty(2);
+          }
+        });
+        viewer.dataSources.add(iccaDs);
+        spatialLayersRef.current.push(iccaDs);
+      }
+    } catch (err) {
+      console.warn('[CesiumMap] Failed to load spatial layers:', err);
+    }
+  }, []);
+
   const handleMapClick = useCallback((movement: any) => { // Typed movement
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
+
+    // Block clicks during active expedition
+    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'briefing') {
+      setShowInfoBox(true);
+      setInfoBoxData({ habitats: [], species: [], message: 'Complete the current expedition first.' });
+      return;
+    }
 
     const viewer = viewerRef.current.cesiumElement;
 
@@ -272,12 +377,13 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
 
       console.log("Resium: Calling speciesService for location:", longitude, latitude);
 
-      // Fetch species data for this location
+      // Fetch species data + expedition context for this location
       Promise.all([
         speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
-        speciesService.getRasterHabitatDistribution(longitude, latitude)
+        speciesService.getRasterHabitatDistribution(longitude, latitude),
+        fetch(`/api/protected-areas/at-point?lon=${longitude}&lat=${latitude}&size=500`).then(r => r.ok ? r.json() : null).catch(() => null),
       ])
-        .then(async ([speciesResult, rasterHabitats]) => {
+        .then(async ([speciesResult, rasterHabitats, atPointData]) => {
           console.log("Resium: Species service response:", speciesResult);
           console.log("Resium: Raster habitat response:", rasterHabitats);
           
@@ -361,14 +467,39 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             });
             const habitatList = Array.from(legacyHabitats);
             
-            // Emit with the expected format - species array and rasterHabitats array
-            EventBus.emit('cesium-location-selected', { 
-              species: clickedSpecies.species, // Pass the array, not the wrapper object
-              rasterHabitats: rasterHabitatData,
-              habitats: habitatList,
-              lon: cartographicLocation.longitude,
-              lat: cartographicLocation.latitude 
-            });
+            // Emit expedition-data-ready (briefing intercepts before puzzle starts)
+            if (atPointData?.generated_nodes) {
+              EventBus.emit('expedition-data-ready', {
+                lon: cartographicLocation.longitude,
+                lat: cartographicLocation.latitude,
+                expedition: {
+                  nodes: atPointData.generated_nodes,
+                  bioregion: atPointData.bioregion,
+                  protectedAreas: atPointData.protected_areas ?? [],
+                  resourceBias: atPointData.resource_bias ?? {},
+                  primaryNodeFamily: atPointData.primary_node_family ?? '',
+                  primaryVariant: atPointData.primary_variant ?? '',
+                  modifierNodes: atPointData.modifier_nodes ?? [],
+                  signals: atPointData.signals ?? {},
+                  iccaTerritories: atPointData.icca_territories ?? [],
+                  nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
+                },
+                species: clickedSpecies.species,
+                rasterHabitats: rasterHabitatData,
+                habitats: habitatList,
+              });
+              // Fetch + render spatial layers on globe
+              loadSpatialLayers(cartographicLocation.longitude, cartographicLocation.latitude);
+            } else {
+              // Fallback: no expedition data, emit old event directly
+              EventBus.emit('cesium-location-selected', {
+                species: clickedSpecies.species,
+                rasterHabitats: rasterHabitatData,
+                habitats: habitatList,
+                lon: cartographicLocation.longitude,
+                lat: cartographicLocation.latitude,
+              });
+            }
           } else if (viewerRef.current) {
             // No species found - find and highlight the closest habitat
             const closestHabitatGeometry = await speciesService.getClosestHabitat(
@@ -423,14 +554,37 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
               }, 3000);
             }
             
-            // Still emit the event even with no species, so the game knows
-            EventBus.emit('cesium-location-selected', { 
-              species: [], // Empty array when no species found
-              rasterHabitats: rasterHabitatData,
-              habitats: [], // Empty habitats when no species found
-              lon: cartographicLocation.longitude,
-              lat: cartographicLocation.latitude 
-            });
+            // Still emit the event even with no species
+            if (atPointData?.generated_nodes) {
+              EventBus.emit('expedition-data-ready', {
+                lon: cartographicLocation.longitude,
+                lat: cartographicLocation.latitude,
+                expedition: {
+                  nodes: atPointData.generated_nodes,
+                  bioregion: atPointData.bioregion,
+                  protectedAreas: atPointData.protected_areas ?? [],
+                  resourceBias: atPointData.resource_bias ?? {},
+                  primaryNodeFamily: atPointData.primary_node_family ?? '',
+                  primaryVariant: atPointData.primary_variant ?? '',
+                  modifierNodes: atPointData.modifier_nodes ?? [],
+                  signals: atPointData.signals ?? {},
+                  iccaTerritories: atPointData.icca_territories ?? [],
+                  nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
+                },
+                species: [],
+                rasterHabitats: rasterHabitatData,
+                habitats: [],
+              });
+              loadSpatialLayers(cartographicLocation.longitude, cartographicLocation.latitude);
+            } else {
+              EventBus.emit('cesium-location-selected', {
+                species: [],
+                rasterHabitats: rasterHabitatData,
+                habitats: [],
+                lon: cartographicLocation.longitude,
+                lat: cartographicLocation.latitude,
+              });
+            }
           }
           
           // Keep legacy habitat extraction for backward compatibility (if needed elsewhere)

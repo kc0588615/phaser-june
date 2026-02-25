@@ -56,6 +56,8 @@ export const playerSpeciesDiscoveries = pgTable(
     cluesUnlockedBeforeGuess: integer('clues_unlocked_before_guess').notNull().default(0),
     incorrectGuessesCount: integer('incorrect_guesses_count').notNull().default(0),
     scoreEarned: integer('score_earned').notNull().default(0),
+    runId: uuid('run_id'),
+    runNodeId: uuid('run_node_id'),
   },
   (table) => ({
     uqPlayerSpeciesDiscoveriesPlayerSpecies: uniqueIndex(
@@ -64,6 +66,12 @@ export const playerSpeciesDiscoveries = pgTable(
     ixPlayerSpeciesDiscoveriesSessionId: index(
       'ix_player_species_discoveries_session_id'
     ).on(table.sessionId),
+    ixPlayerSpeciesDiscoveriesRunId: index(
+      'ix_player_species_discoveries_run_id'
+    ).on(table.runId),
+    ixPlayerSpeciesDiscoveriesRunNodeId: index(
+      'ix_player_species_discoveries_run_node_id'
+    ).on(table.runNodeId),
   })
 );
 
@@ -78,6 +86,7 @@ export const playerClueUnlocks = pgTable(
     clueField: text('clue_field').notNull(),
     clueValue: text('clue_value'),
     unlockedAt: timestamp('unlocked_at', { withTimezone: true }).notNull().defaultNow(),
+    runNodeId: uuid('run_node_id'),
   },
   (table) => ({
     uqPlayerClueUnlocksPlayerSpeciesCategoryField: uniqueIndex(
@@ -86,6 +95,9 @@ export const playerClueUnlocks = pgTable(
     ixPlayerClueUnlocksDiscoveryId: index(
       'ix_player_clue_unlocks_discovery_id'
     ).on(table.discoveryId),
+    ixPlayerClueUnlocksRunNodeId: index(
+      'ix_player_clue_unlocks_run_node_id'
+    ).on(table.runNodeId),
   })
 );
 

@@ -116,6 +116,7 @@ export class Game extends Phaser.Scene {
     // --- Backend Data ---
     private isBoardInitialized: boolean = false;
     private statusText: Phaser.GameObjects.Text | null = null;
+    private obstacleText: Phaser.GameObjects.Text | null = null;
     private scoreText: Phaser.GameObjects.Text | null = null;
     private movesText: Phaser.GameObjects.Text | null = null;
     private multiplierText: Phaser.GameObjects.Text | null = null;
@@ -161,6 +162,9 @@ export class Game extends Phaser.Scene {
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
     
+    // Expedition run state — when true, node-complete handles transitions (not auto-reset)
+    private inExpeditionRun: boolean = false;
+
     // Owl sprite
     private owl?: OwlSprite;
 
@@ -374,6 +378,15 @@ export class Game extends Phaser.Scene {
             strokeThickness: 3
         }).setOrigin(1, 0).setDepth(100);
 
+        // Obstacle indicator (shown during expedition nodes)
+        this.obstacleText = this.add.text(width / 2, 8, '', {
+            fontSize: '12px',
+            color: '#f59e0b',
+            stroke: '#000000',
+            strokeThickness: 2,
+            align: 'center',
+        }).setOrigin(0.5, 0).setDepth(100).setVisible(false);
+
         this.multiplierText = this.add.text(20, height - 55, '', {
             fontSize: '18px',
             color: '#ffe66d',
@@ -427,6 +440,9 @@ export class Game extends Phaser.Scene {
         EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
         EventBus.on('species-guess-submitted', this.handleSpeciesGuess, this);
         EventBus.on(EVT_GAME_RESTART, this.handleRestart, this);
+        EventBus.on('node-complete', this.handleNodeComplete, this);
+        EventBus.on('expedition-start', this.onExpeditionStart, this);
+        EventBus.on('game-reset', this.onGameReset, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -1026,6 +1042,24 @@ export class Game extends Phaser.Scene {
             // Regenerate the board with new random gems
             this.backendPuzzle.regenerateBoard();
             this.backendPuzzle.resetMoves();
+            // Scale moves by node difficulty (default MAX_MOVES outside expeditions)
+            if (data.difficulty && data.difficulty >= 1) {
+                const difficultyMoves = [50, 40, 30, 25, 20];
+                const moves = difficultyMoves[Math.min(data.difficulty - 1, 4)] ?? MAX_MOVES;
+                this.backendPuzzle.setMaxMoves(moves);
+            } else {
+                this.backendPuzzle.setMaxMoves(MAX_MOVES);
+            }
+
+            // Show obstacle indicators if present
+            if (this.obstacleText) {
+                if (data.obstacles && data.obstacles.length > 0) {
+                    this.obstacleText.setText(data.obstacles.map(o => o.replace(/_/g, ' ')).join(' · '));
+                    this.obstacleText.setVisible(true);
+                } else {
+                    this.obstacleText.setVisible(false);
+                }
+            }
 
             this.calculateBoardDimensions(); // Recalculate for current scale
             if (!this.boardView) { // Should exist from create()
@@ -1604,7 +1638,9 @@ export class Game extends Phaser.Scene {
                 console.log("Game Scene: All species at this location discovered!");
                 
                 if (this.statusText && this.statusText.active) {
-                    this.statusText.setText(`Correct! You discovered the ${data.actualName}!\n\nAll species at this location have been discovered.\n\nClick on the globe to select a new location.`);
+                    this.statusText.setText(this.inExpeditionRun
+                        ? `Correct! You discovered the ${data.actualName}!\n\nComplete the node to continue.`
+                        : `Correct! You discovered the ${data.actualName}!\n\nAll species at this location have been discovered.\n\nClick on the globe to select a new location.`);
                 }
                 
                 // Emit event to signal completion after a delay to allow individual species toast to show first
@@ -1614,10 +1650,12 @@ export class Game extends Phaser.Scene {
                     });
                 });
                 
-                // Reset game state for new location selection
-                this.time.delayedCall(5000, () => {
-                    this.resetForNewLocation();
-                });
+                // Reset game state for new location (only outside expedition runs)
+                if (!this.inExpeditionRun) {
+                    this.time.delayedCall(5000, () => {
+                        this.resetForNewLocation();
+                    });
+                }
             }
         } else {
             // Wrong guess - reset streak
@@ -1678,34 +1716,41 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private resetForNewLocation(): void {
-        console.log("Game Scene: Resetting for new location selection");
-        
-        // Clear current species data
+    private onExpeditionStart(): void { this.inExpeditionRun = true; }
+    private onGameReset(): void {
+        this.inExpeditionRun = false;
+        // Full cleanup when React signals run ended
         this.currentSpecies = [];
         this.selectedSpecies = null;
         this.currentSpeciesIndex = 0;
-        this.revealedClues.clear();
-        this.completedClueCategories.clear();
-        this.allCluesRevealed = false;
         this.rasterHabitats = [];
-        this.usedRasterHabitats.clear();
-        this.lastMoveCategories.clear();
-        this.currentMoveSummary = null;
-        this.lastAppliedMoveMultiplier = 1;
-        this.updateMultiplierText(1);
-        this.pauseButtonContainer?.setVisible(false);
-        
-        // Clear the board
+        this.prepareForNextNode();
+        if (this.statusText && this.statusText.active) {
+            this.statusText.setText("Click on the globe to find a habitat area\nfor a mystery species.");
+        }
+    }
+
+    private handleNodeComplete(): void {
+        // Light reset: clear board between expedition nodes (same species pool)
+        this.prepareForNextNode();
+    }
+
+    /** Clears board + scoring for next node without clearing species data or showing end-game text. */
+    private prepareForNextNode(): void {
+        console.log("Game Scene: Preparing for next node");
+
+        // Clear the board visuals
         if (this.boardView) {
             this.boardView.destroyBoard();
         }
-        
-        // Reset game state
+
+        // Reset board/move state (cesium-location-selected will reinitialize)
         this.canMove = false;
         this.isBoardInitialized = false;
-        
-        // Reset streak and scoring state
+        this.pauseButtonContainer?.setVisible(false);
+        this.obstacleText?.setVisible(false);
+
+        // Reset scoring for new node (keep species + raster data intact)
         this.streak = 0;
         this.seenClueCategories.clear();
         this.turnBaseTotalScore = 0;
@@ -1713,14 +1758,38 @@ export class Game extends Phaser.Scene {
         this.lastMoveCategories.clear();
         this.currentMoveSummary = null;
         this.lastAppliedMoveMultiplier = 1;
+        this.updateMultiplierText(1);
         this.isResolvingMove = false;
         this.backendPuzzle?.resetMoves();
-        
-        // Update status text
+
+        // Reset HUD text to avoid stale display between nodes
+        if (this.scoreText) this.scoreText.setText('Score: 0');
+        if (this.movesText) this.movesText.setText('Moves: 0');
+
+        // Clear clue state for fresh node
+        this.revealedClues.clear();
+        this.completedClueCategories.clear();
+        this.allCluesRevealed = false;
+        this.usedRasterHabitats.clear();
+    }
+
+    private resetForNewLocation(): void {
+        console.log("Game Scene: Resetting for new location selection");
+
+        // Full clear: species, habitats, everything
+        this.currentSpecies = [];
+        this.selectedSpecies = null;
+        this.currentSpeciesIndex = 0;
+        this.rasterHabitats = [];
+
+        // Reset board via shared helper
+        this.prepareForNextNode();
+
+        // Show waiting-for-click text
         if (this.statusText && this.statusText.active) {
             this.statusText.setText("Great job!\n\nClick on the globe to find a new habitat area\nfor another mystery species.");
         }
-        
+
         // Emit reset event for React components
         EventBus.emit('game-reset', undefined);
     }
@@ -1845,6 +1914,9 @@ export class Game extends Phaser.Scene {
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
         EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
         EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
+        EventBus.off('node-complete', this.handleNodeComplete, this);
+        EventBus.off('expedition-start', this.onExpeditionStart, this);
+        EventBus.off('game-reset', this.onGameReset, this);
 
         // Remove player tracking listeners if they exist
         if (this.currentUserId) {

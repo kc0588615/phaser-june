@@ -16,7 +16,7 @@ export class BackendPuzzle {
     private nextGemsToSpawn: GemType[] = [];
     private score: number = 0;
     private movesUsed: number = 0;
-    private readonly maxMoves: number = MAX_MOVES;
+    private maxMoves: number = MAX_MOVES;
 
     constructor(
         public readonly width: number,
@@ -74,6 +74,10 @@ export class BackendPuzzle {
 
     resetMoves(): void {
         this.movesUsed = 0;
+    }
+
+    setMaxMoves(max: number): void {
+        this.maxMoves = max;
     }
 
     calculatePhaseBaseScore(phase: ExplodeAndReplacePhase): number {

@@ -1,26 +1,195 @@
-import { useRef, useEffect, useState } from 'react';
-import { PhaserGame, IRefPhaserGame } from './PhaserGame'; // Your existing PhaserGame component
-import CesiumMap from './components/CesiumMap';  // Import the new CesiumMap component
-import { SpeciesPanel } from './components/SpeciesPanel'; // Import the SpeciesPanel component
-import SpeciesList from './components/SpeciesList'; // Import the SpeciesList component
-import UserMenu from './components/UserMenu'; // Import the UserMenu component
-import { EventBus } from './game/EventBus';      // If App.jsx itself needs to react to game events
-import { Toaster } from 'sonner';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { PhaserGame, IRefPhaserGame } from './PhaserGame';
+import CesiumMap from './components/CesiumMap';
+import { SpeciesPanel } from './components/SpeciesPanel';
+import SpeciesList from './components/SpeciesList';
+import UserMenu from './components/UserMenu';
+import { EventBus } from './game/EventBus';
+import type { EventPayloads } from './game/EventBus';
+import { toast, Toaster } from 'sonner';
 import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
+import type { RunState } from '@/types/expedition';
+import { GEM_DEFS } from '@/types/expedition';
+import { ExpeditionBriefing } from './components/ExpeditionBriefing';
+import { RunTrack } from './components/RunTrack';
+import { ActiveEncounterPanel } from './components/ActiveEncounterPanel';
+import { GemWallet } from './components/GemWallet';
+
+const INITIAL_RUN_STATE: RunState = {
+    phase: 'idle',
+    expedition: null,
+    currentNodeIndex: 0,
+    gemWallet: { nature_gem: 0, water_gem: 0, knowledge_gem: 0, craft_gem: 0 },
+};
 
 function MainAppLayout() {
-    const phaserRef = useRef<IRefPhaserGame | null>(null); // Ref to access Phaser game instance and current scene
-    const [viewMode, setViewMode] = useState<'map' | 'clues' | 'species'>('map'); // View mode state
-    const [scrollToSpeciesId, setScrollToSpeciesId] = useState<number | null>(null); // Track species to scroll to
+    const phaserRef = useRef<IRefPhaserGame | null>(null);
+    const [viewMode, setViewMode] = useState<'map' | 'clues' | 'species'>('map');
+    const [scrollToSpeciesId, setScrollToSpeciesId] = useState<number | null>(null);
+    const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
 
-    // This callback is for when PhaserGame signals that a scene is ready
+    // Store full expedition payload for re-emitting cesium-location-selected per node
+    const expeditionPayloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
+    const runIdRef = useRef<string | null>(null);
+    const nodeIdsRef = useRef<string[]>([]);
+    const hudRef = useRef<{ score: number; movesUsed: number }>({ score: 0, movesUsed: 0 });
+    const nodeStartScoreRef = useRef<number>(0);
+
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
-        // You can store the scene or game instance if App.jsx needs to directly interact
         if (phaserRef.current) {
             phaserRef.current.scene = scene;
         }
     };
+
+    // --- Expedition event handlers ---
+
+    const handleExpeditionDataReady = useCallback((data: EventPayloads['expedition-data-ready']) => {
+        expeditionPayloadRef.current = data;
+        setRunState({
+            phase: 'briefing',
+            expedition: data.expedition,
+            currentNodeIndex: 0,
+            gemWallet: { nature_gem: 0, water_gem: 0, knowledge_gem: 0, craft_gem: 0 },
+        });
+    }, []);
+
+    const handleExpeditionStart = useCallback(() => {
+        setRunState(prev => ({ ...prev, phase: 'in-run' }));
+        // Reset score tracking for this run
+        hudRef.current = { score: 0, movesUsed: 0 };
+        nodeStartScoreRef.current = 0;
+        const payload = expeditionPayloadRef.current;
+        if (!payload) return;
+
+        // Persist run to DB (fire-and-forget; don't block puzzle init)
+        const locationKey = `${payload.lon.toFixed(4)},${payload.lat.toFixed(4)}`;
+        fetch('/api/runs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lon: payload.lon,
+                lat: payload.lat,
+                locationKey,
+                nodes: payload.expedition.nodes,
+                bioregion: payload.expedition.bioregion?.bioregion ?? undefined,
+                realm: payload.expedition.bioregion?.realm ?? undefined,
+                biome: payload.expedition.bioregion?.biome ?? undefined,
+            }),
+        })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data) {
+                    runIdRef.current = data.runId;
+                    nodeIdsRef.current = data.nodeIds;
+                    console.log('Run session created:', data.runId);
+                }
+            })
+            .catch(err => console.error('Failed to create run session:', err));
+
+        // Emit cesium-location-selected to trigger Game scene puzzle init
+        EventBus.emit('cesium-location-selected', {
+            lon: payload.lon,
+            lat: payload.lat,
+            species: payload.species,
+            rasterHabitats: payload.rasterHabitats,
+            habitats: payload.habitats,
+            difficulty: payload.expedition.nodes[0]?.difficulty,
+            obstacles: payload.expedition.nodes[0]?.obstacles,
+        });
+    }, []);
+
+    const handleNodeComplete = useCallback((data: { nodeIndex: number }) => {
+        setRunState(prev => {
+            // Guard: only advance if actively in-run
+            if (prev.phase !== 'in-run') return prev;
+
+            const nodeOrder = prev.currentNodeIndex + 1; // 1-based for DB
+            const nextIndex = prev.currentNodeIndex + 1;
+
+            // Persist node completion with actual score/moves
+            const nodeScore = hudRef.current.score - nodeStartScoreRef.current;
+            const nodeMoves = hudRef.current.movesUsed;
+            if (runIdRef.current) {
+                fetch(`/api/runs/${runIdRef.current}/nodes/${nodeOrder}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves }),
+                }).catch(err => console.error('Failed to complete node:', err));
+            }
+            // Next node starts from current cumulative score
+            nodeStartScoreRef.current = hudRef.current.score;
+
+            if (nextIndex >= (prev.expedition?.nodes.length ?? 6)) {
+                // Persist gem wallet to session metadata
+                if (runIdRef.current) {
+                    const wallet = { ...prev.gemWallet };
+                    const rid = runIdRef.current;
+                    setTimeout(() => {
+                        fetch(`/api/runs/${rid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ gemWallet: wallet }),
+                        }).catch(err => console.error('Failed to persist gem wallet:', err));
+                    }, 0);
+                }
+                setTimeout(() => toast.success('Expedition Complete!', { duration: 3000 }), 0);
+                return { ...prev, phase: 'complete' as const, currentNodeIndex: nextIndex };
+            }
+            // Advance to next node
+            setTimeout(() => toast(`Node ${nodeOrder} complete — next up!`, { duration: 1500 }), 0);
+            const payload = expeditionPayloadRef.current;
+            if (payload) {
+                const nextNode = prev.expedition?.nodes[nextIndex];
+                setTimeout(() => {
+                    EventBus.emit('cesium-location-selected', {
+                        lon: payload.lon,
+                        lat: payload.lat,
+                        species: payload.species,
+                        rasterHabitats: payload.rasterHabitats,
+                        habitats: payload.habitats,
+                        difficulty: nextNode?.difficulty,
+                        obstacles: nextNode?.obstacles,
+                    });
+                }, 100);
+            }
+            return { ...prev, currentNodeIndex: nextIndex };
+        });
+    }, []);
+
+    // Award gem based on resource_bias weighted probabilities
+    const handleClueForWallet = useCallback((_clue: EventPayloads['clue-revealed']) => {
+        const bias = expeditionPayloadRef.current?.expedition.resourceBias;
+        const keys: (keyof RunState['gemWallet'])[] = ['nature_gem', 'water_gem', 'knowledge_gem', 'craft_gem'];
+        // Weighted random pick using resource_bias (fallback: equal weights)
+        const weights = keys.map(k => bias?.[k] ?? 0.25);
+        const total = weights.reduce((s, w) => s + w, 0);
+        const r = Math.random() * total;
+        let acc = 0;
+        let gemKey = keys[0];
+        for (let i = 0; i < keys.length; i++) {
+            acc += weights[i];
+            if (r < acc) { gemKey = keys[i]; break; }
+        }
+        setRunState(prev => {
+            if (prev.phase !== 'in-run') return prev;
+            return { ...prev, gemWallet: { ...prev.gemWallet, [gemKey]: prev.gemWallet[gemKey] + 1 } };
+        });
+    }, []);
+
+    const handleRunReset = useCallback(() => {
+        runIdRef.current = null;
+        nodeIdsRef.current = [];
+        hudRef.current = { score: 0, movesUsed: 0 };
+        nodeStartScoreRef.current = 0;
+        setRunState(INITIAL_RUN_STATE);
+        EventBus.emit('game-reset', undefined);
+    }, []);
+
+    // Track latest HUD state for persisting score/moves on node-complete
+    const handleHudUpdate = useCallback((data: EventPayloads['game-hud-updated']) => {
+        hudRef.current = { score: data.score, movesUsed: data.movesUsed };
+    }, []);
 
     // Handle show-species-list event
     useEffect(() => {
@@ -30,63 +199,60 @@ function MainAppLayout() {
         };
 
         EventBus.on('show-species-list', handleShowSpeciesList);
+        EventBus.on('expedition-data-ready', handleExpeditionDataReady);
+        EventBus.on('expedition-start', handleExpeditionStart);
+        EventBus.on('node-complete', handleNodeComplete);
+        EventBus.on('clue-revealed', handleClueForWallet);
+        EventBus.on('game-hud-updated', handleHudUpdate);
 
         return () => {
             EventBus.off('show-species-list', handleShowSpeciesList);
+            EventBus.off('expedition-data-ready', handleExpeditionDataReady);
+            EventBus.off('expedition-start', handleExpeditionStart);
+            EventBus.off('node-complete', handleNodeComplete);
+            EventBus.off('clue-revealed', handleClueForWallet);
+            EventBus.off('game-hud-updated', handleHudUpdate);
         };
-    }, []);
+    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeComplete, handleClueForWallet, handleHudUpdate]);
 
-    // --- Layout Styling --- (Updated for game-first design)
     const appStyle: React.CSSProperties = {
         display: 'flex',
-        flexDirection: 'column', // Vertical stack: Phaser Game on top, Cesium Map below
+        flexDirection: 'column',
         width: '100vw',
         height: '100vh',
         overflow: 'hidden'
     };
     const phaserGameWrapperStyle: React.CSSProperties = {
         width: '100%',
-        height: '60%', // Phaser game takes 60% of screen
+        height: '60%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        position: 'relative',
     };
     const cesiumContainerStyle: React.CSSProperties = {
         width: '100%',
-        height: '40%', // Bottom area takes 40% of screen
+        height: '40%',
         minHeight: '0px',
-        borderTop: '2px solid #555', // Border at top of bottom container
+        borderTop: '2px solid #555',
         position: 'relative',
         overflow: 'hidden',
-        backgroundColor: '#0f172a', // Dark background to match SpeciesPanel
+        backgroundColor: '#0f172a',
         display: 'flex',
         flexDirection: 'column'
     };
-    const buttonStyle: React.CSSProperties = {
-        position: 'absolute',
-        top: '45px',
-        zIndex: 1000,
-        padding: '5px 10px',
-        backgroundColor: 'rgba(42, 42, 42, 0.8)',
-        color: 'white',
-        border: '1px solid #555',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '14px'
-    };
 
-    useEffect(() => {
-        // If you have any specific EventBus listeners from your original App.jsx, set them up here
-        // and clean them up in the return function.
-        // Example:
-        // EventBus.on('some-event', handler);
-        // return () => EventBus.off('some-event', handler);
-    }, []);
+    const inRun = runState.phase === 'in-run';
+    const showBriefing = runState.phase === 'briefing';
+    const showComplete = runState.phase === 'complete';
+    const currentNode = inRun && runState.expedition
+        ? runState.expedition.nodes[runState.currentNodeIndex]
+        : null;
 
     return (
         <div id="app-container" style={appStyle}>
             {/* Show game layout - position off-screen when in species view */}
-            <div style={{ 
+            <div style={{
                 position: viewMode === 'species' ? 'absolute' : 'relative',
                 left: viewMode === 'species' ? '-9999px' : '0',
                 display: 'flex',
@@ -94,8 +260,31 @@ function MainAppLayout() {
                 width: '100%',
                 height: '100%'
             }}>
+                {/* RunTrack bar above Phaser canvas */}
+                <div style={{ display: inRun && runState.expedition ? 'block' : 'none' }}>
+                    {runState.expedition && (
+                        <RunTrack nodes={runState.expedition.nodes} currentNodeIndex={runState.currentNodeIndex} />
+                    )}
+                </div>
+
                 <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
                     <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+
+                    {/* ActiveEncounterPanel overlay inside phaser wrapper */}
+                    {inRun && currentNode && (
+                        <ActiveEncounterPanel
+                            node={currentNode}
+                            nodeIndex={runState.currentNodeIndex}
+                            onComplete={() => EventBus.emit('node-complete', { nodeIndex: runState.currentNodeIndex })}
+                        />
+                    )}
+
+                    {/* GemWallet fixed inside phaser wrapper */}
+                    {inRun && (
+                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 50 }}>
+                            <GemWallet wallet={runState.gemWallet} />
+                        </div>
+                    )}
                 </div>
 
                 <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
@@ -146,22 +335,86 @@ function MainAppLayout() {
                         {viewMode === 'map' ? <PiListMagnifyingGlass size={18} /> : <PiGlobeHemisphereWestThin size={18} />}
                     </button>
                 </div>
-                
+
                 {/* Keep all components mounted but show/hide with CSS */}
-                <div style={{ 
-                    display: viewMode === 'map' ? 'block' : 'none',
+                <div style={{
+                    display: (viewMode === 'map' && !showBriefing) ? 'block' : 'none',
                     height: '100%',
                     width: '100%'
                 }}>
                     <CesiumMap />
                 </div>
-                
+
+                {/* ExpeditionBriefing replaces bottom area when briefing */}
+                <div style={{
+                    display: showBriefing ? 'block' : 'none',
+                    height: '100%',
+                    width: '100%',
+                }}>
+                    {runState.expedition && (
+                        <ExpeditionBriefing
+                            expedition={runState.expedition}
+                            onStart={() => EventBus.emit('expedition-start', {} as Record<string, never>)}
+                        />
+                    )}
+                </div>
+
+                {/* Run completion summary */}
+                {showComplete && (
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                        gap: '12px',
+                        fontFamily: 'sans-serif',
+                        padding: '16px',
+                    }}>
+                        <div style={{ color: '#22d3ee', fontSize: '22px', fontWeight: 700 }}>
+                            Expedition Complete!
+                        </div>
+                        <div style={{ color: '#e2e8f0', fontSize: '28px', fontWeight: 700 }}>
+                            {hudRef.current.score} pts
+                        </div>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
+                            {GEM_DEFS.map(({ key, color, label }) => (
+                                <div key={key} style={{ textAlign: 'center' }}>
+                                    <div style={{ color, fontWeight: 700, fontSize: '18px' }}>
+                                        {runState.gemWallet[key]}
+                                    </div>
+                                    <div style={{ color: '#94a3b8', fontSize: '11px' }}>{label}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ color: '#94a3b8', fontSize: '13px' }}>
+                            {runState.expedition?.nodes.length ?? 6} nodes completed
+                        </div>
+                        <button
+                            onClick={handleRunReset}
+                            style={{
+                                marginTop: '8px',
+                                padding: '8px 24px',
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            New Expedition
+                        </button>
+                    </div>
+                )}
+
                 {/* Always mounted SpeciesPanel - visible when viewMode === 'clues' */}
-                <SpeciesPanel 
-                    toastsEnabled={viewMode === 'map'} 
-                    style={{ 
+                <SpeciesPanel
+                    toastsEnabled={viewMode === 'map'}
+                    style={{
                         display: viewMode === 'clues' ? 'block' : 'none',
-                        height: '100%', 
+                        height: '100%',
                         width: '100%',
                         overflow: 'auto',
                         position: 'relative'
@@ -189,7 +442,7 @@ function MainAppLayout() {
                     scrollToSpeciesId={scrollToSpeciesId}
                 />
             </div>
-            
+
             <Toaster
                 position="bottom-right"
                 richColors

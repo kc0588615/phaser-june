@@ -21,5 +21,5 @@ export default {
   dbCredentials: {
     url: dbUrl,
   },
-  tablesFilter: ['high_scores', 'player_*', 'profiles', 'habitat_colormap'],
+  tablesFilter: ['high_scores', 'player_*', 'profiles', 'habitat_colormap', 'eco_*', 'hydro_*', 'marine_*', 'protected_planet_parcels'],
 } satisfies Config;
