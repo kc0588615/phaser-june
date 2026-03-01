@@ -34,6 +34,7 @@ function MainAppLayout() {
     const nodeIdsRef = useRef<string[]>([]);
     const hudRef = useRef<{ score: number; movesUsed: number }>({ score: 0, movesUsed: 0 });
     const nodeStartScoreRef = useRef<number>(0);
+    const nodeObjectiveProgressRef = useRef<number>(0);
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
@@ -88,14 +89,19 @@ function MainAppLayout() {
             .catch(err => console.error('Failed to create run session:', err));
 
         // Emit cesium-location-selected to trigger Game scene puzzle init
+        nodeObjectiveProgressRef.current = 0;
+        const firstNode = payload.expedition.nodes[0];
         EventBus.emit('cesium-location-selected', {
             lon: payload.lon,
             lat: payload.lat,
             species: payload.species,
             rasterHabitats: payload.rasterHabitats,
             habitats: payload.habitats,
-            difficulty: payload.expedition.nodes[0]?.difficulty,
-            obstacles: payload.expedition.nodes[0]?.obstacles,
+            difficulty: firstNode?.difficulty,
+            obstacles: firstNode?.obstacles,
+            requiredGems: firstNode?.requiredGems,
+            objectiveTarget: firstNode?.objectiveTarget,
+            nodeIndex: 0,
         });
     }, []);
 
@@ -107,14 +113,15 @@ function MainAppLayout() {
             const nodeOrder = prev.currentNodeIndex + 1; // 1-based for DB
             const nextIndex = prev.currentNodeIndex + 1;
 
-            // Persist node completion with actual score/moves
+            // Persist node completion with actual score/moves + objective progress
             const nodeScore = hudRef.current.score - nodeStartScoreRef.current;
             const nodeMoves = hudRef.current.movesUsed;
+            const objProgress = nodeObjectiveProgressRef.current;
             if (runIdRef.current) {
                 fetch(`/api/runs/${runIdRef.current}/nodes/${nodeOrder}/complete`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves }),
+                    body: JSON.stringify({ scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves, objectiveProgress: objProgress }),
                 }).catch(err => console.error('Failed to complete node:', err));
             }
             // Next node starts from current cumulative score
@@ -141,6 +148,7 @@ function MainAppLayout() {
             const payload = expeditionPayloadRef.current;
             if (payload) {
                 const nextNode = prev.expedition?.nodes[nextIndex];
+                nodeObjectiveProgressRef.current = 0;
                 setTimeout(() => {
                     EventBus.emit('cesium-location-selected', {
                         lon: payload.lon,
@@ -150,6 +158,9 @@ function MainAppLayout() {
                         habitats: payload.habitats,
                         difficulty: nextNode?.difficulty,
                         obstacles: nextNode?.obstacles,
+                        requiredGems: nextNode?.requiredGems,
+                        objectiveTarget: nextNode?.objectiveTarget,
+                        nodeIndex: nextIndex,
                     });
                 }, 100);
             }
@@ -191,6 +202,10 @@ function MainAppLayout() {
         hudRef.current = { score: data.score, movesUsed: data.movesUsed };
     }, []);
 
+    const handleObjectiveUpdate = useCallback((data: EventPayloads['node-objective-updated']) => {
+        nodeObjectiveProgressRef.current = data.progress;
+    }, []);
+
     // Handle show-species-list event
     useEffect(() => {
         const handleShowSpeciesList = (data: { speciesId: number }) => {
@@ -204,6 +219,7 @@ function MainAppLayout() {
         EventBus.on('node-complete', handleNodeComplete);
         EventBus.on('clue-revealed', handleClueForWallet);
         EventBus.on('game-hud-updated', handleHudUpdate);
+        EventBus.on('node-objective-updated', handleObjectiveUpdate);
 
         return () => {
             EventBus.off('show-species-list', handleShowSpeciesList);
@@ -212,8 +228,9 @@ function MainAppLayout() {
             EventBus.off('node-complete', handleNodeComplete);
             EventBus.off('clue-revealed', handleClueForWallet);
             EventBus.off('game-hud-updated', handleHudUpdate);
+            EventBus.off('node-objective-updated', handleObjectiveUpdate);
         };
-    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeComplete, handleClueForWallet, handleHudUpdate]);
+    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeComplete, handleClueForWallet, handleHudUpdate, handleObjectiveUpdate]);
 
     const appStyle: React.CSSProperties = {
         display: 'flex',

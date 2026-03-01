@@ -15,6 +15,9 @@ export interface EventPayloads {
     rasterHabitats: RasterHabitatResult[];
     difficulty?: number;
     obstacles?: string[];
+    requiredGems?: string[];
+    objectiveTarget?: number;
+    nodeIndex?: number;
   };
   'game-score-updated': {
     score: number;
@@ -71,6 +74,7 @@ export interface EventPayloads {
   };
   'expedition-start': Record<string, never>;
   'node-complete': { nodeIndex: number };
+  'node-objective-updated': { progress: number; target: number; requiredGems: string[] };
 }
 
 // Type-safe EventBus class

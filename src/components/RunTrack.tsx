@@ -1,6 +1,6 @@
 import React from 'react';
 import type { RunNode } from '@/types/expedition';
-import { NODE_TYPE_LABELS } from '@/types/expedition';
+import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/types/expedition';
 
 interface Props {
   nodes: RunNode[];
@@ -48,7 +48,19 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex }) => {
               {isCompleted
                 ? <><span style={{ marginRight: '3px' }}>✓</span>{NODE_TYPE_LABELS[node.node_type] || node.node_type}</>
                 : NODE_TYPE_LABELS[node.node_type] || node.node_type}
-              <div style={{ fontSize: '9px', opacity: 0.7 }}>{node.difficulty}</div>
+              <div style={{ fontSize: '9px', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                {isCurrent && node.requiredGems?.length > 0
+                  ? node.requiredGems.map((g, gi) => (
+                      <span key={gi} style={{
+                        display: 'inline-block',
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: GEM_COLOR_MAP[g] ?? '#888',
+                      }} />
+                    ))
+                  : node.difficulty}
+              </div>
             </div>
             {i < nodes.length - 1 && (
               <div style={{

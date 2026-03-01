@@ -17,6 +17,18 @@ export interface ExpeditionData {
   nearestRiverDistM?: number | null;
 }
 
+/** Board gem name → hex color for UI swatches */
+export const GEM_COLOR_MAP: Record<string, string> = {
+  black: '#1e293b',
+  blue: '#3b82f6',
+  green: '#22c55e',
+  orange: '#f97316',
+  red: '#ef4444',
+  white: '#e2e8f0',
+  yellow: '#eab308',
+  purple: '#a855f7',
+};
+
 /** Short display labels for node_type values */
 export const NODE_TYPE_LABELS: Record<string, string> = {
   riverbank_sweep: 'River',

@@ -7,6 +7,9 @@
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 
+/** Board gem colors (mirrors GemType from constants.ts — local to avoid circular imports) */
+export type NodeGemColor = 'black' | 'blue' | 'green' | 'orange' | 'red' | 'white' | 'yellow' | 'purple';
+
 export interface LayerScore {
   nodeFamily: NodeFamily;
   variant: string;
@@ -30,6 +33,8 @@ export interface RunNode {
   obstacles: string[];
   events: string[];
   rationale: string;
+  requiredGems: NodeGemColor[];
+  objectiveTarget: number;
 }
 
 export interface HabitatSignals {
@@ -167,14 +172,14 @@ function computeResourceBias(primary: NodeFamily, scores: LayerScore[]): Record<
 }
 
 /** Node templates keyed by node_type */
-const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty'>> = {
-  riverbank_sweep: { node_type: 'riverbank_sweep', obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity drives water mechanics.' },
-  dense_canopy: { node_type: 'dense_canopy', obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Forest cover supports canopy pressure gameplay.' },
-  urban_fringe: { node_type: 'urban_fringe', obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Human footprint adds urban-edge friction.' },
-  elevation_ridge: { node_type: 'elevation_ridge', obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Terrain-based traversal node.' },
-  storm_window: { node_type: 'storm_window', obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'High-risk urgency from threatened species + low protection.' },
-  custom: { node_type: 'custom', obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Context-specific challenge from spatial data.' },
-  analysis: { node_type: 'analysis', obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route deduction and wager phase.' },
+const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
+  riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['blue', 'green'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity drives water mechanics.' },
+  dense_canopy: { node_type: 'dense_canopy', requiredGems: ['green', 'black'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Forest cover supports canopy pressure gameplay.' },
+  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['red', 'white'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Human footprint adds urban-edge friction.' },
+  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['green', 'black'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Terrain-based traversal node.' },
+  storm_window: { node_type: 'storm_window', requiredGems: ['red', 'white'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'High-risk urgency from threatened species + low protection.' },
+  custom: { node_type: 'custom', requiredGems: ['purple', 'yellow'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Context-specific challenge from spatial data.' },
+  analysis: { node_type: 'analysis', requiredGems: [], obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route deduction and wager phase.' },
 };
 
 /** Unified 6-node run generator. Derives all nodes from layer scores + habitat context. */
@@ -185,7 +190,8 @@ export function generateRunNodes(
   threatenedCount: number,
   protectedCoverage: number,
 ): RunNode[] {
-  const nodes: RunNode[] = [];
+  type PartialNode = Omit<RunNode, 'objectiveTarget'>;
+  const nodes: PartialNode[] = [];
 
   // Node 1: primary from scoring
   const primaryType = mapFamilyToNodeType(selection.primaryNodeFamily, selection.primaryVariant);
@@ -229,5 +235,9 @@ export function generateRunNodes(
   // Node 6: always analysis
   nodes.push({ ...NODE_TEMPLATES.analysis, difficulty: 3 });
 
-  return nodes.slice(0, 6);
+  // Compute objectiveTarget per node: flat 6 for gem-objective nodes, 0 for analysis
+  return nodes.slice(0, 6).map(n => ({
+    ...n,
+    objectiveTarget: n.requiredGems.length > 0 ? 6 : 0,
+  }));
 }

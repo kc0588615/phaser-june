@@ -50,8 +50,10 @@ export async function POST(request: NextRequest) {
       nodeOrder: i + 1,
       nodeType: node.node_type,
       nodeStatus: i === 0 ? 'active' : 'locked',
-      hazardProfile: { obstacles: node.obstacles, events: node.events },
+      hazardProfile: { obstacles: node.obstacles, events: node.events, requiredGems: node.requiredGems ?? [] },
       boardContext: { rationale: node.rationale, difficulty: node.difficulty },
+      objectiveType: (node.requiredGems?.length ?? 0) > 0 ? 'required_gem_match' : 'any',
+      objectiveTarget: node.objectiveTarget ?? 0,
     }));
 
     const insertedNodes = await db

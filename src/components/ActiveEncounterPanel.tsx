@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { RunNode } from '@/types/expedition';
-import { NODE_TYPE_LABELS } from '@/types/expedition';
+import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/types/expedition';
+import { EventBus } from '@/game/EventBus';
+import type { EventPayloads } from '@/game/EventBus';
 
 interface Props {
   node: RunNode;
@@ -10,10 +12,35 @@ interface Props {
 
 export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onComplete }) => {
   const [clicked, setClicked] = useState(false);
+  const [progress, setProgress] = useState(0);
   const completedRef = useRef(false);
 
-  // Reset both state and ref when node changes
-  useEffect(() => { setClicked(false); completedRef.current = false; }, [nodeIndex]);
+  const hasObjective = node.objectiveTarget > 0;
+
+  // Reset when node changes
+  useEffect(() => {
+    setClicked(false);
+    setProgress(0);
+    completedRef.current = false;
+  }, [nodeIndex]);
+
+  // Listen to objective progress from Game scene
+  useEffect(() => {
+    if (!hasObjective) return;
+
+    const handler = (data: EventPayloads['node-objective-updated']) => {
+      setProgress(data.progress);
+      // Auto-complete when target reached
+      if (data.progress >= data.target && !completedRef.current) {
+        completedRef.current = true;
+        setClicked(true);
+        onComplete();
+      }
+    };
+
+    EventBus.on('node-objective-updated', handler);
+    return () => { EventBus.off('node-objective-updated', handler); };
+  }, [hasObjective, onComplete, nodeIndex]);
 
   const handleClick = () => {
     if (completedRef.current) return;
@@ -21,6 +48,8 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
     setClicked(true);
     onComplete();
   };
+
+  const pct = hasObjective ? Math.min(100, (progress / node.objectiveTarget) * 100) : 0;
 
   return (
     <div style={{
@@ -51,24 +80,62 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
         {node.rationale}
       </div>
 
-      <button
-        onClick={handleClick}
-        disabled={clicked}
-        style={{
-          width: '100%',
-          padding: '6px',
-          fontSize: '12px',
-          fontWeight: 600,
-          background: clicked ? '#475569' : '#1d4ed8',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: clicked ? 'not-allowed' : 'pointer',
-          opacity: clicked ? 0.6 : 1,
-        }}
-      >
-        {clicked ? 'Advancing...' : 'Complete Node'}
-      </button>
+      {/* Gem objective: show required gem swatches + progress bar */}
+      {hasObjective && (
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Match:</span>
+            {node.requiredGems.map((g, i) => (
+              <div key={i} style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                background: GEM_COLOR_MAP[g] ?? '#888',
+                border: '1px solid rgba(255,255,255,0.3)',
+              }} />
+            ))}
+            <span style={{ fontSize: '11px', color: '#cbd5e1', marginLeft: '4px' }}>
+              {progress}/{node.objectiveTarget}
+            </span>
+          </div>
+          <div style={{
+            height: '6px',
+            background: '#1e293b',
+            borderRadius: '3px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${pct}%`,
+              background: pct >= 100 ? '#22c55e' : 'linear-gradient(90deg, #0ea5e9, #22d3ee)',
+              borderRadius: '3px',
+              transition: 'width 0.2s ease',
+            }} />
+          </div>
+        </div>
+      )}
+
+      {/* Manual button only for analysis nodes (no gem objective) */}
+      {!hasObjective && (
+        <button
+          onClick={handleClick}
+          disabled={clicked}
+          style={{
+            width: '100%',
+            padding: '6px',
+            fontSize: '12px',
+            fontWeight: 600,
+            background: clicked ? '#475569' : '#1d4ed8',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: clicked ? 'not-allowed' : 'pointer',
+            opacity: clicked ? 0.6 : 1,
+          }}
+        >
+          {clicked ? 'Advancing...' : 'Complete Node'}
+        </button>
+      )}
     </div>
   );
 };

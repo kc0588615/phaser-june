@@ -165,6 +165,13 @@ export class Game extends Phaser.Scene {
     // Expedition run state — when true, node-complete handles transitions (not auto-reset)
     private inExpeditionRun: boolean = false;
 
+    // Node objective tracking (gem matching targets)
+    private nodeRequiredGems: Set<string> = new Set();
+    private nodeObjectiveTarget: number = 0;
+    private nodeObjectiveProgress: number = 0;
+    private nodeObjectiveCompleted: boolean = false;
+    private currentNodeIndex: number = 0;
+
     // Owl sprite
     private owl?: OwlSprite;
 
@@ -274,6 +281,22 @@ export class Game extends Phaser.Scene {
         }
 
         this.emitHud();
+
+        // Emit node objective progress to React
+        if (this.nodeObjectiveTarget > 0) {
+            EventBus.emit('node-objective-updated', {
+                progress: this.nodeObjectiveProgress,
+                target: this.nodeObjectiveTarget,
+                requiredGems: Array.from(this.nodeRequiredGems),
+            });
+            // Auto-complete node when target reached
+            if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
+                this.nodeObjectiveCompleted = true;
+                this.time.delayedCall(400, () => {
+                    EventBus.emit('node-complete', { nodeIndex: this.currentNodeIndex });
+                });
+            }
+        }
 
         // Disable input and transition when moves hit limit
         if (this.backendPuzzle.isGameOver()) {
@@ -747,6 +770,7 @@ export class Game extends Phaser.Scene {
             if (match.length > this.currentMoveSummary.largestMatch) {
                 this.currentMoveSummary.largestMatch = match.length;
             }
+            let requiredGemsInMatch = 0;
             for (const [x, y] of match) {
                 const gem = state?.[x]?.[y];
                 if (gem && gem.gemType) {
@@ -755,7 +779,16 @@ export class Game extends Phaser.Scene {
                     if (category !== null) {
                         this.currentMoveSummary.categoriesMatched.add(category);
                     }
+                    // Count toward node objective if gem color is required
+                    if (this.nodeRequiredGems.has(gem.gemType) && !this.nodeObjectiveCompleted) {
+                        this.nodeObjectiveProgress++;
+                        requiredGemsInMatch++;
+                    }
                 }
+            }
+            // Match-4+ of required gems instantly completes the node
+            if (requiredGemsInMatch >= 4 && this.nodeObjectiveTarget > 0) {
+                this.nodeObjectiveProgress = this.nodeObjectiveTarget;
             }
         }
     }
@@ -1008,6 +1041,13 @@ export class Game extends Phaser.Scene {
             this.incorrectGuessesThisSpecies = 0;
             this.speciesStartTime = Date.now();
             
+            // Initialize node objective from expedition data
+            this.nodeRequiredGems = new Set(data.requiredGems ?? []);
+            this.nodeObjectiveTarget = data.objectiveTarget ?? 0;
+            this.nodeObjectiveProgress = 0;
+            this.nodeObjectiveCompleted = false;
+            this.currentNodeIndex = data.nodeIndex ?? 0;
+
             // Store raster habitat data for green gem clues
             this.rasterHabitats = [...data.rasterHabitats];
             this.usedRasterHabitats.clear(); // Reset used raster habitats for new game
@@ -1765,6 +1805,12 @@ export class Game extends Phaser.Scene {
         // Reset HUD text to avoid stale display between nodes
         if (this.scoreText) this.scoreText.setText('Score: 0');
         if (this.movesText) this.movesText.setText('Moves: 0');
+
+        // Reset objective progress
+        this.nodeRequiredGems.clear();
+        this.nodeObjectiveTarget = 0;
+        this.nodeObjectiveProgress = 0;
+        this.nodeObjectiveCompleted = false;
 
         // Clear clue state for fresh node
         this.revealedClues.clear();

@@ -21,7 +21,7 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { scoreEarned = 0, movesUsed = 0 } = body as { scoreEarned?: number; movesUsed?: number };
+    const { scoreEarned = 0, movesUsed = 0, objectiveProgress = 0 } = body as { scoreEarned?: number; movesUsed?: number; objectiveProgress?: number };
 
     // Find the node
     const [node] = await db
@@ -45,6 +45,7 @@ export async function POST(
         nodeStatus: 'completed',
         scoreEarned,
         movesUsed,
+        objectiveProgress,
         endedAt: new Date(),
         updatedAt: new Date(),
       })
