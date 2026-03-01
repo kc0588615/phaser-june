@@ -171,13 +171,13 @@ function computeResourceBias(primary: NodeFamily, scores: LayerScore[]): Record<
   return bias;
 }
 
-/** Node templates keyed by node_type */
+/** Node templates keyed by node_type — each has a unique gem pair for variety */
 const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
   riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['blue', 'green'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity drives water mechanics.' },
   dense_canopy: { node_type: 'dense_canopy', requiredGems: ['green', 'black'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Forest cover supports canopy pressure gameplay.' },
-  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['red', 'white'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Human footprint adds urban-edge friction.' },
-  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['green', 'black'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Terrain-based traversal node.' },
-  storm_window: { node_type: 'storm_window', requiredGems: ['red', 'white'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'High-risk urgency from threatened species + low protection.' },
+  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['red', 'orange'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Human footprint adds urban-edge friction.' },
+  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['white', 'blue'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Terrain-based traversal node.' },
+  storm_window: { node_type: 'storm_window', requiredGems: ['red', 'purple'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'High-risk urgency from threatened species + low protection.' },
   custom: { node_type: 'custom', requiredGems: ['purple', 'yellow'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Context-specific challenge from spatial data.' },
   analysis: { node_type: 'analysis', requiredGems: [], obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route deduction and wager phase.' },
 };
@@ -227,9 +227,31 @@ export function generateRunNodes(
     nodes.push({ ...NODE_TEMPLATES.storm_window, difficulty: 5 });
   }
 
-  // Fill remaining with elevation_ridge
+  // Fill remaining with varied types — avoid repeating gem pairs already in the run
+  const usedGemPairs = new Set(nodes.map(n => n.requiredGems.slice().sort().join(',')));
+  const fillerPool = ['elevation_ridge', 'riverbank_sweep', 'urban_fringe', 'dense_canopy', 'custom'] as const;
+  let fillerIdx = 0;
   while (nodes.length < 5) {
-    nodes.push({ ...NODE_TEMPLATES.elevation_ridge, difficulty: 2 });
+    // Pick next filler whose gem pair isn't already used
+    let picked = false;
+    for (let i = 0; i < fillerPool.length; i++) {
+      const candidate = fillerPool[(fillerIdx + i) % fillerPool.length];
+      const tmpl = NODE_TEMPLATES[candidate];
+      const pair = tmpl.requiredGems.slice().sort().join(',');
+      if (!usedGemPairs.has(pair)) {
+        nodes.push({ ...tmpl, difficulty: 2 });
+        usedGemPairs.add(pair);
+        fillerIdx = (fillerIdx + i + 1) % fillerPool.length;
+        picked = true;
+        break;
+      }
+    }
+    if (!picked) {
+      // All pairs used — just add next in pool
+      const tmpl = NODE_TEMPLATES[fillerPool[fillerIdx % fillerPool.length]];
+      nodes.push({ ...tmpl, difficulty: 2 });
+      fillerIdx++;
+    }
   }
 
   // Node 6: always analysis

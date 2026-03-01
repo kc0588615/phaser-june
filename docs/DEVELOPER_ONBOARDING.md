@@ -56,16 +56,18 @@ npm run start    # http://localhost:3000
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `MoveAction.ts` and `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
-- Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`.
+- Expedition run loop: `src/types/expedition.ts` (RunState, catalogs), `src/lib/nodeScoring.ts` (node generation), `src/MainAppLayout.tsx` (phase state machine). Run creates 6 nodes from GIS scoring; each node has gem objectives, encounters (every 3rd match group), and souvenir drops. Components: `ExpeditionBriefing`, `RunTrack`, `ActiveEncounterPanel`, `GemWallet`, `SouvenirPouch`.
+- Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes` tables.
 
 ## 3) Recommended Reading Path
 1) **Core architecture:** [EVENTBUS_AND_DISPLAY_ARCHITECTURE.md](./EVENTBUS_AND_DISPLAY_ARCHITECTURE.md), [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md), [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [LAYOUT_RESTRUCTURE_IMPLEMENTATION.md](./LAYOUT_RESTRUCTURE_IMPLEMENTATION.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md), [species-list-improvements.md](./species-list-improvements.md).
-5) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
-6) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
-7) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
+5) **Expedition run loop:** [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
+6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
+7) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
+8) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
 
 ## 4) Full Document Index (every .md)
 
@@ -76,6 +78,10 @@ npm run start    # http://localhost:3000
 - [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md) — resize behavior, MVC flow, reactive patterns.
 - [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md) — layout variables, gem sizing, responsive behavior.
 - [PAGE_ROUTING_INFRASTRUCTURE.md](./PAGE_ROUTING_INFRASTRUCTURE.md) — Next.js routing.
+
+**Expedition Run Loop**
+- [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) — run phases, node generation, encounters, souvenirs, gem wallet, route trail.
+- [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) — GIS layer scoring, node family taxonomy, DB schema.
 
 **Game Board & Clues**
 - [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md) — match-3 board, clue emission.

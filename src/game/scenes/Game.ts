@@ -34,6 +34,7 @@ import {
 } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
+import { ENCOUNTER_CATALOG, SOUVENIR_CATALOG } from '@/types/expedition';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
 
@@ -172,6 +173,11 @@ export class Game extends Phaser.Scene {
     private nodeObjectiveCompleted: boolean = false;
     private currentNodeIndex: number = 0;
 
+    // Encounter tracking
+    private nodeMatchGroupTotal: number = 0;
+    private nodeEncounterIndex: number = 0;
+    private nodeEvents: string[] = [];
+
     // Owl sprite
     private owl?: OwlSprite;
 
@@ -298,6 +304,17 @@ export class Game extends Phaser.Scene {
             }
         }
 
+        // Check for mid-node encounter trigger (every 3rd match group)
+        if (this.nodeEvents.length > 0 && didAnyMatch) {
+            const threshold = 3;
+            const expected = Math.floor(this.nodeMatchGroupTotal / threshold);
+            if (expected > this.nodeEncounterIndex) {
+                const eventKey = this.nodeEvents[this.nodeEncounterIndex % this.nodeEvents.length];
+                this.nodeEncounterIndex++;
+                this.applyEncounter(eventKey);
+            }
+        }
+
         // Disable input and transition when moves hit limit
         if (this.backendPuzzle.isGameOver()) {
             this.disableInputs();
@@ -306,6 +323,53 @@ export class Game extends Phaser.Scene {
             this.time.delayedCall(100, () => {
                 this.scene.start('GameOver', { score: finalScore });
             });
+        }
+    }
+
+    private applyEncounter(eventKey: string): void {
+        const effect = ENCOUNTER_CATALOG[eventKey];
+        if (!effect || !this.backendPuzzle) return;
+
+        switch (effect.type) {
+            case 'bonus_gems': {
+                const gemsToQueue = Array.from(this.nodeRequiredGems).slice(0, 3) as GemType[];
+                if (gemsToQueue.length > 0) {
+                    this.backendPuzzle.addNextGemsToSpawn(gemsToQueue);
+                }
+                break;
+            }
+            case 'score_boost':
+                this.backendPuzzle.addBonusScore(50);
+                this.emitHud();
+                break;
+            case 'objective_boost':
+                if (this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
+                    this.nodeObjectiveProgress = Math.min(
+                        this.nodeObjectiveProgress + 2,
+                        this.nodeObjectiveTarget
+                    );
+                    EventBus.emit('node-objective-updated', {
+                        progress: this.nodeObjectiveProgress,
+                        target: this.nodeObjectiveTarget,
+                        requiredGems: Array.from(this.nodeRequiredGems),
+                    });
+                    if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
+                        this.nodeObjectiveCompleted = true;
+                        this.time.delayedCall(400, () => {
+                            EventBus.emit('node-complete', { nodeIndex: this.currentNodeIndex });
+                        });
+                    }
+                }
+                break;
+        }
+
+        // Roll souvenir
+        const souvenirDef = SOUVENIR_CATALOG[eventKey];
+        const souvenirDrop = souvenirDef && Math.random() < souvenirDef.dropChance ? souvenirDef : undefined;
+
+        EventBus.emit('encounter-triggered', { eventKey, effect, souvenirDrop });
+        if (souvenirDrop) {
+            EventBus.emit('souvenir-dropped', { souvenir: souvenirDrop });
         }
     }
 
@@ -1048,6 +1112,11 @@ export class Game extends Phaser.Scene {
             this.nodeObjectiveCompleted = false;
             this.currentNodeIndex = data.nodeIndex ?? 0;
 
+            // Encounter tracking for this node
+            this.nodeMatchGroupTotal = 0;
+            this.nodeEncounterIndex = 0;
+            this.nodeEvents = data.events ?? [];
+
             // Store raster habitat data for green gem clues
             this.rasterHabitats = [...data.rasterHabitats];
             this.usedRasterHabitats.clear(); // Reset used raster habitats for new game
@@ -1473,6 +1542,10 @@ export class Game extends Phaser.Scene {
             multiplier = 1;
         }
 
+        // Accumulate match groups for encounter triggers
+        if (this.currentMoveSummary) {
+            this.nodeMatchGroupTotal += this.currentMoveSummary.matchGroups;
+        }
         this.lastMoveCategories = this.currentMoveSummary ? new Set(this.currentMoveSummary.categoriesMatched) : new Set();
         this.currentMoveSummary = null;
 
@@ -1811,6 +1884,11 @@ export class Game extends Phaser.Scene {
         this.nodeObjectiveTarget = 0;
         this.nodeObjectiveProgress = 0;
         this.nodeObjectiveCompleted = false;
+
+        // Reset encounter state
+        this.nodeMatchGroupTotal = 0;
+        this.nodeEncounterIndex = 0;
+        this.nodeEvents = [];
 
         // Clear clue state for fresh node
         this.revealedClues.clear();

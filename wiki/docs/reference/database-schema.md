@@ -182,6 +182,56 @@ Aggregated per-player statistics. JSONB fields store map-style counts.
 | `created_at` | timestamptz | Created timestamp |
 | `updated_at` | timestamptz | Updated timestamp |
 
+### eco_run_sessions
+
+Expedition run sessions. One per map click that starts an expedition.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `player_id` | uuid | FK to profiles.user_id (nullable) |
+| `location_key` | text | `lon,lat` string for grouping |
+| `lon` | numeric | Click longitude |
+| `lat` | numeric | Click latitude |
+| `run_status` | text | `active` / `completed` / `abandoned` |
+| `node_count_planned` | integer | Planned node count (default 6) |
+| `node_index_current` | integer | Current node (1-based) |
+| `score_total` | integer | Cumulative score |
+| `moves_used` | integer | Cumulative moves |
+| `gem_wallet` | jsonb | `{ nature_gem, water_gem, knowledge_gem, craft_gem }` |
+| `bioregion` | text | Bioregion context |
+| `realm` | text | Realm context |
+| `biome` | text | Biome context |
+| `started_at` | timestamptz | Run start |
+| `ended_at` | timestamptz | Run end |
+| `created_at` | timestamptz | Created timestamp |
+
+### eco_run_nodes
+
+Per-node records within an expedition run.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `run_id` | uuid | FK to eco_run_sessions.id |
+| `node_order` | integer | 1-based position in run |
+| `node_type` | text | Template type (riverbank_sweep, dense_canopy, etc.) |
+| `node_status` | text | `pending` / `active` / `completed` |
+| `difficulty` | integer | 1-5 |
+| `objective_type` | text | Objective category |
+| `objective_target` | integer | Target count |
+| `objective_progress` | integer | Current progress |
+| `hazard_profile` | jsonb | Obstacles + events config |
+| `reward_profile` | jsonb | Souvenirs and other rewards |
+| `reward_claimed` | boolean | Whether rewards collected |
+| `score_earned` | integer | Score for this node |
+| `moves_used` | integer | Moves for this node |
+| `board_seed` | integer | Reproducible board seed |
+| `started_at` | timestamptz | Node start |
+| `ended_at` | timestamptz | Node end |
+| `created_at` | timestamptz | Created timestamp |
+| `updated_at` | timestamptz | Updated timestamp |
+
 ### habitat_colormap
 
 | Column | Type | Description |

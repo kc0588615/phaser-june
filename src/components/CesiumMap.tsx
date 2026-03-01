@@ -19,8 +19,12 @@ import {
   Color as CesiumColor,
   ConstantProperty,
   ColorMaterialProperty,
+  CallbackProperty,
+  PolylineDashMaterialProperty,
+  Entity as CesiumEntity,
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
+import type { EventPayloads } from '../game/EventBus';
 import { speciesService } from '../lib/speciesService';
 import type { Species } from '../types/database';
 import { getAppConfig } from '../utils/config';
@@ -57,14 +61,106 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   // Track spatial layer data sources for cleanup
   const spatialLayersRef = useRef<GeoJsonDataSource[]>([]);
 
+  // Route trail entities
+  const trailEntitiesRef = useRef<CesiumEntity[]>([]);
+  const trailPositionsRef = useRef<{ lon: number; lat: number }[]>([]);
+  const trailCompletedIndexRef = useRef<number>(0);
+
+  // Compute synthetic trail positions fanned NE from center
+  const computeTrailPositions = useCallback((lon: number, lat: number, count: number) => {
+    const step = 0.003; // ~300m
+    return Array.from({ length: count }, (_, i) => ({
+      lon: lon + i * step * 0.7,
+      lat: lat + i * step * 0.7,
+    }));
+  }, []);
+
+  const removeTrailEntities = useCallback(() => {
+    if (!viewerRef.current?.cesiumElement) return;
+    const viewer = viewerRef.current.cesiumElement;
+    for (const ent of trailEntitiesRef.current) {
+      try { viewer.entities.remove(ent); } catch { /* ok */ }
+    }
+    trailEntitiesRef.current = [];
+    trailPositionsRef.current = [];
+    trailCompletedIndexRef.current = 0;
+  }, []);
+
   // Block map clicks during active expedition run
   const runPhaseRef: MutableRefObject<string> = useRef('idle');
   useEffect(() => {
-    const onExpeditionReady = () => { runPhaseRef.current = 'briefing'; };
+    const onExpeditionReady = (data: EventPayloads['expedition-data-ready']) => {
+      runPhaseRef.current = 'briefing';
+      // Build trail positions from expedition nodes
+      const nodeCount = data.expedition.nodes.length;
+      const positions = computeTrailPositions(data.lon, data.lat, nodeCount);
+      trailPositionsRef.current = positions;
+      trailCompletedIndexRef.current = 0;
+
+      if (viewerRef.current?.cesiumElement && positions.length > 1) {
+        const viewer = viewerRef.current.cesiumElement;
+        removeTrailEntities();
+
+        // Polyline using CallbackProperty for reactive updates
+        const polyline = viewer.entities.add({
+          polyline: {
+            positions: new CallbackProperty(() => {
+              const idx = Math.min(trailCompletedIndexRef.current + 1, trailPositionsRef.current.length);
+              return trailPositionsRef.current.slice(0, idx).map(p =>
+                Cartesian3.fromDegrees(p.lon, p.lat)
+              );
+            }, false) as any,
+            material: new PolylineDashMaterialProperty({
+              color: CesiumColor.CYAN.withAlpha(0.7),
+              dashLength: 12,
+            }),
+            width: new ConstantProperty(3),
+            clampToGround: new ConstantProperty(true),
+          },
+        });
+        trailEntitiesRef.current.push(polyline);
+
+        // Node point markers
+        for (let i = 0; i < positions.length; i++) {
+          const pt = viewer.entities.add({
+            position: Cartesian3.fromDegrees(positions[i].lon, positions[i].lat),
+            point: {
+              pixelSize: new ConstantProperty(8),
+              color: new ConstantProperty(CesiumColor.GRAY),
+              outlineColor: new ConstantProperty(CesiumColor.WHITE),
+              outlineWidth: new ConstantProperty(1),
+              heightReference: new ConstantProperty(HeightReference.CLAMP_TO_GROUND),
+            },
+          });
+          trailEntitiesRef.current.push(pt);
+        }
+        // Mark first node as current (yellow)
+        const firstPt = trailEntitiesRef.current[1]; // [0] is polyline
+        if (firstPt?.point) {
+          firstPt.point.color = new ConstantProperty(CesiumColor.YELLOW);
+          firstPt.point.pixelSize = new ConstantProperty(10);
+        }
+      }
+    };
     const onExpeditionStart = () => { runPhaseRef.current = 'in-run'; };
-    const onNodeComplete = () => { /* stays in-run until run completes or resets */ };
+    const onNodeComplete = (data: { nodeIndex: number }) => {
+      // Extend trail + recolor markers
+      const completedIdx = data.nodeIndex;
+      trailCompletedIndexRef.current = completedIdx + 1;
+      const markerIdx = completedIdx + 1; // offset by polyline at [0]
+      if (trailEntitiesRef.current[markerIdx]?.point) {
+        trailEntitiesRef.current[markerIdx].point!.color = new ConstantProperty(CesiumColor.CYAN);
+      }
+      // Mark next node as current
+      const nextMarkerIdx = markerIdx + 1;
+      if (trailEntitiesRef.current[nextMarkerIdx]?.point) {
+        trailEntitiesRef.current[nextMarkerIdx].point!.color = new ConstantProperty(CesiumColor.YELLOW);
+        trailEntitiesRef.current[nextMarkerIdx].point!.pixelSize = new ConstantProperty(10);
+      }
+    };
     const onGameReset = () => {
       runPhaseRef.current = 'idle';
+      removeTrailEntities();
       // Remove spatial layer overlays
       if (viewerRef.current?.cesiumElement) {
         const viewer = viewerRef.current.cesiumElement;
@@ -84,7 +180,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
       EventBus.off('node-complete', onNodeComplete);
       EventBus.off('game-reset', onGameReset);
     };
-  }, []);
+  }, [computeTrailPositions, removeTrailEntities]);
 
   useEffect(() => {
     // Crucial for Next.js: CESIUM_BASE_URL is defined in next.config.mjs and made global in global.d.ts

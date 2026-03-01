@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData } from '@/types/expedition';
+import type { ExpeditionData, EncounterEffect, SouvenirDef } from '@/types/expedition';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -18,6 +18,7 @@ export interface EventPayloads {
     requiredGems?: string[];
     objectiveTarget?: number;
     nodeIndex?: number;
+    events?: string[];
   };
   'game-score-updated': {
     score: number;
@@ -75,6 +76,8 @@ export interface EventPayloads {
   'expedition-start': Record<string, never>;
   'node-complete': { nodeIndex: number };
   'node-objective-updated': { progress: number; target: number; requiredGems: string[] };
+  'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
+  'souvenir-dropped': { souvenir: SouvenirDef };
 }
 
 // Type-safe EventBus class

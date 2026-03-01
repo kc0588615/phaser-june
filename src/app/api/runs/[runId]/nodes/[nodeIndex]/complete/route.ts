@@ -21,7 +21,10 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { scoreEarned = 0, movesUsed = 0, objectiveProgress = 0 } = body as { scoreEarned?: number; movesUsed?: number; objectiveProgress?: number };
+    const { scoreEarned = 0, movesUsed = 0, objectiveProgress = 0, souvenirs } = body as {
+      scoreEarned?: number; movesUsed?: number; objectiveProgress?: number;
+      souvenirs?: { id: string; name: string }[];
+    };
 
     // Find the node
     const [node] = await db
@@ -38,7 +41,11 @@ export async function POST(
       return NextResponse.json({ error: 'Node already completed' }, { status: 409 });
     }
 
-    // Mark node completed
+    // Mark node completed + persist souvenirs in rewardProfile
+    const rewardUpdate: Record<string, unknown> = {};
+    if (souvenirs && souvenirs.length > 0) {
+      rewardUpdate.souvenirs = souvenirs;
+    }
     await db
       .update(ecoRunNodes)
       .set({
@@ -46,6 +53,9 @@ export async function POST(
         scoreEarned,
         movesUsed,
         objectiveProgress,
+        ...(souvenirs && souvenirs.length > 0
+          ? { rewardProfile: rewardUpdate, rewardClaimed: true }
+          : {}),
         endedAt: new Date(),
         updatedAt: new Date(),
       })

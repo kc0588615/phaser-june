@@ -26,6 +26,28 @@ Prioritized documentation gaps for contributors. Each item includes the source f
 
 These files are essential to understand before making any game changes.
 
+### 0. Expedition Run Loop (COMPLETED)
+
+**Source:** `src/types/expedition.ts`, `src/lib/nodeScoring.ts`, `src/MainAppLayout.tsx`, `src/game/scenes/Game.ts`
+**Current State:** Documented
+**Location:** `docs/guides/game/expedition-run-loop.md`, `docs/EXPEDITION_RUN_LOOP.md`
+
+**Covers:**
+- [x] Run phases (idle → briefing → in-run → complete)
+- [x] Node generation from GIS scoring (6 per expedition)
+- [x] Node templates with unique gem pairs
+- [x] Gem objectives + objective tracking in Game.ts
+- [x] Mid-node encounters (every 3rd match group)
+- [x] Encounter effects (bonus_gems, score_boost, objective_boost)
+- [x] Souvenir drops (11 items, probabilistic)
+- [x] Gem wallet + resource bias weighting
+- [x] Route trail (CesiumMap polyline + markers)
+- [x] API routes (runs, node-complete)
+- [x] EventBus events (6 new events documented)
+- [x] eco_run_sessions + eco_run_nodes tables
+
+---
+
 ### 1. Match-3 Game Logic (`BackendPuzzle.ts`)
 
 **Source:** `src/game/BackendPuzzle.ts` (13KB)
@@ -428,7 +450,10 @@ Update this section as items are completed:
 
 | Item | Status | Contributor | Date |
 |------|--------|-------------|------|
+| expedition-run-loop.md | Completed | Claude | 2026-03-01 |
+| event-types.md update (6 new events) | Completed | Claude | 2026-03-01 |
+| database-schema.md update (eco_run tables) | Completed | Claude | 2026-03-01 |
+| game-constants.md | Completed | Codex | 2025-12-31 |
 | match3-logic.md | Not Started | - | - |
 | board-rendering.md | Not Started | - | - |
-| game-constants.md | Completed | Codex | 2025-12-31 |
 | ... | ... | ... | ... |

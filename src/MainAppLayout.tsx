@@ -8,18 +8,20 @@ import { EventBus } from './game/EventBus';
 import type { EventPayloads } from './game/EventBus';
 import { toast, Toaster } from 'sonner';
 import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
-import type { RunState } from '@/types/expedition';
+import type { RunState, SouvenirDef } from '@/types/expedition';
 import { GEM_DEFS } from '@/types/expedition';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
 import { RunTrack } from './components/RunTrack';
 import { ActiveEncounterPanel } from './components/ActiveEncounterPanel';
 import { GemWallet } from './components/GemWallet';
+import { SouvenirPouch } from './components/SouvenirPouch';
 
 const INITIAL_RUN_STATE: RunState = {
     phase: 'idle',
     expedition: null,
     currentNodeIndex: 0,
     gemWallet: { nature_gem: 0, water_gem: 0, knowledge_gem: 0, craft_gem: 0 },
+    souvenirs: [],
 };
 
 function MainAppLayout() {
@@ -52,6 +54,7 @@ function MainAppLayout() {
             expedition: data.expedition,
             currentNodeIndex: 0,
             gemWallet: { nature_gem: 0, water_gem: 0, knowledge_gem: 0, craft_gem: 0 },
+            souvenirs: [],
         });
     }, []);
 
@@ -102,6 +105,7 @@ function MainAppLayout() {
             requiredGems: firstNode?.requiredGems,
             objectiveTarget: firstNode?.objectiveTarget,
             nodeIndex: 0,
+            events: firstNode?.events,
         });
     }, []);
 
@@ -121,7 +125,14 @@ function MainAppLayout() {
                 fetch(`/api/runs/${runIdRef.current}/nodes/${nodeOrder}/complete`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves, objectiveProgress: objProgress }),
+                    body: JSON.stringify({
+                        scoreEarned: Math.max(0, nodeScore),
+                        movesUsed: nodeMoves,
+                        objectiveProgress: objProgress,
+                        souvenirs: prev.souvenirs.length > 0
+                            ? prev.souvenirs.map(s => ({ id: s.id, name: s.name }))
+                            : undefined,
+                    }),
                 }).catch(err => console.error('Failed to complete node:', err));
             }
             // Next node starts from current cumulative score
@@ -161,6 +172,7 @@ function MainAppLayout() {
                         requiredGems: nextNode?.requiredGems,
                         objectiveTarget: nextNode?.objectiveTarget,
                         nodeIndex: nextIndex,
+                        events: nextNode?.events,
                     });
                 }, 100);
             }
@@ -206,6 +218,13 @@ function MainAppLayout() {
         nodeObjectiveProgressRef.current = data.progress;
     }, []);
 
+    const handleSouvenirDrop = useCallback((data: { souvenir: SouvenirDef }) => {
+        setRunState(prev => prev.phase === 'in-run'
+            ? { ...prev, souvenirs: [...prev.souvenirs, data.souvenir] }
+            : prev
+        );
+    }, []);
+
     // Handle show-species-list event
     useEffect(() => {
         const handleShowSpeciesList = (data: { speciesId: number }) => {
@@ -220,6 +239,7 @@ function MainAppLayout() {
         EventBus.on('clue-revealed', handleClueForWallet);
         EventBus.on('game-hud-updated', handleHudUpdate);
         EventBus.on('node-objective-updated', handleObjectiveUpdate);
+        EventBus.on('souvenir-dropped', handleSouvenirDrop);
 
         return () => {
             EventBus.off('show-species-list', handleShowSpeciesList);
@@ -229,8 +249,9 @@ function MainAppLayout() {
             EventBus.off('clue-revealed', handleClueForWallet);
             EventBus.off('game-hud-updated', handleHudUpdate);
             EventBus.off('node-objective-updated', handleObjectiveUpdate);
+            EventBus.off('souvenir-dropped', handleSouvenirDrop);
         };
-    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeComplete, handleClueForWallet, handleHudUpdate, handleObjectiveUpdate]);
+    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeComplete, handleClueForWallet, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop]);
 
     const appStyle: React.CSSProperties = {
         display: 'flex',
@@ -296,10 +317,13 @@ function MainAppLayout() {
                         />
                     )}
 
-                    {/* GemWallet fixed inside phaser wrapper */}
+                    {/* GemWallet + SouvenirPouch fixed inside phaser wrapper */}
                     {inRun && (
-                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 50 }}>
+                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 50, display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
                             <GemWallet wallet={runState.gemWallet} />
+                            {runState.souvenirs.length > 0 && (
+                                <SouvenirPouch souvenirs={runState.souvenirs} />
+                            )}
                         </div>
                     )}
                 </div>

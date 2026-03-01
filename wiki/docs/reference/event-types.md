@@ -26,6 +26,12 @@ Complete catalog of all EventBus events, their payloads, emitters, and listeners
 | `game-hud-updated` | Phaser → React | Game.ts | SpeciesPanel.tsx |
 | `game-restart` | React → Phaser | UI Component | Game.ts |
 | `show-species-list` | React → React | SpeciesPanel.tsx | MainAppLayout.tsx |
+| `expedition-data-ready` | React → React | CesiumMap.tsx | MainAppLayout.tsx |
+| `expedition-start` | React → React | MainAppLayout.tsx | MainAppLayout.tsx |
+| `node-complete` | Phaser → React | Game.ts | MainAppLayout.tsx |
+| `node-objective-updated` | Phaser → React | Game.ts | ActiveEncounterPanel.tsx, MainAppLayout.tsx |
+| `encounter-triggered` | Phaser → React | Game.ts | ActiveEncounterPanel.tsx |
+| `souvenir-dropped` | Phaser → React | Game.ts | MainAppLayout.tsx |
 
 ## Event Payloads
 
@@ -268,6 +274,99 @@ interface Payload {
 
 Emitted to toggle the species catalog view.
 
+### expedition-data-ready
+
+```typescript
+interface Payload {
+  lon: number; lat: number;
+  expedition: ExpeditionData;
+  species: Species[];
+  rasterHabitats: RasterHabitatResult[];
+  habitats: string[];
+}
+```
+
+Emitted when a map click generates a full expedition (GIS scoring + node generation complete).
+
+**Emitter:** `CesiumMap.tsx` (after `/api/protected-areas/at-point` response)
+**Listener:** `MainAppLayout.tsx` (enters briefing phase)
+
+---
+
+### expedition-start
+
+```typescript
+type Payload = Record<string, never>;
+```
+
+Emitted when player clicks Start in ExpeditionBriefing.
+
+---
+
+### node-complete
+
+```typescript
+interface Payload {
+  nodeIndex: number;
+}
+```
+
+Emitted when a node's gem objective is met (auto-complete) or manually completed (analysis nodes).
+
+**Emitter:** `Game.ts` (objective reached) or `ActiveEncounterPanel.tsx` (manual button)
+**Listener:** `MainAppLayout.tsx` (advances to next node or completes run)
+
+---
+
+### node-objective-updated
+
+```typescript
+interface Payload {
+  progress: number;
+  target: number;
+  requiredGems: string[];
+}
+```
+
+Emitted each move when node has a gem objective. Drives the progress bar in ActiveEncounterPanel.
+
+**Emitter:** `Game.ts` in `onMoveResolved()`
+**Listener:** `ActiveEncounterPanel.tsx`, `MainAppLayout.tsx`
+
+---
+
+### encounter-triggered
+
+```typescript
+interface Payload {
+  eventKey: string;
+  effect: EncounterEffect;
+  souvenirDrop?: SouvenirDef;
+}
+```
+
+Emitted when a mid-node encounter fires (every 3rd match group). Carries the effect applied and optional souvenir drop.
+
+**Emitter:** `Game.ts` in `applyEncounter()`
+**Listener:** `ActiveEncounterPanel.tsx` (flash overlay)
+
+---
+
+### souvenir-dropped
+
+```typescript
+interface Payload {
+  souvenir: SouvenirDef;
+}
+```
+
+Emitted alongside `encounter-triggered` when the souvenir probability roll succeeds.
+
+**Emitter:** `Game.ts` in `applyEncounter()`
+**Listener:** `MainAppLayout.tsx` (appends to `RunState.souvenirs`)
+
+---
+
 ## TypeScript Interface
 
 **Location:** `src/game/EventBus.ts`
@@ -281,6 +380,12 @@ export interface EventPayloads {
     habitats: string[];
     species: Species[];
     rasterHabitats: RasterHabitatResult[];
+    difficulty?: number;
+    obstacles?: string[];
+    requiredGems?: string[];
+    objectiveTarget?: number;
+    nodeIndex?: number;
+    events?: string[];
   };
   'layout-changed': {
     mapMinimized: boolean;
@@ -310,12 +415,28 @@ export interface EventPayloads {
   'game-hud-updated': {
     score: number;
     movesRemaining: number;
+    movesUsed: number;
+    maxMoves: number;
     streak: number;
+    multiplier: number;
+    moveMultiplier?: number;
   };
-  'game-restart': undefined;
+  'game-restart': Record<string, never>;
   'show-species-list': {
-    scrollToSpeciesId?: number;
+    speciesId: number;
   };
+  'expedition-data-ready': {
+    lon: number; lat: number;
+    expedition: ExpeditionData;
+    species: Species[];
+    rasterHabitats: RasterHabitatResult[];
+    habitats: string[];
+  };
+  'expedition-start': Record<string, never>;
+  'node-complete': { nodeIndex: number };
+  'node-objective-updated': { progress: number; target: number; requiredGems: string[] };
+  'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
+  'souvenir-dropped': { souvenir: SouvenirDef };
 }
 ```
 

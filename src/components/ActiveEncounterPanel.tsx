@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { RunNode } from '@/types/expedition';
+import type { RunNode, EncounterEffect, SouvenirDef } from '@/types/expedition';
 import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/types/expedition';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
@@ -14,6 +14,8 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
   const [clicked, setClicked] = useState(false);
   const [progress, setProgress] = useState(0);
   const completedRef = useRef(false);
+  const [flash, setFlash] = useState<{ label: string; emoji?: string } | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasObjective = node.objectiveTarget > 0;
 
@@ -22,7 +24,22 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
     setClicked(false);
     setProgress(0);
     completedRef.current = false;
+    setFlash(null);
   }, [nodeIndex]);
+
+  // Listen for encounter-triggered events
+  useEffect(() => {
+    const handler = (data: EventPayloads['encounter-triggered']) => {
+      setFlash({ label: data.effect.label, emoji: data.souvenirDrop?.emoji });
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = setTimeout(() => setFlash(null), 2000);
+    };
+    EventBus.on('encounter-triggered', handler);
+    return () => {
+      EventBus.off('encounter-triggered', handler);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    };
+  }, []);
 
   // Listen to objective progress from Game scene
   useEffect(() => {
@@ -135,6 +152,27 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
         >
           {clicked ? 'Advancing...' : 'Complete Node'}
         </button>
+      )}
+
+      {/* Encounter flash overlay */}
+      {flash && (
+        <div style={{
+          marginTop: '6px',
+          padding: '6px 10px',
+          background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(34,211,238,0.15))',
+          border: '1px solid #22d3ee',
+          borderRadius: '6px',
+          textAlign: 'center',
+          animation: 'fadeIn 0.2s ease',
+          transition: 'opacity 0.5s ease',
+        }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#67e8f9' }}>
+            {flash.label}
+          </div>
+          {flash.emoji && (
+            <div style={{ fontSize: '18px', marginTop: '2px' }}>{flash.emoji}</div>
+          )}
+        </div>
       )}
     </div>
   );
