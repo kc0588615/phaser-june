@@ -5,10 +5,10 @@
  * Line layers:     score = exp(-distance_m / 500)  (overlap_ratio always 0)
  */
 
-export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
+import type { GemType } from '@/game/constants';
+import type { NodeObstacle } from '@/game/nodeObstacles';
 
-/** Board gem colors (mirrors GemType from constants.ts — local to avoid circular imports) */
-export type NodeGemColor = 'black' | 'blue' | 'green' | 'orange' | 'red' | 'white' | 'yellow' | 'purple';
+export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 
 export interface LayerScore {
   nodeFamily: NodeFamily;
@@ -30,10 +30,10 @@ export interface NodeSelection {
 export interface RunNode {
   node_type: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  obstacles: string[];
+  obstacles: NodeObstacle[];
   events: string[];
   rationale: string;
-  requiredGems: NodeGemColor[];
+  requiredGems: GemType[];
   objectiveTarget: number;
 }
 

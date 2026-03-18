@@ -1,3 +1,5 @@
+> Archived (Supabase-era): kept for historical reference. Current stack uses Drizzle + Hetzner Postgres.
+
 # MISSING PROFILES - Root Cause Found & Fixed
 
 ## Problem Identified ✅

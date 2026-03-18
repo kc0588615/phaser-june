@@ -31,9 +31,9 @@ Map click
   → /api/protected-areas/at-point (GIS scoring + node gen)
   → CesiumMap emits expedition-data-ready
   → MainAppLayout stores payload, shows briefing
-  → Player starts → cesium-location-selected emitted per node
-  → Game.ts runs puzzle with node config
-  → Objective met → node-complete → next node or run complete
+  → Player starts → cesium-location-selected emitted per node (with boardContext)
+  → Game.ts runs puzzle with node config + seeded obstacle state
+  → Objective met → node-advance-requested → MainAppLayout validates → node-complete → next node or run complete
 ```
 
 ## Node Generation
@@ -67,6 +67,19 @@ Each template has a **unique gem pair**. Filler logic avoids repeating pairs alr
 - Player matches required-color gems to fill progress
 - Match-4+ of required gems → instant node complete
 - Progress shown in ActiveEncounterPanel
+- Objective counting reads from `phaseResult.matchGridState` (snapshot before explode-and-replace)
+- Objective progress is independent of species/clue state — nodes with no species still track gem objectives
+
+### Obstacle Seeding
+
+Obstacles are typed in `src/game/nodeObstacles.ts`. Some obstacles seed deterministic per-cell board state via `boardContext` (generated once, shared by runtime and persistence). Static seeded obstacles: `mud_tiles`, `overgrowth`, `junk_blockers`, `steep_terrain`, `signal_dropout`, `noise_interference`, `unknown_terrain`, `limited_signal`. Dynamic-only placeholders (no cell mechanic yet): `flow_shift`, `low_visibility`, `time_pressure`.
+
+### Node Advancement
+
+- Phaser owns objective tracking; React owns expedition advancement
+- Game/UI emits `node-advance-requested` when ready to advance
+- `MainAppLayout` validates the request, persists node completion, emits `node-complete`
+- `node-complete` is a fact emitted once by React, not a request signal
 
 ## Encounters
 
@@ -148,9 +161,10 @@ CesiumMap draws a synthetic trail on the globe:
 |------|------|
 | `src/types/expedition.ts` | Types, catalogs, RunState |
 | `src/lib/nodeScoring.ts` | Node generation + scoring |
-| `src/game/scenes/Game.ts` | Objective tracking + encounter triggers |
-| `src/MainAppLayout.tsx` | Phase state machine, event wiring |
-| `src/components/ActiveEncounterPanel.tsx` | Node panel + encounter flash |
+| `src/game/scenes/Game.ts` | Objective tracking, encounter triggers, advancement requests |
+| `src/game/nodeObstacles.ts` | Obstacle typing, labels, deterministic board-state seeding |
+| `src/MainAppLayout.tsx` | Phase state machine, request validation, persistence, node advancement |
+| `src/components/ActiveEncounterPanel.tsx` | Node panel, progress bar, analysis-node advance button, encounter flash |
 | `src/components/RunTrack.tsx` | Progress track bar |
 | `src/components/GemWallet.tsx` | Gem inventory |
 | `src/components/SouvenirPouch.tsx` | Souvenir display |
@@ -165,7 +179,8 @@ CesiumMap draws a synthetic trail on the globe:
 | `expedition-start` | React → React | Player starts run |
 | `cesium-location-selected` | React → Phaser | Init puzzle with node params |
 | `node-objective-updated` | Phaser → React | Progress bar update |
-| `node-complete` | Phaser → React | Node done, advance |
+| `node-advance-requested` | Phaser/UI → React | Node ready to advance (request) |
+| `node-complete` | React → Phaser/Cesium/UI | Node done (fact), advance |
 | `encounter-triggered` | Phaser → React | Show encounter flash |
 | `souvenir-dropped` | Phaser → React | Collect souvenir |
 

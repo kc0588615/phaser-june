@@ -10,6 +10,8 @@ import { toast, Toaster } from 'sonner';
 import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
 import type { RunState, SouvenirDef } from '@/types/expedition';
 import { GEM_DEFS } from '@/types/expedition';
+import { GRID_COLS, GRID_ROWS } from '@/game/constants';
+import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
 import { RunTrack } from './components/RunTrack';
 import { ActiveEncounterPanel } from './components/ActiveEncounterPanel';
@@ -37,6 +39,7 @@ function MainAppLayout() {
     const hudRef = useRef<{ score: number; movesUsed: number }>({ score: 0, movesUsed: 0 });
     const nodeStartScoreRef = useRef<number>(0);
     const nodeObjectiveProgressRef = useRef<number>(0);
+    const lastResolvedNodeRef = useRef<number>(-1);
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
@@ -63,6 +66,7 @@ function MainAppLayout() {
         // Reset score tracking for this run
         hudRef.current = { score: 0, movesUsed: 0 };
         nodeStartScoreRef.current = 0;
+        lastResolvedNodeRef.current = -1;
         const payload = expeditionPayloadRef.current;
         if (!payload) return;
 
@@ -94,6 +98,12 @@ function MainAppLayout() {
         // Emit cesium-location-selected to trigger Game scene puzzle init
         nodeObjectiveProgressRef.current = 0;
         const firstNode = payload.expedition.nodes[0];
+        const firstBoardContext = buildNodeBoardContext({
+            width: GRID_COLS,
+            height: GRID_ROWS,
+            obstacles: firstNode?.obstacles ?? [],
+            nodeIndex: 0,
+        });
         EventBus.emit('cesium-location-selected', {
             lon: payload.lon,
             lat: payload.lat,
@@ -106,16 +116,20 @@ function MainAppLayout() {
             objectiveTarget: firstNode?.objectiveTarget,
             nodeIndex: 0,
             events: firstNode?.events,
+            boardContext: firstBoardContext,
         });
     }, []);
 
-    const handleNodeComplete = useCallback((data: { nodeIndex: number }) => {
+    const handleNodeAdvanceRequested = useCallback((data: EventPayloads['node-advance-requested']) => {
         setRunState(prev => {
             // Guard: only advance if actively in-run
             if (prev.phase !== 'in-run') return prev;
+            if (data.nodeIndex !== prev.currentNodeIndex) return prev;
+            if (data.nodeIndex <= lastResolvedNodeRef.current) return prev;
 
             const nodeOrder = prev.currentNodeIndex + 1; // 1-based for DB
             const nextIndex = prev.currentNodeIndex + 1;
+            lastResolvedNodeRef.current = prev.currentNodeIndex;
 
             // Persist node completion with actual score/moves + objective progress
             const nodeScore = hudRef.current.score - nodeStartScoreRef.current;
@@ -135,6 +149,8 @@ function MainAppLayout() {
                     }),
                 }).catch(err => console.error('Failed to complete node:', err));
             }
+
+            EventBus.emit('node-complete', { nodeIndex: prev.currentNodeIndex });
             // Next node starts from current cumulative score
             nodeStartScoreRef.current = hudRef.current.score;
 
@@ -161,6 +177,12 @@ function MainAppLayout() {
                 const nextNode = prev.expedition?.nodes[nextIndex];
                 nodeObjectiveProgressRef.current = 0;
                 setTimeout(() => {
+                    const nextBoardContext = buildNodeBoardContext({
+                        width: GRID_COLS,
+                        height: GRID_ROWS,
+                        obstacles: nextNode?.obstacles ?? [],
+                        nodeIndex: nextIndex,
+                    });
                     EventBus.emit('cesium-location-selected', {
                         lon: payload.lon,
                         lat: payload.lat,
@@ -173,6 +195,7 @@ function MainAppLayout() {
                         objectiveTarget: nextNode?.objectiveTarget,
                         nodeIndex: nextIndex,
                         events: nextNode?.events,
+                        boardContext: nextBoardContext,
                     });
                 }, 100);
             }
@@ -205,6 +228,7 @@ function MainAppLayout() {
         nodeIdsRef.current = [];
         hudRef.current = { score: 0, movesUsed: 0 };
         nodeStartScoreRef.current = 0;
+        lastResolvedNodeRef.current = -1;
         setRunState(INITIAL_RUN_STATE);
         EventBus.emit('game-reset', undefined);
     }, []);
@@ -235,7 +259,7 @@ function MainAppLayout() {
         EventBus.on('show-species-list', handleShowSpeciesList);
         EventBus.on('expedition-data-ready', handleExpeditionDataReady);
         EventBus.on('expedition-start', handleExpeditionStart);
-        EventBus.on('node-complete', handleNodeComplete);
+        EventBus.on('node-advance-requested', handleNodeAdvanceRequested);
         EventBus.on('clue-revealed', handleClueForWallet);
         EventBus.on('game-hud-updated', handleHudUpdate);
         EventBus.on('node-objective-updated', handleObjectiveUpdate);
@@ -245,13 +269,13 @@ function MainAppLayout() {
             EventBus.off('show-species-list', handleShowSpeciesList);
             EventBus.off('expedition-data-ready', handleExpeditionDataReady);
             EventBus.off('expedition-start', handleExpeditionStart);
-            EventBus.off('node-complete', handleNodeComplete);
+            EventBus.off('node-advance-requested', handleNodeAdvanceRequested);
             EventBus.off('clue-revealed', handleClueForWallet);
             EventBus.off('game-hud-updated', handleHudUpdate);
             EventBus.off('node-objective-updated', handleObjectiveUpdate);
             EventBus.off('souvenir-dropped', handleSouvenirDrop);
         };
-    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeComplete, handleClueForWallet, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop]);
+    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleClueForWallet, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop]);
 
     const appStyle: React.CSSProperties = {
         display: 'flex',
@@ -313,7 +337,11 @@ function MainAppLayout() {
                         <ActiveEncounterPanel
                             node={currentNode}
                             nodeIndex={runState.currentNodeIndex}
-                            onComplete={() => EventBus.emit('node-complete', { nodeIndex: runState.currentNodeIndex })}
+                            onComplete={() => EventBus.emit('node-advance-requested', {
+                                nodeIndex: runState.currentNodeIndex,
+                                reason: 'analysis_complete',
+                                source: 'panel',
+                            })}
                         />
                     )}
 

@@ -3,6 +3,7 @@ import type { RunNode, EncounterEffect, SouvenirDef } from '@/types/expedition';
 import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/types/expedition';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
+import { formatNodeObstacleLabel } from '@/game/nodeObstacles';
 
 interface Props {
   node: RunNode;
@@ -13,7 +14,6 @@ interface Props {
 export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onComplete }) => {
   const [clicked, setClicked] = useState(false);
   const [progress, setProgress] = useState(0);
-  const completedRef = useRef(false);
   const [flash, setFlash] = useState<{ label: string; emoji?: string } | null>(null);
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -23,7 +23,6 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
   useEffect(() => {
     setClicked(false);
     setProgress(0);
-    completedRef.current = false;
     setFlash(null);
   }, [nodeIndex]);
 
@@ -47,21 +46,13 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
 
     const handler = (data: EventPayloads['node-objective-updated']) => {
       setProgress(data.progress);
-      // Auto-complete when target reached
-      if (data.progress >= data.target && !completedRef.current) {
-        completedRef.current = true;
-        setClicked(true);
-        onComplete();
-      }
     };
 
     EventBus.on('node-objective-updated', handler);
     return () => { EventBus.off('node-objective-updated', handler); };
-  }, [hasObjective, onComplete, nodeIndex]);
+  }, [hasObjective, nodeIndex]);
 
   const handleClick = () => {
-    if (completedRef.current) return;
-    completedRef.current = true;
     setClicked(true);
     onComplete();
   };
@@ -89,7 +80,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
 
       {node.obstacles.length > 0 && (
         <div style={{ fontSize: '11px', color: '#f59e0b', marginBottom: '2px' }}>
-          Obstacles: {node.obstacles.join(', ')}
+          Obstacles: {node.obstacles.map(formatNodeObstacleLabel).join(', ')}
         </div>
       )}
 

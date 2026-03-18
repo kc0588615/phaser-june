@@ -19,6 +19,8 @@ import {
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
+import { getClueCategoryForGemType } from '../gemSemantics';
+import { buildNodeBoardContext, formatNodeObstacleLabel } from '../nodeObstacles';
 import { 
   GemCategory, 
   CLUE_CONFIG, 
@@ -167,7 +169,7 @@ export class Game extends Phaser.Scene {
     private inExpeditionRun: boolean = false;
 
     // Node objective tracking (gem matching targets)
-    private nodeRequiredGems: Set<string> = new Set();
+    private nodeRequiredGems: Set<GemType> = new Set();
     private nodeObjectiveTarget: number = 0;
     private nodeObjectiveProgress: number = 0;
     private nodeObjectiveCompleted: boolean = false;
@@ -295,11 +297,15 @@ export class Game extends Phaser.Scene {
                 target: this.nodeObjectiveTarget,
                 requiredGems: Array.from(this.nodeRequiredGems),
             });
-            // Auto-complete node when target reached
+            // React owns node advancement; Phaser only requests it.
             if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
                 this.nodeObjectiveCompleted = true;
                 this.time.delayedCall(400, () => {
-                    EventBus.emit('node-complete', { nodeIndex: this.currentNodeIndex });
+                    EventBus.emit('node-advance-requested', {
+                        nodeIndex: this.currentNodeIndex,
+                        reason: 'objective_complete',
+                        source: 'game',
+                    });
                 });
             }
         }
@@ -356,7 +362,11 @@ export class Game extends Phaser.Scene {
                     if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
                         this.nodeObjectiveCompleted = true;
                         this.time.delayedCall(400, () => {
-                            EventBus.emit('node-complete', { nodeIndex: this.currentNodeIndex });
+                            EventBus.emit('node-advance-requested', {
+                                nodeIndex: this.currentNodeIndex,
+                                reason: 'objective_complete',
+                                source: 'game',
+                            });
                         });
                     }
                 }
@@ -827,33 +837,58 @@ export class Game extends Phaser.Scene {
     };
 
     private recordMatchesForSummary(matches: Coordinate[][], gridState?: any): void {
-        if (!this.currentMoveSummary || !matches || matches.length === 0) return;
-        this.currentMoveSummary.matchGroups += matches.length;
+        if (!matches || matches.length === 0) return;
+
         const state = gridState ?? this.backendPuzzle?.getGridState();
+        if (!state) return;
+
+        const summary = this.currentMoveSummary;
+        if (summary) {
+            summary.matchGroups += matches.length;
+        }
+
+        let objectiveProgressChanged = false;
+
         for (const match of matches) {
-            if (match.length > this.currentMoveSummary.largestMatch) {
-                this.currentMoveSummary.largestMatch = match.length;
+            if (summary && match.length > summary.largestMatch) {
+                summary.largestMatch = match.length;
             }
+
             let requiredGemsInMatch = 0;
+
             for (const [x, y] of match) {
-                const gem = state?.[x]?.[y];
-                if (gem && gem.gemType) {
-                    this.currentMoveSummary.gemTypesMatched.add(gem.gemType);
-                    const category = this.gemTypeToCategory(gem.gemType);
+                const gem = state[x]?.[y];
+                if (!gem?.gemType) continue;
+
+                if (summary) {
+                    summary.gemTypesMatched.add(gem.gemType);
+                    const category = getClueCategoryForGemType(gem.gemType);
                     if (category !== null) {
-                        this.currentMoveSummary.categoriesMatched.add(category);
-                    }
-                    // Count toward node objective if gem color is required
-                    if (this.nodeRequiredGems.has(gem.gemType) && !this.nodeObjectiveCompleted) {
-                        this.nodeObjectiveProgress++;
-                        requiredGemsInMatch++;
+                        summary.categoriesMatched.add(category);
                     }
                 }
+
+                if (this.nodeRequiredGems.has(gem.gemType) && !this.nodeObjectiveCompleted) {
+                    this.nodeObjectiveProgress++;
+                    requiredGemsInMatch++;
+                    objectiveProgressChanged = true;
+                }
             }
-            // Match-4+ of required gems instantly completes the node
+
             if (requiredGemsInMatch >= 4 && this.nodeObjectiveTarget > 0) {
+                if (this.nodeObjectiveProgress < this.nodeObjectiveTarget) {
+                    objectiveProgressChanged = true;
+                }
                 this.nodeObjectiveProgress = this.nodeObjectiveTarget;
             }
+        }
+
+        if (objectiveProgressChanged && this.nodeObjectiveTarget > 0) {
+            EventBus.emit('node-objective-updated', {
+                progress: this.nodeObjectiveProgress,
+                target: this.nodeObjectiveTarget,
+                requiredGems: Array.from(this.nodeRequiredGems),
+            });
         }
     }
 
@@ -1150,6 +1185,13 @@ export class Game extends Phaser.Scene {
             }
             // Regenerate the board with new random gems
             this.backendPuzzle.regenerateBoard();
+            const boardContext = data.boardContext ?? buildNodeBoardContext({
+                width: GRID_COLS,
+                height: GRID_ROWS,
+                obstacles: data.obstacles ?? [],
+                nodeIndex: data.nodeIndex ?? 0,
+            });
+            this.backendPuzzle.applyCellStateSeeds(boardContext.obstacleSeeds);
             this.backendPuzzle.resetMoves();
             // Scale moves by node difficulty (default MAX_MOVES outside expeditions)
             if (data.difficulty && data.difficulty >= 1) {
@@ -1163,7 +1205,7 @@ export class Game extends Phaser.Scene {
             // Show obstacle indicators if present
             if (this.obstacleText) {
                 if (data.obstacles && data.obstacles.length > 0) {
-                    this.obstacleText.setText(data.obstacles.map(o => o.replace(/_/g, ' ')).join(' · '));
+                    this.obstacleText.setText(data.obstacles.map(formatNodeObstacleLabel).join(' · '));
                     this.obstacleText.setVisible(true);
                 } else {
                     this.obstacleText.setVisible(false);
@@ -1512,8 +1554,6 @@ export class Game extends Phaser.Scene {
         this.anyMatchThisTurn = false;
         this.currentMoveSummary = this.createEmptyMoveSummary();
         
-        // Capture grid state BEFORE applying the move to get original gem types
-        const gridStateBeforeMove = this.backendPuzzle.getGridState();
         const phaseResult = this.backendPuzzle.getNextExplodeAndReplacePhase([moveAction]); // This applies the move
         
         if (!phaseResult.isNothingToDo()) {
@@ -1522,7 +1562,7 @@ export class Game extends Phaser.Scene {
             this.turnBaseTotalScore += phaseScore;
             this.anyMatchThisTurn = true;
             
-            await this.animatePhaseWithOriginalGems(phaseResult, gridStateBeforeMove);
+            await this.animatePhaseWithOriginalGems(phaseResult);
             await this.handleCascades();
         } else {
             console.warn("applyMoveAndHandleResults: Move was applied, but backend reports no matches. This might be a logic discrepancy.");
@@ -1559,8 +1599,6 @@ export class Game extends Phaser.Scene {
     private async handleCascades(): Promise<void> {
         if (!this.backendPuzzle || !this.boardView) return;
         
-        // Capture grid state BEFORE checking for cascade matches
-        const gridStateBeforeCascade = this.backendPuzzle.getGridState();
         const cascadePhase = this.backendPuzzle.getNextExplodeAndReplacePhase([]);
         
         if (!cascadePhase.isNothingToDo()) {
@@ -1572,16 +1610,16 @@ export class Game extends Phaser.Scene {
                 this.currentMoveSummary.cascades += 1;
             }
             
-            await this.animatePhaseWithOriginalGems(cascadePhase, gridStateBeforeCascade);
+            await this.animatePhaseWithOriginalGems(cascadePhase);
             await this.handleCascades();
         }
     }
 
-    private async animatePhaseWithOriginalGems(phaseResult: ExplodeAndReplacePhase, originalGridState: any): Promise<void> {
+    private async animatePhaseWithOriginalGems(phaseResult: ExplodeAndReplacePhase): Promise<void> {
         if (!this.boardView || !this.backendPuzzle) return;
         try {
             // Process clues using original gem types
-            this.processMatchedGemsWithOriginalTypes(phaseResult.matches, originalGridState);
+            this.processMatchedGemsWithOriginalTypes(phaseResult.matches, phaseResult.matchGridState);
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
@@ -1597,7 +1635,7 @@ export class Game extends Phaser.Scene {
         if (!this.boardView || !this.backendPuzzle) return;
         try {
             // Process clues using current grid state (fallback method)
-            this.processMatchedGemsForClues(phaseResult.matches);
+            this.processMatchedGemsForClues(phaseResult.matches, phaseResult.matchGridState);
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
@@ -1610,9 +1648,8 @@ export class Game extends Phaser.Scene {
     }
 
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
-        if (!this.selectedSpecies || matches.length === 0) return;
-
         this.recordMatchesForSummary(matches, originalGridState);
+        if (!this.selectedSpecies || matches.length === 0 || !originalGridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
 
@@ -1621,7 +1658,7 @@ export class Game extends Phaser.Scene {
             const [firstX, firstY] = match[0];
             const gem = originalGridState[firstX]?.[firstY];
             if (!gem) continue;
-            const category = this.gemTypeToCategory(gem.gemType);
+            const category = getClueCategoryForGemType(gem.gemType);
             if (category === null) continue;
             const current = categoryMaxMatch.get(category) ?? 0;
             if (match.length > current) {
@@ -1641,26 +1678,23 @@ export class Game extends Phaser.Scene {
         this.checkAllCluesRevealed();
     }
 
-    private processMatchedGemsForClues(matches: Coordinate[][]): void {
-        if (!this.selectedSpecies || matches.length === 0) return;
-
-        this.recordMatchesForSummary(matches, this.backendPuzzle?.getGridState());
+    private processMatchedGemsForClues(matches: Coordinate[][], gridStateOverride?: any): void {
+        const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
+        this.recordMatchesForSummary(matches, gridState);
+        if (!this.selectedSpecies || matches.length === 0 || !gridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
 
-        if (this.backendPuzzle) {
-            const gridState = this.backendPuzzle.getGridState();
-            for (const match of matches) {
-                if (match.length === 0) continue;
-                const [firstX, firstY] = match[0];
-                const gem = gridState[firstX]?.[firstY];
-                if (!gem) continue;
-                const category = this.gemTypeToCategory(gem.gemType);
-                if (category === null) continue;
-                const current = categoryMaxMatch.get(category) ?? 0;
-                if (match.length > current) {
-                    categoryMaxMatch.set(category, match.length);
-                }
+        for (const match of matches) {
+            if (match.length === 0) continue;
+            const [firstX, firstY] = match[0];
+            const gem = gridState[firstX]?.[firstY];
+            if (!gem) continue;
+            const category = getClueCategoryForGemType(gem.gemType);
+            if (category === null) continue;
+            const current = categoryMaxMatch.get(category) ?? 0;
+            if (match.length > current) {
+                categoryMaxMatch.set(category, match.length);
             }
         }
 
@@ -1916,21 +1950,6 @@ export class Game extends Phaser.Scene {
 
         // Emit reset event for React components
         EventBus.emit('game-reset', undefined);
-    }
-
-    private gemTypeToCategory(gemType: GemType): GemCategory | null {
-        // Map gem types to categories based on corrected color scheme
-        switch (gemType) {
-            case 'red': return GemCategory.CLASSIFICATION;
-            case 'green': return GemCategory.HABITAT;
-            case 'blue': return GemCategory.GEOGRAPHIC; // Now includes habitat info
-            case 'orange': return GemCategory.MORPHOLOGY; // Combines color/pattern and size/shape
-            case 'white': return GemCategory.CONSERVATION;
-            case 'black': return GemCategory.LIFE_CYCLE;
-            case 'yellow': return GemCategory.BEHAVIOR; // Now includes diet info
-            case 'purple': return GemCategory.KEY_FACTS; // Uses key_fact1, key_fact2, key_fact3
-            default: return null;
-        }
     }
 
     private resetDragState(): void {

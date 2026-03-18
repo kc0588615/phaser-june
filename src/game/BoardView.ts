@@ -10,7 +10,7 @@ import {
 } from './constants';
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
-import { PuzzleGrid } from './BackendPuzzle';
+import type { BoardCell, PuzzleGrid } from './boardTypes';
 
 interface BoardConfig {
     cols: number;
@@ -86,7 +86,7 @@ export class BoardView {
             for (let y = 0; y < this.gridRows; y++) {
                 const gemData = initialPuzzleState[x][y];
                 if (gemData && gemData.gemType) {
-                    this.createSprite(x, y, gemData.gemType);
+                    this.createSprite(x, y, gemData);
                 } else {
                     // Optional: Log if a cell is unexpectedly null in the initial state
                     // console.log(`BoardView: No initial gem data at [${x}, ${y}]`);
@@ -431,6 +431,17 @@ export class BoardView {
             // 4. Update the main gemsSprites reference
             this.gemsSprites = newGrid;
 
+            // Sync sprite metadata from the authoritative backend state.
+            for (let x = 0; x < this.gridCols; x++) {
+                for (let y = 0; y < this.gridRows; y++) {
+                    const sprite = this.gemsSprites[x]?.[y];
+                    const cell = finalBackendState[x]?.[y];
+                    if (sprite && cell) {
+                        this.applyBoardCellDataToSprite(sprite, cell);
+                    }
+                }
+            }
+
             // 5. Animate all sprites (survivors and new) to their final visual positions
             spritesToAnimate.forEach(({ sprite, targetGridY }) => {
                 if (!sprite || !sprite.active) return;
@@ -575,7 +586,8 @@ export class BoardView {
     }
 
     /** Creates a single sprite, adds to group, stores data, places in gemsSprites array. */
-    private createSprite(gridX: number, gridY: number, gemType: GemType, startVisualY?: number): Phaser.GameObjects.Sprite | null {
+    private createSprite(gridX: number, gridY: number, cellOrGemType: BoardCell | GemType, startVisualY?: number): Phaser.GameObjects.Sprite | null {
+        const gemType = typeof cellOrGemType === 'string' ? cellOrGemType : cellOrGemType.gemType;
         const textureKey = AssetKeys.GEM_TEXTURE(gemType, 0); // Default frame
         if (!this.scene.textures.exists(textureKey)) {
             console.error(`Texture missing: ${textureKey}`); return null;
@@ -602,7 +614,10 @@ export class BoardView {
         sprite.setOrigin(0.5);
         sprite.setData('gridX', gridX);
         sprite.setData('gridY', gridY);
-        sprite.setData('gemType', gemType);
+        this.applyBoardCellDataToSprite(
+            sprite,
+            typeof cellOrGemType === 'string' ? { gemType: cellOrGemType } : cellOrGemType
+        );
         sprite.setScale(this.calculateSpriteScale(sprite));
         sprite.setInteractive(); // Enable input detection ON the sprite (used by Scene)
 
@@ -625,6 +640,44 @@ export class BoardView {
         }
 
         return sprite;
+    }
+
+    private applyBoardCellDataToSprite(sprite: Phaser.GameObjects.Sprite, cell: BoardCell): void {
+        sprite.setData('gemType', cell.gemType);
+        sprite.setData('cellState', cell.state ?? null);
+        this.applyBoardCellVisualState(sprite, cell);
+    }
+
+    private applyBoardCellVisualState(sprite: Phaser.GameObjects.Sprite, cell: BoardCell): void {
+        const blockerId = cell.state?.blockerId ?? null;
+        sprite.clearTint();
+
+        switch (blockerId) {
+            case 'mud':
+                sprite.setTint(0x8b5a2b);
+                break;
+            case 'vine':
+                sprite.setTint(0x4f8f3a);
+                break;
+            case 'junk':
+                sprite.setTint(0x6b7280);
+                break;
+            case 'stone':
+                sprite.setTint(0x7c7c84);
+                break;
+            case 'signal':
+                sprite.setTint(0x38bdf8);
+                break;
+            case 'noise':
+                sprite.setTint(0xf59e0b);
+                break;
+            case 'unknown':
+                sprite.setTint(0xa855f7);
+                break;
+            default:
+                sprite.clearTint();
+                break;
+        }
     }
 
     /** Gets the sprite at [x, y] if active, otherwise null. */

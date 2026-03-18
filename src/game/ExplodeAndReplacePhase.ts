@@ -1,6 +1,7 @@
 // src/game/ExplodeAndReplacePhase.ts
 
 import { GemType } from './constants';
+import type { PuzzleGrid } from './boardTypes';
 
 export type Coordinate = [number, number]; // [x, y]
 export type Match = Coordinate[]; // Array of coordinates that form a match
@@ -17,7 +18,8 @@ export class ExplodeAndReplacePhase {
      */
     constructor(
         public readonly matches: Match[] = [],
-        public readonly replacements: ColumnReplacement[] = []
+        public readonly replacements: ColumnReplacement[] = [],
+        public readonly matchGridState: PuzzleGrid | null = null,
     ) {}
 
     /**

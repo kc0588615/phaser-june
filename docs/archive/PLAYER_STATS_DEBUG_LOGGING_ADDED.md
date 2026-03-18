@@ -1,3 +1,5 @@
+> Archived (Supabase-era): kept for historical reference. Current stack uses Drizzle + Hetzner Postgres.
+
 # Player Stats Not Saving - Debugging Logs Added
 
 ## Problem

@@ -1,4 +1,6 @@
-# 🎮 Gamification Enhancement Plan: Making Species Discovery Fun for Kids!
+> Archived (Supabase-era): kept for historical reference. Current stack uses Drizzle + Hetzner Postgres.
+
+# Gamification Enhancement Plan: Making Species Discovery Fun for Kids!
 
 ## 📊 Current State Analysis
 

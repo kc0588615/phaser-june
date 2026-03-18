@@ -3,6 +3,8 @@ import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
 import type { ExpeditionData, EncounterEffect, SouvenirDef } from '@/types/expedition';
+import type { GemType } from './constants';
+import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -14,11 +16,12 @@ export interface EventPayloads {
     species: Species[];
     rasterHabitats: RasterHabitatResult[];
     difficulty?: number;
-    obstacles?: string[];
-    requiredGems?: string[];
+    obstacles?: NodeObstacle[];
+    requiredGems?: GemType[];
     objectiveTarget?: number;
     nodeIndex?: number;
     events?: string[];
+    boardContext?: NodeBoardContext;
   };
   'game-score-updated': {
     score: number;
@@ -43,9 +46,6 @@ export interface EventPayloads {
   };
   'all-species-completed': {
     totalSpecies: number;
-  };
-  'layout-changed': {
-    mapMinimized: boolean;
   };
   'species-guess-submitted': {
     guessedName: string;
@@ -74,8 +74,13 @@ export interface EventPayloads {
     habitats: string[];
   };
   'expedition-start': Record<string, never>;
+  'node-advance-requested': {
+    nodeIndex: number;
+    reason: 'objective_complete' | 'analysis_complete';
+    source: 'game' | 'panel';
+  };
   'node-complete': { nodeIndex: number };
-  'node-objective-updated': { progress: number; target: number; requiredGems: string[] };
+  'node-objective-updated': { progress: number; target: number; requiredGems: GemType[] };
   'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
   'souvenir-dropped': { souvenir: SouvenirDef };
 }

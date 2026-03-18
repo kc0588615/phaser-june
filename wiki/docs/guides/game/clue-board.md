@@ -10,6 +10,12 @@ difficulty: Intermediate
 
 This guide explains how the match-3 puzzle board generates clues and communicates them to the React UI.
 
+**Current contract:**
+- Phaser owns clue generation; React owns clue display.
+- Gem color maps directly to clue category via `src/game/gemSemantics.ts`.
+- Match detection reads original gem types from `phaseResult.matchGridState` (snapshot before explode-and-replace).
+- Clue emission requires a selected species; objective progress is tracked independently.
+
 ## Architecture Overview
 
 The clue system follows a clean separation of concerns:
@@ -177,12 +183,8 @@ export const GEM_TYPES = [
 ### Step 3: Map Gem to Category
 
 ```typescript
-// src/game/scenes/Game.ts
-private gemTypeToCategory: Record<string, GemCategory> = {
-  'red': GemCategory.CLASSIFICATION,
-  // ... existing mappings
-  'cyan': GemCategory.NEW_CATEGORY,
-};
+// src/game/gemSemantics.ts
+// Add mapping for the new gem type → clue category
 ```
 
 ### Step 4: Add Asset Files
@@ -248,6 +250,5 @@ useEffect(() => {
 
 ## Related Documentation
 
-- [EventBus Architecture](/docs/architecture/eventbus-display)
 - [Species Discovery](/docs/guides/game/species-discovery)
 - [Database Schema](/docs/reference/database-schema)

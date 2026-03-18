@@ -1,5 +1,11 @@
 # Species Discovery Feature Implementation
 
+Current behavior note:
+
+- clue completion and node completion are separate concerns during expeditions
+- revealing all clues does not advance an expedition node
+- a correct guess can happen before or after node completion
+
 ## Overview
 This document details the implementation of a species discovery/guessing game feature where players must deduce the identity of a "Mystery Species" by matching gems to reveal clues. The game supports multiple species per location with automatic progression.
 
@@ -136,7 +142,8 @@ Individual species card component.
    - Species List updates to show in "Discovered" section
 
 4. **Next Species**:
-   - Game automatically advances after all clues revealed
+   - Game advances after a correct guess when more species remain at the location
+   - During expeditions, node advancement is separate from species progression
    - Process repeats with new mystery species
 
 ## Data Storage

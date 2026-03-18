@@ -54,16 +54,16 @@ npm run start    # http://localhost:3000
 - Layout host: `src/MainAppLayout.tsx` keeps Cesium map + Phaser canvas mounted; toggles view modes.
 - React ↔ Phaser bridge: `src/PhaserGame.tsx` boots `src/game/main.ts`, which registers scenes (Boot → Preloader → MainMenu → Game → GameOver).
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
-- Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `MoveAction.ts` and `ExplodeAndReplacePhase.ts` handle swaps/cascades.
+- Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `boardTypes.ts` defines extensible cell schema, `gemSemantics.ts` defines shared gem meaning, `nodeObstacles.ts` defines typed obstacle contracts + seeded cell state, and `MoveAction.ts` / `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
 - Expedition run loop: `src/types/expedition.ts` (RunState, catalogs), `src/lib/nodeScoring.ts` (node generation), `src/MainAppLayout.tsx` (phase state machine). Run creates 6 nodes from GIS scoring; each node has gem objectives, encounters (every 3rd match group), and souvenir drops. Components: `ExpeditionBriefing`, `RunTrack`, `ActiveEncounterPanel`, `GemWallet`, `SouvenirPouch`.
-- Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, auth actions in `auth-actions.ts`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes` tables.
+- Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes` tables.
 
 ## 3) Recommended Reading Path
-1) **Core architecture:** [EVENTBUS_AND_DISPLAY_ARCHITECTURE.md](./EVENTBUS_AND_DISPLAY_ARCHITECTURE.md), [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md), [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md).
+1) **Core architecture:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
-3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
-4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [LAYOUT_RESTRUCTURE_IMPLEMENTATION.md](./LAYOUT_RESTRUCTURE_IMPLEMENTATION.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md), [species-list-improvements.md](./species-list-improvements.md).
+3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
+4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
 5) **Expedition run loop:** [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
 6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
 7) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
@@ -74,9 +74,7 @@ npm run start    # http://localhost:3000
 **Core / Architecture**
 - [README.md](./README.md) — project overview, setup, scripts.
 - [DEVELOPER_ONBOARDING.md](./DEVELOPER_ONBOARDING.md) — you are here.
-- [EVENTBUS_AND_DISPLAY_ARCHITECTURE.md](./EVENTBUS_AND_DISPLAY_ARCHITECTURE.md) — React↔Phaser event model and layout.
-- [GAME_REACTIVITY_GUIDE.md](./GAME_REACTIVITY_GUIDE.md) — resize behavior, MVC flow, reactive patterns.
-- [UI_DISPLAY_SYSTEM_REFERENCE.md](./UI_DISPLAY_SYSTEM_REFERENCE.md) — layout variables, gem sizing, responsive behavior.
+- [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) — current React↔Phaser ownership, EventBus contract, layout model, board constraints.
 - [PAGE_ROUTING_INFRASTRUCTURE.md](./PAGE_ROUTING_INFRASTRUCTURE.md) — Next.js routing.
 
 **Expedition Run Loop**
@@ -86,11 +84,9 @@ npm run start    # http://localhost:3000
 **Game Board & Clues**
 - [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md) — match-3 board, clue emission.
 - [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md) — species progression and discovery flow.
-- [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md) — map/game resizing hook-up.
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — habitat hit/highlight flow.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG integration for habitat stats.
 - [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md) — Cesium map UX changes.
-- [LAYOUT_RESTRUCTURE_IMPLEMENTATION.md](./LAYOUT_RESTRUCTURE_IMPLEMENTATION.md) — layout changes aligning React + Phaser.
 
 **UI & Styling**
 - [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md) — component library usage.
@@ -98,8 +94,6 @@ npm run start    # http://localhost:3000
 - [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md) — species card UX changes.
 - [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md) — mobile UX adjustments.
 - [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md) — breadcrumb/dropdown behavior.
-- [species-list-improvements.md](./species-list-improvements.md) — species list UX improvements.
-- [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md) — also relevant for responsive UI.
 
 **Data, Auth, and Platform**
 - [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Drizzle queries, TiTiler integration.
@@ -107,6 +101,8 @@ npm run start    # http://localhost:3000
 - [DRIZZLE_ORM_GUIDE.md](./DRIZZLE_ORM_GUIDE.md) — Drizzle usage patterns.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from legacy raster storage.
 - [DRIZZLE_VERCEL_MIGRATION.md](./DRIZZLE_VERCEL_MIGRATION.md) — Drizzle + Vercel server runtime setup.
+- [NORMALIZED_BIODIVERSITY_SCHEMA.md](./NORMALIZED_BIODIVERSITY_SCHEMA.md) — normalized 3NF biodiversity schema.
+- [SHAPEFILE_BEST_PRACTICES.mdx](./SHAPEFILE_BEST_PRACTICES.mdx) — shapefile prep and ETL guide.
 
 **Player Tracking & Stats**
 - [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Drizzle writes.
@@ -120,7 +116,6 @@ npm run start    # http://localhost:3000
 - [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md) — ecoregion details.
 
 **Feature / UX Improvements**
-- [MAP_MINIMIZE_IMPLEMENTATION.md](./MAP_MINIMIZE_IMPLEMENTATION.md) — shared with UI.
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — shared with map.
 
 **Archive / Historical (for reference only)**
@@ -134,6 +129,9 @@ npm run start    # http://localhost:3000
 - [archive/P0_FIXES_REVISED.md](./archive/P0_FIXES_REVISED.md)
 - [archive/gameTime.md](./archive/gameTime.md)
 - [archive/gamification.md](./archive/gamification.md)
+- [archive/DRIZZLE_MIGRATION_PLAN.md](./archive/DRIZZLE_MIGRATION_PLAN.md)
+- [archive/species-list-improvements.md](./archive/species-list-improvements.md)
+- [archive/normalization_review_sql.md](./archive/normalization_review_sql.md)
 
 ## 5) Quick Code Navigation
 - **Map click → board init:** `src/components/CesiumMap.tsx` emits `cesium-location-selected` → `src/game/scenes/Game.ts.initializeBoardFromCesium`.
@@ -148,7 +146,7 @@ npm run start    # http://localhost:3000
 - Habitat-to-gem mapping for board seeding (`HABITAT_GEM_MAP`): Forests (100-109) → green; Savannas (200-202) → orange; Shrublands (300-308) → black; Grasslands (400-407) → white; Wetlands (500-518) → blue; Urban/Artificial (1400-1406) → red; default/unknown → white.
 - Green gem clues are not from the ICAA species text table; they consume Cesium `rasterHabitat` results (`habitat_type`, `percentage`) in the order returned (service currently returns highest % first), emitting `Search Area is {percentage}% {habitat_type}` until exhausted.
 
-**Clue sources by gem (matches map through `Game.gemTypeToCategory`)**
+**Clue sources by gem (matches map through `src/game/gemSemantics.ts`)**
 
 | Color (asset key) | Category | Icon | Clue source (progressive order) | Example output |
 | --- | --- | --- | --- | --- |

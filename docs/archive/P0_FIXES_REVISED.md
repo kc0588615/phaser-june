@@ -1,3 +1,5 @@
+> Archived (Supabase-era): kept for historical reference. Current stack uses Drizzle + Hetzner Postgres.
+
 # P0 Critical Fixes - REVISED (Post-Codex Review)
 
 **Date**: 2025-10-19

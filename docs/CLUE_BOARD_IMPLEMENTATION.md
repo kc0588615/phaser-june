@@ -1,5 +1,14 @@
 # Clue Board Implementation Guide
 
+Current clue-system doc. The historical implementation notes below are still useful, but the active contract is:
+
+- Phaser owns clue generation.
+- React owns clue display.
+- Gem color currently equals clue category.
+- `clue-revealed` also feeds expedition gem-wallet rewards.
+
+Read [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) and [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) before changing gem semantics.
+
 ## Overview
 
 This document provides a comprehensive review of the new clue board implementation, detailing all changes made, the architecture, business logic integration, event bus communication, and UI components.
@@ -162,11 +171,12 @@ EventBus.emit('clue-revealed', {
 
 1. **Gem Match Detection** (Phaser)
    - Player matches 3+ gems
-   - Game identifies gem color/type
-   - Maps to clue category
+   - `ExplodeAndReplacePhase.matchGridState` captures gem types before explode-and-replace
+   - Game reads original gem types from that snapshot, maps to clue category
 
 2. **Clue Generation** (Game Logic)
    - Uses `clueConfig.ts` to generate clue
+   - Requires a selected species; objective progress is tracked independently
    - Creates CluePayload object
    - Emits via EventBus
 
@@ -180,6 +190,16 @@ EventBus.emit('clue-revealed', {
    - Toast appears with colored border
    - Colored dot added to header
    - Clue added to grid and sheet
+
+## Important Constraint
+
+Because gem color is both:
+
+- a board mechanic input
+- a clue category identifier
+- a visual UI category
+
+any action-oriented board changes that repurpose gem colors must first decouple those roles in the runtime model.
 
 ## Color System
 

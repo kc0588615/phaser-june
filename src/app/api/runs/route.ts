@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunSessions, ecoRunNodes } from '@/db';
 import type { RunNode } from '@/lib/nodeScoring';
+import { GRID_COLS, GRID_ROWS } from '@/game/constants';
+import { buildNodeBoardContext } from '@/game/nodeObstacles';
 
 /**
  * POST /api/runs
@@ -45,16 +47,25 @@ export async function POST(request: NextRequest) {
       .returning({ id: ecoRunSessions.id });
 
     // Insert all nodes
-    const nodeRows = nodes.map((node, i) => ({
+    const nodeRows = nodes.map((node, i) => {
+      const boardContext = buildNodeBoardContext({
+        width: GRID_COLS,
+        height: GRID_ROWS,
+        obstacles: node.obstacles,
+        nodeIndex: i,
+      });
+
+      return {
       runId: session.id,
       nodeOrder: i + 1,
       nodeType: node.node_type,
       nodeStatus: i === 0 ? 'active' : 'locked',
       hazardProfile: { obstacles: node.obstacles, events: node.events, requiredGems: node.requiredGems ?? [] },
-      boardContext: { rationale: node.rationale, difficulty: node.difficulty },
+      boardContext: { rationale: node.rationale, difficulty: node.difficulty, ...boardContext },
       objectiveType: (node.requiredGems?.length ?? 0) > 0 ? 'required_gem_match' : 'any',
       objectiveTarget: node.objectiveTarget ?? 0,
-    }));
+    };
+    });
 
     const insertedNodes = await db
       .insert(ecoRunNodes)

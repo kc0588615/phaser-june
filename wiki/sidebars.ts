@@ -46,9 +46,6 @@ const sidebars: SidebarsConfig = {
         slug: '/category/architecture',
       },
       items: [
-        'architecture/eventbus-display',
-        'architecture/game-reactivity',
-        'architecture/ui-display-system',
         'architecture/page-routing',
       ],
     },
@@ -70,7 +67,6 @@ const sidebars: SidebarsConfig = {
             'guides/game/clue-board',
             'guides/game/species-discovery',
             'guides/game/expedition-run-loop',
-            'guides/game/layout-restructure',
           ],
         },
         {
@@ -79,7 +75,6 @@ const sidebars: SidebarsConfig = {
           items: [
             'guides/map/cesium-customization',
             'guides/map/habitat-highlight',
-            'guides/map/map-minimize',
             'guides/map/habitat-raster',
           ],
         },

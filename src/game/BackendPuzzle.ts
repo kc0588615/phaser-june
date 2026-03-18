@@ -2,14 +2,11 @@
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
 import { GEM_TYPES, GemType, MAX_MOVES } from './constants';
+import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
+import type { CellStateSeed } from './nodeObstacles';
 
-// Type for a gem in the puzzle
-export interface Gem {
-    gemType: GemType;
-}
-
-// Type for the puzzle grid
-export type PuzzleGrid = (Gem | null)[][];
+export type Gem = BoardCell;
+export type { BoardCell, PuzzleGrid };
 
 export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
@@ -60,7 +57,7 @@ export class BackendPuzzle {
     }
 
     getGridState(): PuzzleGrid {
-        return this.puzzleState;
+        return this.cloneGridState(this.puzzleState);
     }
 
     addBonusScore(points: number): void {
@@ -78,6 +75,17 @@ export class BackendPuzzle {
 
     setMaxMoves(max: number): void {
         this.maxMoves = max;
+    }
+
+    applyCellStateSeeds(seeds: CellStateSeed[]): void {
+        for (const seed of seeds) {
+            const cell = this.puzzleState[seed.x]?.[seed.y];
+            if (!cell) continue;
+            this.puzzleState[seed.x][seed.y] = {
+                ...cell,
+                state: this.mergeCellState(cell.state, seed.state),
+            };
+        }
     }
 
     calculatePhaseBaseScore(phase: ExplodeAndReplacePhase): number {
@@ -137,7 +145,7 @@ export class BackendPuzzle {
                 const possibleGemsArray = Array.from(possibleGems);
                 const gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] as GemType;
 
-                grid[x][y] = { gemType };
+                grid[x][y] = createBoardCell(gemType);
             }
         }
         console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches finished creating grid.");
@@ -148,6 +156,7 @@ export class BackendPuzzle {
         for (const action of actions) {
             this.applyMoveToGrid(this.puzzleState, action);
         }
+        const matchGridState = this.cloneGridState(this.puzzleState);
         const matches = this.getMatches(this.puzzleState);
         const replacements: ColumnReplacement[] = [];
         
@@ -174,7 +183,7 @@ export class BackendPuzzle {
             }
         }
         
-        const phaseResult = new ExplodeAndReplacePhase(matches, replacements);
+        const phaseResult = new ExplodeAndReplacePhase(matches, replacements, matchGridState);
         if (!phaseResult.isNothingToDo()) {
             this.applyExplodeAndReplacePhase(phaseResult);
         }
@@ -233,7 +242,7 @@ export class BackendPuzzle {
             const y = index;
             if (y < 0 || y >= this.height) return;
 
-            const currentRow: (Gem | null)[] = [];
+            const currentRow: (BoardCell | null)[] = [];
             for (let x = 0; x < width; x++) {
                 currentRow.push(grid[x]?.[y] ?? null);
             }
@@ -267,7 +276,7 @@ export class BackendPuzzle {
         const matches: Match[] = [];
         if (!puzzleState || this.width === 0 || this.height === 0) return matches;
         
-        const getGemType = (x: number, y: number): GemType | null => puzzleState[x]?.[y]?.gemType ?? null;
+        const getGemType = (x: number, y: number): GemType | null => getBoardCellGemType(puzzleState[x]?.[y]);
 
         // Check vertical matches
         for (let x = 0; x < this.width; x++) {
@@ -339,7 +348,7 @@ export class BackendPuzzle {
             const currentColumn = this.puzzleState[x] || [];
             const survivingGems = currentColumn.filter((gem, y) => !explodeCoords.has(`${x},${y}`));
             const newGemTypes = replacementsMap.get(x) || [];
-            const newGems: Gem[] = newGemTypes.map(type => ({ gemType: type }));
+            const newGems: BoardCell[] = newGemTypes.map(type => createBoardCell(type));
             newGrid[x] = [...newGems, ...survivingGems];
             
             if (newGrid[x].length !== this.height) {
@@ -349,6 +358,18 @@ export class BackendPuzzle {
             }
         }
         this.puzzleState = newGrid;
+    }
+
+    private mergeCellState(current: BoardCellState | undefined, incoming: BoardCellState): BoardCellState {
+        return {
+            blockerId: incoming.blockerId ?? current?.blockerId ?? null,
+            durability: incoming.durability ?? current?.durability ?? null,
+            flags: incoming.flags ?? current?.flags ?? [],
+        };
+    }
+
+    private cloneGridState(grid: PuzzleGrid): PuzzleGrid {
+        return grid.map(col => col.map(cell => cell ? { ...cell } : null));
     }
 
 }
