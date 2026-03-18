@@ -1,9 +1,15 @@
 import React from 'react';
-import type { RunState } from '@/types/expedition';
-import { GEM_DEFS } from '@/types/expedition';
+import type { ResourceWallet } from '@/types/expedition';
+
+const RESOURCE_DEFS: { key: keyof ResourceWallet; label: string; color: string; icon: string }[] = [
+  { key: 'nature',    label: 'Nature',    color: '#34d399', icon: '🍃' },
+  { key: 'water',     label: 'Water',     color: '#38bdf8', icon: '💧' },
+  { key: 'knowledge', label: 'Knowledge', color: '#cbd5e1', icon: '📘' },
+  { key: 'craft',     label: 'Craft',     color: '#fb923c', icon: '🔧' },
+];
 
 interface Props {
-  wallet: RunState['gemWallet'];
+  wallet: ResourceWallet;
 }
 
 export const GemWallet: React.FC<Props> = ({ wallet }) => {
@@ -17,7 +23,7 @@ export const GemWallet: React.FC<Props> = ({ wallet }) => {
       border: '1px solid #334155',
       fontFamily: 'sans-serif',
     }}>
-      {GEM_DEFS.map(({ key, label, color }) => (
+      {RESOURCE_DEFS.map(({ key, label, color, icon }) => (
         <div key={key} style={{ textAlign: 'center' }}>
           <div style={{
             width: '20px',
@@ -30,11 +36,11 @@ export const GemWallet: React.FC<Props> = ({ wallet }) => {
             justifyContent: 'center',
             fontSize: '10px',
             fontWeight: 700,
-            color: key === 'knowledge_gem' ? '#0f172a' : '#fff',
+            color: key === 'knowledge' ? '#0f172a' : '#fff',
           }}>
             {wallet[key]}
           </div>
-          <div style={{ fontSize: '9px', color: '#94a3b8' }}>{label}</div>
+          <div style={{ fontSize: '9px', color: '#94a3b8' }}>{icon} {label}</div>
         </div>
       ))}
     </div>

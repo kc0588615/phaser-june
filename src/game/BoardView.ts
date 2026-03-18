@@ -6,11 +6,11 @@ import {
     AssetKeys,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE,
-    GemType, GEM_FRAME_COUNT
+    GemType, GEM_FRAME_COUNT, RESOURCE_GEM_TYPES
 } from './constants';
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
-import type { BoardCell, PuzzleGrid } from './boardTypes';
+import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
 
 interface BoardConfig {
     cols: number;
@@ -48,7 +48,29 @@ export class BoardView {
         this.gemSize = config.gemSize;
         this.boardOffset = config.boardOffset;
         this.gemGroup = this.scene.add.group();
+        this.ensureResourceGemTextures();
         console.log("BoardView initialized");
+    }
+
+    /** Generate colored-circle placeholder textures for resource gems that lack sprite assets. */
+    private ensureResourceGemTextures(): void {
+        const colorMap: Record<string, number> = {
+            nature: 0x34d399,
+            water: 0x38bdf8,
+            knowledge: 0xcbd5e1,
+            craft: 0xfb923c,
+        };
+        for (const type of RESOURCE_GEM_TYPES) {
+            for (let i = 0; i < GEM_FRAME_COUNT; i++) {
+                const key = AssetKeys.GEM_TEXTURE(type, i);
+                if (this.scene.textures.exists(key)) continue;
+                const gfx = this.scene.add.graphics();
+                gfx.fillStyle(colorMap[type] ?? 0xffffff, 1);
+                gfx.fillCircle(16, 16, 14);
+                gfx.generateTexture(key, 32, 32);
+                gfx.destroy();
+            }
+        }
     }
 
     // --- Public Methods (Called by Controller: Game.js) ---
@@ -616,7 +638,7 @@ export class BoardView {
         sprite.setData('gridY', gridY);
         this.applyBoardCellDataToSprite(
             sprite,
-            typeof cellOrGemType === 'string' ? { gemType: cellOrGemType } : cellOrGemType
+            typeof cellOrGemType === 'string' ? createBoardCell(cellOrGemType) : cellOrGemType
         );
         sprite.setScale(this.calculateSpriteScale(sprite));
         sprite.setInteractive(); // Enable input detection ON the sprite (used by Scene)

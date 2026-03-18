@@ -19,6 +19,7 @@ export interface ExpeditionData {
 
 /** Board gem name → hex color for UI swatches */
 export const GEM_COLOR_MAP: Record<string, string> = {
+  // Knowledge gems
   black: '#1e293b',
   blue: '#3b82f6',
   green: '#22c55e',
@@ -27,6 +28,11 @@ export const GEM_COLOR_MAP: Record<string, string> = {
   white: '#e2e8f0',
   yellow: '#eab308',
   purple: '#a855f7',
+  // Resource gems
+  nature: '#34d399',
+  water: '#38bdf8',
+  knowledge: '#cbd5e1',
+  craft: '#fb923c',
 };
 
 /** Short display labels for node_type values */
@@ -92,10 +98,55 @@ export const SOUVENIR_CATALOG: Record<string, SouvenirDef> = {
   wager_guess:            { id: 'lucky_coin',      name: 'Lucky Coin',      emoji: '🪙', dropChance: 0.2 },
 };
 
+export type NodeType = 'collection' | 'standoff' | 'crisis' | 'store';
+
+export interface ResourceWallet {
+  nature: number;
+  water: number;
+  knowledge: number;
+  craft: number;
+}
+
+export interface ConsumableItem {
+  id: string;
+  name: string;
+  resourceCost: Partial<ResourceWallet>;
+  effect: string;
+}
+
+export interface PassiveRelic {
+  id: string;
+  name: string;
+  effect: string;
+}
+
+export interface BattleState {
+  creatureHp: number;
+  creatureMaxHp: number;
+  creatureArmor: number;
+  playerHp: number;
+  playerMaxHp: number;
+  telegraph: string | null;
+  turnsUntilAction: number;
+  weaknesses: string[];
+  resistances: string[];
+}
+
 export interface RunState {
   phase: RunPhase;
   expedition: ExpeditionData | null;
   currentNodeIndex: number;
+  /** Legacy flat wallet — kept for backward compat, prefer resourceWallet */
   gemWallet: { nature_gem: number; water_gem: number; knowledge_gem: number; craft_gem: number };
+  resourceWallet: ResourceWallet;
+  knowledgeMatchSummary: Record<string, number>;
+  equippedPassives: PassiveRelic[];
+  consumables: ConsumableItem[];
+  pendingNodeModifiers: string[];
+  currentBattleState: BattleState | null;
   souvenirs: SouvenirDef[];
+}
+
+export function createEmptyResourceWallet(): ResourceWallet {
+  return { nature: 0, water: 0, knowledge: 0, craft: 0 };
 }

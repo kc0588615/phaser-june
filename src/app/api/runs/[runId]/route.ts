@@ -4,9 +4,9 @@ import { db, ecoRunSessions } from '@/db';
 
 /**
  * PATCH /api/runs/[runId]
- * Update session metadata (e.g. gem wallet on completion).
+ * Update session metadata (e.g. resource wallet on completion).
  *
- * Body: { gemWallet?: Record<string, number> }
+ * Body: { resourceWallet?: Record<string, number> }
  */
 export async function PATCH(
   request: NextRequest,
@@ -19,13 +19,13 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { gemWallet } = body as { gemWallet?: Record<string, number> };
+    const { resourceWallet } = body as { resourceWallet?: Record<string, number> };
 
-    if (gemWallet) {
+    if (resourceWallet) {
       await db
         .update(ecoRunSessions)
         .set({
-          metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify({ gemWallet })}::jsonb`,
+          metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify({ resourceWallet })}::jsonb`,
         })
         .where(eq(ecoRunSessions.id, runId));
     }

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, EncounterEffect, SouvenirDef } from '@/types/expedition';
+import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic } from '@/types/expedition';
 import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
 
@@ -22,6 +22,7 @@ export interface EventPayloads {
     nodeIndex?: number;
     events?: string[];
     boardContext?: NodeBoardContext;
+    resourceWeight?: number;
   };
   'game-score-updated': {
     score: number;
@@ -74,9 +75,38 @@ export interface EventPayloads {
     habitats: string[];
   };
   'expedition-start': Record<string, never>;
+  'battle-state-updated': {
+    battle: BattleState;
+    canAffordSkills: Record<string, boolean>;
+  };
+  'resource-wallet-updated': {
+    wallet: ResourceWallet;
+  };
+  'store-opened': {
+    stock: Array<ConsumableItem | PassiveRelic>;
+    wallet: ResourceWallet;
+  };
+  'store-purchase-requested': {
+    itemId: string;
+    cost: Partial<ResourceWallet>;
+  };
+  'store-purchase-resolved': {
+    itemId: string;
+    success: boolean;
+    wallet: ResourceWallet;
+  };
+  'crisis-choice-requested': {
+    crisisId: string;
+    options: Array<{ id: string; label: string; cost?: Partial<ResourceWallet>; effect: string }>;
+  };
+  'crisis-choice-resolved': {
+    crisisId: string;
+    chosenOptionId: string;
+    modifier: string;
+  };
   'node-advance-requested': {
     nodeIndex: number;
-    reason: 'objective_complete' | 'analysis_complete';
+    reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved';
     source: 'game' | 'panel';
   };
   'node-complete': { nodeIndex: number };

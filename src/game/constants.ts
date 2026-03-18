@@ -5,10 +5,19 @@ export const GRID_COLS = 7 as const;
 export const GRID_ROWS = 7 as const; // Reduced from 8 to 7 to make room for owl
 
 // --- Gem Configuration ---
-export const GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'purple'] as const;
+export const KNOWLEDGE_GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'purple'] as const;
+export const RESOURCE_GEM_TYPES = ['nature', 'water', 'knowledge', 'craft'] as const;
+export const GEM_TYPES = [...KNOWLEDGE_GEM_TYPES, ...RESOURCE_GEM_TYPES] as const;
 export type GemType = typeof GEM_TYPES[number];
+export type KnowledgeGemType = typeof KNOWLEDGE_GEM_TYPES[number];
+export type ResourceGemType = typeof RESOURCE_GEM_TYPES[number];
+export type GemFamily = 'knowledge' | 'resource';
 
-export const GEM_FRAME_COUNT = 8 as const; // Number of frames per gem type (for explosion animation, etc.)
+export function getGemFamily(gemType: GemType): GemFamily {
+    return (RESOURCE_GEM_TYPES as readonly string[]).includes(gemType) ? 'resource' : 'knowledge';
+}
+
+export const GEM_FRAME_COUNT = 8 as const; // Number of animation frames per gem type (explosion etc.)
 
 // --- Paths ---
 export const ASSETS_PATH = 'assets/' as const;

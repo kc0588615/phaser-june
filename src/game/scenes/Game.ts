@@ -19,7 +19,8 @@ import {
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
-import { getClueCategoryForGemType } from '../gemSemantics';
+import { getClueCategoryForGemType, getResourceKeyForGemType } from '../gemSemantics';
+import type { ResourceGemType } from '../constants';
 import { buildNodeBoardContext, formatNodeObstacleLabel } from '../nodeObstacles';
 import { 
   GemCategory, 
@@ -126,6 +127,7 @@ export class Game extends Phaser.Scene {
     private pauseButtonContainer: Phaser.GameObjects.Container | null = null;
     private pauseButton: Phaser.GameObjects.Rectangle | null = null;
     private pauseButtonLabel: Phaser.GameObjects.Text | null = null;
+    private shuffleButtonContainer: Phaser.GameObjects.Container | null = null;
     private pauseOverlay: Phaser.GameObjects.Container | null = null;
     private pauseOverlayBackground: Phaser.GameObjects.Rectangle | null = null;
     private pauseOverlayTitle: Phaser.GameObjects.Text | null = null;
@@ -597,7 +599,39 @@ export class Game extends Phaser.Scene {
         this.pauseButtonLabel = label;
 
         this.ensurePauseOverlay();
+        this.createShuffleButton();
         this.positionPauseButton();
+    }
+
+    private createShuffleButton(): void {
+        if (this.shuffleButtonContainer) {
+            this.shuffleButtonContainer.destroy(true);
+            this.shuffleButtonContainer = null;
+        }
+        const sz = 36;
+        const bg = this.add.rectangle(0, 0, sz, sz, 0x000000, 0.45)
+            .setStrokeStyle(2, 0xf59e0b)
+            .setDepth(110);
+        bg.setInteractive({ useHandCursor: true });
+        bg.on('pointerover', () => bg.setFillStyle(0x111111, 0.6));
+        bg.on('pointerout', () => bg.setFillStyle(0x000000, 0.45));
+        bg.on('pointerup', () => this.handleShuffle());
+
+        const label = this.add.text(0, 0, '🔀', {
+            fontSize: '18px',
+        }).setOrigin(0.5).setDepth(111);
+
+        const container = this.add.container(0, 0, [bg, label]).setDepth(110);
+        container.setScrollFactor(0);
+        container.setVisible(this.isBoardInitialized);
+        this.shuffleButtonContainer = container;
+    }
+
+    private handleShuffle(): void {
+        if (!this.backendPuzzle || !this.boardView || !this.canMove || this.isPaused) return;
+        this.backendPuzzle.shuffle();
+        this.boardView.destroyBoard();
+        this.boardView.createBoard(this.backendPuzzle.getGridState());
     }
 
     private ensurePauseOverlay(): void {
@@ -695,6 +729,7 @@ export class Game extends Phaser.Scene {
             this.canMoveBeforePause = this.canMove;
             this.canMove = false;
             this.pauseButtonContainer?.setVisible(false);
+            this.shuffleButtonContainer?.setVisible(false);
             this.tweens.pauseAll();
             this.time.timeScale = 0;
             this.input.mouse?.releasePointerLock();
@@ -710,6 +745,7 @@ export class Game extends Phaser.Scene {
             this.pauseOverlayTitle?.setVisible(false);
             this.pauseOverlayResumeButton?.setVisible(false);
             this.pauseButtonContainer?.setVisible(true);
+            this.shuffleButtonContainer?.setVisible(true);
             if (this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.isResolvingMove && this.canMoveBeforePause) {
                 this.canMove = true;
             }
@@ -723,6 +759,10 @@ export class Game extends Phaser.Scene {
         const x = this.boardOffset.x + boardWidth - 18;
         const y = this.boardOffset.y - 42;
         this.pauseButtonContainer.setPosition(x, y);
+        // Shuffle button sits to the left of pause
+        if (this.shuffleButtonContainer) {
+            this.shuffleButtonContainer.setPosition(x - 44, y);
+        }
         this.updatePauseOverlayLayout();
     }
 
@@ -889,6 +929,28 @@ export class Game extends Phaser.Scene {
                 target: this.nodeObjectiveTarget,
                 requiredGems: Array.from(this.nodeRequiredGems),
             });
+        }
+    }
+
+    /** Tally resource gem matches and emit wallet update. */
+    private emitResourceGemRewards(matches: Coordinate[][], gridState: any): void {
+        if (!matches || matches.length === 0 || !gridState) return;
+        const rewards: Record<ResourceGemType, number> = { nature: 0, water: 0, knowledge: 0, craft: 0 };
+        let any = false;
+        for (const match of matches) {
+            if (match.length === 0) continue;
+            const [x, y] = match[0];
+            const gem = gridState[x]?.[y];
+            if (!gem) continue;
+            const rk = getResourceKeyForGemType(gem.gemType);
+            if (rk) {
+                const bonus = match.length >= 4 ? 2 : 1;
+                rewards[rk] += bonus;
+                any = true;
+            }
+        }
+        if (any) {
+            EventBus.emit('resource-wallet-updated', { wallet: { ...rewards } });
         }
     }
 
@@ -1183,7 +1245,8 @@ export class Game extends Phaser.Scene {
             if (!this.backendPuzzle) { // Should exist from create()
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
             }
-            // Regenerate the board with new random gems
+            // Set gem pool weighting for this node type (reset to default if absent)
+            this.backendPuzzle.setGemPool({ resourceWeight: data.resourceWeight ?? 0.35 });
             this.backendPuzzle.regenerateBoard();
             const boardContext = data.boardContext ?? buildNodeBoardContext({
                 width: GRID_COLS,
@@ -1243,6 +1306,7 @@ export class Game extends Phaser.Scene {
             }
             this.positionPauseButton();
             this.pauseButtonContainer?.setVisible(true);
+            this.shuffleButtonContainer?.setVisible(true);
             if (this.movesText && this.backendPuzzle) {
                 this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
             }
@@ -1649,6 +1713,7 @@ export class Game extends Phaser.Scene {
 
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
         this.recordMatchesForSummary(matches, originalGridState);
+        this.emitResourceGemRewards(matches, originalGridState);
         if (!this.selectedSpecies || matches.length === 0 || !originalGridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -1681,6 +1746,7 @@ export class Game extends Phaser.Scene {
     private processMatchedGemsForClues(matches: Coordinate[][], gridStateOverride?: any): void {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState);
+        this.emitResourceGemRewards(matches, gridState);
         if (!this.selectedSpecies || matches.length === 0 || !gridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -1895,6 +1961,7 @@ export class Game extends Phaser.Scene {
         this.canMove = false;
         this.isBoardInitialized = false;
         this.pauseButtonContainer?.setVisible(false);
+        this.shuffleButtonContainer?.setVisible(false);
         this.obstacleText?.setVisible(false);
 
         // Reset scoring for new node (keep species + raster data intact)
@@ -2103,6 +2170,10 @@ export class Game extends Phaser.Scene {
         if (this.pauseButtonContainer) {
             this.pauseButtonContainer.destroy(true);
             this.pauseButtonContainer = null;
+        }
+        if (this.shuffleButtonContainer) {
+            this.shuffleButtonContainer.destroy(true);
+            this.shuffleButtonContainer = null;
         }
         this.pauseButton = null;
         this.pauseButtonLabel = null;
