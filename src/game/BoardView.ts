@@ -6,11 +6,12 @@ import {
     AssetKeys,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE,
-    GemType, GEM_FRAME_COUNT, RESOURCE_GEM_TYPES
+    GemType, GEM_FRAME_COUNT, ACTION_GEM_TYPES
 } from './constants';
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
 import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
+import { getGemDefinition } from '../expedition/domain';
 
 interface BoardConfig {
     cols: number;
@@ -48,25 +49,23 @@ export class BoardView {
         this.gemSize = config.gemSize;
         this.boardOffset = config.boardOffset;
         this.gemGroup = this.scene.add.group();
-        this.ensureResourceGemTextures();
+        this.ensureGeneratedGemTextures();
         console.log("BoardView initialized");
     }
 
-    /** Generate colored-circle placeholder textures for resource gems that lack sprite assets. */
-    private ensureResourceGemTextures(): void {
-        const colorMap: Record<string, number> = {
-            nature: 0x34d399,
-            water: 0x38bdf8,
-            knowledge: 0xcbd5e1,
-            craft: 0xfb923c,
-        };
-        for (const type of RESOURCE_GEM_TYPES) {
+    /** Generate placeholder textures for action gems until dedicated art exists. */
+    private ensureGeneratedGemTextures(): void {
+        for (const type of ACTION_GEM_TYPES) {
+            const definition = getGemDefinition(type);
+            const color = Number(definition.color.replace('#', '0x'));
             for (let i = 0; i < GEM_FRAME_COUNT; i++) {
                 const key = AssetKeys.GEM_TEXTURE(type, i);
                 if (this.scene.textures.exists(key)) continue;
                 const gfx = this.scene.add.graphics();
-                gfx.fillStyle(colorMap[type] ?? 0xffffff, 1);
-                gfx.fillCircle(16, 16, 14);
+                gfx.fillStyle(color, 1);
+                gfx.fillRoundedRect(2, 2, 28, 28, 8);
+                gfx.lineStyle(2, 0xffffff, 0.65);
+                gfx.strokeRoundedRect(4, 4, 24, 24, 7);
                 gfx.generateTexture(key, 32, 32);
                 gfx.destroy();
             }

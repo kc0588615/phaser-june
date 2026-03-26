@@ -8,7 +8,7 @@ import { EventBus } from './game/EventBus';
 import type { EventPayloads } from './game/EventBus';
 import { toast, Toaster } from 'sonner';
 import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
-import type { RunState, SouvenirDef } from '@/types/expedition';
+import type { ConsumableItem, RunState, SouvenirDef } from '@/types/expedition';
 import { createEmptyResourceWallet } from '@/types/expedition';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
@@ -17,27 +17,15 @@ import { RunTrack } from './components/RunTrack';
 import { ActiveEncounterPanel } from './components/ActiveEncounterPanel';
 import { GemWallet } from './components/GemWallet';
 import { SouvenirPouch } from './components/SouvenirPouch';
-
-/** Map node_type to resource gem weight on the board.
- *  Current runtime node types: riverbank_sweep, dense_canopy, urban_fringe,
- *  elevation_ridge, storm_window, custom, analysis. */
-function resourceWeightForNode(node?: { node_type?: string; difficulty?: number }): number {
-    const t = node?.node_type ?? '';
-    // analysis nodes are pure knowledge — no resource gems on board
-    if (t === 'analysis') return 0;
-    // storm_window is the hardest encounter — slightly more resource pressure
-    if (t === 'storm_window') return 0.40;
-    // all other collection nodes
-    return 0.35;
-}
+import { ConsumableTray } from './components/ConsumableTray';
+import { buildBoardSpawnConfigForNode, WALLET_DEFS } from '@/expedition/domain';
 
 const INITIAL_RUN_STATE: RunState = {
     phase: 'idle',
     expedition: null,
     currentNodeIndex: 0,
-    gemWallet: { nature_gem: 0, water_gem: 0, knowledge_gem: 0, craft_gem: 0 },
     resourceWallet: createEmptyResourceWallet(),
-    knowledgeMatchSummary: {},
+    lootMatchSummary: {},
     equippedPassives: [],
     consumables: [],
     pendingNodeModifiers: [],
@@ -121,6 +109,11 @@ function MainAppLayout() {
             obstacles: firstNode?.obstacles ?? [],
             nodeIndex: 0,
         });
+        const firstBoardConfig = buildBoardSpawnConfigForNode(
+            firstNode?.node_type ?? 'custom',
+            firstNode?.requiredGems ?? [],
+            payload.expedition.actionBias
+        );
         EventBus.emit('cesium-location-selected', {
             lon: payload.lon,
             lat: payload.lat,
@@ -134,7 +127,7 @@ function MainAppLayout() {
             nodeIndex: 0,
             events: firstNode?.events,
             boardContext: firstBoardContext,
-            resourceWeight: resourceWeightForNode(firstNode),
+            boardConfig: firstBoardConfig,
         });
     }, []);
 
@@ -201,6 +194,11 @@ function MainAppLayout() {
                         obstacles: nextNode?.obstacles ?? [],
                         nodeIndex: nextIndex,
                     });
+                    const nextBoardConfig = buildBoardSpawnConfigForNode(
+                        nextNode?.node_type ?? 'custom',
+                        nextNode?.requiredGems ?? [],
+                        prev.expedition?.actionBias ?? {}
+                    );
                     EventBus.emit('cesium-location-selected', {
                         lon: payload.lon,
                         lat: payload.lat,
@@ -214,7 +212,7 @@ function MainAppLayout() {
                         nodeIndex: nextIndex,
                         events: nextNode?.events,
                         boardContext: nextBoardContext,
-                        resourceWeight: resourceWeightForNode(nextNode),
+                        boardConfig: nextBoardConfig,
                     });
                 }, 100);
             }
@@ -260,6 +258,34 @@ function MainAppLayout() {
         );
     }, []);
 
+    const handleConsumableFound = useCallback((data: EventPayloads['consumable-found']) => {
+        setRunState(prev => prev.phase === 'in-run'
+            ? { ...prev, consumables: [...prev.consumables, data.item] }
+            : prev
+        );
+        toast(`Crate yielded ${data.item.name}`, { duration: 1600 });
+    }, []);
+
+    const handleConsumableUseRequested = useCallback((data: EventPayloads['consumable-use-requested']) => {
+        let consumedItem: ConsumableItem | null = null;
+        setRunState(prev => {
+            if (prev.phase !== 'in-run') return prev;
+            const nextConsumables = prev.consumables.filter((item) => {
+                const keep = item.instanceId !== data.itemInstanceId;
+                if (!keep) consumedItem = item;
+                return keep;
+            });
+            if (!consumedItem) return prev;
+            return { ...prev, consumables: nextConsumables };
+        });
+
+        const usedItem = consumedItem as ConsumableItem | null;
+        if (usedItem) {
+            EventBus.emit('consumable-used', { item: usedItem });
+            toast(`Used ${usedItem.name}`, { duration: 1400 });
+        }
+    }, []);
+
     // Handle show-species-list event
     useEffect(() => {
         const handleShowSpeciesList = (data: { speciesId: number }) => {
@@ -275,6 +301,8 @@ function MainAppLayout() {
         EventBus.on('node-objective-updated', handleObjectiveUpdate);
         EventBus.on('souvenir-dropped', handleSouvenirDrop);
         EventBus.on('resource-wallet-updated', handleResourceWalletUpdate);
+        EventBus.on('consumable-found', handleConsumableFound);
+        EventBus.on('consumable-use-requested', handleConsumableUseRequested);
 
         return () => {
             EventBus.off('show-species-list', handleShowSpeciesList);
@@ -285,8 +313,10 @@ function MainAppLayout() {
             EventBus.off('node-objective-updated', handleObjectiveUpdate);
             EventBus.off('souvenir-dropped', handleSouvenirDrop);
             EventBus.off('resource-wallet-updated', handleResourceWalletUpdate);
+            EventBus.off('consumable-found', handleConsumableFound);
+            EventBus.off('consumable-use-requested', handleConsumableUseRequested);
         };
-    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop, handleResourceWalletUpdate]);
+    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop, handleResourceWalletUpdate, handleConsumableFound, handleConsumableUseRequested]);
 
     const appStyle: React.CSSProperties = {
         display: 'flex',
@@ -358,11 +388,17 @@ function MainAppLayout() {
 
                     {/* GemWallet + SouvenirPouch fixed inside phaser wrapper */}
                     {inRun && (
-                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 50, display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
-                            <GemWallet wallet={runState.resourceWallet} />
-                            {runState.souvenirs.length > 0 && (
-                                <SouvenirPouch souvenirs={runState.souvenirs} />
-                            )}
+                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+                                <GemWallet wallet={runState.resourceWallet} />
+                                {runState.souvenirs.length > 0 && (
+                                    <SouvenirPouch souvenirs={runState.souvenirs} />
+                                )}
+                            </div>
+                            <ConsumableTray
+                                items={runState.consumables}
+                                onUse={(itemInstanceId) => EventBus.emit('consumable-use-requested', { itemInstanceId })}
+                            />
                         </div>
                     )}
                 </div>
@@ -458,12 +494,7 @@ function MainAppLayout() {
                             {hudRef.current.score} pts
                         </div>
                         <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
-                            {([
-                                { key: 'nature' as const, color: '#34d399', label: '🍃 Nature' },
-                                { key: 'water' as const, color: '#38bdf8', label: '💧 Water' },
-                                { key: 'knowledge' as const, color: '#cbd5e1', label: '📘 Knowledge' },
-                                { key: 'craft' as const, color: '#fb923c', label: '🔧 Craft' },
-                            ]).map(({ key, color, label }) => (
+                            {WALLET_DEFS.map(({ key, color, label }) => (
                                 <div key={key} style={{ textAlign: 'center' }}>
                                     <div style={{ color, fontWeight: 700, fontSize: '18px' }}>
                                         {runState.resourceWallet[key]}

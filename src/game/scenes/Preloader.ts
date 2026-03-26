@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { KNOWLEDGE_GEM_TYPES, ASSETS_PATH, AssetKeys, GEM_FRAME_COUNT } from '../constants';
+import { LOOT_GEM_TYPES, ASSETS_PATH, AssetKeys, GEM_FRAME_COUNT } from '../constants';
 import type { GemType } from '../constants';
 
 export class Preloader extends Phaser.Scene {
@@ -18,9 +18,8 @@ export class Preloader extends Phaser.Scene {
         this.load.image(AssetKeys.LOGO, `${assetsFullPath}logo.png`);
         this.load.image(AssetKeys.BACKGROUND, `${assetsFullPath}bg.png`); // Corrected key and filename
 
-        // Load Gem Assets — only knowledge gems have sprite sheets;
-        // resource gems use programmatic rendering until art is produced
-        KNOWLEDGE_GEM_TYPES.forEach((type: GemType) => {
+        // Load loot gem assets. Action gems use generated placeholder textures for now.
+        LOOT_GEM_TYPES.forEach((type: GemType) => {
             for (let i = 0; i < GEM_FRAME_COUNT; i++) {
                 const key = AssetKeys.GEM_TEXTURE(type, i);
                 const path = `${assetsFullPath}${type}_gem_${i}.png`;

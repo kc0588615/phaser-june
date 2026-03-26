@@ -1,19 +1,19 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, KNOWLEDGE_GEM_TYPES, RESOURCE_GEM_TYPES, GemType, MAX_MOVES } from './constants';
+import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
 
 export type Gem = BoardCell;
 export type { BoardCell, PuzzleGrid };
 
-/** Fraction of resource gems in the pool (0–1). Rest are knowledge gems. */
-export interface GemPoolConfig {
-    resourceWeight: number; // 0.35 = collection, 0.45 = standoff, 0.50 = boss
-}
+export type GemPoolConfig = BoardSpawnConfig;
 
-const DEFAULT_GEM_POOL: GemPoolConfig = { resourceWeight: 0.35 };
+const DEFAULT_GEM_POOL: GemPoolConfig = {
+    lootChance: DEFAULT_BOARD_SPAWN_CONFIG.lootChance,
+    actionWeights: { ...DEFAULT_BOARD_SPAWN_CONFIG.actionWeights },
+};
 
 export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
@@ -34,7 +34,10 @@ export class BackendPuzzle {
     }
 
     setGemPool(config: GemPoolConfig): void {
-        this.gemPool = config;
+        this.gemPool = {
+            lootChance: config.lootChance,
+            actionWeights: { ...config.actionWeights },
+        };
     }
 
     /**
@@ -235,12 +238,26 @@ export class BackendPuzzle {
         return this.pickWeightedGem();
     }
 
-    /** Pick a random gem weighted by resourceWeight config */
+    /** Pick a random gem weighted by action-vs-loot board config. */
     private pickWeightedGem(): GemType {
-        if (Math.random() < this.gemPool.resourceWeight) {
-            return RESOURCE_GEM_TYPES[Math.floor(Math.random() * RESOURCE_GEM_TYPES.length)];
+        if (Math.random() < this.gemPool.lootChance) {
+            return LOOT_GEM_TYPES[Math.floor(Math.random() * LOOT_GEM_TYPES.length)];
         }
-        return KNOWLEDGE_GEM_TYPES[Math.floor(Math.random() * KNOWLEDGE_GEM_TYPES.length)];
+        return this.pickWeightedActionGem();
+    }
+
+    private pickWeightedActionGem(): ActionGemType {
+        const roll = Math.random();
+        let cursor = 0;
+
+        for (const gemType of ACTION_GEM_TYPES) {
+            cursor += this.gemPool.actionWeights[gemType] ?? 0;
+            if (roll <= cursor) {
+                return gemType;
+            }
+        }
+
+        return ACTION_GEM_TYPES[ACTION_GEM_TYPES.length - 1];
     }
 
     /** Check if any single-cell row/col shift produces a match. */

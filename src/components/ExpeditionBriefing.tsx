@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ExpeditionData } from '@/types/expedition';
-import { NODE_TYPE_LABELS, GEM_DEFS } from '@/types/expedition';
+import { ACTION_GEM_DEFS, NODE_TYPE_LABELS } from '@/expedition/domain';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -80,14 +80,15 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart }) => 
         </Badge>
       )}
 
-      {/* Resource Bias */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        {GEM_DEFS.map(({ key, label, color }) => {
-          const weight = expedition.resourceBias[key] ?? 0.25;
-          const maxWeight = Math.max(...Object.values(expedition.resourceBias), 0.25);
+      {/* Action Bias */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
+        {ACTION_GEM_DEFS.map(({ gemType, label, color }) => {
+          const actionGemType = gemType as keyof ExpeditionData['actionBias'];
+          const weight = expedition.actionBias[actionGemType] ?? 0.125;
+          const maxWeight = Math.max(...Object.values(expedition.actionBias), 0.125);
           const pct = Math.round((weight / maxWeight) * 100);
           return (
-            <div key={key} style={{ flex: 1, textAlign: 'center' }}>
+            <div key={gemType} style={{ textAlign: 'center' }}>
               <div style={{ height: '6px', borderRadius: '3px', background: '#1e293b' }}>
                 <div style={{
                   height: '100%',

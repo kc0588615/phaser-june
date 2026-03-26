@@ -1,3 +1,5 @@
+import type { ActionGemType, ConsumableItem as DomainConsumableItem, ResourceWallet as DomainResourceWallet } from '@/expedition/domain';
+import { createEmptyResourceWallet as createEmptyDomainResourceWallet } from '@/expedition/domain';
 import type { RunNode } from '@/lib/nodeScoring';
 
 export type { RunNode };
@@ -8,7 +10,7 @@ export interface ExpeditionData {
   nodes: RunNode[];
   bioregion: { bioregion: string | null; realm: string | null; biome: string | null } | null;
   protectedAreas: Array<{ name: string | null; designation: string | null; iucn_category: string | null }>;
-  resourceBias: Record<string, number>;
+  actionBias: Partial<Record<ActionGemType, number>>;
   primaryNodeFamily: string;
   primaryVariant: string;
   modifierNodes: string[];
@@ -17,49 +19,8 @@ export interface ExpeditionData {
   nearestRiverDistM?: number | null;
 }
 
-/** Board gem name → hex color for UI swatches */
-export const GEM_COLOR_MAP: Record<string, string> = {
-  // Knowledge gems
-  black: '#1e293b',
-  blue: '#3b82f6',
-  green: '#22c55e',
-  orange: '#f97316',
-  red: '#ef4444',
-  white: '#e2e8f0',
-  yellow: '#eab308',
-  purple: '#a855f7',
-  // Resource gems
-  nature: '#34d399',
-  water: '#38bdf8',
-  knowledge: '#cbd5e1',
-  craft: '#fb923c',
-};
-
-/** Short display labels for node_type values */
-export const NODE_TYPE_LABELS: Record<string, string> = {
-  riverbank_sweep: 'River',
-  dense_canopy: 'Canopy',
-  urban_fringe: 'Urban',
-  elevation_ridge: 'Ridge',
-  storm_window: 'Storm',
-  analysis: 'Analysis',
-  custom: 'Special',
-};
-
-/** Shared gem display metadata */
-export const GEM_DEFS = [
-  { key: 'nature_gem' as const, label: 'Nature', color: '#22c55e' },
-  { key: 'water_gem' as const, label: 'Water', color: '#3b82f6' },
-  { key: 'knowledge_gem' as const, label: 'Knowledge', color: '#e2e8f0' },
-  { key: 'craft_gem' as const, label: 'Craft', color: '#f97316' },
-] as const;
-
-// --- Encounter & Souvenir types ---
-
-export type EncounterEffectType = 'bonus_gems' | 'score_boost' | 'objective_boost';
-
 export interface EncounterEffect {
-  type: EncounterEffectType;
+  type: 'bonus_gems' | 'score_boost' | 'objective_boost';
   label: string;
 }
 
@@ -81,7 +42,7 @@ export interface SouvenirDef {
   id: string;
   name: string;
   emoji: string;
-  dropChance: number; // 0-1
+  dropChance: number;
 }
 
 export const SOUVENIR_CATALOG: Record<string, SouvenirDef> = {
@@ -100,19 +61,8 @@ export const SOUVENIR_CATALOG: Record<string, SouvenirDef> = {
 
 export type NodeType = 'collection' | 'standoff' | 'crisis' | 'store';
 
-export interface ResourceWallet {
-  nature: number;
-  water: number;
-  knowledge: number;
-  craft: number;
-}
-
-export interface ConsumableItem {
-  id: string;
-  name: string;
-  resourceCost: Partial<ResourceWallet>;
-  effect: string;
-}
+export type ResourceWallet = DomainResourceWallet;
+export type ConsumableItem = DomainConsumableItem;
 
 export interface PassiveRelic {
   id: string;
@@ -136,10 +86,8 @@ export interface RunState {
   phase: RunPhase;
   expedition: ExpeditionData | null;
   currentNodeIndex: number;
-  /** Legacy flat wallet — kept for backward compat, prefer resourceWallet */
-  gemWallet: { nature_gem: number; water_gem: number; knowledge_gem: number; craft_gem: number };
   resourceWallet: ResourceWallet;
-  knowledgeMatchSummary: Record<string, number>;
+  lootMatchSummary: Record<string, number>;
   equippedPassives: PassiveRelic[];
   consumables: ConsumableItem[];
   pendingNodeModifiers: string[];
@@ -148,5 +96,5 @@ export interface RunState {
 }
 
 export function createEmptyResourceWallet(): ResourceWallet {
-  return { nature: 0, water: 0, knowledge: 0, craft: 0 };
+  return createEmptyDomainResourceWallet();
 }

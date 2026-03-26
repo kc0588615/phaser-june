@@ -1,21 +1,26 @@
 // src/game/constants.ts
 
+import {
+    ACTION_GEM_TYPES,
+    LOOT_GEM_TYPES,
+    GEM_TYPES,
+    type ActionGemType,
+    type LootGemType,
+    type GemType,
+    type GemFamily,
+    type CurrencyKey,
+    type BoardSpawnConfig,
+    getGemFamily,
+    DEFAULT_BOARD_SPAWN_CONFIG,
+} from '../expedition/domain';
+
 // --- Grid Configuration ---
 export const GRID_COLS = 7 as const;
 export const GRID_ROWS = 7 as const; // Reduced from 8 to 7 to make room for owl
 
 // --- Gem Configuration ---
-export const KNOWLEDGE_GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'purple'] as const;
-export const RESOURCE_GEM_TYPES = ['nature', 'water', 'knowledge', 'craft'] as const;
-export const GEM_TYPES = [...KNOWLEDGE_GEM_TYPES, ...RESOURCE_GEM_TYPES] as const;
-export type GemType = typeof GEM_TYPES[number];
-export type KnowledgeGemType = typeof KNOWLEDGE_GEM_TYPES[number];
-export type ResourceGemType = typeof RESOURCE_GEM_TYPES[number];
-export type GemFamily = 'knowledge' | 'resource';
-
-export function getGemFamily(gemType: GemType): GemFamily {
-    return (RESOURCE_GEM_TYPES as readonly string[]).includes(gemType) ? 'resource' : 'knowledge';
-}
+export { ACTION_GEM_TYPES, LOOT_GEM_TYPES, GEM_TYPES, getGemFamily, DEFAULT_BOARD_SPAWN_CONFIG };
+export type { ActionGemType, LootGemType, GemType, GemFamily, CurrencyKey, BoardSpawnConfig };
 
 export const GEM_FRAME_COUNT = 8 as const; // Number of animation frames per gem type (explosion etc.)
 
@@ -65,7 +70,7 @@ export const AssetKeys = {
 
 // --- Habitat to Gem Mapping ---
 export const HABITAT_GEM_MAP: Partial<Record<number, GemType>> = {
-    // Forests (100-109) → Green
+    // Legacy habitat mapping now routes to rare loot gems.
     100: 'green', 101: 'green', 102: 'green', 103: 'green', 104: 'green',
     105: 'green', 106: 'green', 107: 'green', 108: 'green', 109: 'green',
     

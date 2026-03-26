@@ -14,14 +14,16 @@ import {
     MULTIPLIER_LARGE_MATCH,
     MULTIPLIER_HUGE_MATCH,
     MULTIPLIER_MULTI_CATEGORY,
-    MULTIPLIER_REPEAT_CATEGORY
+    MULTIPLIER_REPEAT_CATEGORY,
+    DEFAULT_BOARD_SPAWN_CONFIG,
 } from '../constants';
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
 import { getClueCategoryForGemType, getResourceKeyForGemType } from '../gemSemantics';
-import type { ResourceGemType } from '../constants';
 import { buildNodeBoardContext, formatNodeObstacleLabel } from '../nodeObstacles';
+import type { CurrencyKey } from '@/expedition/domain';
+import { getGemDefinition, isActionGem, rollCrateConsumable } from '@/expedition/domain';
 import { 
   GemCategory, 
   CLUE_CONFIG, 
@@ -542,6 +544,7 @@ export class Game extends Phaser.Scene {
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
+        EventBus.on('consumable-used', this.handleConsumableUsed, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -932,26 +935,88 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    /** Tally resource gem matches and emit wallet update. */
-    private emitResourceGemRewards(matches: Coordinate[][], gridState: any): void {
+    /** Resolve action gem economy, crate items, and rare loot payouts from a match set. */
+    private emitMatchEconomyRewards(matches: Coordinate[][], gridState: any): void {
         if (!matches || matches.length === 0 || !gridState) return;
-        const rewards: Record<ResourceGemType, number> = { nature: 0, water: 0, knowledge: 0, craft: 0 };
-        let any = false;
+
+        const rewards: Record<CurrencyKey, number> = { gold: 0, power: 0, thought: 0, dust: 0 };
+        let anyWalletReward = false;
+
         for (const match of matches) {
             if (match.length === 0) continue;
             const [x, y] = match[0];
             const gem = gridState[x]?.[y];
             if (!gem) continue;
-            const rk = getResourceKeyForGemType(gem.gemType);
-            if (rk) {
-                const bonus = match.length >= 4 ? 2 : 1;
-                rewards[rk] += bonus;
-                any = true;
+
+            const bonus = match.length >= 4 ? 2 : 1;
+            const resourceKey = getResourceKeyForGemType(gem.gemType);
+            if (resourceKey) {
+                rewards[resourceKey] += bonus;
+                anyWalletReward = true;
+            }
+
+            if (gem.gemType === 'crate') {
+                const item = rollCrateConsumable(match.length);
+                EventBus.emit('consumable-found', { item });
+            }
+
+            if (gem.gemType === 'multiplier' && this.backendPuzzle) {
+                this.backendPuzzle.addBonusScore(25 * bonus);
+                this.emitHud();
+            }
+
+            if (!isActionGem(gem.gemType)) {
+                rewards.dust += match.length >= 5 ? 2 : 1;
+                anyWalletReward = true;
             }
         }
-        if (any) {
+
+        if (anyWalletReward) {
             EventBus.emit('resource-wallet-updated', { wallet: { ...rewards } });
         }
+    }
+
+    private handleConsumableUsed(data: EventPayloads['consumable-used']): void {
+        if (!this.backendPuzzle) return;
+
+        switch (data.item.effectType) {
+            case 'score_burst':
+                this.backendPuzzle.addBonusScore(75);
+                break;
+            case 'objective_push':
+                if (this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
+                    this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + 2);
+                    EventBus.emit('node-objective-updated', {
+                        progress: this.nodeObjectiveProgress,
+                        target: this.nodeObjectiveTarget,
+                        requiredGems: Array.from(this.nodeRequiredGems),
+                    });
+                    if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
+                        this.nodeObjectiveCompleted = true;
+                        this.time.delayedCall(250, () => {
+                            EventBus.emit('node-advance-requested', {
+                                nodeIndex: this.currentNodeIndex,
+                                reason: 'objective_complete',
+                                source: 'game',
+                            });
+                        });
+                    }
+                }
+                break;
+            case 'move_buffer':
+                this.backendPuzzle.setMaxMoves(this.backendPuzzle.getMaxMoves() + 3);
+                break;
+            case 'queue_boost': {
+                const queue = Array.from(this.nodeRequiredGems).slice(0, 2);
+                if (queue.length > 0) {
+                    this.backendPuzzle.addNextGemsToSpawn(queue);
+                }
+                this.backendPuzzle.addNextGemToSpawn('crate');
+                break;
+            }
+        }
+
+        this.emitHud();
     }
 
     private applyMoveBonuses(baseScore: number): { finalScore: number; multiplier: number; repeatedCategories: GemCategory[] } {
@@ -1245,8 +1310,8 @@ export class Game extends Phaser.Scene {
             if (!this.backendPuzzle) { // Should exist from create()
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
             }
-            // Set gem pool weighting for this node type (reset to default if absent)
-            this.backendPuzzle.setGemPool({ resourceWeight: data.resourceWeight ?? 0.35 });
+            // Configure board spawning for action-first YMBAB-style nodes.
+            this.backendPuzzle.setGemPool(data.boardConfig ?? DEFAULT_BOARD_SPAWN_CONFIG);
             this.backendPuzzle.regenerateBoard();
             const boardContext = data.boardContext ?? buildNodeBoardContext({
                 width: GRID_COLS,
@@ -1713,7 +1778,7 @@ export class Game extends Phaser.Scene {
 
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
         this.recordMatchesForSummary(matches, originalGridState);
-        this.emitResourceGemRewards(matches, originalGridState);
+        this.emitMatchEconomyRewards(matches, originalGridState);
         if (!this.selectedSpecies || matches.length === 0 || !originalGridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -1746,7 +1811,7 @@ export class Game extends Phaser.Scene {
     private processMatchedGemsForClues(matches: Coordinate[][], gridStateOverride?: any): void {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState);
-        this.emitResourceGemRewards(matches, gridState);
+        this.emitMatchEconomyRewards(matches, gridState);
         if (!this.selectedSpecies || matches.length === 0 || !gridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -2127,6 +2192,7 @@ export class Game extends Phaser.Scene {
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
+        EventBus.off('consumable-used', this.handleConsumableUsed, this);
 
         // Remove player tracking listeners if they exist
         if (this.currentUserId) {

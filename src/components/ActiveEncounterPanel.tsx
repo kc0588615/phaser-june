@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { RunNode, EncounterEffect, SouvenirDef } from '@/types/expedition';
-import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/types/expedition';
+import { NODE_TYPE_LABELS, GEM_COLOR_MAP, getGemDefinition } from '@/expedition/domain';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { formatNodeObstacleLabel } from '@/game/nodeObstacles';
@@ -105,6 +105,9 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
             <span style={{ fontSize: '11px', color: '#cbd5e1', marginLeft: '4px' }}>
               {progress}/{node.objectiveTarget}
             </span>
+          </div>
+          <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>
+            {node.requiredGems.map((gemType) => getGemDefinition(gemType).label).join(' + ')}
           </div>
           <div style={{
             height: '6px',

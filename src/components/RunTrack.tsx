@@ -1,6 +1,6 @@
 import React from 'react';
 import type { RunNode } from '@/types/expedition';
-import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/types/expedition';
+import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/expedition/domain';
 
 interface Props {
   nodes: RunNode[];

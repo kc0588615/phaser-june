@@ -581,7 +581,7 @@ export async function GET(request: NextRequest) {
       primary_node_family: nodeSelection.primaryNodeFamily,
       primary_variant: nodeSelection.primaryVariant,
       modifier_nodes: nodeSelection.modifierNodes,
-      resource_bias: nodeSelection.resourceBias,
+      action_bias: nodeSelection.actionBias,
       signals: allSignals,
       protected_areas: [...protectedAreas].map((row) => ({
         site_id: row.site_id,

@@ -5,6 +5,7 @@ import type { CluePayload } from './clueConfig';
 import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic } from '@/types/expedition';
 import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
+import type { BoardSpawnConfig } from '@/expedition/domain';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -22,7 +23,7 @@ export interface EventPayloads {
     nodeIndex?: number;
     events?: string[];
     boardContext?: NodeBoardContext;
-    resourceWeight?: number;
+    boardConfig?: BoardSpawnConfig;
   };
   'game-score-updated': {
     score: number;
@@ -81,6 +82,15 @@ export interface EventPayloads {
   };
   'resource-wallet-updated': {
     wallet: ResourceWallet;
+  };
+  'consumable-found': {
+    item: ConsumableItem;
+  };
+  'consumable-use-requested': {
+    itemInstanceId: string;
+  };
+  'consumable-used': {
+    item: ConsumableItem;
   };
   'store-opened': {
     stock: Array<ConsumableItem | PassiveRelic>;
