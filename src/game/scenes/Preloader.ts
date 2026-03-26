@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { GEM_TYPES, ASSETS_PATH, AssetKeys, GEM_FRAME_COUNT, GemType } from '../constants';
+import { LOOT_GEM_TYPES, ASSETS_PATH, AssetKeys, GEM_FRAME_COUNT } from '../constants';
+import type { GemType } from '../constants';
 
 export class Preloader extends Phaser.Scene {
     constructor() {
@@ -17,12 +18,10 @@ export class Preloader extends Phaser.Scene {
         this.load.image(AssetKeys.LOGO, `${assetsFullPath}logo.png`);
         this.load.image(AssetKeys.BACKGROUND, `${assetsFullPath}bg.png`); // Corrected key and filename
 
-        // Load Gem Assets
-        GEM_TYPES.forEach((type: GemType) => {
+        // Load loot gem assets. Action gems use generated placeholder textures for now.
+        LOOT_GEM_TYPES.forEach((type: GemType) => {
             for (let i = 0; i < GEM_FRAME_COUNT; i++) {
                 const key = AssetKeys.GEM_TEXTURE(type, i);
-                // Assuming gem files are named like 'black_gem_0.png', 'blue_gem_1.png' etc.
-                // and located directly in the ASSETS_PATH folder.
                 const path = `${assetsFullPath}${type}_gem_${i}.png`;
                 this.load.image(key, path);
             }

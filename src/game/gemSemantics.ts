@@ -1,22 +1,47 @@
-import type { GemType } from './constants';
+import type { GemType, GemFamily, CurrencyKey } from './constants';
+import {
+    getGemFamily,
+} from './constants';
 import { GemCategory } from './clueConfig';
+import {
+    GEM_REGISTRY,
+    getClueCategoryForGemType as getDomainClueCategoryForGemType,
+    getCurrencyKeyForGemType as getDomainCurrencyKeyForGemType,
+    isActionGem as isDomainActionGem,
+    isLootGem as isDomainLootGem,
+} from '../expedition/domain';
 
 export interface GemSemanticDef {
     gemType: GemType;
+    family: GemFamily;
     clueCategory: GemCategory | null;
+    resourceKey: CurrencyKey | null;
 }
 
-export const GEM_SEMANTICS: Record<GemType, GemSemanticDef> = {
-    black: { gemType: 'black', clueCategory: GemCategory.LIFE_CYCLE },
-    blue: { gemType: 'blue', clueCategory: GemCategory.GEOGRAPHIC },
-    green: { gemType: 'green', clueCategory: GemCategory.HABITAT },
-    orange: { gemType: 'orange', clueCategory: GemCategory.MORPHOLOGY },
-    red: { gemType: 'red', clueCategory: GemCategory.CLASSIFICATION },
-    white: { gemType: 'white', clueCategory: GemCategory.CONSERVATION },
-    yellow: { gemType: 'yellow', clueCategory: GemCategory.BEHAVIOR },
-    purple: { gemType: 'purple', clueCategory: GemCategory.KEY_FACTS },
-};
+export const GEM_SEMANTICS: Record<GemType, GemSemanticDef> = Object.fromEntries(
+    Object.values(GEM_REGISTRY).map((definition) => [
+        definition.gemType,
+        {
+            gemType: definition.gemType,
+            family: definition.family,
+            clueCategory: definition.clueCategory,
+            resourceKey: definition.currencyKey,
+        },
+    ])
+) as Record<GemType, GemSemanticDef>;
 
 export function getClueCategoryForGemType(gemType: GemType): GemCategory | null {
-    return GEM_SEMANTICS[gemType]?.clueCategory ?? null;
+    return getDomainClueCategoryForGemType(gemType);
+}
+
+export function getResourceKeyForGemType(gemType: GemType): CurrencyKey | null {
+    return getDomainCurrencyKeyForGemType(gemType);
+}
+
+export function isKnowledgeGem(gemType: GemType): boolean {
+    return isDomainLootGem(gemType);
+}
+
+export function isResourceGem(gemType: GemType): boolean {
+    return isDomainActionGem(gemType);
 }

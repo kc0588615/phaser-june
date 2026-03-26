@@ -1,12 +1,19 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, GemType, MAX_MOVES } from './constants';
+import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
 
 export type Gem = BoardCell;
 export type { BoardCell, PuzzleGrid };
+
+export type GemPoolConfig = BoardSpawnConfig;
+
+const DEFAULT_GEM_POOL: GemPoolConfig = {
+    lootChance: DEFAULT_BOARD_SPAWN_CONFIG.lootChance,
+    actionWeights: { ...DEFAULT_BOARD_SPAWN_CONFIG.actionWeights },
+};
 
 export class BackendPuzzle {
     private puzzleState: PuzzleGrid;
@@ -14,6 +21,7 @@ export class BackendPuzzle {
     private score: number = 0;
     private movesUsed: number = 0;
     private maxMoves: number = MAX_MOVES;
+    private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
 
     constructor(
         public readonly width: number,
@@ -23,6 +31,13 @@ export class BackendPuzzle {
         // Initial puzzle state will be random, can be influenced later
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(width, height);
         console.log("BackendPuzzle: Initial puzzleState created.");
+    }
+
+    setGemPool(config: GemPoolConfig): void {
+        this.gemPool = {
+            lootChance: config.lootChance,
+            actionWeights: { ...config.actionWeights },
+        };
     }
 
     /**
@@ -141,9 +156,18 @@ export class BackendPuzzle {
                     }
                 }
 
-                // Convert set to array and pick a random gem from remaining choices
-                const possibleGemsArray = Array.from(possibleGems);
-                const gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] as GemType;
+                // Pick a weighted random gem, retrying if it would create a match
+                let gemType: GemType;
+                let attempts = 0;
+                do {
+                    gemType = this.pickWeightedGem();
+                    attempts++;
+                } while (!possibleGems.has(gemType) && attempts < 20);
+                // Fallback: pick any non-matching gem
+                if (!possibleGems.has(gemType)) {
+                    const possibleGemsArray = Array.from(possibleGems);
+                    gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] as GemType;
+                }
 
                 grid[x][y] = createBoardCell(gemType);
             }
@@ -211,8 +235,71 @@ export class BackendPuzzle {
             return this.nextGemsToSpawn.shift()!;
         }
 
-        // Always return a random gem type
-        return GEM_TYPES[Math.floor(Math.random() * GEM_TYPES.length)];
+        return this.pickWeightedGem();
+    }
+
+    /** Pick a random gem weighted by action-vs-loot board config. */
+    private pickWeightedGem(): GemType {
+        if (Math.random() < this.gemPool.lootChance) {
+            return LOOT_GEM_TYPES[Math.floor(Math.random() * LOOT_GEM_TYPES.length)];
+        }
+        return this.pickWeightedActionGem();
+    }
+
+    private pickWeightedActionGem(): ActionGemType {
+        const roll = Math.random();
+        let cursor = 0;
+
+        for (const gemType of ACTION_GEM_TYPES) {
+            cursor += this.gemPool.actionWeights[gemType] ?? 0;
+            if (roll <= cursor) {
+                return gemType;
+            }
+        }
+
+        return ACTION_GEM_TYPES[ACTION_GEM_TYPES.length - 1];
+    }
+
+    /** Check if any single-cell row/col shift produces a match. */
+    hasAnyValidMove(): boolean {
+        for (let y = 0; y < this.height; y++) {
+            for (let amt of [1, -1]) {
+                const m = new MoveAction('row', y, amt);
+                if (this.getMatchesFromHypotheticalMove(m).length > 0) return true;
+            }
+        }
+        for (let x = 0; x < this.width; x++) {
+            for (let amt of [1, -1]) {
+                const m = new MoveAction('col', x, amt);
+                if (this.getMatchesFromHypotheticalMove(m).length > 0) return true;
+            }
+        }
+        return false;
+    }
+
+    /** Shuffle all gem types in place (Fisher-Yates), preserving cell states. Repeats until at least one valid move exists. */
+    shuffle(): void {
+        const cells: { x: number; y: number; cell: BoardCell }[] = [];
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
+                const c = this.puzzleState[x]?.[y];
+                if (c) cells.push({ x, y, cell: c });
+            }
+        }
+        let attempts = 0;
+        do {
+            // Fisher-Yates on gem types only
+            const types = cells.map(c => c.cell.gemType);
+            for (let i = types.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [types[i], types[j]] = [types[j], types[i]];
+            }
+            for (let i = 0; i < cells.length; i++) {
+                const { x, y } = cells[i];
+                this.puzzleState[x][y] = createBoardCell(types[i], cells[i].cell.state);
+            }
+            attempts++;
+        } while (!this.hasAnyValidMove() && attempts < 50);
     }
 
     addNextGemToSpawn(gemType: GemType): void {

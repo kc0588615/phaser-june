@@ -1,9 +1,9 @@
 import React from 'react';
-import type { RunState } from '@/types/expedition';
-import { GEM_DEFS } from '@/types/expedition';
+import type { ResourceWallet } from '@/types/expedition';
+import { WALLET_DEFS } from '@/expedition/domain';
 
 interface Props {
-  wallet: RunState['gemWallet'];
+  wallet: ResourceWallet;
 }
 
 export const GemWallet: React.FC<Props> = ({ wallet }) => {
@@ -17,7 +17,7 @@ export const GemWallet: React.FC<Props> = ({ wallet }) => {
       border: '1px solid #334155',
       fontFamily: 'sans-serif',
     }}>
-      {GEM_DEFS.map(({ key, label, color }) => (
+      {WALLET_DEFS.map(({ key, label, color, shortLabel }) => (
         <div key={key} style={{ textAlign: 'center' }}>
           <div style={{
             width: '20px',
@@ -30,11 +30,11 @@ export const GemWallet: React.FC<Props> = ({ wallet }) => {
             justifyContent: 'center',
             fontSize: '10px',
             fontWeight: 700,
-            color: key === 'knowledge_gem' ? '#0f172a' : '#fff',
+            color: key === 'gold' || key === 'thought' ? '#0f172a' : '#fff',
           }}>
             {wallet[key]}
           </div>
-          <div style={{ fontSize: '9px', color: '#94a3b8' }}>{label}</div>
+          <div style={{ fontSize: '9px', color: '#94a3b8' }}>{shortLabel} {label}</div>
         </div>
       ))}
     </div>

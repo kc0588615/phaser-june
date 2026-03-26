@@ -1,4 +1,5 @@
-import type { GemType } from './constants';
+import type { GemType, GemFamily } from './constants';
+import { getGemFamily } from './constants';
 
 export interface BoardCellState {
     blockerId?: string | null;
@@ -7,6 +8,7 @@ export interface BoardCellState {
 }
 
 export interface BoardCell {
+    family: GemFamily;
     gemType: GemType;
     state?: BoardCellState;
 }
@@ -14,7 +16,9 @@ export interface BoardCell {
 export type PuzzleGrid = (BoardCell | null)[][];
 
 export function createBoardCell(gemType: GemType, state?: BoardCellState): BoardCell {
-    return state ? { gemType, state } : { gemType };
+    const cell: BoardCell = { family: getGemFamily(gemType), gemType };
+    if (state) cell.state = state;
+    return cell;
 }
 
 export function getBoardCellGemType(cell: BoardCell | null | undefined): GemType | null {

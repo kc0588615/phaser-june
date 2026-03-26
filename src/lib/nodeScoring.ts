@@ -5,7 +5,7 @@
  * Line layers:     score = exp(-distance_m / 500)  (overlap_ratio always 0)
  */
 
-import type { GemType } from '@/game/constants';
+import type { ActionGemType, GemType } from '@/game/constants';
 import type { NodeObstacle } from '@/game/nodeObstacles';
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
@@ -23,7 +23,7 @@ export interface NodeSelection {
   primaryNodeFamily: NodeFamily;
   primaryVariant: string;
   modifierNodes: string[];
-  resourceBias: Record<string, number>;
+  actionBias: Partial<Record<ActionGemType, number>>;
   signals: Record<string, number>;
 }
 
@@ -124,61 +124,83 @@ export function selectNodes(scores: LayerScore[]): NodeSelection {
     primaryNodeFamily: primary.nodeFamily,
     primaryVariant: primary.variant,
     modifierNodes: modifiers,
-    resourceBias: computeResourceBias(primary.nodeFamily, scores),
+    actionBias: computeActionBias(primary.nodeFamily, scores),
     signals,
   };
 }
 
-/** Derive gem resource bias from primary family + context */
-function computeResourceBias(primary: NodeFamily, scores: LayerScore[]): Record<string, number> {
-  const bias: Record<string, number> = {
-    nature_gem: 0.25,
-    water_gem: 0.25,
-    knowledge_gem: 0.25,
-    craft_gem: 0.25,
+/** Derive board action bias from primary family + context. */
+function computeActionBias(primary: NodeFamily, scores: LayerScore[]): Partial<Record<ActionGemType, number>> {
+  const bias: Partial<Record<ActionGemType, number>> = {
+    sword: 0.125,
+    staff: 0.125,
+    shield: 0.125,
+    key: 0.125,
+    crate: 0.125,
+    power: 0.125,
+    thought: 0.125,
+    multiplier: 0.125,
   };
 
   if (primary === 'water_node') {
-    bias.water_gem = 0.40;
-    bias.nature_gem = 0.30;
-    bias.knowledge_gem = 0.15;
-    bias.craft_gem = 0.15;
+    bias.shield = 0.22;
+    bias.power = 0.18;
+    bias.staff = 0.16;
+    bias.crate = 0.12;
+    bias.thought = 0.1;
+    bias.key = 0.08;
+    bias.sword = 0.08;
+    bias.multiplier = 0.06;
   } else if (primary === 'bioregion_node') {
-    bias.nature_gem = 0.40;
-    bias.knowledge_gem = 0.25;
-    bias.water_gem = 0.20;
-    bias.craft_gem = 0.15;
+    bias.sword = 0.18;
+    bias.crate = 0.17;
+    bias.thought = 0.15;
+    bias.shield = 0.14;
+    bias.power = 0.12;
+    bias.staff = 0.1;
+    bias.key = 0.08;
+    bias.multiplier = 0.06;
   } else if (primary === 'protected_node') {
-    bias.knowledge_gem = 0.35;
-    bias.craft_gem = 0.25;
-    bias.nature_gem = 0.25;
-    bias.water_gem = 0.15;
+    bias.key = 0.18;
+    bias.shield = 0.18;
+    bias.thought = 0.15;
+    bias.power = 0.14;
+    bias.multiplier = 0.12;
+    bias.staff = 0.09;
+    bias.sword = 0.08;
+    bias.crate = 0.06;
   } else if (primary === 'community_node') {
-    bias.knowledge_gem = 0.35;
-    bias.nature_gem = 0.30;
-    bias.craft_gem = 0.20;
-    bias.water_gem = 0.15;
+    bias.thought = 0.18;
+    bias.crate = 0.17;
+    bias.key = 0.14;
+    bias.shield = 0.14;
+    bias.power = 0.12;
+    bias.sword = 0.1;
+    bias.staff = 0.09;
+    bias.multiplier = 0.06;
   }
 
-  // Boost water if any water layer is present
+  // Water-heavy contexts should over-index on survival and charge generation.
   const waterScore = scores.find((s) => s.nodeFamily === 'water_node');
   if (waterScore && waterScore.score > 0.2 && primary !== 'water_node') {
-    bias.water_gem = Math.min(bias.water_gem + 0.10, 0.40);
-    bias.nature_gem = Math.max(bias.nature_gem - 0.05, 0.10);
-    bias.craft_gem = Math.max(bias.craft_gem - 0.05, 0.10);
+    bias.shield = Math.min((bias.shield ?? 0) + 0.05, 0.25);
+    bias.power = Math.min((bias.power ?? 0) + 0.04, 0.22);
+    bias.staff = Math.min((bias.staff ?? 0) + 0.03, 0.2);
+    bias.sword = Math.max((bias.sword ?? 0) - 0.03, 0.06);
+    bias.key = Math.max((bias.key ?? 0) - 0.02, 0.06);
   }
 
   return bias;
 }
 
-/** Node templates keyed by node_type — each has a unique gem pair for variety */
+/** Node templates keyed by node_type — action gem pairs drive YMBAB-style node goals. */
 const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
-  riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['blue', 'green'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity drives water mechanics.' },
-  dense_canopy: { node_type: 'dense_canopy', requiredGems: ['green', 'black'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Forest cover supports canopy pressure gameplay.' },
-  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['red', 'orange'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Human footprint adds urban-edge friction.' },
-  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['white', 'blue'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Terrain-based traversal node.' },
-  storm_window: { node_type: 'storm_window', requiredGems: ['red', 'purple'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'High-risk urgency from threatened species + low protection.' },
-  custom: { node_type: 'custom', requiredGems: ['purple', 'yellow'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Context-specific challenge from spatial data.' },
+  riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['shield', 'power'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity emphasizes defense and momentum.' },
+  dense_canopy: { node_type: 'dense_canopy', requiredGems: ['sword', 'crate'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Canopy routes lean on clearing brush and scavenging tools.' },
+  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['key', 'thought'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Urban edges favor unlocks, planning, and route reading.' },
+  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['staff', 'shield'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Ridges reward control, coverage, and survival pressure.' },
+  storm_window: { node_type: 'storm_window', requiredGems: ['power', 'multiplier'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'Storm nodes convert urgency into burst turns.' },
+  custom: { node_type: 'custom', requiredGems: ['crate', 'thought'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Custom nodes mix improvisation with discovery tools.' },
   analysis: { node_type: 'analysis', requiredGems: [], obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route deduction and wager phase.' },
 };
 

@@ -27,6 +27,10 @@ Target: portrait mobile (390×844 logical px, iPhone 14 baseline). All measureme
 - **gem-lifecycle**: #6b7280 (gray) — 🥚 Egg
 - **gem-conservation**: #f1f5f9 (white) — 🛡️ Shield
 - **gem-keyfacts**: #a855f7 (purple) — ⭐ Star
+- **resource-nature**: #34d399 (green-teal) — 🍃 Leaf cluster
+- **resource-water**: #38bdf8 (cyan-blue) — 💧 Water droplet
+- **resource-knowledge**: #cbd5e1 (silver) — 📘 Field journal
+- **resource-craft**: #fb923c (orange) — 🔧 Tool
 - **creature-hp**: #ef4444 (red — enemy health bar fill)
 - **creature-hp-bg**: #1c2541 (enemy health bar track)
 - **creature-shield**: #60a5fa (blue — when creature has armor)
@@ -90,22 +94,38 @@ Target: portrait mobile (390×844 logical px, iPhone 14 baseline). All measureme
 
 ---
 
-## Gem System — Category Icon Tiles
+## Gem System — 12-Tile Dual Economy
 
-Gems are **not abstract colored shapes**. Each gem visually represents the clue category it unlocks. This creates immediate visual feedback: match 🧬 tiles, get a Classification clue.
+The board uses **12 gem types** split into two families:
 
-### The 8 Gem Types
+- **Knowledge gems (8)**: clue categories. Matching them reveals species information and drives enemy weaknesses/resistances.
+- **Resource gems (4)**: run economy currency. Matching them fills the expedition wallet for store purchases, combat skills, and crisis costs.
 
-| Category | Icon | Color | Shape at 36px | Board label |
-|---|---|---|---|---|
-| Classification | 🧬 | gem-classification (red) | Double helix spiral — 2 intertwined curves | CLS |
-| Habitat | 🌿 | gem-habitat (green) | Fern frond — curved stem with 4-5 leaflets | HAB |
-| Geographic | 🌍 | gem-geographic (blue) | Globe — circle with 2 latitude + 1 longitude line | GEO |
-| Morphology | 🐾 | gem-morphology (orange) | Paw print — 1 pad + 4 toes | MRP |
-| Behavior | 👁️ | gem-behavior (yellow) | Eye — almond shape with circle pupil | BHV |
-| Life Cycle | 🥚 | gem-lifecycle (gray) | Egg — oval, slightly tapered at top | LCY |
-| Conservation | 🛡️ | gem-conservation (white) | Shield — pointed-bottom heraldic shape | CON |
-| Key Facts | ⭐ | gem-keyfacts (purple) | Star — 5-point, slightly rounded tips | KEY |
+This keeps clue collection legible while creating a real action-RPG economy layer.
+
+### The 12 Gem Types
+
+| Family | Category | Icon | Color | Shape at 36px | Board label | Primary use |
+|---|---|---|---|---|---|---|
+| Knowledge | Classification | 🧬 | gem-classification (red) | Double helix spiral — 2 intertwined curves | CLS | Reveal taxonomy clue |
+| Knowledge | Habitat | 🌿 | gem-habitat (green) | Fern frond — curved stem with 4-5 leaflets | HAB | Reveal habitat clue |
+| Knowledge | Geographic | 🌍 | gem-geographic (blue) | Globe — circle with 2 latitude + 1 longitude line | GEO | Reveal range clue |
+| Knowledge | Morphology | 🐾 | gem-morphology (orange) | Paw print — 1 pad + 4 toes | MRP | Reveal body-form clue |
+| Knowledge | Behavior | 👁️ | gem-behavior (yellow) | Eye — almond shape with circle pupil | BHV | Reveal behavior clue |
+| Knowledge | Life Cycle | 🥚 | gem-lifecycle (gray) | Egg — oval, slightly tapered at top | LCY | Reveal life-stage clue |
+| Knowledge | Conservation | 🛡️ | gem-conservation (white) | Shield — pointed-bottom heraldic shape | CON | Reveal threat/status clue |
+| Knowledge | Key Facts | ⭐ | gem-keyfacts (purple) | Star — 5-point, slightly rounded tips | KEY | Reveal bonus fact clue |
+| Resource | Nature | 🍃 | resource-nature | Three-leaf cluster | NTR | Healing, forage, shop currency |
+| Resource | Water | 💧 | resource-water | Tall droplet | WTR | Cleansing, flow control, shop currency |
+| Resource | Knowledge | 📘 | resource-knowledge | Closed field journal | KNO | Scan, telegraph, shop currency |
+| Resource | Craft | 🔧 | resource-craft | Wrench/tool silhouette | CRF | Traps, armor break, shop currency |
+
+### Board Mix
+
+- **Collection nodes**: 65% knowledge gems, 35% resource gems
+- **Standard standoffs**: 55% knowledge gems, 45% resource gems
+- **Boss standoffs**: 50% knowledge gems, 50% resource gems
+- **Node-specific modifiers** can temporarily bias a single resource type without changing the 12-gem taxonomy
 
 ### Gem Tile Rendering
 
@@ -115,7 +135,7 @@ Each gem tile is a **square cell** containing:
 2. **Color wash**: radial gradient of the gem's category color at 15% opacity, centered, fills the cell — gives quick color-scanning ability
 3. **Icon**: centered within the cell, 28px rendered size
    - **Option A (emoji)**: the Unicode emoji character at 28px font-size. Simple, cross-platform, zero asset pipeline.
-   - **Option B (SVG/PNG — production target)**: custom-drawn icon in a consistent style: 2px stroke weight, rounded joins, monochrome white with gem-color fill. Slight inner shadow (1px, darker shade) for depth. All 8 icons share the same visual weight and level of detail so no icon dominates the grid.
+   - **Option B (SVG/PNG — production target)**: custom-drawn icon in a consistent style: 2px stroke weight, rounded joins, monochrome white with gem-color fill. Slight inner shadow (1px, darker shade) for depth. All 12 icons share the same visual weight and level of detail so no icon dominates the grid.
 4. **Gem border ring**: 1px border in the gem's category color at 30% opacity, rounded-md, on the cell itself
 
 ### Gem States
@@ -128,35 +148,48 @@ Each gem tile is a **square cell** containing:
 - **Spoiled by creature** (see Standoff): icon replaced with a gray "?" at 50% opacity. Must be cleared by matching adjacent gems. Spoiled gems cannot be swapped.
 - **Hidden by fog** (see Standoff): cell shows surface-elevated background only, no icon visible. Fog clears when an adjacent match occurs.
 
-### Why Category Icons
+### Match Outcomes
 
-- **Self-teaching**: match 🐾 → morphology clue appears. No memorization of color-to-category mapping.
-- **Accessibility**: 8 colors are hard to distinguish on small dark screens. Shape + color = always readable.
-- **Visual coherence**: clue cards already show these icons as headers. Board and clue sheet use the same visual language.
-- **Scalable**: icons read clearly from 28px (phone) to 48px (tablet).
+- **Knowledge gem match**: advances clue progress for that category, contributes to collection objectives if relevant, and deals battle damage in standoffs
+- **Resource gem match**: adds 1 resource to the run wallet, charges its matching combat skill, and contributes to resource objectives if relevant
+- **4-match or larger**: grants +1 extra reward of that gem family before cascade bonuses
+- **Cascade**: can reward both clue unlocks and resource income in the same turn
+
+### Why Split Knowledge and Resource Gems
+
+- **Keeps clue logic readable**: knowledge matches still map directly to species info.
+- **Creates a real run economy**: resource gems can be spent in stores, crises, and abilities without hijacking clue progression.
+- **Accessibility**: 12 colors on a dark board only work if shape and icon carry most of the meaning.
+- **Scalable**: the same icon language works on the board, in the wallet, in the shop, and on clue cards.
 
 ---
 
 ## Node Types & Gameplay Modes
 
-Expedition nodes are not all the same. There are three node types that alternate to create variety. The expedition briefing route preview shows which type each node is.
+Expedition nodes are not all the same. There are four node types that alternate to create variety. The expedition briefing route preview shows which type each node is.
 
 ### Collection Nodes (default)
-- Standard match-3 with a gem objective (e.g., "Collect 5 🌿")
+- Standard match-3 with a gem objective (e.g., "Collect 5 🌿" or "Collect 4 💧")
 - Move-limited (15-25 moves depending on difficulty)
 - Obstacle overlays apply per node config
-- Clues are revealed as a side-effect of matching category gems
+- Knowledge gems reveal clues; resource gems stock the wallet
 
 ### Standoff Nodes (combat encounters)
 - A wildlife creature appears with HP
-- Match gems to deal damage; creature disrupts the board every N moves
+- Match knowledge gems to exploit weaknesses; match resource gems to charge skills and purchases
 - Move-limited; failing to defeat creature = node failed, can retry
 - See **Screen 3d: Wildlife Standoff** below for full visual spec
 
 ### Crisis Events (between nodes)
 - Not a board — a decision card between two nodes
-- Player spends resources or accepts a tradeoff
+- Player spends resource gems or accepts a tradeoff
 - See **Screen 3e: Expedition Crisis** below for full visual spec
+
+### Field Store Nodes (between major encounters)
+- Non-board merchant/camp screen
+- Spend resource gems on consumables, passives, or one-run upgrades
+- Inspired by YMBAB pacing: small stock, meaningful choices, no permanent menu sprawl
+- See **Screen 3f: Field Store** below for full visual spec
 
 ---
 
@@ -183,7 +216,7 @@ Expedition nodes are not all the same. There are three node types that alternate
   - **Info rows** (3 rows, each is caption size, text-secondary, with a small icon 14px left-aligned):
     - "Difficulty: ★★★☆☆" — star icons, filled = accent-amber, empty = text-muted
     - "Biome: Temperate Broadleaf Forest" — leaf icon
-    - "Primary Resource: Nature" — colored circle (gem-nature, 8px) inline
+    - "Primary Resource: 🍃 Nature" — small resource icon (12px) inline, tinted resource-nature
   - **"Start Expedition" button**: full width, height 40px, rounded-md, background linear-gradient(135deg, accent-cyan, #0ea5e9), text heading-sm white centered, margin-top md
 
 ### Empty state (no marker tapped)
@@ -223,21 +256,22 @@ Expedition nodes are not all the same. There are three node types that alternate
 
 #### Resource Distribution (margin-top lg)
 - "Resource Bias" — caption, text-muted, margin-bottom sm
-- 8 horizontal bars stacked vertically (gap xs), one per gem category:
+- 4 horizontal bars stacked vertically (gap xs), one per resource gem:
   - Each bar: full width, 20px tall, rounded-sm
-  - Left label (48px wide): gem category icon (14px) + 3-letter code (caption): e.g., 🧬 CLS, 🌿 HAB, 🌍 GEO, 🐾 MRP, 👁️ BHV, 🥚 LCY, 🛡️ CON, ⭐ KEY
+  - Left label (56px wide): resource gem icon (14px) + 3-letter code (caption): e.g., 🍃 NTR, 💧 WTR, 📘 KNO, 🔧 CRF
   - Bar track: surface-elevated background
-  - Bar fill: category color, width = percentage of distribution, rounded-sm
+  - Bar fill: resource color, width = percentage of distribution, rounded-sm
   - Right label: percentage text, caption, text-secondary (e.g., "18%")
-  - Only categories with > 5% share are shown; remainder collapsed into "Other" row
+  - All 4 rows are always shown so the player can plan wallet routing before the run
 
 #### Node Preview (margin-top lg)
 - "Route" — caption, text-muted, margin-bottom sm
 - Horizontal row of connected nodes, centered:
   - Each node: 36px circle, surface-elevated, border 1px border-subtle
-  - **Collection node**: node type icon inside (16px): tree for Habitat, paw print for Fauna, droplet for Water, etc.
+  - **Collection node**: circle with objective icon inside (16px): target reticle, clue icon, or resource icon depending on node objective
   - **Standoff node**: accent-rose border, creature silhouette icon inside (16px). Below circle: "⚔️" small indicator. Label shows creature name if known.
   - **Crisis node**: shown as a diamond shape (rotated 45° square, 28px) instead of circle, accent-amber border, "!" icon inside (14px, accent-amber)
+  - **Field store node**: rounded square (28px), resource-knowledge border, backpack icon inside (14px), tiny coin sparkle at one corner
   - Below each circle/diamond: caption text-muted, node difficulty "Lv.2"
   - Connections: 20px horizontal line (2px, border-subtle) between each node
   - Last node: accent-rose border, boss creature icon inside (always a standoff)
@@ -267,13 +301,14 @@ This is the primary screen. The entire viewport is dedicated to the match-3 boar
 
 **Node Progress Track** (44px tall, full width, padding horizontal lg):
 - Horizontal track centered, showing all nodes in the expedition
-- Each node: 20px shape (circle for collection/standoff, diamond for crisis)
+- Each node: 20px shape (circle for collection/standoff, diamond for crisis, square for store)
   - Completed: filled accent-emerald, white checkmark icon (10px) inside
   - Current: filled accent-cyan, glow-cyan, slightly larger (24px), white dot or pulsing ring
   - Current standoff: filled accent-rose, glow-rose, slightly larger (24px), creature silhouette inside
   - Future collection: surface-elevated fill, border 1px border-subtle
   - Future standoff: surface-elevated fill, border 1px accent-rose (faint red border signals combat ahead)
   - Future crisis: diamond shape (rotated square, 16px), surface-elevated fill, border 1px accent-amber
+  - Future store: rounded square (16px), surface-elevated fill, border 1px resource-knowledge
   - Boss node (last): always a standoff, accent-rose fill at 30% opacity, creature icon, larger (28px)
 - Connecting lines: 2px height, 16px wide between shapes
   - Before current: accent-emerald
@@ -282,11 +317,11 @@ This is the primary screen. The entire viewport is dedicated to the match-3 boar
 
 **Objective & Clue Bar** (36px tall, full width, padding horizontal lg):
 - Left half: objective indicator (changes by node type)
-  - **Collection node**: Node type icon (14px, text-secondary) + "Collect 5" + required gem category icons (10px each, category color) + progress "3/5" (caption, text-primary). If objective met: text turns accent-emerald, checkmark replaces count.
+  - **Collection node**: Node type icon (14px, text-secondary) + "Collect 5" + required gem icons (10px each, clue or resource color) + progress "3/5" (caption, text-primary). If objective met: text turns accent-emerald, checkmark replaces count.
   - **Standoff node**: Creature emoji/icon (14px) + creature name (caption, text-primary, truncated) + "❤️ 28/40" miniature HP readout (caption, accent-rose). See Screen 3d for the full standoff HUD.
 - Right half: clue progress
-  - Pill (glass-bg, rounded-full, padding 2px 10px): "Clues 2/5" — badge text, accent-amber
-  - 5 tiny category icons (8px each, 3px gap) after the text: colored = revealed, gray = unrevealed
+  - Pill (glass-bg, rounded-full, padding 2px 10px): "Clues 3/8" — badge text, accent-amber
+  - 8 tiny category icons (8px each, 3px gap) after the text: colored = revealed, gray = unrevealed
 
 #### Middle Section — Play Zone (fills remaining space, centered)
 
@@ -297,7 +332,8 @@ This is the primary screen. The entire viewport is dedicated to the match-3 boar
 
 **Gem Grid** (7 columns × 7 rows):
 - Each cell: square, sized to fit the board width minus padding (approximately 44–46px per cell at 390px screen width with 16px horizontal padding and 8px board padding)
-- Gems render as described in the **Gem System — Category Icon Tiles** section above
+- Gems render as described in the **Gem System — 12-Tile Dual Economy** section above
+- Board pool always includes both knowledge and resource gems; node config controls the family weighting
 - Cell layout: color wash background + icon centered + border ring
 - Matched gems: burst animation with particles in the gem's category color
 - Falling gems: smooth ease-out vertical translation
@@ -315,11 +351,11 @@ This is the primary screen. The entire viewport is dedicated to the match-3 boar
 - Background: linear-gradient(to top, surface, transparent) — fades into the board background
 - Three-column layout, vertically centered:
 
-  **Left column** (gem wallet, left-aligned, padding-left lg):
-  - Horizontal row of up to 4 most-collected gem categories (gap sm):
-    - Each: category-colored circle (16px) with the gem icon (10px, white) inside + count number to the right (badge text, text-primary)
-    - If a gem was just earned: the circle does a brief scale-up bounce (1.3x, 200ms)
-    - Tap the wallet area to expand a full 8-category gem breakdown (glass-bg tooltip above, shows all 8 icons with counts)
+  **Left column** (resource wallet, left-aligned, padding-left lg):
+  - Fixed horizontal row of the 4 resource currencies (gap sm):
+    - Each: resource-colored circle (16px) with the resource icon (10px, white or dark navy for 📘) inside + count number to the right (badge text, text-primary)
+    - If a resource was just earned: the circle does a brief scale-up bounce (1.3x, 200ms)
+    - Tap the wallet area to expand a full wallet breakdown (glass-bg tooltip above, shows all 4 resources, current passive item count, and shop discounts if any)
 
   **Center column** (moves counter, centered):
   - Large rounded pill (glass-bg, rounded-xl, padding sm lg, border 1px border-accent):
@@ -338,7 +374,7 @@ This is the primary screen. The entire viewport is dedicated to the match-3 boar
 
 ## Screen 3a: Clue Bottom Sheet (overlay on Board Screen)
 
-Triggered by tapping the "Clues 2/5" pill or swiping up from the bottom resource bar.
+Triggered by tapping the "Clues 3/8" pill or swiping up from the bottom resource bar.
 
 ### Half-Sheet State (default on open)
 - Covers bottom 50% of screen
@@ -409,11 +445,12 @@ Shown when a node's objective is met or manually completed.
 - **Content** (padding xl, centered):
   - Checkmark icon in a circle (48px, accent-emerald background, white checkmark)
   - "Node Complete!" — heading-lg, text-primary, margin-top md
-  - Node type label — caption, text-secondary (e.g., "Habitat Node — Lv.3")
+  - Node type label — caption, text-secondary (e.g., "Collection Node — Lv.3")
   - Horizontal divider (border-subtle, margin-y md)
   - **Rewards row** (horizontal, centered, gap lg):
-    - Each reward: large number (heading-lg, gem color) above caption label
-    - e.g., "+3" (gem-nature) above "Nature", "+1" (gem-water) above "Water"
+    - Each reward: large number (heading-lg, gem/resource color) above caption label
+    - Resource rewards use the 4 resource icons (e.g., "+3" above "🍃 Nature")
+    - Clue rewards use the 8 knowledge icons (e.g., "+1 clue" above "🧬 Classification")
   - If souvenir earned: souvenir emoji (28px) + name (body, accent-amber) below rewards
   - **"Continue" button**: full width, 44px, rounded-md, accent-cyan background, white heading-sm text, margin-top lg
   - Subtle particle/sparkle animation around the checkmark icon
@@ -470,7 +507,7 @@ Every N moves (shown by the countdown circle), the creature performs one action.
 
 #### Action: Territorial Roar
 - **Telegraph**: "ROAR" badge (accent-rose background, white caption) appears below countdown
-- **Effect**: 2-3 random empty cells are replaced with **stone blockers** (gray, indestructible, rounded-md, stone texture)
+- **Effect**: 1 random gem is overwritten with a **stone blocker** and 2 adjacent gems become **weakened**
 - **Animation**: board shakes (3px horizontal, 3 cycles, 200ms total), stone blocks slam into place from above (150ms, hard ease-in), dust particle burst at impact point
 - **Sound cue**: deep rumble (if audio implemented)
 
@@ -491,7 +528,7 @@ Every N moves (shown by the countdown circle), the creature performs one action.
 
 #### Action: Armor Up
 - **Telegraph**: "ARMOR" badge (creature-shield blue background, white caption)
-- **Effect**: creature gains +5 armor. While armor > 0, all damage is reduced by 1 per match (minimum 1 damage). Armor is shown as a blue shield overlay on the HP bar.
+- **Effect**: creature gains +5 armor. Armor is a flat shield value that is subtracted from each incoming damage packet (minimum 1 damage always gets through). Craft matches remove 1 armor before damage is applied.
 - **Animation**: blue hexagonal shield pattern flashes over the creature banner (200ms), shield icon with "+5" floats up (like damage numbers but blue)
 
 ### Player HP (Standoff only)
@@ -507,6 +544,20 @@ During standoffs, the player has **hit points** (3–5 depending on difficulty).
 - When HP = 1: remaining heart pulses (scale 1.0–1.15, glow-rose, 600ms loop)
 - When HP = 0: standoff failed (see Standoff Failed state below)
 
+### Ability Belt (resource gems spent in battle)
+
+Resource gems are not dead currency during standoffs. Matching them fills the wallet and also unlocks manual combat skills shown as a compact row above the resource bar.
+
+- 4 small skill chips (28px tall, horizontal):
+  - **🍃 Mend**: spend 3 Nature → heal 1 HP and clear poison/spoil from 1 chosen cell
+  - **💧 Wash**: spend 3 Water → clear fog or weaken from a 3×3 area
+  - **📘 Study**: spend 3 Knowledge → reveal the next creature action immediately and expose one new weakness for 2 turns
+  - **🔧 Trap**: spend 3 Craft → deal 4 true damage and strip 2 armor or destroy 1 stone blocker
+- A skill chip is dimmed until the player can afford it
+- When affordable: chip border glows in its resource color and pulses subtly
+- Tap skill chip → targeting overlay appears if needed; second tap confirms
+- Skills use the same run wallet shown in the thumb zone, so store purchases and battle powers compete for the same resources
+
 ### Damage Calculation
 
 - Base damage per match: 3-match = 3, 4-match = 5, 5-match = 8, 6+ match = 12
@@ -515,6 +566,7 @@ During standoffs, the player has **hit points** (3–5 depending on difficulty).
 - Armor reduction: subtract creature's current armor from damage, minimum 1
 - Streak bonus: if player streak > 1, add +1 per streak tier
 - Multi-match cascade: each successive match in a cascade deals +1 bonus damage
+- Resource skills resolve after the current cascade finishes and do not consume a move
 
 ### Standoff Victory
 
@@ -525,7 +577,8 @@ When creature HP reaches 0:
 - Below: "You gathered valuable data on [creature name]" — caption, text-secondary
 - After 1.5s: transitions to Node Complete interstitial (Screen 3c) with bonus rewards:
   - Clue reward: always reveals 1 clue of the creature's weakness category
-  - Gem bonus: +3 gems of weakness type
+  - Resource reward: +3 of a creature-linked resource type
+  - If first-time victory: guaranteed store discount token for the next Field Store
   - Possible souvenir drop
 
 ### Standoff Failed
@@ -537,7 +590,7 @@ When player HP reaches 0:
   - "The [creature name] proved too strong" — body, text-secondary
   - Divider
   - **"Retry"** button: full width, 44px, accent-cyan gradient, "Try Again" heading-sm white. Resets the node with same creature/same board seed.
-  - **"Retreat"** link: body, text-muted, underline. Skips this node (no rewards) and proceeds. Costs 1 gem from wallet (player chooses which type).
+  - **"Retreat"** link: body, text-muted, underline. Skips this node (no rewards) and proceeds. Costs 1 resource gem from the wallet (player chooses which type).
 
 ---
 
@@ -569,8 +622,8 @@ Appears between nodes when the expedition route includes a crisis event. This is
 - Card (surface-elevated, rounded-lg, padding md, border 1px border-subtle):
   - On hover/press: border changes to accent-cyan, glow-cyan
   - **Title row**: choice label — heading-sm, text-primary (e.g., "Ford the River")
-  - **Cost row** (if any): "Cost: 5 💧" — caption, accent-rose. Shows gem category icon (14px) + count. Cost is deducted from wallet.
-    - If player cannot afford: card is dimmed (40% opacity), "Not enough gems" caption below, not tappable
+  - **Cost row** (if any): "Cost: 5 💧 Water" — caption, accent-rose. Shows resource icon (14px) + count. Cost is deducted from the 4-resource wallet.
+    - If player cannot afford: card is dimmed (40% opacity), "Not enough resources" caption below, not tappable
   - **Effect row**: "Next node starts normally" — caption, accent-emerald (positive effects in emerald, negative in accent-rose)
 
 #### Choice B (bottom option card, margin-top sm)
@@ -590,19 +643,81 @@ Appears between nodes when the expedition route includes a crisis event. This is
 
 | Crisis | Icon | Choice A | Choice B |
 |---|---|---|---|
-| **River Crossing** | 🌊 | Spend 5 🌍 gems → safe passage | Free → next node has Flooding hazard |
-| **Supply Shortage** | 🎒 | Spend 3 🌿 gems to forage → normal | Free → next node has 5 fewer moves |
-| **Rare Sighting** | 🔭 | Detour → +1 bonus node with rare clues, but next standoff is harder | Ignore → no cost, no reward |
-| **Poacher Activity** | 🚨 | Spend 3 🛡️ gems to alert rangers → +1 conservation clue | Sneak past → free, no reward |
-| **Sudden Storm** | ⛈️ | Spend 4 ⭐ gems for shelter → safe | Free → next node has Fog on 50% of board at start |
-| **Territorial Warning** | 🐾 | Spend 3 🐾 gems to circle around → safe | Free → next standoff creature starts with +10 HP |
+| **River Crossing** | 🌊 | Spend 5 💧 Water → safe passage | Free → next node has Flooding hazard |
+| **Supply Shortage** | 🎒 | Spend 3 🍃 Nature to forage → normal | Free → next node has 5 fewer moves |
+| **Rare Sighting** | 🔭 | Spend 3 📘 Knowledge → add a bonus store node with rare goods | Ignore → no cost, no reward |
+| **Poacher Activity** | 🚨 | Spend 3 🔧 Craft to rig deterrents → +1 conservation clue | Sneak past → free, no reward |
+| **Sudden Storm** | ⛈️ | Spend 4 💧 Water for shelter systems → safe | Free → next node starts with Fog on 50% of the board |
+| **Territorial Warning** | 🐾 | Spend 3 🍃 Nature to circle around → safe | Free → next standoff creature starts with +10 HP |
 
 ### After Choice
 
 - Selected card pulses (border accent-cyan, 200ms), unselected card fades to 20% opacity (200ms)
-- If choice has a gem cost: gem icons float from the wallet area to the card and vanish (3-4 small icons, staggered, 400ms total)
+- If choice has a resource cost: resource icons float from the wallet area to the card and vanish (3-4 small icons, staggered, 400ms total)
 - Card fades out (300ms), a brief "route continues" animation plays on the node progress track (avatar walks to next node, 500ms)
 - Next node loads with modified config based on the choice
+
+---
+
+## Screen 3f: Field Store (between-node merchant)
+
+Appears on dedicated **Field Store** nodes or when a crisis spawns a bonus shop. The vibe is compact, high-value, and run-focused: buy one or two meaningful upgrades, not browse a giant menu.
+
+### Layout
+
+- Full-screen overlay on top of the biome background
+- Background: rgba(10,14,26,0.88)
+- Top header bar (56px): "Field Store" heading on left, wallet summary on right
+- Main card stack centered with 3 offer cards visible at once
+- Bottom action bar (72px): reroll, continue, and inventory-slot summary
+
+### Header Wallet
+
+- Horizontal row of the 4 resource gems with counts:
+  - 🍃 Nature
+  - 💧 Water
+  - 📘 Knowledge
+  - 🔧 Craft
+- If the player has a store discount from a standoff victory: small badge "Discount -1" in accent-emerald
+
+### Offer Cards
+
+Each offer card is 100px tall, surface-elevated, rounded-lg, border 1px border-subtle.
+
+- Left: item icon badge (32px)
+- Center:
+  - Item name — heading-sm
+  - Item type pill — badge text:
+    - Consumable
+    - Passive
+    - Battle Tech
+  - 1-line description — caption, text-secondary
+- Right:
+  - Cost row with 1-2 resource icons and counts
+  - Purchase button or "Owned / Full" disabled state
+
+### Item Examples
+
+- **Field Medkit** (Consumable): cost 3 🍃 + 1 📘. Restores 2 HP during a standoff.
+- **Flash Flood Vial** (Battle Tech): cost 4 💧. Clears one full row and applies Wet, making the next Water match worth +2.
+- **Predator Notes** (Passive): cost 4 📘. First Study skill each standoff is free.
+- **Snare Kit** (Battle Tech): cost 3 🔧. Trap skill deals +2 damage for the next two uses.
+- **Forager's Charm** (Passive): cost 2 🍃 + 2 💧. Gain +1 Nature whenever a 4-match occurs.
+- **Pack Expansion** (Passive): cost 2 🔧 + 2 📘. Increases consumable capacity by 1 for the run.
+
+### Store Rules
+
+- Stock size: 3 offers
+- 1 free reroll per store; additional rerolls cost 2 📘
+- Max 2 consumables carried, max 3 passive relics equipped
+- Buying an item animates the card into the inventory tray at the bottom
+- The player can leave without buying, but store nodes are the main place to convert resource surplus into power
+
+### Bottom Action Bar
+
+- **Reroll** button: secondary button, disabled if no free reroll remains and player lacks 2 📘
+- **Continue Expedition** button: primary accent-cyan button
+- Small slot summary: "Consumables 1/2 • Passives 2/3"
 
 ---
 
@@ -654,19 +769,24 @@ Full-screen overlay after all nodes are finished.
 
 - **Divider** (margin-y md)
 
-- **Stats Grid** (2 columns, 3 rows, gap md):
+- **Stats Grid** (2 columns, 4 rows, gap md):
   - Each cell: surface-elevated, rounded-md, padding md, centered
     - Large number: heading-lg, accent color
     - Label below: caption, text-muted
   - Row 1: "Nodes" (count, accent-cyan), "Score" (total, accent-amber)
   - Row 2: "Species" (identified count, accent-emerald), "Creatures" (standoffs won, accent-rose)
-  - Row 3: "Gems" (total collected, gem-keyfacts purple), "Crises" (choices made, accent-amber)
-  - Rows with zero values are collapsed (e.g., if no standoffs occurred, "Creatures" cell hidden and grid reflows)
+  - Row 3: "Damage Taken" (total HP lost, accent-rose), "Crises" (choices made, accent-amber)
+  - Row 4: "Store Buys" (items purchased, resource-knowledge), "Resources Spent" (sum spent in crises + stores, resource-craft)
+  - Rows with zero values are collapsed only if their partner cell is also zero
 
-- **Gem Total Row** (margin-top md):
-  - Horizontal row: 8 gem category circles (16px each, category color) with count (caption, white) below each
-  - Only categories with count > 0 are shown
-  - Represents total gems earned across all nodes
+- **Resource Wallet Row** (margin-top md):
+  - Horizontal row: 4 resource circles (18px each) with count (caption, white) below each
+  - Always shown
+  - Represents the run's collected resources and how much was retained at the finish
+
+- **Knowledge Match Row** (margin-top sm):
+  - Horizontal row: 8 knowledge icons (14px each) with tiny count beneath
+  - Optional subtitle: "Clue matches this run"
 
 - **Souvenirs Row** (if any, margin-top md):
   - "Souvenirs Collected" — caption, text-muted
@@ -734,12 +854,24 @@ Full-screen overlay after all nodes are finished.
 
 ### Sections (vertical scroll, padding lg):
 
-#### Gem Reserves
-- "Gem Reserves" — heading-sm, text-primary, margin-bottom sm
+#### Resource Reserves
+- "Resource Reserves" — heading-sm, text-primary, margin-bottom sm
 - Card (surface-elevated, rounded-lg, padding md):
   - 4-column row, each column centered:
-    - Gem circle (32px, gem color) with total count (heading-sm, white) inside
-    - Label below: caption, text-muted ("Nature", "Water", etc.)
+    - Resource circle (32px, resource color) with total count (heading-sm, white or dark navy for 📘) inside
+    - Label below: caption, text-muted ("Nature", "Water", "Knowledge", "Craft")
+
+#### Expedition Kit
+- "Expedition Kit" — heading-sm, text-primary, margin-top lg, margin-bottom sm
+- Card (surface-elevated, rounded-lg, padding md):
+  - **Consumables row**: 2 slots, each either item chip or dashed empty slot
+  - **Passive row**: 3 slots, each item chip with icon + short name
+  - Tap an item for its effect text and source ("Bought at store", "Rewarded after boss", etc.)
+
+#### Knowledge Ledger
+- "Knowledge Ledger" — heading-sm, text-primary, margin-top lg, margin-bottom sm
+- 2-row grid of the 8 knowledge gem icons with lifetime match totals
+- Used for completionists and balancing visibility, not spendable currency
 
 #### Souvenirs
 - "Souvenirs" — heading-sm, text-primary, margin-top lg, margin-bottom sm
@@ -770,8 +902,13 @@ Full-screen overlay after all nodes are finished.
 
 ### Crisis Animations
 - **Crisis card entrance**: background dims (200ms), card slides up from bottom (300ms, ease-out) with slight overshoot
-- **Choice selection**: selected card border glows, unselected fades, gem cost icons float from wallet to card
+- **Choice selection**: selected card border glows, unselected fades, resource cost icons float from wallet to card
 - **Crisis exit**: card scales down to 0.95 and fades (200ms), node progress track avatar walks forward (500ms)
+
+### Store Animations
+- **Store entrance**: offer cards stagger up from below, 60ms apart, while wallet icons slide in from the right
+- **Purchase confirmed**: cost icons fly from wallet to the offer card, item chip pops out of the card and lands in the kit tray
+- **Reroll**: current cards tilt back 4deg and slide down; new cards cascade in from alternating sides
 
 ### Screen Transitions
 - **Tab switch**: crossfade 200ms
@@ -791,6 +928,8 @@ Full-screen overlay after all nodes are finished.
 - **Standoff — player hit**: double-tap heavy impact pattern
 - **Standoff — creature defeated**: success notification + medium impact
 - **Crisis — choice confirmed**: medium impact
+- **Store — purchase confirmed**: medium impact + soft success tap
+- **Store — reroll**: light impact
 
 ---
 
