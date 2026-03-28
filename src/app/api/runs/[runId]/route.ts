@@ -4,9 +4,9 @@ import { db, ecoRunSessions } from '@/db';
 
 /**
  * PATCH /api/runs/[runId]
- * Update session metadata (e.g. resource wallet on completion).
+ * Update session metadata (e.g. resource wallet or deduction summary on completion).
  *
- * Body: { resourceWallet?: Record<string, number> }
+ * Body: { resourceWallet?: Record<string, number>; finalScore?: number; deductionSummary?: Record<string, unknown> }
  */
 export async function PATCH(
   request: NextRequest,
@@ -19,13 +19,22 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet } = body as { resourceWallet?: Record<string, number> };
+    const { resourceWallet, finalScore, deductionSummary } = body as {
+      resourceWallet?: Record<string, number>;
+      finalScore?: number;
+      deductionSummary?: Record<string, unknown>;
+    };
 
-    if (resourceWallet) {
+    const metadataPatch: Record<string, unknown> = {};
+    if (resourceWallet) metadataPatch.resourceWallet = resourceWallet;
+    if (typeof finalScore === 'number') metadataPatch.finalScore = finalScore;
+    if (deductionSummary) metadataPatch.deductionSummary = deductionSummary;
+
+    if (Object.keys(metadataPatch).length > 0) {
       await db
         .update(ecoRunSessions)
         .set({
-          metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify({ resourceWallet })}::jsonb`,
+          metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify(metadataPatch)}::jsonb`,
         })
         .where(eq(ecoRunSessions.id, runId));
     }

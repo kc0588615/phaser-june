@@ -723,7 +723,7 @@ export class BoardView {
     /** Calculates the appropriate scale based on gemSize and texture width. */
     private calculateSpriteScale(sprite: Phaser.GameObjects.Sprite): number {
         if (!sprite || !sprite.width || sprite.width === 0) return 1;
-        return (this.gemSize / sprite.width) * 0.9; // 90% of cell size
+        return this.gemSize / sprite.width;
     }
 
     /** Helper to iterate over all active sprites in the grid. */

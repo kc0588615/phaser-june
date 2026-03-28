@@ -436,7 +436,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
 
     // Block clicks during active expedition
-    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'briefing') {
+    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'briefing' || runPhaseRef.current === 'deduction') {
       setShowInfoBox(true);
       setInfoBoxData({ habitats: [], species: [], message: 'Complete the current expedition first.' });
       return;

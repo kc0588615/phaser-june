@@ -16,6 +16,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
   const [progress, setProgress] = useState(0);
   const [flash, setFlash] = useState<{ label: string; emoji?: string } | null>(null);
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [bonusPool, setBonusPool] = useState<{ current: number; start: number; pct: number } | null>(null);
 
   const hasObjective = node.objectiveTarget > 0;
 
@@ -24,7 +25,17 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
     setClicked(false);
     setProgress(0);
     setFlash(null);
+    setBonusPool(null);
   }, [nodeIndex]);
+
+  // Listen for node bonus decay ticks
+  useEffect(() => {
+    const handler = (data: EventPayloads['node-bonus-tick']) => {
+      setBonusPool({ current: data.currentPool, start: data.startPool, pct: data.pct });
+    };
+    EventBus.on('node-bonus-tick', handler);
+    return () => { EventBus.off('node-bonus-tick', handler); };
+  }, []);
 
   // Listen for encounter-triggered events
   useEffect(() => {
@@ -87,6 +98,27 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, onCompl
       <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', marginBottom: '8px' }}>
         {node.rationale}
       </div>
+
+      {/* Node bonus decay bar */}
+      {bonusPool && (
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
+            <span style={{ color: '#94a3b8' }}>Node Bonus</span>
+            <span style={{ color: bonusPool.pct > 0.6 ? '#4ade80' : bonusPool.pct > 0.4 ? '#fbbf24' : '#f87171', fontWeight: 600 }}>
+              +{bonusPool.current}
+            </span>
+          </div>
+          <div style={{ height: '4px', background: '#1e293b', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${bonusPool.pct * 100}%`,
+              background: bonusPool.pct > 0.6 ? '#4ade80' : bonusPool.pct > 0.4 ? '#fbbf24' : '#f87171',
+              borderRadius: '2px',
+              transition: 'width 0.8s ease',
+            }} />
+          </div>
+        </div>
+      )}
 
       {/* Gem objective: show required gem swatches + progress bar */}
       {hasObjective && (

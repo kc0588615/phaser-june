@@ -253,7 +253,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
       
       {!hasGuessed && guessedSpecies.size > 0 && (
         <p className="text-sm text-amber-400">
-          Incorrect. Keep matching gems to reveal more clues!
+          Incorrect. Buy more clues and try again.
         </p>
       )}
       

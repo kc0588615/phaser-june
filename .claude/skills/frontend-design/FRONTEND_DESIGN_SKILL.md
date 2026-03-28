@@ -1,660 +1,506 @@
 ---
-name: mobile-match3-biodiversity-design
-description: Design distinctive UI for mobile-first match-3 expedition game combining Phaser canvas + React overlays. Harmonize game aesthetics with naturalist field journal sensibility.
-context: Hybrid Phaser/React app, Cesium map integration, expedition/discovery theme
----
 
-# Frontend Design Skill: Mobile Match-3 Biodiversity Game
+name: modern-atmospheric-hud-skill
+description: Design modern premium UI for a mobile-first match-3 expedition game using Phaser canvas with React overlays. Prioritize dark glass surfaces, atmospheric depth, and restrained bioluminescent accents.
+context: Hybrid Phaser/React app, Cesium map integration, expedition/discovery theme
+------------------------------------------------------------------------------------
+
+# Frontend Design Skill: Modern Atmospheric HUD for Mobile Match-3 Expedition Game
 
 Design production-grade interfaces for a hybrid mobile-first web game combining Phaser canvas gameplay with React UI overlays, Cesium 3D map, and biodiversity discovery mechanics.
 
-## Context-Specific Constraints
+This skill favors a **premium dark glass UI** over a field-journal look.
 
-### Technical Architecture
-- **Dual rendering**: Phaser canvas (game) + React DOM (UI panels/HUD)
-- **Mobile-first**: Touch targets ≥44px, thumb-zone layout, portrait primary
-- **EventBus communication**: `src/game/EventBus.ts` typed events bridge Phaser↔React
-- **Persistent mount**: Components use `display: none`, NOT unmount (preserves listeners)
-- **Stack**: Next.js, TypeScript, shadcn/ui, Tailwind, Cesium for 3D map
-- **Performance**: 60fps game loop, minimize React re-renders during gameplay
+## Primary Visual Direction
 
-### Design Philosophy: Naturalist Field Journal
-Core aesthetic = **modern digital field journal** meeting expedition game:
-- Scientific precision + tactile exploration
-- Specimen collection + habitat discovery
-- Educational depth + playful engagement
-- Analog warmth (sketches, notes) + digital clarity
+**Default aesthetic:** cinematic glassmorphism for game overlays.
 
-Avoid: generic mobile game tropes (bubbly cartoon, neon gradients, Comic Sans energy)
+**Visual tone:**
 
-## Design Thinking Process
+* atmospheric
+* bioluminescent
+* premium
+* minimal
+* calm under pressure
+* modern mobile game HUD, not scrapbook or notebook
 
-Before implementing, define:
+**Core principle:** let the world art carry texture and fantasy; let the UI carry clarity, hierarchy, and restraint.
 
-1. **Component Role**
-   - Game-critical HUD? (minimal, non-distracting)
-   - Discovery moment? (celebratory, immersive)
-   - Data reference? (scannable, organized)
-   - Narrative context? (atmospheric, engaging)
+## Hard Style Rules
 
-2. **Aesthetic Direction** (pick ONE per component, execute fully)
-   - **Vintage Field Guide**: Sepia tones, botanical illustration style, ornate borders, parchment texture
-   - **Modern Naturalist**: Clean sans-serif, photography-forward, generous whitespace, earthy palette
-   - **Tactical Expedition**: Utilitarian, monospace accents, grid overlays, topographic patterns
-   - **Specimen Archive**: Card catalog, taxonomy hierarchy, labeled diagrams, archival precision
-   - **Trail Journal**: Handwritten touches, ink splatters, worn edges, chronological narrative
+Always prefer:
 
-3. **Mobile Interaction Model**
-   - **Thumb zones**: Primary actions bottom 1/3, secondary top corners
-   - **Gesture vocabulary**: Swipe (navigation), tap (select), long-press (details), drag (rarely)
-   - **State persistence**: Collapse/expand states survive mode switches (map↔game↔species list)
-   - **Context switching**: Clear visual cues when toggling between viewMode states
+* dark translucent surfaces
+* soft backdrop blur
+* thin luminous borders
+* subtle cyan/mint active glow
+* generous padding
+* rounded corners with consistent radius
+* modern sans typography
+* low-noise composition
 
-4. **Information Hierarchy**
-   - **Glanceable**: Score, streaks, objectives (always visible during game)
-   - **On-demand**: Species details, clues, souvenirs (modal/drawer)
-   - **Ambient**: Habitat context, environmental hints (subtle background elements)
+Always avoid:
 
-## Component-Specific Guidelines
+* parchment textures
+* brass trims
+* ornate borders
+* faux-explorer props
+* handwritten headings
+* scrapbook layering
+* bubbly mobile-game chrome
+* loud rainbow gradients
+* candy-color saturation
+* constant pulsing or attention-seeking motion
 
-### Game HUD Overlays
-**Challenge**: Info display without obscuring Phaser board (centered canvas)
+## Technical Architecture Constraints
 
-**Design principles**:
-- Semi-transparent backgrounds (backdrop-blur)
-- Corner/edge anchoring (avoid center-screen)
-- Compact icon-first design (tap to expand details)
-- Animation: slide-in on update, pulse on milestone
+* **Dual rendering:** Phaser canvas for gameplay, React DOM for overlays and panels
+* **Mobile-first:** touch targets at least 44px, portrait-first layout, thumb-friendly action placement
+* **EventBus communication:** use typed events through `src/game/EventBus.ts`
+* **Persistent mount:** prefer hiding with CSS/display state rather than unmounting panels that hold listeners
+* **Stack:** Next.js, TypeScript, shadcn/ui, Tailwind, Cesium
+* **Performance target:** preserve smooth gameplay and avoid unnecessary React work during active play
 
-**Example aesthetic**: Tactical Expedition
-- Monospace numeric scores
-- Icon badges for gem wallet (consumable inventory)
-- Minimal chrome, high contrast on varied backgrounds
-- Grid-snapped positioning
+## Output Contract
 
-### Discovery Moments (Clue Reveals, Species Unlocks)
-**Challenge**: Celebrate achievement without breaking game flow
+When asked to design or implement a component, always respond in this order:
 
-**Design principles**:
-- Full-screen takeover (brief, skippable)
-- Scroll-driven reveal (species card details unfold)
-- Haptic/sound cues (EventBus trigger, not UI responsibility)
-- Collectible "specimen card" metaphor
+1. **Component role**
+2. **Chosen visual treatment**
+3. **Information hierarchy**
+4. **Mobile interaction model**
+5. **Layout placement relative to the Phaser board**
+6. **shadcn/Tailwind implementation plan**
+7. **Performance and accessibility checks**
 
-**Example aesthetic**: Vintage Field Guide
-- Illustration reveal with ink-drawn border animation
-- Taxonomy badge fade-in sequence
-- Parchment-textured card background
-- Serif display font for species name, sans body text
+Do not skip the visual treatment decision.
+Do not mix multiple aesthetics in one component.
+Do not default back to a field-journal style unless explicitly requested.
 
-### Species Catalog/List
-**Challenge**: Browse 500+ entries, filter by bioregion/habitat, responsive performance
+## Decision Framework
 
-**Design principles**:
-- Virtualized scroll (react-window for 500+ cards)
-- Filter chips (habitat, bioregion, conservation status)
-- Card density: thumbnail + name + key facts (tap for modal)
-- Discovery state: grayscale locked, color unlocked
+Before implementing, classify the component:
 
-**Example aesthetic**: Modern Naturalist
-- Photography hero images (species in habitat)
-- Sans-serif hierarchy (DM Sans display, system body)
-- Earthy palette: moss green, clay terracotta, stone gray
-- Generous padding, card shadows for depth
+### 1. Component Role
 
-### Map Interface (Cesium Overlay)
-**Challenge**: 3D globe controls + habitat polygons + expedition nodes, mobile-friendly
+* **Live HUD:** persistent, glanceable, low-noise
+* **Progress feedback:** node progression, clue updates, milestone banners
+* **Discovery moment:** celebratory but controlled
+* **Reference surface:** species info, clues, catalog, objectives
+* **Navigation layer:** map controls, drawers, tabs, mode switching
 
-**Design principles**:
-- Floating action button (bottom-right, toggle map controls)
-- Habitat highlights (translucent polygon fills, no clutter)
-- Node markers (tap to load expedition, distinct from species pins)
-- Zoom-adaptive labels (hide detail at high altitude)
+### 2. Visual Treatment
 
-**Example aesthetic**: Tactical Expedition
-- Topographic line pattern on water bodies
-- Compass rose (fixed top-right)
-- Coordinate display (monospace, top-left)
-- UTM grid overlay toggle (advanced users)
+Use the same core system everywhere, with only small intensity shifts:
 
-### Expedition Run UI (Node Track, Encounter Panels)
-**Challenge**: Linear progression through nodes, each with objectives/encounters/souvenirs
+* **Live HUD:** darkest surfaces, thinnest borders, lowest motion
+* **Progress feedback:** slightly brighter glow, stronger emphasis
+* **Discovery moment:** elevated blur, focused spotlight, richer internal depth
+* **Reference surface:** calm card stacks, clearer separators, more readable spacing
+* **Navigation layer:** clean segmented controls, obvious active state, quiet idle state
 
-**Design principles**:
-- Horizontal scroll track (past←current→future nodes)
-- Encounter flash (modal interrupt, story beat)
-- Souvenir pickup (badge animation, add to pouch)
-- Objective checklist (checkboxes, strikethrough on complete)
+### 3. Attention Budget
 
-**Example aesthetic**: Trail Journal
-- Handwritten-style headings (Caveat or Permanent Marker)
-- Node icons: hand-drawn trail markers
-- Encounter text: narrative prose, aged paper background
-- Progress dots (filled=complete, outlined=remaining)
+Ask:
 
-## Typography System
+* Is this needed during active matching?
+* Can this stay at the edge instead of the center?
+* Can this collapse to one line or one icon?
+* Can this animate once and then become still?
 
-### Font Pairing Strategy
-Match fonts to component aesthetic, but maintain app-wide coherence:
+If the answer is yes, do it.
 
-**Option A: Scientific Modern**
-- Display: `Instrument Serif` (naturalist elegance)
-- Body: `Inter Variable` (readable, neutral)
-- Accent: `JetBrains Mono` (code/data)
+## System Tokens
 
-**Option B: Field Guide Classic**
-- Display: `Cinzel` (ornate, vintage)
-- Body: `Crimson Text` (serif, bookish)
-- Accent: `Special Elite` (typewriter)
+### Color Behavior
 
-**Option C: Tactical Utility** (current project leans here)
-- Display: `Space Grotesk` (geometric, modern)
-- Body: `DM Sans` (friendly, clear)
-- Accent: `Roboto Mono` (technical)
-
-**Load via Google Fonts or bundle woff2**. Define CSS vars in `src/styles/globals.css`:
+Use a restrained dark palette with selective accent energy.
 
 ```css
 :root {
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'Roboto Mono', monospace;
+  --bg-0: hsl(200 35% 6%);
+  --bg-1: hsl(196 28% 9%);
+  --bg-2: hsl(193 24% 13%);
+  --surface: hsla(190 30% 12% / 0.68);
+  --surface-strong: hsla(190 34% 10% / 0.82);
+  --surface-soft: hsla(190 24% 16% / 0.52);
+
+  --border-soft: hsla(186 55% 74% / 0.22);
+  --border-active: hsla(182 80% 74% / 0.48);
+  --glow-soft: hsla(177 90% 72% / 0.16);
+  --glow-active: hsla(177 100% 72% / 0.28);
+
+  --text-strong: hsl(0 0% 96%);
+  --text: hsl(200 18% 84%);
+  --text-muted: hsl(198 12% 66%);
+  --text-dim: hsl(198 10% 52%);
+
+  --success: hsl(150 55% 62%);
+  --warning: hsl(38 88% 68%);
+  --danger: hsl(0 75% 68%);
 }
 ```
 
-### Type Scale (Mobile-First)
-```css
-/* Base: 16px (1rem) */
---text-xs: 0.75rem;   /* 12px - labels, captions */
---text-sm: 0.875rem;  /* 14px - body secondary */
---text-base: 1rem;    /* 16px - body primary */
---text-lg: 1.125rem;  /* 18px - subheadings */
---text-xl: 1.25rem;   /* 20px - card titles */
---text-2xl: 1.5rem;   /* 24px - section headers */
---text-3xl: 1.875rem; /* 30px - page titles */
---text-4xl: 2.25rem;  /* 36px - hero display */
-```
+Rules:
 
-## Color & Theme
+* Keep most surfaces in blue-green charcoal space
+* Reserve high-brightness cyan/mint for active, selected, or newly revealed states
+* Never make every element glow at once
+* Let gameplay pieces remain more colorful than the surrounding HUD
 
-### Biodiversity Palette (Naturalist)
-Earthy, habitat-inspired, avoid neon/synthetic:
+### Typography
+
+Default stack:
+
+* **Display:** `Space Grotesk`
+* **Body:** `DM Sans` or `Inter`
+* **Data/utility:** `Roboto Mono`
+
+Tone:
+
+* headlines are clean and confident
+* labels are quiet and compact
+* metadata is subdued
+* no decorative serif or handwritten font by default
+
+Suggested scale:
 
 ```css
 :root {
-  /* Primary: Forest Canopy */
-  --color-primary: hsl(142, 48%, 28%);     /* #248a46 deep green */
-  --color-primary-light: hsl(142, 45%, 65%); /* lighter tint */
-
-  /* Secondary: Clay Terracotta */
-  --color-secondary: hsl(16, 62%, 52%);    /* #d9673a warm red-orange */
-
-  /* Accent: Sky Blue (water, air) */
-  --color-accent: hsl(201, 78%, 45%);      /* #1a8cb8 clear blue */
-
-  /* Neutral: Stone & Parchment */
-  --color-bg: hsl(45, 25%, 96%);           /* #f9f7f3 off-white */
-  --color-surface: hsl(0, 0%, 100%);       /* #ffffff pure white */
-  --color-text: hsl(210, 15%, 20%);        /* #2b3034 charcoal */
-  --color-text-muted: hsl(210, 10%, 50%);  /* #757a80 gray */
-
-  /* Functional */
-  --color-success: hsl(142, 48%, 38%);     /* matches primary green */
-  --color-warning: hsl(38, 92%, 50%);      /* amber */
-  --color-danger: hsl(0, 72%, 51%);        /* red */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
 }
 ```
 
-### Dark Mode (Optional, for night exploration)
-```css
-.dark {
-  --color-bg: hsl(210, 15%, 12%);          /* deep charcoal */
-  --color-surface: hsl(210, 15%, 16%);     /* card bg */
-  --color-text: hsl(45, 25%, 92%);         /* cream white */
-  --color-text-muted: hsl(210, 10%, 60%);  /* lighter gray */
-}
-```
+### Radius, Stroke, Shadow
 
-## Motion & Animation
+* **Card radius:** 18px to 24px
+* **Inner chip radius:** pill or 14px
+* **Border weight:** 1px preferred
+* **Shadow:** soft, broad, low contrast
+* **Glow:** ambient edge light, not neon tubes
 
-### Performance Budget
-- **60fps target**: Use `transform` + `opacity` only (GPU-accelerated)
-- **Phaser sync**: Coordinate with game loop, avoid React animation jank
-- **Gesture response**: <100ms feedback (button press, card flip)
+### Blur and Transparency
 
-### Animation Patterns
+Use glass intentionally:
 
-#### 1. Page/Panel Transitions (Mode Switches)
-```css
-/* Slide up from bottom (expedition panel) */
-@keyframes slideUp {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.expedition-panel {
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-```
+* HUD cards: light blur
+* modal surfaces: medium blur
+* background overlays: soft gradient dimming
+* never stack so much blur that text loses contrast
 
-#### 2. Discovery Celebrations (Staggered Reveals)
-```tsx
-// Species card unlock: image → name → details
-<div className="species-card">
-  <img style={{ animationDelay: '0ms' }} />
-  <h3 style={{ animationDelay: '150ms' }} />
-  <p style={{ animationDelay: '300ms' }} />
-</div>
-```
+## Motion Rules
 
-```css
-.species-card > * {
-  animation: fadeInUp 0.5s ease-out both;
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-```
+Motion should feel expensive, soft, and intentional.
 
-#### 3. Micro-Interactions (Haptic Feedback Analogs)
-```css
-/* Button press (scale + shadow) */
-.btn:active {
-  transform: scale(0.95);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-  transition: transform 0.1s, box-shadow 0.1s;
-}
+Use:
 
-/* Gem wallet pulse (new consumable) */
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-.gem-badge.new {
-  animation: pulse 0.6s ease-in-out;
-}
-```
+* fade
+* slight upward drift
+* subtle scale from 0.98 to 1
+* gentle border/glow pulse for active states
+* horizontal progress sweeps
 
-### Scroll-Driven Effects
-Use Intersection Observer for viewport-triggered animations:
+Avoid:
 
-```tsx
-// Fade in species cards as they scroll into view
-const observerOptions = {
-  threshold: 0.2,
-  rootMargin: '0px 0px -10% 0px'
-};
+* bounce
+* elastic overshoot
+* arcade pop spam
+* repeated shimmer loops on many components
+* long chained animations during gameplay
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    }
-  });
-}, observerOptions);
-```
+Animation guidance:
 
-## Backgrounds & Atmospheric Details
+* most transitions: 160ms to 240ms
+* reveals: 240ms to 320ms
+* use `transform` and `opacity`
+* avoid layout-triggering animations during active gameplay
 
-### Texture Overlays (Naturalist Aesthetic)
-```css
-/* Parchment grain (species cards, expedition briefing) */
-.parchment-bg {
-  background-color: var(--color-bg);
-  background-image:
-    url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-}
+## Layout Rules for Phaser Coexistence
 
-/* Topographic pattern (map background) */
-.topo-pattern {
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 11px),
-    repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 11px);
-}
-```
+The puzzle board and runner lane are the visual center of gravity.
 
-### Gradient Mesh Backgrounds (Discovery Modals)
-```css
-.discovery-modal {
-  background:
-    radial-gradient(ellipse at 20% 30%, hsla(142, 48%, 75%, 0.3), transparent 50%),
-    radial-gradient(ellipse at 80% 70%, hsla(201, 78%, 75%, 0.2), transparent 50%),
-    var(--color-surface);
-}
-```
+Therefore:
 
-### Decorative Borders (Field Guide Cards)
-```css
-.specimen-card {
-  border: 2px solid var(--color-primary);
-  border-image: url('/assets/ornate-border.svg') 30 round;
-  box-shadow:
-    0 2px 8px rgba(0,0,0,0.08),
-    inset 0 0 0 1px rgba(255,255,255,0.5);
-}
-```
+* anchor HUD to top, bottom, and corners
+* keep the central board area visually clear
+* use overlays that float above the scene without fully boxing it in
+* expand secondary information from edges or bottom sheets
+* use large centered overlays only for milestone or discovery moments
 
-## Mobile-Specific Optimizations
+Never:
 
-### Touch Targets
-```css
-/* Minimum 44×44px (Apple HIG), prefer 48×48px (Material) */
-.touch-target {
-  min-width: 48px;
-  min-height: 48px;
-  padding: 12px; /* expand beyond visual size */
-}
-```
+* cover the active puzzle board with persistent panels
+* place tall stacked chrome in the center during a live run
+* force the player to parse dense text while matching
 
-### Thumb Zone Layout
-```tsx
-// Primary actions: bottom 1/3 of screen
-<div className="fixed bottom-0 w-full p-4 safe-area-bottom">
-  <Button>Continue Expedition</Button>
-  <Button variant="secondary">View Map</Button>
-</div>
+## Component Defaults
 
-// Secondary: top corners (reachable with index finger)
-<Button className="fixed top-4 right-4">Settings</Button>
-```
+### 1. Game HUD Overlays
 
-### Safe Area (Notch Avoidance)
-```css
-.safe-area-top {
-  padding-top: env(safe-area-inset-top);
-}
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-```
+**Default treatment:** Minimal tactical glass HUD
 
-### Prevent Overscroll Bounce (Canvas Games)
-```css
-body {
-  overscroll-behavior: none;
-  touch-action: pan-x pan-y;
-}
-```
+Use for:
 
-## Component Composition Patterns
+* score
+* streak
+* current objective
+* consumables
+* expedition state
 
-### HUD Overlay (Game.ts → React)
-```tsx
-// src/components/GameHUD.tsx
-import { useEffect, useState } from 'react';
-import { EventBus } from '@/game/EventBus';
+Rules:
 
-export function GameHUD() {
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
+* edge-anchored
+* compact first, expandable second
+* one emphasis state at a time
+* icon + short label + value
+* translucent charcoal panel with thin luminous border
 
-  useEffect(() => {
-    const handler = (data: { score: number; streak: number }) => {
-      setScore(data.score);
-      setStreak(data.streak);
-    };
-    EventBus.on('game-hud-updated', handler);
-    return () => EventBus.off('game-hud-updated', handler);
-  }, []);
+Visual cues:
 
-  return (
-    <div className="fixed top-4 left-4 bg-surface/80 backdrop-blur rounded-lg p-3 shadow-md">
-      <div className="text-xs text-muted uppercase tracking-wide">Score</div>
-      <div className="text-2xl font-display font-bold">{score}</div>
-      {streak > 2 && (
-        <div className="text-sm text-accent mt-1">🔥 {streak}x Streak</div>
-      )}
-    </div>
-  );
-}
-```
+* numbers can use mono or tight sans
+* active objective can gain a soft cyan edge glow
+* do not over-badge or over-outline
 
-### Modal Discovery Card
-```tsx
-// src/components/SpeciesDiscoveryModal.tsx
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+### 2. Clue Toasts and Discovery Notifications
 
-export function SpeciesDiscoveryModal({ species, open, onClose }) {
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="species-card parchment-bg max-w-md">
-        {/* Hero image with fade-in */}
-        <img
-          src={species.imageUrl}
-          alt={species.commonName}
-          className="w-full h-48 object-cover rounded-t-lg"
-          style={{ animationDelay: '0ms' }}
-        />
+**Default treatment:** Elevated cinematic callout
 
-        {/* Name + taxonomy badge */}
-        <div className="p-6">
-          <h2
-            className="text-3xl font-display mb-2"
-            style={{ animationDelay: '150ms' }}
-          >
-            {species.commonName}
-          </h2>
-          <p
-            className="text-sm italic text-muted mb-4"
-            style={{ animationDelay: '200ms' }}
-          >
-            {species.scientificName}
-          </p>
+Use for:
 
-          {/* Habitat, range, conservation status */}
-          <div
-            className="space-y-2 text-sm"
-            style={{ animationDelay: '300ms' }}
-          >
-            <div><strong>Habitat:</strong> {species.habitat}</div>
-            <div><strong>Range:</strong> {species.range}</div>
-            <div><strong>Status:</strong> {species.conservationStatus}</div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-```
+* new clue found
+* habitat hint revealed
+* milestone progression
+* species evidence updates
 
-### Expedition Node Track (Horizontal Scroll)
-```tsx
-// src/components/RunTrack.tsx (simplified example)
-export function RunTrack({ nodes, currentIndex }) {
-  return (
-    <div className="overflow-x-auto flex gap-4 p-4 snap-x snap-mandatory">
-      {nodes.map((node, i) => (
-        <div
-          key={i}
-          className={`
-            snap-center shrink-0 w-64 p-4 rounded-lg border-2
-            ${i === currentIndex ? 'border-primary bg-primary/5' : 'border-gray-300'}
-            ${i < currentIndex ? 'opacity-60' : ''}
-          `}
-        >
-          <h4 className="font-display text-lg">{node.name}</h4>
-          <p className="text-sm text-muted">{node.habitat}</p>
+Rules:
 
-          {/* Objective checklist */}
-          <ul className="mt-2 space-y-1">
-            {node.objectives.map((obj, j) => (
-              <li key={j} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={obj.complete}
-                  readOnly
-                  className="w-4 h-4"
-                />
-                <span className={obj.complete ? 'line-through text-muted' : ''}>
-                  {obj.description}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
-  );
-}
-```
+* brief and highly readable
+* one toast at a time
+* newest toast replaces prior one cleanly
+* icon/art tile on the left, title + supporting line on the right
+* appears above gameplay, then settles or exits
 
-## Implementation Checklist
+Visual cues:
 
-Before finalizing any component:
+* strongest glow in the system, but still restrained
+* backdrop blur stronger than standard HUD cards
+* title is bold and bright; supporting line is muted
 
-- [ ] **Mobile-first**: Tested on 375×667 (iPhone SE), 390×844 (iPhone 12)
-- [ ] **Touch targets**: All interactive elements ≥48px
-- [ ] **Performance**: 60fps on mid-range Android (throttle CPU 4× in DevTools)
-- [ ] **Accessibility**: Keyboard nav, ARIA labels, color contrast ≥4.5:1
-- [ ] **EventBus integration**: Listeners added in `useEffect`, cleaned up on unmount
-- [ ] **Aesthetic coherence**: Fonts, colors, spacing match chosen design direction
-- [ ] **Animation timing**: `cubic-bezier(0.4, 0, 0.2, 1)` for most UI, `ease-out` for reveals
-- [ ] **Dark mode** (if applicable): Test color variables in `.dark` class
-- [ ] **Phaser coexistence**: No z-index conflicts, canvas remains visible when needed
+### 3. Expedition Track / Node Progress
 
-## Anti-Patterns to Avoid
+**Default treatment:** Luminous route strip
 
-❌ **Generic mobile game UI**: Bubbly buttons, candy colors, Comic Sans energy
-✅ **Naturalist precision**: Scientific typography, habitat-inspired palette, field journal textures
+Use for:
 
-❌ **Center-screen clutter**: HUD elements blocking Phaser board
-✅ **Edge anchoring**: Top/bottom bars, corner badges, slide-out drawers
+* node path
+* region progression
+* obstacle sequence
+* current expedition stage
 
-❌ **Jank animations**: Heavy DOM manipulation during 60fps game loop
-✅ **GPU-accelerated**: `transform` + `opacity` only, coordinate with EventBus timing
+Rules:
 
-❌ **Unmounting panels**: Breaks EventBus listeners, causes re-initialization
-✅ **Display toggling**: `className={viewMode === 'game' ? 'block' : 'hidden'}`
+* horizontal, simple, legible
+* node states: complete / current / upcoming / locked
+* current node gets halo and strongest contrast
+* connector line stays subtle
+* labels remain short
 
-❌ **Desktop-first responsive**: Tiny touch targets, cramped thumb zones
-✅ **Mobile-first scaling**: 48px minimum, bottom-heavy layout, safe-area insets
+Visual cues:
 
-❌ **One-size-fits-all aesthetic**: Every panel looks identical
-✅ **Context-specific styling**: HUD (tactical), discoveries (celebratory), catalog (archival)
+* route line is soft and thin
+* current node has a glow ring
+* completed nodes are calmer than the active node
 
----
+### 4. Species Drawer / Bottom Sheet
 
-## Example: Complete Component (Species Card)
+**Default treatment:** Premium reference drawer
 
-Combining all principles into production code:
+Use for:
+
+* mystery species progress
+* clue count
+* quick facts
+* expandable details
+
+Rules:
+
+* collapsed by default during active play
+* opens from bottom
+* strong headline, muted metadata, clear progress chip
+* one primary action only
+
+Visual cues:
+
+* heavy blur is acceptable here because it is separated from the core board
+* use chips and dividers sparingly
+* avoid making it look like enterprise dashboard UI
+
+### 5. Species Catalog / Collection Screens
+
+**Default treatment:** Modern archival gallery
+
+Use for:
+
+* browsing species
+* filtering by habitat, biome, rarity, status
+* discovery completion
+
+Rules:
+
+* use calm grid/list views
+* cards should feel premium and breathable
+* locked state is subdued, not ugly
+* filters should look like clean pills, not chunky segmented toy controls
+
+Visual cues:
+
+* strong image area
+* thin type hierarchy
+* light surface separation and minimal chrome
+
+### 6. Cesium Map Overlay
+
+**Default treatment:** Atmospheric tactical overlay
+
+Use for:
+
+* globe controls
+* expedition nodes
+* habitat polygons
+* region labels
+
+Rules:
+
+* allow globe art to dominate
+* keep overlays sparse
+* controls float at edges
+* labels fade with zoom level
+* data overlays should be translucent, not opaque stickers
+
+Visual cues:
+
+* coordinate and telemetry surfaces can use mono accents
+* selected habitats get subtle luminous outline/fill
+* never turn the map into a cluttered GIS desktop tool
+
+## Mobile Interaction Model
+
+* Primary actions belong in the bottom third where possible
+* Secondary readouts can live along the top edge
+* Bottom sheet is preferred over center modal for reference content
+* Long-press is optional, never required for core play
+* Swipe can dismiss transient overlays or move between side panels
+* Expansion states should persist when moving between game, map, and catalog
+
+## Accessibility and Readability
+
+Always check:
+
+* text contrast against blurred surfaces
+* legibility over varied scene backgrounds
+* touch targets at least 44px, preferably 48px
+* state not conveyed by color alone
+* focus styles visible even on dark translucent surfaces
+* motion reduced when appropriate
+
+For small text on glass:
+
+* raise opacity of the surface first
+* darken the backdrop if needed
+* do not solve contrast problems with more glow
+
+## Runtime Safety Rules
+
+* Do not subscribe React UI directly to unnecessarily high-frequency game events
+* Prefer coarse-grained UI events such as milestone changed, clue added, objective updated, run state changed
+* Throttle or batch updates when a source can fire rapidly
+* Avoid expensive blur stacks on many simultaneous elements
+* Avoid box-shadow spam on large lists
+* Prefer opacity and transform transitions only
+* Keep live HUD components shallow and memo-friendly
+
+## Implementation Preferences
+
+When proposing code:
+
+* prefer existing shadcn primitives first
+* prefer project Tailwind tokens and CSS variables over one-off colors
+* use `backdrop-blur-*` selectively, not everywhere
+* use `pointer-events-none` on decorative overlays where appropriate
+* use `pointer-events-auto` only on interactive children
+* keep z-index layers simple and named by purpose
+
+## Example Utility Classes
 
 ```tsx
-// src/components/SpeciesCard.tsx
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { Species } from '@/types/species';
-
-interface SpeciesCardProps {
-  species: Species;
-  discovered: boolean;
-  onTap: (species: Species) => void;
-}
-
-export function SpeciesCard({ species, discovered, onTap }: SpeciesCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  return (
-    <Card
-      className={`
-        relative overflow-hidden cursor-pointer
-        transform transition-all duration-200 hover:scale-[1.02] active:scale-95
-        ${discovered ? 'opacity-100' : 'opacity-40 grayscale'}
-      `}
-      onClick={() => discovered && onTap(species)}
-    >
-      {/* Hero Image */}
-      <div className="relative h-48 bg-gray-200">
-        <img
-          src={species.imageUrl}
-          alt={species.commonName}
-          className={`
-            w-full h-full object-cover transition-opacity duration-500
-            ${imageLoaded ? 'opacity-100' : 'opacity-0'}
-          `}
-          onLoad={() => setImageLoaded(true)}
-        />
-
-        {/* Conservation Badge (top-right overlay) */}
-        {species.conservationStatus !== 'Least Concern' && (
-          <Badge
-            variant="destructive"
-            className="absolute top-2 right-2 text-xs"
-          >
-            {species.conservationStatus}
-          </Badge>
-        )}
-      </div>
-
-      {/* Card Content */}
-      <div className="p-4 space-y-2">
-        <h3 className="font-display text-xl leading-tight">
-          {discovered ? species.commonName : '???'}
-        </h3>
-
-        <p className="text-sm italic text-muted">
-          {discovered ? species.scientificName : 'Undiscovered'}
-        </p>
-
-        {discovered && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            <Badge variant="outline" className="text-xs">
-              {species.habitat}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {species.bioregion}
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      {/* Decorative Border (field guide aesthetic) */}
-      <div className="absolute inset-0 pointer-events-none border-2 border-primary/20 rounded-lg" />
-    </Card>
-  );
-}
+<Card
+  className={cn(
+    "rounded-3xl border border-white/10",
+    "bg-[color:var(--surface)] text-[color:var(--text)]",
+    "backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)]"
+  )}
+/>
 ```
 
-**CSS (Tailwind + custom animations)**:
-
-```css
-/* src/styles/globals.css */
-
-/* Staggered card reveal on page load */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.species-card > * {
-  animation: fadeInUp 0.5s ease-out both;
-}
-
-.species-card > *:nth-child(1) { animation-delay: 0ms; }
-.species-card > *:nth-child(2) { animation-delay: 150ms; }
-.species-card > *:nth-child(3) { animation-delay: 300ms; }
-
-/* Parchment texture for modals */
-.parchment-bg {
-  background-color: hsl(45, 25%, 96%);
-  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-}
+```tsx
+<div
+  className={cn(
+    "rounded-full border px-3 py-1 text-sm",
+    "border-[color:var(--border-soft)]",
+    "bg-[color:var(--surface-soft)] text-[color:var(--text-muted)]",
+    isActive && "border-[color:var(--border-active)] text-white shadow-[0_0_0_1px_rgba(140,255,235,0.12),0_0_24px_rgba(140,255,235,0.10)]"
+  )}
+/>
 ```
 
----
+## Review Checklist
 
-## Closing Principles
+Before finalizing any component, verify:
 
-1. **Context over convention**: Design for naturalist game, not generic mobile app
-2. **Boldness with restraint**: Commit to aesthetic but execute with precision
-3. **Mobile performance**: 60fps, GPU-accelerated, touch-optimized
-4. **Phaser harmony**: React UI enhances canvas game, never competes
-5. **Discovery delight**: Celebrate moments, respect focus during play
+* [ ] It looks modern, calm, and premium rather than themed or decorative
+* [ ] The world art remains visible and emotionally dominant
+* [ ] The center gameplay area stays clear during active play
+* [ ] There is only one primary emphasis area at a time
+* [ ] Active glow is used sparingly and intentionally
+* [ ] Typography is clean and neutral
+* [ ] The layout works one-handed on a narrow mobile screen
+* [ ] Motion uses transform and opacity only where possible
+* [ ] React work is minimized during live gameplay
+* [ ] Contrast remains strong over dark translucent surfaces
 
-Every interface element should answer: **Does this feel like a field biologist's digital expedition journal?**
+## Anti-Patterns
+
+❌ Paper, parchment, leather, brass, scrapbook, handwritten explorer UI
+
+✅ Dark glass, luminous edge light, restrained premium HUD
+
+❌ Heavy ornament trying to explain the setting
+
+✅ Let the scene art explain the setting; let the UI explain the state
+
+❌ Multiple competing glow colors and loud highlight states
+
+✅ One accent family, one active emphasis at a time
+
+❌ Dense dashboard panels during active puzzle play
+
+✅ Compact edge HUD and expandable secondary surfaces
+
+❌ Toast spam and stacked notifications
+
+✅ One controlled callout with clean replacement behavior
+
+❌ Re-rendering large trees from noisy game events
+
+✅ Coarse event wiring and memo-friendly UI islands
+
+## Closing Principle
+
+Every interface element should answer:
+
+**Does this feel like a premium atmospheric game overlay that supports focus, discovery, and motion without fighting the world beneath it?**

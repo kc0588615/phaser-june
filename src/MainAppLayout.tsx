@@ -7,9 +7,9 @@ import UserMenu from './components/UserMenu';
 import { EventBus } from './game/EventBus';
 import type { EventPayloads } from './game/EventBus';
 import { toast, Toaster } from 'sonner';
-import { PiListMagnifyingGlass, PiBookOpenTextLight, PiGlobeHemisphereWestThin } from "react-icons/pi";
-import type { ConsumableItem, RunState, SouvenirDef } from '@/types/expedition';
-import { createEmptyResourceWallet } from '@/types/expedition';
+import { PiBookOpenTextLight } from "react-icons/pi";
+import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry } from '@/types/expedition';
+import { createEmptyResourceWallet, createEmptyClueFragments, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
@@ -18,6 +18,7 @@ import { ActiveEncounterPanel } from './components/ActiveEncounterPanel';
 import { GemWallet } from './components/GemWallet';
 import { SouvenirPouch } from './components/SouvenirPouch';
 import { ConsumableTray } from './components/ConsumableTray';
+import { DeductionCamp } from './components/DeductionCamp';
 import { buildBoardSpawnConfigForNode, WALLET_DEFS } from '@/expedition/domain';
 
 const INITIAL_RUN_STATE: RunState = {
@@ -31,11 +32,19 @@ const INITIAL_RUN_STATE: RunState = {
     pendingNodeModifiers: [],
     currentBattleState: null,
     souvenirs: [],
+    bankedScore: 0,
+    clueFragments: createEmptyClueFragments(),
+    triviaUnlocked: [],
+    deductionCamp: null,
+    currentNodeBonus: null,
+    lastNodeRewards: null,
+    finalScore: null,
+    totalThoughtDiscount: 0,
 };
 
 function MainAppLayout() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
-    const [viewMode, setViewMode] = useState<'map' | 'clues' | 'species'>('map');
+    const [viewMode, setViewMode] = useState<'map' | 'species'>('map');
     const [scrollToSpeciesId, setScrollToSpeciesId] = useState<number | null>(null);
     const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
 
@@ -47,6 +56,8 @@ function MainAppLayout() {
     const nodeStartScoreRef = useRef<number>(0);
     const nodeObjectiveProgressRef = useRef<number>(0);
     const lastResolvedNodeRef = useRef<number>(-1);
+    const correctSpeciesIdRef = useRef<number>(0);
+    const hiddenSpeciesNameRef = useRef<string>('');
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
@@ -74,6 +85,14 @@ function MainAppLayout() {
         lastResolvedNodeRef.current = -1;
         const payload = expeditionPayloadRef.current;
         if (!payload) return;
+
+        // Identify correct species (lowest ogc_fid, same as Game.ts)
+        const sorted = [...payload.species].sort((a, b) => a.ogc_fid - b.ogc_fid);
+        const correct = sorted[0];
+        if (correct) {
+            correctSpeciesIdRef.current = correct.ogc_fid;
+            hiddenSpeciesNameRef.current = correct.common_name || correct.scientific_name || 'Unknown Species';
+        }
 
         // Persist run to DB (fire-and-forget; don't block puzzle init)
         const locationKey = `${payload.lon.toFixed(4)},${payload.lat.toFixed(4)}`;
@@ -166,6 +185,23 @@ function MainAppLayout() {
             nodeStartScoreRef.current = hudRef.current.score;
 
             if (nextIndex >= (prev.expedition?.nodes.length ?? 6)) {
+                // Build deduction camp state
+                const campShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(cat => ({
+                    category: cat,
+                    purchased: 0,
+                    fragmentCount: prev.clueFragments[cat],
+                }));
+                const campState: DeductionCampState = {
+                    bankedScore: prev.bankedScore,
+                    clueFragments: { ...prev.clueFragments },
+                    clueShop: campShop,
+                    revealedClues: [],
+                    triviaUnlocked: [...prev.triviaUnlocked],
+                    scoreSpent: 0,
+                    guessResult: null,
+                    guessBonusAwarded: 0,
+                    thoughtDiscountPct: prev.totalThoughtDiscount,
+                };
                 // Persist resource wallet to session metadata
                 if (runIdRef.current) {
                     const wallet = { ...prev.resourceWallet };
@@ -178,8 +214,8 @@ function MainAppLayout() {
                         }).catch(err => console.error('Failed to persist resource wallet:', err));
                     }, 0);
                 }
-                setTimeout(() => toast.success('Expedition Complete!', { duration: 3000 }), 0);
-                return { ...prev, phase: 'complete' as const, currentNodeIndex: nextIndex };
+                setTimeout(() => toast.success('All nodes complete — time to identify!', { duration: 3000 }), 0);
+                return { ...prev, phase: 'deduction' as const, currentNodeIndex: nextIndex, deductionCamp: campState };
             }
             // Advance to next node
             setTimeout(() => toast(`Node ${nodeOrder} complete — next up!`, { duration: 1500 }), 0);
@@ -266,6 +302,55 @@ function MainAppLayout() {
         toast(`Crate yielded ${data.item.name}`, { duration: 1600 });
     }, []);
 
+    /** Accumulate clue fragments from loot gem matches during expedition nodes. */
+    const handleClueFragmentEarned = useCallback((data: EventPayloads['clue-fragment-earned']) => {
+        setRunState(prev => {
+            if (prev.phase !== 'in-run') return prev;
+            const frags = { ...prev.clueFragments };
+            frags[data.category] += data.amount;
+            return { ...prev, clueFragments: frags };
+        });
+    }, []);
+
+    /** Accumulate clue shop discounts from thought gem matches during expedition nodes. */
+    const handleClueDiscountEarned = useCallback((data: EventPayloads['clue-discount-earned']) => {
+        setRunState(prev => {
+            if (prev.phase !== 'in-run') return prev;
+            return { ...prev, totalThoughtDiscount: prev.totalThoughtDiscount + data.amount };
+        });
+    }, []);
+
+    /** Bank node reward score when a node is completed. */
+    const handleNodeRewardsSummary = useCallback((data: EventPayloads['node-rewards-summary']) => {
+        const totalReward = data.baseClearReward + data.preservedNodeBonus + data.triviaReward;
+        setRunState(prev => {
+            if (prev.phase !== 'in-run') return prev;
+            return {
+                ...prev,
+                bankedScore: prev.bankedScore + totalReward,
+                lastNodeRewards: data,
+            };
+        });
+    }, []);
+
+    /** Persist deduction clue history in run state so the UI survives rerenders and remounts. */
+    const handleClueRevealed = useCallback((clue: EventPayloads['clue-revealed']) => {
+        setRunState(prev => {
+            if (prev.phase !== 'deduction' || !prev.deductionCamp) return prev;
+            const exists = prev.deductionCamp.revealedClues.some(
+                existing => existing.category === clue.category && existing.clue === clue.clue
+            );
+            if (exists) return prev;
+            return {
+                ...prev,
+                deductionCamp: {
+                    ...prev.deductionCamp,
+                    revealedClues: [clue, ...prev.deductionCamp.revealedClues],
+                },
+            };
+        });
+    }, []);
+
     const handleConsumableUseRequested = useCallback((data: EventPayloads['consumable-use-requested']) => {
         let consumedItem: ConsumableItem | null = null;
         setRunState(prev => {
@@ -286,6 +371,60 @@ function MainAppLayout() {
         }
     }, []);
 
+    /** Handle clue purchase from Deduction Camp. */
+    const handleDeductionPurchase = useCallback((category: ClueCategoryKey, cost: number) => {
+        setRunState(prev => {
+            if (prev.phase !== 'deduction' || !prev.deductionCamp) return prev;
+            const camp = { ...prev.deductionCamp };
+            camp.scoreSpent += cost;
+            camp.clueShop = camp.clueShop.map(e =>
+                e.category === category ? { ...e, purchased: e.purchased + 1 } : e
+            );
+            // Reset wrong guess state so player can guess again after buying a clue
+            if (camp.guessResult === 'wrong') camp.guessResult = null;
+            return { ...prev, deductionCamp: camp };
+        });
+        // Trigger actual clue reveal via existing system
+        EventBus.emit('deduction-camp-purchase', { category, cost });
+    }, []);
+
+    /** Handle guess result from SpeciesGuessSelector inside DeductionCamp. */
+    const handleDeductionGuessResult = useCallback((isCorrect: boolean) => {
+        setRunState(prev => {
+            if (prev.phase !== 'deduction' || !prev.deductionCamp) return prev;
+            const camp = { ...prev.deductionCamp };
+            const totalPaid = camp.clueShop.reduce((sum, e) => sum + e.purchased, 0);
+            if (isCorrect) {
+                const { guessBonus, efficiencyBonus } = getGuessBonuses(totalPaid, true);
+                camp.guessResult = 'correct';
+                camp.guessBonusAwarded = guessBonus + efficiencyBonus;
+                const finalScore = getDeductionFinalScore(camp);
+                if (runIdRef.current) {
+                    const rid = runIdRef.current;
+                    const deductionSummary = {
+                        scoreSpent: camp.scoreSpent,
+                        purchasedClues: totalPaid,
+                        revealedClues: camp.revealedClues.length,
+                        thoughtDiscountPct: camp.thoughtDiscountPct,
+                        finalScore,
+                    };
+                    setTimeout(() => {
+                        fetch(`/api/runs/${rid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ finalScore, deductionSummary }),
+                        }).catch(err => console.error('Failed to persist deduction summary:', err));
+                    }, 0);
+                }
+                return { ...prev, phase: 'complete', deductionCamp: camp, finalScore };
+            } else {
+                camp.guessResult = 'wrong';
+                camp.scoreSpent += 25;
+            }
+            return { ...prev, deductionCamp: camp, finalScore: null };
+        });
+    }, []);
+
     // Handle show-species-list event
     useEffect(() => {
         const handleShowSpeciesList = (data: { speciesId: number }) => {
@@ -303,6 +442,10 @@ function MainAppLayout() {
         EventBus.on('resource-wallet-updated', handleResourceWalletUpdate);
         EventBus.on('consumable-found', handleConsumableFound);
         EventBus.on('consumable-use-requested', handleConsumableUseRequested);
+        EventBus.on('clue-fragment-earned', handleClueFragmentEarned);
+        EventBus.on('clue-discount-earned', handleClueDiscountEarned);
+        EventBus.on('clue-revealed', handleClueRevealed);
+        EventBus.on('node-rewards-summary', handleNodeRewardsSummary);
 
         return () => {
             EventBus.off('show-species-list', handleShowSpeciesList);
@@ -315,8 +458,12 @@ function MainAppLayout() {
             EventBus.off('resource-wallet-updated', handleResourceWalletUpdate);
             EventBus.off('consumable-found', handleConsumableFound);
             EventBus.off('consumable-use-requested', handleConsumableUseRequested);
+            EventBus.off('clue-fragment-earned', handleClueFragmentEarned);
+            EventBus.off('clue-discount-earned', handleClueDiscountEarned);
+            EventBus.off('clue-revealed', handleClueRevealed);
+            EventBus.off('node-rewards-summary', handleNodeRewardsSummary);
         };
-    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop, handleResourceWalletUpdate, handleConsumableFound, handleConsumableUseRequested]);
+    }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop, handleResourceWalletUpdate, handleConsumableFound, handleConsumableUseRequested, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary]);
 
     const appStyle: React.CSSProperties = {
         display: 'flex',
@@ -348,6 +495,7 @@ function MainAppLayout() {
     const inRun = runState.phase === 'in-run';
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
+    const showDeduction = runState.phase === 'deduction';
     const currentNode = inRun && runState.expedition
         ? runState.expedition.nodes[runState.currentNodeIndex]
         : null;
@@ -432,29 +580,25 @@ function MainAppLayout() {
                     >
                         <PiBookOpenTextLight size={18} />
                     </button>
-                    <button
-                        style={{
-                            padding: '5px 10px',
-                            backgroundColor: 'rgba(42, 42, 42, 0.8)',
-                            color: 'white',
-                            border: '1px solid #555',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                        }}
-                        onClick={() => setViewMode(viewMode === 'map' ? 'clues' : 'map')}
-                        title={viewMode === 'map' ? 'Clue List' : 'Show Map'}
-                    >
-                        {viewMode === 'map' ? <PiListMagnifyingGlass size={18} /> : <PiGlobeHemisphereWestThin size={18} />}
-                    </button>
                 </div>
+
+                {/* Deduction Camp phase */}
+                {showDeduction && runState.deductionCamp && (
+                    <div style={{ height: '100%', width: '100%', overflow: 'auto' }}>
+                        <DeductionCamp
+                            camp={runState.deductionCamp}
+                            speciesId={correctSpeciesIdRef.current}
+                            hiddenSpeciesName={hiddenSpeciesNameRef.current}
+                            onPurchase={handleDeductionPurchase}
+                            onGuessResult={handleDeductionGuessResult}
+                            onFinish={handleRunReset}
+                        />
+                    </div>
+                )}
 
                 {/* Keep all components mounted but show/hide with CSS */}
                 <div style={{
-                    display: (viewMode === 'map' && !showBriefing) ? 'block' : 'none',
+                    display: (viewMode === 'map' && !showBriefing && !showDeduction) ? 'block' : 'none',
                     height: '100%',
                     width: '100%'
                 }}>
@@ -491,7 +635,7 @@ function MainAppLayout() {
                             Expedition Complete!
                         </div>
                         <div style={{ color: '#e2e8f0', fontSize: '28px', fontWeight: 700 }}>
-                            {hudRef.current.score} pts
+                            {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hudRef.current.score} pts
                         </div>
                         <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
                             {WALLET_DEFS.map(({ key, color, label }) => (
@@ -525,15 +669,11 @@ function MainAppLayout() {
                     </div>
                 )}
 
-                {/* Always mounted SpeciesPanel - visible when viewMode === 'clues' */}
+                {/* SpeciesPanel always mounted but hidden — handles clue-revealed toasts */}
                 <SpeciesPanel
-                    toastsEnabled={viewMode === 'map'}
+                    toastsEnabled={viewMode === 'map' || showDeduction}
                     style={{
-                        display: viewMode === 'clues' ? 'block' : 'none',
-                        height: '100%',
-                        width: '100%',
-                        overflow: 'auto',
-                        position: 'relative'
+                        display: 'none',
                     }}
                 />
             </div>

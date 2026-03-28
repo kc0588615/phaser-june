@@ -4,9 +4,16 @@ import type { CluePayload } from '../game/clueConfig';
 interface DenseClueGridProps {
   clues: CluePayload[];
   hasSelectedSpecies: boolean;
+  emptyMessage?: string;
+  variant?: 'dense' | 'card';
 }
 
-export const DenseClueGrid: React.FC<DenseClueGridProps> = ({ clues, hasSelectedSpecies }) => {
+export const DenseClueGrid: React.FC<DenseClueGridProps> = ({
+  clues,
+  hasSelectedSpecies,
+  emptyMessage = 'Match gems to reveal clues about this species...',
+  variant = 'dense',
+}) => {
   if (!hasSelectedSpecies) {
     return (
       <div className="flex-1 bg-slate-800 rounded-lg p-4 flex items-center justify-center text-slate-400">
@@ -26,7 +33,43 @@ export const DenseClueGrid: React.FC<DenseClueGridProps> = ({ clues, hasSelected
   if (clues.length === 0) {
     return (
       <div className="flex-1 bg-slate-800 rounded-lg p-4 flex items-center justify-center text-slate-400">
-        <p className="text-center italic">Match gems to reveal clues about this species...</p>
+        <p className="text-center italic">{emptyMessage}</p>
+      </div>
+    );
+  }
+
+  if (variant === 'card') {
+    return (
+      <div className="grid gap-3">
+        {clues.map((clue, index) => (
+          <div
+            key={`clue-card-${clue.name}-${clue.clue.slice(0, 20)}-${index}`}
+            style={{
+              padding: '10px 12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '6px',
+              borderLeft: `3px solid ${clue.color}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: '15px',
+                fontWeight: 700,
+                marginBottom: '6px',
+                color: clue.color,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span style={{ fontSize: '18px', lineHeight: 1 }}>{clue.icon}</span>
+              <span>{clue.name}</span>
+            </div>
+            <div style={{ fontSize: '14px', color: '#e2e8f0', lineHeight: 1.45 }}>
+              {clue.clue}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

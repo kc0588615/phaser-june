@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic } from '@/types/expedition';
+import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic, ClueCategoryKey, ClueFragments, NodeRewardLanes } from '@/types/expedition';
 import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
@@ -123,6 +123,14 @@ export interface EventPayloads {
   'node-objective-updated': { progress: number; target: number; requiredGems: GemType[] };
   'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
   'souvenir-dropped': { souvenir: SouvenirDef };
+  // New economy events
+  'node-bonus-tick': { currentPool: number; startPool: number; pct: number };
+  'clue-fragment-earned': { category: ClueCategoryKey; amount: number; source: 'loot_match' | 'key_cache' | 'node_reward' };
+  'clue-discount-earned': { amount: number; source: 'thought_match' };
+  'trivia-unlocked': { triviaId: string; scoreReward: number };
+  'node-rewards-summary': NodeRewardLanes;
+  'deduction-camp-purchase': { category: ClueCategoryKey; cost: number };
+  'deduction-camp-guess': { guessedName: string; speciesId: number };
 }
 
 // Type-safe EventBus class

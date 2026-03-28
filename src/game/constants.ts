@@ -15,8 +15,8 @@ import {
 } from '../expedition/domain';
 
 // --- Grid Configuration ---
-export const GRID_COLS = 7 as const;
-export const GRID_ROWS = 7 as const; // Reduced from 8 to 7 to make room for owl
+export const GRID_COLS = 6 as const;
+export const GRID_ROWS = 8 as const;
 
 // --- Gem Configuration ---
 export { ACTION_GEM_TYPES, LOOT_GEM_TYPES, GEM_TYPES, getGemFamily, DEFAULT_BOARD_SPAWN_CONFIG };
