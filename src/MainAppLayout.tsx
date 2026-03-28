@@ -157,6 +157,40 @@ function MainAppLayout() {
             if (data.nodeIndex !== prev.currentNodeIndex) return prev;
             if (data.nodeIndex <= lastResolvedNodeRef.current) return prev;
 
+            // Escaped: animal fled — skip remaining nodes, go to Deduction Camp
+            if (data.reason === 'escaped') {
+                lastResolvedNodeRef.current = prev.currentNodeIndex;
+                const campShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(cat => ({
+                    category: cat,
+                    purchased: 0,
+                    fragmentCount: prev.clueFragments[cat],
+                }));
+                const campState: DeductionCampState = {
+                    bankedScore: prev.bankedScore,
+                    clueFragments: { ...prev.clueFragments },
+                    clueShop: campShop,
+                    revealedClues: [],
+                    triviaUnlocked: [...prev.triviaUnlocked],
+                    scoreSpent: 0,
+                    guessResult: null,
+                    guessBonusAwarded: 0,
+                    thoughtDiscountPct: prev.totalThoughtDiscount,
+                };
+                if (runIdRef.current) {
+                    const wallet = { ...prev.resourceWallet };
+                    const rid = runIdRef.current;
+                    setTimeout(() => {
+                        fetch(`/api/runs/${rid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ resourceWallet: wallet }),
+                        }).catch(err => console.error('Failed to persist resource wallet:', err));
+                    }, 0);
+                }
+                setTimeout(() => toast('Animal escaped! Reviewing gathered evidence...', { duration: 3000 }), 0);
+                return { ...prev, phase: 'deduction' as const, deductionCamp: campState };
+            }
+
             const nodeOrder = prev.currentNodeIndex + 1; // 1-based for DB
             const nextIndex = prev.currentNodeIndex + 1;
             lastResolvedNodeRef.current = prev.currentNodeIndex;
@@ -596,28 +630,44 @@ function MainAppLayout() {
                     </div>
                 )}
 
-                {/* Keep all components mounted but show/hide with CSS */}
+                {/* CesiumMap stays visible under briefing overlay */}
                 <div style={{
-                    display: (viewMode === 'map' && !showBriefing && !showDeduction) ? 'block' : 'none',
+                    display: (viewMode === 'map' && !showDeduction) ? 'block' : 'none',
                     height: '100%',
                     width: '100%'
                 }}>
                     <CesiumMap />
                 </div>
 
-                {/* ExpeditionBriefing replaces bottom area when briefing */}
-                <div style={{
-                    display: showBriefing ? 'block' : 'none',
-                    height: '100%',
-                    width: '100%',
-                }}>
-                    {runState.expedition && (
-                        <ExpeditionBriefing
-                            expedition={runState.expedition}
-                            onStart={() => EventBus.emit('expedition-start', {} as Record<string, never>)}
-                        />
-                    )}
-                </div>
+                {/* ExpeditionBriefing as overlay on top of map */}
+                {showBriefing && runState.expedition && (
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        zIndex: 900,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(15,23,42,0.75)',
+                        backdropFilter: 'blur(4px)',
+                    }}>
+                        <div style={{
+                            width: '90%',
+                            maxWidth: '420px',
+                            maxHeight: '90%',
+                            borderRadius: '12px',
+                            background: 'rgba(15,23,42,0.95)',
+                            border: '1px solid #334155',
+                            overflow: 'hidden',
+                        }}>
+                            <ExpeditionBriefing
+                                expedition={runState.expedition}
+                                onStart={() => EventBus.emit('expedition-start', {} as Record<string, never>)}
+                                onClose={() => setRunState(INITIAL_RUN_STATE)}
+                            />
+                        </div>
+                    </div>
+                )}
 
                 {/* Run completion summary */}
                 {showComplete && (
@@ -671,7 +721,7 @@ function MainAppLayout() {
 
                 {/* SpeciesPanel always mounted but hidden — handles clue-revealed toasts */}
                 <SpeciesPanel
-                    toastsEnabled={viewMode === 'map' || showDeduction}
+                    toastsEnabled={viewMode === 'map' && !showDeduction}
                     style={{
                         display: 'none',
                     }}

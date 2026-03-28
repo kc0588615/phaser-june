@@ -330,7 +330,7 @@ This is the primary screen. The entire viewport is dedicated to the match-3 boar
 - Board background: glass-bg panel, rounded-xl, padding sm
 - Border: 1px border-accent (very subtle cyan edge)
 
-**Gem Grid** (7 columns × 7 rows):
+**Gem Grid** (6 columns × 8 rows):
 - Each cell: square, sized to fit the board width minus padding (approximately 44–46px per cell at 390px screen width with 16px horizontal padding and 8px board padding)
 - Gems render as described in the **Gem System — 12-Tile Dual Economy** section above
 - Board pool always includes both knowledge and resource gems; node config controls the family weighting

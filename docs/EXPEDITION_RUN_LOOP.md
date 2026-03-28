@@ -38,22 +38,11 @@ The intended identity is now:
 ### Current runtime
 
 - Nodes are solved by matching required action gems until `objectiveTarget` is filled.
-- Pressure comes from move limits plus a decaying node bonus.
+- Pressure comes from the **spook meter** (tracking window that decays each second) plus move limits as a secondary lever.
+- Three per-node outcomes: **stabilized** (best rewards), **spooked** (reduced rewards), **escaped** (run ends early → Deduction Camp).
 - Loot gems award clue fragments instead of direct clue reveals.
-- After the route, the player spends banked score in Deduction Camp to buy clues and make a species guess.
-
-### Planned direction
-
-The next major design step is to replace most of the remaining move-cap pressure with a **hybrid chase pressure loop**.
-
-Instead of recreating YMBAB's monster pushback literally, the game will reinterpret that tension as an **animal tracking / spook meter**:
-
-- the mystery animal gradually pulls away during the run
-- nodes represent behavior or traversal moments where the player must gather the right observations quickly
-- failing a node does not kill the player; it increases escape pressure or ends the expedition early into Deduction Camp
-- Deduction Camp remains the run's main sink and final decision point
-
-This preserves the expedition/deduction identity while reintroducing more continuous momentum.
+- After the route (or early escape), the player spends banked score in Deduction Camp to buy clues and make a species guess.
+- Action gem labels use fieldwork language (Observe, Scan, Camouflage, Traverse, Focus, Field Notes, Backpack, Burst).
 
 ## Run Phases
 
@@ -144,56 +133,43 @@ Objective counting reads gem types from `phaseResult.matchGridState` (snapshot t
 - `node-complete` is a completion fact emitted once by `MainAppLayout`, not a request signal.
 - Analysis nodes use a panel button that emits `node-advance-requested`.
 
-## Planned Pressure-Loop Evolution
+## Spook Meter (Chase Pressure)
 
-### Goal
+The node bonus decay timer has been re-themed and mechanically upgraded into an **animal tracking / spook meter** with three outcome tiers per node.
 
-Recover some of YMBAB's momentum and flow-state without importing its most frustrating fail conditions.
+### Tier thresholds
 
-### Proposed hybrid model
+| Tier | % Range | Base reward | Bonus multiplier | Run effect |
+|------|---------|-------------|------------------|------------|
+| **Stabilized** | > 60% | 1.0x | 1.0x | Continue to next node |
+| **Spooked** | 20–60% | 0.75x | 0.5x | Continue with reduced rewards |
+| **Escaped** | ≤ 20% | 0.5x | 0x | Skip remaining nodes → Deduction Camp |
 
-Keep:
+- `SpookTier` type and `getSpookTier(pct)` helper in `src/types/expedition.ts`
+- Meter floor lowered from 40% to 20% to create the escaped zone
+- `node-bonus-tick` event now includes `tier: SpookTier`
+- `node-advance-requested` reason union includes `'escaped'`
 
-- 6-node expedition structure
-- per-node action-gem objectives
-- clue fragments
-- banked score
-- Deduction Camp
+### Escape behavior
 
-Change:
+When the spook meter drops to ≤ 20%, or moves are exhausted without completing the objective:
 
-- move limits become a secondary tuning lever instead of the primary source of pressure
-- the node bonus bar evolves into a more thematic **tracking / spook meter**
-- failing to stabilize the situation causes the animal to get farther away rather than causing direct defeat
+1. Game.ts stops the decay timer and emits `node-rewards-summary` with escaped tier multipliers
+2. Game.ts emits `node-advance-requested` with `reason: 'escaped'`
+3. MainAppLayout skips remaining nodes and transitions directly to `phase: 'deduction'`
+4. Player enters Deduction Camp with whatever banked score + fragments they accumulated
 
-### Animal-spook reinterpretation
+Spook state does **not** carry between nodes — each node resets fresh. The structural consequence of escape is fewer completed nodes (fewer fragments, less banked score), making Deduction Camp harder but still playable.
 
-The current node bonus system is the easiest bridge into this model.
+### Gem effect integration
 
-Short-term plan:
-
-- rename the node bonus readout in design terms to a tracking window / observation window
-- keep the same underlying timer-driven implementation while testing the fantasy
-- make `shield`-style effects read as stealth or camouflage buffering the escape risk
-- make `power`/`staff`-style effects read as observation burst or catch-up tools
-
-Long-term plan:
-
-- replace pure decay with a visible pursuit state
-- allow nodes to resolve as:
-  - **stabilized**: player keeps pace, gains best rewards
-  - **spooked**: animal escapes further, player takes a softer reward hit
-  - **escaped**: expedition ends early, player still proceeds to Deduction Camp with gathered evidence
+- `shield` (Camouflage) → `decay_slow` effect halves meter decay for 5s
+- `power` (Focus) → `score_multiply` effect boosts node payout
+- Moves exhausted during expeditions now triggers escape instead of the GameOver scene
 
 ### Why not a pure YMBAB treadmill
 
-A literal left-edge fail state would conflict with the explorer-science tone and with the low-stress goals of the project.
-
-The intended compromise is:
-
-- preserve live urgency
-- avoid harsh punishment
-- let partial-information runs still produce meaningful deduction gameplay
+A literal left-edge fail state would conflict with the explorer-science tone. The compromise: live urgency without harsh punishment, and partial-information runs still produce meaningful deduction gameplay.
 
 ## Encounters
 
@@ -221,17 +197,23 @@ Each encounter rolls against `dropChance` (0.15–0.6). Drops collected in `RunS
 - Action gems drive node scoring, encounters, and end-of-run deduction discounts.
 - `GemWallet` remains displayed for legacy resources and crate rewards, but the expedition clue loop is no longer based on direct clue reveals during board play.
 
-### Planned semantic remap
+### Gem semantic remap (implemented)
 
-As the chase model becomes more explicit, action gems should read less like combat abstractions and more like fieldwork verbs:
+Action gem labels have been re-themed from combat abstractions to fieldwork verbs. Code-level `GemType` enum values are unchanged; only display labels in `src/expedition/domain.ts` changed.
 
-- `sword` / `staff` → observation tools or data capture actions
-- `shield` → stealth / camouflage buffer
-- `key` → traversal tools for environmental blockers
-- `power` / `thought` → field notes, samples, and deduction leverage
-- `crate` → backpack supplies / consumables
+| Code value | Label | Effect |
+|------------|-------|--------|
+| `sword` | Observe | direct_score |
+| `staff` | Scan | trivia_boost |
+| `shield` | Camouflage | decay_slow (spook meter buffer) |
+| `key` | Traverse | open_cache |
+| `power` | Focus | score_multiply |
+| `thought` | Field Notes | clue_discount |
+| `crate` | Backpack | grant_consumable |
+| `multiplier` | Burst | combo_enhance |
 
-This is a presentation and encounter-design shift, not necessarily a required code-level rename on the first pass.
+Wallet currencies: Supplies, Focus, Insight, Samples.
+Consumables: Signal Flare, Bait, Trail Map, Field Kit.
 
 ## Route Trail (CesiumMap)
 
@@ -263,11 +245,13 @@ Initial node persistence now stores generated board context alongside rationale/
 
 ## Planned Next Steps
 
-1. Treat the existing node bonus meter as the first prototype of chase pressure rather than as a permanent scoring-only system.
+1. ~~Spook meter with stabilized/spooked/escaped tiers~~ — done
 2. Reduce the design importance of move caps so nodes feel less like discrete turn budgets.
-3. Introduce a visible tracking/escape state in the HUD before changing deeper board logic.
-4. Re-theme node encounters around animal behavior and field observation instead of combat-adjacent framing.
+3. ~~Visible tracking/escape state in the HUD~~ — done
+4. ~~Re-theme gems and encounters around fieldwork instead of combat~~ — done
 5. Keep Deduction Camp as the primary end-of-run sink and identity anchor.
+6. Tune spook meter decay rates and tier thresholds via playtesting.
+7. Support partial-run summaries in Deduction Camp for escaped expeditions.
 
 ## DB Tables
 

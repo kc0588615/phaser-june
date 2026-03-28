@@ -1,6 +1,8 @@
 # Expedition System Design Recommendations
 
-Recommendations based on the recent 12-gem / resource-wallet / board-pool work.
+Historical design memo from the transition into the current expedition board. This is not a runtime contract.
+
+Status note: the live board now uses an `action` / `loot` split rather than the older `knowledge` / `resource` terminology used in parts of this memo. Prefer [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) and [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) for current behavior.
 
 This is not a bug list. It is a design memo for improving the system architecture before battle, store, and crisis features add more state and event complexity.
 
@@ -10,8 +12,8 @@ This is not a bug list. It is a design memo for improving the system architectur
 
 The recent work moved the project in a good direction:
 
-- board gems now have two families: knowledge and resource
-- resource gem matches now update a real `resourceWallet`
+- board gems now have two families: action and loot
+- board-side rewards now update a real `resourceWallet`
 - board pool weighting can vary by node
 - the HUD and run-complete flow now read the player-facing wallet from `resourceWallet`
 
@@ -53,7 +55,7 @@ It should own:
 
 - gem definitions
 - resource definitions
-- knowledge-category definitions
+- clue-category definitions
 - node-mode definitions
 - node-type display metadata
 - default board config per node mode/type
@@ -61,13 +63,14 @@ It should own:
 Example structure:
 
 ```ts
-export const RESOURCE_KEYS = ['nature', 'water', 'knowledge', 'craft'] as const;
+export const ACTION_GEM_TYPES = ['sword', 'staff', 'shield', 'key'] as const;
+export const LOOT_GEM_TYPES = ['red', 'green', 'blue', 'orange'] as const;
 
 export const GEM_REGISTRY = {
-  red: { family: 'knowledge', clueCategory: 'classification', color: '#ef4444', icon: '🧬' },
-  green: { family: 'knowledge', clueCategory: 'habitat', color: '#22c55e', icon: '🌿' },
-  nature: { family: 'resource', resourceKey: 'nature', color: '#34d399', icon: '🍃' },
-  water: { family: 'resource', resourceKey: 'water', color: '#38bdf8', icon: '💧' },
+  red: { family: 'loot', clueCategory: 'classification', color: '#ef4444', icon: '🧬' },
+  green: { family: 'loot', clueCategory: 'habitat', color: '#22c55e', icon: '🌿' },
+  sword: { family: 'action', label: 'Observe', color: '#ef4444' },
+  staff: { family: 'action', label: 'Scan', color: '#6366f1' },
 } as const;
 
 export const NODE_TYPE_REGISTRY = {
@@ -166,8 +169,8 @@ Only one should survive. The old wallet is now mostly a compatibility shell, but
 
 There is similar leftover duplication elsewhere:
 
-- `GEM_DEFS` still uses legacy `nature_gem`-style keys
-- `resourceBias` still uses `nature_gem` / `water_gem` / etc.
+- older docs and helper names still refer to pre-domain terminology
+- event and node config assumptions still live in several files
 
 ### Recommendation
 
@@ -176,18 +179,9 @@ Do a cleanup pass soon, before store/battle logic depends on the wrong structure
 ### Suggested cleanup
 
 1. Remove `gemWallet` from `RunState`.
-2. Rename `resourceBias` keys from:
-   - `nature_gem`
-   - `water_gem`
-   - `knowledge_gem`
-   - `craft_gem`
-   to:
-   - `nature`
-   - `water`
-   - `knowledge`
-   - `craft`
-3. Delete `GEM_DEFS` and replace it with canonical resource defs from the domain module.
-4. Update any persistence/API payloads to use only the new wallet shape.
+2. Remove or rename any leftover helpers that still encode pre-domain naming.
+3. Delete duplicate gem metadata and replace it with canonical defs from the domain module.
+4. Update persistence/API payloads to use the canonical current wallet and node shapes only.
 
 ### Benefits
 
@@ -288,9 +282,9 @@ interface RunNode {
   mode: NodeMode;
   difficulty: 1 | 2 | 3 | 4 | 5;
   boardConfig?: {
-    resourceWeight: number;
-    allowKnowledgeGems: boolean;
-    allowResourceGems: boolean;
+    lootChance: number;
+    allowLootGems: boolean;
+    allowActionGems: boolean;
   };
   objective: {
     kind: 'required_gem_match' | 'survive' | 'defeat_creature' | 'choice' | 'shop';
@@ -427,4 +421,3 @@ That gives the rest of the feature work a stable base:
 - one place for persistence decisions
 
 Without that, every new feature will keep adding more “temporary” glue in UI and scene code.
-

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic, ClueCategoryKey, ClueFragments, NodeRewardLanes } from '@/types/expedition';
+import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic, ClueCategoryKey, ClueFragments, NodeRewardLanes, SpookTier } from '@/types/expedition';
 import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
@@ -116,7 +116,7 @@ export interface EventPayloads {
   };
   'node-advance-requested': {
     nodeIndex: number;
-    reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved';
+    reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved' | 'escaped';
     source: 'game' | 'panel';
   };
   'node-complete': { nodeIndex: number };
@@ -124,7 +124,7 @@ export interface EventPayloads {
   'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
   'souvenir-dropped': { souvenir: SouvenirDef };
   // New economy events
-  'node-bonus-tick': { currentPool: number; startPool: number; pct: number };
+  'node-bonus-tick': { currentPool: number; startPool: number; pct: number; tier: SpookTier };
   'clue-fragment-earned': { category: ClueCategoryKey; amount: number; source: 'loot_match' | 'key_cache' | 'node_reward' };
   'clue-discount-earned': { amount: number; source: 'thought_match' };
   'trivia-unlocked': { triviaId: string; scoreReward: number };

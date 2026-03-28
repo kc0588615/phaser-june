@@ -435,8 +435,8 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
   const handleMapClick = useCallback((movement: any) => { // Typed movement
     if (!viewerRef.current || !viewerRef.current.cesiumElement || isLoading) return;
 
-    // Block clicks during active expedition
-    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'briefing' || runPhaseRef.current === 'deduction') {
+    // Block clicks during active expedition (briefing is dismissible, allow re-clicking)
+    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'deduction') {
       setShowInfoBox(true);
       setInfoBoxData({ habitats: [], species: [], message: 'Complete the current expedition first.' });
       return;

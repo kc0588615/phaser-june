@@ -7,6 +7,14 @@ export type { RunNode };
 
 export type RunPhase = 'idle' | 'briefing' | 'in-run' | 'deduction' | 'complete';
 
+export type SpookTier = 'stabilized' | 'spooked' | 'escaped';
+
+export function getSpookTier(pct: number): SpookTier {
+  if (pct > 0.6) return 'stabilized';
+  if (pct > 0.2) return 'spooked';
+  return 'escaped';
+}
+
 export interface ExpeditionData {
   nodes: RunNode[];
   bioregion: { bioregion: string | null; realm: string | null; biome: string | null } | null;
@@ -164,6 +172,7 @@ export interface NodeRewardLanes {
   preservedNodeBonus: number;
   triviaReward: number;
   clueFragmentReward: Partial<Record<ClueCategoryKey, number>>;
+  tier: SpookTier;
 }
 
 /** Escalating cost for nth clue purchase in a category */

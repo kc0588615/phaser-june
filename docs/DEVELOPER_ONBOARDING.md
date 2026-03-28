@@ -60,11 +60,11 @@ npm run start    # http://localhost:3000
 - Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes` tables.
 
 ## 3) Recommended Reading Path
-1) **Core architecture:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md).
+1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../CLAUDE.md](../CLAUDE.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
-5) **Expedition run loop:** [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
+5) **Partial runtime / schema context:** [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md), [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md).
 6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
 7) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
 8) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
@@ -79,11 +79,12 @@ npm run start    # http://localhost:3000
 
 **Expedition Run Loop**
 - [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) — run phases, node generation, encounters, souvenirs, gem wallet, route trail.
-- [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) — GIS layer scoring, node family taxonomy, DB schema.
-- [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md) — first-pass action-gem conversion, loot-gem demotion, and crate consumable pipeline.
+- [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md) — banked score, clue fragments, Deduction Camp, spook-tier rewards.
+- [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) — GIS layer scoring, node family taxonomy, DB schema; partially forward-looking.
+- [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md) — historical handoff for the action/loot conversion.
 
 **Game Board & Clues**
-- [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md) — match-3 board, clue emission.
+- [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md) — historical/free-play clue-board flow; not the expedition runtime source of truth.
 - [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md) — species progression and discovery flow.
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — habitat hit/highlight flow.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG integration for habitat stats.
@@ -141,13 +142,14 @@ npm run start    # http://localhost:3000
 - **Data access:** `src/lib/speciesService.ts` (RPCs), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (session + telemetry).
 
 ## 6) Gem Assets & Clue Mapping (current build)
-- Gem types loaded: 8 colors (`black`, `blue`, `green`, `orange`, `red`, `white`, `yellow`, `purple`). Pink art files exist in `public/assets/` but are not loaded because `pink` is not in `GEM_TYPES`.
-- Asset files: `{color}_gem_{frame}.png`, frames `0-7` (0 = idle, 1-7 = explosion), served from `public/assets/` via the `assets/` base path.
-- Total gem assets used: 64 images (8 types × 8 frames), plus `bg.png`, `logo.png`, and `Owl_spritesheet.png`.
+- Runtime gem pool: 16 total types — 8 action gems and 8 loot gems in `src/expedition/domain.ts`.
+- Only the 8 loot gems (`black`, `blue`, `green`, `orange`, `red`, `white`, `yellow`, `purple`) currently use sprite assets from `public/assets/`. Action gems use generated placeholder textures at runtime.
+- Loot asset files: `{color}_gem_{frame}.png`, frames `0-7` (0 = idle, 1-7 = explosion), served from `public/assets/` via the `assets/` base path.
+- Total shipped loot gem images: 64 (8 loot types × 8 frames), plus `bg.png`, `logo.png`, and `Owl_spritesheet.png`.
 - Habitat-to-gem mapping for board seeding (`HABITAT_GEM_MAP`): Forests (100-109) → green; Savannas (200-202) → orange; Shrublands (300-308) → black; Grasslands (400-407) → white; Wetlands (500-518) → blue; Urban/Artificial (1400-1406) → red; default/unknown → white.
 - Green gem clues are not from the ICAA species text table; they consume Cesium `rasterHabitat` results (`habitat_type`, `percentage`) in the order returned (service currently returns highest % first), emitting `Search Area is {percentage}% {habitat_type}` until exhausted.
 
-**Clue sources by gem (matches map through `src/game/gemSemantics.ts`)**
+**Loot clue sources by gem (matches map through `src/game/gemSemantics.ts`)**
 
 | Color (asset key) | Category | Icon | Clue source (progressive order) | Example output |
 | --- | --- | --- | --- | --- |

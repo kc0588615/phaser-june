@@ -1,6 +1,6 @@
 # Action Run Schema + GIS Source Map
 
-This document pairs the new run schema with GIS signals you can wire into node generation.
+Current schema + GIS reference for expedition generation. The database and signal-key sections describe current runtime contracts; some challenge and upgrade ideas below are still forward-looking design notes.
 
 Related migration: `src/db/migrations/007_action_run_loop_schema.sql`
 Related migration: `src/db/migrations/008_protected_planet_parcels.sql`
@@ -8,7 +8,7 @@ Related migration: `src/db/migrations/008_protected_planet_parcels.sql`
 ## Core Data Flow
 
 1. Player clicks map location -> create `eco_run_sessions`.
-2. Route generator creates 5-7 nodes -> insert `eco_run_nodes`.
+2. Route generator creates 6 nodes -> insert `eco_run_nodes`.
 3. For each node, sample GIS layers -> insert `eco_node_gis_samples`.
 4. Node play results -> write `eco_node_attempts`.
 5. Species/clue outcomes remain in existing tables, now linked via `run_id` / `run_node_id`.
@@ -119,29 +119,42 @@ Persist to `eco_node_gis_samples`:
 - `signal_value_numeric`: computed value
 - `signal_payload`: feature identifiers used in scoring
 
-## Gem and Resource Economy
+## Board Economy Snapshot
 
-### Base Gem Types
+### Gem families
 
-1. `nature_gem` → wood, fiber
-2. `water_gem` → navigation charge, resin
-3. `knowledge_gem` → research points
-4. `craft_gem` → parts, textile
+- The board now uses **8 action gems** plus **8 rarer loot gems**.
+- GIS generation returns `action_bias`, which weights action-gem spawning per expedition.
+- Loot-gem frequency is controlled separately by node board config (`lootChance`), not by `action_bias`.
+- Action gems drive node objectives and most run-side effects.
+- Loot gems award clue fragments by category during expeditions.
 
-### Expedition Tool Recipes
+### Action gems
 
-- `raft_kit` = wood + fiber
-- `lake_boat_kit` = wood + resin + parts
-- `ocean_boat_kit` = textile + parts + research
-- `stealth_field_kit` = textile + research
-- `survey_scanner_kit` = research + parts
+- `sword` → Observe
+- `staff` → Scan
+- `shield` → Camouflage
+- `key` → Traverse
+- `crate` → Backpack
+- `power` → Focus
+- `thought` → Field Notes
+- `multiplier` → Burst
 
-### Home Base Upgrade Tracks
+### Loot gems
 
-1. `workshop`: better crafting conversion rates
-2. `dockyard`: better water traversal and tool durability
-3. `research_lab`: stronger clue decoding and node forecasting
-4. `community_liaison`: bonuses in `community_node` challenges
+- `red` → classification
+- `green` → habitat
+- `blue` → geographic
+- `orange` → morphology
+- `yellow` → behavior
+- `black` → life_cycle
+- `white` → conservation
+- `purple` → key_facts
+
+### Wallet + crate effects
+
+- The expedition wallet still tracks `gold`, `power`, `thought`, and `dust`.
+- Crate action-gem matches can also roll consumables such as Signal Flare, Bait, Trail Map, and Field Kit.
 
 ## Mission Node JSON Contract
 
@@ -162,11 +175,15 @@ Target response from `/api/protected-areas/at-point`:
   "primary_node_family": "water_node",
   "primary_variant": "river",
   "modifier_nodes": ["protected_node:strict_pa", "bioregion_node:tropical_forest"],
-  "resource_bias": {
-    "nature_gem": 0.35,
-    "water_gem": 0.40,
-    "knowledge_gem": 0.15,
-    "craft_gem": 0.10
+  "action_bias": {
+    "shield": 0.22,
+    "power": 0.18,
+    "staff": 0.16,
+    "crate": 0.12,
+    "thought": 0.10,
+    "key": 0.08,
+    "sword": 0.08,
+    "multiplier": 0.06
   },
   "generated_nodes": [...],
   "protected_areas": [...],
@@ -183,7 +200,7 @@ Target response from `/api/protected-areas/at-point`:
 For reproducibility, persist:
 
 - `eco_run_nodes.board_seed`
-- `eco_run_nodes.board_context` (8x8 cell summary)
+- `eco_run_nodes.board_context` (6×8 cell summary)
 - `eco_node_gis_samples` records for each signal used
 
 ## Minimal Seed Rows for `eco_gis_layers`

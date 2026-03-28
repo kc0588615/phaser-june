@@ -1,6 +1,8 @@
 # YMBAB Conversion
 
-System-level handoff for the first-pass conversion from the legacy clue-first board model to a **You Must Build A Boat**-inspired action board.
+Historical handoff for the first-pass conversion from the legacy clue-first board model to a **You Must Build A Boat**-inspired action board.
+
+Status note: this doc is still useful for understanding the shift into the action/loot board, but it is no longer the runtime source of truth. Prefer [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), and [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md) for current behavior.
 
 Read this after [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) and [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md).
 
@@ -35,7 +37,7 @@ This is intentionally an early structural conversion, not a full combat/economy 
 
 - the board uses an `action/loot` split
 - node goals are action-gem goals
-- clue reveals come from rare loot gem matches
+- expedition loot matches award clue fragments, with clue reveals moved to Deduction Camp purchases
 - crate matches create consumables
 - expedition spawning is configured by explicit board config, not a single resource-weight scalar
 
@@ -165,7 +167,7 @@ The old node templates used clue-color pairs. They now use action-gem pairs.
 
 API payload change:
 
-- old: `resource_bias`
+- legacy payload key: `resource_bias`
 - new: `action_bias`
 
 Touched files:
@@ -197,13 +199,13 @@ Primary files:
 
 ### Current consumables
 
-- `Fireball`
+- `Signal Flare`
   - simple score burst
-- `Food`
+- `Bait`
   - simple objective push
-- `Shell`
+- `Trail Map`
   - simple move buffer
-- `Tile Bomb`
+- `Field Kit`
   - queues helpful gems into future spawns
 
 These effects are intentionally simple and can be expanded later into richer battle logic.
@@ -217,7 +219,7 @@ Primary file:
 The scene now resolves matches in a more YMBAB-like split:
 
 - action gems contribute to run economy and node goals
-- loot gems contribute clue reveals and rare dust payout
+- loot gems contribute clue fragments and rare dust payout
 - crates create consumables
 - multiplier gems currently add a small direct score effect
 
@@ -227,8 +229,8 @@ Clue progression still exists, but it is no longer the board's primary role.
 
 Loot gems are now the bridge back into:
 
-- species clue reveals
-- clue-category progress
+- clue fragments by category
+- Deduction Camp clue purchases
 - species guessing flow
 
 ## UI Changes

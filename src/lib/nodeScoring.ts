@@ -195,13 +195,13 @@ function computeActionBias(primary: NodeFamily, scores: LayerScore[]): Partial<R
 
 /** Node templates keyed by node_type — action gem pairs drive YMBAB-style node goals. */
 const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
-  riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['shield', 'power'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity emphasizes defense and momentum.' },
-  dense_canopy: { node_type: 'dense_canopy', requiredGems: ['sword', 'crate'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Canopy routes lean on clearing brush and scavenging tools.' },
-  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['key', 'thought'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Urban edges favor unlocks, planning, and route reading.' },
-  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['staff', 'shield'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Ridges reward control, coverage, and survival pressure.' },
-  storm_window: { node_type: 'storm_window', requiredGems: ['power', 'multiplier'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'Storm nodes convert urgency into burst turns.' },
-  custom: { node_type: 'custom', requiredGems: ['crate', 'thought'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Custom nodes mix improvisation with discovery tools.' },
-  analysis: { node_type: 'analysis', requiredGems: [], obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route deduction and wager phase.' },
+  riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['shield', 'power'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity rewards stealth and focused observation.' },
+  dense_canopy: { node_type: 'dense_canopy', requiredGems: ['sword', 'crate'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Canopy routes lean on observation and supply management.' },
+  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['key', 'thought'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Urban edges favor traversal, field notes, and route reading.' },
+  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['staff', 'shield'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Ridges reward scanning, camouflage, and careful positioning.' },
+  storm_window: { node_type: 'storm_window', requiredGems: ['power', 'multiplier'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'Storm nodes convert urgency into focused burst tracking.' },
+  custom: { node_type: 'custom', requiredGems: ['crate', 'thought'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Custom nodes mix improvisation with field note gathering.' },
+  analysis: { node_type: 'analysis', requiredGems: [], obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route evidence review and species identification.' },
 };
 
 /** Unified 6-node run generator. Derives all nodes from layer scores + habitat context. */

@@ -55,7 +55,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   sword: {
     gemType: 'sword',
     family: 'action',
-    label: 'Sword',
+    label: 'Observe',
     color: '#dc2626',
     clueCategory: null,
     currencyKey: null,
@@ -64,7 +64,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   staff: {
     gemType: 'staff',
     family: 'action',
-    label: 'Staff',
+    label: 'Scan',
     color: '#6366f1',
     clueCategory: null,
     currencyKey: null,
@@ -73,7 +73,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   shield: {
     gemType: 'shield',
     family: 'action',
-    label: 'Shield',
+    label: 'Camouflage',
     color: '#94a3b8',
     clueCategory: null,
     currencyKey: null,
@@ -82,7 +82,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   key: {
     gemType: 'key',
     family: 'action',
-    label: 'Key',
+    label: 'Traverse',
     color: '#f59e0b',
     clueCategory: null,
     currencyKey: 'gold',
@@ -91,7 +91,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   crate: {
     gemType: 'crate',
     family: 'action',
-    label: 'Crate',
+    label: 'Backpack',
     color: '#b45309',
     clueCategory: null,
     currencyKey: 'gold',
@@ -101,7 +101,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   power: {
     gemType: 'power',
     family: 'action',
-    label: 'Power',
+    label: 'Focus',
     color: '#06b6d4',
     clueCategory: null,
     currencyKey: 'power',
@@ -110,7 +110,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   thought: {
     gemType: 'thought',
     family: 'action',
-    label: 'Thought',
+    label: 'Field Notes',
     color: '#10b981',
     clueCategory: null,
     currencyKey: 'thought',
@@ -119,7 +119,7 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
   multiplier: {
     gemType: 'multiplier',
     family: 'action',
-    label: 'Multiplier',
+    label: 'Burst',
     color: '#ec4899',
     clueCategory: null,
     currencyKey: null,
@@ -254,10 +254,10 @@ export const WALLET_DEFS: Array<{
   color: string;
   shortLabel: string;
 }> = [
-  { key: 'gold', label: 'Gold', color: '#fbbf24', shortLabel: 'G' },
-  { key: 'power', label: 'Power', color: '#06b6d4', shortLabel: 'P' },
-  { key: 'thought', label: 'Thought', color: '#10b981', shortLabel: 'T' },
-  { key: 'dust', label: 'Dust', color: '#c084fc', shortLabel: 'D' },
+  { key: 'gold', label: 'Supplies', color: '#fbbf24', shortLabel: 'S' },
+  { key: 'power', label: 'Focus', color: '#06b6d4', shortLabel: 'F' },
+  { key: 'thought', label: 'Insight', color: '#10b981', shortLabel: 'I' },
+  { key: 'dust', label: 'Samples', color: '#c084fc', shortLabel: 'Sa' },
 ];
 
 export type ConsumableEffectType = 'score_burst' | 'objective_push' | 'move_buffer' | 'queue_boost';
@@ -277,25 +277,25 @@ export interface ConsumableItem extends ConsumableBlueprint {
 export const CRATE_ITEM_BLUEPRINTS: ConsumableBlueprint[] = [
   {
     id: 'fireball',
-    name: 'Fireball',
-    description: '+75 score and primes combat pressure.',
+    name: 'Signal Flare',
+    description: '+75 score. Illuminates the tracking area.',
     effectType: 'score_burst',
   },
   {
     id: 'food',
-    name: 'Food',
+    name: 'Bait',
     description: '+2 node objective progress.',
     effectType: 'objective_push',
   },
   {
     id: 'shell',
-    name: 'Shell',
+    name: 'Trail Map',
     description: '+3 max moves for this node.',
     effectType: 'move_buffer',
   },
   {
     id: 'tile_bomb',
-    name: 'Tile Bomb',
+    name: 'Field Kit',
     description: 'Queues action gems for the next refill.',
     effectType: 'queue_boost',
   },

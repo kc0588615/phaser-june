@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 interface Props {
   expedition: ExpeditionData;
   onStart: () => void;
+  onClose?: () => void;
 }
 
-export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart }) => {
+export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClose }) => {
   const avgDifficulty = expedition.nodes.length > 0
     ? expedition.nodes.reduce((sum, n) => sum + n.difficulty, 0) / expedition.nodes.length
     : 0;
@@ -28,9 +29,29 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart }) => 
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0, fontSize: '18px', color: '#67e8f9' }}>Expedition Briefing</h2>
-        <Badge variant="outline" style={{ color: '#fbbf24', borderColor: '#fbbf24' }}>
-          Difficulty: {avgDifficulty.toFixed(1)} / 5
-        </Badge>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <Badge variant="outline" style={{ color: '#fbbf24', borderColor: '#fbbf24' }}>
+            Difficulty: {avgDifficulty.toFixed(1)} / 5
+          </Badge>
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: '1px solid #475569',
+                borderRadius: '6px',
+                color: '#94a3b8',
+                fontSize: '16px',
+                lineHeight: 1,
+                padding: '4px 8px',
+                cursor: 'pointer',
+              }}
+              title="Back to map"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Location */}

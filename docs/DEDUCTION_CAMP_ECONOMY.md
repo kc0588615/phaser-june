@@ -1,6 +1,6 @@
 # Deduction Camp & Banked-Score Economy
 
-Rework of the expedition economy from direct-clue-reveal to banked-score + clue-fragment + end-of-run deduction camp. Also covers the YMBAB board visual changes and the planned hybrid chase integration.
+Current expedition-economy doc for the shipped loop: banked score + clue fragments + Deduction Camp. It also notes a few typed hooks and planned expansions that are not fully realized yet.
 
 Read after [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md) and [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md).
 
@@ -12,7 +12,7 @@ The new system:
 
 - Loot gem matches during runs earn **clue fragments** (category-specific counters) instead of immediate clue reveals
 - Match score is **banked** per node (never lost)
-- After all nodes, a **Deduction Camp** phase opens where banked score buys clue reveals
+- After the route finishes, or after an early escape, a **Deduction Camp** phase opens where banked score buys clue reveals
 - Fragments provide purchase discounts
 - Player guesses the species when confident
 
@@ -112,26 +112,29 @@ New fields added to `RunState`:
 
 - `bankedScore: number` — accumulated research score across nodes
 - `clueFragments: ClueFragments` — category-specific fragment counts
-- `triviaUnlocked: string[]` — trivia IDs found during run
+- `triviaUnlocked: string[]` — typed placeholder for future trivia content; currently remains empty in the expedition loop
 - `deductionCamp: DeductionCampState | null` — populated when entering deduction phase
-- `currentNodeBonus: NodeBonusState | null` — active decay timer state
+- `currentNodeBonus: NodeBonusState | null` — typed placeholder for persisted spook state; current React UI reads live `node-bonus-tick` events instead
 - `lastNodeRewards: NodeRewardLanes | null` — most recent node reward breakdown
 - `finalScore: number | null` — populated after a correct deduction
 - `totalThoughtDiscount: number` — accumulated end-of-run clue-shop discount from thought matches
 
-## New Events
+## Active Economy Events
 
 **File:** `src/game/EventBus.ts`
 
 | Event | Payload | Source → Consumer |
 |-------|---------|-------------------|
-| `node-bonus-tick` | `{ currentPool, startPool, pct }` | Game.ts → ActiveEncounterPanel |
+| `node-bonus-tick` | `{ currentPool, startPool, pct, tier }` | Game.ts → ActiveEncounterPanel |
 | `clue-fragment-earned` | `{ category, amount, source }` | Game.ts → MainAppLayout |
 | `clue-discount-earned` | `{ amount, source }` | Game.ts → MainAppLayout |
-| `trivia-unlocked` | `{ triviaId, scoreReward }` | Game.ts → MainAppLayout |
 | `node-rewards-summary` | `NodeRewardLanes` | Game.ts → MainAppLayout |
 | `deduction-camp-purchase` | `{ category, cost }` | MainAppLayout → Game.ts |
-| `deduction-camp-guess` | `{ guessedName, speciesId }` | MainAppLayout → Game.ts |
+
+Typed in the EventBus but not active end-to-end in the current expedition runtime:
+
+- `trivia-unlocked`
+- `deduction-camp-guess`
 
 ## Gem Effect System
 
@@ -139,17 +142,17 @@ New fields added to `RunState`:
 
 Pure function `getGemEffects(gemType, matchSize) → GemEffect[]`:
 
-| Gem | Effect | Description |
-|-----|--------|-------------|
-| sword | `direct_score` | Adds score directly |
-| staff | `trivia_boost` | Increases trivia roll chance |
-| shield | `decay_slow` | Halves node bonus decay for 5s |
-| key | `open_cache` | Rolls score/trivia/fragment |
-| power | `score_multiply` | Multiplies node score payout |
-| thought | `clue_discount` | Reduces end-run clue costs |
-| crate | `grant_consumable` | Same as prior YMBAB behavior |
-| multiplier | `combo_enhance` | Temporary combo boost |
-| loot gems (8) | `clue_fragment` | Category-specific fragment by `LOOT_CATEGORY_MAP` |
+| Gem (code) | Label | Effect | Description |
+|------------|-------|--------|-------------|
+| sword | Observe | `direct_score` | Adds score directly |
+| staff | Scan | `trivia_boost` | Increases trivia roll chance |
+| shield | Camouflage | `decay_slow` | Halves spook meter decay for 5s |
+| key | Traverse | `open_cache` | Rolls score/trivia/fragment |
+| power | Focus | `score_multiply` | Multiplies node score payout |
+| thought | Field Notes | `clue_discount` | Reduces end-run clue costs |
+| crate | Backpack | `grant_consumable` | Rolls a consumable item |
+| multiplier | Burst | `combo_enhance` | Temporary combo boost |
+| loot gems (8) | (by color) | `clue_fragment` | Category-specific fragment by `LOOT_CATEGORY_MAP` |
 
 ### Loot → Category mapping
 
@@ -175,60 +178,37 @@ During expeditions (`inExpeditionRun === true`):
 - Loot gem matches emit `clue-fragment-earned` instead of `clue-revealed`
 - Free-play retains the old direct-reveal behavior unchanged
 
-## Node Bonus Decay Timer
+## Spook Meter
 
 **File:** `src/game/scenes/Game.ts`
 
-New properties on the Game scene:
+The former "node bonus decay timer" is now a **spook meter** with three outcome tiers. See [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md#spook-meter-chase-pressure) for full details.
 
-- `nodeBonusPool` / `nodeBonusStart` / `nodeBonusDecayRate` / `nodeBonusFloorPct`
+### Properties
+
+- `nodeBonusPool` / `nodeBonusStart` / `nodeBonusDecayRate` / `nodeBonusFloorPct` (floor = 0.2)
 - `nodeBonusShieldSlow` / `nodeBonusShieldExpiry`
 - `nodeBonusTimer` — Phaser `time.addEvent` at 1s interval
 
-### Behavior
+### Tier multipliers
 
-- Init in `initializeBoardFromCesium` when `inExpeditionRun` — pool derived from difficulty: easy=80, medium=120, hard=180
-- Decrements by `decayRate * (shieldSlow ? 0.5 : 1)` each tick
-- Floors at 40% of start pool
-- Emits `node-bonus-tick` each second
-- Destroyed on node completion via `stopNodeBonusDecayAndEmitRewards()`
+| Tier | % Range | Base reward | Bonus multiplier | Run effect |
+|------|---------|-------------|------------------|------------|
+| Stabilized | > 60% | 1.0x | 1.0x | Continue |
+| Spooked | 20–60% | 0.75x | 0.5x | Continue |
+| Escaped | ≤ 20% | 0.5x | 0x | Skip to Deduction Camp |
 
 ### UI
 
 **File:** `src/components/ActiveEncounterPanel.tsx`
 
-- Listens for `node-bonus-tick`, displays a color-coded bar (green → amber → red)
+- Listens for `node-bonus-tick` (now includes `tier: SpookTier`)
+- Displays "Tracking" label with tier-specific text: Stabilized / Spooked! / Escaping...
+- Color-coded bar: green > 60%, amber 20-60%, red ≤ 20%
 
-## Planned Integration With Chase Pressure
+### Escape → Deduction Camp
 
-The current node bonus timer is functional, but it is best treated as a transitional system.
-
-### Current role
-
-- supplies soft urgency
-- rewards faster node clears
-- never removes banked progress
-
-### Planned role
-
-This meter is the natural bridge into the planned **animal tracking / spook** model:
-
-- the bar can evolve from "bonus preserved" into "tracking window" or "animal calm"
-- `shield`-style effects become stealth/camouflage buffering escape risk
-- node failure can branch into softer outcomes than hard defeat:
-  - reduced rewards
-  - increased escape pressure
-  - early end to expedition, followed by Deduction Camp
-
-### Important constraint
-
-The game should not re-import YMBAB's harshest punishment blindly.
-
-Design target:
-
-- more momentum than the current move-cap-heavy loop
-- less frustration than literal pushback-to-death
-- Deduction Camp remains relevant even on imperfect runs
+When the meter hits escaped (or moves are exhausted during an expedition), MainAppLayout skips remaining nodes and transitions directly to `phase: 'deduction'`. The player enters Deduction Camp with partial evidence — fewer fragments and less banked score, but still playable.
 
 ## Score Banking
 
@@ -369,7 +349,7 @@ Added `'deduction'` to the guard that blocks map clicks during runs.
 | `src/game/BoardView.ts` | Gem gap removed (0.9 → 1.0 scale) |
 | `src/game/scenes/Game.ts` | Board calc, gem effects pipeline, bonus decay timer, node rewards, deduction purchase handler, expedition guards on clue reveal |
 | `src/types/expedition.ts` | New types, RunPhase extended with 'deduction', RunState extended |
-| `src/game/EventBus.ts` | 6 new typed events |
+| `src/game/EventBus.ts` | Typed expedition economy events (only a subset are active end-to-end today) |
 | `src/MainAppLayout.tsx` | RunState extensions, deduction phase, new handlers, clue list removal |
 | `src/components/ActiveEncounterPanel.tsx` | Node bonus decay bar |
 | `src/components/CesiumMap.tsx` | Deduction phase click guard |
@@ -380,17 +360,20 @@ Added `'deduction'` to the guard that blocks map clicks during runs.
 
 ## Current Limitations
 
-- Node bonus decay timer values (pool sizes, decay rate) are first-pass estimates — need playtesting
+- Spook meter decay rates and tier thresholds (60%/20%) are first-pass estimates — need playtesting
 - Clue shop costs (40/70/110 escalation, fragment discount formula) need tuning
 - Guess bonuses (250 base, 200/100/25 efficiency tiers) need balancing
-- Trivia system (`trivia_boost`, `trivia-unlocked`) events are wired but no trivia content exists yet
+- Scan/trivia hooks exist, but there is no real trivia content pipeline yet
 - `score_multiply` and `clue_discount` gem effects accumulate per-node but reset between nodes
 - Free-play mode retains the old direct-clue-reveal behavior unchanged
+- Escaped expeditions do not yet show a partial-run summary before Deduction Camp
 
 ## Planned Next Steps
 
 1. Keep Deduction Camp as the stable meta loop while experimentation happens in the live node pressure model.
-2. Re-theme the existing action-gem effects around field observation, stealth, traversal, notes, and supplies.
-3. Prototype an "animal spook" or "tracking window" readout by reusing the current node bonus channel before changing progression rules.
-4. Support early expedition termination by carrying partial score and clue fragments into Deduction Camp instead of treating it as a full failure.
+2. ~~Re-theme the existing action-gem effects around field observation, stealth, traversal, notes, and supplies.~~ — done
+3. ~~Prototype an "animal spook" or "tracking window" readout by reusing the current node bonus channel.~~ — done
+4. ~~Support early expedition termination by carrying partial score and clue fragments into Deduction Camp.~~ — done
 5. Tune clue pricing and wrong-guess penalties around low-stress play, not around YMBAB-level panic pacing.
+6. Add partial-run summary UI for escaped expeditions entering Deduction Camp.
+7. Playtest spook meter decay rates to find the right balance of urgency vs. accessibility.

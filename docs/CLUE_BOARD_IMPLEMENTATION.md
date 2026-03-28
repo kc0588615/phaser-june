@@ -1,11 +1,13 @@
 # Clue Board Implementation Guide
 
-Current clue-system doc. The historical implementation notes below are still useful, but the active contract is:
+Historical/free-play clue-system doc. The implementation notes below are still useful, but expedition runtime truth now lives in [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), and [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md).
+
+What still holds:
 
 - Phaser owns clue generation.
 - React owns clue display.
-- Gem color currently equals clue category.
-- `clue-revealed` also feeds expedition gem-wallet rewards.
+- Loot-gem color equals clue category.
+- `clue-revealed` is used by free-play clue reveals and Deduction Camp purchases, not as the expedition reward loop.
 
 Read [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) and [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) before changing gem semantics.
 
@@ -193,7 +195,7 @@ EventBus.emit('clue-revealed', {
 
 ## Important Constraint
 
-Because gem color is both:
+Because loot-gem color is both:
 
 - a board mechanic input
 - a clue category identifier
