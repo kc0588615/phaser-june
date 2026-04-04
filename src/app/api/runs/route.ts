@@ -8,17 +8,18 @@ import { buildNodeBoardContext } from '@/game/nodeObstacles';
  * POST /api/runs
  * Create a new expedition run session with 6 pre-generated nodes.
  *
- * Body: { lon, lat, locationKey, nodes: RunNode[], bioregion?, realm?, biome?, runSeed? }
+ * Body: { lon, lat, locationKey, nodes: RunNode[], activeAffinities?, bioregion?, realm?, biome?, runSeed? }
  * Returns: { runId, nodeIds: string[] }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { lon, lat, locationKey, nodes, bioregion, realm, biome, runSeed } = body as {
+    const { lon, lat, locationKey, nodes, activeAffinities, bioregion, realm, biome, runSeed } = body as {
       lon: number;
       lat: number;
       locationKey: string;
       nodes: RunNode[];
+      activeAffinities?: string[];
       bioregion?: string;
       realm?: string;
       biome?: string;
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
         biome: biome ?? null,
         bioregion: bioregion ?? null,
         runStatus: 'active',
+        metadata: { activeAffinities: activeAffinities ?? [] },
       })
       .returning({ id: ecoRunSessions.id });
 
@@ -60,9 +62,16 @@ export async function POST(request: NextRequest) {
       nodeOrder: i + 1,
       nodeType: node.node_type,
       nodeStatus: i === 0 ? 'active' : 'locked',
-      hazardProfile: { obstacles: node.obstacles, events: node.events, requiredGems: node.requiredGems ?? [] },
+      hazardProfile: {
+        obstacles: node.obstacles,
+        events: node.events,
+        requiredGems: node.requiredGems ?? [],
+        counterGem: node.counterGem ?? null,
+        obstacleFamily: node.obstacleFamily ?? null,
+      },
+      toolProfile: { activeAffinities: activeAffinities ?? [] },
       boardContext: { rationale: node.rationale, difficulty: node.difficulty, ...boardContext },
-      objectiveType: (node.requiredGems?.length ?? 0) > 0 ? 'required_gem_match' : 'any',
+      objectiveType: node.counterGem ? 'counter_gem_match' : 'any',
       objectiveTarget: node.objectiveTarget ?? 0,
     };
     });

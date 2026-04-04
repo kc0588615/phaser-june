@@ -6,7 +6,11 @@
  */
 
 import type { ActionGemType, GemType } from '@/game/constants';
-import type { NodeObstacle } from '@/game/nodeObstacles';
+import {
+  getCounterGemForObstacleFamily,
+  type NodeObstacle,
+  type ObstacleFamily,
+} from '@/game/nodeObstacles';
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 
@@ -33,6 +37,8 @@ export interface RunNode {
   obstacles: NodeObstacle[];
   events: string[];
   rationale: string;
+  counterGem: ActionGemType | null;
+  obstacleFamily: ObstacleFamily | null;
   requiredGems: GemType[];
   objectiveTarget: number;
 }
@@ -193,15 +199,76 @@ function computeActionBias(primary: NodeFamily, scores: LayerScore[]): Partial<R
   return bias;
 }
 
-/** Node templates keyed by node_type — action gem pairs drive YMBAB-style node goals. */
+function createNodeTemplate(config: {
+  node_type: string;
+  obstacles: NodeObstacle[];
+  events: string[];
+  rationale: string;
+  obstacleFamily: ObstacleFamily | null;
+}): Omit<RunNode, 'difficulty' | 'objectiveTarget'> {
+  const counterGem = config.obstacleFamily ? getCounterGemForObstacleFamily(config.obstacleFamily) : null;
+  return {
+    node_type: config.node_type,
+    obstacles: config.obstacles,
+    events: config.events,
+    rationale: config.rationale,
+    obstacleFamily: config.obstacleFamily,
+    counterGem,
+    requiredGems: counterGem ? [counterGem] : [],
+  };
+}
+
+/** Node templates keyed by node_type — compatibility keeps requiredGems derived from counterGem. */
 const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
-  riverbank_sweep: { node_type: 'riverbank_sweep', requiredGems: ['shield', 'power'], obstacles: ['flow_shift', 'mud_tiles'], events: ['amphibian_signal', 'river_crossing'], rationale: 'River proximity rewards stealth and focused observation.' },
-  dense_canopy: { node_type: 'dense_canopy', requiredGems: ['sword', 'crate'], obstacles: ['overgrowth', 'low_visibility'], events: ['trail_markings', 'rare_track'], rationale: 'Canopy routes lean on observation and supply management.' },
-  urban_fringe: { node_type: 'urban_fringe', requiredGems: ['key', 'thought'], obstacles: ['junk_blockers', 'noise_interference'], events: ['human_disturbance', 'corridor_crossing'], rationale: 'Urban edges favor traversal, field notes, and route reading.' },
-  elevation_ridge: { node_type: 'elevation_ridge', requiredGems: ['staff', 'shield'], obstacles: ['steep_terrain'], events: ['vantage_scan'], rationale: 'Ridges reward scanning, camouflage, and careful positioning.' },
-  storm_window: { node_type: 'storm_window', requiredGems: ['power', 'multiplier'], obstacles: ['time_pressure', 'signal_dropout'], events: ['urgent_tracking_window', 'migration_shift'], rationale: 'Storm nodes convert urgency into focused burst tracking.' },
-  custom: { node_type: 'custom', requiredGems: ['crate', 'thought'], obstacles: ['unknown_terrain'], events: ['discovery_event'], rationale: 'Custom nodes mix improvisation with field note gathering.' },
-  analysis: { node_type: 'analysis', requiredGems: [], obstacles: ['limited_signal'], events: ['wager_guess'], rationale: 'End-of-route evidence review and species identification.' },
+  riverbank_sweep: createNodeTemplate({
+    node_type: 'riverbank_sweep',
+    obstacleFamily: 'terrain',
+    obstacles: ['flow_shift', 'mud_tiles'],
+    events: ['amphibian_signal', 'river_crossing'],
+    rationale: 'River proximity rewards steady traversal through unstable terrain.',
+  }),
+  dense_canopy: createNodeTemplate({
+    node_type: 'dense_canopy',
+    obstacleFamily: 'visibility',
+    obstacles: ['overgrowth', 'low_visibility'],
+    events: ['trail_markings', 'rare_track'],
+    rationale: 'Canopy routes choke sight lines and reward deliberate scanning.',
+  }),
+  urban_fringe: createNodeTemplate({
+    node_type: 'urban_fringe',
+    obstacleFamily: 'panic',
+    obstacles: ['junk_blockers', 'noise_interference'],
+    events: ['human_disturbance', 'corridor_crossing'],
+    rationale: 'Urban edges stress gear and supplies more than raw speed.',
+  }),
+  elevation_ridge: createNodeTemplate({
+    node_type: 'elevation_ridge',
+    obstacleFamily: 'sighting',
+    obstacles: ['steep_terrain'],
+    events: ['vantage_scan'],
+    rationale: 'Ridge nodes turn narrow sighting windows into the main pressure point.',
+  }),
+  storm_window: createNodeTemplate({
+    node_type: 'storm_window',
+    obstacleFamily: 'alert',
+    obstacles: ['time_pressure', 'signal_dropout'],
+    events: ['urgent_tracking_window', 'migration_shift'],
+    rationale: 'Storm nodes lean on composure as the animal spooks faster under pressure.',
+  }),
+  custom: createNodeTemplate({
+    node_type: 'custom',
+    obstacleFamily: 'panic',
+    obstacles: ['unknown_terrain'],
+    events: ['discovery_event'],
+    rationale: 'Custom nodes reward field preparation when conditions turn unpredictable.',
+  }),
+  analysis: createNodeTemplate({
+    node_type: 'analysis',
+    obstacleFamily: null,
+    obstacles: ['limited_signal'],
+    events: ['wager_guess'],
+    rationale: 'End-of-route evidence review and species identification.',
+  }),
 };
 
 /** Unified 6-node run generator. Derives all nodes from layer scores + habitat context. */
@@ -249,30 +316,43 @@ export function generateRunNodes(
     nodes.push({ ...NODE_TEMPLATES.storm_window, difficulty: 5 });
   }
 
-  // Fill remaining with varied types — avoid repeating gem pairs already in the run
-  const usedGemPairs = new Set(nodes.map(n => n.requiredGems.slice().sort().join(',')));
+  // Fill remaining with varied tools — avoid repeating the same counter gem when possible.
+  const usedCounterGems = new Set(nodes.map((n) => n.counterGem).filter((value): value is ActionGemType => value != null));
   const fillerPool = ['elevation_ridge', 'riverbank_sweep', 'urban_fringe', 'dense_canopy', 'custom'] as const;
   let fillerIdx = 0;
   while (nodes.length < 5) {
-    // Pick next filler whose gem pair isn't already used
+    // Pick next filler whose counter gem is not already used
     let picked = false;
     for (let i = 0; i < fillerPool.length; i++) {
       const candidate = fillerPool[(fillerIdx + i) % fillerPool.length];
       const tmpl = NODE_TEMPLATES[candidate];
-      const pair = tmpl.requiredGems.slice().sort().join(',');
-      if (!usedGemPairs.has(pair)) {
+      const counterGem = tmpl.counterGem;
+      if (counterGem && !usedCounterGems.has(counterGem)) {
         nodes.push({ ...tmpl, difficulty: 2 });
-        usedGemPairs.add(pair);
+        usedCounterGems.add(counterGem);
         fillerIdx = (fillerIdx + i + 1) % fillerPool.length;
         picked = true;
         break;
       }
     }
     if (!picked) {
-      // All pairs used — just add next in pool
-      const tmpl = NODE_TEMPLATES[fillerPool[fillerIdx % fillerPool.length]];
-      nodes.push({ ...tmpl, difficulty: 2 });
-      fillerIdx++;
+      // All unique counter gems are exhausted — pick the next node type not already present when possible.
+      const usedNodeTypes = new Set(nodes.map((n) => n.node_type));
+      let fallbackTemplate: Omit<RunNode, 'difficulty' | 'objectiveTarget'> | null = null;
+      for (let i = 0; i < fillerPool.length; i++) {
+        const candidate = fillerPool[(fillerIdx + i) % fillerPool.length];
+        const tmpl = NODE_TEMPLATES[candidate];
+        if (!usedNodeTypes.has(tmpl.node_type)) {
+          fallbackTemplate = tmpl;
+          fillerIdx = (fillerIdx + i + 1) % fillerPool.length;
+          break;
+        }
+      }
+      if (!fallbackTemplate) {
+        fallbackTemplate = NODE_TEMPLATES[fillerPool[fillerIdx % fillerPool.length]];
+        fillerIdx++;
+      }
+      nodes.push({ ...fallbackTemplate, difficulty: 2 });
     }
   }
 
@@ -282,6 +362,6 @@ export function generateRunNodes(
   // Compute objectiveTarget per node: flat 6 for gem-objective nodes, 0 for analysis
   return nodes.slice(0, 6).map(n => ({
     ...n,
-    objectiveTarget: n.requiredGems.length > 0 ? 6 : 0,
+    objectiveTarget: n.counterGem ? 6 : 0,
   }));
 }

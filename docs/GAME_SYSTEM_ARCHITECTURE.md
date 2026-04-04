@@ -4,6 +4,8 @@ Current source of truth for the React + Phaser gameplay stack.
 
 Use this doc before changing run flow, EventBus contracts, board logic, clue behavior, or the run economy.
 
+For the implemented affinity migration and current follow-up checklist, see [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
+
 ## Runtime ownership
 
 - React owns app layout, expedition phase state, run persistence, wallet/inventory state, deduction camp, and node advancement.
@@ -15,7 +17,7 @@ Use this doc before changing run flow, EventBus contracts, board logic, clue beh
 
 - `src/MainAppLayout.tsx` keeps Phaser, Cesium, and clue UI mounted.
 - Top area is the Phaser wrapper.
-- Bottom area switches between Cesium, expedition briefing, Deduction Camp, completion summary, and clue UI.
+- Bottom area keeps Cesium mounted for map phases, swaps to Deduction Camp and completion summary when needed, and renders the expedition briefing as an overlay on top of the map instead of replacing it.
 - Components should be hidden with CSS instead of unmounted when they need to preserve EventBus listeners or state.
 
 ## EventBus ownership rules
@@ -38,7 +40,7 @@ Use this doc before changing run flow, EventBus contracts, board logic, clue beh
 ### Active run events
 
 - `expedition-data-ready`: Cesium/API -> React run setup
-- `expedition-start`: briefing -> active run
+- `expedition-start`: briefing overlay -> active run
 - `cesium-location-selected`: React -> Phaser node initialization
 - `node-objective-updated`: Phaser -> React/UI progress update
 - `node-bonus-tick`: Phaser -> UI spook meter state (currentPool, startPool, pct, tier)
@@ -51,6 +53,12 @@ Use this doc before changing run flow, EventBus contracts, board logic, clue beh
 - `encounter-triggered`: Phaser -> UI flash/loot feedback
 - `souvenir-dropped`: Phaser -> React souvenir state
 - `deduction-camp-purchase`: React -> Phaser clue category purchase
+
+Map click policy in the current runtime:
+
+- clicks are allowed during `idle` and `briefing`
+- clicks are blocked during `in-run` and `deduction`
+- clicking a new location during `briefing` replaces the current expedition payload and briefing overlay
 
 Typed in `src/game/EventBus.ts` but not active end-to-end in the current expedition loop:
 

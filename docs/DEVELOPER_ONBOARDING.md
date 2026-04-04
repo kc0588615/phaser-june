@@ -56,11 +56,12 @@ npm run start    # http://localhost:3000
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `boardTypes.ts` defines extensible cell schema, `gemSemantics.ts` defines shared gem meaning, `nodeObstacles.ts` defines typed obstacle contracts + seeded cell state, and `MoveAction.ts` / `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
-- Expedition run loop: `src/types/expedition.ts` (RunState, catalogs), `src/lib/nodeScoring.ts` (node generation), `src/MainAppLayout.tsx` (phase state machine). Run creates 6 nodes from GIS scoring; each node has gem objectives, encounters (every 3rd match group), and souvenir drops. Components: `ExpeditionBriefing`, `RunTrack`, `ActiveEncounterPanel`, `GemWallet`, `SouvenirPouch`.
+- Expedition run loop: `src/types/expedition.ts` (RunState, catalogs), `src/lib/nodeScoring.ts` (node generation), `src/MainAppLayout.tsx` (phase state machine). Run creates 6 nodes from GIS scoring; each node has gem objectives, encounters (every 3rd match group), and souvenir drops. Components: `ExpeditionBriefing` (dismissible overlay on map — player can close and click a different location), `RunTrack`, `ActiveEncounterPanel`, `GemWallet`, `SouvenirPouch`. Phaser runner strip: `src/game/ui/ExpeditionRunnerStrip.ts` (scientist progress, obstacle badges, spook-tier visuals above the board).
 - Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes` tables.
 
 ## 3) Recommended Reading Path
 1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../CLAUDE.md](../CLAUDE.md).
+Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
@@ -79,6 +80,7 @@ npm run start    # http://localhost:3000
 
 **Expedition Run Loop**
 - [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) — run phases, node generation, encounters, souvenirs, gem wallet, route trail.
+- [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md) — implemented `counterGem` + affinity migration, follow-up work, and related files.
 - [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md) — banked score, clue fragments, Deduction Camp, spook-tier rewards.
 - [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) — GIS layer scoring, node family taxonomy, DB schema; partially forward-looking.
 - [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md) — historical handoff for the action/loot conversion.
@@ -136,7 +138,7 @@ npm run start    # http://localhost:3000
 - [archive/normalization_review_sql.md](./archive/normalization_review_sql.md)
 
 ## 5) Quick Code Navigation
-- **Map click → board init:** `src/components/CesiumMap.tsx` emits `cesium-location-selected` → `src/game/scenes/Game.ts.initializeBoardFromCesium`.
+- **Map click → briefing → board init:** `src/components/CesiumMap.tsx` emits `expedition-data-ready` → `MainAppLayout` shows briefing overlay (dismissible; map stays interactive). Player clicks Start → `expedition-start` → `cesium-location-selected` → `Game.ts.initializeBoardFromCesium`. CesiumMap only blocks clicks during `in-run` and `deduction` phases.
 - **HUD updates:** `Game.ts.emitHud` → `EventBus 'game-hud-updated'` → `src/components/SpeciesPanel.tsx`.
 - **Species list sync:** `SpeciesPanel` emits `show-species-list` → `src/MainAppLayout.tsx` toggles view and scrolls `SpeciesList`.
 - **Data access:** `src/lib/speciesService.ts` (RPCs), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (session + telemetry).

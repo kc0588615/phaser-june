@@ -3,8 +3,9 @@ import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
 import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic, ClueCategoryKey, ClueFragments, NodeRewardLanes, SpookTier } from '@/types/expedition';
-import type { GemType } from './constants';
-import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
+import type { AffinityType } from '@/expedition/affinities';
+import type { ActionGemType, GemType } from './constants';
+import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
 
 // Define all event types and their payloads
@@ -18,9 +19,13 @@ export interface EventPayloads {
     rasterHabitats: RasterHabitatResult[];
     difficulty?: number;
     obstacles?: NodeObstacle[];
+    obstacleFamily?: ObstacleFamily | null;
+    counterGem?: ActionGemType | null;
     requiredGems?: GemType[];
+    activeAffinities?: AffinityType[];
     objectiveTarget?: number;
     nodeIndex?: number;
+    nodeType?: string;
     events?: string[];
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
@@ -120,7 +125,13 @@ export interface EventPayloads {
     source: 'game' | 'panel';
   };
   'node-complete': { nodeIndex: number };
-  'node-objective-updated': { progress: number; target: number; requiredGems: GemType[] };
+  'node-objective-updated': {
+    progress: number;
+    target: number;
+    requiredGems: GemType[];
+    counterGem?: ActionGemType | null;
+    activeAffinities?: AffinityType[];
+  };
   'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
   'souvenir-dropped': { souvenir: SouvenirDef };
   // New economy events

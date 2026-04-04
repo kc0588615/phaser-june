@@ -1,4 +1,6 @@
 import { GemCategory } from '@/game/clueConfig';
+import type { AffinityType } from './affinities';
+import { getAffinityBuffedGem } from './affinities';
 
 export const ACTION_GEM_TYPES = [
   'sword',
@@ -260,13 +262,19 @@ export const WALLET_DEFS: Array<{
   { key: 'dust', label: 'Samples', color: '#c084fc', shortLabel: 'Sa' },
 ];
 
-export type ConsumableEffectType = 'score_burst' | 'objective_push' | 'move_buffer' | 'queue_boost';
+export type ConsumableEffectType =
+  | 'clear_visibility'
+  | 'freeze_spook'
+  | 'clear_terrain'
+  | 'clear_sighting'
+  | 'supply_drop';
 
 export interface ConsumableBlueprint {
   id: string;
   name: string;
   description: string;
   effectType: ConsumableEffectType;
+  preferredAffinity?: AffinityType | null;
 }
 
 export interface ConsumableItem extends ConsumableBlueprint {
@@ -276,28 +284,39 @@ export interface ConsumableItem extends ConsumableBlueprint {
 
 export const CRATE_ITEM_BLUEPRINTS: ConsumableBlueprint[] = [
   {
-    id: 'fireball',
-    name: 'Signal Flare',
-    description: '+75 score. Illuminates the tracking area.',
-    effectType: 'score_burst',
+    id: 'burst_camera',
+    name: 'Burst Camera',
+    description: 'Instantly resolves a Sighting node objective.',
+    effectType: 'clear_sighting',
+    preferredAffinity: 'insect',
   },
   {
-    id: 'food',
-    name: 'Bait',
-    description: '+2 node objective progress.',
-    effectType: 'objective_push',
+    id: 'field_scope',
+    name: 'Field Scope',
+    description: 'Instantly resolves a Visibility node objective.',
+    effectType: 'clear_visibility',
+    preferredAffinity: 'avian',
   },
   {
-    id: 'shell',
-    name: 'Trail Map',
-    description: '+3 max moves for this node.',
-    effectType: 'move_buffer',
+    id: 'bridge_kit',
+    name: 'Bridge Kit',
+    description: 'Instantly resolves a Terrain node objective.',
+    effectType: 'clear_terrain',
+    preferredAffinity: 'amphibian',
   },
   {
-    id: 'tile_bomb',
-    name: 'Field Kit',
-    description: 'Queues action gems for the next refill.',
-    effectType: 'queue_boost',
+    id: 'hide_cloak',
+    name: 'Hide Cloak',
+    description: 'Freezes spook decay for 5 seconds.',
+    effectType: 'freeze_spook',
+    preferredAffinity: 'feline',
+  },
+  {
+    id: 'supply_drop',
+    name: 'Supply Drop',
+    description: 'Instantly resolves the current node objective and queues counter gems.',
+    effectType: 'supply_drop',
+    preferredAffinity: 'primate',
   },
 ];
 
@@ -313,10 +332,25 @@ export function createConsumableItem(blueprint: ConsumableBlueprint): Consumable
   };
 }
 
-export function rollCrateConsumable(matchSize: number): ConsumableItem {
+export function rollCrateConsumable(
+  matchSize: number,
+  options?: { preferHigherTier?: boolean; guaranteedId?: ConsumableBlueprint['id'] | null; activeAffinities?: AffinityType[] }
+): ConsumableItem {
+  if (options?.guaranteedId) {
+    const guaranteed = CRATE_ITEM_BLUEPRINTS.find((blueprint) => blueprint.id === options.guaranteedId);
+    if (guaranteed) {
+      return createConsumableItem(guaranteed);
+    }
+  }
+
+  const affinityFavored = options?.activeAffinities
+    ?.map((affinity) => getAffinityBuffedGem(affinity))
+    .includes('crate');
+  const preferHigherTier = options?.preferHigherTier || affinityFavored;
   const pool =
-    matchSize >= 5
+    matchSize >= 5 || preferHigherTier
       ? [
+          CRATE_ITEM_BLUEPRINTS[4],
           CRATE_ITEM_BLUEPRINTS[3],
           CRATE_ITEM_BLUEPRINTS[0],
           CRATE_ITEM_BLUEPRINTS[1],
@@ -374,6 +408,7 @@ export function createBoardSpawnConfig(config?: {
   actionBias?: Partial<Record<ActionGemType, number>>;
   objectiveActions?: ActionGemType[];
   nodeBoosts?: Partial<Record<ActionGemType, number>>;
+  activeAffinities?: AffinityType[];
 }): BoardSpawnConfig {
   const lootChance = Math.min(Math.max(config?.lootChance ?? DEFAULT_BOARD_SPAWN_CONFIG.lootChance, 0), 0.45);
   const mergedWeights: Partial<Record<ActionGemType, number>> = {
@@ -388,6 +423,11 @@ export function createBoardSpawnConfig(config?: {
   for (const [gemType, weight] of Object.entries(config?.nodeBoosts ?? {})) {
     const typedGem = gemType as ActionGemType;
     mergedWeights[typedGem] = (mergedWeights[typedGem] ?? 0) + (weight ?? 0);
+  }
+
+  for (const affinity of config?.activeAffinities ?? []) {
+    const buffedGem = getAffinityBuffedGem(affinity) as ActionGemType;
+    mergedWeights[buffedGem] = (mergedWeights[buffedGem] ?? 0) + 0.08;
   }
 
   return {
@@ -445,15 +485,17 @@ const NODE_TYPE_BOARD_META: Record<
 
 export function buildBoardSpawnConfigForNode(
   nodeType: string,
-  requiredGems: GemType[] = [],
-  actionBias: Partial<Record<ActionGemType, number>> = {}
+  counterGem: ActionGemType | null = null,
+  actionBias: Partial<Record<ActionGemType, number>> = {},
+  activeAffinities: AffinityType[] = []
 ): BoardSpawnConfig {
   const meta = NODE_TYPE_BOARD_META[nodeType] ?? NODE_TYPE_BOARD_META.custom;
-  const objectiveActions = requiredGems.filter(isActionGem);
+  const objectiveActions = counterGem ? [counterGem] : [];
   return createBoardSpawnConfig({
     lootChance: meta.lootChance,
     actionBias,
     objectiveActions,
     nodeBoosts: meta.nodeBoosts,
+    activeAffinities,
   });
 }

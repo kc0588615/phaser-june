@@ -25,6 +25,7 @@ import {
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
 import type { EventPayloads } from '../game/EventBus';
+import { deriveAvailableAffinities, getDefaultActiveAffinities } from '../expedition/affinities';
 import { speciesService } from '../lib/speciesService';
 import type { Species } from '../types/database';
 import { getAppConfig } from '../utils/config';
@@ -565,6 +566,7 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
             
             // Emit expedition-data-ready (briefing intercepts before puzzle starts)
             if (atPointData?.generated_nodes) {
+              const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
               EventBus.emit('expedition-data-ready', {
                 lon: cartographicLocation.longitude,
                 lat: cartographicLocation.latitude,
@@ -573,6 +575,8 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
                   bioregion: atPointData.bioregion,
                   protectedAreas: atPointData.protected_areas ?? [],
                   actionBias: atPointData.action_bias ?? {},
+                  activeAffinities: getDefaultActiveAffinities(availableAffinities),
+                  availableAffinities,
                   primaryNodeFamily: atPointData.primary_node_family ?? '',
                   primaryVariant: atPointData.primary_variant ?? '',
                   modifierNodes: atPointData.modifier_nodes ?? [],
@@ -660,6 +664,8 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
                   bioregion: atPointData.bioregion,
                   protectedAreas: atPointData.protected_areas ?? [],
                   actionBias: atPointData.action_bias ?? {},
+                  activeAffinities: [],
+                  availableAffinities: [],
                   primaryNodeFamily: atPointData.primary_node_family ?? '',
                   primaryVariant: atPointData.primary_variant ?? '',
                   modifierNodes: atPointData.modifier_nodes ?? [],

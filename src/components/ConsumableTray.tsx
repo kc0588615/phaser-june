@@ -6,6 +6,14 @@ interface Props {
   onUse: (itemInstanceId: string) => void;
 }
 
+const ITEM_EMOJIS: Record<string, string> = {
+  burst_camera: '📸',
+  field_scope: '🔭',
+  bridge_kit: '🌉',
+  hide_cloak: '🥷',
+  supply_drop: '📦',
+};
+
 export const ConsumableTray: React.FC<Props> = ({ items, onUse }) => {
   if (items.length === 0) return null;
 
@@ -14,11 +22,11 @@ export const ConsumableTray: React.FC<Props> = ({ items, onUse }) => {
       style={{
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '6px',
-        maxWidth: '280px',
-        padding: '6px',
+        gap: '4px',
+        maxWidth: '232px',
+        padding: '4px',
         background: 'rgba(15,23,42,0.88)',
-        borderRadius: '8px',
+        borderRadius: '7px',
         border: '1px solid #334155',
         fontFamily: 'sans-serif',
       }}
@@ -29,21 +37,23 @@ export const ConsumableTray: React.FC<Props> = ({ items, onUse }) => {
           onClick={() => onUse(item.instanceId)}
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: '2px',
-            minWidth: '86px',
-            padding: '6px 8px',
+            alignItems: 'center',
+            gap: '6px',
+            minWidth: '0',
+            padding: '5px 7px',
             background: 'rgba(30,41,59,0.9)',
             color: '#e2e8f0',
             border: '1px solid #475569',
             borderRadius: '6px',
             cursor: 'pointer',
             textAlign: 'left',
+            flex: '1 1 108px',
           }}
           title={item.description}
+          aria-label={`${item.name}: ${item.description}`}
         >
-          <span style={{ fontSize: '11px', fontWeight: 700 }}>{item.name}</span>
-          <span style={{ fontSize: '9px', color: '#94a3b8' }}>{item.description}</span>
+          <span style={{ fontSize: '13px', lineHeight: 1 }}>{ITEM_EMOJIS[item.id] ?? '🧰'}</span>
+          <span style={{ fontSize: '10px', fontWeight: 700, lineHeight: 1.1 }}>{item.name}</span>
         </button>
       ))}
     </div>

@@ -1,4 +1,5 @@
 import type { BoardCellState } from './boardTypes';
+import type { ActionGemType } from './constants';
 
 export const NODE_OBSTACLES = [
     'flow_shift',
@@ -15,6 +16,7 @@ export const NODE_OBSTACLES = [
 ] as const;
 
 export type NodeObstacle = typeof NODE_OBSTACLES[number];
+export type ObstacleFamily = 'visibility' | 'alert' | 'terrain' | 'sighting' | 'panic';
 
 export interface CellStateSeed {
     x: number;
@@ -43,6 +45,36 @@ export const NODE_OBSTACLE_LABELS: Record<NodeObstacle, string> = {
     signal_dropout: 'Signal Dropout',
     unknown_terrain: 'Unknown Terrain',
     limited_signal: 'Limited Signal',
+};
+
+export const OBSTACLE_FAMILY_LABELS: Record<ObstacleFamily, string> = {
+    visibility: 'Visibility',
+    alert: 'Alert',
+    terrain: 'Terrain',
+    sighting: 'Sighting',
+    panic: 'Panic',
+};
+
+export const OBSTACLE_COUNTER_GEM_MAP: Record<ObstacleFamily, ActionGemType> = {
+    visibility: 'staff',
+    alert: 'shield',
+    terrain: 'key',
+    sighting: 'sword',
+    panic: 'crate',
+};
+
+export const NODE_OBSTACLE_FAMILY_MAP: Record<NodeObstacle, ObstacleFamily> = {
+    flow_shift: 'terrain',
+    mud_tiles: 'terrain',
+    overgrowth: 'visibility',
+    low_visibility: 'visibility',
+    junk_blockers: 'panic',
+    noise_interference: 'alert',
+    steep_terrain: 'terrain',
+    time_pressure: 'alert',
+    signal_dropout: 'visibility',
+    unknown_terrain: 'panic',
+    limited_signal: 'visibility',
 };
 
 interface ObstacleSeedConfig {
@@ -113,6 +145,14 @@ function createRng(seed: number): () => number {
 
 export function formatNodeObstacleLabel(obstacle: NodeObstacle): string {
     return NODE_OBSTACLE_LABELS[obstacle] ?? obstacle.replace(/_/g, ' ');
+}
+
+export function getObstacleFamily(obstacle: NodeObstacle): ObstacleFamily {
+    return NODE_OBSTACLE_FAMILY_MAP[obstacle];
+}
+
+export function getCounterGemForObstacleFamily(family: ObstacleFamily): ActionGemType {
+    return OBSTACLE_COUNTER_GEM_MAP[family];
 }
 
 export function buildNodeObstacleSeeds(config: ObstacleSeedConfig): CellStateSeed[] {

@@ -277,7 +277,7 @@ User clicks "Buy" button in DeductionCamp
       - This uses the existing progressive clue system (WeakMap-based)
       - Emits 'clue-revealed' with full CluePayload
   → Two listeners receive 'clue-revealed':
-      1. SpeciesPanel (always mounted, display:none) → fires toast notification
+      1. SpeciesPanel (always mounted, display:none) → receives the event, but clue toasts are suppressed during Deduction Camp
       2. MainAppLayout → appends clue to deductionCamp.revealedClues for DeductionCamp rendering
 ```
 
@@ -323,8 +323,8 @@ The old clue list toggle (PiListMagnifyingGlass icon that switched between map a
 - Removed `PiListMagnifyingGlass` and `PiGlobeHemisphereWestThin` icon imports
 - Removed the clue list toggle button
 - `viewMode` type narrowed from `'map' | 'clues' | 'species'` to `'map' | 'species'`
-- `SpeciesPanel` remains mounted but always `display: none` — it still handles `clue-revealed` toast notifications
-- `toastsEnabled` set to `true` during both map and deduction phases
+- `SpeciesPanel` remains mounted but always `display: none` — it still listens for `clue-revealed`, but clue toasts are disabled during Deduction Camp
+- `toastsEnabled={viewMode === 'map' && !showDeduction}` so gameplay/map toasts still fire, while Deduction Camp purchases render directly in the clue grid without toast spam
 
 ## CesiumMap Guard
 

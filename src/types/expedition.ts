@@ -1,4 +1,5 @@
 import type { ActionGemType, ConsumableItem as DomainConsumableItem, ResourceWallet as DomainResourceWallet } from '@/expedition/domain';
+import type { AffinityType } from '@/expedition/affinities';
 import { createEmptyResourceWallet as createEmptyDomainResourceWallet } from '@/expedition/domain';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
@@ -20,6 +21,8 @@ export interface ExpeditionData {
   bioregion: { bioregion: string | null; realm: string | null; biome: string | null } | null;
   protectedAreas: Array<{ name: string | null; designation: string | null; iucn_category: string | null }>;
   actionBias: Partial<Record<ActionGemType, number>>;
+  activeAffinities: AffinityType[];
+  availableAffinities: AffinityType[];
   primaryNodeFamily: string;
   primaryVariant: string;
   modifierNodes: string[];
@@ -95,6 +98,7 @@ export interface RunState {
   phase: RunPhase;
   expedition: ExpeditionData | null;
   currentNodeIndex: number;
+  activeAffinities: AffinityType[];
   resourceWallet: ResourceWallet;
   lootMatchSummary: Record<string, number>;
   equippedPassives: PassiveRelic[];

@@ -7,7 +7,7 @@ Related migration: `src/db/migrations/008_protected_planet_parcels.sql`
 
 ## Core Data Flow
 
-1. Player clicks map location -> create `eco_run_sessions`.
+1. Player clicks map location -> expedition briefing overlay appears (dismissible; player can close and click elsewhere). On "Start Expedition" -> create `eco_run_sessions`.
 2. Route generator creates 6 nodes -> insert `eco_run_nodes`.
 3. For each node, sample GIS layers -> insert `eco_node_gis_samples`.
 4. Node play results -> write `eco_node_attempts`.

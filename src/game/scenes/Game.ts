@@ -19,11 +19,18 @@ import {
 } from '../constants';
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
-import { GemType } from '../constants';
+import { GemType, type ActionGemType } from '../constants';
 import { getClueCategoryForGemType, getResourceKeyForGemType } from '../gemSemantics';
-import { buildNodeBoardContext, formatNodeObstacleLabel } from '../nodeObstacles';
+import {
+  buildNodeBoardContext,
+  formatNodeObstacleLabel,
+  getCounterGemForObstacleFamily,
+  type NodeObstacle,
+  type ObstacleFamily,
+} from '../nodeObstacles';
 import type { CurrencyKey } from '@/expedition/domain';
 import { getGemDefinition, isActionGem, rollCrateConsumable } from '@/expedition/domain';
+import type { AffinityType } from '@/expedition/affinities';
 import { getGemEffects } from '@/expedition/gemEffects';
 import type { ClueCategoryKey, SpookTier } from '@/types/expedition';
 import { getSpookTier } from '@/types/expedition';
@@ -43,6 +50,7 @@ import {
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import { ENCOUNTER_CATALOG, SOUVENIR_CATALOG } from '@/types/expedition';
+import { isWaterObstacleSet, resolveObjectiveContribution } from '@/game/objectiveResolver';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
 
@@ -177,6 +185,10 @@ export class Game extends Phaser.Scene {
 
     // Node objective tracking (gem matching targets)
     private nodeRequiredGems: Set<GemType> = new Set();
+    private nodeCounterGem: ActionGemType | null = null;
+    private nodeObstacleFamily: ObstacleFamily | null = null;
+    private nodeObstacles: NodeObstacle[] = [];
+    private nodeActiveAffinities: AffinityType[] = [];
     private nodeObjectiveTarget: number = 0;
     private nodeObjectiveProgress: number = 0;
     private nodeObjectiveCompleted: boolean = false;
@@ -272,6 +284,62 @@ export class Game extends Phaser.Scene {
         this.runnerStrip?.setSpook(pct, getSpookTier(pct));
     }
 
+    private emitNodeObjectiveUpdated(): void {
+        EventBus.emit('node-objective-updated', {
+            progress: this.nodeObjectiveProgress,
+            target: this.nodeObjectiveTarget,
+            requiredGems: Array.from(this.nodeRequiredGems),
+            counterGem: this.nodeCounterGem,
+            activeAffinities: [...this.nodeActiveAffinities],
+        });
+    }
+
+    private finishNodeObjective(reason: 'objective_complete' | 'escaped'): void {
+        if (reason === 'objective_complete') {
+            this.nodeObjectiveCompleted = true;
+            this.runnerStrip?.markResolved('success');
+            this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
+            this.time.delayedCall(250, () => {
+                EventBus.emit('node-advance-requested', {
+                    nodeIndex: this.currentNodeIndex,
+                    reason,
+                    source: 'game',
+                });
+            });
+            return;
+        }
+
+        this.nodeObjectiveCompleted = true;
+        this.disableInputs();
+        this.runnerStrip?.markResolved('escaped');
+        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
+        this.time.delayedCall(250, () => {
+            EventBus.emit('node-advance-requested', {
+                nodeIndex: this.currentNodeIndex,
+                reason,
+                source: 'game',
+            });
+        });
+    }
+
+    private applySpookSlow(factor: number, durationMs: number): void {
+        this.nodeBonusShieldSlow = Math.min(this.nodeBonusShieldSlow, factor);
+        this.nodeBonusShieldExpiry = Math.max(this.nodeBonusShieldExpiry, Date.now() + durationMs);
+    }
+
+    private isAffinityActive(affinity: AffinityType): boolean {
+        return this.nodeActiveAffinities.includes(affinity);
+    }
+
+    private getCrateRollOptions(matchSize: number): { preferHigherTier?: boolean; guaranteedId?: string | null; activeAffinities?: AffinityType[] } {
+        const guaranteedId = this.isAffinityActive('arachnid') ? 'burst_camera' : null;
+        return {
+            preferHigherTier: matchSize >= 5 || this.isAffinityActive('primate'),
+            guaranteedId,
+            activeAffinities: this.nodeActiveAffinities,
+        };
+    }
+
     update(): void {
         if (!this.backendPuzzle || !this.isBoardInitialized) return;
 
@@ -355,24 +423,11 @@ export class Game extends Phaser.Scene {
 
         // Emit node objective progress to React
         if (this.nodeObjectiveTarget > 0) {
-            EventBus.emit('node-objective-updated', {
-                progress: this.nodeObjectiveProgress,
-                target: this.nodeObjectiveTarget,
-                requiredGems: Array.from(this.nodeRequiredGems),
-            });
+            this.emitNodeObjectiveUpdated();
             this.syncRunnerStripObjective();
             // React owns node advancement; Phaser only requests it.
             if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
-                this.nodeObjectiveCompleted = true;
-                this.runnerStrip?.markResolved('success');
-                this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                this.time.delayedCall(400, () => {
-                    EventBus.emit('node-advance-requested', {
-                        nodeIndex: this.currentNodeIndex,
-                        reason: 'objective_complete',
-                        source: 'game',
-                    });
-                });
+                this.finishNodeObjective('objective_complete');
             }
         }
 
@@ -391,16 +446,7 @@ export class Game extends Phaser.Scene {
         if (this.backendPuzzle.isGameOver()) {
             if (this.inExpeditionRun) {
                 if (!this.nodeObjectiveCompleted) {
-                    this.disableInputs();
-                    this.runnerStrip?.markResolved('escaped');
-                    this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                    this.time.delayedCall(250, () => {
-                        EventBus.emit('node-advance-requested', {
-                            nodeIndex: this.currentNodeIndex,
-                            reason: 'escaped',
-                            source: 'game',
-                        });
-                    });
+                    this.finishNodeObjective('escaped');
                 }
                 return;
             }
@@ -419,9 +465,8 @@ export class Game extends Phaser.Scene {
 
         switch (effect.type) {
             case 'bonus_gems': {
-                const gemsToQueue = Array.from(this.nodeRequiredGems).slice(0, 3) as GemType[];
-                if (gemsToQueue.length > 0) {
-                    this.backendPuzzle.addNextGemsToSpawn(gemsToQueue);
+                if (this.nodeCounterGem) {
+                    this.backendPuzzle.addNextGemsToSpawn([this.nodeCounterGem, this.nodeCounterGem, this.nodeCounterGem]);
                 }
                 break;
             }
@@ -435,23 +480,10 @@ export class Game extends Phaser.Scene {
                         this.nodeObjectiveProgress + 2,
                         this.nodeObjectiveTarget
                     );
-                    EventBus.emit('node-objective-updated', {
-                        progress: this.nodeObjectiveProgress,
-                        target: this.nodeObjectiveTarget,
-                        requiredGems: Array.from(this.nodeRequiredGems),
-                    });
+                    this.emitNodeObjectiveUpdated();
                     this.syncRunnerStripObjective();
                     if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
-                        this.nodeObjectiveCompleted = true;
-                        this.runnerStrip?.markResolved('success');
-                        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                        this.time.delayedCall(400, () => {
-                            EventBus.emit('node-advance-requested', {
-                                nodeIndex: this.currentNodeIndex,
-                                reason: 'objective_complete',
-                                source: 'game',
-                            });
-                        });
+                        this.finishNodeObjective('objective_complete');
                     }
                 }
                 break;
@@ -965,11 +997,12 @@ export class Game extends Phaser.Scene {
                 summary.largestMatch = match.length;
             }
 
-            let requiredGemsInMatch = 0;
+            let matchGemType: GemType | null = null;
 
             for (const [x, y] of match) {
                 const gem = state[x]?.[y];
                 if (!gem?.gemType) continue;
+                matchGemType = gem.gemType;
 
                 if (summary) {
                     summary.gemTypesMatched.add(gem.gemType);
@@ -979,27 +1012,24 @@ export class Game extends Phaser.Scene {
                     }
                 }
 
-                if (this.nodeRequiredGems.has(gem.gemType) && !this.nodeObjectiveCompleted) {
-                    this.nodeObjectiveProgress++;
-                    requiredGemsInMatch++;
-                    objectiveProgressChanged = true;
-                }
             }
 
-            if (requiredGemsInMatch >= 4 && this.nodeObjectiveTarget > 0) {
-                if (this.nodeObjectiveProgress < this.nodeObjectiveTarget) {
+            if (matchGemType && this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
+                const contribution = resolveObjectiveContribution(matchGemType, match.length, {
+                    counterGem: this.nodeCounterGem,
+                    obstacleFamily: this.nodeObstacleFamily,
+                    activeAffinities: this.nodeActiveAffinities,
+                    nodeObstacles: this.nodeObstacles,
+                });
+                if (contribution > 0) {
+                    this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + contribution);
                     objectiveProgressChanged = true;
                 }
-                this.nodeObjectiveProgress = this.nodeObjectiveTarget;
             }
         }
 
         if (objectiveProgressChanged && this.nodeObjectiveTarget > 0) {
-            EventBus.emit('node-objective-updated', {
-                progress: this.nodeObjectiveProgress,
-                target: this.nodeObjectiveTarget,
-                requiredGems: Array.from(this.nodeRequiredGems),
-            });
+            this.emitNodeObjectiveUpdated();
             this.syncRunnerStripObjective();
         }
     }
@@ -1031,7 +1061,7 @@ export class Game extends Phaser.Scene {
             }
 
             if (gem.gemType === 'crate') {
-                const item = rollCrateConsumable(match.length);
+                const item = rollCrateConsumable(match.length, this.getCrateRollOptions(match.length));
                 EventBus.emit('consumable-found', { item });
             }
 
@@ -1069,11 +1099,21 @@ export class Game extends Phaser.Scene {
                         }
                         break;
                     case 'trivia_boost':
-                        // Future: increase trivia roll chance
+                        if (gem.gemType === 'staff' && this.isAffinityActive('reptile') && this.backendPuzzle && this.nodeCounterGem) {
+                            this.backendPuzzle.addNextGemsToSpawn([this.nodeCounterGem, this.nodeCounterGem]);
+                        }
                         break;
                     case 'decay_slow':
-                        this.nodeBonusShieldSlow = effect.factor;
-                        this.nodeBonusShieldExpiry = Date.now() + effect.durationMs;
+                        {
+                            let factor = effect.factor;
+                            if (this.isAffinityActive('feline')) {
+                                factor *= 0.75;
+                            }
+                            if (this.isAffinityActive('burrower')) {
+                                factor *= 0.5;
+                            }
+                            this.applySpookSlow(factor, effect.durationMs);
+                        }
                         break;
                     case 'open_cache':
                         if (this.backendPuzzle) {
@@ -1095,7 +1135,7 @@ export class Game extends Phaser.Scene {
                         EventBus.emit('clue-discount-earned', { amount: effect.factor, source: 'thought_match' });
                         break;
                     case 'grant_consumable': {
-                        const item = rollCrateConsumable(match.length);
+                        const item = rollCrateConsumable(match.length, this.getCrateRollOptions(match.length));
                         EventBus.emit('consumable-found', { item });
                         break;
                     }
@@ -1109,6 +1149,15 @@ export class Game extends Phaser.Scene {
                         EventBus.emit('clue-fragment-earned', { category: effect.category, amount: effect.amount, source: 'loot_match' });
                         break;
                 }
+            }
+
+            if (gem.gemType === 'sword' && this.isAffinityActive('insect') && this.currentMoveSummary && this.currentMoveSummary.cascades > 0 && this.backendPuzzle) {
+                this.backendPuzzle.addBonusScore(20 * this.currentMoveSummary.cascades);
+                this.emitHud();
+            }
+
+            if (gem.gemType === 'key' && this.isAffinityActive('ungulate')) {
+                this.applySpookSlow(0.85, 3000);
             }
         }
     }
@@ -1126,16 +1175,7 @@ export class Game extends Phaser.Scene {
                     const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 0;
                     const tier = getSpookTier(pct);
                     if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
-                        this.nodeObjectiveCompleted = true;
-                        this.disableInputs();
-                        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                        this.time.delayedCall(250, () => {
-                            EventBus.emit('node-advance-requested', {
-                                nodeIndex: this.currentNodeIndex,
-                                reason: 'escaped',
-                                source: 'game',
-                            });
-                        });
+                        this.finishNodeObjective('escaped');
                     }
                     return;
                 }
@@ -1156,17 +1196,7 @@ export class Game extends Phaser.Scene {
                 this.syncRunnerStripSpook();
                 // Trigger escape when meter drops into escaped zone
                 if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
-                    this.nodeObjectiveCompleted = true;
-                    this.disableInputs();
-                    this.runnerStrip?.markResolved('escaped');
-                    this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                    this.time.delayedCall(250, () => {
-                        EventBus.emit('node-advance-requested', {
-                            nodeIndex: this.currentNodeIndex,
-                            reason: 'escaped',
-                            source: 'game',
-                        });
-                    });
+                    this.finishNodeObjective('escaped');
                 }
             },
         });
@@ -1198,44 +1228,42 @@ export class Game extends Phaser.Scene {
 
     private handleConsumableUsed(data: EventPayloads['consumable-used']): void {
         if (!this.backendPuzzle) return;
+        const canAffectObjective = this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted;
 
         switch (data.item.effectType) {
-            case 'score_burst':
-                this.backendPuzzle.addBonusScore(75);
+            case 'clear_visibility':
+                if (canAffectObjective && this.nodeObstacleFamily === 'visibility') {
+                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
+                }
                 break;
-            case 'objective_push':
-                if (this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
-                    this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + 2);
-                    EventBus.emit('node-objective-updated', {
-                        progress: this.nodeObjectiveProgress,
-                        target: this.nodeObjectiveTarget,
-                        requiredGems: Array.from(this.nodeRequiredGems),
-                    });
-                    this.syncRunnerStripObjective();
-                    if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
-                        this.nodeObjectiveCompleted = true;
-                        this.runnerStrip?.markResolved('success');
-                        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                        this.time.delayedCall(250, () => {
-                            EventBus.emit('node-advance-requested', {
-                                nodeIndex: this.currentNodeIndex,
-                                reason: 'objective_complete',
-                                source: 'game',
-                            });
-                        });
+            case 'clear_terrain':
+                if (canAffectObjective && this.nodeObstacleFamily === 'terrain') {
+                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
+                }
+                break;
+            case 'clear_sighting':
+                if (canAffectObjective && this.nodeObstacleFamily === 'sighting') {
+                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
+                }
+                break;
+            case 'freeze_spook':
+                this.applySpookSlow(0, 5000);
+                break;
+            case 'supply_drop':
+                if (canAffectObjective) {
+                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
+                    if (this.nodeCounterGem) {
+                        this.backendPuzzle.addNextGemsToSpawn([this.nodeCounterGem, this.nodeCounterGem]);
                     }
                 }
                 break;
-            case 'move_buffer':
-                this.backendPuzzle.setMaxMoves(this.backendPuzzle.getMaxMoves() + 3);
-                break;
-            case 'queue_boost': {
-                const queue = Array.from(this.nodeRequiredGems).slice(0, 2);
-                if (queue.length > 0) {
-                    this.backendPuzzle.addNextGemsToSpawn(queue);
-                }
-                this.backendPuzzle.addNextGemToSpawn('crate');
-                break;
+        }
+
+        if (this.nodeObjectiveTarget > 0) {
+            this.emitNodeObjectiveUpdated();
+            this.syncRunnerStripObjective();
+            if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
+                this.finishNodeObjective('objective_complete');
             }
         }
 
@@ -1491,7 +1519,11 @@ export class Game extends Phaser.Scene {
             this.speciesStartTime = Date.now();
             
             // Initialize node objective from expedition data
-            this.nodeRequiredGems = new Set(data.requiredGems ?? []);
+            this.nodeObstacles = [...(data.obstacles ?? [])];
+            this.nodeObstacleFamily = data.obstacleFamily ?? null;
+            this.nodeCounterGem = data.counterGem ?? (this.nodeObstacleFamily ? getCounterGemForObstacleFamily(this.nodeObstacleFamily) : null);
+            this.nodeRequiredGems = new Set(data.requiredGems ?? (this.nodeCounterGem ? [this.nodeCounterGem] : []));
+            this.nodeActiveAffinities = [...(data.activeAffinities ?? [])];
             this.nodeObjectiveTarget = data.objectiveTarget ?? 0;
             this.nodeObjectiveProgress = 0;
             this.nodeObjectiveCompleted = false;
@@ -1500,8 +1532,10 @@ export class Game extends Phaser.Scene {
             this.runnerStrip?.setNode({
                 nodeIndex: this.currentNodeIndex,
                 objectiveTarget: this.nodeObjectiveTarget,
-                obstacles: data.obstacles ?? [],
-                requiredGems: data.requiredGems ?? [],
+                obstacles: this.nodeObstacles,
+                counterGem: this.nodeCounterGem,
+                activeAffinities: this.nodeActiveAffinities,
+                requiredGems: Array.from(this.nodeRequiredGems),
             });
 
             // Encounter tracking for this node
@@ -1515,6 +1549,9 @@ export class Game extends Phaser.Scene {
                 const bonusByDifficulty = [0, 80, 100, 120, 160, 180];
                 this.nodeBonusStart = bonusByDifficulty[Math.min(diff, 5)] ?? 120;
                 this.nodeBonusPool = this.nodeBonusStart;
+                const waterPenalty = isWaterObstacleSet(this.nodeObstacles) && !this.isAffinityActive('fish') ? 0.75 : 0;
+                const baseNodeDecayRate = 2;
+                this.nodeBonusDecayRate = baseNodeDecayRate + waterPenalty;
                 this.nodeBonusShieldSlow = 1.0;
                 this.nodePowerMultiplier = 1.0;
                 this.nodeThoughtDiscount = 0;
@@ -2301,6 +2338,10 @@ export class Game extends Phaser.Scene {
 
         // Reset objective progress
         this.nodeRequiredGems.clear();
+        this.nodeCounterGem = null;
+        this.nodeObstacleFamily = null;
+        this.nodeObstacles = [];
+        this.nodeActiveAffinities = [];
         this.nodeObjectiveTarget = 0;
         this.nodeObjectiveProgress = 0;
         this.nodeObjectiveCompleted = false;

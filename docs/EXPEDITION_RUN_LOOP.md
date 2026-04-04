@@ -2,6 +2,8 @@
 
 Current runtime doc. For cross-system ownership rules, read [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) first.
 
+For the current additive `counterGem` + affinity migration status, see [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
+
 This document now describes both:
 
 - the **current shipped/runtime loop**
@@ -22,7 +24,7 @@ The current game keeps several YMBAB-inspired structural elements:
 
 But it intentionally diverges in its emotional core:
 
-- no runner-lane combat
+- a runner strip above the board (visual progress, not combat)
 - no hard left-edge death state
 - no direct clue-reveal pressure during node play
 - a calmer banked-score economy with a post-run deduction phase
@@ -49,9 +51,9 @@ The intended identity is now:
 `RunPhase`: `idle` → `briefing` → `in-run` → `deduction` → `complete`
 
 - **idle**: waiting for map click
-- **briefing**: ExpeditionBriefing shown; player reviews nodes before starting
-- **in-run**: puzzle active, nodes advance sequentially
-- **deduction**: Deduction Camp — player spends banked score to buy clues and guess the species (see [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md))
+- **briefing**: ExpeditionBriefing shown as a dismissible overlay on the Cesium map. Player can close it (✕ button) to return to the map and click a different location. Map clicks are not blocked during briefing — clicking a new location replaces the current briefing with fresh expedition data.
+- **in-run**: puzzle active, nodes advance sequentially. Map clicks blocked.
+- **deduction**: Deduction Camp — player spends banked score to buy clues and guess the species (see [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md)). Map clicks blocked. Clue-reveal toasts are suppressed; purchased clues appear directly in the DenseClueGrid.
 - **complete**: all nodes done, summary shown
 
 State tracked in `RunState` (`src/types/expedition.ts`), managed by `MainAppLayout.tsx`.
@@ -171,6 +173,23 @@ Spook state does **not** carry between nodes — each node resets fresh. The str
 
 A literal left-edge fail state would conflict with the explorer-science tone. The compromise: live urgency without harsh punishment, and partial-information runs still produce meaningful deduction gameplay.
 
+## Runner Strip (Phaser UI)
+
+**File:** `src/game/ui/ExpeditionRunnerStrip.ts`
+
+A horizontal strip rendered above the match-3 board in the Phaser scene. Shows a generated pixel-art scientist advancing toward a node marker as objective progress increases.
+
+- **Layout**: `Game.ts` reserves vertical space (`runnerStripHeight` + gap) in `calculateBoardDimensions()` so the board sits below the strip. Responsive: 60px on mobile, 78px on desktop.
+- **Node setup**: displays node title, required gem labels, and obstacle badges placed along the route.
+- **Progress**: scientist position lerps toward `targetProgress` (0–1) based on `objectiveProgress / objectiveTarget`.
+- **Spook tiers**: sky/horizon tint changes per tier (blue=stabilized, amber=spooked, red=escaped).
+- **Encounters**: `pulseEncounter()` animates the node marker and shows encounter name for ~1.8s.
+- **Resolution**: `markResolved('success' | 'escaped')` — success advances scientist to node; escape tints red.
+- **Textures**: all procedurally generated (scientist, node marker, ground tile) — no external assets needed.
+- **Obstacle badges**: labeled chips (e.g. MUD, FOG, RIDGE) positioned along the track; fade when the scientist passes them.
+
+The owl overlay previously used in Game.ts has been removed from the active scene but its assets remain in the repo.
+
 ## Encounters
 
 Every 3rd cumulative match group within a node triggers an encounter from the node's `events[]` array.
@@ -236,6 +255,7 @@ Initial node persistence now stores generated board context alongside rationale/
 | `src/game/scenes/Game.ts` | Objective tracking, encounter triggers, advancement requests |
 | `src/game/nodeObstacles.ts` | Obstacle typing, labels, deterministic board-state seeding |
 | `src/MainAppLayout.tsx` | Run phase state machine, request validation, persistence, node advancement |
+| `src/game/ui/ExpeditionRunnerStrip.ts` | Phaser runner strip above the board: scientist sprite, scrolling ground, obstacle badges, spook-tier palette, encounter pulses |
 | `src/components/ActiveEncounterPanel.tsx` | Node info panel, objective progress bar, analysis-node advance button, encounter flash |
 | `src/components/RunTrack.tsx` | Node progress track bar |
 | `src/components/GemWallet.tsx` | Gem inventory display |

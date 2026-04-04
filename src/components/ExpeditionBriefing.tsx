@@ -1,26 +1,33 @@
 import React from 'react';
 import type { ExpeditionData } from '@/types/expedition';
 import { ACTION_GEM_DEFS, NODE_TYPE_LABELS } from '@/expedition/domain';
+import type { AffinityType } from '@/expedition/affinities';
+import { getAffinityDefinition } from '@/expedition/affinities';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface Props {
   expedition: ExpeditionData;
   onStart: () => void;
+  onSelectAffinity: (affinityId: AffinityType | null) => void;
   onClose?: () => void;
 }
 
-export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClose }) => {
+export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSelectAffinity, onClose }) => {
   const avgDifficulty = expedition.nodes.length > 0
     ? expedition.nodes.reduce((sum, n) => sum + n.difficulty, 0) / expedition.nodes.length
     : 0;
+  const selectedAffinity = expedition.activeAffinities[0] ?? null;
 
   return (
     <div style={{
       height: '100%',
+      minHeight: 0,
+      flex: '1 1 auto',
       width: '100%',
-      overflow: 'auto',
+      overflowY: 'auto',
       padding: '12px',
+      boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
       gap: '10px',
@@ -126,6 +133,46 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
           );
         })}
       </div>
+
+      {expedition.availableAffinities.length > 0 && (
+        <Card style={{ background: 'rgba(30,41,59,0.8)', border: '1px solid #334155' }}>
+          <CardContent style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Primary Affinity
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {expedition.availableAffinities.map((affinity) => {
+                const def = getAffinityDefinition(affinity);
+                const selected = selectedAffinity === affinity;
+                return (
+                  <button
+                    key={affinity}
+                    onClick={() => onSelectAffinity(affinity)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px',
+                      textAlign: 'left',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      border: selected ? `1px solid ${def.color}` : '1px solid #475569',
+                      background: selected ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.55)',
+                      color: '#e2e8f0',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: def.color }}>{def.label}</span>
+                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>{def.familyLabel}</span>
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#cbd5e1' }}>{def.shortEffect}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Nodes preview */}
       <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>

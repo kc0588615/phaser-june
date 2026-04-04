@@ -10,6 +10,7 @@ import { toast, Toaster } from 'sonner';
 import { PiBookOpenTextLight } from "react-icons/pi";
 import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry } from '@/types/expedition';
 import { createEmptyResourceWallet, createEmptyClueFragments, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
+import type { AffinityType } from '@/expedition/affinities';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
@@ -25,6 +26,7 @@ const INITIAL_RUN_STATE: RunState = {
     phase: 'idle',
     expedition: null,
     currentNodeIndex: 0,
+    activeAffinities: [],
     resourceWallet: createEmptyResourceWallet(),
     lootMatchSummary: {},
     equippedPassives: [],
@@ -58,6 +60,7 @@ function MainAppLayout() {
     const lastResolvedNodeRef = useRef<number>(-1);
     const correctSpeciesIdRef = useRef<number>(0);
     const hiddenSpeciesNameRef = useRef<string>('');
+    const activeAffinitiesRef = useRef<AffinityType[]>([]);
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
@@ -70,15 +73,17 @@ function MainAppLayout() {
 
     const handleExpeditionDataReady = useCallback((data: EventPayloads['expedition-data-ready']) => {
         expeditionPayloadRef.current = data;
+        activeAffinitiesRef.current = data.expedition.activeAffinities;
         setRunState({
             ...INITIAL_RUN_STATE,
             phase: 'briefing',
             expedition: data.expedition,
+            activeAffinities: data.expedition.activeAffinities,
         });
     }, []);
 
     const handleExpeditionStart = useCallback(() => {
-        setRunState(prev => ({ ...prev, phase: 'in-run' }));
+        setRunState(prev => ({ ...prev, phase: 'in-run', activeAffinities: [...activeAffinitiesRef.current] }));
         // Reset score tracking for this run
         hudRef.current = { score: 0, movesUsed: 0 };
         nodeStartScoreRef.current = 0;
@@ -104,6 +109,7 @@ function MainAppLayout() {
                 lat: payload.lat,
                 locationKey,
                 nodes: payload.expedition.nodes,
+                activeAffinities: activeAffinitiesRef.current,
                 bioregion: payload.expedition.bioregion?.bioregion ?? undefined,
                 realm: payload.expedition.bioregion?.realm ?? undefined,
                 biome: payload.expedition.bioregion?.biome ?? undefined,
@@ -130,8 +136,9 @@ function MainAppLayout() {
         });
         const firstBoardConfig = buildBoardSpawnConfigForNode(
             firstNode?.node_type ?? 'custom',
-            firstNode?.requiredGems ?? [],
-            payload.expedition.actionBias
+            firstNode?.counterGem ?? null,
+            payload.expedition.actionBias,
+            activeAffinitiesRef.current
         );
         EventBus.emit('cesium-location-selected', {
             lon: payload.lon,
@@ -141,12 +148,32 @@ function MainAppLayout() {
             habitats: payload.habitats,
             difficulty: firstNode?.difficulty,
             obstacles: firstNode?.obstacles,
+            obstacleFamily: firstNode?.obstacleFamily,
+            counterGem: firstNode?.counterGem,
             requiredGems: firstNode?.requiredGems,
+            activeAffinities: activeAffinitiesRef.current,
             objectiveTarget: firstNode?.objectiveTarget,
             nodeIndex: 0,
+            nodeType: firstNode?.node_type,
             events: firstNode?.events,
             boardContext: firstBoardContext,
             boardConfig: firstBoardConfig,
+        });
+    }, []);
+
+    const handleAffinitySelected = useCallback((affinityId: AffinityType | null) => {
+        const nextAffinities = affinityId ? [affinityId] : [];
+        activeAffinitiesRef.current = nextAffinities;
+        setRunState(prev => {
+            if (!prev.expedition) return prev;
+            return {
+                ...prev,
+                activeAffinities: nextAffinities,
+                expedition: {
+                    ...prev.expedition,
+                    activeAffinities: nextAffinities,
+                },
+            };
         });
     }, []);
 
@@ -266,8 +293,9 @@ function MainAppLayout() {
                     });
                     const nextBoardConfig = buildBoardSpawnConfigForNode(
                         nextNode?.node_type ?? 'custom',
-                        nextNode?.requiredGems ?? [],
-                        prev.expedition?.actionBias ?? {}
+                        nextNode?.counterGem ?? null,
+                        prev.expedition?.actionBias ?? {},
+                        activeAffinitiesRef.current
                     );
                     EventBus.emit('cesium-location-selected', {
                         lon: payload.lon,
@@ -277,9 +305,13 @@ function MainAppLayout() {
                         habitats: payload.habitats,
                         difficulty: nextNode?.difficulty,
                         obstacles: nextNode?.obstacles,
+                        obstacleFamily: nextNode?.obstacleFamily,
+                        counterGem: nextNode?.counterGem,
                         requiredGems: nextNode?.requiredGems,
+                        activeAffinities: activeAffinitiesRef.current,
                         objectiveTarget: nextNode?.objectiveTarget,
                         nodeIndex: nextIndex,
+                        nodeType: nextNode?.node_type,
                         events: nextNode?.events,
                         boardContext: nextBoardContext,
                         boardConfig: nextBoardConfig,
@@ -308,6 +340,7 @@ function MainAppLayout() {
         hudRef.current = { score: 0, movesUsed: 0 };
         nodeStartScoreRef.current = 0;
         lastResolvedNodeRef.current = -1;
+        activeAffinitiesRef.current = [];
         setRunState(INITIAL_RUN_STATE);
         EventBus.emit('game-reset', undefined);
     }, []);
@@ -499,6 +532,23 @@ function MainAppLayout() {
         };
     }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop, handleResourceWalletUpdate, handleConsumableFound, handleConsumableUseRequested, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary]);
 
+    const inRun = runState.phase === 'in-run';
+    const showBriefing = runState.phase === 'briefing';
+    const showComplete = runState.phase === 'complete';
+    const showDeduction = runState.phase === 'deduction';
+    const useSplitLayout = inRun;
+    const currentNode = inRun && runState.expedition
+        ? runState.expedition.nodes[runState.currentNodeIndex]
+        : null;
+
+    useEffect(() => {
+        if (!phaserRef.current?.game) return;
+        const rafId = window.requestAnimationFrame(() => {
+            phaserRef.current?.game?.scale.refresh();
+        });
+        return () => window.cancelAnimationFrame(rafId);
+    }, [useSplitLayout, viewMode]);
+
     const appStyle: React.CSSProperties = {
         display: 'flex',
         flexDirection: 'column',
@@ -508,31 +558,30 @@ function MainAppLayout() {
     };
     const phaserGameWrapperStyle: React.CSSProperties = {
         width: '100%',
-        height: '60%',
+        height: useSplitLayout ? '66.6667%' : '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative',
+        position: useSplitLayout ? 'relative' : 'absolute',
+        inset: useSplitLayout ? undefined : 0,
+        overflow: 'hidden',
+        visibility: useSplitLayout ? 'visible' : 'hidden',
+        pointerEvents: useSplitLayout ? 'auto' : 'none',
+        flexShrink: 0,
     };
     const cesiumContainerStyle: React.CSSProperties = {
         width: '100%',
-        height: '40%',
+        height: useSplitLayout ? '33.3333%' : '100%',
         minHeight: '0px',
-        borderTop: '2px solid #555',
-        position: 'relative',
+        borderTop: useSplitLayout ? '2px solid #555' : 'none',
+        position: useSplitLayout ? 'relative' : 'absolute',
+        inset: useSplitLayout ? undefined : 0,
         overflow: 'hidden',
         backgroundColor: '#0f172a',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        zIndex: useSplitLayout ? 1 : 2,
     };
-
-    const inRun = runState.phase === 'in-run';
-    const showBriefing = runState.phase === 'briefing';
-    const showComplete = runState.phase === 'complete';
-    const showDeduction = runState.phase === 'deduction';
-    const currentNode = inRun && runState.expedition
-        ? runState.expedition.nodes[runState.currentNodeIndex]
-        : null;
 
     return (
         <div id="app-container" style={appStyle}>
@@ -548,7 +597,11 @@ function MainAppLayout() {
                 {/* RunTrack bar above Phaser canvas */}
                 <div style={{ display: inRun && runState.expedition ? 'block' : 'none' }}>
                     {runState.expedition && (
-                        <RunTrack nodes={runState.expedition.nodes} currentNodeIndex={runState.currentNodeIndex} />
+                        <RunTrack
+                            nodes={runState.expedition.nodes}
+                            currentNodeIndex={runState.currentNodeIndex}
+                            activeAffinities={runState.activeAffinities}
+                        />
                     )}
                 </div>
 
@@ -560,6 +613,7 @@ function MainAppLayout() {
                         <ActiveEncounterPanel
                             node={currentNode}
                             nodeIndex={runState.currentNodeIndex}
+                            activeAffinities={runState.activeAffinities}
                             onComplete={() => EventBus.emit('node-advance-requested', {
                                 nodeIndex: runState.currentNodeIndex,
                                 reason: 'analysis_complete',
@@ -570,8 +624,8 @@ function MainAppLayout() {
 
                     {/* GemWallet + SouvenirPouch fixed inside phaser wrapper */}
                     {inRun && (
-                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+                        <div style={{ position: 'absolute', bottom: '6px', left: '6px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end' }}>
                                 <GemWallet wallet={runState.resourceWallet} />
                                 {runState.souvenirs.length > 0 && (
                                     <SouvenirPouch souvenirs={runState.souvenirs} />
@@ -654,7 +708,11 @@ function MainAppLayout() {
                         <div style={{
                             width: '90%',
                             maxWidth: '420px',
+                            height: 'min(90%, 720px)',
                             maxHeight: '90%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            minHeight: 0,
                             borderRadius: '12px',
                             background: 'rgba(15,23,42,0.95)',
                             border: '1px solid #334155',
@@ -662,8 +720,9 @@ function MainAppLayout() {
                         }}>
                             <ExpeditionBriefing
                                 expedition={runState.expedition}
+                                onSelectAffinity={handleAffinitySelected}
                                 onStart={() => EventBus.emit('expedition-start', {} as Record<string, never>)}
-                                onClose={() => setRunState(INITIAL_RUN_STATE)}
+                                onClose={handleRunReset}
                             />
                         </div>
                     </div>

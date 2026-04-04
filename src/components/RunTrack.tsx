@@ -1,13 +1,16 @@
 import React from 'react';
 import type { RunNode } from '@/types/expedition';
 import { NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/expedition/domain';
+import type { AffinityType } from '@/expedition/affinities';
+import { affinitySetBuffsGem } from '@/expedition/affinities';
 
 interface Props {
   nodes: RunNode[];
   currentNodeIndex: number;
+  activeAffinities: AffinityType[];
 }
 
-export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex }) => {
+export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffinities }) => {
   return (
     <div style={{
       height: '48px',
@@ -24,7 +27,6 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex }) => {
       {nodes.map((node, i) => {
         const isCurrent = i === currentNodeIndex;
         const isCompleted = i < currentNodeIndex;
-        const isFuture = i > currentNodeIndex;
 
         return (
           <div key={i} style={{
@@ -49,16 +51,18 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex }) => {
                 ? <><span style={{ marginRight: '3px' }}>✓</span>{NODE_TYPE_LABELS[node.node_type] || node.node_type}</>
                 : NODE_TYPE_LABELS[node.node_type] || node.node_type}
               <div style={{ fontSize: '9px', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                {isCurrent && node.requiredGems?.length > 0
-                  ? node.requiredGems.map((g, gi) => (
-                      <span key={gi} style={{
+                {isCurrent && node.counterGem
+                  ? (
+                      <span style={{
                         display: 'inline-block',
-                        width: '6px',
-                        height: '6px',
+                        width: '8px',
+                        height: '8px',
                         borderRadius: '50%',
-                        background: GEM_COLOR_MAP[g] ?? '#888',
+                        background: GEM_COLOR_MAP[node.counterGem] ?? '#888',
+                        boxShadow: affinitySetBuffsGem(activeAffinities, node.counterGem) ? `0 0 8px ${GEM_COLOR_MAP[node.counterGem] ?? '#22d3ee'}` : 'none',
+                        border: affinitySetBuffsGem(activeAffinities, node.counterGem) ? '1px solid rgba(255,255,255,0.7)' : 'none',
                       }} />
-                    ))
+                    )
                   : node.difficulty}
               </div>
             </div>

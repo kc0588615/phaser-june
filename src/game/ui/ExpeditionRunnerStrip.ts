@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { getGemDefinition, type GemType } from '@/expedition/domain';
+import type { AffinityType } from '@/expedition/affinities';
+import { affinitySetBuffsGem } from '@/expedition/affinities';
 import type { SpookTier } from '@/types/expedition';
 import { formatNodeObstacleLabel, type NodeObstacle } from '@/game/nodeObstacles';
 
@@ -139,6 +141,8 @@ export class ExpeditionRunnerStrip {
         nodeIndex: number;
         objectiveTarget: number;
         obstacles: NodeObstacle[];
+        counterGem: GemType | null;
+        activeAffinities: AffinityType[];
         requiredGems: GemType[];
     }): void {
         this.active = true;
@@ -153,11 +157,11 @@ export class ExpeditionRunnerStrip {
             ? `Node ${config.nodeIndex + 1}`
             : `Analysis ${config.nodeIndex + 1}`;
 
-        if (config.objectiveTarget > 0 && config.requiredGems.length > 0) {
-            const labels = config.requiredGems
-                .map((gemType) => getGemDefinition(gemType).label)
-                .join(' + ');
-            this.objectiveText = `Match ${labels}`;
+        if (config.objectiveTarget > 0 && config.counterGem) {
+            const label = getGemDefinition(config.counterGem).label;
+            this.objectiveText = affinitySetBuffsGem(config.activeAffinities, config.counterGem)
+                ? `Match ${label} x2`
+                : `Match ${label}`;
         } else {
             this.objectiveText = 'Review evidence and prepare your guess';
         }
