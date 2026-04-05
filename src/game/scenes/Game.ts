@@ -660,10 +660,13 @@ export class Game extends Phaser.Scene {
         console.log("Game Scene: Create method finished. Waiting for Cesium data.");
     }
 
-    private async initializePlayerTracking(): Promise<void> {
-        // Auth is not configured yet; player tracking remains disabled.
+    private initializePlayerTracking(): void {
         this.currentUserId = null;
         this.currentSessionId = null;
+        EventBus.on('auth-user-ready', (data) => {
+            this.currentUserId = data.playerId;
+            this.currentSessionId = data.sessionId ?? null;
+        });
     }
 
     private createPauseControls(): void {
@@ -2491,6 +2494,7 @@ export class Game extends Phaser.Scene {
         EventBus.off('game-reset', this.onGameReset, this);
         EventBus.off('consumable-used', this.handleConsumableUsed, this);
         EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
+        EventBus.off('auth-user-ready');
 
         // Remove player tracking listeners if they exist
         if (this.currentUserId) {

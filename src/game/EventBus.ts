@@ -142,6 +142,7 @@ export interface EventPayloads {
   'node-rewards-summary': NodeRewardLanes;
   'deduction-camp-purchase': { category: ClueCategoryKey; cost: number };
   'deduction-camp-guess': { guessedName: string; speciesId: number };
+  'auth-user-ready': { playerId: string; sessionId?: string };
 }
 
 // Type-safe EventBus class

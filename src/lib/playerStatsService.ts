@@ -57,14 +57,13 @@ function transformToPlayerStats(data: PlayerStatsRow): PlayerStats {
 }
 
 /**
- * Fetch player stats for the current authenticated user.
- * Auth is not configured yet, so this returns null.
+ * Fetch player stats for the given player ID.
  */
 export async function fetchPlayerStats(
+  playerId: string,
   options: FetchPlayerStatsOptions = { includeRankings: true }
 ): Promise<PlayerStats | null> {
-  console.warn('fetchPlayerStats: auth not configured (Clerk planned).');
-  return null;
+  return fetchPlayerStatsByPlayerId(playerId, options);
 }
 
 /**

@@ -4,10 +4,14 @@ import CesiumMap from './components/CesiumMap';
 import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
 import UserMenu from './components/UserMenu';
+import { useAuthBridge } from './hooks/useAuthBridge';
+import { useUser, SignInButton } from '@clerk/nextjs';
 import { EventBus } from './game/EventBus';
 import type { EventPayloads } from './game/EventBus';
 import { toast, Toaster } from 'sonner';
 import { PiBookOpenTextLight } from "react-icons/pi";
+import { BottomTabBar } from './components/BottomTabBar';
+import type { BaseTab } from './components/BottomTabBar';
 import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry } from '@/types/expedition';
 import { createEmptyResourceWallet, createEmptyClueFragments, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
@@ -44,11 +48,48 @@ const INITIAL_RUN_STATE: RunState = {
     totalThoughtDiscount: 0,
 };
 
+function ProfileTabContent() {
+    const { isSignedIn, isLoaded } = useUser();
+
+    if (!isLoaded) return null;
+
+    if (!isSignedIn) {
+        return (
+            <div style={{ padding: '48px 16px 16px', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+                <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Field Profile</h1>
+                <div style={{ background: '#131a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Sign in to view your profile</p>
+                    <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Track biomes explored, family affinities, and discovery history.</p>
+                    <SignInButton mode="redirect">
+                        <button style={{ padding: '8px 24px', borderRadius: 9999, background: '#22d3ee', color: '#0a0e1a', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                            Sign In
+                        </button>
+                    </SignInButton>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ padding: '48px 16px 16px', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Field Profile</h1>
+            <div style={{ background: '#131a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+                <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Profile loaded</p>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
+                    Visit the <a href="/stats" style={{ color: '#22d3ee', textDecoration: 'underline' }}>full stats page</a> to see your Field Profile.
+                </p>
+            </div>
+        </div>
+    );
+}
+
 function MainAppLayout() {
+    useAuthBridge();
     const phaserRef = useRef<IRefPhaserGame | null>(null);
     const [viewMode, setViewMode] = useState<'map' | 'species'>('map');
     const [scrollToSpeciesId, setScrollToSpeciesId] = useState<number | null>(null);
     const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
+    const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     // Store full expedition payload for re-emitting cesium-location-selected per node
     const expeditionPayloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
@@ -497,6 +538,7 @@ function MainAppLayout() {
         const handleShowSpeciesList = (data: { speciesId: number }) => {
             setScrollToSpeciesId(data.speciesId);
             setViewMode('species');
+            setBaseTab('field-guide');
         };
 
         EventBus.on('show-species-list', handleShowSpeciesList);
@@ -536,7 +578,15 @@ function MainAppLayout() {
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
     const showDeduction = runState.phase === 'deduction';
+    const inExpedition = inRun || showBriefing || showComplete || showDeduction;
     const useSplitLayout = inRun;
+
+    // Tab bar drives viewMode for backward compat
+    const handleTabChange = useCallback((tab: BaseTab) => {
+        setBaseTab(tab);
+        if (tab === 'explore') setViewMode('map');
+        else if (tab === 'field-guide') setViewMode('species');
+    }, []);
     const currentNode = inRun && runState.expedition
         ? runState.expedition.nodes[runState.currentNodeIndex]
         : null;
@@ -585,10 +635,10 @@ function MainAppLayout() {
 
     return (
         <div id="app-container" style={appStyle}>
-            {/* Show game layout - position off-screen when in species view */}
+            {/* Show game layout - position off-screen when not on explore/expedition tab */}
             <div style={{
-                position: viewMode === 'species' ? 'absolute' : 'relative',
-                left: viewMode === 'species' ? '-9999px' : '0',
+                position: (baseTab !== 'explore' && baseTab !== 'expedition' && !inExpedition) ? 'absolute' : 'relative',
+                left: (baseTab !== 'explore' && baseTab !== 'expedition' && !inExpedition) ? '-9999px' : '0',
                 display: 'flex',
                 flexDirection: 'column',
                 width: '100%',
@@ -663,7 +713,7 @@ function MainAppLayout() {
                             alignItems: 'center',
                             gap: '4px'
                         }}
-                        onClick={() => setViewMode('species')}
+                        onClick={() => { setViewMode('species'); setBaseTab('field-guide'); }}
                         title="Species List"
                     >
                         <PiBookOpenTextLight size={18} />
@@ -790,7 +840,7 @@ function MainAppLayout() {
 
             {/* Full-page species view - keep mounted to preserve state */}
             <div style={{
-                display: viewMode === 'species' ? 'block' : 'none',
+                display: (viewMode === 'species' || (baseTab === 'field-guide' && !inExpedition)) ? 'block' : 'none',
                 width: '100%',
                 height: '100%',
                 position: 'absolute',
@@ -802,11 +852,53 @@ function MainAppLayout() {
                 <SpeciesList
                     onBack={() => {
                         setViewMode('map');
+                        setBaseTab('explore');
                         setScrollToSpeciesId(null);
                     }}
                     scrollToSpeciesId={scrollToSpeciesId}
                 />
             </div>
+
+            {/* Profile tab — full-screen overlay */}
+            <div style={{
+                display: (baseTab === 'profile' && !inExpedition) ? 'block' : 'none',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                backgroundColor: '#0a0e1a',
+                zIndex: 2000,
+                overflowY: 'auto',
+                paddingBottom: 90,
+            }}>
+                <ProfileTabContent />
+            </div>
+
+            {/* Inventory tab — placeholder */}
+            <div style={{
+                display: (baseTab === 'inventory' && !inExpedition) ? 'flex' : 'none',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                backgroundColor: '#0a0e1a',
+                zIndex: 2000,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingBottom: 90,
+            }}>
+                <div style={{ textAlign: 'center', color: '#64748b', fontFamily: 'system-ui, sans-serif' }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>Inventory</p>
+                    <p style={{ fontSize: 13 }}>Souvenirs and gear will appear here after expeditions.</p>
+                </div>
+            </div>
+
+            {/* Bottom Tab Bar — hidden during expedition phases */}
+            {!inExpedition && (
+                <BottomTabBar active={baseTab} onChange={handleTabChange} />
+            )}
 
             <Toaster
                 position="bottom-right"
