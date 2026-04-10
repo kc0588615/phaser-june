@@ -645,6 +645,7 @@ export class Game extends Phaser.Scene {
         EventBus.on('game-reset', this.onGameReset, this);
         EventBus.on('consumable-used', this.handleConsumableUsed, this);
         EventBus.on('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
+        EventBus.on('crisis-choice-resolved', this.handleCrisisResolved, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -1273,6 +1274,36 @@ export class Game extends Phaser.Scene {
         this.emitHud();
     }
 
+    private initializeNodeBonusState(difficulty: number, nodeType?: string): void {
+        const bonusByDifficulty = [0, 80, 100, 120, 160, 180];
+        this.nodeBonusStart = bonusByDifficulty[Math.min(difficulty, 5)] ?? 120;
+        this.nodeBonusPool = this.nodeBonusStart;
+        const waterPenalty = isWaterObstacleSet(this.nodeObstacles) && !this.isAffinityActive('fish') ? 0.75 : 0;
+        const baseNodeDecayRate = 2;
+        const skittishBonus = nodeType === 'standoff' ? 0.5 + (difficulty - 1) * 0.25 : 0;
+        this.nodeBonusDecayRate = baseNodeDecayRate + waterPenalty + skittishBonus;
+        this.nodeBonusShieldSlow = 1.0;
+        this.nodeBonusShieldExpiry = 0;
+        this.nodePowerMultiplier = 1.0;
+        this.nodeThoughtDiscount = 0;
+        this.syncRunnerStripSpook();
+    }
+
+    private handleCrisisResolved(data: EventPayloads['crisis-choice-resolved']): void {
+        if (data.chosenOptionId === 'take_risk') {
+            // Penalty: lose 30% of current bonus pool
+            this.nodeBonusPool = Math.max(0, this.nodeBonusPool * 0.7);
+        }
+        this.syncRunnerStripSpook();
+        // Resume board play and auto-advance node
+        this.canMove = true;
+        EventBus.emit('node-advance-requested', {
+            nodeIndex: this.currentNodeIndex,
+            reason: 'crisis_resolved',
+            source: 'game',
+        });
+    }
+
     private applyMoveBonuses(baseScore: number): { finalScore: number; multiplier: number; repeatedCategories: GemCategory[] } {
         if (!this.currentMoveSummary || baseScore <= 0 || !this.anyMatchThisTurn) {
             return { finalScore: baseScore, multiplier: 1, repeatedCategories: [] };
@@ -1546,20 +1577,29 @@ export class Game extends Phaser.Scene {
             this.nodeEncounterIndex = 0;
             this.nodeEvents = data.events ?? [];
 
+            if (this.inExpeditionRun) {
+                this.initializeNodeBonusState(this.currentNodeDifficulty, data.nodeType);
+            }
+
+            // Crisis node: emit the narrative choice and skip board initialization/decay.
+            if (data.nodeType === 'crisis' && this.inExpeditionRun) {
+                this.canMove = false;
+                if (this.statusText && this.statusText.active) {
+                    this.statusText.setText('Field crisis! Choose how to proceed.');
+                }
+                EventBus.emit('crisis-choice-requested', {
+                    crisisId: `crisis-${data.nodeIndex ?? 0}`,
+                    options: [
+                        { id: 'spend_tool', label: 'Use a Tool', effect: 'Spend a consumable to bypass the crisis', cost: {} },
+                        { id: 'take_risk', label: 'Push Through', effect: 'Lose some tracking stability but advance' },
+                    ],
+                });
+                return;
+            }
+
             // Node bonus decay (new economy)
             if (this.inExpeditionRun) {
-                const diff = data.difficulty ?? 3;
-                const bonusByDifficulty = [0, 80, 100, 120, 160, 180];
-                this.nodeBonusStart = bonusByDifficulty[Math.min(diff, 5)] ?? 120;
-                this.nodeBonusPool = this.nodeBonusStart;
-                const waterPenalty = isWaterObstacleSet(this.nodeObstacles) && !this.isAffinityActive('fish') ? 0.75 : 0;
-                const baseNodeDecayRate = 2;
-                this.nodeBonusDecayRate = baseNodeDecayRate + waterPenalty;
-                this.nodeBonusShieldSlow = 1.0;
-                this.nodePowerMultiplier = 1.0;
-                this.nodeThoughtDiscount = 0;
                 this.startNodeBonusDecay();
-                this.syncRunnerStripSpook();
             }
 
             // Store raster habitat data for green gem clues
@@ -2494,6 +2534,7 @@ export class Game extends Phaser.Scene {
         EventBus.off('game-reset', this.onGameReset, this);
         EventBus.off('consumable-used', this.handleConsumableUsed, this);
         EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
+        EventBus.off('crisis-choice-resolved', this.handleCrisisResolved, this);
         EventBus.off('auth-user-ready');
 
         // Remove player tracking listeners if they exist

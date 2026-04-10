@@ -73,39 +73,61 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
 
   const pct = hasObjective ? Math.min(100, (progress / node.objectiveTarget) * 100) : 0;
 
+  const isEncounter = node.node_type === 'standoff';
+
   return (
     <div style={{
       position: 'absolute',
       top: '6px',
       right: '6px',
       zIndex: 50,
-      background: 'rgba(15,23,42,0.88)',
-      border: '1px solid #334155',
+      background: 'var(--ds-glass-bg)',
+      backdropFilter: 'blur(12px)',
+      border: `1px solid ${isEncounter ? 'var(--ds-accent-amber)' : 'var(--ds-border-subtle)'}`,
       borderRadius: '7px',
       padding: '8px 10px',
       maxWidth: '200px',
-      fontFamily: 'sans-serif',
-      color: '#e2e8f0',
-      boxShadow: '0 6px 18px rgba(2, 6, 23, 0.28)',
+      fontFamily: 'inherit',
+      color: 'var(--ds-text-primary)',
+      boxShadow: isEncounter ? 'var(--ds-glow-amber)' : 'var(--ds-shadow-card)',
     }}>
-      <div style={{ fontSize: '11px', fontWeight: 700, color: '#67e8f9', marginBottom: '3px', lineHeight: 1.2 }}>
+      {/* Encounter banner — creature silhouette */}
+      {isEncounter && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          marginBottom: '6px', padding: '4px 6px',
+          background: 'rgba(245,158,11,0.1)', borderRadius: '6px',
+        }}>
+          <span style={{ fontSize: '24px', filter: 'brightness(0) opacity(0.4)' }}>🦎</span>
+          <div>
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ds-accent-amber)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Creature Spotted
+            </div>
+            <div style={{ fontSize: '9px', color: 'var(--ds-text-muted)' }}>
+              Gather data before it flees!
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ds-accent-cyan)', marginBottom: '3px', lineHeight: 1.2 }}>
         Node {nodeIndex + 1}: {NODE_TYPE_LABELS[node.node_type] || node.node_type.replace(/_/g, ' ')}
-        <span style={{ fontWeight: 400, fontSize: '10px', color: '#94a3b8', marginLeft: '5px' }}>Lv.{node.difficulty}</span>
+        <span style={{ fontWeight: 400, fontSize: '10px', color: 'var(--ds-text-secondary)', marginLeft: '5px' }}>Lv.{node.difficulty}</span>
       </div>
 
       {node.obstacles.length > 0 && (
-        <div style={{ fontSize: '9px', color: '#f59e0b', marginBottom: '2px', lineHeight: 1.25 }}>
+        <div style={{ fontSize: '9px', color: 'var(--ds-accent-amber)', marginBottom: '2px', lineHeight: 1.25 }}>
           Obstacles: {node.obstacles.map(formatNodeObstacleLabel).join(', ')}
         </div>
       )}
 
       {node.obstacleFamily && (
-        <div style={{ fontSize: '9px', color: '#67e8f9', marginBottom: '5px', lineHeight: 1.25 }}>
+        <div style={{ fontSize: '9px', color: 'var(--ds-accent-cyan)', marginBottom: '5px', lineHeight: 1.25 }}>
           Counter: {OBSTACLE_FAMILY_LABELS[node.obstacleFamily]}
         </div>
       )}
 
-      <div style={{ fontSize: '10px', lineHeight: 1.35, color: '#94a3b8', fontStyle: 'italic', marginBottom: '6px' }}>
+      <div style={{ fontSize: '10px', lineHeight: 1.35, color: 'var(--ds-text-secondary)', fontStyle: 'italic', marginBottom: '6px' }}>
         {node.rationale}
       </div>
 
@@ -113,7 +135,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
       {bonusPool && (
         <div style={{ marginBottom: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', marginBottom: '2px' }}>
-            <span style={{ color: '#94a3b8' }}>Tracking</span>
+            <span style={{ color: 'var(--ds-text-secondary)' }}>Tracking</span>
             <span style={{
               color: bonusPool.tier === 'stabilized' ? '#4ade80' : bonusPool.tier === 'spooked' ? '#fbbf24' : '#f87171',
               fontWeight: 600,
@@ -121,7 +143,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
               {bonusPool.tier === 'stabilized' ? 'Stabilized' : bonusPool.tier === 'spooked' ? 'Spooked!' : 'Escaping...'}
             </span>
           </div>
-          <div style={{ height: '3px', background: '#1e293b', borderRadius: '999px', overflow: 'hidden' }}>
+          <div style={{ height: '3px', background: 'var(--ds-background)', borderRadius: '999px', overflow: 'hidden' }}>
             <div style={{
               height: '100%',
               width: `${bonusPool.pct * 100}%`,
@@ -137,7 +159,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
       {hasObjective && (
         <div style={{ marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
-            <span style={{ fontSize: '10px', color: '#94a3b8' }}>Match:</span>
+            <span style={{ fontSize: '10px', color: 'var(--ds-text-secondary)' }}>Match:</span>
             {node.counterGem && (
               <div style={{
                 width: '10px',
@@ -148,11 +170,11 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
                 boxShadow: affinitySetBuffsGem(activeAffinities, node.counterGem) ? `0 0 8px ${GEM_COLOR_MAP[node.counterGem] ?? '#22d3ee'}` : 'none',
               }} />
             )}
-            <span style={{ fontSize: '10px', color: '#cbd5e1', marginLeft: '3px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--ds-text-primary)', marginLeft: '3px' }}>
               {progress}/{node.objectiveTarget}
             </span>
           </div>
-          <div style={{ fontSize: '9px', color: '#94a3b8', marginBottom: '3px' }}>
+          <div style={{ fontSize: '9px', color: 'var(--ds-text-secondary)', marginBottom: '3px' }}>
             {node.counterGem ? getGemDefinition(node.counterGem).label : 'No active tool'}
           </div>
           {node.counterGem && affinitySetBuffsGem(activeAffinities, node.counterGem) && (
@@ -162,7 +184,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
           )}
           <div style={{
             height: '5px',
-            background: '#1e293b',
+            background: 'var(--ds-background)',
             borderRadius: '999px',
             overflow: 'hidden',
           }}>
@@ -187,7 +209,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
             padding: '5px',
             fontSize: '11px',
             fontWeight: 600,
-            background: clicked ? '#475569' : '#1d4ed8',
+            background: clicked ? 'var(--ds-surface-elevated)' : '#1d4ed8',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
@@ -205,13 +227,13 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
           marginTop: '5px',
           padding: '5px 8px',
           background: 'linear-gradient(135deg, rgba(14,165,233,0.3), rgba(34,211,238,0.15))',
-          border: '1px solid #22d3ee',
+          border: '1px solid var(--ds-accent-cyan)',
           borderRadius: '6px',
           textAlign: 'center',
           animation: 'fadeIn 0.2s ease',
           transition: 'opacity 0.5s ease',
         }}>
-          <div style={{ fontSize: '10px', fontWeight: 700, color: '#67e8f9', lineHeight: 1.2 }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ds-accent-cyan)', lineHeight: 1.2 }}>
             {flash.label}
           </div>
           {flash.emoji && (

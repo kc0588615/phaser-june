@@ -5,7 +5,6 @@ import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
 import UserMenu from './components/UserMenu';
 import { useAuthBridge } from './hooks/useAuthBridge';
-import { useUser, SignInButton } from '@clerk/nextjs';
 import { EventBus } from './game/EventBus';
 import type { EventPayloads } from './game/EventBus';
 import { toast, Toaster } from 'sonner';
@@ -24,7 +23,12 @@ import { GemWallet } from './components/GemWallet';
 import { SouvenirPouch } from './components/SouvenirPouch';
 import { ConsumableTray } from './components/ConsumableTray';
 import { DeductionCamp } from './components/DeductionCamp';
+import { ProfileContent } from './components/ProfileContent';
+import { SpookMeter } from './components/SpookMeter';
+import { BankedScore } from './components/BankedScore';
+import { CrisisOverlay } from './components/CrisisOverlay';
 import { buildBoardSpawnConfigForNode, WALLET_DEFS } from '@/expedition/domain';
+import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
 
 const INITIAL_RUN_STATE: RunState = {
     phase: 'idle',
@@ -49,36 +53,10 @@ const INITIAL_RUN_STATE: RunState = {
 };
 
 function ProfileTabContent() {
-    const { isSignedIn, isLoaded } = useUser();
-
-    if (!isLoaded) return null;
-
-    if (!isSignedIn) {
-        return (
-            <div style={{ padding: '48px 16px 16px', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-                <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Field Profile</h1>
-                <div style={{ background: '#131a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Sign in to view your profile</p>
-                    <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Track biomes explored, family affinities, and discovery history.</p>
-                    <SignInButton mode="redirect">
-                        <button style={{ padding: '8px 24px', borderRadius: 9999, background: '#22d3ee', color: '#0a0e1a', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                            Sign In
-                        </button>
-                    </SignInButton>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div style={{ padding: '48px 16px 16px', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-            <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Field Profile</h1>
-            <div style={{ background: '#131a2e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
-                <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Profile loaded</p>
-                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-                    Visit the <a href="/stats" style={{ color: '#22d3ee', textDecoration: 'underline' }}>full stats page</a> to see your Field Profile.
-                </p>
-            </div>
+        <div style={{ paddingTop: '48px' }}>
+            <h1 className="text-ds-heading-lg px-4 mb-4">Field Profile</h1>
+            <ProfileContent inline />
         </div>
     );
 }
@@ -102,6 +80,7 @@ function MainAppLayout() {
     const correctSpeciesIdRef = useRef<number>(0);
     const hiddenSpeciesNameRef = useRef<string>('');
     const activeAffinitiesRef = useRef<AffinityType[]>([]);
+    const [boardOpacity, setBoardOpacity] = useState(1);
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         console.log('MainAppLayout: Phaser scene ready -', scene.scene.key);
@@ -129,6 +108,7 @@ function MainAppLayout() {
         hudRef.current = { score: 0, movesUsed: 0 };
         nodeStartScoreRef.current = 0;
         lastResolvedNodeRef.current = -1;
+        setBoardOpacity(1);
         const payload = expeditionPayloadRef.current;
         if (!payload) return;
 
@@ -219,6 +199,7 @@ function MainAppLayout() {
     }, []);
 
     const handleNodeAdvanceRequested = useCallback((data: EventPayloads['node-advance-requested']) => {
+        setBoardOpacity(1);
         setRunState(prev => {
             // Guard: only advance if actively in-run
             if (prev.phase !== 'in-run') return prev;
@@ -382,9 +363,25 @@ function MainAppLayout() {
         nodeStartScoreRef.current = 0;
         lastResolvedNodeRef.current = -1;
         activeAffinitiesRef.current = [];
+        setBoardOpacity(1);
         setRunState(INITIAL_RUN_STATE);
         EventBus.emit('game-reset', undefined);
     }, []);
+
+    const handleCrisisToolSpend = useCallback((): ConsumableItem | null => {
+        const spentItem = runState.phase === 'in-run' ? runState.consumables[0] ?? null : null;
+        if (!spentItem) return null;
+
+        setRunState(prev => {
+            if (prev.phase !== 'in-run') return prev;
+            return {
+                ...prev,
+                consumables: prev.consumables.filter(item => item.instanceId !== spentItem.instanceId),
+            };
+        });
+        toast(`Used ${spentItem.name} to bypass the crisis`, { duration: 1600 });
+        return spentItem;
+    }, [runState.phase, runState.consumables]);
 
     // Track latest HUD state for persisting score/moves on node-complete
     const handleHudUpdate = useCallback((data: EventPayloads['game-hud-updated']) => {
@@ -556,6 +553,13 @@ function MainAppLayout() {
         EventBus.on('clue-revealed', handleClueRevealed);
         EventBus.on('node-rewards-summary', handleNodeRewardsSummary);
 
+        // Board opacity fades as spook drops (Flight Instinct)
+        const handleBonusTick = (d: EventPayloads['node-bonus-tick']) => {
+            // Fade starts below 50%, reaches 0.35 at 0%
+            setBoardOpacity(d.pct >= 0.5 ? 1 : 0.35 + d.pct * 1.3);
+        };
+        EventBus.on('node-bonus-tick', handleBonusTick);
+
         return () => {
             EventBus.off('show-species-list', handleShowSpeciesList);
             EventBus.off('expedition-data-ready', handleExpeditionDataReady);
@@ -571,6 +575,7 @@ function MainAppLayout() {
             EventBus.off('clue-discount-earned', handleClueDiscountEarned);
             EventBus.off('clue-revealed', handleClueRevealed);
             EventBus.off('node-rewards-summary', handleNodeRewardsSummary);
+            EventBus.off('node-bonus-tick', handleBonusTick);
         };
     }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleHudUpdate, handleObjectiveUpdate, handleSouvenirDrop, handleResourceWalletUpdate, handleConsumableFound, handleConsumableUseRequested, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary]);
 
@@ -583,10 +588,16 @@ function MainAppLayout() {
 
     // Tab bar drives viewMode for backward compat
     const handleTabChange = useCallback((tab: BaseTab) => {
+        if (tab === 'expedition' && !inExpedition) {
+            // No active expedition — bounce to explore so user can pick a location
+            setBaseTab('explore');
+            setViewMode('map');
+            return;
+        }
         setBaseTab(tab);
         if (tab === 'explore') setViewMode('map');
         else if (tab === 'field-guide') setViewMode('species');
-    }, []);
+    }, [inExpedition]);
     const currentNode = inRun && runState.expedition
         ? runState.expedition.nodes[runState.currentNodeIndex]
         : null;
@@ -627,7 +638,7 @@ function MainAppLayout() {
         position: useSplitLayout ? 'relative' : 'absolute',
         inset: useSplitLayout ? undefined : 0,
         overflow: 'hidden',
-        backgroundColor: '#0f172a',
+        background: 'var(--ds-background)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: useSplitLayout ? 1 : 2,
@@ -655,7 +666,17 @@ function MainAppLayout() {
                     )}
                 </div>
 
-                <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
+                <div id="phaser-game-wrapper" style={{ ...phaserGameWrapperStyle, opacity: inRun ? boardOpacity : 1, transition: 'opacity 0.8s ease' }}>
+                    {/* Board glassmorphism backdrop */}
+                    {inRun && (
+                        <div style={{
+                            position: 'absolute', inset: 0, zIndex: 0,
+                            background: 'var(--ds-glass-bg)',
+                            backdropFilter: 'blur(8px)',
+                            borderRadius: useSplitLayout ? 0 : '16px',
+                        }} />
+                    )}
+
                     <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
                     {/* ActiveEncounterPanel overlay inside phaser wrapper */}
@@ -672,19 +693,34 @@ function MainAppLayout() {
                         />
                     )}
 
-                    {/* GemWallet + SouvenirPouch fixed inside phaser wrapper */}
+                    {/* Thumb zone — bottom overlays */}
                     {inRun && (
-                        <div style={{ position: 'absolute', bottom: '6px', left: '6px', zIndex: 50, display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end' }}>
-                                <GemWallet wallet={runState.resourceWallet} />
-                                {runState.souvenirs.length > 0 && (
-                                    <SouvenirPouch souvenirs={runState.souvenirs} />
-                                )}
+                        <div style={{
+                            position: 'absolute', bottom: '6px', left: '6px', right: '6px', zIndex: 50,
+                            display: 'flex', alignItems: 'flex-end', gap: '6px',
+                        }}>
+                            {/* Left: wallet + consumables */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start', flex: '0 0 auto' }}>
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end' }}>
+                                    <GemWallet wallet={runState.resourceWallet} />
+                                    {runState.souvenirs.length > 0 && (
+                                        <SouvenirPouch souvenirs={runState.souvenirs} />
+                                    )}
+                                </div>
+                                <ConsumableTray
+                                    items={runState.consumables}
+                                    onUse={(itemInstanceId) => EventBus.emit('consumable-use-requested', { itemInstanceId })}
+                                />
                             </div>
-                            <ConsumableTray
-                                items={runState.consumables}
-                                onUse={(itemInstanceId) => EventBus.emit('consumable-use-requested', { itemInstanceId })}
-                            />
+
+                            {/* Center: Spook Meter */}
+                            <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                <SpookMeter />
+                                <BankedScore score={runState.bankedScore} />
+                            </div>
+
+                            {/* Right spacer for balance */}
+                            <div style={{ flex: '0 0 auto', width: '1px' }} />
                         </div>
                     )}
                 </div>
@@ -703,9 +739,10 @@ function MainAppLayout() {
                     <button
                         style={{
                             padding: '5px 10px',
-                            backgroundColor: 'rgba(42, 42, 42, 0.8)',
-                            color: 'white',
-                            border: '1px solid #555',
+                            background: 'var(--ds-glass-bg)',
+                            backdropFilter: 'blur(12px)',
+                            color: 'var(--ds-text-primary)',
+                            border: '1px solid var(--ds-border-subtle)',
                             borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '14px',
@@ -722,7 +759,11 @@ function MainAppLayout() {
 
                 {/* Deduction Camp phase */}
                 {showDeduction && runState.deductionCamp && (
-                    <div style={{ height: '100%', width: '100%', overflow: 'auto' }}>
+                    <div className="glass-bg" style={{
+                        position: 'absolute', inset: 0, zIndex: 900,
+                        backdropFilter: 'blur(16px)',
+                        overflow: 'auto',
+                    }}>
                         <DeductionCamp
                             camp={runState.deductionCamp}
                             speciesId={correctSpeciesIdRef.current}
@@ -743,29 +784,32 @@ function MainAppLayout() {
                     <CesiumMap />
                 </div>
 
-                {/* ExpeditionBriefing as overlay on top of map */}
+                {/* ExpeditionBriefing as bottom sliding glass sheet */}
                 {showBriefing && runState.expedition && (
                     <div style={{
                         position: 'absolute',
                         inset: 0,
                         zIndex: 900,
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(15,23,42,0.75)',
-                        backdropFilter: 'blur(4px)',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-end',
                     }}>
+                        {/* Scrim tap-to-close */}
+                        <div
+                            style={{ flex: '0 0 25%', background: 'rgba(10,14,26,0.4)' }}
+                            onClick={handleRunReset}
+                        />
                         <div style={{
-                            width: '90%',
-                            maxWidth: '420px',
-                            height: 'min(90%, 720px)',
-                            maxHeight: '90%',
+                            flex: '0 0 75%',
                             display: 'flex',
                             flexDirection: 'column',
                             minHeight: 0,
-                            borderRadius: '12px',
-                            background: 'rgba(15,23,42,0.95)',
-                            border: '1px solid #334155',
+                            borderRadius: '16px 16px 0 0',
+                            background: 'var(--ds-glass-bg)',
+                            backdropFilter: 'blur(12px)',
+                            border: '1px solid var(--ds-border-subtle)',
+                            borderBottom: 'none',
+                            boxShadow: 'var(--ds-shadow-card)',
                             overflow: 'hidden',
                         }}>
                             <ExpeditionBriefing
@@ -778,54 +822,121 @@ function MainAppLayout() {
                     </div>
                 )}
 
-                {/* Run completion summary */}
+                {/* Run completion summary — glass overlay with stats grid */}
                 {showComplete && (
                     <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '100%',
-                        gap: '12px',
-                        fontFamily: 'sans-serif',
-                        padding: '16px',
+                        position: 'absolute', inset: 0, zIndex: 800,
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(10,14,26,0.7)',
+                        backdropFilter: 'blur(12px)',
+                        fontFamily: 'inherit',
+                        padding: '24px 16px',
+                        gap: '16px',
                     }}>
-                        <div style={{ color: '#22d3ee', fontSize: '22px', fontWeight: 700 }}>
+                        <div style={{ color: 'var(--ds-accent-cyan)', fontSize: '22px', fontWeight: 700 }}>
                             Expedition Complete!
                         </div>
-                        <div style={{ color: '#e2e8f0', fontSize: '28px', fontWeight: 700 }}>
+                        <div style={{ color: 'var(--ds-text-primary)', fontSize: '36px', fontWeight: 700 }}>
                             {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hudRef.current.score} pts
                         </div>
+
+                        {/* Stats grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%', maxWidth: '300px' }}>
+                            {[
+                                { label: 'Banked Score', value: String(hudRef.current.score), color: 'var(--ds-accent-cyan)' },
+                                { label: 'Nodes Done', value: String(runState.expedition?.nodes.length ?? 0), color: 'var(--ds-accent-emerald)' },
+                                { label: 'Souvenirs', value: String(runState.souvenirs.length), color: 'var(--ds-accent-amber)' },
+                                { label: 'Items Left', value: String(runState.consumables.length), color: 'var(--ds-gem-focus)' },
+                            ].map(({ label, value, color }) => (
+                                <div key={label} className="glass-bg shadow-card" style={{
+                                    border: '1px solid var(--ds-border-subtle)',
+                                    borderRadius: '10px', padding: '10px', textAlign: 'center',
+                                }}>
+                                    <div style={{ fontSize: '20px', fontWeight: 700, color }}>{value}</div>
+                                    <div style={{ fontSize: '10px', fontWeight: 500, color: 'var(--ds-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Meta-unlock badge — newly discovered species */}
+                        {runState.deductionCamp?.guessResult === 'correct' && hiddenSpeciesNameRef.current && (
+                            <div className="glass-bg shadow-card" style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                padding: '8px 16px', borderRadius: '12px',
+                                border: '1px solid var(--ds-accent-emerald)',
+                                animation: 'badge-pop 0.6s ease-out 0.3s both',
+                            }}>
+                                <span style={{ fontSize: '20px' }}>🔬</span>
+                                <div>
+                                    <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ds-accent-emerald)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        Species Discovered
+                                    </div>
+                                    <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ds-text-primary)' }}>
+                                        {hiddenSpeciesNameRef.current}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Affinity badge award */}
+                        {runState.activeAffinities.length > 0 && (
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                {runState.activeAffinities.map(a => {
+                                    const def = AFFINITY_DEFINITIONS[a];
+                                    return (
+                                        <div key={a} className="glass-bg shadow-card" style={{
+                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                            padding: '6px 14px', borderRadius: '9999px',
+                                            border: `1px solid ${def.color}`,
+                                            animation: 'badge-pop 0.5s ease-out both',
+                                        }}>
+                                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: def.color, flexShrink: 0 }} />
+                                            <span style={{ fontSize: '12px', fontWeight: 600, color: def.color }}>{def.label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Wallet breakdown */}
                         <div style={{ display: 'flex', gap: '16px', fontSize: '14px' }}>
                             {WALLET_DEFS.map(({ key, color, label }) => (
                                 <div key={key} style={{ textAlign: 'center' }}>
                                     <div style={{ color, fontWeight: 700, fontSize: '18px' }}>
                                         {runState.resourceWallet[key]}
                                     </div>
-                                    <div style={{ color: '#94a3b8', fontSize: '11px' }}>{label}</div>
+                                    <div style={{ color: 'var(--ds-text-secondary)', fontSize: '11px' }}>{label}</div>
                                 </div>
                             ))}
                         </div>
-                        <div style={{ color: '#94a3b8', fontSize: '13px' }}>
-                            {runState.expedition?.nodes.length ?? 6} nodes completed
-                        </div>
+
                         <button
                             onClick={handleRunReset}
                             style={{
                                 marginTop: '8px',
-                                padding: '8px 24px',
+                                padding: '12px 32px',
                                 fontSize: '14px',
                                 fontWeight: 700,
-                                background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
-                                color: 'white',
+                                background: 'linear-gradient(135deg, var(--ds-accent-cyan), #06b6d4)',
+                                color: 'var(--ds-background)',
                                 border: 'none',
-                                borderRadius: '6px',
+                                borderRadius: '9999px',
                                 cursor: 'pointer',
+                                boxShadow: 'var(--ds-glow-cyan)',
                             }}
                         >
-                            New Expedition
+                            Return to Globe
                         </button>
                     </div>
+                )}
+
+                {/* Crisis event decision overlay */}
+                {inRun && (
+                    <CrisisOverlay
+                        consumables={runState.consumables}
+                        onSpendTool={handleCrisisToolSpend}
+                    />
                 )}
 
                 {/* SpeciesPanel always mounted but hidden — handles clue-revealed toasts */}
@@ -846,7 +957,7 @@ function MainAppLayout() {
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                backgroundColor: '#0f172a',
+                background: 'var(--ds-background)',
                 zIndex: 2000
             }}>
                 <SpeciesList
@@ -867,7 +978,7 @@ function MainAppLayout() {
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                backgroundColor: '#0a0e1a',
+                background: 'var(--ds-background)',
                 zIndex: 2000,
                 overflowY: 'auto',
                 paddingBottom: 90,
@@ -875,7 +986,7 @@ function MainAppLayout() {
                 <ProfileTabContent />
             </div>
 
-            {/* Inventory tab — placeholder */}
+            {/* Inventory tab — souvenir/gear ledger */}
             <div style={{
                 display: (baseTab === 'inventory' && !inExpedition) ? 'flex' : 'none',
                 width: '100%',
@@ -883,16 +994,61 @@ function MainAppLayout() {
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                backgroundColor: '#0a0e1a',
+                background: 'var(--ds-background)',
                 zIndex: 2000,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingBottom: 90,
+                flexDirection: 'column',
+                overflowY: 'auto',
+                padding: '56px 16px 100px',
+                boxSizing: 'border-box',
             }}>
-                <div style={{ textAlign: 'center', color: '#64748b', fontFamily: 'system-ui, sans-serif' }}>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>Inventory</p>
-                    <p style={{ fontSize: 13 }}>Souvenirs and gear will appear here after expeditions.</p>
-                </div>
+                <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 600, color: 'var(--ds-text-primary)' }}>Inventory</h2>
+                <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--ds-text-muted)' }}>Souvenirs collected during expeditions</p>
+
+                {/* Souvenir grid */}
+                {runState.souvenirs.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
+                    {runState.souvenirs.map((s, i) => (
+                      <div key={`${s.id}-${i}`} className="glass-bg shadow-card" style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                        padding: '12px 8px', borderRadius: 12,
+                        border: '1px solid var(--ds-border-subtle)',
+                      }}>
+                        <span style={{ fontSize: 28 }}>{s.emoji}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ds-text-primary)', textAlign: 'center' }}>{s.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="glass-bg" style={{
+                    padding: '32px 16px', borderRadius: 16, textAlign: 'center',
+                    border: '1px solid var(--ds-border-subtle)',
+                  }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>🎒</div>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--ds-text-muted)' }}>
+                      No souvenirs yet. Complete expeditions to collect items!
+                    </p>
+                  </div>
+                )}
+
+                {/* Consumables section */}
+                {runState.consumables.length > 0 && (
+                  <>
+                    <h3 style={{ margin: '20px 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--ds-text-primary)' }}>Consumables</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 10 }}>
+                      {runState.consumables.map((c, i) => (
+                        <div key={`${c.instanceId}-${i}`} className="glass-bg shadow-card" style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                          padding: '12px 8px', borderRadius: 12,
+                          border: '1px solid var(--ds-border-subtle)',
+                        }}>
+                          <span style={{ fontSize: 20 }}>🧪</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--ds-text-primary)', textAlign: 'center' }}>{c.name}</span>
+                          <span style={{ fontSize: 9, color: 'var(--ds-text-muted)' }}>{c.effectType}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
             </div>
 
             {/* Bottom Tab Bar — hidden during expedition phases */}
@@ -909,10 +1065,10 @@ function MainAppLayout() {
                 visibleToasts={3}
                 toastOptions={{
                     classNames: {
-                        toast: "bg-slate-800 border-slate-700 text-slate-100",
-                        title: "text-cyan-300",
-                        description: "text-slate-300",
-                        actionButton: "bg-slate-600 text-white hover:bg-slate-500",
+                        toast: "glass-bg shadow-card border-ds-subtle text-ds-text-primary",
+                        title: "text-ds-cyan",
+                        description: "text-ds-text-secondary",
+                        actionButton: "bg-ds-surface-elevated text-ds-text-primary",
                     },
                 }}
             />

@@ -61,7 +61,7 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
       <Button
         variant="outline"
         size="sm"
-        className="w-full bg-slate-700 hover:bg-slate-600 border-slate-600"
+        className="w-full glass-bg hover:bg-ds-surface-elevated border-ds-subtle"
         disabled={!hasSelectedSpecies}
         onClick={() => setIsOpen(true)}
       >
@@ -88,14 +88,15 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
               bottom: 0,
               width: '100%',
               maxWidth: '32rem',
-              backgroundColor: '#0f172a',
-              borderLeft: '1px solid #334155',
+              background: 'var(--ds-glass-bg)',
+              backdropFilter: 'blur(12px)',
+              borderLeft: '1px solid var(--ds-border-subtle)',
               zIndex: 100000,
               display: 'flex',
               flexDirection: 'column'
             }}
           >
-            <div style={{ padding: '24px', borderBottom: '1px solid #334155' }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid var(--ds-border-subtle)' }}>
               <button
                 onClick={() => setIsOpen(false)}
                 style={{
@@ -105,24 +106,24 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
                   padding: '8px',
                   background: 'transparent',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: 'var(--ds-text-secondary)',
                   cursor: 'pointer'
                 }}
               >
                 ✕
               </button>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#67e8f9', marginBottom: '8px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ds-accent-cyan)', marginBottom: '8px' }}>
                 Species Detective 🔍
               </h2>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+              <p style={{ fontSize: '14px', color: 'var(--ds-text-secondary)' }}>
                 {isSpeciesDiscovered ? `✅ ${discoveredName}` : (speciesName || 'No species selected')}
               </p>
             </div>
             
             {/* Species Guess Selector */}
             {speciesName === 'Mystery Species' && speciesId && !isSpeciesDiscovered && (
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid #334155' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#67e8f9', marginBottom: '12px' }}>
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--ds-border-subtle)' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ds-accent-cyan)', marginBottom: '12px' }}>
                   Guess the Species
                 </h3>
                 <SpeciesGuessSelector 
@@ -136,14 +137,14 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
             
             <ScrollArea className="flex-1" style={{ padding: '24px' }}>
               {clues.length === 0 ? (
-                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No clues discovered yet.</p>
+                <p style={{ color: 'var(--ds-text-secondary)', fontStyle: 'italic' }}>No clues discovered yet.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {clues.map((clue, index) => (
                     <div
                       key={`clue-${clue.name}-${clue.clue.slice(0, 20)}`}
                       style={{
-                        backgroundColor: '#1e293b',
+                        background: 'var(--ds-surface-elevated)',
                         borderRadius: '8px',
                         padding: '16px',
                         borderLeft: `4px solid ${clue.color}`
@@ -151,9 +152,9 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                         <span style={{ fontSize: '20px' }}>{clue.icon}</span>
-                        <h3 style={{ fontWeight: '600', color: '#67e8f9' }}>{clue.name}</h3>
+                        <h3 style={{ fontWeight: '600', color: 'var(--ds-accent-cyan)' }}>{clue.name}</h3>
                       </div>
-                      <p style={{ fontSize: '14px', color: '#cbd5e1' }}>{clue.clue}</p>
+                      <p style={{ fontSize: '14px', color: 'var(--ds-text-primary)' }}>{clue.clue}</p>
                     </div>
                   ))}
                 </div>

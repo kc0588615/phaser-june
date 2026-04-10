@@ -34,6 +34,9 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -68,11 +71,61 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        /* Design system tokens */
+        ds: {
+          bg: "var(--ds-background)",
+          surface: "var(--ds-surface)",
+          "surface-elevated": "var(--ds-surface-elevated)",
+          "text-primary": "var(--ds-text-primary)",
+          "text-secondary": "var(--ds-text-secondary)",
+          "text-muted": "var(--ds-text-muted)",
+          cyan: "var(--ds-accent-cyan)",
+          amber: "var(--ds-accent-amber)",
+          emerald: "var(--ds-accent-emerald)",
+          rose: "var(--ds-accent-rose)",
+        },
+        gem: {
+          observe: "var(--ds-gem-observe)",
+          scan: "var(--ds-gem-scan)",
+          camouflage: "var(--ds-gem-camouflage)",
+          traverse: "var(--ds-gem-traverse)",
+          pack: "var(--ds-gem-pack)",
+          focus: "var(--ds-gem-focus)",
+          notes: "var(--ds-gem-notes)",
+          burst: "var(--ds-gem-burst)",
+        },
+      },
+      borderColor: {
+        "ds-subtle": "var(--ds-border-subtle)",
+        "ds-accent": "var(--ds-border-accent)",
+      },
+      boxShadow: {
+        "ds-card": "var(--ds-shadow-card)",
+        "glow-cyan": "var(--ds-glow-cyan)",
+        "glow-amber": "var(--ds-glow-amber)",
+        "glow-rose": "var(--ds-glow-rose)",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      spacing: {
+        "ds-xs": "4px",
+        "ds-sm": "8px",
+        "ds-md": "12px",
+        "ds-lg": "16px",
+        "ds-xl": "24px",
+        "safe-top": "47px",
+        "safe-bottom": "34px",
+        "tab-bar": "56px",
+      },
+      fontSize: {
+        "ds-heading-lg": ["20px", { lineHeight: "1.2", fontWeight: "600" }],
+        "ds-heading-sm": ["14px", { lineHeight: "1.3", fontWeight: "600" }],
+        "ds-body": ["13px", { lineHeight: "1.4", fontWeight: "400" }],
+        "ds-caption": ["11px", { lineHeight: "1.2", fontWeight: "500" }],
+        "ds-badge": ["10px", { lineHeight: "1.0", fontWeight: "700", letterSpacing: "0.5px" }],
       },
       keyframes: {
         "accordion-down": {

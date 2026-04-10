@@ -19,10 +19,12 @@ export const SouvenirPouch: React.FC<Props> = ({ souvenirs }) => {
       display: 'flex',
       gap: '4px',
       padding: '4px 6px',
-      background: 'rgba(15,23,42,0.85)',
+      background: 'var(--ds-glass-bg)',
+      backdropFilter: 'blur(12px)',
       borderRadius: '6px',
-      border: '1px solid #334155',
-      fontFamily: 'sans-serif',
+      border: '1px solid var(--ds-border-subtle)',
+      boxShadow: 'var(--ds-shadow-card)',
+      fontFamily: 'inherit',
     }}>
       {Array.from(grouped.values()).map(({ def, count }) => (
         <div
@@ -37,7 +39,7 @@ export const SouvenirPouch: React.FC<Props> = ({ souvenirs }) => {
             {def.emoji}
           </div>
           {count > 1 && (
-            <div style={{ fontSize: '8px', color: '#94a3b8', fontWeight: 700 }}>x{count}</div>
+            <div style={{ fontSize: '8px', color: 'var(--ds-text-secondary)', fontWeight: 700 }}>x{count}</div>
           )}
         </div>
       ))}

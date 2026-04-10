@@ -91,8 +91,9 @@ export function CategoryGenusPicker({
           align="start"
           sideOffset={5}
           style={{
-            backgroundColor: '#1e293b',
-            border: '1px solid #475569',
+            background: 'var(--ds-glass-bg)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid var(--ds-border-subtle)',
             zIndex: 50
           }}
         >

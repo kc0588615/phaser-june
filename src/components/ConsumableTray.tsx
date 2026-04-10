@@ -25,10 +25,12 @@ export const ConsumableTray: React.FC<Props> = ({ items, onUse }) => {
         gap: '4px',
         maxWidth: '232px',
         padding: '4px',
-        background: 'rgba(15,23,42,0.88)',
+        background: 'var(--ds-glass-bg)',
+        backdropFilter: 'blur(12px)',
         borderRadius: '7px',
-        border: '1px solid #334155',
-        fontFamily: 'sans-serif',
+        border: '1px solid var(--ds-border-subtle)',
+        boxShadow: 'var(--ds-shadow-card)',
+        fontFamily: 'inherit',
       }}
     >
       {items.map((item) => (
@@ -41,9 +43,9 @@ export const ConsumableTray: React.FC<Props> = ({ items, onUse }) => {
             gap: '6px',
             minWidth: '0',
             padding: '5px 7px',
-            background: 'rgba(30,41,59,0.9)',
-            color: '#e2e8f0',
-            border: '1px solid #475569',
+            background: 'var(--ds-surface-elevated)',
+            color: 'var(--ds-text-primary)',
+            border: '1px solid var(--ds-border-subtle)',
             borderRadius: '6px',
             cursor: 'pointer',
             textAlign: 'left',

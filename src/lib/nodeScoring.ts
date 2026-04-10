@@ -262,6 +262,13 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     events: ['discovery_event'],
     rationale: 'Custom nodes reward field preparation when conditions turn unpredictable.',
   }),
+  crisis: createNodeTemplate({
+    node_type: 'crisis',
+    obstacleFamily: null,
+    obstacles: [],
+    events: [],
+    rationale: 'Field complications force a choice before the expedition can continue.',
+  }),
   analysis: createNodeTemplate({
     node_type: 'analysis',
     obstacleFamily: null,
@@ -314,6 +321,13 @@ export function generateRunNodes(
   // Storm window if threatened species + low protection
   if (nodes.length < 5 && threatenedCount >= 2 && protectedCoverage < 0.3) {
     nodes.push({ ...NODE_TEMPLATES.storm_window, difficulty: 5 });
+  }
+
+  // Crisis nodes appear on higher-pressure expeditions and replace one filler slot.
+  const shouldAddCrisis = threatenedCount >= 2 || protectedCoverage < 0.2 || habitat.urban_ratio >= 0.35;
+  if (nodes.length < 5 && shouldAddCrisis && !nodes.some((n) => n.node_type === 'crisis')) {
+    const difficulty: RunNode['difficulty'] = threatenedCount >= 2 && protectedCoverage < 0.3 ? 4 : 3;
+    nodes.push({ ...NODE_TEMPLATES.crisis, difficulty });
   }
 
   // Fill remaining with varied tools — avoid repeating the same counter gem when possible.

@@ -271,7 +271,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
 
   const containerStyle: React.CSSProperties = {
     height: '100%',
-    backgroundColor: '#0f172a',
+    background: 'var(--ds-background)',
     padding: '6px',
     boxSizing: 'border-box',
     display: 'flex',
@@ -292,10 +292,12 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '8px 12px',
-        backgroundColor: '#1e293b',
+        background: 'var(--ds-glass-bg)',
+        backdropFilter: 'blur(12px)',
         borderRadius: '8px',
+        border: '1px solid var(--ds-border-subtle)',
         fontSize: '14px',
-        color: '#e2e8f0',
+        color: 'var(--ds-text-primary)',
         fontWeight: 500,
       }}>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -311,7 +313,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
             onClick={onRestart}
             style={{
               padding: '4px 12px',
-              backgroundColor: '#3b82f6',
+              background: 'var(--ds-accent-cyan)',
               color: 'white',
               border: 'none',
               borderRadius: '4px',

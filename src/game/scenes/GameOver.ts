@@ -93,7 +93,7 @@ export class GameOver extends Phaser.Scene {
             fontFamily: 'Arial',
             fontSize: `${Math.min(width * 0.05, height * 0.06)}px`,
             color: '#eeeeee',
-            backgroundColor: '#1e293b',
+            backgroundColor: '#131a2e',
             padding: { x: 16, y: 8 },
             align: 'center'
         }).setOrigin(0.5)

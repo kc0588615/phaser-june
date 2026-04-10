@@ -178,9 +178,9 @@ html, body {
 }
 
 body {
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #000000; 
-    font-family: Arial, Helvetica, sans-serif;
+    color: var(--ds-text-primary);
+    background-color: var(--ds-background);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 
 #app {
@@ -236,6 +236,12 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+@keyframes badge-pop {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 /* Override Cesium fullscreen button position */
 .cesium-viewer .cesium-viewer-fullscreenContainer {
   /* Only move the fullscreen button container up */
@@ -268,6 +274,63 @@ body {
 :root {
   --sticky-offset: 80px;
 }
+
+/* ── Design System Tokens (UI Redesign Spec) ── */
+:root {
+  /* Surfaces */
+  --ds-background: #0a0e1a;
+  --ds-surface: #131a2e;
+  --ds-surface-elevated: #1c2541;
+
+  /* Borders */
+  --ds-border-subtle: rgba(255,255,255,0.08);
+  --ds-border-accent: rgba(34,211,238,0.3);
+
+  /* Text */
+  --ds-text-primary: #f1f5f9;
+  --ds-text-secondary: #94a3b8;
+  --ds-text-muted: #64748b;
+
+  /* Accents */
+  --ds-accent-cyan: #22d3ee;
+  --ds-accent-amber: #f59e0b;
+  --ds-accent-emerald: #10b981;
+  --ds-accent-rose: #f43f5e;
+
+  /* Gem colors */
+  --ds-gem-observe: #ef4444;
+  --ds-gem-scan: #3b82f6;
+  --ds-gem-camouflage: #22c55e;
+  --ds-gem-traverse: #f59e0b;
+  --ds-gem-pack: #fb923c;
+  --ds-gem-focus: #8b5cf6;
+  --ds-gem-notes: #cbd5e1;
+  --ds-gem-burst: #06b6d4;
+
+  /* Effects */
+  --ds-glow-cyan: 0 0 12px rgba(34,211,238,0.4);
+  --ds-glow-amber: 0 0 12px rgba(245,158,11,0.4);
+  --ds-glow-rose: 0 0 12px rgba(244,63,94,0.4);
+  --ds-shadow-card: 0 4px 16px rgba(0,0,0,0.5);
+  --ds-glass-bg: rgba(19,26,46,0.85);
+}
+
+/* ── Glassmorphism utility ── */
+.glass-bg {
+  background: var(--ds-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Shadow utility ── */
+.shadow-card {
+  box-shadow: var(--ds-shadow-card);
+}
+
+/* ── Glow utilities ── */
+.glow-cyan  { box-shadow: var(--ds-glow-cyan); }
+.glow-amber { box-shadow: var(--ds-glow-amber); }
+.glow-rose  { box-shadow: var(--ds-glow-rose); }
 
 /* Screen reader only utility (if not provided by Tailwind) */
 .sr-only {

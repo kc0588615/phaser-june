@@ -280,6 +280,46 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
     return () => clearTimeout(timer);
   }, []);
 
+  // Pulsing cyan markers for species-viable entry points
+  const hotspotEntitiesRef = useRef<CesiumEntity[]>([]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!viewerRef.current?.cesiumElement) return;
+      const viewer = viewerRef.current.cesiumElement;
+      // Species-dense grid centroids from spatial data
+      const HOTSPOTS = [
+        { lon: -90, lat: 0 }, { lon: -60, lat: -5 }, { lon: 140, lat: -10 },
+        { lon: 15, lat: -30 }, { lon: 45, lat: -25 }, { lon: 50, lat: -15 },
+        { lon: 35, lat: -5 }, { lon: 10, lat: 0 }, { lon: 10, lat: 5 },
+        { lon: 15, lat: 15 }, { lon: 105, lat: 20 }, { lon: 110, lat: 25 },
+        { lon: 75, lat: 10 }, { lon: 105, lat: 0 }, { lon: 105, lat: 5 },
+      ];
+      for (const h of HOTSPOTS) {
+        // Pulsing outer ring
+        const ent = viewer.entities.add({
+          position: Cartesian3.fromDegrees(h.lon, h.lat),
+          point: {
+            pixelSize: new CallbackProperty(() => 12 + 4 * Math.sin(Date.now() / 600), false) as unknown as ConstantProperty,
+            color: new ConstantProperty(CesiumColor.CYAN.withAlpha(0.5)),
+            outlineColor: new ConstantProperty(CesiumColor.CYAN.withAlpha(0.8)),
+            outlineWidth: new ConstantProperty(2),
+            heightReference: new ConstantProperty(HeightReference.CLAMP_TO_GROUND),
+          },
+        });
+        hotspotEntitiesRef.current.push(ent);
+      }
+    }, 1500);
+    return () => {
+      clearTimeout(timer);
+      if (viewerRef.current?.cesiumElement) {
+        for (const ent of hotspotEntitiesRef.current) {
+          try { viewerRef.current.cesiumElement.entities.remove(ent); } catch { /* ok */ }
+        }
+      }
+      hotspotEntitiesRef.current = [];
+    };
+  }, []);
+
   useEffect(() => {
     // Load configuration and setup TiTiler imagery
     const setupImagery = async () => {
@@ -775,24 +815,42 @@ const CesiumMap: React.FC = () => { // Changed to React.FC for consistency
         )}
       </Viewer>
       {showInfoBox && (
-        <div style={{
-          position: 'absolute', top: '10px', left: '10px',
-          background: 'rgba(40,40,40,0.85)', color: 'white',
-          padding: '5px', borderRadius: '5px', fontFamily: 'sans-serif',
-          fontSize: '12px', maxWidth: '350px', zIndex: 1000, pointerEvents: 'auto'
+        <div className="glass-bg shadow-card" style={{
+          position: 'absolute', top: '12px', left: '12px',
+          padding: '10px 14px', borderRadius: '16px',
+          border: '1px solid var(--ds-border-subtle)',
+          color: 'var(--ds-text-primary)', fontFamily: 'inherit',
+          fontSize: '12px', maxWidth: '320px', zIndex: 1000, pointerEvents: 'auto',
+          display: 'flex', flexDirection: 'column', gap: '6px',
         }}>
-          <div style={{ marginBottom: '5px' }}>
-            {infoBoxData.message ? <p style={{ margin: 0 }}>{infoBoxData.message}</p> : (
-              <p style={{ margin: 0 }}>
-                <b>Habitats:</b> {infoBoxData.rasterHabitats?.length || 0} &nbsp;&nbsp;
-                <b>Species:</b> {infoBoxData.species.length}
-              </p>
-            )}
-            {isLoading && <p style={{ margin: 0 }}><em>Loading...</em></p>}
-          </div>
-          
+          {infoBoxData.message ? (
+            <p style={{ margin: 0, color: 'var(--ds-text-secondary)' }}>{infoBoxData.message}</p>
+          ) : (
+            <>
+              {/* Biome + species summary */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 600, fontSize: '13px' }}>
+                  {infoBoxData.topHabitat || 'Unknown Biome'}
+                </span>
+                <span style={{
+                  fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '9999px',
+                  background: 'var(--ds-surface-elevated)', color: 'var(--ds-accent-cyan)',
+                }}>
+                  {infoBoxData.species.length} species
+                </span>
+              </div>
+              {/* Difficulty stars based on species count */}
+              <div style={{ display: 'flex', gap: '2px' }}>
+                {Array.from({ length: Math.min(5, Math.max(1, Math.ceil(infoBoxData.species.length / 3))) }, (_, i) => (
+                  <span key={i} style={{ fontSize: '10px', color: 'var(--ds-accent-amber)' }}>★</span>
+                ))}
+              </div>
+            </>
+          )}
+          {isLoading && <p style={{ margin: 0, color: 'var(--ds-text-muted)', fontStyle: 'italic' }}>Loading...</p>}
+
           {infoBoxData.rasterHabitats && infoBoxData.rasterHabitats.length > 0 && (
-            <HabitatLegend 
+            <HabitatLegend
               habitats={infoBoxData.rasterHabitats}
               radiusKm={HABITAT_RADIUS_METERS / 1000}
             />

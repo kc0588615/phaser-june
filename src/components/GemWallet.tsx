@@ -19,10 +19,12 @@ export const GemWallet: React.FC<Props> = ({ wallet }) => {
       display: 'flex',
       gap: '4px',
       padding: '4px 6px',
-      background: 'rgba(15,23,42,0.85)',
+      background: 'var(--ds-glass-bg)',
+      backdropFilter: 'blur(12px)',
       borderRadius: '6px',
-      border: '1px solid #334155',
-      fontFamily: 'sans-serif',
+      border: '1px solid var(--ds-border-subtle)',
+      boxShadow: 'var(--ds-shadow-card)',
+      fontFamily: 'inherit',
       flexWrap: 'wrap',
     }}>
       {WALLET_DEFS.map(({ key, label, color }) => (
@@ -35,8 +37,8 @@ export const GemWallet: React.FC<Props> = ({ wallet }) => {
             gap: '4px',
             padding: '2px 5px',
             borderRadius: '999px',
-            background: 'rgba(30,41,59,0.72)',
-            border: '1px solid rgba(148,163,184,0.18)',
+            background: 'var(--ds-surface-elevated)',
+            border: '1px solid var(--ds-border-subtle)',
           }}
         >
           <div style={{

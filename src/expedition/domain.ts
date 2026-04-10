@@ -442,6 +442,7 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   urban_fringe: 'Urban',
   elevation_ridge: 'Ridge',
   storm_window: 'Storm',
+  crisis: 'Crisis',
   analysis: 'Analysis',
   custom: 'Special',
 };
@@ -472,6 +473,10 @@ const NODE_TYPE_BOARD_META: Record<
   storm_window: {
     lootChance: 0.08,
     nodeBoosts: { power: 0.1, multiplier: 0.08, sword: 0.04 },
+  },
+  crisis: {
+    lootChance: 0,
+    nodeBoosts: {},
   },
   custom: {
     lootChance: 0.14,

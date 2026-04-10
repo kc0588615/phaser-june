@@ -20,9 +20,10 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
       justifyContent: 'center',
       gap: '6px',
       padding: '0 12px',
-      background: 'rgba(15,23,42,0.85)',
-      borderBottom: '1px solid #334155',
-      fontFamily: 'sans-serif',
+      background: 'var(--ds-glass-bg)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: '1px solid var(--ds-border-subtle)',
+      fontFamily: 'inherit',
     }}>
       {nodes.map((node, i) => {
         const isCurrent = i === currentNodeIndex;
@@ -39,9 +40,9 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
               borderRadius: '6px',
               fontSize: '12px',
               fontWeight: isCurrent ? 700 : 500,
-              border: isCurrent ? '2px solid #22d3ee' : isCompleted ? '1px solid #475569' : '1px solid #334155',
+              border: isCurrent ? '2px solid var(--ds-accent-cyan)' : isCompleted ? '1px solid var(--ds-border-subtle)' : '1px solid var(--ds-border-subtle)',
               background: isCurrent ? 'rgba(34,211,238,0.15)' : isCompleted ? 'rgba(71,85,105,0.3)' : 'transparent',
-              color: isCurrent ? '#22d3ee' : isCompleted ? '#64748b' : '#94a3b8',
+              color: isCurrent ? 'var(--ds-accent-cyan)' : isCompleted ? 'var(--ds-text-muted)' : 'var(--ds-text-secondary)',
               transform: isCurrent ? 'scale(1.1)' : 'scale(1)',
               transition: 'all 0.2s ease',
               textAlign: 'center',
@@ -70,7 +71,7 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
               <div style={{
                 width: '12px',
                 height: '2px',
-                background: isCompleted ? '#475569' : '#1e293b',
+                background: isCompleted ? 'var(--ds-border-subtle)' : 'var(--ds-background)',
               }} />
             )}
           </div>

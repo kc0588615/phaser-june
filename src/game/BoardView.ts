@@ -38,6 +38,7 @@ export class BoardView {
     private boardOffset: { x: number; y: number };
     private gemsSprites: (Phaser.GameObjects.Sprite | null)[][] = []; // The 2D array [x][y] mirroring the logical grid
     private gemGroup: Phaser.GameObjects.Group; // Group for efficient management
+    private overlayGraphics: (Phaser.GameObjects.Graphics | null)[][] = []; // Obstacle overlay visuals
 
     constructor(scene: Phaser.Scene, config: BoardConfig) {
         if (!scene || !(scene instanceof Phaser.Scene)) {
@@ -581,6 +582,15 @@ export class BoardView {
 
         this.gemsSprites = [];
 
+        // Destroy all obstacle overlays
+        for (const col of this.overlayGraphics) {
+            if (!col) continue;
+            for (const gfx of col) {
+                if (gfx) gfx.destroy();
+            }
+        }
+        this.overlayGraphics = [];
+
         // Clear Phaser group without recreating it
         if (this.gemGroup) {
             try {
@@ -673,6 +683,10 @@ export class BoardView {
         const blockerId = cell.state?.blockerId ?? null;
         sprite.clearTint();
 
+        // Get grid coords from sprite data or position
+        const gx: number | undefined = sprite.getData('gridX');
+        const gy: number | undefined = sprite.getData('gridY');
+
         switch (blockerId) {
             case 'mud':
                 sprite.setTint(0x8b5a2b);
@@ -699,6 +713,52 @@ export class BoardView {
                 sprite.clearTint();
                 break;
         }
+
+        // Obstacle overlay graphics
+        if (typeof gx === 'number' && typeof gy === 'number') {
+            this.clearOverlayAt(gx, gy);
+            if (blockerId) {
+                this.drawOverlayAt(gx, gy, blockerId);
+            }
+        }
+    }
+
+    private clearOverlayAt(x: number, y: number): void {
+        const gfx = this.overlayGraphics[x]?.[y];
+        if (gfx) {
+            gfx.destroy();
+            this.overlayGraphics[x][y] = null;
+        }
+    }
+
+    private drawOverlayAt(x: number, y: number, blockerId: string): void {
+        if (!this.overlayGraphics[x]) this.overlayGraphics[x] = [];
+        const pos = this.getSpritePosition(x, y);
+        const half = this.gemSize / 2;
+        const gfx = this.scene.add.graphics();
+        gfx.setDepth(10);
+
+        const flags = this.gemsSprites[x]?.[y]?.getData('cellState')?.flags as string[] | undefined;
+        const isVisibility = flags?.some((f: string) => ['overgrowth', 'low_visibility', 'signal_dropout', 'limited_signal'].includes(f));
+
+        if (isVisibility) {
+            // Fog overlay — translucent white cloud
+            gfx.fillStyle(0xffffff, 0.3);
+            gfx.fillRoundedRect(pos.x - half, pos.y - half, this.gemSize, this.gemSize, 6);
+            gfx.fillStyle(0xffffff, 0.15);
+            gfx.fillCircle(pos.x - half * 0.3, pos.y - half * 0.2, half * 0.6);
+            gfx.fillCircle(pos.x + half * 0.3, pos.y + half * 0.2, half * 0.5);
+        } else {
+            // Bramble/terrain overlay — cross-hatch lines
+            gfx.lineStyle(1.5, 0x5a3e1b, 0.5);
+            const step = this.gemSize / 4;
+            for (let i = 1; i < 4; i++) {
+                gfx.lineBetween(pos.x - half + i * step, pos.y - half, pos.x - half, pos.y - half + i * step);
+                gfx.lineBetween(pos.x + half - i * step, pos.y + half, pos.x + half, pos.y + half - i * step);
+            }
+        }
+
+        this.overlayGraphics[x][y] = gfx;
     }
 
     /** Gets the sprite at [x, y] if active, otherwise null. */
