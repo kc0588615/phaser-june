@@ -11,6 +11,19 @@ This makes data flow impossible to trace from component signatures, creates dupl
 
 ---
 
+## Current Branch Status
+
+This plan describes the migration starting from the current UI-audit branch, not an already-centralized EventBus state.
+
+- Active mounted React/EventBus consumers still include `MainAppLayout`, `PhaserGame`, `useExpeditionRun`, `useSpeciesPanelState`, `useCesiumTrail`, `ActiveEncounterPanel`, `SpookMeter`, `CrisisOverlay`, `ClueSheetWrapper`, and `SpeciesGuessSelector`
+- That mounted code still represents roughly high-30s React-side listeners before any Context migration
+- `ClueDisplay.tsx` and `SpeciesPanel.old.tsx` still exist as legacy files and also contain old EventBus subscriptions, but they appear unused
+- Part 1 improved structure and extracted hooks, but it did not yet centralize subscriptions
+
+The main value of Part 1 is that the largest EventBus consumers are now isolated into hooks (`useExpeditionRun`, `useSpeciesPanelState`, `useCesiumTrail`), which makes the Context cut-over much cleaner.
+
+---
+
 ## Current EventBus Usage Map
 
 ### Events emitted by Phaser (Game.ts) → consumed by React
@@ -93,7 +106,7 @@ Several events have multiple independent React subscribers that maintain their o
 | `node-bonus-tick` | useExpeditionRun, SpookMeter, ActiveEncounterPanel | Bonus pool / spook tier |
 | `node-objective-updated` | useExpeditionRun, ActiveEncounterPanel | Progress toward objective |
 | `game-reset` | useExpeditionRun, useSpeciesPanelState, useCesiumTrail | Reset state |
-| `new-game-started` | useSpeciesPanelState, ClueSheetWrapper, SpeciesGuessSelector | Species name/id |
+| `new-game-started` | useSpeciesPanelState, ClueSheetWrapper, SpeciesGuessSelector | Species name/id and hidden species name |
 | `expedition-data-ready` | useExpeditionRun, useCesiumTrail | Expedition payload |
 
 Each subscriber independently `on()`/`off()` the same event and maintains its own `useState`. With context, a single subscriber could hold the state and share it via provider.
@@ -128,7 +141,7 @@ New file: `src/contexts/GameBridgeContext.tsx`
 - Stores derived state: `hud`, `clues[]`, `bonusPool`, `objectiveProgress`, `speciesInfo`, `encounterFlash`
 - Exposes via `useGameBridge()` hook
 - Components like SpookMeter, ActiveEncounterPanel, SpeciesPanel read from context instead of subscribing individually
-- **EventBus listeners move from 6 files into 1 provider**
+- **EventBus listeners move from several mounted consumers into 1 provider**
 
 ```tsx
 // Pseudocode
@@ -176,8 +189,9 @@ New file: `src/contexts/ExpeditionContext.tsx`
 | SpookMeter | `EventBus.on('node-bonus-tick')` → local state | `const { bonusPool } = useGameBridge()` |
 | ActiveEncounterPanel | 3 EventBus subscriptions → 3 local states | `const { bonusPool, objectiveProgress, encounterFlash } = useGameBridge()` |
 | useSpeciesPanelState | 8 EventBus subscriptions | `const { hud, clues, speciesInfo } = useGameBridge()` — most state comes from context |
-| ClueSheetWrapper | 2 EventBus subscriptions | Props from parent (speciesInfo from context) |
-| SpeciesGuessSelector | 1 EventBus subscription | Props from parent |
+| CrisisOverlay | 2 EventBus subscriptions | `const { crisisState } = useGameBridge()` + callback prop for tool spending |
+| ClueSheetWrapper | 2 EventBus subscriptions | Props/context for species discovery state |
+| SpeciesGuessSelector | 1 EventBus subscription | Hidden species name passed via props/context |
 
 #### Step 5: Keep EventBus for True Bridge Events
 
@@ -218,13 +232,13 @@ Mixed events (`game-reset`, `expedition-start`, `species-guess-submitted`) get d
 
 ### Expected Outcome
 
-| Metric | Before | After |
-|--------|--------|-------|
-| EventBus listeners in React | ~45 | ~12 (bridge-only) |
-| Components subscribing to EventBus | 10 | 3 (GameBridgeProvider, ExpeditionProvider, PhaserGame) |
-| Duplicate state copies (hud, clues, etc.) | 3-4 per datum | 1 per datum |
-| Data flow traceability | Invisible (pub/sub) | Explicit (props/context) |
-| Files touched | — | ~12 (2 new providers, 8 refactored consumers, 2 layout files) |
+| Metric | Current Branch | Target After Migration |
+|--------|----------------|------------------------|
+| EventBus listeners in mounted React code | ~38 | bridge-only subset |
+| Mounted React consumers subscribing to EventBus | 10 | 3 (`GameBridgeProvider`, `ExpeditionProvider`, `PhaserGame`) |
+| Duplicate state copies (hud, clues, bonus pool, species info) | 2-4 per datum | 1 per datum |
+| Data flow traceability | Mostly invisible (pub/sub) | Explicit (props/context) |
+| Legacy unused subscribers still in tree | 2 files | 0 after cleanup |
 
 ### Files to Create
 
@@ -244,7 +258,7 @@ Mixed events (`game-reset`, `expedition-start`, `species-guess-submitted`) get d
 - `src/hooks/useCesiumTrail.ts` — Consume ExpeditionContext for expedition-data-ready
 - `src/components/CesiumMap.tsx` — Call context setter instead of EventBus.emit for expedition-data-ready
 
-### Files to Delete
+### Optional Cleanup After Migration
 
 - `src/components/SpeciesPanel.old.tsx` — Legacy duplicate, unused
 - `src/components/ClueDisplay.tsx` — Legacy duplicate with 6 EventBus subscriptions, replaced by DenseClueGrid + ClueSheetWrapper

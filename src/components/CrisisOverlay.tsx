@@ -1,21 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { EventBus } from '@/game/EventBus';
-import type { EventPayloads } from '@/game/EventBus';
 import type { ConsumableItem } from '@/types/expedition';
 import { ModalOverlay } from '@/components/ui/modal-overlay';
 import { GlassPanel } from '@/components/ui/glass-panel';
-
-interface CrisisOption {
-  id: string;
-  label: string;
-  cost?: Record<string, number>;
-  effect: string;
-}
-
-interface CrisisState {
-  crisisId: string;
-  options: CrisisOption[];
-}
+import { useGameBridge } from '@/contexts/GameBridgeContext';
 
 interface Props {
   consumables: ConsumableItem[];
@@ -23,29 +11,17 @@ interface Props {
 }
 
 export const CrisisOverlay: React.FC<Props> = ({ consumables, onSpendTool }) => {
-  const [crisis, setCrisis] = useState<CrisisState | null>(null);
+  const { crisisState } = useGameBridge();
   const [chosen, setChosen] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handler = (data: EventPayloads['crisis-choice-requested']) => {
-      setCrisis({ crisisId: data.crisisId, options: data.options });
-      setChosen(null);
-    };
-    EventBus.on('crisis-choice-requested', handler);
-    return () => { EventBus.off('crisis-choice-requested', handler); };
-  }, []);
-
-  useEffect(() => {
-    const handler = () => { setCrisis(null); setChosen(null); };
-    EventBus.on('node-complete', handler);
-    return () => { EventBus.off('node-complete', handler); };
-  }, []);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Reset chosen when a new crisis arrives or crisis clears
+  useEffect(() => { setChosen(null); }, [crisisState]);
+
   /* Trap focus inside the crisis panel */
   useEffect(() => {
-    if (!crisis) return;
+    if (!crisisState) return;
     const el = panelRef.current;
     if (el) {
       const first = el.querySelector<HTMLElement>('button:not([disabled])');
@@ -62,9 +38,9 @@ export const CrisisOverlay: React.FC<Props> = ({ consumables, onSpendTool }) => 
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [crisis]);
+  }, [crisisState]);
 
-  if (!crisis) return null;
+  if (!crisisState) return null;
 
   const handleChoice = (optionId: string) => {
     if (optionId === 'spend_tool') {
@@ -72,9 +48,9 @@ export const CrisisOverlay: React.FC<Props> = ({ consumables, onSpendTool }) => 
       if (!spent) return;
     }
     setChosen(optionId);
-    const opt = crisis.options.find(o => o.id === optionId);
+    const opt = crisisState.options.find(o => o.id === optionId);
     EventBus.emit('crisis-choice-resolved', {
-      crisisId: crisis.crisisId,
+      crisisId: crisisState.crisisId,
       chosenOptionId: optionId,
       modifier: opt?.effect ?? '',
     });
@@ -92,7 +68,7 @@ export const CrisisOverlay: React.FC<Props> = ({ consumables, onSpendTool }) => 
         </div>
 
         <div className="flex flex-col gap-ds-sm">
-          {crisis.options.map(opt => {
+          {crisisState.options.map(opt => {
             const isToolOption = opt.id === 'spend_tool';
             const disabled = chosen !== null || (isToolOption && consumables.length === 0);
             const toolLabel = isToolOption && consumables[0]

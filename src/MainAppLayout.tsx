@@ -5,7 +5,9 @@ import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
 import UserMenu from './components/UserMenu';
 import { useAuthBridge } from './hooks/useAuthBridge';
-import { useExpeditionRun } from './hooks/useExpeditionRun';
+import { useExpedition } from './contexts/ExpeditionContext';
+import { GameBridgeProvider, useGameBridge } from './contexts/GameBridgeContext';
+import { ExpeditionProvider } from './contexts/ExpeditionContext';
 import { EventBus } from './game/EventBus';
 import { Toaster } from 'sonner';
 import { PiBookOpenTextLight } from "react-icons/pi";
@@ -25,6 +27,7 @@ import { CrisisOverlay } from './components/CrisisOverlay';
 import { WALLET_DEFS } from '@/expedition/domain';
 import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import type { RunState } from '@/types/expedition';
 
 function ProfileTabContent() {
     return (
@@ -35,7 +38,7 @@ function ProfileTabContent() {
     );
 }
 
-function MainAppLayout() {
+function MainAppLayoutInner() {
     useAuthBridge();
     const phaserRef = useRef<IRefPhaserGame | null>(null);
     const [viewMode, setViewMode] = useState<'map' | 'species'>('map');
@@ -43,25 +46,25 @@ function MainAppLayout() {
     const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     const {
-        runState, boardOpacity, hudRef, correctSpeciesIdRef, hiddenSpeciesNameRef,
+        runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
         handleAffinitySelected, handleRunReset, handleCrisisToolSpend,
         handleDeductionPurchase, handleDeductionGuessResult,
-    } = useExpeditionRun();
+        useConsumable, onShowSpeciesList,
+    } = useExpedition();
+
+    // Register show-species-list handler (replaces EventBus listener)
+    useEffect(() => {
+        onShowSpeciesList.current = (speciesId: number) => {
+            setScrollToSpeciesId(speciesId);
+            setViewMode('species');
+            setBaseTab('field-guide');
+        };
+        return () => { onShowSpeciesList.current = null; };
+    }, [onShowSpeciesList]);
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         if (phaserRef.current) phaserRef.current.scene = scene;
     };
-
-    // Show-species-list navigation
-    useEffect(() => {
-        const handleShowSpeciesList = (data: { speciesId: number }) => {
-            setScrollToSpeciesId(data.speciesId);
-            setViewMode('species');
-            setBaseTab('field-guide');
-        };
-        EventBus.on('show-species-list', handleShowSpeciesList);
-        return () => { EventBus.off('show-species-list', handleShowSpeciesList); };
-    }, []);
 
     const inRun = runState.phase === 'in-run';
     const showBriefing = runState.phase === 'briefing';
@@ -153,7 +156,7 @@ function MainAppLayout() {
                                     <GemWallet wallet={runState.resourceWallet} />
                                     {runState.souvenirs.length > 0 && <SouvenirPouch souvenirs={runState.souvenirs} />}
                                 </div>
-                                <ConsumableTray items={runState.consumables} onUse={(itemInstanceId) => EventBus.emit('consumable-use-requested', { itemInstanceId })} />
+                                <ConsumableTray items={runState.consumables} onUse={useConsumable} />
                             </div>
                             <div className="flex-1 flex flex-col items-center gap-ds-xs">
                                 <SpookMeter />
@@ -170,8 +173,8 @@ function MainAppLayout() {
                         <div className="glass-bg absolute inset-0 z-deduction backdrop-blur-xl overflow-auto">
                             <DeductionCamp
                                 camp={runState.deductionCamp}
-                                speciesId={correctSpeciesIdRef.current}
-                                hiddenSpeciesName={hiddenSpeciesNameRef.current}
+                                speciesId={correctSpeciesId}
+                                hiddenSpeciesName={hiddenSpeciesName}
                                 onPurchase={handleDeductionPurchase}
                                 onGuessResult={handleDeductionGuessResult}
                                 onFinish={handleRunReset}
@@ -207,8 +210,6 @@ function MainAppLayout() {
                     {showComplete && (
                         <RunCompleteSummary
                             runState={runState}
-                            hudRef={hudRef}
-                            hiddenSpeciesNameRef={hiddenSpeciesNameRef}
                             onReset={handleRunReset}
                         />
                     )}
@@ -310,16 +311,15 @@ function MainAppLayout() {
 }
 
 // --- Run completion summary overlay ---
-import type { RunState } from '@/types/expedition';
 
-function RunCompleteSummary({ runState, hudRef, hiddenSpeciesNameRef, onReset }: {
+function RunCompleteSummary({ runState, onReset }: {
     runState: RunState;
-    hudRef: React.RefObject<{ score: number; movesUsed: number }>;
-    hiddenSpeciesNameRef: React.RefObject<string>;
     onReset: () => void;
 }) {
+    const { hud } = useGameBridge();
+    const { hiddenSpeciesName } = useExpedition();
     const stats = [
-        { label: 'Banked Score', value: String(hudRef.current?.score ?? 0), color: 'var(--ds-accent-cyan)' },
+        { label: 'Banked Score', value: String(hud.score), color: 'var(--ds-accent-cyan)' },
         { label: 'Nodes Done', value: String(runState.expedition?.nodes.length ?? 0), color: 'var(--ds-accent-emerald)' },
         { label: 'Souvenirs', value: String(runState.souvenirs.length), color: 'var(--ds-accent-amber)' },
         { label: 'Items Left', value: String(runState.consumables.length), color: 'var(--ds-gem-focus)' },
@@ -329,7 +329,7 @@ function RunCompleteSummary({ runState, hudRef, hiddenSpeciesNameRef, onReset }:
         <div className="absolute inset-0 z-panel flex flex-col items-center justify-center bg-[rgba(10,14,26,0.7)] backdrop-blur-md p-ds-xl gap-ds-lg">
             <div className="text-[22px] font-bold text-ds-cyan">Expedition Complete!</div>
             <div className="text-4xl font-bold text-ds-text-primary">
-                {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hudRef.current?.score ?? 0} pts
+                {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hud.score} pts
             </div>
 
             <div className="grid grid-cols-2 gap-ds-sm w-full max-w-[300px]">
@@ -341,12 +341,12 @@ function RunCompleteSummary({ runState, hudRef, hiddenSpeciesNameRef, onReset }:
                 ))}
             </div>
 
-            {runState.deductionCamp?.guessResult === 'correct' && hiddenSpeciesNameRef.current && (
+            {runState.deductionCamp?.guessResult === 'correct' && hiddenSpeciesName && (
                 <GlassPanel borderColor="var(--ds-accent-emerald)" className="flex items-center gap-ds-sm px-ds-lg py-ds-sm rounded-xl">
                     <span className="text-xl">🔬</span>
                     <div>
                         <div className="text-ds-badge font-bold text-ds-emerald uppercase tracking-wider">Species Discovered</div>
-                        <div className="text-ds-body font-semibold text-ds-text-primary">{hiddenSpeciesNameRef.current}</div>
+                        <div className="text-ds-body font-semibold text-ds-text-primary">{hiddenSpeciesName}</div>
                     </div>
                 </GlassPanel>
             )}
@@ -382,6 +382,17 @@ function RunCompleteSummary({ runState, hudRef, hiddenSpeciesNameRef, onReset }:
                 Return to Globe
             </button>
         </div>
+    );
+}
+
+// --- Wrapped with providers ---
+function MainAppLayout() {
+    return (
+        <GameBridgeProvider>
+            <ExpeditionProvider>
+                <MainAppLayoutInner />
+            </ExpeditionProvider>
+        </GameBridgeProvider>
     );
 }
 

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { EventBus } from '@/game/EventBus';
-import type { EventPayloads } from '@/game/EventBus';
+import React from 'react';
 import type { SpookTier } from '@/types/expedition';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { useGameBridge } from '@/contexts/GameBridgeContext';
 
 const TIER_CONFIG: Record<SpookTier, { label: string; color: string }> = {
   stabilized: { label: 'Stabilized', color: 'var(--ds-accent-emerald)' },
@@ -11,20 +10,12 @@ const TIER_CONFIG: Record<SpookTier, { label: string; color: string }> = {
 };
 
 export const SpookMeter: React.FC = () => {
-  const [data, setData] = useState<{ pct: number; tier: SpookTier } | null>(null);
+  const { bonusPool } = useGameBridge();
 
-  useEffect(() => {
-    const handler = (d: EventPayloads['node-bonus-tick']) => {
-      setData({ pct: d.pct, tier: d.tier });
-    };
-    EventBus.on('node-bonus-tick', handler);
-    return () => { EventBus.off('node-bonus-tick', handler); };
-  }, []);
+  if (!bonusPool) return null;
 
-  if (!data) return null;
-
-  const cfg = TIER_CONFIG[data.tier];
-  const widthPct = Math.max(0, Math.min(100, data.pct * 100));
+  const cfg = TIER_CONFIG[bonusPool.tier];
+  const widthPct = Math.max(0, Math.min(100, bonusPool.pct * 100));
 
   return (
     <GlassPanel

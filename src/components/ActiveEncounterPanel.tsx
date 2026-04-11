@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { RunNode, SpookTier } from '@/types/expedition';
 import { NODE_TYPE_LABELS, getGemDefinition } from '@/expedition/domain';
 import { GemSwatch } from '@/components/ui/gem-swatch';
 import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem, getAffinityDefinition } from '@/expedition/affinities';
-import { EventBus } from '@/game/EventBus';
-import type { EventPayloads } from '@/game/EventBus';
 import { formatNodeObstacleLabel, OBSTACLE_FAMILY_LABELS } from '@/game/nodeObstacles';
+import { useGameBridge } from '@/contexts/GameBridgeContext';
 
 interface Props {
   node: RunNode;
@@ -27,40 +26,13 @@ const TIER_LABELS: Record<SpookTier, string> = {
 };
 
 export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeAffinities, onComplete }) => {
+  const { bonusPool, encounterFlash, objectiveProgress } = useGameBridge();
+
   const [clicked, setClicked] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [flash, setFlash] = useState<{ label: string; emoji?: string } | null>(null);
-  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [bonusPool, setBonusPool] = useState<{ current: number; start: number; pct: number; tier: SpookTier } | null>(null);
-
   const hasObjective = node.objectiveTarget > 0;
+  const progress = objectiveProgress?.progress ?? 0;
 
-  useEffect(() => { setClicked(false); setProgress(0); setFlash(null); setBonusPool(null); }, [nodeIndex]);
-
-  useEffect(() => {
-    const handler = (data: EventPayloads['node-bonus-tick']) => {
-      setBonusPool({ current: data.currentPool, start: data.startPool, pct: data.pct, tier: data.tier });
-    };
-    EventBus.on('node-bonus-tick', handler);
-    return () => { EventBus.off('node-bonus-tick', handler); };
-  }, []);
-
-  useEffect(() => {
-    const handler = (data: EventPayloads['encounter-triggered']) => {
-      setFlash({ label: data.effect.label, emoji: data.souvenirDrop?.emoji });
-      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
-      flashTimerRef.current = setTimeout(() => setFlash(null), 2000);
-    };
-    EventBus.on('encounter-triggered', handler);
-    return () => { EventBus.off('encounter-triggered', handler); if (flashTimerRef.current) clearTimeout(flashTimerRef.current); };
-  }, []);
-
-  useEffect(() => {
-    if (!hasObjective) return;
-    const handler = (data: EventPayloads['node-objective-updated']) => { setProgress(data.progress); };
-    EventBus.on('node-objective-updated', handler);
-    return () => { EventBus.off('node-objective-updated', handler); };
-  }, [hasObjective, nodeIndex]);
+  useEffect(() => { setClicked(false); }, [nodeIndex]);
 
   const handleClick = () => { setClicked(true); onComplete(); };
 
@@ -172,10 +144,10 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
       )}
 
       {/* Encounter flash */}
-      {flash && (
+      {encounterFlash && (
         <div className="mt-1.5 py-1.5 px-2 bg-gradient-to-br from-[rgba(14,165,233,0.3)] to-[rgba(34,211,238,0.15)] border border-ds-accent rounded-md text-center">
-          <div className="text-ds-badge font-bold text-ds-cyan leading-tight">{flash.label}</div>
-          {flash.emoji && <div className="text-sm mt-0.5">{flash.emoji}</div>}
+          <div className="text-ds-badge font-bold text-ds-cyan leading-tight">{encounterFlash.label}</div>
+          {encounterFlash.emoji && <div className="text-sm mt-0.5">{encounterFlash.emoji}</div>}
         </div>
       )}
     </section>

@@ -38,7 +38,7 @@
 
 | File | Changes |
 |------|---------|
-| `src/components/BottomTabBar.tsx` | `z-[9000]` → `z-tab-bar`, `<div>` → `<nav>`, `role=tablist` + `role=tab` + `aria-selected`, focus-visible ring |
+| `src/components/BottomTabBar.tsx` | `z-[9000]` → `z-tab-bar`, `<div>` → `<nav>`, `aria-current` on active item, focus-visible ring |
 | `src/components/ui/dialog.tsx` | `z-[9999]`/`z-[10000]` → `z-modal-backdrop`/`z-modal` |
 | `src/components/ui/sheet.tsx` | `z-[99999]`/`z-[100000]` → `z-sheet-backdrop`/`z-sheet` |
 | `src/PhaserGame.tsx` | `zIndex: 1` → `z-game` token |

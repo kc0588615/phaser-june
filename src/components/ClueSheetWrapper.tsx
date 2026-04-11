@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { CluePayload } from '../game/clueConfig';
 import { SpeciesGuessSelector } from './SpeciesGuessSelector';
-import { EventBus } from '@/game/EventBus';
+import { useGameBridge } from '@/contexts/GameBridgeContext';
 
 interface ClueSheetWrapperProps {
   clues: CluePayload[];
@@ -16,33 +16,35 @@ interface ClueSheetWrapperProps {
 }
 
 export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speciesName, hasSelectedSpecies, speciesId, hiddenSpeciesName }) => {
+  const { guessResult, speciesInfo } = useGameBridge();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isSpeciesDiscovered, setIsSpeciesDiscovered] = React.useState(false);
   const [discoveredName, setDiscoveredName] = React.useState('');
 
+  // React to guess results from context
   React.useEffect(() => {
-    const handleGuessResult = (data: any) => {
-      if (data.isCorrect && data.speciesId === speciesId) {
-        setIsSpeciesDiscovered(true);
-        setDiscoveredName(data.actualName);
-      }
-    };
-    EventBus.on('species-guess-submitted', handleGuessResult);
-    return () => { EventBus.off('species-guess-submitted', handleGuessResult); };
-  }, [speciesId]);
+    if (guessResult?.isCorrect && guessResult.speciesId === speciesId) {
+      setIsSpeciesDiscovered(true);
+      setDiscoveredName(guessResult.actualName);
+    }
+  }, [guessResult, speciesId]);
 
+  // Reset on new species
   React.useEffect(() => {
     if (speciesId && speciesId > 0) { setIsSpeciesDiscovered(false); setDiscoveredName(''); }
   }, [speciesId]);
 
+  // Reset on new game (detected via speciesInfo change)
+  const prevSpeciesInfoRef = useRef(speciesInfo);
   React.useEffect(() => {
-    const handleNewGame = () => { setIsSpeciesDiscovered(false); setDiscoveredName(''); };
-    EventBus.on('new-game-started', handleNewGame);
-    return () => { EventBus.off('new-game-started', handleNewGame); };
-  }, []);
+    if (speciesInfo && speciesInfo !== prevSpeciesInfoRef.current) {
+      setIsSpeciesDiscovered(false);
+      setDiscoveredName('');
+    }
+    prevSpeciesInfoRef.current = speciesInfo;
+  }, [speciesInfo]);
 
   const sheetRef = useRef<HTMLDivElement>(null);
-
   const closeSheet = useCallback(() => setIsOpen(false), []);
 
   /* Escape key + focus trap */
