@@ -1,5 +1,6 @@
 import React from 'react';
 import type { ConsumableItem } from '@/types/expedition';
+import { GlassPanel } from '@/components/ui/glass-panel';
 
 interface Props {
   items: ConsumableItem[];
@@ -18,46 +19,20 @@ export const ConsumableTray: React.FC<Props> = ({ items, onUse }) => {
   if (items.length === 0) return null;
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '4px',
-        maxWidth: '232px',
-        padding: '4px',
-        background: 'var(--ds-glass-bg)',
-        backdropFilter: 'blur(12px)',
-        borderRadius: '7px',
-        border: '1px solid var(--ds-border-subtle)',
-        boxShadow: 'var(--ds-shadow-card)',
-        fontFamily: 'inherit',
-      }}
-    >
+    <GlassPanel className="flex flex-wrap gap-ds-xs max-w-[200px] sm:max-w-[260px] p-ds-xs rounded-md">
       {items.map((item) => (
         <button
           key={item.instanceId}
           onClick={() => onUse(item.instanceId)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            minWidth: '0',
-            padding: '5px 7px',
-            background: 'var(--ds-surface-elevated)',
-            color: 'var(--ds-text-primary)',
-            border: '1px solid var(--ds-border-subtle)',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            textAlign: 'left',
-            flex: '1 1 108px',
-          }}
+          className="flex items-center gap-1.5 min-w-0 py-[5px] px-[7px] bg-ds-surface-elevated text-ds-text-primary border border-ds-subtle rounded-md cursor-pointer text-left"
+          style={{ flex: '1 1 108px' }}
           title={item.description}
           aria-label={`${item.name}: ${item.description}`}
         >
-          <span style={{ fontSize: '13px', lineHeight: 1 }}>{ITEM_EMOJIS[item.id] ?? '🧰'}</span>
-          <span style={{ fontSize: '10px', fontWeight: 700, lineHeight: 1.1 }}>{item.name}</span>
+          <span className="text-[13px] leading-none">{ITEM_EMOJIS[item.id] ?? '🧰'}</span>
+          <span className="text-ds-badge font-bold leading-tight">{item.name}</span>
         </button>
       ))}
-    </div>
+    </GlassPanel>
   );
 };

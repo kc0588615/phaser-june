@@ -178,7 +178,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
           </button>
           
           {open && (
-            <div className="absolute z-[200000] w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-hidden">
+            <div className="absolute z-guess-dropdown w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-hidden">
               <div className="p-2 border-b border-slate-700">
                 <input
                   type="text"

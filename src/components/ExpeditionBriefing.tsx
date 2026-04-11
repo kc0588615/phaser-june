@@ -28,7 +28,6 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
     : 0;
   const selectedAffinity = expedition.activeAffinities[0] ?? null;
 
-  // Compute obstacle family breakdown across all nodes
   const obstacleCounts: Partial<Record<ObstacleFamily, number>> = {};
   let totalObstacles = 0;
   for (const node of expedition.nodes) {
@@ -39,49 +38,26 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
   }
 
   return (
-    <div style={{
-      height: '100%',
-      minHeight: 0,
-      flex: '1 1 auto',
-      width: '100%',
-      overflowY: 'auto',
-      padding: '16px',
-      boxSizing: 'border-box',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px',
-      color: 'var(--ds-text-primary)',
-      fontFamily: 'inherit',
-    }}>
+    <div className="h-full min-h-0 flex-1 w-full overflow-y-auto p-ds-lg box-border flex flex-col gap-ds-md text-ds-text-primary">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="flex justify-between items-center">
         <div>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--ds-text-primary)' }}>
+          <h2 className="m-0 text-lg font-semibold text-ds-text-primary">
             {expedition.bioregion?.bioregion || 'Expedition Briefing'}
           </h2>
           {expedition.bioregion?.biome && (
-            <div style={{ fontSize: '12px', color: 'var(--ds-text-secondary)', marginTop: '2px' }}>
-              {expedition.bioregion.biome}
-            </div>
+            <div className="text-ds-body text-ds-text-secondary mt-0.5">{expedition.bioregion.biome}</div>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <Badge variant="outline" style={{ color: 'var(--ds-accent-amber)', borderColor: 'var(--ds-accent-amber)' }}>
+        <div className="flex gap-ds-sm items-center">
+          <Badge variant="outline" className="text-ds-amber border-[var(--ds-accent-amber)]">
             {'★'.repeat(Math.round(avgDifficulty))}{'☆'.repeat(5 - Math.round(avgDifficulty))}
           </Badge>
           {onClose && (
             <button
               onClick={onClose}
-              style={{
-                background: 'transparent',
-                border: '1px solid var(--ds-border-subtle)',
-                borderRadius: '6px',
-                color: 'var(--ds-text-secondary)',
-                fontSize: '16px',
-                lineHeight: 1,
-                padding: '4px 8px',
-                cursor: 'pointer',
-              }}
+              className="bg-transparent border border-ds-subtle rounded-md text-ds-text-secondary text-base leading-none px-ds-sm py-ds-xs cursor-pointer"
+              aria-label="Back to map"
               title="Back to map"
             >
               ✕
@@ -90,21 +66,21 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
         </div>
       </div>
 
-      {/* Protected Areas + ICCA as badges */}
+      {/* Protected Areas + ICCA badges */}
       {(expedition.protectedAreas.length > 0 || (expedition.iccaTerritories && expedition.iccaTerritories.length > 0)) && (
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div className="flex gap-1.5 flex-wrap">
           {expedition.protectedAreas.slice(0, 3).map((pa, i) => (
-            <Badge key={`pa-${i}`} variant="secondary" style={{ fontSize: '11px', background: 'var(--ds-surface-elevated)', color: 'var(--ds-gem-scan)' }}>
+            <Badge key={`pa-${i}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
               {pa.name || pa.designation || 'Protected Area'}
             </Badge>
           ))}
           {expedition.iccaTerritories?.slice(0, 1).map((icca, i) => (
-            <Badge key={`icca-${i}`} variant="secondary" style={{ fontSize: '11px', background: 'var(--ds-surface-elevated)', color: 'var(--ds-accent-amber)' }}>
+            <Badge key={`icca-${i}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-ds-amber">
               {icca.name || 'ICCA Territory'}
             </Badge>
           ))}
           {expedition.nearestRiverDistM != null && expedition.nearestRiverDistM < 10000 && (
-            <Badge variant="secondary" style={{ fontSize: '11px', background: 'var(--ds-surface-elevated)', color: 'var(--ds-gem-scan)' }}>
+            <Badge variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
               River {(expedition.nearestRiverDistM / 1000).toFixed(1)} km
             </Badge>
           )}
@@ -114,27 +90,22 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
       {/* Obstacle Preview Bar */}
       {totalObstacles > 0 && (
         <div>
-          <div style={{ fontSize: '11px', color: 'var(--ds-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-            Route Hazards
-          </div>
-          <div style={{ display: 'flex', height: '8px', borderRadius: '4px', overflow: 'hidden', gap: '2px' }}>
+          <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1.5">Route Hazards</div>
+          <div className="flex h-2 rounded overflow-hidden gap-0.5">
             {(Object.entries(obstacleCounts) as [ObstacleFamily, number][]).map(([family, count]) => (
               <div
                 key={family}
-                style={{
-                  flex: count,
-                  background: OBSTACLE_FAMILY_COLORS[family] ?? 'var(--ds-text-muted)',
-                  borderRadius: '4px',
-                }}
+                className="rounded"
+                style={{ flex: count, background: OBSTACLE_FAMILY_COLORS[family] ?? 'var(--ds-text-muted)' }}
                 title={`${OBSTACLE_FAMILY_LABELS[family]}: ${Math.round((count / totalObstacles) * 100)}%`}
               />
             ))}
           </div>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+          <div className="flex gap-ds-sm mt-ds-xs flex-wrap">
             {(Object.entries(obstacleCounts) as [ObstacleFamily, number][]).map(([family, count]) => (
-              <div key={family} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: OBSTACLE_FAMILY_COLORS[family] }} />
-                <span style={{ fontSize: '10px', color: 'var(--ds-text-secondary)' }}>
+              <div key={family} className="flex items-center gap-ds-xs">
+                <div className="w-2 h-2 rounded-full" style={{ background: OBSTACLE_FAMILY_COLORS[family] }} />
+                <span className="text-ds-badge text-ds-text-secondary">
                   {OBSTACLE_FAMILY_LABELS[family]} {Math.round((count / totalObstacles) * 100)}%
                 </span>
               </div>
@@ -143,42 +114,28 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
         </div>
       )}
 
-      {/* Connected Node Circles — route preview */}
+      {/* Route Preview */}
       <div>
-        <div style={{ fontSize: '11px', color: 'var(--ds-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-          Route
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0', overflowX: 'auto', padding: '4px 0' }}>
+        <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1.5">Route</div>
+        <div className="flex items-center justify-center overflow-x-auto py-ds-xs">
           {expedition.nodes.map((node, i) => {
             const isEncounter = node.node_type === 'analysis' || node.obstacles.length === 0;
             const gemColor = node.counterGem ? GEM_COLOR_MAP[node.counterGem] : 'var(--ds-text-muted)';
             return (
               <React.Fragment key={i}>
-                {i > 0 && (
-                  <div style={{ width: '16px', height: '2px', background: 'var(--ds-border-subtle)', flexShrink: 0 }} />
-                )}
+                {i > 0 && <div className="w-4 h-0.5 bg-ds-surface-elevated shrink-0" />}
                 <div
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-ds-surface flex flex-col items-center justify-center shrink-0"
                   style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
                     border: `2px solid ${gemColor}`,
-                    background: 'var(--ds-surface)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
                     boxShadow: isEncounter ? 'none' : `0 0 6px ${gemColor}44`,
                   }}
                   title={`${NODE_TYPE_LABELS[node.node_type] || node.node_type} Lv.${node.difficulty}`}
                 >
-                  <div style={{ fontSize: '9px', fontWeight: 700, color: gemColor, lineHeight: 1 }}>
+                  <div className="text-[9px] font-bold leading-none" style={{ color: gemColor }}>
                     {NODE_TYPE_LABELS[node.node_type]?.slice(0, 3) || '?'}
                   </div>
-                  <div style={{ fontSize: '8px', color: 'var(--ds-text-muted)', lineHeight: 1 }}>
-                    {node.difficulty}
-                  </div>
+                  <div className="text-[8px] text-ds-text-muted leading-none">{node.difficulty}</div>
                 </div>
               </React.Fragment>
             );
@@ -186,41 +143,34 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
         </div>
       </div>
 
-      {/* Affinity Loadout Selector */}
+      {/* Affinity Loadout */}
       {expedition.availableAffinities.length > 0 && (
         <div>
-          <div style={{ fontSize: '11px', color: 'var(--ds-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-            Equip Affinity
-          </div>
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '2px 0' }}>
+          <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1.5">Equip Affinity</div>
+          <div role="radiogroup" aria-label="Affinity selection" className="flex gap-ds-sm overflow-x-auto py-0.5">
             {expedition.availableAffinities.map((affinity) => {
               const def = getAffinityDefinition(affinity);
               const selected = selectedAffinity === affinity;
               return (
                 <button
                   key={affinity}
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={`${def.label} affinity: ${def.shortEffect}`}
                   onClick={() => onSelectAffinity(affinity)}
+                  className={`
+                    flex flex-col gap-ds-xs text-center items-center py-2.5 px-ds-md rounded-xl
+                    min-w-[85px] sm:min-w-[100px] shrink-0 cursor-pointer transition-all duration-200 text-ds-text-primary
+                    ${selected ? 'bg-ds-surface' : 'glass-bg'}
+                  `}
                   style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                    textAlign: 'center',
-                    alignItems: 'center',
-                    padding: '10px 12px',
-                    borderRadius: '12px',
-                    minWidth: '100px',
-                    flexShrink: 0,
                     border: selected ? `2px solid ${def.color}` : '1px solid var(--ds-border-subtle)',
-                    background: selected ? 'var(--ds-surface)' : 'var(--ds-glass-bg)',
-                    color: 'var(--ds-text-primary)',
-                    cursor: 'pointer',
                     boxShadow: selected ? `0 0 12px ${def.color}44` : 'none',
-                    transition: 'all 0.2s ease',
                   }}
                 >
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: def.color }}>{def.label}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--ds-text-secondary)' }}>{def.familyLabel}</span>
-                  <span style={{ fontSize: '10px', color: 'var(--ds-text-muted)' }}>{def.shortEffect}</span>
+                  <span className="text-ds-body font-bold" style={{ color: def.color }}>{def.label}</span>
+                  <span className="text-ds-badge text-ds-text-secondary">{def.familyLabel}</span>
+                  <span className="text-ds-badge text-ds-text-muted">{def.shortEffect}</span>
                 </button>
               );
             })}
@@ -228,49 +178,32 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
         </div>
       )}
 
-      {/* Action Bias — compact bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
+      {/* Action Bias */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-ds-sm">
         {ACTION_GEM_DEFS.map(({ gemType, label, color }) => {
           const actionGemType = gemType as keyof ExpeditionData['actionBias'];
           const weight = expedition.actionBias[actionGemType] ?? 0.125;
           const maxWeight = Math.max(...Object.values(expedition.actionBias), 0.125);
           const pct = Math.round((weight / maxWeight) * 100);
           return (
-            <div key={gemType} style={{ textAlign: 'center' }}>
-              <div style={{ height: '6px', borderRadius: '3px', background: 'var(--ds-background)' }}>
-                <div style={{
-                  height: '100%',
-                  borderRadius: '3px',
-                  background: color,
-                  width: `${pct}%`,
-                  transition: 'width 0.3s ease',
-                }} />
+            <div key={gemType} className="text-center">
+              <div className="h-1.5 rounded-sm bg-ds-bg">
+                <div className="h-full rounded-sm transition-[width] duration-300" style={{ background: color, width: `${pct}%` }} />
               </div>
-              <div style={{ fontSize: '10px', color: 'var(--ds-text-secondary)', marginTop: '3px' }}>
-                {label} <span style={{ color, fontWeight: 600 }}>{Math.round(weight * 100)}%</span>
+              <div className="text-ds-badge text-ds-text-secondary mt-1">
+                {label} <span className="font-semibold" style={{ color }}>{Math.round(weight * 100)}%</span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Start button pinned to bottom */}
-      <div style={{ marginTop: 'auto', padding: '4px 0 0', flexShrink: 0 }}>
+      {/* Start button */}
+      <div className="mt-auto pt-ds-xs shrink-0">
         <button
           onClick={onStart}
-          style={{
-            width: '100%',
-            padding: '14px 20px',
-            fontSize: '16px',
-            fontWeight: 700,
-            background: 'linear-gradient(135deg, var(--ds-accent-cyan), #06b6d4)',
-            color: 'var(--ds-background)',
-            border: 'none',
-            borderRadius: '9999px',
-            cursor: 'pointer',
-            textAlign: 'center',
-            boxShadow: 'var(--ds-glow-cyan)',
-          }}
+          className="w-full py-3.5 px-5 text-base font-bold text-ds-bg border-none rounded-full cursor-pointer text-center shadow-glow-cyan"
+          style={{ background: 'var(--ds-gradient-cta)' }}
         >
           Start Expedition
         </button>

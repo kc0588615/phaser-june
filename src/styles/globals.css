@@ -307,12 +307,36 @@ body {
   --ds-gem-notes: #cbd5e1;
   --ds-gem-burst: #06b6d4;
 
+  /* Gradients */
+  --ds-gradient-cta: linear-gradient(135deg, var(--ds-accent-cyan), var(--ds-gem-burst));
+  --ds-gradient-progress: linear-gradient(90deg, #0ea5e9, var(--ds-accent-cyan));
+
   /* Effects */
   --ds-glow-cyan: 0 0 12px rgba(34,211,238,0.4);
   --ds-glow-amber: 0 0 12px rgba(245,158,11,0.4);
   --ds-glow-rose: 0 0 12px rgba(244,63,94,0.4);
   --ds-shadow-card: 0 4px 16px rgba(0,0,0,0.5);
   --ds-glass-bg: rgba(19,26,46,0.85);
+
+  /* Z-index layers */
+  --z-base: 0;
+  --z-game: 1;
+  --z-hud: 50;
+  --z-carousel-nav: 80;
+  --z-dropdown: 100;
+  --z-overlay: 500;
+  --z-crisis: 700;
+  --z-panel: 800;
+  --z-deduction: 900;
+  --z-menu: 1000;
+  --z-briefing: 2000;
+  --z-tab-bar: 5000;
+  --z-modal-backdrop: 8000;
+  --z-modal: 8100;
+  --z-sheet-backdrop: 8200;
+  --z-sheet: 8300;
+  --z-confetti: 9000;
+  --z-guess-dropdown: 9500;
 }
 
 /* ── Glassmorphism utility ── */

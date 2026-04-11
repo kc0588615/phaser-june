@@ -44,9 +44,9 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
       roots.push(classId);
       
       Object.entries(orders).forEach(([orderName, genera]) => {
-        const orderId = `order-${orderName}`;
+        const orderId = `order-${className}-${orderName}`;
         const orderChildren: string[] = [];
-        
+
         data[orderId] = {
           id: orderId,
           name: getOrderDisplayName(orderName),
@@ -54,9 +54,9 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
           children: orderChildren
         };
         classChildren.push(orderId);
-        
+
         Object.entries(genera).forEach(([familyName, speciesList]) => {
-          const familyId = `family-${familyName}`;
+          const familyId = `family-${className}-${orderName}-${familyName}`;
           const familyChildren: string[] = [];
           
           data[familyId] = {
@@ -123,8 +123,8 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
       const familyName = itemData.name.split(' (')[0]; // Extract family name without count
       onFilterSelect({ type: 'family', value: familyName });
     } else if (itemData?.type === 'order') {
-      // Filter by order
-      const orderName = itemData.id.replace('order-', '');
+      // Filter by order — ID format: order-{class}-{order}
+      const orderName = itemData.id.split('-').slice(2).join('-');
       onFilterSelect({ type: 'order', value: orderName });
     } else if (itemData?.type === 'class') {
       // Filter by class
@@ -164,7 +164,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
             } else if (selectedFilter.type === 'family' && itemData?.type === 'family') {
               isFilterMatch = itemData.name.split(' (')[0] === selectedFilter.value;
             } else if (selectedFilter.type === 'order' && itemData?.type === 'order') {
-              isFilterMatch = itemData.id.replace('order-', '') === selectedFilter.value;
+              isFilterMatch = itemData.id.split('-').slice(2).join('-') === selectedFilter.value;
             } else if (selectedFilter.type === 'class' && itemData?.type === 'class') {
               isFilterMatch = itemData.id.replace('class-', '') === selectedFilter.value;
             }

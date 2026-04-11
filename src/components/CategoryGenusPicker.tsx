@@ -95,7 +95,7 @@ export function CategoryGenusPicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-[400px] p-0 max-h-[400px] overflow-auto bg-secondary border border-secondary z-[9999]" 
+          className="w-[400px] p-0 max-h-[400px] overflow-auto bg-secondary border border-secondary z-dropdown" 
           align="start"
         >
           <Command>

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ResourceWallet } from '@/types/expedition';
 import { WALLET_DEFS } from '@/expedition/domain';
+import { GlassPanel } from '@/components/ui/glass-panel';
 
 interface Props {
   wallet: ResourceWallet;
@@ -15,51 +16,22 @@ const WALLET_EMOJIS = {
 
 export const GemWallet: React.FC<Props> = ({ wallet }) => {
   return (
-    <div style={{
-      display: 'flex',
-      gap: '4px',
-      padding: '4px 6px',
-      background: 'var(--ds-glass-bg)',
-      backdropFilter: 'blur(12px)',
-      borderRadius: '6px',
-      border: '1px solid var(--ds-border-subtle)',
-      boxShadow: 'var(--ds-shadow-card)',
-      fontFamily: 'inherit',
-      flexWrap: 'wrap',
-    }}>
+    <GlassPanel className="flex gap-ds-xs p-1.5 flex-wrap">
       {WALLET_DEFS.map(({ key, label, color }) => (
         <div
           key={key}
           title={`${label}: ${wallet[key]}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '2px 5px',
-            borderRadius: '999px',
-            background: 'var(--ds-surface-elevated)',
-            border: '1px solid var(--ds-border-subtle)',
-          }}
+          className="flex items-center gap-ds-xs px-1.5 py-0.5 rounded-full bg-ds-surface-elevated border border-ds-subtle"
         >
-          <div style={{
-            fontSize: '11px',
-            lineHeight: 1,
-          }}>
-            {WALLET_EMOJIS[key]}
-          </div>
-          <div style={{
-            minWidth: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            fontWeight: 700,
-            color,
-          }}>
+          <span className="text-ds-caption leading-none">{WALLET_EMOJIS[key]}</span>
+          <span
+            className="min-w-[14px] flex items-center justify-center text-ds-badge font-bold"
+            style={{ color }}
+          >
             {wallet[key]}
-          </div>
+          </span>
         </div>
       ))}
-    </div>
+    </GlassPanel>
   );
 };

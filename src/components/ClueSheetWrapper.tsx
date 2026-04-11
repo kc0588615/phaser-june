@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -20,7 +20,6 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
   const [isSpeciesDiscovered, setIsSpeciesDiscovered] = React.useState(false);
   const [discoveredName, setDiscoveredName] = React.useState('');
 
-  // Listen for species guess results
   React.useEffect(() => {
     const handleGuessResult = (data: any) => {
       if (data.isCorrect && data.speciesId === speciesId) {
@@ -28,33 +27,45 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
         setDiscoveredName(data.actualName);
       }
     };
-
     EventBus.on('species-guess-submitted', handleGuessResult);
-    return () => {
-      EventBus.off('species-guess-submitted', handleGuessResult);
-    };
+    return () => { EventBus.off('species-guess-submitted', handleGuessResult); };
   }, [speciesId]);
 
-  // Reset when new game starts
   React.useEffect(() => {
-    if (speciesId && speciesId > 0) {
-      setIsSpeciesDiscovered(false);
-      setDiscoveredName('');
-    }
+    if (speciesId && speciesId > 0) { setIsSpeciesDiscovered(false); setDiscoveredName(''); }
   }, [speciesId]);
 
-  // Listen for new game events to reset state
   React.useEffect(() => {
-    const handleNewGame = () => {
-      setIsSpeciesDiscovered(false);
-      setDiscoveredName('');
-    };
-
+    const handleNewGame = () => { setIsSpeciesDiscovered(false); setDiscoveredName(''); };
     EventBus.on('new-game-started', handleNewGame);
-    return () => {
-      EventBus.off('new-game-started', handleNewGame);
-    };
+    return () => { EventBus.off('new-game-started', handleNewGame); };
   }, []);
+
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  const closeSheet = useCallback(() => setIsOpen(false), []);
+
+  /* Escape key + focus trap */
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = sheetRef.current;
+    if (el) {
+      const first = el.querySelector<HTMLElement>('button, input, [tabindex]');
+      first?.focus();
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closeSheet(); return; }
+      if (e.key !== 'Tab' || !el) return;
+      const focusable = el.querySelectorAll<HTMLElement>('button, input, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, closeSheet]);
 
   return (
     <>
@@ -71,90 +82,47 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
 
       {isOpen && typeof window !== 'undefined' && createPortal(
         <>
-          <div 
-            style={{
-              position: 'fixed',
-              inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              zIndex: 99999
-            }}
-            onClick={() => setIsOpen(false)}
-          />
-          <div 
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: '100%',
-              maxWidth: '32rem',
-              background: 'var(--ds-glass-bg)',
-              backdropFilter: 'blur(12px)',
-              borderLeft: '1px solid var(--ds-border-subtle)',
-              zIndex: 100000,
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            <div style={{ padding: '24px', borderBottom: '1px solid var(--ds-border-subtle)' }}>
+          <div className="fixed inset-0 bg-black/80 z-sheet-backdrop" onClick={closeSheet} aria-hidden="true" />
+          <div ref={sheetRef} role="dialog" aria-modal="true" aria-label="Species detective clue sheet" className="fixed inset-y-0 right-0 w-full max-w-lg glass-bg border-l border-ds-subtle z-sheet flex flex-col">
+            <div className="p-ds-xl border-b border-ds-subtle">
               <button
-                onClick={() => setIsOpen(false)}
-                style={{
-                  position: 'absolute',
-                  right: '16px',
-                  top: '16px',
-                  padding: '8px',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--ds-text-secondary)',
-                  cursor: 'pointer'
-                }}
+                onClick={closeSheet}
+                aria-label="Close clue sheet"
+                className="absolute right-ds-lg top-ds-lg p-ds-sm bg-transparent border-none text-ds-text-secondary cursor-pointer"
               >
                 ✕
               </button>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--ds-accent-cyan)', marginBottom: '8px' }}>
+              <h2 className="text-ds-heading-lg font-semibold text-ds-cyan mb-ds-sm">
                 Species Detective 🔍
               </h2>
-              <p style={{ fontSize: '14px', color: 'var(--ds-text-secondary)' }}>
+              <p className="text-ds-body text-ds-text-secondary">
                 {isSpeciesDiscovered ? `✅ ${discoveredName}` : (speciesName || 'No species selected')}
               </p>
             </div>
-            
-            {/* Species Guess Selector */}
+
             {speciesName === 'Mystery Species' && speciesId && !isSpeciesDiscovered && (
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--ds-border-subtle)' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: 'var(--ds-accent-cyan)', marginBottom: '12px' }}>
-                  Guess the Species
-                </h3>
-                <SpeciesGuessSelector 
-                  key={`guess-${speciesId}`}
-                  speciesId={speciesId}
-                  disabled={false}
-                  hiddenSpeciesName={hiddenSpeciesName}
-                />
+              <div className="px-ds-xl py-ds-lg border-b border-ds-subtle">
+                <h3 className="text-ds-heading-sm font-semibold text-ds-cyan mb-ds-md">Guess the Species</h3>
+                <SpeciesGuessSelector key={`guess-${speciesId}`} speciesId={speciesId} disabled={false} hiddenSpeciesName={hiddenSpeciesName} />
               </div>
             )}
-            
-            <ScrollArea className="flex-1" style={{ padding: '24px' }}>
+
+            <ScrollArea className="flex-1 px-ds-xl py-ds-xl">
               {clues.length === 0 ? (
-                <p style={{ color: 'var(--ds-text-secondary)', fontStyle: 'italic' }}>No clues discovered yet.</p>
+                <p className="text-ds-text-secondary italic">No clues discovered yet.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {clues.map((clue, index) => (
+                <div className="flex flex-col gap-ds-md">
+                  {clues.map((clue) => (
                     <div
                       key={`clue-${clue.name}-${clue.clue.slice(0, 20)}`}
-                      style={{
-                        background: 'var(--ds-surface-elevated)',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        borderLeft: `4px solid ${clue.color}`
-                      }}
+                      className="bg-ds-surface-elevated rounded-lg p-ds-lg"
+                      style={{ borderLeft: `4px solid ${clue.color}` }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '20px' }}>{clue.icon}</span>
-                        <h3 style={{ fontWeight: '600', color: 'var(--ds-accent-cyan)' }}>{clue.name}</h3>
+                      <div className="flex items-center gap-ds-sm mb-ds-sm">
+                        <span className="text-xl">{clue.icon}</span>
+                        <h3 className="font-semibold text-ds-cyan">{clue.name}</h3>
                       </div>
-                      <p style={{ fontSize: '14px', color: 'var(--ds-text-primary)' }}>{clue.clue}</p>
+                      <p className="text-ds-body text-ds-text-primary">{clue.clue}</p>
                     </div>
                   ))}
                 </div>

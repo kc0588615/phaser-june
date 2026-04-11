@@ -44,28 +44,14 @@ export const DenseClueGrid: React.FC<DenseClueGridProps> = ({
         {clues.map((clue, index) => (
           <div
             key={`clue-card-${clue.name}-${clue.clue.slice(0, 20)}-${index}`}
-            style={{
-              padding: '10px 12px',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '6px',
-              borderLeft: `3px solid ${clue.color}`,
-            }}
+            className="py-2.5 px-3 bg-white/5 rounded-md"
+            style={{ borderLeft: `3px solid ${clue.color}` }}
           >
-            <div
-              style={{
-                fontSize: '15px',
-                fontWeight: 700,
-                marginBottom: '6px',
-                color: clue.color,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span style={{ fontSize: '18px', lineHeight: 1 }}>{clue.icon}</span>
+            <div className="text-[15px] font-bold mb-1.5 flex items-center gap-2" style={{ color: clue.color }}>
+              <span className="text-lg leading-none">{clue.icon}</span>
               <span>{clue.name}</span>
             </div>
-            <div style={{ fontSize: '14px', color: '#e2e8f0', lineHeight: 1.45 }}>
+            <div className="text-sm text-slate-200 leading-[1.45]">
               {clue.clue}
             </div>
           </div>

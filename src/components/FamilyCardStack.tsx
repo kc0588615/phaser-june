@@ -309,7 +309,7 @@ export default function FamilyCardStack({
           <>
             <button
               id={prevButtonId}
-              className={`hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-[80] p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
+              className={`hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
                 isBeginning ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/90'
               }`}
               disabled={isBeginning}
@@ -319,7 +319,7 @@ export default function FamilyCardStack({
             </button>
             <button
               id={nextButtonId}
-              className={`hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-[80] p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
+              className={`hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
                 isEnd ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/90'
               }`}
               disabled={isEnd}

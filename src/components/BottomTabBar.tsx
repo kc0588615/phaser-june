@@ -17,17 +17,19 @@ interface BottomTabBarProps {
 
 export function BottomTabBar({ active, onChange }: BottomTabBarProps) {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md z-[9000]">
+    <nav aria-label="Main navigation" className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md z-tab-bar">
       <div className="flex justify-between items-center px-2 py-2 glass-bg border border-ds-subtle rounded-[32px] shadow-ds-card">
         {TABS.map(({ key, label, icon: Icon }) => {
           const isActive = active === key;
           return (
             <button
               key={key}
+              aria-current={isActive ? 'page' : undefined}
+              aria-label={label}
               onClick={() => onChange(key)}
               className={`
                 relative flex flex-col items-center justify-center w-[72px] h-[64px] transition-all duration-300
-                rounded-[20px] overflow-hidden
+                rounded-[20px] overflow-hidden focus-visible:outline-2 focus-visible:outline-ds-cyan focus-visible:outline-offset-2
                 ${isActive ? 'bg-ds-cyan/10' : 'hover:bg-white/5'}
               `}
             >
@@ -48,6 +50,6 @@ export function BottomTabBar({ active, onChange }: BottomTabBarProps) {
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }

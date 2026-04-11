@@ -97,7 +97,7 @@ export function CategoryGenusPicker({
         
         {open && (
           <div 
-            className="dropdown-portal absolute z-[9999] rounded-md shadow-xl bg-slate-800 border border-slate-700 max-h-[80vh] overflow-hidden w-full mt-1 top-full left-0"
+            className="dropdown-portal absolute z-dropdown rounded-md shadow-xl bg-slate-800 border border-slate-700 max-h-[80vh] overflow-hidden w-full mt-1 top-full left-0"
           >
             <Command 
               shouldFilter={true}

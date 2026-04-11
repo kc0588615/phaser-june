@@ -80,7 +80,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     }, [currentActiveScene, ref]);
 
     return (
-        <div id="game-container" style={{ position: 'relative', zIndex: 1 }}></div>
+        <div id="game-container" className="relative z-game"></div>
     );
 
 });

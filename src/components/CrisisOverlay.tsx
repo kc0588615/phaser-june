@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import type { ConsumableItem } from '@/types/expedition';
+import { ModalOverlay } from '@/components/ui/modal-overlay';
+import { GlassPanel } from '@/components/ui/glass-panel';
 
 interface CrisisOption {
   id: string;
@@ -33,12 +35,34 @@ export const CrisisOverlay: React.FC<Props> = ({ consumables, onSpendTool }) => 
     return () => { EventBus.off('crisis-choice-requested', handler); };
   }, []);
 
-  // Auto-dismiss after choice resolved
   useEffect(() => {
     const handler = () => { setCrisis(null); setChosen(null); };
     EventBus.on('node-complete', handler);
     return () => { EventBus.off('node-complete', handler); };
   }, []);
+
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  /* Trap focus inside the crisis panel */
+  useEffect(() => {
+    if (!crisis) return;
+    const el = panelRef.current;
+    if (el) {
+      const first = el.querySelector<HTMLElement>('button:not([disabled])');
+      first?.focus();
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !el) return;
+      const focusable = el.querySelectorAll<HTMLElement>('button:not([disabled])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [crisis]);
 
   if (!crisis) return null;
 
@@ -57,77 +81,55 @@ export const CrisisOverlay: React.FC<Props> = ({ consumables, onSpendTool }) => 
   };
 
   return (
-    <div style={{
-      position: 'absolute', inset: 0, zIndex: 700,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(10,14,26,0.6)',
-      backdropFilter: 'blur(8px)',
-      fontFamily: 'inherit',
-    }}>
-      <div className="glass-bg shadow-card" style={{
-        maxWidth: '320px', width: '90%',
-        padding: '20px 16px',
-        borderRadius: '16px',
-        border: '1px solid var(--ds-accent-amber)',
-        display: 'flex', flexDirection: 'column', gap: '12px',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '4px' }}>⚠️</div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--ds-accent-amber)' }}>Crisis Event</div>
-          <div style={{ fontSize: '11px', color: 'var(--ds-text-secondary)', marginTop: '4px' }}>
+    <ModalOverlay className="z-crisis backdrop-blur-md">
+      <GlassPanel ref={panelRef} role="alertdialog" aria-modal="true" aria-label="Crisis event" borderColor="var(--ds-accent-amber)" className="max-w-[320px] w-[90%] p-5 flex flex-col gap-ds-md">
+        <div className="text-center">
+          <div className="text-2xl mb-1">⚠️</div>
+          <div className="text-ds-heading-sm font-bold text-ds-amber">Crisis Event</div>
+          <div className="text-ds-caption text-ds-text-secondary mt-1">
             Choose wisely — each path has consequences.
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {crisis.options.map(opt => (
-            (() => {
-              const isToolOption = opt.id === 'spend_tool';
-              const disabled = chosen !== null || (isToolOption && consumables.length === 0);
-              const toolLabel = isToolOption && consumables[0]
-                ? `Spend ${consumables[0].name} to bypass the crisis.`
-                : opt.effect;
-              return (
-            <button
-              key={opt.id}
-              disabled={disabled}
-              onClick={() => handleChoice(opt.id)}
-              className="glass-bg"
-              style={{
-                padding: '10px 12px',
-                borderRadius: '10px',
-                border: `1px solid ${chosen === opt.id ? 'var(--ds-accent-cyan)' : 'var(--ds-border-subtle)'}`,
-                cursor: disabled ? 'default' : 'pointer',
-                opacity: disabled && chosen !== opt.id ? 0.4 : 1,
-                textAlign: 'left',
-                transition: 'all 0.2s ease',
-                color: 'var(--ds-text-primary)',
-              }}
-            >
-              <div style={{ fontSize: '12px', fontWeight: 600 }}>{opt.label}</div>
-              <div style={{ fontSize: '10px', color: 'var(--ds-text-muted)', marginTop: '2px' }}>{toolLabel}</div>
-              {isToolOption && consumables.length === 0 && (
-                <div style={{ fontSize: '9px', color: 'var(--ds-accent-rose)', marginTop: '3px' }}>
-                  No consumables available.
-                </div>
-              )}
-              {opt.cost && Object.keys(opt.cost).length > 0 && (
-                <div style={{ fontSize: '9px', color: 'var(--ds-accent-rose)', marginTop: '3px' }}>
-                  Cost: {Object.entries(opt.cost).map(([k, v]) => `${v} ${k}`).join(', ')}
-                </div>
-              )}
-            </button>
-              );
-            })()
-          ))}
+        <div className="flex flex-col gap-ds-sm">
+          {crisis.options.map(opt => {
+            const isToolOption = opt.id === 'spend_tool';
+            const disabled = chosen !== null || (isToolOption && consumables.length === 0);
+            const toolLabel = isToolOption && consumables[0]
+              ? `Spend ${consumables[0].name} to bypass the crisis.`
+              : opt.effect;
+            return (
+              <button
+                key={opt.id}
+                disabled={disabled}
+                onClick={() => handleChoice(opt.id)}
+                className={`glass-bg rounded-lg border p-ds-md text-left transition-all duration-200 text-ds-text-primary
+                  ${chosen === opt.id ? 'border-ds-accent' : 'border-ds-subtle'}
+                  ${disabled && chosen !== opt.id ? 'opacity-40' : ''}
+                  ${disabled ? 'cursor-default' : 'cursor-pointer'}
+                `}
+              >
+                <div className="text-ds-body font-semibold">{opt.label}</div>
+                <div className="text-ds-badge text-ds-text-muted mt-0.5">{toolLabel}</div>
+                {isToolOption && consumables.length === 0 && (
+                  <div className="text-[9px] text-ds-rose mt-1">No consumables available.</div>
+                )}
+                {opt.cost && Object.keys(opt.cost).length > 0 && (
+                  <div className="text-[9px] text-ds-rose mt-1">
+                    Cost: {Object.entries(opt.cost).map(([k, v]) => `${v} ${k}`).join(', ')}
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {chosen && (
-          <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--ds-accent-cyan)', fontWeight: 600 }}>
+          <div className="text-center text-ds-caption text-ds-cyan font-semibold">
             Decision made — continuing...
           </div>
         )}
-      </div>
-    </div>
+      </GlassPanel>
+    </ModalOverlay>
   );
 };

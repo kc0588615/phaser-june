@@ -171,7 +171,7 @@ export default function SpeciesCarousel({
           <>
             <button
               ref={prevRef}
-              className={`absolute left-1 top-1/2 -translate-y-1/2 z-[80] p-2 rounded-full transition-all min-w-[40px] min-h-[40px] items-center justify-center flex bg-slate-900/90 border border-slate-700 backdrop-blur shadow-lg ${
+              className={`absolute left-1 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all min-w-[40px] min-h-[40px] items-center justify-center flex bg-slate-900/90 border border-slate-700 backdrop-blur shadow-lg ${
                 isBeginning ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/95'
               }`}
               disabled={isBeginning}
@@ -181,7 +181,7 @@ export default function SpeciesCarousel({
             </button>
             <button
               ref={nextRef}
-              className={`absolute right-1 top-1/2 -translate-y-1/2 z-[80] p-2 rounded-full transition-all min-w-[40px] min-h-[40px] items-center justify-center flex bg-slate-900/90 border border-slate-700 backdrop-blur shadow-lg ${
+              className={`absolute right-1 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all min-w-[40px] min-h-[40px] items-center justify-center flex bg-slate-900/90 border border-slate-700 backdrop-blur shadow-lg ${
                 isEnd ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/95'
               }`}
               disabled={isEnd}
