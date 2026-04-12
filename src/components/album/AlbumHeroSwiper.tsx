@@ -37,25 +37,29 @@ export default function AlbumHeroSwiper({
   const [runMemoryCache, setRunMemoryCache] = useState<Record<number, RunMemoryData | null>>({});
 
   // Fetch run memory for the currently focused species
+  const inFlightRef = useRef(new Set<number>());
   useEffect(() => {
     const species = speciesList[activeIndex];
     if (!species) return;
     const sid = species.ogc_fid;
-    if (sid in runMemoryCache) return; // already fetched or in-flight
+    if (sid in runMemoryCache || inFlightRef.current.has(sid)) return;
 
-    // Mark as in-flight
-    setRunMemoryCache(prev => ({ ...prev, [sid]: null }));
+    inFlightRef.current.add(sid);
 
     fetch(`/api/species/cards/${sid}`)
-      .then(r => r.ok ? r.json() : null)
+      .then(r => {
+        if (!r.ok) { inFlightRef.current.delete(sid); return null; } // Don't cache failures — allow retry
+        return r.json();
+      })
       .then(data => {
         if (data?.memories?.length > 0) {
-          // Use the most recent memory
           const mem = data.memories[data.memories.length - 1];
           setRunMemoryCache(prev => ({ ...prev, [sid]: mem }));
+        } else if (data) {
+          setRunMemoryCache(prev => ({ ...prev, [sid]: null })); // Fetched OK but no memories
         }
       })
-      .catch(() => {});
+      .catch(() => { inFlightRef.current.delete(sid); });
   }, [activeIndex, speciesList, runMemoryCache]);
 
   const handleSlideChange = useCallback((swiper: SwiperType) => {

@@ -658,16 +658,21 @@ export class Game extends Phaser.Scene {
         // Initialize player tracking
         this.initializePlayerTracking();
 
+        // Bind shutdown to Phaser scene lifecycle so listeners are cleaned on stop/restart/HMR
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
+
         console.log("Game Scene: Create method finished. Waiting for Cesium data.");
     }
+
+    private handleAuthUserReady = (data: { playerId: string; sessionId?: string }) => {
+        this.currentUserId = data.playerId;
+        this.currentSessionId = data.sessionId ?? null;
+    };
 
     private initializePlayerTracking(): void {
         this.currentUserId = null;
         this.currentSessionId = null;
-        EventBus.on('auth-user-ready', (data) => {
-            this.currentUserId = data.playerId;
-            this.currentSessionId = data.sessionId ?? null;
-        });
+        EventBus.on('auth-user-ready', this.handleAuthUserReady, this);
     }
 
     private createPauseControls(): void {
@@ -2535,7 +2540,7 @@ export class Game extends Phaser.Scene {
         EventBus.off('consumable-used', this.handleConsumableUsed, this);
         EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
         EventBus.off('crisis-choice-resolved', this.handleCrisisResolved, this);
-        EventBus.off('auth-user-ready');
+        EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
 
         // Remove player tracking listeners if they exist
         if (this.currentUserId) {

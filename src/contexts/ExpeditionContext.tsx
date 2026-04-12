@@ -140,7 +140,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         biome: payload.expedition.bioregion?.biome ?? undefined,
       }),
     })
-      .then(r => r.ok ? r.json() : null)
+      .then(r => {
+        if (!r.ok) { console.warn(`[ExpeditionContext] Run creation failed (${r.status}). Score persistence disabled for this run.`); return null; }
+        return r.json();
+      })
       .then(data => {
         if (data) {
           runIdRef.current = data.runId;

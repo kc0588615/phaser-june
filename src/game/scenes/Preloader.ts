@@ -97,27 +97,12 @@ export class Preloader extends Phaser.Scene {
             loadingText.destroy();
             percentText.destroy();
             assetText.destroy();
-            console.log("Preloader complete.");
-            // Proceed only if no errors occurred (basic check)
-            // Check if there are any files still being loaded
-            if (!this.load.inflight || this.load.inflight.size === 0) {
-                 this.create(); // Call create manually after ensuring completion
-            } else {
-                 console.error(`Asset loading incomplete. ${this.load.inflight.size} files still in flight.`);
-                 // Display a persistent error message?
-                 this.add.text(width / 2, height / 2, `Error loading assets.\nCheck console.`, { 
-                     color: '#ff0000', 
-                     fontSize: '20px', 
-                     align: 'center' 
-                 }).setOrigin(0.5);
-            }
+            console.log("Preloader: assets loaded.");
         });
     }
 
-    // create() is now called manually from the 'complete' handler
     create(): void {
         console.log("Preloader: Starting Game");
-        // Add a small delay or fade before starting next scene (optional)
         this.time.delayedCall(100, () => {
              this.scene.start('Game');
         });

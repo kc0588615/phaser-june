@@ -334,8 +334,11 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     fetch('/api/runs/list?status=completed&limit=20')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.runs) setRuns(data.runs);
-        setRunsLoaded(true);
+        if (data?.runs) {
+          setRuns(data.runs);
+          setRunsLoaded(true);
+        }
+        // Don't mark loaded on null (401/error) so it retries when auth is ready
       })
       .catch(err => console.error('Failed to fetch runs:', err))
       .finally(() => setRunsLoading(false));
