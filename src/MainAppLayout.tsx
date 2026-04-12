@@ -49,6 +49,7 @@ function MainAppLayoutInner() {
         runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
         handleAffinitySelected, handleRunReset, handleCrisisToolSpend,
         handleDeductionPurchase, handleDeductionGuessResult,
+        handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
         useConsumable, onShowSpeciesList,
     } = useExpedition();
 
@@ -173,10 +174,14 @@ function MainAppLayoutInner() {
                         <div className="glass-bg absolute inset-0 z-deduction backdrop-blur-xl overflow-auto">
                             <DeductionCamp
                                 camp={runState.deductionCamp}
+                                comp={runState.comparativeDeduction}
                                 speciesId={correctSpeciesId}
                                 hiddenSpeciesName={hiddenSpeciesName}
                                 onPurchase={handleDeductionPurchase}
                                 onGuessResult={handleDeductionGuessResult}
+                                onProcessClue={handleProcessClue}
+                                onPlaceReference={handlePlaceReference}
+                                onComparativeGuess={handleComparativeGuessResult}
                                 onFinish={handleRunReset}
                             />
                         </div>

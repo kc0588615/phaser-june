@@ -111,6 +111,7 @@ export interface RunState {
   clueFragments: ClueFragments;
   triviaUnlocked: string[];
   deductionCamp: DeductionCampState | null;
+  comparativeDeduction: ComparativeDeductionState | null;
   currentNodeBonus: NodeBonusState | null;
   lastNodeRewards: NodeRewardLanes | null;
   finalScore: number | null;
@@ -126,6 +127,22 @@ export const CLUE_CATEGORY_KEYS: ClueCategoryKey[] = [
   'classification', 'habitat', 'geographic', 'morphology',
   'behavior', 'life_cycle', 'conservation', 'key_facts',
 ];
+
+/** Map DeductionClueCategory → ClueCategoryKey for fragment wallet lookups */
+export function deductionCatToWalletKey(cat: string): ClueCategoryKey {
+  switch (cat) {
+    case 'habitat': return 'habitat';
+    case 'morphology': return 'morphology';
+    case 'diet': return 'behavior';       // diet fragments stored under behavior
+    case 'behavior': return 'behavior';
+    case 'reproduction': return 'life_cycle'; // reproduction → life_cycle
+    case 'taxonomy': return 'classification'; // taxonomy → classification
+    case 'key_fact': return 'key_facts';
+    case 'geography': return 'geographic';
+    case 'conservation': return 'conservation';
+    default: return 'key_facts';
+  }
+}
 
 export interface ClueFragments {
   classification: number;
@@ -169,6 +186,67 @@ export interface DeductionCampState {
   guessResult: 'pending' | 'correct' | 'wrong' | null;
   guessBonusAwarded: number;
   thoughtDiscountPct: number;
+}
+
+// ---------------------------------------------------------------------------
+// Comparative deduction state (Phase 2)
+// ---------------------------------------------------------------------------
+
+import type { DeductionClueCategory } from '@/db/schema/species';
+import type {
+  DeductionProfile,
+  DeductionClue,
+  ProcessedClue,
+  ReferenceAttempt,
+} from '@/lib/deductionEngine';
+
+export interface ComparativeDeductionState {
+  /** Mystery species profile (tag arrays for comparison) */
+  mysteryProfile: DeductionProfile;
+  /** All clues available for the mystery species */
+  mysteryClues: DeductionClue[];
+  /** Clues the player has processed (unblurred) */
+  processedClues: ProcessedClue[];
+  /** Album cards available as references */
+  albumProfiles: DeductionProfile[];
+  /** Currently slotted reference card (null = empty slot) */
+  activeReferenceId: number | null;
+  /** History of all reference attempts */
+  referenceHistory: ReferenceAttempt[];
+  /** Confirmed tags per category from successful comparisons */
+  confirmedTags: Partial<Record<DeductionClueCategory, string[]>>;
+  /** Species IDs eliminated via negative confirmation */
+  eliminatedSpeciesIds: number[];
+  /** Current candidate count after filtering */
+  candidateCount: number;
+  /** Fragment + score spending */
+  fragmentsSpent: Partial<Record<ClueCategoryKey, number>>;
+  scoreSpent: number;
+  /** Final guess */
+  guessResult: 'pending' | 'correct' | 'wrong' | null;
+  guessBonusAwarded: number;
+}
+
+export function createEmptyComparativeState(
+  mysteryProfile: DeductionProfile,
+  mysteryClues: DeductionClue[],
+  albumProfiles: DeductionProfile[],
+): ComparativeDeductionState {
+  return {
+    mysteryProfile,
+    mysteryClues,
+    processedClues: [],
+    albumProfiles,
+    activeReferenceId: null,
+    referenceHistory: [],
+    confirmedTags: {},
+    eliminatedSpeciesIds: [],
+    candidateCount: albumProfiles.length + 1, // +1 for mystery species itself
+    fragmentsSpent: {},
+    scoreSpent: 0,
+    guessResult: null,
+    guessBonusAwarded: 0,
+  };
 }
 
 export interface NodeRewardLanes {

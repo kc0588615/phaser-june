@@ -3,6 +3,7 @@
 // Re-introspect after shapefile schema changes: npx drizzle-kit introspect
 // =============================================================================
 
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   doublePrecision,
@@ -13,7 +14,10 @@ import {
   pgView,
   pgTable,
   serial,
+  smallint,
   text,
+  timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/pg-core';
 
@@ -91,6 +95,71 @@ export const icaa = pgTable(
       'gist',
       table.wkbGeometry.asc().nullsLast().op('gist_geometry_ops_2d')
     ),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// Comparative deduction tables
+// ---------------------------------------------------------------------------
+
+export const speciesDeductionProfiles = pgTable(
+  'species_deduction_profiles',
+  {
+    speciesId: integer('species_id')
+      .primaryKey()
+      .references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+    habitatTags: text('habitat_tags').array().notNull().default(sql`'{}'::text[]`),
+    morphologyTags: text('morphology_tags').array().notNull().default(sql`'{}'::text[]`),
+    dietTags: text('diet_tags').array().notNull().default(sql`'{}'::text[]`),
+    behaviorTags: text('behavior_tags').array().notNull().default(sql`'{}'::text[]`),
+    reproductionTags: text('reproduction_tags').array().notNull().default(sql`'{}'::text[]`),
+    taxonomyTags: text('taxonomy_tags').array().notNull().default(sql`'{}'::text[]`),
+    habitatNote: text('habitat_note'),
+    morphologyNote: text('morphology_note'),
+    dietNote: text('diet_note'),
+    behaviorNote: text('behavior_note'),
+    reproductionNote: text('reproduction_note'),
+    referenceSummary: text('reference_summary'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('ix_deduction_profiles_habitat').using('gin', table.habitatTags),
+    index('ix_deduction_profiles_morphology').using('gin', table.morphologyTags),
+    index('ix_deduction_profiles_diet').using('gin', table.dietTags),
+    index('ix_deduction_profiles_behavior').using('gin', table.behaviorTags),
+    index('ix_deduction_profiles_reproduction').using('gin', table.reproductionTags),
+    index('ix_deduction_profiles_taxonomy').using('gin', table.taxonomyTags),
+  ]
+);
+
+export type DeductionClueCategory =
+  | 'habitat' | 'morphology' | 'diet' | 'behavior' | 'reproduction'
+  | 'taxonomy' | 'key_fact' | 'geography' | 'conservation';
+
+export type DeductionUnlockMode = 'fragment' | 'score';
+
+export const speciesDeductionClues = pgTable(
+  'species_deduction_clues',
+  {
+    id: serial('id').primaryKey(),
+    speciesId: integer('species_id')
+      .notNull()
+      .references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+    category: text('category').notNull().$type<DeductionClueCategory>(),
+    label: text('label').notNull(),
+    compareTags: text('compare_tags').array(),
+    revealOrder: smallint('reveal_order').notNull().default(1),
+    unlockMode: text('unlock_mode').notNull().default('fragment').$type<DeductionUnlockMode>(),
+    baseCost: smallint('base_cost').notNull().default(2),
+    isFiltering: boolean('is_filtering').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('uq_deduction_clues_species_cat_order').on(table.speciesId, table.category, table.revealOrder),
+    index('ix_deduction_clues_species').on(table.speciesId),
+    index('ix_deduction_clues_category').on(table.speciesId, table.category),
+    index('ix_deduction_clues_compare').using('gin', table.compareTags),
   ]
 );
 

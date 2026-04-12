@@ -2,8 +2,11 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { toast } from 'sonner';
-import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ResourceWallet } from '@/types/expedition';
-import { createEmptyResourceWallet, createEmptyClueFragments, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
+import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ResourceWallet, ComparativeDeductionState } from '@/types/expedition';
+import { createEmptyResourceWallet, createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
+import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost } from '@/lib/deductionEngine';
+import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
+import type { DeductionClueCategory } from '@/db/schema/species';
 import type { AffinityType } from '@/expedition/affinities';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
@@ -25,6 +28,7 @@ const INITIAL_RUN_STATE: RunState = {
     clueFragments: createEmptyClueFragments(),
     triviaUnlocked: [],
     deductionCamp: null,
+    comparativeDeduction: null,
     currentNodeBonus: null,
     lastNodeRewards: null,
     finalScore: null,
@@ -371,6 +375,205 @@ export function useExpeditionRun() {
         });
     }, []);
 
+    // --- Comparative deduction: fetch profiles when entering deduction phase ---
+    useEffect(() => {
+        if (runState.phase !== 'deduction' || runState.comparativeDeduction) return;
+        const speciesId = correctSpeciesIdRef.current;
+        if (!speciesId) return;
+
+        // For now, use all other species as album cards (later: filter to discovered)
+        const allSpeciesIds = Array.from({ length: 24 }, (_, i) => i + 1).filter(id => id !== speciesId && id !== 4 && id !== 11);
+        const albumParam = allSpeciesIds.join(',');
+
+        fetch(`/api/species/deduction?mysteryId=${speciesId}&albumIds=${albumParam}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data) return;
+                const compState = createEmptyComparativeState(
+                    data.mysteryProfile,
+                    data.mysteryClues,
+                    data.albumProfiles,
+                );
+                setRunState(prev => {
+                    if (prev.phase !== 'deduction') return prev;
+                    return { ...prev, comparativeDeduction: compState };
+                });
+            })
+            .catch(err => console.error('Failed to fetch deduction profiles:', err));
+    }, [runState.phase, runState.comparativeDeduction]);
+
+    // --- Comparative deduction handlers ---
+
+    const handleProcessClue = useCallback((clueId: number) => {
+        setRunState(prev => {
+            if (prev.phase !== 'deduction' || !prev.comparativeDeduction || !prev.deductionCamp) return prev;
+            const comp = prev.comparativeDeduction;
+            const camp = prev.deductionCamp;
+
+            // Find the clue
+            const clue = comp.mysteryClues.find(c => c.id === clueId);
+            if (!clue) return prev;
+
+            // Already processed?
+            if (comp.processedClues.some(pc => pc.clueId === clueId)) return prev;
+
+            // Check cost
+            const catKey = deductionCatToWalletKey(clue.category);
+            const fragCount = camp.clueFragments[catKey] ?? 0;
+            const cost = getEffectiveClueCost(clue, fragCount, camp.thoughtDiscountPct);
+
+            if (clue.unlockMode === 'fragment') {
+                if (fragCount < cost) return prev;
+            } else {
+                const available = camp.bankedScore - camp.scoreSpent - comp.scoreSpent;
+                if (available < cost) return prev;
+            }
+
+            const processed: ProcessedClue = {
+                clueId: clue.id,
+                category: clue.category,
+                label: clue.label,
+                status: 'processed',
+                compareTags: clue.compareTags,
+                fragmentCost: cost,
+            };
+
+            const newFragsSpent = { ...comp.fragmentsSpent };
+            let newScoreSpent = comp.scoreSpent;
+            const newCampFrags = { ...camp.clueFragments };
+
+            if (clue.unlockMode === 'fragment') {
+                newFragsSpent[catKey] = (newFragsSpent[catKey] ?? 0) + cost;
+                newCampFrags[catKey] = Math.max(0, newCampFrags[catKey] - cost);
+            } else {
+                newScoreSpent += cost;
+            }
+
+            return {
+                ...prev,
+                comparativeDeduction: {
+                    ...comp,
+                    processedClues: [...comp.processedClues, processed],
+                    fragmentsSpent: newFragsSpent,
+                    scoreSpent: newScoreSpent,
+                },
+                deductionCamp: {
+                    ...camp,
+                    clueFragments: newCampFrags,
+                },
+            };
+        });
+    }, []);
+
+    const handlePlaceReference = useCallback((referenceSpeciesId: number, clueId: number) => {
+        setRunState(prev => {
+            if (prev.phase !== 'deduction' || !prev.comparativeDeduction) return prev;
+            const comp = prev.comparativeDeduction;
+
+            // Find the processed clue
+            const pClue = comp.processedClues.find(pc => pc.clueId === clueId);
+            if (!pClue || pClue.status !== 'processed' || !pClue.compareTags) return prev;
+
+            // Find reference profile
+            const refProfile = comp.albumProfiles.find(p => p.speciesId === referenceSpeciesId);
+            if (!refProfile) return prev;
+
+            // Run comparison
+            const result = compareReference(comp.mysteryProfile, refProfile, pClue.category);
+
+            const attempt: import('@/lib/deductionEngine').ReferenceAttempt = {
+                referenceSpeciesId,
+                referenceName: refProfile.commonName,
+                clueId,
+                category: pClue.category,
+                result,
+            };
+
+            // Update confirmed tags or eliminations
+            const newConfirmed = { ...comp.confirmedTags };
+            const newEliminated = [...comp.eliminatedSpeciesIds];
+
+            if (result.matched) {
+                const existing = newConfirmed[pClue.category] ?? [];
+                newConfirmed[pClue.category] = [...new Set([...existing, ...result.matchedTags])];
+            } else {
+                // Negative: this reference species doesn't share tags → eliminate it
+                if (!newEliminated.includes(referenceSpeciesId)) {
+                    newEliminated.push(referenceSpeciesId);
+                }
+            }
+
+            // Recount candidates
+            const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
+            const eliminatedSet = new Set(newEliminated);
+            const candidates = filterCandidates(allProfiles, newConfirmed, eliminatedSet);
+
+            // Update clue status
+            const updatedProcessed = comp.processedClues.map(pc =>
+                pc.clueId === clueId
+                    ? { ...pc, status: (result.matched ? 'confirmed' : 'rejected') as ProcessedClue['status'] }
+                    : pc
+            );
+
+            return {
+                ...prev,
+                comparativeDeduction: {
+                    ...comp,
+                    activeReferenceId: referenceSpeciesId,
+                    processedClues: updatedProcessed,
+                    referenceHistory: [...comp.referenceHistory, attempt],
+                    confirmedTags: newConfirmed,
+                    eliminatedSpeciesIds: newEliminated,
+                    candidateCount: candidates.length,
+                },
+            };
+        });
+    }, []);
+
+    const handleComparativeGuessResult = useCallback((isCorrect: boolean) => {
+        setRunState(prev => {
+            if (prev.phase !== 'deduction' || !prev.comparativeDeduction || !prev.deductionCamp) return prev;
+            const comp = prev.comparativeDeduction;
+            const camp = prev.deductionCamp;
+
+            if (isCorrect) {
+                const totalClues = comp.processedClues.length;
+                const { guessBonus, efficiencyBonus } = getGuessBonuses(totalClues, true);
+                const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
+
+                if (runIdRef.current) {
+                    const rid = runIdRef.current;
+                    const deductionSummary = {
+                        scoreSpent: camp.scoreSpent + comp.scoreSpent,
+                        processedClues: totalClues,
+                        confirmedCategories: Object.keys(comp.confirmedTags).length,
+                        candidateCount: comp.candidateCount,
+                        referenceAttempts: comp.referenceHistory.length,
+                        finalScore,
+                    };
+                    fetch(`/api/runs/${rid}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ finalScore, deductionSummary, speciesId: correctSpeciesIdRef.current || undefined }),
+                    }).catch(err => console.error('Failed to persist deduction:', err));
+                }
+
+                return {
+                    ...prev,
+                    phase: 'complete' as const,
+                    comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus },
+                    finalScore,
+                };
+            } else {
+                return {
+                    ...prev,
+                    comparativeDeduction: { ...comp, guessResult: 'wrong' },
+                    deductionCamp: { ...camp, scoreSpent: camp.scoreSpent + 25 },
+                };
+            }
+        });
+    }, []);
+
     // --- EventBus registration ---
     useEffect(() => {
         const handleBonusTick = (d: EventPayloads['node-bonus-tick']) => {
@@ -423,6 +626,9 @@ export function useExpeditionRun() {
         handleCrisisToolSpend,
         handleDeductionPurchase,
         handleDeductionGuessResult,
+        handleProcessClue,
+        handlePlaceReference,
+        handleComparativeGuessResult,
     };
 }
 
