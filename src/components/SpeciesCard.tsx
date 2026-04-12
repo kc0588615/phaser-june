@@ -34,12 +34,103 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
     </h4>
   );
 
+  // --- Undiscovered species: mystery card ---
+  if (!isDiscovered) {
+    return (
+      <div
+        className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border"
+        data-species-id={species.ogc_fid}
+        style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal', minWidth: '0', maxWidth: '100%' }}
+      >
+        {/* Breadcrumb */}
+        <div className="mb-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink onClick={(e) => { e.preventDefault(); onNavigateToTop(); }} className="cursor-pointer hover:text-primary">
+                  Select
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{category}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
+        {/* Mystery Header */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">
+              {category}
+            </span>
+            {speciesPositionLabel && (
+              <span className="text-xs text-muted-foreground">{speciesPositionLabel}</span>
+            )}
+          </div>
+          <h2
+            className="font-bold text-slate-400 mb-2 break-words whitespace-normal leading-tight"
+            style={{ fontSize: 'clamp(18px, 5vw, 36px)', lineHeight: '1.2' }}
+          >
+            <span className="inline-flex items-center gap-2">
+              <Search className="w-5 h-5 text-slate-500 flex-shrink-0" aria-hidden="true" />
+              <span className="sr-only">Undiscovered species</span>
+              <span>???</span>
+            </span>
+          </h2>
+          <p className="italic text-slate-500 mb-3" style={{ fontSize: 'clamp(14px, 3.5vw, 22px)' }}>
+            Unknown Species
+          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {hasValue(species.conservation_code) && (
+              <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold ${iucnBadgeClasses(species.conservation_code!)}`}>
+                {species.conservation_code} - {iucnLabel(species.conservation_code!)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="h-px bg-border my-4 sm:my-6" />
+
+        {/* Safe hints only: habitat type + biome */}
+        <div className="space-y-4">
+          {(species.marine || species.terrestrial || species.freshwater) && (
+            <div>
+              <h4 className="category-title blue mb-2"><span>Habitat Type</span></h4>
+              <div className="flex gap-2 text-xs">
+                {species.marine && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Marine</span>}
+                {species.terrestrial && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Terrestrial</span>}
+                {species.freshwater && <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold border border-secondary text-secondary-foreground">Freshwater</span>}
+              </div>
+            </div>
+          )}
+          {hasValue(species.biome) && (
+            <div>
+              <h4 className="category-title green mb-2"><span>Biome</span></h4>
+              <p className="text-sm text-slate-300">{species.biome}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="h-px bg-border my-4 sm:my-6" />
+
+        {/* Mystery prompt */}
+        <div className="text-center py-6">
+          <div className="text-4xl mb-3 opacity-40">?</div>
+          <p className="text-sm text-slate-500">Complete an expedition to discover this species</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Discovered species: full card ---
   return (
-    <div 
+    <div
       className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border"
       data-species-id={species.ogc_fid}
-      style={{ 
-        wordBreak: 'break-word', 
+      style={{
+        wordBreak: 'break-word',
         overflowWrap: 'break-word',
         whiteSpace: 'normal',
         minWidth: '0',
@@ -51,7 +142,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink 
+              <BreadcrumbLink
                 onClick={(e) => {
                   e.preventDefault();
                   onNavigateToTop();
@@ -68,7 +159,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      
+
       {/* Header */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
@@ -89,23 +180,14 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
           }}
         >
           <span className="inline-flex items-center gap-2">
-            {isDiscovered ? (
-              <>
-                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" aria-hidden="true" />
-                <span className="sr-only">Discovered: </span>
-              </>
-            ) : (
-              <>
-                <Search className="w-5 h-5 text-slate-400 flex-shrink-0" aria-hidden="true" />
-                <span className="sr-only">Undiscovered: </span>
-              </>
-            )}
-            <span className={isDiscovered ? "text-green-400" : ""}>{species.common_name || species.scientific_name}</span>
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" aria-hidden="true" />
+            <span className="sr-only">Discovered: </span>
+            <span className="text-green-400">{species.common_name || species.scientific_name}</span>
           </span>
         </h2>
-        <p 
+        <p
           className="italic text-slate-200 mb-3 break-words whitespace-normal leading-relaxed"
-          style={{ 
+          style={{
             fontSize: 'clamp(16px, 4.5vw, 30px)',
             lineHeight: '1.3'
           }}

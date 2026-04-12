@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunSessions, ecoRunNodes } from '@/db';
+import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import type { RunNode } from '@/lib/nodeScoring';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
@@ -30,10 +31,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields: lon, lat, locationKey, nodes' }, { status: 400 });
     }
 
+    // Resolve player from auth (optional — anonymous runs allowed)
+    const playerId = await getPlayerIdFromClerk();
+
     // Insert session
     const [session] = await db
       .insert(ecoRunSessions)
       .values({
+        playerId: playerId ?? undefined,
         selectedLng: lon,
         selectedLat: lat,
         locationKey,

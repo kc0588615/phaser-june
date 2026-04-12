@@ -354,7 +354,11 @@ export function useExpeditionRun() {
                         fetch(`/api/runs/${rid}`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ finalScore, deductionSummary }),
+                            body: JSON.stringify({
+                                finalScore,
+                                deductionSummary,
+                                speciesId: correctSpeciesIdRef.current || undefined,
+                            }),
                         }).catch(err => console.error('Failed to persist deduction summary:', err));
                     }, 0);
                 }

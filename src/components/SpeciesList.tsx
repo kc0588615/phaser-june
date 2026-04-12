@@ -1,18 +1,45 @@
-import { useEffect, useState, useMemo, useRef, memo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback, memo } from 'react';
 import { useSpeciesData } from '@/hooks/useSpeciesData';
 import SpeciesCard from '@/components/SpeciesCard';
 import FamilyCardStack from '@/components/FamilyCardStack';
 import SpeciesCarousel from '@/components/SpeciesCarousel';
+import AlbumHeroSwiper from '@/components/album/AlbumHeroSwiper';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
-import { Loader2, ChevronDown, List, Book, BookOpen } from 'lucide-react';
+import { Loader2, ChevronDown, List, Book, BookOpen, Album, FileQuestion, Map, TreeDeciduous, MapPin, Swords, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
 import { getFamilyDisplayName } from '@/config/familyCommonNames';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
+
+// Run type from API
+interface RunSummary {
+  id: string;
+  status: string;
+  locationKey: string;
+  realm: string | null;
+  biome: string | null;
+  bioregion: string | null;
+  scoreTotal: number;
+  finalScore: number | null;
+  nodeCount: number;
+  startedAt: string;
+  endedAt: string | null;
+  affinities: string[];
+  nodes: Array<{
+    nodeOrder: number;
+    nodeType: string;
+    nodeStatus: string;
+    scoreEarned: number;
+    movesUsed: number;
+    counterGem: string | null;
+    obstacleFamily: string | null;
+  }>;
+}
 
 // Separate component to handle accordion category with sticky header
 const AccordionCategory = memo(({
@@ -235,47 +262,107 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const [showStickyHeaders, setShowStickyHeaders] = useState(false);
   const [showClassification, setShowClassification] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<Record<number, { name: string; discoveredAt: string }>>({});
-  
+
+  // Hero swiper state
+  const [heroOpen, setHeroOpen] = useState(false);
+  const [heroSpeciesList, setHeroSpeciesList] = useState<Species[]>([]);
+  const [heroInitialIndex, setHeroInitialIndex] = useState(0);
+
+  // Runs tab state
+  const [runs, setRuns] = useState<RunSummary[]>([]);
+  const [runsLoading, setRunsLoading] = useState(false);
+  const [runsLoaded, setRunsLoaded] = useState(false);
+
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement | null>(null);
   const lastScrollTop = useRef(0);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    loadDiscoveredSpecies();
-  }, []);
-
-  // Function to load discovered species from localStorage
-  const loadDiscoveredSpecies = () => {
+  const loadDiscoveredSpecies = useCallback(async () => {
     try {
-      const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
-      const discoveredMap: Record<number, { name: string; discoveredAt: string }> = {};
-      discovered.forEach((d: any) => {
-        discoveredMap[d.id] = { name: d.name, discoveredAt: d.discoveredAt };
+      const localDiscovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+      const localMap: Record<number, { name: string; discoveredAt: string }> = {};
+      localDiscovered.forEach((d: any) => {
+        if (typeof d?.id === 'number') {
+          localMap[d.id] = { name: d.name || '', discoveredAt: d.discoveredAt || '' };
+        }
       });
-      setDiscoveredSpecies(discoveredMap);
-      console.log('Loaded discovered species:', discovered);
+
+      const response = await fetch('/api/species/cards');
+      if (!response.ok) {
+        setDiscoveredSpecies(localMap);
+        return;
+      }
+
+      const data = await response.json().catch(() => null);
+      const serverMap: Record<number, { name: string; discoveredAt: string }> = {};
+      const cards = Array.isArray(data?.cards) ? data.cards : [];
+
+      cards.forEach((card: any) => {
+        if (card?.discovered && typeof card?.speciesId === 'number') {
+          serverMap[card.speciesId] = {
+            name: localMap[card.speciesId]?.name || '',
+            discoveredAt: card.firstDiscoveredAt || localMap[card.speciesId]?.discoveredAt || '',
+          };
+        }
+      });
+
+      setDiscoveredSpecies({ ...localMap, ...serverMap });
     } catch (error) {
+      try {
+        const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+        const discoveredMap: Record<number, { name: string; discoveredAt: string }> = {};
+        discovered.forEach((d: any) => {
+          discoveredMap[d.id] = { name: d.name, discoveredAt: d.discoveredAt };
+        });
+        setDiscoveredSpecies(discoveredMap);
+      } catch (fallbackError) {
+        console.error('Error loading discovered species:', fallbackError);
+      }
       console.error('Error loading discovered species:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void loadDiscoveredSpecies();
+  }, [loadDiscoveredSpecies]);
+
+  // Fetch runs when user opens runs tab
+  const fetchRuns = useCallback(() => {
+    if (runsLoaded || runsLoading) return;
+    setRunsLoading(true);
+    fetch('/api/runs/list?status=completed&limit=20')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.runs) setRuns(data.runs);
+        setRunsLoaded(true);
+      })
+      .catch(err => console.error('Failed to fetch runs:', err))
+      .finally(() => setRunsLoading(false));
+  }, [runsLoaded, runsLoading]);
+
+  const openHeroView = useCallback((list: Species[], index: number) => {
+    setHeroSpeciesList(list);
+    setHeroInitialIndex(index);
+    setHeroOpen(true);
+  }, []);
 
   // Listen for storage changes to update discovered species
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'discoveredSpecies') {
-        loadDiscoveredSpecies();
+        void loadDiscoveredSpecies();
       }
     };
 
     // Also listen for focus to reload when switching tabs
     const handleFocus = () => {
-      loadDiscoveredSpecies();
+      void loadDiscoveredSpecies();
     };
 
     // Listen for custom species discovered event
     const handleSpeciesDiscovered = () => {
-      loadDiscoveredSpecies();
+      void loadDiscoveredSpecies();
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -287,7 +374,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('species-discovered', handleSpeciesDiscovered);
     };
-  }, []);
+  }, [loadDiscoveredSpecies]);
 
   // Scroll direction detection
   useEffect(() => {
@@ -552,209 +639,430 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
 
   return (
     <div className="flex flex-col h-full bg-slate-900 w-full relative">
-      <div className="flex-shrink-0 px-5 pt-5 pb-4 bg-slate-900 relative z-50">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-semibold text-cyan-300 flex items-center gap-2">
-            <List className="h-6 w-6" />
-            Species List
-          </h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowClassification(!showClassification)}
-              className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors"
-              aria-label={showClassification ? "Hide classification" : "Show classification"}
-            >
-              {showClassification ? <BookOpen className="h-5 w-5" /> : <Book className="h-5 w-5" />}
-            </button>
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md flex items-center gap-2 transition-colors"
-              >
-                ← Back to Game
-              </button>
-            )}
+      <Tabs defaultValue="album" className="flex flex-col h-full" onValueChange={(v) => { if (v === 'runs') fetchRuns(); }}>
+        {/* Global header */}
+        <div className="flex-shrink-0 px-5 pt-5 pb-2 bg-slate-900 relative z-50">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl font-semibold text-cyan-300 flex items-center gap-2">
+              <Album className="h-6 w-6" />
+              Field Album
+            </h1>
+            <div className="flex items-center gap-2">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md flex items-center gap-2 transition-colors"
+                >
+                  ← Back to Game
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="w-full">
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-gray-600 mb-2">
-              Categories: {getAllCategories(species).length}, 
-              Ecoregions: {ecoregionList.length}, 
-              Realms: {realmList.length}, 
-              Biomes: {biomeList.length}
+
+          {/* Tab navigation */}
+          <TabsList className="w-full grid grid-cols-4 h-10">
+            <TabsTrigger value="album" className="text-xs sm:text-sm gap-1">
+              <Album className="h-3.5 w-3.5 hidden sm:block" />Album
+            </TabsTrigger>
+            <TabsTrigger value="cases" className="text-xs sm:text-sm gap-1">
+              <FileQuestion className="h-3.5 w-3.5 hidden sm:block" />Cases
+            </TabsTrigger>
+            <TabsTrigger value="runs" className="text-xs sm:text-sm gap-1">
+              <Map className="h-3.5 w-3.5 hidden sm:block" />Runs
+            </TabsTrigger>
+            <TabsTrigger value="taxonomy" className="text-xs sm:text-sm gap-1">
+              <TreeDeciduous className="h-3.5 w-3.5 hidden sm:block" />Taxonomy
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Collection progress bar (visible on all tabs) */}
+          {!isLoading && !error && species.length > 0 && (
+            <div className="mt-3 px-1">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                <span><span className="text-green-400 font-semibold">{knownSpecies.length}</span> / {filteredSpecies.length} discovered</span>
+                <span>{Math.round((knownSpecies.length / Math.max(filteredSpecies.length, 1)) * 100)}%</span>
+              </div>
+              <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 rounded-full transition-all duration-500"
+                  style={{ width: `${(knownSpecies.length / Math.max(filteredSpecies.length, 1)) * 100}%` }}
+                />
+              </div>
             </div>
           )}
-          <SpeciesSearchInput
-            grouped={grouped}
-            ecoregionList={ecoregionList}
-            realmList={realmList}
-            biomeList={biomeList}
-            species={species}
-            selectedFilter={selectedFilter}
-            onJump={onJump}
-            onClearFilter={onClearFilter}
-          />
         </div>
-        {selectedFilter && (
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredSpecies.length} species
-            </p>
-            <div className="flex items-center gap-1 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
-              <span className="capitalize">{selectedFilter.type}:</span>
-              <span className="font-medium">
-                {selectedFilter.value}
-              </span>
+
+        {/* Loading / error states */}
+        {isLoading && (
+          <div className="flex-1 flex items-center justify-center px-5">
+            <div className="flex items-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading species data...</span>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex-1 px-5 pt-4">
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+              <p className="text-destructive font-semibold mb-2">Error loading species</p>
+              <p className="text-sm text-muted-foreground mb-3">{error.message || 'Unknown error occurred'}</p>
               <button
-                onClick={onClearFilter}
-                className="ml-1 hover:text-blue-100 transition-colors"
-                aria-label="Clear filter"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                ×
+                {isFetching ? 'Retrying...' : 'Retry Now'}
               </button>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Species Tree View */}
-      {!isLoading && !error && species.length > 0 && showClassification && (
-        <div className="px-5 pb-4">
-          <h2 className="text-lg font-semibold mb-3 text-foreground">Browse by Classification</h2>
-          <SpeciesTree 
-            species={species} 
-            onFilterSelect={onTreeFilterSelect}
-            selectedFilter={selectedFilter}
-          />
-        </div>
-      )}
+        {!isLoading && !error && species.length === 0 && (
+          <div className="flex-1 flex items-center justify-center px-5">
+            <p className="text-center text-muted-foreground">No species found in the database.</p>
+          </div>
+        )}
 
-      {isLoading && (
-        <div className="flex-1 flex items-center justify-center px-5">
-          <div className="flex items-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">Loading species data...</span>
-          </div>
-        </div>
-      )}
-      
-      {error && (
-        <div className="flex-1 px-5 pt-4">
-          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
-            <p className="text-destructive font-semibold mb-2">Error loading species</p>
-            <p className="text-sm text-muted-foreground mb-3">{error.message || 'Unknown error occurred'}</p>
-            <button
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isFetching ? 'Retrying...' : 'Retry Now'}
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {!isLoading && !error && species.length === 0 && (
-        <div className="flex-1 flex items-center justify-center px-5">
-          <p className="text-center text-muted-foreground">
-            No species found in the database.
-          </p>
-        </div>
-      )}
-      
-      {!isLoading && !error && species.length > 0 && (
-        <div className="flex-1 overflow-hidden relative">
-          <ScrollArea className="h-full px-5" ref={gridRef}>
-            {/* Display single species when species filter is active */}
-            {selectedFilter?.type === 'species' && filteredSpecies.length === 1 ? (
-              <div className="max-w-4xl mx-auto py-8">
-                <SpeciesCard 
-                  species={filteredSpecies[0]} 
-                  category={filteredSpecies[0].taxon_order || 'Unknown'}
-                  isDiscovered={!!discoveredSpecies[filteredSpecies[0].ogc_fid]}
-                  discoveredAt={discoveredSpecies[filteredSpecies[0].ogc_fid]?.discoveredAt}
-                  onNavigateToTop={() => {
-                    // Scroll ScrollArea to top
-                    if (gridRef.current) {
-                      const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');
-                      if (scrollContainer) {
-                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                      }
-                    }
-                  }}
-                />
-              </div>
-            ) : (
-              /* Display unified species list */
-              <div className="space-y-6">
-                {/* Summary Stats Bar */}
-                <div className="mb-4 px-4 py-3 bg-slate-800/50 rounded-lg border border-slate-700">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">
-                      <span className="text-green-400 font-semibold">{knownSpecies.length}</span> discovered
-                    </span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-slate-300">
-                      <span className="text-slate-400 font-semibold">{unknownSpecies.length}</span> undiscovered
-                    </span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-slate-300">
-                      <span className="font-semibold">{filteredSpecies.length}</span> total
-                    </span>
-                  </div>
+        {!isLoading && !error && species.length > 0 && (
+          <>
+            {/* ===== ALBUM TAB ===== */}
+            <TabsContent value="album" className="flex-1 overflow-hidden mt-0">
+              <ScrollArea className="h-full px-5">
+                <div className="space-y-6 py-4">
+                  {/* Recent discoveries */}
+                  {knownSpecies.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-white mb-3">Recent Discoveries</h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {knownSpecies
+                          .sort((a, b) => {
+                            const aTime = discoveredSpecies[a.ogc_fid]?.discoveredAt || '';
+                            const bTime = discoveredSpecies[b.ogc_fid]?.discoveredAt || '';
+                            return bTime.localeCompare(aTime);
+                          })
+                          .slice(0, 8)
+                          .map((sp, i) => (
+                            <SpeciesTCGCardMini key={sp.ogc_fid} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, knownSpecies.indexOf(sp))} />
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All discovered by family */}
+                  {knownSpecies.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-white mb-3">Collection</h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {knownSpecies.map((sp, i) => (
+                          <SpeciesTCGCardMini key={sp.ogc_fid} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, i)} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {knownSpecies.length === 0 && (
+                    <div className="text-center py-16">
+                      <div className="text-5xl mb-4 opacity-30">?</div>
+                      <p className="text-slate-400 text-lg mb-2">No discoveries yet</p>
+                      <p className="text-slate-500 text-sm">Start an expedition to discover species</p>
+                    </div>
+                  )}
                 </div>
+              </ScrollArea>
+            </TabsContent>
 
-                {/* Unified Accordion */}
-                <Accordion
-                  type="multiple"
-                  className="w-full space-y-4"
-                  value={openAccordions}
-                  onValueChange={setOpenAccordions}
-                >
-                  {Object.entries(grouped).map(([order, genera]) => {
-                    const accordionId = order;
-                    const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
-                    const discoveredCount = knownCounts[order] || 0;
-                    const totalCount = totalCounts[order] || Object.values(genera).reduce((sum, list) => sum + list.length, 0);
-                    const displayName = orderNameFormatted;
+            {/* ===== CASES TAB ===== */}
+            <TabsContent value="cases" className="flex-1 overflow-hidden mt-0">
+              <ScrollArea className="h-full px-5">
+                <div className="space-y-6 py-4">
+                  <h2 className="text-lg font-semibold text-white mb-3">Unsolved Cases</h2>
+                  {unknownSpecies.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {unknownSpecies.map((sp, i) => (
+                        <SpeciesTCGCardMini key={sp.ogc_fid} species={sp} isDiscovered={false} onClick={() => openHeroView(unknownSpecies, i)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-16">
+                      <p className="text-green-400 text-lg mb-2">All species discovered!</p>
+                      <p className="text-slate-500 text-sm">You've solved every case</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
 
-                    return (
-                      <AccordionCategory
-                        key={accordionId}
-                        category={displayName}
-                        genera={genera}
-                        isOpen={openAccordions.includes(accordionId)}
-                        showStickyHeaders={showStickyHeaders}
-                        discoveredSpecies={discoveredSpecies}
-                        accordionValue={accordionId}
-                        discoveredCount={discoveredCount}
-                        totalCount={totalCount}
-                        onToggle={() => {
-                          setOpenAccordions(prev =>
-                            prev.includes(accordionId)
-                              ? prev.filter(c => c !== accordionId)
-                              : [...prev, accordionId]
-                          );
-                          setShowStickyHeaders(false);
-                        }}
-                        setRef={setRef}
-                      />
-                    );
-                  })}
-                </Accordion>
+            {/* ===== RUNS TAB ===== */}
+            <TabsContent value="runs" className="flex-1 overflow-hidden mt-0" onFocusCapture={fetchRuns} onMouseEnter={fetchRuns}>
+              <ScrollArea className="h-full px-5">
+                <div className="space-y-4 py-4">
+                  <h2 className="text-lg font-semibold text-white">Expedition Runs</h2>
+                  {runsLoading && (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground text-sm">Loading runs...</span>
+                    </div>
+                  )}
+                  {runsLoaded && runs.length === 0 && (
+                    <div className="text-center py-16">
+                      <Map className="h-12 w-12 mx-auto mb-4 text-slate-600" />
+                      <p className="text-slate-400 text-lg mb-2">No completed runs yet</p>
+                      <p className="text-slate-500 text-sm">Complete an expedition to see it here</p>
+                    </div>
+                  )}
+                  {runs.map(run => (
+                    <RunMemoryCard key={run.id} run={run} />
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
 
-                {Object.keys(grouped).length === 0 && (
-                  <div className="text-center p-12">
-                    <p className="text-muted-foreground">No species found for the selected filter.</p>
+            {/* ===== TAXONOMY TAB ===== */}
+            <TabsContent value="taxonomy" className="flex-1 overflow-hidden mt-0">
+              <div className="flex-shrink-0 px-5 pb-2">
+                <div className="w-full">
+                  <SpeciesSearchInput
+                    grouped={grouped}
+                    ecoregionList={ecoregionList}
+                    realmList={realmList}
+                    biomeList={biomeList}
+                    species={species}
+                    selectedFilter={selectedFilter}
+                    onJump={onJump}
+                    onClearFilter={onClearFilter}
+                  />
+                </div>
+                {selectedFilter && (
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <p className="text-sm text-muted-foreground">Showing {filteredSpecies.length} species</p>
+                    <div className="flex items-center gap-1 bg-blue-600/20 text-blue-300 px-3 py-1 rounded-full text-sm">
+                      <span className="capitalize">{selectedFilter.type}:</span>
+                      <span className="font-medium">{selectedFilter.value}</span>
+                      <button onClick={onClearFilter} className="ml-1 hover:text-blue-100 transition-colors" aria-label="Clear filter">×</button>
+                    </div>
                   </div>
                 )}
+                {showClassification && (
+                  <div className="pt-2">
+                    <SpeciesTree species={species} onFilterSelect={onTreeFilterSelect} selectedFilter={selectedFilter} />
+                  </div>
+                )}
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => setShowClassification(!showClassification)}
+                    className="p-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md transition-colors text-xs flex items-center gap-1"
+                  >
+                    {showClassification ? <BookOpen className="h-4 w-4" /> : <Book className="h-4 w-4" />}
+                    {showClassification ? 'Hide Tree' : 'Show Tree'}
+                  </button>
+                </div>
               </div>
+              <div className="flex-1 overflow-hidden relative">
+                <ScrollArea className="h-full px-5" ref={gridRef}>
+                  {selectedFilter?.type === 'species' && filteredSpecies.length === 1 ? (
+                    <div className="max-w-4xl mx-auto py-8">
+                      <SpeciesCard
+                        species={filteredSpecies[0]}
+                        category={filteredSpecies[0].taxon_order || 'Unknown'}
+                        isDiscovered={!!discoveredSpecies[filteredSpecies[0].ogc_fid]}
+                        discoveredAt={discoveredSpecies[filteredSpecies[0].ogc_fid]?.discoveredAt}
+                        onNavigateToTop={() => {
+                          if (gridRef.current) {
+                            const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');
+                            if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="mb-4 px-4 py-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-300"><span className="text-green-400 font-semibold">{knownSpecies.length}</span> discovered</span>
+                          <span className="text-slate-500">•</span>
+                          <span className="text-slate-300"><span className="text-slate-400 font-semibold">{unknownSpecies.length}</span> undiscovered</span>
+                          <span className="text-slate-500">•</span>
+                          <span className="text-slate-300"><span className="font-semibold">{filteredSpecies.length}</span> total</span>
+                        </div>
+                      </div>
+                      <Accordion type="multiple" className="w-full space-y-4" value={openAccordions} onValueChange={setOpenAccordions}>
+                        {Object.entries(grouped).map(([order, genera]) => {
+                          const accordionId = order;
+                          const orderNameFormatted = order.charAt(0).toUpperCase() + order.slice(1).toLowerCase();
+                          const discoveredCount = knownCounts[order] || 0;
+                          const totalCount = totalCounts[order] || Object.values(genera).reduce((sum, list) => sum + list.length, 0);
+                          return (
+                            <AccordionCategory
+                              key={accordionId}
+                              category={orderNameFormatted}
+                              genera={genera}
+                              isOpen={openAccordions.includes(accordionId)}
+                              showStickyHeaders={showStickyHeaders}
+                              discoveredSpecies={discoveredSpecies}
+                              accordionValue={accordionId}
+                              discoveredCount={discoveredCount}
+                              totalCount={totalCount}
+                              onToggle={() => {
+                                setOpenAccordions(prev =>
+                                  prev.includes(accordionId) ? prev.filter(c => c !== accordionId) : [...prev, accordionId]
+                                );
+                                setShowStickyHeaders(false);
+                              }}
+                              setRef={setRef}
+                            />
+                          );
+                        })}
+                      </Accordion>
+                      {Object.keys(grouped).length === 0 && (
+                        <div className="text-center p-12">
+                          <p className="text-muted-foreground">No species found for the selected filter.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            </TabsContent>
+          </>
+        )}
+        {/* Hero swiper overlay */}
+        {heroOpen && (
+          <AlbumHeroSwiper
+            speciesList={heroSpeciesList}
+            discoveredSpecies={discoveredSpecies}
+            initialIndex={heroInitialIndex}
+            onClose={() => setHeroOpen(false)}
+          />
+        )}
+      </Tabs>
+    </div>
+  );
+}
+
+// ---- Run memory card for Runs tab ----
+function RunMemoryCard({ run }: { run: RunSummary }) {
+  const completedNodes = run.nodes.filter(n => n.nodeStatus === 'completed').length;
+  return (
+    <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-start gap-2 min-w-0">
+          <MapPin className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white truncate">{run.bioregion || run.realm || run.locationKey}</p>
+            {run.biome && <p className="text-[11px] text-slate-400 truncate">{run.biome}</p>}
+          </div>
+        </div>
+        {run.finalScore != null && (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Swords className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-sm font-semibold text-amber-300">{run.finalScore}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Node chips */}
+      <div className="flex gap-1 flex-wrap mb-2">
+        {run.nodes.filter(n => n.nodeType !== 'analysis').map((node, i) => (
+          <span
+            key={i}
+            className={cn(
+              'text-[9px] px-1.5 py-0.5 rounded border',
+              node.nodeStatus === 'completed'
+                ? 'bg-green-500/10 border-green-500/30 text-green-300'
+                : 'bg-slate-800 border-slate-700 text-slate-500'
             )}
-          </ScrollArea>
+          >
+            {node.nodeType.replace(/_/g, ' ')}
+            {node.counterGem && <span className="ml-0.5 text-cyan-400">[{node.counterGem}]</span>}
+          </span>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between text-[10px] text-slate-500">
+        <span>{completedNodes}/{run.nodeCount} nodes</span>
+        {run.affinities.length > 0 && (
+          <span className="text-purple-400">{(run.affinities as string[]).join(', ')}</span>
+        )}
+        <span className="flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          {new Date(run.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---- Mini TCG card for album/cases grid ----
+function SpeciesTCGCardMini({ species, isDiscovered, onClick }: { species: Species; isDiscovered: boolean; onClick?: () => void }) {
+  const iucnColor: Record<string, string> = {
+    CR: 'border-red-500/60 bg-red-500/10',
+    EN: 'border-amber-500/60 bg-amber-500/10',
+    VU: 'border-cyan-500/60 bg-cyan-500/10',
+    NT: 'border-green-500/40 bg-green-500/5',
+    LC: 'border-slate-600 bg-slate-800/50',
+  };
+  const frameClass = iucnColor[species.conservation_code || ''] || 'border-slate-600 bg-slate-800/50';
+
+  return (
+    <div
+      className={cn(
+        'rounded-lg border-2 p-3 transition-all hover:scale-[1.02] cursor-pointer',
+        frameClass
+      )}
+      onClick={onClick}
+    >
+      {/* Conservation badge */}
+      {species.conservation_code && (
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {species.conservation_code}
+          </span>
+          {species.biome && (
+            <span className="text-[9px] text-slate-500 truncate max-w-[60%] text-right">
+              {species.biome}
+            </span>
+          )}
         </div>
       )}
+
+      {/* Art / silhouette area */}
+      <div className="aspect-[4/3] rounded bg-slate-900/60 flex items-center justify-center mb-2">
+        {isDiscovered ? (
+          <span className="text-3xl">
+            {species.class === 'AVES' ? '🐦' : species.class === 'MAMMALIA' ? '🦁' : species.class === 'REPTILIA' ? '🦎' : species.class === 'AMPHIBIA' ? '🐸' : '🐾'}
+          </span>
+        ) : (
+          <span className="text-3xl opacity-20">?</span>
+        )}
+      </div>
+
+      {/* Name */}
+      <div className="min-h-[2.5rem]">
+        {isDiscovered ? (
+          <>
+            <p className="text-xs font-semibold text-white leading-tight truncate">
+              {species.common_name || species.scientific_name}
+            </p>
+            <p className="text-[10px] italic text-slate-400 truncate">
+              {species.scientific_name}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-xs font-semibold text-slate-500 leading-tight">???</p>
+            <p className="text-[10px] italic text-slate-600">Unknown Species</p>
+          </>
+        )}
+      </div>
+
+      {/* Habitat tags */}
+      <div className="flex gap-1 mt-1 flex-wrap">
+        {species.marine && <span className="text-[8px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">Marine</span>}
+        {species.terrestrial && <span className="text-[8px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300">Land</span>}
+        {species.freshwater && <span className="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300">Fresh</span>}
+      </div>
     </div>
   );
 }

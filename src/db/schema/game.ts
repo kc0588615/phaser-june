@@ -321,3 +321,86 @@ export const marineEez = pgTable(
     ixMarineEezSovereign: index('ix_marine_eez_sovereign').on(table.sovereign1),
   })
 );
+
+// ---------------------------------------------------------------------------
+// Species Album TCG tables
+// ---------------------------------------------------------------------------
+
+export const speciesCards = pgTable(
+  'species_cards',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    playerId: uuid('player_id').notNull().references(() => profiles.userId, { onDelete: 'cascade' }),
+    speciesId: integer('species_id').notNull().references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+    discovered: boolean('discovered').notNull().default(false),
+    firstDiscoveredAt: timestamp('first_discovered_at', { withTimezone: true }),
+    lastEncounteredAt: timestamp('last_encountered_at', { withTimezone: true }),
+    timesEncountered: integer('times_encountered').notNull().default(0),
+    bestRunId: uuid('best_run_id').references(() => ecoRunSessions.id, { onDelete: 'set null' }),
+    bestRunScore: integer('best_run_score'),
+    completionPct: integer('completion_pct').notNull().default(0),
+    rarityTier: text('rarity_tier').notNull().default('common'),
+    conservationCode: text('conservation_code'),
+    affinityTags: jsonb('affinity_tags').notNull().default(sql`'[]'::jsonb`),
+    factsUnlocked: jsonb('facts_unlocked').notNull().default(sql`'[]'::jsonb`),
+    clueCategoriesUnlocked: jsonb('clue_categories_unlocked').notNull().default(sql`'[]'::jsonb`),
+    gisStamps: jsonb('gis_stamps').notNull().default(sql`'[]'::jsonb`),
+    expeditionRegionsSeen: jsonb('expedition_regions_seen').notNull().default(sql`'[]'::jsonb`),
+    cardVariant: text('card_variant'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    uqSpeciesCardsPlayerSpecies: uniqueIndex('uq_species_cards_player_species').on(table.playerId, table.speciesId),
+    ixSpeciesCardsPlayer: index('ix_species_cards_player').on(table.playerId),
+    ixSpeciesCardsDiscovered: index('ix_species_cards_discovered').on(table.playerId, table.discovered),
+  })
+);
+
+export const runMemories = pgTable(
+  'run_memories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    runId: uuid('run_id').notNull().references(() => ecoRunSessions.id, { onDelete: 'cascade' }),
+    playerId: uuid('player_id').references(() => profiles.userId, { onDelete: 'set null' }),
+    speciesId: integer('species_id').references(() => icaa.ogcFid, { onDelete: 'set null' }),
+    locationKey: text('location_key').notNull(),
+    startLon: doublePrecision('start_lon').notNull(),
+    startLat: doublePrecision('start_lat').notNull(),
+    routePolyline: jsonb('route_polyline').notNull().default(sql`'[]'::jsonb`),
+    routeBounds: jsonb('route_bounds'),
+    nodes: jsonb('nodes').notNull().default(sql`'[]'::jsonb`),
+    gisFeaturesNearby: jsonb('gis_features_nearby').notNull().default(sql`'[]'::jsonb`),
+    eventsTriggered: jsonb('events_triggered').notNull().default(sql`'[]'::jsonb`),
+    itemsUsed: jsonb('items_used').notNull().default(sql`'[]'::jsonb`),
+    deductionSummary: jsonb('deduction_summary'),
+    finalScore: integer('final_score'),
+    realm: text('realm'),
+    biome: text('biome'),
+    bioregion: text('bioregion'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    uqRunMemoriesRun: uniqueIndex('uq_run_memories_run').on(table.runId),
+    ixRunMemoriesPlayer: index('ix_run_memories_player').on(table.playerId),
+    ixRunMemoriesSpecies: index('ix_run_memories_species').on(table.speciesId),
+  })
+);
+
+export const speciesCardUnlocks = pgTable(
+  'species_card_unlocks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    playerId: uuid('player_id').notNull().references(() => profiles.userId, { onDelete: 'cascade' }),
+    speciesId: integer('species_id').notNull().references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+    runId: uuid('run_id').references(() => ecoRunSessions.id, { onDelete: 'set null' }),
+    unlockType: text('unlock_type').notNull(),
+    payload: jsonb('payload').notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    ixSpeciesCardUnlocksPlayer: index('ix_species_card_unlocks_player').on(table.playerId),
+    ixSpeciesCardUnlocksSpecies: index('ix_species_card_unlocks_species').on(table.speciesId),
+    ixSpeciesCardUnlocksRun: index('ix_species_card_unlocks_run').on(table.runId),
+  })
+);

@@ -480,6 +480,12 @@ function updateLocalStorageDiscovery(speciesId: number): void {
       localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
       window.dispatchEvent(new Event('species-discovered'));
     }
+    // Sync to DB-backed species cards (fire-and-forget)
+    fetch(`/api/species/cards/${speciesId}/unlock`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ unlockType: 'discover' }),
+    }).catch(() => {});
   } catch (err) {
     console.error('Failed to update localStorage:', err);
   }
