@@ -6,9 +6,6 @@ import {
   Cartesian3,
   Color,
   Rectangle,
-  ScreenSpaceEventHandler,
-  ScreenSpaceEventType,
-  defined,
   Cartographic,
   UrlTemplateImageryProvider,
   WebMercatorTilingScheme,
@@ -19,8 +16,6 @@ import {
   Color as CesiumColor,
   ConstantProperty,
   ColorMaterialProperty,
-  CallbackProperty,
-  Entity as CesiumEntity,
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
 import { deriveAvailableAffinities, getDefaultActiveAffinities } from '../expedition/affinities';
@@ -59,44 +54,6 @@ const CesiumMap: React.FC = () => {
   // Extracted hooks
   useCesiumFullscreen(viewerRef);
   const { runPhaseRef, loadSpatialLayers } = useCesiumTrail(viewerRef);
-
-  // Pulsing cyan markers for species-viable entry points
-  const hotspotEntitiesRef = useRef<CesiumEntity[]>([]);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!viewerRef.current?.cesiumElement) return;
-      const viewer = viewerRef.current.cesiumElement;
-      const HOTSPOTS = [
-        { lon: -90, lat: 0 }, { lon: -60, lat: -5 }, { lon: 140, lat: -10 },
-        { lon: 15, lat: -30 }, { lon: 45, lat: -25 }, { lon: 50, lat: -15 },
-        { lon: 35, lat: -5 }, { lon: 10, lat: 0 }, { lon: 10, lat: 5 },
-        { lon: 15, lat: 15 }, { lon: 105, lat: 20 }, { lon: 110, lat: 25 },
-        { lon: 75, lat: 10 }, { lon: 105, lat: 0 }, { lon: 105, lat: 5 },
-      ];
-      for (const h of HOTSPOTS) {
-        const ent = viewer.entities.add({
-          position: Cartesian3.fromDegrees(h.lon, h.lat),
-          point: {
-            pixelSize: new CallbackProperty(() => 12 + 4 * Math.sin(Date.now() / 600), false) as unknown as ConstantProperty,
-            color: new ConstantProperty(CesiumColor.CYAN.withAlpha(0.5)),
-            outlineColor: new ConstantProperty(CesiumColor.CYAN.withAlpha(0.8)),
-            outlineWidth: new ConstantProperty(2),
-            heightReference: new ConstantProperty(HeightReference.CLAMP_TO_GROUND),
-          },
-        });
-        hotspotEntitiesRef.current.push(ent);
-      }
-    }, 1500);
-    return () => {
-      clearTimeout(timer);
-      if (viewerRef.current?.cesiumElement) {
-        for (const ent of hotspotEntitiesRef.current) {
-          try { viewerRef.current.cesiumElement.entities.remove(ent); } catch { /* ok */ }
-        }
-      }
-      hotspotEntitiesRef.current = [];
-    };
-  }, []);
 
   useEffect(() => {
     Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN || 'YOUR_FALLBACK_TOKEN';
