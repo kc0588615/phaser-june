@@ -3,6 +3,15 @@ import { RotateCw, MapPin, Swords, Star } from 'lucide-react';
 import { iucnBadgeClasses, iucnLabel } from '@/lib/iucn';
 import { cn } from '@/lib/utils';
 import type { Species } from '@/types/database';
+import type { FeatureClass } from '@/types/gis';
+
+const FEATURE_CLASS_BADGES: Record<FeatureClass, { icon: string; label: string; color: string }> = {
+  river: { icon: '🌊', label: 'River', color: 'text-blue-400' },
+  lake: { icon: '💧', label: 'Lake', color: 'text-blue-300' },
+  protected_area: { icon: '🛡', label: 'Protected', color: 'text-green-400' },
+  bioregion: { icon: '🌍', label: 'Bioregion', color: 'text-amber-400' },
+  ramsar_site: { icon: '🏞', label: 'Ramsar', color: 'text-cyan-400' },
+};
 
 // Conservation-themed frame colors
 const FRAME_COLORS: Record<string, { border: string; glow: string; bg: string }> = {
@@ -30,10 +39,11 @@ interface SpeciesTCGCardProps {
     finalScore?: number | null;
     startedAt?: string;
   } | null;
+  gisStamps?: FeatureClass[];
   onFlip?: () => void;
 }
 
-export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, runMemory, onFlip }: SpeciesTCGCardProps) {
+export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, runMemory, gisStamps, onFlip }: SpeciesTCGCardProps) {
   const [flipped, setFlipped] = useState(false);
   const code = species.conservation_code || '';
   const frame = FRAME_COLORS[code] || FRAME_COLORS.LC!;
@@ -205,6 +215,23 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
                 <div className="flex items-center gap-2">
                   <Swords className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   <span className="text-sm font-semibold text-amber-300">{runMemory.finalScore} pts</span>
+                </div>
+              )}
+
+              {/* GIS stamps */}
+              {gisStamps && gisStamps.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Evidence Stamps</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {[...new Set(gisStamps)].map((fc) => {
+                      const badge = FEATURE_CLASS_BADGES[fc];
+                      return badge ? (
+                        <span key={fc} className={`text-[9px] ${badge.color} bg-slate-800/80 px-1.5 py-0.5 rounded`}>
+                          {badge.icon} {badge.label}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
                 </div>
               )}
 

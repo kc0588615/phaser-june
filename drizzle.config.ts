@@ -21,5 +21,6 @@ export default {
   dbCredentials: {
     url: dbUrl,
   },
-  tablesFilter: ['high_scores', 'player_*', 'profiles', 'habitat_colormap', 'eco_*', 'hydro_*', 'marine_*', 'protected_planet_parcels'],
+  tablesFilter: ['high_scores', 'player_*', 'profiles', 'habitat_colormap', 'eco_*', 'species_*', 'run_memories', 'oneearth_bioregion'],
+  schemaFilter: ['public'],
 } satisfies Config;

@@ -7,6 +7,8 @@ import type { AffinityType } from '@/expedition/affinities';
 import type { ActionGemType, GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
+import type { ThreatType, EncounterConfig } from './encounterState';
+import type { FeatureFingerprint } from '@/types/gis';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -29,6 +31,7 @@ export interface EventPayloads {
     events?: string[];
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
+    encounterConfig?: EncounterConfig | null;
   };
   'game-score-updated': {
     score: number;
@@ -79,6 +82,7 @@ export interface EventPayloads {
     species: Species[];
     rasterHabitats: RasterHabitatResult[];
     habitats: string[];
+    featureFingerprints?: FeatureFingerprint[];
   };
   'expedition-start': Record<string, never>;
   'battle-state-updated': {
@@ -123,6 +127,12 @@ export interface EventPayloads {
     nodeIndex: number;
     reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved' | 'escaped';
     source: 'game' | 'panel';
+    encounterOutcome?: {
+      threats: Array<{ id: string; threatType: string; progress: number; target: number; resolved: boolean }>;
+      finalSpookLevel: number;
+      outcome: 'success' | 'escaped' | 'partial';
+      chipDamageTotal: number;
+    };
   };
   'node-complete': { nodeIndex: number };
   'node-objective-updated': {
@@ -131,6 +141,11 @@ export interface EventPayloads {
     requiredGems: GemType[];
     counterGem?: ActionGemType | null;
     activeAffinities?: AffinityType[];
+    // Multi-threat encounter state
+    threats?: Array<{ id: string; threatType: ThreatType; counterGem: ActionGemType; progress: number; target: number; resolved: boolean }>;
+    spookLevel?: number;
+    chipDamagePool?: number;
+    overallResolved?: boolean;
   };
   'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
   'souvenir-dropped': { souvenir: SouvenirDef };

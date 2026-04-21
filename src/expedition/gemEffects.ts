@@ -1,5 +1,19 @@
-import type { GemType } from './domain';
+import type { GemType, ActionGemType } from './domain';
 import type { ClueCategoryKey } from '@/types/expedition';
+
+export type TacticalRole = 'threat_resolver' | 'support';
+
+/** Action gems with threat-resolution role vs support role for chip-damage pool. */
+export const GEM_TACTICAL_ROLE: Record<ActionGemType, TacticalRole> = {
+  sword: 'threat_resolver',
+  staff: 'threat_resolver',
+  shield: 'threat_resolver',
+  key: 'threat_resolver',
+  crate: 'threat_resolver',
+  power: 'support',
+  thought: 'support',
+  multiplier: 'support',
+};
 
 export type GemEffect =
   | { type: 'direct_score'; amount: number }

@@ -8,6 +8,11 @@ interface InfoBoxData {
   habitats: string[];
   species: Species[];
   rasterHabitats?: Array<{ habitat_type: string; percentage: number }>;
+  bioregion?: {
+    bioregion?: string | null;
+    realm?: string | null;
+    biome?: string | null;
+  };
   habitatCount?: number;
   topHabitat?: string;
   message?: string | null;
@@ -17,9 +22,17 @@ interface Props {
   data: InfoBoxData;
   isLoading: boolean;
   radiusKm: number;
+  showBioregionPolygons: boolean;
+  onToggleBioregionPolygons: () => void;
 }
 
-export const CesiumInfoBox: React.FC<Props> = ({ data, isLoading, radiusKm }) => {
+export const CesiumInfoBox: React.FC<Props> = ({
+  data,
+  isLoading,
+  radiusKm,
+  showBioregionPolygons,
+  onToggleBioregionPolygons,
+}) => {
   return (
     <div className="absolute top-3 left-3 glass-bg shadow-card rounded-2xl border border-ds-subtle text-ds-text-primary text-xs max-w-[320px] z-menu pointer-events-auto px-3.5 py-2.5 flex flex-col gap-1.5">
       {data.message ? (
@@ -43,8 +56,14 @@ export const CesiumInfoBox: React.FC<Props> = ({ data, isLoading, radiusKm }) =>
       )}
       {isLoading && <p className="m-0 text-ds-text-muted italic">Loading...</p>}
 
-      {data.rasterHabitats && data.rasterHabitats.length > 0 && (
-        <HabitatLegend habitats={data.rasterHabitats} radiusKm={radiusKm} />
+      {(data.bioregion || (data.rasterHabitats && data.rasterHabitats.length > 0)) && (
+        <HabitatLegend
+          habitats={data.rasterHabitats ?? []}
+          radiusKm={radiusKm}
+          bioregion={data.bioregion}
+          showBioregionPolygons={showBioregionPolygons}
+          onToggleBioregionPolygons={onToggleBioregionPolygons}
+        />
       )}
     </div>
   );

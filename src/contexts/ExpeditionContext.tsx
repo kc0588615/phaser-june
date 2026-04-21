@@ -5,13 +5,14 @@ import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
 import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ResourceWallet, ComparativeDeductionState } from '@/types/expedition';
 import { createEmptyResourceWallet, createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
-import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost } from '@/lib/deductionEngine';
+import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
 import type { AffinityType } from '@/expedition/affinities';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
+import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -34,6 +35,7 @@ const INITIAL_RUN_STATE: RunState = {
   lastNodeRewards: null,
   finalScore: null,
   totalThoughtDiscount: 0,
+  evidenceBundle: null,
 };
 
 interface ExpeditionContextValue {
@@ -103,11 +105,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const handleExpeditionDataReady = useCallback((data: EventPayloads['expedition-data-ready']) => {
     expeditionPayloadRef.current = data;
     activeAffinitiesRef.current = data.expedition.activeAffinities;
+    const evidenceBundle = data.featureFingerprints?.length
+      ? buildRunEvidenceBundle(data.featureFingerprints)
+      : null;
     setRunState({
       ...INITIAL_RUN_STATE,
       phase: 'briefing',
       expedition: data.expedition,
       activeAffinities: data.expedition.activeAffinities,
+      evidenceBundle,
     });
   }, []);
 
@@ -171,6 +177,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       objectiveTarget: firstNode?.objectiveTarget, nodeIndex: 0,
       nodeType: firstNode?.node_type, events: firstNode?.events,
       boardContext: firstBoardContext, boardConfig: firstBoardConfig,
+      encounterConfig: firstNode?.encounterConfig,
     });
   }, []);
 
@@ -213,6 +220,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves,
             objectiveProgress: objProgress,
             souvenirs: prev.souvenirs.length > 0 ? prev.souvenirs.map(s => ({ id: s.id, name: s.name })) : undefined,
+            encounterOutcome: data.encounterOutcome ?? undefined,
           }),
         }).catch(err => console.error('Failed to complete node:', err));
       }
@@ -251,6 +259,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             objectiveTarget: nextNode?.objectiveTarget, nodeIndex: nextIndex,
             nodeType: nextNode?.node_type, events: nextNode?.events,
             boardContext: nextBoardContext, boardConfig: nextBoardConfig,
+            encounterConfig: nextNode?.encounterConfig,
           });
         }, 100);
       }
@@ -384,6 +393,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
                 finalScore,
                 deductionSummary,
                 speciesId: correctSpeciesIdRef.current || undefined,
+                featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [],
               }),
             }).catch(err => console.error('Failed to persist deduction summary:', err));
           }, 0);
@@ -415,7 +425,22 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       .then(data => {
         if (!data) return;
         const compState = createEmptyComparativeState(data.mysteryProfile, data.mysteryClues, data.albumProfiles);
-        setRunState(prev => prev.phase === 'deduction' ? { ...prev, comparativeDeduction: compState } : prev);
+        setRunState(prev => {
+          if (prev.phase !== 'deduction') return prev;
+          // Auto-confirm habitat tags from GIS evidence + recompute candidates
+          if (prev.evidenceBundle) {
+            const { confirmedCategories, confirmedHabitatTags } = applyEvidenceBundle(prev.evidenceBundle, compState.mysteryProfile);
+            if (confirmedHabitatTags.length > 0) {
+              compState.confirmedTags = { ...compState.confirmedTags };
+              for (const cat of confirmedCategories) {
+                compState.confirmedTags[cat] = [...(compState.confirmedTags[cat] ?? []), ...confirmedHabitatTags];
+              }
+              const allProfiles = [...compState.albumProfiles, compState.mysteryProfile];
+              compState.candidateCount = filterCandidates(allProfiles, compState.confirmedTags, new Set(compState.eliminatedSpeciesIds)).length;
+            }
+          }
+          return { ...prev, comparativeDeduction: compState };
+        });
       })
       .catch(err => console.error('Failed to fetch deduction profiles:', err));
   }, [runState.phase, runState.comparativeDeduction]);
@@ -491,7 +516,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
         if (runIdRef.current) {
           const rid = runIdRef.current;
-          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined }) }).catch(err => console.error('Failed to persist deduction:', err));
+          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [] }) }).catch(err => console.error('Failed to persist deduction:', err));
         }
         return { ...prev, phase: 'complete' as const, comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus }, finalScore };
       }

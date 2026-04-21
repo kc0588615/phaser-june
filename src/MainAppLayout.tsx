@@ -177,6 +177,7 @@ function MainAppLayoutInner() {
                                 comp={runState.comparativeDeduction}
                                 speciesId={correctSpeciesId}
                                 hiddenSpeciesName={hiddenSpeciesName}
+                                evidenceBundle={runState.evidenceBundle}
                                 onPurchase={handleDeductionPurchase}
                                 onGuessResult={handleDeductionGuessResult}
                                 onProcessClue={handleProcessClue}

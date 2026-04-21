@@ -4,6 +4,15 @@ import { NODE_TYPE_LABELS } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem } from '@/expedition/affinities';
 import { GemSwatch } from '@/components/ui/gem-swatch';
+import type { ThreatType } from '@/game/encounterState';
+
+const THREAT_ICONS: Record<ThreatType, string> = {
+  quarry: '🎯',
+  blocker: '🧱',
+  hazard: '⚠',
+  loot_cache: '📦',
+  time_pressure: '⏱',
+};
 
 interface Props {
   nodes: RunNode[];
@@ -35,9 +44,17 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
                 ? <><span className="mr-1">✓</span>{NODE_TYPE_LABELS[node.node_type] || node.node_type}</>
                 : NODE_TYPE_LABELS[node.node_type] || node.node_type}
               <div className="text-[9px] opacity-70 flex items-center justify-center gap-0.5">
-                {isCurrent && node.counterGem
-                  ? <GemSwatch gem={node.counterGem} size={8} glow={affinitySetBuffsGem(activeAffinities, node.counterGem)} />
-                  : node.difficulty}
+                {node.encounterConfig ? (
+                  node.encounterConfig.threats.map((t, ti) => (
+                    <span key={ti} title={t.threatType} className="text-[8px]">
+                      {THREAT_ICONS[t.threatType] ?? '?'}
+                    </span>
+                  ))
+                ) : isCurrent && node.counterGem ? (
+                  <GemSwatch gem={node.counterGem} size={8} glow={affinitySetBuffsGem(activeAffinities, node.counterGem)} />
+                ) : (
+                  node.difficulty
+                )}
               </div>
             </div>
             {i < nodes.length - 1 && (

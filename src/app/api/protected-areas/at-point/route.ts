@@ -9,17 +9,19 @@ import {
   generateRunNodes,
 } from '@/lib/nodeScoring';
 import { buildSquare, buildSeed } from '@/lib/geoUtils';
+import type { FeatureFingerprint } from '@/types/gis';
 
-interface ProtectedParcelRow {
+interface ProtectedAreaRow {
   site_id: number;
   site_pid: string;
-  site_type: 'pa' | 'oecm';
+  site_type: string;
   display_name: string | null;
-  name_english: string | null;
+  name_eng: string | null;
   name: string | null;
-  realm_name: string | null;
-  designation_name: string | null;
-  iucn_category_name: string | null;
+  realm: string | null;
+  desig_eng: string | null;
+  iucn_cat: string | null;
+  gov_type: string | null;
   intersect_area_m2: number | null;
   [key: string]: unknown;
 }
@@ -49,48 +51,28 @@ interface BioregionRow {
 }
 
 interface RiverRow {
-  hyriv_id: number;
-  ord_stra: number | null;
+  gid: number;
+  river_map: string | null;
   distance_m: number;
   [key: string]: unknown;
 }
 
 interface LakeRow {
-  hylak_id: number;
+  glwd_id: number;
   lake_name: string | null;
-  lake_type: number | null;
+  type: string | null;
+  area_skm: number | null;
   intersect_area_m2: number | null;
   distance_m: number;
   [key: string]: unknown;
 }
 
-interface MarineRow {
-  mrgid: number;
-  geoname: string | null;
+interface WetlandRow {
+  gid: number;
+  ecoregion: string | null;
+  mht_txt: string | null;
   intersect_area_m2: number | null;
-  distance_m: number;
   [key: string]: unknown;
-}
-
-interface IccaRow {
-  wdpa_id: number;
-  name: string | null;
-  comm_name: string | null;
-  habit_type: string | null;
-  threats: string | null;
-  distance_m: number;
-  [key: string]: unknown;
-}
-
-async function tableExists(tableName: string): Promise<boolean> {
-  try {
-    const result = await db.execute<{ table_name: string | null }>(
-      sql.raw(`SELECT to_regclass('public.${tableName}') AS table_name`)
-    );
-    return !!result[0]?.table_name;
-  } catch {
-    return false;
-  }
 }
 
 
@@ -212,37 +194,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!(await tableExists('protected_planet_parcels'))) {
-      return NextResponse.json(
-        { error: 'Missing required table "protected_planet_parcels". Run migration 008 first.' },
-        { status: 500 }
-      );
-    }
-
     const square = buildSquare(lon, lat, sizeMeters);
     const squareJson = JSON.stringify(square.geometry);
     const pointWkt = `SRID=4326;POINT(${lon} ${lat})`;
 
-    // --- Existing queries (protected areas, threatened species, habitat) ---
+    // --- Protected areas from wpda.wdpa_polygons (SRID 3857) ---
 
-    const protectedAreas = await db.execute<ProtectedParcelRow>(sql`
+    const protectedAreas = await db.execute<ProtectedAreaRow>(sql`
       WITH square AS (
-        SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
+        SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
       )
       SELECT
         p.site_id,
         p.site_pid,
         p.site_type,
-        COALESCE(p.name_english, p.name) AS display_name,
-        p.name_english,
+        COALESCE(p.name_eng, p.name) AS display_name,
+        p.name_eng,
         p.name,
-        p.realm_name,
-        p.designation_name,
-        p.iucn_category_name,
-        p.governance_type,
-        p.governance_subtype,
-        ST_Area(ST_Intersection(p.geom, square.geom)::geography) AS intersect_area_m2
-      FROM protected_planet_parcels p
+        p.realm,
+        p.desig_eng,
+        p.iucn_cat,
+        p.gov_type,
+        ST_Area(ST_Intersection(p.geom, square.geom)) AS intersect_area_m2
+      FROM wpda.wdpa_polygons p
       CROSS JOIN square
       WHERE ST_Intersects(p.geom, square.geom)
       ORDER BY intersect_area_m2 DESC NULLS LAST
@@ -292,7 +266,7 @@ export async function GET(request: NextRequest) {
           b.biome,
           ST_Area(ST_Intersection(b.wkb_geometry, square.geom)::geography) AS intersect_area_m2,
           ST_Distance(b.wkb_geometry::geography, pt.geom::geography) AS distance_m
-        FROM oneearth_bioregion b
+        FROM oneearth.oneearth_bioregion b
         CROSS JOIN square
         CROSS JOIN pt
         WHERE ST_DWithin(b.wkb_geometry::geography, pt.geom::geography, 5000)
@@ -315,99 +289,74 @@ export async function GET(request: NextRequest) {
       }
     } catch { /* eco_gis_layers may not exist yet */ }
 
-    // --- Water queries (guarded by table existence + layer enabled) ---
+    // --- Water queries — unesco.world_rivers (3857), wwf.glwd_1 (3857) ---
 
     let riverRows: RiverRow[] = [];
-    if (enabledLayers.has('hydrorivers') && await tableExists('hydro_rivers')) {
+    if (enabledLayers.has('unesco_rivers')) {
       try {
         riverRows = [...await db.execute<RiverRow>(sql`
           WITH pt AS (
-            SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
+            SELECT ST_Transform(ST_GeomFromEWKT(${pointWkt}), 3857) AS geom
           )
           SELECT
-            r.hyriv_id,
-            r.ord_stra,
-            ST_Distance(r.geom::geography, pt.geom::geography) AS distance_m
-          FROM hydro_rivers r
+            r.gid,
+            r.river_map,
+            ST_Distance(r.geom, pt.geom) AS distance_m
+          FROM unesco.world_rivers r
           CROSS JOIN pt
-          WHERE ST_DWithin(r.geom::geography, pt.geom::geography, 20000)
+          WHERE ST_DWithin(r.geom, pt.geom, 20000)
           ORDER BY distance_m ASC
           LIMIT 3
         `)];
-      } catch { /* no data yet */ }
+      } catch { /* no data */ }
     }
 
     let lakeRows: LakeRow[] = [];
-    if (enabledLayers.has('hydrolakes') && await tableExists('hydro_lakes')) {
+    if (enabledLayers.has('wwf_glwd')) {
       try {
         lakeRows = [...await db.execute<LakeRow>(sql`
           WITH square AS (
-            SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
+            SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
           ), pt AS (
-            SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
+            SELECT ST_Transform(ST_GeomFromEWKT(${pointWkt}), 3857) AS geom
           )
           SELECT
-            l.hylak_id,
+            l.glwd_id,
             l.lake_name,
-            l.lake_type,
-            ST_Area(ST_Intersection(l.geom, square.geom)::geography) AS intersect_area_m2,
-            ST_Distance(l.geom::geography, pt.geom::geography) AS distance_m
-          FROM hydro_lakes l
+            l.type,
+            l.area_skm,
+            ST_Area(ST_Intersection(l.geom, square.geom)) AS intersect_area_m2,
+            ST_Distance(l.geom, pt.geom) AS distance_m
+          FROM wwf.glwd_1 l
           CROSS JOIN square
           CROSS JOIN pt
-          WHERE ST_DWithin(l.geom::geography, pt.geom::geography, 5000)
+          WHERE ST_DWithin(l.geom, pt.geom, 5000)
           ORDER BY distance_m ASC
           LIMIT 3
         `)];
-      } catch { /* no data yet */ }
+      } catch { /* no data */ }
     }
 
-    let marineRows: MarineRow[] = [];
-    if (enabledLayers.has('marine_eez') && await tableExists('marine_eez')) {
+    // --- Ramsar wetlands (3857) ---
+
+    let wetlandRows: WetlandRow[] = [];
+    if (enabledLayers.has('ramsar_wetland')) {
       try {
-        marineRows = [...await db.execute<MarineRow>(sql`
+        wetlandRows = [...await db.execute<WetlandRow>(sql`
           WITH square AS (
-            SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
-          ), pt AS (
-            SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
+            SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
           )
           SELECT
-            m.mrgid,
-            m.geoname,
-            ST_Area(ST_Intersection(m.geom, square.geom)::geography) AS intersect_area_m2,
-            ST_Distance(m.geom::geography, pt.geom::geography) AS distance_m
-          FROM marine_eez m
+            w.gid,
+            w.ecoregion,
+            w.mht_txt,
+            ST_Area(ST_Intersection(w.geom, square.geom)) AS intersect_area_m2
+          FROM ramsar.wetland w
           CROSS JOIN square
-          CROSS JOIN pt
-          WHERE ST_DWithin(m.geom::geography, pt.geom::geography, 10000)
-          ORDER BY distance_m ASC
-          LIMIT 3
-        `)];
-      } catch { /* no data yet */ }
-    }
-
-    // --- ICCA registry query (point data, 50km radius) ---
-    let iccaRows: IccaRow[] = [];
-    if (await tableExists('icca_registry_point')) {
-      try {
-        iccaRows = [...await db.execute<IccaRow>(sql`
-          WITH pt AS (
-            SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
-          )
-          SELECT
-            i.wdpa_id,
-            i.name,
-            i.comm_name,
-            i.habit_type,
-            i.threats,
-            ST_Distance(i.geom::geography, pt.geom::geography) AS distance_m
-          FROM icca_registry_point i
-          CROSS JOIN pt
-          WHERE ST_DWithin(i.geom::geography, pt.geom::geography, 50000)
-          ORDER BY distance_m ASC
+          WHERE ST_Intersects(w.geom, square.geom)
           LIMIT 5
         `)];
-      } catch { /* table may be empty */ }
+      } catch { /* no data */ }
     }
 
     // --- Compute layer scores ---
@@ -450,59 +399,45 @@ export async function GET(request: NextRequest) {
       const overlap = (pa.intersect_area_m2 || 0) / square.areaM2;
       layerScores.push({
         nodeFamily: 'protected_node',
-        variant: pa.iucn_category_name || pa.site_type || 'pa',
+        variant: pa.iucn_cat || pa.site_type || 'pa',
         score: scorePolygonLayer(overlap, 0),
         overlapRatio: overlap,
         nearestDistanceM: 0,
-        features: { site_pid: pa.site_pid, designation: pa.designation_name, iucn: pa.iucn_category_name },
+        features: { site_pid: pa.site_pid, designation: pa.desig_eng, iucn: pa.iucn_cat },
       });
     }
 
-    // Community node (WDPA governance_subtype proxy)
+    // Community node (WDPA gov_type proxy)
     const communityParcels = [...protectedAreas].filter((p) => {
-      const gov = ((p as Record<string, unknown>).governance_type as string || '').toLowerCase();
+      const gov = (p.gov_type || '').toLowerCase();
       return /community|indigenous|shared|local/i.test(gov);
     });
     if (communityParcels.length > 0) {
       const cp = communityParcels[0];
       const overlap = (cp.intersect_area_m2 || 0) / square.areaM2;
-      // Only score community_node if meaningful overlap (avoids false positives from distant parcels)
       if (overlap >= 0.1) {
         layerScores.push({
           nodeFamily: 'community_node',
-          variant: (cp as Record<string, unknown>).governance_type as string || 'community',
+          variant: cp.gov_type || 'community',
           score: scorePolygonLayer(overlap, 0),
           overlapRatio: overlap,
           nearestDistanceM: 0,
-          features: { site_pid: cp.site_pid, governance: (cp as Record<string, unknown>).governance_type },
+          features: { site_pid: cp.site_pid, governance: cp.gov_type },
         });
       }
     }
 
-    // ICCA registry score (point proximity)
-    if (iccaRows.length > 0) {
-      const ic = iccaRows[0];
-      layerScores.push({
-        nodeFamily: 'community_node',
-        variant: 'icca',
-        score: scoreLineLayer(ic.distance_m, 10000),
-        overlapRatio: 0,
-        nearestDistanceM: ic.distance_m,
-        features: { wdpa_id: ic.wdpa_id, name: ic.name, comm_name: ic.comm_name },
-      });
-    }
-
-    // Water scores (river = line, lake = polygon, marine = polygon)
+    // Water scores (river = line, lake = polygon)
     if (riverRows.length > 0) {
       const r = riverRows[0];
-      const riverDecay = layerDecay.get('hydrorivers') ?? 500;
+      const riverDecay = layerDecay.get('unesco_rivers') ?? 500;
       layerScores.push({
         nodeFamily: 'water_node',
         variant: 'river',
         score: scoreLineLayer(r.distance_m, riverDecay),
         overlapRatio: 0,
         nearestDistanceM: r.distance_m,
-        features: { hyriv_id: r.hyriv_id, ord_stra: r.ord_stra },
+        features: { gid: r.gid, river_map: r.river_map },
       });
     }
     if (lakeRows.length > 0) {
@@ -514,19 +449,20 @@ export async function GET(request: NextRequest) {
         score: scorePolygonLayer(overlap, l.distance_m),
         overlapRatio: overlap,
         nearestDistanceM: l.distance_m,
-        features: { hylak_id: l.hylak_id, lake_name: l.lake_name },
+        features: { glwd_id: l.glwd_id, lake_name: l.lake_name, type: l.type },
       });
     }
-    if (marineRows.length > 0) {
-      const m = marineRows[0];
-      const overlap = (m.intersect_area_m2 || 0) / square.areaM2;
+    // Wetland score from Ramsar
+    if (wetlandRows.length > 0) {
+      const w = wetlandRows[0];
+      const overlap = (w.intersect_area_m2 || 0) / square.areaM2;
       layerScores.push({
         nodeFamily: 'water_node',
-        variant: 'marine',
-        score: scorePolygonLayer(overlap, m.distance_m),
+        variant: 'wetland',
+        score: scorePolygonLayer(overlap, 0),
         overlapRatio: overlap,
-        nearestDistanceM: m.distance_m,
-        features: { mrgid: m.mrgid, geoname: m.geoname },
+        nearestDistanceM: 0,
+        features: { gid: w.gid, ecoregion: w.ecoregion, mht_txt: w.mht_txt },
       });
     }
 
@@ -570,6 +506,48 @@ export async function GET(request: NextRequest) {
       ...nodeSelection.signals,
     };
 
+    // Build feature fingerprints for evidence pipeline
+    const fingerprints: FeatureFingerprint[] = [];
+    for (const pa of [...protectedAreas]) {
+      fingerprints.push({
+        featureClass: 'protected_area', sourceTable: 'wpda.wdpa_polygons',
+        sourceId: pa.site_pid, name: pa.display_name ?? pa.name_eng ?? null,
+        distanceM: 0, overlapRatio: (pa.intersect_area_m2 || 0) / square.areaM2,
+        properties: { iucn_cat: pa.iucn_cat, desig_eng: pa.desig_eng, gov_type: pa.gov_type },
+      });
+    }
+    for (const r of riverRows) {
+      fingerprints.push({
+        featureClass: 'river', sourceTable: 'unesco.world_rivers',
+        sourceId: r.gid, name: r.river_map, distanceM: r.distance_m, overlapRatio: 0,
+        properties: { gid: r.gid, river_map: r.river_map },
+      });
+    }
+    for (const l of lakeRows) {
+      fingerprints.push({
+        featureClass: 'lake', sourceTable: 'wwf.glwd_1',
+        sourceId: l.glwd_id, name: l.lake_name, distanceM: l.distance_m,
+        overlapRatio: (l.intersect_area_m2 || 0) / square.areaM2,
+        properties: { type: l.type, area_skm: l.area_skm },
+      });
+    }
+    for (const w of wetlandRows) {
+      fingerprints.push({
+        featureClass: 'ramsar_site', sourceTable: 'ramsar.wetland',
+        sourceId: w.gid, name: w.ecoregion, distanceM: 0,
+        overlapRatio: (w.intersect_area_m2 || 0) / square.areaM2,
+        properties: { mht_txt: w.mht_txt },
+      });
+    }
+    for (const br of bioregionRows) {
+      fingerprints.push({
+        featureClass: 'bioregion', sourceTable: 'oneearth.oneearth_bioregion',
+        sourceId: br.bioregion ?? 'unknown', name: br.bioregion,
+        distanceM: br.distance_m ?? 0, overlapRatio: (br.intersect_area_m2 || 0) / square.areaM2,
+        properties: { realm: br.realm, biome: br.biome },
+      });
+    }
+
     return NextResponse.json({
       mission_seed: buildSeed(lon, lat),
       query: {
@@ -588,9 +566,9 @@ export async function GET(request: NextRequest) {
         site_pid: row.site_pid,
         site_type: row.site_type,
         name: row.display_name,
-        realm: row.realm_name,
-        designation: row.designation_name,
-        iucn_category: row.iucn_category_name,
+        realm: row.realm,
+        designation: row.desig_eng,
+        iucn_category: row.iucn_cat,
         intersect_area_m2: Number((row.intersect_area_m2 || 0).toFixed(2)),
       })),
       threatened_species: [...threatenedSpecies].map((row) => ({
@@ -608,15 +586,8 @@ export async function GET(request: NextRequest) {
         realm: bioregionRows[0].realm,
         biome: bioregionRows[0].biome,
       } : null,
-      icca_territories: iccaRows.map((r) => ({
-        wdpa_id: r.wdpa_id,
-        name: r.name,
-        comm_name: r.comm_name,
-        habit_type: r.habit_type,
-        threats: r.threats,
-        distance_m: Number(r.distance_m.toFixed(1)),
-      })),
       nearest_river_dist_m: riverRows.length > 0 ? Number(riverRows[0].distance_m.toFixed(1)) : null,
+      feature_fingerprints: fingerprints,
       ...(debug ? {
         _debug: {
           layer_scores: layerScores.map((s) => ({

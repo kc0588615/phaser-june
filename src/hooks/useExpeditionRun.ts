@@ -33,6 +33,7 @@ const INITIAL_RUN_STATE: RunState = {
     lastNodeRewards: null,
     finalScore: null,
     totalThoughtDiscount: 0,
+    evidenceBundle: null,
 };
 
 export function useExpeditionRun() {

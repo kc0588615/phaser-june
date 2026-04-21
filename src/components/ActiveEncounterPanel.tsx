@@ -6,6 +6,7 @@ import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem, getAffinityDefinition } from '@/expedition/affinities';
 import { formatNodeObstacleLabel, OBSTACLE_FAMILY_LABELS } from '@/game/nodeObstacles';
 import { useGameBridge } from '@/contexts/GameBridgeContext';
+import type { ThreatType } from '@/game/encounterState';
 
 interface Props {
   node: RunNode;
@@ -25,12 +26,23 @@ const TIER_LABELS: Record<SpookTier, string> = {
   escaped: 'Escaping...',
 };
 
+const THREAT_LABELS: Record<ThreatType, string> = {
+  quarry: 'Quarry',
+  blocker: 'Blocker',
+  hazard: 'Hazard',
+  loot_cache: 'Cache',
+  time_pressure: 'Timer',
+};
+
 export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeAffinities, onComplete }) => {
   const { bonusPool, encounterFlash, objectiveProgress } = useGameBridge();
 
   const [clicked, setClicked] = useState(false);
   const hasObjective = node.objectiveTarget > 0;
   const progress = objectiveProgress?.progress ?? 0;
+  const threats = objectiveProgress?.threats;
+  const chipDamagePool = objectiveProgress?.chipDamagePool ?? 0;
+  const hasMultiThreat = threats && threats.length > 0;
 
   useEffect(() => { setClicked(false); }, [nodeIndex]);
 
@@ -70,7 +82,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
         </div>
       )}
 
-      {node.obstacleFamily && (
+      {node.obstacleFamily && !hasMultiThreat && (
         <div className="text-[9px] text-ds-cyan mb-1.5 leading-tight">
           Counter: {OBSTACLE_FAMILY_LABELS[node.obstacleFamily]}
         </div>
@@ -80,11 +92,11 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
         {node.rationale}
       </div>
 
-      {/* Spook / tracking meter */}
+      {/* Spook / tracking meter — encounter spookLevel when multi-threat, legacy bonusPool otherwise */}
       {bonusPool && (
         <div className="mb-1.5">
           <div className="flex justify-between text-[9px] mb-0.5">
-            <span className="text-ds-text-secondary">Tracking</span>
+            <span className="text-ds-text-secondary">{hasMultiThreat ? 'Spook' : 'Tracking'}</span>
             <span className="font-semibold" style={{ color: TIER_COLORS[bonusPool.tier] }}>
               {TIER_LABELS[bonusPool.tier]}
             </span>
@@ -98,8 +110,48 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
         </div>
       )}
 
-      {/* Gem objective */}
-      {hasObjective && (
+      {/* Multi-threat encounter bars */}
+      {hasMultiThreat && (
+        <div className="mb-1.5 flex flex-col gap-1">
+          {threats.map((threat) => {
+            const threatPct = Math.min(100, (threat.progress / threat.target) * 100);
+            const gemDef = getGemDefinition(threat.counterGem);
+            return (
+              <div key={threat.id}>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <GemSwatch gem={threat.counterGem} size={8} glow={affinitySetBuffsGem(activeAffinities, threat.counterGem)} />
+                  <span className="text-[9px] text-ds-text-secondary flex-1">
+                    {THREAT_LABELS[threat.threatType as ThreatType] ?? threat.threatType}
+                  </span>
+                  <span className="text-[9px] text-ds-text-primary font-semibold">
+                    {threat.progress}/{threat.target}
+                  </span>
+                </div>
+                <div className="h-[4px] bg-ds-bg rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-200 ease-out"
+                    style={{
+                      width: `${threatPct}%`,
+                      background: threat.resolved
+                        ? 'var(--ds-accent-emerald)'
+                        : gemDef.color,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {/* Chip-damage indicator */}
+          {chipDamagePool > 0 && (
+            <div className="text-[8px] text-ds-text-muted text-right">
+              Chip damage: {chipDamagePool}/3
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Legacy single-gem objective (no encounterConfig) */}
+      {hasObjective && !hasMultiThreat && (
         <div className="mb-1.5">
           <div className="flex items-center gap-ds-xs mb-1">
             <span className="text-ds-badge text-ds-text-secondary">Match:</span>

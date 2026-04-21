@@ -6,6 +6,7 @@ import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY
 import type { DeductionClue, ProcessedClue, DeductionProfile, ReferenceAttempt } from '@/lib/deductionEngine';
 import { isFilteringCategory } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
+import type { RunEvidenceBundle } from '@/types/gis';
 import { SpeciesGuessSelector } from './SpeciesGuessSelector';
 import { DenseClueGrid } from './DenseClueGrid';
 import { GlassPanel } from '@/components/ui/glass-panel';
@@ -74,6 +75,7 @@ interface Props {
   comp: ComparativeDeductionState | null;
   speciesId: number;
   hiddenSpeciesName: string;
+  evidenceBundle?: RunEvidenceBundle | null;
   onPurchase: (category: ClueCategoryKey, cost: number) => void;
   onGuessResult: (isCorrect: boolean) => void;
   onProcessClue: (clueId: number) => void;
@@ -83,7 +85,7 @@ interface Props {
 }
 
 export const DeductionCamp: React.FC<Props> = ({
-  camp, comp, speciesId, hiddenSpeciesName,
+  camp, comp, speciesId, hiddenSpeciesName, evidenceBundle,
   onPurchase, onGuessResult, onProcessClue, onPlaceReference, onComparativeGuess, onFinish,
 }) => {
   const availableScore = camp.bankedScore - camp.scoreSpent - (comp?.scoreSpent ?? 0);
@@ -99,9 +101,34 @@ export const DeductionCamp: React.FC<Props> = ({
     }
   }, [isCorrect]);
 
+  // Route Evidence section (rendered above whichever deduction UI is active)
+  const evidenceSection = evidenceBundle && evidenceBundle.fingerprints.length > 0 ? (
+    <div className="mb-3 px-3 py-2 rounded-md bg-[rgba(14,165,233,0.08)] border border-[rgba(14,165,233,0.2)]">
+      <div className="text-ds-caption font-bold text-ds-cyan uppercase tracking-wider mb-1.5">Route Evidence</div>
+      <div className="flex flex-wrap gap-1.5">
+        {evidenceBundle.uniqueProtectedAreas.slice(0, 3).map((name, i) => (
+          <span key={`pa-${i}`} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">
+            {name}
+          </span>
+        ))}
+        {Object.entries(evidenceBundle.featureClassCounts).map(([fc, count]) => (
+          <span key={fc} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">
+            {fc.replace(/_/g, ' ')} x{count}
+          </span>
+        ))}
+      </div>
+      {evidenceBundle.bioregionContext?.bioregion && (
+        <div className="text-[9px] text-ds-text-muted mt-1">
+          Bioregion: {evidenceBundle.bioregionContext.bioregion}
+        </div>
+      )}
+    </div>
+  ) : null;
+
   // If comparative deduction data is loaded, render the new UI
   if (comp) {
     return (
+      <>{evidenceSection}
       <ComparativeDeductionUI
         camp={camp}
         comp={comp}
@@ -116,13 +143,14 @@ export const DeductionCamp: React.FC<Props> = ({
         onFinish={onFinish}
         confettiRef={confettiRef}
       />
+      </>
     );
   }
 
   // Fallback: legacy clue-shop UI (if comparative data hasn't loaded yet)
-  return <LegacyClueShop camp={camp} speciesId={speciesId} hiddenSpeciesName={hiddenSpeciesName}
+  return <>{evidenceSection}<LegacyClueShop camp={camp} speciesId={speciesId} hiddenSpeciesName={hiddenSpeciesName}
     availableScore={availableScore} isCorrect={isCorrect} isWrong={isWrong}
-    onPurchase={onPurchase} onGuessResult={onGuessResult} onFinish={onFinish} confettiRef={confettiRef} />;
+    onPurchase={onPurchase} onGuessResult={onGuessResult} onFinish={onFinish} confettiRef={confettiRef} /></>;
 };
 
 // ---------------------------------------------------------------------------

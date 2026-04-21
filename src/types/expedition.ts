@@ -3,6 +3,7 @@ import type { AffinityType } from '@/expedition/affinities';
 import { createEmptyResourceWallet as createEmptyDomainResourceWallet } from '@/expedition/domain';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
+import type { RunEvidenceBundle } from '@/types/gis';
 
 export type { RunNode };
 
@@ -27,7 +28,6 @@ export interface ExpeditionData {
   primaryVariant: string;
   modifierNodes: string[];
   signals: Record<string, number>;
-  iccaTerritories?: Array<{ name: string | null; comm_name: string | null; habit_type: string | null; threats: string | null; distance_m: number }>;
   nearestRiverDistM?: number | null;
 }
 
@@ -116,6 +116,7 @@ export interface RunState {
   lastNodeRewards: NodeRewardLanes | null;
   finalScore: number | null;
   totalThoughtDiscount: number;
+  evidenceBundle: RunEvidenceBundle | null;
 }
 
 // --- New Economy Types ---

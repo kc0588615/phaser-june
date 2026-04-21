@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         obstacleFamily: node.obstacleFamily ?? null,
       },
       toolProfile: { activeAffinities: activeAffinities ?? [] },
-      boardContext: { rationale: node.rationale, difficulty: node.difficulty, ...boardContext },
+      boardContext: { rationale: node.rationale, difficulty: node.difficulty, encounterConfig: node.encounterConfig ?? null, ...boardContext },
       objectiveType: node.counterGem ? 'counter_gem_match' : 'any',
       objectiveTarget: node.objectiveTarget ?? 0,
     };

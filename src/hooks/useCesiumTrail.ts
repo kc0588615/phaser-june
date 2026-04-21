@@ -82,19 +82,34 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
         spatialLayersRef.current.push(paDs);
       }
 
-      if (data.icca?.features?.length > 0) {
-        const iccaDs = new GeoJsonDataSource('spatial-icca');
-        await iccaDs.load(data.icca);
-        iccaDs.entities.values.forEach((e) => {
-          if (e.point) {
-            e.point.color = new ConstantProperty(CesiumColor.fromCssColorString('#f97316'));
-            e.point.pixelSize = new ConstantProperty(10);
-            e.point.outlineColor = new ConstantProperty(CesiumColor.WHITE);
-            e.point.outlineWidth = new ConstantProperty(2);
+      if (data.wetlands?.features?.length > 0) {
+        const wetDs = new GeoJsonDataSource('spatial-wetlands');
+        await wetDs.load(data.wetlands);
+        wetDs.entities.values.forEach((e) => {
+          if (e.polygon) {
+            e.polygon.material = new ColorMaterialProperty(CesiumColor.fromCssColorString('#14b8a6').withAlpha(0.25));
+            e.polygon.outline = new ConstantProperty(true);
+            e.polygon.outlineColor = new ConstantProperty(CesiumColor.fromCssColorString('#14b8a6'));
+            e.polygon.outlineWidth = new ConstantProperty(1);
           }
         });
-        viewer.dataSources.add(iccaDs);
-        spatialLayersRef.current.push(iccaDs);
+        viewer.dataSources.add(wetDs);
+        spatialLayersRef.current.push(wetDs);
+      }
+
+      if (data.lakes?.features?.length > 0) {
+        const lakeDs = new GeoJsonDataSource('spatial-lakes');
+        await lakeDs.load(data.lakes);
+        lakeDs.entities.values.forEach((e) => {
+          if (e.polygon) {
+            e.polygon.material = new ColorMaterialProperty(CesiumColor.fromCssColorString('#3b82f6').withAlpha(0.3));
+            e.polygon.outline = new ConstantProperty(true);
+            e.polygon.outlineColor = new ConstantProperty(CesiumColor.fromCssColorString('#3b82f6'));
+            e.polygon.outlineWidth = new ConstantProperty(1);
+          }
+        });
+        viewer.dataSources.add(lakeDs);
+        spatialLayersRef.current.push(lakeDs);
       }
     } catch (err) {
       console.warn('[CesiumMap] Failed to load spatial layers:', err);

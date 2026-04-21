@@ -5,6 +5,7 @@ import type { Swiper as SwiperType } from 'swiper';
 import { X } from 'lucide-react';
 import SpeciesTCGCard from '@/components/album/SpeciesTCGCard';
 import type { Species } from '@/types/database';
+import type { FeatureClass } from '@/types/gis';
 import 'swiper/css';
 import 'swiper/css/effect-cards';
 
@@ -15,6 +16,7 @@ type RunMemoryData = {
   bioregion?: string;
   finalScore?: number | null;
   startedAt?: string;
+  gisFeaturesNearby?: Array<{ featureClass: string }>;
 };
 
 interface AlbumHeroSwiperProps {
@@ -35,8 +37,9 @@ export default function AlbumHeroSwiper({
   const swiperRef = useRef<SwiperType>();
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [runMemoryCache, setRunMemoryCache] = useState<Record<number, RunMemoryData | null>>({});
+  const [cardStampsCache, setCardStampsCache] = useState<Record<number, FeatureClass[]>>({});
 
-  // Fetch run memory for the currently focused species
+  // Fetch run memory + card data for the currently focused species
   const inFlightRef = useRef(new Set<number>());
   useEffect(() => {
     const species = speciesList[activeIndex];
@@ -48,15 +51,20 @@ export default function AlbumHeroSwiper({
 
     fetch(`/api/species/cards/${sid}`)
       .then(r => {
-        if (!r.ok) { inFlightRef.current.delete(sid); return null; } // Don't cache failures — allow retry
+        if (!r.ok) { inFlightRef.current.delete(sid); return null; }
         return r.json();
       })
       .then(data => {
-        if (data?.memories?.length > 0) {
+        if (!data) return;
+        // Cache card-level GIS stamps (authoritative)
+        if (data.card?.gisStamps && Array.isArray(data.card.gisStamps) && data.card.gisStamps.length > 0) {
+          setCardStampsCache(prev => ({ ...prev, [sid]: data.card.gisStamps as FeatureClass[] }));
+        }
+        if (data.memories?.length > 0) {
           const mem = data.memories[data.memories.length - 1];
           setRunMemoryCache(prev => ({ ...prev, [sid]: mem }));
-        } else if (data) {
-          setRunMemoryCache(prev => ({ ...prev, [sid]: null })); // Fetched OK but no memories
+        } else {
+          setRunMemoryCache(prev => ({ ...prev, [sid]: null }));
         }
       })
       .catch(() => { inFlightRef.current.delete(sid); });
@@ -109,6 +117,9 @@ export default function AlbumHeroSwiper({
           {speciesList.map((species) => {
             const isDiscovered = !!discoveredSpecies[species.ogc_fid];
             const memory = runMemoryCache[species.ogc_fid] ?? undefined;
+            const gisStamps = cardStampsCache[species.ogc_fid]
+              ?? memory?.gisFeaturesNearby?.map(f => f.featureClass as FeatureClass).filter(Boolean)
+              ?? undefined;
             return (
               <SwiperSlide key={species.ogc_fid} className="!overflow-visible">
                 <SpeciesTCGCard
@@ -116,6 +127,7 @@ export default function AlbumHeroSwiper({
                   isDiscovered={isDiscovered}
                   discoveredAt={discoveredSpecies[species.ogc_fid]?.discoveredAt}
                   runMemory={memory}
+                  gisStamps={gisStamps}
                 />
               </SwiperSlide>
             );

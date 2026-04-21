@@ -41,57 +41,6 @@ export const habitatColormap = pgTable('habitat_colormap', {
   label: text('label').notNull(),
 });
 
-export const protectedPlanetParcels = pgTable(
-  'protected_planet_parcels',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    siteId: integer('site_id').notNull(),
-    sitePid: text('site_pid').notNull(),
-    siteType: text('site_type').notNull(),
-    parcelOrdinal: smallint('parcel_ordinal').notNull().default(1),
-    nameEnglish: text('name_english'),
-    name: text('name'),
-    realmId: integer('realm_id'),
-    realmName: text('realm_name'),
-    iucnCategoryName: text('iucn_category_name'),
-    designationName: text('designation_name'),
-    designationEng: text('designation_eng'),
-    governanceType: text('governance_type'),
-    governanceSubtype: text('governance_subtype'),
-    ownershipType: text('ownership_type'),
-    ownershipSubtype: text('ownership_subtype'),
-    inlandWaters: text('inland_waters'),
-    oecmAssessment: text('oecm_assessment'),
-    countryIso3: text('country_iso3'),
-    iso3: text('iso3'),
-    marine: boolean('marine'),
-    noTake: text('no_take'),
-    noTakeArea: numeric('no_take_area'),
-    repArea: numeric('rep_area'),
-    gisArea: numeric('gis_area'),
-    sourceUpdatedYear: integer('source_updated_year'),
-    sourcePayload: jsonb('source_payload').notNull().default(sql`'{}'::jsonb`),
-    sourceMeta: jsonb('source_meta').notNull().default(sql`'{}'::jsonb`),
-    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-    lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    uqProtectedPlanetParcelsPidOrdinal: uniqueIndex('uq_protected_planet_parcels_pid_ordinal').on(
-      table.sitePid,
-      table.parcelOrdinal
-    ),
-    ixProtectedPlanetParcelsSiteId: index('ix_protected_planet_parcels_site_id').on(table.siteId),
-    ixProtectedPlanetParcelsSitePid: index('ix_protected_planet_parcels_site_pid').on(table.sitePid),
-    ixProtectedPlanetParcelsSiteType: index('ix_protected_planet_parcels_site_type').on(table.siteType),
-    ixProtectedPlanetParcelsCountryIso3: index('ix_protected_planet_parcels_country_iso3').on(table.countryIso3),
-    ixProtectedPlanetParcelsRealm: index('ix_protected_planet_parcels_realm').on(table.realmName),
-    ixProtectedPlanetParcelsGeom: index('ix_protected_planet_parcels_geom')
-      .using('gist', table.geom),
-  })
-);
-
 // ---------------------------------------------------------------------------
 // Eco run loop tables (migration 007)
 // ---------------------------------------------------------------------------
@@ -256,69 +205,6 @@ export const ecoNodeGisSamples = pgTable(
     ixEcoNodeGisSamplesNode: index('ix_eco_node_gis_samples_node').on(table.nodeId),
     ixEcoNodeGisSamplesLayer: index('ix_eco_node_gis_samples_layer').on(table.layerId),
     ixEcoNodeGisSamplesGeometry: index('ix_eco_node_gis_samples_geometry').using('gist', table.sampleGeometry),
-  })
-);
-
-// ---------------------------------------------------------------------------
-// Water layers (migration 009)
-// ---------------------------------------------------------------------------
-
-export const hydroRivers = pgTable(
-  'hydro_rivers',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    hyrivId: integer('hyriv_id').notNull().unique(),
-    ordStra: smallint('ord_stra'),
-    ordFlow: smallint('ord_flow'),
-    uplandSkm: numeric('upland_skm'),
-    lengthKm: numeric('length_km'),
-    disM3Pyr: numeric('dis_m3_pyr'),
-    geom: geometry('geom', { type: 'multilinestring', srid: 4326 }).notNull(),
-  },
-  (table) => ({
-    ixHydroRiversGeom: index('ix_hydro_rivers_geom').using('gist', table.geom),
-    ixHydroRiversOrdStra: index('ix_hydro_rivers_ord_stra').on(table.ordStra),
-  })
-);
-
-export const hydroLakes = pgTable(
-  'hydro_lakes',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    hylakId: integer('hylak_id').notNull().unique(),
-    lakeName: text('lake_name'),
-    lakeType: smallint('lake_type'),
-    lakeArea: numeric('lake_area'),
-    volTotal: numeric('vol_total'),
-    shoreLen: numeric('shore_len'),
-    depthAvg: numeric('depth_avg'),
-    elevation: numeric('elevation'),
-    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
-  },
-  (table) => ({
-    ixHydroLakesGeom: index('ix_hydro_lakes_geom').using('gist', table.geom),
-    ixHydroLakesLakeType: index('ix_hydro_lakes_lake_type').on(table.lakeType),
-  })
-);
-
-// ---------------------------------------------------------------------------
-// Marine regions (migration 010)
-// ---------------------------------------------------------------------------
-
-export const marineEez = pgTable(
-  'marine_eez',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    mrgid: integer('mrgid').notNull().unique(),
-    geoname: text('geoname'),
-    sovereign1: text('sovereign1'),
-    territory1: text('territory1'),
-    areaKm2: numeric('area_km2'),
-    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
-  },
-  (table) => ({
-    ixMarineEezGeom: index('ix_marine_eez_geom').using('gist', table.geom),
-    ixMarineEezSovereign: index('ix_marine_eez_sovereign').on(table.sovereign1),
   })
 );
 

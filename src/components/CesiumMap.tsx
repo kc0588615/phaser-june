@@ -25,6 +25,7 @@ import { getAppConfig } from '../utils/config';
 import { CesiumInfoBox } from './CesiumInfoBox';
 import { useCesiumFullscreen } from '../hooks/useCesiumFullscreen';
 import { useCesiumTrail } from '../hooks/useCesiumTrail';
+import { getBioregionStyle } from '../lib/bioregionStyles';
 
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif";
@@ -43,6 +44,11 @@ const CesiumMap: React.FC = () => {
     habitats: string[];
     species: Species[];
     rasterHabitats?: Array<{habitat_type: string; percentage: number}>;
+    bioregion?: {
+      bioregion?: string | null;
+      realm?: string | null;
+      biome?: string | null;
+    };
     habitatCount?: number;
     topHabitat?: string;
     message?: string | null;
@@ -50,6 +56,8 @@ const CesiumMap: React.FC = () => {
   const [showInfoBox, setShowInfoBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [highlightedSpeciesSource, setHighlightedSpeciesSource] = useState<GeoJsonDataSource | null>(null);
+  const [showBioregionPolygons, setShowBioregionPolygons] = useState(false);
+  const bioregionSourceRef = useRef<GeoJsonDataSource | null>(null);
 
   // Extracted hooks
   useCesiumFullscreen(viewerRef);
@@ -58,6 +66,83 @@ const CesiumMap: React.FC = () => {
   useEffect(() => {
     Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN || 'YOUR_FALLBACK_TOKEN';
   }, []);
+
+  const removeBioregionLayer = useCallback(() => {
+    if (!viewerRef.current?.cesiumElement || !bioregionSourceRef.current) return;
+    try {
+      viewerRef.current.cesiumElement.dataSources.remove(bioregionSourceRef.current, true);
+    } catch {
+      /* ok */
+    }
+    bioregionSourceRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const syncBioregionLayer = async () => {
+      if (!showBioregionPolygons || !clickedLonLat || !viewerRef.current?.cesiumElement) {
+        removeBioregionLayer();
+        return;
+      }
+
+      try {
+        const resp = await fetch(`/api/layers/near-point?lon=${clickedLonLat.lon}&lat=${clickedLonLat.lat}`);
+        if (!resp.ok) {
+          removeBioregionLayer();
+          return;
+        }
+
+        const data = await resp.json();
+        if (cancelled || !data.bioregions?.features?.length || !viewerRef.current?.cesiumElement) {
+          if (!data.bioregions?.features?.length) removeBioregionLayer();
+          return;
+        }
+
+        const bioregionDs = new GeoJsonDataSource('spatial-bioregions');
+        await bioregionDs.load(data.bioregions, { clampToGround: true });
+        if (cancelled || !viewerRef.current?.cesiumElement) return;
+
+        bioregionDs.entities.values.forEach((entity) => {
+          if (!entity.polygon) return;
+          const biome = entity.properties?.biome?.getValue?.();
+          const realm = entity.properties?.realm?.getValue?.();
+          const style = getBioregionStyle(
+            typeof biome === 'string' ? biome : undefined,
+            typeof realm === 'string' ? realm : undefined
+          );
+
+          entity.polygon.material = new ColorMaterialProperty(
+            CesiumColor.fromCssColorString(style.fill).withAlpha(0.9)
+          );
+          entity.polygon.outline = new ConstantProperty(true);
+          entity.polygon.outlineColor = new ConstantProperty(
+            CesiumColor.fromCssColorString(style.outline).withAlpha(0.95)
+          );
+          entity.polygon.outlineWidth = new ConstantProperty(2);
+          entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+          entity.polygon.zIndex = new ConstantProperty(20);
+        });
+
+        removeBioregionLayer();
+        viewerRef.current.cesiumElement.dataSources.add(bioregionDs);
+        bioregionSourceRef.current = bioregionDs;
+      } catch (err) {
+        console.warn('[CesiumMap] Failed to load bioregion layer:', err);
+        removeBioregionLayer();
+      }
+    };
+
+    syncBioregionLayer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clickedLonLat, removeBioregionLayer, showBioregionPolygons]);
+
+  useEffect(() => () => {
+    removeBioregionLayer();
+  }, [removeBioregionLayer]);
 
   useEffect(() => {
     const setupImagery = async () => {
@@ -265,12 +350,13 @@ const CesiumMap: React.FC = () => {
                   primaryVariant: atPointData.primary_variant ?? '',
                   modifierNodes: atPointData.modifier_nodes ?? [],
                   signals: atPointData.signals ?? {},
-                  iccaTerritories: atPointData.icca_territories ?? [],
+
                   nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
                 },
                 species: clickedSpecies.species,
                 rasterHabitats: rasterHabitatData,
                 habitats: habitatList,
+                featureFingerprints: atPointData.feature_fingerprints ?? [],
               });
               loadSpatialLayers(cartographicLocation.longitude, cartographicLocation.latitude);
             } else {
@@ -340,12 +426,13 @@ const CesiumMap: React.FC = () => {
                   primaryVariant: atPointData.primary_variant ?? '',
                   modifierNodes: atPointData.modifier_nodes ?? [],
                   signals: atPointData.signals ?? {},
-                  iccaTerritories: atPointData.icca_territories ?? [],
+
                   nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
                 },
                 species: [],
                 rasterHabitats: rasterHabitatData,
                 habitats: [],
+                featureFingerprints: atPointData.feature_fingerprints ?? [],
               });
               loadSpatialLayers(cartographicLocation.longitude, cartographicLocation.latitude);
             } else {
@@ -380,6 +467,7 @@ const CesiumMap: React.FC = () => {
             habitats: habitatList,
             species: speciesResult.species,
             rasterHabitats: rasterHabitatData,
+            bioregion: atPointData?.bioregion ?? undefined,
             habitatCount,
             topHabitat,
             message: null
@@ -402,8 +490,9 @@ const CesiumMap: React.FC = () => {
       setClickedPosition(null);
       setClickedLonLat(null);
       setQueryBounds(null);
+      removeBioregionLayer();
     }
-  }, [isLoading, highlightedSpeciesSource, runPhaseRef, loadSpatialLayers]);
+  }, [isLoading, highlightedSpeciesSource, runPhaseRef, loadSpatialLayers, removeBioregionLayer]);
 
   return (
     <div className="w-full h-full relative">
@@ -438,7 +527,13 @@ const CesiumMap: React.FC = () => {
         )}
       </Viewer>
       {showInfoBox && (
-        <CesiumInfoBox data={infoBoxData} isLoading={isLoading} radiusKm={HABITAT_RADIUS_METERS / 1000} />
+        <CesiumInfoBox
+          data={infoBoxData}
+          isLoading={isLoading}
+          radiusKm={HABITAT_RADIUS_METERS / 1000}
+          showBioregionPolygons={showBioregionPolygons}
+          onToggleBioregionPolygons={() => setShowBioregionPolygons((value) => !value)}
+        />
       )}
     </div>
   );

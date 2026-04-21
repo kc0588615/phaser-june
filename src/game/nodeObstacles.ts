@@ -77,6 +77,13 @@ export const NODE_OBSTACLE_FAMILY_MAP: Record<NodeObstacle, ObstacleFamily> = {
     limited_signal: 'visibility',
 };
 
+export interface ObstacleRule {
+    obstacle: NodeObstacle;
+    effect: 'block_matches' | 'resist_gem' | 'force_clear_first' | 'reveal_then_clear';
+    targetGem?: ActionGemType;
+    clearCondition?: { gem: ActionGemType; count: number };
+}
+
 interface ObstacleSeedConfig {
     width: number;
     height: number;

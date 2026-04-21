@@ -67,17 +67,22 @@ export async function GET(
       bioregion: session.bioregion,
       finalScore: (session.metadata as Record<string, unknown>)?.finalScore as number | null ?? null,
       deductionSummary: (session.metadata as Record<string, unknown>)?.deductionSummary ?? null,
-      nodes: nodes.map(n => ({
-        nodeOrder: n.nodeOrder,
-        nodeType: n.nodeType,
-        nodeStatus: n.nodeStatus,
-        counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
-        obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
-        objectiveTarget: n.objectiveTarget,
-        objectiveProgress: n.objectiveProgress,
-        scoreEarned: n.scoreEarned,
-        movesUsed: n.movesUsed,
-      })),
+      nodes: nodes.map(n => {
+        const bc = (n.boardContext as Record<string, unknown>) ?? {};
+        return {
+          nodeOrder: n.nodeOrder,
+          nodeType: n.nodeType,
+          nodeStatus: n.nodeStatus,
+          counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
+          obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
+          objectiveTarget: n.objectiveTarget,
+          objectiveProgress: n.objectiveProgress,
+          scoreEarned: n.scoreEarned,
+          movesUsed: n.movesUsed,
+          encounterOutcome: bc.encounterOutcome ?? null,
+          encounterConfig: bc.encounterConfig ?? null,
+        };
+      }),
       startedAt: session.startedAt,
       endedAt: session.endedAt,
     };

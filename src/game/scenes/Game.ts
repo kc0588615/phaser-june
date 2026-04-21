@@ -50,7 +50,9 @@ import {
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import { ENCOUNTER_CATALOG, SOUVENIR_CATALOG } from '@/types/expedition';
-import { isWaterObstacleSet, resolveObjectiveContribution } from '@/game/objectiveResolver';
+import { isWaterObstacleSet, resolveObjectiveContribution, resolveMatchAgainstEncounter } from '@/game/objectiveResolver';
+import type { EncounterState } from '@/game/encounterState';
+import { createEncounterState, tickSpook, snapshotEncounterOutcome } from '@/game/encounterState';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
 
@@ -199,6 +201,7 @@ export class Game extends Phaser.Scene {
     private nodeMatchGroupTotal: number = 0;
     private nodeEncounterIndex: number = 0;
     private nodeEvents: string[] = [];
+    private nodeEncounterState: EncounterState | null = null;
 
     // Node bonus decay (new economy)
     private nodeBonusPool: number = 0;
@@ -280,21 +283,35 @@ export class Game extends Phaser.Scene {
     }
 
     private syncRunnerStripSpook(): void {
-        const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 1;
+        const pct = this.nodeEncounterState
+            ? 1 - this.nodeEncounterState.spookLevel / 100
+            : (this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 1);
         this.runnerStrip?.setSpook(pct, getSpookTier(pct));
     }
 
     private emitNodeObjectiveUpdated(): void {
+        const enc = this.nodeEncounterState;
         EventBus.emit('node-objective-updated', {
             progress: this.nodeObjectiveProgress,
             target: this.nodeObjectiveTarget,
             requiredGems: Array.from(this.nodeRequiredGems),
             counterGem: this.nodeCounterGem,
             activeAffinities: [...this.nodeActiveAffinities],
+            threats: enc?.threats.map(t => ({
+                id: t.id, threatType: t.threatType, counterGem: t.counterGem,
+                progress: t.progress, target: t.target, resolved: t.resolved,
+            })),
+            spookLevel: enc?.spookLevel,
+            chipDamagePool: enc?.chipDamagePool,
+            overallResolved: enc?.resolved,
         });
     }
 
     private finishNodeObjective(reason: 'objective_complete' | 'escaped'): void {
+        const outcome = this.nodeEncounterState
+            ? snapshotEncounterOutcome(this.nodeEncounterState)
+            : undefined;
+
         if (reason === 'objective_complete') {
             this.nodeObjectiveCompleted = true;
             this.runnerStrip?.markResolved('success');
@@ -304,6 +321,7 @@ export class Game extends Phaser.Scene {
                     nodeIndex: this.currentNodeIndex,
                     reason,
                     source: 'game',
+                    encounterOutcome: outcome,
                 });
             });
             return;
@@ -318,6 +336,7 @@ export class Game extends Phaser.Scene {
                 nodeIndex: this.currentNodeIndex,
                 reason,
                 source: 'game',
+                encounterOutcome: outcome,
             });
         });
     }
@@ -425,8 +444,10 @@ export class Game extends Phaser.Scene {
         if (this.nodeObjectiveTarget > 0) {
             this.emitNodeObjectiveUpdated();
             this.syncRunnerStripObjective();
-            // React owns node advancement; Phaser only requests it.
-            if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
+            // Check encounter-level resolution (multi-threat) or legacy progress
+            const encounterDone = this.nodeEncounterState?.resolved && this.nodeEncounterState.outcome === 'success';
+            const legacyDone = this.nodeObjectiveProgress >= this.nodeObjectiveTarget;
+            if ((encounterDone || legacyDone) && !this.nodeObjectiveCompleted) {
                 this.finishNodeObjective('objective_complete');
             }
         }
@@ -910,79 +931,70 @@ export class Game extends Phaser.Scene {
         }
 
         try {
-            const { trackClueUnlock } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
             const clueCategory = getCategoryKey(payload.category);
             const { field, value } = deriveClueFieldAndValue(payload);
 
-            console.log('📝 Calling trackClueUnlock with:', {
-                userId: this.currentUserId,
-                speciesId: this.selectedSpecies.ogc_fid,
-                category: clueCategory,
-                field,
-                value
+            const res = await fetch('/api/player/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'trackClueUnlock',
+                    speciesId: this.selectedSpecies.ogc_fid,
+                    clueCategory, clueField: field, clueValue: value,
+                }),
             });
+            const data = await res.json();
 
-            const wasNew = await trackClueUnlock(
-                this.currentUserId,
-                this.selectedSpecies.ogc_fid,
-                clueCategory,
-                field,
-                value,
-                null // discovery_id will be linked later
-            );
-
-            if (wasNew) {
+            if (data.wasNew) {
                 this.clueCountThisSpecies++;
-                console.log(`✅ New clue tracked! Total for species: ${this.clueCountThisSpecies}`);
-            } else if (wasNew === false) {
-                console.log('ℹ️ Duplicate clue (already unlocked)');
-            } else {
-                console.warn('⚠️ trackClueUnlock returned null (error or queued)');
             }
         } catch (error) {
-            console.error('❌ Failed to track clue unlock:', error);
+            console.error('Failed to track clue unlock:', error);
         }
     };
 
-    private handleHudUpdate = async (data: EventPayloads['game-hud-updated']): Promise<void> => {
+    private sessionUpdateTimer: ReturnType<typeof setTimeout> | null = null;
+
+    private handleHudUpdate = (data: EventPayloads['game-hud-updated']): void => {
         if (!this.currentSessionId || !this.backendPuzzle) return;
 
-        try {
-            const { updateSessionProgress } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
-
-            // Count total species discovered in this session
-            const speciesDiscovered = this.currentSpeciesIndex; // Species completed before current
-
-            // Count total clues unlocked in session (all categories revealed)
-            const cluesUnlocked = this.revealedClues.size;
-
-            // Debounced update (10s delay, auto-batched)
-            await updateSessionProgress(
-                this.currentSessionId,
-                data.movesUsed,
-                data.score,
-                speciesDiscovered,
-                cluesUnlocked
-            );
-        } catch (error) {
-            console.error('Failed to update session progress:', error);
-        }
+        // Client-side debounce (10s)
+        if (this.sessionUpdateTimer) clearTimeout(this.sessionUpdateTimer);
+        this.sessionUpdateTimer = setTimeout(() => {
+            fetch('/api/player/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'updateSessionProgress',
+                    sessionId: this.currentSessionId,
+                    moves: data.movesUsed,
+                    score: data.score,
+                    speciesDiscovered: this.currentSpeciesIndex,
+                    cluesUnlocked: this.revealedClues.size,
+                }),
+            }).catch(err => console.error('Failed to update session progress:', err));
+        }, 10000);
     };
 
     private handleBeforeUnload = async (): Promise<void> => {
         if (!this.currentSessionId || !this.backendPuzzle) return;
 
-        try {
-            const { forceSessionUpdate } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
+        if (this.sessionUpdateTimer) {
+            clearTimeout(this.sessionUpdateTimer);
+            this.sessionUpdateTimer = null;
+        }
 
-            // Force immediate flush (bypass debounce)
-            await forceSessionUpdate(
-                this.currentSessionId,
-                this.backendPuzzle.getMovesUsed(),
-                this.backendPuzzle.getScore(),
-                this.currentSpeciesIndex,
-                this.revealedClues.size
-            );
+        try {
+            // Use sendBeacon for reliable delivery on page unload
+            const blob = new Blob([JSON.stringify({
+                action: 'forceSessionUpdate',
+                sessionId: this.currentSessionId,
+                moves: this.backendPuzzle.getMovesUsed(),
+                score: this.backendPuzzle.getScore(),
+                speciesDiscovered: this.currentSpeciesIndex,
+                cluesUnlocked: this.revealedClues.size,
+            })], { type: 'application/json' });
+            navigator.sendBeacon('/api/player/track', blob);
         } catch (error) {
             console.error('Failed to flush session on unload:', error);
         }
@@ -1023,16 +1035,47 @@ export class Game extends Phaser.Scene {
 
             }
 
+            // Damage adjacent blockers when a match clears nearby
+            if (this.backendPuzzle && match.length > 0) {
+                const adjacentBlockerCoords = new Set<string>();
+                for (const [mx, my] of match) {
+                    for (const [dx, dy] of [[0,1],[0,-1],[1,0],[-1,0]] as const) {
+                        const nx = mx + dx, ny = my + dy;
+                        const key = `${nx},${ny}`;
+                        if (!adjacentBlockerCoords.has(key) && !match.some(([cx, cy]) => cx === nx && cy === ny)) {
+                            adjacentBlockerCoords.add(key);
+                            this.backendPuzzle.damageBlocker(nx, ny);
+                        }
+                    }
+                }
+            }
+
             if (matchGemType && this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
-                const contribution = resolveObjectiveContribution(matchGemType, match.length, {
-                    counterGem: this.nodeCounterGem,
-                    obstacleFamily: this.nodeObstacleFamily,
-                    activeAffinities: this.nodeActiveAffinities,
-                    nodeObstacles: this.nodeObstacles,
-                });
-                if (contribution > 0) {
-                    this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + contribution);
-                    objectiveProgressChanged = true;
+                if (this.nodeEncounterState && !this.nodeEncounterState.resolved) {
+                    // Multi-threat encounter resolution
+                    const result = resolveMatchAgainstEncounter(
+                        matchGemType, match.length, this.nodeEncounterState,
+                        this.nodeActiveAffinities, this.nodeObstacles,
+                    );
+                    if (result.totalContribution > 0 || result.chipDamageAdded > 0) {
+                        // Sync legacy progress as sum of all threat progress
+                        this.nodeObjectiveProgress = this.nodeEncounterState.threats.reduce(
+                            (sum, t) => sum + t.progress, 0
+                        );
+                        objectiveProgressChanged = true;
+                    }
+                } else {
+                    // Legacy single-threat resolution
+                    const contribution = resolveObjectiveContribution(matchGemType, match.length, {
+                        counterGem: this.nodeCounterGem,
+                        obstacleFamily: this.nodeObstacleFamily,
+                        activeAffinities: this.nodeActiveAffinities,
+                        nodeObstacles: this.nodeObstacles,
+                    });
+                    if (contribution > 0) {
+                        this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + contribution);
+                        objectiveProgressChanged = true;
+                    }
                 }
             }
         }
@@ -1174,13 +1217,34 @@ export class Game extends Phaser.Scene {
     /** Start the per-node spook meter decay timer. */
     private startNodeBonusDecay(): void {
         if (this.nodeBonusTimer) this.nodeBonusTimer.destroy();
+
+        // New encounter model: use tickSpook instead of bonusPool
+        if (this.nodeEncounterState) {
+            this.nodeBonusTimer = this.time.addEvent({
+                delay: 1000,
+                loop: true,
+                callback: () => {
+                    if (!this.nodeEncounterState || this.nodeEncounterState.resolved) return;
+                    const spookLevel = tickSpook(this.nodeEncounterState);
+                    const pct = 1 - spookLevel / 100; // invert: 100% spook = 0% tracking
+                    const tier = getSpookTier(pct);
+                    EventBus.emit('node-bonus-tick', { currentPool: Math.round(100 - spookLevel), startPool: 100, pct, tier });
+                    this.syncRunnerStripSpook();
+                    if (this.nodeEncounterState.outcome === 'escaped' && !this.nodeObjectiveCompleted) {
+                        this.finishNodeObjective('escaped');
+                    }
+                },
+            });
+            return;
+        }
+
+        // Legacy bonusPool timer for nodes without encounterConfig
         this.nodeBonusTimer = this.time.addEvent({
             delay: 1000,
             loop: true,
             callback: () => {
                 const floor = this.nodeBonusStart * this.nodeBonusFloorPct;
                 if (this.nodeBonusPool <= floor) {
-                    // Already at floor — check if escaped
                     const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 0;
                     const tier = getSpookTier(pct);
                     if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
@@ -1188,7 +1252,6 @@ export class Game extends Phaser.Scene {
                     }
                     return;
                 }
-                // Expire shield slow
                 if (this.nodeBonusShieldSlow < 1.0 && Date.now() > this.nodeBonusShieldExpiry) {
                     this.nodeBonusShieldSlow = 1.0;
                 }
@@ -1203,7 +1266,6 @@ export class Game extends Phaser.Scene {
                     tier,
                 });
                 this.syncRunnerStripSpook();
-                // Trigger escape when meter drops into escaped zone
                 if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
                     this.finishNodeObjective('escaped');
                 }
@@ -1581,6 +1643,9 @@ export class Game extends Phaser.Scene {
             this.nodeMatchGroupTotal = 0;
             this.nodeEncounterIndex = 0;
             this.nodeEvents = data.events ?? [];
+            this.nodeEncounterState = data.encounterConfig
+                ? createEncounterState(data.encounterConfig)
+                : null;
 
             if (this.inExpeditionRun) {
                 this.initializeNodeBonusState(this.currentNodeDifficulty, data.nodeType);
@@ -2268,38 +2333,58 @@ export class Game extends Phaser.Scene {
         this.discoveredSpeciesIds.add(speciesId);
 
         try {
-            const {
-                trackSpeciesDiscovery,
-                calculateTimeToDiscover,
-                forceSessionUpdate
-            } = await import(/* webpackIgnore: true */ '@/lib/playerTracking');
+            const timeToDiscover = this.speciesStartTime > 0
+                ? Math.floor((Date.now() - this.speciesStartTime) / 1000)
+                : undefined;
 
-            const timeToDiscover = calculateTimeToDiscover();
-
-            const discoveryId = await trackSpeciesDiscovery(
-                this.currentUserId!,
-                speciesId,
-                {
+            const res = await fetch('/api/player/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'trackSpeciesDiscovery',
+                    speciesId,
                     sessionId: this.currentSessionId || undefined,
-                    timeToDiscoverSeconds: timeToDiscover || undefined,
+                    timeToDiscoverSeconds: timeToDiscover,
                     cluesUnlockedBeforeGuess: this.clueCountThisSpecies,
                     incorrectGuessesCount: this.incorrectGuessesThisSpecies,
-                    scoreEarned: this.backendPuzzle!.getScore()
-                }
-            );
+                    scoreEarned: this.backendPuzzle!.getScore(),
+                }),
+            });
+            const data = await res.json();
 
-            if (discoveryId) {
-                console.log('Species discovery tracked:', discoveryId);
+            if (data.discoveryId) {
+                // Update localStorage for offline support
+                try {
+                    const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+                    if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
+                        discovered.push({ id: speciesId, discoveredAt: new Date().toISOString() });
+                        localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
+                        window.dispatchEvent(new Event('species-discovered'));
+                    }
+                } catch { /* localStorage may be unavailable */ }
+
+                // Sync to DB-backed species cards (fire-and-forget)
+                fetch(`/api/species/cards/${speciesId}/unlock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ unlockType: 'discover' }),
+                }).catch(() => {});
 
                 // Force immediate session update (critical event)
                 if (this.currentSessionId) {
-                    await forceSessionUpdate(
-                        this.currentSessionId,
-                        this.backendPuzzle!.getMovesUsed(),
-                        this.backendPuzzle!.getScore(),
-                        this.currentSpeciesIndex + 1, // +1 because we just discovered one
-                        this.revealedClues.size
-                    );
+                    if (this.sessionUpdateTimer) { clearTimeout(this.sessionUpdateTimer); this.sessionUpdateTimer = null; }
+                    await fetch('/api/player/track', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'forceSessionUpdate',
+                            sessionId: this.currentSessionId,
+                            moves: this.backendPuzzle!.getMovesUsed(),
+                            score: this.backendPuzzle!.getScore(),
+                            speciesDiscovered: this.currentSpeciesIndex + 1,
+                            cluesUnlocked: this.revealedClues.size,
+                        }),
+                    });
                 }
             }
         } catch (error) {
@@ -2398,6 +2483,7 @@ export class Game extends Phaser.Scene {
         this.nodeMatchGroupTotal = 0;
         this.nodeEncounterIndex = 0;
         this.nodeEvents = [];
+        this.nodeEncounterState = null;
         this.runnerStrip?.setIdle(this.inExpeditionRun ? 'Transiting to next node' : 'Awaiting expedition site');
 
         // Clear clue state for fresh node
@@ -2525,6 +2611,12 @@ export class Game extends Phaser.Scene {
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
 
+        // Clear debounce timer
+        if (this.sessionUpdateTimer) {
+            clearTimeout(this.sessionUpdateTimer);
+            this.sessionUpdateTimer = null;
+        }
+
         // End session if active
         if (this.currentSessionId && this.backendPuzzle) {
             this.endSessionSync();
@@ -2641,18 +2733,15 @@ export class Game extends Phaser.Scene {
     }
 
     private endSessionSync(): void {
-        // Fire-and-forget session end (don't await in shutdown)
-        import(/* webpackIgnore: true */ '@/lib/playerTracking').then(({ endGameSession }) => {
-            if (this.currentSessionId && this.backendPuzzle) {
-                endGameSession(
-                    this.currentSessionId,
-                    this.backendPuzzle.getMovesUsed(),
-                    this.backendPuzzle.getScore()
-                ).catch(error => {
-                    console.error('Failed to end session:', error);
-                });
-            }
-        });
+        if (!this.currentSessionId || !this.backendPuzzle) return;
+        // Fire-and-forget via sendBeacon for reliability during shutdown
+        const blob = new Blob([JSON.stringify({
+            action: 'endGameSession',
+            sessionId: this.currentSessionId,
+            finalMoves: this.backendPuzzle.getMovesUsed(),
+            finalScore: this.backendPuzzle.getScore(),
+        })], { type: 'application/json' });
+        navigator.sendBeacon('/api/player/track', blob);
     }
 
     private verifyBoardState(): void {

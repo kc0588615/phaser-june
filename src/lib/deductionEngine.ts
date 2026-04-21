@@ -223,3 +223,41 @@ export function isFilteringCategory(cat: DeductionClueCategory): boolean {
 export function getProfileKeyForCategory(cat: DeductionClueCategory): keyof DeductionProfile | null {
   return CATEGORY_TO_PROFILE_KEY[cat] as keyof DeductionProfile | null ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// GIS evidence → auto-confirm habitat tags
+// ---------------------------------------------------------------------------
+
+import type { RunEvidenceBundle, FeatureClass } from '@/types/gis';
+
+/** Map GIS feature classes to habitat tags for auto-confirmation. */
+const FEATURE_CLASS_HABITAT_TAGS: Record<FeatureClass, string[]> = {
+  river: ['freshwater', 'riverine', 'riparian'],
+  lake: ['freshwater', 'lacustrine'],
+  protected_area: ['protected', 'conservation_area'],
+  bioregion: [],
+  ramsar_site: ['wetland', 'freshwater', 'marsh', 'ramsar'],
+};
+
+/**
+ * Auto-confirm habitat tags on a mystery profile using GIS evidence.
+ * Returns tags that were confirmed (intersection of evidence-derived tags and profile tags).
+ */
+export function applyEvidenceBundle(
+  bundle: RunEvidenceBundle,
+  profile: DeductionProfile,
+): { confirmedHabitatTags: string[]; confirmedCategories: DeductionClueCategory[] } {
+  const evidenceTags = new Set<string>();
+  for (const fp of bundle.fingerprints) {
+    const tags = FEATURE_CLASS_HABITAT_TAGS[fp.featureClass] ?? [];
+    for (const t of tags) evidenceTags.add(t);
+  }
+
+  const confirmedHabitatTags = profile.habitatTags.filter(t => evidenceTags.has(t));
+  const confirmedCategories: DeductionClueCategory[] = [];
+  if (confirmedHabitatTags.length > 0) {
+    confirmedCategories.push('habitat');
+  }
+
+  return { confirmedHabitatTags, confirmedCategories };
+}

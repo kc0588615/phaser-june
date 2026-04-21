@@ -7,15 +7,34 @@ interface HabitatData {
   color?: string;
 }
 
+interface BioregionData {
+  bioregion?: string | null;
+  realm?: string | null;
+  biome?: string | null;
+}
+
 interface HabitatLegendProps {
   habitats: HabitatData[];
   radiusKm: number;
+  bioregion?: BioregionData;
+  showBioregionPolygons: boolean;
+  onToggleBioregionPolygons: () => void;
 }
 
-export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps) {
+export default function HabitatLegend({
+  habitats,
+  radiusKm,
+  bioregion,
+  showBioregionPolygons,
+  onToggleBioregionPolygons,
+}: HabitatLegendProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const sortedHabitats = [...habitats].sort((a, b) => b.percentage - a.percentage);
+  const hasBioregion =
+    !!bioregion?.bioregion ||
+    !!bioregion?.realm ||
+    !!bioregion?.biome;
 
   return (
     <div style={{
@@ -66,6 +85,76 @@ export default function HabitatLegend({ habitats, radiusKm }: HabitatLegendProps
           overflowX: 'hidden',
           paddingRight: '5px'
         }}>
+          <div style={{ marginBottom: sortedHabitats.length > 0 ? '8px' : '4px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              marginBottom: hasBioregion ? '4px' : 0
+            }}>
+              <div style={{ fontWeight: 'bold' }}>Bioregion</div>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleBioregionPolygons();
+                }}
+                style={{
+                  border: `1px solid ${showBioregionPolygons ? '#f59e0b' : '#777'}`,
+                  background: showBioregionPolygons ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                  color: 'white',
+                  borderRadius: '999px',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  cursor: 'pointer'
+                }}
+                aria-pressed={showBioregionPolygons}
+              >
+                {showBioregionPolygons ? 'On' : 'Off'}
+              </button>
+            </div>
+
+            {hasBioregion ? (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  fontSize: '12px'
+                }}
+              >
+                <span
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: '#f59e0b',
+                    border: '1px solid #fff',
+                    marginRight: '6px',
+                    marginTop: '2px',
+                    flexShrink: 0,
+                    borderRadius: '2px'
+                  }}
+                />
+                <div style={{ flex: 1, lineHeight: '1.2' }}>
+                  <div style={{ fontWeight: 'bold' }}>
+                    {bioregion?.bioregion || 'Bioregion'}
+                  </div>
+                  {(bioregion?.realm || bioregion?.biome) && (
+                    <div style={{ opacity: 0.8 }}>
+                      {[bioregion?.realm, bioregion?.biome].filter(Boolean).join(' • ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                No bioregion detected
+              </div>
+            )}
+          </div>
+
+          <div style={{ borderTop: '1px solid #555', margin: '8px 0 6px' }} />
+
           {sortedHabitats.length === 0 ? (
             <div style={{ fontSize: '12px', opacity: 0.8 }}>
               No habitats detected

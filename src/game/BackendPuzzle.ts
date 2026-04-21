@@ -359,11 +359,30 @@ export class BackendPuzzle {
         }
     }
 
+    /** Damage a blocker at (x,y). Returns true if the blocker was destroyed. */
+    damageBlocker(x: number, y: number): boolean {
+        const cell = this.puzzleState[x]?.[y];
+        if (!cell?.state?.blockerId || !cell.state.durability) return false;
+        cell.state.durability -= 1;
+        if (cell.state.durability <= 0) {
+            cell.state.blockerId = null;
+            cell.state.durability = null;
+            cell.state.flags = [];
+            return true;
+        }
+        return false;
+    }
+
     private getMatches(puzzleState: PuzzleGrid): Match[] {
         const matches: Match[] = [];
         if (!puzzleState || this.width === 0 || this.height === 0) return matches;
-        
-        const getGemType = (x: number, y: number): GemType | null => getBoardCellGemType(puzzleState[x]?.[y]);
+
+        const getGemType = (x: number, y: number): GemType | null => {
+            const cell = puzzleState[x]?.[y];
+            // Skip cells with active blockers
+            if (cell?.state?.blockerId && cell.state.durability && cell.state.durability > 0) return null;
+            return getBoardCellGemType(cell);
+        };
 
         // Check vertical matches
         for (let x = 0; x < this.width; x++) {

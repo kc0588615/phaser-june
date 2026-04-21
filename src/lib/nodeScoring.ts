@@ -11,6 +11,7 @@ import {
   type NodeObstacle,
   type ObstacleFamily,
 } from '@/game/nodeObstacles';
+import type { EncounterConfig } from '@/game/encounterState';
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 
@@ -41,6 +42,7 @@ export interface RunNode {
   obstacleFamily: ObstacleFamily | null;
   requiredGems: GemType[];
   objectiveTarget: number;
+  encounterConfig: EncounterConfig | null;
 }
 
 export interface HabitatSignals {
@@ -112,7 +114,7 @@ export function selectNodes(scores: LayerScore[]): NodeSelection {
   // Emit signals using documented key names (docs/ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md)
   const SIGNAL_KEY_MAP: Record<string, { overlap: string; distance: string }> = {
     protected_node: { overlap: 'wdpa_overlap_ratio', distance: 'wdpa_distance_m' },
-    community_node: { overlap: 'icca_overlap_ratio', distance: 'icca_distance_m' },
+    community_node: { overlap: 'community_overlap_ratio', distance: 'community_distance_m' },
     water_node: { overlap: 'water_overlap_ratio', distance: 'river_distance_m' },
     bioregion_node: { overlap: 'bioregion_overlap_ratio', distance: 'bioregion_distance_m' },
   };
@@ -205,6 +207,7 @@ function createNodeTemplate(config: {
   events: string[];
   rationale: string;
   obstacleFamily: ObstacleFamily | null;
+  encounterConfig?: EncounterConfig | null;
 }): Omit<RunNode, 'difficulty' | 'objectiveTarget'> {
   const counterGem = config.obstacleFamily ? getCounterGemForObstacleFamily(config.obstacleFamily) : null;
   return {
@@ -215,6 +218,7 @@ function createNodeTemplate(config: {
     obstacleFamily: config.obstacleFamily,
     counterGem,
     requiredGems: counterGem ? [counterGem] : [],
+    encounterConfig: config.encounterConfig ?? null,
   };
 }
 
@@ -226,6 +230,14 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['flow_shift', 'mud_tiles'],
     events: ['amphibian_signal', 'river_crossing'],
     rationale: 'River proximity rewards steady traversal through unstable terrain.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
+        { threatType: 'blocker', counterGem: 'key', altGem: 'staff', target: 4, resistances: ['terrain'] },
+        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 2, resistances: [] },
+      ],
+      baseSpookRate: 2,
+    },
   }),
   dense_canopy: createNodeTemplate({
     node_type: 'dense_canopy',
@@ -233,6 +245,14 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['overgrowth', 'low_visibility'],
     events: ['trail_markings', 'rare_track'],
     rationale: 'Canopy routes choke sight lines and reward deliberate scanning.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'quarry', counterGem: 'sword', altGem: 'staff', target: 4, resistances: ['visibility'] },
+        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 3, resistances: [] },
+        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 3, resistances: [] },
+      ],
+      baseSpookRate: 2.5,
+    },
   }),
   urban_fringe: createNodeTemplate({
     node_type: 'urban_fringe',
@@ -240,6 +260,14 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['junk_blockers', 'noise_interference'],
     events: ['human_disturbance', 'corridor_crossing'],
     rationale: 'Urban edges stress gear and supplies more than raw speed.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'blocker', counterGem: 'key', altGem: 'crate', target: 3, resistances: ['panic'] },
+        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 3, resistances: [] },
+        { threatType: 'loot_cache', counterGem: 'crate', altGem: null, target: 2, resistances: [] },
+      ],
+      baseSpookRate: 2,
+    },
   }),
   elevation_ridge: createNodeTemplate({
     node_type: 'elevation_ridge',
@@ -247,6 +275,13 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['steep_terrain'],
     events: ['vantage_scan'],
     rationale: 'Ridge nodes turn narrow sighting windows into the main pressure point.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 5, resistances: ['sighting'] },
+        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 3, resistances: [] },
+      ],
+      baseSpookRate: 3,
+    },
   }),
   storm_window: createNodeTemplate({
     node_type: 'storm_window',
@@ -254,6 +289,14 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['time_pressure', 'signal_dropout'],
     events: ['urgent_tracking_window', 'migration_shift'],
     rationale: 'Storm nodes lean on composure as the animal spooks faster under pressure.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'time_pressure', counterGem: 'staff', altGem: 'shield', target: 4, resistances: ['alert'] },
+        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 3, resistances: [] },
+        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
+      ],
+      baseSpookRate: 3.5,
+    },
   }),
   custom: createNodeTemplate({
     node_type: 'custom',
@@ -261,6 +304,13 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['unknown_terrain'],
     events: ['discovery_event'],
     rationale: 'Custom nodes reward field preparation when conditions turn unpredictable.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'hazard', counterGem: 'crate', altGem: 'shield', target: 3, resistances: ['panic'] },
+        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
+      ],
+      baseSpookRate: 2,
+    },
   }),
   crisis: createNodeTemplate({
     node_type: 'crisis',
@@ -373,9 +423,11 @@ export function generateRunNodes(
   // Node 6: always analysis
   nodes.push({ ...NODE_TEMPLATES.analysis, difficulty: 3 });
 
-  // Compute objectiveTarget per node: flat 6 for gem-objective nodes, 0 for analysis
+  // objectiveTarget = sum of threat targets when encounter config exists, else legacy flat 6
   return nodes.slice(0, 6).map(n => ({
     ...n,
-    objectiveTarget: n.counterGem ? 6 : 0,
+    objectiveTarget: n.encounterConfig
+      ? n.encounterConfig.threats.reduce((sum, t) => sum + t.target, 0)
+      : (n.counterGem ? 6 : 0),
   }));
 }

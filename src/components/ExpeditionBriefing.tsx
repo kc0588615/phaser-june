@@ -66,17 +66,12 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
         </div>
       </div>
 
-      {/* Protected Areas + ICCA badges */}
-      {(expedition.protectedAreas.length > 0 || (expedition.iccaTerritories && expedition.iccaTerritories.length > 0)) && (
+      {/* Protected Areas badges */}
+      {expedition.protectedAreas.length > 0 && (
         <div className="flex gap-1.5 flex-wrap">
           {expedition.protectedAreas.slice(0, 3).map((pa, i) => (
             <Badge key={`pa-${i}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
               {pa.name || pa.designation || 'Protected Area'}
-            </Badge>
-          ))}
-          {expedition.iccaTerritories?.slice(0, 1).map((icca, i) => (
-            <Badge key={`icca-${i}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-ds-amber">
-              {icca.name || 'ICCA Territory'}
             </Badge>
           ))}
           {expedition.nearestRiverDistM != null && expedition.nearestRiverDistM < 10000 && (

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { eq, sql } from 'drizzle-orm';
-import { db, ecoRunSessions, ecoRunNodes, runMemories } from '@/db';
+import { and, eq, sql } from 'drizzle-orm';
+import { db, ecoRunSessions, ecoRunNodes, runMemories, ecoLocationMastery, speciesCards } from '@/db';
+import { createEmptyFeatureMastery, updateFeatureMastery } from '@/lib/featureMastery';
+import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
+import type { FeatureFingerprint } from '@/types/gis';
 
 /**
  * PATCH /api/runs/[runId]
@@ -20,11 +23,12 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet, finalScore, deductionSummary, speciesId } = body as {
+    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints } = body as {
       resourceWallet?: Record<string, number>;
       finalScore?: number;
       deductionSummary?: Record<string, unknown>;
       speciesId?: number;
+      featureFingerprints?: unknown[];
     };
 
     const metadataPatch: Record<string, unknown> = {};
@@ -66,17 +70,22 @@ export async function PATCH(
             .where(eq(ecoRunNodes.runId, runId))
             .orderBy(ecoRunNodes.nodeOrder);
 
-          const nodesSummary = nodes.map(n => ({
-            nodeOrder: n.nodeOrder,
-            nodeType: n.nodeType,
-            nodeStatus: n.nodeStatus,
-            counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
-            obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
-            objectiveTarget: n.objectiveTarget,
-            objectiveProgress: n.objectiveProgress,
-            scoreEarned: n.scoreEarned,
-            movesUsed: n.movesUsed,
-          }));
+          const nodesSummary = nodes.map(n => {
+            const bc = (n.boardContext as Record<string, unknown>) ?? {};
+            return {
+              nodeOrder: n.nodeOrder,
+              nodeType: n.nodeType,
+              nodeStatus: n.nodeStatus,
+              counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
+              obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
+              objectiveTarget: n.objectiveTarget,
+              objectiveProgress: n.objectiveProgress,
+              scoreEarned: n.scoreEarned,
+              movesUsed: n.movesUsed,
+              encounterOutcome: bc.encounterOutcome ?? null,
+              encounterConfig: bc.encounterConfig ?? null,
+            };
+          });
 
           await db
             .insert(runMemories)
@@ -88,6 +97,7 @@ export async function PATCH(
               startLon: session.selectedLng,
               startLat: session.selectedLat,
               nodes: nodesSummary,
+              gisFeaturesNearby: featureFingerprints ?? [],
               deductionSummary: deductionSummary ?? null,
               finalScore,
               realm: session.realm,
@@ -95,6 +105,68 @@ export async function PATCH(
               bioregion: session.bioregion,
             })
             .onConflictDoNothing();
+
+          // Upsert feature mastery on location mastery row
+          if (featureFingerprints && featureFingerprints.length > 0 && session.playerId && session.locationKey) {
+            try {
+              const pid = session.playerId;
+              const lk = session.locationKey;
+              const bundle = buildRunEvidenceBundle(featureFingerprints as FeatureFingerprint[]);
+
+              // Read existing row to merge mastery data
+              const [existing] = await db
+                .select({ metadata: ecoLocationMastery.metadata })
+                .from(ecoLocationMastery)
+                .where(and(eq(ecoLocationMastery.playerId, pid), eq(ecoLocationMastery.locationKey, lk)))
+                .limit(1);
+
+              const current = (existing?.metadata as Record<string, unknown>)?.featureMastery ?? createEmptyFeatureMastery();
+              const updated = updateFeatureMastery(current as ReturnType<typeof createEmptyFeatureMastery>, bundle);
+              const metaJson = JSON.stringify({ featureMastery: updated });
+
+              await db
+                .insert(ecoLocationMastery)
+                .values({
+                  playerId: pid,
+                  locationKey: lk,
+                  realm: session.realm,
+                  biome: session.biome,
+                  bioregion: session.bioregion,
+                  runsCompleted: 1,
+                  lastPlayedAt: new Date(),
+                  metadata: sql`${metaJson}::jsonb`,
+                })
+                .onConflictDoUpdate({
+                  target: [ecoLocationMastery.playerId, ecoLocationMastery.locationKey],
+                  set: {
+                    metadata: sql`COALESCE(${ecoLocationMastery.metadata}, '{}'::jsonb) || ${metaJson}::jsonb`,
+                    runsCompleted: sql`${ecoLocationMastery.runsCompleted} + 1`,
+                    lastPlayedAt: new Date(),
+                  },
+                });
+            } catch (fmErr) {
+              console.error('[API PATCH /api/runs/[runId]] feature mastery update failed:', fmErr);
+            }
+          }
+
+          // Stamp GIS feature classes onto species card
+          if (resolvedSpeciesId && session.playerId && featureFingerprints && featureFingerprints.length > 0) {
+            try {
+              const stamps = [...new Set((featureFingerprints as FeatureFingerprint[]).map(f => f.featureClass))];
+              await db
+                .update(speciesCards)
+                .set({
+                  gisStamps: sql`(
+                    SELECT COALESCE(jsonb_agg(DISTINCT val), '[]'::jsonb)
+                    FROM jsonb_array_elements(COALESCE(${speciesCards.gisStamps}, '[]'::jsonb) || ${JSON.stringify(stamps)}::jsonb) AS val
+                  )`,
+                  updatedAt: new Date(),
+                })
+                .where(and(eq(speciesCards.playerId, session.playerId), eq(speciesCards.speciesId, resolvedSpeciesId)));
+            } catch (stampErr) {
+              console.error('[API PATCH /api/runs/[runId]] gis stamp update failed:', stampErr);
+            }
+          }
         }
       } catch (memErr) {
         // Non-fatal: log but don't fail the request
