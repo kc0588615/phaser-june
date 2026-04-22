@@ -5,11 +5,13 @@ const isProtectedRoute = createRouteMatcher([
   '/api/player/start-session',
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const proxy = clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
 });
+
+export default proxy;
 
 export const config = {
   matcher: [
