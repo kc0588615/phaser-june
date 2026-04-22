@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
-import { db, ensureIcaaViewReady } from '@/db';
+import { db } from '@/db';
 
 interface SpatialSpeciesRow {
-  ogc_fid: number;
+  id: number;
   common_name: string | null;
   scientific_name: string | null;
-  category: string | null;
+  conservation_code: string | null;
   realm: string | null;
   biome: string | null;
   taxon_order: string | null;
@@ -15,9 +15,6 @@ interface SpatialSpeciesRow {
   diet_type: string | null;
   color_primary: string | null;
   habitat_description: string | null;
-  key_fact_1: string | null;
-  key_fact_2: string | null;
-  key_fact_3: string | null;
   wkb_geometry: string | null;
   [key: string]: unknown;
 }
@@ -29,7 +26,6 @@ interface SpatialSpeciesRow {
  * Uses PostGIS ST_DWithin for efficient spatial query.
  */
 export async function GET(request: NextRequest) {
-  await ensureIcaaViewReady();
   try {
     const { searchParams } = new URL(request.url);
     const lon = parseFloat(searchParams.get('lon') || '');
@@ -47,29 +43,27 @@ export async function GET(request: NextRequest) {
     const MAX_RADIUS = 500000; // 500km
     const radius = Math.min(Math.max(radiusParam || 10000, 1), MAX_RADIUS);
 
-    // PostGIS spatial query using ST_DWithin on geography type
+    // PostGIS spatial query: join species + icaa geometry
     const species = await db.execute<SpatialSpeciesRow>(sql`
-      SELECT
-        ogc_fid,
-        common_name,
-        scientific_name,
-        category,
-        realm,
-        biome,
-        taxon_order,
-        family,
-        genus,
-        diet_type,
-        color_primary,
-        habitat_description,
-        key_fact_1,
-        key_fact_2,
-        key_fact_3,
-        ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry
-      FROM icaa_view
-      WHERE wkb_geometry IS NOT NULL
+      SELECT DISTINCT ON (s.id)
+        s.id,
+        s.common_name,
+        s.scientific_name,
+        s.conservation_code,
+        s.realm,
+        s.biome,
+        s.taxon_order,
+        s.family,
+        s.genus,
+        s.diet_type,
+        s.color_primary,
+        s.habitat_description,
+        ST_AsGeoJSON(i.wkb_geometry)::text as wkb_geometry
+      FROM species s
+      JOIN icaa i ON i.species_id = s.iucn_id::numeric
+      WHERE i.wkb_geometry IS NOT NULL
         AND ST_DWithin(
-          wkb_geometry::geography,
+          i.wkb_geometry::geography,
           ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
           ${radius}
         )

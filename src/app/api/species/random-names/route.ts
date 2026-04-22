@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ne } from 'drizzle-orm';
-import { db, icaaView, ensureIcaaViewReady } from '@/db';
+import { db, speciesTable } from '@/db';
 
 /**
  * GET /api/species/random-names?count=15&exclude=5
@@ -8,23 +8,21 @@ import { db, icaaView, ensureIcaaViewReady } from '@/db';
  * Returns random species names for the guessing game
  */
 export async function GET(request: NextRequest) {
-  await ensureIcaaViewReady();
   try {
     const { searchParams } = new URL(request.url);
     const count = parseInt(searchParams.get('count') || '15', 10);
     const excludeId = searchParams.get('exclude');
 
-    // Build query
     let query = db
       .select({
-        ogcFid: icaaView.ogcFid,
-        commonName: icaaView.commonName,
-        scientificName: icaaView.scientificName,
+        id: speciesTable.id,
+        commonName: speciesTable.commonName,
+        scientificName: speciesTable.scientificName,
       })
-      .from(icaaView);
+      .from(speciesTable);
 
     if (excludeId) {
-      query = query.where(ne(icaaView.ogcFid, parseInt(excludeId, 10))) as typeof query;
+      query = query.where(ne(speciesTable.id, parseInt(excludeId, 10))) as typeof query;
     }
 
     const species = await query;

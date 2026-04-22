@@ -14,8 +14,7 @@ let playerGameSessions: any;
 let playerClueUnlocks: any;
 let playerSpeciesDiscoveries: any;
 let playerStats: any;
-let icaaView: any;
-let ensureIcaaViewReady: any;
+let speciesTable: any;
 let eq: any, and: any, isNull: any, desc: any, inArray: any, count: any, sum: any, sql: any;
 
 async function ensureServerDeps() {
@@ -42,8 +41,7 @@ async function ensureServerDeps() {
     playerClueUnlocks = dbModule.playerClueUnlocks;
     playerSpeciesDiscoveries = dbModule.playerSpeciesDiscoveries;
     playerStats = dbModule.playerStats;
-    icaaView = dbModule.icaaView;
-    ensureIcaaViewReady = dbModule.ensureIcaaViewReady;
+    speciesTable = dbModule.speciesTable;
   }
   return true;
 }
@@ -531,8 +529,6 @@ export async function getClueCountForSpecies(
 export async function refreshPlayerStats(playerId: string): Promise<boolean> {
   if (!(await ensureServerDeps())) return false;
 
-  await ensureIcaaViewReady();
-
   try {
     // Get discovery stats with species details
     const discoveries = await db
@@ -543,20 +539,19 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         cluesUnlockedBeforeGuess: playerSpeciesDiscoveries.cluesUnlockedBeforeGuess,
         discoveredAt: playerSpeciesDiscoveries.discoveredAt,
         // Join species data
-        taxonOrder: icaaView.taxonOrder,
-        family: icaaView.family,
-        genus: icaaView.genus,
-        realm: icaaView.realm,
-        biome: icaaView.biome,
-        bioregion: icaaView.bioregion,
-        marine: icaaView.marine,
-        terrestrial: icaaView.terrestrial,
-        freshwater: icaaView.freshwater,
-        aquatic: icaaView.aquatic,
-        conservationCode: icaaView.conservationCode,
+        taxonOrder: speciesTable.taxonOrder,
+        family: speciesTable.family,
+        genus: speciesTable.genus,
+        realm: speciesTable.realm,
+        biome: speciesTable.biome,
+        bioregion: speciesTable.bioregion,
+        marine: speciesTable.marine,
+        terrestrial: speciesTable.terrestrial,
+        freshwater: speciesTable.freshwater,
+        conservationCode: speciesTable.conservationCode,
       })
       .from(playerSpeciesDiscoveries)
-      .leftJoin(icaaView, eq(playerSpeciesDiscoveries.speciesId, icaaView.ogcFid))
+      .leftJoin(speciesTable, eq(playerSpeciesDiscoveries.speciesId, speciesTable.id))
       .where(eq(playerSpeciesDiscoveries.playerId, playerId));
 
     // Get clue stats
@@ -654,7 +649,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
       if (d.marine) marineSpeciesCount++;
       if (d.terrestrial) terrestrialSpeciesCount++;
       if (d.freshwater) freshwaterSpeciesCount++;
-      if (d.aquatic) aquaticSpeciesCount++;
     }
 
     // Build clue category breakdown

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
-import { db, ensureIcaaViewReady, habitatColormap } from '@/db';
+import { db, habitatColormap } from '@/db';
 import {
   type LayerScore,
   scorePolygonLayer,
@@ -27,11 +27,10 @@ interface ProtectedAreaRow {
 }
 
 interface ThreatenedSpeciesRow {
-  ogc_fid: number;
+  id: number;
   common_name: string | null;
   scientific_name: string | null;
   conservation_code: string | null;
-  category: string | null;
   intersect_area_m2: number | null;
   [key: string]: unknown;
 }
@@ -178,8 +177,6 @@ async function getHabitatDistributionFromTiTiler(
 }
 
 export async function GET(request: NextRequest) {
-  await ensureIcaaViewReady();
-
   try {
     const { searchParams } = new URL(request.url);
     const lon = Number(searchParams.get('lon'));
@@ -227,24 +224,19 @@ export async function GET(request: NextRequest) {
       WITH square AS (
         SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
       )
-      SELECT
-        s.ogc_fid,
-        s.common_name,
-        s.scientific_name,
-        s.conservation_code,
-        s.category,
-        ST_Area(ST_Intersection(s.wkb_geometry, square.geom)::geography) AS intersect_area_m2
-      FROM icaa_view s
+      SELECT DISTINCT ON (sp.id)
+        sp.id,
+        sp.common_name,
+        sp.scientific_name,
+        sp.conservation_code,
+        ST_Area(ST_Intersection(i.wkb_geometry, square.geom)::geography) AS intersect_area_m2
+      FROM species sp
+      JOIN icaa i ON i.species_id = sp.iucn_id::numeric
       CROSS JOIN square
-      WHERE s.wkb_geometry IS NOT NULL
-        AND ST_Intersects(s.wkb_geometry, square.geom)
-        AND (
-          UPPER(COALESCE(s.conservation_code, '')) IN ('CR', 'EN', 'VU')
-          OR UPPER(COALESCE(s.category, '')) IN ('CR', 'EN', 'VU')
-          OR LOWER(COALESCE(s.conservation_code, '')) ~ '(critically endangered|endangered|vulnerable)'
-          OR LOWER(COALESCE(s.category, '')) ~ '(critically endangered|endangered|vulnerable)'
-        )
-      ORDER BY intersect_area_m2 DESC NULLS LAST
+      WHERE i.wkb_geometry IS NOT NULL
+        AND ST_Intersects(i.wkb_geometry, square.geom)
+        AND UPPER(COALESCE(sp.conservation_code, '')) IN ('CR', 'EN', 'VU')
+      ORDER BY sp.id, intersect_area_m2 DESC NULLS LAST
       LIMIT 50
     `);
 
@@ -572,11 +564,10 @@ export async function GET(request: NextRequest) {
         intersect_area_m2: Number((row.intersect_area_m2 || 0).toFixed(2)),
       })),
       threatened_species: [...threatenedSpecies].map((row) => ({
-        ogc_fid: row.ogc_fid,
+        id: row.id,
         common_name: row.common_name,
         scientific_name: row.scientific_name,
         conservation_code: row.conservation_code,
-        category: row.category,
         intersect_area_m2: Number((row.intersect_area_m2 || 0).toFixed(2)),
       })),
       habitat_mix: habitatMix,

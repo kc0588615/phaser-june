@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
-import { db, ensureIcaaViewReady } from '@/db';
+import { db } from '@/db';
 
 interface ClosestSpeciesRow {
-  ogc_fid: number;
+  id: number;
   common_name: string | null;
   scientific_name: string | null;
   wkb_geometry: string | null;
@@ -18,7 +18,6 @@ interface ClosestSpeciesRow {
  * Uses PostGIS <-> operator for efficient nearest-neighbor search.
  */
 export async function GET(request: NextRequest) {
-  await ensureIcaaViewReady();
   try {
     const { searchParams } = new URL(request.url);
     const lon = parseFloat(searchParams.get('lon') || '');
@@ -31,20 +30,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // PostGIS nearest-neighbor query using <-> operator
+    // PostGIS nearest-neighbor: join species + icaa geometry
     const result = await db.execute<ClosestSpeciesRow>(sql`
-      SELECT
-        ogc_fid,
-        common_name,
-        scientific_name,
-        ST_AsGeoJSON(wkb_geometry)::text as wkb_geometry,
+      SELECT DISTINCT ON (s.id)
+        s.id,
+        s.common_name,
+        s.scientific_name,
+        ST_AsGeoJSON(i.wkb_geometry)::text as wkb_geometry,
         ST_Distance(
-          wkb_geometry::geography,
+          i.wkb_geometry::geography,
           ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
         ) as distance_meters
-      FROM icaa_view
-      WHERE wkb_geometry IS NOT NULL
-      ORDER BY wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
+      FROM species s
+      JOIN icaa i ON i.species_id = s.iucn_id::numeric
+      WHERE i.wkb_geometry IS NOT NULL
+      ORDER BY s.id, i.wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
       LIMIT 1
     `);
 
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     const closest = rows[0];
     return NextResponse.json({
       species: {
-        ogc_fid: closest.ogc_fid,
+        id: closest.id,
         common_name: closest.common_name,
         scientific_name: closest.scientific_name,
         distance_km: Math.round(closest.distance_meters / 1000),

@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { speciesDeductionProfiles, speciesDeductionClues, icaa } from '@/db/schema';
+import { speciesDeductionProfiles, speciesDeductionClues, speciesTable } from '@/db/schema';
 import type { DeductionProfile, DeductionClue } from '@/lib/deductionEngine';
 
 const profileColumns = {
@@ -23,9 +23,9 @@ const profileColumns = {
 };
 
 const nameColumns = {
-  ogcFid: icaa.ogcFid,
-  commonName: icaa.commonName,
-  scientificName: icaa.scientificName,
+  id: speciesTable.id,
+  commonName: speciesTable.commonName,
+  scientificName: speciesTable.scientificName,
 };
 
 export async function GET(request: NextRequest) {
@@ -69,12 +69,12 @@ export async function GET(request: NextRequest) {
         .from(speciesDeductionClues)
         .where(eq(speciesDeductionClues.speciesId, mysteryId)),
       db.select(nameColumns)
-        .from(icaa)
-        .where(inArray(icaa.ogcFid, allIds)),
+        .from(speciesTable)
+        .where(inArray(speciesTable.id, allIds)),
     ]);
 
     // Build name lookup
-    const nameMap = new Map(names.map(n => [n.ogcFid, n]));
+    const nameMap = new Map(names.map(n => [n.id, n]));
 
     // Build DeductionProfile objects with names
     function toProfile(row: typeof profiles[number]): DeductionProfile {

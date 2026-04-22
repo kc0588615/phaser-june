@@ -10,6 +10,8 @@ import {
   playerSpeciesDiscoveries,
   playerStats,
   profiles,
+  speciesTable,
+  speciesFacts,
 } from './schema';
 
 // Select types (for reading)
@@ -25,6 +27,10 @@ export type HabitatColormap = InferSelectModel<typeof habitatColormap>;
 export type ICAA = InferSelectModel<typeof icaa>;
 export type ICAAView = typeof icaaView.$inferSelect;
 export type OneEarthBioregion = InferSelectModel<typeof oneearthBioregion>;
+
+// Curated game species
+export type Species = InferSelectModel<typeof speciesTable>;
+export type SpeciesFact = InferSelectModel<typeof speciesFacts>;
 
 // Insert types (for writing)
 export type NewHighScore = InferInsertModel<typeof highScores>;

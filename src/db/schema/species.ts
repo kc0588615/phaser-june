@@ -5,6 +5,7 @@
 
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
   boolean,
   doublePrecision,
   geometry,
@@ -99,6 +100,65 @@ export const icaa = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Curated game species (stable PK, decoupled from icaa import)
+// ---------------------------------------------------------------------------
+
+export const speciesTable = pgTable('species', {
+  id: serial('id').primaryKey(),
+  iucnId: bigint('iucn_id', { mode: 'number' }).notNull().unique(),
+  scientificName: text('scientific_name').notNull(),
+  commonName: text('common_name').notNull(),
+  kingdom: text(),
+  phylum: text(),
+  class: text(),
+  taxonOrder: text('taxon_order'),
+  family: text(),
+  genus: text(),
+  conservationCode: text('conservation_code'),
+  conservationText: text('conservation_text'),
+  realm: text(),
+  subrealm: text(),
+  biome: text(),
+  bioregion: text(),
+  habitatDescription: text('habitat_description'),
+  habitatTags: text('habitat_tags').array(),
+  geographicDescription: text('geographic_description'),
+  marine: boolean().default(false),
+  terrestrial: boolean().default(false),
+  freshwater: boolean().default(false),
+  colorPrimary: text('color_primary'),
+  colorSecondary: text('color_secondary'),
+  pattern: text(),
+  shapeDescription: text('shape_description'),
+  sizeMinCm: numeric('size_min_cm'),
+  sizeMaxCm: numeric('size_max_cm'),
+  weightKg: numeric('weight_kg'),
+  dietType: text('diet_type'),
+  lifespan: numeric(),
+  maturity: text(),
+  reproductionType: text('reproduction_type'),
+  clutchSize: text('clutch_size'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const speciesFacts = pgTable(
+  'species_facts',
+  {
+    id: serial('id').primaryKey(),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+    category: text('category').notNull(),
+    factText: text('fact_text').notNull(),
+    sortOrder: smallint('sort_order').notNull().default(1),
+  },
+  (table) => [
+    uniqueIndex('uq_species_facts_species_cat_order').on(table.speciesId, table.category, table.sortOrder),
+    index('ix_species_facts_species').on(table.speciesId),
+    index('ix_species_facts_category').on(table.speciesId, table.category),
+  ]
+);
+
+// ---------------------------------------------------------------------------
 // Comparative deduction tables
 // ---------------------------------------------------------------------------
 
@@ -107,7 +167,7 @@ export const speciesDeductionProfiles = pgTable(
   {
     speciesId: integer('species_id')
       .primaryKey()
-      .references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+      .references(() => speciesTable.id, { onDelete: 'cascade' }),
     habitatTags: text('habitat_tags').array().notNull().default(sql`'{}'::text[]`),
     morphologyTags: text('morphology_tags').array().notNull().default(sql`'{}'::text[]`),
     dietTags: text('diet_tags').array().notNull().default(sql`'{}'::text[]`),
@@ -145,7 +205,7 @@ export const speciesDeductionClues = pgTable(
     id: serial('id').primaryKey(),
     speciesId: integer('species_id')
       .notNull()
-      .references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+      .references(() => speciesTable.id, { onDelete: 'cascade' }),
     category: text('category').notNull().$type<DeductionClueCategory>(),
     label: text('label').notNull(),
     compareTags: text('compare_tags').array(),

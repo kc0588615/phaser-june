@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inArray } from 'drizzle-orm';
-import { db, icaaView, ensureIcaaViewReady } from '@/db';
+import { db, speciesTable } from '@/db';
 
 /**
  * GET /api/species/bioregions?ids=1,2,3
  * POST /api/species/bioregions { species_ids: [1, 2, 3] }
- *
- * Returns bioregion data for species by intersecting with OneEarth bioregion polygons.
  */
 export async function GET(request: NextRequest) {
-  await ensureIcaaViewReady();
   try {
     const { searchParams } = new URL(request.url);
     const idsParam = searchParams.get('ids');
@@ -39,7 +36,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  await ensureIcaaViewReady();
   try {
     const body = await request.json();
     const ids: number[] = body.species_ids || body.ids || [];
@@ -60,21 +56,19 @@ export async function POST(request: NextRequest) {
 }
 
 async function getBioregionsForSpecies(speciesIds: number[]) {
-  // Get species with their pre-populated bioregion columns
-  // (bioregion data is already exposed via icaa_view)
-  const species = await db
+  const rows = await db
     .select({
-      ogcFid: icaaView.ogcFid,
-      bioregion: icaaView.bioregion,
-      realm: icaaView.realm,
-      subrealm: icaaView.subrealm,
-      biome: icaaView.biome,
+      id: speciesTable.id,
+      bioregion: speciesTable.bioregion,
+      realm: speciesTable.realm,
+      subrealm: speciesTable.subrealm,
+      biome: speciesTable.biome,
     })
-    .from(icaaView)
-    .where(inArray(icaaView.ogcFid, speciesIds));
+    .from(speciesTable)
+    .where(inArray(speciesTable.id, speciesIds));
 
-  return species.map(s => ({
-    species_id: s.ogcFid,
+  return rows.map(s => ({
+    species_id: s.id,
     bioregion: s.bioregion,
     realm: s.realm,
     subrealm: s.subrealm,

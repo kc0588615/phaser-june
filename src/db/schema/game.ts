@@ -17,7 +17,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { profiles, playerGameSessions } from './player';
-import { icaa } from './species';
+import { speciesTable } from './species';
 
 export const highScores = pgTable(
   'high_scores',
@@ -101,7 +101,7 @@ export const ecoRunNodes = pgTable(
     rewardClaimed: boolean('reward_claimed').notNull().default(false),
     wagerTier: text('wager_tier'),
     wagerResult: text('wager_result'),
-    guessedSpeciesId: integer('guessed_species_id').references(() => icaa.ogcFid, { onDelete: 'set null' }),
+    guessedSpeciesId: integer('guessed_species_id').references(() => speciesTable.id, { onDelete: 'set null' }),
     guessCorrect: boolean('guess_correct'),
     scoreEarned: integer('score_earned').notNull().default(0),
     dominantHabitat: text('dominant_habitat'),
@@ -217,7 +217,7 @@ export const speciesCards = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     playerId: uuid('player_id').notNull().references(() => profiles.userId, { onDelete: 'cascade' }),
-    speciesId: integer('species_id').notNull().references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
     discovered: boolean('discovered').notNull().default(false),
     firstDiscoveredAt: timestamp('first_discovered_at', { withTimezone: true }),
     lastEncounteredAt: timestamp('last_encountered_at', { withTimezone: true }),
@@ -249,7 +249,7 @@ export const runMemories = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     runId: uuid('run_id').notNull().references(() => ecoRunSessions.id, { onDelete: 'cascade' }),
     playerId: uuid('player_id').references(() => profiles.userId, { onDelete: 'set null' }),
-    speciesId: integer('species_id').references(() => icaa.ogcFid, { onDelete: 'set null' }),
+    speciesId: integer('species_id').references(() => speciesTable.id, { onDelete: 'set null' }),
     locationKey: text('location_key').notNull(),
     startLon: doublePrecision('start_lon').notNull(),
     startLat: doublePrecision('start_lat').notNull(),
@@ -278,7 +278,7 @@ export const speciesCardUnlocks = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     playerId: uuid('player_id').notNull().references(() => profiles.userId, { onDelete: 'cascade' }),
-    speciesId: integer('species_id').notNull().references(() => icaa.ogcFid, { onDelete: 'cascade' }),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
     runId: uuid('run_id').references(() => ecoRunSessions.id, { onDelete: 'set null' }),
     unlockType: text('unlock_type').notNull(),
     payload: jsonb('payload').notNull().default(sql`'{}'::jsonb`),

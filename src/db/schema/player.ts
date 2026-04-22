@@ -11,9 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-// NOTE: icaa is import-owned (shapefile). FKs assume icaa exists before app tables.
-// This is true for our existing DB; fresh DBs must import shapefiles first.
-import { icaa } from './species';
+import { speciesTable } from './species';
 
 export const profiles = pgTable('profiles', {
   userId: uuid('user_id').primaryKey(),
@@ -50,7 +48,7 @@ export const playerSpeciesDiscoveries = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     playerId: uuid('player_id').notNull().references(() => profiles.userId),
-    speciesId: integer('species_id').notNull().references(() => icaa.ogcFid),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id),
     sessionId: uuid('session_id').references(() => playerGameSessions.id),
     discoveredAt: timestamp('discovered_at', { withTimezone: true }).notNull().defaultNow(),
     timeToDiscoverSeconds: integer('time_to_discover_seconds'),
@@ -81,7 +79,7 @@ export const playerClueUnlocks = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     playerId: uuid('player_id').notNull().references(() => profiles.userId),
-    speciesId: integer('species_id').notNull().references(() => icaa.ogcFid),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id),
     discoveryId: uuid('discovery_id').references(() => playerSpeciesDiscoveries.id),
     clueCategory: text('clue_category').notNull(),
     clueField: text('clue_field').notNull(),
