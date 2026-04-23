@@ -350,8 +350,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
     icon: '🌳',
     getClue: (species: Species) => {
       const habitats: string[] = [];
-      // Habitat fields are now booleans
-      if (species.aquatic || species.freshwater) habitats.push('freshwater');
+      if (species.freshwater) habitats.push('freshwater');
       if (species.terrestrial) habitats.push('terrestrial');
       if (species.marine) habitats.push('marine');
 

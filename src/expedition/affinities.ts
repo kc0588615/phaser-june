@@ -240,7 +240,7 @@ export function getAffinityForSpecies(species: Species): AffinityType | null {
     return CLASS_AFFINITY_MAP[className];
   }
 
-  if (species.aquatic || species.freshwater || species.marine) {
+  if (species.freshwater || species.marine) {
     return 'fish';
   }
 

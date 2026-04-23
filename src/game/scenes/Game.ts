@@ -916,7 +916,7 @@ export class Game extends Phaser.Scene {
             hasCurrentUserId: !!this.currentUserId,
             currentUserId: this.currentUserId,
             hasSelectedSpecies: !!this.selectedSpecies,
-            speciesId: this.selectedSpecies?.ogc_fid,
+            speciesId: this.selectedSpecies?.id,
             category: payload.category,
             clue: payload.clue
         });
@@ -925,7 +925,7 @@ export class Game extends Phaser.Scene {
             console.warn('⚠️ Skipping clue tracking:', {
                 reason: !this.currentUserId ? 'No currentUserId' : 'No selectedSpecies',
                 currentUserId: this.currentUserId,
-                selectedSpecies: this.selectedSpecies?.ogc_fid
+                selectedSpecies: this.selectedSpecies?.id
             });
             return;
         }
@@ -939,7 +939,7 @@ export class Game extends Phaser.Scene {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'trackClueUnlock',
-                    speciesId: this.selectedSpecies.ogc_fid,
+                    speciesId: this.selectedSpecies.id,
                     clueCategory, clueField: field, clueValue: value,
                 }),
             });
@@ -1448,7 +1448,7 @@ export class Game extends Phaser.Scene {
                 category,
                 heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
                 clue: clueText,
-                speciesId: this.selectedSpecies.ogc_fid,
+                speciesId: this.selectedSpecies.id,
                 name: config.categoryName,
                 icon: config.icon,
                 color: config.color
@@ -1508,7 +1508,7 @@ export class Game extends Phaser.Scene {
                     category,
                     heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
                     clue: clueText,
-                    speciesId: this.selectedSpecies.ogc_fid,
+                    speciesId: this.selectedSpecies.id,
                     name: config.categoryName,
                     icon: config.icon,
                     color: config.color
@@ -1538,7 +1538,7 @@ export class Game extends Phaser.Scene {
                 category,
                 heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
                 clue: clueText,
-                speciesId: this.selectedSpecies.ogc_fid,
+                speciesId: this.selectedSpecies.id,
                 name: config.categoryName,
                 icon: config.icon,
                 color: config.color
@@ -1562,10 +1562,10 @@ export class Game extends Phaser.Scene {
         if (this.revealedClues.size < TOTAL_CLUE_CATEGORIES) return;
 
         this.allCluesRevealed = true;
-        console.log("Game Scene: All clues revealed for species:", this.selectedSpecies.ogc_fid);
+        console.log("Game Scene: All clues revealed for species:", this.selectedSpecies.id);
 
         EventBus.emit('all-clues-revealed', {
-            speciesId: this.selectedSpecies.ogc_fid
+            speciesId: this.selectedSpecies.id
         });
 
         if (this.statusText && this.statusText.active) {
@@ -1597,8 +1597,8 @@ export class Game extends Phaser.Scene {
         }
 
         try {
-            // Sort species by ogc_fid (lowest first)
-            this.currentSpecies = [...data.species].sort((a, b) => a.ogc_fid - b.ogc_fid);
+            // Sort species by id (lowest first)
+            this.currentSpecies = [...data.species].sort((a, b) => a.id - b.id);
             this.currentSpeciesIndex = 0;
             this.revealedClues.clear(); // Reset clues for new game
             this.completedClueCategories.clear();
@@ -1678,9 +1678,9 @@ export class Game extends Phaser.Scene {
             console.log("Game Scene: Stored raster habitats:", this.rasterHabitats);
             
             if (this.currentSpecies.length > 0) {
-                // Select the species with lowest ogc_fid
+                // Select the species with lowest id
                 this.selectedSpecies = this.currentSpecies[0];
-                console.log("Game Scene: Selected species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+                console.log("Game Scene: Selected species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "id:", this.selectedSpecies.id);
                 
                 // Reset all progressive clues for new species
                 resetAllProgressiveClues(this.selectedSpecies);
@@ -1689,7 +1689,7 @@ export class Game extends Phaser.Scene {
                 // Hide the species name - player needs to guess it
                 EventBus.emit('new-game-started', {
                     speciesName: 'Mystery Species',  // Hidden name for guessing game
-                    speciesId: this.selectedSpecies.ogc_fid,
+                    speciesId: this.selectedSpecies.id,
                     totalSpecies: this.currentSpecies.length,
                     currentIndex: this.currentSpeciesIndex + 1,
                     hiddenSpeciesName: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species'  // Store real name internally
@@ -2239,13 +2239,13 @@ export class Game extends Phaser.Scene {
             // Reset all progressive clues for new species
             resetAllProgressiveClues(this.selectedSpecies);
             
-            console.log("Game Scene: Advancing to next species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "ogc_fid:", this.selectedSpecies.ogc_fid);
+            console.log("Game Scene: Advancing to next species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "id:", this.selectedSpecies.id);
             
             // Emit event for new species
             // Hide the species name - player needs to guess it
             EventBus.emit('new-game-started', {
                 speciesName: 'Mystery Species',  // Hidden name for guessing game
-                speciesId: this.selectedSpecies.ogc_fid,
+                speciesId: this.selectedSpecies.id,
                 totalSpecies: this.currentSpecies.length,
                 currentIndex: this.currentSpeciesIndex + 1,
                 hiddenSpeciesName: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species'  // Store real name internally
@@ -2260,7 +2260,7 @@ export class Game extends Phaser.Scene {
         console.log("Game Scene: Species guess received:", data);
         
         // Check if this guess is for the current species
-        if (!this.selectedSpecies || data.speciesId !== this.selectedSpecies.ogc_fid) {
+        if (!this.selectedSpecies || data.speciesId !== this.selectedSpecies.id) {
             console.log("Game Scene: Guess is for a different species, ignoring");
             return;
         }
@@ -2601,7 +2601,7 @@ export class Game extends Phaser.Scene {
             category: GemCategory.HABITAT,
             heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
             clue: clue,
-            speciesId: this.selectedSpecies.ogc_fid,
+            speciesId: this.selectedSpecies.id,
             name: habitatConfig.categoryName,
             icon: habitatConfig.icon,
             color: habitatConfig.color

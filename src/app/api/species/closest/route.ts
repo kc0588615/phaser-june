@@ -30,21 +30,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // PostGIS nearest-neighbor: join species + icaa geometry
+    // PostGIS nearest-neighbor: dedupe per species then pick globally closest
     const result = await db.execute<ClosestSpeciesRow>(sql`
-      SELECT DISTINCT ON (s.id)
-        s.id,
-        s.common_name,
-        s.scientific_name,
-        ST_AsGeoJSON(i.wkb_geometry)::text as wkb_geometry,
-        ST_Distance(
-          i.wkb_geometry::geography,
-          ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
-        ) as distance_meters
-      FROM species s
-      JOIN icaa i ON i.species_id = s.iucn_id::numeric
-      WHERE i.wkb_geometry IS NOT NULL
-      ORDER BY s.id, i.wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
+      SELECT id, common_name, scientific_name, wkb_geometry, distance_meters
+      FROM (
+        SELECT DISTINCT ON (s.id)
+          s.id,
+          s.common_name,
+          s.scientific_name,
+          ST_AsGeoJSON(i.wkb_geometry)::text as wkb_geometry,
+          ST_Distance(
+            i.wkb_geometry::geography,
+            ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
+          ) as distance_meters
+        FROM species s
+        JOIN icaa i ON i.species_id = s.iucn_id::numeric
+        WHERE i.wkb_geometry IS NOT NULL
+        ORDER BY s.id, i.wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
+      ) deduped
+      ORDER BY distance_meters
       LIMIT 1
     `);
 

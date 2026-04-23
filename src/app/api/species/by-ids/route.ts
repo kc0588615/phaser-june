@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { asc, inArray } from 'drizzle-orm';
 import { db, speciesTable } from '@/db';
+import { drizzleToSnake } from '@/lib/drizzleToSnake';
 
 /**
  * GET /api/species/by-ids?ids=1,2,3
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       .where(inArray(speciesTable.id, ids))
       .orderBy(asc(speciesTable.id));
 
-    return NextResponse.json({ species });
+    return NextResponse.json({ species: species.map(drizzleToSnake) });
   } catch (error) {
     console.error('[API /species/by-ids] Error:', error);
     return NextResponse.json(
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       .where(inArray(speciesTable.id, ids))
       .orderBy(asc(speciesTable.id));
 
-    return NextResponse.json({ species });
+    return NextResponse.json({ species: species.map(drizzleToSnake) });
   } catch (error) {
     console.error('[API /species/by-ids] Error:', error);
     return NextResponse.json(

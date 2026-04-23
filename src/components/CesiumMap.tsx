@@ -289,14 +289,14 @@ const CesiumMap: React.FC = () => {
                   features.push({
                     type: 'Feature' as const,
                     properties: {
-                      ogc_fid: species.ogc_fid,
+                      species_id: species.id,
                       comm_name: species.common_name,
                       sci_name: species.scientific_name
                     },
                     geometry: species.wkb_geometry
                   });
                 } catch (geoError) {
-                  console.warn(`Failed to process geometry for species ${species.ogc_fid}:`, geoError);
+                  console.warn(`Failed to process geometry for species ${species.id}:`, geoError);
                 }
               }
             }
@@ -327,7 +327,7 @@ const CesiumMap: React.FC = () => {
             const legacyHabitats = new Set<string>();
             clickedSpecies.species.forEach((species: Species) => {
               if (species.habitat_description) legacyHabitats.add(species.habitat_description);
-              if (species.aquatic) legacyHabitats.add('aquatic');
+
               if (species.freshwater) legacyHabitats.add('freshwater');
               if (species.terrestrial) legacyHabitats.add('terrestrial');
               if (species.marine) legacyHabitats.add('marine');
@@ -449,7 +449,6 @@ const CesiumMap: React.FC = () => {
           const legacyHabitats = new Set<string>();
           speciesResult.species.forEach((species: Species) => {
             if (species.habitat_description) legacyHabitats.add(species.habitat_description);
-            if (species.aquatic) legacyHabitats.add('aquatic');
             if (species.freshwater) legacyHabitats.add('freshwater');
             if (species.terrestrial) legacyHabitats.add('terrestrial');
             if (species.marine) legacyHabitats.add('marine');

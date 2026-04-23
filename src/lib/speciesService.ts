@@ -178,7 +178,7 @@ export const speciesService = {
   },
 
   /**
-   * Get species by their ogc_fid values
+   * Get species by their species.id values
    */
   async getSpeciesByIds(ids: number[]): Promise<Species[]> {
     try {
@@ -406,7 +406,7 @@ export const speciesService = {
         features: species.map(sp => ({
           type: 'Feature',
           properties: {
-            ogc_fid: sp.ogc_fid,
+            id: sp.id,
             common_name: sp.common_name,
             scientific_name: sp.scientific_name
           },

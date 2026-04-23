@@ -39,7 +39,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
     return (
       <div
         className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border"
-        data-species-id={species.ogc_fid}
+        data-species-id={species.id}
         style={{ wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal', minWidth: '0', maxWidth: '100%' }}
       >
         {/* Breadcrumb */}
@@ -128,7 +128,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
   return (
     <div
       className="species-card-mobile bg-slate-800 border border-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg transition-all duration-200 w-full box-border"
-      data-species-id={species.ogc_fid}
+      data-species-id={species.id}
       style={{
         wordBreak: 'break-word',
         overflowWrap: 'break-word',
@@ -298,8 +298,8 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
             <div>
               {hasValue(species.habitat_tags) && (
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {species.habitat_tags!.split(',').map((tag, index) => (
-                    <span key={`habitat-${species.ogc_fid}-${tag.trim()}`} className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
+                  {(Array.isArray(species.habitat_tags) ? species.habitat_tags : species.habitat_tags!.split(',')).map((tag) => (
+                    <span key={`habitat-${species.id}-${tag.trim()}`} className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
                       {tag.trim()}
                     </span>
                   ))}
@@ -466,7 +466,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Prey:</span>
                   <div className="flex flex-wrap gap-1">
                     {species.diet_prey!.split(/[,;]/).map((item, index) => (
-                      <span key={`prey-${species.ogc_fid}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
+                      <span key={`prey-${species.id}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
                         {item.trim()}
                       </span>
                     ))}
@@ -478,7 +478,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Plant Food:</span>
                   <div className="flex flex-wrap gap-1">
                     {species.diet_flora!.split(/[,;]/).map((item, index) => (
-                      <span key={`flora-${species.ogc_fid}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
+                      <span key={`flora-${species.id}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
                         {item.trim()}
                       </span>
                     ))}

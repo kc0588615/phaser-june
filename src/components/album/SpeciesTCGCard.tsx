@@ -159,7 +159,7 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
               {species.terrestrial && <span className="text-[8px] px-1 py-0.5 rounded bg-green-500/20 text-green-300">Land</span>}
               {species.freshwater && <span className="text-[8px] px-1 py-0.5 rounded bg-teal-500/20 text-teal-300">Fresh</span>}
             </div>
-            <span className="text-[9px] text-slate-600 font-mono">#{species.ogc_fid}</span>
+            <span className="text-[9px] text-slate-600 font-mono">#{species.id}</span>
           </div>
         </div>
 

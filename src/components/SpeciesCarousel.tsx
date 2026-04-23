@@ -147,9 +147,9 @@ export default function SpeciesCarousel({
           className="mobile-species-swiper !overflow-visible w-full"
         >
           {speciesList.map((species, index) => {
-            const isDiscovered = !!discoveredSpecies[species.ogc_fid];
+            const isDiscovered = !!discoveredSpecies[species.id];
             return (
-              <SwiperSlide key={species.ogc_fid} className="!h-auto w-full flex-shrink-0">
+              <SwiperSlide key={species.id} className="!h-auto w-full flex-shrink-0">
                 {/* Constrain card for mobile screens */}
                 <div className="p-2 sm:p-3 w-full" style={{ maxWidth: '100%' }}>
                   <SpeciesCard
@@ -157,7 +157,7 @@ export default function SpeciesCarousel({
                     category={category}
                     speciesPositionLabel={`Species ${index + 1} of ${speciesList.length}`}
                     isDiscovered={isDiscovered}
-                    discoveredAt={discoveredSpecies[species.ogc_fid]?.discoveredAt}
+                    discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
                     onNavigateToTop={onNavigateToTop}
                   />
                 </div>

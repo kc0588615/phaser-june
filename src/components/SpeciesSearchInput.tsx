@@ -126,7 +126,7 @@ export function SpeciesSearchInput({
     // Add individual species
     species.forEach(sp => {
       options.push({
-        value: `species:${sp.ogc_fid}`,
+        value: `species:${sp.id}`,
         label: sp.common_name || sp.scientific_name || 'Unknown',
         type: 'species',
         speciesData: sp
@@ -197,7 +197,7 @@ export function SpeciesSearchInput({
     } else if (option.type === 'order') {
       onJump({ type: 'order', value: option.value });
     } else if (option.type === 'species' && option.speciesData) {
-      onJump({ type: 'species', value: option.speciesData.ogc_fid.toString() });
+      onJump({ type: 'species', value: option.speciesData.id.toString() });
     } else if (option.type === 'category') {
       // Convert category to order value for filtering
       const orderValue = getOrderFromCategory(option.value);

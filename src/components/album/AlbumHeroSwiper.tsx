@@ -44,7 +44,7 @@ export default function AlbumHeroSwiper({
   useEffect(() => {
     const species = speciesList[activeIndex];
     if (!species) return;
-    const sid = species.ogc_fid;
+    const sid = species.id;
     if (sid in runMemoryCache || inFlightRef.current.has(sid)) return;
 
     inFlightRef.current.add(sid);
@@ -115,17 +115,17 @@ export default function AlbumHeroSwiper({
           className="!overflow-visible"
         >
           {speciesList.map((species) => {
-            const isDiscovered = !!discoveredSpecies[species.ogc_fid];
-            const memory = runMemoryCache[species.ogc_fid] ?? undefined;
-            const gisStamps = cardStampsCache[species.ogc_fid]
+            const isDiscovered = !!discoveredSpecies[species.id];
+            const memory = runMemoryCache[species.id] ?? undefined;
+            const gisStamps = cardStampsCache[species.id]
               ?? memory?.gisFeaturesNearby?.map(f => f.featureClass as FeatureClass).filter(Boolean)
               ?? undefined;
             return (
-              <SwiperSlide key={species.ogc_fid} className="!overflow-visible">
+              <SwiperSlide key={species.id} className="!overflow-visible">
                 <SpeciesTCGCard
                   species={species}
                   isDiscovered={isDiscovered}
-                  discoveredAt={discoveredSpecies[species.ogc_fid]?.discoveredAt}
+                  discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
                   runMemory={memory}
                   gisStamps={gisStamps}
                 />

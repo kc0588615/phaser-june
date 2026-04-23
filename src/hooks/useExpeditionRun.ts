@@ -88,10 +88,10 @@ export function useExpeditionRun() {
         const payload = expeditionPayloadRef.current;
         if (!payload) return;
 
-        const sorted = [...payload.species].sort((a, b) => a.ogc_fid - b.ogc_fid);
+        const sorted = [...payload.species].sort((a, b) => a.id - b.id);
         const correct = sorted[0];
         if (correct) {
-            correctSpeciesIdRef.current = correct.ogc_fid;
+            correctSpeciesIdRef.current = correct.id;
             hiddenSpeciesNameRef.current = correct.common_name || correct.scientific_name || 'Unknown Species';
         }
 

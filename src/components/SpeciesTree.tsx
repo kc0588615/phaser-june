@@ -68,7 +68,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
           orderChildren.push(familyId);
           
           speciesList.forEach((sp) => {
-            const speciesId = `species-${sp.ogc_fid}`;
+            const speciesId = `species-${sp.id}`;
             data[speciesId] = {
               id: speciesId,
               name: sp.common_name || sp.scientific_name || 'Unknown',
@@ -115,7 +115,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
       // Filter to show just this species
       onFilterSelect({ 
         type: 'species', 
-        value: itemData.speciesData.ogc_fid.toString(),
+        value: itemData.speciesData.id.toString(),
         speciesData: itemData.speciesData
       });
     } else if (itemData?.type === 'family') {
@@ -160,7 +160,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
           let isFilterMatch = false;
           if (selectedFilter) {
             if (selectedFilter.type === 'species' && itemData?.type === 'species') {
-              isFilterMatch = itemData.speciesData?.ogc_fid.toString() === selectedFilter.value;
+              isFilterMatch = itemData.speciesData?.id.toString() === selectedFilter.value;
             } else if (selectedFilter.type === 'family' && itemData?.type === 'family') {
               isFilterMatch = itemData.name.split(' (')[0] === selectedFilter.value;
             } else if (selectedFilter.type === 'order' && itemData?.type === 'order') {

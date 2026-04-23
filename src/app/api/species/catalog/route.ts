@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { asc } from 'drizzle-orm';
 import { db, speciesTable } from '@/db';
+import { drizzleToSnake } from '@/lib/drizzleToSnake';
 
 /**
  * GET /api/species/catalog
@@ -14,7 +15,7 @@ export async function GET() {
       .orderBy(asc(speciesTable.commonName));
 
     return NextResponse.json({
-      species,
+      species: species.map(drizzleToSnake),
       count: species.length,
     });
   } catch (error) {

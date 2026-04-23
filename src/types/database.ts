@@ -104,7 +104,8 @@ export interface Bioregion {
 }
 
 export interface Species {
-  ogc_fid: number;
+  id: number;
+  iucn_id?: number;
   common_name?: string;
   scientific_name?: string;
   iucn_url?: string | null;
@@ -118,21 +119,18 @@ export interface Species {
   kingdom?: string;
   taxonomic_comment?: string;
 
-  // Habitat fields (boolean)
+  // Habitat fields
   habitat_description?: string;
-  aquatic?: boolean;
   freshwater?: boolean;
   terrestrial?: boolean;
   marine?: boolean;
-  habitat_tags?: string;
+  habitat_tags?: string[] | string;
 
   // Geographic fields
   geographic_description?: string;
   distribution_comment?: string;
-  island?: boolean;
-  origin?: number;
 
-  // Bioregion fields (from oneearth_bioregion)
+  // Bioregion fields
   bioregion?: string;
   realm?: string;
   subrealm?: string;
@@ -187,10 +185,10 @@ export interface Database {
         Insert: Omit<HighScore, 'id' | 'created_at'>;
         Update: Partial<Omit<HighScore, 'id' | 'created_at'>>;
       };
-      icaa: {
+      species: {
         Row: Species;
-        Insert: Omit<Species, 'ogc_fid'>;
-        Update: Partial<Omit<Species, 'ogc_fid'>>;
+        Insert: Omit<Species, 'id'>;
+        Update: Partial<Omit<Species, 'id'>>;
       };
       profiles: {
         Row: Profile;
@@ -219,9 +217,6 @@ export interface Database {
       };
     };
     Views: {
-      icaa_view: {
-        Row: Species;
-      };
       top_scores: {
         Row: HighScore & { rank: number };
       };

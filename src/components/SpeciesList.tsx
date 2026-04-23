@@ -427,7 +427,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     if (!scrollToSpeciesId || isLoading) return;
 
     // Find the species in the data
-    const targetSpecies = species.find(s => s.ogc_fid === scrollToSpeciesId);
+    const targetSpecies = species.find(s => s.id === scrollToSpeciesId);
     if (!targetSpecies) return;
 
     // Determine which category the species belongs to
@@ -480,7 +480,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       case 'family':
         return species.filter(s => s.family === selectedFilter.value);
       case 'species':
-        return species.filter(s => s.ogc_fid.toString() === selectedFilter.value);
+        return species.filter(s => s.id.toString() === selectedFilter.value);
       default:
         return species;
     }
@@ -492,7 +492,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     const unknown: Species[] = [];
     
     filteredSpecies.forEach(sp => {
-      if (discoveredSpecies[sp.ogc_fid]) {
+      if (discoveredSpecies[sp.id]) {
         known.push(sp);
       } else {
         unknown.push(sp);
@@ -502,8 +502,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     // Debug logging
     if (process.env.NODE_ENV === 'development') {
       console.log('Discovered species IDs:', Object.keys(discoveredSpecies));
-      console.log('Known species:', known.map(s => ({ id: s.ogc_fid, name: s.common_name })));
-      console.log('Unknown species:', unknown.map(s => ({ id: s.ogc_fid, name: s.common_name })));
+      console.log('Known species:', known.map(s => ({ id: s.id, name: s.common_name })));
+      console.log('Unknown species:', unknown.map(s => ({ id: s.id, name: s.common_name })));
     }
     
     return { knownSpecies: known, unknownSpecies: unknown };
@@ -740,13 +740,13 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {knownSpecies
                           .sort((a, b) => {
-                            const aTime = discoveredSpecies[a.ogc_fid]?.discoveredAt || '';
-                            const bTime = discoveredSpecies[b.ogc_fid]?.discoveredAt || '';
+                            const aTime = discoveredSpecies[a.id]?.discoveredAt || '';
+                            const bTime = discoveredSpecies[b.id]?.discoveredAt || '';
                             return bTime.localeCompare(aTime);
                           })
                           .slice(0, 8)
                           .map((sp, i) => (
-                            <SpeciesTCGCardMini key={sp.ogc_fid} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, knownSpecies.indexOf(sp))} />
+                            <SpeciesTCGCardMini key={sp.id} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, knownSpecies.indexOf(sp))} />
                           ))}
                       </div>
                     </div>
@@ -758,7 +758,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                       <h2 className="text-lg font-semibold text-white mb-3">Collection</h2>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {knownSpecies.map((sp, i) => (
-                          <SpeciesTCGCardMini key={sp.ogc_fid} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, i)} />
+                          <SpeciesTCGCardMini key={sp.id} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, i)} />
                         ))}
                       </div>
                     </div>
@@ -783,7 +783,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                   {unknownSpecies.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                       {unknownSpecies.map((sp, i) => (
-                        <SpeciesTCGCardMini key={sp.ogc_fid} species={sp} isDiscovered={false} onClick={() => openHeroView(unknownSpecies, i)} />
+                        <SpeciesTCGCardMini key={sp.id} species={sp} isDiscovered={false} onClick={() => openHeroView(unknownSpecies, i)} />
                       ))}
                     </div>
                   ) : (
@@ -868,8 +868,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                       <SpeciesCard
                         species={filteredSpecies[0]}
                         category={filteredSpecies[0].taxon_order || 'Unknown'}
-                        isDiscovered={!!discoveredSpecies[filteredSpecies[0].ogc_fid]}
-                        discoveredAt={discoveredSpecies[filteredSpecies[0].ogc_fid]?.discoveredAt}
+                        isDiscovered={!!discoveredSpecies[filteredSpecies[0].id]}
+                        discoveredAt={discoveredSpecies[filteredSpecies[0].id]?.discoveredAt}
                         onNavigateToTop={() => {
                           if (gridRef.current) {
                             const scrollContainer = gridRef.current.querySelector('[data-radix-scroll-area-viewport]');

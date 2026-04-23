@@ -2,8 +2,8 @@
  * GET /api/species/deduction?mysteryId=3&albumIds=1,2,5,6
  *
  * Returns deduction profiles and clues for the comparative deduction camp.
- * - mysteryId: the hidden species ogc_fid
- * - albumIds: comma-separated ogc_fids of player's discovered album cards
+ * - mysteryId: the hidden species id
+ * - albumIds: comma-separated species ids of player's discovered album cards
  */
 
 import { NextRequest, NextResponse } from 'next/server';

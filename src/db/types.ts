@@ -3,7 +3,6 @@ import {
   habitatColormap,
   highScores,
   icaa,
-  icaaView,
   oneearthBioregion,
   playerClueUnlocks,
   playerGameSessions,
@@ -25,7 +24,6 @@ export type HabitatColormap = InferSelectModel<typeof habitatColormap>;
 
 // Spatial tables (introspected)
 export type ICAA = InferSelectModel<typeof icaa>;
-export type ICAAView = typeof icaaView.$inferSelect;
 export type OneEarthBioregion = InferSelectModel<typeof oneearthBioregion>;
 
 // Curated game species
