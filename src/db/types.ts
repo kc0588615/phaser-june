@@ -2,7 +2,7 @@ import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import {
   habitatColormap,
   highScores,
-  icaa,
+  iucn,
   oneearthBioregion,
   playerClueUnlocks,
   playerGameSessions,
@@ -23,7 +23,7 @@ export type HighScore = InferSelectModel<typeof highScores>;
 export type HabitatColormap = InferSelectModel<typeof habitatColormap>;
 
 // Spatial tables (introspected)
-export type ICAA = InferSelectModel<typeof icaa>;
+export type IUCN = InferSelectModel<typeof iucn>;
 export type OneEarthBioregion = InferSelectModel<typeof oneearthBioregion>;
 
 // Curated game species

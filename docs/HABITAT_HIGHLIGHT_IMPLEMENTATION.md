@@ -56,7 +56,8 @@ Options:
 **TODO 5: Performance Optimization**
 ```
 Task: Add spatial index if not exists
-SQL: CREATE INDEX IF NOT EXISTS ix_taxon_ranges_wkb_geometry ON taxon_ranges USING GIST (wkb_geometry);
+SQL: CREATE INDEX IF NOT EXISTS ix_iucn_wkb_geometry ON iucn USING GIST (wkb_geometry);
+-- Note: taxon_ranges was removed; raw range geometry now lives in the iucn table
 Benefit: Faster nearest-neighbor queries
 ```
 

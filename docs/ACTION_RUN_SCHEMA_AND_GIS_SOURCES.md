@@ -32,7 +32,7 @@ These are practical, globally available options to represent the signal keys abo
 - Existing in your stack:
   - IUCN Habitat raster COG (already queried via TiTiler): dominant habitat proportions.
   - One Earth bioregions (already in DB): realm/biome/bioregion context.
-  - ICAA species polygons (already in DB): species presence and discovery validation.
+  - IUCN species polygons (already in DB as `iucn` table): species presence and discovery validation.
 
 - Add next for strong emergent variation:
   - JRC Global Surface Water (water seasonality/occurrence): `water_ratio`, `wetland_ratio`
@@ -223,7 +223,7 @@ You can keep `enabled = false` for layers not wired yet and still preserve schem
 Returns:
 
 - intersecting protected/conserved area parcels (`protected_planet_parcels`)
-- intersecting threatened species from `icaa_view`
+- intersecting threatened species from `species` (via `iucn` geometry join)
 - habitat composition in a 100x100m square (TiTiler stats)
 - derived signals and generated roguelike node suggestions
 

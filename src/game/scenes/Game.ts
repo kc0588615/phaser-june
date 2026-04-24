@@ -2357,7 +2357,7 @@ export class Game extends Phaser.Scene {
                 try {
                     const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
                     if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
-                        discovered.push({ id: speciesId, discoveredAt: new Date().toISOString() });
+                        discovered.push({ id: speciesId, idSource: 'species.id', discoveredAt: new Date().toISOString() });
                         localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
                         window.dispatchEvent(new Event('species-discovered'));
                     }

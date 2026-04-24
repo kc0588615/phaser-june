@@ -171,7 +171,7 @@ export async function getSpeciesByRealm(realm: string): Promise<Species[]> {
 
 // =============================================================================
 // POSTGIS SPATIAL QUERIES
-// Join species table with icaa geometry via iucn_id = species_id
+// Join species table with iucn geometry via species.iucn_id = iucn.id_no
 // =============================================================================
 
 interface SpatialSpeciesRow {
@@ -198,7 +198,7 @@ export async function getSpeciesInRadius(
   const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT DISTINCT ON (s.id) s.*, i.wkb_geometry
     FROM species s
-    JOIN icaa i ON i.species_id = s.iucn_id::numeric
+    JOIN iucn i ON i.id_no = s.iucn_id::numeric
     WHERE i.wkb_geometry IS NOT NULL
       AND ST_DWithin(
         i.wkb_geometry::geography,
@@ -217,7 +217,7 @@ export async function getSpeciesAtPoint(lon: number, lat: number) {
   const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT DISTINCT ON (s.id) s.*, i.wkb_geometry
     FROM species s
-    JOIN icaa i ON i.species_id = s.iucn_id::numeric
+    JOIN iucn i ON i.id_no = s.iucn_id::numeric
     WHERE i.wkb_geometry IS NOT NULL
       AND ST_Contains(
         i.wkb_geometry,
@@ -235,7 +235,7 @@ export async function getClosestHabitat(lon: number, lat: number) {
   const results = await db.execute<SpatialSpeciesRow>(sql`
     SELECT DISTINCT ON (s.id) s.*, i.wkb_geometry
     FROM species s
-    JOIN icaa i ON i.species_id = s.iucn_id::numeric
+    JOIN iucn i ON i.id_no = s.iucn_id::numeric
     WHERE i.wkb_geometry IS NOT NULL
     ORDER BY s.id, i.wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
     LIMIT 1

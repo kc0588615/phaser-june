@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
           ) as distance_meters
         FROM species s
-        JOIN icaa i ON i.species_id = s.iucn_id::numeric
+        JOIN iucn i ON i.id_no = s.iucn_id::numeric
         WHERE i.wkb_geometry IS NOT NULL
         ORDER BY s.id, i.wkb_geometry::geography <-> ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography
       ) deduped

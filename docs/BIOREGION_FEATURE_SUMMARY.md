@@ -1,26 +1,27 @@
 # Bioregion Feature Implementation Summary
 
+> **HISTORICAL — architecture superseded (2026-04-22)**
+> `taxon_bioregions`, `icaa_view`, and the normalized taxa tables have been removed.
+> Bioregion fields (`bioregion`, `realm`, `subrealm`, `biome`) are now stored directly on
+> `species` table. See `docs/BIOREGION_IMPLEMENTATION.md` for current SQL and approach.
+
 ## Overview
 Added automatic ecoregion classification for species based on spatial analysis of habitat polygons against the `oneearth_bioregion` table. Each species now displays its primary bioregion, realm, sub-realm, and biome.
 
-## What Was Done
+## What Was Done (Historical)
 
 ### 1. Database Schema Changes
-- **Normalized bioregion storage** via `taxon_bioregions` + `oneearth_bioregion`, exposed through `icaa_view`.
-- `bioregion`, `realm`, `subrealm`, `biome` are now read from the compatibility view rather than raw `icaa` columns.
-
-- **Created `Bioregion` interface** (src/types/database.ts:8-15):
-  - Represents the oneearth_bioregion table structure
-- Includes ogc_fid, bioregion, realm, subrealm, biome, wkb_geometry
+- ~~**Normalized bioregion storage** via `taxon_bioregions` + `oneearth_bioregion`, exposed through `icaa_view`.~~ (removed)
+- `bioregion`, `realm`, `subrealm`, `biome` are now stored directly on `species` table.
 
 - **Database migration executed**:
-  - Added normalized tables (`taxon_bioregions`) and compatibility view (`icaa_view`)
-  - Populated records from legacy `icaa` data via backfill
+  - ~~Added normalized tables (`taxon_bioregions`) and compatibility view (`icaa_view`)~~ (removed)
+  - Fields now computed via spatial join and written to `species` directly
   - Maintains SRID transformation (4326 → 900914) for spatial joins
 
 ### 2. Service Layer Updates
-- Species reads now use `icaa_view` (see `src/lib/speciesQueries.ts` and `/api/species/bioregions`).
-- Bioregion/realm/biome are returned from the view without additional RPC calls.
+- Species reads now use `species` table directly (see `src/lib/speciesQueries.ts` and `/api/species/bioregions`).
+- Bioregion/realm/biome are returned from `species` fields without additional RPC calls.
 
 ### 3. UI Component Updates
 - **SpeciesCard.tsx enhancements** (src/components/SpeciesCard.tsx):

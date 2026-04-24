@@ -30,7 +30,7 @@ export interface PlayerGameSession {
 export interface PlayerSpeciesDiscovery {
   id: string;
   player_id: string; // Required FK to profiles
-  species_id: number; // Required FK to icaa
+  species_id: number; // Required FK to species
   session_id?: string; // Optional FK to player_game_sessions
   discovered_at: string;
   time_to_discover_seconds?: number;
@@ -43,7 +43,7 @@ export interface PlayerSpeciesDiscovery {
 export interface PlayerClueUnlock {
   id: string;
   player_id: string; // Required FK to profiles
-  species_id: number; // Required FK to icaa
+  species_id: number; // Required FK to species
   discovery_id?: string; // Optional FK to player_species_discoveries (linked after guess)
   clue_category: string;
   clue_field: string;

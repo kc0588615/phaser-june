@@ -59,7 +59,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 - [x] Fixed geometry SRID issues (900914 → no constraint)
 - [x] Fixed geometry Z-dimension issues
 - [x] Imported to VPS:
-    - [x] 22 species (icaa table)
+    - [x] 22 species (iucn table, formerly icaa)
     - [x] 185 bioregions (oneearth_bioregion)
     - [x] 3 profiles
     - [x] 82 habitat colormap entries

@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
         sp.conservation_code,
         ST_Area(ST_Intersection(i.wkb_geometry, square.geom)::geography) AS intersect_area_m2
       FROM species sp
-      JOIN icaa i ON i.species_id = sp.iucn_id::numeric
+      JOIN iucn i ON i.id_no = sp.iucn_id::numeric
       CROSS JOIN square
       WHERE i.wkb_geometry IS NOT NULL
         AND ST_Intersects(i.wkb_geometry, square.geom)

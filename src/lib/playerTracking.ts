@@ -473,6 +473,7 @@ function updateLocalStorageDiscovery(speciesId: number): void {
     if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
       discovered.push({
         id: speciesId,
+        idSource: 'species.id',
         discoveredAt: new Date().toISOString(),
       });
       localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));

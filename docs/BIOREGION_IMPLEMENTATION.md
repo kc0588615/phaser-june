@@ -1,19 +1,27 @@
 # Bioregion Implementation for Species Habitat Classification
 
-This document describes the implementation of automatic bioregion classification for species based on their habitat polygons.
+> **Architecture updated 2026-04-22**: `taxon_bioregions`, `taxon_ranges`, and `icaa_view`
+> have been removed. Bioregion fields (`bioregion`, `realm`, `subrealm`, `biome`) are now
+> stored directly on the `species` table. Geometry lives in the `iucn` table (raw IUCN
+> shapefile import). The SQL functions below have been updated to reflect current schema.
+
+This document describes automatic bioregion classification for species based on their habitat polygons.
 
 ## Overview
 
-Each species habitat polygon is spatially analyzed against the `oneearth_bioregion` table to determine which ecoregion has the most overlapping area with the species' habitat. This provides additional ecological context for each species.
+Each species' geometry is spatially analyzed against `oneearth_bioregion` to find the largest
+overlapping ecoregion. The result is stored on `species.bioregion/realm/subrealm/biome`.
+
+## Current Schema
+
+- `species.bioregion/realm/subrealm/biome` — curated fields, updated by the SQL below
+- `iucn` — raw geometry source; join via `species.iucn_id = iucn.id_no`
+- `oneearth_bioregion` — ecoregion polygons (SRID: 900914 Spherical Mercator)
+- `iucn.wkb_geometry` — species range polygons (SRID: 4326 WGS84)
 
 ## Setup Instructions
 
-Bioregion fields are stored in normalized tables (`taxon_bioregions` + `oneearth_bioregion`) and exposed via `icaa_view` and `/api/species/bioregions`. Use the SQL below to (re)compute those fields when refreshing the dataset or to validate geometry-based classification.
-
-1. Open your Postgres admin tool (psql, pgAdmin, etc.)
-2. Run the SQL functions below
-
-**IMPORTANT**: Without populated `taxon_bioregions` records (and matching `oneearth_bioregion` rows), the ecoregion section will not appear in the species cards.
+Run the SQL queries below to (re)populate bioregion fields on the `species` table after refreshing the IUCN dataset or when adding new species.
 
 ## Database Schema
 
@@ -27,104 +35,97 @@ Contains polygons representing different ecoregions with the following relevant 
 - `wkb_geometry`: Polygon geometry (SRID: 900914 - Spherical Mercator)
 
 ### Geometry Source
-- `taxon_ranges.wkb_geometry` stores species habitat polygons (SRID: 4326 - WGS84)
-- `icaa_view.wkb_geometry` exposes the latest range geometry for legacy read paths
+- `iucn.wkb_geometry` — raw IUCN range polygons (SRID: 4326 WGS84)
+- Join: `species.iucn_id = iucn.id_no`
 
-## SQL Functions
+## SQL: Populate bioregion fields on species
 
-### 1. get_species_bioregion(species_id INT)
-Returns bioregion data for a single species:
+### Batch update all species (largest total overlap per bioregion wins)
+
+For species with multiple iucn range rows (subspecies, seasonal ranges), overlap area must be
+summed per bioregion before picking the winner. The inner GROUP BY aggregates per
+`(species.id, bioregion)` first; the outer `DISTINCT ON` then picks the bioregion with the
+largest total overlap per species.
 
 ```sql
-CREATE OR REPLACE FUNCTION get_species_bioregion(species_id INT)
-RETURNS TABLE (
-  bioregion TEXT,
-  realm TEXT,
-  subrealm TEXT,
-  biome TEXT,
-  overlap_area FLOAT
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    b.bioregion::TEXT,
-    b.realm::TEXT,
-    b.subrealm::TEXT,
-    b.biome::TEXT,
-    ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) / 1000000 as overlap_area
-  FROM icaa_view s
-  JOIN oneearth_bioregion b ON ST_Intersects(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)
-  WHERE s.ogc_fid = species_id
-  ORDER BY ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) DESC
-  LIMIT 1;
-END;
-$$ LANGUAGE plpgsql;
+UPDATE species sp SET
+  bioregion = sub.bioregion,
+  realm     = sub.realm,
+  subrealm  = sub.subrealm,
+  biome     = sub.biome
+FROM (
+  SELECT DISTINCT ON (agg.species_id)
+    agg.species_id,
+    agg.bioregion,
+    agg.realm,
+    agg.subrealm,
+    agg.biome
+  FROM (
+    SELECT
+      s.id AS species_id,
+      b.bioregion::TEXT,
+      b.realm::TEXT,
+      b.subrealm::TEXT,
+      b.biome::TEXT,
+      SUM(ST_Area(ST_Intersection(ST_Transform(i.wkb_geometry, 900914), b.wkb_geometry))) AS total_overlap
+    FROM species s
+    JOIN iucn i ON i.id_no = s.iucn_id::numeric
+    JOIN oneearth_bioregion b ON ST_Intersects(ST_Transform(i.wkb_geometry, 900914), b.wkb_geometry)
+    WHERE i.wkb_geometry IS NOT NULL
+    GROUP BY s.id, b.bioregion, b.realm, b.subrealm, b.biome
+  ) agg
+  ORDER BY agg.species_id, agg.total_overlap DESC
+) sub
+WHERE sub.species_id = sp.id;
 ```
 
-### 2. get_species_bioregions(species_ids INT[])
-Batch function for multiple species (more performant):
+### Single species (by species.id)
 
 ```sql
-CREATE OR REPLACE FUNCTION get_species_bioregions(species_ids INT[])
-RETURNS TABLE (
-  species_id INT,
-  bioregion TEXT,
-  realm TEXT,
-  subrealm TEXT,
-  biome TEXT
-) AS $$
-BEGIN
-  RETURN QUERY
-  WITH species_bioregion AS (
-    SELECT DISTINCT ON (s.ogc_fid)
-      s.ogc_fid as sp_id,
-      b.bioregion::TEXT as bio_1,
-      b.realm::TEXT as r,
-      b.subrealm::TEXT as sr,
-      b.biome::TEXT as bi,
-      ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) as overlap_area
-    FROM icaa_view s
-    JOIN oneearth_bioregion b ON ST_Intersects(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)
-    WHERE s.ogc_fid = ANY(species_ids)
-    ORDER BY s.ogc_fid, ST_Area(ST_Intersection(ST_Transform(s.wkb_geometry, 900914), b.wkb_geometry)::geography) DESC
-  )
-  SELECT 
-    sp_id as species_id,
-    bio_1 as bioregion,
-    r as realm,
-    sr as subrealm,
-    bi as biome
-  FROM species_bioregion;
-END;
-$$ LANGUAGE plpgsql;
+SELECT
+  b.bioregion::TEXT,
+  b.realm::TEXT,
+  b.subrealm::TEXT,
+  b.biome::TEXT,
+  SUM(ST_Area(ST_Intersection(ST_Transform(i.wkb_geometry, 900914), b.wkb_geometry))) / 1e6 AS total_overlap_km2
+FROM species s
+JOIN iucn i ON i.id_no = s.iucn_id::numeric
+JOIN oneearth_bioregion b ON ST_Intersects(ST_Transform(i.wkb_geometry, 900914), b.wkb_geometry)
+WHERE s.id = $species_id
+GROUP BY b.bioregion, b.realm, b.subrealm, b.biome
+ORDER BY total_overlap_km2 DESC
+LIMIT 1;
 ```
 
 ## Key Implementation Details
 
-1. **Coordinate System Transformation**: The species polygons (SRID 4326) are transformed to match the bioregion polygons (SRID 900914) using `ST_Transform`.
+1. **Source geometry**: `iucn.wkb_geometry` (SRID 4326) joined to `species` via `iucn.id_no = species.iucn_id`. Multiple range rows per species are handled by the join naturally — all polygons are checked.
 
-2. **Spatial Intersection**: `ST_Intersects` finds all bioregions that overlap with a species habitat.
+2. **Coordinate System Transformation**: `iucn` polygons (SRID 4326) are transformed to match `oneearth_bioregion` (SRID 900914) using `ST_Transform`.
 
-3. **Area Calculation**: `ST_Area(ST_Intersection(...))` calculates the overlapping area in square meters, converted to km².
+3. **Spatial Intersection**: `ST_Intersects` finds all bioregions overlapping the species range.
 
-4. **Selection Logic**: The bioregion with the largest overlapping area is selected using `DISTINCT ON` with `ORDER BY overlap_area DESC`.
+4. **Area Calculation**: `ST_Area(ST_Intersection(...))` in native CRS units (900914 is metric).
 
-5. **Performance**: The batch function processes multiple species in a single query for better performance.
+5. **Selection Logic**: Inner `GROUP BY (s.id, bioregion, ...)` sums `ST_Area` across all iucn rows for that species+bioregion pair; outer `DISTINCT ON (species_id) ORDER BY total_overlap DESC` picks the bioregion with the largest total area. This correctly handles species with multiple range polygons spanning multiple bioregions.
+
+6. **Storage**: Results written to `species.bioregion/realm/subrealm/biome` — no separate join table needed.
 
 ## Frontend Integration
 
 ### API Integration
-`/api/species/bioregions` reads bioregion data from `icaa_view`, which already joins `taxon_bioregions` to `oneearth_bioregion`.
+`/api/species/bioregions` reads `bioregion`, `realm`, `subrealm`, `biome` from the `species`
+table directly (populated by the SQL above).
 
 ### Species Card Component
-Displays bioregion information in a new "Ecoregion" section showing:
+Displays bioregion information in the "Ecoregion" section:
 - Bioregion name
 - Realm
-- Sub-realm  
+- Sub-realm
 - Biome
 
 ## Example Result
-For Green Sea Turtle (ogc_fid: 4):
+For Green Sea Turtle (species.id: 4):
 - **Bioregion**: Micronesia Moist Tropical Forests
 - **Realm**: Oceania
 - **Sub-realm**: Oceanic Islands

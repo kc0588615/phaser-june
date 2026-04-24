@@ -33,7 +33,7 @@ export function useAuthBridge() {
             fetch('/api/discoveries/migrate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ discoveries }),
+              body: JSON.stringify({ userId: playerId, discoveries }),
             }).catch(console.error);
           }
         }

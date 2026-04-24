@@ -1,8 +1,18 @@
 # Database User Guide
 
+> **OUTDATED — architecture superseded (2026-04-22)**
+> This guide describes the old `icaa_view` / taxa-table normalization approach, which has been
+> removed. The current architecture uses:
+> - `iucn` — raw IUCN range shapefile table (source-owned field names: id_no, sci_name, etc.)
+> - `species` — curated game/app table (stable FK target for all game tables)
+> - All game FKs point to `species.id`; spatial joins use `species.iucn_id = iucn.id_no`
+>
+> See `docs/SPECIES_TABLE_SIMPLIFICATION_PLAN.md` for the current architecture and
+> `docs/SHAPEFILE_BEST_PRACTICES.mdx` for the ETL/import guide.
+
 ## Overview
 
-This guide provides comprehensive documentation for the database architecture used in the Species Discovery Game, focusing on the `icaa_view` compatibility view, the normalized biodiversity schema, clue system dependencies, and guidelines for making database changes.
+This guide provides historical documentation for the database architecture used in the Species Discovery Game. It focuses on the (now-removed) `icaa_view` compatibility view and the normalized biodiversity schema. Kept for historical reference; do not follow for new development.
 
 ## Current Database Architecture
 

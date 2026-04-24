@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
     const MAX_RADIUS = 500000; // 500km
     const radius = Math.min(Math.max(radiusParam || 10000, 1), MAX_RADIUS);
 
-    // PostGIS spatial query: join species + icaa geometry, return all species columns
+    // PostGIS spatial query: join species + iucn geometry, return all species columns
     const species = await db.execute<SpatialSpeciesRow>(sql`
       SELECT DISTINCT ON (s.id)
         s.*,
         ST_AsGeoJSON(i.wkb_geometry)::text as wkb_geometry
       FROM species s
-      JOIN icaa i ON i.species_id = s.iucn_id::numeric
+      JOIN iucn i ON i.id_no = s.iucn_id::numeric
       WHERE i.wkb_geometry IS NOT NULL
         AND ST_DWithin(
           i.wkb_geometry::geography,

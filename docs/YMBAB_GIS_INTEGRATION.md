@@ -30,7 +30,7 @@ The database was reorganized from Brazil-only `public.*` tables into per-organiz
 
 ### Key constraint
 
-`oneearthBioregion` stays in `species.ts` (not moved to `gis.ts`) due to FK dependency in `taxa.ts:251` and type inference in `types.ts:7,27`. All runtime queries use schema-qualified `oneearth.oneearth_bioregion` via raw SQL.
+`oneearthBioregion` stays in `species.ts`. (`taxa.ts` was deleted in the species table simplification; `types.ts` FK reference was removed at the same time.) All runtime queries use `oneearth_bioregion` via raw SQL.
 
 ---
 

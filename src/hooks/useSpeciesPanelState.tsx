@@ -97,7 +97,7 @@ export function useSpeciesPanelState(toastsEnabled: boolean) {
       try {
         const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
         if (!discovered.find((s: any) => s.id === guessResult.speciesId)) {
-          discovered.push({ id: guessResult.speciesId, name: guessResult.actualName, discoveredAt: new Date().toISOString() });
+          discovered.push({ id: guessResult.speciesId, idSource: 'species.id', name: guessResult.actualName, discoveredAt: new Date().toISOString() });
           localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
           window.dispatchEvent(new CustomEvent('species-discovered', { detail: { id: guessResult.speciesId, name: guessResult.actualName } }));
         }

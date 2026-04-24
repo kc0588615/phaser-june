@@ -11,9 +11,12 @@ This guide explains how Drizzle ORM is integrated into the Species Discovery Gam
 ## Schema Locations
 
 - App tables: `src/db/schema/player.ts`, `src/db/schema/game.ts`
-- Spatial tables + compatibility view: `src/db/schema/species.ts` (`icaa`, `oneearth_bioregion`, `icaa_view`)
-- Normalized biodiversity tables: `src/db/schema/taxa.ts`
+- Spatial tables: `src/db/schema/species.ts` (`iucn`, `speciesTable`, `oneearthBioregion`)
 - Types: `src/db/types.ts`
+
+> `icaa_view`, `taxa.ts`, and `ensureIcaaViewReady` have been removed. The raw range table
+> is now `iucn` (raw IUCN field names). The curated game table is `species`. See
+> `docs/SPECIES_TABLE_SIMPLIFICATION_PLAN.md` for current architecture.
 
 ## Conventions
 
@@ -31,31 +34,31 @@ See `docs/DATABASE_USER_GUIDE.md` for full details and examples.
 ## Client Usage
 
 ```typescript
-import { db, icaaView, ensureIcaaViewReady } from '@/db';
+import { db } from '@/db';
+import { speciesTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-
-await ensureIcaaViewReady();
 
 const species = await db
   .select()
-  .from(icaaView)
-  .where(eq(icaaView.family, 'FELIDAE'));
+  .from(speciesTable)
+  .where(eq(speciesTable.family, 'FELIDAE'));
 ```
 
 ## PostGIS Queries
 
+Spatial queries join `species` (curated) with `iucn` (raw geometry) via `iucn.id_no = species.iucn_id`:
+
 ```typescript
 import { sql } from 'drizzle-orm';
-import { db, ensureIcaaViewReady } from '@/db';
-
-await ensureIcaaViewReady();
+import { db } from '@/db';
 
 const results = await db.execute(sql`
-  SELECT ogc_fid, common_name
-  FROM icaa_view
-  WHERE wkb_geometry IS NOT NULL
+  SELECT DISTINCT ON (s.id) s.*, ST_AsGeoJSON(i.wkb_geometry)::text as wkb_geometry
+  FROM species s
+  JOIN iucn i ON i.id_no = s.iucn_id::numeric
+  WHERE i.wkb_geometry IS NOT NULL
     AND ST_DWithin(
-      wkb_geometry::geography,
+      i.wkb_geometry::geography,
       ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
       ${radiusMeters}
     )

@@ -35,7 +35,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 - [ ] **GIS features nearby**: populate `run_memories.gis_features_nearby` JSONB during run completion
   - Query hydro_rivers, protected_planet_parcels, oneearth_bioregion within radius of run coords
 - [ ] **Richer card back layout**: show GIS stamps as badge chips, mini-map thumbnail, route stats
-- [ ] **Facts slot unlocking**: wire `taxon_key_facts` into card front fact slots; unlock via gameplay events
+- [ ] **Facts slot unlocking**: wire `species.key_fact_1/2/3` (and `species_facts` rows) into card front fact slots; unlock via gameplay events (`taxon_key_facts` removed)
 - [ ] **Clue category tracking**: populate `species_cards.clue_categories_unlocked` from clue reveals during runs
 
 ### Phase 3 — Collection Depth & Progression
@@ -62,9 +62,9 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 - [ ] **Populate empty tables**: hydro_lakes (0 rows), marine_eez (0 rows) — need data imports
 - [ ] **Enable disabled GIS layers**: protected_planet, icca_registry, marine_eez in `eco_gis_layers`
 - [ ] **eco_node_gis_samples**: populate during node generation — sample nearby GIS features per node
-- [ ] **taxon_ranges spatial queries**: use species range polygons to validate/enhance discoveries
-- [ ] **Threat/conservation overlays**: surface `taxon_threats` and `taxon_conservation_assessments` data on card back
-- [ ] **Habitat tag matching**: cross-ref `taxon_habitat_tags` with node biome for relevance scoring
+- [ ] **iucn spatial queries**: use `iucn` range polygons (replacing removed `taxon_ranges`) to validate/enhance discoveries — join via `species.iucn_id = iucn.id_no`
+- [ ] **Threat/conservation overlays**: surface `species.threats` and conservation fields on card back (`taxon_threats`/`taxon_conservation_assessments` were removed)
+- [ ] **Habitat tag matching**: cross-ref `species.habitat_tags` with node biome for relevance scoring (`taxon_habitat_tags` was removed)
 
 ### Misc / Debt
 
@@ -86,7 +86,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 | `protected_planet_parcels` | 1,177 | MULTIPOLYGON | 4326 | WDPA protected areas | GIS stamp: "in [protected area]", conservation badge |
 | `icca_registry_point` | 264 | POINT | 4326 | Indigenous/community conservation areas | GIS stamp: ICCA proximity |
 | `oneearth_bioregion` | 185 | MULTIPOLYGON | 4326 | One Earth bioregion polygons | Bioregion name on card back, expedition region tracking |
-| `taxon_ranges` | 22 | MULTIPOLYGON | 4326 | Species range polygons | Validate discovery location is within range |
+| `iucn` | 22+ | MULTIPOLYGON | 4326 | Raw IUCN range polygons | Validate discovery location is within range (join via `species.iucn_id = iucn.id_no`) |
 | `eco_node_gis_samples` | 0 | — | — | GIS features sampled per node | Node-level spatial context — **needs pipeline** |
 | `habitat_colormap` | 82 | — | — | IUCN habitat type → color mapping | Card frame tinting by habitat |
 
@@ -101,7 +101,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 | `icca_registry` | No | icca_registry_point | 264 rows ready, needs layer enable |
 | `marine_eez` | No | marine_eez | Empty — needs data + enable |
 | `hydrolakes` | No | hydro_lakes | Empty — needs data + enable |
-| `taxon_range` | No | taxon_ranges | 22 rows, needs enable |
+| `taxon_range` | No | iucn | 22+ rows (`taxon_ranges` removed; source is now `iucn` table), needs enable |
 
 ---
 
@@ -109,16 +109,19 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 
 | Table | Rows | Description | Album Use |
 |---|---|---|---|
-| `species` | 5,922 | Core species catalog (ogc_fid, name, taxonomy, IUCN status, habitat, biome) | Card front: name, taxonomy, conservation code, habitat |
-| `conservation_statuses` | 11 | IUCN status codes + labels | Card frame color mapping |
-| `taxon_key_facts` | 66 | Curated facts per species | Card front fact slots (unlockable) |
-| `taxon_habitat_tags` | 84 | Habitat type tags per species | Card habitat badge, GIS cross-ref |
-| `taxon_threats` | 60 | Threat categories per species | Card back threat info |
-| `taxon_conservation_assessments` | 0 | Detailed assessments | Card back conservation detail — **needs data** |
-| `taxon_behaviors` | 44 | Behavioral traits | Card flavor text / fun facts |
-| `taxon_diet_items` | 97 | Diet composition | Card flavor text |
-| `taxon_life_descriptions` | 44 | Life history descriptions | Card flavor text |
-| `taxon_profiles` | 22 | Species profile summaries | Card back extended bio |
+| `species` | 22 | Curated game species: stable PK, taxonomy, IUCN status, habitat flags, flat fact/behavior/clue columns | Card front: name, taxonomy, conservation, habitat |
+| `species_facts` | 0 | Extensible fact rows per species (category, fact_text, sort_order) | Future: card fact slots |
+| `species_deduction_profiles` | 22 | Tag arrays (habitat, morphology, diet, behavior, etc.) per species | Deduction/clue game mechanic |
+| `species_deduction_clues` | — | Per-species clue definitions (label, category, reveal order) | Clue unlock flow |
+| `iucn` | 22+ | Raw IUCN range polygons (source-owned field names) | Discovery location validation (join via `species.iucn_id = iucn.id_no`) |
+| ~~`taxon_key_facts`~~ | — | **Removed** — facts now on `species.key_fact_1/2/3` + `species_facts` | — |
+| ~~`taxon_habitat_tags`~~ | — | **Removed** — habitat tags now on `species.habitat_tags TEXT[]` | — |
+| ~~`taxon_threats`~~ | — | **Removed** — threats now on `species.threats` | — |
+| ~~`taxon_behaviors`~~ | — | **Removed** — behaviors now on `species.behavior_1/2` | — |
+| ~~`taxon_diet_items`~~ | — | **Removed** — diet now on `species.diet_prey/diet_flora` | — |
+| ~~`taxon_life_descriptions`~~ | — | **Removed** — life history now on `species.life_description_1/2` | — |
+| ~~`taxon_profiles`~~ | — | **Removed** — profile data consolidated onto `species` | — |
+| ~~`taxon_conservation_assessments`~~ | — | **Removed** — conservation fields on `species.conservation_code/text` | — |
 
 ---
 
@@ -155,7 +158,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 
 4. **Clue reveal → fact unlock**: EventBus `clue-revealed` events should trigger `/api/species/cards/[id]/unlock` with `unlockType: 'fact'` and the clue content.
 
-5. **taxon_key_facts → card slots**: Query `taxon_key_facts` for a species, show as locked/unlocked slots on card front based on `species_cards.facts_unlocked`.
+5. **Key facts → card slots**: Read `species.key_fact_1/2/3` (and any `species_facts` rows) for a species; show as locked/unlocked slots on card front based on `species_cards.facts_unlocked`. (`taxon_key_facts` removed)
 
 6. **Spatial queries at run start**: Use `ST_DWithin(geom, ST_MakePoint(lon,lat)::geography, radius)` against hydro_rivers, protected_planet_parcels, oneearth_bioregion to gather GIS context.
 

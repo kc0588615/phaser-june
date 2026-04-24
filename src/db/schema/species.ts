@@ -21,45 +21,42 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-export const icaa = pgTable(
-  'icaa',
+// Raw IUCN range shapefile import — source-owned field names, do not app-shape
+export const iucn = pgTable(
+  'iucn',
   {
     ogcFid: serial('ogc_fid').primaryKey().notNull(),
-    speciesId: numeric('species_id', { precision: 65, scale: 30 }),
-    commonName: text('common_name'),
-    scientificName: text('scientific_name'),
-    taxonomicComment: text('taxonomic_comment'),
-    iucnUrl: text('iucn_url'),
+    idNo: numeric('id_no', { precision: 65, scale: 30 }),        // IUCN species id_no; joins to species.iucn_id
+    sciName: text('sci_name'),
+    taxComm: text('tax_comm'),
     kingdom: text(),
     phylum: text(),
     class: text(),
-    taxonOrder: text('taxon_order'),
+    order: text('order_'),
     family: text(),
     genus: text(),
     category: text(),
     marine: boolean(),
-    terrestrial: boolean(),
+    terrestria: boolean(),
     freshwater: boolean(),
-    aquatic: boolean(),
     island: boolean(),
     origin: numeric({ precision: 65, scale: 30 }),
     presence: numeric({ precision: 65, scale: 30 }),
     seasonal: numeric({ precision: 65, scale: 30 }),
     compiler: text(),
-    yearCompiled: numeric('year_compiled', { precision: 65, scale: 30 }),
+    yrcompiled: numeric({ precision: 65, scale: 30 }),
     citation: text(),
     source: text(),
     subspecies: text(),
     subpop: text(),
     legend: text(),
-    generalised: numeric({ precision: 65, scale: 30 }),
-    shapeLength: numeric('shape_length', { precision: 65, scale: 30 }),
-    shapeLengthAlt: numeric('shape_length_alt', { precision: 65, scale: 30 }),
+    generalisd: numeric({ precision: 65, scale: 30 }),
+    shapeLeng: numeric('shape_leng', { precision: 65, scale: 30 }),
     shapeArea: numeric('shape_area', { precision: 65, scale: 30 }),
     wkbGeometry: geometry('wkb_geometry', { type: 'geometry', srid: 4326 }),
   },
   (table) => [
-    index('ix_icaa_wkb_geometry').using(
+    index('ix_iucn_wkb_geometry').using(
       'gist',
       table.wkbGeometry.asc().nullsLast().op('gist_geometry_ops_2d')
     ),
@@ -67,7 +64,8 @@ export const icaa = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// Curated game species (stable PK, decoupled from icaa import)
+// Curated game species (stable PK, decoupled from iucn raw import)
+// joins to iucn via: species.iucn_id = iucn.id_no
 // ---------------------------------------------------------------------------
 
 export const speciesTable = pgTable('species', {

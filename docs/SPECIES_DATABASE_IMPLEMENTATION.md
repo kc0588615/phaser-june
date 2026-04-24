@@ -23,7 +23,7 @@ This document describes the implementation of the species database feature, whic
 **Purpose**: Displays a grid of all species from the database
 
 **Key Features**:
-- Fetches data via Drizzle from `icaa_view` (compatibility view over normalized tables)
+- Fetches data via Drizzle from `speciesTable` (`icaa_view` and normalized tables have been removed)
 - Groups species by taxonomic categories (Turtles and Frogs)
 - Displays biodiversity statistics in development mode
 - Responsive grid layout with accordion UI
@@ -34,57 +34,15 @@ This document describes the implementation of the species database feature, whic
 **Data Fetching**:
 ```typescript
 // Using Drizzle (src/lib/speciesQueries.ts)
+// icaaView and ensureIcaaViewReady have been removed; query speciesTable directly.
 import { asc } from 'drizzle-orm';
-import { db, icaaView, ensureIcaaViewReady } from '@/db';
-
-await ensureIcaaViewReady();
+import { db } from '@/db';
+import { speciesTable } from '@/db/schema';
 
 const species = await db
-  .select({
-    ogc_fid: icaaView.ogcFid,
-    scientific_name: icaaView.scientificName,
-    common_name: icaaView.commonName,
-    iucn_url: icaaView.iucnUrl,
-    kingdom: icaaView.kingdom,
-    phylum: icaaView.phylum,
-    class: icaaView.class,
-    taxon_order: icaaView.taxonOrder,
-    family: icaaView.family,
-    genus: icaaView.genus,
-    category: icaaView.category,
-    conservation_code: icaaView.conservationCode,
-    conservation_text: icaaView.conservationText,
-    marine: icaaView.marine,           // boolean
-    terrestrial: icaaView.terrestrial, // boolean
-    freshwater: icaaView.freshwater,   // boolean
-    habitat_tags: icaaView.habitatTags,
-    habitat_description: icaaView.habitatDescription,
-    geographic_description: icaaView.geographicDescription,
-    color_primary: icaaView.colorPrimary,
-    color_secondary: icaaView.colorSecondary,
-    pattern: icaaView.pattern,
-    size_min_cm: icaaView.sizeMinCm,
-    size_max_cm: icaaView.sizeMaxCm,
-    weight_kg: icaaView.weightKg,
-    shape_description: icaaView.shapeDescription,
-    diet_type: icaaView.dietType,
-    diet_prey: icaaView.dietPrey,
-    diet_flora: icaaView.dietFlora,
-    behavior_1: icaaView.behavior1,
-    behavior_2: icaaView.behavior2,
-    lifespan: icaaView.lifespan,
-    maturity: icaaView.maturity,
-    reproduction_type: icaaView.reproductionType,
-    clutch_size: icaaView.clutchSize,
-    life_description_1: icaaView.lifeDescription1,
-    life_description_2: icaaView.lifeDescription2,
-    threats: icaaView.threats,
-    key_fact_1: icaaView.keyFact1,
-    key_fact_2: icaaView.keyFact2,
-    key_fact_3: icaaView.keyFact3,
-  })
-  .from(icaaView)
-  .orderBy(asc(icaaView.commonName));
+  .select()
+  .from(speciesTable)
+  .orderBy(asc(speciesTable.commonName));
 ```
 
 ### 2. SpeciesCard Component (`src/components/SpeciesCard.tsx`)
@@ -225,7 +183,7 @@ filteredSpecies.forEach(sp => {
 
 ## Database Schema
 
-The implementation uses the `icaa_view` compatibility view (backed by normalized tables) with 40+ fields covering:
+The implementation uses the `species` table directly (`icaa_view` and normalized tables have been removed) with 40+ fields covering:
 - Taxonomic classification
 - Conservation status
 - Habitat preferences
