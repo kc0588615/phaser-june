@@ -34,60 +34,62 @@ export async function POST(request: NextRequest) {
     // Resolve player from auth (optional — anonymous runs allowed)
     const playerId = await getPlayerIdFromClerk();
 
-    // Insert session
-    const [session] = await db
-      .insert(ecoRunSessions)
-      .values({
-        playerId: playerId ?? undefined,
-        selectedLng: lon,
-        selectedLat: lat,
-        locationKey,
-        nodeCountPlanned: nodes.length,
-        nodeIndexCurrent: 1,
-        runSeed: runSeed ?? null,
-        realm: realm ?? null,
-        biome: biome ?? null,
-        bioregion: bioregion ?? null,
-        runStatus: 'active',
-        metadata: { activeAffinities: activeAffinities ?? [] },
-      })
-      .returning({ id: ecoRunSessions.id });
+    const { runId, insertedNodes } = await db.transaction(async (tx) => {
+      const [session] = await tx
+        .insert(ecoRunSessions)
+        .values({
+          playerId: playerId ?? undefined,
+          selectedLng: lon,
+          selectedLat: lat,
+          locationKey,
+          nodeCountPlanned: nodes.length,
+          nodeIndexCurrent: 1,
+          runSeed: runSeed ?? null,
+          realm: realm ?? null,
+          biome: biome ?? null,
+          bioregion: bioregion ?? null,
+          runStatus: 'active',
+          metadata: { activeAffinities: activeAffinities ?? [] },
+        })
+        .returning({ id: ecoRunSessions.id });
 
-    // Insert all nodes
-    const nodeRows = nodes.map((node, i) => {
-      const boardContext = buildNodeBoardContext({
-        width: GRID_COLS,
-        height: GRID_ROWS,
-        obstacles: node.obstacles,
-        nodeIndex: i,
+      const nodeRows = nodes.map((node, i) => {
+        const boardContext = buildNodeBoardContext({
+          width: GRID_COLS,
+          height: GRID_ROWS,
+          obstacles: node.obstacles,
+          nodeIndex: i,
+        });
+
+        return {
+          runId: session.id,
+          nodeOrder: i + 1,
+          nodeType: node.node_type,
+          nodeStatus: i === 0 ? 'active' : 'locked',
+          hazardProfile: {
+            obstacles: node.obstacles,
+            events: node.events,
+            requiredGems: node.requiredGems ?? [],
+            counterGem: node.counterGem ?? null,
+            obstacleFamily: node.obstacleFamily ?? null,
+          },
+          toolProfile: { activeAffinities: activeAffinities ?? [] },
+          boardContext: { rationale: node.rationale, difficulty: node.difficulty, encounterConfig: node.encounterConfig ?? null, ...boardContext },
+          objectiveType: node.counterGem ? 'counter_gem_match' : 'match_count',
+          objectiveTarget: node.objectiveTarget ?? 0,
+        };
       });
 
-      return {
-      runId: session.id,
-      nodeOrder: i + 1,
-      nodeType: node.node_type,
-      nodeStatus: i === 0 ? 'active' : 'locked',
-      hazardProfile: {
-        obstacles: node.obstacles,
-        events: node.events,
-        requiredGems: node.requiredGems ?? [],
-        counterGem: node.counterGem ?? null,
-        obstacleFamily: node.obstacleFamily ?? null,
-      },
-      toolProfile: { activeAffinities: activeAffinities ?? [] },
-      boardContext: { rationale: node.rationale, difficulty: node.difficulty, encounterConfig: node.encounterConfig ?? null, ...boardContext },
-      objectiveType: node.counterGem ? 'counter_gem_match' : 'any',
-      objectiveTarget: node.objectiveTarget ?? 0,
-    };
+      const insertedNodes = await tx
+        .insert(ecoRunNodes)
+        .values(nodeRows)
+        .returning({ id: ecoRunNodes.id, nodeOrder: ecoRunNodes.nodeOrder });
+
+      return { runId: session.id, insertedNodes };
     });
 
-    const insertedNodes = await db
-      .insert(ecoRunNodes)
-      .values(nodeRows)
-      .returning({ id: ecoRunNodes.id, nodeOrder: ecoRunNodes.nodeOrder });
-
     return NextResponse.json({
-      runId: session.id,
+      runId,
       nodeIds: insertedNodes.sort((a, b) => a.nodeOrder - b.nodeOrder).map((n) => n.id),
     });
   } catch (error) {

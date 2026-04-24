@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS eco_run_nodes (
       'urban_fringe',
       'elevation_ridge',
       'storm_window',
+      'crisis',
       'analysis',
       'custom'
     )
