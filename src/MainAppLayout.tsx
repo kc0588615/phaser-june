@@ -20,6 +20,7 @@ import { GemWallet } from './components/GemWallet';
 import { SouvenirPouch } from './components/SouvenirPouch';
 import { ConsumableTray } from './components/ConsumableTray';
 import { DeductionCamp } from './components/DeductionCamp';
+import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ProfileContent } from './components/ProfileContent';
 import { SpookMeter } from './components/SpookMeter';
 import { BankedScore } from './components/BankedScore';
@@ -75,15 +76,15 @@ function MainAppLayoutInner() {
     const useSplitLayout = inRun;
 
     const handleTabChange = useCallback((tab: BaseTab) => {
-        if (tab === 'expedition' && !inExpedition) {
-            setBaseTab('explore');
-            setViewMode('map');
-            return;
-        }
         setBaseTab(tab);
         if (tab === 'explore') setViewMode('map');
         else if (tab === 'field-guide') setViewMode('species');
-    }, [inExpedition]);
+    }, []);
+
+    const handleStartExpeditionFromLauncher = useCallback(() => {
+        setBaseTab('explore');
+        setViewMode('map');
+    }, []);
 
     const currentNode = inRun && runState.expedition
         ? runState.expedition.nodes[runState.currentNodeIndex]
@@ -296,6 +297,13 @@ function MainAppLayoutInner() {
                         </div>
                     </>
                 )}
+            </div>
+
+            {/* Expedition tab */}
+            <div className="absolute inset-0 w-full h-full z-briefing bg-ds-bg overflow-y-auto" style={{
+                display: (baseTab === 'expedition' && !inExpedition) ? 'block' : 'none',
+            }}>
+                <ExpeditionLauncher onStart={handleStartExpeditionFromLauncher} />
             </div>
 
             {/* Bottom Tab Bar */}

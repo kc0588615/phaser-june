@@ -12,6 +12,7 @@ import {
 } from 'cesium';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
+import { computeExpeditionRoutePolyline } from '@/lib/expeditionRoute';
 
 /** Manages expedition trail polyline + node markers on the Cesium globe. */
 export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
@@ -20,14 +21,6 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
   const trailCompletedIndexRef = useRef<number>(0);
   const spatialLayersRef = useRef<GeoJsonDataSource[]>([]);
   const runPhaseRef: MutableRefObject<string> = useRef('idle');
-
-  const computeTrailPositions = useCallback((lon: number, lat: number, count: number) => {
-    const step = 0.003;
-    return Array.from({ length: count }, (_, i) => ({
-      lon: lon + i * step * 0.7,
-      lat: lat + i * step * 0.7,
-    }));
-  }, []);
 
   const removeTrailEntities = useCallback(() => {
     if (!viewerRef.current?.cesiumElement) return;
@@ -120,7 +113,7 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
     const onExpeditionReady = (data: EventPayloads['expedition-data-ready']) => {
       runPhaseRef.current = 'briefing';
       const nodeCount = data.expedition.nodes.length;
-      const positions = computeTrailPositions(data.lon, data.lat, nodeCount);
+      const positions = computeExpeditionRoutePolyline(data.lon, data.lat, nodeCount);
       trailPositionsRef.current = positions;
       trailCompletedIndexRef.current = 0;
 
@@ -205,7 +198,7 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
       EventBus.off('node-complete', onNodeComplete);
       EventBus.off('game-reset', onGameReset);
     };
-  }, [viewerRef, computeTrailPositions, removeTrailEntities]);
+  }, [viewerRef, removeTrailEntities]);
 
   return { runPhaseRef, spatialLayersRef, loadSpatialLayers };
 }

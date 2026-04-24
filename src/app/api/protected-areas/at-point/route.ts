@@ -9,7 +9,7 @@ import {
   generateRunNodes,
 } from '@/lib/nodeScoring';
 import { buildSquare, buildSeed } from '@/lib/geoUtils';
-import type { FeatureFingerprint } from '@/types/gis';
+import { sampleGisFeaturesAtPoint } from '@/lib/gisFeatureSampling';
 
 interface ProtectedAreaRow {
   site_id: number;
@@ -498,47 +498,12 @@ export async function GET(request: NextRequest) {
       ...nodeSelection.signals,
     };
 
-    // Build feature fingerprints for evidence pipeline
-    const fingerprints: FeatureFingerprint[] = [];
-    for (const pa of [...protectedAreas]) {
-      fingerprints.push({
-        featureClass: 'protected_area', sourceTable: 'wpda.wdpa_polygons',
-        sourceId: pa.site_pid, name: pa.display_name ?? pa.name_eng ?? null,
-        distanceM: 0, overlapRatio: (pa.intersect_area_m2 || 0) / square.areaM2,
-        properties: { iucn_cat: pa.iucn_cat, desig_eng: pa.desig_eng, gov_type: pa.gov_type },
-      });
-    }
-    for (const r of riverRows) {
-      fingerprints.push({
-        featureClass: 'river', sourceTable: 'unesco.world_rivers',
-        sourceId: r.gid, name: r.river_map, distanceM: r.distance_m, overlapRatio: 0,
-        properties: { gid: r.gid, river_map: r.river_map },
-      });
-    }
-    for (const l of lakeRows) {
-      fingerprints.push({
-        featureClass: 'lake', sourceTable: 'wwf.glwd_1',
-        sourceId: l.glwd_id, name: l.lake_name, distanceM: l.distance_m,
-        overlapRatio: (l.intersect_area_m2 || 0) / square.areaM2,
-        properties: { type: l.type, area_skm: l.area_skm },
-      });
-    }
-    for (const w of wetlandRows) {
-      fingerprints.push({
-        featureClass: 'ramsar_site', sourceTable: 'ramsar.wetland',
-        sourceId: w.gid, name: w.ecoregion, distanceM: 0,
-        overlapRatio: (w.intersect_area_m2 || 0) / square.areaM2,
-        properties: { mht_txt: w.mht_txt },
-      });
-    }
-    for (const br of bioregionRows) {
-      fingerprints.push({
-        featureClass: 'bioregion', sourceTable: 'oneearth.oneearth_bioregion',
-        sourceId: br.bioregion ?? 'unknown', name: br.bioregion,
-        distanceM: br.distance_m ?? 0, overlapRatio: (br.intersect_area_m2 || 0) / square.areaM2,
-        properties: { realm: br.realm, biome: br.biome },
-      });
-    }
+    const fingerprints = await sampleGisFeaturesAtPoint({
+      lon,
+      lat,
+      sizeMeters,
+      enabledLayers,
+    });
 
     return NextResponse.json({
       mission_seed: buildSeed(lon, lat),

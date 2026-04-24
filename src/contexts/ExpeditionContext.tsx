@@ -13,6 +13,7 @@ import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
 import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
+import { computeExpeditionRoutePolyline } from '@/lib/expeditionRoute';
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -394,6 +395,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
                 deductionSummary,
                 speciesId: correctSpeciesIdRef.current || undefined,
                 featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [],
+                routePolyline: getCurrentRoutePolyline(expeditionPayloadRef.current),
               }),
             }).catch(err => console.error('Failed to persist deduction summary:', err));
           }, 0);
@@ -516,7 +518,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
         if (runIdRef.current) {
           const rid = runIdRef.current;
-          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [] }) }).catch(err => console.error('Failed to persist deduction:', err));
+          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: getCurrentRoutePolyline(expeditionPayloadRef.current) }) }).catch(err => console.error('Failed to persist deduction:', err));
         }
         return { ...prev, phase: 'complete' as const, comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus }, finalScore };
       }
@@ -568,6 +570,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 }
 
 // --- Helpers ---
+
+function getCurrentRoutePolyline(payload: EventPayloads['expedition-data-ready'] | null) {
+  if (!payload) return [];
+  return computeExpeditionRoutePolyline(payload.lon, payload.lat, payload.expedition.nodes.length);
+}
 
 function buildDeductionCampState(prev: RunState): DeductionCampState {
   const campShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(cat => ({

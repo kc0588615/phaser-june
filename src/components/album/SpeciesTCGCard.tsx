@@ -75,7 +75,7 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
             'shadow-lg', frame.glow,
             '[backface-visibility:hidden]'
           )}
-          style={{ backfaceVisibility: 'hidden' }}
+          style={{ backfaceVisibility: 'hidden', backgroundColor: 'rgb(15 23 42)' }}
         >
           {/* Top band */}
           <div className="flex items-center justify-between mb-3">
@@ -171,7 +171,7 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
             'shadow-lg', frame.glow,
             '[transform:rotateY(180deg)] [backface-visibility:hidden]'
           )}
-          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundColor: 'rgb(15 23 42)' }}
         >
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-semibold text-white">Expedition Memory</h4>

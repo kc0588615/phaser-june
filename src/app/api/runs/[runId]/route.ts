@@ -3,6 +3,8 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db, ecoRunSessions, ecoRunNodes, runMemories, ecoLocationMastery, speciesCards } from '@/db';
 import { createEmptyFeatureMastery, updateFeatureMastery } from '@/lib/featureMastery';
 import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
+import { computeExpeditionRoutePolyline, getRouteBounds, type RoutePoint } from '@/lib/expeditionRoute';
+import { getGisStampClasses, sampleGisFeaturesForRoute } from '@/lib/gisFeatureSampling';
 import type { FeatureFingerprint } from '@/types/gis';
 
 /**
@@ -23,12 +25,13 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints } = body as {
+    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline } = body as {
       resourceWallet?: Record<string, number>;
       finalScore?: number;
       deductionSummary?: Record<string, unknown>;
       speciesId?: number;
       featureFingerprints?: unknown[];
+      routePolyline?: unknown[];
     };
 
     const metadataPatch: Record<string, unknown> = {};
@@ -87,6 +90,22 @@ export async function PATCH(
             };
           });
 
+          const providedRoute = normalizeRoutePolyline(routePolyline);
+          const resolvedRoutePolyline = providedRoute.length > 0
+            ? providedRoute
+            : computeExpeditionRoutePolyline(session.selectedLng, session.selectedLat, nodes.length || session.nodeCountPlanned);
+
+          const providedFingerprints = Array.isArray(featureFingerprints)
+            ? featureFingerprints as FeatureFingerprint[]
+            : [];
+          const resolvedFingerprints = providedFingerprints.length > 0
+            ? providedFingerprints
+            : await sampleGisFeaturesForRoute(
+              resolvedRoutePolyline.length > 0
+                ? resolvedRoutePolyline
+                : [{ lon: session.selectedLng, lat: session.selectedLat }],
+            );
+
           await db
             .insert(runMemories)
             .values({
@@ -96,22 +115,35 @@ export async function PATCH(
               locationKey: session.locationKey,
               startLon: session.selectedLng,
               startLat: session.selectedLat,
+              routePolyline: resolvedRoutePolyline,
+              routeBounds: getRouteBounds(resolvedRoutePolyline),
               nodes: nodesSummary,
-              gisFeaturesNearby: featureFingerprints ?? [],
+              gisFeaturesNearby: resolvedFingerprints,
               deductionSummary: deductionSummary ?? null,
               finalScore,
               realm: session.realm,
               biome: session.biome,
               bioregion: session.bioregion,
             })
-            .onConflictDoNothing();
+            .onConflictDoUpdate({
+              target: runMemories.runId,
+              set: {
+                speciesId: resolvedSpeciesId,
+                routePolyline: resolvedRoutePolyline,
+                routeBounds: getRouteBounds(resolvedRoutePolyline),
+                nodes: nodesSummary,
+                gisFeaturesNearby: resolvedFingerprints,
+                deductionSummary: deductionSummary ?? null,
+                finalScore,
+              },
+            });
 
           // Upsert feature mastery on location mastery row
-          if (featureFingerprints && featureFingerprints.length > 0 && session.playerId && session.locationKey) {
+          if (resolvedFingerprints.length > 0 && session.playerId && session.locationKey) {
             try {
               const pid = session.playerId;
               const lk = session.locationKey;
-              const bundle = buildRunEvidenceBundle(featureFingerprints as FeatureFingerprint[]);
+              const bundle = buildRunEvidenceBundle(resolvedFingerprints);
 
               // Read existing row to merge mastery data
               const [existing] = await db
@@ -150,9 +182,9 @@ export async function PATCH(
           }
 
           // Stamp GIS feature classes onto species card
-          if (resolvedSpeciesId && session.playerId && featureFingerprints && featureFingerprints.length > 0) {
+          if (resolvedSpeciesId && session.playerId && resolvedFingerprints.length > 0) {
             try {
-              const stamps = [...new Set((featureFingerprints as FeatureFingerprint[]).map(f => f.featureClass))];
+              const stamps = getGisStampClasses(resolvedFingerprints);
               await db
                 .update(speciesCards)
                 .set({
@@ -179,4 +211,16 @@ export async function PATCH(
     console.error('[API PATCH /api/runs/[runId]] Error:', error);
     return NextResponse.json({ error: 'Failed to update session' }, { status: 500 });
   }
+}
+
+function normalizeRoutePolyline(routePolyline: unknown[] | undefined): RoutePoint[] {
+  if (!Array.isArray(routePolyline)) return [];
+
+  return routePolyline.flatMap((point) => {
+    if (!point || typeof point !== 'object') return [];
+    const lon = Number((point as { lon?: unknown }).lon);
+    const lat = Number((point as { lat?: unknown }).lat);
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) return [];
+    return [{ lon, lat }];
+  });
 }
