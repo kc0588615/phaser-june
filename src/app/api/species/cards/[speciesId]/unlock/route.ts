@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
-import { db, speciesCards, speciesCardUnlocks } from '@/db';
+import { eq, sql } from 'drizzle-orm';
+import { db, speciesCards, speciesCardUnlocks, speciesTable } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { getSpeciesCardRarityTier } from '@/lib/speciesCardProgression';
+import { refreshSpeciesCardProgress } from '@/lib/speciesCardProgression.server';
 
 /**
  * POST /api/species/cards/[speciesId]/unlock
- * Record an unlock event (discover, fact, stamp, set-complete).
+ * Record an unlock event (discover, fact, stamp, clue, clue_category, set-complete).
  * playerId derived from Clerk session.
  *
  * Body: { runId?, unlockType, payload? }
@@ -34,6 +36,21 @@ export async function POST(
     }
 
     const isEncounter = unlockType === 'discover' || unlockType === 'encounter';
+    const facts = getStringArray(payload?.facts);
+    const stamps = getStringArray(payload?.stamps);
+    const categories = getStringArray(payload?.categories);
+    const [speciesMeta] = await db
+      .select({ conservationCode: speciesTable.conservationCode })
+      .from(speciesTable)
+      .where(eq(speciesTable.id, sid))
+      .limit(1);
+    if (!speciesMeta) {
+      return NextResponse.json({ error: 'Species not found' }, { status: 404 });
+    }
+    const conservationCode = speciesMeta?.conservationCode ?? null;
+    const shouldUnlockFacts = unlockType === 'fact' || unlockType === 'clue';
+    const shouldUnlockStamps = unlockType === 'stamp';
+    const shouldUnlockCategories = unlockType === 'clue_category' || unlockType === 'clue';
 
     // Upsert species_cards row
     await db
@@ -46,6 +63,11 @@ export async function POST(
         lastEncounteredAt: isEncounter ? new Date() : undefined,
         timesEncountered: isEncounter ? 1 : 0,
         bestRunId: runId ?? null,
+        conservationCode,
+        rarityTier: getSpeciesCardRarityTier(conservationCode),
+        factsUnlocked: shouldUnlockFacts && facts.length > 0 ? facts : undefined,
+        gisStamps: shouldUnlockStamps && stamps.length > 0 ? stamps : undefined,
+        clueCategoriesUnlocked: shouldUnlockCategories && categories.length > 0 ? categories : undefined,
       })
       .onConflictDoUpdate({
         target: [speciesCards.playerId, speciesCards.speciesId],
@@ -58,16 +80,24 @@ export async function POST(
             discovered: true,
             firstDiscoveredAt: sql`COALESCE(${speciesCards.firstDiscoveredAt}, now())`,
           } : {}),
-          ...(unlockType === 'fact' && payload?.facts ? {
+          conservationCode,
+          rarityTier: getSpeciesCardRarityTier(conservationCode),
+          ...(shouldUnlockFacts && facts.length > 0 ? {
             factsUnlocked: sql`(
               SELECT jsonb_agg(DISTINCT val)
-              FROM jsonb_array_elements(${speciesCards.factsUnlocked} || ${JSON.stringify(payload.facts)}::jsonb) AS val
+              FROM jsonb_array_elements(${speciesCards.factsUnlocked} || ${JSON.stringify(facts)}::jsonb) AS val
             )`,
           } : {}),
-          ...(unlockType === 'stamp' && payload?.stamps ? {
+          ...(shouldUnlockStamps && stamps.length > 0 ? {
             gisStamps: sql`(
               SELECT jsonb_agg(DISTINCT val)
-              FROM jsonb_array_elements(${speciesCards.gisStamps} || ${JSON.stringify(payload.stamps)}::jsonb) AS val
+              FROM jsonb_array_elements(${speciesCards.gisStamps} || ${JSON.stringify(stamps)}::jsonb) AS val
+            )`,
+          } : {}),
+          ...(shouldUnlockCategories && categories.length > 0 ? {
+            clueCategoriesUnlocked: sql`(
+              SELECT jsonb_agg(DISTINCT val)
+              FROM jsonb_array_elements(${speciesCards.clueCategoriesUnlocked} || ${JSON.stringify(categories)}::jsonb) AS val
             )`,
           } : {}),
           updatedAt: new Date(),
@@ -83,9 +113,17 @@ export async function POST(
       payload: payload ?? {},
     });
 
+    await refreshSpeciesCardProgress(playerId, sid);
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('[API POST /api/species/cards/[speciesId]/unlock] Error:', error);
     return NextResponse.json({ error: 'Failed to record unlock' }, { status: 500 });
   }
+}
+
+function getStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? [...new Set(value.filter((item): item is string => typeof item === 'string' && item.length > 0))]
+    : [];
 }

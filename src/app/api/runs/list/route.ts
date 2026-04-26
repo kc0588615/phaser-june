@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, desc, eq } from 'drizzle-orm';
-import { db, ecoRunSessions, ecoRunNodes } from '@/db';
+import { and, desc, eq, inArray } from 'drizzle-orm';
+import { db, ecoRunSessions, ecoRunNodes, runMemories, speciesTable } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 
 /**
  * GET /api/runs/list?status=completed&limit=20
+ * Use comma-separated statuses to fetch multiple run states.
  * Returns the authenticated player's recent expedition runs with node summaries.
  */
 export async function GET(request: NextRequest) {
@@ -14,13 +15,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const status = request.nextUrl.searchParams.get('status') || 'completed';
+    const statusParam = request.nextUrl.searchParams.get('status') || 'completed';
+    const statuses = statusParam
+      .split(',')
+      .map(status => status.trim())
+      .filter(Boolean);
     const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '20', 10), 50);
 
     const sessions = await db
       .select()
       .from(ecoRunSessions)
-      .where(and(eq(ecoRunSessions.runStatus, status), eq(ecoRunSessions.playerId, playerId)))
+      .where(and(
+        statuses.length > 1
+          ? inArray(ecoRunSessions.runStatus, statuses)
+          : eq(ecoRunSessions.runStatus, statuses[0] ?? 'completed'),
+        eq(ecoRunSessions.playerId, playerId),
+      ))
       .orderBy(desc(ecoRunSessions.startedAt))
       .limit(limit);
 
@@ -40,6 +50,23 @@ export async function GET(request: NextRequest) {
           .orderBy(ecoRunNodes.nodeOrder);
 
         const meta = s.metadata as Record<string, unknown>;
+        const [memory] = await db
+          .select()
+          .from(runMemories)
+          .where(eq(runMemories.runId, s.id))
+          .limit(1);
+        const [memorySpecies] = memory?.speciesId
+          ? await db
+            .select({
+              id: speciesTable.id,
+              commonName: speciesTable.commonName,
+              scientificName: speciesTable.scientificName,
+            })
+            .from(speciesTable)
+            .where(eq(speciesTable.id, memory.speciesId))
+            .limit(1)
+          : [];
+
         return {
           id: s.id,
           status: s.runStatus,
@@ -53,7 +80,15 @@ export async function GET(request: NextRequest) {
           startedAt: s.startedAt,
           endedAt: s.endedAt,
           affinities: meta?.activeAffinities ?? [],
+          resourceWallet: meta?.resourceWallet ?? null,
           deductionSummary: meta?.deductionSummary ?? null,
+          discoveredSpecies: memorySpecies ? {
+            id: memorySpecies.id,
+            name: memorySpecies.commonName || memorySpecies.scientificName,
+          } : null,
+          routePolyline: memory?.routePolyline ?? [],
+          routeBounds: memory?.routeBounds ?? null,
+          gisFeaturesNearby: memory?.gisFeaturesNearby ?? [],
           nodes: nodes.map(n => ({
             nodeOrder: n.nodeOrder,
             nodeType: n.nodeType,

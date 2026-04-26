@@ -6,7 +6,7 @@ import SpeciesCarousel from '@/components/SpeciesCarousel';
 import AlbumHeroSwiper from '@/components/album/AlbumHeroSwiper';
 import { SpeciesSearchInput } from '@/components/SpeciesSearchInput';
 import { SpeciesTree } from '@/components/SpeciesTree';
-import { Loader2, ChevronDown, List, Book, BookOpen, Album, FileQuestion, Map, TreeDeciduous, MapPin, Swords, Clock } from 'lucide-react';
+import { Loader2, ChevronDown, List, Book, BookOpen, Album, FileQuestion, Map, TreeDeciduous, MapPin, Swords, Clock, Search } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
 import { getFamilyDisplayName } from '@/config/familyCommonNames';
 import type { Species } from '@/types/database';
+import type { FeatureClass } from '@/types/gis';
 import type { JumpTarget } from '@/types/speciesBrowser';
 
 // Run type from API
@@ -30,6 +31,11 @@ interface RunSummary {
   startedAt: string;
   endedAt: string | null;
   affinities: string[];
+  resourceWallet: Record<string, number> | null;
+  discoveredSpecies: { id: number; name: string } | null;
+  routePolyline: Array<{ lon: number; lat: number }>;
+  routeBounds: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
+  gisFeaturesNearby: Array<{ featureClass: FeatureClass; name?: string | null }>;
   nodes: Array<{
     nodeOrder: number;
     nodeType: string;
@@ -40,6 +46,24 @@ interface RunSummary {
     obstacleFamily: string | null;
   }>;
 }
+
+interface SpeciesCardSummary {
+  completionPct?: number;
+  rarityTier?: string;
+  cardVariant?: string | null;
+  bestRunScore?: number | null;
+}
+
+type AlbumSortMode = 'recent' | 'completion' | 'rarity' | 'best';
+type CasesGroupMode = 'biome' | 'realm' | 'bioregion';
+
+const RARITY_RANK: Record<string, number> = {
+  legendary: 5,
+  epic: 4,
+  rare: 3,
+  uncommon: 2,
+  common: 1,
+};
 
 // Separate component to handle accordion category with sticky header
 const AccordionCategory = memo(({
@@ -262,6 +286,10 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const [showStickyHeaders, setShowStickyHeaders] = useState(false);
   const [showClassification, setShowClassification] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<Record<number, { name: string; discoveredAt: string }>>({});
+  const [cardProgress, setCardProgress] = useState<Record<number, SpeciesCardSummary>>({});
+  const [albumSort, setAlbumSort] = useState<AlbumSortMode>('recent');
+  const [albumSearch, setAlbumSearch] = useState('');
+  const [casesGroupBy, setCasesGroupBy] = useState<CasesGroupMode>('biome');
 
   // Hero swiper state
   const [heroOpen, setHeroOpen] = useState(false);
@@ -291,14 +319,24 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       const response = await fetch('/api/species/cards');
       if (!response.ok) {
         setDiscoveredSpecies(localMap);
+        setCardProgress({});
         return;
       }
 
       const data = await response.json().catch(() => null);
       const serverMap: Record<number, { name: string; discoveredAt: string }> = {};
+      const progressMap: Record<number, SpeciesCardSummary> = {};
       const cards = Array.isArray(data?.cards) ? data.cards : [];
 
       cards.forEach((card: any) => {
+        if (typeof card?.speciesId === 'number') {
+          progressMap[card.speciesId] = {
+            completionPct: typeof card.completionPct === 'number' ? card.completionPct : undefined,
+            rarityTier: typeof card.rarityTier === 'string' ? card.rarityTier : undefined,
+            cardVariant: typeof card.cardVariant === 'string' ? card.cardVariant : null,
+            bestRunScore: typeof card.bestRunScore === 'number' ? card.bestRunScore : null,
+          };
+        }
         if (card?.discovered && typeof card?.speciesId === 'number') {
           serverMap[card.speciesId] = {
             name: localMap[card.speciesId]?.name || '',
@@ -308,6 +346,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       });
 
       setDiscoveredSpecies({ ...localMap, ...serverMap });
+      setCardProgress(progressMap);
     } catch (error) {
       try {
         const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
@@ -316,6 +355,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
           discoveredMap[d.id] = { name: d.name, discoveredAt: d.discoveredAt };
         });
         setDiscoveredSpecies(discoveredMap);
+        setCardProgress({});
       } catch (fallbackError) {
         console.error('Error loading discovered species:', fallbackError);
       }
@@ -368,14 +408,20 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       void loadDiscoveredSpecies();
     };
 
+    const handleCardProgressUpdated = () => {
+      void loadDiscoveredSpecies();
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('species-discovered', handleSpeciesDiscovered);
+    window.addEventListener('species-card-progress-updated', handleCardProgressUpdated);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('species-discovered', handleSpeciesDiscovered);
+      window.removeEventListener('species-card-progress-updated', handleCardProgressUpdated);
     };
   }, [loadDiscoveredSpecies]);
 
@@ -508,6 +554,72 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     
     return { knownSpecies: known, unknownSpecies: unknown };
   }, [filteredSpecies, discoveredSpecies]);
+
+  const visibleKnownSpecies = useMemo(() => {
+    const query = albumSearch.trim().toLowerCase();
+    if (!query) return knownSpecies;
+
+    return knownSpecies.filter((sp) => {
+      return [
+        sp.common_name,
+        sp.scientific_name,
+        sp.family,
+        sp.taxon_order,
+        sp.biome,
+        sp.conservation_code,
+      ].some((value) => value?.toLowerCase().includes(query));
+    });
+  }, [knownSpecies, albumSearch]);
+
+  const recentKnownSpecies = useMemo(() => {
+    return [...visibleKnownSpecies].sort((a, b) => {
+      const aTime = discoveredSpecies[a.id]?.discoveredAt || '';
+      const bTime = discoveredSpecies[b.id]?.discoveredAt || '';
+      return bTime.localeCompare(aTime);
+    });
+  }, [visibleKnownSpecies, discoveredSpecies]);
+
+  const sortedKnownSpecies = useMemo(() => {
+    return [...visibleKnownSpecies].sort((a, b) => {
+      const cardA = cardProgress[a.id];
+      const cardB = cardProgress[b.id];
+
+      if (albumSort === 'completion') {
+        return (cardB?.completionPct ?? 0) - (cardA?.completionPct ?? 0) || a.id - b.id;
+      }
+
+      if (albumSort === 'rarity') {
+        return (RARITY_RANK[cardB?.rarityTier ?? 'common'] ?? 0) - (RARITY_RANK[cardA?.rarityTier ?? 'common'] ?? 0) || a.id - b.id;
+      }
+
+      if (albumSort === 'best') {
+        return (cardB?.bestRunScore ?? -1) - (cardA?.bestRunScore ?? -1) || a.id - b.id;
+      }
+
+      const aTime = discoveredSpecies[a.id]?.discoveredAt || '';
+      const bTime = discoveredSpecies[b.id]?.discoveredAt || '';
+      return bTime.localeCompare(aTime) || a.id - b.id;
+    });
+  }, [visibleKnownSpecies, cardProgress, discoveredSpecies, albumSort]);
+
+  const groupedUnknownSpecies = useMemo(() => {
+    const groups = new globalThis.Map<string, { label: string; species: Species[] }>();
+
+    for (const sp of unknownSpecies) {
+      const label = getCaseGroupLabel(sp, casesGroupBy);
+      const key = label.toLowerCase();
+      const group = groups.get(key) ?? { label, species: [] };
+      group.species.push(sp);
+      groups.set(key, group);
+    }
+
+    return [...groups.values()]
+      .map(group => ({
+        ...group,
+        species: [...group.species].sort(compareSpeciesName),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [unknownSpecies, casesGroupBy]);
 
   // Count species per order for discovered and unknown
   const { knownCounts, unknownCounts, totalCounts } = useMemo(() => {
@@ -733,20 +845,33 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
             <TabsContent value="album" className="flex-1 overflow-hidden mt-0">
               <ScrollArea className="h-full px-5">
                 <div className="space-y-6 py-4">
-                  {/* Recent discoveries */}
                   {knownSpecies.length > 0 && (
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                      <input
+                        value={albumSearch}
+                        onChange={(event) => setAlbumSearch(event.target.value)}
+                        placeholder="Search collection"
+                        className="w-full rounded-md border border-slate-700 bg-slate-900/70 py-2 pl-9 pr-3 text-sm text-white placeholder:text-slate-500 outline-none transition-colors focus:border-cyan-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* Recent discoveries */}
+                  {recentKnownSpecies.length > 0 && (
                     <div>
                       <h2 className="text-lg font-semibold text-white mb-3">Recent Discoveries</h2>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {knownSpecies
-                          .sort((a, b) => {
-                            const aTime = discoveredSpecies[a.id]?.discoveredAt || '';
-                            const bTime = discoveredSpecies[b.id]?.discoveredAt || '';
-                            return bTime.localeCompare(aTime);
-                          })
+                        {recentKnownSpecies
                           .slice(0, 8)
                           .map((sp, i) => (
-                            <SpeciesTCGCardMini key={sp.id} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, knownSpecies.indexOf(sp))} />
+                            <SpeciesTCGCardMini
+                              key={sp.id}
+                              species={sp}
+                              isDiscovered
+                              card={cardProgress[sp.id]}
+                              onClick={() => openHeroView(recentKnownSpecies, i)}
+                            />
                           ))}
                       </div>
                     </div>
@@ -755,12 +880,48 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                   {/* All discovered by family */}
                   {knownSpecies.length > 0 && (
                     <div>
-                      <h2 className="text-lg font-semibold text-white mb-3">Collection</h2>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {knownSpecies.map((sp, i) => (
-                          <SpeciesTCGCardMini key={sp.id} species={sp} isDiscovered onClick={() => openHeroView(knownSpecies, i)} />
-                        ))}
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <h2 className="text-lg font-semibold text-white">Collection</h2>
+                        <div className="flex rounded-md border border-slate-700 bg-slate-900/60 p-0.5">
+                          {([
+                            ['recent', 'Recent'],
+                            ['completion', 'Complete'],
+                            ['rarity', 'Rarity'],
+                            ['best', 'Best'],
+                          ] as Array<[AlbumSortMode, string]>).map(([mode, label]) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() => setAlbumSort(mode)}
+                              className={cn(
+                                'px-2 py-1 text-[10px] rounded transition-colors',
+                                albumSort === mode
+                                  ? 'bg-slate-700 text-white'
+                                  : 'text-slate-400 hover:text-white'
+                              )}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
+                      {sortedKnownSpecies.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {sortedKnownSpecies.map((sp, i) => (
+                            <SpeciesTCGCardMini
+                              key={sp.id}
+                              species={sp}
+                              isDiscovered
+                              card={cardProgress[sp.id]}
+                              onClick={() => openHeroView(sortedKnownSpecies, i)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10">
+                          <p className="text-slate-400 text-sm">No cards match your search</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -779,11 +940,51 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
             <TabsContent value="cases" className="flex-1 overflow-hidden mt-0">
               <ScrollArea className="h-full px-5">
                 <div className="space-y-6 py-4">
-                  <h2 className="text-lg font-semibold text-white mb-3">Unsolved Cases</h2>
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold text-white">Unsolved Cases</h2>
+                    {unknownSpecies.length > 0 && (
+                      <div className="flex rounded-md border border-slate-700 bg-slate-900/60 p-0.5">
+                        {([
+                          ['biome', 'Biome'],
+                          ['realm', 'Realm'],
+                          ['bioregion', 'Region'],
+                        ] as Array<[CasesGroupMode, string]>).map(([mode, label]) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setCasesGroupBy(mode)}
+                            className={cn(
+                              'px-2 py-1 text-[10px] rounded transition-colors',
+                              casesGroupBy === mode
+                                ? 'bg-slate-700 text-white'
+                                : 'text-slate-400 hover:text-white'
+                            )}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {unknownSpecies.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {unknownSpecies.map((sp, i) => (
-                        <SpeciesTCGCardMini key={sp.id} species={sp} isDiscovered={false} onClick={() => openHeroView(unknownSpecies, i)} />
+                    <div className="space-y-5">
+                      {groupedUnknownSpecies.map((group) => (
+                        <div key={group.label}>
+                          <div className="mb-2 flex items-center justify-between text-xs">
+                            <h3 className="font-semibold text-slate-300">{group.label}</h3>
+                            <span className="text-slate-500">{group.species.length} cases</span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {group.species.map((sp, i) => (
+                              <SpeciesTCGCardMini
+                                key={sp.id}
+                                species={sp}
+                                isDiscovered={false}
+                                onClick={() => openHeroView(group.species, i)}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -946,6 +1147,11 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
 // ---- Run memory card for Runs tab ----
 function RunMemoryCard({ run }: { run: RunSummary }) {
   const completedNodes = run.nodes.filter(n => n.nodeStatus === 'completed').length;
+  const walletEntries = Object.entries(run.resourceWallet ?? {})
+    .filter(([, value]) => typeof value === 'number' && value > 0)
+    .slice(0, 4);
+  const featureClasses = [...new Set(run.gisFeaturesNearby.map(f => f.featureClass).filter(Boolean))].slice(0, 4);
+
   return (
     <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-4">
       <div className="flex items-start justify-between mb-2">
@@ -963,6 +1169,26 @@ function RunMemoryCard({ run }: { run: RunSummary }) {
           </div>
         )}
       </div>
+
+      {(run.routePolyline.length > 1 || run.discoveredSpecies) && (
+        <div className="mb-3 grid grid-cols-[88px_1fr] gap-3">
+          <RunRouteSparkline points={run.routePolyline} />
+          <div className="min-w-0">
+            {run.discoveredSpecies && (
+              <p className="text-[11px] text-green-300 truncate">Found {run.discoveredSpecies.name}</p>
+            )}
+            {featureClasses.length > 0 && (
+              <div className="mt-1 flex gap-1 flex-wrap">
+                {featureClasses.map((featureClass) => (
+                  <span key={featureClass} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-900/80 text-cyan-300 border border-slate-700">
+                    {featureClass.replace(/_/g, ' ')}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Node chips */}
       <div className="flex gap-1 flex-wrap mb-2">
@@ -988,6 +1214,11 @@ function RunMemoryCard({ run }: { run: RunSummary }) {
         {run.affinities.length > 0 && (
           <span className="text-purple-400">{(run.affinities as string[]).join(', ')}</span>
         )}
+        {walletEntries.length > 0 && (
+          <span className="text-cyan-400">
+            {walletEntries.map(([key, value]) => `${key[0].toUpperCase()}${value}`).join(' ')}
+          </span>
+        )}
         <span className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {new Date(run.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
@@ -997,8 +1228,63 @@ function RunMemoryCard({ run }: { run: RunSummary }) {
   );
 }
 
+function RunRouteSparkline({ points }: { points: Array<{ lon: number; lat: number }> }) {
+  if (points.length <= 1) {
+    return <div className="h-14 rounded bg-slate-900/70 border border-slate-700" />;
+  }
+
+  const xs = points.map(point => point.lon);
+  const ys = points.map(point => point.lat);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const width = 88;
+  const height = 56;
+  const pad = 8;
+  const dx = maxX - minX || 1;
+  const dy = maxY - minY || 1;
+  const polyline = points.map((point) => {
+    const x = pad + ((point.lon - minX) / dx) * (width - pad * 2);
+    const y = height - pad - ((point.lat - minY) / dy) * (height - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const start = polyline[0].split(',');
+  const end = polyline[polyline.length - 1].split(',');
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-14 w-[88px] rounded bg-slate-900/70 border border-slate-700">
+      <polyline points={polyline.join(' ')} fill="none" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={start[0]} cy={start[1]} r="2" fill="#facc15" />
+      <circle cx={end[0]} cy={end[1]} r="2" fill="#22c55e" />
+    </svg>
+  );
+}
+
+function getCaseGroupLabel(species: Species, mode: CasesGroupMode): string {
+  if (mode === 'realm') return species.realm || 'Unknown Realm';
+  if (mode === 'bioregion') return species.bioregion || 'Unknown Region';
+  return species.biome || 'Unknown Biome';
+}
+
+function compareSpeciesName(a: Species, b: Species): number {
+  const aName = a.common_name || a.scientific_name || '';
+  const bName = b.common_name || b.scientific_name || '';
+  return aName.localeCompare(bName) || a.id - b.id;
+}
+
 // ---- Mini TCG card for album/cases grid ----
-function SpeciesTCGCardMini({ species, isDiscovered, onClick }: { species: Species; isDiscovered: boolean; onClick?: () => void }) {
+function SpeciesTCGCardMini({
+  species,
+  isDiscovered,
+  card,
+  onClick,
+}: {
+  species: Species;
+  isDiscovered: boolean;
+  card?: SpeciesCardSummary;
+  onClick?: () => void;
+}) {
   const iucnColor: Record<string, string> = {
     CR: 'border-red-500/60 bg-red-500/10',
     EN: 'border-amber-500/60 bg-amber-500/10',
@@ -1007,12 +1293,17 @@ function SpeciesTCGCardMini({ species, isDiscovered, onClick }: { species: Speci
     LC: 'border-slate-600 bg-slate-800/50',
   };
   const frameClass = iucnColor[species.conservation_code || ''] || 'border-slate-600 bg-slate-800/50';
+  const completionPct = typeof card?.completionPct === 'number'
+    ? Math.max(0, Math.min(100, Math.round(card.completionPct)))
+    : null;
+  const variantLabel = card?.cardVariant === 'foil' ? 'Foil' : null;
 
   return (
     <div
       className={cn(
         'rounded-lg border-2 p-3 transition-all hover:scale-[1.02] cursor-pointer',
-        frameClass
+        frameClass,
+        variantLabel && 'ring-1 ring-cyan-300/50'
       )}
       onClick={onClick}
     >
@@ -1022,6 +1313,11 @@ function SpeciesTCGCardMini({ species, isDiscovered, onClick }: { species: Speci
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {species.conservation_code}
           </span>
+          {variantLabel && (
+            <span className="text-[9px] font-semibold uppercase text-cyan-200 bg-cyan-300/15 border border-cyan-300/30 rounded px-1">
+              {variantLabel}
+            </span>
+          )}
           {species.biome && (
             <span className="text-[9px] text-slate-500 truncate max-w-[60%] text-right">
               {species.biome}
@@ -1066,6 +1362,21 @@ function SpeciesTCGCardMini({ species, isDiscovered, onClick }: { species: Speci
         {species.terrestrial && <span className="text-[8px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300">Land</span>}
         {species.freshwater && <span className="text-[8px] px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300">Fresh</span>}
       </div>
+
+      {isDiscovered && completionPct != null && (
+        <div className="mt-2">
+          <div className="flex items-center justify-between text-[9px] text-slate-500 mb-1">
+            <span className="capitalize">{card?.rarityTier ?? 'common'}</span>
+            <span>{completionPct}%</span>
+          </div>
+          <div className="h-1 rounded-full bg-slate-900/80 overflow-hidden">
+            <div className="h-full rounded-full bg-cyan-400" style={{ width: `${completionPct}%` }} />
+          </div>
+          {card?.bestRunScore != null && (
+            <p className="text-[9px] text-amber-300 mt-1 truncate">Best {card.bestRunScore} pts</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

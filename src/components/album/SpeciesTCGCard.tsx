@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { RotateCw, MapPin, Swords, Star } from 'lucide-react';
+import { AFFINITY_TYPES, getAffinityDefinition, type AffinityType } from '@/expedition/affinities';
 import { iucnBadgeClasses, iucnLabel } from '@/lib/iucn';
 import { cn } from '@/lib/utils';
 import type { Species } from '@/types/database';
@@ -27,12 +28,25 @@ const CLASS_EMOJI: Record<string, string> = {
   ACTINOPTERYGII: '🐟', CHONDRICHTHYES: '🦈', INSECTA: '🦋',
 };
 
+const CLUE_CATEGORY_BADGES: Record<string, { icon: string; label: string; color: string }> = {
+  classification: { icon: '🧬', label: 'Class', color: 'text-red-300' },
+  habitat: { icon: '🌳', label: 'Habitat', color: 'text-green-300' },
+  geographic: { icon: '🗺', label: 'Range', color: 'text-blue-300' },
+  morphology: { icon: '🐾', label: 'Form', color: 'text-orange-300' },
+  behavior: { icon: '💨', label: 'Behavior', color: 'text-slate-300' },
+  life_cycle: { icon: '⏳', label: 'Life', color: 'text-violet-300' },
+  conservation: { icon: '🛡', label: 'Status', color: 'text-emerald-300' },
+  key_facts: { icon: '🔮', label: 'Facts', color: 'text-purple-300' },
+};
+
 interface SpeciesTCGCardProps {
   species: Species;
   isDiscovered: boolean;
   discoveredAt?: string;
   runMemory?: {
     nodes?: Array<{ nodeType: string; counterGem: string | null; obstacleFamily: string | null; scoreEarned: number }>;
+    routePolyline?: Array<{ lon: number; lat: number }>;
+    routeBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
     realm?: string;
     biome?: string;
     bioregion?: string;
@@ -40,14 +54,51 @@ interface SpeciesTCGCardProps {
     startedAt?: string;
   } | null;
   gisStamps?: FeatureClass[];
+  factsUnlocked?: string[];
+  clueCategoriesUnlocked?: string[];
+  completionPct?: number;
+  rarityTier?: string;
+  bestRunScore?: number | null;
+  affinityTags?: string[];
+  timesEncountered?: number;
+  expeditionRegionsSeen?: string[];
+  cardVariant?: string | null;
   onFlip?: () => void;
 }
 
-export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, runMemory, gisStamps, onFlip }: SpeciesTCGCardProps) {
+export default function SpeciesTCGCard({
+  species,
+  isDiscovered,
+  discoveredAt,
+  runMemory,
+  gisStamps,
+  factsUnlocked,
+  clueCategoriesUnlocked,
+  completionPct,
+  rarityTier,
+  bestRunScore,
+  affinityTags,
+  timesEncountered,
+  expeditionRegionsSeen,
+  cardVariant,
+  onFlip,
+}: SpeciesTCGCardProps) {
   const [flipped, setFlipped] = useState(false);
   const code = species.conservation_code || '';
   const frame = FRAME_COLORS[code] || FRAME_COLORS.LC!;
   const emoji = CLASS_EMOJI[species.class || ''] || '🐾';
+  const unlockedFacts = new Set(factsUnlocked ?? []);
+  const hasCompletionPct = typeof completionPct === 'number' && Number.isFinite(completionPct);
+  const cardCompletionPct = clampPercent(completionPct);
+  const unlockedAffinityTags = getKnownAffinityTags(affinityTags);
+  const clueCategoryBadges = getClueCategoryBadges(clueCategoriesUnlocked);
+  const regionLabels = getRegionLabels(expeditionRegionsSeen);
+  const variantLabel = getVariantLabel(cardVariant);
+  const keyFacts = [
+    { key: 'key_fact_1', text: species.key_fact_1, tone: 'text-slate-300', icon: 'text-amber-400' },
+    { key: 'key_fact_2', text: species.key_fact_2, tone: 'text-slate-400', icon: 'text-amber-400/60' },
+    { key: 'key_fact_3', text: species.key_fact_3, tone: 'text-slate-400', icon: 'text-amber-400/50' },
+  ].filter((fact): fact is { key: string; text: string; tone: string; icon: string } => Boolean(fact.text));
 
   const handleFlip = () => {
     setFlipped(f => !f);
@@ -73,6 +124,7 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
             'rounded-xl border-2 p-4 bg-gradient-to-b to-slate-900',
             frame.border, frame.bg,
             'shadow-lg', frame.glow,
+            variantLabel && 'ring-1 ring-cyan-300/50',
             '[backface-visibility:hidden]'
           )}
           style={{ backfaceVisibility: 'hidden', backgroundColor: 'rgb(15 23 42)' }}
@@ -83,6 +135,11 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
               {code && (
                 <span className={cn('px-2 py-0.5 rounded text-[10px] font-bold uppercase', iucnBadgeClasses(code))}>
                   {code}
+                </span>
+              )}
+              {variantLabel && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase bg-cyan-300/15 text-cyan-200 border border-cyan-300/30">
+                  {variantLabel}
                 </span>
               )}
               {species.biome && (
@@ -121,18 +178,19 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
             )}
           </div>
 
-          {/* Quick facts (discovered only) */}
+          {/* Quick facts */}
           {isDiscovered && (
             <div className="space-y-1.5 mb-3">
-              {species.key_fact_1 && (
-                <p className="text-[11px] text-slate-300 leading-snug line-clamp-2">
-                  <Star className="w-3 h-3 inline mr-1 text-amber-400" />{species.key_fact_1}
-                </p>
-              )}
-              {species.key_fact_2 && (
-                <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">
-                  <Star className="w-3 h-3 inline mr-1 text-amber-400/60" />{species.key_fact_2}
-                </p>
+              {keyFacts.length > 0 ? keyFacts.map((fact) => (
+                isFactUnlocked(unlockedFacts, fact.key, fact.text) ? (
+                  <p key={fact.key} className={`text-[11px] ${fact.tone} leading-snug line-clamp-2`}>
+                    <Star className={`w-3 h-3 inline mr-1 ${fact.icon}`} />{fact.text}
+                  </p>
+                ) : (
+                  <div key={fact.key} className="h-4 bg-slate-800/60 rounded border border-slate-700/30" />
+                )
+              )) : (
+                <p className="text-[10px] text-slate-600">No facts recorded yet</p>
               )}
             </div>
           )}
@@ -159,7 +217,10 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
               {species.terrestrial && <span className="text-[8px] px-1 py-0.5 rounded bg-green-500/20 text-green-300">Land</span>}
               {species.freshwater && <span className="text-[8px] px-1 py-0.5 rounded bg-teal-500/20 text-teal-300">Fresh</span>}
             </div>
-            <span className="text-[9px] text-slate-600 font-mono">#{species.id}</span>
+            <div className="flex items-center gap-1.5 text-[9px] text-slate-600 font-mono">
+              {isDiscovered && hasCompletionPct && <span>{cardCompletionPct}%</span>}
+              <span>#{species.id}</span>
+            </div>
           </div>
         </div>
 
@@ -169,6 +230,7 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
             'absolute inset-0 rounded-xl border-2 p-4 bg-gradient-to-b to-slate-900',
             frame.border, frame.bg,
             'shadow-lg', frame.glow,
+            variantLabel && 'ring-1 ring-cyan-300/50',
             '[transform:rotateY(180deg)] [backface-visibility:hidden]'
           )}
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundColor: 'rgb(15 23 42)' }}
@@ -188,6 +250,23 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
                   {runMemory.biome && <p className="text-slate-500 text-[10px]">{runMemory.biome}</p>}
                 </div>
               </div>
+
+              {runMemory.routePolyline && runMemory.routePolyline.length > 1 && (
+                <RunRouteMiniMap points={runMemory.routePolyline} />
+              )}
+
+              {regionLabels.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Regions Seen</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {regionLabels.map((region) => (
+                      <span key={region.key} className="text-[9px] text-cyan-300 bg-slate-800/80 px-1.5 py-0.5 rounded">
+                        {region.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Node timeline */}
               {runMemory.nodes && runMemory.nodes.length > 0 && (
@@ -215,6 +294,63 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
                 <div className="flex items-center gap-2">
                   <Swords className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                   <span className="text-sm font-semibold text-amber-300">{runMemory.finalScore} pts</span>
+                </div>
+              )}
+
+              {/* Collection progress */}
+              {(hasCompletionPct || rarityTier || bestRunScore != null || (timesEncountered != null && timesEncountered > 0)) && (
+                <div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+                    <span>Card Progress</span>
+                    <span className="flex items-center gap-1.5">
+                      {variantLabel && <span>{variantLabel}</span>}
+                      {rarityTier && <span className="capitalize">{rarityTier}</span>}
+                    </span>
+                  </div>
+                  {hasCompletionPct && (
+                    <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                      <div className="h-full rounded-full bg-cyan-400" style={{ width: `${cardCompletionPct}%` }} />
+                    </div>
+                  )}
+                  {bestRunScore != null && (
+                    <p className="text-[10px] text-slate-500 mt-1">Best run {bestRunScore} pts</p>
+                  )}
+                  {timesEncountered != null && timesEncountered > 0 && (
+                    <p className="text-[10px] text-slate-500 mt-1">Encounters {timesEncountered}</p>
+                  )}
+                </div>
+              )}
+
+              {unlockedAffinityTags.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Affinity Tags</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {unlockedAffinityTags.map((affinity) => {
+                      const def = getAffinityDefinition(affinity);
+                      return (
+                        <span
+                          key={affinity}
+                          className="text-[9px] bg-slate-800/80 px-1.5 py-0.5 rounded"
+                          style={{ color: def.color }}
+                        >
+                          {def.familyLabel}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {clueCategoryBadges.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Clue Categories</p>
+                  <div className="flex gap-1 flex-wrap">
+                    {clueCategoryBadges.map((badge) => (
+                      <span key={badge.key} className={`text-[9px] ${badge.color} bg-slate-800/80 px-1.5 py-0.5 rounded`}>
+                        {badge.icon} {badge.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -259,6 +395,87 @@ export default function SpeciesTCGCard({ species, isDiscovered, discoveredAt, ru
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function isFactUnlocked(unlockedFacts: Set<string>, factKey: string, factText: string): boolean {
+  return unlockedFacts.has(factKey) || unlockedFacts.has(factText);
+}
+
+function clampPercent(value: number | undefined): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function getKnownAffinityTags(value: string[] | undefined): AffinityType[] {
+  if (!Array.isArray(value)) return [];
+  const known = new Set<string>(AFFINITY_TYPES);
+  return [...new Set(value)].filter((tag): tag is AffinityType => known.has(tag));
+}
+
+function getClueCategoryBadges(value: string[] | undefined): Array<{ key: string; icon: string; label: string; color: string }> {
+  if (!Array.isArray(value)) return [];
+
+  return [...new Set(value)]
+    .flatMap((category) => {
+      const badge = CLUE_CATEGORY_BADGES[category];
+      return badge ? [{ key: category, ...badge }] : [];
+    });
+}
+
+function getRegionLabels(value: string[] | undefined): Array<{ key: string; label: string }> {
+  if (!Array.isArray(value)) return [];
+
+  return [...new Set(value)]
+    .flatMap((region) => {
+      const [kind, ...rest] = region.split(':');
+      const label = rest.join(':').trim();
+      if (!label) return [];
+      const prefix = kind === 'bioregion' ? '' : `${titleCase(kind)}: `;
+      return [{ key: region, label: `${prefix}${label}` }];
+    })
+    .slice(0, 4);
+}
+
+function titleCase(value: string): string {
+  if (!value) return '';
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
+}
+
+function getVariantLabel(value: string | null | undefined): string | null {
+  if (value === 'foil') return 'Foil';
+  return null;
+}
+
+function RunRouteMiniMap({ points }: { points: Array<{ lon: number; lat: number }> }) {
+  const width = 288;
+  const height = 52;
+  const pad = 8;
+  const xs = points.map(point => point.lon);
+  const ys = points.map(point => point.lat);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const dx = maxX - minX || 1;
+  const dy = maxY - minY || 1;
+  const polyline = points.map((point) => {
+    const x = pad + ((point.lon - minX) / dx) * (width - pad * 2);
+    const y = height - pad - ((point.lat - minY) / dy) * (height - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const start = polyline[0].split(',');
+  const end = polyline[polyline.length - 1].split(',');
+
+  return (
+    <div>
+      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Route</p>
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-[52px] w-full rounded bg-slate-900/80 border border-slate-700/50">
+        <polyline points={polyline.join(' ')} fill="none" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={start[0]} cy={start[1]} r="2.5" fill="#facc15" />
+        <circle cx={end[0]} cy={end[1]} r="2.5" fill="#22c55e" />
+      </svg>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { EventBus } from '@/game/EventBus';
 import type { EventPayloads, GameHudUpdatedEvent } from '@/game/EventBus';
 import type { CluePayload } from '@/game/clueConfig';
 import type { SpookTier } from '@/types/expedition';
+import { unlockSpeciesCardFromClue } from '@/lib/speciesCardUnlocks';
 
 export interface BonusPoolState {
   currentPool: number;
@@ -87,6 +88,9 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
         : `cat:${clue.category}`;
       if (clueSetRef.current.has(key)) return;
       clueSetRef.current.add(key);
+      unlockSpeciesCardFromClue(clue).catch((err) => {
+        console.warn('[GameBridgeContext] Failed to persist card clue unlock:', err);
+      });
       setClues(prev => [clue, ...prev]);
       setLatestClue(clue);
     };

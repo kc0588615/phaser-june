@@ -93,7 +93,7 @@ export async function POST(
     if (isLastNode) {
       await db
         .update(ecoRunSessions)
-        .set({ runStatus: 'completed', endedAt: new Date() })
+        .set({ runStatus: 'deduction' })
         .where(eq(ecoRunSessions.id, runId));
     } else {
       // Unlock next node

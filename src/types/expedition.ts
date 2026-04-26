@@ -3,6 +3,7 @@ import type { AffinityType } from '@/expedition/affinities';
 import { createEmptyResourceWallet as createEmptyDomainResourceWallet } from '@/expedition/domain';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
+import type { RoutePoint } from '@/lib/expeditionRoute';
 import type { RunEvidenceBundle } from '@/types/gis';
 
 export type { RunNode };
@@ -28,6 +29,7 @@ export interface ExpeditionData {
   primaryVariant: string;
   modifierNodes: string[];
   signals: Record<string, number>;
+  routePolyline?: RoutePoint[];
   nearestRiverDistM?: number | null;
 }
 

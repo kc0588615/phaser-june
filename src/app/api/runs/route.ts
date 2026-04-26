@@ -4,27 +4,54 @@ import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import type { RunNode } from '@/lib/nodeScoring';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
+import type { FeatureFingerprint } from '@/types/gis';
+import type { RasterHabitatResult } from '@/lib/speciesService';
+import type { AffinityType } from '@/expedition/affinities';
 
 /**
  * POST /api/runs
  * Create a new expedition run session with 6 pre-generated nodes.
  *
- * Body: { lon, lat, locationKey, nodes: RunNode[], activeAffinities?, bioregion?, realm?, biome?, runSeed? }
+ * Body: { lon, lat, locationKey, nodes: RunNode[], activeAffinities?, bioregion?, realm?, biome?, runSeed?, ...resume snapshot }
  * Returns: { runId, nodeIds: string[] }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { lon, lat, locationKey, nodes, activeAffinities, bioregion, realm, biome, runSeed } = body as {
+    const {
+      lon,
+      lat,
+      locationKey,
+      nodes,
+      activeAffinities,
+      bioregion,
+      realm,
+      biome,
+      runSeed,
+      correctSpeciesId,
+      speciesIds,
+      habitats,
+      rasterHabitats,
+      featureFingerprints,
+      routePolyline,
+      expeditionSnapshot,
+    } = body as {
       lon: number;
       lat: number;
       locationKey: string;
       nodes: RunNode[];
-      activeAffinities?: string[];
+      activeAffinities?: AffinityType[];
       bioregion?: string;
       realm?: string;
       biome?: string;
       runSeed?: number;
+      correctSpeciesId?: number;
+      speciesIds?: number[];
+      habitats?: string[];
+      rasterHabitats?: RasterHabitatResult[];
+      featureFingerprints?: FeatureFingerprint[];
+      routePolyline?: Array<{ lon: number; lat: number }>;
+      expeditionSnapshot?: Record<string, unknown>;
     };
 
     if (!Number.isFinite(lon) || !Number.isFinite(lat) || !locationKey || !Array.isArray(nodes) || nodes.length === 0) {
@@ -49,7 +76,16 @@ export async function POST(request: NextRequest) {
           biome: biome ?? null,
           bioregion: bioregion ?? null,
           runStatus: 'active',
-          metadata: { activeAffinities: activeAffinities ?? [] },
+          metadata: {
+            activeAffinities: activeAffinities ?? [],
+            correctSpeciesId: Number.isInteger(correctSpeciesId) ? correctSpeciesId : null,
+            speciesIds: Array.isArray(speciesIds) ? speciesIds.filter(Number.isInteger) : [],
+            habitats: Array.isArray(habitats) ? habitats.filter((value): value is string => typeof value === 'string') : [],
+            rasterHabitats: Array.isArray(rasterHabitats) ? rasterHabitats : [],
+            featureFingerprints: Array.isArray(featureFingerprints) ? featureFingerprints : [],
+            routePolyline: Array.isArray(routePolyline) ? routePolyline : [],
+            expeditionSnapshot: expeditionSnapshot && typeof expeditionSnapshot === 'object' ? expeditionSnapshot : {},
+          },
         })
         .returning({ id: ecoRunSessions.id });
 

@@ -1,6 +1,6 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCards, Keyboard, A11y } from 'swiper/modules';
+import { EffectCards, Keyboard, A11y, Virtual } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import { X } from 'lucide-react';
 import SpeciesTCGCard from '@/components/album/SpeciesTCGCard';
@@ -11,12 +11,27 @@ import 'swiper/css/effect-cards';
 
 type RunMemoryData = {
   nodes?: Array<{ nodeType: string; counterGem: string | null; obstacleFamily: string | null; scoreEarned: number }>;
+  routePolyline?: Array<{ lon: number; lat: number }>;
+  routeBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
   realm?: string;
   biome?: string;
   bioregion?: string;
   finalScore?: number | null;
   startedAt?: string;
   gisFeaturesNearby?: Array<{ featureClass: string }>;
+};
+
+type CardData = {
+  gisStamps?: FeatureClass[];
+  factsUnlocked?: string[];
+  clueCategoriesUnlocked?: string[];
+  completionPct?: number;
+  rarityTier?: string;
+  bestRunScore?: number | null;
+  affinityTags?: string[];
+  timesEncountered?: number;
+  expeditionRegionsSeen?: string[];
+  cardVariant?: string | null;
 };
 
 interface AlbumHeroSwiperProps {
@@ -37,7 +52,7 @@ export default function AlbumHeroSwiper({
   const swiperRef = useRef<SwiperType>();
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [runMemoryCache, setRunMemoryCache] = useState<Record<number, RunMemoryData | null>>({});
-  const [cardStampsCache, setCardStampsCache] = useState<Record<number, FeatureClass[]>>({});
+  const [cardDataCache, setCardDataCache] = useState<Record<number, CardData>>({});
 
   // Fetch run memory + card data for the currently focused species
   const inFlightRef = useRef(new Set<number>());
@@ -56,9 +71,22 @@ export default function AlbumHeroSwiper({
       })
       .then(data => {
         if (!data) return;
-        // Cache card-level GIS stamps (authoritative)
-        if (data.card?.gisStamps && Array.isArray(data.card.gisStamps) && data.card.gisStamps.length > 0) {
-          setCardStampsCache(prev => ({ ...prev, [sid]: data.card.gisStamps as FeatureClass[] }));
+        if (data.card) {
+          setCardDataCache(prev => ({
+            ...prev,
+            [sid]: {
+              gisStamps: Array.isArray(data.card.gisStamps) ? data.card.gisStamps as FeatureClass[] : undefined,
+              factsUnlocked: Array.isArray(data.card.factsUnlocked) ? data.card.factsUnlocked as string[] : undefined,
+              clueCategoriesUnlocked: Array.isArray(data.card.clueCategoriesUnlocked) ? data.card.clueCategoriesUnlocked as string[] : undefined,
+              completionPct: typeof data.card.completionPct === 'number' ? data.card.completionPct : undefined,
+              rarityTier: typeof data.card.rarityTier === 'string' ? data.card.rarityTier : undefined,
+              bestRunScore: typeof data.card.bestRunScore === 'number' ? data.card.bestRunScore : null,
+              affinityTags: Array.isArray(data.card.affinityTags) ? data.card.affinityTags as string[] : undefined,
+              timesEncountered: typeof data.card.timesEncountered === 'number' ? data.card.timesEncountered : undefined,
+              expeditionRegionsSeen: Array.isArray(data.card.expeditionRegionsSeen) ? data.card.expeditionRegionsSeen as string[] : undefined,
+              cardVariant: typeof data.card.cardVariant === 'string' ? data.card.cardVariant : null,
+            },
+          }));
         }
         if (data.memories?.length > 0) {
           const mem = data.memories[data.memories.length - 1];
@@ -96,11 +124,17 @@ export default function AlbumHeroSwiper({
       {/* Card swiper */}
       <div className="w-full max-w-[360px] px-4">
         <Swiper
-          modules={[EffectCards, Keyboard, A11y]}
+          modules={[EffectCards, Keyboard, A11y, Virtual]}
           effect="cards"
           grabCursor
           initialSlide={initialIndex}
           keyboard={{ enabled: true }}
+          virtual={{
+            enabled: true,
+            addSlidesBefore: 3,
+            addSlidesAfter: 3,
+            cache: true,
+          }}
           onSwiper={(swiper) => { swiperRef.current = swiper; }}
           onSlideChange={handleSlideChange}
           cardsEffect={{
@@ -114,20 +148,30 @@ export default function AlbumHeroSwiper({
           }}
           className="!overflow-visible"
         >
-          {speciesList.map((species) => {
+          {speciesList.map((species, index) => {
             const isDiscovered = !!discoveredSpecies[species.id];
             const memory = runMemoryCache[species.id] ?? undefined;
-            const gisStamps = cardStampsCache[species.id]
+            const cardData = cardDataCache[species.id];
+            const gisStamps = cardData?.gisStamps
               ?? memory?.gisFeaturesNearby?.map(f => f.featureClass as FeatureClass).filter(Boolean)
               ?? undefined;
             return (
-              <SwiperSlide key={species.id} className="!overflow-visible">
+              <SwiperSlide key={species.id} virtualIndex={index} className="!overflow-visible">
                 <SpeciesTCGCard
                   species={species}
                   isDiscovered={isDiscovered}
                   discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
                   runMemory={memory}
                   gisStamps={gisStamps}
+                  factsUnlocked={cardData?.factsUnlocked}
+                  clueCategoriesUnlocked={cardData?.clueCategoriesUnlocked}
+                  completionPct={cardData?.completionPct}
+                  rarityTier={cardData?.rarityTier}
+                  bestRunScore={cardData?.bestRunScore}
+                  affinityTags={cardData?.affinityTags}
+                  timesEncountered={cardData?.timesEncountered}
+                  expeditionRegionsSeen={cardData?.expeditionRegionsSeen}
+                  cardVariant={cardData?.cardVariant}
                 />
               </SwiperSlide>
             );

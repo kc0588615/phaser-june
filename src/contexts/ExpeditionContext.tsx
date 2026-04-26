@@ -3,7 +3,7 @@ import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
-import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ResourceWallet, ComparativeDeductionState } from '@/types/expedition';
+import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
 import { createEmptyResourceWallet, createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
 import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
@@ -82,6 +82,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const correctSpeciesIdRef = useRef<number>(0);
   const hiddenSpeciesNameRef = useRef<string>('');
   const activeAffinitiesRef = useRef<AffinityType[]>([]);
+  const plannedRoutePolylineRef = useRef<Array<{ lon: number; lat: number }>>([]);
+  const routePolylineRef = useRef<Array<{ lon: number; lat: number }>>([]);
   const onShowSpeciesListRef = useRef<((speciesId: number) => void) | null>(null);
 
   // Derive boardOpacity from bonusPool (replaces node-bonus-tick listener)
@@ -99,6 +101,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     correctSpeciesIdRef.current = 0;
     hiddenSpeciesNameRef.current = '';
     activeAffinitiesRef.current = [];
+    plannedRoutePolylineRef.current = [];
+    routePolylineRef.current = [];
     setBoardOpacity(1);
     setRunState(INITIAL_RUN_STATE);
   }, []);
@@ -106,6 +110,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const handleExpeditionDataReady = useCallback((data: EventPayloads['expedition-data-ready']) => {
     expeditionPayloadRef.current = data;
     activeAffinitiesRef.current = data.expedition.activeAffinities;
+    plannedRoutePolylineRef.current = getExpeditionRoutePolyline(data);
+    routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
     const evidenceBundle = data.featureFingerprints?.length
       ? buildRunEvidenceBundle(data.featureFingerprints)
       : null;
@@ -126,6 +132,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     setBoardOpacity(1);
     const payload = expeditionPayloadRef.current;
     if (!payload) return;
+    plannedRoutePolylineRef.current = getExpeditionRoutePolyline(payload);
+    routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
 
     const sorted = [...payload.species].sort((a, b) => a.id - b.id);
     const correct = sorted[0];
@@ -145,6 +153,22 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         bioregion: payload.expedition.bioregion?.bioregion ?? undefined,
         realm: payload.expedition.bioregion?.realm ?? undefined,
         biome: payload.expedition.bioregion?.biome ?? undefined,
+        correctSpeciesId: correct?.id,
+        speciesIds: payload.species.map(species => species.id),
+        habitats: payload.habitats,
+        rasterHabitats: payload.rasterHabitats,
+        featureFingerprints: payload.featureFingerprints ?? [],
+        routePolyline: plannedRoutePolylineRef.current,
+        expeditionSnapshot: {
+          protectedAreas: payload.expedition.protectedAreas,
+          actionBias: payload.expedition.actionBias,
+          availableAffinities: payload.expedition.availableAffinities,
+          primaryNodeFamily: payload.expedition.primaryNodeFamily,
+          primaryVariant: payload.expedition.primaryVariant,
+          modifierNodes: payload.expedition.modifierNodes,
+          signals: payload.expedition.signals,
+          nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
+        },
       }),
     })
       .then(r => {
@@ -200,8 +224,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
       if (data.reason === 'escaped') {
         lastResolvedNodeRef.current = prev.currentNodeIndex;
+        routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, prev.currentNodeIndex);
         const campState = buildDeductionCampState(prev);
-        if (runIdRef.current) persistWallet(runIdRef.current, prev.resourceWallet);
+        if (runIdRef.current) persistRunCheckpoint(runIdRef.current, prev, prev.currentNodeIndex, routePolylineRef.current);
         setTimeout(() => toast('Animal escaped! Reviewing gathered evidence...', { duration: 3000 }), 0);
         return { ...prev, phase: 'deduction' as const, deductionCamp: campState };
       }
@@ -209,11 +234,13 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const nodeOrder = prev.currentNodeIndex + 1;
       const nextIndex = prev.currentNodeIndex + 1;
       lastResolvedNodeRef.current = prev.currentNodeIndex;
+      routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, prev.currentNodeIndex);
 
       const nodeScore = (hudRef.current?.score ?? 0) - nodeStartScoreRef.current;
       const nodeMoves = hudRef.current?.movesUsed ?? 0;
       const objProgress = objectiveProgressRef.current;
       if (runIdRef.current) {
+        persistRunCheckpoint(runIdRef.current, prev, nextIndex, routePolylineRef.current);
         fetch(`/api/runs/${runIdRef.current}/nodes/${nodeOrder}/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -231,7 +258,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
       if (nextIndex >= (prev.expedition?.nodes.length ?? 6)) {
         const campState = buildDeductionCampState(prev);
-        if (runIdRef.current) persistWallet(runIdRef.current, prev.resourceWallet);
         setTimeout(() => toast.success('All nodes complete — time to identify!', { duration: 3000 }), 0);
         return { ...prev, phase: 'deduction' as const, currentNodeIndex: nextIndex, deductionCamp: campState };
       }
@@ -395,9 +421,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
                 deductionSummary,
                 speciesId: correctSpeciesIdRef.current || undefined,
                 featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [],
-                routePolyline: getCurrentRoutePolyline(expeditionPayloadRef.current),
+                routePolyline: routePolylineRef.current,
               }),
-            }).catch(err => console.error('Failed to persist deduction summary:', err));
+            })
+              .then((response) => {
+                if (response.ok) {
+                  window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: correctSpeciesIdRef.current } }));
+                }
+              })
+              .catch(err => console.error('Failed to persist deduction summary:', err));
           }, 0);
         }
         return { ...prev, phase: 'complete', deductionCamp: camp, finalScore };
@@ -518,7 +550,13 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
         if (runIdRef.current) {
           const rid = runIdRef.current;
-          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: getCurrentRoutePolyline(expeditionPayloadRef.current) }) }).catch(err => console.error('Failed to persist deduction:', err));
+          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: routePolylineRef.current }) })
+            .then((response) => {
+              if (response.ok) {
+                window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: correctSpeciesIdRef.current } }));
+              }
+            })
+            .catch(err => console.error('Failed to persist deduction:', err));
         }
         return { ...prev, phase: 'complete' as const, comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus }, finalScore };
       }
@@ -571,9 +609,16 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
 // --- Helpers ---
 
-function getCurrentRoutePolyline(payload: EventPayloads['expedition-data-ready'] | null) {
+function getExpeditionRoutePolyline(payload: EventPayloads['expedition-data-ready'] | null) {
   if (!payload) return [];
-  return computeExpeditionRoutePolyline(payload.lon, payload.lat, payload.expedition.nodes.length);
+  return payload.expedition.routePolyline?.length
+    ? payload.expedition.routePolyline
+    : computeExpeditionRoutePolyline(payload.lon, payload.lat, payload.expedition.nodes.length);
+}
+
+function getRoutePolylineThroughNode(route: Array<{ lon: number; lat: number }>, nodeIndex: number) {
+  if (route.length === 0) return [];
+  return route.slice(0, Math.min(route.length, Math.max(0, nodeIndex) + 1));
 }
 
 function buildDeductionCampState(prev: RunState): DeductionCampState {
@@ -593,12 +638,23 @@ function buildDeductionCampState(prev: RunState): DeductionCampState {
   };
 }
 
-function persistWallet(runId: string, wallet: Record<string, number> | ResourceWallet) {
+function persistRunCheckpoint(
+  runId: string,
+  state: RunState,
+  currentNodeIndex: number,
+  routePolyline: Array<{ lon: number; lat: number }>,
+) {
   setTimeout(() => {
     fetch(`/api/runs/${runId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resourceWallet: { ...wallet } }),
-    }).catch(err => console.error('Failed to persist resource wallet:', err));
+      body: JSON.stringify({
+        resourceWallet: { ...state.resourceWallet },
+        clueFragments: { ...state.clueFragments },
+        bankedScore: state.bankedScore,
+        currentNodeIndex,
+        routePolyline,
+      }),
+    }).catch(err => console.error('Failed to persist run checkpoint:', err));
   }, 0);
 }

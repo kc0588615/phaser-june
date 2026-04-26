@@ -26,6 +26,7 @@ import { CesiumInfoBox } from './CesiumInfoBox';
 import { useCesiumFullscreen } from '../hooks/useCesiumFullscreen';
 import { useCesiumTrail } from '../hooks/useCesiumTrail';
 import { getBioregionStyle } from '../lib/bioregionStyles';
+import { computeExpeditionRoutePolyline } from '../lib/expeditionRoute';
 
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif";
@@ -336,6 +337,11 @@ const CesiumMap: React.FC = () => {
 
             if (atPointData?.generated_nodes) {
               const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
+              const routePolyline = computeExpeditionRoutePolyline(
+                cartographicLocation.longitude,
+                cartographicLocation.latitude,
+                atPointData.generated_nodes.length,
+              );
               EventBus.emit('expedition-data-ready', {
                 lon: cartographicLocation.longitude,
                 lat: cartographicLocation.latitude,
@@ -350,6 +356,7 @@ const CesiumMap: React.FC = () => {
                   primaryVariant: atPointData.primary_variant ?? '',
                   modifierNodes: atPointData.modifier_nodes ?? [],
                   signals: atPointData.signals ?? {},
+                  routePolyline,
 
                   nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
                 },
@@ -412,6 +419,11 @@ const CesiumMap: React.FC = () => {
             }
 
             if (atPointData?.generated_nodes) {
+              const routePolyline = computeExpeditionRoutePolyline(
+                cartographicLocation.longitude,
+                cartographicLocation.latitude,
+                atPointData.generated_nodes.length,
+              );
               EventBus.emit('expedition-data-ready', {
                 lon: cartographicLocation.longitude,
                 lat: cartographicLocation.latitude,
@@ -426,6 +438,7 @@ const CesiumMap: React.FC = () => {
                   primaryVariant: atPointData.primary_variant ?? '',
                   modifierNodes: atPointData.modifier_nodes ?? [],
                   signals: atPointData.signals ?? {},
+                  routePolyline,
 
                   nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
                 },

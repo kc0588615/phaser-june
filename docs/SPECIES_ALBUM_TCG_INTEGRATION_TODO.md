@@ -27,34 +27,34 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 
 ### Phase 2 — Card Back & Run Memory Enrichment
 
-- [ ] **GIS stamps on card back**: query spatial tables at run start/node completion, write stamps to `species_cards.gis_stamps` via unlock endpoint
+- [x] **GIS stamps on card back**: query spatial tables at run start/node completion, write stamps to `species_cards.gis_stamps` via unlock endpoint
   - Stamps = bioregion name, nearby rivers, protected areas, IUCN habitat type
   - Use PostGIS `ST_DWithin` / `ST_Intersects` against player's route or node coordinates
 - [ ] **Route polyline**: persist simplified route geometry in `run_memories.route_polyline` (currently NULL)
   - Source: accumulate player positions during run, simplify with `ST_Simplify`
 - [ ] **GIS features nearby**: populate `run_memories.gis_features_nearby` JSONB during run completion
   - Query hydro_rivers, protected_planet_parcels, oneearth_bioregion within radius of run coords
-- [ ] **Richer card back layout**: show GIS stamps as badge chips, mini-map thumbnail, route stats
-- [ ] **Facts slot unlocking**: wire `species.key_fact_1/2/3` (and `species_facts` rows) into card front fact slots; unlock via gameplay events (`taxon_key_facts` removed)
-- [ ] **Clue category tracking**: populate `species_cards.clue_categories_unlocked` from clue reveals during runs
+- [x] **Richer card back layout**: show GIS stamps as badge chips, mini-map thumbnail, route stats
+- [x] **Facts slot unlocking**: wire `species.key_fact_1/2/3` (and `species_facts` rows) into card front fact slots; unlock via gameplay events (`taxon_key_facts` removed)
+- [x] **Clue category tracking**: populate `species_cards.clue_categories_unlocked` from clue reveals during runs
 
 ### Phase 3 — Collection Depth & Progression
 
-- [ ] **Completion percentage calc**: define formula (facts + stamps + clues + encounters → pct), update on each unlock
-- [ ] **Rarity tier assignment**: assign based on IUCN status + encounter frequency (CR=legendary, EN=epic, VU=rare, NT=uncommon, LC=common)
-- [ ] **Card variant system**: holographic/foil variants for full-completion or special achievements
-- [ ] **Affinity tag accumulation**: track which gem affinities a species was discovered with, store in `species_cards.affinity_tags`
-- [ ] **Expedition regions seen**: accumulate distinct bioregion/realm/biome combos per species card
-- [ ] **Best run tracking**: update `best_run_id` / `best_run_score` when a new high score is set
+- [x] **Completion percentage calc**: define formula (facts + stamps + clues + encounters → pct), update on each unlock
+- [x] **Rarity tier assignment**: assign based on IUCN status + encounter frequency (CR=legendary, EN=epic, VU=rare, NT=uncommon, LC=common)
+- [x] **Card variant system**: holographic/foil variants for full-completion or special achievements
+- [x] **Affinity tag accumulation**: track which gem affinities a species was discovered with, store in `species_cards.affinity_tags`
+- [x] **Expedition regions seen**: accumulate distinct bioregion/realm/biome combos per species card
+- [x] **Best run tracking**: update `best_run_id` / `best_run_score` when a new high score is set
 - [ ] **Deduplicate unlock timeline semantics**: decide which events should increment `times_encountered` vs only append to `species_card_unlocks`
 
 ### Phase 4 — Swiper & UX Polish
 
 - [ ] **Swiper premium modules**: evaluate Swiper Element (web component) for better perf on large collections
 - [ ] **Virtual slides**: enable Swiper virtual mode for albums with 100+ cards (prevent DOM bloat)
-- [ ] **Card sort/filter in Album tab**: sort by rarity, conservation status, discovery date, completion %
+- [x] **Card sort/filter in Album tab**: sort by rarity, conservation status, discovery date, completion %
 - [ ] **Cases tab grouping**: group undiscovered by biome/realm/bioregion instead of flat list
-- [ ] **Search within album**: quick-filter by name substring
+- [x] **Search within album**: quick-filter by name substring
 - [ ] **Runs tab enrichment**: show mini-map, species discovered per run, gem wallet summary
 
 ### Phase 5 — Data Pipeline & GIS Expansion
