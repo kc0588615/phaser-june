@@ -35,6 +35,8 @@
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
         "typecheck:watch": "tsc --noEmit --watch",
+        "verify:waypoint-run": "node scripts/verify-waypoint-run-integration.mjs",
+        "verify:waypoints": "node scripts/verify-waypoints.mjs",
         "postinstall": "node scripts/copy-cesium-assets.js || symlink-dir node_modules/cesium/Build/Cesium public/cesium",
         "clean": "rm -rf .next dist public/cesium",
         "db:introspect": "drizzle-kit introspect"

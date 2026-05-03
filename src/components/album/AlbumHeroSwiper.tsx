@@ -6,11 +6,18 @@ import { X } from 'lucide-react';
 import SpeciesTCGCard from '@/components/album/SpeciesTCGCard';
 import type { Species } from '@/types/database';
 import type { FeatureClass } from '@/types/gis';
+import type { ExpeditionWaypointMemory } from '@/types/waypoints';
 import 'swiper/css';
 import 'swiper/css/effect-cards';
 
 type RunMemoryData = {
-  nodes?: Array<{ nodeType: string; counterGem: string | null; obstacleFamily: string | null; scoreEarned: number }>;
+  nodes?: Array<{
+    nodeType: string;
+    counterGem: string | null;
+    obstacleFamily: string | null;
+    scoreEarned: number;
+    waypoint?: ExpeditionWaypointMemory | null;
+  }>;
   routePolyline?: Array<{ lon: number; lat: number }>;
   routeBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
   realm?: string;

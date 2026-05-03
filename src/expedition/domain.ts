@@ -447,6 +447,30 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   custom: 'Special',
 };
 
+export function getRunNodeLabel(node: {
+  node_type?: string;
+  nodeType?: string;
+  waypoint?: { waypointType?: string; fallback?: boolean } | null;
+}): string {
+  const nodeType = node.node_type ?? node.nodeType ?? 'custom';
+
+  if (nodeType === 'custom' && node.waypoint) {
+    switch (node.waypoint.waypointType) {
+      case 'protected_area':
+        return 'Protected';
+      case 'bioregion_edge':
+        return 'Ecotone';
+      case 'basecamp':
+        return node.waypoint.fallback ? 'Basecamp' : 'Urban';
+      case 'lake':
+      case 'wetland':
+        return 'Water';
+    }
+  }
+
+  return NODE_TYPE_LABELS[nodeType] || nodeType.replace(/_/g, ' ');
+}
+
 const NODE_TYPE_BOARD_META: Record<
   string,
   {

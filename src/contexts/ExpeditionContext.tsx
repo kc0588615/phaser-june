@@ -13,7 +13,10 @@ import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
 import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
-import { computeExpeditionRoutePolyline } from '@/lib/expeditionRoute';
+import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
+import type { Species } from '@/types/database';
+import type { FeatureFingerprint } from '@/types/gis';
+import type { RasterHabitatResult } from '@/lib/speciesService';
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -45,6 +48,7 @@ interface ExpeditionContextValue {
   correctSpeciesId: number;
   hiddenSpeciesName: string;
   handleAffinitySelected: (affinityId: AffinityType | null) => void;
+  handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
   handleCrisisToolSpend: () => ConsumableItem | null;
   handleDeductionPurchase: (category: ClueCategoryKey, cost: number) => void;
@@ -82,9 +86,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const correctSpeciesIdRef = useRef<number>(0);
   const hiddenSpeciesNameRef = useRef<string>('');
   const activeAffinitiesRef = useRef<AffinityType[]>([]);
-  const plannedRoutePolylineRef = useRef<Array<{ lon: number; lat: number }>>([]);
-  const routePolylineRef = useRef<Array<{ lon: number; lat: number }>>([]);
+  const plannedRoutePolylineRef = useRef<RoutePoint[]>([]);
+  const routePolylineRef = useRef<RoutePoint[]>([]);
+  const runStateRef = useRef<RunState>(INITIAL_RUN_STATE);
+  const lastObjectiveCheckpointAtRef = useRef(0);
   const onShowSpeciesListRef = useRef<((speciesId: number) => void) | null>(null);
+
+  useEffect(() => {
+    runStateRef.current = runState;
+  }, [runState]);
 
   // Derive boardOpacity from bonusPool (replaces node-bonus-tick listener)
   useEffect(() => {
@@ -103,6 +113,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     activeAffinitiesRef.current = [];
     plannedRoutePolylineRef.current = [];
     routePolylineRef.current = [];
+    lastObjectiveCheckpointAtRef.current = 0;
     setBoardOpacity(1);
     setRunState(INITIAL_RUN_STATE);
   }, []);
@@ -167,6 +178,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           primaryVariant: payload.expedition.primaryVariant,
           modifierNodes: payload.expedition.modifierNodes,
           signals: payload.expedition.signals,
+          waypoints: payload.expedition.waypoints ?? [],
+          waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null,
           nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
         },
       }),
@@ -192,8 +205,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       firstNode?.node_type ?? 'custom', firstNode?.counterGem ?? null,
       payload.expedition.actionBias, activeAffinitiesRef.current
     );
+    const firstLocation = getNodeRouteLocation(payload, 0);
     EventBus.emit('cesium-location-selected', {
-      lon: payload.lon, lat: payload.lat,
+      lon: firstLocation.lon, lat: firstLocation.lat,
       species: payload.species, rasterHabitats: payload.rasterHabitats,
       habitats: payload.habitats, difficulty: firstNode?.difficulty,
       obstacles: firstNode?.obstacles, obstacleFamily: firstNode?.obstacleFamily,
@@ -215,6 +229,95 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
+  const handleRunResume = useCallback(async (runId: string): Promise<boolean> => {
+    try {
+      const runResponse = await fetch(`/api/runs/${runId}`);
+      if (!runResponse.ok) throw new Error(`Run fetch failed (${runResponse.status})`);
+      const data = await runResponse.json() as ResumeRunResponse;
+      const resume = data.resume;
+      if (!resume?.expedition?.nodes?.length) throw new Error('Run has no resumable expedition payload');
+
+      const species = await fetchResumeSpecies(resume.speciesIds, resume.lon, resume.lat);
+      const expedition = {
+        ...resume.expedition,
+        activeAffinities: normalizeAffinities(resume.expedition.activeAffinities),
+        availableAffinities: normalizeAffinities(resume.expedition.availableAffinities),
+      };
+      const payload: EventPayloads['expedition-data-ready'] = {
+        lon: resume.lon,
+        lat: resume.lat,
+        expedition,
+        species,
+        rasterHabitats: resume.rasterHabitats ?? [],
+        habitats: resume.habitats ?? [],
+        featureFingerprints: resume.featureFingerprints ?? [],
+      };
+      const currentNodeIndex = clampNodeIndex(resume.currentNodeIndex, expedition.nodes.length, data.run?.status);
+      const correctSpecies = species.find(s => s.id === resume.correctSpeciesId) ?? [...species].sort((a, b) => a.id - b.id)[0];
+      const evidenceBundle = payload.featureFingerprints?.length
+        ? buildRunEvidenceBundle(payload.featureFingerprints)
+        : null;
+      const resourceWallet = mergeResourceWallet(resume.resourceWallet);
+      const clueFragments = mergeClueFragments(resume.clueFragments);
+      const bankedScore = typeof resume.bankedScore === 'number' ? resume.bankedScore : 0;
+      const routeNodeIndex = data.run?.status === 'deduction' ? currentNodeIndex : Math.max(0, currentNodeIndex - 1);
+
+      expeditionPayloadRef.current = payload;
+      runIdRef.current = runId;
+      nodeIdsRef.current = (data.nodes ?? []).sort((a, b) => a.nodeOrder - b.nodeOrder).map(node => node.id);
+      correctSpeciesIdRef.current = correctSpecies?.id ?? resume.correctSpeciesId ?? 0;
+      hiddenSpeciesNameRef.current = correctSpecies?.common_name || correctSpecies?.scientific_name || 'Unknown Species';
+      activeAffinitiesRef.current = expedition.activeAffinities;
+      plannedRoutePolylineRef.current = getExpeditionRoutePolyline(payload);
+      routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, routeNodeIndex);
+      nodeStartScoreRef.current = 0;
+      lastResolvedNodeRef.current = Math.max(-1, currentNodeIndex - 1);
+      const resumedObjectiveProgress = data.nodes?.find(node => node.nodeOrder === currentNodeIndex + 1)?.objectiveProgress ?? 0;
+      objectiveProgressRef.current = resumedObjectiveProgress;
+      setBoardOpacity(1);
+
+      if (data.run?.status === 'deduction') {
+        const deductionState: RunState = {
+          ...INITIAL_RUN_STATE,
+          phase: 'deduction',
+          expedition,
+          currentNodeIndex,
+          activeAffinities: expedition.activeAffinities,
+          resourceWallet,
+          clueFragments,
+          bankedScore,
+          deductionCamp: buildDeductionCampFromCheckpoint(bankedScore, clueFragments),
+          evidenceBundle,
+        };
+        setRunState(deductionState);
+        toast('Resumed deduction camp', { duration: 1800 });
+        return true;
+      }
+
+      setRunState({
+        ...INITIAL_RUN_STATE,
+        phase: 'in-run',
+        expedition,
+        currentNodeIndex,
+        activeAffinities: expedition.activeAffinities,
+        resourceWallet,
+        clueFragments,
+        bankedScore,
+        evidenceBundle,
+      });
+
+      setTimeout(() => {
+        emitBoardForNode(payload, currentNodeIndex, expedition.activeAffinities, resumedObjectiveProgress);
+        toast('Resumed expedition checkpoint', { duration: 1800 });
+      }, 100);
+      return true;
+    } catch (error) {
+      console.error('Failed to resume run:', error);
+      toast.error('Could not resume that expedition');
+      return false;
+    }
+  }, [objectiveProgressRef]);
+
   const handleNodeAdvanceRequested = useCallback((data: EventPayloads['node-advance-requested']) => {
     setBoardOpacity(1);
     setRunState(prev => {
@@ -226,7 +329,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         lastResolvedNodeRef.current = prev.currentNodeIndex;
         routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, prev.currentNodeIndex);
         const campState = buildDeductionCampState(prev);
-        if (runIdRef.current) persistRunCheckpoint(runIdRef.current, prev, prev.currentNodeIndex, routePolylineRef.current);
+        if (runIdRef.current) persistRunCheckpoint(runIdRef.current, prev, prev.currentNodeIndex, routePolylineRef.current, 'deduction');
         setTimeout(() => toast('Animal escaped! Reviewing gathered evidence...', { duration: 3000 }), 0);
         return { ...prev, phase: 'deduction' as const, deductionCamp: campState };
       }
@@ -276,8 +379,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             nextNode?.node_type ?? 'custom', nextNode?.counterGem ?? null,
             prev.expedition?.actionBias ?? {}, activeAffinitiesRef.current
           );
+          const nodeLocation = getNodeRouteLocation(payload, nextIndex);
           EventBus.emit('cesium-location-selected', {
-            lon: payload.lon, lat: payload.lat,
+            lon: nodeLocation.lon, lat: nodeLocation.lat,
             species: payload.species, rasterHabitats: payload.rasterHabitats,
             habitats: payload.habitats, difficulty: nextNode?.difficulty,
             obstacles: nextNode?.obstacles, obstacleFamily: nextNode?.obstacleFamily,
@@ -301,6 +405,25 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       for (const [k, v] of Object.entries(data.wallet)) { if (k in w) (w as any)[k] += v; }
       return { ...prev, resourceWallet: w };
     });
+  }, []);
+
+  const handleNodeObjectiveCheckpoint = useCallback((data: EventPayloads['node-objective-updated']) => {
+    const state = runStateRef.current;
+    if (state.phase !== 'in-run' || !runIdRef.current) return;
+    if (data.target <= 0 || data.progress <= 0) return;
+
+    const now = Date.now();
+    if (now - lastObjectiveCheckpointAtRef.current < 5000 && data.progress < data.target) return;
+    lastObjectiveCheckpointAtRef.current = now;
+
+    persistRunCheckpoint(
+      runIdRef.current,
+      state,
+      state.currentNodeIndex,
+      routePolylineRef.current,
+      undefined,
+      data.progress,
+    );
   }, []);
 
   const handleRunReset = useCallback(() => {
@@ -576,6 +699,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.on('clue-discount-earned', handleClueDiscountEarned);
     EventBus.on('clue-revealed', handleClueRevealed);
     EventBus.on('node-rewards-summary', handleNodeRewardsSummary);
+    EventBus.on('node-objective-updated', handleNodeObjectiveCheckpoint);
     EventBus.on('game-reset', resetRunStateLocal);
 
     return () => {
@@ -589,20 +713,21 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('clue-discount-earned', handleClueDiscountEarned);
       EventBus.off('clue-revealed', handleClueRevealed);
       EventBus.off('node-rewards-summary', handleNodeRewardsSummary);
+      EventBus.off('node-objective-updated', handleNodeObjectiveCheckpoint);
       EventBus.off('game-reset', resetRunStateLocal);
     };
-  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleSouvenirDrop, handleConsumableFound, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary, resetRunStateLocal]);
+  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleSouvenirDrop, handleConsumableFound, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
 
   const value = useMemo<ExpeditionContextValue>(() => ({
     runState, boardOpacity,
     correctSpeciesId: correctSpeciesIdRef.current,
     hiddenSpeciesName: hiddenSpeciesNameRef.current,
-    handleAffinitySelected, handleRunReset, handleCrisisToolSpend,
+    handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend,
     handleDeductionPurchase, handleDeductionGuessResult,
     handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
     useConsumable, showSpeciesList,
     onShowSpeciesList: onShowSpeciesListRef,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunReset, handleCrisisToolSpend, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, useConsumable, showSpeciesList]);
+  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, useConsumable, showSpeciesList]);
 
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
@@ -618,7 +743,58 @@ function getExpeditionRoutePolyline(payload: EventPayloads['expedition-data-read
 
 function getRoutePolylineThroughNode(route: Array<{ lon: number; lat: number }>, nodeIndex: number) {
   if (route.length === 0) return [];
-  return route.slice(0, Math.min(route.length, Math.max(0, nodeIndex) + 1));
+  return getRoutePolylineThroughWaypointSlot(route, nodeIndex);
+}
+
+function getNodeRouteLocation(payload: EventPayloads['expedition-data-ready'], nodeIndex: number) {
+  const waypoint = payload.expedition.nodes[nodeIndex]?.waypoint;
+  return waypoint
+    ? { lon: waypoint.lon, lat: waypoint.lat }
+    : { lon: payload.lon, lat: payload.lat };
+}
+
+function emitBoardForNode(
+  payload: EventPayloads['expedition-data-ready'],
+  nodeIndex: number,
+  activeAffinities: AffinityType[],
+  objectiveProgress = 0,
+) {
+  const node = payload.expedition.nodes[nodeIndex];
+  if (!node) return;
+  const boardContext = buildNodeBoardContext({
+    width: GRID_COLS,
+    height: GRID_ROWS,
+    obstacles: node.obstacles ?? [],
+    nodeIndex,
+  });
+  const boardConfig = buildBoardSpawnConfigForNode(
+    node.node_type ?? 'custom',
+    node.counterGem ?? null,
+    payload.expedition.actionBias,
+    activeAffinities,
+  );
+  const nodeLocation = getNodeRouteLocation(payload, nodeIndex);
+  EventBus.emit('cesium-location-selected', {
+    lon: nodeLocation.lon,
+    lat: nodeLocation.lat,
+    species: payload.species,
+    rasterHabitats: payload.rasterHabitats,
+    habitats: payload.habitats,
+    difficulty: node.difficulty,
+    obstacles: node.obstacles,
+    obstacleFamily: node.obstacleFamily,
+    counterGem: node.counterGem,
+    requiredGems: node.requiredGems,
+    activeAffinities,
+    objectiveTarget: node.objectiveTarget,
+    objectiveProgress,
+    nodeIndex,
+    nodeType: node.node_type,
+    events: node.events,
+    boardContext,
+    boardConfig,
+    encounterConfig: node.encounterConfig,
+  });
 }
 
 function buildDeductionCampState(prev: RunState): DeductionCampState {
@@ -638,11 +814,35 @@ function buildDeductionCampState(prev: RunState): DeductionCampState {
   };
 }
 
+function buildDeductionCampFromCheckpoint(
+  bankedScore: number,
+  clueFragments: RunState['clueFragments'],
+): DeductionCampState {
+  const clueShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(category => ({
+    category,
+    purchased: 0,
+    fragmentCount: clueFragments[category],
+  }));
+  return {
+    bankedScore,
+    clueFragments: { ...clueFragments },
+    clueShop,
+    revealedClues: [],
+    triviaUnlocked: [],
+    scoreSpent: 0,
+    guessResult: null,
+    guessBonusAwarded: 0,
+    thoughtDiscountPct: 0,
+  };
+}
+
 function persistRunCheckpoint(
   runId: string,
   state: RunState,
   currentNodeIndex: number,
-  routePolyline: Array<{ lon: number; lat: number }>,
+  routePolyline: RoutePoint[],
+  status?: 'active' | 'deduction',
+  objectiveProgress?: number,
 ) {
   setTimeout(() => {
     fetch(`/api/runs/${runId}`, {
@@ -653,8 +853,81 @@ function persistRunCheckpoint(
         clueFragments: { ...state.clueFragments },
         bankedScore: state.bankedScore,
         currentNodeIndex,
+        objectiveProgress,
         routePolyline,
+        status,
       }),
     }).catch(err => console.error('Failed to persist run checkpoint:', err));
   }, 0);
+}
+
+type ResumeRunResponse = {
+  run?: { status?: string };
+  nodes?: Array<{ id: string; nodeOrder: number; objectiveProgress: number }>;
+  resume?: {
+    lon: number;
+    lat: number;
+    correctSpeciesId: number | null;
+    speciesIds: number[];
+    habitats: string[];
+    rasterHabitats: RasterHabitatResult[];
+    currentNodeIndex: number;
+    resourceWallet: Record<string, number>;
+    clueFragments: Record<string, number>;
+    bankedScore: number;
+    featureFingerprints: FeatureFingerprint[];
+    expedition: Omit<EventPayloads['expedition-data-ready']['expedition'], 'activeAffinities' | 'availableAffinities'> & {
+      activeAffinities: string[];
+      availableAffinities: string[];
+    };
+  };
+};
+
+async function fetchResumeSpecies(speciesIds: number[], lon: number, lat: number): Promise<Species[]> {
+  if (speciesIds.length === 0) return fetchResumeSpeciesNearPoint(lon, lat);
+  const response = await fetch(`/api/species/by-ids?ids=${speciesIds.join(',')}`);
+  if (!response.ok) return fetchResumeSpeciesNearPoint(lon, lat);
+  const data = await response.json() as { species?: Species[] };
+  const species = Array.isArray(data.species) ? data.species : [];
+  return species.length > 0 ? species : fetchResumeSpeciesNearPoint(lon, lat);
+}
+
+async function fetchResumeSpeciesNearPoint(lon: number, lat: number): Promise<Species[]> {
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return [];
+  const response = await fetch(`/api/species/in-radius?lon=${lon}&lat=${lat}&radius=10000`);
+  if (!response.ok) return [];
+  const data = await response.json() as { species?: Species[] };
+  return Array.isArray(data.species) ? data.species : [];
+}
+
+function normalizeAffinities(values: unknown): AffinityType[] {
+  return Array.isArray(values)
+    ? values.filter((value): value is AffinityType => typeof value === 'string' && value.length > 0)
+    : [];
+}
+
+function clampNodeIndex(index: unknown, nodeCount: number, status: string | undefined): number {
+  const max = status === 'deduction' ? nodeCount : Math.max(0, nodeCount - 1);
+  const value = typeof index === 'number' && Number.isFinite(index) ? Math.trunc(index) : 0;
+  return Math.max(0, Math.min(max, value));
+}
+
+function mergeResourceWallet(value: unknown): RunState['resourceWallet'] {
+  const wallet = createEmptyResourceWallet();
+  if (!value || typeof value !== 'object') return wallet;
+  for (const key of Object.keys(wallet) as Array<keyof typeof wallet>) {
+    const next = (value as Record<string, unknown>)[key];
+    if (typeof next === 'number' && Number.isFinite(next)) wallet[key] = next;
+  }
+  return wallet;
+}
+
+function mergeClueFragments(value: unknown): RunState['clueFragments'] {
+  const fragments = createEmptyClueFragments();
+  if (!value || typeof value !== 'object') return fragments;
+  for (const key of CLUE_CATEGORY_KEYS) {
+    const next = (value as Record<string, unknown>)[key];
+    if (typeof next === 'number' && Number.isFinite(next)) fragments[key] = next;
+  }
+  return fragments;
 }

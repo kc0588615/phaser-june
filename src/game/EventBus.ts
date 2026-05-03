@@ -26,6 +26,7 @@ export interface EventPayloads {
     requiredGems?: GemType[];
     activeAffinities?: AffinityType[];
     objectiveTarget?: number;
+    objectiveProgress?: number;
     nodeIndex?: number;
     nodeType?: string;
     events?: string[];

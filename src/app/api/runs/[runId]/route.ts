@@ -136,7 +136,7 @@ function buildResumePayload(session: EcoRunSessionRow, nodes: EcoRunNodeRow[]) {
     speciesIds,
     habitats: getStringArray(metadata.habitats),
     rasterHabitats: Array.isArray(metadata.rasterHabitats) ? metadata.rasterHabitats : [],
-    currentNodeIndex: getNumberOrNull(metadata.currentNodeIndex) ?? session.nodeIndexCurrent,
+    currentNodeIndex: getNumberOrNull(metadata.currentNodeIndex) ?? Math.max(0, session.nodeIndexCurrent - 1),
     resourceWallet: getNumberRecord(metadata.resourceWallet),
     clueFragments: getNumberRecord(metadata.clueFragments),
     bankedScore: getNumberOrNull(metadata.bankedScore) ?? session.scoreTotal,
@@ -159,6 +159,8 @@ function buildResumePayload(session: EcoRunSessionRow, nodes: EcoRunNodeRow[]) {
       modifierNodes: getStringArray(snapshot.modifierNodes),
       signals: getNumberRecord(snapshot.signals),
       routePolyline: normalizeRoutePolyline(Array.isArray(metadata.routePolyline) ? metadata.routePolyline : undefined),
+      waypoints: Array.isArray(snapshot.waypoints) ? snapshot.waypoints : [],
+      waypointRadiusKm: getNumberOrNull(snapshot.waypointRadiusKm),
       nearestRiverDistM: getNumberOrNull(snapshot.nearestRiverDistM),
     },
   };
@@ -182,6 +184,9 @@ function reconstructRunNode(node: EcoRunNodeRow): RunNode {
     encounterConfig: boardContext.encounterConfig && typeof boardContext.encounterConfig === 'object'
       ? boardContext.encounterConfig as RunNode['encounterConfig']
       : null,
+    waypoint: boardContext.waypoint && typeof boardContext.waypoint === 'object'
+      ? boardContext.waypoint as RunNode['waypoint']
+      : undefined,
   };
 }
 
@@ -190,7 +195,7 @@ function reconstructRunNode(node: EcoRunNodeRow): RunNode {
  * Update session metadata (e.g. resource wallet or deduction summary on completion).
  * When finalScore is provided, also persists a run_memories row.
  *
- * Body: { resourceWallet?: Record<string, number>; finalScore?: number; deductionSummary?: Record<string, unknown> }
+ * Body: { resourceWallet?: Record<string, number>; finalScore?: number; status?: 'active' | 'deduction'; deductionSummary?: Record<string, unknown> }
  */
 export async function PATCH(
   request: NextRequest,
@@ -202,10 +207,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Missing runId' }, { status: 400 });
     }
 
+    const playerId = await getPlayerIdFromClerk();
+    const [existingSession] = await db
+      .select({ playerId: ecoRunSessions.playerId })
+      .from(ecoRunSessions)
+      .where(eq(ecoRunSessions.id, runId))
+      .limit(1);
+
+    if (!existingSession) {
+      return NextResponse.json({ error: 'Run not found' }, { status: 404 });
+    }
+
+    if (existingSession.playerId && existingSession.playerId !== playerId) {
+      return NextResponse.json({ error: playerId ? 'Forbidden' : 'Unauthorized' }, { status: playerId ? 403 : 401 });
+    }
+
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, clueFragments, bankedScore, currentNodeIndex } = body as {
+    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, clueFragments, bankedScore, currentNodeIndex, objectiveProgress, status } = body as {
       resourceWallet?: Record<string, number>;
       finalScore?: number;
+      status?: string;
       deductionSummary?: Record<string, unknown>;
       speciesId?: number;
       featureFingerprints?: unknown[];
@@ -213,6 +234,7 @@ export async function PATCH(
       clueFragments?: Record<string, number>;
       bankedScore?: number;
       currentNodeIndex?: number;
+      objectiveProgress?: number;
     };
     const normalizedCheckpointRoute = normalizeRoutePolyline(routePolyline);
 
@@ -225,7 +247,8 @@ export async function PATCH(
     if (typeof finalScore === 'number') metadataPatch.finalScore = finalScore;
     if (deductionSummary) metadataPatch.deductionSummary = deductionSummary;
 
-    if (Object.keys(metadataPatch).length > 0) {
+    const runStatusPatch = status === 'active' || status === 'deduction' ? status : null;
+    if (Object.keys(metadataPatch).length > 0 || runStatusPatch) {
       await db
         .update(ecoRunSessions)
         .set({
@@ -234,9 +257,26 @@ export async function PATCH(
             runStatus: 'completed',
             endedAt: new Date(),
             scoreTotal: finalScore,
+          } : runStatusPatch ? {
+            runStatus: runStatusPatch,
           } : {}),
         })
         .where(eq(ecoRunSessions.id, runId));
+    }
+
+    if (typeof currentNodeIndex === 'number' && Number.isInteger(currentNodeIndex) && typeof objectiveProgress === 'number' && Number.isFinite(objectiveProgress)) {
+      const nodeOrder = currentNodeIndex + 1;
+      await db
+        .update(ecoRunNodes)
+        .set({
+          objectiveProgress: Math.max(0, Math.trunc(objectiveProgress)),
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(ecoRunNodes.runId, runId),
+          eq(ecoRunNodes.nodeOrder, nodeOrder),
+          sql`${ecoRunNodes.nodeStatus} <> 'completed'`,
+        ));
     }
 
     // When run completes (finalScore present), persist a run_memories row
@@ -273,6 +313,7 @@ export async function PATCH(
               movesUsed: n.movesUsed,
               encounterOutcome: bc.encounterOutcome ?? null,
               encounterConfig: bc.encounterConfig ?? null,
+              waypoint: bc.waypoint ?? null,
             };
           });
 
@@ -433,7 +474,8 @@ function normalizeRoutePolyline(routePolyline: unknown[] | undefined): RoutePoin
     const lon = Number((point as { lon?: unknown }).lon);
     const lat = Number((point as { lat?: unknown }).lat);
     if (!Number.isFinite(lon) || !Number.isFinite(lat)) return [];
-    return [{ lon, lat }];
+    const waypointSlot = Number((point as { waypointSlot?: unknown }).waypointSlot);
+    return [Number.isInteger(waypointSlot) ? { lon, lat, waypointSlot } : { lon, lat }];
   });
 }
 

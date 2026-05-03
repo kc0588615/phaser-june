@@ -5,6 +5,7 @@ import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
 import type { RoutePoint } from '@/lib/expeditionRoute';
 import type { RunEvidenceBundle } from '@/types/gis';
+import type { ExpeditionWaypoint } from '@/types/waypoints';
 
 export type { RunNode };
 
@@ -30,6 +31,8 @@ export interface ExpeditionData {
   modifierNodes: string[];
   signals: Record<string, number>;
   routePolyline?: RoutePoint[];
+  waypoints?: ExpeditionWaypoint[];
+  waypointRadiusKm?: number | null;
   nearestRiverDistM?: number | null;
 }
 

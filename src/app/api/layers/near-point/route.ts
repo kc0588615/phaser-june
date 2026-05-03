@@ -23,19 +23,20 @@ export async function GET(request: NextRequest) {
     const squareJson = JSON.stringify(square30km.geometry);
     const pointWkt = `SRID=4326;POINT(${lon} ${lat})`;
 
-    // Rivers — unesco.world_rivers (SRID 3857)
+    // Rivers — unesco.world_rivers (SRID 4326)
     let riverFeatures: unknown[] = [];
     try {
       const rows = await db.execute<GeoJsonRow>(sql`
-        WITH pt AS (SELECT ST_Transform(ST_GeomFromEWKT(${pointWkt}), 3857) AS geom)
+        WITH pt AS (SELECT ST_GeomFromEWKT(${pointWkt}) AS geom)
         SELECT
-          ST_AsGeoJSON(ST_Transform(ST_Simplify(r.geom, 100), 4326)) AS geojson,
+          ST_AsGeoJSON(ST_Simplify(r.geom, 0.001)) AS geojson,
           json_build_object('gid', r.gid, 'river_map', r.river_map,
-            'distance_m', ST_Distance(r.geom, pt.geom)
+            'distance_m', ST_Distance(r.geom::geography, pt.geom::geography)
           )::text AS properties
         FROM unesco.world_rivers r CROSS JOIN pt
-        WHERE ST_DWithin(r.geom, pt.geom, 30000)
-        ORDER BY ST_Distance(r.geom, pt.geom) ASC
+        WHERE r.geom && ST_Expand(pt.geom, 0.35)
+          AND ST_DWithin(r.geom::geography, pt.geom::geography, 30000)
+        ORDER BY ST_Distance(r.geom::geography, pt.geom::geography) ASC
         LIMIT 50
       `);
       riverFeatures = [...rows].map((r) => ({
@@ -45,15 +46,15 @@ export async function GET(request: NextRequest) {
       }));
     } catch { /* no data */ }
 
-    // Protected areas — wpda.wdpa_polygons (SRID 3857)
+    // Protected areas — wpda.wdpa_polygons (SRID 4326)
     let paFeatures: unknown[] = [];
     try {
       const rows = await db.execute<GeoJsonRow>(sql`
         WITH square AS (
-          SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
+          SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
         )
         SELECT
-          ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(p.geom, 500), 4326)) AS geojson,
+          ST_AsGeoJSON(ST_SimplifyPreserveTopology(p.geom, 0.005)) AS geojson,
           json_build_object('site_pid', p.site_pid,
             'name', COALESCE(p.name_eng, p.name),
             'designation', p.desig_eng,
@@ -98,15 +99,15 @@ export async function GET(request: NextRequest) {
       }));
     } catch { /* no data */ }
 
-    // Wetlands — ramsar.wetland (SRID 3857)
+    // Wetlands — ramsar.wetland (SRID 4326)
     let wetlandFeatures: unknown[] = [];
     try {
       const rows = await db.execute<GeoJsonRow>(sql`
         WITH square AS (
-          SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
+          SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
         )
         SELECT
-          ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(w.geom, 500), 4326)) AS geojson,
+          ST_AsGeoJSON(ST_SimplifyPreserveTopology(w.geom, 0.005)) AS geojson,
           json_build_object('gid', w.gid,
             'ecoregion', w.ecoregion,
             'mht_txt', w.mht_txt
@@ -123,21 +124,22 @@ export async function GET(request: NextRequest) {
       }));
     } catch { /* no data */ }
 
-    // Lakes — wwf.glwd_1 (SRID 3857)
+    // Lakes — wwf.glwd_1 (SRID 4326)
     let lakeFeatures: unknown[] = [];
     try {
       const rows = await db.execute<GeoJsonRow>(sql`
-        WITH pt AS (SELECT ST_Transform(ST_GeomFromEWKT(${pointWkt}), 3857) AS geom)
+        WITH pt AS (SELECT ST_GeomFromEWKT(${pointWkt}) AS geom)
         SELECT
-          ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(l.geom, 500), 4326)) AS geojson,
+          ST_AsGeoJSON(ST_SimplifyPreserveTopology(l.geom, 0.005)) AS geojson,
           json_build_object('glwd_id', l.glwd_id,
             'lake_name', l.lake_name, 'type', l.type,
             'area_skm', l.area_skm, 'elev_m', l.elev_m,
-            'distance_m', ST_Distance(l.geom, pt.geom)
+            'distance_m', ST_Distance(l.geom::geography, pt.geom::geography)
           )::text AS properties
         FROM wwf.glwd_1 l CROSS JOIN pt
-        WHERE ST_DWithin(l.geom, pt.geom, 10000)
-        ORDER BY ST_Distance(l.geom, pt.geom) ASC
+        WHERE l.geom && ST_Expand(pt.geom, 0.15)
+          AND ST_DWithin(l.geom::geography, pt.geom::geography, 10000)
+        ORDER BY ST_Distance(l.geom::geography, pt.geom::geography) ASC
         LIMIT 10
       `);
       lakeFeatures = [...rows].map((r) => ({

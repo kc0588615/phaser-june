@@ -1,6 +1,6 @@
 import React from 'react';
 import type { RunNode } from '@/types/expedition';
-import { NODE_TYPE_LABELS } from '@/expedition/domain';
+import { getRunNodeLabel } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem } from '@/expedition/affinities';
 import { GemSwatch } from '@/components/ui/gem-swatch';
@@ -26,9 +26,10 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
       {nodes.map((node, i) => {
         const isCurrent = i === currentNodeIndex;
         const isCompleted = i < currentNodeIndex;
+        const label = getRunNodeLabel(node);
 
         return (
-          <div key={i} className="flex items-center gap-0.5" aria-label={`Node ${i + 1}: ${NODE_TYPE_LABELS[node.node_type] || node.node_type}, difficulty ${node.difficulty}${isCurrent ? ' (current)' : isCompleted ? ' (complete)' : ''}`}>
+          <div key={i} className="flex items-center gap-0.5" aria-label={`Node ${i + 1}: ${label}, difficulty ${node.difficulty}${isCurrent ? ' (current)' : isCompleted ? ' (complete)' : ''}`}>
             <div
               className={`
                 px-2.5 py-ds-xs rounded-md text-ds-body text-center min-w-[48px] border transition-all duration-200
@@ -41,8 +42,8 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
               `}
             >
               {isCompleted
-                ? <><span className="mr-1">✓</span>{NODE_TYPE_LABELS[node.node_type] || node.node_type}</>
-                : NODE_TYPE_LABELS[node.node_type] || node.node_type}
+                ? <><span className="mr-1">✓</span>{label}</>
+                : label}
               <div className="text-[9px] opacity-70 flex items-center justify-center gap-0.5">
                 {node.encounterConfig ? (
                   node.encounterConfig.threats.map((t, ti) => (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { RunNode, SpookTier } from '@/types/expedition';
-import { NODE_TYPE_LABELS, getGemDefinition } from '@/expedition/domain';
+import { getGemDefinition, getRunNodeLabel } from '@/expedition/domain';
 import { GemSwatch } from '@/components/ui/gem-swatch';
 import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem, getAffinityDefinition } from '@/expedition/affinities';
@@ -50,10 +50,11 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
 
   const pct = hasObjective ? Math.min(100, (progress / node.objectiveTarget) * 100) : 0;
   const isEncounter = node.node_type === 'standoff';
+  const nodeLabel = getRunNodeLabel(node);
 
   return (
     <section
-      aria-label={`Active node: ${NODE_TYPE_LABELS[node.node_type] || node.node_type}`}
+      aria-label={`Active node: ${nodeLabel}`}
       className={`
         absolute top-1.5 right-1.5 z-hud glass-bg rounded-md max-w-[180px] sm:max-w-[220px] p-2 sm:p-2.5
         text-ds-text-primary border
@@ -72,7 +73,7 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
       )}
 
       <div className="text-ds-caption font-bold text-ds-cyan mb-1 leading-tight">
-        Node {nodeIndex + 1}: {NODE_TYPE_LABELS[node.node_type] || node.node_type.replace(/_/g, ' ')}
+        Node {nodeIndex + 1}: {nodeLabel}
         <span className="font-normal text-ds-badge text-ds-text-secondary ml-1.5">Lv.{node.difficulty}</span>
       </div>
 

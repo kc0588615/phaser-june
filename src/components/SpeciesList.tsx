@@ -11,11 +11,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { getRunNodeLabel } from '@/expedition/domain';
 import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory, getAllCategories, getCategoryFromOrder, getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
 import { getFamilyDisplayName } from '@/config/familyCommonNames';
 import type { Species } from '@/types/database';
 import type { FeatureClass } from '@/types/gis';
 import type { JumpTarget } from '@/types/speciesBrowser';
+import type { ExpeditionWaypointMemory } from '@/types/waypoints';
 
 // Run type from API
 interface RunSummary {
@@ -44,6 +46,7 @@ interface RunSummary {
     movesUsed: number;
     counterGem: string | null;
     obstacleFamily: string | null;
+    waypoint?: ExpeditionWaypointMemory | null;
   }>;
 }
 
@@ -1192,20 +1195,34 @@ function RunMemoryCard({ run }: { run: RunSummary }) {
 
       {/* Node chips */}
       <div className="flex gap-1 flex-wrap mb-2">
-        {run.nodes.filter(n => n.nodeType !== 'analysis').map((node, i) => (
-          <span
-            key={i}
-            className={cn(
-              'text-[9px] px-1.5 py-0.5 rounded border',
-              node.nodeStatus === 'completed'
-                ? 'bg-green-500/10 border-green-500/30 text-green-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500'
-            )}
-          >
-            {node.nodeType.replace(/_/g, ' ')}
-            {node.counterGem && <span className="ml-0.5 text-cyan-400">[{node.counterGem}]</span>}
-          </span>
-        ))}
+        {run.nodes.filter(n => n.nodeType !== 'analysis').map((node, i) => {
+          const waypointName = typeof node.waypoint?.name === 'string' ? node.waypoint.name : '';
+          const nodeLabel = getRunNodeLabel(node);
+          const chipTitle = waypointName
+            ? `${nodeLabel} - ${waypointName}`
+            : nodeLabel;
+
+          return (
+            <span
+              key={i}
+              title={chipTitle}
+              className={cn(
+                'inline-flex flex-col text-[9px] px-1.5 py-0.5 rounded border max-w-[112px]',
+                node.nodeStatus === 'completed'
+                  ? 'bg-green-500/10 border-green-500/30 text-green-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-500'
+              )}
+            >
+              <span className="truncate">
+                {nodeLabel}
+                {node.counterGem && <span className="ml-0.5 text-cyan-400">[{node.counterGem}]</span>}
+              </span>
+              {waypointName && (
+                <span className="truncate text-emerald-300/80">{waypointName}</span>
+              )}
+            </span>
+          );
+        })}
       </div>
 
       {/* Footer */}

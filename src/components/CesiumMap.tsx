@@ -19,19 +19,130 @@ import {
 } from 'cesium';
 import { EventBus } from '../game/EventBus';
 import { deriveAvailableAffinities, getDefaultActiveAffinities } from '../expedition/affinities';
+import type { AffinityType } from '../expedition/affinities';
 import { speciesService } from '../lib/speciesService';
 import type { Species } from '../types/database';
+import type { ExpeditionData, RunNode } from '../types/expedition';
+import type { FeatureFingerprint } from '../types/gis';
 import { getAppConfig } from '../utils/config';
 import { CesiumInfoBox } from './CesiumInfoBox';
 import { useCesiumFullscreen } from '../hooks/useCesiumFullscreen';
 import { useCesiumTrail } from '../hooks/useCesiumTrail';
 import { getBioregionStyle } from '../lib/bioregionStyles';
-import { computeExpeditionRoutePolyline } from '../lib/expeditionRoute';
+import { computeExpeditionRoutePolyline, normalizeRoutePolyline } from '../lib/expeditionRoute';
+import { applyWaypointsToRunNodes } from '../lib/nodeScoring';
+import type { ExpeditionWaypointResponse } from '../types/waypoints';
 
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif";
 const HABITAT_RADIUS_METERS = 10000.0;
 const SPECIES_RADIUS_METERS = 10000.0;
+const WAYPOINT_FETCH_TIMEOUT_MS = 4000;
+
+type RasterHabitatSummary = Array<{ habitat_type: string; percentage: number }>;
+
+interface AtPointData {
+  generated_nodes?: RunNode[];
+  bioregion?: ExpeditionData['bioregion'];
+  protected_areas?: ExpeditionData['protectedAreas'];
+  action_bias?: ExpeditionData['actionBias'];
+  primary_node_family?: string;
+  primary_variant?: string;
+  modifier_nodes?: string[];
+  signals?: Record<string, number>;
+  nearest_river_dist_m?: number | null;
+  feature_fingerprints?: FeatureFingerprint[];
+}
+
+function getWaypointRouteOrFallback(
+  waypointData: ExpeditionWaypointResponse | null,
+  lon: number,
+  lat: number,
+  count: number,
+) {
+  const routePolyline = normalizeRoutePolyline(waypointData?.routePolyline);
+  return routePolyline.length > 0
+    ? routePolyline
+    : computeExpeditionRoutePolyline(lon, lat, count);
+}
+
+function attachWaypointsToNodes(nodes: RunNode[], waypointData: ExpeditionWaypointResponse | null): RunNode[] {
+  if (!waypointData?.waypoints?.length) return nodes;
+  const waypointsBySlot = new Map(waypointData.waypoints.map((waypoint) => [waypoint.slot, waypoint]));
+  return applyWaypointsToRunNodes(nodes.map((node, index) => ({
+    ...node,
+    waypoint: waypointsBySlot.get(index as 0 | 1 | 2 | 3 | 4 | 5),
+  })));
+}
+
+async function fetchWaypointData(lon: number, lat: number): Promise<ExpeditionWaypointResponse | null> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), WAYPOINT_FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`/api/expedition/waypoints?lon=${lon}&lat=${lat}`, {
+      signal: controller.signal,
+    });
+    return response.ok ? response.json() as Promise<ExpeditionWaypointResponse> : null;
+  } catch (error) {
+    if ((error as { name?: string }).name !== 'AbortError') {
+      console.warn('[CesiumMap] Failed to load waypoint route:', error);
+    }
+    return null;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+function emitExpeditionReadyFromMapClick(input: {
+  lon: number;
+  lat: number;
+  atPointData: AtPointData | null;
+  waypointData: ExpeditionWaypointResponse | null;
+  species: Species[];
+  rasterHabitats: RasterHabitatSummary;
+  habitats: string[];
+  activeAffinities: AffinityType[];
+  availableAffinities: AffinityType[];
+  loadSpatialLayers: (lon: number, lat: number) => void;
+}): boolean {
+  const nodes = input.atPointData?.generated_nodes;
+  if (!nodes?.length) return false;
+
+  const routePolyline = getWaypointRouteOrFallback(
+    input.waypointData,
+    input.lon,
+    input.lat,
+    nodes.length,
+  );
+
+  EventBus.emit('expedition-data-ready', {
+    lon: input.lon,
+    lat: input.lat,
+    expedition: {
+      nodes: attachWaypointsToNodes(nodes, input.waypointData),
+      bioregion: input.atPointData?.bioregion ?? null,
+      protectedAreas: input.atPointData?.protected_areas ?? [],
+      actionBias: input.atPointData?.action_bias ?? {},
+      activeAffinities: input.activeAffinities,
+      availableAffinities: input.availableAffinities,
+      primaryNodeFamily: input.atPointData?.primary_node_family ?? '',
+      primaryVariant: input.atPointData?.primary_variant ?? '',
+      modifierNodes: input.atPointData?.modifier_nodes ?? [],
+      signals: input.atPointData?.signals ?? {},
+      routePolyline,
+      waypoints: input.waypointData?.waypoints ?? [],
+      waypointRadiusKm: input.waypointData?.radiusKm ?? null,
+      nearestRiverDistM: input.atPointData?.nearest_river_dist_m ?? null,
+    },
+    species: input.species,
+    rasterHabitats: input.rasterHabitats,
+    habitats: input.habitats,
+    featureFingerprints: input.atPointData?.feature_fingerprints ?? [],
+  });
+  input.loadSpatialLayers(input.lon, input.lat);
+  return true;
+}
 
 const CesiumMap: React.FC = () => {
   const viewerRef = useRef<any>(null);
@@ -265,9 +376,10 @@ const CesiumMap: React.FC = () => {
       Promise.all([
         speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
         speciesService.getRasterHabitatDistribution(longitude, latitude),
-        fetch(`/api/protected-areas/at-point?lon=${longitude}&lat=${latitude}&size=500`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`/api/protected-areas/at-point?lon=${longitude}&lat=${latitude}&size=500`).then(r => r.ok ? r.json() as Promise<AtPointData> : null).catch(() => null),
+        fetchWaypointData(longitude, latitude),
       ])
-        .then(async ([speciesResult, rasterHabitats, atPointData]) => {
+        .then(async ([speciesResult, rasterHabitats, atPointData, waypointData]) => {
           console.log("Resium: Species service response:", speciesResult);
           console.log("Resium: Raster habitat response:", rasterHabitats);
 
@@ -335,38 +447,19 @@ const CesiumMap: React.FC = () => {
             });
             const habitatList = Array.from(legacyHabitats);
 
-            if (atPointData?.generated_nodes) {
-              const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
-              const routePolyline = computeExpeditionRoutePolyline(
-                cartographicLocation.longitude,
-                cartographicLocation.latitude,
-                atPointData.generated_nodes.length,
-              );
-              EventBus.emit('expedition-data-ready', {
-                lon: cartographicLocation.longitude,
-                lat: cartographicLocation.latitude,
-                expedition: {
-                  nodes: atPointData.generated_nodes,
-                  bioregion: atPointData.bioregion,
-                  protectedAreas: atPointData.protected_areas ?? [],
-                  actionBias: atPointData.action_bias ?? {},
-                  activeAffinities: getDefaultActiveAffinities(availableAffinities),
-                  availableAffinities,
-                  primaryNodeFamily: atPointData.primary_node_family ?? '',
-                  primaryVariant: atPointData.primary_variant ?? '',
-                  modifierNodes: atPointData.modifier_nodes ?? [],
-                  signals: atPointData.signals ?? {},
-                  routePolyline,
-
-                  nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
-                },
-                species: clickedSpecies.species,
-                rasterHabitats: rasterHabitatData,
-                habitats: habitatList,
-                featureFingerprints: atPointData.feature_fingerprints ?? [],
-              });
-              loadSpatialLayers(cartographicLocation.longitude, cartographicLocation.latitude);
-            } else {
+            const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
+            if (!emitExpeditionReadyFromMapClick({
+              lon: cartographicLocation.longitude,
+              lat: cartographicLocation.latitude,
+              atPointData,
+              waypointData,
+              species: clickedSpecies.species,
+              rasterHabitats: rasterHabitatData,
+              habitats: habitatList,
+              activeAffinities: getDefaultActiveAffinities(availableAffinities),
+              availableAffinities,
+              loadSpatialLayers,
+            })) {
               EventBus.emit('cesium-location-selected', {
                 species: clickedSpecies.species,
                 rasterHabitats: rasterHabitatData,
@@ -418,37 +511,18 @@ const CesiumMap: React.FC = () => {
               }, 3000);
             }
 
-            if (atPointData?.generated_nodes) {
-              const routePolyline = computeExpeditionRoutePolyline(
-                cartographicLocation.longitude,
-                cartographicLocation.latitude,
-                atPointData.generated_nodes.length,
-              );
-              EventBus.emit('expedition-data-ready', {
-                lon: cartographicLocation.longitude,
-                lat: cartographicLocation.latitude,
-                expedition: {
-                  nodes: atPointData.generated_nodes,
-                  bioregion: atPointData.bioregion,
-                  protectedAreas: atPointData.protected_areas ?? [],
-                  actionBias: atPointData.action_bias ?? {},
-                  activeAffinities: [],
-                  availableAffinities: [],
-                  primaryNodeFamily: atPointData.primary_node_family ?? '',
-                  primaryVariant: atPointData.primary_variant ?? '',
-                  modifierNodes: atPointData.modifier_nodes ?? [],
-                  signals: atPointData.signals ?? {},
-                  routePolyline,
-
-                  nearestRiverDistM: atPointData.nearest_river_dist_m ?? null,
-                },
-                species: [],
-                rasterHabitats: rasterHabitatData,
-                habitats: [],
-                featureFingerprints: atPointData.feature_fingerprints ?? [],
-              });
-              loadSpatialLayers(cartographicLocation.longitude, cartographicLocation.latitude);
-            } else {
+            if (!emitExpeditionReadyFromMapClick({
+              lon: cartographicLocation.longitude,
+              lat: cartographicLocation.latitude,
+              atPointData,
+              waypointData,
+              species: [],
+              rasterHabitats: rasterHabitatData,
+              habitats: [],
+              activeAffinities: [],
+              availableAffinities: [],
+              loadSpatialLayers,
+            })) {
               EventBus.emit('cesium-location-selected', {
                 species: [],
                 rasterHabitats: rasterHabitatData,

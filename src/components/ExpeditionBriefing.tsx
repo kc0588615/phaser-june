@@ -1,11 +1,12 @@
 import React from 'react';
 import type { ExpeditionData } from '@/types/expedition';
-import { ACTION_GEM_DEFS, NODE_TYPE_LABELS, GEM_COLOR_MAP } from '@/expedition/domain';
+import { ACTION_GEM_DEFS, NODE_TYPE_LABELS, GEM_COLOR_MAP, getRunNodeLabel } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
 import { getAffinityDefinition } from '@/expedition/affinities';
 import { OBSTACLE_FAMILY_LABELS } from '@/game/nodeObstacles';
 import type { ObstacleFamily } from '@/game/nodeObstacles';
 import { Badge } from '@/components/ui/badge';
+import { getWaypointTypeLabel } from '@/types/waypoints';
 
 interface Props {
   expedition: ExpeditionData;
@@ -37,6 +38,12 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
     }
   }
 
+  const waypointCount = expedition.waypoints?.length ?? 0;
+  const fallbackWaypointCount = expedition.waypoints?.filter((waypoint) => waypoint.fallback).length ?? 0;
+  const showContextBadges = expedition.protectedAreas.length > 0
+    || (expedition.nearestRiverDistM != null && expedition.nearestRiverDistM < 10000)
+    || waypointCount > 0;
+
   return (
     <div className="h-full min-h-0 flex-1 w-full overflow-y-auto p-ds-lg box-border flex flex-col gap-ds-md text-ds-text-primary">
       {/* Header */}
@@ -66,8 +73,8 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
         </div>
       </div>
 
-      {/* Protected Areas badges */}
-      {expedition.protectedAreas.length > 0 && (
+      {/* Context badges */}
+      {showContextBadges && (
         <div className="flex gap-1.5 flex-wrap">
           {expedition.protectedAreas.slice(0, 3).map((pa, i) => (
             <Badge key={`pa-${i}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
@@ -77,6 +84,16 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
           {expedition.nearestRiverDistM != null && expedition.nearestRiverDistM < 10000 && (
             <Badge variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
               River {(expedition.nearestRiverDistM / 1000).toFixed(1)} km
+            </Badge>
+          )}
+          {expedition.waypointRadiusKm != null && (
+            <Badge variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-ds-text-secondary">
+              {expedition.waypointRadiusKm} km route
+            </Badge>
+          )}
+          {fallbackWaypointCount > 0 && (
+            <Badge variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-accent-amber)]">
+              {fallbackWaypointCount} fallback{fallbackWaypointCount === 1 ? '' : 's'}
             </Badge>
           )}
         </div>
@@ -116,6 +133,8 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
           {expedition.nodes.map((node, i) => {
             const isEncounter = node.node_type === 'analysis' || node.obstacles.length === 0;
             const gemColor = node.counterGem ? GEM_COLOR_MAP[node.counterGem] : 'var(--ds-text-muted)';
+            const waypointLabel = node.waypoint?.name ? ` at ${node.waypoint.name}` : '';
+            const nodeLabel = getRunNodeLabel(node);
             return (
               <React.Fragment key={i}>
                 {i > 0 && <div className="w-4 h-0.5 bg-ds-surface-elevated shrink-0" />}
@@ -125,10 +144,10 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
                     border: `2px solid ${gemColor}`,
                     boxShadow: isEncounter ? 'none' : `0 0 6px ${gemColor}44`,
                   }}
-                  title={`${NODE_TYPE_LABELS[node.node_type] || node.node_type} Lv.${node.difficulty}`}
+                  title={`${nodeLabel}${waypointLabel} Lv.${node.difficulty}`}
                 >
                   <div className="text-[9px] font-bold leading-none" style={{ color: gemColor }}>
-                    {NODE_TYPE_LABELS[node.node_type]?.slice(0, 3) || '?'}
+                    {nodeLabel.slice(0, 3)}
                   </div>
                   <div className="text-[8px] text-ds-text-muted leading-none">{node.difficulty}</div>
                 </div>
@@ -136,6 +155,31 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
             );
           })}
         </div>
+        {waypointCount > 0 && (
+          <div className="overflow-x-auto pb-0.5">
+            <div className="grid grid-cols-6 gap-1.5 min-w-[620px]">
+              {expedition.nodes.map((node, i) => {
+                const waypoint = node.waypoint ?? expedition.waypoints?.[i] ?? null;
+                const waypointType = getWaypointTypeLabel(waypoint?.waypointType) ?? 'Node';
+                const waypointName = waypoint?.name || getRunNodeLabel(node);
+                return (
+                  <div
+                    key={`waypoint-${i}`}
+                    className="min-h-[44px] border border-ds-subtle rounded-md bg-ds-surface-elevated px-2 py-1.5 overflow-hidden"
+                    title={waypoint ? `${waypointType}: ${waypoint.name}` : waypointName}
+                  >
+                    <div className="text-[10px] text-ds-text-muted leading-tight truncate">
+                      {i + 1}. {waypointType}
+                    </div>
+                    <div className="text-ds-badge text-ds-text-primary leading-tight truncate">
+                      {waypointName}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Affinity Loadout */}

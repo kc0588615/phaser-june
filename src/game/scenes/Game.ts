@@ -1626,7 +1626,7 @@ export class Game extends Phaser.Scene {
             this.nodeRequiredGems = new Set(data.requiredGems ?? (this.nodeCounterGem ? [this.nodeCounterGem] : []));
             this.nodeActiveAffinities = [...(data.activeAffinities ?? [])];
             this.nodeObjectiveTarget = data.objectiveTarget ?? 0;
-            this.nodeObjectiveProgress = 0;
+            this.nodeObjectiveProgress = Phaser.Math.Clamp(data.objectiveProgress ?? 0, 0, this.nodeObjectiveTarget);
             this.nodeObjectiveCompleted = false;
             this.currentNodeIndex = data.nodeIndex ?? 0;
             this.currentNodeDifficulty = data.difficulty ?? 3;
@@ -1638,6 +1638,7 @@ export class Game extends Phaser.Scene {
                 activeAffinities: this.nodeActiveAffinities,
                 requiredGems: Array.from(this.nodeRequiredGems),
             });
+            this.syncRunnerStripObjective();
 
             // Encounter tracking for this node
             this.nodeMatchGroupTotal = 0;

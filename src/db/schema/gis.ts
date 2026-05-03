@@ -19,9 +19,10 @@ const unescoSchema = pgSchema('unesco');
 const ramsarSchema = pgSchema('ramsar');
 const wpdaSchema = pgSchema('wpda');
 const wwfSchema = pgSchema('wwf');
+const naturalEarthSchema = pgSchema('natural_earth');
 
 // ---------------------------------------------------------------------------
-// unesco.world_rivers — 5104 rows, MULTILINESTRING SRID 3857
+// unesco.world_rivers — 5104 rows, MULTILINESTRING SRID 4326
 // Replaces deleted public.hydro_rivers
 // ---------------------------------------------------------------------------
 export const worldRivers = unescoSchema.table(
@@ -29,7 +30,7 @@ export const worldRivers = unescoSchema.table(
   {
     gid: integer('gid').primaryKey(),
     riverMap: varchar('river_map'),
-    geom: geometry('geom', { type: 'multilinestring', srid: 3857 }).notNull(),
+    geom: geometry('geom', { type: 'multilinestring', srid: 4326 }).notNull(),
   },
   (table) => [
     index('world_rivers_geom_idx').using('gist', table.geom),
@@ -37,7 +38,7 @@ export const worldRivers = unescoSchema.table(
 );
 
 // ---------------------------------------------------------------------------
-// ramsar.wetland — 449 rows, MULTIPOLYGON SRID 3857
+// ramsar.wetland — 449 rows, MULTIPOLYGON SRID 4326
 // ---------------------------------------------------------------------------
 export const ramsarWetland = ramsarSchema.table(
   'wetland',
@@ -50,7 +51,7 @@ export const ramsarWetland = ramsarSchema.table(
     ecoIdU: integer('eco_id_u'),
     ramsar2014: doublePrecision('ramsar2014'),
     popupText: varchar('popup_text'),
-    geom: geometry('geom', { type: 'multipolygon', srid: 3857 }).notNull(),
+    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
   },
   (table) => [
     index('ramsar_geom_idx').using('gist', table.geom),
@@ -58,7 +59,7 @@ export const ramsarWetland = ramsarSchema.table(
 );
 
 // ---------------------------------------------------------------------------
-// wpda.wdpa_points — 7663 rows, MULTIPOINT SRID 3857
+// wpda.wdpa_points — 7663 rows, MULTIPOINT SRID 4326
 // ---------------------------------------------------------------------------
 export const wdpaPoints = wpdaSchema.table(
   'wdpa_points',
@@ -95,7 +96,7 @@ export const wdpaPoints = wpdaSchema.table(
     consObj: text('cons_obj'),
     inlndWtrs: text('inlnd_wtrs'),
     oecmAsmt: text('oecm_asmt'),
-    geom: geometry('geom', { type: 'multipoint', srid: 3857 }).notNull(),
+    geom: geometry('geom', { type: 'multipoint', srid: 4326 }).notNull(),
   },
   (table) => [
     index('wdpa_points_geom_idx').using('gist', table.geom),
@@ -103,7 +104,7 @@ export const wdpaPoints = wpdaSchema.table(
 );
 
 // ---------------------------------------------------------------------------
-// wpda.wdpa_polygons — 306950 rows, MULTIPOLYGON SRID 3857
+// wpda.wdpa_polygons — 306950 rows, MULTIPOLYGON SRID 4326
 // Replaces public.protected_planet_parcels (1177 Brazil-only rows)
 // ---------------------------------------------------------------------------
 export const wdpaPolygons = wpdaSchema.table(
@@ -143,7 +144,7 @@ export const wdpaPolygons = wpdaSchema.table(
     consObj: text('cons_obj'),
     inlndWtrs: text('inlnd_wtrs'),
     oecmAsmt: text('oecm_asmt'),
-    geom: geometry('geom', { type: 'multipolygon', srid: 3857 }).notNull(),
+    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
   },
   (table) => [
     index('wdpa_polygons_geom_idx').using('gist', table.geom),
@@ -151,7 +152,7 @@ export const wdpaPolygons = wpdaSchema.table(
 );
 
 // ---------------------------------------------------------------------------
-// wwf.glwd_1 — 3721 rows, MULTIPOLYGON SRID 3857
+// wwf.glwd_1 — 3721 rows, MULTIPOLYGON SRID 4326
 // Global Lakes & Wetlands Database
 // ---------------------------------------------------------------------------
 export const glwd1 = wwfSchema.table(
@@ -186,9 +187,60 @@ export const glwd1 = wwfSchema.table(
     use1: varchar('use_1'),
     use2: varchar('use_2'),
     use3: varchar('use_3'),
-    geom: geometry('geom', { type: 'multipolygon', srid: 3857 }).notNull(),
+    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
   },
   (table) => [
     index('glwd_1_geom_idx').using('gist', table.geom),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// natural_earth.populated_places — POINT SRID 4326
+// ---------------------------------------------------------------------------
+export const naturalEarthPopulatedPlaces = naturalEarthSchema.table(
+  'populated_places',
+  {
+    gid: integer('gid').primaryKey(),
+    name: text('name'),
+    nameascii: text('nameascii'),
+    adm0name: text('adm0name'),
+    adm0A3: varchar('adm0_a3', { length: 3 }),
+    latitude: doublePrecision('latitude'),
+    longitude: doublePrecision('longitude'),
+    popMax: doublePrecision('pop_max'),
+    popMin: doublePrecision('pop_min'),
+    featurecla: text('featurecla'),
+    scalerank: integer('scalerank'),
+    natscale: integer('natscale'),
+    capital: text('capital'),
+    geom: geometry('geom', { type: 'point', srid: 4326 }).notNull(),
+  },
+  (table) => [
+    index('natural_earth_populated_places_geom_idx').using('gist', table.geom),
+    index('natural_earth_populated_places_pop_max_idx').on(table.popMax),
+  ]
+);
+
+// ---------------------------------------------------------------------------
+// natural_earth.countries — MULTIPOLYGON SRID 4326
+// ---------------------------------------------------------------------------
+export const naturalEarthCountries = naturalEarthSchema.table(
+  'countries',
+  {
+    gid: integer('gid').primaryKey(),
+    name: text('name'),
+    nameLong: text('name_long'),
+    admin: text('admin'),
+    adm0A3: varchar('adm0_a3', { length: 3 }),
+    isoA2: varchar('iso_a2', { length: 2 }),
+    isoA3: varchar('iso_a3', { length: 3 }),
+    continent: text('continent'),
+    regionUn: text('region_un'),
+    subregion: text('subregion'),
+    popEst: doublePrecision('pop_est'),
+    geom: geometry('geom', { type: 'multipolygon', srid: 4326 }).notNull(),
+  },
+  (table) => [
+    index('natural_earth_countries_geom_idx').using('gist', table.geom),
   ]
 );

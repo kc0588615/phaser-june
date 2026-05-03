@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { RotateCw, MapPin, Swords, Star } from 'lucide-react';
 import { AFFINITY_TYPES, getAffinityDefinition, type AffinityType } from '@/expedition/affinities';
+import { getRunNodeLabel } from '@/expedition/domain';
 import { iucnBadgeClasses, iucnLabel } from '@/lib/iucn';
 import { cn } from '@/lib/utils';
 import type { Species } from '@/types/database';
 import type { FeatureClass } from '@/types/gis';
+import { getWaypointTypeLabel, type ExpeditionWaypointMemory } from '@/types/waypoints';
 
 const FEATURE_CLASS_BADGES: Record<FeatureClass, { icon: string; label: string; color: string }> = {
   river: { icon: '🌊', label: 'River', color: 'text-blue-400' },
@@ -44,7 +46,13 @@ interface SpeciesTCGCardProps {
   isDiscovered: boolean;
   discoveredAt?: string;
   runMemory?: {
-    nodes?: Array<{ nodeType: string; counterGem: string | null; obstacleFamily: string | null; scoreEarned: number }>;
+    nodes?: Array<{
+      nodeType: string;
+      counterGem: string | null;
+      obstacleFamily: string | null;
+      scoreEarned: number;
+      waypoint?: ExpeditionWaypointMemory | null;
+    }>;
     routePolyline?: Array<{ lon: number; lat: number }>;
     routeBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
     realm?: string;
@@ -274,16 +282,7 @@ export default function SpeciesTCGCard({
                   <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Route Nodes</p>
                   <div className="flex gap-1 flex-wrap">
                     {runMemory.nodes.map((node, i) => (
-                      <div
-                        key={i}
-                        className="px-1.5 py-1 rounded bg-slate-800/80 border border-slate-700/50 text-center"
-                        title={`${node.nodeType} — ${node.obstacleFamily || 'none'}`}
-                      >
-                        <p className="text-[9px] text-slate-400 truncate max-w-[60px]">{node.nodeType.replace(/_/g, ' ')}</p>
-                        {node.counterGem && (
-                          <p className="text-[8px] text-cyan-400">{node.counterGem}</p>
-                        )}
-                      </div>
+                      <MemoryNodeChip key={i} node={node} />
                     ))}
                   </div>
                 </div>
@@ -446,6 +445,41 @@ function titleCase(value: string): string {
 function getVariantLabel(value: string | null | undefined): string | null {
   if (value === 'foil') return 'Foil';
   return null;
+}
+
+function MemoryNodeChip({
+  node,
+}: {
+  node: {
+    nodeType: string;
+    counterGem: string | null;
+    obstacleFamily: string | null;
+    waypoint?: ExpeditionWaypointMemory | null;
+  };
+}) {
+  const waypointName = typeof node.waypoint?.name === 'string' ? node.waypoint.name : '';
+  const waypointType = getWaypointTypeLabel(node.waypoint?.waypointType);
+  const nodeLabel = getRunNodeLabel(node);
+  const title = [
+    nodeLabel,
+    node.obstacleFamily || 'none',
+    waypointName ? `${waypointType ?? 'Waypoint'}: ${waypointName}` : null,
+  ].filter(Boolean).join(' - ');
+
+  return (
+    <div
+      className="px-1.5 py-1 rounded bg-slate-800/80 border border-slate-700/50 text-center"
+      title={title}
+    >
+      <p className="text-[9px] text-slate-400 truncate max-w-[64px]">{nodeLabel}</p>
+      {waypointName && (
+        <p className="text-[8px] text-emerald-300 truncate max-w-[72px]">{waypointName}</p>
+      )}
+      {node.counterGem && (
+        <p className="text-[8px] text-cyan-400">{node.counterGem}</p>
+      )}
+    </div>
+  );
 }
 
 function RunRouteMiniMap({ points }: { points: Array<{ lon: number; lat: number }> }) {

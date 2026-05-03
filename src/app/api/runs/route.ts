@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunSessions, ecoRunNodes } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import type { RunNode } from '@/lib/nodeScoring';
+import { applyWaypointsToRunNodes } from '@/lib/nodeScoring';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import type { FeatureFingerprint } from '@/types/gis';
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     if (!Number.isFinite(lon) || !Number.isFinite(lat) || !locationKey || !Array.isArray(nodes) || nodes.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: lon, lat, locationKey, nodes' }, { status: 400 });
     }
+    const waypointAwareNodes = applyWaypointsToRunNodes(nodes);
 
     // Resolve player from auth (optional — anonymous runs allowed)
     const playerId = await getPlayerIdFromClerk();
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
           selectedLng: lon,
           selectedLat: lat,
           locationKey,
-          nodeCountPlanned: nodes.length,
+          nodeCountPlanned: waypointAwareNodes.length,
           nodeIndexCurrent: 1,
           runSeed: runSeed ?? null,
           realm: realm ?? null,
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
         })
         .returning({ id: ecoRunSessions.id });
 
-      const nodeRows = nodes.map((node, i) => {
+      const nodeRows = waypointAwareNodes.map((node, i) => {
         const boardContext = buildNodeBoardContext({
           width: GRID_COLS,
           height: GRID_ROWS,
@@ -110,7 +112,13 @@ export async function POST(request: NextRequest) {
             obstacleFamily: node.obstacleFamily ?? null,
           },
           toolProfile: { activeAffinities: activeAffinities ?? [] },
-          boardContext: { rationale: node.rationale, difficulty: node.difficulty, encounterConfig: node.encounterConfig ?? null, ...boardContext },
+          boardContext: {
+            rationale: node.rationale,
+            difficulty: node.difficulty,
+            encounterConfig: node.encounterConfig ?? null,
+            waypoint: node.waypoint ?? null,
+            ...boardContext,
+          },
           objectiveType: node.counterGem ? 'counter_gem_match' : 'match_count',
           objectiveTarget: node.objectiveTarget ?? 0,
         };

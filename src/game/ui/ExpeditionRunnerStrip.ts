@@ -55,6 +55,7 @@ export class ExpeditionRunnerStrip {
     private encounterPulseUntil = 0;
     private statusResetAt = 0;
     private obstacleBadges: Phaser.GameObjects.Container[] = [];
+    private destroyed = false;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -102,6 +103,8 @@ export class ExpeditionRunnerStrip {
     }
 
     setLayout(x: number, y: number, width: number, height: number): void {
+        if (!this.canMutate()) return;
+
         this.root.setPosition(x, y);
         this.width = Math.max(120, width);
         this.height = Math.max(48, height);
@@ -121,6 +124,8 @@ export class ExpeditionRunnerStrip {
     }
 
     setIdle(message: string = 'Awaiting expedition site'): void {
+        if (!this.canMutate()) return;
+
         this.active = false;
         this.targetProgress = 0;
         this.displayProgress = 0;
@@ -145,6 +150,8 @@ export class ExpeditionRunnerStrip {
         activeAffinities: AffinityType[];
         requiredGems: GemType[];
     }): void {
+        if (!this.canMutate()) return;
+
         this.active = true;
         this.targetProgress = config.objectiveTarget > 0 ? 0 : 0.92;
         this.displayProgress = config.objectiveTarget > 0 ? 0 : 0.92;
@@ -174,6 +181,8 @@ export class ExpeditionRunnerStrip {
     }
 
     setObjectiveProgress(progress: number, target: number): void {
+        if (!this.canMutate()) return;
+
         if (target <= 0) {
             this.targetProgress = 0.92;
             return;
@@ -182,6 +191,8 @@ export class ExpeditionRunnerStrip {
     }
 
     setSpook(pct: number, tier: SpookTier): void {
+        if (!this.canMutate()) return;
+
         this.spookTier = tier;
         if (tier === 'stabilized') {
             this.statusMessage = `Tracking stable ${(pct * 100).toFixed(0)}%`;
@@ -195,6 +206,8 @@ export class ExpeditionRunnerStrip {
     }
 
     pulseEncounter(eventKey: string): void {
+        if (!this.canMutate()) return;
+
         this.encounterPulseUntil = this.scene.time.now + 1400;
         this.statusMessage = `Encounter: ${eventKey.replace(/_/g, ' ')}`;
         this.statusResetAt = this.scene.time.now + 1800;
@@ -202,6 +215,8 @@ export class ExpeditionRunnerStrip {
     }
 
     markResolved(result: RunnerResult): void {
+        if (!this.canMutate()) return;
+
         if (result === 'success') {
             this.targetProgress = 1;
             this.statusMessage = 'Node stabilized';
@@ -214,13 +229,18 @@ export class ExpeditionRunnerStrip {
     }
 
     destroy(): void {
+        if (this.destroyed) return;
+
         this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.handleUpdate, this);
         this.clearObstacleBadges();
-        this.root.destroy(true);
+        if (this.root.active) {
+            this.root.destroy(true);
+        }
+        this.destroyed = true;
     }
 
     private handleUpdate(time: number, delta: number): void {
-        if (!this.root.active) return;
+        if (!this.canMutate()) return;
 
         if (this.statusResetAt > 0 && time >= this.statusResetAt) {
             this.statusResetAt = 0;
@@ -250,6 +270,8 @@ export class ExpeditionRunnerStrip {
     }
 
     private syncVisualState(time: number): void {
+        if (!this.canMutate()) return;
+
         const x = Phaser.Math.Linear(this.trackStartX, this.trackEndX, this.displayProgress);
         const bob = this.active ? Math.sin(time / 110) * 2 : 0;
         this.scientist.setPosition(x, this.trackY + 3 + bob);
@@ -270,12 +292,20 @@ export class ExpeditionRunnerStrip {
     }
 
     private syncText(): void {
-        this.titleText.setText(this.nodeTitle);
-        this.subtitleText.setText(this.objectiveText);
-        this.statusText.setText(this.statusMessage.toUpperCase());
+        if (!this.canMutate()) return;
+
+        try {
+            this.titleText.setText(this.nodeTitle);
+            this.subtitleText.setText(this.objectiveText);
+            this.statusText.setText(this.statusMessage.toUpperCase());
+        } catch {
+            this.destroyed = true;
+        }
     }
 
     private setObstacleBadges(obstacles: NodeObstacle[]): void {
+        if (!this.canMutate()) return;
+
         this.clearObstacleBadges();
         for (const obstacle of obstacles) {
             const meta = OBSTACLE_BADGE_META[obstacle];
@@ -296,7 +326,9 @@ export class ExpeditionRunnerStrip {
     }
 
     private layoutObstacleBadges(): void {
+        if (!this.canMutate()) return;
         if (this.obstacleBadges.length === 0) return;
+
         const span = this.trackEndX - this.trackStartX;
         this.obstacleBadges.forEach((badge, index) => {
             const progress = (index + 1) / (this.obstacleBadges.length + 1);
@@ -306,24 +338,48 @@ export class ExpeditionRunnerStrip {
     }
 
     private clearObstacleBadges(): void {
-        this.obstacleBadges.forEach((badge) => badge.destroy(true));
+        this.obstacleBadges.forEach((badge) => {
+            if (badge.active) {
+                badge.destroy(true);
+            }
+        });
         this.obstacleBadges = [];
     }
 
     private applyTierPalette(): void {
-        if (this.spookTier === 'stabilized') {
-            this.sky.setFillStyle(0x10253d, 0.95);
-            this.horizon.setFillStyle(0x1d4f59, 0.95);
-            this.statusText.setColor('#67e8f9');
-        } else if (this.spookTier === 'spooked') {
-            this.sky.setFillStyle(0x3f2a1d, 0.95);
-            this.horizon.setFillStyle(0x7c3f13, 0.95);
-            this.statusText.setColor('#fbbf24');
-        } else {
-            this.sky.setFillStyle(0x3f1722, 0.95);
-            this.horizon.setFillStyle(0x7f1d1d, 0.95);
-            this.statusText.setColor('#f87171');
+        if (!this.canMutate()) return;
+
+        try {
+            if (this.spookTier === 'stabilized') {
+                this.sky.setFillStyle(0x10253d, 0.95);
+                this.horizon.setFillStyle(0x1d4f59, 0.95);
+                this.statusText.setColor('#67e8f9');
+            } else if (this.spookTier === 'spooked') {
+                this.sky.setFillStyle(0x3f2a1d, 0.95);
+                this.horizon.setFillStyle(0x7c3f13, 0.95);
+                this.statusText.setColor('#fbbf24');
+            } else {
+                this.sky.setFillStyle(0x3f1722, 0.95);
+                this.horizon.setFillStyle(0x7f1d1d, 0.95);
+                this.statusText.setColor('#f87171');
+            }
+        } catch {
+            this.destroyed = true;
         }
+    }
+
+    private canMutate(): boolean {
+        return !this.destroyed
+            && this.root.active
+            && this.sky.active
+            && this.horizon.active
+            && this.trail.active
+            && this.scientistShadow.active
+            && this.scientist.active
+            && this.nodeMarker.active
+            && this.titleText.active
+            && this.subtitleText.active
+            && this.statusText.active;
     }
 
     private ensureGeneratedTextures(): void {

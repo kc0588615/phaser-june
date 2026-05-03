@@ -6,6 +6,7 @@
  */
 
 import type { ActionGemType, GemType } from '@/game/constants';
+import type { ExpeditionWaypoint } from '@/types/waypoints';
 import {
   getCounterGemForObstacleFamily,
   type NodeObstacle,
@@ -43,6 +44,7 @@ export interface RunNode {
   requiredGems: GemType[];
   objectiveTarget: number;
   encounterConfig: EncounterConfig | null;
+  waypoint?: ExpeditionWaypoint;
 }
 
 export interface HabitatSignals {
@@ -312,6 +314,51 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
       baseSpookRate: 2,
     },
   }),
+  protected_area_survey: createNodeTemplate({
+    node_type: 'custom',
+    obstacleFamily: 'sighting',
+    obstacles: ['limited_signal', 'steep_terrain'],
+    events: ['vantage_scan', 'discovery_event'],
+    rationale: 'Protected-area surveys trade speed for careful boundaries, permits, and evidence checks.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'blocker', counterGem: 'key', altGem: 'thought', target: 3, resistances: ['sighting'] },
+        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
+        { threatType: 'loot_cache', counterGem: 'thought', altGem: null, target: 2, resistances: [] },
+      ],
+      baseSpookRate: 1.8,
+    },
+  }),
+  basecamp_survey: createNodeTemplate({
+    node_type: 'custom',
+    obstacleFamily: 'alert',
+    obstacles: ['limited_signal', 'unknown_terrain'],
+    events: ['discovery_event', 'trail_markings'],
+    rationale: 'Sparse-route basecamps emphasize orientation, signal checks, and keeping the field plan playable.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'hazard', counterGem: 'shield', altGem: 'crate', target: 2, resistances: ['alert'] },
+        { threatType: 'loot_cache', counterGem: 'crate', altGem: null, target: 2, resistances: [] },
+        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 2, resistances: [] },
+      ],
+      baseSpookRate: 1.5,
+    },
+  }),
+  ecotone_edge: createNodeTemplate({
+    node_type: 'custom',
+    obstacleFamily: 'visibility',
+    obstacles: ['low_visibility', 'flow_shift'],
+    events: ['corridor_crossing', 'migration_shift'],
+    rationale: 'Ecotone edges mix habitats and create shifting sight lines along the route boundary.',
+    encounterConfig: {
+      threats: [
+        { threatType: 'quarry', counterGem: 'sword', altGem: 'staff', target: 3, resistances: ['visibility'] },
+        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 3, resistances: [] },
+        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 2, resistances: [] },
+      ],
+      baseSpookRate: 2.4,
+    },
+  }),
   crisis: createNodeTemplate({
     node_type: 'crisis',
     obstacleFamily: null,
@@ -327,6 +374,77 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     rationale: 'End-of-route evidence review and species identification.',
   }),
 };
+
+function objectiveTargetForNode(node: Omit<RunNode, 'objectiveTarget'>): number {
+  return node.encounterConfig
+    ? node.encounterConfig.threats.reduce((sum, threat) => sum + threat.target, 0)
+    : (node.counterGem ? 6 : 0);
+}
+
+function waypointNodeTemplateKey(waypoint: ExpeditionWaypoint, existingNode: RunNode): keyof typeof NODE_TEMPLATES {
+  if (waypoint.nodeRole === 'final') return 'analysis';
+  if (existingNode.node_type === 'crisis') return 'crisis';
+
+  switch (waypoint.waypointType) {
+    case 'river':
+    case 'lake':
+    case 'wetland':
+      return 'riverbank_sweep';
+    case 'city':
+      return 'urban_fringe';
+    case 'protected_area':
+      return 'protected_area_survey';
+    case 'bioregion_edge':
+      return 'ecotone_edge';
+    case 'basecamp':
+      return waypoint.fallback ? 'basecamp_survey' : 'urban_fringe';
+  }
+}
+
+function waypointRationale(waypoint: ExpeditionWaypoint, baseRationale: string): string {
+  if (waypoint.fallback) {
+    return `${baseRationale} Route fallback uses ${waypoint.name} to keep the expedition playable in sparse data.`;
+  }
+
+  switch (waypoint.waypointType) {
+    case 'river':
+      return `Waypoint route crosses ${waypoint.name}, so traversal pressure centers on riverbank terrain.`;
+    case 'lake':
+    case 'wetland':
+      return `Waypoint route follows ${waypoint.name}, turning water-edge movement into the main pressure.`;
+    case 'city':
+      return `Waypoint route starts near ${waypoint.name}, where urban edge disturbance shapes the opening node.`;
+    case 'protected_area':
+      return `Waypoint route enters ${waypoint.name}, emphasizing protected-area boundaries, access, and evidence checks.`;
+    case 'bioregion_edge':
+      return `Waypoint route reaches ${waypoint.name}, where shifting habitat edges shape the encounter.`;
+    case 'basecamp':
+      return `Waypoint route starts from ${waypoint.name}, keeping the opening node anchored to the selected location.`;
+  }
+}
+
+export function applyWaypointsToRunNodes(nodes: RunNode[]): RunNode[] {
+  return nodes.map((node) => {
+    const waypoint = node.waypoint;
+    if (!waypoint) return node;
+
+    const templateKey = waypointNodeTemplateKey(waypoint, node);
+    const template = NODE_TEMPLATES[templateKey] ?? NODE_TEMPLATES.custom;
+    const tunedNode: Omit<RunNode, 'objectiveTarget'> = {
+      ...template,
+      difficulty: waypoint.fallback
+        ? Math.min(node.difficulty, 2) as RunNode['difficulty']
+        : node.difficulty,
+      waypoint,
+      rationale: waypointRationale(waypoint, template.rationale),
+    };
+
+    return {
+      ...tunedNode,
+      objectiveTarget: objectiveTargetForNode(tunedNode),
+    };
+  });
+}
 
 /** Unified 6-node run generator. Derives all nodes from layer scores + habitat context. */
 export function generateRunNodes(
@@ -426,8 +544,6 @@ export function generateRunNodes(
   // objectiveTarget = sum of threat targets when encounter config exists, else legacy flat 6
   return nodes.slice(0, 6).map(n => ({
     ...n,
-    objectiveTarget: n.encounterConfig
-      ? n.encounterConfig.threats.reduce((sum, t) => sum + t.target, 0)
-      : (n.counterGem ? 6 : 0),
+    objectiveTarget: objectiveTargetForNode(n),
   }));
 }

@@ -195,11 +195,11 @@ export async function GET(request: NextRequest) {
     const squareJson = JSON.stringify(square.geometry);
     const pointWkt = `SRID=4326;POINT(${lon} ${lat})`;
 
-    // --- Protected areas from wpda.wdpa_polygons (SRID 3857) ---
+    // --- Protected areas from wpda.wdpa_polygons (SRID 4326) ---
 
     const protectedAreas = await db.execute<ProtectedAreaRow>(sql`
       WITH square AS (
-        SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
+        SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
       )
       SELECT
         p.site_id,
@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
         p.desig_eng,
         p.iucn_cat,
         p.gov_type,
-        ST_Area(ST_Intersection(p.geom, square.geom)) AS intersect_area_m2
+        ST_Area(ST_Intersection(p.geom, square.geom)::geography) AS intersect_area_m2
       FROM wpda.wdpa_polygons p
       CROSS JOIN square
       WHERE ST_Intersects(p.geom, square.geom)
@@ -281,22 +281,23 @@ export async function GET(request: NextRequest) {
       }
     } catch { /* eco_gis_layers may not exist yet */ }
 
-    // --- Water queries — unesco.world_rivers (3857), wwf.glwd_1 (3857) ---
+    // --- Water queries — unesco.world_rivers (4326), wwf.glwd_1 (4326) ---
 
     let riverRows: RiverRow[] = [];
     if (enabledLayers.has('unesco_rivers')) {
       try {
         riverRows = [...await db.execute<RiverRow>(sql`
           WITH pt AS (
-            SELECT ST_Transform(ST_GeomFromEWKT(${pointWkt}), 3857) AS geom
+            SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
           )
           SELECT
             r.gid,
             r.river_map,
-            ST_Distance(r.geom, pt.geom) AS distance_m
+            ST_Distance(r.geom::geography, pt.geom::geography) AS distance_m
           FROM unesco.world_rivers r
           CROSS JOIN pt
-          WHERE ST_DWithin(r.geom, pt.geom, 20000)
+          WHERE r.geom && ST_Expand(pt.geom, 0.25)
+            AND ST_DWithin(r.geom::geography, pt.geom::geography, 20000)
           ORDER BY distance_m ASC
           LIMIT 3
         `)];
@@ -308,41 +309,42 @@ export async function GET(request: NextRequest) {
       try {
         lakeRows = [...await db.execute<LakeRow>(sql`
           WITH square AS (
-            SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
+            SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
           ), pt AS (
-            SELECT ST_Transform(ST_GeomFromEWKT(${pointWkt}), 3857) AS geom
+            SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
           )
           SELECT
             l.glwd_id,
             l.lake_name,
             l.type,
             l.area_skm,
-            ST_Area(ST_Intersection(l.geom, square.geom)) AS intersect_area_m2,
-            ST_Distance(l.geom, pt.geom) AS distance_m
+            ST_Area(ST_Intersection(l.geom, square.geom)::geography) AS intersect_area_m2,
+            ST_Distance(l.geom::geography, pt.geom::geography) AS distance_m
           FROM wwf.glwd_1 l
           CROSS JOIN square
           CROSS JOIN pt
-          WHERE ST_DWithin(l.geom, pt.geom, 5000)
+          WHERE l.geom && ST_Expand(pt.geom, 0.1)
+            AND ST_DWithin(l.geom::geography, pt.geom::geography, 5000)
           ORDER BY distance_m ASC
           LIMIT 3
         `)];
       } catch { /* no data */ }
     }
 
-    // --- Ramsar wetlands (3857) ---
+    // --- Ramsar wetlands (4326) ---
 
     let wetlandRows: WetlandRow[] = [];
     if (enabledLayers.has('ramsar_wetland')) {
       try {
         wetlandRows = [...await db.execute<WetlandRow>(sql`
           WITH square AS (
-            SELECT ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326), 3857) AS geom
+            SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
           )
           SELECT
             w.gid,
             w.ecoregion,
             w.mht_txt,
-            ST_Area(ST_Intersection(w.geom, square.geom)) AS intersect_area_m2
+            ST_Area(ST_Intersection(w.geom, square.geom)::geography) AS intersect_area_m2
           FROM ramsar.wetland w
           CROSS JOIN square
           WHERE ST_Intersects(w.geom, square.geom)

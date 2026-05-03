@@ -48,7 +48,7 @@ function MainAppLayoutInner() {
 
     const {
         runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
-        handleAffinitySelected, handleRunReset, handleCrisisToolSpend,
+        handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend,
         handleDeductionPurchase, handleDeductionGuessResult,
         handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
         useConsumable, onShowSpeciesList,
@@ -85,6 +85,15 @@ function MainAppLayoutInner() {
         setBaseTab('explore');
         setViewMode('map');
     }, []);
+
+    const handleResumeExpeditionFromLauncher = useCallback(async (runId: string) => {
+        const resumed = await handleRunResume(runId);
+        if (resumed) {
+            setBaseTab('explore');
+            setViewMode('map');
+        }
+        return resumed;
+    }, [handleRunResume]);
 
     const currentNode = inRun && runState.expedition
         ? runState.expedition.nodes[runState.currentNodeIndex]
@@ -303,7 +312,7 @@ function MainAppLayoutInner() {
             <div className="absolute inset-0 w-full h-full z-briefing bg-ds-bg overflow-y-auto" style={{
                 display: (baseTab === 'expedition' && !inExpedition) ? 'block' : 'none',
             }}>
-                <ExpeditionLauncher onStart={handleStartExpeditionFromLauncher} />
+                <ExpeditionLauncher onStart={handleStartExpeditionFromLauncher} onResume={handleResumeExpeditionFromLauncher} />
             </div>
 
             {/* Bottom Tab Bar */}

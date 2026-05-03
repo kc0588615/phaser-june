@@ -44,12 +44,14 @@ export async function GET(request: NextRequest) {
             scoreEarned: ecoRunNodes.scoreEarned,
             movesUsed: ecoRunNodes.movesUsed,
             hazardProfile: ecoRunNodes.hazardProfile,
+            boardContext: ecoRunNodes.boardContext,
           })
           .from(ecoRunNodes)
           .where(eq(ecoRunNodes.runId, s.id))
           .orderBy(ecoRunNodes.nodeOrder);
 
         const meta = s.metadata as Record<string, unknown>;
+        const hasResumeSnapshot = Boolean(meta?.expeditionSnapshot && typeof meta.expeditionSnapshot === 'object');
         const [memory] = await db
           .select()
           .from(runMemories)
@@ -80,6 +82,7 @@ export async function GET(request: NextRequest) {
           startedAt: s.startedAt,
           endedAt: s.endedAt,
           affinities: meta?.activeAffinities ?? [],
+          hasResumeSnapshot,
           resourceWallet: meta?.resourceWallet ?? null,
           deductionSummary: meta?.deductionSummary ?? null,
           discoveredSpecies: memorySpecies ? {
@@ -97,6 +100,7 @@ export async function GET(request: NextRequest) {
             movesUsed: n.movesUsed,
             counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
             obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
+            waypoint: ((n.boardContext as Record<string, unknown>)?.waypoint as Record<string, unknown> | null | undefined) ?? null,
           })),
         };
       })

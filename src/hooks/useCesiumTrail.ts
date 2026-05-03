@@ -9,16 +9,59 @@ import {
   GeoJsonDataSource,
   Entity as CesiumEntity,
   ColorMaterialProperty,
+  Cartesian2,
+  LabelStyle,
+  VerticalOrigin,
 } from 'cesium';
 import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
-import { computeExpeditionRoutePolyline } from '@/lib/expeditionRoute';
+import { computeExpeditionRoutePolyline, getRouteIndexForWaypointSlot, getRoutePolylineThroughWaypointSlot, normalizeRoutePolyline, type RoutePoint } from '@/lib/expeditionRoute';
+import { getWaypointTypeLabel, type ExpeditionWaypoint, type WaypointType } from '@/types/waypoints';
+
+const WAYPOINT_COLORS: Record<WaypointType, string> = {
+  city: '#f59e0b',
+  river: '#38bdf8',
+  lake: '#2563eb',
+  wetland: '#14b8a6',
+  protected_area: '#22c55e',
+  bioregion_edge: '#a78bfa',
+  basecamp: '#f97316',
+};
+
+function getWaypointForRoutePoint(data: EventPayloads['expedition-data-ready'], routePoint: RoutePoint, routeIndex: number): ExpeditionWaypoint | null {
+  const slot = Number.isInteger(routePoint.waypointSlot) ? routePoint.waypointSlot! : routeIndex;
+  const nodeWaypoint = data.expedition.nodes[slot]?.waypoint;
+  if (nodeWaypoint) return nodeWaypoint;
+  return data.expedition.waypoints?.find((waypoint) => waypoint.slot === slot) ?? null;
+}
+
+function markerColorForWaypoint(waypoint: ExpeditionWaypoint | null) {
+  if (!waypoint) return CesiumColor.GRAY;
+  return CesiumColor.fromCssColorString(WAYPOINT_COLORS[waypoint.waypointType]).withAlpha(waypoint.fallback ? 0.75 : 1);
+}
+
+function markerLabelForWaypoint(waypoint: ExpeditionWaypoint | null, routeIndex: number) {
+  if (!waypoint) return `Node ${routeIndex + 1}`;
+  const typeLabel = getWaypointTypeLabel(waypoint.waypointType) ?? 'Waypoint';
+  const name = waypoint.name.length > 22 ? `${waypoint.name.slice(0, 21)}…` : waypoint.name;
+  return `${waypoint.slot + 1}. ${typeLabel}: ${name}`;
+}
+
+function getGameplayTrailPositions(route: RoutePoint[], currentSlot: number): RoutePoint[] {
+  return getRoutePolylineThroughWaypointSlot(route, currentSlot);
+}
+
+function clearActiveMarker(entity: CesiumEntity | undefined) {
+  if (!entity?.point) return;
+  entity.point.pixelSize = new ConstantProperty(9);
+}
 
 /** Manages expedition trail polyline + node markers on the Cesium globe. */
 export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
   const trailEntitiesRef = useRef<CesiumEntity[]>([]);
-  const trailPositionsRef = useRef<{ lon: number; lat: number }[]>([]);
-  const trailCompletedIndexRef = useRef<number>(0);
+  const trailPositionsRef = useRef<RoutePoint[]>([]);
+  const trailCurrentSlotRef = useRef<number>(0);
+  const trailActiveMarkerRef = useRef<CesiumEntity | null>(null);
   const spatialLayersRef = useRef<GeoJsonDataSource[]>([]);
   const runPhaseRef: MutableRefObject<string> = useRef('idle');
 
@@ -30,7 +73,8 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
     }
     trailEntitiesRef.current = [];
     trailPositionsRef.current = [];
-    trailCompletedIndexRef.current = 0;
+    trailCurrentSlotRef.current = 0;
+    trailActiveMarkerRef.current = null;
   }, [viewerRef]);
 
   const loadSpatialLayers = useCallback(async (lon: number, lat: number) => {
@@ -113,9 +157,13 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
     const onExpeditionReady = (data: EventPayloads['expedition-data-ready']) => {
       runPhaseRef.current = 'briefing';
       const nodeCount = data.expedition.nodes.length;
-      const positions = computeExpeditionRoutePolyline(data.lon, data.lat, nodeCount);
+      const payloadRoute = normalizeRoutePolyline(data.expedition.routePolyline);
+      const positions = payloadRoute.length > 0
+        ? payloadRoute
+        : computeExpeditionRoutePolyline(data.lon, data.lat, nodeCount);
       trailPositionsRef.current = positions;
-      trailCompletedIndexRef.current = 0;
+      trailCurrentSlotRef.current = 0;
+      trailActiveMarkerRef.current = null;
 
       if (viewerRef.current?.cesiumElement && positions.length > 1) {
         const viewer = viewerRef.current.cesiumElement;
@@ -124,8 +172,7 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
         const polyline = viewer.entities.add({
           polyline: {
             positions: new CallbackProperty(() => {
-              const idx = Math.min(trailCompletedIndexRef.current + 1, trailPositionsRef.current.length);
-              return trailPositionsRef.current.slice(0, idx).map((p: { lon: number; lat: number }) =>
+              return getGameplayTrailPositions(trailPositionsRef.current, trailCurrentSlotRef.current).map((p: { lon: number; lat: number }) =>
                 Cartesian3.fromDegrees(p.lon, p.lat)
               );
             }, false) as any,
@@ -140,13 +187,28 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
         trailEntitiesRef.current.push(polyline);
 
         for (let i = 0; i < positions.length; i++) {
+          const waypoint = getWaypointForRoutePoint(data, positions[i], i);
+          const markerColor = markerColorForWaypoint(waypoint);
           const pt = viewer.entities.add({
             position: Cartesian3.fromDegrees(positions[i].lon, positions[i].lat),
             point: {
-              pixelSize: new ConstantProperty(8),
-              color: new ConstantProperty(CesiumColor.GRAY),
+              pixelSize: new ConstantProperty(waypoint?.fallback ? 7 : 9),
+              color: new ConstantProperty(markerColor),
               outlineColor: new ConstantProperty(CesiumColor.WHITE),
               outlineWidth: new ConstantProperty(1),
+              heightReference: new ConstantProperty(HeightReference.CLAMP_TO_GROUND),
+            },
+            label: {
+              text: new ConstantProperty(markerLabelForWaypoint(waypoint, i)),
+              font: new ConstantProperty('12px sans-serif'),
+              fillColor: new ConstantProperty(CesiumColor.WHITE),
+              outlineColor: new ConstantProperty(CesiumColor.BLACK),
+              outlineWidth: new ConstantProperty(2),
+              style: new ConstantProperty(LabelStyle.FILL_AND_OUTLINE),
+              verticalOrigin: new ConstantProperty(VerticalOrigin.BOTTOM),
+              pixelOffset: new ConstantProperty(new Cartesian2(0, -14)),
+              showBackground: new ConstantProperty(true),
+              backgroundColor: new ConstantProperty(CesiumColor.BLACK.withAlpha(0.55)),
               heightReference: new ConstantProperty(HeightReference.CLAMP_TO_GROUND),
             },
           });
@@ -155,7 +217,8 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
         const firstPt = trailEntitiesRef.current[1];
         if (firstPt?.point) {
           firstPt.point.color = new ConstantProperty(CesiumColor.YELLOW);
-          firstPt.point.pixelSize = new ConstantProperty(10);
+          firstPt.point.pixelSize = new ConstantProperty(11);
+          trailActiveMarkerRef.current = firstPt;
         }
       }
     };
@@ -163,16 +226,23 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
     const onExpeditionStart = () => { runPhaseRef.current = 'in-run'; };
 
     const onNodeComplete = (data: { nodeIndex: number }) => {
-      const completedIdx = data.nodeIndex;
-      trailCompletedIndexRef.current = completedIdx + 1;
+      const completedIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, data.nodeIndex);
+      if (completedIdx < 0) return;
+      trailCurrentSlotRef.current = Math.max(trailCurrentSlotRef.current, data.nodeIndex + 1);
       const markerIdx = completedIdx + 1;
+      clearActiveMarker(trailActiveMarkerRef.current ?? undefined);
       if (trailEntitiesRef.current[markerIdx]?.point) {
         trailEntitiesRef.current[markerIdx].point!.color = new ConstantProperty(CesiumColor.CYAN);
+        trailEntitiesRef.current[markerIdx].point!.pixelSize = new ConstantProperty(9);
       }
-      const nextMarkerIdx = markerIdx + 1;
+      const nextRouteIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, data.nodeIndex + 1);
+      const nextMarkerIdx = nextRouteIdx >= 0 ? nextRouteIdx + 1 : -1;
       if (trailEntitiesRef.current[nextMarkerIdx]?.point) {
         trailEntitiesRef.current[nextMarkerIdx].point!.color = new ConstantProperty(CesiumColor.YELLOW);
-        trailEntitiesRef.current[nextMarkerIdx].point!.pixelSize = new ConstantProperty(10);
+        trailEntitiesRef.current[nextMarkerIdx].point!.pixelSize = new ConstantProperty(11);
+        trailActiveMarkerRef.current = trailEntitiesRef.current[nextMarkerIdx];
+      } else {
+        trailActiveMarkerRef.current = null;
       }
     };
 

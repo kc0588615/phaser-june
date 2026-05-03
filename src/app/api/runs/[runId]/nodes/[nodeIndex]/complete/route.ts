@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq, and, sql } from 'drizzle-orm';
 import { db, ecoRunSessions, ecoRunNodes } from '@/db';
+import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 
 /**
  * POST /api/runs/[runId]/nodes/[nodeIndex]/complete
@@ -18,6 +19,21 @@ export async function POST(
 
     if (!runId || !Number.isFinite(nodeOrder) || nodeOrder < 1) {
       return NextResponse.json({ error: 'Invalid runId or nodeIndex' }, { status: 400 });
+    }
+
+    const playerId = await getPlayerIdFromClerk();
+    const [sessionOwner] = await db
+      .select({ playerId: ecoRunSessions.playerId })
+      .from(ecoRunSessions)
+      .where(eq(ecoRunSessions.id, runId))
+      .limit(1);
+
+    if (!sessionOwner) {
+      return NextResponse.json({ error: 'Run not found' }, { status: 404 });
+    }
+
+    if (sessionOwner.playerId && sessionOwner.playerId !== playerId) {
+      return NextResponse.json({ error: playerId ? 'Forbidden' : 'Unauthorized' }, { status: playerId ? 403 : 401 });
     }
 
     const body = await request.json().catch(() => ({}));
