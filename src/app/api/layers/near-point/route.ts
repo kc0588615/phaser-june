@@ -85,9 +85,13 @@ export async function GET(request: NextRequest) {
             'ogc_fid', b.ogc_fid,
             'bioregion', b.bioregion,
             'realm', b.realm,
-            'biome', b.biome
+            'biome', b.biome,
+            'eco_id', b.eco_id,
+            'eco_sym', b.eco_sym,
+            'hex_color', c.hex_color
           )::text AS properties
         FROM oneearth.oneearth_bioregion b
+        LEFT JOIN oneearth.eco_sym_colors c ON c.eco_sym = b.eco_sym
         CROSS JOIN square
         WHERE ST_Intersects(b.wkb_geometry, square.geom)
         LIMIT 6

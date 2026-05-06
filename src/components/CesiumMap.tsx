@@ -219,9 +219,11 @@ const CesiumMap: React.FC = () => {
           if (!entity.polygon) return;
           const biome = entity.properties?.biome?.getValue?.();
           const realm = entity.properties?.realm?.getValue?.();
+          const hexColor = entity.properties?.hex_color?.getValue?.();
           const style = getBioregionStyle(
             typeof biome === 'string' ? biome : undefined,
-            typeof realm === 'string' ? realm : undefined
+            typeof realm === 'string' ? realm : undefined,
+            typeof hexColor === 'string' ? hexColor : undefined,
           );
 
           entity.polygon.material = new ColorMaterialProperty(

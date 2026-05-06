@@ -30,6 +30,13 @@ const REALM_STYLES: Record<string, { fill: string; outline: string }> = {
 
 const DEFAULT_STYLE = { fill: '#64748b', outline: '#334155' };
 
+function darkenHex(hex: string, factor = 0.7): string {
+  const r = Math.round(parseInt(hex.slice(1, 3), 16) * factor);
+  const g = Math.round(parseInt(hex.slice(3, 5), 16) * factor);
+  const b = Math.round(parseInt(hex.slice(5, 7), 16) * factor);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
 function normalizeBiome(biome?: string): string | undefined {
   if (!biome) return undefined;
   const cleaned = biome.replace(/\\&/g, '&').trim();
@@ -41,7 +48,8 @@ function normalizeBiome(biome?: string): string | undefined {
   }
 }
 
-export function getBioregionStyle(biome?: string, realm?: string): { fill: string; outline: string } {
+export function getBioregionStyle(biome?: string, realm?: string, hexColor?: string): { fill: string; outline: string } {
+  if (hexColor) return { fill: hexColor, outline: darkenHex(hexColor) };
   const nb = normalizeBiome(biome);
   if (nb && BIOME_STYLES[nb]) return BIOME_STYLES[nb];
   if (realm && REALM_STYLES[realm]) return REALM_STYLES[realm];
