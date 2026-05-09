@@ -37,6 +37,9 @@ export interface PlayerSpeciesDiscovery {
   clues_unlocked_before_guess: number;
   incorrect_guesses_count: number;
   score_earned: number;
+  found_lon?: number;
+  found_lat?: number;
+  found_ecoregion_id?: number;
   // Note: clues_revealed removed - use player_clue_unlocks as single source of truth
 }
 
@@ -96,11 +99,41 @@ export interface PlayerLeaderboard {
 
 export interface Bioregion {
   ogc_fid: number;
+  eco_id?: number;
+  eco_sym?: number;
+  eco_code?: string;
   bioregion?: string;
   realm?: string;
   subrealm?: string;
   biome?: string;
   wkb_geometry?: any;
+}
+
+export interface EcoregionCollectionSummary {
+  ecoregion_id: number;
+  bioregion?: string | null;
+  realm?: string | null;
+  subrealm?: string | null;
+  biome?: string | null;
+  total_species: number;
+  found_species: number;
+  groups: Array<{
+    animal_type: string;
+    animal_icon: string;
+    total_species: number;
+    found_species: number;
+  }>;
+  found_points: Array<{
+    discovery_id: string;
+    species_id: number;
+    common_name?: string | null;
+    scientific_name?: string | null;
+    animal_type: string;
+    animal_icon: string;
+    lon: number;
+    lat: number;
+    discovered_at: string;
+  }>;
 }
 
 export interface Species {

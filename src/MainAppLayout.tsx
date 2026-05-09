@@ -3,14 +3,12 @@ import { PhaserGame, IRefPhaserGame } from './PhaserGame';
 import CesiumMap from './components/CesiumMap';
 import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
-import UserMenu from './components/UserMenu';
 import { useAuthBridge } from './hooks/useAuthBridge';
 import { useExpedition } from './contexts/ExpeditionContext';
 import { GameBridgeProvider, useGameBridge } from './contexts/GameBridgeContext';
 import { ExpeditionProvider } from './contexts/ExpeditionContext';
 import { EventBus } from './game/EventBus';
 import { Toaster } from 'sonner';
-import { PiBookOpenTextLight } from "react-icons/pi";
 import { BottomTabBar } from './components/BottomTabBar';
 import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
@@ -77,8 +75,7 @@ function MainAppLayoutInner() {
 
     const handleTabChange = useCallback((tab: BaseTab) => {
         setBaseTab(tab);
-        if (tab === 'explore') setViewMode('map');
-        else if (tab === 'field-guide') setViewMode('species');
+        setViewMode(tab === 'field-guide' ? 'species' : 'map');
     }, []);
 
     const handleStartExpeditionFromLauncher = useCallback(() => {
@@ -203,7 +200,7 @@ function MainAppLayoutInner() {
                         display: (viewMode === 'map' && !showDeduction) ? 'block' : 'none',
                         height: '100%', width: '100%'
                     }}>
-                        <CesiumMap />
+                        <CesiumMap onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }} />
                     </div>
 
                     {/* Expedition Briefing */}
@@ -238,23 +235,14 @@ function MainAppLayoutInner() {
                     {/* SpeciesPanel always mounted but hidden */}
                     <SpeciesPanel toastsEnabled={viewMode === 'map' && !showDeduction} style={{ display: 'none' }} />
 
-                    {/* Top-right controls — rendered last to paint above Cesium canvas */}
-                    <div className="absolute top-2.5 right-2.5 z-menu flex gap-ds-sm items-center">
-                        <UserMenu />
-                        <button
-                            className="glass-bg border border-ds-subtle rounded-md py-1.5 px-2.5 text-ds-text-primary cursor-pointer flex items-center gap-ds-xs"
-                            onClick={() => { setViewMode('species'); setBaseTab('field-guide'); }}
-                            title="Species List"
-                        >
-                            <PiBookOpenTextLight size={18} />
-                        </button>
-                    </div>
                 </div>
             </div>
 
             {/* Full-page species view */}
             <div className="absolute inset-0 w-full h-full z-briefing bg-ds-bg" style={{
                 display: (viewMode === 'species' || (baseTab === 'field-guide' && !inExpedition)) ? 'block' : 'none',
+                zIndex: 'var(--z-briefing)',
+                background: 'var(--ds-background)',
             }}>
                 <SpeciesList
                     onBack={() => { setViewMode('map'); setBaseTab('explore'); setScrollToSpeciesId(null); }}
@@ -265,6 +253,8 @@ function MainAppLayoutInner() {
             {/* Profile tab */}
             <div className="absolute inset-0 w-full h-full z-briefing bg-ds-bg overflow-y-auto pb-[90px]" style={{
                 display: (baseTab === 'profile' && !inExpedition) ? 'block' : 'none',
+                zIndex: 'var(--z-briefing)',
+                background: 'var(--ds-background)',
             }}>
                 <ProfileTabContent />
             </div>
@@ -272,6 +262,8 @@ function MainAppLayoutInner() {
             {/* Inventory tab */}
             <div className="absolute inset-0 w-full h-full z-briefing bg-ds-bg flex-col overflow-y-auto pt-14 px-ds-lg pb-[100px] box-border" style={{
                 display: (baseTab === 'inventory' && !inExpedition) ? 'flex' : 'none',
+                zIndex: 'var(--z-briefing)',
+                background: 'var(--ds-background)',
             }}>
                 <h2 className="m-0 mb-1 text-lg font-semibold text-ds-text-primary">Inventory</h2>
                 <p className="m-0 mb-ds-lg text-ds-body text-ds-text-muted">Souvenirs collected during expeditions</p>
@@ -311,6 +303,8 @@ function MainAppLayoutInner() {
             {/* Expedition tab */}
             <div className="absolute inset-0 w-full h-full z-briefing bg-ds-bg overflow-y-auto" style={{
                 display: (baseTab === 'expedition' && !inExpedition) ? 'block' : 'none',
+                zIndex: 'var(--z-briefing)',
+                background: 'var(--ds-background)',
             }}>
                 <ExpeditionLauncher onStart={handleStartExpeditionFromLauncher} onResume={handleResumeExpeditionFromLauncher} />
             </div>

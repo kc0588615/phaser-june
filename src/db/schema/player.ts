@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -11,7 +12,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-import { speciesTable } from './species';
+import { oneearthBioregion, speciesTable } from './species';
 
 export const profiles = pgTable('profiles', {
   userId: uuid('user_id').primaryKey(),
@@ -57,6 +58,9 @@ export const playerSpeciesDiscoveries = pgTable(
     scoreEarned: integer('score_earned').notNull().default(0),
     runId: uuid('run_id'),
     runNodeId: uuid('run_node_id'),
+    foundLon: doublePrecision('found_lon'),
+    foundLat: doublePrecision('found_lat'),
+    foundEcoregionId: integer('found_ecoregion_id').references(() => oneearthBioregion.ogcFid, { onDelete: 'set null' }),
   },
   (table) => ({
     uqPlayerSpeciesDiscoveriesPlayerSpecies: uniqueIndex(
@@ -71,6 +75,12 @@ export const playerSpeciesDiscoveries = pgTable(
     ixPlayerSpeciesDiscoveriesRunNodeId: index(
       'ix_player_species_discoveries_run_node_id'
     ).on(table.runNodeId),
+    ixPlayerSpeciesDiscoveriesFoundEcoregion: index(
+      'ix_player_species_discoveries_found_ecoregion'
+    ).on(table.foundEcoregionId),
+    ixPlayerSpeciesDiscoveriesFoundLocation: index(
+      'ix_player_species_discoveries_found_location'
+    ).on(table.foundLon, table.foundLat),
   })
 );
 

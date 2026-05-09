@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback, memo } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { useSpeciesData } from '@/hooks/useSpeciesData';
 import SpeciesCard from '@/components/SpeciesCard';
 import FamilyCardStack from '@/components/FamilyCardStack';
@@ -283,6 +284,7 @@ interface SpeciesListProps {
 export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListProps = {}) {
   // Use React Query hook for species data fetching with automatic retries and caching
   const { data: species = [], isLoading, error, refetch, isFetching } = useSpeciesData();
+  const { isLoaded: isUserLoaded, isSignedIn } = useUser();
 
   const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
   const [openAccordions, setOpenAccordions] = useState<string[]>([]);
@@ -318,6 +320,12 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
           localMap[d.id] = { name: d.name || '', discoveredAt: d.discoveredAt || '' };
         }
       });
+
+      if (!isUserLoaded || !isSignedIn) {
+        setDiscoveredSpecies(localMap);
+        setCardProgress({});
+        return;
+      }
 
       const response = await fetch('/api/species/cards');
       if (!response.ok) {
@@ -364,7 +372,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       }
       console.error('Error loading discovered species:', error);
     }
-  }, []);
+  }, [isSignedIn, isUserLoaded]);
 
   useEffect(() => {
     void loadDiscoveredSpecies();
@@ -372,7 +380,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
 
   // Fetch runs when user opens runs tab
   const fetchRuns = useCallback(() => {
-    if (runsLoaded || runsLoading) return;
+    if (!isUserLoaded || !isSignedIn || runsLoaded || runsLoading) return;
     setRunsLoading(true);
     fetch('/api/runs/list?status=completed&limit=20')
       .then(r => r.ok ? r.json() : null)
@@ -385,7 +393,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       })
       .catch(err => console.error('Failed to fetch runs:', err))
       .finally(() => setRunsLoading(false));
-  }, [runsLoaded, runsLoading]);
+  }, [isSignedIn, isUserLoaded, runsLoaded, runsLoading]);
 
   const openHeroView = useCallback((list: Species[], index: number) => {
     setHeroSpeciesList(list);
@@ -462,7 +470,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       }, 2000);
     };
 
-    scrollContainer.addEventListener('scroll', handleScroll);
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       scrollContainer.removeEventListener('scroll', handleScroll);
       if (scrollTimeout.current) {
@@ -474,6 +482,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   // Effect to scroll to a specific species when scrollToSpeciesId is provided
   useEffect(() => {
     if (!scrollToSpeciesId || isLoading) return;
+    let scrollToTimer: ReturnType<typeof setTimeout> | undefined;
+    let highlightTimer: ReturnType<typeof setTimeout> | undefined;
 
     // Find the species in the data
     const targetSpecies = species.find(s => s.id === scrollToSpeciesId);
@@ -494,18 +504,23 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     });
 
     // Scroll to the species after a short delay to allow accordion to open
-    setTimeout(() => {
+    scrollToTimer = setTimeout(() => {
       const speciesElement = document.querySelector(`[data-species-id="${scrollToSpeciesId}"]`);
       if (speciesElement) {
         speciesElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         // Add a highlight effect
         speciesElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-900');
-        setTimeout(() => {
+        highlightTimer = setTimeout(() => {
           speciesElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-slate-900');
         }, 3000);
       }
     }, 300);
+
+    return () => {
+      if (scrollToTimer) clearTimeout(scrollToTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
+    };
   }, [scrollToSpeciesId, species, isLoading]);
 
 

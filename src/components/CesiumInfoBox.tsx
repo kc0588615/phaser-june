@@ -1,6 +1,7 @@
 import React from 'react';
 import HabitatLegend from './HabitatLegend';
 import type { Species } from '../types/database';
+import { ANIMAL_MARKER, type EcoregionProgress } from '../types/ecoregions';
 
 interface InfoBoxData {
   lon?: number;
@@ -16,6 +17,7 @@ interface InfoBoxData {
   habitatCount?: number;
   topHabitat?: string;
   message?: string | null;
+  ecoregionProgress?: EcoregionProgress | null;
 }
 
 interface Props {
@@ -52,6 +54,21 @@ export const CesiumInfoBox: React.FC<Props> = ({
               <span key={i} className="text-[10px] text-ds-amber">★</span>
             ))}
           </div>
+          {data.ecoregionProgress?.groups.length ? (
+            <div className="mt-1.5 grid gap-1">
+              {data.ecoregionProgress.groups.slice(0, 4).map((group) => (
+                <div key={group.animal_type} className="flex items-center justify-between gap-3 text-[11px]">
+                  <span className="flex items-center gap-1.5 text-ds-text-secondary">
+                    <span aria-hidden="true">{ANIMAL_MARKER[group.animal_icon] ?? ANIMAL_MARKER.species}</span>
+                    {group.animal_type}
+                  </span>
+                  <span className="font-semibold text-ds-cyan">
+                    {group.found_species} / {group.total_species}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </>
       )}
       {isLoading && <p className="m-0 text-ds-text-muted italic">Loading...</p>}

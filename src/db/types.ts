@@ -9,6 +9,7 @@ import {
   playerSpeciesDiscoveries,
   playerStats,
   profiles,
+  speciesEcoregions,
   speciesTable,
   speciesFacts,
 } from './schema';
@@ -25,6 +26,7 @@ export type HabitatColormap = InferSelectModel<typeof habitatColormap>;
 // Spatial tables (introspected)
 export type IUCN = InferSelectModel<typeof iucn>;
 export type OneEarthBioregion = InferSelectModel<typeof oneearthBioregion>;
+export type SpeciesEcoregion = InferSelectModel<typeof speciesEcoregions>;
 
 // Curated game species
 export type Species = InferSelectModel<typeof speciesTable>;

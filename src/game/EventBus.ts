@@ -16,6 +16,7 @@ export interface EventPayloads {
   'cesium-location-selected': {
     lon: number;
     lat: number;
+    ecoregionId?: number | null;
     habitats: string[];
     species: Species[];
     rasterHabitats: RasterHabitatResult[];
@@ -79,6 +80,7 @@ export interface EventPayloads {
   'game-restart': Record<string, never>;
   'expedition-data-ready': {
     lon: number; lat: number;
+    ecoregionId?: number | null;
     expedition: ExpeditionData;
     species: Species[];
     rasterHabitats: RasterHabitatResult[];

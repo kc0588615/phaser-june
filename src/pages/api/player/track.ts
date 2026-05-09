@@ -48,9 +48,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       case 'trackSpeciesDiscovery': {
-        const { speciesId, sessionId, timeToDiscoverSeconds, cluesUnlockedBeforeGuess, incorrectGuessesCount, scoreEarned } = params;
+        const {
+          speciesId,
+          sessionId,
+          timeToDiscoverSeconds,
+          cluesUnlockedBeforeGuess,
+          incorrectGuessesCount,
+          scoreEarned,
+          foundLon,
+          foundLat,
+          foundEcoregionId,
+        } = params;
         const discoveryId = await pt.trackSpeciesDiscovery(profile.userId, speciesId, {
-          sessionId, timeToDiscoverSeconds, cluesUnlockedBeforeGuess, incorrectGuessesCount, scoreEarned,
+          sessionId,
+          timeToDiscoverSeconds,
+          cluesUnlockedBeforeGuess,
+          incorrectGuessesCount,
+          scoreEarned,
+          foundLon,
+          foundLat,
+          foundEcoregionId,
         });
         return res.json({ discoveryId });
       }

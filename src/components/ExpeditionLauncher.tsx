@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
 import { AlertCircle, ArrowRight, Clock, Compass, Loader2, MapPin, RefreshCw, Route, Swords } from 'lucide-react';
 import { getRunNodeLabel } from '@/expedition/domain';
 
@@ -34,16 +35,28 @@ interface ResumeRunSummary {
 }
 
 export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProps) {
+  const { isLoaded, isSignedIn } = useUser();
   const [resumeRuns, setResumeRuns] = useState<ResumeRunSummary[]>([]);
   const [loadingResumeRuns, setLoadingResumeRuns] = useState(false);
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
 
   const loadResumeRuns = useCallback(async (signal?: AbortSignal) => {
+    if (!isLoaded || !isSignedIn) {
+      setResumeRuns([]);
+      setResumeError(null);
+      setLoadingResumeRuns(false);
+      return;
+    }
+
     setLoadingResumeRuns(true);
     setResumeError(null);
     try {
       const response = await fetch('/api/runs/list?status=active,deduction&limit=5', { signal });
+      if (response.status === 401 || response.status === 403) {
+        setResumeRuns([]);
+        return;
+      }
       if (!response.ok) throw new Error(`Resume list failed (${response.status})`);
       const data = await response.json();
       setResumeRuns(Array.isArray(data?.runs) ? data.runs : []);
@@ -54,7 +67,7 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
     } finally {
       if (!signal?.aborted) setLoadingResumeRuns(false);
     }
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
     const controller = new AbortController();

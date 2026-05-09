@@ -1,8 +1,9 @@
 // src/components/CesiumMap.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Viewer, ImageryLayer, Entity, RectangleGraphics } from 'resium';
+import { Viewer, ImageryLayer, Entity, PointGraphics, LabelGraphics } from 'resium';
 import {
   Ion,
+  Cartesian2,
   Cartesian3,
   Color,
   Rectangle,
@@ -17,6 +18,7 @@ import {
   ConstantProperty,
   ColorMaterialProperty,
 } from 'cesium';
+import { Compass, Layers, Maximize2, Search } from 'lucide-react';
 import { EventBus } from '../game/EventBus';
 import { deriveAvailableAffinities, getDefaultActiveAffinities } from '../expedition/affinities';
 import type { AffinityType } from '../expedition/affinities';
@@ -25,13 +27,12 @@ import type { Species } from '../types/database';
 import type { ExpeditionData, RunNode } from '../types/expedition';
 import type { FeatureFingerprint } from '../types/gis';
 import { getAppConfig } from '../utils/config';
-import { CesiumInfoBox } from './CesiumInfoBox';
-import { useCesiumFullscreen } from '../hooks/useCesiumFullscreen';
 import { useCesiumTrail } from '../hooks/useCesiumTrail';
-import { getBioregionStyle } from '../lib/bioregionStyles';
+import { useEcoregionLayer } from '../hooks/useEcoregionLayer';
 import { computeExpeditionRoutePolyline, normalizeRoutePolyline } from '../lib/expeditionRoute';
 import { applyWaypointsToRunNodes } from '../lib/nodeScoring';
 import type { ExpeditionWaypointResponse } from '../types/waypoints';
+import { ANIMAL_MARKER, type EcoregionPreviewPick, type EcoregionProgress } from '../types/ecoregions';
 
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif";
@@ -52,6 +53,19 @@ interface AtPointData {
   signals?: Record<string, number>;
   nearest_river_dist_m?: number | null;
   feature_fingerprints?: FeatureFingerprint[];
+}
+
+interface PendingSelection {
+  lon: number;
+  lat: number;
+  atPointData: AtPointData | null;
+  waypointData: ExpeditionWaypointResponse | null;
+  species: Species[];
+  rasterHabitats: RasterHabitatSummary;
+  habitats: string[];
+  activeAffinities: AffinityType[];
+  availableAffinities: AffinityType[];
+  ecoregionId: number | null;
 }
 
 function getWaypointRouteOrFallback(
@@ -94,6 +108,16 @@ async function fetchWaypointData(lon: number, lat: number): Promise<ExpeditionWa
   }
 }
 
+async function fetchEcoregionProgress(lon: number, lat: number): Promise<EcoregionProgress | null> {
+  try {
+    const response = await fetch(`/api/ecoregions/progress?lon=${lon}&lat=${lat}`);
+    return response.ok ? response.json() as Promise<EcoregionProgress> : null;
+  } catch (error) {
+    console.warn('[CesiumMap] Failed to load ecoregion progress:', error);
+    return null;
+  }
+}
+
 function emitExpeditionReadyFromMapClick(input: {
   lon: number;
   lat: number;
@@ -104,6 +128,7 @@ function emitExpeditionReadyFromMapClick(input: {
   habitats: string[];
   activeAffinities: AffinityType[];
   availableAffinities: AffinityType[];
+  ecoregionId?: number | null;
   loadSpatialLayers: (lon: number, lat: number) => void;
 }): boolean {
   const nodes = input.atPointData?.generated_nodes;
@@ -119,6 +144,7 @@ function emitExpeditionReadyFromMapClick(input: {
   EventBus.emit('expedition-data-ready', {
     lon: input.lon,
     lat: input.lat,
+    ecoregionId: input.ecoregionId ?? null,
     expedition: {
       nodes: attachWaypointsToNodes(nodes, input.waypointData),
       bioregion: input.atPointData?.bioregion ?? null,
@@ -144,11 +170,13 @@ function emitExpeditionReadyFromMapClick(input: {
   return true;
 }
 
-const CesiumMap: React.FC = () => {
+interface CesiumMapProps {
+  onSearchOpen?: () => void;
+}
+
+const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
   const viewerRef = useRef<any>(null);
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null);
-  const [clickedPosition, setClickedPosition] = useState<Cartesian3 | null>(null);
-  const [queryBounds, setQueryBounds] = useState<Rectangle | null>(null);
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null);
   const [infoBoxData, setInfoBoxData] = useState<{
     lon?: number;
@@ -156,6 +184,7 @@ const CesiumMap: React.FC = () => {
     habitats: string[];
     species: Species[];
     rasterHabitats?: Array<{habitat_type: string; percentage: number}>;
+    ecoregionProgress?: EcoregionProgress | null;
     bioregion?: {
       bioregion?: string | null;
       realm?: string | null;
@@ -165,98 +194,57 @@ const CesiumMap: React.FC = () => {
     topHabitat?: string;
     message?: string | null;
   }>({ habitats: [], species: [] });
-  const [showInfoBox, setShowInfoBox] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [ecoregionProgress, setEcoregionProgress] = useState<EcoregionProgress | null>(null);
+  const [pendingSelection, setPendingSelection] = useState<PendingSelection | null>(null);
+  const [selectedEcoregion, setSelectedEcoregion] = useState<EcoregionPreviewPick | null>(null);
   const [highlightedSpeciesSource, setHighlightedSpeciesSource] = useState<GeoJsonDataSource | null>(null);
-  const [showBioregionPolygons, setShowBioregionPolygons] = useState(false);
-  const bioregionSourceRef = useRef<GeoJsonDataSource | null>(null);
+  const [showEcoregionLayer, setShowEcoregionLayer] = useState(false);
 
   // Extracted hooks
-  useCesiumFullscreen(viewerRef);
   const { runPhaseRef, loadSpatialLayers } = useCesiumTrail(viewerRef);
+  const { focusedEcoregion, isPreviewLoading, pickEcoregionAtPosition } = useEcoregionLayer(viewerRef, showEcoregionLayer);
+  const contextEcoregion = selectedEcoregion ?? focusedEcoregion;
 
   useEffect(() => {
     Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN || 'YOUR_FALLBACK_TOKEN';
   }, []);
 
-  const removeBioregionLayer = useCallback(() => {
-    if (!viewerRef.current?.cesiumElement || !bioregionSourceRef.current) return;
-    try {
-      viewerRef.current.cesiumElement.dataSources.remove(bioregionSourceRef.current, true);
-    } catch {
-      /* ok */
-    }
-    bioregionSourceRef.current = null;
+  useEffect(() => {
+    if (!showEcoregionLayer) setSelectedEcoregion(null);
+  }, [showEcoregionLayer]);
+
+  const recenterGlobe = useCallback(() => {
+    viewerRef.current?.cesiumElement?.camera?.flyHome?.(0.8);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Error attempting to enable fullscreen:', err.message);
+      });
+      return;
+    }
+    document.exitFullscreen();
+  }, []);
 
-    const syncBioregionLayer = async () => {
-      if (!showBioregionPolygons || !clickedLonLat || !viewerRef.current?.cesiumElement) {
-        removeBioregionLayer();
-        return;
-      }
+  const startPendingSelection = useCallback(() => {
+    if (!pendingSelection) return;
 
-      try {
-        const resp = await fetch(`/api/layers/near-point?lon=${clickedLonLat.lon}&lat=${clickedLonLat.lat}`);
-        if (!resp.ok) {
-          removeBioregionLayer();
-          return;
-        }
-
-        const data = await resp.json();
-        if (cancelled || !data.bioregions?.features?.length || !viewerRef.current?.cesiumElement) {
-          if (!data.bioregions?.features?.length) removeBioregionLayer();
-          return;
-        }
-
-        const bioregionDs = new GeoJsonDataSource('spatial-bioregions');
-        await bioregionDs.load(data.bioregions, { clampToGround: true });
-        if (cancelled || !viewerRef.current?.cesiumElement) return;
-
-        bioregionDs.entities.values.forEach((entity) => {
-          if (!entity.polygon) return;
-          const biome = entity.properties?.biome?.getValue?.();
-          const realm = entity.properties?.realm?.getValue?.();
-          const hexColor = entity.properties?.hex_color?.getValue?.();
-          const style = getBioregionStyle(
-            typeof biome === 'string' ? biome : undefined,
-            typeof realm === 'string' ? realm : undefined,
-            typeof hexColor === 'string' ? hexColor : undefined,
-          );
-
-          entity.polygon.material = new ColorMaterialProperty(
-            CesiumColor.fromCssColorString(style.fill).withAlpha(0.9)
-          );
-          entity.polygon.outline = new ConstantProperty(true);
-          entity.polygon.outlineColor = new ConstantProperty(
-            CesiumColor.fromCssColorString(style.outline).withAlpha(0.95)
-          );
-          entity.polygon.outlineWidth = new ConstantProperty(2);
-          entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
-          entity.polygon.zIndex = new ConstantProperty(20);
-        });
-
-        removeBioregionLayer();
-        viewerRef.current.cesiumElement.dataSources.add(bioregionDs);
-        bioregionSourceRef.current = bioregionDs;
-      } catch (err) {
-        console.warn('[CesiumMap] Failed to load bioregion layer:', err);
-        removeBioregionLayer();
-      }
-    };
-
-    syncBioregionLayer();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [clickedLonLat, removeBioregionLayer, showBioregionPolygons]);
-
-  useEffect(() => () => {
-    removeBioregionLayer();
-  }, [removeBioregionLayer]);
+    if (!emitExpeditionReadyFromMapClick({
+      ...pendingSelection,
+      loadSpatialLayers,
+    })) {
+      EventBus.emit('cesium-location-selected', {
+        ecoregionId: pendingSelection.ecoregionId,
+        species: pendingSelection.species,
+        rasterHabitats: pendingSelection.rasterHabitats,
+        habitats: pendingSelection.habitats,
+        lon: pendingSelection.lon,
+        lat: pendingSelection.lat,
+      });
+    }
+  }, [loadSpatialLayers, pendingSelection]);
 
   useEffect(() => {
     const setupImagery = async () => {
@@ -271,7 +259,6 @@ const CesiumMap: React.FC = () => {
         const tileMatrixSetId = "WebMercatorQuad";
         const tileJsonUrl = `${config.titilerBaseUrl}/cog/${tileMatrixSetId}/tilejson.json?url=${encodedCOGUrl}&colormap_name=${colormapName}&nodata=0`;
 
-        console.log("Resium: Requesting TileJSON from:", tileJsonUrl);
         const response = await fetch(tileJsonUrl);
 
         if (!response.ok) {
@@ -280,7 +267,6 @@ const CesiumMap: React.FC = () => {
         }
 
         const tileJson = await response.json();
-        console.log("Resium: Received TileJSON:", tileJson);
         if (!tileJson.tiles || tileJson.tiles.length === 0) {
           throw new Error("TileJSON missing 'tiles' array or 'tiles' array is empty.");
         }
@@ -288,8 +274,6 @@ const CesiumMap: React.FC = () => {
         if (!templateUrl) {
           throw new Error("TileJSON 'tiles' array does not contain a valid URL template.");
         }
-
-        console.log("Resium: Using Template URL:", templateUrl);
 
         const provider = new UrlTemplateImageryProvider({
           url: templateUrl,
@@ -321,12 +305,9 @@ const CesiumMap: React.FC = () => {
               rectangle.west -= 0.05;
             }
             viewer.camera.flyTo({ destination: rectangle, duration: 1.5 });
-            console.log("Resium: Flying to bounds:", tileJson.bounds);
           } else {
             console.warn("Resium: Invalid TileJSON bounds.", tileJson.bounds);
           }
-        } else if (!tileJson.bounds) {
-          console.log("Resium: TileJSON missing bounds. Default camera view used.");
         }
       } catch (err: any) {
         console.error("Resium: Error loading habitat layer:", err);
@@ -337,250 +318,248 @@ const CesiumMap: React.FC = () => {
     setupImagery();
   }, []);
 
-  const handleMapClick = useCallback((movement: any) => {
+  const loadAreaDetails = useCallback((longitude: number, latitude: number) => {
     if (!viewerRef.current?.cesiumElement || isLoading) return;
-
-    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'deduction') {
-      setShowInfoBox(true);
-      setInfoBoxData({ habitats: [], species: [], message: 'Complete the current expedition first.' });
-      return;
-    }
-
     const viewer = viewerRef.current.cesiumElement;
 
     if (highlightedSpeciesSource) {
       viewer.dataSources.remove(highlightedSpeciesSource, true);
       setHighlightedSpeciesSource(null);
     }
-    const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
 
-    if (cartesian) {
-      setClickedPosition(cartesian);
-      const cartographic = Cartographic.fromCartesian(cartesian);
-      const longitude = CesiumMath.toDegrees(cartographic.longitude);
-      const latitude = CesiumMath.toDegrees(cartographic.latitude);
-      setClickedLonLat({ lon: longitude, lat: latitude });
+    setClickedLonLat({ lon: longitude, lat: latitude });
+    setEcoregionProgress(null);
+    setPendingSelection(null);
+    setInfoBoxData({ habitats: [], species: [], message: `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...` });
+    setIsLoading(true);
 
-      const metersPerDegreeLat = 111320;
-      const metersPerDegreeLon = 111320 * Math.cos(latitude * Math.PI / 180);
-      const deltaLat = HABITAT_RADIUS_METERS / metersPerDegreeLat;
-      const deltaLon = HABITAT_RADIUS_METERS / metersPerDegreeLon;
-      setQueryBounds(Rectangle.fromDegrees(
-        longitude - deltaLon, latitude - deltaLat,
-        longitude + deltaLon, latitude + deltaLat
-      ));
-      setShowInfoBox(true);
-      setInfoBoxData({ habitats: [], species: [], message: `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...` });
-      setIsLoading(true);
+    Promise.all([
+      speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
+      speciesService.getRasterHabitatDistribution(longitude, latitude),
+      fetch(`/api/protected-areas/at-point?lon=${longitude}&lat=${latitude}&size=500`).then(r => r.ok ? r.json() as Promise<AtPointData> : null).catch(() => null),
+      fetchWaypointData(longitude, latitude),
+      fetchEcoregionProgress(longitude, latitude),
+    ])
+      .then(async ([speciesResult, rasterHabitats, atPointData, waypointData, progress]) => {
+        setEcoregionProgress(progress);
 
-      console.log("Resium: Calling speciesService for location:", longitude, latitude);
+        const cartographicLocation = { longitude, latitude };
+        const clickedSpecies = speciesResult;
+        const rasterHabitatData = rasterHabitats;
 
-      Promise.all([
-        speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
-        speciesService.getRasterHabitatDistribution(longitude, latitude),
-        fetch(`/api/protected-areas/at-point?lon=${longitude}&lat=${latitude}&size=500`).then(r => r.ok ? r.json() as Promise<AtPointData> : null).catch(() => null),
-        fetchWaypointData(longitude, latitude),
-      ])
-        .then(async ([speciesResult, rasterHabitats, atPointData, waypointData]) => {
-          console.log("Resium: Species service response:", speciesResult);
-          console.log("Resium: Raster habitat response:", rasterHabitats);
+        if (clickedSpecies.count > 0 && viewerRef.current) {
+          const cesiumDataSource = viewerRef.current.cesiumElement.dataSources.getByName('species-data-source')[0];
+          if (cesiumDataSource) {
+            viewerRef.current.cesiumElement.dataSources.remove(cesiumDataSource);
+          }
 
-          const cartographicLocation = { longitude, latitude };
-          const clickedSpecies = speciesResult;
-          const rasterHabitatData = rasterHabitats;
+          const redDataSource = new GeoJsonDataSource('species-hit-highlight');
+          const features: any[] = [];
 
-          if (clickedSpecies.count > 0 && viewerRef.current) {
-            const cesiumDataSource = viewerRef.current.cesiumElement.dataSources.getByName('species-data-source')[0];
-            if (cesiumDataSource) {
-              viewerRef.current.cesiumElement.dataSources.remove(cesiumDataSource);
-            }
-
-            const redDataSource = new GeoJsonDataSource('species-hit-highlight');
-            const features: any[] = [];
-
-            for (const species of clickedSpecies.species) {
-              if (species.wkb_geometry) {
-                try {
-                  features.push({
-                    type: 'Feature' as const,
-                    properties: {
-                      species_id: species.id,
-                      comm_name: species.common_name,
-                      sci_name: species.scientific_name
-                    },
-                    geometry: species.wkb_geometry
-                  });
-                } catch (geoError) {
-                  console.warn(`Failed to process geometry for species ${species.id}:`, geoError);
-                }
+          for (const species of clickedSpecies.species) {
+            if (species.wkb_geometry) {
+              try {
+                features.push({
+                  type: 'Feature' as const,
+                  properties: {
+                    species_id: species.id,
+                    comm_name: species.common_name,
+                    sci_name: species.scientific_name
+                  },
+                  geometry: species.wkb_geometry
+                });
+              } catch (geoError) {
+                console.warn(`Failed to process geometry for species ${species.id}:`, geoError);
               }
-            }
-
-            if (features.length > 0) {
-              await redDataSource.load({ type: 'FeatureCollection', features });
-
-              redDataSource.entities.values.forEach(entity => {
-                if (entity.polygon) {
-                  entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
-                  entity.polygon.outline = new ConstantProperty(true);
-                  entity.polygon.outlineColor = new ConstantProperty(CesiumColor.RED);
-                  entity.polygon.outlineWidth = new ConstantProperty(2);
-                  entity.polygon.height = new ConstantProperty(1.0);
-                  entity.polygon.extrudedHeight = new ConstantProperty(2.0);
-                  entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
-                  entity.polygon.zIndex = new ConstantProperty(100);
-                }
-                entity.name = 'species-hit';
-              });
-
-              viewerRef.current.cesiumElement.dataSources.add(redDataSource);
-              setHighlightedSpeciesSource(redDataSource);
-            }
-
-            console.log('Clicked species:', clickedSpecies);
-
-            const legacyHabitats = new Set<string>();
-            clickedSpecies.species.forEach((species: Species) => {
-              if (species.habitat_description) legacyHabitats.add(species.habitat_description);
-
-              if (species.freshwater) legacyHabitats.add('freshwater');
-              if (species.terrestrial) legacyHabitats.add('terrestrial');
-              if (species.marine) legacyHabitats.add('marine');
-            });
-            const habitatList = Array.from(legacyHabitats);
-
-            const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
-            if (!emitExpeditionReadyFromMapClick({
-              lon: cartographicLocation.longitude,
-              lat: cartographicLocation.latitude,
-              atPointData,
-              waypointData,
-              species: clickedSpecies.species,
-              rasterHabitats: rasterHabitatData,
-              habitats: habitatList,
-              activeAffinities: getDefaultActiveAffinities(availableAffinities),
-              availableAffinities,
-              loadSpatialLayers,
-            })) {
-              EventBus.emit('cesium-location-selected', {
-                species: clickedSpecies.species,
-                rasterHabitats: rasterHabitatData,
-                habitats: habitatList,
-                lon: cartographicLocation.longitude,
-                lat: cartographicLocation.latitude,
-              });
-            }
-          } else if (viewerRef.current) {
-            const closestHabitatGeometry = await speciesService.getClosestHabitat(
-              cartographicLocation.longitude,
-              cartographicLocation.latitude
-            );
-
-            if (closestHabitatGeometry) {
-              const existingHighlight = viewerRef.current.cesiumElement.dataSources.getByName('habitat-highlight')[0];
-              if (existingHighlight) {
-                viewerRef.current.cesiumElement.dataSources.remove(existingHighlight);
-              }
-
-              const highlightDataSource = new GeoJsonDataSource('habitat-highlight');
-              await highlightDataSource.load({
-                type: 'FeatureCollection',
-                features: [{ type: 'Feature', properties: {}, geometry: closestHabitatGeometry }]
-              });
-
-              viewerRef.current.cesiumElement.dataSources.add(highlightDataSource);
-
-              highlightDataSource.entities.values.forEach(entity => {
-                if (entity.polygon) {
-                  entity.polygon.material = new ColorMaterialProperty(CesiumColor.CYAN.withAlpha(0.7));
-                  entity.polygon.outline = new ConstantProperty(true);
-                  entity.polygon.outlineColor = new ConstantProperty(CesiumColor.CYAN);
-                  entity.polygon.outlineWidth = new ConstantProperty(3);
-                  entity.polygon.height = new ConstantProperty(0.5);
-                  entity.polygon.extrudedHeight = new ConstantProperty(1.5);
-                  entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
-                  entity.polygon.zIndex = new ConstantProperty(50);
-                }
-              });
-
-              setTimeout(() => {
-                if (viewerRef.current) {
-                  const highlight = viewerRef.current.cesiumElement.dataSources.getByName('habitat-highlight')[0];
-                  if (highlight) {
-                    viewerRef.current.cesiumElement.dataSources.remove(highlight);
-                  }
-                }
-              }, 3000);
-            }
-
-            if (!emitExpeditionReadyFromMapClick({
-              lon: cartographicLocation.longitude,
-              lat: cartographicLocation.latitude,
-              atPointData,
-              waypointData,
-              species: [],
-              rasterHabitats: rasterHabitatData,
-              habitats: [],
-              activeAffinities: [],
-              availableAffinities: [],
-              loadSpatialLayers,
-            })) {
-              EventBus.emit('cesium-location-selected', {
-                species: [],
-                rasterHabitats: rasterHabitatData,
-                habitats: [],
-                lon: cartographicLocation.longitude,
-                lat: cartographicLocation.latitude,
-              });
             }
           }
 
+          if (features.length > 0) {
+            await redDataSource.load({ type: 'FeatureCollection', features });
+
+            redDataSource.entities.values.forEach(entity => {
+              if (entity.polygon) {
+                entity.polygon.material = new ColorMaterialProperty(CesiumColor.CYAN.withAlpha(0.22));
+                entity.polygon.outline = new ConstantProperty(true);
+                entity.polygon.outlineColor = new ConstantProperty(CesiumColor.CYAN);
+                entity.polygon.outlineWidth = new ConstantProperty(2);
+                entity.polygon.height = new ConstantProperty(1.0);
+                entity.polygon.extrudedHeight = new ConstantProperty(2.0);
+                entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+                entity.polygon.zIndex = new ConstantProperty(100);
+              }
+              entity.name = 'species-hit';
+            });
+
+            viewerRef.current.cesiumElement.dataSources.add(redDataSource);
+            setHighlightedSpeciesSource(redDataSource);
+          }
+
           const legacyHabitats = new Set<string>();
-          speciesResult.species.forEach((species: Species) => {
+          clickedSpecies.species.forEach((species: Species) => {
             if (species.habitat_description) legacyHabitats.add(species.habitat_description);
+
             if (species.freshwater) legacyHabitats.add('freshwater');
             if (species.terrestrial) legacyHabitats.add('terrestrial');
             if (species.marine) legacyHabitats.add('marine');
           });
-
           const habitatList = Array.from(legacyHabitats);
-          const habitatCount = rasterHabitatData.length;
-          const topHabitat = rasterHabitatData.length > 0
-            ? `${rasterHabitatData[0].habitat_type} (${rasterHabitatData[0].percentage}%)`
-            : undefined;
 
-          setInfoBoxData({
-            lon: longitude,
-            lat: latitude,
-            habitats: habitatList,
-            species: speciesResult.species,
+          const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
+          setPendingSelection({
+            lon: cartographicLocation.longitude,
+            lat: cartographicLocation.latitude,
+            atPointData,
+            waypointData,
+            species: clickedSpecies.species,
             rasterHabitats: rasterHabitatData,
-            bioregion: atPointData?.bioregion ?? undefined,
-            habitatCount,
-            topHabitat,
-            message: null
+            habitats: habitatList,
+            activeAffinities: getDefaultActiveAffinities(availableAffinities),
+            availableAffinities,
+            ecoregionId: progress?.ecoregion?.ecoregion_id ?? null,
           });
-        })
-        .catch(err => {
-          console.error("Resium: Error calling species service:", err);
-          setInfoBoxData({
-            habitats: [],
+        } else if (viewerRef.current) {
+          const closestHabitatGeometry = await speciesService.getClosestHabitat(
+            cartographicLocation.longitude,
+            cartographicLocation.latitude
+          );
+
+          if (closestHabitatGeometry) {
+            const existingHighlight = viewerRef.current.cesiumElement.dataSources.getByName('habitat-highlight')[0];
+            if (existingHighlight) {
+              viewerRef.current.cesiumElement.dataSources.remove(existingHighlight);
+            }
+
+            const highlightDataSource = new GeoJsonDataSource('habitat-highlight');
+            await highlightDataSource.load({
+              type: 'FeatureCollection',
+              features: [{ type: 'Feature', properties: {}, geometry: closestHabitatGeometry }]
+            });
+
+            viewerRef.current.cesiumElement.dataSources.add(highlightDataSource);
+
+            highlightDataSource.entities.values.forEach(entity => {
+              if (entity.polygon) {
+                entity.polygon.material = new ColorMaterialProperty(CesiumColor.CYAN.withAlpha(0.7));
+                entity.polygon.outline = new ConstantProperty(true);
+                entity.polygon.outlineColor = new ConstantProperty(CesiumColor.CYAN);
+                entity.polygon.outlineWidth = new ConstantProperty(3);
+                entity.polygon.height = new ConstantProperty(0.5);
+                entity.polygon.extrudedHeight = new ConstantProperty(1.5);
+                entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+                entity.polygon.zIndex = new ConstantProperty(50);
+              }
+            });
+
+            setTimeout(() => {
+              if (viewerRef.current) {
+                const highlight = viewerRef.current.cesiumElement.dataSources.getByName('habitat-highlight')[0];
+                if (highlight) {
+                  viewerRef.current.cesiumElement.dataSources.remove(highlight);
+                }
+              }
+            }, 3000);
+          }
+
+          setPendingSelection({
+            lon: cartographicLocation.longitude,
+            lat: cartographicLocation.latitude,
+            atPointData,
+            waypointData,
             species: [],
-            message: `Error: ${err.message || 'Failed to load species data'}`
+            rasterHabitats: rasterHabitatData,
+            habitats: [],
+            activeAffinities: [],
+            availableAffinities: [],
+            ecoregionId: progress?.ecoregion?.ecoregion_id ?? null,
           });
-        })
-        .finally(() => {
-          setIsLoading(false);
+        }
+
+        const legacyHabitats = new Set<string>();
+        speciesResult.species.forEach((species: Species) => {
+          if (species.habitat_description) legacyHabitats.add(species.habitat_description);
+          if (species.freshwater) legacyHabitats.add('freshwater');
+          if (species.terrestrial) legacyHabitats.add('terrestrial');
+          if (species.marine) legacyHabitats.add('marine');
         });
-    } else {
-      setShowInfoBox(true);
-      setInfoBoxData({ habitats: [], species: [], message: 'Click on the globe to query location.' });
-      setClickedPosition(null);
-      setClickedLonLat(null);
-      setQueryBounds(null);
-      removeBioregionLayer();
+
+        const habitatList = Array.from(legacyHabitats);
+        const habitatCount = rasterHabitatData.length;
+        const topHabitat = rasterHabitatData.length > 0
+          ? `${rasterHabitatData[0].habitat_type} (${rasterHabitatData[0].percentage}%)`
+          : undefined;
+
+        setInfoBoxData({
+          lon: longitude,
+          lat: latitude,
+          habitats: habitatList,
+          species: speciesResult.species,
+          rasterHabitats: rasterHabitatData,
+          bioregion: atPointData?.bioregion ?? undefined,
+          ecoregionProgress: progress,
+          habitatCount,
+          topHabitat,
+          message: null
+        });
+      })
+      .catch(err => {
+        console.error("Resium: Error calling species service:", err);
+        setInfoBoxData({
+          habitats: [],
+          species: [],
+          message: `Error: ${err.message || 'Failed to load species data'}`
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [isLoading, highlightedSpeciesSource]);
+
+  const exploreSelectedArea = useCallback(() => {
+    if (!selectedEcoregion || selectedEcoregion.lon == null || selectedEcoregion.lat == null) return;
+    loadAreaDetails(selectedEcoregion.lon, selectedEcoregion.lat);
+  }, [loadAreaDetails, selectedEcoregion]);
+
+  const handleMapClick = useCallback((movement: any) => {
+    if (!viewerRef.current?.cesiumElement || isLoading) return;
+
+    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'deduction') {
+      setInfoBoxData({ habitats: [], species: [], message: 'Complete the current expedition first.' });
+      return;
     }
-  }, [isLoading, highlightedSpeciesSource, runPhaseRef, loadSpatialLayers, removeBioregionLayer]);
+
+    const viewer = viewerRef.current.cesiumElement;
+    const pickedEcoregion = pickEcoregionAtPosition(movement.position);
+    const cartesian = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+
+    if (!cartesian) {
+      setSelectedEcoregion(null);
+      setInfoBoxData({ habitats: [], species: [], message: null });
+      setClickedLonLat(null);
+      setEcoregionProgress(null);
+      setPendingSelection(null);
+      return;
+    }
+
+    if (showEcoregionLayer && pickedEcoregion) {
+      const cartographic = Cartographic.fromCartesian(cartesian);
+      const longitude = CesiumMath.toDegrees(cartographic.longitude);
+      const latitude = CesiumMath.toDegrees(cartographic.latitude);
+      setClickedLonLat({ lon: longitude, lat: latitude });
+      setSelectedEcoregion({ ...pickedEcoregion, lon: longitude, lat: latitude });
+      setEcoregionProgress(null);
+      setPendingSelection(null);
+      setInfoBoxData({ habitats: [], species: [], message: null });
+      return;
+    }
+
+    const cartographic = Cartographic.fromCartesian(cartesian);
+    const longitude = CesiumMath.toDegrees(cartographic.longitude);
+    const latitude = CesiumMath.toDegrees(cartographic.latitude);
+    setClickedLonLat({ lon: longitude, lat: latitude });
+    setSelectedEcoregion(null);
+    loadAreaDetails(longitude, latitude);
+  }, [isLoading, loadAreaDetails, pickEcoregionAtPosition, runPhaseRef, showEcoregionLayer]);
 
   return (
     <div className="w-full h-full relative">
@@ -601,29 +580,223 @@ const CesiumMap: React.FC = () => {
           <ImageryLayer imageryProvider={imageryProvider} alpha={0.7} />
         )}
 
-        {queryBounds && (
-          <Entity name="Habitat Query Bounds">
-            <RectangleGraphics
-              coordinates={queryBounds}
-              material={Color.RED.withAlpha(0.2)}
-              outline
-              outlineColor={Color.RED}
+        {ecoregionProgress?.foundPoints.map((point) => (
+          <Entity
+            key={point.discovery_id}
+            name={point.common_name || point.scientific_name || 'Discovered species'}
+            position={Cartesian3.fromDegrees(point.lon, point.lat)}
+          >
+            <PointGraphics
+              pixelSize={18}
+              color={Color.fromCssColorString('#22d3ee').withAlpha(0.32)}
+              outlineColor={Color.fromCssColorString('#22d3ee')}
               outlineWidth={2}
-              heightReference={HeightReference.CLAMP_TO_GROUND}
+              disableDepthTestDistance={Number.POSITIVE_INFINITY}
+            />
+            <LabelGraphics
+              text={ANIMAL_MARKER[point.animal_icon] ?? ANIMAL_MARKER.species}
+              font="22px Inter, system-ui, sans-serif"
+              fillColor={Color.WHITE}
+              outlineColor={Color.BLACK}
+              outlineWidth={2}
+              pixelOffset={new Cartesian2(0, -22)}
+              disableDepthTestDistance={Number.POSITIVE_INFINITY}
             />
           </Entity>
-        )}
+        ))}
       </Viewer>
-      {showInfoBox && (
-        <CesiumInfoBox
-          data={infoBoxData}
-          isLoading={isLoading}
-          radiusKm={HABITAT_RADIUS_METERS / 1000}
-          showBioregionPolygons={showBioregionPolygons}
-          onToggleBioregionPolygons={() => setShowBioregionPolygons((value) => !value)}
-        />
+      <ExploreMapOverlay
+        info={infoBoxData}
+        isLoading={isLoading}
+        isPreviewLoading={isPreviewLoading}
+        preview={contextEcoregion}
+        progress={ecoregionProgress}
+        hasSelection={Boolean(pendingSelection)}
+        hasSelectedEcoregion={Boolean(selectedEcoregion)}
+        layersActive={showEcoregionLayer}
+        onSearchOpen={onSearchOpen}
+        onExplore={exploreSelectedArea}
+        onStart={startPendingSelection}
+        onCompass={recenterGlobe}
+        onLayers={() => setShowEcoregionLayer((value) => !value)}
+        onFullscreen={toggleFullscreen}
+      />
+    </div>
+  );
+}
+
+function ExploreMapOverlay({
+  info,
+  isLoading,
+  isPreviewLoading,
+  preview,
+  progress,
+  hasSelection,
+  hasSelectedEcoregion,
+  layersActive,
+  onSearchOpen,
+  onExplore,
+  onStart,
+  onCompass,
+  onLayers,
+  onFullscreen,
+}: {
+  info: {
+    species: Species[];
+    topHabitat?: string;
+    message?: string | null;
+    bioregion?: { bioregion?: string | null; biome?: string | null };
+  };
+  isLoading: boolean;
+  isPreviewLoading: boolean;
+  preview: EcoregionPreviewPick | null;
+  progress: EcoregionProgress | null;
+  hasSelection: boolean;
+  hasSelectedEcoregion: boolean;
+  layersActive: boolean;
+  onSearchOpen?: () => void;
+  onExplore: () => void;
+  onStart: () => void;
+  onCompass: () => void;
+  onLayers: () => void;
+  onFullscreen: () => void;
+}) {
+  const ecoregion = progress?.ecoregion ?? null;
+  const title = ecoregion?.bioregion
+    ?? preview?.properties.ECO_NAME
+    ?? info.bioregion?.bioregion
+    ?? info.topHabitat?.replace(/\s+\([^)]*\)$/, '')
+    ?? 'Explore Ecoregions';
+  const previewSubtitle = preview
+    ? [preview.properties.BIOME_NAME, preview.properties.REALM].filter(Boolean).join(' · ')
+    : null;
+  const subtitle = ecoregion?.biome ?? previewSubtitle ?? info.bioregion?.biome ?? 'Global biodiversity map';
+  const speciesCount = hasSelection ? info.species.length : ecoregion?.total_species;
+  const groups = progress?.groups ?? [];
+  const progressLabel = groups.length > 0
+    ? groups.slice(0, 2).map((group) => `${group.animal_type} ${group.found_species}/${group.total_species}`).join(' · ')
+    : speciesCount != null && speciesCount > 0 ? `${speciesCount} species` : preview?.properties.NNH_NAME ?? 'Collection target pending';
+  const showCard = Boolean(hasSelectedEcoregion || hasSelection || isLoading || info.message);
+  const canExplore = Boolean(preview?.lon != null && preview?.lat != null && !hasSelection && !isLoading);
+  const canStart = hasSelection && !isLoading && (speciesCount ?? 0) > 0;
+  const buttonLabel = isLoading
+    ? 'Loading Area'
+    : canExplore
+      ? 'Explore Area'
+      : canStart
+        ? 'Start Expedition'
+        : hasSelection && !isLoading
+          ? 'No Species Here'
+          : 'Select Ecoregion';
+  const actionDisabled = isLoading || (!canExplore && !canStart);
+  const runAction = canStart ? onStart : onExplore;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 text-ds-text-primary" style={{ zIndex: 2500 }}>
+      <div
+        className="absolute left-5 right-5 pointer-events-auto"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 18px)' }}
+      >
+        <button
+          type="button"
+          onClick={onSearchOpen}
+          className="glass-bg h-14 w-full rounded-[28px] border border-ds-subtle shadow-card flex items-center gap-3 px-5 text-left text-ds-text-muted"
+          aria-label="Search species, locations, biomes"
+        >
+          <Search className="size-6 shrink-0 text-ds-text-secondary" strokeWidth={2} />
+          <span className="truncate text-[15px] sm:text-base">Search species, locations, biomes...</span>
+        </button>
+        {preview && (
+          <div className="glass-bg mt-3 rounded-lg border border-ds-subtle px-4 py-3 shadow-card">
+            <div className="truncate text-sm font-semibold text-ds-text-primary">{preview.properties.ECO_NAME}</div>
+            <div className="mt-0.5 truncate text-xs text-ds-text-secondary">
+              {[preview.properties.BIOME_NAME, preview.properties.REALM].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div
+        className="absolute right-4 flex flex-col gap-3 pointer-events-auto"
+        style={{ bottom: showCard ? 'calc(env(safe-area-inset-bottom, 0px) + 282px)' : 'calc(env(safe-area-inset-bottom, 0px) + 114px)' }}
+      >
+        <MapControlButton label="Recenter map" onClick={onCompass}><Compass /></MapControlButton>
+        <MapControlButton label="Toggle ecoregion layers" active={layersActive} onClick={onLayers}><Layers /></MapControlButton>
+        <MapControlButton label="Toggle fullscreen" onClick={onFullscreen}><Maximize2 /></MapControlButton>
+      </div>
+
+      {showCard && (
+        <div
+          className="glass-bg shadow-card absolute left-4 right-4 pointer-events-auto rounded-[24px] border border-ds-subtle p-3"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 104px)' }}
+        >
+          <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-white/25" />
+          <div className="grid grid-cols-[86px_minmax(0,1fr)] gap-3">
+            <div className="h-[86px] rounded-[18px] border border-ds-subtle overflow-hidden bg-ds-bg">
+              <div className="h-full w-full bg-[radial-gradient(circle_at_35%_18%,rgba(34,211,238,0.32),transparent_28%),linear-gradient(150deg,rgba(20,184,166,0.45),rgba(12,28,42,0.15)_42%,rgba(3,7,18,0.95)_72%),linear-gradient(32deg,transparent_43%,rgba(226,232,240,0.16)_44%,transparent_47%)]" />
+            </div>
+            <div className="min-w-0 flex flex-col justify-center">
+              <h2 className="truncate text-[20px] leading-tight font-semibold text-ds-text-primary">
+                {isLoading ? 'Loading ecoregion...' : isPreviewLoading && !preview ? 'Loading ecoregions...' : title}
+              </h2>
+              <p className="mt-1 line-clamp-1 text-[12px] leading-snug text-ds-text-secondary">
+                {subtitle}
+              </p>
+              <div className="mt-1.5 flex items-center gap-2 text-[13px] text-ds-text-secondary">
+                <span className="font-semibold text-ds-cyan">{progressLabel}</span>
+                {groups.length > 0 && (
+                  <>
+                    <span className="text-ds-text-muted">·</span>
+                    <span>{speciesCount ?? 0} species</span>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={runAction}
+                disabled={actionDisabled}
+                className="mt-2.5 h-11 w-full rounded-full border-0 px-4 text-[15px] font-bold text-[#06101a] shadow-glow-cyan disabled:cursor-default disabled:text-ds-text-secondary disabled:shadow-none"
+                style={{ background: canStart || canExplore ? 'var(--ds-gradient-cta)' : 'rgba(34,211,238,0.2)' }}
+              >
+                {buttonLabel}
+              </button>
+            </div>
+          </div>
+          {info.message && !isLoading && (
+            <div className="mt-2 truncate text-center text-[11px] text-ds-text-muted">{info.message}</div>
+          )}
+        </div>
       )}
     </div>
+  );
+}
+
+function MapControlButton({
+  label,
+  active,
+  onClick,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+  children: React.ReactElement<{ className?: string; strokeWidth?: number }>;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={`glass-bg shadow-card grid size-11 place-items-center rounded-full border transition-colors ${
+        active ? 'border-ds-cyan/80 bg-ds-cyan/15' : 'border-ds-subtle'
+      }`}
+    >
+      {React.cloneElement(children, {
+        className: 'size-5 text-ds-cyan drop-shadow-[0_0_8px_rgba(34,211,238,0.75)]',
+        strokeWidth: 2,
+      })}
+    </button>
   );
 }
 

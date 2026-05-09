@@ -374,6 +374,9 @@ export async function trackSpeciesDiscovery(
     cluesUnlockedBeforeGuess: number;
     incorrectGuessesCount: number;
     scoreEarned: number;
+    foundLon?: number;
+    foundLat?: number;
+    foundEcoregionId?: number | null;
   }
 ): Promise<string | null> {
   if (!(await ensureServerDeps())) return null; // Client-side no-op
@@ -395,12 +398,18 @@ export async function trackSpeciesDiscovery(
           cluesUnlockedBeforeGuess: options.cluesUnlockedBeforeGuess,
           incorrectGuessesCount: options.incorrectGuessesCount,
           scoreEarned: options.scoreEarned,
+          foundLon: options.foundLon,
+          foundLat: options.foundLat,
+          foundEcoregionId: options.foundEcoregionId ?? null,
         })
         .onConflictDoUpdate({
           target: [playerSpeciesDiscoveries.playerId, playerSpeciesDiscoveries.speciesId],
           set: {
-            // If already discovered, update score
+            // If already discovered, update score and fill first known location.
             scoreEarned: options.scoreEarned,
+            foundLon: sql`COALESCE(${playerSpeciesDiscoveries.foundLon}, ${options.foundLon ?? null})`,
+            foundLat: sql`COALESCE(${playerSpeciesDiscoveries.foundLat}, ${options.foundLat ?? null})`,
+            foundEcoregionId: sql`COALESCE(${playerSpeciesDiscoveries.foundEcoregionId}, ${options.foundEcoregionId ?? null})`,
           },
         })
         .returning({ id: playerSpeciesDiscoveries.id });

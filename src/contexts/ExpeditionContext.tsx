@@ -208,6 +208,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     const firstLocation = getNodeRouteLocation(payload, 0);
     EventBus.emit('cesium-location-selected', {
       lon: firstLocation.lon, lat: firstLocation.lat,
+      ecoregionId: payload.ecoregionId ?? null,
       species: payload.species, rasterHabitats: payload.rasterHabitats,
       habitats: payload.habitats, difficulty: firstNode?.difficulty,
       obstacles: firstNode?.obstacles, obstacleFamily: firstNode?.obstacleFamily,
@@ -382,6 +383,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           const nodeLocation = getNodeRouteLocation(payload, nextIndex);
           EventBus.emit('cesium-location-selected', {
             lon: nodeLocation.lon, lat: nodeLocation.lat,
+            ecoregionId: payload.ecoregionId ?? null,
             species: payload.species, rasterHabitats: payload.rasterHabitats,
             habitats: payload.habitats, difficulty: nextNode?.difficulty,
             obstacles: nextNode?.obstacles, obstacleFamily: nextNode?.obstacleFamily,
@@ -777,6 +779,7 @@ function emitBoardForNode(
   EventBus.emit('cesium-location-selected', {
     lon: nodeLocation.lon,
     lat: nodeLocation.lat,
+    ecoregionId: payload.ecoregionId ?? null,
     species: payload.species,
     rasterHabitats: payload.rasterHabitats,
     habitats: payload.habitats,

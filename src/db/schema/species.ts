@@ -12,7 +12,9 @@ import {
   index,
   integer,
   numeric,
+  primaryKey,
   pgTable,
+  pgSchema,
   serial,
   smallint,
   text,
@@ -21,7 +23,9 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-// Raw IUCN range shapefile import — source-owned field names, do not app-shape
+const oneearthSchema = pgSchema('oneearth');
+
+// Raw IUCN range shapefile import - source-owned field names, do not app-shape
 export const iucn = pgTable(
   'iucn',
   {
@@ -200,7 +204,7 @@ export const speciesDeductionClues = pgTable(
   ]
 );
 
-export const oneearthBioregion = pgTable(
+export const oneearthBioregion = oneearthSchema.table(
   'oneearth_bioregion',
   {
     ogcFid: serial('ogc_fid').primaryKey().notNull(),
@@ -209,17 +213,40 @@ export const oneearthBioregion = pgTable(
     bioregions: varchar(),
     bioregion: varchar(),
     realm: varchar(),
-    subrealm: varchar(),
+    subrealm: varchar('sub_realm'),
     biome: varchar(),
     shapeLength: doublePrecision('shape_length'),
     shapeLengthAlt: numeric('shape_length_alt', { precision: 65, scale: 30 }),
     shapeArea: doublePrecision('shape_area'),
     wkbGeometry: geometry('wkb_geometry', { type: 'multipolygon', srid: 4326 }),
+    ecoId: integer('eco_id'),
+    ecoSym: integer('eco_sym'),
+    ecoCode: text('eco_code'),
   },
   (table) => [
     index('ix_oneearth_bioregion_wkb_geometry').using(
       'gist',
       table.wkbGeometry.asc().nullsLast().op('gist_geometry_ops_2d')
     ),
+  ]
+);
+
+export const speciesEcoregions = pgTable(
+  'species_ecoregions',
+  {
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+    ecoregionId: integer('ecoregion_id').notNull().references(() => oneearthBioregion.ogcFid, { onDelete: 'cascade' }),
+    overlapKm2: doublePrecision('overlap_km2').notNull().default(0),
+    speciesOverlapPct: doublePrecision('species_overlap_pct').notNull().default(0),
+    ecoregionOverlapPct: doublePrecision('ecoregion_overlap_pct').notNull().default(0),
+    isPrimary: boolean('is_primary').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.speciesId, table.ecoregionId] }),
+    index('ix_species_ecoregions_ecoregion').on(table.ecoregionId),
+    index('ix_species_ecoregions_species').on(table.speciesId),
+    index('ix_species_ecoregions_primary').on(table.speciesId).where(sql`${table.isPrimary} = true`),
   ]
 );

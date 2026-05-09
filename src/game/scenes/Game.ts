@@ -161,6 +161,7 @@ export class Game extends Phaser.Scene {
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
     private discoveredSpeciesIds: Set<number> = new Set();
+    private currentMapLocation: { lon: number; lat: number; ecoregionId: number | null } | null = null;
 
     // --- Player Tracking ---
     private currentUserId: string | null = null; // Cache user ID
@@ -1598,6 +1599,11 @@ export class Game extends Phaser.Scene {
 
         try {
             // Sort species by id (lowest first)
+            this.currentMapLocation = {
+                lon: data.lon,
+                lat: data.lat,
+                ecoregionId: data.ecoregionId ?? null,
+            };
             this.currentSpecies = [...data.species].sort((a, b) => a.id - b.id);
             this.currentSpeciesIndex = 0;
             this.revealedClues.clear(); // Reset clues for new game
@@ -2349,6 +2355,9 @@ export class Game extends Phaser.Scene {
                     cluesUnlockedBeforeGuess: this.clueCountThisSpecies,
                     incorrectGuessesCount: this.incorrectGuessesThisSpecies,
                     scoreEarned: this.backendPuzzle!.getScore(),
+                    foundLon: this.currentMapLocation?.lon,
+                    foundLat: this.currentMapLocation?.lat,
+                    foundEcoregionId: this.currentMapLocation?.ecoregionId ?? null,
                 }),
             });
             const data = await res.json();
