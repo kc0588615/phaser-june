@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { SignInButton, useUser } from '@clerk/nextjs';
 import {
-  Globe, Leaf, Droplets, Waves, TreePine, Star, MapPin, Clock, Zap, Layers, BookOpen,
+  Globe, Leaf, Droplets, Waves, TreePine, Star, MapPin, Clock, Zap, Layers, BookOpen, LogIn,
 } from 'lucide-react';
 
 // ---- types ------------------------------------------------------------------
@@ -228,6 +228,15 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
           <Globe className="w-12 h-12 text-ds-cyan mx-auto mb-3 glow-cyan" />
           <p className="text-ds-heading-sm mb-1">Sign in to view your profile</p>
           <p className="text-ds-body text-ds-text-muted mb-4">Track biomes explored, family affinities, and discovery history.</p>
+          <SignInButton mode="redirect" fallbackRedirectUrl="/stats" forceRedirectUrl="/stats">
+            <button
+              type="button"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-ds-cyan/50 bg-ds-cyan/15 px-5 text-sm font-semibold text-ds-cyan shadow-glow-cyan transition-colors hover:bg-ds-cyan/25"
+            >
+              <LogIn className="size-4" />
+              Sign in
+            </button>
+          </SignInButton>
         </div>
       </div>
     );
