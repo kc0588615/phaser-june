@@ -13,7 +13,7 @@ import type { EcoregionPreviewPick, EcoregionPreviewProperties, EcoregionPreview
 
 const SOURCE_NAME = 'ecoregion-preview';
 const HOVER_THROTTLE_MS = 80;
-const ALL_ECOREGIONS_URL = '/api/ecoregions/preview?west=-180&south=-90&east=180&north=90';
+const ALL_ECOREGIONS_URL = '/ecoregions.json';
 
 function propertyValue(entity: any, key: keyof EcoregionPreviewProperties) {
   return entity?.properties?.[key]?.getValue?.() ?? entity?.properties?.[key] ?? null;

@@ -1,4 +1,5 @@
 import { Globe, BookOpen, Compass, Backpack, User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type BaseTab = 'explore' | 'field-guide' | 'expedition' | 'inventory' | 'profile';
 
@@ -31,18 +32,17 @@ export function BottomTabBar({ active, onChange }: BottomTabBarProps) {
               aria-current={isActive ? 'page' : undefined}
               aria-label={label}
               onClick={() => onChange(key)}
-              className={`
-                relative flex flex-col items-center justify-center flex-1 min-w-0 h-[64px] transition-all duration-300
-                rounded-[18px] overflow-hidden focus-visible:outline-2 focus-visible:outline-ds-cyan focus-visible:outline-offset-2
-                ${isActive ? '' : 'hover:bg-white/5'}
-              `}
+              className={cn(
+                'relative flex flex-col items-center justify-center flex-1 min-w-0 h-[64px] transition-all duration-300 rounded-[18px] overflow-hidden focus-visible:outline-2 focus-visible:outline-ds-cyan focus-visible:outline-offset-2',
+                !isActive && 'hover:bg-white/5'
+              )}
             >
               <Icon
                 size={24}
-                className={`mb-1 transition-all duration-300 ${isActive ? 'text-ds-cyan drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]' : 'text-ds-text-muted'}`}
+                className={cn('mb-1 transition-all duration-300', isActive ? 'text-ds-cyan drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]' : 'text-ds-text-muted')}
                 strokeWidth={isActive ? 2 : 1.5}
               />
-              <span className={`text-ds-caption tracking-wide transition-colors ${isActive ? 'text-ds-cyan' : 'text-ds-text-muted'}`}>
+              <span className={cn('text-ds-caption tracking-wide transition-colors', isActive ? 'text-ds-cyan' : 'text-ds-text-muted')}>
                 {label}
               </span>
               {isActive && (

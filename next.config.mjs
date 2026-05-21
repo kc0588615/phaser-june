@@ -56,10 +56,7 @@ const nextConfig = {
             {
                 source: '/:path*',
                 headers: [
-                    {
-                        key: 'X-Frame-Options',
-                        value: 'DENY'
-                    },
+                    // Removed X-Frame-Options: DENY to allow embedding in IDE preview panes
                     {
                         key: 'X-Content-Type-Options',
                         value: 'nosniff'

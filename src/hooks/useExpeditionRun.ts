@@ -106,6 +106,12 @@ export function useExpeditionRun() {
                 bioregion: payload.expedition.bioregion?.bioregion ?? undefined,
                 realm: payload.expedition.bioregion?.realm ?? undefined,
                 biome: payload.expedition.bioregion?.biome ?? undefined,
+                routePolyline: payload.expedition.routePolyline ?? [],
+                expeditionSnapshot: {
+                    waypoints: payload.expedition.waypoints ?? [],
+                    waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null,
+                    nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
+                },
             }),
         })
             .then(r => r.ok ? r.json() : null)
@@ -480,7 +486,7 @@ export function useExpeditionRun() {
             if (!refProfile) return prev;
 
             // Run comparison
-            const result = compareReference(comp.mysteryProfile, refProfile, pClue.category);
+            const result = compareReference(comp.mysteryProfile, refProfile, pClue.category, pClue.compareTags);
 
             const attempt: import('@/lib/deductionEngine').ReferenceAttempt = {
                 referenceSpeciesId,
@@ -509,12 +515,15 @@ export function useExpeditionRun() {
             const eliminatedSet = new Set(newEliminated);
             const candidates = filterCandidates(allProfiles, newConfirmed, eliminatedSet);
 
-            // Update clue status
-            const updatedProcessed = comp.processedClues.map(pc =>
-                pc.clueId === clueId
-                    ? { ...pc, status: (result.matched ? 'confirmed' : 'rejected') as ProcessedClue['status'] }
-                    : pc
-            );
+            // On a match, mark the clue confirmed. On a mismatch, keep it
+            // processed so the player can compare another reference.
+            const updatedProcessed = result.matched
+                ? comp.processedClues.map(pc =>
+                    pc.clueId === clueId
+                        ? { ...pc, status: 'confirmed' as ProcessedClue['status'] }
+                        : pc
+                )
+                : comp.processedClues;
 
             return {
                 ...prev,

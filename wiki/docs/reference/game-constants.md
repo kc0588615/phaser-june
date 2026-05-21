@@ -17,8 +17,8 @@ Reference for constants defined in `src/game/constants.ts`. These values control
 
 | Constant | Value | Purpose | Used in |
 |----------|-------|---------|---------|
-| `GRID_COLS` | `7` | Board columns | `BackendPuzzle.ts`, `Game.ts` |
-| `GRID_ROWS` | `7` | Board rows (reduced for owl UI space) | `BackendPuzzle.ts`, `Game.ts` |
+| `GRID_COLS` | `6` | Board columns | `BackendPuzzle.ts`, `Game.ts` |
+| `GRID_ROWS` | `6` | Board rows | `BackendPuzzle.ts`, `Game.ts` |
 | `GEM_TYPES` | `black, blue, green, orange, red, white, yellow, purple` | Allowed gem colors | `BackendPuzzle.ts`, `Preloader.ts` |
 | `GEM_FRAME_COUNT` | `8` | Frames per gem sprite (0 idle, 1-7 explode) | `Preloader.ts` |
 

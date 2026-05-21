@@ -3,7 +3,6 @@ import Phaser from 'phaser';
 import { BackendPuzzle } from '../BackendPuzzle';
 import { MoveAction, MoveDirection } from '../MoveAction';
 import { BoardView } from '../BoardView';
-import { ExpeditionRunnerStrip } from '../ui/ExpeditionRunnerStrip';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD, MOVE_THRESHOLD,
@@ -215,10 +214,6 @@ export class Game extends Phaser.Scene {
     private nodePowerMultiplier: number = 1.0;
     private nodeThoughtDiscount: number = 0;
 
-    // Top-of-board runner strip
-    private runnerStrip?: ExpeditionRunnerStrip;
-    private runnerStripHeight: number = 72;
-    private runnerStripGap: number = 10;
 
     constructor() {
         super('Game');
@@ -263,32 +258,6 @@ export class Game extends Phaser.Scene {
         return !!displayList && status < Phaser.Scenes.SHUTDOWN;
     }
 
-    private syncRunnerStripLayout(): void {
-        if (!this.runnerStrip) return;
-        this.runnerStrip.setLayout(
-            this.boardOffset.x,
-            this.boardOffset.y - this.runnerStripGap - this.runnerStripHeight,
-            GRID_COLS * this.gemSize,
-            this.runnerStripHeight,
-        );
-        if (this.obstacleText) {
-            this.obstacleText.setPosition(
-                this.boardOffset.x + (GRID_COLS * this.gemSize) / 2,
-                this.boardOffset.y - this.runnerStripGap - this.runnerStripHeight - 16,
-            );
-        }
-    }
-
-    private syncRunnerStripObjective(): void {
-        this.runnerStrip?.setObjectiveProgress(this.nodeObjectiveProgress, this.nodeObjectiveTarget);
-    }
-
-    private syncRunnerStripSpook(): void {
-        const pct = this.nodeEncounterState
-            ? 1 - this.nodeEncounterState.spookLevel / 100
-            : (this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 1);
-        this.runnerStrip?.setSpook(pct, getSpookTier(pct));
-    }
 
     private emitNodeObjectiveUpdated(): void {
         const enc = this.nodeEncounterState;
@@ -315,7 +284,6 @@ export class Game extends Phaser.Scene {
 
         if (reason === 'objective_complete') {
             this.nodeObjectiveCompleted = true;
-            this.runnerStrip?.markResolved('success');
             this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
             this.time.delayedCall(250, () => {
                 EventBus.emit('node-advance-requested', {
@@ -330,7 +298,6 @@ export class Game extends Phaser.Scene {
 
         this.nodeObjectiveCompleted = true;
         this.disableInputs();
-        this.runnerStrip?.markResolved('escaped');
         this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
         this.time.delayedCall(250, () => {
             EventBus.emit('node-advance-requested', {
@@ -378,7 +345,6 @@ export class Game extends Phaser.Scene {
                 if (!this.nodeObjectiveCompleted) {
                     this.nodeObjectiveCompleted = true;
                     this.disableInputs();
-                    this.runnerStrip?.markResolved('escaped');
                     this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
                     this.time.delayedCall(250, () => {
                         EventBus.emit('node-advance-requested', {
@@ -444,7 +410,7 @@ export class Game extends Phaser.Scene {
         // Emit node objective progress to React
         if (this.nodeObjectiveTarget > 0) {
             this.emitNodeObjectiveUpdated();
-            this.syncRunnerStripObjective();
+
             // Check encounter-level resolution (multi-threat) or legacy progress
             const encounterDone = this.nodeEncounterState?.resolved && this.nodeEncounterState.outcome === 'success';
             const legacyDone = this.nodeObjectiveProgress >= this.nodeObjectiveTarget;
@@ -503,7 +469,7 @@ export class Game extends Phaser.Scene {
                         this.nodeObjectiveTarget
                     );
                     this.emitNodeObjectiveUpdated();
-                    this.syncRunnerStripObjective();
+        
                     if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
                         this.finishNodeObjective('objective_complete');
                     }
@@ -515,7 +481,6 @@ export class Game extends Phaser.Scene {
         const souvenirDef = SOUVENIR_CATALOG[eventKey];
         const souvenirDrop = souvenirDef && Math.random() < souvenirDef.dropChance ? souvenirDef : undefined;
 
-        this.runnerStrip?.pulseEncounter(eventKey);
         EventBus.emit('encounter-triggered', { eventKey, effect, souvenirDrop });
         if (souvenirDrop) {
             EventBus.emit('souvenir-dropped', { souvenir: souvenirDrop });
@@ -632,9 +597,6 @@ export class Game extends Phaser.Scene {
         this.updateMultiplierText(1);
 
         this.calculateBoardDimensions();
-        this.runnerStrip = new ExpeditionRunnerStrip(this);
-        this.syncRunnerStripLayout();
-        this.runnerStrip.setIdle();
 
         // Initialize BackendPuzzle and BoardView, but board visuals are created later
         this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -1083,7 +1045,7 @@ export class Game extends Phaser.Scene {
 
         if (objectiveProgressChanged && this.nodeObjectiveTarget > 0) {
             this.emitNodeObjectiveUpdated();
-            this.syncRunnerStripObjective();
+
         }
     }
 
@@ -1230,7 +1192,7 @@ export class Game extends Phaser.Scene {
                     const pct = 1 - spookLevel / 100; // invert: 100% spook = 0% tracking
                     const tier = getSpookTier(pct);
                     EventBus.emit('node-bonus-tick', { currentPool: Math.round(100 - spookLevel), startPool: 100, pct, tier });
-                    this.syncRunnerStripSpook();
+
                     if (this.nodeEncounterState.outcome === 'escaped' && !this.nodeObjectiveCompleted) {
                         this.finishNodeObjective('escaped');
                     }
@@ -1266,7 +1228,7 @@ export class Game extends Phaser.Scene {
                     pct,
                     tier,
                 });
-                this.syncRunnerStripSpook();
+        
                 if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
                     this.finishNodeObjective('escaped');
                 }
@@ -1284,7 +1246,6 @@ export class Game extends Phaser.Scene {
 
         const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 0;
         const tier = getSpookTier(pct);
-        this.runnerStrip?.setSpook(pct, tier);
         const baseClearReward = 50 + 25 * difficulty;
         const tierBaseMultiplier = tier === 'stabilized' ? 1.0 : tier === 'spooked' ? 0.75 : 0.5;
         const tierBonusMultiplier = tier === 'stabilized' ? 1.0 : tier === 'spooked' ? 0.5 : 0;
@@ -1333,7 +1294,7 @@ export class Game extends Phaser.Scene {
 
         if (this.nodeObjectiveTarget > 0) {
             this.emitNodeObjectiveUpdated();
-            this.syncRunnerStripObjective();
+
             if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
                 this.finishNodeObjective('objective_complete');
             }
@@ -1354,7 +1315,7 @@ export class Game extends Phaser.Scene {
         this.nodeBonusShieldExpiry = 0;
         this.nodePowerMultiplier = 1.0;
         this.nodeThoughtDiscount = 0;
-        this.syncRunnerStripSpook();
+
     }
 
     private handleCrisisResolved(data: EventPayloads['crisis-choice-resolved']): void {
@@ -1362,7 +1323,7 @@ export class Game extends Phaser.Scene {
             // Penalty: lose 30% of current bonus pool
             this.nodeBonusPool = Math.max(0, this.nodeBonusPool * 0.7);
         }
-        this.syncRunnerStripSpook();
+
         // Resume board play and auto-advance node
         this.canMove = true;
         EventBus.emit('node-advance-requested', {
@@ -1636,15 +1597,7 @@ export class Game extends Phaser.Scene {
             this.nodeObjectiveCompleted = false;
             this.currentNodeIndex = data.nodeIndex ?? 0;
             this.currentNodeDifficulty = data.difficulty ?? 3;
-            this.runnerStrip?.setNode({
-                nodeIndex: this.currentNodeIndex,
-                objectiveTarget: this.nodeObjectiveTarget,
-                obstacles: this.nodeObstacles,
-                counterGem: this.nodeCounterGem,
-                activeAffinities: this.nodeActiveAffinities,
-                requiredGems: Array.from(this.nodeRequiredGems),
-            });
-            this.syncRunnerStripObjective();
+
 
             // Encounter tracking for this node
             this.nodeMatchGroupTotal = 0;
@@ -1741,7 +1694,7 @@ export class Game extends Phaser.Scene {
             }
 
             this.calculateBoardDimensions(); // Recalculate for current scale
-            this.syncRunnerStripLayout();
+
             if (!this.boardView) { // Should exist from create()
                 this.boardView = new BoardView(this, {
                     cols: GRID_COLS,
@@ -1765,7 +1718,7 @@ export class Game extends Phaser.Scene {
             this.isBoardInitialized = true;
             this.canMove = true; // Board is ready, enable input
             console.log("Game Scene: Board initialized with random gems. Input enabled.");
-            this.syncRunnerStripObjective();
+
             this.positionPauseButton();
             this.pauseButtonContainer?.setVisible(true);
             this.shuffleButtonContainer?.setVisible(true);
@@ -1817,9 +1770,7 @@ export class Game extends Phaser.Scene {
         
         // Determine if we're on mobile or desktop
         const isMobile = width < MOBILE_BREAKPOINT;
-        this.runnerStripHeight = isMobile ? 60 : 78;
-        this.runnerStripGap = isMobile ? 8 : 12;
-        const stripReserve = this.runnerStripHeight + this.runnerStripGap + 24;
+        const stripReserve = isMobile ? 16 : 24;
         
         // Calculate usable space with different factors for mobile vs desktop
         const usableWidth = isMobile ? width * 0.95 : width * 0.85;
@@ -1875,7 +1826,6 @@ export class Game extends Phaser.Scene {
         if (this.multiplierText) {
             this.multiplierText.setPosition(20, height - 55);
         }
-        this.syncRunnerStripLayout();
         this.positionPauseButton();
 
         if (this.boardView) {
@@ -2407,7 +2357,6 @@ export class Game extends Phaser.Scene {
     private onExpeditionStart(): void { this.inExpeditionRun = true; }
     private onGameReset(): void {
         this.inExpeditionRun = false;
-        this.runnerStrip?.setIdle('Awaiting expedition site');
         // Full cleanup when React signals run ended
         this.currentSpecies = [];
         this.selectedSpecies = null;
@@ -2421,7 +2370,6 @@ export class Game extends Phaser.Scene {
 
     private handleNodeComplete(): void {
         // Emit rewards for nodes completed via panel (analysis nodes)
-        this.runnerStrip?.markResolved('success');
         this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
         // Light reset: clear board between expedition nodes (same species pool)
         this.prepareForNextNode();
@@ -2494,8 +2442,6 @@ export class Game extends Phaser.Scene {
         this.nodeEncounterIndex = 0;
         this.nodeEvents = [];
         this.nodeEncounterState = null;
-        this.runnerStrip?.setIdle(this.inExpeditionRun ? 'Transiting to next node' : 'Awaiting expedition site');
-
         // Clear clue state for fresh node
         this.revealedClues.clear();
         this.completedClueCategories.clear();
@@ -2519,8 +2465,6 @@ export class Game extends Phaser.Scene {
         if (this.statusText && this.statusText.active) {
             this.statusText.setText("Great job!\n\nClick on the globe to find a new habitat area\nfor another mystery species.");
         }
-        this.runnerStrip?.setIdle('Choose a new expedition site');
-
         // Emit reset event for React components
         EventBus.emit('game-reset', undefined);
     }
@@ -2682,10 +2626,6 @@ export class Game extends Phaser.Scene {
         if (this.multiplierText) {
             this.multiplierText.destroy();
             this.multiplierText = null;
-        }
-        if (this.runnerStrip) {
-            this.runnerStrip.destroy();
-            this.runnerStrip = undefined;
         }
         if (this.pauseButtonContainer) {
             this.pauseButtonContainer.destroy(true);

@@ -6,6 +6,7 @@ import { getAffinityDefinition } from '@/expedition/affinities';
 import { OBSTACLE_FAMILY_LABELS } from '@/game/nodeObstacles';
 import type { ObstacleFamily } from '@/game/nodeObstacles';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { getWaypointTypeLabel } from '@/types/waypoints';
 
 interface Props {
@@ -197,11 +198,10 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
                   aria-checked={selected}
                   aria-label={`${def.label} affinity: ${def.shortEffect}`}
                   onClick={() => onSelectAffinity(affinity)}
-                  className={`
-                    flex flex-col gap-ds-xs text-center items-center py-2.5 px-ds-md rounded-xl
-                    min-w-[85px] sm:min-w-[100px] shrink-0 cursor-pointer transition-all duration-200 text-ds-text-primary
-                    ${selected ? 'bg-ds-surface' : 'glass-bg'}
-                  `}
+                  className={cn(
+                    'flex flex-col gap-ds-xs text-center items-center py-2.5 px-ds-md rounded-xl min-w-[85px] sm:min-w-[100px] shrink-0 cursor-pointer transition-all duration-200 text-ds-text-primary',
+                    selected ? 'bg-ds-surface' : 'glass-bg'
+                  )}
                   style={{
                     border: selected ? `2px solid ${def.color}` : '1px solid var(--ds-border-subtle)',
                     boxShadow: selected ? `0 0 12px ${def.color}44` : 'none',

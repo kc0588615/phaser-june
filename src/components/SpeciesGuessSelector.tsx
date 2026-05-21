@@ -10,6 +10,12 @@ interface SpeciesGuessSelectorProps {
   disabled?: boolean;
   onGuessSubmitted?: (isCorrect: boolean) => void;
   hiddenSpeciesName?: string;
+  /**
+   * Explicit candidate pool to choose from. When supplied (e.g. from
+   * deduction-narrowed candidates), the random fetch is skipped so the
+   * player's deduction work actually constrains the final guess list.
+   */
+  candidateNames?: string[];
 }
 
 export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
@@ -17,6 +23,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
   disabled = false,
   onGuessSubmitted,
   hiddenSpeciesName: propHiddenSpeciesName,
+  candidateNames,
 }) => {
   const [open, setOpen] = useState(false);
   const [selectedSpecies, setSelectedSpecies] = useState('');
@@ -56,12 +63,24 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
     };
   }, []);
 
-  // Load candidate species when we have both speciesId and hiddenSpeciesName
+  // Load candidate species when we have both speciesId and hiddenSpeciesName.
+  // If an explicit candidateNames pool is supplied, use it directly so the
+  // player's deduction narrows the actual guess list.
   useEffect(() => {
-    if (speciesId > 0 && hiddenSpeciesName) {
+    if (!hiddenSpeciesName) return;
+    if (candidateNames && candidateNames.length > 0) {
+      const set = new Set(candidateNames);
+      if (hiddenSpeciesName && hiddenSpeciesName !== 'Unknown Species') {
+        set.add(hiddenSpeciesName);
+      }
+      setCandidateSpecies(Array.from(set));
+      setIsLoading(false);
+      return;
+    }
+    if (speciesId > 0) {
       loadCandidateSpecies();
     }
-  }, [speciesId, hiddenSpeciesName]);
+  }, [speciesId, hiddenSpeciesName, candidateNames]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -172,7 +191,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
             )}
           >
             <span className="truncate">
-              {selectedSpecies || (hasGuessed ? 'Correct!' : `Select a species... (${10 - guessedSpecies.size} left)`)}
+              {selectedSpecies || (hasGuessed ? 'Correct!' : `Select a species... (${Math.max(0, candidateSpecies.length - guessedSpecies.size)} left)`)}
             </span>
             <ChevronDown className="h-4 w-4 opacity-50" />
           </button>

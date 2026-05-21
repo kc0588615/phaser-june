@@ -50,14 +50,14 @@ interface ProfileData {
 // ---- helpers ----------------------------------------------------------------
 
 const IUCN_LABELS: Record<string, { label: string; color: string }> = {
-  LC: { label: 'Least Concern', color: '#10b981' },
-  NT: { label: 'Near Threatened', color: '#22d3ee' },
-  VU: { label: 'Vulnerable', color: '#f59e0b' },
-  EN: { label: 'Endangered', color: '#fb923c' },
-  CR: { label: 'Critically Endangered', color: '#f43f5e' },
-  EW: { label: 'Extinct in Wild', color: '#a855f7' },
-  EX: { label: 'Extinct', color: '#6b7280' },
-  DD: { label: 'Data Deficient', color: '#94a3b8' },
+  LC: { label: 'Least Concern', color: 'var(--ds-accent-emerald)' },
+  NT: { label: 'Near Threatened', color: 'var(--ds-accent-cyan)' },
+  VU: { label: 'Vulnerable', color: 'var(--ds-accent-amber)' },
+  EN: { label: 'Endangered', color: 'var(--ds-gem-pack)' },
+  CR: { label: 'Critically Endangered', color: 'var(--ds-accent-rose)' },
+  EW: { label: 'Extinct in Wild', color: 'var(--ds-gem-focus)' },
+  EX: { label: 'Extinct', color: 'var(--ds-text-muted)' },
+  DD: { label: 'Data Deficient', color: 'var(--ds-text-secondary)' },
 };
 
 function fmtTime(seconds: number): string {
@@ -81,12 +81,15 @@ function masteryLabel(tier: number): string {
 }
 
 function masteryColor(tier: number): string {
-  return ['#64748b', '#22d3ee', '#10b981', '#f59e0b', '#fb923c', '#f43f5e'][Math.min(tier, 5)];
+  return [
+    'var(--ds-text-muted)', 'var(--ds-accent-cyan)', 'var(--ds-accent-emerald)',
+    'var(--ds-accent-amber)', 'var(--ds-gem-pack)', 'var(--ds-accent-rose)',
+  ][Math.min(tier, 5)];
 }
 
 // ---- sub-components ---------------------------------------------------------
 
-function StatCard({ value, label, color = '#22d3ee' }: { value: string; label: string; color?: string }) {
+function StatCard({ value, label, color = 'var(--ds-accent-cyan)' }: { value: string; label: string; color?: string }) {
   return (
     <div className="flex-1 flex flex-col items-center gap-1 glass-bg shadow-card border border-ds-subtle rounded-[10px] py-3 px-2">
       <span className="text-xl font-bold" style={{ color }}>{value}</span>
@@ -106,7 +109,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 function BiomeChip({ name, count }: { name: string; count: number }) {
   return (
     <div className="flex items-center gap-2 glass-bg border border-ds-accent rounded-full px-3 py-1.5">
-      <Leaf className="w-3 h-3 text-ds-emerald flex-shrink-0" />
+      <Leaf className="size-3 text-ds-emerald flex-shrink-0" />
       <span className="text-[12px] text-ds-text-primary truncate max-w-[130px]">{name}</span>
       <span className="text-ds-badge font-bold text-ds-cyan ml-auto flex-shrink-0">{count}</span>
     </div>
@@ -122,7 +125,7 @@ function AffinityBadge({ family, count }: { family: string; count: number }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div
-        className="w-12 h-12 rounded-full flex items-center justify-center border-2 text-[13px] font-bold"
+        className="size-12 rounded-full flex items-center justify-center border-2 text-[13px] font-bold"
         style={{ borderColor: color, boxShadow: glow, color, background: `hsla(${hue}, 70%, 15%, 0.6)` }}
       >
         {initials}
@@ -155,9 +158,9 @@ function LocationCard({ loc }: { loc: ProfileData['topLocations'][0] }) {
   const color = masteryColor(loc.masteryTier);
   return (
     <div className="glass-bg shadow-card border border-ds-subtle rounded-[10px] p-3 flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center border flex-shrink-0"
-        style={{ borderColor: color, boxShadow: `0 0 8px ${color}44`, color }}>
-        <MapPin className="w-4 h-4" />
+      <div className="size-8 rounded-full flex items-center justify-center border flex-shrink-0"
+        style={{ borderColor: color, boxShadow: `0 0 8px color-mix(in srgb, ${color} 27%, transparent)`, color }}>
+        <MapPin className="size-4" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-[12px] font-semibold text-ds-text-primary truncate">{loc.biome ?? loc.realm ?? loc.bioregion ?? loc.locationKey}</div>
@@ -225,7 +228,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
     return (
       <div className={inline ? 'p-4' : 'mx-4 mt-8'}>
         <div className="glass-bg shadow-card border border-ds-accent rounded-[16px] p-6 text-center">
-          <Globe className="w-12 h-12 text-ds-cyan mx-auto mb-3 glow-cyan" />
+          <Globe className="size-12 text-ds-cyan mx-auto mb-3 glow-cyan" />
           <p className="text-ds-heading-sm mb-1">Sign in to view your profile</p>
           <p className="text-ds-body text-ds-text-muted mb-4">Track biomes explored, family affinities, and discovery history.</p>
           <SignInButton mode="redirect" fallbackRedirectUrl="/stats" forceRedirectUrl="/stats">
@@ -246,7 +249,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
     <div className="text-ds-text-primary">
       {loading && (
         <div className="flex items-center justify-center mt-20">
-          <div className="w-8 h-8 border-2 border-ds-cyan border-t-transparent rounded-full animate-spin" />
+          <div className="size-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -257,17 +260,17 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
       )}
 
       {data && (
-        <div className="px-4 space-y-6">
+        <div className="px-4 flex flex-col gap-6">
           {/* Profile header */}
           <div className="flex items-center gap-4 glass-bg shadow-card rounded-[16px] p-4 border border-ds-subtle">
             {data.profile.avatarUrl ? (
               <img
                 src={data.profile.avatarUrl}
                 alt=""
-                className="w-14 h-14 rounded-full border-2 border-ds-accent flex-shrink-0 object-cover glow-cyan"
+                className="size-14 rounded-full border-2 border-ds-accent flex-shrink-0 object-cover glow-cyan"
               />
             ) : (
-              <div className="w-14 h-14 rounded-full flex items-center justify-center text-[22px] font-bold border-2 border-ds-accent flex-shrink-0 bg-ds-surface-elevated glow-cyan">
+              <div className="size-14 rounded-full flex items-center justify-center text-[22px] font-bold border-2 border-ds-accent flex-shrink-0 bg-ds-surface-elevated glow-cyan">
                 {data.profile.username ? data.profile.username.slice(0, 1).toUpperCase() : '?'}
               </div>
             )}
@@ -276,7 +279,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
               <span className="inline-block text-ds-badge uppercase text-ds-cyan bg-ds-cyan/10 border border-ds-cyan/30 rounded-full px-2 py-0.5">Field Researcher</span>
               {data.profile.createdAt && (
                 <div className="flex items-center gap-1 mt-1 text-ds-caption text-ds-text-muted">
-                  <Clock className="w-3 h-3" />
+                  <Clock className="size-3" />
                   <span>Since {new Date(data.profile.createdAt).toLocaleDateString()}</span>
                 </div>
               )}
@@ -290,15 +293,15 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
           )}
 
           {stats && <div className="flex gap-2">
-            <StatCard value={fmtNum(stats.totalSpeciesDiscovered)} label="Species" color="#10b981" />
-            <StatCard value={fmtNum(stats.totalScore)} label="Score" color="#22d3ee" />
-            <StatCard value={String(stats.totalGamesPlayed)} label="Runs" color="#f59e0b" />
-            <StatCard value={fmtTime(stats.totalPlayTimeSeconds)} label="Time" color="#94a3b8" />
+            <StatCard value={fmtNum(stats.totalSpeciesDiscovered)} label="Species" color="var(--ds-accent-emerald)" />
+            <StatCard value={fmtNum(stats.totalScore)} label="Score" color="var(--ds-accent-cyan)" />
+            <StatCard value={String(stats.totalGamesPlayed)} label="Runs" color="var(--ds-accent-amber)" />
+            <StatCard value={fmtTime(stats.totalPlayTimeSeconds)} label="Time" color="var(--ds-text-secondary)" />
           </div>}
 
           {topBiomes.length > 0 && (
             <div>
-              <SectionHeader><Leaf className="w-4 h-4 text-ds-emerald" /> Biomes Explored</SectionHeader>
+              <SectionHeader><Leaf className="size-4 text-ds-emerald" /> Biomes Explored</SectionHeader>
               <div className="flex flex-wrap gap-2">
                 {topBiomes.map(([biome, count]) => <BiomeChip key={biome} name={biome} count={count} />)}
               </div>
@@ -307,7 +310,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {topRealms.length > 0 && (
             <div>
-              <SectionHeader><Globe className="w-4 h-4 text-ds-cyan" /> Biogeographic Realms</SectionHeader>
+              <SectionHeader><Globe className="size-4 text-ds-cyan" /> Biogeographic Realms</SectionHeader>
               <div className="grid grid-cols-2 gap-2">
                 {topRealms.map(([realm, count]) => (
                   <div key={realm} className="glass-bg border border-ds-accent rounded-[10px] px-3 py-2 flex justify-between items-center">
@@ -321,7 +324,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {topFamilies.length > 0 && (
             <div>
-              <SectionHeader><Star className="w-4 h-4 text-ds-amber" /> Family Affinities</SectionHeader>
+              <SectionHeader><Star className="size-4 text-ds-amber" /> Family Affinities</SectionHeader>
               <div className="glass-bg shadow-card border border-ds-subtle rounded-[16px] p-4">
                 <div className="flex flex-wrap gap-4 justify-start">
                   {topFamilies.map(([family, count]) => <AffinityBadge key={family} family={family} count={count} />)}
@@ -332,7 +335,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {topGenera.length > 0 && (
             <div>
-              <SectionHeader><TreePine className="w-4 h-4 text-ds-emerald" /> Top Genera</SectionHeader>
+              <SectionHeader><TreePine className="size-4 text-ds-emerald" /> Top Genera</SectionHeader>
               <div className="glass-bg shadow-card border border-ds-subtle rounded-[16px] overflow-hidden">
                 {topGenera.map(([genus, count], i) => (
                   <div key={genus} className="flex items-center justify-between px-4 py-2.5 border-b border-ds-subtle last:border-0">
@@ -349,24 +352,24 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {stats && totalEco > 0 && (
             <div>
-              <SectionHeader><Waves className="w-4 h-4 text-ds-cyan" /> Ecosystem Types</SectionHeader>
-              <div className="glass-bg shadow-card border border-ds-subtle rounded-[16px] p-4 space-y-3">
-                <EcosystemBar label="Terrestrial" count={stats.terrestrialSpeciesCount} total={totalEco} color="#10b981" icon={<TreePine className="w-4 h-4" />} />
-                <EcosystemBar label="Marine" count={stats.marineSpeciesCount} total={totalEco} color="#22d3ee" icon={<Waves className="w-4 h-4" />} />
-                <EcosystemBar label="Freshwater" count={stats.freshwaterSpeciesCount} total={totalEco} color="#3b82f6" icon={<Droplets className="w-4 h-4" />} />
-                <EcosystemBar label="Aquatic" count={stats.aquaticSpeciesCount} total={totalEco} color="#8b5cf6" icon={<Droplets className="w-4 h-4" />} />
+              <SectionHeader><Waves className="size-4 text-ds-cyan" /> Ecosystem Types</SectionHeader>
+              <div className="glass-bg shadow-card border border-ds-subtle rounded-[16px] p-4 flex flex-col gap-3">
+                <EcosystemBar label="Terrestrial" count={stats.terrestrialSpeciesCount} total={totalEco} color="var(--ds-accent-emerald)" icon={<TreePine className="size-4" />} />
+                <EcosystemBar label="Marine" count={stats.marineSpeciesCount} total={totalEco} color="var(--ds-accent-cyan)" icon={<Waves className="size-4" />} />
+                <EcosystemBar label="Freshwater" count={stats.freshwaterSpeciesCount} total={totalEco} color="var(--ds-gem-scan)" icon={<Droplets className="size-4" />} />
+                <EcosystemBar label="Aquatic" count={stats.aquaticSpeciesCount} total={totalEco} color="var(--ds-gem-focus)" icon={<Droplets className="size-4" />} />
               </div>
             </div>
           )}
 
           {iucnEntries.length > 0 && (
             <div>
-              <SectionHeader><Zap className="w-4 h-4 text-ds-amber" /> Conservation Status</SectionHeader>
+              <SectionHeader><Zap className="size-4 text-ds-amber" /> Conservation Status</SectionHeader>
               <div className="flex flex-wrap gap-2">
                 {iucnEntries.map(([code, count]) => {
-                  const meta = IUCN_LABELS[code] ?? { label: code, color: '#94a3b8' };
+                  const meta = IUCN_LABELS[code] ?? { label: code, color: 'var(--ds-text-secondary)' };
                   return (
-                    <div key={code} className="flex items-center gap-2 glass-bg rounded-full px-3 py-1.5 border" style={{ borderColor: `${meta.color}33` }}>
+                    <div key={code} className="flex items-center gap-2 glass-bg rounded-full px-3 py-1.5 border" style={{ borderColor: `color-mix(in srgb, ${meta.color} 20%, transparent)` }}>
                       <span className="text-[11px] font-bold" style={{ color: meta.color }}>{code}</span>
                       <span className="text-[11px] text-ds-text-secondary">{meta.label}</span>
                       <span className="text-[11px] font-bold ml-1" style={{ color: meta.color }}>{count}</span>
@@ -379,7 +382,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {topOrders.length > 0 && (
             <div>
-              <SectionHeader><Layers className="w-4 h-4 text-ds-amber" /> Taxonomic Orders</SectionHeader>
+              <SectionHeader><Layers className="size-4 text-ds-amber" /> Taxonomic Orders</SectionHeader>
               <div className="flex flex-wrap gap-1.5">
                 {topOrders.map(([order, count]) => (
                   <span key={order} className="glass-bg border border-ds-subtle rounded-full px-2.5 py-0.5 text-ds-caption">
@@ -392,7 +395,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {topBioregions.length > 0 && (
             <div>
-              <SectionHeader><Globe className="w-4 h-4 text-ds-emerald" /> Bioregions</SectionHeader>
+              <SectionHeader><Globe className="size-4 text-ds-emerald" /> Bioregions</SectionHeader>
               <div className="flex flex-wrap gap-1.5">
                 {topBioregions.map(([region, count]) => (
                   <span key={region} className="glass-bg border border-ds-subtle rounded-full px-2.5 py-0.5 text-ds-caption">
@@ -405,7 +408,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {clueCategories.length > 0 && (
             <div>
-              <SectionHeader><BookOpen className="w-4 h-4 text-ds-cyan" /> Clue Categories</SectionHeader>
+              <SectionHeader><BookOpen className="size-4 text-ds-cyan" /> Clue Categories</SectionHeader>
               <div className="flex flex-wrap gap-1.5">
                 {clueCategories.map(([cat, count]) => (
                   <span key={cat} className="glass-bg border border-ds-subtle rounded-full px-2.5 py-0.5 text-ds-caption">
@@ -418,8 +421,8 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
           {data.topLocations.length > 0 && (
             <div>
-              <SectionHeader><MapPin className="w-4 h-4 text-ds-cyan" /> Field Mastery</SectionHeader>
-              <div className="space-y-2">
+              <SectionHeader><MapPin className="size-4 text-ds-cyan" /> Field Mastery</SectionHeader>
+              <div className="flex flex-col gap-2">
                 {data.topLocations.map((loc) => <LocationCard key={loc.locationKey} loc={loc} />)}
               </div>
             </div>

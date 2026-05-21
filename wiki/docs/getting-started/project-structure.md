@@ -56,7 +56,7 @@ phaser-june/
 │   └── PhaserGame.tsx      # React-Phaser bridge
 │
 ├── public/
-│   ├── assets/             # Game sprites (gems, owl)
+│   ├── assets/             # Game sprites (gems)
 │   └── cesium/             # Cesium static assets
 │
 ├── docs/                   # Source documentation (migrated to wiki)

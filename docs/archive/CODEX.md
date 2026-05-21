@@ -1,6 +1,6 @@
 ## Postgres Database Access
 
-Use the `postgres-tunnel` skill for database access. Do not use `pg-claude`.
+Use the `postgres-tunnel` skill for database access.
 
 ## Connection
 

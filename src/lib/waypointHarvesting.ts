@@ -82,7 +82,8 @@ interface Candidate {
   fallback: boolean;
 }
 
-const SEARCH_RADII_KM = [100, 200, 400] as const;
+const SEARCH_RADII_KM = [75, 150, 250] as const;
+const MIN_WAYPOINT_SPACING_KM = 35;
 const NODE_ROLES: WaypointNodeRole[] = [
   'start',
   'river',
@@ -464,12 +465,11 @@ function hasEnoughCandidates(candidates: Candidate[]): boolean {
       .filter(Boolean),
   );
 
-  return counts.city >= 1
-    && counts.river >= 1
+  return counts.river >= 1
     && counts.lake + counts.wetland >= 1
     && counts.protected_area >= 2
     && protectedCategories.size >= 2
-    && candidates.length >= 6;
+    && candidates.length >= 5;
 }
 
 function countCandidates(candidates: Candidate[]): Record<WaypointType, number> {
@@ -524,16 +524,21 @@ function selectWaypoints(candidates: Candidate[], lon: number, lat: number): Exp
   const selectedKeys = new Set<string>();
   const selected: Array<Candidate | null> = [null, null, null, null, null, null];
 
-  const pickBest = (predicate: (candidate: Candidate) => boolean): Candidate | null => {
-    const candidate = candidates
-      .filter((item) => !selectedKeys.has(item.key) && predicate(item))
+  const farEnoughFromSelected = (candidate: Candidate) => selected
+    .filter((item): item is Candidate => item != null)
+    .every((item) => routeDistanceKm(item, candidate) >= MIN_WAYPOINT_SPACING_KM);
+
+  const pickBest = (predicate: (candidate: Candidate) => boolean, requireSpacing = true): Candidate | null => {
+    const eligible = candidates
+      .filter((item) => !selectedKeys.has(item.key) && predicate(item));
+    const spaced = requireSpacing ? eligible.filter(farEnoughFromSelected) : eligible;
+    const candidate = (spaced.length > 0 ? spaced : eligible)
       .sort((a, b) => b.rankScore - a.rankScore)[0];
     if (candidate) selectedKeys.add(candidate.key);
     return candidate ?? null;
   };
 
-  selected[0] = pickBest((candidate) => candidate.waypointType === 'city')
-    ?? fallbackCandidate(lon, lat, 0, 'start');
+  selected[0] = fallbackCandidate(lon, lat, 0, 'start');
   selectedKeys.add(selected[0].key);
 
   selected[1] = pickBest((candidate) => candidate.waypointType === 'river');
@@ -547,7 +552,8 @@ function selectWaypoints(candidates: Candidate[], lon: number, lat: number): Exp
     && candidate.designationCategory !== firstProtectedCategory
   )) ?? pickBest((candidate) => candidate.waypointType === 'protected_area');
 
-  selected[5] = pickBest((candidate) => candidate.waypointType !== 'city')
+  selected[5] = pickBest((candidate) => candidate.waypointType === 'city')
+    ?? pickBest((candidate) => candidate.waypointType !== 'city')
     ?? pickBest(() => true);
 
   for (let slot = 1; slot < selected.length; slot++) {
@@ -587,26 +593,12 @@ function routeDistanceKm(a: { lon: number; lat: number }, b: { lon: number; lat:
 }
 
 function buildRoutePolyline(waypoints: ExpeditionWaypoint[], origin: { lon: number; lat: number }) {
-  const remaining = new Map<number, ExpeditionWaypoint>(waypoints.map((waypoint) => [waypoint.slot, waypoint]));
-  const route: Array<{ lon: number; lat: number; waypointSlot: number }> = [];
-  let current = remaining.get(0) ?? origin;
+  const route = waypoints
+    .slice()
+    .sort((a, b) => a.slot - b.slot)
+    .map((waypoint) => ({ lon: waypoint.lon, lat: waypoint.lat, waypointSlot: waypoint.slot }));
 
-  if (remaining.has(0)) {
-    const start = remaining.get(0)!;
-    route.push({ lon: start.lon, lat: start.lat, waypointSlot: start.slot });
-    remaining.delete(0);
-  }
-
-  while (remaining.size > 0) {
-    const next = [...remaining.values()].sort((a, b) => (
-      routeDistanceKm(current, a) - routeDistanceKm(current, b)
-    ))[0];
-    route.push({ lon: next.lon, lat: next.lat, waypointSlot: next.slot });
-    remaining.delete(next.slot);
-    current = next;
-  }
-
-  return route;
+  return route.length > 0 ? route : [{ lon: origin.lon, lat: origin.lat, waypointSlot: 0 }];
 }
 
 export async function harvestExpeditionWaypoints({ lon, lat }: HarvestOptions): Promise<ExpeditionWaypointRoute> {

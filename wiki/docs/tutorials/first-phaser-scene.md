@@ -94,10 +94,6 @@ export class Preloader extends Phaser.Scene {
 
     // Load other assets
     this.load.image('bg', 'bg.png');
-    this.load.spritesheet('owl', 'Owl_spritesheet.png', {
-      frameWidth: 32,
-      frameHeight: 32
-    });
   }
 
   create() {

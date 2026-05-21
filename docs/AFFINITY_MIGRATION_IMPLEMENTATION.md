@@ -78,7 +78,6 @@ The expedition run flow now supports:
 
 - [src/game/scenes/Game.ts](/home/danby/phaser-june/src/game/scenes/Game.ts)
 - [src/game/EventBus.ts](/home/danby/phaser-june/src/game/EventBus.ts)
-- [src/game/ui/ExpeditionRunnerStrip.ts](/home/danby/phaser-june/src/game/ui/ExpeditionRunnerStrip.ts)
 
 ### React Run Flow and UI
 

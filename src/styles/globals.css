@@ -113,60 +113,39 @@
   box-sizing: border-box;
 }
 
+/* ── Shadcn semantic vars bridged to DS tokens (dark-only app) ── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
+    --background: var(--ds-background);
+    --foreground: var(--ds-text-primary);
+    --card: var(--ds-surface);
+    --card-foreground: var(--ds-text-primary);
+    --popover: var(--ds-surface);
+    --popover-foreground: var(--ds-text-primary);
+    --primary: var(--ds-accent-cyan);
+    --primary-foreground: var(--ds-background);
+    --secondary: var(--ds-surface-elevated);
+    --secondary-foreground: var(--ds-text-primary);
+    --muted: var(--ds-surface-elevated);
+    --muted-foreground: var(--ds-text-muted);
+    --accent: var(--ds-surface-elevated);
+    --accent-foreground: var(--ds-text-primary);
+    --destructive: var(--ds-accent-rose);
+    --destructive-foreground: var(--ds-background);
+    --border: var(--ds-border-subtle);
+    --input: var(--ds-border-subtle);
+    --ring: var(--ds-accent-cyan);
     --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
   }
 }
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    border-color: var(--border);
   }
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }
 
@@ -179,8 +158,6 @@ html, body {
 }
 
 body {
-    color: var(--ds-text-primary);
-    background-color: var(--ds-background);
     font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 

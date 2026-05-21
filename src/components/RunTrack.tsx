@@ -4,6 +4,7 @@ import { getRunNodeLabel } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem } from '@/expedition/affinities';
 import { GemSwatch } from '@/components/ui/gem-swatch';
+import { cn } from '@/lib/utils';
 import type { ThreatType } from '@/game/encounterState';
 
 const THREAT_ICONS: Record<ThreatType, string> = {
@@ -31,15 +32,14 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
         return (
           <div key={i} className="flex items-center gap-0.5" aria-label={`Node ${i + 1}: ${label}, difficulty ${node.difficulty}${isCurrent ? ' (current)' : isCompleted ? ' (complete)' : ''}`}>
             <div
-              className={`
-                px-2.5 py-ds-xs rounded-md text-ds-body text-center min-w-[48px] border transition-all duration-200
-                ${isCurrent
-                  ? 'border-2 border-ds-accent font-bold text-ds-cyan bg-[rgba(34,211,238,0.15)] scale-110'
+              className={cn(
+                'px-2.5 py-ds-xs rounded-md text-ds-body text-center min-w-[48px] border transition-all duration-200',
+                isCurrent
+                  ? 'border-2 border-ds-accent font-bold text-ds-cyan bg-primary/15 scale-110'
                   : isCompleted
-                    ? 'border-ds-subtle font-medium text-ds-text-muted bg-[rgba(71,85,105,0.3)]'
+                    ? 'border-ds-subtle font-medium text-ds-text-muted bg-secondary/30'
                     : 'border-ds-subtle font-medium text-ds-text-secondary bg-transparent'
-                }
-              `}
+              )}
             >
               {isCompleted
                 ? <><span className="mr-1">✓</span>{label}</>
@@ -59,7 +59,7 @@ export const RunTrack: React.FC<Props> = ({ nodes, currentNodeIndex, activeAffin
               </div>
             </div>
             {i < nodes.length - 1 && (
-              <div className={`w-3 h-0.5 ${isCompleted ? 'bg-ds-surface-elevated' : 'bg-ds-bg'}`} />
+              <div className={cn('w-3 h-0.5', isCompleted ? 'bg-secondary' : 'bg-background')} />
             )}
           </div>
         );

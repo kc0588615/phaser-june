@@ -58,13 +58,13 @@ The board still borrows YMBAB's action-board language, but Deduction Camp is the
 
 ### Grid dimensions
 
-Changed from 7×7 to 6 columns × 8 rows.
+Changed to 6 columns × 6 rows.
 
 **File:** `src/game/constants.ts`
 
 ```
 GRID_COLS = 6
-GRID_ROWS = 8
+GRID_ROWS = 6
 ```
 
 ### Gem spacing

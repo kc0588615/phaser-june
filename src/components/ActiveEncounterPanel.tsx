@@ -6,6 +6,7 @@ import type { AffinityType } from '@/expedition/affinities';
 import { affinitySetBuffsGem, getAffinityDefinition } from '@/expedition/affinities';
 import { formatNodeObstacleLabel, OBSTACLE_FAMILY_LABELS } from '@/game/nodeObstacles';
 import { useGameBridge } from '@/contexts/GameBridgeContext';
+import { cn } from '@/lib/utils';
 import type { ThreatType } from '@/game/encounterState';
 
 interface Props {
@@ -55,11 +56,10 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
   return (
     <section
       aria-label={`Active node: ${nodeLabel}`}
-      className={`
-        absolute top-1.5 right-1.5 z-hud glass-bg rounded-md max-w-[180px] sm:max-w-[220px] p-2 sm:p-2.5
-        text-ds-text-primary border
-        ${isEncounter ? 'border-[var(--ds-accent-amber)] shadow-glow-amber' : 'border-ds-subtle shadow-ds-card'}
-      `}
+      className={cn(
+        'absolute top-1.5 right-1.5 z-hud glass-bg rounded-md max-w-[180px] sm:max-w-[220px] p-2 sm:p-2.5 text-ds-text-primary border',
+        isEncounter ? 'border-[var(--ds-accent-amber)] shadow-glow-amber' : 'border-ds-subtle shadow-ds-card'
+      )}
     >
       {/* Encounter banner */}
       {isEncounter && (
@@ -187,10 +187,10 @@ export const ActiveEncounterPanel: React.FC<Props> = ({ node, nodeIndex, activeA
           onClick={handleClick}
           disabled={clicked}
           aria-label={clicked ? 'Advancing to next node' : 'Complete current node'}
-          className={`
-            w-full py-1.5 text-ds-caption font-semibold rounded border-none text-white
-            ${clicked ? 'bg-ds-surface-elevated cursor-not-allowed opacity-60' : 'bg-blue-700 cursor-pointer'}
-          `}
+          className={cn(
+            'w-full py-1.5 text-ds-caption font-semibold rounded border-none',
+            clicked ? 'bg-secondary text-foreground cursor-not-allowed opacity-60' : 'bg-primary text-primary-foreground cursor-pointer'
+          )}
         >
           {clicked ? 'Advancing...' : 'Complete Node'}
         </button>

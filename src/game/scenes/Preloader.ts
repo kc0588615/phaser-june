@@ -27,12 +27,6 @@ export class Preloader extends Phaser.Scene {
             }
         });
 
-        // Load owl spritesheet (48x32 cells)
-        this.load.spritesheet('owl', `${assetsFullPath}Owl_spritesheet.png`, {
-            frameWidth: 48,
-            frameHeight: 32
-        });
-
         // Load sounds if/when added
         // this.load.audio(AssetKeys.SOUND_MATCH, [`${assetsFullPath}sounds/match.ogg`, `${assetsFullPath}sounds/match.mp3`]);
 

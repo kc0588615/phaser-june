@@ -147,7 +147,7 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
           </div>
 
           {resumeError && (
-            <div className="mb-ds-sm flex items-start gap-2 rounded-md border border-red-400/20 bg-red-500/10 px-3 py-2 text-ds-caption text-red-200" role="status">
+            <div className="mb-ds-sm flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-ds-caption text-destructive" role="status">
               <AlertCircle size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
               <span>{resumeError}</span>
             </div>

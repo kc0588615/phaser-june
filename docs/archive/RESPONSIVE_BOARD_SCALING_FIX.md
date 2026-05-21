@@ -15,12 +15,10 @@ Added intelligent responsive behavior that adapts to screen size:
 #### Mobile Mode (< 768px width)
 - **Board Position**: Left-aligned with 12px margin
 - **Rationale**: Maximizes limited screen space on mobile devices
-- **Owl Position**: Aligned with board's left edge
 
 #### Desktop Mode (≥ 768px width)  
 - **Board Position**: Horizontally centered
 - **Rationale**: Classic game board appearance with black bars
-- **Owl Position**: Offset from board for better visual balance
 
 ### Scaling Improvements
 1. **Maximum Gem Size**: Capped at 80px to prevent oversized gems on large screens
@@ -38,7 +36,6 @@ Added intelligent responsive behavior that adapts to screen size:
    - Added mobile/desktop detection based on 768px breakpoint
    - Implemented conditional positioning (left-aligned vs centered)
    - Added maximum gem size constraint (80px)
-   - Updated owl positioning logic in both `create()` and `handleResize()`
 
 ### Code Changes
 ```typescript
@@ -89,7 +86,6 @@ if (isMobile) {
 2. Gradually resize narrower past 768px breakpoint
 3. **Expected behavior**:
    - Board transitions from centered to left-aligned at breakpoint
-   - Owl sprite adjusts position accordingly
    - Gem sizing adapts smoothly
 
 ## Benefits

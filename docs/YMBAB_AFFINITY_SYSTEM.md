@@ -91,11 +91,7 @@ To implement this system, the following files must be refactored or updated:
 - **What to do:** If a player matches `Traverse` (Key) and has the `Amphibian` affinity equipped, apply the x2 modifier to the target progress emitted via `node-objective-updated`.
 - **What to do:** Update the item usage listeners (e.g. listening for `consumable-used` from React) to trigger immediate target-clearing or meter-freezing. 
 
-### 5. `src/game/ui/ExpeditionRunnerStrip.ts` (Visual Delivery)
-- **What to do:** When an obstacle is presented in the strip, display its distinct counter gem icon alongside it.
-- **What to do:** Display active affinities in the UI, applying visual effects (e.g., a glow or "x2" text) over gem icons to visually communicate to the player that "Traverse is currently buffed by your Amphibian Affinity."
-
-### 6. `src/components/ConsumableTray.tsx` (User Interface)
+### 5. `src/components/ConsumableTray.tsx` (User Interface)
 - **What to do:** Ensure consumables trigger immediate dispatches to the `Game.ts` scene without requiring a turn/move to pass, solidifying their role as twitch-reaction panic buttons. 
 
 ---

@@ -24,7 +24,7 @@ import { deriveAvailableAffinities, getDefaultActiveAffinities } from '../expedi
 import type { AffinityType } from '../expedition/affinities';
 import { speciesService } from '../lib/speciesService';
 import type { Species } from '../types/database';
-import type { ExpeditionData, RunNode } from '../types/expedition';
+import type { ExpeditionData, RunNode, RunPhase } from '../types/expedition';
 import type { FeatureFingerprint } from '../types/gis';
 import { getAppConfig } from '../utils/config';
 import { useCesiumTrail } from '../hooks/useCesiumTrail';
@@ -33,6 +33,7 @@ import { computeExpeditionRoutePolyline, normalizeRoutePolyline } from '../lib/e
 import { applyWaypointsToRunNodes } from '../lib/nodeScoring';
 import type { ExpeditionWaypointResponse } from '../types/waypoints';
 import { ANIMAL_MARKER, type EcoregionPreviewPick, type EcoregionProgress } from '../types/ecoregions';
+import { cn } from '@/lib/utils';
 
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
 const COG_URL = process.env.NEXT_PUBLIC_COG_URL || "https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif";
@@ -129,7 +130,6 @@ function emitExpeditionReadyFromMapClick(input: {
   activeAffinities: AffinityType[];
   availableAffinities: AffinityType[];
   ecoregionId?: number | null;
-  loadSpatialLayers: (lon: number, lat: number) => void;
 }): boolean {
   const nodes = input.atPointData?.generated_nodes;
   if (!nodes?.length) return false;
@@ -166,15 +166,15 @@ function emitExpeditionReadyFromMapClick(input: {
     habitats: input.habitats,
     featureFingerprints: input.atPointData?.feature_fingerprints ?? [],
   });
-  input.loadSpatialLayers(input.lon, input.lat);
   return true;
 }
 
 interface CesiumMapProps {
   onSearchOpen?: () => void;
+  expeditionPhase?: RunPhase;
 }
 
-const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
+const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = 'idle' }) => {
   const viewerRef = useRef<any>(null);
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null);
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null);
@@ -199,12 +199,14 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
   const [pendingSelection, setPendingSelection] = useState<PendingSelection | null>(null);
   const [selectedEcoregion, setSelectedEcoregion] = useState<EcoregionPreviewPick | null>(null);
   const [highlightedSpeciesSource, setHighlightedSpeciesSource] = useState<GeoJsonDataSource | null>(null);
-  const [showEcoregionLayer, setShowEcoregionLayer] = useState(false);
+  const [showEcoregionLayer, setShowEcoregionLayer] = useState(true);
 
   // Extracted hooks
-  const { runPhaseRef, loadSpatialLayers } = useCesiumTrail(viewerRef);
-  const { focusedEcoregion, isPreviewLoading, pickEcoregionAtPosition } = useEcoregionLayer(viewerRef, showEcoregionLayer);
+  useCesiumTrail(viewerRef);
+  const ecoregionLayerEnabled = showEcoregionLayer && expeditionPhase === 'idle';
+  const { focusedEcoregion, isPreviewLoading, pickEcoregionAtPosition } = useEcoregionLayer(viewerRef, ecoregionLayerEnabled);
   const contextEcoregion = selectedEcoregion ?? focusedEcoregion;
+  const expeditionBlocksMapClick = expeditionPhase !== 'idle';
 
   useEffect(() => {
     Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN || 'YOUR_FALLBACK_TOKEN';
@@ -213,6 +215,19 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
   useEffect(() => {
     if (!showEcoregionLayer) setSelectedEcoregion(null);
   }, [showEcoregionLayer]);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      viewerRef.current?.cesiumElement?.resize?.();
+    });
+    const timeoutId = window.setTimeout(() => {
+      viewerRef.current?.cesiumElement?.resize?.();
+    }, 120);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [expeditionPhase]);
 
   const recenterGlobe = useCallback(() => {
     viewerRef.current?.cesiumElement?.camera?.flyHome?.(0.8);
@@ -233,7 +248,6 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
 
     if (!emitExpeditionReadyFromMapClick({
       ...pendingSelection,
-      loadSpatialLayers,
     })) {
       EventBus.emit('cesium-location-selected', {
         ecoregionId: pendingSelection.ecoregionId,
@@ -244,7 +258,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
         lat: pendingSelection.lat,
       });
     }
-  }, [loadSpatialLayers, pendingSelection]);
+  }, [pendingSelection]);
 
   useEffect(() => {
     const setupImagery = async () => {
@@ -330,7 +344,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
     setClickedLonLat({ lon: longitude, lat: latitude });
     setEcoregionProgress(null);
     setPendingSelection(null);
-    setInfoBoxData({ habitats: [], species: [], message: `Querying for Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}...` });
+    setInfoBoxData({ habitats: [], species: [], message: `Querying Lon: ${longitude.toFixed(4)}, Lat: ${latitude.toFixed(4)}` });
     setIsLoading(true);
 
     Promise.all([
@@ -523,7 +537,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
   const handleMapClick = useCallback((movement: any) => {
     if (!viewerRef.current?.cesiumElement || isLoading) return;
 
-    if (runPhaseRef.current === 'in-run' || runPhaseRef.current === 'deduction') {
+    if (expeditionBlocksMapClick) {
       setInfoBoxData({ habitats: [], species: [], message: 'Complete the current expedition first.' });
       return;
     }
@@ -559,7 +573,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
     setClickedLonLat({ lon: longitude, lat: latitude });
     setSelectedEcoregion(null);
     loadAreaDetails(longitude, latitude);
-  }, [isLoading, loadAreaDetails, pickEcoregionAtPosition, runPhaseRef, showEcoregionLayer]);
+  }, [expeditionBlocksMapClick, isLoading, loadAreaDetails, pickEcoregionAtPosition, showEcoregionLayer]);
 
   return (
     <div className="w-full h-full relative">
@@ -614,6 +628,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen }) => {
         hasSelection={Boolean(pendingSelection)}
         hasSelectedEcoregion={Boolean(selectedEcoregion)}
         layersActive={showEcoregionLayer}
+        inRun={expeditionPhase !== 'idle'}
         onSearchOpen={onSearchOpen}
         onExplore={exploreSelectedArea}
         onStart={startPendingSelection}
@@ -634,6 +649,7 @@ function ExploreMapOverlay({
   hasSelection,
   hasSelectedEcoregion,
   layersActive,
+  inRun,
   onSearchOpen,
   onExplore,
   onStart,
@@ -654,6 +670,7 @@ function ExploreMapOverlay({
   hasSelection: boolean;
   hasSelectedEcoregion: boolean;
   layersActive: boolean;
+  inRun: boolean;
   onSearchOpen?: () => void;
   onExplore: () => void;
   onStart: () => void;
@@ -676,7 +693,7 @@ function ExploreMapOverlay({
   const progressLabel = groups.length > 0
     ? groups.slice(0, 2).map((group) => `${group.animal_type} ${group.found_species}/${group.total_species}`).join(' · ')
     : speciesCount != null && speciesCount > 0 ? `${speciesCount} species` : preview?.properties.NNH_NAME ?? 'Collection target pending';
-  const showCard = Boolean(hasSelectedEcoregion || hasSelection || isLoading || info.message);
+  const showCard = !inRun && Boolean(hasSelectedEcoregion || hasSelection || isLoading || info.message);
   const canExplore = Boolean(preview?.lon != null && preview?.lat != null && !hasSelection && !isLoading);
   const canStart = hasSelection && !isLoading && (speciesCount ?? 0) > 0;
   const buttonLabel = isLoading
@@ -691,6 +708,11 @@ function ExploreMapOverlay({
   const actionDisabled = isLoading || (!canExplore && !canStart);
   const runAction = canStart ? onStart : onExplore;
 
+  // During active runs, hide all overlay UI — map shows only route + markers
+  if (inRun) {
+    return <div className="pointer-events-none absolute inset-0" style={{ zIndex: 2500 }} />;
+  }
+
   return (
     <div className="pointer-events-none absolute inset-0 text-ds-text-primary" style={{ zIndex: 2500 }}>
       <div
@@ -704,16 +726,9 @@ function ExploreMapOverlay({
           aria-label="Search species, locations, biomes"
         >
           <Search className="size-6 shrink-0 text-ds-text-secondary" strokeWidth={2} />
-          <span className="truncate text-[15px] sm:text-base">Search species, locations, biomes...</span>
+          <span className="truncate text-[15px] sm:text-base">Search species, locations, biomes</span>
         </button>
-        {preview && (
-          <div className="glass-bg mt-3 rounded-lg border border-ds-subtle px-4 py-3 shadow-card">
-            <div className="truncate text-sm font-semibold text-ds-text-primary">{preview.properties.ECO_NAME}</div>
-            <div className="mt-0.5 truncate text-xs text-ds-text-secondary">
-              {[preview.properties.BIOME_NAME, preview.properties.REALM].filter(Boolean).join(' · ')}
-            </div>
-          </div>
-        )}
+        <GlobeContextBar preview={preview} />
       </div>
 
       <div
@@ -725,48 +740,70 @@ function ExploreMapOverlay({
         <MapControlButton label="Toggle fullscreen" onClick={onFullscreen}><Maximize2 /></MapControlButton>
       </div>
 
-      {showCard && (
-        <div
-          className="glass-bg shadow-card absolute left-4 right-4 pointer-events-auto rounded-[24px] border border-ds-subtle p-3"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 104px)' }}
-        >
-          <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-white/25" />
-          <div className="grid grid-cols-[86px_minmax(0,1fr)] gap-3">
-            <div className="h-[86px] rounded-[18px] border border-ds-subtle overflow-hidden bg-ds-bg">
-              <div className="h-full w-full bg-[radial-gradient(circle_at_35%_18%,rgba(34,211,238,0.32),transparent_28%),linear-gradient(150deg,rgba(20,184,166,0.45),rgba(12,28,42,0.15)_42%,rgba(3,7,18,0.95)_72%),linear-gradient(32deg,transparent_43%,rgba(226,232,240,0.16)_44%,transparent_47%)]" />
-            </div>
-            <div className="min-w-0 flex flex-col justify-center">
-              <h2 className="truncate text-[20px] leading-tight font-semibold text-ds-text-primary">
-                {isLoading ? 'Loading ecoregion...' : isPreviewLoading && !preview ? 'Loading ecoregions...' : title}
-              </h2>
-              <p className="mt-1 line-clamp-1 text-[12px] leading-snug text-ds-text-secondary">
-                {subtitle}
-              </p>
-              <div className="mt-1.5 flex items-center gap-2 text-[13px] text-ds-text-secondary">
-                <span className="font-semibold text-ds-cyan">{progressLabel}</span>
-                {groups.length > 0 && (
-                  <>
-                    <span className="text-ds-text-muted">·</span>
-                    <span>{speciesCount ?? 0} species</span>
-                  </>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={runAction}
-                disabled={actionDisabled}
-                className="mt-2.5 h-11 w-full rounded-full border-0 px-4 text-[15px] font-bold text-[#06101a] shadow-glow-cyan disabled:cursor-default disabled:text-ds-text-secondary disabled:shadow-none"
-                style={{ background: canStart || canExplore ? 'var(--ds-gradient-cta)' : 'rgba(34,211,238,0.2)' }}
-              >
-                {buttonLabel}
-              </button>
-            </div>
+      <div
+        aria-hidden={!showCard}
+        className={cn(
+          'glass-bg shadow-card absolute left-4 right-4 rounded-[24px] border border-ds-subtle p-3 transition-[opacity,transform] duration-200 ease-out',
+          showCard ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
+        )}
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 104px)' }}
+      >
+        <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-white/25" />
+        <div className="grid grid-cols-[86px_minmax(0,1fr)] gap-3">
+          <div className="h-[86px] rounded-[18px] border border-ds-subtle overflow-hidden bg-ds-bg">
+            <div className="h-full w-full bg-[radial-gradient(circle_at_35%_18%,rgba(34,211,238,0.32),transparent_28%),linear-gradient(150deg,rgba(20,184,166,0.45),rgba(12,28,42,0.15)_42%,rgba(3,7,18,0.95)_72%),linear-gradient(32deg,transparent_43%,rgba(226,232,240,0.16)_44%,transparent_47%)]" />
           </div>
-          {info.message && !isLoading && (
-            <div className="mt-2 truncate text-center text-[11px] text-ds-text-muted">{info.message}</div>
-          )}
+          <div className="min-w-0 flex flex-col justify-center">
+            <h2 className="truncate text-[20px] leading-tight font-semibold text-ds-text-primary">
+              {isLoading ? 'Loading ecoregion' : isPreviewLoading && !preview ? 'Loading ecoregions' : title}
+            </h2>
+            <p className="mt-1 line-clamp-1 text-[12px] leading-snug text-ds-text-secondary">
+              {subtitle}
+            </p>
+            <div className="mt-1.5 flex items-center gap-2 text-[13px] text-ds-text-secondary">
+              <span className="font-semibold text-ds-cyan">{progressLabel}</span>
+              {groups.length > 0 && (
+                <>
+                  <span className="text-ds-text-muted">·</span>
+                  <span>{speciesCount ?? 0} species</span>
+                </>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={runAction}
+              disabled={actionDisabled || !showCard}
+              tabIndex={showCard ? 0 : -1}
+              className="mt-2.5 h-11 w-full rounded-full border-0 px-4 text-[15px] font-bold text-[#06101a] shadow-glow-cyan disabled:cursor-default disabled:text-ds-text-secondary disabled:shadow-none"
+              style={{ background: canStart || canExplore ? 'var(--ds-gradient-cta)' : 'rgba(34,211,238,0.2)' }}
+            >
+              {buttonLabel}
+            </button>
+          </div>
         </div>
+        {info.message && !isLoading && (
+          <div className="mt-2 truncate text-center text-[11px] text-ds-text-muted">{info.message}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GlobeContextBar({ preview }: { preview: EcoregionPreviewPick | null }) {
+  const subtitle = preview
+    ? [preview.properties.BIOME_NAME, preview.properties.REALM].filter(Boolean).join(' · ')
+    : '';
+
+  return (
+    <div
+      aria-hidden={!preview}
+      className={cn(
+        'glass-bg mt-3 rounded-lg border border-ds-subtle px-4 py-3 shadow-card transition-[opacity,transform] duration-200 ease-out',
+        preview ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
       )}
+    >
+      <div className="truncate text-sm font-semibold text-ds-text-primary">{preview?.properties.ECO_NAME ?? 'Ecoregion'}</div>
+      <div className="mt-0.5 truncate text-xs text-ds-text-secondary">{subtitle}</div>
     </div>
   );
 }

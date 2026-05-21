@@ -41,7 +41,7 @@ async function verifyCase({ name, lon, lat }) {
   assert(response.status === 200, `${name}: expected HTTP 200, got ${response.status}`);
   assert(isValidLonLat(data.origin), `${name}: invalid origin`);
   assert(data.origin.lon === lon && data.origin.lat === lat, `${name}: origin mismatch`);
-  assert([100, 200, 400].includes(data.radiusKm), `${name}: unexpected radius ${data.radiusKm}`);
+  assert([25, 50, 75].includes(data.radiusKm), `${name}: unexpected radius ${data.radiusKm}`);
   assert(Array.isArray(data.waypoints), `${name}: waypoints must be an array`);
   assert(data.waypoints.length === 6, `${name}: expected six waypoints, got ${data.waypoints.length}`);
   assert(Array.isArray(data.routePolyline), `${name}: routePolyline must be an array`);

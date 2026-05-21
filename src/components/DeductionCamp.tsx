@@ -4,7 +4,7 @@ import { FreeMode, A11y } from 'swiper/modules';
 import type { DeductionCampState, ClueCategoryKey, ComparativeDeductionState } from '@/types/expedition';
 import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS, deductionCatToWalletKey } from '@/types/expedition';
 import type { DeductionClue, ProcessedClue, DeductionProfile, ReferenceAttempt } from '@/lib/deductionEngine';
-import { isFilteringCategory } from '@/lib/deductionEngine';
+import { isFilteringCategory, filterCandidates, getProfileKeyForCategory } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
 import type { RunEvidenceBundle } from '@/types/gis';
 import { SpeciesGuessSelector } from './SpeciesGuessSelector';
@@ -101,39 +101,16 @@ export const DeductionCamp: React.FC<Props> = ({
     }
   }, [isCorrect]);
 
-  // Route Evidence section (rendered above whichever deduction UI is active)
-  const evidenceSection = evidenceBundle && evidenceBundle.fingerprints.length > 0 ? (
-    <div className="mb-3 px-3 py-2 rounded-md bg-[rgba(14,165,233,0.08)] border border-[rgba(14,165,233,0.2)]">
-      <div className="text-ds-caption font-bold text-ds-cyan uppercase tracking-wider mb-1.5">Route Evidence</div>
-      <div className="flex flex-wrap gap-1.5">
-        {evidenceBundle.uniqueProtectedAreas.slice(0, 3).map((name, i) => (
-          <span key={`pa-${i}`} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">
-            {name}
-          </span>
-        ))}
-        {Object.entries(evidenceBundle.featureClassCounts).map(([fc, count]) => (
-          <span key={fc} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">
-            {fc.replace(/_/g, ' ')} x{count}
-          </span>
-        ))}
-      </div>
-      {evidenceBundle.bioregionContext?.bioregion && (
-        <div className="text-[9px] text-ds-text-muted mt-1">
-          Bioregion: {evidenceBundle.bioregionContext.bioregion}
-        </div>
-      )}
-    </div>
-  ) : null;
-
-  // If comparative deduction data is loaded, render the new UI
+  // If comparative deduction data is loaded, render the new UI.
+  // The comparative UI handles route evidence inline (in its sticky context bar).
   if (comp) {
     return (
-      <>{evidenceSection}
       <ComparativeDeductionUI
         camp={camp}
         comp={comp}
         speciesId={speciesId}
         hiddenSpeciesName={hiddenSpeciesName}
+        evidenceBundle={evidenceBundle ?? null}
         availableScore={availableScore}
         isCorrect={isCorrect}
         isWrong={isWrong}
@@ -143,12 +120,24 @@ export const DeductionCamp: React.FC<Props> = ({
         onFinish={onFinish}
         confettiRef={confettiRef}
       />
-      </>
     );
   }
 
   // Fallback: legacy clue-shop UI (if comparative data hasn't loaded yet)
-  return <>{evidenceSection}<LegacyClueShop camp={camp} speciesId={speciesId} hiddenSpeciesName={hiddenSpeciesName}
+  const legacyEvidence = evidenceBundle && evidenceBundle.fingerprints.length > 0 ? (
+    <div className="mb-3 px-3 py-2 rounded-md bg-[rgba(14,165,233,0.08)] border border-[rgba(14,165,233,0.2)]">
+      <div className="text-ds-caption font-bold text-ds-cyan uppercase tracking-wider mb-1.5">Route Evidence</div>
+      <div className="flex flex-wrap gap-1.5">
+        {evidenceBundle.uniqueProtectedAreas.slice(0, 3).map((name, i) => (
+          <span key={`pa-${i}`} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">{name}</span>
+        ))}
+        {Object.entries(evidenceBundle.featureClassCounts).map(([fc, count]) => (
+          <span key={fc} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">{fc.replace(/_/g, ' ')} x{count}</span>
+        ))}
+      </div>
+    </div>
+  ) : null;
+  return <>{legacyEvidence}<LegacyClueShop camp={camp} speciesId={speciesId} hiddenSpeciesName={hiddenSpeciesName}
     availableScore={availableScore} isCorrect={isCorrect} isWrong={isWrong}
     onPurchase={onPurchase} onGuessResult={onGuessResult} onFinish={onFinish} confettiRef={confettiRef} /></>;
 };
@@ -162,6 +151,7 @@ interface CompUIProps {
   comp: ComparativeDeductionState;
   speciesId: number;
   hiddenSpeciesName: string;
+  evidenceBundle: RunEvidenceBundle | null;
   availableScore: number;
   isCorrect: boolean;
   isWrong: boolean;
@@ -173,7 +163,7 @@ interface CompUIProps {
 }
 
 function ComparativeDeductionUI({
-  camp, comp, speciesId, hiddenSpeciesName, availableScore,
+  camp, comp, speciesId, hiddenSpeciesName, evidenceBundle, availableScore,
   isCorrect, isWrong, onProcessClue, onPlaceReference, onGuessResult, onFinish, confettiRef,
 }: CompUIProps) {
   const [selectedClueId, setSelectedClueId] = useState<number | null>(null);
@@ -199,6 +189,19 @@ function ComparativeDeductionUI({
     return comp.processedClues.find(pc => pc.clueId === selectedClueId) ?? null;
   }, [selectedClueId, comp.processedClues]);
 
+  // Narrowed candidate pool — actually constrains the final guess list,
+  // so the player's deduction work pays off.
+  const candidateNames = useMemo(() => {
+    const eliminated = new Set(comp.eliminatedSpeciesIds);
+    const pool = filterCandidates(comp.albumProfiles, comp.confirmedTags, eliminated);
+    const names = pool.map(p => p.commonName);
+    // The mystery is not in the album profiles; ensure it remains a guessable option.
+    if (hiddenSpeciesName && hiddenSpeciesName !== 'Unknown Species' && !names.includes(hiddenSpeciesName)) {
+      names.push(hiddenSpeciesName);
+    }
+    return names;
+  }, [comp.albumProfiles, comp.confirmedTags, comp.eliminatedSpeciesIds, hiddenSpeciesName]);
+
   // Handle tapping an album card — compare against selected clue
   const handleReferenceSelect = useCallback((refId: number) => {
     if (!selectedClueId || !selectedClue) return;
@@ -221,11 +224,14 @@ function ComparativeDeductionUI({
     ? getGuessBonuses(totalProcessed, true)
     : { guessBonus: 0, efficiencyBonus: 0 };
 
+  // Active filtering category (drives reference-card tag previews)
+  const activeCategory = selectedClue && isFilteringCategory(selectedClue.category) ? selectedClue.category : null;
+
   return (
     <div className="h-full w-full flex flex-col text-ds-text-primary box-border">
-      {/* Header bar */}
-      <div className="shrink-0 px-ds-md pt-ds-md pb-ds-xs">
-        <h2 className="m-0 text-lg font-semibold text-ds-cyan text-center mb-ds-xs">Comparative Deduction</h2>
+      {/* Sticky context bar: header + stat pills + compact evidence/confirmed-traits strip */}
+      <div className="shrink-0 px-ds-md pt-ds-md pb-ds-xs space-y-ds-xs">
+        <h2 className="m-0 text-lg font-semibold text-ds-cyan text-center">Comparative Deduction</h2>
         <GlassPanel pill className="flex justify-center gap-ds-lg text-ds-body flex-wrap px-ds-lg py-ds-sm">
           <StatPill label="Score" value={availableScore} color="var(--ds-accent-emerald)" />
           <StatPill label="Clues" value={`${totalProcessed}/${comp.mysteryClues.length}`} />
@@ -234,12 +240,14 @@ function ComparativeDeductionUI({
             <StatPill label="Refs" value={comp.referenceHistory.length} color="var(--ds-gem-observe)" />
           )}
         </GlassPanel>
+        <ContextStrip evidenceBundle={evidenceBundle} confirmedTags={comp.confirmedTags} />
       </div>
 
       {/* Main content — scrollable */}
       <div className="flex-1 overflow-y-auto px-ds-md pb-ds-xs flex flex-col gap-ds-sm">
-        {/* Mystery Clues Panel */}
+        {/* Step 1: Reveal / select a clue */}
         <div>
+          <StepHeader n={1} title="Reveal a clue" active={!selectedClue} />
           <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1">Mystery Clues</div>
           <div className="flex flex-col gap-ds-xs">
             {Array.from(cluesByCategory.entries()).map(([category, clues]) => {
@@ -315,8 +323,9 @@ function ComparativeDeductionUI({
           </GlassPanel>
         )}
 
-        {/* Album Reference Swiper */}
+        {/* Step 2: Compare references */}
         <div>
+          <StepHeader n={2} title="Compare references" active={!!activeCategory} />
           <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1">
             Field Album ({comp.albumProfiles.length} cards)
           </div>
@@ -325,34 +334,25 @@ function ComparativeDeductionUI({
             eliminatedIds={comp.eliminatedSpeciesIds}
             confirmedTags={comp.confirmedTags}
             activeReferenceId={comp.activeReferenceId}
+            activeCategory={activeCategory}
             selectable={!!selectedClue && selectedClue.status === 'processed' && isFilteringCategory(selectedClue.category)}
             onSelect={handleReferenceSelect}
           />
         </div>
 
-        {/* Confirmed tags summary */}
-        {Object.keys(comp.confirmedTags).length > 0 && (
-          <div>
-            <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1">Confirmed Traits</div>
-            <div className="flex flex-wrap gap-1">
-              {Object.entries(comp.confirmedTags).map(([cat, tags]) => {
-                const meta = CATEGORY_META[cat] ?? { icon: '?', color: 'var(--ds-text-muted)' };
-                return (tags ?? []).map(tag => (
-                  <span key={`${cat}-${tag}`} className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10"
-                    style={{ borderLeft: `2px solid ${meta.color}` }}>
-                    {meta.icon} {tag.replace(/_/g, ' ')}
-                  </span>
-                ));
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Species guess */}
+        {/* Step 3: Guess from narrowed candidates */}
         {!isCorrect && (
           <div className="w-full shrink-0">
-            <div className="text-ds-body text-ds-text-secondary mb-1.5 text-center">Which species is it?</div>
-            <SpeciesGuessSelector speciesId={speciesId} hiddenSpeciesName={hiddenSpeciesName} onGuessSubmitted={onGuessResult} />
+            <StepHeader n={3} title="Guess the species" active={!activeCategory && totalProcessed > 0} />
+            <div className="text-ds-body text-ds-text-secondary mb-1.5 text-center">
+              Which species is it? <span className="text-ds-text-muted">({candidateNames.length} candidate{candidateNames.length === 1 ? '' : 's'})</span>
+            </div>
+            <SpeciesGuessSelector
+              speciesId={speciesId}
+              hiddenSpeciesName={hiddenSpeciesName}
+              candidateNames={candidateNames}
+              onGuessSubmitted={onGuessResult}
+            />
           </div>
         )}
 
@@ -465,11 +465,12 @@ interface AlbumSwiperProps {
   eliminatedIds: number[];
   confirmedTags: Partial<Record<DeductionClueCategory, string[]>>;
   activeReferenceId: number | null;
+  activeCategory: DeductionClueCategory | null;
   selectable: boolean;
   onSelect: (speciesId: number) => void;
 }
 
-function AlbumSwiper({ profiles, eliminatedIds, confirmedTags, activeReferenceId, selectable, onSelect }: AlbumSwiperProps) {
+function AlbumSwiper({ profiles, eliminatedIds, confirmedTags, activeReferenceId, activeCategory, selectable, onSelect }: AlbumSwiperProps) {
   const eliminatedSet = useMemo(() => new Set(eliminatedIds), [eliminatedIds]);
 
   return (
@@ -490,6 +491,7 @@ function AlbumSwiper({ profiles, eliminatedIds, confirmedTags, activeReferenceId
               profile={profile}
               eliminated={isEliminated}
               active={isActive}
+              activeCategory={activeCategory}
               selectable={selectable && !isEliminated}
               onSelect={() => onSelect(profile.speciesId)}
             />
@@ -508,34 +510,132 @@ interface ReferenceCardProps {
   profile: DeductionProfile;
   eliminated: boolean;
   active: boolean;
+  activeCategory: DeductionClueCategory | null;
   selectable: boolean;
   onSelect: () => void;
 }
 
-function ReferenceCard({ profile, eliminated, active, selectable, onSelect }: ReferenceCardProps) {
-  const tagCount = profile.habitatTags.length + profile.morphologyTags.length + profile.dietTags.length
+function ReferenceCard({ profile, eliminated, active, activeCategory, selectable, onSelect }: ReferenceCardProps) {
+  // When comparing, show this reference's tags for the active category so the
+  // player can reason about whether to risk a comparison. Otherwise, total count.
+  const categoryTags: string[] | null = useMemo(() => {
+    if (!activeCategory) return null;
+    const key = getProfileKeyForCategory(activeCategory);
+    if (!key) return null;
+    const arr = profile[key] as string[] | undefined;
+    return Array.isArray(arr) ? arr : [];
+  }, [profile, activeCategory]);
+
+  const totalTagCount = profile.habitatTags.length + profile.morphologyTags.length + profile.dietTags.length
     + profile.behaviorTags.length + profile.reproductionTags.length + profile.taxonomyTags.length;
+
+  const meta = activeCategory ? CATEGORY_META[activeCategory] : null;
 
   return (
     <button
       onClick={onSelect}
       disabled={!selectable}
       className={`
-        flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl text-center transition-all min-w-[90px]
+        flex flex-col items-stretch gap-0.5 px-2.5 py-2 rounded-xl text-center transition-all min-w-[110px] max-w-[150px]
         ${eliminated ? 'opacity-30 cursor-default line-through' : ''}
         ${active ? 'ring-2 ring-ds-cyan' : ''}
         ${selectable ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'}
         ${selectable ? 'glass-bg border border-ds-cyan/30' : 'glass-bg border border-ds-subtle'}
       `}
     >
-      <span className="text-[11px] font-semibold text-ds-text-primary leading-tight max-w-[80px] truncate">
+      <span className="text-[11px] font-semibold text-ds-text-primary leading-tight truncate">
         {profile.commonName}
       </span>
-      <span className="text-[9px] text-ds-text-muted italic leading-tight max-w-[80px] truncate">
+      <span className="text-[9px] text-ds-text-muted italic leading-tight truncate">
         {profile.scientificName}
       </span>
-      <span className="text-[9px] text-ds-text-muted mt-0.5">{tagCount} tags</span>
+      {categoryTags ? (
+        <div className="mt-1 flex flex-wrap justify-center gap-0.5">
+          {categoryTags.length === 0 ? (
+            <span className="text-[9px] text-ds-text-muted italic">no {activeCategory} tags</span>
+          ) : (
+            categoryTags.slice(0, 4).map(tag => (
+              <span
+                key={tag}
+                className="inline-block px-1 py-[1px] rounded-full text-[9px] bg-white/10 leading-tight"
+                style={meta ? { borderLeft: `2px solid ${meta.color}` } : undefined}
+              >
+                {tag.replace(/_/g, ' ')}
+              </span>
+            ))
+          )}
+          {categoryTags.length > 4 && (
+            <span className="text-[9px] text-ds-text-muted">+{categoryTags.length - 4}</span>
+          )}
+        </div>
+      ) : (
+        <span className="text-[9px] text-ds-text-muted mt-0.5">{totalTagCount} tags</span>
+      )}
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Compact context strip — route evidence + confirmed traits, single row
+// ---------------------------------------------------------------------------
+
+interface ContextStripProps {
+  evidenceBundle: RunEvidenceBundle | null;
+  confirmedTags: Partial<Record<DeductionClueCategory, string[]>>;
+}
+
+function ContextStrip({ evidenceBundle, confirmedTags }: ContextStripProps) {
+  const hasEvidence = !!evidenceBundle && evidenceBundle.fingerprints.length > 0;
+  const confirmedEntries = Object.entries(confirmedTags).filter(([, tags]) => (tags?.length ?? 0) > 0);
+  if (!hasEvidence && confirmedEntries.length === 0) return null;
+  return (
+    <div className="rounded-md bg-[rgba(14,165,233,0.05)] border border-[rgba(14,165,233,0.15)] px-2 py-1 flex flex-wrap gap-x-2 gap-y-1 items-center">
+      {hasEvidence && (
+        <>
+          <span className="text-[9px] font-bold text-ds-cyan uppercase tracking-wider">Route</span>
+          {evidenceBundle!.uniqueProtectedAreas.slice(0, 2).map((name, i) => (
+            <span key={`pa-${i}`} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">{name}</span>
+          ))}
+          {Object.entries(evidenceBundle!.featureClassCounts).slice(0, 4).map(([fc, count]) => (
+            <span key={fc} className="text-[10px] bg-ds-surface px-1.5 py-0.5 rounded text-ds-text-secondary">{fc.replace(/_/g, ' ')} x{count}</span>
+          ))}
+        </>
+      )}
+      {confirmedEntries.length > 0 && (
+        <>
+          {hasEvidence && <span className="text-ds-text-muted">|</span>}
+          <span className="text-[9px] font-bold text-ds-emerald uppercase tracking-wider">Confirmed</span>
+          {confirmedEntries.flatMap(([cat, tags]) => {
+            const meta = CATEGORY_META[cat] ?? { icon: '?', color: 'var(--ds-text-muted)' };
+            return (tags ?? []).map(tag => (
+              <span key={`${cat}-${tag}`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-white/10"
+                style={{ borderLeft: `2px solid ${meta.color}` }}>
+                {meta.icon} {tag.replace(/_/g, ' ')}
+              </span>
+            ));
+          })}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step header — numbered marker for the 3-step deduction flow
+// ---------------------------------------------------------------------------
+
+function StepHeader({ n, title, active }: { n: number; title: string; active: boolean }) {
+  return (
+    <div className="flex items-center gap-2 mb-1">
+      <span
+        className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold ${active ? 'bg-ds-cyan text-ds-bg' : 'bg-white/10 text-ds-text-muted'}`}
+      >
+        {n}
+      </span>
+      <span className={`text-ds-caption font-semibold uppercase tracking-wider ${active ? 'text-ds-cyan' : 'text-ds-text-muted'}`}>
+        {title}
+      </span>
+    </div>
   );
 }
 

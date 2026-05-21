@@ -87,11 +87,16 @@ const CATEGORY_TO_PROFILE_KEY: Record<string, keyof DeductionProfile> = {
 /**
  * Compare a mystery species against a reference card for a specific category.
  * Returns whether any tags overlap and which ones matched.
+ *
+ * When `compareTags` is supplied (the specific tags a clue concerns), the
+ * comparison is restricted to those tags so the result reflects the clue's
+ * actual subject — preventing spurious matches via unrelated category overlap.
  */
 export function compareReference(
   mysteryProfile: DeductionProfile,
   referenceProfile: DeductionProfile,
   category: DeductionClueCategory,
+  compareTags?: string[] | null,
 ): ComparisonResult {
   const profileKey = CATEGORY_TO_PROFILE_KEY[category];
   if (!profileKey) {
@@ -100,7 +105,10 @@ export function compareReference(
 
   const mysteryTags = mysteryProfile[profileKey] as string[];
   const referenceTags = referenceProfile[profileKey] as string[];
-  const intersection = mysteryTags.filter(t => referenceTags.includes(t));
+  const focusTags = (compareTags && compareTags.length > 0)
+    ? mysteryTags.filter(t => compareTags.includes(t))
+    : mysteryTags;
+  const intersection = focusTags.filter(t => referenceTags.includes(t));
   const matched = intersection.length > 0;
 
   const message = matched

@@ -31,19 +31,9 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 This project has been through multiple migrations: Supabase -> Prisma/Hetzner -> Drizzle/Hetzner. There should be zero remaining Supabase and Prisma references in the codebase. If you encounter any Supabase or Prisma imports, env vars, or references, flag them for removal. Do not suggest Supabase or Prisma-based solutions.
 
 ## Database Access
-Use [CODEX.md](/home/danby/phaser-june/CODEX.md) for Postgres access.
-
-- Use the `pg-claude` command when inspecting or querying the database.
-- Available operations include:
-  - `pg-claude "list schemas"`
-  - `pg-claude "list tables in <schema>"`
-  - `pg-claude "get details for table <schema>.<table>"`
-  - `pg-claude "explain query: <SQL>"`
-  - `pg-claude "execute: <SQL>"`
-  - `pg-claude "check database health"`
-  - `pg-claude "analyze workload indexes"`
-  - `pg-claude "get top queries"`
-- Always use the database access path documented in `CODEX.md`; do not set up a new database MCP server.
+- Use the `postgres-tunnel` skill for Postgres access.
+- Inspect/query through the SSH tunnel with `psql`.
+- Do not set up a new database MCP server.
 - Connection goes through PgBouncer on port 6432 with TLS; do not use `?pgbouncer=true` param (causes empty introspection).
 - Always use the `DATABASE_URL` from environment, never hardcode connection strings.
 - Always wrap database lookups and external calls in try/catch blocks.

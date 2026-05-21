@@ -642,7 +642,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const refProfile = comp.albumProfiles.find(p => p.speciesId === referenceSpeciesId);
       if (!refProfile) return prev;
 
-      const result = compareReference(comp.mysteryProfile, refProfile, pClue.category);
+      const result = compareReference(comp.mysteryProfile, refProfile, pClue.category, pClue.compareTags);
       const attempt: import('@/lib/deductionEngine').ReferenceAttempt = { referenceSpeciesId, referenceName: refProfile.commonName, clueId, category: pClue.category, result };
 
       const newConfirmed = { ...comp.confirmedTags };
@@ -658,7 +658,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
       const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
       const candidates = filterCandidates(allProfiles, newConfirmed, new Set(newEliminated));
-      const updatedProcessed = comp.processedClues.map(pc => pc.clueId === clueId ? { ...pc, status: (result.matched ? 'confirmed' : 'rejected') as ProcessedClue['status'] } : pc);
+      // On a match, mark the clue confirmed. On a mismatch, leave it 'processed'
+      // so the player can compare against another reference rather than burning the clue.
+      const updatedProcessed = result.matched
+        ? comp.processedClues.map(pc => pc.clueId === clueId ? { ...pc, status: 'confirmed' as ProcessedClue['status'] } : pc)
+        : comp.processedClues;
 
       return { ...prev, comparativeDeduction: { ...comp, activeReferenceId: referenceSpeciesId, processedClues: updatedProcessed, referenceHistory: [...comp.referenceHistory, attempt], confirmedTags: newConfirmed, eliminatedSpeciesIds: newEliminated, candidateCount: candidates.length } };
     });

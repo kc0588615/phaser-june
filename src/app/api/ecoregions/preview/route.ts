@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ecoregionsJson from '@/config/ecoregions.json';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { EcoregionPreviewFeature, EcoregionPreviewProperties } from '@/types/ecoregions';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+
+const CACHE_CONTROL = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800';
+const ECOREGIONS_FILE = join(process.cwd(), 'public', 'ecoregions.json');
 
 type BBox = [number, number, number, number];
 
@@ -14,10 +17,17 @@ interface SourceFeature {
   properties?: Partial<EcoregionPreviewProperties> & Record<string, unknown>;
 }
 
-const sourceFeatures = (ecoregionsJson as { features?: SourceFeature[] }).features ?? [];
+let sourceFeaturesCache: SourceFeature[] | null = null;
 let boundsCache: Array<{ feature: SourceFeature; bbox: BBox }> | null = null;
 
-function getBoundsCache() {
+async function getSourceFeatures() {
+  if (sourceFeaturesCache) return sourceFeaturesCache;
+  const file = await readFile(ECOREGIONS_FILE, 'utf8');
+  sourceFeaturesCache = (JSON.parse(file) as { features?: SourceFeature[] }).features ?? [];
+  return sourceFeaturesCache;
+}
+
+function getBoundsCache(sourceFeatures: SourceFeature[]) {
   if (boundsCache) return boundsCache;
   boundsCache = sourceFeatures
     .map((feature) => ({ feature, bbox: getGeometryBbox(feature.geometry?.coordinates) }))
@@ -94,7 +104,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing or invalid west/south/east/north' }, { status: 400 });
   }
 
-  const visible = getBoundsCache()
+  const sourceFeatures = await getSourceFeatures();
+  const visible = getBoundsCache(sourceFeatures)
     .filter(({ bbox }) => bboxIntersects(bbox, viewport))
     .map(({ feature }) => feature);
 
@@ -108,10 +119,13 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  return NextResponse.json({
-    type: 'FeatureCollection',
-    bbox: viewport,
-    count: features.length,
-    features,
-  });
+  return NextResponse.json(
+    {
+      type: 'FeatureCollection',
+      bbox: viewport,
+      count: features.length,
+      features,
+    },
+    { headers: { 'Cache-Control': CACHE_CONTROL } }
+  );
 }

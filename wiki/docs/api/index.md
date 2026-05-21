@@ -78,7 +78,6 @@
 - [game/scenes/GameOver](game/scenes/GameOver/index.md)
 - [game/scenes/MainMenu](game/scenes/MainMenu/index.md)
 - [game/scenes/Preloader](game/scenes/Preloader/index.md)
-- [game/ui/OwlSprite](game/ui/OwlSprite/index.md)
 - [global](global/index.md)
 - [hooks/useSpeciesData](hooks/useSpeciesData/index.md)
 - [lib/iucn](lib/iucn/index.md)

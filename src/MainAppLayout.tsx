@@ -104,7 +104,7 @@ function MainAppLayoutInner() {
 
     const appStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' };
     const phaserGameWrapperStyle: React.CSSProperties = {
-        width: '100%', height: useSplitLayout ? '66.6667%' : '100%',
+        width: '100%', height: useSplitLayout ? '60%' : '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: useSplitLayout ? 'relative' : 'absolute',
         inset: useSplitLayout ? undefined : 0, overflow: 'hidden',
@@ -112,7 +112,7 @@ function MainAppLayoutInner() {
         pointerEvents: useSplitLayout ? 'auto' : 'none', flexShrink: 0,
     };
     const cesiumContainerStyle: React.CSSProperties = {
-        width: '100%', height: useSplitLayout ? '33.3333%' : '100%',
+        width: '100%', height: useSplitLayout ? '40%' : '100%',
         minHeight: '0px', borderTop: useSplitLayout ? '2px solid #555' : 'none',
         position: useSplitLayout ? 'relative' : 'absolute',
         inset: useSplitLayout ? undefined : 0, overflow: 'hidden',
@@ -197,10 +197,13 @@ function MainAppLayoutInner() {
 
                     {/* CesiumMap */}
                     <div style={{
-                        display: (viewMode === 'map' && !showDeduction) ? 'block' : 'none',
+                        display: viewMode === 'map' ? 'block' : 'none',
                         height: '100%', width: '100%'
                     }}>
-                        <CesiumMap onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }} />
+                        <CesiumMap
+                            expeditionPhase={runState.phase}
+                            onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
+                        />
                     </div>
 
                     {/* Expedition Briefing */}
