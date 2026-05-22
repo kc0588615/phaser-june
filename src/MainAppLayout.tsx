@@ -110,10 +110,11 @@ function MainAppLayoutInner() {
         inset: useSplitLayout ? undefined : 0, overflow: 'hidden',
         visibility: useSplitLayout ? 'visible' : 'hidden',
         pointerEvents: useSplitLayout ? 'auto' : 'none', flexShrink: 0,
+        borderTop: useSplitLayout ? '2px solid #555' : 'none',
     };
     const cesiumContainerStyle: React.CSSProperties = {
         width: '100%', height: useSplitLayout ? '40%' : '100%',
-        minHeight: '0px', borderTop: useSplitLayout ? '2px solid #555' : 'none',
+        minHeight: '0px',
         position: useSplitLayout ? 'relative' : 'absolute',
         inset: useSplitLayout ? undefined : 0, overflow: 'hidden',
         background: 'var(--ds-background)', display: 'flex', flexDirection: 'column',
@@ -135,109 +136,111 @@ function MainAppLayoutInner() {
                     )}
                 </div>
 
-                <div id="phaser-game-wrapper" style={{ ...phaserGameWrapperStyle, opacity: inRun ? boardOpacity : 1, transition: 'opacity 0.8s ease' }}>
-                    {inRun && (
-                        <div className="absolute inset-0 z-base glass-bg" style={{ borderRadius: useSplitLayout ? 0 : '16px' }} />
-                    )}
-
-                    <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
-
-                    {/* Active encounter panel */}
-                    {inRun && currentNode && (
-                        <ActiveEncounterPanel
-                            node={currentNode}
-                            nodeIndex={runState.currentNodeIndex}
-                            activeAffinities={runState.activeAffinities}
-                            onComplete={() => EventBus.emit('node-advance-requested', {
-                                nodeIndex: runState.currentNodeIndex,
-                                reason: 'analysis_complete',
-                                source: 'panel',
-                            })}
-                        />
-                    )}
-
-                    {/* Thumb zone — bottom overlays */}
-                    {inRun && (
-                        <div className="absolute bottom-1.5 left-1.5 right-1.5 z-hud flex items-end gap-1.5">
-                            <div className="flex flex-col gap-ds-xs items-start shrink-0">
-                                <div className="flex gap-ds-xs items-end">
-                                    <GemWallet wallet={runState.resourceWallet} />
-                                    {runState.souvenirs.length > 0 && <SouvenirPouch souvenirs={runState.souvenirs} />}
-                                </div>
-                                <ConsumableTray items={runState.consumables} onUse={useConsumable} />
-                            </div>
-                            <div className="flex-1 flex flex-col items-center gap-ds-xs">
-                                <SpookMeter />
-                                <BankedScore score={runState.bankedScore} />
-                            </div>
-                            <div className="shrink-0 w-px" />
-                        </div>
-                    )}
-                </div>
-
-                <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
-                    {/* Deduction Camp phase */}
-                    {showDeduction && runState.deductionCamp && (
-                        <div className="glass-bg absolute inset-0 z-deduction backdrop-blur-xl overflow-auto">
-                            <DeductionCamp
-                                camp={runState.deductionCamp}
-                                comp={runState.comparativeDeduction}
-                                speciesId={correctSpeciesId}
-                                hiddenSpeciesName={hiddenSpeciesName}
-                                evidenceBundle={runState.evidenceBundle}
-                                onPurchase={handleDeductionPurchase}
-                                onGuessResult={handleDeductionGuessResult}
-                                onProcessClue={handleProcessClue}
-                                onPlaceReference={handlePlaceReference}
-                                onComparativeGuess={handleComparativeGuessResult}
-                                onFinish={handleRunReset}
-                            />
-                        </div>
-                    )}
-
-                    {/* CesiumMap */}
-                    <div style={{
-                        display: viewMode === 'map' ? 'block' : 'none',
-                        height: '100%', width: '100%'
-                    }}>
-                        <CesiumMap
-                            expeditionPhase={runState.phase}
-                            onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
-                        />
-                    </div>
-
-                    {/* Expedition Briefing */}
-                    {showBriefing && runState.expedition && (
-                        <div className="absolute inset-0 z-deduction flex flex-col justify-end">
-                            <div style={{ flex: '0 0 25%', background: 'rgba(10,14,26,0.4)' }}
-                                onClick={() => EventBus.emit('game-reset', undefined)} />
-                            <div className="glass-bg border-t border-ds-subtle" style={{ flex: '0 0 75%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                                <ExpeditionBriefing
-                                    expedition={runState.expedition}
-                                    onStart={() => EventBus.emit('expedition-start', {})}
-                                    onSelectAffinity={handleAffinitySelected}
-                                    onClose={handleRunReset}
+                <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                    <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
+                        {/* Deduction Camp phase */}
+                        {showDeduction && runState.deductionCamp && (
+                            <div className="glass-bg absolute inset-0 z-deduction backdrop-blur-xl overflow-auto">
+                                <DeductionCamp
+                                    camp={runState.deductionCamp}
+                                    comp={runState.comparativeDeduction}
+                                    speciesId={correctSpeciesId}
+                                    hiddenSpeciesName={hiddenSpeciesName}
+                                    evidenceBundle={runState.evidenceBundle}
+                                    onPurchase={handleDeductionPurchase}
+                                    onGuessResult={handleDeductionGuessResult}
+                                    onProcessClue={handleProcessClue}
+                                    onPlaceReference={handlePlaceReference}
+                                    onComparativeGuess={handleComparativeGuessResult}
+                                    onFinish={handleRunReset}
                                 />
                             </div>
+                        )}
+
+                        {/* CesiumMap */}
+                        <div style={{
+                            display: viewMode === 'map' ? 'block' : 'none',
+                            height: '100%', width: '100%'
+                        }}>
+                            <CesiumMap
+                                expeditionPhase={runState.phase}
+                                onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
+                            />
                         </div>
-                    )}
 
-                    {/* Run completion summary */}
-                    {showComplete && (
-                        <RunCompleteSummary
-                            runState={runState}
-                            onReset={handleRunReset}
-                        />
-                    )}
+                        {/* Expedition Briefing */}
+                        {showBriefing && runState.expedition && (
+                            <div className="absolute inset-0 z-deduction flex flex-col justify-end">
+                                <div style={{ flex: '0 0 25%', background: 'rgba(10,14,26,0.4)' }}
+                                    onClick={() => EventBus.emit('game-reset', undefined)} />
+                                <div className="glass-bg border-t border-ds-subtle" style={{ flex: '0 0 75%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                                    <ExpeditionBriefing
+                                        expedition={runState.expedition}
+                                        onStart={() => EventBus.emit('expedition-start', {})}
+                                        onSelectAffinity={handleAffinitySelected}
+                                        onClose={handleRunReset}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
-                    {/* Crisis overlay */}
+                        {/* Run completion summary */}
+                        {showComplete && (
+                            <RunCompleteSummary
+                                runState={runState}
+                                onReset={handleRunReset}
+                            />
+                        )}
+
+                        {/* SpeciesPanel always mounted but hidden */}
+                        <SpeciesPanel toastsEnabled={viewMode === 'map' && !showDeduction} style={{ display: 'none' }} />
+
+                    </div>
+
+                    <div id="phaser-game-wrapper" style={{ ...phaserGameWrapperStyle, opacity: inRun ? boardOpacity : 1, transition: 'opacity 0.8s ease' }}>
+                        {inRun && (
+                            <div className="absolute inset-0 z-base glass-bg" style={{ borderRadius: useSplitLayout ? 0 : '16px' }} />
+                        )}
+
+                        <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+
+                        {/* Active encounter panel */}
+                        {inRun && currentNode && (
+                            <ActiveEncounterPanel
+                                node={currentNode}
+                                nodeIndex={runState.currentNodeIndex}
+                                activeAffinities={runState.activeAffinities}
+                                onComplete={() => EventBus.emit('node-advance-requested', {
+                                    nodeIndex: runState.currentNodeIndex,
+                                    reason: 'analysis_complete',
+                                    source: 'panel',
+                                })}
+                            />
+                        )}
+
+                        {/* Thumb zone — bottom overlays */}
+                        {inRun && (
+                            <div className="absolute bottom-1.5 left-1.5 right-1.5 z-hud flex items-end gap-1.5">
+                                <div className="flex flex-col gap-ds-xs items-start shrink-0">
+                                    <div className="flex gap-ds-xs items-end">
+                                        <GemWallet wallet={runState.resourceWallet} />
+                                        {runState.souvenirs.length > 0 && <SouvenirPouch souvenirs={runState.souvenirs} />}
+                                    </div>
+                                    <ConsumableTray items={runState.consumables} onUse={useConsumable} />
+                                </div>
+                                <div className="flex-1 flex flex-col items-center gap-ds-xs">
+                                    <SpookMeter />
+                                    <BankedScore score={runState.bankedScore} />
+                                </div>
+                                <div className="shrink-0 w-px" />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Crisis overlay — hoisted to cover both game regions but leave RunTrack visible */}
                     {inRun && (
                         <CrisisOverlay consumables={runState.consumables} onSpendTool={handleCrisisToolSpend} />
                     )}
-
-                    {/* SpeciesPanel always mounted but hidden */}
-                    <SpeciesPanel toastsEnabled={viewMode === 'map' && !showDeduction} style={{ display: 'none' }} />
-
                 </div>
             </div>
 
