@@ -79,8 +79,6 @@ export async function GET(
           objectiveProgress: n.objectiveProgress,
           scoreEarned: n.scoreEarned,
           movesUsed: n.movesUsed,
-          encounterOutcome: bc.encounterOutcome ?? null,
-          encounterConfig: bc.encounterConfig ?? null,
           waypoint: bc.waypoint ?? null,
         };
       }),

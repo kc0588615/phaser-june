@@ -31,10 +31,8 @@ export interface EventPayloads {
     objectiveProgress?: number;
     nodeIndex?: number;
     nodeType?: string;
-    events?: string[];
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
-    encounterConfig?: unknown | null;
     matchBattleConfig?: MatchBattleBoardConfig;
     matchBattleNodeType?: MatchBattleNodeType;
     matchBattleCombat?: MatchBattleCombatState;

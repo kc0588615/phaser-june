@@ -6,6 +6,7 @@ import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 import { computeExpeditionRoutePolyline, getRouteBounds, type RoutePoint } from '@/lib/expeditionRoute';
 import { dedupeFeatureFingerprints, getGisStampClasses, sampleGisFeaturesForRoute } from '@/lib/gisFeatureSampling';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { sanitizeMatchBattleBlob } from '@/lib/sanitizeMatchBattle';
 import { refreshSpeciesCardProgress } from '@/lib/speciesCardProgression.server';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { FeatureFingerprint } from '@/types/gis';
@@ -140,6 +141,7 @@ function buildResumePayload(session: EcoRunSessionRow, nodes: EcoRunNodeRow[]) {
     resourceWallet: getNumberRecord(metadata.resourceWallet),
     clueFragments: getNumberRecord(metadata.clueFragments),
     bankedScore: getNumberOrNull(metadata.bankedScore) ?? session.scoreTotal,
+    matchBattle: metadata.matchBattle && typeof metadata.matchBattle === 'object' ? metadata.matchBattle : null,
     featureFingerprints: Array.isArray(metadata.featureFingerprints)
       ? metadata.featureFingerprints as FeatureFingerprint[]
       : [],
@@ -175,15 +177,13 @@ function reconstructRunNode(node: EcoRunNodeRow): RunNode {
     node_type: node.nodeType,
     difficulty: (Number.isInteger(difficulty) ? Math.max(1, Math.min(5, difficulty)) : 1) as RunNode['difficulty'],
     obstacles: Array.isArray(hazardProfile.obstacles) ? hazardProfile.obstacles as RunNode['obstacles'] : [],
-    events: getStringArray(hazardProfile.events),
+    events: [],
     rationale: typeof boardContext.rationale === 'string' ? boardContext.rationale : '',
     counterGem: typeof hazardProfile.counterGem === 'string' ? hazardProfile.counterGem as RunNode['counterGem'] : null,
     obstacleFamily: typeof hazardProfile.obstacleFamily === 'string' ? hazardProfile.obstacleFamily as RunNode['obstacleFamily'] : null,
     requiredGems: getStringArray(hazardProfile.requiredGems) as RunNode['requiredGems'],
     objectiveTarget: node.objectiveTarget,
-    encounterConfig: boardContext.encounterConfig && typeof boardContext.encounterConfig === 'object'
-      ? boardContext.encounterConfig as RunNode['encounterConfig']
-      : null,
+    encounterConfig: null,
     waypoint: boardContext.waypoint && typeof boardContext.waypoint === 'object'
       ? boardContext.waypoint as RunNode['waypoint']
       : undefined,
@@ -223,7 +223,7 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, clueFragments, bankedScore, currentNodeIndex, objectiveProgress, status } = body as {
+    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, clueFragments, bankedScore, currentNodeIndex, objectiveProgress, status, matchBattle } = body as {
       resourceWallet?: Record<string, number>;
       finalScore?: number;
       status?: string;
@@ -235,6 +235,7 @@ export async function PATCH(
       bankedScore?: number;
       currentNodeIndex?: number;
       objectiveProgress?: number;
+      matchBattle?: unknown;
     };
     const normalizedCheckpointRoute = normalizeRoutePolyline(routePolyline);
 
@@ -246,6 +247,11 @@ export async function PATCH(
     if (routePolyline) metadataPatch.routePolyline = normalizedCheckpointRoute;
     if (typeof finalScore === 'number') metadataPatch.finalScore = finalScore;
     if (deductionSummary) metadataPatch.deductionSummary = deductionSummary;
+    if (matchBattle !== undefined) {
+      const sanitized = sanitizeMatchBattleBlob(matchBattle);
+      if (sanitized === null) return NextResponse.json({ error: 'Invalid matchBattle payload' }, { status: 400 });
+      metadataPatch.matchBattle = sanitized;
+    }
 
     const runStatusPatch = status === 'active' || status === 'deduction' ? status : null;
     if (Object.keys(metadataPatch).length > 0 || runStatusPatch) {
@@ -311,8 +317,6 @@ export async function PATCH(
               objectiveProgress: n.objectiveProgress,
               scoreEarned: n.scoreEarned,
               movesUsed: n.movesUsed,
-              encounterOutcome: bc.encounterOutcome ?? null,
-              encounterConfig: bc.encounterConfig ?? null,
               waypoint: bc.waypoint ?? null,
             };
           });

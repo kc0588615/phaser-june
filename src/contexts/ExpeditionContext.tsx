@@ -552,9 +552,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             counterGem: nextNode?.counterGem, requiredGems: nextNode?.requiredGems,
             activeAffinities: activeAffinitiesRef.current,
             objectiveTarget: nextNode?.objectiveTarget, nodeIndex: nextIndex,
-            nodeType: nextNode?.node_type, events: nextNode?.events,
+            nodeType: nextNode?.node_type,
             boardContext: nextBoardContext, boardConfig: nextBoardConfig,
-            encounterConfig: nextNode?.encounterConfig,
           });
         }, 100);
       }
@@ -1161,10 +1160,8 @@ function emitBoardForNode(
     objectiveProgress,
     nodeIndex,
     nodeType: node.node_type,
-    events: node.events,
     boardContext,
     boardConfig,
-    encounterConfig: node.encounterConfig,
     matchBattleConfig: nodeMatchBattle ? {
       piecePool: nodeMatchBattle.piecePool,
       snippetsEnabled: nodeMatchBattle.snippetsEnabled,

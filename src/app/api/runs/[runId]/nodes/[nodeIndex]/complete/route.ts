@@ -37,15 +37,10 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { scoreEarned = 0, movesUsed = 0, objectiveProgress = 0, souvenirs, encounterOutcome } = body as {
+    const { scoreEarned = 0, movesUsed = 0, objectiveProgress = 0 } = body as {
       scoreEarned?: number; movesUsed?: number; objectiveProgress?: number;
       souvenirs?: { id: string; name: string }[];
-      encounterOutcome?: {
-        threats: Array<{ id: string; threatType: string; progress: number; target: number; resolved: boolean }>;
-        finalSpookLevel: number;
-        outcome: string;
-        chipDamageTotal: number;
-      };
+      encounterOutcome?: unknown;
     };
 
     // Find the node
@@ -63,11 +58,7 @@ export async function POST(
       return NextResponse.json({ error: 'Node already completed' }, { status: 409 });
     }
 
-    // Mark node completed + persist souvenirs in rewardProfile + encounterOutcome in boardContext
-    const rewardUpdate: Record<string, unknown> = {};
-    if (souvenirs && souvenirs.length > 0) {
-      rewardUpdate.souvenirs = souvenirs;
-    }
+    // Mark node completed. Legacy souvenirs/encounterOutcome payloads are accepted but ignored.
     await db
       .update(ecoRunNodes)
       .set({
@@ -75,12 +66,6 @@ export async function POST(
         scoreEarned,
         movesUsed,
         objectiveProgress,
-        ...(souvenirs && souvenirs.length > 0
-          ? { rewardProfile: rewardUpdate, rewardClaimed: true }
-          : {}),
-        ...(encounterOutcome
-          ? { boardContext: sql`COALESCE(${ecoRunNodes.boardContext}, '{}'::jsonb) || ${JSON.stringify({ encounterOutcome })}::jsonb` }
-          : {}),
         endedAt: new Date(),
         updatedAt: new Date(),
       })
