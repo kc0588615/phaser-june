@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, A11y } from 'swiper/modules';
 import type { DeductionCampState, ClueCategoryKey, ComparativeDeductionState } from '@/types/expedition';
-import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS, deductionCatToWalletKey } from '@/types/expedition';
+import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS } from '@/types/expedition';
 import type { DeductionClue, ProcessedClue, DeductionProfile, ReferenceAttempt } from '@/lib/deductionEngine';
 import { isFilteringCategory, filterCandidates, getProfileKeyForCategory } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
 import type { RunEvidenceBundle } from '@/types/gis';
+import { GemCategory } from '@/game/clueConfig';
 import { SpeciesGuessSelector } from './SpeciesGuessSelector';
 import { DenseClueGrid } from './DenseClueGrid';
 import { GlassPanel } from '@/components/ui/glass-panel';
@@ -68,6 +69,17 @@ const LEGACY_CATEGORY_META: Record<ClueCategoryKey, { label: string; icon: strin
   life_cycle:     { label: 'Life',    icon: '\u{23F3}',  color: 'var(--ds-text-muted)' },
   conservation:   { label: 'Conserv', icon: '\u{1F6E1}', color: 'var(--ds-gem-notes)' },
   key_facts:      { label: 'Facts',   icon: '\u{1F52E}', color: 'var(--ds-gem-focus)' },
+};
+
+const CLUE_KEY_TO_GEM_CATEGORY: Record<ClueCategoryKey, GemCategory> = {
+  classification: GemCategory.CLASSIFICATION,
+  habitat: GemCategory.HABITAT,
+  geographic: GemCategory.GEOGRAPHIC,
+  morphology: GemCategory.MORPHOLOGY,
+  behavior: GemCategory.BEHAVIOR,
+  life_cycle: GemCategory.LIFE_CYCLE,
+  conservation: GemCategory.CONSERVATION,
+  key_facts: GemCategory.KEY_FACTS,
 };
 
 interface Props {
@@ -252,8 +264,6 @@ function ComparativeDeductionUI({
           <div className="flex flex-col gap-ds-xs">
             {Array.from(cluesByCategory.entries()).map(([category, clues]) => {
               const meta = CATEGORY_META[category] ?? { label: category, icon: '?', color: 'var(--ds-text-muted)' };
-              const catKey = deductionCatToWalletKey(category);
-              const fragCount = camp.clueFragments[catKey] ?? 0;
               const filtering = isFilteringCategory(category);
               return (
                 <div key={category}>
@@ -278,8 +288,6 @@ function ComparativeDeductionUI({
                           label={pc?.label ?? clue.label}
                           isSelected={isSelected}
                           isFiltering={filtering}
-                          fragmentCount={fragCount}
-                          thoughtDiscount={camp.thoughtDiscountPct}
                           availableScore={availableScore}
                           onProcess={() => {
                             if (!isProcessed) onProcessClue(clue.id);
@@ -404,22 +412,17 @@ interface ClueRowProps {
   label: string;
   isSelected: boolean;
   isFiltering: boolean;
-  fragmentCount: number;
-  thoughtDiscount: number;
   availableScore: number;
   onProcess: () => void;
   onSelect: () => void;
   metaColor: string;
 }
 
-function ClueRow({ clue, status, label, isSelected, isFiltering, fragmentCount, thoughtDiscount, availableScore, onProcess, onSelect, metaColor }: ClueRowProps) {
+function ClueRow({ clue, status, label, isSelected, isFiltering, availableScore, onProcess, onSelect, metaColor }: ClueRowProps) {
   if (status === 'locked') {
     // Show cost + unlock button
-    const cost = clue.baseCost;
-    const currency = clue.unlockMode === 'fragment' ? 'frag' : 'pts';
-    const canAfford = clue.unlockMode === 'fragment'
-      ? fragmentCount >= cost
-      : availableScore >= cost;
+    const cost = Math.max(10, clue.baseCost);
+    const canAfford = availableScore >= cost;
     return (
       <button
         onClick={onProcess}
@@ -429,7 +432,7 @@ function ClueRow({ clue, status, label, isSelected, isFiltering, fragmentCount, 
       >
         <span className="text-ds-text-muted flex-1 italic">Locked clue</span>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${canAfford ? 'bg-white/15 text-ds-text-primary' : 'bg-white/5 text-ds-text-muted'}`}>
-          {cost} {currency}
+          {cost} pts
         </span>
       </button>
     );
@@ -658,11 +661,15 @@ interface LegacyProps {
 
 function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, isCorrect, isWrong, onPurchase, onGuessResult, onFinish, confettiRef }: LegacyProps) {
   const totalPaid = camp.clueShop.reduce((sum, e) => sum + e.purchased, 0);
+  const revealedCategories = useMemo(
+    () => new Set(camp.revealedClues.map(clue => clue.category)),
+    [camp.revealedClues],
+  );
 
   const handleBuy = useCallback((cat: ClueCategoryKey) => {
     const entry = camp.clueShop.find(e => e.category === cat);
     if (!entry) return;
-    const cost = getClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
+    const cost = getClueShopCost(entry.purchased);
     if (cost > availableScore) return;
     onPurchase(cat, cost);
   }, [camp, availableScore, onPurchase]);
@@ -680,20 +687,17 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
         <StatPill label="Banked" value={camp.bankedScore} />
         <StatPill label="Spent" value={camp.scoreSpent} color="var(--ds-accent-rose)" />
         <StatPill label="Left" value={availableScore} color="var(--ds-accent-emerald)" />
-        {camp.thoughtDiscountPct > 0 && (
-          <StatPill label="Disc" value={`${Math.round(camp.thoughtDiscountPct * 100)}%`} color="var(--ds-gem-focus)" />
-        )}
       </GlassPanel>
 
       {/* Clue Market */}
       <div>
         <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1.5">Clue Market</div>
         <div className="flex gap-ds-sm overflow-x-auto py-ds-xs snap-x snap-mandatory">
-          {CLUE_CATEGORY_KEYS.map(cat => {
+          {CLUE_CATEGORY_KEYS.filter(cat => !revealedCategories.has(CLUE_KEY_TO_GEM_CATEGORY[cat])).map(cat => {
             const meta = LEGACY_CATEGORY_META[cat];
             const entry = camp.clueShop.find(e => e.category === cat);
             if (!entry) return null;
-            const cost = getClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
+            const cost = getClueShopCost(entry.purchased);
             const canBuy = cost <= availableScore && !isCorrect;
             return (
               <button

@@ -42,12 +42,11 @@ export interface RunState {
   lootMatchSummary: Record<string, number>;
   pendingNodeModifiers: string[];
   bankedScore: number;
-  clueFragments: ClueFragments;
+  revealedDuringRun: CluePayload[];
   triviaUnlocked: string[];
   deductionCamp: DeductionCampState | null;
   comparativeDeduction: ComparativeDeductionState | null;
   finalScore: number | null;
-  totalThoughtDiscount: number;
   evidenceBundle: RunEvidenceBundle | null;
   matchBattle: MatchBattleRunState | null;
 }
@@ -62,56 +61,19 @@ export const CLUE_CATEGORY_KEYS: ClueCategoryKey[] = [
   'behavior', 'life_cycle', 'conservation', 'key_facts',
 ];
 
-/** Map DeductionClueCategory → ClueCategoryKey for fragment wallet lookups */
-export function deductionCatToWalletKey(cat: string): ClueCategoryKey {
-  switch (cat) {
-    case 'habitat': return 'habitat';
-    case 'morphology': return 'morphology';
-    case 'diet': return 'behavior';       // diet fragments stored under behavior
-    case 'behavior': return 'behavior';
-    case 'reproduction': return 'life_cycle'; // reproduction → life_cycle
-    case 'taxonomy': return 'classification'; // taxonomy → classification
-    case 'key_fact': return 'key_facts';
-    case 'geography': return 'geographic';
-    case 'conservation': return 'conservation';
-    default: return 'key_facts';
-  }
-}
-
-export interface ClueFragments {
-  classification: number;
-  habitat: number;
-  geographic: number;
-  morphology: number;
-  behavior: number;
-  life_cycle: number;
-  conservation: number;
-  key_facts: number;
-}
-
-export function createEmptyClueFragments(): ClueFragments {
-  return {
-    classification: 0, habitat: 0, geographic: 0, morphology: 0,
-    behavior: 0, life_cycle: 0, conservation: 0, key_facts: 0,
-  };
-}
-
 export interface ClueShopEntry {
   category: ClueCategoryKey;
   purchased: number;
-  fragmentCount: number;
 }
 
 export interface DeductionCampState {
   bankedScore: number;
-  clueFragments: ClueFragments;
   clueShop: ClueShopEntry[];
   revealedClues: CluePayload[];
   triviaUnlocked: string[];
   scoreSpent: number;
   guessResult: 'pending' | 'correct' | 'wrong' | null;
   guessBonusAwarded: number;
-  thoughtDiscountPct: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -145,8 +107,7 @@ export interface ComparativeDeductionState {
   eliminatedSpeciesIds: number[];
   /** Current candidate count after filtering */
   candidateCount: number;
-  /** Fragment + score spending */
-  fragmentsSpent: Partial<Record<ClueCategoryKey, number>>;
+  /** Score spent on clue processing */
   scoreSpent: number;
   /** Final guess */
   guessResult: 'pending' | 'correct' | 'wrong' | null;
@@ -168,7 +129,6 @@ export function createEmptyComparativeState(
     confirmedTags: {},
     eliminatedSpeciesIds: [],
     candidateCount: albumProfiles.length + 1, // +1 for mystery species itself
-    fragmentsSpent: {},
     scoreSpent: 0,
     guessResult: null,
     guessBonusAwarded: 0,
@@ -176,12 +136,9 @@ export function createEmptyComparativeState(
 }
 
 /** Escalating cost for nth clue purchase in a category */
-export function getClueShopCost(purchased: number, fragmentCount: number, thoughtDiscountPct = 0): number {
+export function getClueShopCost(purchased: number): number {
   const baseCosts = [40, 70, 110, 160, 220];
-  const base = baseCosts[Math.min(purchased, baseCosts.length - 1)];
-  const discount = Math.floor(fragmentCount / 3) * 15;
-  const discountedBase = Math.round((base - discount) * Math.max(0, 1 - thoughtDiscountPct));
-  return Math.max(10, discountedBase);
+  return baseCosts[Math.min(purchased, baseCosts.length - 1)];
 }
 
 /** Guess bonus based on paid clue count */

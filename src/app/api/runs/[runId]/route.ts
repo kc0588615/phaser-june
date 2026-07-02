@@ -139,7 +139,7 @@ function buildResumePayload(session: EcoRunSessionRow, nodes: EcoRunNodeRow[]) {
     rasterHabitats: Array.isArray(metadata.rasterHabitats) ? metadata.rasterHabitats : [],
     currentNodeIndex: getNumberOrNull(metadata.currentNodeIndex) ?? Math.max(0, session.nodeIndexCurrent - 1),
     resourceWallet: getNumberRecord(metadata.resourceWallet),
-    clueFragments: getNumberRecord(metadata.clueFragments),
+    revealedDuringRun: Array.isArray(metadata.revealedDuringRun) ? metadata.revealedDuringRun : [],
     bankedScore: getNumberOrNull(metadata.bankedScore) ?? session.scoreTotal,
     matchBattle: metadata.matchBattle && typeof metadata.matchBattle === 'object' ? metadata.matchBattle : null,
     featureFingerprints: Array.isArray(metadata.featureFingerprints)
@@ -223,7 +223,7 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, clueFragments, bankedScore, currentNodeIndex, objectiveProgress, status, matchBattle } = body as {
+    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, revealedDuringRun, bankedScore, currentNodeIndex, objectiveProgress, status, matchBattle } = body as {
       resourceWallet?: Record<string, number>;
       finalScore?: number;
       status?: string;
@@ -231,7 +231,7 @@ export async function PATCH(
       speciesId?: number;
       featureFingerprints?: unknown[];
       routePolyline?: unknown[];
-      clueFragments?: Record<string, number>;
+      revealedDuringRun?: unknown[];
       bankedScore?: number;
       currentNodeIndex?: number;
       objectiveProgress?: number;
@@ -241,7 +241,7 @@ export async function PATCH(
 
     const metadataPatch: Record<string, unknown> = {};
     if (resourceWallet) metadataPatch.resourceWallet = resourceWallet;
-    if (clueFragments) metadataPatch.clueFragments = clueFragments;
+    if (Array.isArray(revealedDuringRun)) metadataPatch.revealedDuringRun = revealedDuringRun;
     if (typeof bankedScore === 'number') metadataPatch.bankedScore = bankedScore;
     if (Number.isInteger(currentNodeIndex)) metadataPatch.currentNodeIndex = currentNodeIndex;
     if (routePolyline) metadataPatch.routePolyline = normalizedCheckpointRoute;

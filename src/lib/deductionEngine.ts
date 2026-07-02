@@ -207,21 +207,6 @@ export function groupCluesByCategory(
   return map;
 }
 
-/** Calculate effective cost for a clue given fragments and discount */
-export function getEffectiveClueCost(
-  clue: DeductionClue,
-  fragmentCount: number,
-  thoughtDiscountPct: number,
-): number {
-  if (clue.unlockMode === 'fragment') {
-    const discount = Math.floor(fragmentCount / 3) * 1;
-    const base = Math.max(1, clue.baseCost - discount);
-    return Math.max(1, Math.round(base * Math.max(0, 1 - thoughtDiscountPct)));
-  }
-  // Score-based clues: flat cost with thought discount only
-  return Math.max(10, Math.round(clue.baseCost * Math.max(0, 1 - thoughtDiscountPct)));
-}
-
 /** Check if a category is a filtering (comparative) category */
 export function isFilteringCategory(cat: DeductionClueCategory): boolean {
   return FILTERING_CATEGORIES.includes(cat);

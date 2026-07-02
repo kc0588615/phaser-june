@@ -114,8 +114,6 @@ export interface EventPayloads {
     counterGem?: ActionGemType | null;
     activeAffinities?: AffinityType[];
   };
-  'clue-fragment-earned': { category: ClueCategoryKey; amount: number; source: 'loot_match' | 'key_cache' | 'node_reward' };
-  'clue-discount-earned': { amount: number; source: 'thought_match' };
   'deduction-camp-purchase': { category: ClueCategoryKey; cost: number };
   'auth-user-ready': { playerId: string; sessionId?: string };
 }

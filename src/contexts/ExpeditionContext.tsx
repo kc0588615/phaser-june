@@ -4,8 +4,8 @@ import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
 import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
-import { createEmptyResourceWallet, createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
-import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost, applyEvidenceBundle } from '@/lib/deductionEngine';
+import { createEmptyResourceWallet, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
+import { compareReference, filterCandidates, getNextClue, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
 import type { AffinityType } from '@/expedition/affinities';
@@ -21,6 +21,7 @@ import type { Species } from '@/types/database';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { SpeciesCombatInput } from '@/game/matchBattle/speciesMapper';
+import type { CluePayload } from '@/game/clueConfig';
 
 // Combat traits cache: speciesId → combatant input. Populated once per
 // expedition by prefetchCombatants; read synchronously by emitBoardForNode.
@@ -68,12 +69,11 @@ const INITIAL_RUN_STATE: RunState = {
   lootMatchSummary: {},
   pendingNodeModifiers: [],
   bankedScore: 0,
-  clueFragments: createEmptyClueFragments(),
+  revealedDuringRun: [],
   triviaUnlocked: [],
   deductionCamp: null,
   comparativeDeduction: null,
   finalScore: null,
-  totalThoughtDiscount: 0,
   evidenceBundle: null,
   matchBattle: null,
 };
@@ -153,7 +153,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       phase: checkpointState.phase,
       currentNodeIndex: checkpointState.currentNodeIndex,
       resourceWallet: checkpointState.resourceWallet,
-      clueFragments: checkpointState.clueFragments,
+      revealedDuringRun: checkpointState.revealedDuringRun,
       bankedScore: checkpointState.bankedScore,
       routePolyline,
       matchBattle: checkpointState.matchBattle,
@@ -360,7 +360,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         ? buildRunEvidenceBundle(payload.featureFingerprints)
         : null;
       const resourceWallet = mergeResourceWallet(resume.resourceWallet);
-      const clueFragments = mergeClueFragments(resume.clueFragments);
+      const revealedDuringRun = mergeRevealedClues(resume.revealedDuringRun);
       const bankedScore = typeof resume.bankedScore === 'number' ? resume.bankedScore : 0;
       const routeNodeIndex = data.run?.status === 'deduction' ? currentNodeIndex : Math.max(0, currentNodeIndex - 1);
 
@@ -387,9 +387,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           currentNodeIndex,
           activeAffinities: expedition.activeAffinities,
           resourceWallet,
-          clueFragments,
           bankedScore,
-          deductionCamp: buildDeductionCampFromCheckpoint(bankedScore, clueFragments),
+          revealedDuringRun,
+          deductionCamp: buildDeductionCampFromCheckpoint(bankedScore, revealedDuringRun),
           evidenceBundle,
         };
         setRunState(deductionState);
@@ -409,8 +409,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         currentNodeIndex,
         activeAffinities: expedition.activeAffinities,
         resourceWallet,
-        clueFragments,
         bankedScore,
+        revealedDuringRun,
         evidenceBundle,
         matchBattle: resumedMatchBattle,
       });
@@ -447,12 +447,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         if (data.reason === 'escaped' || data.reason === 'retreat') {
           setTimeout(() => toast.error('Run lost', { duration: 2200 }), 0);
           EventBus.emit('match-battle-run-ended', { outcome: 'lost' });
-          return {
+          const lostMatchBattle = { ...matchBattle, outcome: 'lost' as const, combat: { ...matchBattle.combat, playerHp: 0 } };
+          const deductionState: RunState = {
             ...prev,
-            phase: 'complete' as const,
-            matchBattle: { ...matchBattle, outcome: 'lost', combat: { ...matchBattle.combat, playerHp: 0 } },
-            finalScore: Math.max(0, prev.bankedScore),
+            phase: 'deduction' as const,
+            matchBattle: lostMatchBattle,
+            deductionCamp: buildDeductionCampState({ ...prev, matchBattle: lostMatchBattle }),
           };
+          if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
+          return deductionState;
         }
 
         const routeNodes = matchBattle.routeNodes.map((node) => {
@@ -469,12 +472,16 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           setTimeout(() => toast.success('Leader cleared', { duration: 2200 }), 0);
           EventBus.emit('match-battle-run-ended', { outcome: 'won' });
           const wonMatchBattle = { ...nextMatchBattle, outcome: 'won' as const };
-          return {
+          const nextBankedScore = prev.bankedScore + credits + markForm * 25;
+          const deductionState: RunState = {
             ...prev,
-            phase: 'complete' as const,
+            phase: 'deduction' as const,
             matchBattle: wonMatchBattle,
-            finalScore: prev.bankedScore + credits + markForm * 25,
+            bankedScore: nextBankedScore,
+            deductionCamp: buildDeductionCampState({ ...prev, matchBattle: wonMatchBattle, bankedScore: nextBankedScore }),
           };
+          if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
+          return deductionState;
         }
 
         const rewardDraft = createRewardDraft(nextMatchBattle);
@@ -594,22 +601,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.emit('game-reset', undefined);
   }, [resetRunStateLocal]);
 
-  const handleClueFragmentEarned = useCallback((data: EventPayloads['clue-fragment-earned']) => {
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      const frags = { ...prev.clueFragments };
-      frags[data.category] += data.amount;
-      return { ...prev, clueFragments: frags };
-    });
-  }, []);
-
-  const handleClueDiscountEarned = useCallback((data: EventPayloads['clue-discount-earned']) => {
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      return { ...prev, totalThoughtDiscount: prev.totalThoughtDiscount + data.amount };
-    });
-  }, []);
-
   const handleMatchBattleCombatEnded = useCallback((data: EventPayloads['match-battle-combat-ended']) => {
     setRunState(prev => {
       if (!prev.matchBattle) return prev;
@@ -617,17 +608,20 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         lastResolvedNodeRef.current = Math.max(lastResolvedNodeRef.current, data.nodeIndex);
         setTimeout(() => toast.error('Run lost', { duration: 2200 }), 0);
         EventBus.emit('match-battle-run-ended', { outcome: 'lost' });
-        return {
-          ...prev,
-          phase: 'complete' as const,
-          finalScore: Math.max(0, prev.bankedScore),
-          matchBattle: {
-            ...prev.matchBattle,
-            outcome: 'lost' as const,
-            credits: prev.matchBattle.credits + data.creditsDelta,
-            combat: { ...data.combat, playerHp: 0 },
-          },
+        const lostMatchBattle = {
+          ...prev.matchBattle,
+          outcome: 'lost' as const,
+          credits: prev.matchBattle.credits + data.creditsDelta,
+          combat: { ...data.combat, playerHp: 0 },
         };
+        const deductionState: RunState = {
+          ...prev,
+          phase: 'deduction' as const,
+          matchBattle: lostMatchBattle,
+          deductionCamp: buildDeductionCampState({ ...prev, matchBattle: lostMatchBattle }),
+        };
+        if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
+        return deductionState;
       }
       return {
         ...prev,
@@ -642,12 +636,16 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const handleClueRevealed = useCallback((clue: EventPayloads['clue-revealed']) => {
     setRunState(prev => {
-      if (prev.phase !== 'deduction' || !prev.deductionCamp) return prev;
+      const seenInRun = prev.revealedDuringRun.some(
+        existing => existing.category === clue.category && existing.clue === clue.clue
+      );
+      const revealedDuringRun = seenInRun ? prev.revealedDuringRun : [clue, ...prev.revealedDuringRun];
+      if (prev.phase !== 'deduction' || !prev.deductionCamp) return { ...prev, revealedDuringRun };
       const exists = prev.deductionCamp.revealedClues.some(
         existing => existing.category === clue.category && existing.clue === clue.clue
       );
-      if (exists) return prev;
-      return { ...prev, deductionCamp: { ...prev.deductionCamp, revealedClues: [clue, ...prev.deductionCamp.revealedClues] } };
+      if (exists) return { ...prev, revealedDuringRun };
+      return { ...prev, revealedDuringRun, deductionCamp: { ...prev.deductionCamp, revealedClues: [clue, ...prev.deductionCamp.revealedClues] } };
     });
   }, []);
 
@@ -678,7 +676,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           const deductionSummary = {
             scoreSpent: camp.scoreSpent, purchasedClues: totalPaid,
             revealedClues: camp.revealedClues.length,
-            thoughtDiscountPct: camp.thoughtDiscountPct, finalScore,
+            finalScore,
           };
           setTimeout(() => {
             fetch(`/api/runs/${rid}`, {
@@ -848,7 +846,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       }
 
       if (selected.type === 'trivia' || selected.type === 'gis_recon') {
-        EventBus.emit('clue-fragment-earned', { category: selected.type === 'trivia' ? 'behavior' : 'geographic', amount: 1, source: 'node_reward' });
         matchBattle = {
           ...matchBattle,
           credits: matchBattle.credits + (selected.type === 'gis_recon' ? 15 : 0),
@@ -932,21 +929,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const clue = comp.mysteryClues.find(c => c.id === clueId);
       if (!clue || comp.processedClues.some(pc => pc.clueId === clueId)) return prev;
 
-      const catKey = deductionCatToWalletKey(clue.category);
-      const fragCount = camp.clueFragments[catKey] ?? 0;
-      const cost = getEffectiveClueCost(clue, fragCount, camp.thoughtDiscountPct);
-
-      if (clue.unlockMode === 'fragment' && fragCount < cost) return prev;
-      if (clue.unlockMode === 'score' && (camp.bankedScore - camp.scoreSpent - comp.scoreSpent) < cost) return prev;
+      const cost = Math.max(10, clue.baseCost);
+      if ((camp.bankedScore - camp.scoreSpent - comp.scoreSpent) < cost) return prev;
 
       const processed: ProcessedClue = { clueId: clue.id, category: clue.category, label: clue.label, status: 'processed', compareTags: clue.compareTags, fragmentCost: cost };
-      const newCampFrags = { ...camp.clueFragments };
-      if (clue.unlockMode === 'fragment') newCampFrags[catKey] = Math.max(0, newCampFrags[catKey] - cost);
 
       return {
         ...prev,
-        comparativeDeduction: { ...comp, processedClues: [...comp.processedClues, processed], fragmentsSpent: { ...comp.fragmentsSpent, [catKey]: (comp.fragmentsSpent[catKey] ?? 0) + (clue.unlockMode === 'fragment' ? cost : 0) }, scoreSpent: comp.scoreSpent + (clue.unlockMode === 'score' ? cost : 0) },
-        deductionCamp: { ...camp, clueFragments: newCampFrags },
+        comparativeDeduction: { ...comp, processedClues: [...comp.processedClues, processed], scoreSpent: comp.scoreSpent + cost },
       };
     });
   }, []);
@@ -1017,8 +1007,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.on('expedition-start', handleExpeditionStart);
     EventBus.on('node-advance-requested', handleNodeAdvanceRequested);
     EventBus.on('resource-wallet-updated', handleResourceWalletUpdate);
-    EventBus.on('clue-fragment-earned', handleClueFragmentEarned);
-    EventBus.on('clue-discount-earned', handleClueDiscountEarned);
     EventBus.on('clue-revealed', handleClueRevealed);
     EventBus.on('match-battle-combat-ended', handleMatchBattleCombatEnded);
     EventBus.on('node-objective-updated', handleNodeObjectiveCheckpoint);
@@ -1029,14 +1017,12 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('expedition-start', handleExpeditionStart);
       EventBus.off('node-advance-requested', handleNodeAdvanceRequested);
       EventBus.off('resource-wallet-updated', handleResourceWalletUpdate);
-      EventBus.off('clue-fragment-earned', handleClueFragmentEarned);
-      EventBus.off('clue-discount-earned', handleClueDiscountEarned);
       EventBus.off('clue-revealed', handleClueRevealed);
       EventBus.off('match-battle-combat-ended', handleMatchBattleCombatEnded);
       EventBus.off('node-objective-updated', handleNodeObjectiveCheckpoint);
       EventBus.off('game-reset', resetRunStateLocal);
     };
-  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleMatchBattleCombatEnded, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
+  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleClueRevealed, handleMatchBattleCombatEnded, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
 
   const value = useMemo<ExpeditionContextValue>(() => ({
     runState, boardOpacity,
@@ -1182,41 +1168,48 @@ function emitBoardForNode(
 
 function buildDeductionCampState(prev: RunState): DeductionCampState {
   const campShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(cat => ({
-    category: cat, purchased: 0, fragmentCount: prev.clueFragments[cat],
+    category: cat, purchased: 0,
   }));
   return {
     bankedScore: prev.bankedScore,
-    clueFragments: { ...prev.clueFragments },
     clueShop: campShop,
-    revealedClues: [],
+    revealedClues: dedupeClues(prev.revealedDuringRun),
     triviaUnlocked: [...prev.triviaUnlocked],
     scoreSpent: 0,
     guessResult: null,
     guessBonusAwarded: 0,
-    thoughtDiscountPct: prev.totalThoughtDiscount,
   };
 }
 
 function buildDeductionCampFromCheckpoint(
   bankedScore: number,
-  clueFragments: RunState['clueFragments'],
+  revealedDuringRun: CluePayload[],
 ): DeductionCampState {
   const clueShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(category => ({
     category,
     purchased: 0,
-    fragmentCount: clueFragments[category],
   }));
   return {
     bankedScore,
-    clueFragments: { ...clueFragments },
     clueShop,
-    revealedClues: [],
+    revealedClues: dedupeClues(revealedDuringRun),
     triviaUnlocked: [],
     scoreSpent: 0,
     guessResult: null,
     guessBonusAwarded: 0,
-    thoughtDiscountPct: 0,
   };
+}
+
+function dedupeClues(clues: CluePayload[]): CluePayload[] {
+  const seen = new Set<string>();
+  const next: CluePayload[] = [];
+  for (const clue of clues) {
+    const key = `${clue.category}:${clue.clue}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    next.push(clue);
+  }
+  return next;
 }
 
 function persistRunCheckpoint(
@@ -1237,7 +1230,7 @@ function persistRunCheckpoint(
       keepalive: immediate,
       body: JSON.stringify({
         resourceWallet: { ...state.resourceWallet },
-        clueFragments: { ...state.clueFragments },
+        revealedDuringRun: state.revealedDuringRun,
         bankedScore: state.bankedScore,
         currentNodeIndex,
         objectiveProgress,
@@ -1268,7 +1261,7 @@ type ResumeRunResponse = {
     rasterHabitats: RasterHabitatResult[];
     currentNodeIndex: number;
     resourceWallet: Record<string, number>;
-    clueFragments: Record<string, number>;
+    revealedDuringRun?: unknown[];
     bankedScore: number;
     matchBattle?: RunState['matchBattle'];
     featureFingerprints: FeatureFingerprint[];
@@ -1318,12 +1311,12 @@ function mergeResourceWallet(value: unknown): RunState['resourceWallet'] {
   return wallet;
 }
 
-function mergeClueFragments(value: unknown): RunState['clueFragments'] {
-  const fragments = createEmptyClueFragments();
-  if (!value || typeof value !== 'object') return fragments;
-  for (const key of CLUE_CATEGORY_KEYS) {
-    const next = (value as Record<string, unknown>)[key];
-    if (typeof next === 'number' && Number.isFinite(next)) fragments[key] = next;
-  }
-  return fragments;
+function mergeRevealedClues(value: unknown): CluePayload[] {
+  if (!Array.isArray(value)) return [];
+  return dedupeClues(value.filter((entry): entry is CluePayload =>
+    Boolean(entry)
+    && typeof entry === 'object'
+    && typeof (entry as { clue?: unknown }).clue === 'string'
+    && typeof (entry as { category?: unknown }).category === 'number'
+  ));
 }

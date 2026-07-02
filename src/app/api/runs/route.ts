@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
             rasterHabitats: Array.isArray(rasterHabitats) ? rasterHabitats : [],
             featureFingerprints: Array.isArray(featureFingerprints) ? featureFingerprints : [],
             routePolyline: Array.isArray(routePolyline) ? routePolyline : [],
+            revealedDuringRun: [],
             expeditionSnapshot: expeditionSnapshot && typeof expeditionSnapshot === 'object' ? expeditionSnapshot : {},
             matchBattle: sanitizedMatchBattle,
           },
