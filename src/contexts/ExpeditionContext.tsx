@@ -22,6 +22,7 @@ import type { FeatureFingerprint } from '@/types/gis';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { SpeciesCombatInput } from '@/game/matchBattle/speciesMapper';
 import type { CluePayload } from '@/game/clueConfig';
+import type { MatchBattlePartner } from '@/game/matchBattle/partner';
 
 // Combat traits cache: speciesId → combatant input. Populated once per
 // expedition by prefetchCombatants; read synchronously by emitBoardForNode.
@@ -75,6 +76,7 @@ const INITIAL_RUN_STATE: RunState = {
   comparativeDeduction: null,
   finalScore: null,
   evidenceBundle: null,
+  selectedPartner: null,
   matchBattle: null,
 };
 
@@ -84,6 +86,7 @@ interface ExpeditionContextValue {
   correctSpeciesId: number;
   hiddenSpeciesName: string;
   handleAffinitySelected: (affinityId: AffinityType | null) => void;
+  handlePartnerSelected: (partner: MatchBattlePartner | null) => void;
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
   handleDeductionPurchase: (category: ClueCategoryKey, cost: number) => void;
@@ -134,6 +137,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const runStateRef = useRef<RunState>(INITIAL_RUN_STATE);
   const objectiveProgressRef = useRef(0);
   const lastObjectiveCheckpointAtRef = useRef(0);
+  const selectedPartnerRef = useRef<MatchBattlePartner | null>(null);
   const onShowSpeciesListRef = useRef<((speciesId: number) => void) | null>(null);
 
   useEffect(() => {
@@ -224,6 +228,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     plannedRoutePolylineRef.current = [];
     routePolylineRef.current = [];
     lastObjectiveCheckpointAtRef.current = 0;
+    selectedPartnerRef.current = null;
     setBoardOpacity(1);
     setRunState(INITIAL_RUN_STATE);
   }, []);
@@ -232,6 +237,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     expeditionPayloadRef.current = data;
     combatantPrefetch = prefetchCombatants(data.species);
     activeAffinitiesRef.current = data.expedition.activeAffinities;
+    selectedPartnerRef.current = null;
     plannedRoutePolylineRef.current = getExpeditionRoutePolyline(data);
     routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
     const evidenceBundle = data.featureFingerprints?.length
@@ -242,13 +248,24 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       phase: 'briefing',
       expedition: data.expedition,
       activeAffinities: data.expedition.activeAffinities,
+      selectedPartner: null,
       evidenceBundle,
     });
   }, []);
 
   const handleExpeditionStart = useCallback(() => {
-    const initialMatchBattle = createInitialMatchBattleState(activeAffinitiesRef.current[0] ?? null, expeditionPayloadRef.current?.expedition.nodes.length ?? 6);
-    setRunState(prev => ({ ...prev, phase: 'in-run', activeAffinities: [...activeAffinitiesRef.current], matchBattle: initialMatchBattle }));
+    const initialMatchBattle = createInitialMatchBattleState(
+      activeAffinitiesRef.current[0] ?? null,
+      expeditionPayloadRef.current?.expedition.nodes.length ?? 6,
+      selectedPartnerRef.current,
+    );
+    setRunState(prev => ({
+      ...prev,
+      phase: 'in-run',
+      activeAffinities: [...activeAffinitiesRef.current],
+      selectedPartner: selectedPartnerRef.current,
+      matchBattle: initialMatchBattle,
+    }));
     nodeStartScoreRef.current = 0;
     lastResolvedNodeRef.current = -1;
     lastResolvedRouteNodeIdRef.current = null;
@@ -331,6 +348,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
+  const handlePartnerSelected = useCallback((partner: MatchBattlePartner | null) => {
+    selectedPartnerRef.current = partner;
+    setRunState(prev => ({ ...prev, selectedPartner: partner }));
+  }, []);
+
   const handleRunResume = useCallback(async (runId: string): Promise<boolean> => {
     try {
       const runResponse = await fetch(`/api/runs/${runId}`);
@@ -380,6 +402,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       setBoardOpacity(1);
 
       if (data.run?.status === 'deduction') {
+        selectedPartnerRef.current = null;
         const deductionState: RunState = {
           ...INITIAL_RUN_STATE,
           phase: 'deduction',
@@ -389,6 +412,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           resourceWallet,
           bankedScore,
           revealedDuringRun,
+          selectedPartner: null,
           deductionCamp: buildDeductionCampFromCheckpoint(bankedScore, revealedDuringRun),
           evidenceBundle,
         };
@@ -402,6 +426,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         expedition.activeAffinities[0] ?? null,
         expedition.nodes.length,
       );
+      selectedPartnerRef.current = resumedMatchBattle.partner;
       setRunState({
         ...INITIAL_RUN_STATE,
         phase: 'in-run',
@@ -411,6 +436,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         resourceWallet,
         bankedScore,
         revealedDuringRun,
+        selectedPartner: resumedMatchBattle.partner,
         evidenceBundle,
         matchBattle: resumedMatchBattle,
       });
@@ -1031,13 +1057,13 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     runState, boardOpacity,
     correctSpeciesId: correctSpeciesIdRef.current,
     hiddenSpeciesName: hiddenSpeciesNameRef.current,
-    handleAffinitySelected, handleRunResume, handleRunReset,
+    handleAffinitySelected, handlePartnerSelected, handleRunResume, handleRunReset,
     handleDeductionPurchase, handleDeductionGuessResult,
     handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
     selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode,
     showSpeciesList,
     onShowSpeciesList: onShowSpeciesListRef,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode, showSpeciesList]);
+  }), [runState, boardOpacity, handleAffinitySelected, handlePartnerSelected, handleRunResume, handleRunReset, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode, showSpeciesList]);
 
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
@@ -1157,6 +1183,7 @@ function emitBoardForNode(
       snippetsEnabled: nodeMatchBattle.snippetsEnabled,
       boardCols: nodeMatchBattle.boardCols,
       boardRows: nodeMatchBattle.boardRows,
+      partnerPassive: nodeMatchBattle.partner?.passive ?? null,
     } : undefined,
     matchBattleNodeType,
     matchBattleCombat: nodeMatchBattle?.combat,

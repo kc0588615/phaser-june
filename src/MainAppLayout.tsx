@@ -41,7 +41,7 @@ function MainAppLayoutInner() {
 
     const {
         runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
-        handleAffinitySelected, handleRunResume, handleRunReset,
+        handleAffinitySelected, handlePartnerSelected, handleRunResume, handleRunReset,
         handleDeductionPurchase, handleDeductionGuessResult,
         handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
         selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode,
@@ -171,6 +171,8 @@ function MainAppLayoutInner() {
                                         expedition={runState.expedition}
                                         onStart={() => EventBus.emit('expedition-start', {})}
                                         onSelectAffinity={handleAffinitySelected}
+                                        selectedPartnerId={runState.selectedPartner?.speciesId ?? null}
+                                        onSelectPartner={handlePartnerSelected}
                                         onClose={handleRunReset}
                                     />
                                 </div>

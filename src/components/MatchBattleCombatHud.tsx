@@ -32,6 +32,11 @@ export function MatchBattleCombatHud({ matchBattle }: Props) {
           <span>Cover {combat.guard}</span>
           <span>Actions {combat.energy}/{combat.maxEnergy}</span>
           <span>Focus {combat.focusStored}/{combat.maxAccel}</span>
+          {matchBattle.partner && (
+            <span className="text-ds-emerald truncate max-w-full">
+              {matchBattle.partner.commonName}: {matchBattle.partner.passive.description}
+            </span>
+          )}
           <Button
             type="button"
             variant={focusReady ? 'default' : 'secondary'}

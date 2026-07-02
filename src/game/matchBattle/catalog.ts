@@ -12,6 +12,7 @@ import type {
   RewardOption,
   UpgradeDef,
 } from './types';
+import type { MatchBattlePartner } from './partner';
 
 export const MATCH_BATTLE_SCHEMA_VERSION = 3;
 export const MATCH_BATTLE_LOOT_CHANCE = 0.35;
@@ -204,7 +205,12 @@ export function ensureMinimumSpawnablePieces(pool: PiecePoolEntry[]): PiecePoolE
   return next;
 }
 
-export function createInitialMatchBattleState(form: AffinityType | null, nodeCount: number): MatchBattleRunState {
+export function createInitialMatchBattleState(
+  form: AffinityType | null,
+  nodeCount: number,
+  partner: MatchBattlePartner | null = null,
+): MatchBattleRunState {
+  const hpBonus = partner?.passive.hpBonus ?? 0;
   return {
     schemaVersion: MATCH_BATTLE_SCHEMA_VERSION,
     enabled: true,
@@ -221,12 +227,14 @@ export function createInitialMatchBattleState(form: AffinityType | null, nodeCou
     boardCols: 4,
     boardRows: 3,
     lootChance: MATCH_BATTLE_LOOT_CHANCE,
+    partnerSpeciesId: partner?.speciesId ?? null,
+    partner,
     snippetsEnabled: true,
     outcome: 'active',
     rewardDraft: [],
     combat: {
-      playerHp: 60,
-      playerMaxHp: 60,
+      playerHp: 60 + hpBonus,
+      playerMaxHp: 60 + hpBonus,
       guard: 0,
       attack: 0,
       energy: 4,
@@ -255,6 +263,9 @@ export function normalizeMatchBattleRunState(
   const rawPiecePool = asArray<MatchBattleRunState['piecePool'][number]>(raw.piecePool);
   const rawArmaments = asArray<MatchBattleRunState['armaments'][number]>(raw.armaments);
   const rawCombat = raw.combat && typeof raw.combat === 'object' && !Array.isArray(raw.combat) ? raw.combat : undefined;
+  const rawPartner = raw.partner && typeof raw.partner === 'object' && !Array.isArray(raw.partner)
+    ? raw.partner as MatchBattlePartner
+    : null;
 
   return {
     ...base,
@@ -274,6 +285,10 @@ export function normalizeMatchBattleRunState(
     lootChance: typeof raw.lootChance === 'number' && Number.isFinite(raw.lootChance)
       ? Math.max(0, Math.min(1, raw.lootChance))
       : base.lootChance,
+    partnerSpeciesId: typeof raw.partnerSpeciesId === 'number' && Number.isFinite(raw.partnerSpeciesId)
+      ? raw.partnerSpeciesId
+      : rawPartner?.speciesId ?? null,
+    partner: rawPartner,
     snippetsEnabled: raw.snippetsEnabled ?? base.snippetsEnabled,
     rewardDraft: asArray<MatchBattleRunState['rewardDraft'][number]>(raw.rewardDraft) ?? base.rewardDraft,
     combat: {

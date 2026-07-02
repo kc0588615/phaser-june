@@ -7,6 +7,7 @@ import type { RoutePoint } from '@/lib/expeditionRoute';
 import type { RunEvidenceBundle } from '@/types/gis';
 import type { ExpeditionWaypoint } from '@/types/waypoints';
 import type { MatchBattleRunState } from '@/game/matchBattle/types';
+import type { MatchBattlePartner } from '@/game/matchBattle/partner';
 
 export type { RunNode };
 
@@ -48,6 +49,7 @@ export interface RunState {
   comparativeDeduction: ComparativeDeductionState | null;
   finalScore: number | null;
   evidenceBundle: RunEvidenceBundle | null;
+  selectedPartner: MatchBattlePartner | null;
   matchBattle: MatchBattleRunState | null;
 }
 

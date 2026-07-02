@@ -49,6 +49,7 @@ import type { ArmamentDef, MatchBattleCombatState, MatchBattleNodeType } from '@
 import { createMatchBattleCombatStats, logMatchBattleCombatEnd, type MatchBattleCombatStats } from '@/game/matchBattle/debug';
 import { createEnemyFromSpecies, nextSpeciesIntent, pickCombatant } from '@/game/matchBattle/speciesMapper';
 import type { SpeciesCombatInput } from '@/game/matchBattle/speciesMapper';
+import type { MatchBattlePartnerPassive } from '@/game/matchBattle/partner';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
 
@@ -202,6 +203,7 @@ export class Game extends Phaser.Scene {
     private matchBattleCreditsDelta: number = 0;
     private matchBattleStats: MatchBattleCombatStats = createMatchBattleCombatStats();
     private matchBattleLootChance: number = 0;
+    private matchBattlePartnerPassive: MatchBattlePartnerPassive | null = null;
     // Tracks drop-trigger cell ids already fired this move so cascades don't re-trigger surviving pieces.
     // Cell ids survive cloneGridState (see boardTypes.createBoardCell); WeakSet by reference would not.
     // Dedupe by cell id across the entire combat — DROP pieces fire once when they first land
@@ -1062,9 +1064,12 @@ export class Game extends Phaser.Scene {
             if (def.trigger === 'match') {
                 switch (def.effect.stat) {
                 case 'pressure':
-                    combat.attack += amount;
-                    dealDamage(amount);
-                    log.push(`${def.label}: +${amount} Data.`);
+                    {
+                        const total = amount + (this.matchBattlePartnerPassive?.pressureBonus ?? 0);
+                        combat.attack += total;
+                        dealDamage(total);
+                        log.push(`${def.label}: +${total} Data.`);
+                    }
                     break;
                 case 'cover':
                     combat.guard += amount;
@@ -1655,6 +1660,7 @@ export class Game extends Phaser.Scene {
             this.matchBattleCreditsDelta = 0;
             this.matchBattleStats = createMatchBattleCombatStats();
             this.matchBattleLootChance = data.matchBattleConfig?.lootChance ?? 0;
+            this.matchBattlePartnerPassive = data.matchBattleConfig?.partnerPassive ?? null;
             this.boardCols = data.matchBattleConfig?.boardCols ?? data.boardContext?.width ?? GRID_COLS;
             this.boardRows = data.matchBattleConfig?.boardRows ?? data.boardContext?.height ?? GRID_ROWS;
             if (data.matchBattleConfig && this.matchBattleNodeType) {
@@ -1677,6 +1683,10 @@ export class Game extends Phaser.Scene {
                     enemy,
                     log: [`${enemy?.name ?? 'Route node'} engaged.`],
                 };
+                if (this.matchBattlePartnerPassive?.guardBonus) {
+                    combat.guard += this.matchBattlePartnerPassive.guardBonus;
+                    combat.log = [`Partner Cover: +${this.matchBattlePartnerPassive.guardBonus}.`, ...combat.log].slice(0, 8);
+                }
                 // Fresh combat: clear DROP fired-cell ids from any prior combat.
                 this.matchBattleFiredDropCells = new Set();
                 const startEffects = resolveGearTriggers('combat_start', this.matchBattleArmaments, { combat, turn: 1 });
@@ -1702,6 +1712,7 @@ export class Game extends Phaser.Scene {
                 this.matchBattleCombat = null;
                 this.matchBattleCombatant = null;
                 this.matchBattleArmaments = [];
+                this.matchBattlePartnerPassive = null;
             }
 
             // Store raster habitat data for green gem clues
@@ -2495,6 +2506,7 @@ export class Game extends Phaser.Scene {
         this.inExpeditionRun = false;
         this.matchBattleCombat = null;
         this.matchBattleNodeType = null;
+        this.matchBattlePartnerPassive = null;
         this.matchBattleFiredDropCells = new Set();
         this.matchBattleFiredBreakCells = new Set();
         // Full cleanup when React signals run ended

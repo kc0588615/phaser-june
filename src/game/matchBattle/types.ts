@@ -2,6 +2,7 @@ import type { ActionGemType, GemType } from '@/game/constants';
 import type { AffinityType } from '@/expedition/affinities';
 import { ACTION_GEM_TYPES } from '@/game/constants';
 import type { CombatEventType } from './combatEvents';
+import type { MatchBattlePartner, MatchBattlePartnerPassive } from './partner';
 
 export type MatchBattleNodeType =
   | 'enemy'
@@ -133,6 +134,8 @@ export interface MatchBattleRunState {
   boardCols: number;
   boardRows: number;
   lootChance: number;
+  partnerSpeciesId: number | null;
+  partner: MatchBattlePartner | null;
   snippetsEnabled: boolean;
   outcome: 'active' | 'won' | 'lost' | null;
 }
@@ -143,6 +146,7 @@ export interface MatchBattleBoardConfig {
   snippetsEnabled: boolean;
   boardCols: number;
   boardRows: number;
+  partnerPassive?: MatchBattlePartnerPassive | null;
 }
 
 export function isActionPiece(gemType: GemType): gemType is ActionGemType {

@@ -8,11 +8,14 @@ import type { ObstacleFamily } from '@/game/nodeObstacles';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getWaypointTypeLabel } from '@/types/waypoints';
+import type { MatchBattlePartner } from '@/game/matchBattle/partner';
 
 interface Props {
   expedition: ExpeditionData;
   onStart: () => void;
   onSelectAffinity: (affinityId: AffinityType | null) => void;
+  selectedPartnerId?: number | null;
+  onSelectPartner?: (partner: MatchBattlePartner | null) => void;
   onClose?: () => void;
 }
 
@@ -24,7 +27,32 @@ const OBSTACLE_FAMILY_COLORS: Record<ObstacleFamily, string> = {
   panic: 'var(--ds-accent-rose)',
 };
 
-export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSelectAffinity, onClose }) => {
+export const ExpeditionBriefing: React.FC<Props> = ({
+  expedition,
+  onStart,
+  onSelectAffinity,
+  selectedPartnerId = null,
+  onSelectPartner,
+  onClose,
+}) => {
+  const [roster, setRoster] = React.useState<MatchBattlePartner[]>([]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch('/api/player/roster')
+      .then(response => response.ok ? response.json() : { roster: [] })
+      .then((data: { roster?: MatchBattlePartner[] }) => {
+        if (cancelled) return;
+        const nextRoster = Array.isArray(data.roster) ? data.roster : [];
+        setRoster(nextRoster);
+        if (!selectedPartnerId && nextRoster[0]) onSelectPartner?.(nextRoster[0]);
+      })
+      .catch(() => {
+        if (!cancelled) setRoster([]);
+      });
+    return () => { cancelled = true; };
+  }, [onSelectPartner, selectedPartnerId]);
+
   const avgDifficulty = expedition.nodes.length > 0
     ? expedition.nodes.reduce((sum, n) => sum + n.difficulty, 0) / expedition.nodes.length
     : 0;
@@ -210,6 +238,39 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onSel
                   <span className="text-ds-body font-bold" style={{ color: def.color }}>{def.label}</span>
                   <span className="text-ds-badge text-ds-text-secondary">{def.familyLabel}</span>
                   <span className="text-ds-badge text-ds-text-muted">{def.shortEffect}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Field Partner */}
+      {roster.length > 0 && (
+        <div>
+          <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1.5">Field Partner</div>
+          <div role="radiogroup" aria-label="Field partner selection" className="flex gap-ds-sm overflow-x-auto py-0.5">
+            {roster.map((partner) => {
+              const selected = selectedPartnerId === partner.speciesId;
+              return (
+                <button
+                  key={partner.speciesId}
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={`${partner.commonName}: ${partner.passive.description}`}
+                  onClick={() => onSelectPartner?.(partner)}
+                  className={cn(
+                    'flex flex-col gap-ds-xs py-2.5 px-ds-md rounded-xl min-w-[145px] max-w-[190px] shrink-0 cursor-pointer transition-all duration-200 text-left text-ds-text-primary',
+                    selected ? 'bg-ds-surface' : 'glass-bg'
+                  )}
+                  style={{
+                    border: selected ? '2px solid var(--ds-accent-emerald)' : '1px solid var(--ds-border-subtle)',
+                    boxShadow: selected ? '0 0 12px rgba(16,185,129,0.28)' : 'none',
+                  }}
+                >
+                  <span className="text-ds-body font-bold text-ds-emerald truncate">{partner.commonName}</span>
+                  <span className="text-ds-badge text-ds-text-secondary capitalize">{partner.sizeClass} · {partner.combatArchetype}</span>
+                  <span className="text-ds-badge text-ds-text-muted leading-snug">{partner.passive.description}</span>
                 </button>
               );
             })}
