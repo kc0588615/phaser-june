@@ -201,6 +201,7 @@ export class Game extends Phaser.Scene {
     private matchBattleArmaments: ArmamentDef[] = [];
     private matchBattleCreditsDelta: number = 0;
     private matchBattleStats: MatchBattleCombatStats = createMatchBattleCombatStats();
+    private matchBattleLootChance: number = 0;
     // Tracks drop-trigger cell ids already fired this move so cascades don't re-trigger surviving pieces.
     // Cell ids survive cloneGridState (see boardTypes.createBoardCell); WeakSet by reference would not.
     // Dedupe by cell id across the entire combat — DROP pieces fire once when they first land
@@ -374,6 +375,13 @@ export class Game extends Phaser.Scene {
         const before = combat.playerHp;
         combat.playerHp = Phaser.Math.Clamp(before + amount, 0, combat.playerMaxHp);
         if (combat.playerHp < before) this.matchBattleStats.damageTaken += before - combat.playerHp;
+    }
+
+    private emitClueRevealed(clue: CluePayload): void {
+        EventBus.emit('clue-revealed', clue);
+        if (this.matchBattleCombat) {
+            this.matchBattleStats.cluesRevealed += 1;
+        }
     }
 
     private disableInputs(): void {
@@ -1257,7 +1265,7 @@ export class Game extends Phaser.Scene {
             cleanCapture: false,
             creditsDelta: this.matchBattleCreditsDelta,
         });
-        logMatchBattleCombatEnd('won', nextCombat.turn, this.matchBattleStats);
+        logMatchBattleCombatEnd('won', nextCombat.turn, this.matchBattleStats, this.matchBattleLootChance);
         if (!this.nodeObjectiveCompleted) this.finishNodeObjective('objective_complete');
     }
 
@@ -1301,7 +1309,7 @@ export class Game extends Phaser.Scene {
                 cleanCapture: false,
                 creditsDelta: this.matchBattleCreditsDelta,
             });
-            logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats);
+            logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats, this.matchBattleLootChance);
             this.finishNodeObjective('escaped');
         }
     }
@@ -1432,7 +1440,7 @@ export class Game extends Phaser.Scene {
             let emitted = 0;
             let guard = 0;
             while ((clue = this.generateRasterHabitatClue()) && guard < 20) {
-                EventBus.emit('clue-revealed', clue);
+                this.emitClueRevealed(clue);
                 emitted++;
                 guard++;
             }
@@ -1465,7 +1473,7 @@ export class Game extends Phaser.Scene {
                 icon: config.icon,
                 color: config.color
             };
-            EventBus.emit('clue-revealed', clueData);
+            this.emitClueRevealed(clueData);
             emitted++;
             guard++;
             lastClue = clueText;
@@ -1495,7 +1503,7 @@ export class Game extends Phaser.Scene {
                     this.completedClueCategories.add(category);
                     break;
                 }
-                EventBus.emit('clue-revealed', clue);
+                this.emitClueRevealed(clue);
                 emitted++;
             }
             if (emitted > 0) {
@@ -1525,7 +1533,7 @@ export class Game extends Phaser.Scene {
                     icon: config.icon,
                     color: config.color
                 };
-                EventBus.emit('clue-revealed', clueData);
+                this.emitClueRevealed(clueData);
                 emitted++;
                 if (this.isProgressiveCategoryComplete(category)) {
                     this.completedClueCategories.add(category);
@@ -1555,7 +1563,7 @@ export class Game extends Phaser.Scene {
                 icon: config.icon,
                 color: config.color
             };
-            EventBus.emit('clue-revealed', clueData);
+            this.emitClueRevealed(clueData);
             emitted++;
         }
 
@@ -1646,6 +1654,7 @@ export class Game extends Phaser.Scene {
             this.matchBattleArmaments = [...(data.matchBattleArmaments ?? [])];
             this.matchBattleCreditsDelta = 0;
             this.matchBattleStats = createMatchBattleCombatStats();
+            this.matchBattleLootChance = data.matchBattleConfig?.lootChance ?? 0;
             this.boardCols = data.matchBattleConfig?.boardCols ?? data.boardContext?.width ?? GRID_COLS;
             this.boardRows = data.matchBattleConfig?.boardRows ?? data.boardContext?.height ?? GRID_ROWS;
             if (data.matchBattleConfig && this.matchBattleNodeType) {
@@ -1686,7 +1695,7 @@ export class Game extends Phaser.Scene {
                         cleanCapture: false,
                         creditsDelta: this.matchBattleCreditsDelta,
                     });
-                    logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats);
+                    logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats, this.matchBattleLootChance);
                     this.finishNodeObjective('escaped');
                 }
             } else {
@@ -2227,6 +2236,7 @@ export class Game extends Phaser.Scene {
             if (!gem) continue;
             const category = getClueCategoryForGemType(gem.gemType);
             if (category === null) continue;
+            if (this.matchBattleCombat) this.matchBattleStats.lootMatches += 1;
             const current = categoryMaxMatch.get(category) ?? 0;
             if (match.length > current) {
                 categoryMaxMatch.set(category, match.length);
@@ -2261,6 +2271,7 @@ export class Game extends Phaser.Scene {
             if (!gem) continue;
             const category = getClueCategoryForGemType(gem.gemType);
             if (category === null) continue;
+            if (this.matchBattleCombat) this.matchBattleStats.lootMatches += 1;
             const current = categoryMaxMatch.get(category) ?? 0;
             if (match.length > current) {
                 categoryMaxMatch.set(category, match.length);

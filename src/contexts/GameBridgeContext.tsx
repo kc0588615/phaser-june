@@ -24,6 +24,8 @@ interface GameBridgeState {
   clues: CluePayload[];
   /** Most recently added (non-duplicate) clue, for toast side-effects */
   latestClue: CluePayload | null;
+  /** Non-duplicate clues emitted together in one move, for batched toast side-effects */
+  latestClueBatch: CluePayload[];
   speciesInfo: SpeciesInfo | null;
   allCluesRevealed: boolean;
   allSpeciesCompleted: { totalSpecies: number } | null;
@@ -43,6 +45,7 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
   const [hud, setHud] = useState<GameHudUpdatedEvent>(INITIAL_HUD);
   const [clues, setClues] = useState<CluePayload[]>([]);
   const [latestClue, setLatestClue] = useState<CluePayload | null>(null);
+  const [latestClueBatch, setLatestClueBatch] = useState<CluePayload[]>([]);
   const [speciesInfo, setSpeciesInfo] = useState<SpeciesInfo | null>(null);
   const [allCluesRevealed, setAllCluesRevealed] = useState(false);
   const [allSpeciesCompleted, setAllSpeciesCompleted] = useState<{ totalSpecies: number } | null>(null);
@@ -51,11 +54,22 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
 
   const hudRef = useRef<{ score: number; movesUsed: number }>({ score: 0, movesUsed: 0 });
   const clueSetRef = useRef(new Set<string>());
+  const clueBatchRef = useRef<CluePayload[]>([]);
+  const clueBatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const onHud = (d: EventPayloads['game-hud-updated']) => {
       hudRef.current = { score: d.score, movesUsed: d.movesUsed };
       setHud(d);
+    };
+
+    const flushClueBatch = () => {
+      const batch = clueBatchRef.current;
+      clueBatchRef.current = [];
+      clueBatchTimerRef.current = null;
+      if (batch.length === 0) return;
+      setLatestClue(batch[batch.length - 1]);
+      setLatestClueBatch(batch);
     };
 
     const onClue = (clue: CluePayload) => {
@@ -69,13 +83,18 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
         console.warn('[GameBridgeContext] Failed to persist card clue unlock:', err);
       });
       setClues(prev => [clue, ...prev]);
-      setLatestClue(clue);
+      clueBatchRef.current.push(clue);
+      if (!clueBatchTimerRef.current) {
+        clueBatchTimerRef.current = setTimeout(flushClueBatch, 0);
+      }
     };
 
     const onNewGame = (d: EventPayloads['new-game-started']) => {
       setSpeciesInfo({ name: d.speciesName, id: d.speciesId, total: d.totalSpecies, index: d.currentIndex, hiddenName: d.hiddenSpeciesName || '' });
       setClues([]);
       setLatestClue(null);
+      setLatestClueBatch([]);
+      clueBatchRef.current = [];
       setAllCluesRevealed(false);
       setAllSpeciesCompleted(null);
       setGuessResult(null);
@@ -86,6 +105,8 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
       setSpeciesInfo({ name: 'No species found at this location', id: 0, total: 0, index: 0, hiddenName: '' });
       setClues([]);
       setLatestClue(null);
+      setLatestClueBatch([]);
+      clueBatchRef.current = [];
       clueSetRef.current.clear();
     };
 
@@ -99,6 +120,8 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
       setHud(INITIAL_HUD);
       setClues([]);
       setLatestClue(null);
+      setLatestClueBatch([]);
+      clueBatchRef.current = [];
       setSpeciesInfo(null);
       setAllCluesRevealed(false);
       setAllSpeciesCompleted(null);
@@ -130,13 +153,14 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('match-battle-combat-state-updated', onMatchBattleCombat);
       EventBus.off('match-battle-combat-ended', onMatchBattleCombatEnded);
       EventBus.off('game-reset', onReset);
+      if (clueBatchTimerRef.current) clearTimeout(clueBatchTimerRef.current);
     };
   }, []);
 
   const value = useMemo<GameBridgeState>(() => ({
-    hud, hudRef, clues, latestClue,
+    hud, hudRef, clues, latestClue, latestClueBatch,
     speciesInfo, allCluesRevealed, allSpeciesCompleted, guessResult, matchBattleCombat,
-  }), [hud, clues, latestClue, speciesInfo, allCluesRevealed, allSpeciesCompleted, guessResult, matchBattleCombat]);
+  }), [hud, clues, latestClue, latestClueBatch, speciesInfo, allCluesRevealed, allSpeciesCompleted, guessResult, matchBattleCombat]);
 
   return <GameBridgeContext.Provider value={value}>{children}</GameBridgeContext.Provider>;
 }

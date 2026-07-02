@@ -14,7 +14,7 @@ import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
 import { ARMAMENT_CATALOG, createInitialMatchBattleState, createRewardDraft, hasMinimumSpawnablePieces, normalizeMatchBattleRunState } from '@/game/matchBattle/catalog';
 import type { ArmamentDef, MatchBattleRouteNode, RewardOption, UpgradeDef } from '@/game/matchBattle/types';
-import { logMatchBattleRunEvent } from '@/game/matchBattle/debug';
+import { logMatchBattleRunEvent, logMatchBattleRunSummary } from '@/game/matchBattle/debug';
 import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
 import type { Species } from '@/types/database';
@@ -454,6 +454,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             matchBattle: lostMatchBattle,
             deductionCamp: buildDeductionCampState({ ...prev, matchBattle: lostMatchBattle }),
           };
+          logMatchBattleRunSummary('lost', lostMatchBattle.lootChance, deductionState.revealedDuringRun.length);
           if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
           return deductionState;
         }
@@ -480,6 +481,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             bankedScore: nextBankedScore,
             deductionCamp: buildDeductionCampState({ ...prev, matchBattle: wonMatchBattle, bankedScore: nextBankedScore }),
           };
+          logMatchBattleRunSummary('won', wonMatchBattle.lootChance, deductionState.revealedDuringRun.length);
           if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
           return deductionState;
         }
@@ -620,6 +622,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           matchBattle: lostMatchBattle,
           deductionCamp: buildDeductionCampState({ ...prev, matchBattle: lostMatchBattle }),
         };
+        logMatchBattleRunSummary('lost', lostMatchBattle.lootChance, deductionState.revealedDuringRun.length);
         if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
         return deductionState;
       }
