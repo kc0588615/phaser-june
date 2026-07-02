@@ -5,7 +5,7 @@ import { MoveAction, MoveDirection } from '../MoveAction';
 import { BoardView } from '../BoardView';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
-    DRAG_THRESHOLD, MOVE_THRESHOLD,
+    DRAG_THRESHOLD,
     STREAK_STEP, STREAK_CAP, EARLY_BONUS_PER_SLOT, DEFAULT_TOTAL_CLUE_SLOTS,
     MAX_MOVES,
     MOVE_LARGE_MATCH_THRESHOLD,
@@ -21,18 +21,13 @@ import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType, type ActionGemType } from '../constants';
 import { getClueCategoryForGemType, getResourceKeyForGemType } from '../gemSemantics';
 import {
-  buildNodeBoardContext,
   formatNodeObstacleLabel,
-  getCounterGemForObstacleFamily,
   type NodeObstacle,
-  type ObstacleFamily,
 } from '../nodeObstacles';
 import type { CurrencyKey } from '@/expedition/domain';
-import { getGemDefinition, isActionGem, rollCrateConsumable } from '@/expedition/domain';
+import { getGemDefinition, isActionGem } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
-import { getGemEffects } from '@/expedition/gemEffects';
-import type { ClueCategoryKey, SpookTier } from '@/types/expedition';
-import { getSpookTier } from '@/types/expedition';
+import type { ClueCategoryKey } from '@/types/expedition';
 import { 
   GemCategory, 
   CLUE_CONFIG, 
@@ -48,12 +43,17 @@ import {
 } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
-import { ENCOUNTER_CATALOG, SOUVENIR_CATALOG } from '@/types/expedition';
-import { isWaterObstacleSet, resolveObjectiveContribution, resolveMatchAgainstEncounter } from '@/game/objectiveResolver';
-import type { EncounterState } from '@/game/encounterState';
-import { createEncounterState, tickSpook, snapshotEncounterOutcome } from '@/game/encounterState';
+import { createEnemy, nextIntent, PIECE_CATALOG } from '@/game/matchBattle/catalog';
+import { resolveFocusSkill, resolveGearTriggers, type CombatEffectResult } from '@/game/matchBattle/combatEvents';
+import type { ArmamentDef, MatchBattleCombatState, MatchBattleNodeType } from '@/game/matchBattle/types';
+import { createMatchBattleCombatStats, logMatchBattleCombatEnd, type MatchBattleCombatStats } from '@/game/matchBattle/debug';
+import { createEnemyFromSpecies, nextSpeciesIntent, pickCombatant } from '@/game/matchBattle/speciesMapper';
+import type { SpeciesCombatInput } from '@/game/matchBattle/speciesMapper';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
+
+// Player-facing names for debuff ids (ids stay internal/persisted).
+const DEBUFF_LABELS: Record<string, string> = { burn: 'Glare', web: 'Tangle' };
 
 function slugify(value: string): string {
     return value
@@ -105,6 +105,8 @@ interface SpritePosition {
 
 interface MoveSummary {
     largestMatch: number;
+    // largest match formed by the swap itself, excluding cascades — gates free swaps
+    swapLargestMatch: number;
     matchGroups: number;
     categoriesMatched: Set<GemCategory>;
     gemTypesMatched: Set<GemType>;
@@ -122,6 +124,8 @@ export class Game extends Phaser.Scene {
     private dragStartX: number = 0;
     private dragStartY: number = 0;
     private dragDirection: MoveDirection | null = null;
+    private dragTargetX: number | null = null;
+    private dragTargetY: number | null = null;
     private dragStartPointerX: number = 0;
     private dragStartPointerY: number = 0;
     private draggingSprites: Phaser.GameObjects.Sprite[] = [];
@@ -185,34 +189,30 @@ export class Game extends Phaser.Scene {
     // Expedition run state — when true, node-complete handles transitions (not auto-reset)
     private inExpeditionRun: boolean = false;
 
-    // Node objective tracking (gem matching targets)
-    private nodeRequiredGems: Set<GemType> = new Set();
-    private nodeCounterGem: ActionGemType | null = null;
-    private nodeObstacleFamily: ObstacleFamily | null = null;
+    // Expedition node tracking
     private nodeObstacles: NodeObstacle[] = [];
     private nodeActiveAffinities: AffinityType[] = [];
-    private nodeObjectiveTarget: number = 0;
-    private nodeObjectiveProgress: number = 0;
     private nodeObjectiveCompleted: boolean = false;
     private currentNodeIndex: number = 0;
     private currentNodeDifficulty: number = 3;
-
-    // Encounter tracking
-    private nodeMatchGroupTotal: number = 0;
-    private nodeEncounterIndex: number = 0;
-    private nodeEvents: string[] = [];
-    private nodeEncounterState: EncounterState | null = null;
-
-    // Node bonus decay (new economy)
-    private nodeBonusPool: number = 0;
-    private nodeBonusStart: number = 0;
-    private nodeBonusDecayRate: number = 2;
-    private nodeBonusFloorPct: number = 0.2;
-    private nodeBonusShieldSlow: number = 1.0;
-    private nodeBonusShieldExpiry: number = 0;
-    private nodeBonusTimer: Phaser.Time.TimerEvent | null = null;
-    private nodePowerMultiplier: number = 1.0;
-    private nodeThoughtDiscount: number = 0;
+    private matchBattleNodeType: MatchBattleNodeType | null = null;
+    private matchBattleCombatant: SpeciesCombatInput | null = null;
+    private matchBattleCombat: MatchBattleCombatState | null = null;
+    private matchBattleArmaments: ArmamentDef[] = [];
+    private matchBattleCreditsDelta: number = 0;
+    private matchBattleStats: MatchBattleCombatStats = createMatchBattleCombatStats();
+    // Tracks drop-trigger cell ids already fired this move so cascades don't re-trigger surviving pieces.
+    // Cell ids survive cloneGridState (see boardTypes.createBoardCell); WeakSet by reference would not.
+    // Dedupe by cell id across the entire combat — DROP pieces fire once when they first land
+    // in the bottom row, not every move they sit there. Cleared only on combat enter / scene reset.
+    private matchBattleFiredDropCells: Set<number> = new Set();
+    // Dedupe BREAK pieces across cascade phases of a single swap so a surviving adjacent piece
+    // doesn't fire on every cascade. Cleared at the start of each swap.
+    private matchBattleFiredBreakCells: Set<number> = new Set();
+    private boardCols: number = GRID_COLS;
+    private boardRows: number = GRID_ROWS;
+    private boardViewCols: number = GRID_COLS;
+    private boardViewRows: number = GRID_ROWS;
 
 
     constructor() {
@@ -259,72 +259,21 @@ export class Game extends Phaser.Scene {
     }
 
 
-    private emitNodeObjectiveUpdated(): void {
-        const enc = this.nodeEncounterState;
-        EventBus.emit('node-objective-updated', {
-            progress: this.nodeObjectiveProgress,
-            target: this.nodeObjectiveTarget,
-            requiredGems: Array.from(this.nodeRequiredGems),
-            counterGem: this.nodeCounterGem,
-            activeAffinities: [...this.nodeActiveAffinities],
-            threats: enc?.threats.map(t => ({
-                id: t.id, threatType: t.threatType, counterGem: t.counterGem,
-                progress: t.progress, target: t.target, resolved: t.resolved,
-            })),
-            spookLevel: enc?.spookLevel,
-            chipDamagePool: enc?.chipDamagePool,
-            overallResolved: enc?.resolved,
-        });
-    }
-
     private finishNodeObjective(reason: 'objective_complete' | 'escaped'): void {
-        const outcome = this.nodeEncounterState
-            ? snapshotEncounterOutcome(this.nodeEncounterState)
-            : undefined;
-
-        if (reason === 'objective_complete') {
-            this.nodeObjectiveCompleted = true;
-            this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-            this.time.delayedCall(250, () => {
-                EventBus.emit('node-advance-requested', {
-                    nodeIndex: this.currentNodeIndex,
-                    reason,
-                    source: 'game',
-                    encounterOutcome: outcome,
-                });
-            });
-            return;
-        }
-
+        if (this.nodeObjectiveCompleted) return;
         this.nodeObjectiveCompleted = true;
-        this.disableInputs();
-        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
+        if (reason === 'escaped') this.disableInputs();
         this.time.delayedCall(250, () => {
             EventBus.emit('node-advance-requested', {
                 nodeIndex: this.currentNodeIndex,
                 reason,
                 source: 'game',
-                encounterOutcome: outcome,
             });
         });
     }
 
-    private applySpookSlow(factor: number, durationMs: number): void {
-        this.nodeBonusShieldSlow = Math.min(this.nodeBonusShieldSlow, factor);
-        this.nodeBonusShieldExpiry = Math.max(this.nodeBonusShieldExpiry, Date.now() + durationMs);
-    }
-
     private isAffinityActive(affinity: AffinityType): boolean {
         return this.nodeActiveAffinities.includes(affinity);
-    }
-
-    private getCrateRollOptions(matchSize: number): { preferHigherTier?: boolean; guaranteedId?: string | null; activeAffinities?: AffinityType[] } {
-        const guaranteedId = this.isAffinityActive('arachnid') ? 'burst_camera' : null;
-        return {
-            preferHigherTier: matchSize >= 5 || this.isAffinityActive('primate'),
-            guaranteedId,
-            activeAffinities: this.nodeActiveAffinities,
-        };
     }
 
     update(): void {
@@ -335,7 +284,9 @@ export class Game extends Phaser.Scene {
             this.scoreText.setText(`Score: ${this.backendPuzzle.getScore()}`);
         }
         if (this.movesText) {
-            this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
+            this.movesText.setText(this.matchBattleCombat
+                ? `Actions: ${this.matchBattleCombat.energy}/${this.matchBattleCombat.maxEnergy}`
+                : `Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
         }
 
         // Check game over
@@ -343,16 +294,7 @@ export class Game extends Phaser.Scene {
             if (this.inExpeditionRun) {
                 // Expedition: moves exhausted triggers escape, not GameOver scene
                 if (!this.nodeObjectiveCompleted) {
-                    this.nodeObjectiveCompleted = true;
-                    this.disableInputs();
-                    this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-                    this.time.delayedCall(250, () => {
-                        EventBus.emit('node-advance-requested', {
-                            nodeIndex: this.currentNodeIndex,
-                            reason: 'escaped',
-                            source: 'game',
-                        });
-                    });
+                    this.finishNodeObjective('escaped');
                 }
                 return;
             }
@@ -372,6 +314,18 @@ export class Game extends Phaser.Scene {
 
     private emitHud(): void {
         if (!this.backendPuzzle) return;
+        if (this.matchBattleCombat) {
+            EventBus.emit(EVT_GAME_HUD_UPDATED, {
+                score: this.backendPuzzle.getScore(),
+                movesRemaining: this.matchBattleCombat.energy,
+                movesUsed: this.matchBattleCombat.maxEnergy - this.matchBattleCombat.energy,
+                maxMoves: this.matchBattleCombat.maxEnergy,
+                streak: this.streak,
+                multiplier: this.currentMultiplier(),
+                moveMultiplier: this.lastAppliedMoveMultiplier,
+            });
+            return;
+        }
         EventBus.emit(EVT_GAME_HUD_UPDATED, {
             score: this.backendPuzzle.getScore(),
             movesRemaining: this.backendPuzzle.getMovesRemaining(),
@@ -381,6 +335,45 @@ export class Game extends Phaser.Scene {
             multiplier: this.currentMultiplier(),
             moveMultiplier: this.lastAppliedMoveMultiplier,
         });
+    }
+
+    private activeGridCols(): number {
+        return this.backendPuzzle?.width ?? this.boardCols;
+    }
+
+    private activeGridRows(): number {
+        return this.backendPuzzle?.height ?? this.boardRows;
+    }
+
+    private applyCombatEffectResults(combat: MatchBattleCombatState, results: CombatEffectResult[]): { combat: MatchBattleCombatState; creditsDelta: number } {
+        let creditsDelta = 0;
+        const log: string[] = [];
+        for (const result of results) {
+            if (result.hpDelta) this.applyPlayerHpDelta(combat, result.hpDelta);
+            if (result.guardDelta) combat.guard = Math.max(0, combat.guard + result.guardDelta);
+            if (result.attackDelta) combat.attack = Math.max(0, combat.attack + result.attackDelta);
+            if (result.focusDelta) this.addFocusStored(combat, result.focusDelta);
+            if (result.creditsDelta) creditsDelta += result.creditsDelta;
+            if (result.log) log.push(result.log);
+        }
+        if (log.length > 0) combat.log = [...log, ...combat.log].slice(0, 8);
+        return { combat, creditsDelta };
+    }
+
+    /** Mutate Focus charge with clamping; records gained/used for the tuning readout. */
+    private addFocusStored(combat: MatchBattleCombatState, amount: number): void {
+        const before = combat.focusStored;
+        combat.focusStored = Phaser.Math.Clamp(before + amount, 0, combat.maxAccel);
+        const delta = combat.focusStored - before;
+        if (delta > 0) this.matchBattleStats.focusGained += delta;
+        else if (delta < 0) this.matchBattleStats.focusUsed += -delta;
+    }
+
+    /** Mutate player Stamina with clamping; records damage taken for the tuning readout. */
+    private applyPlayerHpDelta(combat: MatchBattleCombatState, amount: number): void {
+        const before = combat.playerHp;
+        combat.playerHp = Phaser.Math.Clamp(before + amount, 0, combat.playerMaxHp);
+        if (combat.playerHp < before) this.matchBattleStats.damageTaken += before - combat.playerHp;
     }
 
     private disableInputs(): void {
@@ -398,6 +391,12 @@ export class Game extends Phaser.Scene {
         this.lastAppliedMoveMultiplier = moveMultiplier;
         this.updateMultiplierText(moveMultiplier);
 
+        if (this.matchBattleCombat) {
+            this.resolveMatchBattleTurn(didAnyMatch);
+            this.emitHud();
+            return;
+        }
+
         if (didAnyMatch) {
             this.backendPuzzle.registerMove();
             if (this.movesText) {
@@ -406,29 +405,6 @@ export class Game extends Phaser.Scene {
         }
 
         this.emitHud();
-
-        // Emit node objective progress to React
-        if (this.nodeObjectiveTarget > 0) {
-            this.emitNodeObjectiveUpdated();
-
-            // Check encounter-level resolution (multi-threat) or legacy progress
-            const encounterDone = this.nodeEncounterState?.resolved && this.nodeEncounterState.outcome === 'success';
-            const legacyDone = this.nodeObjectiveProgress >= this.nodeObjectiveTarget;
-            if ((encounterDone || legacyDone) && !this.nodeObjectiveCompleted) {
-                this.finishNodeObjective('objective_complete');
-            }
-        }
-
-        // Check for mid-node encounter trigger (every 3rd match group)
-        if (this.nodeEvents.length > 0 && didAnyMatch) {
-            const threshold = 3;
-            const expected = Math.floor(this.nodeMatchGroupTotal / threshold);
-            if (expected > this.nodeEncounterIndex) {
-                const eventKey = this.nodeEvents[this.nodeEncounterIndex % this.nodeEvents.length];
-                this.nodeEncounterIndex++;
-                this.applyEncounter(eventKey);
-            }
-        }
 
         // Disable input and transition when moves hit limit
         if (this.backendPuzzle.isGameOver()) {
@@ -444,46 +420,6 @@ export class Game extends Phaser.Scene {
             this.time.delayedCall(100, () => {
                 this.scene.start('GameOver', { score: finalScore });
             });
-        }
-    }
-
-    private applyEncounter(eventKey: string): void {
-        const effect = ENCOUNTER_CATALOG[eventKey];
-        if (!effect || !this.backendPuzzle) return;
-
-        switch (effect.type) {
-            case 'bonus_gems': {
-                if (this.nodeCounterGem) {
-                    this.backendPuzzle.addNextGemsToSpawn([this.nodeCounterGem, this.nodeCounterGem, this.nodeCounterGem]);
-                }
-                break;
-            }
-            case 'score_boost':
-                this.backendPuzzle.addBonusScore(50);
-                this.emitHud();
-                break;
-            case 'objective_boost':
-                if (this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
-                    this.nodeObjectiveProgress = Math.min(
-                        this.nodeObjectiveProgress + 2,
-                        this.nodeObjectiveTarget
-                    );
-                    this.emitNodeObjectiveUpdated();
-        
-                    if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget) {
-                        this.finishNodeObjective('objective_complete');
-                    }
-                }
-                break;
-        }
-
-        // Roll souvenir
-        const souvenirDef = SOUVENIR_CATALOG[eventKey];
-        const souvenirDrop = souvenirDef && Math.random() < souvenirDef.dropChance ? souvenirDef : undefined;
-
-        EventBus.emit('encounter-triggered', { eventKey, effect, souvenirDrop });
-        if (souvenirDrop) {
-            EventBus.emit('souvenir-dropped', { souvenir: souvenirDrop });
         }
     }
 
@@ -612,6 +548,8 @@ export class Game extends Phaser.Scene {
             gemSize: this.gemSize,
             boardOffset: this.boardOffset
         });
+        this.boardViewCols = GRID_COLS;
+        this.boardViewRows = GRID_ROWS;
         this.createPauseControls();
 
         this.input.addPointer(1);
@@ -627,9 +565,8 @@ export class Game extends Phaser.Scene {
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
-        EventBus.on('consumable-used', this.handleConsumableUsed, this);
+        EventBus.on('match-battle-focus-skill-requested', this.handleMatchBattleFocusSkill, this);
         EventBus.on('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
-        EventBus.on('crisis-choice-resolved', this.handleCrisisResolved, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -725,9 +662,46 @@ export class Game extends Phaser.Scene {
 
     private handleShuffle(): void {
         if (!this.backendPuzzle || !this.boardView || !this.canMove || this.isPaused) return;
+        this.shuffleBoardToValidMove(true);
+    }
+
+    private shuffleBoardToValidMove(triggerGear: boolean): void {
+        if (!this.backendPuzzle || !this.boardView) return;
         this.backendPuzzle.shuffle();
         this.boardView.destroyBoard();
         this.boardView.createBoard(this.backendPuzzle.getGridState());
+        this.refreshSnippetPreview();
+        if (this.matchBattleCombat) {
+            const applied = this.applyCombatEffectResults(
+                this.matchBattleCombat,
+                triggerGear
+                    ? resolveGearTriggers('on_shuffle', this.matchBattleArmaments, { combat: this.matchBattleCombat, turn: this.matchBattleCombat.turn })
+                    : [],
+            );
+            this.matchBattleCombat = applied.combat;
+            this.matchBattleCreditsDelta += applied.creditsDelta;
+            EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
+        }
+    }
+
+    private ensureBoardHasValidMove(reason: string): void {
+        if (!this.backendPuzzle || !this.boardView) return;
+        if (this.backendPuzzle.hasAnyValidMove()) return;
+        // System repair shuffle (no valid move available): do NOT fire on_shuffle gear —
+        // those rewards are for player-initiated shuffles only.
+        this.shuffleBoardToValidMove(false);
+        if (this.matchBattleCombat) {
+            this.matchBattleCombat = {
+                ...this.matchBattleCombat,
+                log: [`Board reshuffled: ${reason}.`, ...this.matchBattleCombat.log].slice(0, 8),
+            };
+            EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
+        }
+    }
+
+    private refreshSnippetPreview(): void {
+        if (!this.backendPuzzle || !this.boardView) return;
+        this.boardView.setSnippetPreview(this.backendPuzzle.getSnippetPreview());
     }
 
     private ensurePauseOverlay(): void {
@@ -740,8 +714,8 @@ export class Game extends Phaser.Scene {
             this.pauseOverlay.destroy(true);
         }
 
-        const boardWidth = GRID_COLS * this.gemSize;
-        const boardHeight = GRID_ROWS * this.gemSize;
+        const boardWidth = this.activeGridCols() * this.gemSize;
+        const boardHeight = this.activeGridRows() * this.gemSize;
         const centerX = this.boardOffset.x + boardWidth / 2;
         const centerY = this.boardOffset.y + boardHeight / 2;
 
@@ -805,8 +779,8 @@ export class Game extends Phaser.Scene {
             return;
         }
 
-        const boardWidth = GRID_COLS * this.gemSize;
-        const boardHeight = GRID_ROWS * this.gemSize;
+        const boardWidth = this.activeGridCols() * this.gemSize;
+        const boardHeight = this.activeGridRows() * this.gemSize;
         const centerX = this.boardOffset.x + boardWidth / 2;
         const centerY = this.boardOffset.y + boardHeight / 2;
 
@@ -851,7 +825,7 @@ export class Game extends Phaser.Scene {
 
     private positionPauseButton(): void {
         if (!this.pauseButtonContainer) return;
-        const boardWidth = GRID_COLS * this.gemSize;
+        const boardWidth = this.activeGridCols() * this.gemSize;
         const x = this.boardOffset.x + boardWidth - 18;
         const y = this.boardOffset.y - 42;
         this.pauseButtonContainer.setPosition(x, y);
@@ -865,6 +839,7 @@ export class Game extends Phaser.Scene {
     private createEmptyMoveSummary(): MoveSummary {
         return {
             largestMatch: 0,
+            swapLargestMatch: 0,
             matchGroups: 0,
             categoriesMatched: new Set(),
             gemTypesMatched: new Set(),
@@ -974,19 +949,17 @@ export class Game extends Phaser.Scene {
             summary.matchGroups += matches.length;
         }
 
-        let objectiveProgressChanged = false;
-
         for (const match of matches) {
             if (summary && match.length > summary.largestMatch) {
                 summary.largestMatch = match.length;
             }
-
-            let matchGemType: GemType | null = null;
+            if (summary && summary.cascades === 0 && match.length > summary.swapLargestMatch) {
+                summary.swapLargestMatch = match.length;
+            }
 
             for (const [x, y] of match) {
                 const gem = state[x]?.[y];
                 if (!gem?.gemType) continue;
-                matchGemType = gem.gemType;
 
                 if (summary) {
                     summary.gemTypesMatched.add(gem.gemType);
@@ -997,55 +970,6 @@ export class Game extends Phaser.Scene {
                 }
 
             }
-
-            // Damage adjacent blockers when a match clears nearby
-            if (this.backendPuzzle && match.length > 0) {
-                const adjacentBlockerCoords = new Set<string>();
-                for (const [mx, my] of match) {
-                    for (const [dx, dy] of [[0,1],[0,-1],[1,0],[-1,0]] as const) {
-                        const nx = mx + dx, ny = my + dy;
-                        const key = `${nx},${ny}`;
-                        if (!adjacentBlockerCoords.has(key) && !match.some(([cx, cy]) => cx === nx && cy === ny)) {
-                            adjacentBlockerCoords.add(key);
-                            this.backendPuzzle.damageBlocker(nx, ny);
-                        }
-                    }
-                }
-            }
-
-            if (matchGemType && this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
-                if (this.nodeEncounterState && !this.nodeEncounterState.resolved) {
-                    // Multi-threat encounter resolution
-                    const result = resolveMatchAgainstEncounter(
-                        matchGemType, match.length, this.nodeEncounterState,
-                        this.nodeActiveAffinities, this.nodeObstacles,
-                    );
-                    if (result.totalContribution > 0 || result.chipDamageAdded > 0) {
-                        // Sync legacy progress as sum of all threat progress
-                        this.nodeObjectiveProgress = this.nodeEncounterState.threats.reduce(
-                            (sum, t) => sum + t.progress, 0
-                        );
-                        objectiveProgressChanged = true;
-                    }
-                } else {
-                    // Legacy single-threat resolution
-                    const contribution = resolveObjectiveContribution(matchGemType, match.length, {
-                        counterGem: this.nodeCounterGem,
-                        obstacleFamily: this.nodeObstacleFamily,
-                        activeAffinities: this.nodeActiveAffinities,
-                        nodeObstacles: this.nodeObstacles,
-                    });
-                    if (contribution > 0) {
-                        this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + contribution);
-                        objectiveProgressChanged = true;
-                    }
-                }
-            }
-        }
-
-        if (objectiveProgressChanged && this.nodeObjectiveTarget > 0) {
-            this.emitNodeObjectiveUpdated();
-
         }
     }
 
@@ -1053,8 +977,12 @@ export class Game extends Phaser.Scene {
     private emitMatchEconomyRewards(matches: Coordinate[][], gridState: any): void {
         if (!matches || matches.length === 0 || !gridState) return;
 
+        if (this.matchBattleCombat) {
+            this.applyMatchBattlePieceEffects(matches, gridState);
+            return;
+        }
+
         if (this.inExpeditionRun) {
-            this.emitExpeditionGemEffects(matches, gridState);
             return;
         }
 
@@ -1075,11 +1003,6 @@ export class Game extends Phaser.Scene {
                 anyWalletReward = true;
             }
 
-            if (gem.gemType === 'crate') {
-                const item = rollCrateConsumable(match.length, this.getCrateRollOptions(match.length));
-                EventBus.emit('consumable-found', { item });
-            }
-
             if (gem.gemType === 'multiplier' && this.backendPuzzle) {
                 this.backendPuzzle.addBonusScore(25 * bonus);
                 this.emitHud();
@@ -1096,241 +1019,368 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    /** New expedition economy: apply gem effects from matches. */
-    private emitExpeditionGemEffects(matches: Coordinate[][], gridState: any): void {
+    private applyMatchBattlePieceEffects(matches: Coordinate[][], gridState: any): void {
+        if (!this.matchBattleCombat || !this.backendPuzzle) return;
+        let combat = { ...this.matchBattleCombat, enemy: this.matchBattleCombat.enemy ? { ...this.matchBattleCombat.enemy } : null };
+        const log: string[] = [];
+
+        const dealDamage = (amount: number, pierce = false) => {
+            if (!combat.enemy || amount <= 0) return 0;
+            const blocked = pierce ? 0 : Math.min(combat.enemy.guard, amount);
+            combat.enemy.guard -= blocked;
+            const prevHp = combat.enemy.hp;
+            combat.enemy.hp = Math.max(0, prevHp - (amount - blocked));
+            const dealt = prevHp - combat.enemy.hp;
+            this.matchBattleStats.damageDealt += dealt;
+            return dealt;
+        };
+
+        const effectValue = (pieceId: ActionGemType, level: number, matchSize = 3) => {
+            const effect = PIECE_CATALOG[pieceId].effect;
+            const base = effect.baseValue + Math.max(0, level - 1) * effect.levelScaling;
+            return base + Math.max(0, matchSize - 3);
+        };
+
         for (const match of matches) {
             if (match.length === 0) continue;
             const [x, y] = match[0];
             const gem = gridState[x]?.[y];
-            if (!gem) continue;
+            if (!gem?.pieceId) continue;
+            const level = gem.level ?? 1;
+            const pieceId = gem.pieceId as ActionGemType;
+            const def = PIECE_CATALOG[pieceId];
+            const amount = effectValue(pieceId, level, match.length);
 
-            const effects = getGemEffects(gem.gemType, match.length);
-            for (const effect of effects) {
-                switch (effect.type) {
-                    case 'direct_score':
-                        if (this.backendPuzzle) {
-                            this.backendPuzzle.addBonusScore(effect.amount);
-                            this.emitHud();
-                        }
-                        break;
-                    case 'trivia_boost':
-                        if (gem.gemType === 'staff' && this.isAffinityActive('reptile') && this.backendPuzzle && this.nodeCounterGem) {
-                            this.backendPuzzle.addNextGemsToSpawn([this.nodeCounterGem, this.nodeCounterGem]);
-                        }
-                        break;
-                    case 'decay_slow':
-                        {
-                            let factor = effect.factor;
-                            if (this.isAffinityActive('feline')) {
-                                factor *= 0.75;
-                            }
-                            if (this.isAffinityActive('burrower')) {
-                                factor *= 0.5;
-                            }
-                            this.applySpookSlow(factor, effect.durationMs);
-                        }
-                        break;
-                    case 'open_cache':
-                        if (this.backendPuzzle) {
-                            this.backendPuzzle.addBonusScore(effect.scoreAmount);
-                            this.emitHud();
-                        }
-                        if (Math.random() < effect.fragmentChance) {
-                            // Random category fragment from cache
-                            const cats: ClueCategoryKey[] = ['classification', 'habitat', 'geographic', 'morphology', 'behavior', 'life_cycle', 'conservation', 'key_facts'];
-                            const cat = cats[Math.floor(Math.random() * cats.length)];
-                            EventBus.emit('clue-fragment-earned', { category: cat, amount: 1, source: 'key_cache' });
-                        }
-                        break;
-                    case 'score_multiply':
-                        this.nodePowerMultiplier = Math.max(this.nodePowerMultiplier, effect.factor);
-                        break;
-                    case 'clue_discount':
-                        this.nodeThoughtDiscount += effect.factor;
-                        EventBus.emit('clue-discount-earned', { amount: effect.factor, source: 'thought_match' });
-                        break;
-                    case 'grant_consumable': {
-                        const item = rollCrateConsumable(match.length, this.getCrateRollOptions(match.length));
-                        EventBus.emit('consumable-found', { item });
-                        break;
+            if (def.trigger === 'match') {
+                switch (def.effect.stat) {
+                case 'pressure':
+                    combat.attack += amount;
+                    dealDamage(amount);
+                    log.push(`${def.label}: +${amount} Data.`);
+                    break;
+                case 'cover':
+                    combat.guard += amount;
+                    log.push(`${def.label}: +${amount} Cover.`);
+                    break;
+                case 'unblocked':
+                    dealDamage(amount, true);
+                    log.push(`${def.label}: ${amount} Direct View.`);
+                    break;
+                case 'damage_all':
+                    dealDamage(amount, false);
+                    log.push(`${def.label}: ${amount} Data.`);
+                    if (pieceId === 'caltrops') {
+                        this.applyPlayerHpDelta(combat, -2);
+                        this.addFocusStored(combat, 2);
+                        log.push('Off-Trail Scramble: spent 2 Stamina.');
                     }
-                    case 'combo_enhance':
-                        if (this.backendPuzzle) {
-                            this.backendPuzzle.addBonusScore(Math.round(25 * effect.factor));
-                            this.emitHud();
-                        }
-                        break;
-                    case 'clue_fragment':
-                        EventBus.emit('clue-fragment-earned', { category: effect.category, amount: effect.amount, source: 'loot_match' });
-                        break;
+                    break;
+                case 'focus':
+                    this.addFocusStored(combat, amount);
+                    log.push(`${def.label}: +${amount} Focus.`);
+                    break;
+                default:
+                    log.push(`${def.label} matched.`);
+                    break;
                 }
             }
 
-            if (gem.gemType === 'sword' && this.isAffinityActive('insect') && this.currentMoveSummary && this.currentMoveSummary.cascades > 0 && this.backendPuzzle) {
-                this.backendPuzzle.addBonusScore(20 * this.currentMoveSummary.cascades);
-                this.emitHud();
-            }
-
-            if (gem.gemType === 'key' && this.isAffinityActive('ungulate')) {
-                this.applySpookSlow(0.85, 3000);
-            }
+            const breakResult = this.resolveBreakPieces(match, gridState, combat);
+            combat = breakResult.combat;
+            log.push(...breakResult.log);
         }
+
+        const dropResult = this.resolveDropPieces(combat);
+        combat = dropResult.combat;
+        this.matchBattleCreditsDelta += dropResult.creditsDelta;
+        log.push(...dropResult.log);
+
+        if (this.currentMoveSummary?.cascades) {
+            // applyMatchBattlePieceEffects runs once per cascade phase, so the on_cascade trigger
+            // must receive the per-phase delta (1), not the cumulative count, or gear effects stack
+            // triangularly (+1, +2, +3...) instead of linearly (+1, +1, +1...).
+            const cascadeEffects = resolveGearTriggers('on_cascade', this.matchBattleArmaments, {
+                combat,
+                turn: combat.turn,
+                cascadeCount: 1,
+            });
+            const applied = this.applyCombatEffectResults(combat, cascadeEffects);
+            combat = applied.combat;
+            this.matchBattleCreditsDelta += applied.creditsDelta;
+        }
+
+        const cleansed = this.backendPuzzle.consumeCleanseCount();
+        if (cleansed > 0) {
+            this.matchBattleStats.debuffsCleansed += cleansed;
+            log.push(`Cleared ${cleansed} hindrance${cleansed > 1 ? 's' : ''}.`);
+        }
+
+        combat.log = [...log, ...combat.log].slice(0, 8);
+        this.matchBattleCombat = combat;
+        EventBus.emit('match-battle-combat-state-updated', combat);
     }
 
-    /** Start the per-node spook meter decay timer. */
-    private startNodeBonusDecay(): void {
-        if (this.nodeBonusTimer) this.nodeBonusTimer.destroy();
+    private resolveBreakPieces(match: Coordinate[], gridState: any, combat: MatchBattleCombatState): { combat: MatchBattleCombatState; log: string[] } {
+        const seen = new Set<string>();
+        const log: string[] = [];
+        const nextCombat: MatchBattleCombatState = { ...combat, enemy: combat.enemy ? { ...combat.enemy } : null, log: [...combat.log] };
+        const dealDamage = (amount: number, pierce = false) => {
+            if (!nextCombat.enemy || amount <= 0) return;
+            const blocked = pierce ? 0 : Math.min(nextCombat.enemy.guard, amount);
+            nextCombat.enemy.guard -= blocked;
+            const prevHp = nextCombat.enemy.hp;
+            nextCombat.enemy.hp = Math.max(0, prevHp - (amount - blocked));
+            this.matchBattleStats.damageDealt += prevHp - nextCombat.enemy.hp;
+        };
 
-        // New encounter model: use tickSpook instead of bonusPool
-        if (this.nodeEncounterState) {
-            this.nodeBonusTimer = this.time.addEvent({
-                delay: 1000,
-                loop: true,
-                callback: () => {
-                    if (!this.nodeEncounterState || this.nodeEncounterState.resolved) return;
-                    const spookLevel = tickSpook(this.nodeEncounterState);
-                    const pct = 1 - spookLevel / 100; // invert: 100% spook = 0% tracking
-                    const tier = getSpookTier(pct);
-                    EventBus.emit('node-bonus-tick', { currentPool: Math.round(100 - spookLevel), startPool: 100, pct, tier });
-
-                    if (this.nodeEncounterState.outcome === 'escaped' && !this.nodeObjectiveCompleted) {
-                        this.finishNodeObjective('escaped');
+        for (const [mx, my] of match) {
+            for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]] as const) {
+                const nx = mx + dx;
+                const ny = my + dy;
+                const key = `${nx},${ny}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                const cell = gridState[nx]?.[ny];
+                if (cell?.trigger !== 'break') continue;
+                // Per-swap dedupe: a surviving BREAK piece adjacent to a cascade-phase match must
+                // not fire again on later phases of the same swap.
+                if (cell.id != null) {
+                    if (this.matchBattleFiredBreakCells.has(cell.id)) continue;
+                    this.matchBattleFiredBreakCells.add(cell.id);
+                }
+                const level = cell.level ?? 1;
+                const pieceId = cell.pieceId as ActionGemType;
+                const def = PIECE_CATALOG[pieceId];
+                const amount = def.effect.baseValue + Math.max(0, level - 1) * def.effect.levelScaling;
+                if (pieceId === 'power') {
+                    // Discharge consumes stored Focus only. With zero stored, no damage — the piece breaks inert.
+                    if (nextCombat.focusStored <= 0) {
+                        log.push(`${def.label} BREAK: no stored Focus to discharge.`);
+                    } else {
+                        const charge = Math.min(def.effect.chargeCap ?? 5, nextCombat.focusStored);
+                        dealDamage(amount * charge, true);
+                        this.addFocusStored(nextCombat, -nextCombat.focusStored);
+                        log.push(`${def.label} BREAK: ${amount * charge} Direct View.`);
                     }
-                },
-            });
+                } else if (pieceId === 'thought') {
+                    nextCombat.guard += amount;
+                    nextCombat.attack += amount;
+                    log.push(`${def.label} BREAK: +${amount} Cover/Approach.`);
+                } else if (pieceId === 'shield_unit') {
+                    nextCombat.guard += amount;
+                    log.push(`${def.label} BREAK: +${amount} Cover.`);
+                } else if (pieceId === 'multiplier') {
+                    const count = def.effect.spawnCount ?? 1;
+                    const debuffId = def.effect.spawnId ?? 'burn';
+                    let seeded = 0;
+                    for (let i = 0; i < count; i++) if (this.seedDebuff(debuffId)) seeded++;
+                    if (seeded > 0) log.push(`${def.label} BREAK: marked ${DEBUFF_LABELS[debuffId] ?? debuffId}.`);
+                }
+            }
+        }
+        return { combat: nextCombat, log };
+    }
+
+    private resolveDropPieces(combat: MatchBattleCombatState): { combat: MatchBattleCombatState; creditsDelta: number; log: string[] } {
+        const grid = this.backendPuzzle?.getGridState();
+        if (!grid) return { combat, creditsDelta: 0, log: [] };
+        const nextCombat: MatchBattleCombatState = { ...combat, enemy: combat.enemy ? { ...combat.enemy } : null, log: [...combat.log] };
+        const log: string[] = [];
+        let creditsDelta = 0;
+        const bottomY = this.activeGridRows() - 1;
+        for (let x = 0; x < this.activeGridCols(); x++) {
+            const cell = grid[x]?.[bottomY];
+            if (cell?.trigger !== 'drop' || !cell.pieceId || cell.id == null) continue;
+            if (this.matchBattleFiredDropCells.has(cell.id)) continue;
+            this.matchBattleFiredDropCells.add(cell.id);
+            const pieceId = cell.pieceId as ActionGemType;
+            const def = PIECE_CATALOG[pieceId];
+            const level = cell.level ?? 1;
+            const amount = def.effect.baseValue + Math.max(0, level - 1) * def.effect.levelScaling;
+            if (def.effect.stat === 'supplies') {
+                creditsDelta += amount;
+                log.push(`${def.label} DROP: +${amount} Grants.`);
+            } else if (def.effect.stat === 'pressure') {
+                nextCombat.attack += amount;
+                if (nextCombat.enemy) {
+                    const prevHp = nextCombat.enemy.hp;
+                    nextCombat.enemy.hp = Math.max(0, prevHp - amount);
+                    this.matchBattleStats.damageDealt += prevHp - nextCombat.enemy.hp;
+                }
+                log.push(`${def.label} DROP: +${amount} Data.`);
+            } else if (def.effect.transformCount) {
+                this.addFocusStored(nextCombat, def.effect.transformCount);
+                log.push(`${def.label} DROP: charged Focus.`);
+            }
+        }
+        return { combat: nextCombat, creditsDelta, log };
+    }
+
+    private handleMatchBattleFocusSkill(): void {
+        if (this.isPaused || this.isResolvingMove || !this.matchBattleCombat?.enemy) return;
+        if (this.matchBattleCombat.focusStored < this.matchBattleCombat.maxAccel) return;
+
+        const result = resolveFocusSkill(this.matchBattleCombat);
+        if (result.damage <= 0) return;
+
+        this.matchBattleStats.focusUsed += this.matchBattleCombat.focusStored;
+        if (this.matchBattleCombat.enemy && result.combat.enemy) {
+            this.matchBattleStats.damageDealt += this.matchBattleCombat.enemy.hp - result.combat.enemy.hp;
+        }
+
+        const combat: MatchBattleCombatState = {
+            ...result.combat,
+            log: [`Breakthrough: ${result.damage} Direct View.`, ...result.combat.log].slice(0, 8),
+        };
+
+        if (combat.enemy && combat.enemy.hp <= 0) {
+            this.finishMatchBattleCombatWin(combat);
             return;
         }
 
-        // Legacy bonusPool timer for nodes without encounterConfig
-        this.nodeBonusTimer = this.time.addEvent({
-            delay: 1000,
-            loop: true,
-            callback: () => {
-                const floor = this.nodeBonusStart * this.nodeBonusFloorPct;
-                if (this.nodeBonusPool <= floor) {
-                    const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 0;
-                    const tier = getSpookTier(pct);
-                    if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
-                        this.finishNodeObjective('escaped');
-                    }
-                    return;
-                }
-                if (this.nodeBonusShieldSlow < 1.0 && Date.now() > this.nodeBonusShieldExpiry) {
-                    this.nodeBonusShieldSlow = 1.0;
-                }
-                const decay = this.nodeBonusDecayRate * this.nodeBonusShieldSlow;
-                this.nodeBonusPool = Math.max(floor, this.nodeBonusPool - decay);
-                const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 0;
-                const tier = getSpookTier(pct);
-                EventBus.emit('node-bonus-tick', {
-                    currentPool: Math.round(this.nodeBonusPool),
-                    startPool: this.nodeBonusStart,
-                    pct,
-                    tier,
-                });
-        
-                if (tier === 'escaped' && !this.nodeObjectiveCompleted) {
-                    this.finishNodeObjective('escaped');
-                }
-            },
-        });
-    }
-
-    /** Stop the spook meter timer and emit node reward summary with tier multipliers. */
-    private stopNodeBonusDecayAndEmitRewards(difficulty: number): void {
-        if (this.nodeBonusTimer) {
-            this.nodeBonusTimer.destroy();
-            this.nodeBonusTimer = null;
-        }
-        if (!this.inExpeditionRun) return;
-
-        const pct = this.nodeBonusStart > 0 ? this.nodeBonusPool / this.nodeBonusStart : 0;
-        const tier = getSpookTier(pct);
-        const baseClearReward = 50 + 25 * difficulty;
-        const tierBaseMultiplier = tier === 'stabilized' ? 1.0 : tier === 'spooked' ? 0.75 : 0.5;
-        const tierBonusMultiplier = tier === 'stabilized' ? 1.0 : tier === 'spooked' ? 0.5 : 0;
-        const preservedNodeBonus = Math.round(this.nodeBonusPool * tierBonusMultiplier);
-        EventBus.emit('node-rewards-summary', {
-            baseClearReward: Math.round(baseClearReward * this.nodePowerMultiplier * tierBaseMultiplier),
-            preservedNodeBonus,
-            triviaReward: 0,
-            clueFragmentReward: {},
-            tier,
-        });
-    }
-
-    private handleConsumableUsed(data: EventPayloads['consumable-used']): void {
-        if (!this.backendPuzzle) return;
-        const canAffectObjective = this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted;
-
-        switch (data.item.effectType) {
-            case 'clear_visibility':
-                if (canAffectObjective && this.nodeObstacleFamily === 'visibility') {
-                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
-                }
-                break;
-            case 'clear_terrain':
-                if (canAffectObjective && this.nodeObstacleFamily === 'terrain') {
-                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
-                }
-                break;
-            case 'clear_sighting':
-                if (canAffectObjective && this.nodeObstacleFamily === 'sighting') {
-                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
-                }
-                break;
-            case 'freeze_spook':
-                this.applySpookSlow(0, 5000);
-                break;
-            case 'supply_drop':
-                if (canAffectObjective) {
-                    this.nodeObjectiveProgress = this.nodeObjectiveTarget;
-                    if (this.nodeCounterGem) {
-                        this.backendPuzzle.addNextGemsToSpawn([this.nodeCounterGem, this.nodeCounterGem]);
-                    }
-                }
-                break;
-        }
-
-        if (this.nodeObjectiveTarget > 0) {
-            this.emitNodeObjectiveUpdated();
-
-            if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
-                this.finishNodeObjective('objective_complete');
-            }
-        }
-
+        this.matchBattleCombat = combat;
+        EventBus.emit('match-battle-combat-state-updated', combat);
         this.emitHud();
     }
 
-    private initializeNodeBonusState(difficulty: number, nodeType?: string): void {
-        const bonusByDifficulty = [0, 80, 100, 120, 160, 180];
-        this.nodeBonusStart = bonusByDifficulty[Math.min(difficulty, 5)] ?? 120;
-        this.nodeBonusPool = this.nodeBonusStart;
-        const waterPenalty = isWaterObstacleSet(this.nodeObstacles) && !this.isAffinityActive('fish') ? 0.75 : 0;
-        const baseNodeDecayRate = 2;
-        const skittishBonus = nodeType === 'standoff' ? 0.5 + (difficulty - 1) * 0.25 : 0;
-        this.nodeBonusDecayRate = baseNodeDecayRate + waterPenalty + skittishBonus;
-        this.nodeBonusShieldSlow = 1.0;
-        this.nodeBonusShieldExpiry = 0;
-        this.nodePowerMultiplier = 1.0;
-        this.nodeThoughtDiscount = 0;
-
+    private finishMatchBattleCombatWin(combat: MatchBattleCombatState): void {
+        const endEffects = resolveGearTriggers('combat_end', this.matchBattleArmaments, { combat, turn: combat.turn, wasCleanCapture: false });
+        const applied = this.applyCombatEffectResults(combat, endEffects);
+        const nextCombat = applied.combat;
+        this.matchBattleCreditsDelta += applied.creditsDelta;
+        this.matchBattleCombat = nextCombat;
+        EventBus.emit('match-battle-combat-state-updated', nextCombat);
+        EventBus.emit('match-battle-combat-ended', {
+            outcome: 'won',
+            combat: nextCombat,
+            nodeIndex: this.currentNodeIndex,
+            cleanCapture: false,
+            creditsDelta: this.matchBattleCreditsDelta,
+        });
+        logMatchBattleCombatEnd('won', nextCombat.turn, this.matchBattleStats);
+        if (!this.nodeObjectiveCompleted) this.finishNodeObjective('objective_complete');
     }
 
-    private handleCrisisResolved(data: EventPayloads['crisis-choice-resolved']): void {
-        if (data.chosenOptionId === 'take_risk') {
-            // Penalty: lose 30% of current bonus pool
-            this.nodeBonusPool = Math.max(0, this.nodeBonusPool * 0.7);
+    private resolveMatchBattleTurn(didAnyMatch: boolean): void {
+        if (!this.matchBattleCombat || !this.matchBattleCombat.enemy) return;
+        let combat: MatchBattleCombatState = {
+            ...this.matchBattleCombat,
+            enemy: { ...this.matchBattleCombat.enemy },
+            log: [...this.matchBattleCombat.log],
+        };
+        const freeMove = (this.currentMoveSummary?.swapLargestMatch ?? 0) >= MOVE_LARGE_MATCH_THRESHOLD;
+
+        if (didAnyMatch && !freeMove) {
+            combat.energy = Math.max(0, combat.energy - 1);
+            combat.log = [`Actions spent: ${combat.energy}/${combat.maxEnergy}.`, ...combat.log].slice(0, 8);
+        } else if (didAnyMatch && freeMove) {
+            combat.log = ['4+ match: free swap.', ...combat.log].slice(0, 8);
         }
 
-        // Resume board play and auto-advance node
-        this.canMove = true;
-        EventBus.emit('node-advance-requested', {
-            nodeIndex: this.currentNodeIndex,
-            reason: 'crisis_resolved',
-            source: 'game',
-        });
+        if (combat.enemy && combat.enemy.hp <= 0) {
+            this.finishMatchBattleCombatWin(combat);
+            return;
+        }
+
+        if (combat.energy <= 0) {
+            combat = this.resolveEnemyTurn(combat);
+        }
+
+        this.matchBattleCombat = combat;
+        EventBus.emit('match-battle-combat-state-updated', combat);
+        this.emitHud();
+        if (this.movesText) {
+            this.movesText.setText(`Actions: ${combat.energy}/${combat.maxEnergy}`);
+        }
+
+        if (combat.playerHp <= 0 && !this.nodeObjectiveCompleted) {
+            EventBus.emit('match-battle-combat-ended', {
+                outcome: 'lost',
+                combat,
+                nodeIndex: this.currentNodeIndex,
+                cleanCapture: false,
+                creditsDelta: this.matchBattleCreditsDelta,
+            });
+            logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats);
+            this.finishNodeObjective('escaped');
+        }
+    }
+
+    private resolveEnemyTurn(combat: MatchBattleCombatState): MatchBattleCombatState {
+        if (!combat.enemy || !this.matchBattleNodeType) return combat;
+        const intent = combat.enemy.intent;
+        const enemyName = combat.enemy.name;
+        const log: string[] = [];
+
+        if (intent.type === 'attack' || intent.type === 'attack_debuff') {
+            const blocked = Math.min(combat.guard, intent.amount);
+            const hpDamage = intent.amount - blocked;
+            combat.guard -= blocked;
+            this.applyPlayerHpDelta(combat, -hpDamage);
+            this.addFocusStored(combat, hpDamage);
+            const hpLossEffects = resolveGearTriggers('on_hp_loss', this.matchBattleArmaments, {
+                combat,
+                turn: combat.turn,
+                damageAmount: hpDamage,
+            });
+            const applied = this.applyCombatEffectResults(combat, hpLossEffects);
+            combat = applied.combat;
+            this.matchBattleCreditsDelta += applied.creditsDelta;
+            log.push(`${enemyName}: ${intent.label} for ${hpDamage}.`);
+        }
+
+        if (intent.type === 'guard' && combat.enemy) {
+            combat.enemy.guard += intent.amount;
+            log.push(`${enemyName} gained Cover.`);
+        }
+
+        if (intent.type === 'debuff' || intent.type === 'attack_debuff') {
+            const seededId = intent.debuffId ?? 'burn';
+            if (this.seedDebuff(seededId)) log.push(`${enemyName} marked ${DEBUFF_LABELS[seededId] ?? seededId}.`);
+        }
+
+        const nextTurn = combat.turn + 1;
+        combat.energy = combat.maxEnergy;
+        combat.attack = 0;
+        combat.turn = nextTurn;
+        if (combat.enemy) {
+            combat.enemy.intent = this.matchBattleCombatant
+                ? nextSpeciesIntent(this.matchBattleCombatant, this.matchBattleNodeType, nextTurn, this.currentNodeDifficulty)
+                : nextIntent(this.matchBattleNodeType, nextTurn, this.currentNodeDifficulty);
+        }
+        combat.log = [...log, `Actions refilled: ${combat.energy}/${combat.maxEnergy}.`, `Turn ${nextTurn}.`, ...combat.log].slice(0, 8);
+        const turnEffects = resolveGearTriggers('turn_start', this.matchBattleArmaments, { combat, turn: nextTurn });
+        const applied = this.applyCombatEffectResults(combat, turnEffects);
+        combat = applied.combat;
+        this.matchBattleCreditsDelta += applied.creditsDelta;
+        return combat;
+    }
+
+    /** Seed a debuff on a random open cell. Returns true if the debuff was applied and kept. */
+    private seedDebuff(debuffId: string): boolean {
+        if (!this.backendPuzzle) return false;
+        const grid = this.backendPuzzle.getGridState();
+        const candidates: Array<{ x: number; y: number }> = [];
+        for (let x = 0; x < this.activeGridCols(); x++) {
+            for (let y = 0; y < this.activeGridRows(); y++) {
+                const state = grid[x]?.[y]?.state;
+                // Skip cells already debuffed or occupied by a blocker.
+                if (state?.debuffId || state?.blockerId) continue;
+                candidates.push({ x, y });
+            }
+        }
+        const picked = candidates[Math.floor(Math.random() * candidates.length)];
+        if (!picked) return false;
+        this.backendPuzzle.applyCellStateSeeds([{ x: picked.x, y: picked.y, state: { debuffId, flags: [debuffId] } }]);
+        // Softlock guard: if the new debuff leaves no valid moves, clear it (one-shot, no retry).
+        if (!this.backendPuzzle.hasAnyValidMove()) {
+            this.backendPuzzle.clearCellDebuff(picked.x, picked.y);
+            this.boardView?.syncSpritesToGridPositions();
+            return false;
+        }
+        this.boardView?.syncSpritesToGridPositions();
+        this.matchBattleStats.debuffsSeeded += 1;
+        return true;
     }
 
     private applyMoveBonuses(baseScore: number): { finalScore: number; multiplier: number; repeatedCategories: GemCategory[] } {
@@ -1586,50 +1636,63 @@ export class Game extends Phaser.Scene {
             this.incorrectGuessesThisSpecies = 0;
             this.speciesStartTime = Date.now();
             
-            // Initialize node objective from expedition data
+            // Initialize expedition node metadata.
             this.nodeObstacles = [...(data.obstacles ?? [])];
-            this.nodeObstacleFamily = data.obstacleFamily ?? null;
-            this.nodeCounterGem = data.counterGem ?? (this.nodeObstacleFamily ? getCounterGemForObstacleFamily(this.nodeObstacleFamily) : null);
-            this.nodeRequiredGems = new Set(data.requiredGems ?? (this.nodeCounterGem ? [this.nodeCounterGem] : []));
             this.nodeActiveAffinities = [...(data.activeAffinities ?? [])];
-            this.nodeObjectiveTarget = data.objectiveTarget ?? 0;
-            this.nodeObjectiveProgress = Phaser.Math.Clamp(data.objectiveProgress ?? 0, 0, this.nodeObjectiveTarget);
             this.nodeObjectiveCompleted = false;
             this.currentNodeIndex = data.nodeIndex ?? 0;
             this.currentNodeDifficulty = data.difficulty ?? 3;
-
-
-            // Encounter tracking for this node
-            this.nodeMatchGroupTotal = 0;
-            this.nodeEncounterIndex = 0;
-            this.nodeEvents = data.events ?? [];
-            this.nodeEncounterState = data.encounterConfig
-                ? createEncounterState(data.encounterConfig)
-                : null;
-
-            if (this.inExpeditionRun) {
-                this.initializeNodeBonusState(this.currentNodeDifficulty, data.nodeType);
-            }
-
-            // Crisis node: emit the narrative choice and skip board initialization/decay.
-            if (data.nodeType === 'crisis' && this.inExpeditionRun) {
-                this.canMove = false;
-                if (this.statusText && this.statusText.active) {
-                    this.statusText.setText('Field crisis! Choose how to proceed.');
+            this.matchBattleNodeType = data.matchBattleNodeType ?? null;
+            this.matchBattleArmaments = [...(data.matchBattleArmaments ?? [])];
+            this.matchBattleCreditsDelta = 0;
+            this.matchBattleStats = createMatchBattleCombatStats();
+            this.boardCols = data.matchBattleConfig?.boardCols ?? data.boardContext?.width ?? GRID_COLS;
+            this.boardRows = data.matchBattleConfig?.boardRows ?? data.boardContext?.height ?? GRID_ROWS;
+            if (data.matchBattleConfig && this.matchBattleNodeType) {
+                const combatant = pickCombatant(data.matchBattleCombatants ?? [], this.matchBattleNodeType, this.currentNodeIndex);
+                this.matchBattleCombatant = combatant;
+                const enemy = combatant
+                    ? createEnemyFromSpecies(combatant, this.matchBattleNodeType, this.currentNodeDifficulty)
+                    : createEnemy(this.matchBattleNodeType, this.currentNodeDifficulty);
+                const baseCombat = data.matchBattleCombat;
+                let combat: MatchBattleCombatState = {
+                    playerHp: baseCombat?.playerHp ?? 60,
+                    playerMaxHp: baseCombat?.playerMaxHp ?? 60,
+                    guard: 0,
+                    attack: 0,
+                    energy: baseCombat?.maxEnergy ?? 4,
+                    maxEnergy: baseCombat?.maxEnergy ?? 4,
+                    maxAccel: baseCombat?.maxAccel ?? 10,
+                    focusStored: baseCombat?.focusStored ?? 0,
+                    turn: 1,
+                    enemy,
+                    log: [`${enemy?.name ?? 'Route node'} engaged.`],
+                };
+                // Fresh combat: clear DROP fired-cell ids from any prior combat.
+                this.matchBattleFiredDropCells = new Set();
+                const startEffects = resolveGearTriggers('combat_start', this.matchBattleArmaments, { combat, turn: 1 });
+                combat = this.applyCombatEffectResults(combat, startEffects).combat;
+                const turnEffects = resolveGearTriggers('turn_start', this.matchBattleArmaments, { combat, turn: 1 });
+                combat = this.applyCombatEffectResults(combat, turnEffects).combat;
+                this.matchBattleCombat = combat;
+                EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
+                // Combat-start gear (Trail Mix, etc.) can drop the player to <=0 HP before the board enables.
+                // Surface the loss immediately so the player isn't trapped in an unwinnable encounter.
+                if (combat.playerHp <= 0) {
+                    EventBus.emit('match-battle-combat-ended', {
+                        outcome: 'lost',
+                        combat,
+                        nodeIndex: this.currentNodeIndex,
+                        cleanCapture: false,
+                        creditsDelta: this.matchBattleCreditsDelta,
+                    });
+                    logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats);
+                    this.finishNodeObjective('escaped');
                 }
-                EventBus.emit('crisis-choice-requested', {
-                    crisisId: `crisis-${data.nodeIndex ?? 0}`,
-                    options: [
-                        { id: 'spend_tool', label: 'Use a Tool', effect: 'Spend a consumable to bypass the crisis', cost: {} },
-                        { id: 'take_risk', label: 'Push Through', effect: 'Lose some tracking stability but advance' },
-                    ],
-                });
-                return;
-            }
-
-            // Node bonus decay (new economy)
-            if (this.inExpeditionRun) {
-                this.startNodeBonusDecay();
+            } else {
+                this.matchBattleCombat = null;
+                this.matchBattleCombatant = null;
+                this.matchBattleArmaments = [];
             }
 
             // Store raster habitat data for green gem clues
@@ -1660,22 +1723,21 @@ export class Game extends Phaser.Scene {
                 EventBus.emit('no-species-found', {});
             }
 
-            if (!this.backendPuzzle) { // Should exist from create()
-                this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
+            if (!this.backendPuzzle || this.backendPuzzle.width !== this.boardCols || this.backendPuzzle.height !== this.boardRows) {
+                this.backendPuzzle = new BackendPuzzle(this.boardCols, this.boardRows);
             }
             // Configure board spawning for action-first YMBAB-style nodes.
-            this.backendPuzzle.setGemPool(data.boardConfig ?? DEFAULT_BOARD_SPAWN_CONFIG);
-            this.backendPuzzle.regenerateBoard();
-            const boardContext = data.boardContext ?? buildNodeBoardContext({
-                width: GRID_COLS,
-                height: GRID_ROWS,
-                obstacles: data.obstacles ?? [],
-                nodeIndex: data.nodeIndex ?? 0,
-            });
-            this.backendPuzzle.applyCellStateSeeds(boardContext.obstacleSeeds);
+            if (data.matchBattleConfig) {
+                this.backendPuzzle.setMatchBattleConfig(data.matchBattleConfig);
+            } else {
+                this.backendPuzzle.setGemPool(data.boardConfig ?? DEFAULT_BOARD_SPAWN_CONFIG);
+                this.backendPuzzle.regenerateBoard();
+            }
             this.backendPuzzle.resetMoves();
             // Scale moves by node difficulty (default MAX_MOVES outside expeditions)
-            if (data.difficulty && data.difficulty >= 1) {
+            if (this.matchBattleCombat) {
+                this.backendPuzzle.setMaxMoves(999);
+            } else if (data.difficulty && data.difficulty >= 1) {
                 const difficultyMoves = [50, 40, 30, 25, 20];
                 const moves = difficultyMoves[Math.min(data.difficulty - 1, 4)] ?? MAX_MOVES;
                 this.backendPuzzle.setMaxMoves(moves);
@@ -1685,7 +1747,7 @@ export class Game extends Phaser.Scene {
 
             // Show obstacle indicators if present
             if (this.obstacleText) {
-                if (data.obstacles && data.obstacles.length > 0) {
+                if (!this.matchBattleCombat && data.obstacles && data.obstacles.length > 0) {
                     this.obstacleText.setText(data.obstacles.map(formatNodeObstacleLabel).join(' · '));
                     this.obstacleText.setVisible(true);
                 } else {
@@ -1695,13 +1757,20 @@ export class Game extends Phaser.Scene {
 
             this.calculateBoardDimensions(); // Recalculate for current scale
 
+            if (this.boardView && (this.boardViewCols !== this.boardCols || this.boardViewRows !== this.boardRows)) {
+                this.boardView.destroyBoard();
+                this.boardView = null;
+            }
+
             if (!this.boardView) { // Should exist from create()
                 this.boardView = new BoardView(this, {
-                    cols: GRID_COLS,
-                    rows: GRID_ROWS,
+                    cols: this.boardCols,
+                    rows: this.boardRows,
                     gemSize: this.gemSize,
                     boardOffset: this.boardOffset
                 });
+                this.boardViewCols = this.boardCols;
+                this.boardViewRows = this.boardRows;
             } else {
                 // Update boardView dimensions without animating (board will be recreated)
                 this.boardView.updateDimensions(this.gemSize, this.boardOffset);
@@ -1710,6 +1779,8 @@ export class Game extends Phaser.Scene {
             // Destroy old board sprites and create new ones based on the (potentially new) backendPuzzle state
             if (this.boardView.destroyBoard) this.boardView.destroyBoard();
             this.boardView.createBoard(this.backendPuzzle.getGridState());
+            this.refreshSnippetPreview();
+            this.ensureBoardHasValidMove('no opening move');
 
             if (this.statusText && this.statusText.active) {
                 this.statusText.destroy();
@@ -1723,7 +1794,9 @@ export class Game extends Phaser.Scene {
             this.pauseButtonContainer?.setVisible(true);
             this.shuffleButtonContainer?.setVisible(true);
             if (this.movesText && this.backendPuzzle) {
-                this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
+                this.movesText.setText(this.matchBattleCombat
+                    ? `Actions: ${this.matchBattleCombat.energy}/${this.matchBattleCombat.maxEnergy}`
+                    : `Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
             }
             
             // Emit initial HUD state
@@ -1776,22 +1849,28 @@ export class Game extends Phaser.Scene {
         const usableWidth = isMobile ? width * 0.95 : width * 0.85;
         const usableHeight = Math.max(200, height - stripReserve - 24);
         
+        const gridCols = this.activeGridCols();
+        const gridRows = this.activeGridRows();
+        const hasSnippets = (this.backendPuzzle?.getSnippetPreview().length ?? 0) > 0;
+        const visualRows = gridRows + (hasSnippets ? 1 : 0);
+
         // Calculate gem size based on available space
-        const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
-        const sizeFromHeight = Math.floor(usableHeight / GRID_ROWS);
+        const sizeFromWidth = Math.floor(usableWidth / gridCols);
+        const sizeFromHeight = Math.floor(usableHeight / visualRows);
         
         // Use the smaller dimension but apply max/min constraints
         const calculatedSize = Math.min(sizeFromWidth, sizeFromHeight);
         this.gemSize = Math.max(MIN_GEM_SIZE, Math.min(calculatedSize, MAX_GEM_SIZE));
         
         // Calculate actual board dimensions
-        const boardWidth = GRID_COLS * this.gemSize;
-        const boardHeight = GRID_ROWS * this.gemSize;
+        const boardWidth = gridCols * this.gemSize;
+        const boardHeight = gridRows * this.gemSize;
+        const visualHeight = boardHeight + (hasSnippets ? this.gemSize : 0);
         
         // Position board based on screen size, reserving space for the runner strip.
-        const maxTopMargin = Math.max(height - boardHeight, stripReserve);
+        const maxTopMargin = Math.max(height - visualHeight, stripReserve);
         const minTopMargin = Math.min(stripReserve, maxTopMargin);
-        const preferredTop = Math.round((height - boardHeight) / 2);
+        const preferredTop = Math.round((height - visualHeight) / 2);
         const topOffset = Phaser.Math.Clamp(preferredTop, minTopMargin, maxTopMargin);
 
         // Always center the board horizontally regardless of screen size
@@ -1850,22 +1929,27 @@ export class Game extends Phaser.Scene {
 
         const worldX = pointer.x;
         const worldY = pointer.y;
+        const gridCols = this.activeGridCols();
+        const gridRows = this.activeGridRows();
+        const activeBoardTop = this.boardOffset.y + ((this.backendPuzzle?.getSnippetPreview().length ?? 0) > 0 ? this.gemSize : 0);
         const boardRect = new Phaser.Geom.Rectangle(
-            this.boardOffset.x, this.boardOffset.y,
-            GRID_COLS * this.gemSize, GRID_ROWS * this.gemSize
+            this.boardOffset.x, activeBoardTop,
+            gridCols * this.gemSize, gridRows * this.gemSize
         );
 
         if (!boardRect.contains(worldX, worldY)) return;
 
         const gridX = Math.floor((worldX - this.boardOffset.x) / this.gemSize);
-        const gridY = Math.floor((worldY - this.boardOffset.y) / this.gemSize);
+        const gridY = Math.floor((worldY - activeBoardTop) / this.gemSize);
 
-        this.dragStartX = Phaser.Math.Clamp(gridX, 0, GRID_COLS - 1);
-        this.dragStartY = Phaser.Math.Clamp(gridY, 0, GRID_ROWS - 1);
+        this.dragStartX = Phaser.Math.Clamp(gridX, 0, gridCols - 1);
+        this.dragStartY = Phaser.Math.Clamp(gridY, 0, gridRows - 1);
         this.dragStartPointerX = worldX;
         this.dragStartPointerY = worldY;
         this.isDragging = true; // Set drag flag
         this.dragDirection = null;
+        this.dragTargetX = null;
+        this.dragTargetY = null;
         // IMPORTANT: Initialize these here for the new drag operation
         this.draggingSprites = [];
         this.dragStartSpritePositions = [];
@@ -1892,16 +1976,30 @@ export class Game extends Phaser.Scene {
                 return;
             }
 
-            const index = (this.dragDirection === 'row') ? this.dragStartY : this.dragStartX;
-            const limit = (this.dragDirection === 'row') ? GRID_COLS : GRID_ROWS;
+            const directionSign = this.dragDirection === 'row'
+                ? Math.sign(deltaX)
+                : Math.sign(deltaY);
+            const targetX = this.dragStartX + (this.dragDirection === 'row' ? directionSign : 0);
+            const targetY = this.dragStartY + (this.dragDirection === 'col' ? directionSign : 0);
+
+            if (directionSign === 0 || targetX < 0 || targetX >= this.activeGridCols() || targetY < 0 || targetY >= this.activeGridRows()) {
+                this.cancelDrag("No adjacent swap target");
+                return;
+            }
+
+            this.dragTargetX = targetX;
+            this.dragTargetY = targetY;
 
             // Clear and repopulate for this drag action
             this.draggingSprites = [];
             this.dragStartSpritePositions = [];
 
-            for (let i = 0; i < limit; i++) {
-                const x = (this.dragDirection === 'row') ? i : index;
-                const y = (this.dragDirection === 'row') ? index : i;
+            const swapCoords = [
+                { x: this.dragStartX, y: this.dragStartY },
+                { x: targetX, y: targetY },
+            ];
+
+            for (const { x, y } of swapCoords) {
                 const sprite = allSprites[x]?.[y];
                 if (sprite && sprite.active) {
                     this.draggingSprites.push(sprite);
@@ -1909,8 +2007,8 @@ export class Game extends Phaser.Scene {
                     this.tweens.killTweensOf(sprite);
                 }
             }
-            if (this.draggingSprites.length === 0) {
-                this.cancelDrag("No sprites in dragged line");
+            if (this.draggingSprites.length !== 2) {
+                this.cancelDrag("Adjacent swap sprites unavailable");
                 return;
             }
         }
@@ -1933,6 +2031,8 @@ export class Game extends Phaser.Scene {
         const sPointerY = this.dragStartPointerY;
         const sGridX = this.dragStartX;
         const sGridY = this.dragStartY;
+        const sTargetX = this.dragTargetX;
+        const sTargetY = this.dragTargetY;
 
         if (!wasDragging) { // If not dragging (e.g. just a click, or already processed)
             this.resetDragState(); // Still reset to be safe
@@ -1972,7 +2072,7 @@ export class Game extends Phaser.Scene {
 
         this.canMove = false; // Disable input for processing the move
 
-        const moveAction = this.calculateMoveAction(deltaX, deltaY, currentDragDirection, sGridX, sGridY);
+        const moveAction = this.calculateMoveAction(deltaX, deltaY, currentDragDirection, sGridX, sGridY, sTargetX, sTargetY);
 
         try {
             if (moveAction.amount === 0) {
@@ -1990,6 +2090,7 @@ export class Game extends Phaser.Scene {
                 } else {
                     console.log(`Pointer up: Move resulted in NO matches. Snapping back.`);
                     await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
+                    this.ensureBoardHasValidMove('no valid swaps');
                 }
             }
         } catch (error) {
@@ -2002,7 +2103,8 @@ export class Game extends Phaser.Scene {
             }
         } finally {
             this.isResolvingMove = false;
-            if (!this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver()) {
+            const matchBattleEnded = !!this.matchBattleCombat && (this.nodeObjectiveCompleted || this.matchBattleCombat.playerHp <= 0 || (this.matchBattleCombat.enemy?.hp ?? 1) <= 0);
+            if (!this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver() && !matchBattleEnded) {
                 this.canMove = true;
             }
         }
@@ -2015,6 +2117,8 @@ export class Game extends Phaser.Scene {
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
         this.currentMoveSummary = this.createEmptyMoveSummary();
+        // BREAK dedupe is per-swap (clear here); DROP dedupe is per-combat (cleared on combat enter / reset).
+        this.matchBattleFiredBreakCells = new Set();
         
         const phaseResult = this.backendPuzzle.getNextExplodeAndReplacePhase([moveAction]); // This applies the move
         
@@ -2026,6 +2130,7 @@ export class Game extends Phaser.Scene {
             
             await this.animatePhaseWithOriginalGems(phaseResult);
             await this.handleCascades();
+            this.ensureBoardHasValidMove('no valid swaps');
         } else {
             console.warn("applyMoveAndHandleResults: Move was applied, but backend reports no matches. This might be a logic discrepancy.");
         }
@@ -2044,15 +2149,11 @@ export class Game extends Phaser.Scene {
             multiplier = 1;
         }
 
-        // Accumulate match groups for encounter triggers
-        if (this.currentMoveSummary) {
-            this.nodeMatchGroupTotal += this.currentMoveSummary.matchGroups;
-        }
         this.lastMoveCategories = this.currentMoveSummary ? new Set(this.currentMoveSummary.categoriesMatched) : new Set();
-        this.currentMoveSummary = null;
 
         // Move is fully resolved, apply turn resolution
         this.onMoveResolved(this.turnBaseTotalScore, this.anyMatchThisTurn, multiplier);
+        this.currentMoveSummary = null;
 
         // Reset flags for next move
         this.anyMatchThisTurn = false;
@@ -2085,6 +2186,7 @@ export class Game extends Phaser.Scene {
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
+            this.refreshSnippetPreview();
         } catch (error) {
             console.error("Error during phase animation:", error);
             if (this.boardView && this.backendPuzzle) {
@@ -2101,6 +2203,7 @@ export class Game extends Phaser.Scene {
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
+            this.refreshSnippetPreview();
         } catch (error) {
             console.error("Error during phase animation:", error);
             if (this.boardView && this.backendPuzzle) {
@@ -2357,6 +2460,10 @@ export class Game extends Phaser.Scene {
     private onExpeditionStart(): void { this.inExpeditionRun = true; }
     private onGameReset(): void {
         this.inExpeditionRun = false;
+        this.matchBattleCombat = null;
+        this.matchBattleNodeType = null;
+        this.matchBattleFiredDropCells = new Set();
+        this.matchBattleFiredBreakCells = new Set();
         // Full cleanup when React signals run ended
         this.currentSpecies = [];
         this.selectedSpecies = null;
@@ -2369,8 +2476,6 @@ export class Game extends Phaser.Scene {
     }
 
     private handleNodeComplete(): void {
-        // Emit rewards for nodes completed via panel (analysis nodes)
-        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
         // Light reset: clear board between expedition nodes (same species pool)
         this.prepareForNextNode();
     }
@@ -2427,21 +2532,10 @@ export class Game extends Phaser.Scene {
         if (this.scoreText) this.scoreText.setText('Score: 0');
         if (this.movesText) this.movesText.setText('Moves: 0');
 
-        // Reset objective progress
-        this.nodeRequiredGems.clear();
-        this.nodeCounterGem = null;
-        this.nodeObstacleFamily = null;
+        // Reset expedition metadata
         this.nodeObstacles = [];
         this.nodeActiveAffinities = [];
-        this.nodeObjectiveTarget = 0;
-        this.nodeObjectiveProgress = 0;
         this.nodeObjectiveCompleted = false;
-
-        // Reset encounter state
-        this.nodeMatchGroupTotal = 0;
-        this.nodeEncounterIndex = 0;
-        this.nodeEvents = [];
-        this.nodeEncounterState = null;
         // Clear clue state for fresh node
         this.revealedClues.clear();
         this.completedClueCategories.clear();
@@ -2472,6 +2566,8 @@ export class Game extends Phaser.Scene {
     private resetDragState(): void {
         this.isDragging = false;
         this.dragDirection = null;
+        this.dragTargetX = null;
+        this.dragTargetY = null;
         this.draggingSprites = []; // Ensure these are cleared
         this.dragStartSpritePositions = []; // Ensure these are cleared
         // dragStartX, Y, etc., are fine to be overwritten on next POINTER_DOWN
@@ -2487,21 +2583,32 @@ export class Game extends Phaser.Scene {
         if (this.isBoardInitialized) this.canMove = true;
     }
 
-    private calculateMoveAction(deltaX: number, deltaY: number, direction: MoveDirection, startGridX: number, startGridY: number): MoveAction {
-        let cellsMoved = 0;
-        let index = 0;
-        if (direction === 'row') {
-            cellsMoved = deltaX / this.gemSize;
-            index = startGridY;
-        } else { // 'col'
-            cellsMoved = deltaY / this.gemSize;
-            index = startGridX;
+    private calculateMoveAction(
+        deltaX: number,
+        deltaY: number,
+        direction: MoveDirection,
+        startGridX: number,
+        startGridY: number,
+        targetX: number | null,
+        targetY: number | null
+    ): MoveAction {
+        const signedDistance = direction === 'row' ? deltaX : deltaY;
+        const targetIsPositive = direction === 'row'
+            ? targetX !== null && targetX > startGridX
+            : targetY !== null && targetY > startGridY;
+        const hasCrossedThreshold = targetIsPositive
+            ? signedDistance >= this.gemSize * 0.5
+            : signedDistance <= -this.gemSize * 0.5;
+
+        if (
+            targetX === null ||
+            targetY === null ||
+            !hasCrossedThreshold
+        ) {
+            return new MoveAction({ x: startGridX, y: startGridY }, { x: startGridX, y: startGridY });
         }
-        let amount = 0;
-        if (Math.abs(cellsMoved) >= MOVE_THRESHOLD) {
-            amount = Math.round(cellsMoved);
-        }
-        return new MoveAction(direction, index, amount);
+
+        return new MoveAction({ x: startGridX, y: startGridY }, { x: targetX, y: targetY });
     }
 
     private disableTouchScrolling(): void {
@@ -2583,9 +2690,8 @@ export class Game extends Phaser.Scene {
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
-        EventBus.off('consumable-used', this.handleConsumableUsed, this);
+        EventBus.off('match-battle-focus-skill-requested', this.handleMatchBattleFocusSkill, this);
         EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
-        EventBus.off('crisis-choice-resolved', this.handleCrisisResolved, this);
         EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
 
         // Remove player tracking listeners if they exist
@@ -2699,8 +2805,8 @@ export class Game extends Phaser.Scene {
         const modelState = this.backendPuzzle.getGridState();
         const viewSprites = this.boardView.getGemsSprites();
         let mismatches = 0;
-        for (let x = 0; x < GRID_COLS; x++) {
-            for (let y = 0; y < GRID_ROWS; y++) {
+        for (let x = 0; x < this.activeGridCols(); x++) {
+            for (let y = 0; y < this.activeGridRows(); y++) {
                 const modelGem = modelState[x]?.[y];
                 const viewSprite = viewSprites[x]?.[y];
                 if (!modelGem && viewSprite && viewSprite.active) {

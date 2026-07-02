@@ -12,7 +12,19 @@ import {
   type NodeObstacle,
   type ObstacleFamily,
 } from '@/game/nodeObstacles';
-import type { EncounterConfig } from '@/game/encounterState';
+
+export type ThreatType = 'quarry' | 'blocker' | 'hazard' | 'loot_cache' | 'time_pressure';
+
+export interface EncounterConfig {
+  threats: Array<{
+    threatType: ThreatType;
+    counterGem: ActionGemType;
+    altGem: ActionGemType | null;
+    target: number;
+    resistances: ObstacleFamily[];
+  }>;
+  baseSpookRate: number;
+}
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 

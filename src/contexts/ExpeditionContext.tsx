@@ -3,7 +3,7 @@ import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
-import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
+import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
 import { createEmptyResourceWallet, createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
 import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
@@ -12,11 +12,52 @@ import type { AffinityType } from '@/expedition/affinities';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
+import { ARMAMENT_CATALOG, createInitialMatchBattleState, createRewardDraft, hasMinimumSpawnablePieces, normalizeMatchBattleRunState } from '@/game/matchBattle/catalog';
+import type { ArmamentDef, MatchBattleRouteNode, RewardOption, UpgradeDef } from '@/game/matchBattle/types';
+import { logMatchBattleRunEvent } from '@/game/matchBattle/debug';
 import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
 import type { Species } from '@/types/database';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { RasterHabitatResult } from '@/lib/speciesService';
+import type { SpeciesCombatInput } from '@/game/matchBattle/speciesMapper';
+
+// Combat traits cache: speciesId → combatant input. Populated once per
+// expedition by prefetchCombatants; read synchronously by emitBoardForNode.
+const combatantCache = new Map<number, SpeciesCombatInput>();
+let combatantPrefetch: Promise<void> = Promise.resolve();
+
+async function prefetchCombatants(species: { id: number; common_name?: string }[]) {
+  combatantCache.clear();
+  if (species.length === 0) return;
+  try {
+    const ids = species.map((s) => s.id).join(',');
+    const res = await fetch(`/api/species/combat-traits?ids=${ids}`);
+    if (!res.ok) return;
+    const data = await res.json() as { traits: Array<{
+      species_id: number; size_class: SpeciesCombatInput['sizeClass'];
+      defense_type: SpeciesCombatInput['defenseType']; combat_tier: SpeciesCombatInput['combatTier'];
+      combat_archetype: SpeciesCombatInput['combatArchetype'];
+      hp_override: number | null; guard_override: number | null;
+    }> };
+    const nameById = new Map(species.map((s) => [s.id, s.common_name ?? 'Wild Critter']));
+    for (const t of data.traits) {
+      combatantCache.set(t.species_id, {
+        speciesId: t.species_id,
+        commonName: nameById.get(t.species_id) ?? 'Wild Critter',
+        sizeClass: t.size_class,
+        defenseType: t.defense_type,
+        combatTier: t.combat_tier,
+        combatArchetype: t.combat_archetype,
+        hpOverride: t.hp_override,
+        guardOverride: t.guard_override,
+      });
+    }
+  } catch (err) {
+    console.error('[ExpeditionContext] combat traits prefetch failed:', err);
+    // cache stays empty → Game.ts falls back to generic enemies
+  }
+}
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -25,21 +66,16 @@ const INITIAL_RUN_STATE: RunState = {
   activeAffinities: [],
   resourceWallet: createEmptyResourceWallet(),
   lootMatchSummary: {},
-  equippedPassives: [],
-  consumables: [],
   pendingNodeModifiers: [],
-  currentBattleState: null,
-  souvenirs: [],
   bankedScore: 0,
   clueFragments: createEmptyClueFragments(),
   triviaUnlocked: [],
   deductionCamp: null,
   comparativeDeduction: null,
-  currentNodeBonus: null,
-  lastNodeRewards: null,
   finalScore: null,
   totalThoughtDiscount: 0,
   evidenceBundle: null,
+  matchBattle: null,
 };
 
 interface ExpeditionContextValue {
@@ -50,14 +86,15 @@ interface ExpeditionContextValue {
   handleAffinitySelected: (affinityId: AffinityType | null) => void;
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
-  handleCrisisToolSpend: () => ConsumableItem | null;
   handleDeductionPurchase: (category: ClueCategoryKey, cost: number) => void;
   handleDeductionGuessResult: (isCorrect: boolean) => void;
   handleProcessClue: (clueId: number) => void;
   handlePlaceReference: (referenceSpeciesId: number, clueId: number) => void;
   handleComparativeGuessResult: (isCorrect: boolean) => void;
-  /** Direct call replacing consumable-use-requested EventBus event */
-  useConsumable: (itemInstanceId: string) => void;
+  selectMatchBattleReward: (option: RewardOption) => void;
+  rerollMatchBattleRewards: () => void;
+  purchaseMatchBattleUpgrade: (upgrade: UpgradeDef) => void;
+  selectMatchBattleRouteNode: (routeNodeId: string) => void;
   /** Navigate to species list — replaces show-species-list EventBus event */
   showSpeciesList: (speciesId: number) => void;
   /** Register callback for show-species-list navigation */
@@ -72,8 +109,11 @@ export function useExpedition() {
   return ctx;
 }
 
+// Route node types that resolve between combats (no live board) and warrant a crash-safe flush.
+const NON_COMBAT_ROUTE_TYPES = new Set(['repair', 'trivia', 'gis_recon', 'treasure', 'shop', 'event']);
+
 export function ExpeditionProvider({ children }: { children: React.ReactNode }) {
-  const { hudRef, objectiveProgressRef, bonusPool } = useGameBridge();
+  const { hudRef } = useGameBridge();
 
   const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
   const [boardOpacity, setBoardOpacity] = useState(1);
@@ -83,12 +123,16 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const nodeIdsRef = useRef<string[]>([]);
   const nodeStartScoreRef = useRef<number>(0);
   const lastResolvedNodeRef = useRef<number>(-1);
+  // Match-Battle route depths can clamp to the same `currentNodeIndex` when expedition.nodes.length < depthCount,
+  // so dedupe by route-node id (not by clamped nodeIndex) to avoid silently dropping a second combat resolution.
+  const lastResolvedRouteNodeIdRef = useRef<string | null>(null);
   const correctSpeciesIdRef = useRef<number>(0);
   const hiddenSpeciesNameRef = useRef<string>('');
   const activeAffinitiesRef = useRef<AffinityType[]>([]);
   const plannedRoutePolylineRef = useRef<RoutePoint[]>([]);
   const routePolylineRef = useRef<RoutePoint[]>([]);
   const runStateRef = useRef<RunState>(INITIAL_RUN_STATE);
+  const objectiveProgressRef = useRef(0);
   const lastObjectiveCheckpointAtRef = useRef(0);
   const onShowSpeciesListRef = useRef<((speciesId: number) => void) | null>(null);
 
@@ -96,11 +140,76 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     runStateRef.current = runState;
   }, [runState]);
 
-  // Derive boardOpacity from bonusPool (replaces node-bonus-tick listener)
+  const matchBattleCheckpointKeyRef = useRef('');
+  const immediateCheckpointRef = useRef(false);
+
+  // Build the sanitized Match Battle checkpoint payload + dedupe key, or null if not persistable.
+  const buildMatchBattleCheckpoint = useCallback((state: RunState) => {
+    const runId = runIdRef.current;
+    if (!runId || !state.matchBattle) return null;
+    const checkpointState = sanitizeRunStateForMatchBattleCheckpoint(state);
+    const routePolyline = routePolylineRef.current;
+    const checkpointKey = JSON.stringify({
+      phase: checkpointState.phase,
+      currentNodeIndex: checkpointState.currentNodeIndex,
+      resourceWallet: checkpointState.resourceWallet,
+      clueFragments: checkpointState.clueFragments,
+      bankedScore: checkpointState.bankedScore,
+      routePolyline,
+      matchBattle: checkpointState.matchBattle,
+    });
+    const status: 'active' | 'deduction' | undefined =
+      checkpointState.phase === 'deduction' ? 'deduction'
+      : checkpointState.phase === 'complete' ? undefined
+      : 'active';
+    // When phase is 'complete', finalScore must reach the API so route.ts flips runStatus='completed'
+    // and persists run_memories. Without it the run lingers as runStatus='active' in the DB.
+    const finalScore = checkpointState.phase === 'complete' && typeof checkpointState.finalScore === 'number'
+      ? checkpointState.finalScore
+      : undefined;
+    return { runId, checkpointState, routePolyline, checkpointKey, status, finalScore };
+  }, []);
+
+  // Centralized Match Battle checkpoint: debounced for normal changes, but flushed immediately
+  // when a high-risk between-combat mutation (reward/reroll/upgrade/utility route) requested it.
   useEffect(() => {
-    if (!bonusPool) return;
-    setBoardOpacity(bonusPool.pct >= 0.5 ? 1 : 0.35 + bonusPool.pct * 1.3);
-  }, [bonusPool]);
+    const immediate = immediateCheckpointRef.current;
+    immediateCheckpointRef.current = false; // consume request even on early return
+    const cp = buildMatchBattleCheckpoint(runState);
+    if (!cp || cp.checkpointKey === matchBattleCheckpointKeyRef.current) return;
+
+    const write = () => {
+      // Set the dedupe key up front so in-flight state doesn't re-send, but roll it back on a
+      // failed PATCH so the next state change or exit-flush retries instead of deduping forever.
+      matchBattleCheckpointKeyRef.current = cp.checkpointKey;
+      persistRunCheckpoint(cp.runId, cp.checkpointState, cp.checkpointState.currentNodeIndex, cp.routePolyline, cp.status, undefined, false, cp.finalScore)
+        .then(ok => {
+          if (!ok && matchBattleCheckpointKeyRef.current === cp.checkpointKey) matchBattleCheckpointKeyRef.current = '';
+        });
+    };
+
+    if (immediate) { write(); return; }
+    const timer = setTimeout(write, 300);
+    return () => clearTimeout(timer);
+  }, [runState, buildMatchBattleCheckpoint]);
+
+  // Best-effort flush on tab hide / page unload so the latest between-combat state survives exit.
+  const flushMatchBattleCheckpointNow = useCallback(() => {
+    const cp = buildMatchBattleCheckpoint(runStateRef.current);
+    if (!cp || cp.checkpointKey === matchBattleCheckpointKeyRef.current) return;
+    matchBattleCheckpointKeyRef.current = cp.checkpointKey;
+    persistRunCheckpoint(cp.runId, cp.checkpointState, cp.checkpointState.currentNodeIndex, cp.routePolyline, cp.status, undefined, true, cp.finalScore);
+  }, [buildMatchBattleCheckpoint]);
+
+  useEffect(() => {
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flushMatchBattleCheckpointNow(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flushMatchBattleCheckpointNow);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flushMatchBattleCheckpointNow);
+    };
+  }, [flushMatchBattleCheckpointNow]);
 
   const resetRunStateLocal = useCallback(() => {
     expeditionPayloadRef.current = null;
@@ -108,6 +217,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     nodeIdsRef.current = [];
     nodeStartScoreRef.current = 0;
     lastResolvedNodeRef.current = -1;
+    lastResolvedRouteNodeIdRef.current = null;
     correctSpeciesIdRef.current = 0;
     hiddenSpeciesNameRef.current = '';
     activeAffinitiesRef.current = [];
@@ -120,6 +230,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const handleExpeditionDataReady = useCallback((data: EventPayloads['expedition-data-ready']) => {
     expeditionPayloadRef.current = data;
+    combatantPrefetch = prefetchCombatants(data.species);
     activeAffinitiesRef.current = data.expedition.activeAffinities;
     plannedRoutePolylineRef.current = getExpeditionRoutePolyline(data);
     routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
@@ -136,9 +247,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const handleExpeditionStart = useCallback(() => {
-    setRunState(prev => ({ ...prev, phase: 'in-run', activeAffinities: [...activeAffinitiesRef.current] }));
+    const initialMatchBattle = createInitialMatchBattleState(activeAffinitiesRef.current[0] ?? null, expeditionPayloadRef.current?.expedition.nodes.length ?? 6);
+    setRunState(prev => ({ ...prev, phase: 'in-run', activeAffinities: [...activeAffinitiesRef.current], matchBattle: initialMatchBattle }));
     nodeStartScoreRef.current = 0;
     lastResolvedNodeRef.current = -1;
+    lastResolvedRouteNodeIdRef.current = null;
     objectiveProgressRef.current = 0;
     setBoardOpacity(1);
     const payload = expeditionPayloadRef.current;
@@ -182,10 +295,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null,
           nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
         },
+        matchBattle: initialMatchBattle,
       }),
     })
       .then(r => {
-        if (!r.ok) { console.warn(`[ExpeditionContext] Run creation failed (${r.status}). Score persistence disabled for this run.`); return null; }
+        if (!r.ok) {
+          console.warn(`[ExpeditionContext] Run creation failed (${r.status}). Score persistence disabled for this run.`);
+          toast.warning('Field journal is offline — this expedition won\'t be saved to your records.');
+          return null;
+        }
         return r.json();
       })
       .then(data => {
@@ -194,32 +312,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           nodeIdsRef.current = data.nodeIds;
         }
       })
-      .catch(err => console.error('Failed to create run session:', err));
+      .catch(err => {
+        console.error('Failed to create run session:', err);
+        toast.warning('Field journal is offline — this expedition won\'t be saved to your records.');
+      });
 
-    const firstNode = payload.expedition.nodes[0];
-    const firstBoardContext = buildNodeBoardContext({
-      width: GRID_COLS, height: GRID_ROWS,
-      obstacles: firstNode?.obstacles ?? [], nodeIndex: 0,
+    void combatantPrefetch.then(() => {
+      emitBoardForNode(payload, 0, activeAffinitiesRef.current, 0, initialMatchBattle);
     });
-    const firstBoardConfig = buildBoardSpawnConfigForNode(
-      firstNode?.node_type ?? 'custom', firstNode?.counterGem ?? null,
-      payload.expedition.actionBias, activeAffinitiesRef.current
-    );
-    const firstLocation = getNodeRouteLocation(payload, 0);
-    EventBus.emit('cesium-location-selected', {
-      lon: firstLocation.lon, lat: firstLocation.lat,
-      ecoregionId: payload.ecoregionId ?? null,
-      species: payload.species, rasterHabitats: payload.rasterHabitats,
-      habitats: payload.habitats, difficulty: firstNode?.difficulty,
-      obstacles: firstNode?.obstacles, obstacleFamily: firstNode?.obstacleFamily,
-      counterGem: firstNode?.counterGem, requiredGems: firstNode?.requiredGems,
-      activeAffinities: activeAffinitiesRef.current,
-      objectiveTarget: firstNode?.objectiveTarget, nodeIndex: 0,
-      nodeType: firstNode?.node_type, events: firstNode?.events,
-      boardContext: firstBoardContext, boardConfig: firstBoardConfig,
-      encounterConfig: firstNode?.encounterConfig,
-    });
-  }, []);
+  }, [objectiveProgressRef]);
 
   const handleAffinitySelected = useCallback((affinityId: AffinityType | null) => {
     const nextAffinities = affinityId ? [affinityId] : [];
@@ -273,6 +374,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, routeNodeIndex);
       nodeStartScoreRef.current = 0;
       lastResolvedNodeRef.current = Math.max(-1, currentNodeIndex - 1);
+      lastResolvedRouteNodeIdRef.current = null;
       const resumedObjectiveProgress = data.nodes?.find(node => node.nodeOrder === currentNodeIndex + 1)?.objectiveProgress ?? 0;
       objectiveProgressRef.current = resumedObjectiveProgress;
       setBoardOpacity(1);
@@ -295,6 +397,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         return true;
       }
 
+      const resumedMatchBattle = normalizeMatchBattleRunState(
+        resume.matchBattle as Partial<NonNullable<RunState['matchBattle']>> | null,
+        expedition.activeAffinities[0] ?? null,
+        expedition.nodes.length,
+      );
       setRunState({
         ...INITIAL_RUN_STATE,
         phase: 'in-run',
@@ -305,10 +412,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         clueFragments,
         bankedScore,
         evidenceBundle,
+        matchBattle: resumedMatchBattle,
       });
 
+      combatantPrefetch = prefetchCombatants(payload.species);
       setTimeout(() => {
-        emitBoardForNode(payload, currentNodeIndex, expedition.activeAffinities, resumedObjectiveProgress);
+        void combatantPrefetch.then(() => {
+          emitBoardForNode(payload, currentNodeIndex, expedition.activeAffinities, resumedObjectiveProgress, resumedMatchBattle);
+        });
         toast('Resumed expedition checkpoint', { duration: 1800 });
       }, 100);
       return true;
@@ -324,6 +435,59 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     setRunState(prev => {
       if (prev.phase !== 'in-run') return prev;
       if (data.nodeIndex !== prev.currentNodeIndex) return prev;
+
+      if (prev.matchBattle?.enabled) {
+        const matchBattle = prev.matchBattle;
+        if (lastResolvedRouteNodeIdRef.current === matchBattle.currentRouteNodeId) return prev;
+        const activeRoute = matchBattle.routeNodes.find((node) => node.id === matchBattle.currentRouteNodeId) ?? null;
+        lastResolvedRouteNodeIdRef.current = matchBattle.currentRouteNodeId;
+        lastResolvedNodeRef.current = prev.currentNodeIndex;
+        EventBus.emit('node-complete', { nodeIndex: prev.currentNodeIndex });
+
+        if (data.reason === 'escaped' || data.reason === 'retreat') {
+          setTimeout(() => toast.error('Run lost', { duration: 2200 }), 0);
+          EventBus.emit('match-battle-run-ended', { outcome: 'lost' });
+          return {
+            ...prev,
+            phase: 'complete' as const,
+            matchBattle: { ...matchBattle, outcome: 'lost', combat: { ...matchBattle.combat, playerHp: 0 } },
+            finalScore: Math.max(0, prev.bankedScore),
+          };
+        }
+
+        const routeNodes = matchBattle.routeNodes.map((node) => {
+          if (node.id === matchBattle.currentRouteNodeId) return { ...node, completed: true, available: false };
+          if (activeRoute?.next.includes(node.id)) return { ...node, available: true };
+          return node;
+        });
+        const nodeType = activeRoute?.type ?? 'enemy';
+        const credits = matchBattle.credits + (nodeType === 'elite' ? 35 : nodeType === 'leader' ? 50 : 20);
+        const markForm = matchBattle.markForm + (nodeType === 'elite' ? 2 : 1);
+        const nextMatchBattle = resetMatchBattleCombatForNodeEntry({ ...matchBattle, routeNodes, credits, markForm });
+
+        if (nodeType === 'leader') {
+          setTimeout(() => toast.success('Leader cleared', { duration: 2200 }), 0);
+          EventBus.emit('match-battle-run-ended', { outcome: 'won' });
+          const wonMatchBattle = { ...nextMatchBattle, outcome: 'won' as const };
+          return {
+            ...prev,
+            phase: 'complete' as const,
+            matchBattle: wonMatchBattle,
+            finalScore: prev.bankedScore + credits + markForm * 25,
+          };
+        }
+
+        const rewardDraft = createRewardDraft(nextMatchBattle);
+        setTimeout(() => EventBus.emit('match-battle-reward-draft-opened', { options: rewardDraft }), 0);
+        return {
+          ...prev,
+          phase: 'reward' as const,
+          bankedScore: prev.bankedScore + 75,
+          matchBattle: { ...nextMatchBattle, rewardDraft },
+        };
+      }
+
+      // Non-matchBattle path: dedupe by monotonic node index.
       if (data.nodeIndex <= lastResolvedNodeRef.current) return prev;
 
       if (data.reason === 'escaped') {
@@ -351,8 +515,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           body: JSON.stringify({
             scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves,
             objectiveProgress: objProgress,
-            souvenirs: prev.souvenirs.length > 0 ? prev.souvenirs.map(s => ({ id: s.id, name: s.name })) : undefined,
-            encounterOutcome: data.encounterOutcome ?? undefined,
           }),
         }).catch(err => console.error('Failed to complete node:', err));
       }
@@ -398,7 +560,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       }
       return { ...prev, currentNodeIndex: nextIndex };
     });
-  }, [hudRef, objectiveProgressRef]);
+  }, [hudRef]);
 
   const handleResourceWalletUpdate = useCallback((data: EventPayloads['resource-wallet-updated']) => {
     setRunState(prev => {
@@ -433,26 +595,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.emit('game-reset', undefined);
   }, [resetRunStateLocal]);
 
-  const handleCrisisToolSpend = useCallback((): ConsumableItem | null => {
-    const spentItem = runState.phase === 'in-run' ? runState.consumables[0] ?? null : null;
-    if (!spentItem) return null;
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      return { ...prev, consumables: prev.consumables.filter(item => item.instanceId !== spentItem.instanceId) };
-    });
-    toast(`Used ${spentItem.name} to bypass the crisis`, { duration: 1600 });
-    return spentItem;
-  }, [runState.phase, runState.consumables]);
-
-  const handleSouvenirDrop = useCallback((data: { souvenir: SouvenirDef }) => {
-    setRunState(prev => prev.phase === 'in-run' ? { ...prev, souvenirs: [...prev.souvenirs, data.souvenir] } : prev);
-  }, []);
-
-  const handleConsumableFound = useCallback((data: EventPayloads['consumable-found']) => {
-    setRunState(prev => prev.phase === 'in-run' ? { ...prev, consumables: [...prev.consumables, data.item] } : prev);
-    toast(`Crate yielded ${data.item.name}`, { duration: 1600 });
-  }, []);
-
   const handleClueFragmentEarned = useCallback((data: EventPayloads['clue-fragment-earned']) => {
     setRunState(prev => {
       if (prev.phase !== 'in-run') return prev;
@@ -469,11 +611,33 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
-  const handleNodeRewardsSummary = useCallback((data: EventPayloads['node-rewards-summary']) => {
-    const totalReward = data.baseClearReward + data.preservedNodeBonus + data.triviaReward;
+  const handleMatchBattleCombatEnded = useCallback((data: EventPayloads['match-battle-combat-ended']) => {
     setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      return { ...prev, bankedScore: prev.bankedScore + totalReward, lastNodeRewards: data };
+      if (!prev.matchBattle) return prev;
+      if (data.outcome === 'lost') {
+        lastResolvedNodeRef.current = Math.max(lastResolvedNodeRef.current, data.nodeIndex);
+        setTimeout(() => toast.error('Run lost', { duration: 2200 }), 0);
+        EventBus.emit('match-battle-run-ended', { outcome: 'lost' });
+        return {
+          ...prev,
+          phase: 'complete' as const,
+          finalScore: Math.max(0, prev.bankedScore),
+          matchBattle: {
+            ...prev.matchBattle,
+            outcome: 'lost' as const,
+            credits: prev.matchBattle.credits + data.creditsDelta,
+            combat: { ...data.combat, playerHp: 0 },
+          },
+        };
+      }
+      return {
+        ...prev,
+        matchBattle: {
+          ...prev.matchBattle,
+          credits: prev.matchBattle.credits + data.creditsDelta,
+          combat: data.combat,
+        },
+      };
     });
   }, []);
 
@@ -486,26 +650,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       if (exists) return prev;
       return { ...prev, deductionCamp: { ...prev.deductionCamp, revealedClues: [clue, ...prev.deductionCamp.revealedClues] } };
     });
-  }, []);
-
-  /** Direct call — replaces consumable-use-requested EventBus event */
-  const useConsumable = useCallback((itemInstanceId: string) => {
-    let consumedItem: ConsumableItem | null = null;
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      const nextConsumables = prev.consumables.filter((item) => {
-        const keep = item.instanceId !== itemInstanceId;
-        if (!keep) consumedItem = item;
-        return keep;
-      });
-      if (!consumedItem) return prev;
-      return { ...prev, consumables: nextConsumables };
-    });
-    const usedItem = consumedItem as ConsumableItem | null;
-    if (usedItem) {
-      EventBus.emit('consumable-used', { item: usedItem });
-      toast(`Used ${usedItem.name}`, { duration: 1400 });
-    }
   }, []);
 
   const handleDeductionPurchase = useCallback((category: ClueCategoryKey, cost: number) => {
@@ -568,6 +712,181 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const showSpeciesList = useCallback((speciesId: number) => {
     onShowSpeciesListRef.current?.(speciesId);
+  }, []);
+
+  const selectMatchBattleReward = useCallback((option: RewardOption) => {
+    immediateCheckpointRef.current = true; // crash-safe between-combat write
+    logMatchBattleRunEvent('reward', option.label);
+    setRunState(prev => {
+      if (!prev.matchBattle) return prev;
+      let matchBattle: NonNullable<RunState['matchBattle']> = { ...prev.matchBattle, rewardDraft: [] };
+      if (option.kind === 'piece') {
+        const piecePool = matchBattle.piecePool.map(entry => ({ ...entry }));
+        const existing = piecePool.find(entry => entry.pieceId === option.pieceId);
+        if (existing) existing.weight += 1;
+        else piecePool.push({ pieceId: option.pieceId, level: 1, weight: 2 });
+        matchBattle.piecePool = piecePool;
+      } else if (option.kind === 'armament') {
+        const arm = ARMAMENT_CATALOG.find(candidate => candidate.id === option.armamentId);
+        if (arm) matchBattle = addMatchBattleArmament(matchBattle, arm);
+      } else {
+        matchBattle.credits += option.amount;
+      }
+      return { ...prev, phase: 'route' as const, matchBattle };
+    });
+  }, []);
+
+  const rerollMatchBattleRewards = useCallback(() => {
+    immediateCheckpointRef.current = true; // crash-safe between-combat write
+    setRunState(prev => {
+      if (!prev.matchBattle || prev.matchBattle.credits < prev.matchBattle.rerollCost) return prev;
+      logMatchBattleRunEvent('reroll', `-${prev.matchBattle.rerollCost} Supplies`);
+      const matchBattle = { ...prev.matchBattle, credits: prev.matchBattle.credits - prev.matchBattle.rerollCost };
+      return { ...prev, matchBattle: { ...matchBattle, rewardDraft: createRewardDraft(matchBattle) } };
+    });
+  }, []);
+
+  const purchaseMatchBattleUpgrade = useCallback((upgrade: UpgradeDef) => {
+    immediateCheckpointRef.current = true; // crash-safe between-combat write
+    setRunState(prev => {
+      if (!prev.matchBattle || prev.matchBattle.markForm < upgrade.cost) return prev;
+      // Repeatable upgrades may stack; single-use ones must not duplicate.
+      const repeatable = upgrade.type === 'board_col'
+        || upgrade.type === 'board_row'
+        || upgrade.type === 'energy'
+        || upgrade.type === 'accel'
+        || upgrade.type === 'armament_slot'
+        || upgrade.type === 'piece_weight_down';
+      if (!repeatable && prev.matchBattle.upgrades.includes(upgrade.id)) return prev;
+      let thinnedPool: typeof prev.matchBattle.piecePool | null = null;
+      if (upgrade.type === 'piece_weight_down') {
+        const pool = prev.matchBattle.piecePool;
+        if (pool.length === 0) return prev;
+        let targetIdx = 0;
+        for (let i = 1; i < pool.length; i++) {
+          if (pool[i].weight > pool[targetIdx].weight) targetIdx = i;
+        }
+        const next: typeof pool = [];
+        for (let idx = 0; idx < pool.length; idx++) {
+          const entry = idx === targetIdx ? { ...pool[idx], weight: pool[idx].weight - 1 } : pool[idx];
+          if (entry.weight > 0) next.push(entry);
+        }
+        if (!hasMinimumSpawnablePieces(next)) {
+          setTimeout(() => toast.error('Keep at least 3 piece types', { duration: 1600 }), 0);
+          return prev;
+        }
+        thinnedPool = next;
+      }
+
+      const matchBattle = {
+        ...prev.matchBattle,
+        markForm: prev.matchBattle.markForm - upgrade.cost,
+        upgrades: [...prev.matchBattle.upgrades, upgrade.id],
+      };
+
+      switch (upgrade.type) {
+        case 'board_col':
+          matchBattle.boardCols = Math.min(7, matchBattle.boardCols + 1);
+          break;
+        case 'board_row':
+          matchBattle.boardRows = Math.min(6, matchBattle.boardRows + 1);
+          break;
+        case 'snippet':
+          matchBattle.snippetsEnabled = true;
+          break;
+        case 'energy':
+          matchBattle.combat = { ...matchBattle.combat, maxEnergy: matchBattle.combat.maxEnergy + 1 };
+          break;
+        case 'accel':
+          matchBattle.combat = { ...matchBattle.combat, maxAccel: Math.max(4, matchBattle.combat.maxAccel - 1) };
+          break;
+        case 'armament_slot':
+          matchBattle.maxGearSlots += 1;
+          break;
+        case 'piece_weight_down': {
+          if (thinnedPool) matchBattle.piecePool = thinnedPool;
+          break;
+        }
+      }
+
+      logMatchBattleRunEvent('upgrade', `${upgrade.name} (-${upgrade.cost} Notes)`);
+      return { ...prev, matchBattle };
+    });
+  }, []);
+
+  const selectMatchBattleRouteNode = useCallback((routeNodeId: string) => {
+    // Utility/shop/event selections mutate between-combat state; flush them immediately.
+    // Combat-entry nodes are left to the debounced path (live combat resets on reload by policy).
+    const selectedType = runStateRef.current.matchBattle?.routeNodes.find(n => n.id === routeNodeId && n.available)?.type;
+    if (selectedType && NON_COMBAT_ROUTE_TYPES.has(selectedType)) immediateCheckpointRef.current = true;
+    setRunState(prev => {
+      const payload = expeditionPayloadRef.current;
+      if (!payload || !prev.matchBattle || !prev.expedition) return prev;
+      const selected = prev.matchBattle.routeNodes.find(node => node.id === routeNodeId && node.available);
+      if (!selected) return prev;
+
+      const routeNodes = prev.matchBattle.routeNodes.map(node =>
+        node.id === routeNodeId ? { ...node, available: false } : node
+      );
+      let matchBattle: NonNullable<RunState['matchBattle']> = {
+        ...prev.matchBattle,
+        currentRouteNodeId: routeNodeId,
+        routeNodes,
+      };
+
+      if (selected.type === 'repair') {
+        const healAmount = Math.round(matchBattle.combat.playerMaxHp * 0.3);
+        matchBattle = {
+          ...matchBattle,
+          combat: {
+            ...matchBattle.combat,
+            playerHp: Math.min(matchBattle.combat.playerMaxHp, matchBattle.combat.playerHp + healAmount),
+            log: [`Repair Bay restored ${healAmount} Stamina.`],
+          },
+          routeNodes: completeUtilityRouteNode(routeNodes, selected),
+        };
+        return { ...prev, phase: 'route' as const, matchBattle };
+      }
+
+      if (selected.type === 'trivia' || selected.type === 'gis_recon') {
+        EventBus.emit('clue-fragment-earned', { category: selected.type === 'trivia' ? 'behavior' : 'geographic', amount: 1, source: 'node_reward' });
+        matchBattle = {
+          ...matchBattle,
+          credits: matchBattle.credits + (selected.type === 'gis_recon' ? 15 : 0),
+          markForm: matchBattle.markForm + 1,
+          routeNodes: completeUtilityRouteNode(routeNodes, selected),
+        };
+        return { ...prev, phase: 'route' as const, matchBattle };
+      }
+
+      if (selected.type === 'treasure') {
+        const arm = ARMAMENT_CATALOG.find(candidate => !matchBattle.armaments.some(existing => existing.id === candidate.id));
+        matchBattle = addMatchBattleArmament({
+          ...matchBattle,
+          routeNodes: completeUtilityRouteNode(routeNodes, selected),
+        }, arm);
+        return { ...prev, phase: 'route' as const, matchBattle };
+      }
+
+      if (selected.type === 'shop' || selected.type === 'event') {
+        const rewardDraft = createRewardDraft(matchBattle);
+        matchBattle = {
+          ...matchBattle,
+          rewardDraft,
+          markForm: selected.type === 'event' ? matchBattle.markForm + 1 : matchBattle.markForm,
+          routeNodes: completeUtilityRouteNode(routeNodes, selected),
+        };
+        return { ...prev, phase: 'reward' as const, matchBattle };
+      }
+
+      setTimeout(() => emitBoardForNode(payload, selected.sourceNodeIndex, activeAffinitiesRef.current, 0, matchBattle), 0);
+      return {
+        ...prev,
+        phase: 'in-run' as const,
+        currentNodeIndex: selected.sourceNodeIndex,
+        matchBattle,
+      };
+    });
   }, []);
 
   // --- Comparative deduction: fetch profiles when entering deduction phase ---
@@ -699,12 +1018,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.on('expedition-start', handleExpeditionStart);
     EventBus.on('node-advance-requested', handleNodeAdvanceRequested);
     EventBus.on('resource-wallet-updated', handleResourceWalletUpdate);
-    EventBus.on('souvenir-dropped', handleSouvenirDrop);
-    EventBus.on('consumable-found', handleConsumableFound);
     EventBus.on('clue-fragment-earned', handleClueFragmentEarned);
     EventBus.on('clue-discount-earned', handleClueDiscountEarned);
     EventBus.on('clue-revealed', handleClueRevealed);
-    EventBus.on('node-rewards-summary', handleNodeRewardsSummary);
+    EventBus.on('match-battle-combat-ended', handleMatchBattleCombatEnded);
     EventBus.on('node-objective-updated', handleNodeObjectiveCheckpoint);
     EventBus.on('game-reset', resetRunStateLocal);
 
@@ -713,27 +1030,26 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('expedition-start', handleExpeditionStart);
       EventBus.off('node-advance-requested', handleNodeAdvanceRequested);
       EventBus.off('resource-wallet-updated', handleResourceWalletUpdate);
-      EventBus.off('souvenir-dropped', handleSouvenirDrop);
-      EventBus.off('consumable-found', handleConsumableFound);
       EventBus.off('clue-fragment-earned', handleClueFragmentEarned);
       EventBus.off('clue-discount-earned', handleClueDiscountEarned);
       EventBus.off('clue-revealed', handleClueRevealed);
-      EventBus.off('node-rewards-summary', handleNodeRewardsSummary);
+      EventBus.off('match-battle-combat-ended', handleMatchBattleCombatEnded);
       EventBus.off('node-objective-updated', handleNodeObjectiveCheckpoint);
       EventBus.off('game-reset', resetRunStateLocal);
     };
-  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleSouvenirDrop, handleConsumableFound, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
+  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleMatchBattleCombatEnded, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
 
   const value = useMemo<ExpeditionContextValue>(() => ({
     runState, boardOpacity,
     correctSpeciesId: correctSpeciesIdRef.current,
     hiddenSpeciesName: hiddenSpeciesNameRef.current,
-    handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend,
+    handleAffinitySelected, handleRunResume, handleRunReset,
     handleDeductionPurchase, handleDeductionGuessResult,
     handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
-    useConsumable, showSpeciesList,
+    selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode,
+    showSpeciesList,
     onShowSpeciesList: onShowSpeciesListRef,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, useConsumable, showSpeciesList]);
+  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode, showSpeciesList]);
 
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
@@ -759,17 +1075,65 @@ function getNodeRouteLocation(payload: EventPayloads['expedition-data-ready'], n
     : { lon: payload.lon, lat: payload.lat };
 }
 
+function completeUtilityRouteNode(routeNodes: MatchBattleRouteNode[], selected: MatchBattleRouteNode): MatchBattleRouteNode[] {
+  return routeNodes.map(node => {
+    if (node.id === selected.id) return { ...node, completed: true, available: false };
+    if (selected.next.includes(node.id)) return { ...node, available: true };
+    return node;
+  });
+}
+
+function addMatchBattleArmament(
+  matchBattle: NonNullable<RunState['matchBattle']>,
+  arm: ArmamentDef | null | undefined,
+): NonNullable<RunState['matchBattle']> {
+  if (!arm || matchBattle.armaments.length >= matchBattle.maxGearSlots || matchBattle.armaments.some(existing => existing.id === arm.id)) {
+    return matchBattle;
+  }
+  const next = { ...matchBattle, armaments: [...matchBattle.armaments, arm] };
+  if (arm.id === 'action_booster') {
+    const maxEnergy = next.combat.maxEnergy + 1;
+    next.combat = { ...next.combat, maxEnergy, energy: maxEnergy };
+  }
+  return next;
+}
+
+function resetMatchBattleCombatForNodeEntry(matchBattle: NonNullable<RunState['matchBattle']>): NonNullable<RunState['matchBattle']> {
+  const maxEnergy = matchBattle.combat.maxEnergy;
+  return {
+    ...matchBattle,
+    combat: {
+      ...matchBattle.combat,
+      guard: 0,
+      attack: 0,
+      energy: maxEnergy,
+      turn: 1,
+      enemy: null,
+      log: [],
+    },
+  };
+}
+
+function sanitizeRunStateForMatchBattleCheckpoint(state: RunState): RunState {
+  if (!state.matchBattle) return state;
+  return { ...state, matchBattle: resetMatchBattleCombatForNodeEntry(state.matchBattle) };
+}
+
 function emitBoardForNode(
   payload: EventPayloads['expedition-data-ready'],
   nodeIndex: number,
   activeAffinities: AffinityType[],
   objectiveProgress = 0,
+  matchBattle?: RunState['matchBattle'],
 ) {
   const node = payload.expedition.nodes[nodeIndex];
   if (!node) return;
+  const nodeMatchBattle = matchBattle ? resetMatchBattleCombatForNodeEntry(matchBattle) : null;
+  const routeNode = nodeMatchBattle?.routeNodes.find((candidate) => candidate.id === nodeMatchBattle.currentRouteNodeId) ?? null;
+  const matchBattleNodeType = routeNode?.type;
   const boardContext = buildNodeBoardContext({
-    width: GRID_COLS,
-    height: GRID_ROWS,
+    width: nodeMatchBattle?.boardCols ?? GRID_COLS,
+    height: nodeMatchBattle?.boardRows ?? GRID_ROWS,
     obstacles: node.obstacles ?? [],
     nodeIndex,
   });
@@ -801,7 +1165,21 @@ function emitBoardForNode(
     boardContext,
     boardConfig,
     encounterConfig: node.encounterConfig,
+    matchBattleConfig: nodeMatchBattle ? {
+      piecePool: nodeMatchBattle.piecePool,
+      snippetsEnabled: nodeMatchBattle.snippetsEnabled,
+      boardCols: nodeMatchBattle.boardCols,
+      boardRows: nodeMatchBattle.boardRows,
+    } : undefined,
+    matchBattleNodeType,
+    matchBattleCombat: nodeMatchBattle?.combat,
+    matchBattleArmaments: nodeMatchBattle?.armaments,
+    matchBattleCombatants: payload.species
+      .map((s) => combatantCache.get(s.id))
+      .filter((c): c is SpeciesCombatInput => Boolean(c)),
   });
+  // Game scene applies combat_start/turn_start gear and emits match-battle-combat-state-updated.
+  // Do not pre-stamp here — that path double-applies and is immediately overwritten.
 }
 
 function buildDeductionCampState(prev: RunState): DeductionCampState {
@@ -850,11 +1228,15 @@ function persistRunCheckpoint(
   routePolyline: RoutePoint[],
   status?: 'active' | 'deduction',
   objectiveProgress?: number,
-) {
-  setTimeout(() => {
+  immediate = false,
+  finalScore?: number,
+): Promise<boolean> {
+  const send = (): Promise<boolean> =>
     fetch(`/api/runs/${runId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
+      // keepalive lets the request survive an unloading tab on the immediate exit-flush path.
+      keepalive: immediate,
       body: JSON.stringify({
         resourceWallet: { ...state.resourceWallet },
         clueFragments: { ...state.clueFragments },
@@ -862,10 +1244,18 @@ function persistRunCheckpoint(
         currentNodeIndex,
         objectiveProgress,
         routePolyline,
+        matchBattle: state.matchBattle,
         status,
+        finalScore,
       }),
-    }).catch(err => console.error('Failed to persist run checkpoint:', err));
-  }, 0);
+    })
+      .then(res => res.ok)
+      .catch(err => {
+        console.error('Failed to persist run checkpoint:', err);
+        return false;
+      });
+  if (immediate) return send();
+  return new Promise<boolean>(resolve => setTimeout(() => { send().then(resolve); }, 0));
 }
 
 type ResumeRunResponse = {
@@ -882,6 +1272,7 @@ type ResumeRunResponse = {
     resourceWallet: Record<string, number>;
     clueFragments: Record<string, number>;
     bankedScore: number;
+    matchBattle?: RunState['matchBattle'];
     featureFingerprints: FeatureFingerprint[];
     expedition: Omit<EventPayloads['expedition-data-ready']['expedition'], 'activeAffinities' | 'availableAffinities'> & {
       activeAffinities: string[];
