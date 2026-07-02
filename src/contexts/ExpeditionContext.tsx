@@ -1164,6 +1164,7 @@ function emitBoardForNode(
     boardConfig,
     matchBattleConfig: nodeMatchBattle ? {
       piecePool: nodeMatchBattle.piecePool,
+      lootChance: nodeMatchBattle.lootChance,
       snippetsEnabled: nodeMatchBattle.snippetsEnabled,
       boardCols: nodeMatchBattle.boardCols,
       boardRows: nodeMatchBattle.boardRows,

@@ -2215,9 +2215,7 @@ export class Game extends Phaser.Scene {
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
         this.recordMatchesForSummary(matches, originalGridState);
         this.emitMatchEconomyRewards(matches, originalGridState);
-        // During expeditions, loot matches produce clue fragments (handled in emitExpeditionGemEffects)
-        // Direct clue reveals are deferred to Deduction Camp
-        if (this.inExpeditionRun) return;
+        if (this.inExpeditionRun && !this.matchBattleCombat) return;
         if (!this.selectedSpecies || matches.length === 0 || !originalGridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -2251,7 +2249,7 @@ export class Game extends Phaser.Scene {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState);
         this.emitMatchEconomyRewards(matches, gridState);
-        if (this.inExpeditionRun) return;
+        if (this.inExpeditionRun && !this.matchBattleCombat) return;
         if (!this.selectedSpecies || matches.length === 0 || !gridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();

@@ -132,12 +132,14 @@ export interface MatchBattleRunState {
   rewardDraft: RewardOption[];
   boardCols: number;
   boardRows: number;
+  lootChance: number;
   snippetsEnabled: boolean;
   outcome: 'active' | 'won' | 'lost' | null;
 }
 
 export interface MatchBattleBoardConfig {
   piecePool: PiecePoolEntry[];
+  lootChance: number;
   snippetsEnabled: boolean;
   boardCols: number;
   boardRows: number;

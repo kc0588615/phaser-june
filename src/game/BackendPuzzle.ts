@@ -4,6 +4,8 @@ import { MoveAction } from './MoveAction';
 import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
+import { PIECE_CATALOG } from './matchBattle/catalog';
+import type { MatchBattleBoardConfig, PiecePoolEntry } from './matchBattle/types';
 
 export type Gem = BoardCell;
 export type { BoardCell, PuzzleGrid };
@@ -22,6 +24,9 @@ export class BackendPuzzle {
     private movesUsed: number = 0;
     private maxMoves: number = MAX_MOVES;
     private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
+    private matchBattleConfig: MatchBattleBoardConfig | null = null;
+    private snippetRow: GemType[] = [];
+    private pendingCleanseCount: number = 0;
 
     constructor(
         public readonly width: number,
@@ -38,6 +43,25 @@ export class BackendPuzzle {
             lootChance: config.lootChance,
             actionWeights: { ...config.actionWeights },
         };
+        this.matchBattleConfig = null;
+        this.snippetRow = [];
+    }
+
+    setMatchBattleConfig(config: MatchBattleBoardConfig): void {
+        this.matchBattleConfig = {
+            snippetsEnabled: config.snippetsEnabled,
+            boardCols: config.boardCols,
+            boardRows: config.boardRows,
+            lootChance: config.lootChance,
+            piecePool: config.piecePool.map(entry => ({ ...entry })),
+        };
+        this.snippetRow = [];
+        this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
+        if (this.matchBattleConfig.snippetsEnabled) {
+            this.snippetRow = this.createSnippetRow();
+        }
+        this.score = 0;
+        this.movesUsed = 0;
     }
 
     /**
@@ -47,6 +71,9 @@ export class BackendPuzzle {
     regenerateBoard(): void {
         console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
+        if (this.matchBattleConfig?.snippetsEnabled) {
+            this.snippetRow = this.createSnippetRow();
+        }
         this.score = 0;
         this.movesUsed = 0;
     }
@@ -73,6 +100,12 @@ export class BackendPuzzle {
 
     getGridState(): PuzzleGrid {
         return this.cloneGridState(this.puzzleState);
+    }
+
+    getSnippetPreview(count = this.width): GemType[] {
+        if (!this.matchBattleConfig?.snippetsEnabled) return [];
+        this.ensureSnippetRow();
+        return this.snippetRow.slice(0, count);
     }
 
     addBonusScore(points: number): void {
@@ -134,7 +167,7 @@ export class BackendPuzzle {
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 // Start with all possible gem types
-                let possibleGems = new Set(GEM_TYPES);
+                let possibleGems = new Set<GemType>(this.matchBattleConfig ? this.getSpawnableMatchBattlePieces() : GEM_TYPES);
 
                 // Check if placing a gem would create a vertical match of 3
                 if (y >= 2) {
@@ -156,6 +189,10 @@ export class BackendPuzzle {
                     }
                 }
 
+                if (possibleGems.size === 0) {
+                    possibleGems = new Set<GemType>(this.matchBattleConfig ? this.getSpawnableMatchBattlePieces() : GEM_TYPES);
+                }
+
                 // Pick a weighted random gem, retrying if it would create a match
                 let gemType: GemType;
                 let attempts = 0;
@@ -166,10 +203,10 @@ export class BackendPuzzle {
                 // Fallback: pick any non-matching gem
                 if (!possibleGems.has(gemType)) {
                     const possibleGemsArray = Array.from(possibleGems);
-                    gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] as GemType;
+                    gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] ?? this.pickWeightedGem();
                 }
 
-                grid[x][y] = createBoardCell(gemType);
+                grid[x][y] = this.createSpawnedCell(gemType);
             }
         }
         console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches finished creating grid.");
@@ -200,7 +237,7 @@ export class BackendPuzzle {
                 if (count > 0) {
                     const typesForCol: GemType[] = [];
                     for (let i = 0; i < count; i++) {
-                        typesForCol.push(this.getNextGemToSpawnType());
+                        typesForCol.push(this.getNextGemToSpawnTypeForColumn(x, i === 0));
                     }
                     replacements.push([x, typesForCol]);
                 }
@@ -238,12 +275,91 @@ export class BackendPuzzle {
         return this.pickWeightedGem();
     }
 
+    private getNextGemToSpawnTypeForColumn(column: number, consumeSnippet: boolean): GemType {
+        if (this.nextGemsToSpawn.length > 0) {
+            return this.nextGemsToSpawn.shift()!;
+        }
+
+        if (this.matchBattleConfig?.snippetsEnabled && consumeSnippet) {
+            this.ensureSnippetRow();
+            const next = this.snippetRow[column] ?? this.pickWeightedPiece();
+            this.snippetRow[column] = this.pickWeightedPiece();
+            return next;
+        }
+
+        return this.pickWeightedGem();
+    }
+
     /** Pick a random gem weighted by action-vs-loot board config. */
     private pickWeightedGem(): GemType {
+        if (this.matchBattleConfig) {
+            if (Math.random() < this.matchBattleConfig.lootChance) {
+                return LOOT_GEM_TYPES[Math.floor(Math.random() * LOOT_GEM_TYPES.length)];
+            }
+            return this.pickWeightedPiece();
+        }
         if (Math.random() < this.gemPool.lootChance) {
             return LOOT_GEM_TYPES[Math.floor(Math.random() * LOOT_GEM_TYPES.length)];
         }
         return this.pickWeightedActionGem();
+    }
+
+    private pickWeightedPiece(): ActionGemType {
+        const pool = this.matchBattleConfig?.piecePool ?? [];
+        const total = pool.reduce((sum, entry) => sum + Math.max(0, entry.weight), 0);
+        if (total <= 0) return 'sword';
+        let roll = Math.random() * total;
+        for (const entry of pool) {
+            roll -= Math.max(0, entry.weight);
+            if (roll <= 0) return entry.pieceId;
+        }
+        // Float rounding fallthrough: return a positive-weight piece, never a zero-weight one.
+        return pool.find(entry => entry.weight > 0)?.pieceId ?? 'sword';
+    }
+
+    private getSpawnableMatchBattlePieces(): GemType[] {
+        const pool = this.matchBattleConfig?.piecePool ?? [];
+        const pieces = pool
+            .filter(entry => entry.weight > 0)
+            .map(entry => entry.pieceId);
+        const fallback: ActionGemType[] = ['sword', 'shield', 'staff'];
+        for (const piece of fallback) {
+            if (pieces.length >= 3) break;
+            if (!pieces.includes(piece)) pieces.push(piece);
+        }
+        if ((this.matchBattleConfig?.lootChance ?? 0) > 0) {
+            return [...pieces, ...LOOT_GEM_TYPES];
+        }
+        return pieces.length > 0 ? pieces : fallback;
+    }
+
+    private getPieceEntry(gemType: GemType): PiecePoolEntry | null {
+        if (!this.matchBattleConfig || !ACTION_GEM_TYPES.includes(gemType as ActionGemType)) return null;
+        return this.matchBattleConfig.piecePool.find(entry => entry.pieceId === gemType) ?? { pieceId: gemType as ActionGemType, level: 1, weight: 1 };
+    }
+
+    private createSpawnedCell(gemType: GemType, state?: BoardCellState): BoardCell {
+        const piece = this.getPieceEntry(gemType);
+        if (!piece) return createBoardCell(gemType, state);
+        const def = PIECE_CATALOG[piece.pieceId];
+        return createBoardCell(gemType, state, {
+            pieceId: piece.pieceId,
+            level: piece.level,
+            trigger: def.trigger,
+        });
+    }
+
+    private createSnippetRow(): GemType[] {
+        return Array.from({ length: this.width }, () => this.pickWeightedPiece());
+    }
+
+    private ensureSnippetRow(): void {
+        while (this.snippetRow.length < this.width) {
+            this.snippetRow.push(this.pickWeightedPiece());
+        }
+        if (this.snippetRow.length > this.width) {
+            this.snippetRow = this.snippetRow.slice(0, this.width);
+        }
     }
 
     private pickWeightedActionGem(): ActionGemType {
@@ -260,24 +376,24 @@ export class BackendPuzzle {
         return ACTION_GEM_TYPES[ACTION_GEM_TYPES.length - 1];
     }
 
-    /** Check if any single-cell row/col shift produces a match. */
+    /** Check if any adjacent swap produces a match. */
     hasAnyValidMove(): boolean {
-        for (let y = 0; y < this.height; y++) {
-            for (let amt of [1, -1]) {
-                const m = new MoveAction('row', y, amt);
-                if (this.getMatchesFromHypotheticalMove(m).length > 0) return true;
-            }
-        }
         for (let x = 0; x < this.width; x++) {
-            for (let amt of [1, -1]) {
-                const m = new MoveAction('col', x, amt);
-                if (this.getMatchesFromHypotheticalMove(m).length > 0) return true;
+            for (let y = 0; y < this.height; y++) {
+                if (x + 1 < this.width) {
+                    const move = new MoveAction({ x, y }, { x: x + 1, y });
+                    if (this.getMatchesFromHypotheticalMove(move).length > 0) return true;
+                }
+                if (y + 1 < this.height) {
+                    const move = new MoveAction({ x, y }, { x, y: y + 1 });
+                    if (this.getMatchesFromHypotheticalMove(move).length > 0) return true;
+                }
             }
         }
         return false;
     }
 
-    /** Shuffle all gem types in place (Fisher-Yates), preserving cell states. Repeats until at least one valid move exists. */
+    /** Shuffle gem cells in place (Fisher-Yates), preserving slot states and cell ids. Repeats until at least one valid move exists. */
     shuffle(): void {
         const cells: { x: number; y: number; cell: BoardCell }[] = [];
         for (let x = 0; x < this.width; x++) {
@@ -288,15 +404,17 @@ export class BackendPuzzle {
         }
         let attempts = 0;
         do {
-            // Fisher-Yates on gem types only
-            const types = cells.map(c => c.cell.gemType);
-            for (let i = types.length - 1; i > 0; i--) {
+            const shuffledCells = cells.map(c => c.cell);
+            for (let i = shuffledCells.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [types[i], types[j]] = [types[j], types[i]];
+                [shuffledCells[i], shuffledCells[j]] = [shuffledCells[j], shuffledCells[i]];
             }
             for (let i = 0; i < cells.length; i++) {
                 const { x, y } = cells[i];
-                this.puzzleState[x][y] = createBoardCell(types[i], cells[i].cell.state);
+                this.puzzleState[x][y] = {
+                    ...shuffledCells[i],
+                    state: cells[i].cell.state,
+                };
             }
             attempts++;
         } while (!this.hasAnyValidMove() && attempts < 50);
@@ -314,49 +432,29 @@ export class BackendPuzzle {
         // Generate a new random board
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
         this.nextGemsToSpawn = [];
+        this.snippetRow = this.matchBattleConfig?.snippetsEnabled ? this.createSnippetRow() : [];
         this.movesUsed = 0;
         console.log("BackendPuzzle reset: new random board generated.");
     }
 
     private applyMoveToGrid(grid: PuzzleGrid, moveAction: MoveAction): void {
-        const { rowOrCol, index, amount } = moveAction;
-        if (amount === 0) return;
+        if (!moveAction.isSwap() || moveAction.isNoop() || !moveAction.isAdjacent()) return;
 
-        if (rowOrCol === 'row') {
-            const width = this.width;
-            const effectiveAmount = ((amount % width) + width) % width;
-            if (effectiveAmount === 0) return;
-            const y = index;
-            if (y < 0 || y >= this.height) return;
+        const { from, to } = moveAction;
+        if (!this.isInBounds(from.x, from.y) || !this.isInBounds(to.x, to.y)) return;
 
-            const currentRow: (BoardCell | null)[] = [];
-            for (let x = 0; x < width; x++) {
-                currentRow.push(grid[x]?.[y] ?? null);
-            }
-            if (currentRow.some(gem => gem === undefined)) {
-                console.error(`Error reading row ${y} for move application.`);
-                return;
-            }
-            const newRow = [...currentRow.slice(-effectiveAmount), ...currentRow.slice(0, width - effectiveAmount)];
-            for (let x = 0; x < width; x++) {
-                if (grid[x]) {
-                    grid[x][y] = newRow[x];
-                }
-            }
-        } else { // 'col'
-            const height = this.height;
-            const effectiveAmount = ((amount % height) + height) % height;
-            if (effectiveAmount === 0) return;
-            const x = index;
-            if (x < 0 || x >= this.width || !grid[x]) return;
-            const currentCol = grid[x];
-            if (currentCol.some(gem => gem === undefined)) {
-                console.error(`Error reading column ${x} for move application.`);
-                return;
-            }
-            const newCol = [...currentCol.slice(height - effectiveAmount), ...currentCol.slice(0, height - effectiveAmount)];
-            grid[x] = newCol;
-        }
+        const fromCell = grid[from.x]?.[from.y];
+        const toCell = grid[to.x]?.[to.y];
+        if (!fromCell || !toCell) return;
+        // Debuffed cells are immovable — reject the swap (state is anchored to the slot).
+        if (fromCell.state?.debuffId || toCell.state?.debuffId) return;
+
+        grid[from.x][from.y] = { ...toCell, state: fromCell.state };
+        grid[to.x][to.y] = { ...fromCell, state: toCell.state };
+    }
+
+    private isInBounds(x: number, y: number): boolean {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
     }
 
     /** Damage a blocker at (x,y). Returns true if the blocker was destroyed. */
@@ -373,6 +471,49 @@ export class BackendPuzzle {
         return false;
     }
 
+    /** Clear a single cell's debuff, assigning a FRESH state object (matchGridState clone is shallow). */
+    clearCellDebuff(x: number, y: number): boolean {
+        const cell = this.puzzleState[x]?.[y];
+        const oldId = cell?.state?.debuffId;
+        if (!cell || !oldId) return false;
+        cell.state = {
+            ...cell.state,
+            debuffId: null,
+            flags: (cell.state?.flags ?? []).filter(f => f !== oldId),
+        };
+        return true;
+    }
+
+    /** Number of debuffs cleansed since the last consume; consume reads and resets it. */
+    consumeCleanseCount(): number {
+        const count = this.pendingCleanseCount;
+        this.pendingCleanseCount = 0;
+        return count;
+    }
+
+    /** Cleanse debuffs on cells orthogonally adjacent to (but not part of) the given matches. */
+    private clearDebuffsAdjacentToMatches(matches: Match[]): number {
+        if (matches.length === 0) return 0;
+        const matched = new Set<string>();
+        matches.forEach(match => match.forEach(([x, y]) => matched.add(`${x},${y}`)));
+        const toClear = new Set<string>();
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        matches.forEach(match => match.forEach(([x, y]) => {
+            for (const [dx, dy] of dirs) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (!this.isInBounds(nx, ny) || matched.has(`${nx},${ny}`)) continue;
+                if (this.puzzleState[nx]?.[ny]?.state?.debuffId) toClear.add(`${nx},${ny}`);
+            }
+        }));
+        let count = 0;
+        toClear.forEach(key => {
+            const [x, y] = key.split(',').map(Number);
+            if (this.clearCellDebuff(x, y)) count++;
+        });
+        return count;
+    }
+
     private getMatches(puzzleState: PuzzleGrid): Match[] {
         const matches: Match[] = [];
         if (!puzzleState || this.width === 0 || this.height === 0) return matches;
@@ -381,6 +522,8 @@ export class BackendPuzzle {
             const cell = puzzleState[x]?.[y];
             // Skip cells with active blockers
             if (cell?.state?.blockerId && cell.state.durability && cell.state.durability > 0) return null;
+            // Skip debuffed cells — unmatchable (no durability gate; debuffs have none)
+            if (cell?.state?.debuffId) return null;
             return getBoardCellGemType(cell);
         };
 
@@ -428,7 +571,11 @@ export class BackendPuzzle {
 
     private applyExplodeAndReplacePhase(phase: ExplodeAndReplacePhase): void {
         if (phase.isNothingToDo()) return;
-        
+
+        // Cleanse debuffs orthogonally adjacent to matches, on pre-collapse coords,
+        // before surviving cells are shifted by gravity.
+        this.pendingCleanseCount += this.clearDebuffsAdjacentToMatches(phase.matches);
+
         // Calculate score based on matched gems
         let totalMatched = 0;
         phase.matches.forEach(match => {
@@ -454,7 +601,7 @@ export class BackendPuzzle {
             const currentColumn = this.puzzleState[x] || [];
             const survivingGems = currentColumn.filter((gem, y) => !explodeCoords.has(`${x},${y}`));
             const newGemTypes = replacementsMap.get(x) || [];
-            const newGems: BoardCell[] = newGemTypes.map(type => createBoardCell(type));
+            const newGems: BoardCell[] = newGemTypes.map(type => this.createSpawnedCell(type));
             newGrid[x] = [...newGems, ...survivingGems];
             
             if (newGrid[x].length !== this.height) {
@@ -471,6 +618,8 @@ export class BackendPuzzle {
             blockerId: incoming.blockerId ?? current?.blockerId ?? null,
             durability: incoming.durability ?? current?.durability ?? null,
             flags: incoming.flags ?? current?.flags ?? [],
+            debuffId: incoming.debuffId ?? current?.debuffId ?? null,
+            charge: incoming.charge ?? current?.charge ?? null,
         };
     }
 

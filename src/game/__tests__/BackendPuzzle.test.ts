@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BackendPuzzle, type PuzzleGrid } from '@/game/BackendPuzzle';
 import { createBoardCell } from '@/game/boardTypes';
+import { ACTION_GEM_TYPES, LOOT_GEM_TYPES } from '@/game/constants';
 
 const grid = (columns: string[][]): PuzzleGrid =>
   columns.map((column) => column.map((gemType) => createBoardCell(gemType as any)));
@@ -59,5 +60,58 @@ describe('BackendPuzzle', () => {
     expect(phase.getReplacementsForColumn(2)).toHaveLength(1);
     expect(phase.getReplacementsForColumn(3)).toHaveLength(3);
     expect(puzzle.getGridState().every((column) => column.length === 4)).toBe(true);
+  });
+
+  it('uses match battle lootChance for mixed board spawns', () => {
+    const puzzle = new BackendPuzzle(4, 3);
+    let seed = 7;
+    const random = vi.spyOn(Math, 'random').mockImplementation(() => {
+      seed = (seed * 48271) % 0x7fffffff;
+      return seed / 0x7fffffff;
+    });
+
+    puzzle.setMatchBattleConfig({
+      piecePool: [
+        { pieceId: 'sword', level: 1, weight: 1 },
+        { pieceId: 'shield', level: 1, weight: 1 },
+        { pieceId: 'staff', level: 1, weight: 1 },
+      ],
+      lootChance: 0.35,
+      snippetsEnabled: false,
+      boardCols: 4,
+      boardRows: 3,
+    });
+
+    const sampleSize = 10_000;
+    let lootCount = 0;
+    for (let i = 0; i < sampleSize; i++) {
+      const gem = (puzzle as any).pickWeightedGem();
+      if (LOOT_GEM_TYPES.includes(gem)) lootCount++;
+    }
+    random.mockRestore();
+
+    const observed = lootCount / sampleSize;
+    expect(observed).toBeGreaterThanOrEqual(0.30);
+    expect(observed).toBeLessThanOrEqual(0.40);
+  });
+
+  it('keeps match battle snippet preview action-only', () => {
+    const puzzle = new BackendPuzzle(4, 3);
+    puzzle.setMatchBattleConfig({
+      piecePool: [
+        { pieceId: 'sword', level: 1, weight: 1 },
+        { pieceId: 'shield', level: 1, weight: 1 },
+        { pieceId: 'staff', level: 1, weight: 1 },
+      ],
+      lootChance: 1,
+      snippetsEnabled: true,
+      boardCols: 4,
+      boardRows: 3,
+    });
+
+    const preview = puzzle.getSnippetPreview();
+
+    expect(preview).toHaveLength(4);
+    expect(preview.every(gem => ACTION_GEM_TYPES.includes(gem as any))).toBe(true);
   });
 });

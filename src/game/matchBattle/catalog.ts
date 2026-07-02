@@ -14,6 +14,7 @@ import type {
 } from './types';
 
 export const MATCH_BATTLE_SCHEMA_VERSION = 3;
+export const MATCH_BATTLE_LOOT_CHANCE = 0.35;
 
 export const PIECE_CATALOG: Record<ActionGemType, PieceDef> = {
   sword: {
@@ -219,6 +220,7 @@ export function createInitialMatchBattleState(form: AffinityType | null, nodeCou
     maxGearSlots: 3,
     boardCols: 4,
     boardRows: 3,
+    lootChance: MATCH_BATTLE_LOOT_CHANCE,
     snippetsEnabled: true,
     outcome: 'active',
     rewardDraft: [],
@@ -269,6 +271,9 @@ export function normalizeMatchBattleRunState(
     maxGearSlots: raw.maxGearSlots ?? base.maxGearSlots,
     boardCols: raw.boardCols ?? base.boardCols,
     boardRows: raw.boardRows ?? base.boardRows,
+    lootChance: typeof raw.lootChance === 'number' && Number.isFinite(raw.lootChance)
+      ? Math.max(0, Math.min(1, raw.lootChance))
+      : base.lootChance,
     snippetsEnabled: raw.snippetsEnabled ?? base.snippetsEnabled,
     rewardDraft: asArray<MatchBattleRunState['rewardDraft'][number]>(raw.rewardDraft) ?? base.rewardDraft,
     combat: {
