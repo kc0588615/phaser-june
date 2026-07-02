@@ -2326,9 +2326,14 @@ export class Game extends Phaser.Scene {
         if (data.isCorrect) {
             console.log("Game Scene: Correct species identified!");
 
-            // Track discovery if authenticated
-            if (this.currentUserId && this.backendPuzzle) {
-                this.trackDiscovery(data.speciesId);
+            // Capture/discovery persistence. Authenticated players write through the API;
+            // anonymous players still get local album capture.
+            if (this.backendPuzzle) {
+                if (this.currentUserId) {
+                    this.trackDiscovery(data.speciesId);
+                } else {
+                    this.trackLocalDiscovery(data.speciesId);
+                }
             }
 
             // Apply early guess bonus with streak multiplier
@@ -2453,6 +2458,25 @@ export class Game extends Phaser.Scene {
         } finally {
             this.resetSpeciesTrackingCounters();
         }
+    }
+
+    private trackLocalDiscovery(speciesId: number): void {
+        if (this.discoveredSpeciesIds.has(speciesId)) {
+            this.resetSpeciesTrackingCounters();
+            return;
+        }
+
+        this.discoveredSpeciesIds.add(speciesId);
+        try {
+            const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+            if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
+                discovered.push({ id: speciesId, idSource: 'species.id', discoveredAt: new Date().toISOString() });
+                localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
+                window.dispatchEvent(new Event('species-discovered'));
+            }
+        } catch { /* localStorage may be unavailable */ }
+
+        this.resetSpeciesTrackingCounters();
     }
 
     private onExpeditionStart(): void { this.inExpeditionRun = true; }

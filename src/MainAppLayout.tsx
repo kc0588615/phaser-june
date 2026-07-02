@@ -45,7 +45,7 @@ function MainAppLayoutInner() {
         handleDeductionPurchase, handleDeductionGuessResult,
         handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
         selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode,
-        onShowSpeciesList,
+        showSpeciesList, onShowSpeciesList,
     } = useExpedition();
 
     // Register show-species-list handler (replaces EventBus listener)
@@ -89,6 +89,11 @@ function MainAppLayoutInner() {
         }
         return resumed;
     }, [handleRunResume]);
+
+    const handleViewCapturedSpecies = useCallback((speciesId: number) => {
+        handleRunReset();
+        showSpeciesList(speciesId);
+    }, [handleRunReset, showSpeciesList]);
 
     useEffect(() => {
         if (!phaserRef.current?.game) return;
@@ -139,6 +144,7 @@ function MainAppLayoutInner() {
                                     onProcessClue={handleProcessClue}
                                     onPlaceReference={handlePlaceReference}
                                     onComparativeGuess={handleComparativeGuessResult}
+                                    onViewSpecies={handleViewCapturedSpecies}
                                     onFinish={handleRunReset}
                                 />
                             </div>
