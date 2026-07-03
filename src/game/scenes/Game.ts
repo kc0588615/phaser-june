@@ -19,12 +19,11 @@ import {
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType, type ActionGemType } from '../constants';
-import { getClueCategoryForGemType, getResourceKeyForGemType } from '../gemSemantics';
+import { getClueCategoryForGemType } from '../gemSemantics';
 import {
   formatNodeObstacleLabel,
   type NodeObstacle,
 } from '../nodeObstacles';
-import type { CurrencyKey } from '@/expedition/domain';
 import { getGemDefinition, isActionGem } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
 import type { ClueCategoryKey } from '@/types/expedition';
@@ -200,7 +199,7 @@ export class Game extends Phaser.Scene {
     private matchBattleCombatant: SpeciesCombatInput | null = null;
     private matchBattleCombat: MatchBattleCombatState | null = null;
     private matchBattleArmaments: ArmamentDef[] = [];
-    private matchBattleCreditsDelta: number = 0;
+    private matchBattleScoreDelta: number = 0;
     private matchBattleStats: MatchBattleCombatStats = createMatchBattleCombatStats();
     private matchBattleLootChance: number = 0;
     private matchBattlePartnerPassive: MatchBattlePartnerPassive | null = null;
@@ -348,17 +347,17 @@ export class Game extends Phaser.Scene {
         return this.backendPuzzle?.height ?? this.boardRows;
     }
 
-    private applyCombatEffectResults(combat: MatchBattleCombatState, results: CombatEffectResult[]): { combat: MatchBattleCombatState; creditsDelta: number } {
-        let creditsDelta = 0;
+    private applyCombatEffectResults(combat: MatchBattleCombatState, results: CombatEffectResult[]): { combat: MatchBattleCombatState; scoreDelta: number } {
+        let scoreDelta = 0;
         const log: string[] = [];
         for (const result of results) {
             if (result.hpDelta) this.applyPlayerHpDelta(combat, result.hpDelta);
             if (result.damageDelta) this.damageMatchBattleEnemy(combat, result.damageDelta);
-            if (result.creditsDelta) creditsDelta += result.creditsDelta;
+            if (result.scoreDelta) scoreDelta += result.scoreDelta;
             if (result.log) log.push(result.log);
         }
         if (log.length > 0) combat.log = [...log, ...combat.log].slice(0, 8);
-        return { combat, creditsDelta };
+        return { combat, scoreDelta };
     }
 
     /** Mutate player Stamina with clamping; records damage taken for the tuning readout. */
@@ -686,7 +685,7 @@ export class Game extends Phaser.Scene {
                     : [],
             );
             this.matchBattleCombat = applied.combat;
-            this.matchBattleCreditsDelta += applied.creditsDelta;
+            this.matchBattleScoreDelta += applied.scoreDelta;
             EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
         }
     }
@@ -993,10 +992,6 @@ export class Game extends Phaser.Scene {
             return;
         }
 
-        // Legacy free-play wallet accumulation
-        const rewards: Record<CurrencyKey, number> = { gold: 0, power: 0, thought: 0, dust: 0 };
-        let anyWalletReward = false;
-
         for (const match of matches) {
             if (match.length === 0) continue;
             const [x, y] = match[0];
@@ -1004,25 +999,11 @@ export class Game extends Phaser.Scene {
             if (!gem) continue;
 
             const bonus = match.length >= 4 ? 2 : 1;
-            const resourceKey = getResourceKeyForGemType(gem.gemType);
-            if (resourceKey) {
-                rewards[resourceKey] += bonus;
-                anyWalletReward = true;
-            }
 
             if (gem.gemType === 'multiplier' && this.backendPuzzle) {
                 this.backendPuzzle.addBonusScore(25 * bonus);
                 this.emitHud();
             }
-
-            if (!isActionGem(gem.gemType)) {
-                rewards.dust += match.length >= 5 ? 2 : 1;
-                anyWalletReward = true;
-            }
-        }
-
-        if (anyWalletReward) {
-            EventBus.emit('resource-wallet-updated', { wallet: { ...rewards } });
         }
     }
 
@@ -1084,7 +1065,7 @@ export class Game extends Phaser.Scene {
             });
             const applied = this.applyCombatEffectResults(combat, cascadeEffects);
             combat = applied.combat;
-            this.matchBattleCreditsDelta += applied.creditsDelta;
+            this.matchBattleScoreDelta += applied.scoreDelta;
         }
 
         const cleansed = this.backendPuzzle.consumeCleanseCount();
@@ -1102,7 +1083,7 @@ export class Game extends Phaser.Scene {
         const endEffects = resolveGearTriggers('combat_end', this.matchBattleArmaments, { combat, turn: combat.turn, wasCleanCapture: false });
         const applied = this.applyCombatEffectResults(combat, endEffects);
         const nextCombat = applied.combat;
-        this.matchBattleCreditsDelta += applied.creditsDelta;
+        this.matchBattleScoreDelta += applied.scoreDelta;
         this.matchBattleCombat = nextCombat;
         EventBus.emit('match-battle-combat-state-updated', nextCombat);
         EventBus.emit('match-battle-combat-ended', {
@@ -1110,7 +1091,7 @@ export class Game extends Phaser.Scene {
             combat: nextCombat,
             nodeIndex: this.currentNodeIndex,
             cleanCapture: false,
-            creditsDelta: this.matchBattleCreditsDelta,
+            scoreDelta: this.matchBattleScoreDelta,
         });
         logMatchBattleCombatEnd('won', nextCombat.turn, this.matchBattleStats, this.matchBattleLootChance);
         if (!this.nodeObjectiveCompleted) this.finishNodeObjective('objective_complete');
@@ -1146,7 +1127,7 @@ export class Game extends Phaser.Scene {
                 combat,
                 nodeIndex: this.currentNodeIndex,
                 cleanCapture: false,
-                creditsDelta: this.matchBattleCreditsDelta,
+                scoreDelta: this.matchBattleScoreDelta,
             });
             logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats, this.matchBattleLootChance);
             this.finishNodeObjective('escaped');
@@ -1169,7 +1150,7 @@ export class Game extends Phaser.Scene {
             });
             const applied = this.applyCombatEffectResults(combat, hpLossEffects);
             combat = applied.combat;
-            this.matchBattleCreditsDelta += applied.creditsDelta;
+            this.matchBattleScoreDelta += applied.scoreDelta;
             log.push(`${enemyName}: ${intent.label} for ${hpDamage}.`);
         }
 
@@ -1189,7 +1170,7 @@ export class Game extends Phaser.Scene {
         const turnEffects = resolveGearTriggers('turn_start', this.matchBattleArmaments, { combat, turn: nextTurn });
         const applied = this.applyCombatEffectResults(combat, turnEffects);
         combat = applied.combat;
-        this.matchBattleCreditsDelta += applied.creditsDelta;
+        this.matchBattleScoreDelta += applied.scoreDelta;
         return combat;
     }
 
@@ -1481,7 +1462,7 @@ export class Game extends Phaser.Scene {
             this.currentNodeDifficulty = data.difficulty ?? 3;
             this.matchBattleNodeType = data.matchBattleNodeType ?? null;
             this.matchBattleArmaments = [...(data.matchBattleArmaments ?? [])];
-            this.matchBattleCreditsDelta = 0;
+            this.matchBattleScoreDelta = 0;
             this.matchBattleStats = createMatchBattleCombatStats();
             this.matchBattleLootChance = data.matchBattleConfig?.lootChance ?? 0;
             this.matchBattlePartnerPassive = data.matchBattleConfig?.partnerPassive ?? null;
@@ -1517,7 +1498,7 @@ export class Game extends Phaser.Scene {
                         combat,
                         nodeIndex: this.currentNodeIndex,
                         cleanCapture: false,
-                        creditsDelta: this.matchBattleCreditsDelta,
+                        scoreDelta: this.matchBattleScoreDelta,
                     });
                     logMatchBattleCombatEnd('lost', combat.turn, this.matchBattleStats, this.matchBattleLootChance);
                     this.finishNodeObjective('escaped');

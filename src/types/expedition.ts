@@ -1,6 +1,5 @@
-import type { ActionGemType, ResourceWallet as DomainResourceWallet } from '@/expedition/domain';
+import type { ActionGemType } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
-import { createEmptyResourceWallet as createEmptyDomainResourceWallet } from '@/expedition/domain';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
 import type { RoutePoint } from '@/lib/expeditionRoute';
@@ -32,14 +31,11 @@ export interface ExpeditionData {
 
 export type NodeType = 'collection' | 'standoff' | 'crisis' | 'store';
 
-export type ResourceWallet = DomainResourceWallet;
-
 export interface RunState {
   phase: RunPhase;
   expedition: ExpeditionData | null;
   currentNodeIndex: number;
   activeAffinities: AffinityType[];
-  resourceWallet: ResourceWallet;
   lootMatchSummary: Record<string, number>;
   pendingNodeModifiers: string[];
   bankedScore: number;
@@ -158,8 +154,4 @@ export function getDeductionFinalScore(camp: DeductionCampState): number {
   const isCorrect = camp.guessResult === 'correct';
   const { guessBonus, efficiencyBonus } = getGuessBonuses(totalPaidClues, isCorrect);
   return camp.bankedScore - camp.scoreSpent + guessBonus + efficiencyBonus;
-}
-
-export function createEmptyResourceWallet(): ResourceWallet {
-  return createEmptyDomainResourceWallet();
 }

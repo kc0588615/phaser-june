@@ -87,8 +87,7 @@ export interface UpgradeDef {
 
 export type RewardOption =
   | { kind: 'piece'; pieceId: ActionGemType; label: string; description: string }
-  | { kind: 'armament'; armamentId: string; label: string; description: string }
-  | { kind: 'credits'; amount: number; label: string; description: string };
+  | { kind: 'armament'; armamentId: string; label: string; description: string };
 
 export interface MatchBattleRouteNode {
   id: string;
@@ -111,8 +110,6 @@ export interface MatchBattleRunState {
   piecePool: PiecePoolEntry[];
   armaments: ArmamentDef[];
   upgrades: string[];
-  credits: number;
-  markForm: number;
   rerollCost: number;
   maxGearSlots: number;
   combat: MatchBattleCombatState;

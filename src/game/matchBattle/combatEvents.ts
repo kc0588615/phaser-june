@@ -27,7 +27,7 @@ export interface CombatEventContext {
 export interface CombatEffectResult {
   hpDelta?: number;
   damageDelta?: number;
-  creditsDelta?: number;
+  scoreDelta?: number;
   log?: string;
 }
 
@@ -49,7 +49,7 @@ export function resolveGearTriggers(
         results.push({ hpDelta: 3, log: 'Reinforced Blind: +3 Stamina.' });
         break;
       case 'credit_ledger':
-        results.push({ creditsDelta: 8, log: 'Grant Ledger: +8 Grants.' });
+        results.push({ scoreDelta: 8, log: 'Grant Ledger: +8 Score.' });
         break;
       case 'pain_transmitter':
         results.push({ damageDelta: Math.ceil((ctx.damageAmount ?? 0) / 2), log: 'Endurance Log: counter-read.' });

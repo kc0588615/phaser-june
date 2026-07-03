@@ -6,9 +6,10 @@ import { Progress } from '@/components/ui/progress';
 
 interface Props {
   matchBattle: MatchBattleRunState | null;
+  bankedScore: number;
 }
 
-export function MatchBattleCombatHud({ matchBattle }: Props) {
+export function MatchBattleCombatHud({ matchBattle, bankedScore }: Props) {
   const { matchBattleCombat } = useGameBridge();
   const combat = matchBattleCombat ?? matchBattle?.combat ?? null;
   if (!matchBattle || !combat) return null;
@@ -35,9 +36,9 @@ export function MatchBattleCombatHud({ matchBattle }: Props) {
       </div>
 
       <div className="glass-bg border border-ds-subtle rounded-md px-2 py-1 min-w-[92px] text-center">
-        <div className="text-[9px] uppercase tracking-wider text-ds-text-muted">Grants</div>
-        <div className="text-lg font-black text-ds-amber">{matchBattle.credits}</div>
-        <div className="text-[9px] text-ds-text-secondary">Field Notes {matchBattle.markForm}</div>
+        <div className="text-[9px] uppercase tracking-wider text-ds-text-muted">Banked</div>
+        <div className="text-lg font-black text-ds-amber">{bankedScore}</div>
+        <div className="text-[9px] text-ds-text-secondary">Score</div>
       </div>
 
       <div className="glass-bg border border-ds-subtle rounded-md p-2 min-w-0">

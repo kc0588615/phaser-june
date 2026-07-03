@@ -62,7 +62,7 @@ export const PIECE_CATALOG: Partial<Record<ActionGemType, PieceDef>> = {
 
 export const ARMAMENT_CATALOG: ArmamentDef[] = [
   { id: 'assault_potion', name: 'Trail Mix', kind: 'risk', trigger: 'turn_start', description: '+4 Approach each turn; spend 2 Stamina.' },
-  { id: 'credit_ledger', name: 'Grant Ledger', kind: 'economy', trigger: 'combat_end', description: '+8 Grants after each encounter.' },
+  { id: 'credit_ledger', name: 'Grant Ledger', kind: 'economy', trigger: 'combat_end', description: '+8 score after each encounter.' },
   { id: 'iron_jaw', name: 'Reinforced Blind', kind: 'defense', trigger: 'combat_start', description: '+3 Stamina at encounter start.' },
   { id: 'pain_transmitter', name: 'Endurance Log', kind: 'scaling', trigger: 'on_hp_loss', description: 'Taking damage counters with Data.' },
   { id: 'crescendo_earrings', name: 'Smartwatch', kind: 'scaling', trigger: 'on_cascade', description: 'Every cascade adds +1 Data.' },
@@ -172,8 +172,6 @@ export function createInitialMatchBattleState(
     piecePool: createInitialPiecePool(form),
     armaments: [],
     upgrades: [],
-    credits: 40,
-    markForm: 0,
     rerollCost: 40,
     maxGearSlots: 3,
     boardCols: 4,
@@ -221,8 +219,6 @@ export function normalizeMatchBattleRunState(
     piecePool: ensureMinimumSpawnablePieces(rawPiecePool ? rawPiecePool.map((entry) => ({ ...entry })) : base.piecePool),
     armaments: rawArmaments?.map((entry) => ARMAMENT_CATALOG.find((candidate) => candidate.id === entry.id) ?? { ...entry }) ?? base.armaments,
     upgrades: asArray<string>(raw.upgrades) ?? base.upgrades,
-    credits: raw.credits ?? base.credits,
-    markForm: raw.markForm ?? base.markForm,
     rerollCost: raw.rerollCost ?? base.rerollCost,
     maxGearSlots: raw.maxGearSlots ?? base.maxGearSlots,
     boardCols: raw.boardCols ?? base.boardCols,

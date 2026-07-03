@@ -44,9 +44,6 @@ export function RunsTab({
 
 function RunMemoryCard({ run }: { run: RunSummary }) {
   const completedNodes = run.nodes.filter(n => n.nodeStatus === 'completed').length;
-  const walletEntries = Object.entries(run.resourceWallet ?? {})
-    .filter(([, value]) => typeof value === 'number' && value > 0)
-    .slice(0, 4);
   const featureClasses = [...new Set(run.gisFeaturesNearby.map(f => f.featureClass).filter(Boolean))].slice(0, 4);
 
   return (
@@ -122,11 +119,6 @@ function RunMemoryCard({ run }: { run: RunSummary }) {
         <span>{completedNodes}/{run.nodeCount} nodes</span>
         {run.affinities.length > 0 && (
           <span className="text-gem-focus">{(run.affinities as string[]).join(', ')}</span>
-        )}
-        {walletEntries.length > 0 && (
-          <span className="text-primary">
-            {walletEntries.map(([key, value]) => `${key[0].toUpperCase()}${value}`).join(' ')}
-          </span>
         )}
         <span className="flex items-center gap-1">
           <Clock className="size-3" />

@@ -14,7 +14,6 @@ export interface RunSummary {
   startedAt: string;
   endedAt: string | null;
   affinities: string[];
-  resourceWallet: Record<string, number> | null;
   discoveredSpecies: { id: number; name: string } | null;
   routePolyline: Array<{ lon: number; lat: number }>;
   routeBounds: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;

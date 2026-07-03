@@ -138,7 +138,6 @@ function buildResumePayload(session: EcoRunSessionRow, nodes: EcoRunNodeRow[]) {
     habitats: getStringArray(metadata.habitats),
     rasterHabitats: Array.isArray(metadata.rasterHabitats) ? metadata.rasterHabitats : [],
     currentNodeIndex: getNumberOrNull(metadata.currentNodeIndex) ?? Math.max(0, session.nodeIndexCurrent - 1),
-    resourceWallet: getNumberRecord(metadata.resourceWallet),
     revealedDuringRun: Array.isArray(metadata.revealedDuringRun) ? metadata.revealedDuringRun : [],
     bankedScore: getNumberOrNull(metadata.bankedScore) ?? session.scoreTotal,
     matchBattle: metadata.matchBattle && typeof metadata.matchBattle === 'object' ? metadata.matchBattle : null,
@@ -192,10 +191,10 @@ function reconstructRunNode(node: EcoRunNodeRow): RunNode {
 
 /**
  * PATCH /api/runs/[runId]
- * Update session metadata (e.g. resource wallet or deduction summary on completion).
+ * Update session metadata (checkpoint or deduction summary on completion).
  * When finalScore is provided, also persists a run_memories row.
  *
- * Body: { resourceWallet?: Record<string, number>; finalScore?: number; status?: 'active' | 'deduction'; deductionSummary?: Record<string, unknown> }
+ * Body: { finalScore?: number; status?: 'active' | 'deduction'; deductionSummary?: Record<string, unknown> }
  */
 export async function PATCH(
   request: NextRequest,
@@ -223,8 +222,7 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, revealedDuringRun, bankedScore, currentNodeIndex, objectiveProgress, status, matchBattle } = body as {
-      resourceWallet?: Record<string, number>;
+    const { finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, revealedDuringRun, bankedScore, currentNodeIndex, objectiveProgress, status, matchBattle } = body as {
       finalScore?: number;
       status?: string;
       deductionSummary?: Record<string, unknown>;
@@ -240,7 +238,6 @@ export async function PATCH(
     const normalizedCheckpointRoute = normalizeRoutePolyline(routePolyline);
 
     const metadataPatch: Record<string, unknown> = {};
-    if (resourceWallet) metadataPatch.resourceWallet = resourceWallet;
     if (Array.isArray(revealedDuringRun)) metadataPatch.revealedDuringRun = revealedDuringRun;
     if (typeof bankedScore === 'number') metadataPatch.bankedScore = bankedScore;
     if (Number.isInteger(currentNodeIndex)) metadataPatch.currentNodeIndex = currentNodeIndex;

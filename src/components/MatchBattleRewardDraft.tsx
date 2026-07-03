@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 
 interface Props {
   options: RewardOption[];
-  credits: number;
+  bankedScore: number;
   rerollCost: number;
-  fieldNotes: number;
   upgrades: UpgradeDef[];
   gearSlotsFull: boolean;
   onSelect: (option: RewardOption) => void;
@@ -14,7 +13,7 @@ interface Props {
   onUpgrade: (upgrade: UpgradeDef) => void;
 }
 
-export function MatchBattleRewardDraft({ options, credits, rerollCost, fieldNotes, upgrades, gearSlotsFull, onSelect, onReroll, onUpgrade }: Props) {
+export function MatchBattleRewardDraft({ options, bankedScore, rerollCost, upgrades, gearSlotsFull, onSelect, onReroll, onUpgrade }: Props) {
   return (
     <div className="absolute inset-0 z-deduction glass-bg backdrop-blur-xl flex items-center justify-center p-4">
       <section className="w-full max-w-3xl">
@@ -23,7 +22,7 @@ export function MatchBattleRewardDraft({ options, credits, rerollCost, fieldNote
             <h2 className="m-0 text-2xl font-black text-ds-text-primary">Choose Reward</h2>
             <p className="m-0 mt-1 text-ds-body text-ds-text-secondary">Add pieces, tune probability, or take Field Gear.</p>
           </div>
-          <Button variant="secondary" size="sm" onClick={onReroll} disabled={credits < rerollCost}>
+          <Button variant="secondary" size="sm" onClick={onReroll} disabled={bankedScore < rerollCost}>
             Reroll {rerollCost}
           </Button>
         </div>
@@ -48,15 +47,15 @@ export function MatchBattleRewardDraft({ options, credits, rerollCost, fieldNote
         </div>
         <div className="mt-4 rounded-md border border-ds-subtle glass-bg p-3">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <h3 className="m-0 text-sm font-black text-ds-text-primary">Field Notes Upgrades</h3>
-            <span className="text-xs font-bold text-ds-cyan">{fieldNotes} Notes</span>
+            <h3 className="m-0 text-sm font-black text-ds-text-primary">Score Upgrades</h3>
+            <span className="text-xs font-bold text-ds-cyan">{bankedScore} Score</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {upgrades.map((upgrade) => (
               <button
                 type="button"
                 key={upgrade.id}
-                disabled={fieldNotes < upgrade.cost}
+                disabled={bankedScore < upgrade.cost}
                 onClick={() => onUpgrade(upgrade)}
                 className="min-h-[92px] rounded-md border border-ds-subtle bg-ds-bg/50 p-2 text-left transition hover:border-ds-cyan disabled:cursor-not-allowed disabled:opacity-45"
               >

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, ResourceWallet, ClueCategoryKey } from '@/types/expedition';
+import type { ExpeditionData, ClueCategoryKey } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
 import type { ActionGemType, GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
@@ -93,13 +93,10 @@ export interface EventPayloads {
   };
   'expedition-start': Record<string, never>;
   'match-battle-combat-state-updated': MatchBattleCombatState;
-  'match-battle-combat-ended': { outcome: 'won' | 'lost'; combat: MatchBattleCombatState; nodeIndex: number; cleanCapture: boolean; creditsDelta: number };
+  'match-battle-combat-ended': { outcome: 'won' | 'lost'; combat: MatchBattleCombatState; nodeIndex: number; cleanCapture: boolean; scoreDelta: number };
   'match-battle-reward-draft-opened': { options: RewardOption[] };
   'match-battle-route-node-selected': { routeNodeId: string };
   'match-battle-run-ended': { outcome: 'won' | 'lost' };
-  'resource-wallet-updated': {
-    wallet: ResourceWallet;
-  };
   'node-advance-requested': {
     nodeIndex: number;
     reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'escaped';

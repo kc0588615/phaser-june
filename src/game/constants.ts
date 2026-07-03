@@ -8,7 +8,6 @@ import {
     type LootGemType,
     type GemType,
     type GemFamily,
-    type CurrencyKey,
     type BoardSpawnConfig,
     getGemFamily,
     DEFAULT_BOARD_SPAWN_CONFIG,
@@ -20,7 +19,7 @@ export const GRID_ROWS = 5 as const;
 
 // --- Gem Configuration ---
 export { ACTION_GEM_TYPES, LOOT_GEM_TYPES, GEM_TYPES, getGemFamily, DEFAULT_BOARD_SPAWN_CONFIG };
-export type { ActionGemType, LootGemType, GemType, GemFamily, CurrencyKey, BoardSpawnConfig };
+export type { ActionGemType, LootGemType, GemType, GemFamily, BoardSpawnConfig };
 
 export const GEM_FRAME_COUNT = 8 as const; // Number of animation frames per gem type (explosion etc.)
 

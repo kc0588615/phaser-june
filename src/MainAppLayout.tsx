@@ -190,9 +190,8 @@ function MainAppLayoutInner() {
                         {showReward && runState.matchBattle && (
                             <MatchBattleRewardDraft
                                 options={runState.matchBattle.rewardDraft}
-                                credits={runState.matchBattle.credits}
+                                bankedScore={runState.bankedScore}
                                 rerollCost={runState.matchBattle.rerollCost}
-                                fieldNotes={runState.matchBattle.markForm}
                                 upgrades={UPGRADE_CATALOG}
                                 gearSlotsFull={runState.matchBattle.armaments.length >= runState.matchBattle.maxGearSlots}
                                 onSelect={selectMatchBattleReward}
@@ -221,7 +220,7 @@ function MainAppLayoutInner() {
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
                         {inRun && runState.matchBattle && (
-                            <MatchBattleCombatHud matchBattle={runState.matchBattle} />
+                            <MatchBattleCombatHud matchBattle={runState.matchBattle} bankedScore={runState.bankedScore} />
                         )}
 
                     </div>

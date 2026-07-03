@@ -11,6 +11,10 @@ export const ACTION_GEM_TYPES = [
   'power',
   'thought',
   'multiplier',
+  'grenade',
+  'blade_drive',
+  'caltrops',
+  'shield_unit',
 ] as const;
 
 export const LOOT_GEM_TYPES = [
@@ -31,23 +35,12 @@ export type LootGemType = typeof LOOT_GEM_TYPES[number];
 export type GemType = typeof GEM_TYPES[number];
 export type GemFamily = 'action' | 'loot';
 
-export const CURRENCY_KEYS = ['gold', 'power', 'thought', 'dust'] as const;
-export type CurrencyKey = typeof CURRENCY_KEYS[number];
-
-export interface ResourceWallet {
-  gold: number;
-  power: number;
-  thought: number;
-  dust: number;
-}
-
 export interface GemDefinition {
   gemType: GemType;
   family: GemFamily;
   label: string;
   color: string;
   clueCategory: GemCategory | null;
-  currencyKey: CurrencyKey | null;
   assetBacked: boolean;
   isCrate?: boolean;
   isMultiplier?: boolean;
@@ -60,7 +53,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Observe',
     color: '#dc2626',
     clueCategory: null,
-    currencyKey: null,
     assetBacked: false,
   },
   staff: {
@@ -69,7 +61,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Scan',
     color: '#6366f1',
     clueCategory: null,
-    currencyKey: null,
     assetBacked: false,
   },
   shield: {
@@ -78,7 +69,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Camouflage',
     color: '#94a3b8',
     clueCategory: null,
-    currencyKey: null,
     assetBacked: false,
   },
   key: {
@@ -87,7 +77,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Traverse',
     color: '#f59e0b',
     clueCategory: null,
-    currencyKey: 'gold',
     assetBacked: false,
   },
   crate: {
@@ -96,7 +85,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Backpack',
     color: '#b45309',
     clueCategory: null,
-    currencyKey: 'gold',
     assetBacked: false,
     isCrate: true,
   },
@@ -106,7 +94,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Focus',
     color: '#06b6d4',
     clueCategory: null,
-    currencyKey: 'power',
     assetBacked: false,
   },
   thought: {
@@ -115,7 +102,6 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Field Notes',
     color: '#10b981',
     clueCategory: null,
-    currencyKey: 'thought',
     assetBacked: false,
   },
   multiplier: {
@@ -124,9 +110,40 @@ const ACTION_GEM_DEFINITIONS: Record<ActionGemType, GemDefinition> = {
     label: 'Burst',
     color: '#ec4899',
     clueCategory: null,
-    currencyKey: null,
     assetBacked: false,
     isMultiplier: true,
+  },
+  grenade: {
+    gemType: 'grenade',
+    family: 'action',
+    label: 'Flash Snare',
+    color: '#f97316',
+    clueCategory: null,
+    assetBacked: false,
+  },
+  blade_drive: {
+    gemType: 'blade_drive',
+    family: 'action',
+    label: 'Pressure Drive',
+    color: '#ef4444',
+    clueCategory: null,
+    assetBacked: false,
+  },
+  caltrops: {
+    gemType: 'caltrops',
+    family: 'action',
+    label: 'Bramble Snare',
+    color: '#7f1d1d',
+    clueCategory: null,
+    assetBacked: false,
+  },
+  shield_unit: {
+    gemType: 'shield_unit',
+    family: 'action',
+    label: 'Barrier Unit',
+    color: '#67e8f9',
+    clueCategory: null,
+    assetBacked: false,
   },
 };
 
@@ -137,7 +154,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Life Cycle Loot',
     color: '#1e293b',
     clueCategory: GemCategory.LIFE_CYCLE,
-    currencyKey: null,
     assetBacked: true,
   },
   blue: {
@@ -146,7 +162,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Geographic Loot',
     color: '#3b82f6',
     clueCategory: GemCategory.GEOGRAPHIC,
-    currencyKey: null,
     assetBacked: true,
   },
   green: {
@@ -155,7 +170,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Habitat Loot',
     color: '#22c55e',
     clueCategory: GemCategory.HABITAT,
-    currencyKey: null,
     assetBacked: true,
   },
   orange: {
@@ -164,7 +178,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Morphology Loot',
     color: '#f97316',
     clueCategory: GemCategory.MORPHOLOGY,
-    currencyKey: null,
     assetBacked: true,
   },
   red: {
@@ -173,7 +186,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Classification Loot',
     color: '#ef4444',
     clueCategory: GemCategory.CLASSIFICATION,
-    currencyKey: null,
     assetBacked: true,
   },
   white: {
@@ -182,7 +194,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Conservation Loot',
     color: '#e2e8f0',
     clueCategory: GemCategory.CONSERVATION,
-    currencyKey: null,
     assetBacked: true,
   },
   yellow: {
@@ -191,7 +202,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Behavior Loot',
     color: '#eab308',
     clueCategory: GemCategory.BEHAVIOR,
-    currencyKey: null,
     assetBacked: true,
   },
   purple: {
@@ -200,7 +210,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     label: 'Key Facts Loot',
     color: '#a855f7',
     clueCategory: GemCategory.KEY_FACTS,
-    currencyKey: null,
     assetBacked: true,
   },
 };
@@ -229,10 +238,6 @@ export function getClueCategoryForGemType(gemType: GemType): GemCategory | null 
   return GEM_REGISTRY[gemType].clueCategory;
 }
 
-export function getCurrencyKeyForGemType(gemType: GemType): CurrencyKey | null {
-  return GEM_REGISTRY[gemType].currencyKey;
-}
-
 export function isActionGem(gemType: GemType): gemType is ActionGemType {
   return getGemFamily(gemType) === 'action';
 }
@@ -240,27 +245,6 @@ export function isActionGem(gemType: GemType): gemType is ActionGemType {
 export function isLootGem(gemType: GemType): gemType is LootGemType {
   return getGemFamily(gemType) === 'loot';
 }
-
-export function createEmptyResourceWallet(): ResourceWallet {
-  return {
-    gold: 0,
-    power: 0,
-    thought: 0,
-    dust: 0,
-  };
-}
-
-export const WALLET_DEFS: Array<{
-  key: CurrencyKey;
-  label: string;
-  color: string;
-  shortLabel: string;
-}> = [
-  { key: 'gold', label: 'Supplies', color: '#fbbf24', shortLabel: 'S' },
-  { key: 'power', label: 'Focus', color: '#06b6d4', shortLabel: 'F' },
-  { key: 'thought', label: 'Insight', color: '#10b981', shortLabel: 'I' },
-  { key: 'dust', label: 'Samples', color: '#c084fc', shortLabel: 'Sa' },
-];
 
 export type ConsumableEffectType =
   | 'clear_visibility'
@@ -375,6 +359,10 @@ export const DEFAULT_ACTION_WEIGHTS: Record<ActionGemType, number> = {
   power: 0.125,
   thought: 0.125,
   multiplier: 0.125,
+  grenade: 0,
+  blade_drive: 0,
+  caltrops: 0,
+  shield_unit: 0,
 };
 
 export const DEFAULT_BOARD_SPAWN_CONFIG: BoardSpawnConfig = {
