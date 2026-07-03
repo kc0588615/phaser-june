@@ -41,7 +41,6 @@ export interface EventPayloads {
   };
   'game-score-updated': {
     score: number;
-    movesRemaining: number;
   };
   'game-over': {
     finalScore: number;
@@ -74,9 +73,7 @@ export interface EventPayloads {
   };
   'game-hud-updated': {
     score: number;
-    movesRemaining: number;
     movesUsed: number;
-    maxMoves: number;
     streak: number;
     multiplier: number;
     moveMultiplier?: number;

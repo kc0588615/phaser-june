@@ -307,9 +307,7 @@ export class Game extends Phaser.Scene {
         if (this.matchBattleCombat) {
             EventBus.emit(EVT_GAME_HUD_UPDATED, {
                 score: this.backendPuzzle.getScore(),
-                movesRemaining: 0,
                 movesUsed: this.matchBattleCombat.turn,
-                maxMoves: 0,
                 streak: this.streak,
                 multiplier: this.currentMultiplier(),
                 moveMultiplier: this.lastAppliedMoveMultiplier,
@@ -318,9 +316,7 @@ export class Game extends Phaser.Scene {
         }
         EventBus.emit(EVT_GAME_HUD_UPDATED, {
             score: this.backendPuzzle.getScore(),
-            movesRemaining: this.backendPuzzle.getMovesRemaining(),
             movesUsed: this.backendPuzzle.getMovesUsed(),
-            maxMoves: this.backendPuzzle.getMaxMoves(),
             streak: this.streak,
             multiplier: this.currentMultiplier(),
             moveMultiplier: this.lastAppliedMoveMultiplier,
@@ -1489,7 +1485,7 @@ export class Game extends Phaser.Scene {
             if (this.movesText && this.backendPuzzle) {
                 this.movesText.setText(this.matchBattleCombat
                     ? `Turn: ${this.matchBattleCombat.turn}`
-                    : `Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
+                    : `Moves: ${this.backendPuzzle.getMovesUsed()}`);
             }
             
             // Emit initial HUD state

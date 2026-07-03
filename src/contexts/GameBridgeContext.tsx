@@ -14,7 +14,7 @@ export interface SpeciesInfo {
 }
 
 const INITIAL_HUD: GameHudUpdatedEvent = {
-  score: 0, movesRemaining: 0, movesUsed: 0, maxMoves: 0, streak: 0, multiplier: 1.0, moveMultiplier: 1.0,
+  score: 0, movesUsed: 0, streak: 0, multiplier: 1.0, moveMultiplier: 1.0,
 };
 
 interface GameBridgeState {

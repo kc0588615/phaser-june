@@ -1,7 +1,7 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
+import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
 import { MATCH_BATTLE_PIECE_IDS, PIECE_CATALOG, normalizePiecePool } from './matchBattle/catalog';
@@ -22,7 +22,6 @@ export class BackendPuzzle {
     private nextGemsToSpawn: GemType[] = [];
     private score: number = 0;
     private movesUsed: number = 0;
-    private maxMoves: number = MAX_MOVES;
     private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
     private matchBattleConfig: MatchBattleBoardConfig | null = null;
     private snippetRow: GemType[] = [];
@@ -82,16 +81,8 @@ export class BackendPuzzle {
         return this.score;
     }
 
-    getMovesRemaining(): number {
-        return Math.max(0, this.maxMoves - this.movesUsed);
-    }
-
     getMovesUsed(): number {
         return this.movesUsed;
-    }
-
-    getMaxMoves(): number {
-        return this.maxMoves;
     }
 
     isGameOver(): boolean {
@@ -120,10 +111,6 @@ export class BackendPuzzle {
 
     resetMoves(): void {
         this.movesUsed = 0;
-    }
-
-    setMaxMoves(max: number): void {
-        this.maxMoves = max;
     }
 
     applyCellStateSeeds(seeds: CellStateSeed[]): void {
