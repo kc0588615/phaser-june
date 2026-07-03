@@ -41,18 +41,25 @@ import {
 } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
-import { createEnemy, nextIntent, PIECE_CATALOG } from '@/game/matchBattle/catalog';
+import { createEnemy } from '@/game/matchBattle/catalog';
 import { resolveGearTriggers, type CombatEffectResult } from '@/game/matchBattle/combatEvents';
 import type { ArmamentDef, MatchBattleCombatState, MatchBattleNodeType } from '@/game/matchBattle/types';
 import { createMatchBattleCombatStats, logMatchBattleCombatEnd, type MatchBattleCombatStats } from '@/game/matchBattle/debug';
-import { createEnemyFromSpecies, nextSpeciesIntent, pickCombatant } from '@/game/matchBattle/speciesMapper';
+import { createEnemyFromSpecies, pickCombatant } from '@/game/matchBattle/speciesMapper';
 import type { SpeciesCombatInput } from '@/game/matchBattle/speciesMapper';
 import type { MatchBattlePartnerPassive } from '@/game/matchBattle/partner';
+import {
+  applyCombatEffectResults,
+  applyPieceMatches,
+  DEBUFF_LABELS,
+  resolveTurn,
+  type PieceMatchInput,
+  type ResolverCtx,
+  type ResolverResult,
+  type ResolverStats,
+} from '@/game/matchBattle/combatResolver';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
-
-// Player-facing names for debuff ids (ids stay internal/persisted).
-const DEBUFF_LABELS: Record<string, string> = { burn: 'Glare', web: 'Tangle' };
 
 function slugify(value: string): string {
     return value
@@ -328,33 +335,31 @@ export class Game extends Phaser.Scene {
         return this.backendPuzzle?.height ?? this.boardRows;
     }
 
-    private applyCombatEffectResults(combat: MatchBattleCombatState, results: CombatEffectResult[]): { combat: MatchBattleCombatState; scoreDelta: number } {
-        let scoreDelta = 0;
-        const log: string[] = [];
-        for (const result of results) {
-            if (result.hpDelta) this.applyPlayerHpDelta(combat, result.hpDelta);
-            if (result.damageDelta) this.damageMatchBattleEnemy(combat, result.damageDelta);
-            if (result.scoreDelta) scoreDelta += result.scoreDelta;
-            if (result.log) log.push(result.log);
-        }
-        if (log.length > 0) combat.log = [...log, ...combat.log].slice(0, 8);
-        return { combat, scoreDelta };
+    private addMatchBattleStats(stats: ResolverStats): void {
+        this.matchBattleStats.damageDealt += stats.damageDealt;
+        this.matchBattleStats.damageTaken += stats.damageTaken;
+        this.matchBattleStats.debuffsCleansed += stats.debuffsCleansed;
     }
 
-    /** Mutate player Stamina with clamping; records damage taken for the tuning readout. */
-    private applyPlayerHpDelta(combat: MatchBattleCombatState, amount: number): void {
-        const before = combat.playerHp;
-        combat.playerHp = Phaser.Math.Clamp(before + amount, 0, combat.playerMaxHp);
-        if (combat.playerHp < before) this.matchBattleStats.damageTaken += before - combat.playerHp;
+    private applyResolverResult(result: ResolverResult): MatchBattleCombatState {
+        this.matchBattleScoreDelta += result.scoreDelta;
+        this.addMatchBattleStats(result.stats);
+        return result.combat;
     }
 
-    private damageMatchBattleEnemy(combat: MatchBattleCombatState, amount: number): number {
-        if (!combat.enemy || amount <= 0) return 0;
-        const prevHp = combat.enemy.hp;
-        combat.enemy.hp = Math.max(0, prevHp - amount);
-        const dealt = prevHp - combat.enemy.hp;
-        this.matchBattleStats.damageDealt += dealt;
-        return dealt;
+    private applyCombatEffects(combat: MatchBattleCombatState, results: CombatEffectResult[]): MatchBattleCombatState {
+        return this.applyResolverResult(applyCombatEffectResults(combat, results));
+    }
+
+    private getResolverCtx(): ResolverCtx | null {
+        if (!this.matchBattleNodeType) return null;
+        return {
+            armaments: this.matchBattleArmaments,
+            partnerPassive: this.matchBattlePartnerPassive,
+            nodeType: this.matchBattleNodeType,
+            combatant: this.matchBattleCombatant,
+            difficulty: this.currentNodeDifficulty,
+        };
     }
 
     private emitClueRevealed(clue: CluePayload): void {
@@ -643,14 +648,12 @@ export class Game extends Phaser.Scene {
         this.boardView.createBoard(this.backendPuzzle.getGridState());
         this.refreshSnippetPreview();
         if (this.matchBattleCombat) {
-            const applied = this.applyCombatEffectResults(
+            this.matchBattleCombat = this.applyCombatEffects(
                 this.matchBattleCombat,
                 triggerGear
                     ? resolveGearTriggers('on_shuffle', this.matchBattleArmaments, { combat: this.matchBattleCombat, turn: this.matchBattleCombat.turn })
                     : [],
             );
-            this.matchBattleCombat = applied.combat;
-            this.matchBattleScoreDelta += applied.scoreDelta;
             EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
         }
     }
@@ -974,119 +977,60 @@ export class Game extends Phaser.Scene {
 
     private applyMatchBattlePieceEffects(matches: Coordinate[][], gridState: any): void {
         if (!this.matchBattleCombat || !this.backendPuzzle) return;
-        let combat = { ...this.matchBattleCombat, enemy: this.matchBattleCombat.enemy ? { ...this.matchBattleCombat.enemy } : null };
-        const log: string[] = [];
+        const ctx = this.getResolverCtx();
+        if (!ctx) return;
 
-        const effectValue = (pieceId: ActionGemType, level: number, matchSize = 3) => {
-            const effect = PIECE_CATALOG[pieceId]?.effect;
-            if (!effect) return 0;
-            const base = effect.baseValue + Math.max(0, level - 1) * effect.levelScaling;
-            return base + Math.max(0, matchSize - 3);
-        };
-
+        const pieceMatches: PieceMatchInput[] = [];
         for (const match of matches) {
             if (match.length === 0) continue;
             const [x, y] = match[0];
             const gem = gridState[x]?.[y];
             if (!gem?.pieceId) continue;
-            const level = gem.level ?? 1;
-            const pieceId = gem.pieceId as ActionGemType;
-            const def = PIECE_CATALOG[pieceId];
-            if (!def) continue;
-            const amount = effectValue(pieceId, level, match.length);
-
-            if (def.trigger === 'match') {
-                switch (def.effect.stat) {
-                case 'damage': {
-                    const total = amount + (this.matchBattlePartnerPassive?.pressureBonus ?? 0);
-                    this.damageMatchBattleEnemy(combat, total);
-                    log.push(`${def.label}: ${total} Data.`);
-                    break;
-                }
-                case 'pierce':
-                    this.damageMatchBattleEnemy(combat, amount);
-                    log.push(`${def.label}: ${amount} Direct Data.`);
-                    break;
-                case 'heal':
-                    this.applyPlayerHpDelta(combat, amount);
-                    log.push(`${def.label}: +${amount} Stamina.`);
-                    break;
-                default:
-                    log.push(`${def.label} matched.`);
-                    break;
-                }
-            }
-
-        }
-
-        if (this.currentMoveSummary?.cascades) {
-            // applyMatchBattlePieceEffects runs once per cascade phase, so the on_cascade trigger
-            // must receive the per-phase delta (1), not the cumulative count, or gear effects stack
-            // triangularly (+1, +2, +3...) instead of linearly (+1, +1, +1...).
-            const cascadeEffects = resolveGearTriggers('on_cascade', this.matchBattleArmaments, {
-                combat,
-                turn: combat.turn,
-                cascadeCount: 1,
+            pieceMatches.push({
+                pieceId: gem.pieceId as ActionGemType,
+                level: gem.level ?? 1,
+                matchSize: match.length,
             });
-            const applied = this.applyCombatEffectResults(combat, cascadeEffects);
-            combat = applied.combat;
-            this.matchBattleScoreDelta += applied.scoreDelta;
         }
 
-        const cleansed = this.backendPuzzle.consumeCleanseCount();
-        if (cleansed > 0) {
-            this.matchBattleStats.debuffsCleansed += cleansed;
-            log.push(`Cleared ${cleansed} hindrance${cleansed > 1 ? 's' : ''}.`);
-        }
-
-        combat.log = [...log, ...combat.log].slice(0, 8);
-        this.matchBattleCombat = combat;
-        EventBus.emit('match-battle-combat-state-updated', combat);
-    }
-
-    private finishMatchBattleCombatWin(combat: MatchBattleCombatState): void {
-        const endEffects = resolveGearTriggers('combat_end', this.matchBattleArmaments, { combat, turn: combat.turn, wasCleanCapture: false });
-        const applied = this.applyCombatEffectResults(combat, endEffects);
-        const nextCombat = applied.combat;
-        this.matchBattleScoreDelta += applied.scoreDelta;
-        this.matchBattleCombat = nextCombat;
-        EventBus.emit('match-battle-combat-state-updated', nextCombat);
-        EventBus.emit('match-battle-combat-ended', {
-            outcome: 'won',
-            combat: nextCombat,
-            nodeIndex: this.currentNodeIndex,
-            cleanCapture: false,
-            scoreDelta: this.matchBattleScoreDelta,
+        const result = applyPieceMatches(this.matchBattleCombat, pieceMatches, ctx, {
+            cascadeTriggered: Boolean(this.currentMoveSummary?.cascades),
+            cleansedCount: this.backendPuzzle.consumeCleanseCount(),
         });
-        logMatchBattleCombatEnd('won', nextCombat.turn, this.matchBattleStats, this.matchBattleLootChance);
-        if (!this.nodeObjectiveCompleted) this.finishNodeObjective('objective_complete');
+        this.matchBattleCombat = this.applyResolverResult(result);
+        EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
     }
 
     private resolveMatchBattleTurn(didAnyMatch: boolean): void {
         if (!this.matchBattleCombat || !this.matchBattleCombat.enemy) return;
-        let combat: MatchBattleCombatState = {
-            ...this.matchBattleCombat,
-            enemy: { ...this.matchBattleCombat.enemy },
-            log: [...this.matchBattleCombat.log],
-        };
+        const ctx = this.getResolverCtx();
+        if (!ctx) return;
 
-        if (didAnyMatch) combat.log = ['Field action resolved.', ...combat.log].slice(0, 8);
+        const result = resolveTurn(this.matchBattleCombat, didAnyMatch, ctx);
+        let combat = this.applyResolverResult(result);
+        combat = this.applyDebuffSeeds(combat, result.debuffSeeds);
+        this.matchBattleCombat = combat;
+        EventBus.emit('match-battle-combat-state-updated', combat);
 
-        if (combat.enemy && combat.enemy.hp <= 0) {
-            this.finishMatchBattleCombatWin(combat);
+        if (result.outcome === 'won') {
+            EventBus.emit('match-battle-combat-ended', {
+                outcome: 'won',
+                combat,
+                nodeIndex: this.currentNodeIndex,
+                cleanCapture: false,
+                scoreDelta: this.matchBattleScoreDelta,
+            });
+            logMatchBattleCombatEnd('won', combat.turn, this.matchBattleStats, this.matchBattleLootChance);
+            if (!this.nodeObjectiveCompleted) this.finishNodeObjective('objective_complete');
             return;
         }
 
-        combat = this.resolveEnemyTurn(combat);
-
-        this.matchBattleCombat = combat;
-        EventBus.emit('match-battle-combat-state-updated', combat);
         this.emitHud();
         if (this.movesText) {
             this.movesText.setText(`Turn: ${combat.turn}`);
         }
 
-        if (combat.playerHp <= 0 && !this.nodeObjectiveCompleted) {
+        if (result.outcome === 'lost' && !this.nodeObjectiveCompleted) {
             EventBus.emit('match-battle-combat-ended', {
                 outcome: 'lost',
                 combat,
@@ -1099,44 +1043,23 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private resolveEnemyTurn(combat: MatchBattleCombatState): MatchBattleCombatState {
-        if (!combat.enemy || !this.matchBattleNodeType) return combat;
-        const intent = combat.enemy.intent;
-        const enemyName = combat.enemy.name;
-        const log: string[] = [];
-
-        if (intent.type === 'attack' || intent.type === 'attack_debuff') {
-            const hpDamage = intent.amount;
-            this.applyPlayerHpDelta(combat, -hpDamage);
-            const hpLossEffects = resolveGearTriggers('on_hp_loss', this.matchBattleArmaments, {
-                combat,
-                turn: combat.turn,
-                damageAmount: hpDamage,
-            });
-            const applied = this.applyCombatEffectResults(combat, hpLossEffects);
-            combat = applied.combat;
-            this.matchBattleScoreDelta += applied.scoreDelta;
-            log.push(`${enemyName}: ${intent.label} for ${hpDamage}.`);
+    private applyDebuffSeeds(combat: MatchBattleCombatState, debuffSeeds: string[]): MatchBattleCombatState {
+        if (debuffSeeds.length === 0) return combat;
+        const enemyName = this.matchBattleCombat?.enemy?.name ?? combat.enemy?.name ?? 'Creature';
+        let next = combat;
+        const seedLogs: string[] = [];
+        for (const seededId of debuffSeeds) {
+            if (this.seedDebuff(seededId)) {
+                seedLogs.push(`${enemyName} marked ${DEBUFF_LABELS[seededId] ?? seededId}.`);
+            }
         }
-
-        if (intent.type === 'debuff' || intent.type === 'attack_debuff') {
-            const seededId = intent.debuffId ?? 'burn';
-            if (this.seedDebuff(seededId)) log.push(`${enemyName} marked ${DEBUFF_LABELS[seededId] ?? seededId}.`);
-        }
-
-        const nextTurn = combat.turn + 1;
-        combat.turn = nextTurn;
-        if (combat.enemy) {
-            combat.enemy.intent = this.matchBattleCombatant
-                ? nextSpeciesIntent(this.matchBattleCombatant, this.matchBattleNodeType, nextTurn, this.currentNodeDifficulty)
-                : nextIntent(this.matchBattleNodeType, nextTurn, this.currentNodeDifficulty);
-        }
-        combat.log = [...log, `Turn ${nextTurn}.`, ...combat.log].slice(0, 8);
-        const turnEffects = resolveGearTriggers('turn_start', this.matchBattleArmaments, { combat, turn: nextTurn });
-        const applied = this.applyCombatEffectResults(combat, turnEffects);
-        combat = applied.combat;
-        this.matchBattleScoreDelta += applied.scoreDelta;
-        return combat;
+        if (seedLogs.length === 0) return next;
+        const turnIndex = next.log.findIndex(line => line.startsWith('Turn '));
+        const log = turnIndex >= 0
+            ? [...next.log.slice(0, turnIndex), ...seedLogs, ...next.log.slice(turnIndex)]
+            : [...seedLogs, ...next.log];
+        next = { ...next, log: log.slice(0, 8) };
+        return next;
     }
 
     /** Seed a debuff on a random open cell. Returns true if the debuff was applied and kept. */
@@ -1450,9 +1373,9 @@ export class Game extends Phaser.Scene {
                 // Fresh combat: clear DROP fired-cell ids from any prior combat.
                 this.matchBattleFiredDropCells = new Set();
                 const startEffects = resolveGearTriggers('combat_start', this.matchBattleArmaments, { combat, turn: 1 });
-                combat = this.applyCombatEffectResults(combat, startEffects).combat;
+                combat = this.applyCombatEffects(combat, startEffects);
                 const turnEffects = resolveGearTriggers('turn_start', this.matchBattleArmaments, { combat, turn: 1 });
-                combat = this.applyCombatEffectResults(combat, turnEffects).combat;
+                combat = this.applyCombatEffects(combat, turnEffects);
                 this.matchBattleCombat = combat;
                 EventBus.emit('match-battle-combat-state-updated', this.matchBattleCombat);
                 // Combat-start gear (Trail Mix, etc.) can drop the player to <=0 HP before the board enables.
