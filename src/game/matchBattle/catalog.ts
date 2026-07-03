@@ -225,7 +225,7 @@ export function createInitialMatchBattleState(
     rerollCost: 40,
     maxGearSlots: 3,
     boardCols: 4,
-    boardRows: 3,
+    boardRows: 5,
     lootChance: MATCH_BATTLE_LOOT_CHANCE,
     partnerSpeciesId: partner?.speciesId ?? null,
     partner,
@@ -281,7 +281,9 @@ export function normalizeMatchBattleRunState(
     rerollCost: raw.rerollCost ?? base.rerollCost,
     maxGearSlots: raw.maxGearSlots ?? base.maxGearSlots,
     boardCols: raw.boardCols ?? base.boardCols,
-    boardRows: raw.boardRows ?? base.boardRows,
+    // Clamp to the current base so saves from before the board enlargement
+    // don't resume on a too-small board (board_row upgrades only add rows).
+    boardRows: Math.max(raw.boardRows ?? base.boardRows, base.boardRows),
     lootChance: typeof raw.lootChance === 'number' && Number.isFinite(raw.lootChance)
       ? Math.max(0, Math.min(1, raw.lootChance))
       : base.lootChance,

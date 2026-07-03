@@ -15,8 +15,8 @@ import {
 } from '../expedition/domain';
 
 // --- Grid Configuration ---
-export const GRID_COLS = 6 as const;
-export const GRID_ROWS = 6 as const;
+export const GRID_COLS = 4 as const;
+export const GRID_ROWS = 5 as const;
 
 // --- Gem Configuration ---
 export { ACTION_GEM_TYPES, LOOT_GEM_TYPES, GEM_TYPES, getGemFamily, DEFAULT_BOARD_SPAWN_CONFIG };

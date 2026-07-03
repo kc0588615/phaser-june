@@ -418,6 +418,14 @@ export class BackendPuzzle {
             }
             attempts++;
         } while (!this.hasAnyValidMove() && attempts < 50);
+
+        // Permuting existing cells can never create a match when no gem type
+        // appears 3+ times (small board + wide gem pool). Respawn fresh gems.
+        let regenAttempts = 0;
+        while (!this.hasAnyValidMove() && regenAttempts < 20) {
+            this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
+            regenAttempts++;
+        }
     }
 
     addNextGemToSpawn(gemType: GemType): void {
