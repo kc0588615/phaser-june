@@ -1,8 +1,16 @@
+> Superseded 2026-07 by the Match Battle simplification. See [SIMPLIFICATION_CUT_LIST.md](../SIMPLIFICATION_CUT_LIST.md). The fragment economy no longer exists; current runs use banked score only.
+
 # Deduction Camp & Banked-Score Economy
 
-Current expedition-economy doc for the shipped loop: banked score + clue fragments + Deduction Camp. It also notes a few typed hooks and planned expansions that are not fully realized yet.
+Current expedition-economy doc for the standard GIS expedition loop: banked score + clue fragments + Deduction Camp. It also notes a few typed hooks and planned expansions that are not fully realized yet.
 
-Read after [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md) and [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md).
+Read after [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md). For the active Match Battle combat route, read [MATCH_BATTLE_SYSTEM.md](../MATCH_BATTLE_SYSTEM.md).
+
+## Current Scope
+
+Deduction Camp still pertains to the species-identification loop. Match Battle currently ends at the completion summary on leader win or Stamina loss; it does not automatically enter Deduction Camp on combat loss.
+
+If Match Battle should feed species deduction later, define that handoff explicitly before wiring it into this economy.
 
 ## Purpose
 
@@ -58,13 +66,13 @@ The board still borrows YMBAB's action-board language, but Deduction Camp is the
 
 ### Grid dimensions
 
-Changed to 6 columns × 6 rows.
+Changed to 4 columns × 3 rows.
 
 **File:** `src/game/constants.ts`
 
 ```
-GRID_COLS = 6
-GRID_ROWS = 6
+GRID_COLS = 4
+GRID_ROWS = 3
 ```
 
 ### Gem spacing
@@ -77,11 +85,9 @@ Gems now fill entire cells with no gap (was 10% gap).
 
 ### Board height
 
-Usable height factor adjusted from `0.7875` to `0.85` for the taller 8-row board.
+Board layout is responsive around the current 4x3 default footprint. The same constants feed `BackendPuzzle`, `BoardView`, and obstacle seeding. Match Battle can expand board dimensions through route upgrades, but the base screen footprint is shared.
 
-**File:** `src/game/scenes/Game.ts` (line ~1426)
-
-All consumers (BackendPuzzle, BoardView, nodeObstacles) reference `GRID_COLS`/`GRID_ROWS` from constants and auto-adjust.
+All consumers reference `GRID_COLS`/`GRID_ROWS` from constants and auto-adjust.
 
 ## New Economy Data Model
 

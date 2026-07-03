@@ -1,6 +1,6 @@
 # Phaser + Next.js + Cesium + Drizzle
 
-A Next.js + React application that embeds a Phaser 3 puzzle game and a Cesium 3D map, with species and habitat data stored in Postgres via Drizzle ORM. Server runtime is required for API routes and database access. Auth is planned via Clerk (not implemented yet). UI built with Tailwind CSS and shadcn/ui.
+A Next.js + React application that embeds a Phaser 3 puzzle game and a Cesium 3D map, with species and habitat data stored in Postgres via Drizzle ORM. Server runtime is required for API routes and database access. Auth uses Clerk where player identity is required, with anonymous expedition runs still allowed. UI built with Tailwind CSS and shadcn/ui.
 
 Note: The data layer was migrated from Prisma to Drizzle; Prisma is no longer used in this repo.
 
@@ -11,15 +11,15 @@ Note: The data layer was migrated from Prisma to Drizzle; Prisma is no longer us
 - TypeScript 5
 - Cesium + Resium for 3D map
 - Postgres (Hetzner VPS) + Drizzle ORM for data
-- Clerk for auth (planned, not implemented)
+- Clerk for auth and player identity
 - Tailwind CSS 4 + shadcn/ui for styling
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22.x
 - Postgres database (Hetzner VPS or other)
 - Cesium Ion token
-- Clerk account (planned, not required yet)
+- Clerk keys for signed-in player features
 
 ## Quick Start
 
@@ -40,15 +40,17 @@ Required environment variables (set in `.env.local`):
 
 - `DATABASE_URL` (Postgres connection string)
 - `NEXT_PUBLIC_CESIUM_ION_TOKEN`
-- Clerk keys TBD
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` for signed-in player features
 - Optional: `NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`
 
 ## Project Structure
 
 - `src/pages/` — Next.js routes (`_app.tsx`, `_document.tsx`, `index.tsx`)
+- `src/app/api/` — Next.js API routes for runs, species, GIS, and player data
 - `src/PhaserGame.tsx` — React ↔ Phaser bridge component
-- `src/game/` — Game core: `BackendPuzzle.ts`, `BoardView.ts`, `MoveAction.ts`, scenes in `scenes/`, `EventBus.ts`
+- `src/game/` — Game core: `BackendPuzzle.ts`, `BoardView.ts`, `MoveAction.ts`, scenes in `scenes/`, `EventBus.ts`, and `matchBattle/*`
 - `src/components/` — UI components: `CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, etc., plus `components/ui/*` from shadcn
+- `src/contexts/` — React state providers for Phaser bridge state and expedition/Match Battle run state
 - `src/db/` — Drizzle client + schema + types
 - `src/lib/` — Services: `speciesQueries.ts`, `playerTracking.ts`
 - `src/types/` — Shared types including `database.ts`
@@ -60,6 +62,8 @@ Required environment variables (set in `.env.local`):
 - Cesium integration in `src/components/CesiumMap.tsx`
 - Drizzle data layer in `src/db/*` and `src/lib/speciesQueries.ts`
 - Match-3 MVC-like flow: BackendPuzzle ↔ Scene ↔ BoardView
+- Match Battle roguelite layer: route map, 4x5 board, stamina combat, clues, banked score, rewards, gear, upgrades
+- Moves are unlimited; move count is retained for stats.
 
 ## Scripts
 
@@ -74,9 +78,10 @@ Note: This project requires the Next.js server runtime for API routes and databa
 ## Docs
 
 - Start with onboarding: [`DEVELOPER_ONBOARDING.md`](./DEVELOPER_ONBOARDING.md) (full index of every doc)
-- Architecture: [`GAME_SYSTEM_ARCHITECTURE.md`](./GAME_SYSTEM_ARCHITECTURE.md), [`EXPEDITION_RUN_LOOP.md`](./EXPEDITION_RUN_LOOP.md), [`CLUE_BOARD_IMPLEMENTATION.md`](./CLUE_BOARD_IMPLEMENTATION.md)
-- Data: [`DATABASE_USER_GUIDE.md`](./DATABASE_USER_GUIDE.md), [`SPECIES_DATABASE_IMPLEMENTATION.md`](./SPECIES_DATABASE_IMPLEMENTATION.md), [`DRIZZLE_ORM_GUIDE.md`](./DRIZZLE_ORM_GUIDE.md)
-- UI & styling: [`SHADCN_IMPLEMENTATION_GUIDE.md`](./SHADCN_IMPLEMENTATION_GUIDE.md), [`STYLE_MAPPING.md`](./STYLE_MAPPING.md)
+- Architecture: [`GAME_SYSTEM_ARCHITECTURE.md`](./GAME_SYSTEM_ARCHITECTURE.md), [`MATCH_BATTLE_SYSTEM.md`](./MATCH_BATTLE_SYSTEM.md)
+- Archived legacy run/economy docs: [`archive/EXPEDITION_RUN_LOOP.md`](./archive/EXPEDITION_RUN_LOOP.md), [`archive/DEDUCTION_CAMP_ECONOMY.md`](./archive/DEDUCTION_CAMP_ECONOMY.md)
+- Data: [`SPECIES_TABLE_SIMPLIFICATION_PLAN.md`](./SPECIES_TABLE_SIMPLIFICATION_PLAN.md), [`SPECIES_DATABASE_IMPLEMENTATION.md`](./SPECIES_DATABASE_IMPLEMENTATION.md), [`DRIZZLE_ORM_GUIDE.md`](./DRIZZLE_ORM_GUIDE.md)
+- UI & styling: [`UI_REDESIGN_SPEC.md`](./UI_REDESIGN_SPEC.md), [`SHADCN_IMPLEMENTATION_GUIDE.md`](./SHADCN_IMPLEMENTATION_GUIDE.md)
 - Map/game layout: [`CESIUM_UI_CUSTOMIZATION.md`](./CESIUM_UI_CUSTOMIZATION.md), [`HABITAT_HIGHLIGHT_IMPLEMENTATION.md`](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md)
 
 ## Deploying

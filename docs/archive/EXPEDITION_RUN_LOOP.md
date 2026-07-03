@@ -1,15 +1,20 @@
+> Superseded 2026-07 by the Match Battle simplification. See [SIMPLIFICATION_CUT_LIST.md](../SIMPLIFICATION_CUT_LIST.md). The spook/objective loop no longer describes the active runtime.
+
 # Expedition Run Loop
 
-Current runtime doc. For cross-system ownership rules, read [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) first.
+Runtime doc for the legacy expedition node loop. For cross-system ownership rules, read [GAME_SYSTEM_ARCHITECTURE.md](../GAME_SYSTEM_ARCHITECTURE.md) first.
 
-For the current additive `counterGem` + affinity migration status, see [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
+For the current Match Battle combat route, read [MATCH_BATTLE_SYSTEM.md](../MATCH_BATTLE_SYSTEM.md). Match Battle is the active gameplay direction; this document remains useful for GIS node generation, Deduction Camp, spook/objective mechanics, and legacy expedition behavior.
 
-This document now describes both:
+This document describes:
 
-- the **current shipped/runtime loop**
-- the **planned pressure-loop evolution** toward a softer YMBAB-style chase model
+- the standard GIS expedition loop
+- the spook/objective pressure model
+- the deduction camp handoff
 
-Core gameplay loop: map click → expedition briefing → 6-node run → deduction camp → completion summary.
+Standard expedition loop: map click → expedition briefing → 6-node run → deduction camp → completion summary.
+
+Match Battle loop: map click → expedition briefing → branching combat route → reward/upgrade/route choices → leader win or stamina-loss summary.
 
 ## Design Position
 
@@ -17,7 +22,7 @@ The project is no longer aiming for a literal *You Must Build A Boat* clone.
 
 The current game keeps several YMBAB-inspired structural elements:
 
-- a 6x6 wraparound action board
+- a compact shared match-board footprint (`GRID_COLS = 4`, `GRID_ROWS = 3`)
 - action-gem-driven node objectives
 - crates/consumables
 - encounter events tied to board output
@@ -34,9 +39,9 @@ The intended identity is now:
 - **expedition node progression**
 - **science discovery and species deduction as the meta-loop**
 
-## Current Runtime vs Planned Direction
+## Current Runtime Split
 
-### Current runtime
+### Standard expedition runtime
 
 - Nodes are solved by matching required action gems until `objectiveTarget` is filled.
 - Pressure comes from the **spook meter** (tracking window that decays each second) plus move limits as a secondary lever.
@@ -44,6 +49,15 @@ The intended identity is now:
 - Loot gems award clue fragments instead of direct clue reveals.
 - After the route (or early escape), the player spends banked score in Deduction Camp to buy clues and make a species guess.
 - Action gem labels use fieldwork language (Observe, Scan, Camouflage, Traverse, Focus, Field Notes, Backpack, Burst).
+
+### Match Battle runtime
+
+- Route nodes come from `matchBattle.routeNodes`, not the linear 6-node objective route.
+- Combat nodes use the shared 4x3 board by default, with Match Battle row/column upgrades able to expand it.
+- Stamina reaching 0 immediately ends the Match Battle run as lost.
+- Enemy defeat clears the route node and opens reward/route selection.
+- Leader clear ends the run as won.
+- Build mutations are checkpointed from `RunState.matchBattle`; see [MATCH_BATTLE_SYSTEM.md](./MATCH_BATTLE_SYSTEM.md#persistence).
 
 ## Run Phases
 
@@ -94,6 +108,8 @@ State tracked in `RunState` (`src/types/expedition.ts`), managed by `MainAppLayo
 Each template has a unique gem pair to ensure variety within an expedition. Filler logic cycles through unused gem pairs.
 
 ### Obstacle Seeding
+
+Standard expedition and Match Battle node setup both use the board dimensions from `src/game/constants.ts` unless Match Battle has purchased board-size upgrades. The current default is 4 columns x 3 rows.
 
 - Obstacles are typed in `src/game/nodeObstacles.ts`.
 - Some obstacles now seed deterministic per-cell board state during node initialization.
