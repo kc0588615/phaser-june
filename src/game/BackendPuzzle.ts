@@ -95,7 +95,8 @@ export class BackendPuzzle {
     }
 
     isGameOver(): boolean {
-        return this.movesUsed >= this.maxMoves;
+        // Unlimited play: moves are counted for stats but never end the game.
+        return false;
     }
 
     getGridState(): PuzzleGrid {
@@ -113,7 +114,7 @@ export class BackendPuzzle {
     }
 
     registerMove(): number {
-        this.movesUsed = Math.min(this.maxMoves, this.movesUsed + 1);
+        this.movesUsed += 1;
         return this.movesUsed;
     }
 

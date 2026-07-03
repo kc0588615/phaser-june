@@ -34,21 +34,13 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
       {/* Game HUD */}
       <div className="flex justify-between items-center px-3 py-2 glass-bg rounded-lg border border-ds-subtle text-sm text-ds-text-primary font-medium">
         <div className="flex gap-4 items-center">
-          <span>Moves: {hud.movesUsed}/{hud.maxMoves || '—'}</span>
+          <span>Moves: {hud.movesUsed}</span>
           <span>Score: {hud.score}</span>
           <span>Streak: x{hud.multiplier.toFixed(2)}</span>
           {hud.moveMultiplier && hud.moveMultiplier > 1.01 && (
             <span>Move Bonus: x{hud.moveMultiplier.toFixed(2)}</span>
           )}
         </div>
-        {hud.maxMoves > 0 && hud.movesUsed >= hud.maxMoves && (
-          <button
-            onClick={onRestart}
-            className="px-3 py-1 bg-ds-cyan text-white border-none rounded text-sm font-medium cursor-pointer"
-          >
-            Restart
-          </button>
-        )}
       </div>
 
       {/* Species Header with Horizontal Clue Indicators */}

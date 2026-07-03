@@ -7,7 +7,6 @@ import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD,
     STREAK_STEP, STREAK_CAP, EARLY_BONUS_PER_SLOT, DEFAULT_TOTAL_CLUE_SLOTS,
-    MAX_MOVES,
     MOVE_LARGE_MATCH_THRESHOLD,
     MOVE_HUGE_MATCH_THRESHOLD,
     MULTIPLIER_LARGE_MATCH,
@@ -288,25 +287,7 @@ export class Game extends Phaser.Scene {
         if (this.movesText) {
             this.movesText.setText(this.matchBattleCombat
                 ? `Turn: ${this.matchBattleCombat.turn}`
-                : `Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
-        }
-
-        // Check game over
-        if (this.backendPuzzle.isGameOver() && this.canMove && !this.isPaused) {
-            if (this.inExpeditionRun) {
-                // Expedition: moves exhausted triggers escape, not GameOver scene
-                if (!this.nodeObjectiveCompleted) {
-                    this.finishNodeObjective('escaped');
-                }
-                return;
-            }
-            this.disableInputs();
-            const finalScore = this.backendPuzzle.getScore();
-            this.emitHud();
-            console.log(`Game Over! Final score: ${finalScore}`);
-            this.time.delayedCall(100, () => {
-                this.scene.start('GameOver', { score: finalScore });
-            });
+                : `Moves: ${this.backendPuzzle.getMovesUsed()}`);
         }
     }
 
@@ -407,27 +388,11 @@ export class Game extends Phaser.Scene {
         if (didAnyMatch) {
             this.backendPuzzle.registerMove();
             if (this.movesText) {
-                this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
+                this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}`);
             }
         }
 
         this.emitHud();
-
-        // Disable input and transition when moves hit limit
-        if (this.backendPuzzle.isGameOver()) {
-            if (this.inExpeditionRun) {
-                if (!this.nodeObjectiveCompleted) {
-                    this.finishNodeObjective('escaped');
-                }
-                return;
-            }
-            this.disableInputs();
-            this.emitHud();
-            const finalScore = this.backendPuzzle.getScore();
-            this.time.delayedCall(100, () => {
-                this.scene.start('GameOver', { score: finalScore });
-            });
-        }
     }
 
     private onWrongGuess(): void {
@@ -515,7 +480,7 @@ export class Game extends Phaser.Scene {
         }).setDepth(100);
 
         // Moves display
-        this.movesText = this.add.text(width - 20, height - 25, `Moves: 0/${MAX_MOVES}`, {
+        this.movesText = this.add.text(width - 20, height - 25, `Moves: 0`, {
             fontSize: '20px',
             color: '#ffffff',
             stroke: '#000000',
@@ -1549,16 +1514,6 @@ export class Game extends Phaser.Scene {
                 this.backendPuzzle.regenerateBoard();
             }
             this.backendPuzzle.resetMoves();
-            // Scale moves by node difficulty (default MAX_MOVES outside expeditions)
-            if (this.matchBattleCombat) {
-                this.backendPuzzle.setMaxMoves(999);
-            } else if (data.difficulty && data.difficulty >= 1) {
-                const difficultyMoves = [50, 40, 30, 25, 20];
-                const moves = difficultyMoves[Math.min(data.difficulty - 1, 4)] ?? MAX_MOVES;
-                this.backendPuzzle.setMaxMoves(moves);
-            } else {
-                this.backendPuzzle.setMaxMoves(MAX_MOVES);
-            }
 
             // Show obstacle indicators if present
             if (this.obstacleText) {
