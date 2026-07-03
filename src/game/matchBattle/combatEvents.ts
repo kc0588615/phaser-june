@@ -51,9 +51,6 @@ export function resolveGearTriggers(
       case 'credit_ledger':
         results.push({ scoreDelta: 8, log: 'Grant Ledger: +8 Score.' });
         break;
-      case 'pain_transmitter':
-        results.push({ damageDelta: Math.ceil((ctx.damageAmount ?? 0) / 2), log: 'Endurance Log: counter-read.' });
-        break;
       case 'crescendo_earrings':
         results.push({ damageDelta: ctx.cascadeCount ?? 1, log: 'Smartwatch: cascade Data.' });
         break;

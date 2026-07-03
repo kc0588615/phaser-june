@@ -64,16 +64,12 @@ export const ARMAMENT_CATALOG: ArmamentDef[] = [
   { id: 'assault_potion', name: 'Trail Mix', kind: 'risk', trigger: 'turn_start', description: '+4 Approach each turn; spend 2 Stamina.' },
   { id: 'credit_ledger', name: 'Grant Ledger', kind: 'economy', trigger: 'combat_end', description: '+8 score after each encounter.' },
   { id: 'iron_jaw', name: 'Reinforced Blind', kind: 'defense', trigger: 'combat_start', description: '+3 Stamina at encounter start.' },
-  { id: 'pain_transmitter', name: 'Endurance Log', kind: 'scaling', trigger: 'on_hp_loss', description: 'Taking damage counters with Data.' },
   { id: 'crescendo_earrings', name: 'Smartwatch', kind: 'scaling', trigger: 'on_cascade', description: 'Every cascade adds +1 Data.' },
 ];
 
 export const UPGRADE_CATALOG: UpgradeDef[] = [
   { id: 'board_col', name: 'Wider Viewfinder', type: 'board_col', cost: 3, description: 'Wider board, higher combo ceiling.' },
   { id: 'board_row', name: 'Deeper Range', type: 'board_row', cost: 3, description: 'Taller board, more drop setup.' },
-  // 'snippet_row' upgrade removed: snippetsEnabled is true at MB init (createInitialMatchBattleState), so the purchase was a no-op.
-  { id: 'arm_slot', name: 'Gear Harness', type: 'armament_slot', cost: 3, description: 'Carry one more Field Gear.' },
-  { id: 'reduce_rate', name: 'Optimize Kit', type: 'piece_weight_down', cost: 1, description: 'Reduce a piece spawn weight; 0 removes it.' },
 ];
 
 const BASE_POOL: PiecePoolEntry[] = [
@@ -209,6 +205,7 @@ export function normalizeMatchBattleRunState(
   const rawPartner = raw.partner && typeof raw.partner === 'object' && !Array.isArray(raw.partner)
     ? raw.partner as MatchBattlePartner
     : null;
+  const upgradeIds = new Set(UPGRADE_CATALOG.map((upgrade) => upgrade.id));
 
   return {
     ...base,
@@ -217,8 +214,10 @@ export function normalizeMatchBattleRunState(
     routeNodes: asArray<MatchBattleRunState['routeNodes'][number]>(raw.routeNodes) ?? base.routeNodes,
     currentRouteNodeId: raw.currentRouteNodeId ?? base.currentRouteNodeId,
     piecePool: ensureMinimumSpawnablePieces(rawPiecePool ? rawPiecePool.map((entry) => ({ ...entry })) : base.piecePool),
-    armaments: rawArmaments?.map((entry) => ARMAMENT_CATALOG.find((candidate) => candidate.id === entry.id) ?? { ...entry }) ?? base.armaments,
-    upgrades: asArray<string>(raw.upgrades) ?? base.upgrades,
+    armaments: rawArmaments
+      ?.map((entry) => ARMAMENT_CATALOG.find((candidate) => candidate.id === entry.id) ?? null)
+      .filter((entry): entry is ArmamentDef => Boolean(entry)) ?? base.armaments,
+    upgrades: asArray<string>(raw.upgrades)?.filter((id) => upgradeIds.has(id)) ?? base.upgrades,
     rerollCost: raw.rerollCost ?? base.rerollCost,
     maxGearSlots: raw.maxGearSlots ?? base.maxGearSlots,
     boardCols: raw.boardCols ?? base.boardCols,
