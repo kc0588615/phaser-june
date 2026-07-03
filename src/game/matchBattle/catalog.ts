@@ -14,8 +14,21 @@ import type {
 } from './types';
 import type { MatchBattlePartner } from './partner';
 
-export const MATCH_BATTLE_SCHEMA_VERSION = 3;
+export const MATCH_BATTLE_SCHEMA_VERSION = 4;
 export const MATCH_BATTLE_LOOT_CHANCE = 0.35;
+export const MATCH_BATTLE_PIECE_IDS = ['sword', 'staff', 'shield'] as const satisfies readonly ActionGemType[];
+
+const RETIRED_PIECE_MAP: Partial<Record<ActionGemType, typeof MATCH_BATTLE_PIECE_IDS[number]>> = {
+  crate: 'shield',
+  power: 'staff',
+  thought: 'shield',
+  key: 'staff',
+  multiplier: 'sword',
+  grenade: 'sword',
+  blade_drive: 'sword',
+  caltrops: 'sword',
+  shield_unit: 'shield',
+};
 
 export const PIECE_CATALOG: Record<ActionGemType, PieceDef> = {
   sword: {
@@ -159,13 +172,13 @@ const FORM_BONUS: Partial<Record<AffinityType, ActionGemType>> = {
   feline: 'sword',
   ungulate: 'shield',
   insect: 'staff',
-  primate: 'crate',
-  reptile: 'power',
-  avian: 'thought',
-  fish: 'key',
-  arachnid: 'multiplier',
+  primate: 'shield',
+  reptile: 'staff',
+  avian: 'shield',
+  fish: 'staff',
+  arachnid: 'sword',
   amphibian: 'shield',
-  burrower: 'key',
+  burrower: 'staff',
 };
 
 export function createInitialPiecePool(form: AffinityType | null): PiecePoolEntry[] {
@@ -180,7 +193,7 @@ export function createInitialPiecePool(form: AffinityType | null): PiecePoolEntr
 }
 
 export function countSpawnablePieces(pool: PiecePoolEntry[]): number {
-  return pool.filter((entry) => entry.weight > 0).length;
+  return pool.filter((entry) => entry.weight > 0 && MATCH_BATTLE_PIECE_IDS.includes(entry.pieceId as any)).length;
 }
 
 export function hasMinimumSpawnablePieces(pool: PiecePoolEntry[]): boolean {
@@ -192,7 +205,7 @@ export function hasMinimumSpawnablePieces(pool: PiecePoolEntry[]): boolean {
  * Repairs corrupt/legacy persisted pools so board generation cannot break. Valid pools pass through unchanged.
  */
 export function ensureMinimumSpawnablePieces(pool: PiecePoolEntry[]): PiecePoolEntry[] {
-  const next = pool.map((entry) => ({ ...entry }));
+  const next = normalizePiecePool(pool);
   for (const starter of BASE_POOL) {
     if (countSpawnablePieces(next) >= MIN_SPAWNABLE_PIECES) break;
     const existing = next.find((entry) => entry.pieceId === starter.pieceId);
@@ -203,6 +216,29 @@ export function ensureMinimumSpawnablePieces(pool: PiecePoolEntry[]): PiecePoolE
     }
   }
   return next;
+}
+
+function mapPieceId(pieceId: ActionGemType): typeof MATCH_BATTLE_PIECE_IDS[number] | null {
+  if (MATCH_BATTLE_PIECE_IDS.includes(pieceId as any)) return pieceId as typeof MATCH_BATTLE_PIECE_IDS[number];
+  return RETIRED_PIECE_MAP[pieceId] ?? null;
+}
+
+export function normalizePiecePool(pool: PiecePoolEntry[]): PiecePoolEntry[] {
+  const merged = new Map<ActionGemType, PiecePoolEntry>();
+  for (const entry of pool) {
+    const pieceId = mapPieceId(entry.pieceId);
+    if (!pieceId) continue;
+    const existing = merged.get(pieceId);
+    if (existing) {
+      existing.weight += Math.max(0, entry.weight);
+      existing.level = Math.max(existing.level, entry.level ?? 1);
+    } else {
+      merged.set(pieceId, { pieceId, level: entry.level ?? 1, weight: Math.max(0, entry.weight) });
+    }
+  }
+  return MATCH_BATTLE_PIECE_IDS
+    .map(pieceId => merged.get(pieceId))
+    .filter((entry): entry is PiecePoolEntry => Boolean(entry));
 }
 
 export function createInitialMatchBattleState(
@@ -255,7 +291,6 @@ export function normalizeMatchBattleRunState(
 ): MatchBattleRunState {
   const base = createInitialMatchBattleState(form, nodeCount);
   if (!raw) return base;
-  if (raw.schemaVersion !== MATCH_BATTLE_SCHEMA_VERSION) return base;
 
   // Persisted blob passes the API sanitizer (valid JSON) but its shape is not schema-checked;
   // guard every array/object field so a corrupt checkpoint falls back to defaults instead of crashing resume.
@@ -292,7 +327,7 @@ export function normalizeMatchBattleRunState(
       : rawPartner?.speciesId ?? null,
     partner: rawPartner,
     snippetsEnabled: raw.snippetsEnabled ?? base.snippetsEnabled,
-    rewardDraft: asArray<MatchBattleRunState['rewardDraft'][number]>(raw.rewardDraft) ?? base.rewardDraft,
+    rewardDraft: normalizeRewardDraft(asArray<MatchBattleRunState['rewardDraft'][number]>(raw.rewardDraft) ?? base.rewardDraft),
     combat: {
       ...base.combat,
       ...rawCombat,
@@ -305,6 +340,22 @@ export function normalizeMatchBattleRunState(
       enemy: null,
     },
   };
+}
+
+function normalizeRewardDraft(options: RewardOption[]): RewardOption[] {
+  return options
+    .map((option): RewardOption | null => {
+      if (option.kind !== 'piece') return option;
+      const pieceId = mapPieceId(option.pieceId);
+      if (!pieceId) return null;
+      return {
+        ...option,
+        pieceId,
+        label: PIECE_CATALOG[pieceId].label,
+        description: PIECE_CATALOG[pieceId].description,
+      };
+    })
+    .filter((option): option is RewardOption => Boolean(option));
 }
 
 // Explicit lane layouts for the opening depths of a run.
@@ -391,7 +442,7 @@ export function nextIntent(type: MatchBattleNodeType, turn: number, difficulty: 
 
 export function createRewardDraft(run: MatchBattleRunState): RewardOption[] {
   const owned = new Set(run.piecePool.map((entry) => entry.pieceId));
-  const pieceIds = Object.keys(PIECE_CATALOG) as ActionGemType[];
+  const pieceIds = [...MATCH_BATTLE_PIECE_IDS];
   const candidates = pieceIds
     .filter((id) => !owned.has(id))
     .slice(0, 3);

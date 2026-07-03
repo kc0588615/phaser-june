@@ -4,7 +4,7 @@ import { MoveAction } from './MoveAction';
 import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
-import { PIECE_CATALOG } from './matchBattle/catalog';
+import { MATCH_BATTLE_PIECE_IDS, PIECE_CATALOG, normalizePiecePool } from './matchBattle/catalog';
 import type { MatchBattleBoardConfig, PiecePoolEntry } from './matchBattle/types';
 
 export type Gem = BoardCell;
@@ -53,7 +53,7 @@ export class BackendPuzzle {
             boardCols: config.boardCols,
             boardRows: config.boardRows,
             lootChance: config.lootChance,
-            piecePool: config.piecePool.map(entry => ({ ...entry })),
+            piecePool: normalizePiecePool(config.piecePool),
         };
         this.snippetRow = [];
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
@@ -322,7 +322,7 @@ export class BackendPuzzle {
         const pieces = pool
             .filter(entry => entry.weight > 0)
             .map(entry => entry.pieceId);
-        const fallback: ActionGemType[] = ['sword', 'shield', 'staff'];
+        const fallback: ActionGemType[] = [...MATCH_BATTLE_PIECE_IDS];
         for (const piece of fallback) {
             if (pieces.length >= 3) break;
             if (!pieces.includes(piece)) pieces.push(piece);
