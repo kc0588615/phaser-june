@@ -260,41 +260,27 @@ function normalizeRewardDraft(options: RewardOption[]): RewardOption[] {
     .filter((option): option is RewardOption => Boolean(option));
 }
 
-// Explicit lane layouts for the opening depths of a run.
-const EARLY_DEPTHS: MatchBattleNodeType[][] = [
+const ROUTE_DEPTHS: MatchBattleNodeType[][] = [
   ['enemy'],
-  ['enemy', 'event', 'trivia'],
-  ['elite', 'shop', 'enemy'],
-  ['treasure', 'gis_recon', 'repair'],
+  ['enemy', 'repair'],
+  ['elite', 'enemy', 'repair'],
   ['repair', 'elite', 'enemy'],
-];
-
-// Rotating mix for extended runs (depthCount > EARLY_DEPTHS.length + 1).
-// Cycled by (depth - EARLY_DEPTHS.length) % length so combats and utility stay
-// interleaved instead of collapsing to a single repeated pattern. Never contains
-// 'leader' — the final depth is the only leader.
-const MIDDLE_CYCLE: MatchBattleNodeType[][] = [
-  ['enemy', 'event', 'trivia'],
-  ['elite', 'shop', 'enemy'],
-  ['treasure', 'gis_recon', 'repair'],
-  ['challenge', 'repair', 'enemy'],
-  ['elite', 'event', 'enemy'],
+  ['enemy', 'repair', 'elite'],
 ];
 
 export function createRouteMap(nodeCount: number): MatchBattleRouteNode[] {
-  const depthCount = Math.max(6, nodeCount);
+  const depthCount = Math.max(4, Math.min(6, nodeCount || 6));
   const nodes: MatchBattleRouteNode[] = [];
 
   for (let depth = 0; depth < depthCount; depth++) {
     const isFinalDepth = depth === depthCount - 1;
     const types: MatchBattleNodeType[] = isFinalDepth
       ? ['leader']
-      : depth < EARLY_DEPTHS.length
-        ? EARLY_DEPTHS[depth]
-        : MIDDLE_CYCLE[(depth - EARLY_DEPTHS.length) % MIDDLE_CYCLE.length];
-    types.forEach((type, lane) => {
+      : ROUTE_DEPTHS[depth % ROUTE_DEPTHS.length];
+    types.forEach((type, index) => {
+      const lane = types.length === 1 ? 1 : index;
       nodes.push({
-        id: `n${depth}_${lane}`,
+        id: `n${depth}_${index}`,
         type,
         depth,
         lane,
@@ -304,7 +290,6 @@ export function createRouteMap(nodeCount: number): MatchBattleRouteNode[] {
         sourceNodeIndex: Math.min(depth, Math.max(0, nodeCount - 1)),
         enemyId: type === 'elite' ? 'elite'
           : type === 'leader' ? 'leader'
-          : type === 'challenge' ? 'challenge'
           : type === 'enemy' ? 'enemy'
           : undefined,
       });
