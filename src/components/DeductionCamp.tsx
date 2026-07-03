@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, A11y } from 'swiper/modules';
 import type { DeductionCampState, ClueCategoryKey, ComparativeDeductionState } from '@/types/expedition';
-import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS } from '@/types/expedition';
+import { getCaptureGrade, getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS } from '@/types/expedition';
 import type { DeductionClue, ProcessedClue, DeductionProfile, ReferenceAttempt } from '@/lib/deductionEngine';
 import { isFilteringCategory, filterCandidates, getProfileKeyForCategory } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
@@ -238,6 +238,7 @@ function ComparativeDeductionUI({
   const { guessBonus, efficiencyBonus } = isCorrect
     ? getGuessBonuses(totalProcessed, true)
     : { guessBonus: 0, efficiencyBonus: 0 };
+  const captureGrade = isCorrect ? getCaptureGrade(totalProcessed, camp.wrongGuesses) : null;
 
   // Active filtering category (drives reference-card tag previews)
   const activeCategory = selectedClue && isFilteringCategory(selectedClue.category) ? selectedClue.category : null;
@@ -370,7 +371,14 @@ function ComparativeDeductionUI({
         {/* Correct result */}
         {isCorrect && (
           <div role="status" aria-live="polite" className="text-center p-ds-md shrink-0">
-            <div className="text-xl font-bold text-ds-emerald mb-ds-sm">Captured {hiddenSpeciesName}</div>
+            <div className="mb-ds-sm flex flex-wrap items-center justify-center gap-2 text-xl font-bold text-ds-emerald">
+              <span>Captured {hiddenSpeciesName}</span>
+              {captureGrade && (
+                <span className="text-sm text-ds-amber" aria-label={`${captureGrade.tier} star ${captureGrade.label}`}>
+                  <span aria-hidden="true">{'★'.repeat(captureGrade.tier)}</span> {captureGrade.label}
+                </span>
+              )}
+            </div>
             <div className="text-ds-body text-ds-text-secondary mb-ds-sm">This species is now in your field album.</div>
             <div className="text-ds-body text-ds-text-secondary flex justify-center gap-ds-lg">
               <span>Guess bonus: +{guessBonus}</span>
@@ -690,6 +698,7 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
   const { guessBonus, efficiencyBonus } = isCorrect
     ? getGuessBonuses(totalPaid, true)
     : { guessBonus: 0, efficiencyBonus: 0 };
+  const captureGrade = isCorrect ? getCaptureGrade(camp.revealedClues.length, camp.wrongGuesses) : null;
 
   const finalScore = getDeductionFinalScore(camp);
 
@@ -746,7 +755,14 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
 
       {isCorrect && (
         <div role="status" aria-live="polite" className="text-center p-ds-md shrink-0">
-          <div className="text-xl font-bold text-ds-emerald mb-ds-sm">Captured {hiddenSpeciesName}</div>
+          <div className="mb-ds-sm flex flex-wrap items-center justify-center gap-2 text-xl font-bold text-ds-emerald">
+            <span>Captured {hiddenSpeciesName}</span>
+            {captureGrade && (
+              <span className="text-sm text-ds-amber" aria-label={`${captureGrade.tier} star ${captureGrade.label}`}>
+                <span aria-hidden="true">{'★'.repeat(captureGrade.tier)}</span> {captureGrade.label}
+              </span>
+            )}
+          </div>
           <div className="text-ds-body text-ds-text-secondary mb-ds-sm">This species is now in your field album.</div>
           <div className="text-ds-body text-ds-text-secondary flex justify-center gap-ds-lg">
             <span>Guess bonus: +{guessBonus}</span>

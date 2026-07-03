@@ -70,6 +70,7 @@ export interface DeductionCampState {
   revealedClues: CluePayload[];
   triviaUnlocked: string[];
   scoreSpent: number;
+  wrongGuesses: number;
   guessResult: 'pending' | 'correct' | 'wrong' | null;
   guessBonusAwarded: number;
 }
@@ -147,6 +148,17 @@ export function getGuessBonuses(totalPaidClues: number, isCorrect: boolean): { g
   if (totalPaidClues <= 2) efficiencyBonus = 200;
   else if (totalPaidClues <= 5) efficiencyBonus = 100;
   return { guessBonus, efficiencyBonus };
+}
+
+export interface CaptureGrade {
+  tier: 1 | 2 | 3;
+  label: string;
+}
+
+export function getCaptureGrade(cluesUsed: number, wrongGuesses: number): CaptureGrade {
+  if (cluesUsed <= 2 && wrongGuesses === 0) return { tier: 3, label: 'Featured Find' };
+  if (cluesUsed <= 5 && wrongGuesses <= 1) return { tier: 2, label: 'Documented' };
+  return { tier: 1, label: 'Logged' };
 }
 
 export function getDeductionFinalScore(camp: DeductionCampState): number {

@@ -4,7 +4,7 @@ import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
 import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
-import { createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
+import { createEmptyComparativeState, CLUE_CATEGORY_KEYS, getCaptureGrade, getDeductionFinalScore, getGuessBonuses } from '@/types/expedition';
 import { compareReference, filterCandidates, getNextClue, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
@@ -700,11 +700,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         camp.guessResult = 'correct';
         camp.guessBonusAwarded = guessBonus + efficiencyBonus;
         const finalScore = getDeductionFinalScore(camp);
+        const cluesUsed = camp.revealedClues.length;
+        const captureGrade = getCaptureGrade(cluesUsed, camp.wrongGuesses);
         if (runIdRef.current) {
           const rid = runIdRef.current;
           const deductionSummary = {
             scoreSpent: camp.scoreSpent, purchasedClues: totalPaid,
-            revealedClues: camp.revealedClues.length,
+            revealedClues: cluesUsed,
+            captureGrade,
             finalScore,
           };
           setTimeout(() => {
@@ -731,6 +734,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       } else {
         camp.guessResult = 'wrong';
         camp.scoreSpent += 25;
+        camp.wrongGuesses += 1;
       }
       return { ...prev, deductionCamp: camp, finalScore: null };
     });
@@ -1006,9 +1010,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const totalClues = comp.processedClues.length;
         const { guessBonus, efficiencyBonus } = getGuessBonuses(totalClues, true);
         const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
+        const captureGrade = getCaptureGrade(totalClues, camp.wrongGuesses);
         if (runIdRef.current) {
           const rid = runIdRef.current;
-          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: routePolylineRef.current }) })
+          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, captureGrade, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: routePolylineRef.current }) })
             .then((response) => {
               if (response.ok) {
                 window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: correctSpeciesIdRef.current } }));
@@ -1018,7 +1023,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         }
         return { ...prev, phase: 'complete' as const, comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus }, finalScore };
       }
-      return { ...prev, comparativeDeduction: { ...comp, guessResult: 'wrong' }, deductionCamp: { ...camp, scoreSpent: camp.scoreSpent + 25 } };
+      return { ...prev, comparativeDeduction: { ...comp, guessResult: 'wrong' }, deductionCamp: { ...camp, scoreSpent: camp.scoreSpent + 25, wrongGuesses: camp.wrongGuesses + 1 } };
     });
   }, []);
 
@@ -1188,6 +1193,7 @@ function buildDeductionCampState(prev: RunState): DeductionCampState {
     revealedClues: dedupeClues(prev.revealedDuringRun),
     triviaUnlocked: [...prev.triviaUnlocked],
     scoreSpent: 0,
+    wrongGuesses: 0,
     guessResult: null,
     guessBonusAwarded: 0,
   };
@@ -1207,6 +1213,7 @@ function buildDeductionCampFromCheckpoint(
     revealedClues: dedupeClues(revealedDuringRun),
     triviaUnlocked: [],
     scoreSpent: 0,
+    wrongGuesses: 0,
     guessResult: null,
     guessBonusAwarded: 0,
   };
