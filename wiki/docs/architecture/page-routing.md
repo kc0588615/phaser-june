@@ -7,7 +7,7 @@ tags: [architecture, nextjs, routing]
 
 # Page Routing Infrastructure
 
-This document describes the page routing infrastructure using Next.js server runtime (API routes + Drizzle).
+This document describes the Next.js routing split: Pages Router for UI pages and App Router route handlers for most APIs.
 
 ## Page Types
 
@@ -53,6 +53,10 @@ Provides:
 |------|---------|
 | `src/pages/_app.tsx` | Global app wrapper |
 | `src/pages/_document.tsx` | HTML document structure with dark theme |
+| `src/pages/index.tsx` | Main Phaser/Cesium game page |
+| `src/pages/highscores.tsx`, `src/pages/login.tsx`, `src/pages/stats.tsx` | Simple pages |
+| `src/app/api/*/route.ts` | Current API route handlers |
+| `src/pages/api/player/*` | Legacy player/session API routes |
 | `src/styles/globals.css` | Global styles and Tailwind configuration |
 
 ## Server Runtime Configuration
@@ -124,6 +128,7 @@ import { Button } from '@/components/ui/button';
 ## Server Runtime Notes
 
 - API routes are available under `src/app/api/*`
+- Legacy player session routes remain under `src/pages/api/player/*`
 - Server-side rendering is supported if needed
 - Headers/redirects are handled in `next.config.mjs` or Vercel settings
 

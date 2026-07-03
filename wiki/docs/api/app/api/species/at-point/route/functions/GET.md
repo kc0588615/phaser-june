@@ -2,7 +2,7 @@
 
 > **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
 
-Defined in: [src/app/api/species/at-point/route.ts:31](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/app/api/species/at-point/route.ts#L31)
+Defined in: [src/app/api/species/at-point/route.ts:28](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/app/api/species/at-point/route.ts#L28)
 
 GET /api/species/at-point?lon=-122.4&lat=37.7
 

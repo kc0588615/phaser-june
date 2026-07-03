@@ -4,8 +4,7 @@
 
 - [HabitatColormap](type-aliases/HabitatColormap.md)
 - [HighScore](type-aliases/HighScore.md)
-- [ICAA](type-aliases/ICAA.md)
-- [ICAAView](type-aliases/ICAAView.md)
+- [IUCN](type-aliases/IUCN.md)
 - [NewHighScore](type-aliases/NewHighScore.md)
 - [NewPlayerClueUnlock](type-aliases/NewPlayerClueUnlock.md)
 - [NewPlayerGameSession](type-aliases/NewPlayerGameSession.md)
@@ -16,3 +15,6 @@
 - [PlayerSpeciesDiscovery](type-aliases/PlayerSpeciesDiscovery.md)
 - [PlayerStats](type-aliases/PlayerStats.md)
 - [Profile](type-aliases/Profile.md)
+- [Species](type-aliases/Species.md)
+- [SpeciesEcoregion](type-aliases/SpeciesEcoregion.md)
+- [SpeciesFact](type-aliases/SpeciesFact.md)

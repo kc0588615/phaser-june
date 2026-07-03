@@ -26,7 +26,31 @@ Prioritized documentation gaps for contributors. Each item includes the source f
 
 These files are essential to understand before making any game changes.
 
-### 0. Expedition Run Loop (COMPLETED)
+### 0. Match Battle (COMPLETED)
+
+**Source:** `src/game/matchBattle/*`, `src/contexts/ExpeditionContext.tsx`, `src/game/scenes/Game.ts`, `src/game/BackendPuzzle.ts`
+**Current State:** Documented
+**Location:** `docs/guides/game/match-battle.md`, `docs/MATCH_BATTLE_SYSTEM.md`
+
+**Covers:**
+- [x] React/Phaser/Postgres ownership
+- [x] Route generation and node types
+- [x] Combat state fields: Stamina, Actions, Cover, Pressure, Focus
+- [x] Piece triggers: match, break, drop, debuff
+- [x] Gear and upgrades
+- [x] Reward/route lifecycle
+- [x] Between-combat checkpoint policy
+- [x] EventBus events
+- [x] Deferred work and tuning notes
+
+**Remaining follow-ups:**
+- [ ] Focused test guide for cascade resolution, energy accounting, and gear triggers
+- [ ] Balance/tuning guide for piece weights, route pacing, and reward drafts
+- [ ] Debuff expansion doc once per-type burn/web behavior exists
+
+---
+
+### 1. Expedition Run Loop (COMPLETED)
 
 **Source:** `src/types/expedition.ts`, `src/lib/nodeScoring.ts`, `src/MainAppLayout.tsx`, `src/game/scenes/Game.ts`
 **Current State:** Documented
@@ -48,7 +72,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 1. Match-3 Game Logic (`BackendPuzzle.ts`)
+### 2. Match-3 Game Logic (`BackendPuzzle.ts`)
 
 **Source:** `src/game/BackendPuzzle.ts` (13KB)
 **Current State:** Mentioned in architecture docs but no dedicated guide
@@ -66,7 +90,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 2. Board Rendering (`BoardView.ts`)
+### 3. Board Rendering (`BoardView.ts`)
 
 **Source:** `src/game/BoardView.ts` (33KB - largest file in codebase!)
 **Current State:** Brief mention in architecture
@@ -84,7 +108,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 3. Clue Configuration (`clueConfig.ts`)
+### 4. Clue Configuration (`clueConfig.ts`)
 
 **Source:** `src/game/clueConfig.ts` (13KB)
 **Current State:** Partially covered in clue-board.md
@@ -101,7 +125,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 4. Game Scene (`Game.ts`)
+### 5. Game Scene (`Game.ts`)
 
 **Source:** `src/game/scenes/Game.ts` (large)
 **Current State:** Examples scattered across tutorials
@@ -121,7 +145,7 @@ These files are essential to understand before making any game changes.
 
 ## P1: High Priority - Common Contribution Areas
 
-### 5. Species Service (`speciesService.ts`)
+### 6. Species Service (`speciesService.ts`)
 
 **Source:** `src/lib/speciesService.ts` (16KB)
 **Current State:** Stub in database-guide.md
@@ -138,7 +162,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 6. Player Tracking (`playerTracking.ts`)
+### 7. Player Tracking (`playerTracking.ts`)
 
 **Source:** `src/lib/playerTracking.ts` (13KB)
 **Current State:** Stub guide exists
@@ -155,7 +179,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 7. Drizzle Schema
+### 8. Drizzle Schema
 
 **Source:** `src/db/schema/*` (app tables + spatial mappings)
 **Current State:** Undocumented
@@ -172,7 +196,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 8. Species Guess Flow
+### 9. Species Guess Flow
 
 **Source:** `src/components/SpeciesGuessSelector.tsx`
 **Current State:** Undocumented
@@ -189,7 +213,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 9. Constants Reference
+### 10. Constants Reference
 
 **Source:** `src/game/constants.ts` (5KB)
 **Current State:** Documented in `reference/game-constants.md`
@@ -207,7 +231,7 @@ These files are essential to understand before making any game changes.
 
 ## P2: Medium Priority - Developer Experience
 
-### 10. Species List Component
+### 11. Species List Component
 
 **Source:** `src/components/SpeciesList.tsx`
 **Current State:** Stub only
@@ -223,7 +247,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 11. CesiumMap Deep Dive
+### 12. CesiumMap Deep Dive
 
 **Source:** `src/components/CesiumMap.tsx`
 **Current State:** Tutorial covers basics
@@ -240,7 +264,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 12. Player Stats Dashboard
+### 13. Player Stats Dashboard
 
 **Source:** `src/components/PlayerStatsDashboard/`
 **Current State:** Stub only
@@ -256,7 +280,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 13. Habitat Configuration
+### 14. Habitat Configuration
 
 **Sources:**
 - `src/config/habitatColors.ts` (5KB)
@@ -274,7 +298,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 14. Authentication Flow
+### 15. Authentication Flow
 
 **Source:** `src/lib/auth-actions.ts`
 **Current State:** Mentioned but not documented
@@ -290,7 +314,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 15. Move & Cascade System
+### 16. Move & Cascade System
 
 **Sources:**
 - `src/game/MoveAction.ts`
@@ -311,7 +335,7 @@ These files are essential to understand before making any game changes.
 
 ## P3: Low Priority - Polish
 
-### 16. UI Component Catalog
+### 17. UI Component Catalog
 
 **Sources:** `src/components/ui/*.tsx` (shadcn components)
 **Current State:** Stub mentioning shadcn
@@ -326,7 +350,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 17. Species Card Components
+### 18. Species Card Components
 
 **Sources:**
 - `src/components/SpeciesCard.tsx`
@@ -345,7 +369,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 18. Family/Taxonomy Pickers
+### 19. Family/Taxonomy Pickers
 
 **Sources:**
 - `src/components/CategoryGenusPicker.tsx`
@@ -364,7 +388,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 19. Menu Scenes
+### 20. Menu Scenes
 
 **Sources:**
 - `src/game/scenes/MainMenu.ts`
@@ -382,7 +406,7 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 20. Type Definitions
+### 21. Type Definitions
 
 **Sources:**
 - `src/types/database.ts`

@@ -11,7 +11,7 @@ Get Phaser-June running locally in under 5 minutes.
 
 ## Prerequisites
 
-- **Node.js 18+** ([download](https://nodejs.org/))
+- **Node.js 22.x** for the app; Node 20+ is enough for the wiki tooling
 - **PostgreSQL database** (Hetzner VPS or other)
 - **Cesium Ion token** ([get one free](https://cesium.com/ion/))
 
@@ -19,13 +19,13 @@ Get Phaser-June running locally in under 5 minutes.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/phaser-june.git
+git clone https://github.com/kc0588615/phaser-june.git
 cd phaser-june
 
 # Install dependencies
 npm install
 
-# Copy environment template
+# Create local environment file
 cp .env.example .env.local
 ```
 
@@ -53,8 +53,8 @@ Open [http://localhost:8080](http://localhost:8080) to see the app.
 ## Build for Production
 
 ```bash
-npm run build    # Creates static export in dist/
-npm run serve    # Serves dist/ on port 8080
+npm run build
+npm run serve    # Runs next start on port 8080
 ```
 
 ## Verify Setup
@@ -62,8 +62,8 @@ npm run serve    # Serves dist/ on port 8080
 A successful setup shows:
 1. A 3D Cesium globe in the top section
 2. Click anywhere on land to see habitat/species data
-3. A "Start Game" button appears after location selection
-4. The match-3 puzzle board loads with colored gems
+3. An expedition briefing appears after location selection
+4. Starting the run loads the Phaser match board
 
 ## Development Workflow
 
@@ -77,8 +77,8 @@ npm run dev          # http://localhost:8080
 npm run typecheck
 
 # Production build
-npm run build        # Creates static export in dist/
-npm run serve        # Serves dist/ on port 8080
+npm run build
+npm run serve        # Runs next start on port 8080
 ```
 
 ### Expected Output
@@ -86,7 +86,7 @@ npm run serve        # Serves dist/ on port 8080
 When `npm run dev` succeeds, you should see:
 
 ```
-▲ Next.js 15.x
+▲ Next.js 16.x
 - Local: http://localhost:8080
 ✓ Ready in Xs
 ```
@@ -95,8 +95,8 @@ When `npm run dev` succeeds, you should see:
 
 1. Open http://localhost:8080
 2. Cesium globe should render (if token configured)
-3. Click on land → species panel should update
-4. "Start Game" button should show puzzle board
+3. Click on land; the expedition briefing should update
+4. Start the run; the match board and run HUD should appear
 
 ### Debugging Tips
 

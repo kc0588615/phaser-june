@@ -7,7 +7,7 @@ tags: [setup, database, cesium, titiler]
 
 # Environment Setup
 
-This guide covers detailed configuration for Postgres (Drizzle), Cesium, and optional TiTiler integration.
+This guide covers detailed configuration for Postgres (Drizzle), Cesium, Clerk, and optional raster integration.
 
 ## Environment Variables
 
@@ -21,14 +21,16 @@ cp .env.example .env.local
 
 ```env
 # Database - Postgres connection string (Drizzle)
-DATABASE_URL="postgresql://user:password@host:port/database?schema=public&pgbouncer=true"
+DATABASE_URL="postgresql://user:password@host:6432/database?sslmode=require"
 
 # Cesium Ion - 3D globe rendering
 NEXT_PUBLIC_CESIUM_ION_TOKEN=your-cesium-ion-token
 
-# Auth - Clerk (TBD)
-# NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
-# CLERK_SECRET_KEY=...
+# Auth - Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
 ```
 
 ### Optional Variables
@@ -64,6 +66,7 @@ The application expects these tables (see [Database Guide](/docs/guides/data/dat
 - `icaa` - Import-owned species table (shapefile source)
 - `icaa_view` - Compatibility view used by the app
 - Normalized biodiversity tables (`taxa`, `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`, etc.)
+- `species_combat_traits` - Match Battle enemy traits
 - `profiles` - Player profiles
 - `player_game_sessions` - Session tracking
 - `player_species_discoveries` - Identified species
@@ -72,8 +75,9 @@ The application expects these tables (see [Database Guide](/docs/guides/data/dat
 - `habitat_colormap` - Habitat codes → labels (TiTiler)
 - `oneearth_bioregion` - Bioregion reference data (optional)
 - `high_scores` - Legacy leaderboard
+- `eco_run_sessions` / `eco_run_nodes` - Expedition and Match Battle persistence
 
-API routes under `/api/*` handle queries; no database RPCs are required.
+API routes under `/api/*` handle queries; no database RPCs are required. Do not add `pgbouncer=true` to `DATABASE_URL`; this project uses PgBouncer with TLS via `sslmode=require`.
 
 ### 3. One-Time Stats Backfill
 

@@ -128,7 +128,6 @@ export class Game extends Phaser.Scene {
 
     // 2. Listen for React events
     EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
-    EventBus.on('layout-changed', this.handleLayoutChange, this);
 
     // 3. Listen for resize
     this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
@@ -140,7 +139,6 @@ export class Game extends Phaser.Scene {
   shutdown() {
     // Clean up all listeners
     EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
-    EventBus.off('layout-changed', this.handleLayoutChange, this);
     this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
   }
 }

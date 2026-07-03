@@ -1,0 +1,17 @@
+# Function: getOverallMasteryTier()
+
+> **getOverallMasteryTier**(`data`): [`FeatureMasteryTier`](../type-aliases/FeatureMasteryTier.md)
+
+Defined in: [src/lib/featureMastery.ts:48](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/lib/featureMastery.ts#L48)
+
+Get overall mastery tier across all feature classes.
+
+## Parameters
+
+### data
+
+[`FeatureMasteryData`](../interfaces/FeatureMasteryData.md)
+
+## Returns
+
+[`FeatureMasteryTier`](../type-aliases/FeatureMasteryTier.md)

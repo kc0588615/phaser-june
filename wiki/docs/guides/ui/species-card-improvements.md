@@ -15,4 +15,4 @@ Improvements made to species display cards.
 - Color-coded category dots
 - Responsive image sizing
 
-See [UI Display System](/docs/architecture/ui-display-system) for layout details.
+See [Species List Improvements](/docs/guides/ui/species-list-improvements) for related layout notes.

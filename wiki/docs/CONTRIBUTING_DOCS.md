@@ -110,11 +110,11 @@ Use relative paths from `/docs/`:
 
 ```markdown
 <!-- Good -->
-[EventBus Architecture](/docs/architecture/eventbus-display)
+[Event Types Reference](/docs/reference/event-types)
 [Database Schema](/docs/reference/database-schema)
 
 <!-- Avoid -->
-[Link](../architecture/eventbus-display.md)
+[Link](../reference/event-types.md)
 [Link](https://full-url.com/docs/...)
 ```
 
@@ -376,7 +376,7 @@ End each document with a "Related Documentation" section:
 ```markdown
 ## Related Documentation
 
-- [EventBus Architecture](/docs/architecture/eventbus-display)
+- [Event Types Reference](/docs/reference/event-types)
 - [Clue Board Guide](/docs/guides/game/clue-board)
 ```
 

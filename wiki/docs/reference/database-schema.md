@@ -87,9 +87,30 @@ Core tables created by migrations 004/005/006:
 - `taxon_behaviors`, `taxon_key_facts`, `taxon_life_descriptions`
 - `taxon_habitat_tags`, `taxon_threats`, `taxon_diet_items`
 
+### species_combat_traits
+
+Derived species combat traits used by Match Battle enemy generation.
+
+**Source:** `src/db/schema/species.ts`, populated by `scripts/populate-combat-traits.ts`.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `species_id` | integer | PK/FK to species table |
+| `size_class` | text | `tiny` / `small` / `medium` / `large` / `massive` |
+| `combat_archetype` | text | `aggressive` / `defensive` / `evasive` / `toxic` / `ambush` |
+| `locomotion` | text | `aquatic` / `arboreal` / `burrowing` / `terrestrial` / `flying` |
+| `defense_type` | text | `shell` / `camouflage` / `toxin` / `speed` / `size` / `none` |
+| `attack_style` | text | `bite` / `constrict` / `toxin` / `charge` / `peck` / `none` |
+| `primary_element` | text | `water` / `earth` / `forest` / `urban` / `mountain` |
+| `combat_tier` | text | `common` / `uncommon` / `rare` / `apex` |
+| `hp_override` | integer | Optional exact max HP override. When set, species size/tier/node/difficulty HP scaling is skipped. |
+| `guard_override` | integer | Optional guard override |
+| `custom_move_ids` | text[] | Optional custom move ids |
+| `notes` | text | Import/tuning notes |
+
 ### profiles
 
-Player profile records (auth provider planned: Clerk).
+Player profile records keyed by Clerk user id.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -190,21 +211,28 @@ Expedition run sessions. One per map click that starts an expedition.
 |--------|------|-------------|
 | `id` | uuid | Primary key |
 | `player_id` | uuid | FK to profiles.user_id (nullable) |
-| `location_key` | text | `lon,lat` string for grouping |
-| `lon` | numeric | Click longitude |
-| `lat` | numeric | Click latitude |
-| `run_status` | text | `active` / `completed` / `abandoned` |
-| `node_count_planned` | integer | Planned node count (default 6) |
-| `node_index_current` | integer | Current node (1-based) |
+| `game_session_id` | uuid | Optional FK to player_game_sessions.id |
+| `run_status` | text | `active` / `deduction` / `completed` / historical statuses |
+| `run_seed` | bigint | Optional run seed |
+| `node_count_planned` | smallint | Planned node count |
+| `node_index_current` | smallint | Current node (1-based) |
+| `selected_lng` | double precision | Click longitude |
+| `selected_lat` | double precision | Click latitude |
+| `selected_point` | geometry(Point, 4326) | Click point for spatial indexes |
+| `selection_zoom` | numeric | Optional map zoom |
+| `location_key` | text | Location grouping key |
 | `score_total` | integer | Cumulative score |
 | `moves_used` | integer | Cumulative moves |
-| `gem_wallet` | jsonb | `{ nature_gem, water_gem, knowledge_gem, craft_gem }` |
+| `move_budget` | integer | Budget snapshot |
+| `species_discovered_count` | integer | Discovery count |
 | `bioregion` | text | Bioregion context |
 | `realm` | text | Realm context |
 | `biome` | text | Biome context |
+| `metadata` | jsonb | Run snapshot: expedition, species ids, resource wallet, clue fragments, route polyline, `matchBattle`, final score |
 | `started_at` | timestamptz | Run start |
 | `ended_at` | timestamptz | Run end |
-| `created_at` | timestamptz | Created timestamp |
+
+Match Battle checkpoints are stored under `metadata.matchBattle`. The API sanitizes that blob before writes in `/api/runs` and `/api/runs/[runId]`.
 
 ### eco_run_nodes
 
@@ -216,17 +244,27 @@ Per-node records within an expedition run.
 | `run_id` | uuid | FK to eco_run_sessions.id |
 | `node_order` | integer | 1-based position in run |
 | `node_type` | text | Template type (riverbank_sweep, dense_canopy, etc.) |
-| `node_status` | text | `pending` / `active` / `completed` |
-| `difficulty` | integer | 1-5 |
+| `node_status` | text | `locked` / `active` / `completed` |
 | `objective_type` | text | Objective category |
 | `objective_target` | integer | Target count |
 | `objective_progress` | integer | Current progress |
+| `move_budget` | integer | Node move budget |
+| `moves_used` | integer | Moves for this node |
+| `board_seed` | bigint | Reproducible board seed |
+| `board_sampling_method` | text | Spatial sampling method |
+| `board_context` | jsonb | Seeded board state, difficulty/rationale, encounter config, waypoint |
 | `hazard_profile` | jsonb | Obstacles + events config |
+| `tool_profile` | jsonb | Active affinities/tools |
 | `reward_profile` | jsonb | Souvenirs and other rewards |
 | `reward_claimed` | boolean | Whether rewards collected |
+| `wager_tier` | text | Analysis/wager tier |
+| `wager_result` | text | Analysis/wager result |
+| `guessed_species_id` | integer | Optional guessed species FK |
+| `guess_correct` | boolean | Guess result |
 | `score_earned` | integer | Score for this node |
-| `moves_used` | integer | Moves for this node |
-| `board_seed` | integer | Reproducible board seed |
+| `dominant_habitat` | text | Dominant habitat context |
+| `center_point` | geometry(Point, 4326) | Node center |
+| `bbox` | geometry(Polygon, 4326) | Node bounds |
 | `started_at` | timestamptz | Node start |
 | `ended_at` | timestamptz | Node end |
 | `created_at` | timestamptz | Created timestamp |
