@@ -220,7 +220,11 @@ function MainAppLayoutInner() {
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
                         {inRun && runState.matchBattle && (
-                            <MatchBattleCombatHud matchBattle={runState.matchBattle} bankedScore={runState.bankedScore} />
+                            <MatchBattleCombatHud
+                                matchBattle={runState.matchBattle}
+                                bankedScore={runState.bankedScore}
+                                cluesGathered={runState.revealedDuringRun}
+                            />
                         )}
 
                     </div>
