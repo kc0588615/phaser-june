@@ -267,10 +267,10 @@ export class Game extends Phaser.Scene {
     }
 
 
-    private finishNodeObjective(reason: 'objective_complete' | 'escaped'): void {
+    private finishNodeObjective(reason: 'objective_complete' | 'escaped' | 'retreat'): void {
         if (this.nodeObjectiveCompleted) return;
         this.nodeObjectiveCompleted = true;
-        if (reason === 'escaped') this.disableInputs();
+        if (reason === 'escaped' || reason === 'retreat') this.disableInputs();
         this.time.delayedCall(250, () => {
             EventBus.emit('node-advance-requested', {
                 nodeIndex: this.currentNodeIndex,
@@ -279,6 +279,11 @@ export class Game extends Phaser.Scene {
             });
         });
     }
+
+    private handleMatchBattleBreakCampRequested = (): void => {
+        if (!this.matchBattleCombat?.enemy || this.nodeObjectiveCompleted) return;
+        this.finishNodeObjective('retreat');
+    };
 
     private isAffinityActive(affinity: AffinityType): boolean {
         return this.nodeActiveAffinities.includes(affinity);
@@ -539,6 +544,7 @@ export class Game extends Phaser.Scene {
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
         EventBus.on('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
+        EventBus.on('match-battle-break-camp-requested', this.handleMatchBattleBreakCampRequested, this);
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -2405,6 +2411,7 @@ export class Game extends Phaser.Scene {
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
         EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
+        EventBus.off('match-battle-break-camp-requested', this.handleMatchBattleBreakCampRequested, this);
         EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
 
         // Remove player tracking listeners if they exist

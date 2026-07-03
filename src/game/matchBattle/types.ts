@@ -120,7 +120,7 @@ export interface MatchBattleRunState {
   partnerSpeciesId: number | null;
   partner: MatchBattlePartner | null;
   snippetsEnabled: boolean;
-  outcome: 'active' | 'won' | 'lost' | null;
+  outcome: 'active' | 'won' | 'lost' | 'called' | null;
 }
 
 export interface MatchBattleBoardConfig {

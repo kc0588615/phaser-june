@@ -1,7 +1,9 @@
 import React from 'react';
 import { useGameBridge } from '@/contexts/GameBridgeContext';
+import { EventBus } from '@/game/EventBus';
 import type { MatchBattleRunState } from '@/game/matchBattle/types';
 import { PIECE_CATALOG } from '@/game/matchBattle/catalog';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 
 interface Props {
@@ -52,6 +54,14 @@ export function MatchBattleCombatHud({ matchBattle, bankedScore }: Props) {
             <div className="mt-1 text-[10px] text-ds-rose">
               Next: {combat.enemy.intent.label} {combat.enemy.intent.amount > 0 ? combat.enemy.intent.amount : ''}
             </div>
+            <Button
+              type="button"
+              size="sm"
+              className="pointer-events-auto mt-1 h-6 px-2 text-[10px] font-bold"
+              onClick={() => EventBus.emit('match-battle-break-camp-requested', {})}
+            >
+              Break Camp
+            </Button>
           </>
         ) : (
           <div className="text-[10px] text-ds-text-secondary">Route node</div>

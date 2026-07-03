@@ -296,7 +296,16 @@ function RunCompleteSummary({ runState, onReset }: {
 }) {
     const { hud } = useGameBridge();
     const { hiddenSpeciesName } = useExpedition();
-    const matchBattleLost = runState.matchBattle?.outcome === 'lost';
+    const capturedSpecies = runState.finalScore != null;
+    const matchBattleLost = runState.matchBattle?.outcome === 'lost' && !capturedSpecies;
+    const matchBattleCalled = runState.matchBattle?.outcome === 'called';
+    const title = capturedSpecies
+        ? 'Species Captured!'
+        : matchBattleLost
+            ? 'Out of Stamina'
+            : matchBattleCalled
+                ? 'Camp Report'
+                : 'Expedition Complete!';
     const stats = [
         { label: 'Banked Score', value: String(runState.finalScore ?? hud.score), color: 'var(--ds-accent-cyan)' },
         { label: 'Nodes Done', value: String(runState.expedition?.nodes.length ?? 0), color: 'var(--ds-accent-emerald)' },
@@ -306,7 +315,7 @@ function RunCompleteSummary({ runState, onReset }: {
 
     return (
         <div className="absolute inset-0 z-panel flex flex-col items-center justify-center bg-[rgba(10,14,26,0.7)] backdrop-blur-md p-ds-xl gap-ds-lg">
-            <div className="text-[22px] font-bold text-ds-cyan">{matchBattleLost ? 'Run Lost' : 'Expedition Complete!'}</div>
+            <div className="text-[22px] font-bold text-ds-cyan">{title}</div>
             {matchBattleLost && (
                 <div className="max-w-[320px] text-center text-ds-body text-ds-text-secondary">
                     You ran out of Stamina.

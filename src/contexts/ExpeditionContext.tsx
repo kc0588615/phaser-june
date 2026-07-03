@@ -465,8 +465,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         lastResolvedNodeRef.current = prev.currentNodeIndex;
         EventBus.emit('node-complete', { nodeIndex: prev.currentNodeIndex });
 
-        if (data.reason === 'escaped' || data.reason === 'retreat') {
-          setTimeout(() => toast.error('Run lost', { duration: 2200 }), 0);
+        if (data.reason === 'escaped') {
+          setTimeout(() => toast('Out of stamina — head to camp with what you gathered.', { duration: 2200 }), 0);
           EventBus.emit('match-battle-run-ended', { outcome: 'lost' });
           const lostMatchBattle = { ...matchBattle, outcome: 'lost' as const, combat: { ...matchBattle.combat, playerHp: 0 } };
           const deductionState: RunState = {
@@ -476,6 +476,20 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             deductionCamp: buildDeductionCampState({ ...prev, matchBattle: lostMatchBattle }),
           };
           logMatchBattleRunSummary('lost', lostMatchBattle.lootChance, deductionState.revealedDuringRun.length);
+          if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
+          return deductionState;
+        }
+
+        if (data.reason === 'retreat') {
+          setTimeout(() => toast('Breaking camp — time to make the call.', { duration: 2200 }), 0);
+          EventBus.emit('match-battle-run-ended', { outcome: 'called' });
+          const calledMatchBattle = { ...matchBattle, outcome: 'called' as const };
+          const deductionState: RunState = {
+            ...prev,
+            phase: 'deduction' as const,
+            matchBattle: calledMatchBattle,
+            deductionCamp: buildDeductionCampState({ ...prev, matchBattle: calledMatchBattle }),
+          };
           if (runIdRef.current) persistRunCheckpoint(runIdRef.current, deductionState, deductionState.currentNodeIndex, routePolylineRef.current, 'deduction');
           return deductionState;
         }
@@ -619,7 +633,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       if (!prev.matchBattle) return prev;
       if (data.outcome === 'lost') {
         lastResolvedNodeRef.current = Math.max(lastResolvedNodeRef.current, data.nodeIndex);
-        setTimeout(() => toast.error('Run lost', { duration: 2200 }), 0);
+        setTimeout(() => toast('Out of stamina — head to camp with what you gathered.', { duration: 2200 }), 0);
         EventBus.emit('match-battle-run-ended', { outcome: 'lost' });
         const lostMatchBattle = {
           ...prev.matchBattle,

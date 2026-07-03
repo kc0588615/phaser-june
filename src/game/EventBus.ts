@@ -91,9 +91,10 @@ export interface EventPayloads {
   'expedition-start': Record<string, never>;
   'match-battle-combat-state-updated': MatchBattleCombatState;
   'match-battle-combat-ended': { outcome: 'won' | 'lost'; combat: MatchBattleCombatState; nodeIndex: number; cleanCapture: boolean; scoreDelta: number };
+  'match-battle-break-camp-requested': Record<string, never>;
   'match-battle-reward-draft-opened': { options: RewardOption[] };
   'match-battle-route-node-selected': { routeNodeId: string };
-  'match-battle-run-ended': { outcome: 'won' | 'lost' };
+  'match-battle-run-ended': { outcome: 'won' | 'lost' | 'called' };
   'node-advance-requested': {
     nodeIndex: number;
     reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'escaped';
