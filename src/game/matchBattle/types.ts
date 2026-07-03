@@ -19,14 +19,9 @@ export type MatchBattleNodeType =
 export type PieceTrigger = 'match' | 'break' | 'drop' | 'debuff';
 
 export interface PieceEffect {
-  stat?: 'pressure' | 'cover' | 'supplies' | 'damage_all' | 'damage_self' | 'unblocked' | 'focus';
+  stat: 'damage' | 'pierce' | 'heal';
   baseValue: number;
   levelScaling: number;
-  spawnId?: 'burn' | 'web';
-  spawnCount?: number;
-  chargeMultiplier?: boolean;
-  chargeCap?: number;
-  transformCount?: number;
 }
 
 export interface PieceDef {
@@ -50,12 +45,11 @@ export interface MatchBattleEnemy {
   name: string;
   maxHp: number;
   hp: number;
-  guard: number;
   intent: EnemyIntent;
 }
 
 export interface EnemyIntent {
-  type: 'attack' | 'guard' | 'debuff' | 'attack_debuff';
+  type: 'attack' | 'debuff' | 'attack_debuff';
   amount: number;
   debuffId?: string;
   label: string;
@@ -64,12 +58,6 @@ export interface EnemyIntent {
 export interface MatchBattleCombatState {
   playerHp: number;
   playerMaxHp: number;
-  guard: number;
-  attack: number;
-  energy: number;
-  maxEnergy: number;
-  maxAccel: number;
-  focusStored: number;
   turn: number;
   enemy: MatchBattleEnemy | null;
   log: string[];
@@ -79,7 +67,7 @@ export interface ArmamentDef {
   id: string;
   name: string;
   description: string;
-  kind: 'economy' | 'energy' | 'risk' | 'defense' | 'scaling' | 'accel';
+  kind: 'economy' | 'risk' | 'defense' | 'scaling';
   trigger?: CombatEventType;
   disposable?: boolean;
 }
@@ -93,8 +81,6 @@ export interface UpgradeDef {
     | 'board_col'
     | 'board_row'
     | 'snippet'
-    | 'energy'
-    | 'accel'
     | 'armament_slot'
     | 'piece_weight_down';
 }

@@ -7,7 +7,7 @@ import type {
 
 export interface MatchBattlePartnerPassive {
   hpBonus: number;
-  guardBonus: number;
+  defenseHpBonus: number;
   pressureBonus: number;
   description: string;
 }
@@ -31,7 +31,7 @@ const SIZE_HP_BONUS: Record<CombatSizeClass, number> = {
   massive: 6,
 };
 
-const DEFENSE_GUARD_BONUS: Partial<Record<CombatDefenseType, number>> = {
+const DEFENSE_HP_BONUS: Partial<Record<CombatDefenseType, number>> = {
   shell: 4,
   size: 2,
 };
@@ -42,16 +42,15 @@ export function derivePartnerPassive(input: {
   combatArchetype: CombatArchetype;
 }): MatchBattlePartnerPassive {
   const hpBonus = SIZE_HP_BONUS[input.sizeClass] ?? 0;
-  const guardBonus = DEFENSE_GUARD_BONUS[input.defenseType] ?? 0;
+  const defenseHpBonus = DEFENSE_HP_BONUS[input.defenseType] ?? 0;
   const pressureBonus = input.combatArchetype === 'aggressive' || input.combatArchetype === 'ambush' ? 1 : 0;
   const parts = [
-    hpBonus > 0 ? `+${hpBonus} Stamina` : null,
-    guardBonus > 0 ? `+${guardBonus} starting Cover` : null,
+    hpBonus + defenseHpBonus > 0 ? `+${hpBonus + defenseHpBonus} Stamina` : null,
     pressureBonus > 0 ? `+${pressureBonus} Data on Pressure matches` : null,
   ].filter(Boolean);
   return {
-    hpBonus,
-    guardBonus,
+    hpBonus: hpBonus + defenseHpBonus,
+    defenseHpBonus,
     pressureBonus,
     description: parts.join(' · ') || 'Field morale',
   };

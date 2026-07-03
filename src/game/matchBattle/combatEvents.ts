@@ -26,35 +26,9 @@ export interface CombatEventContext {
 
 export interface CombatEffectResult {
   hpDelta?: number;
-  guardDelta?: number;
-  attackDelta?: number;
-  focusDelta?: number;
+  damageDelta?: number;
   creditsDelta?: number;
   log?: string;
-}
-
-export interface FocusSkillResult {
-  combat: MatchBattleCombatState;
-  damage: number;
-}
-
-export function resolveFocusSkill(combat: MatchBattleCombatState): FocusSkillResult {
-  if (!combat.enemy || combat.focusStored < combat.maxAccel) {
-    return { combat, damage: 0 };
-  }
-
-  const damage = combat.focusStored;
-  return {
-    combat: {
-      ...combat,
-      focusStored: 0,
-      enemy: {
-        ...combat.enemy,
-        hp: Math.max(0, combat.enemy.hp - damage),
-      },
-    },
-    damage,
-  };
 }
 
 export function resolveGearTriggers(
@@ -69,19 +43,19 @@ export function resolveGearTriggers(
 
     switch (item.id) {
       case 'assault_potion':
-        results.push({ hpDelta: -2, attackDelta: 4, log: 'Trail Mix: +4 Approach, -2 Stamina.' });
+        results.push({ hpDelta: -2, damageDelta: 4, log: 'Trail Mix: +4 Data, -2 Stamina.' });
         break;
       case 'iron_jaw':
-        results.push({ guardDelta: 6, log: 'Reinforced Blind: +6 Cover.' });
+        results.push({ hpDelta: 3, log: 'Reinforced Blind: +3 Stamina.' });
         break;
       case 'credit_ledger':
         results.push({ creditsDelta: 8, log: 'Grant Ledger: +8 Grants.' });
         break;
       case 'pain_transmitter':
-        results.push({ focusDelta: Math.ceil((ctx.damageAmount ?? 0) / 2), log: 'Endurance Log fed Focus.' });
+        results.push({ damageDelta: Math.ceil((ctx.damageAmount ?? 0) / 2), log: 'Endurance Log: counter-read.' });
         break;
       case 'crescendo_earrings':
-        results.push({ attackDelta: ctx.cascadeCount ?? 1, log: 'Smartwatch scaled Approach.' });
+        results.push({ damageDelta: ctx.cascadeCount ?? 1, log: 'Smartwatch: cascade Data.' });
         break;
       default:
         break;

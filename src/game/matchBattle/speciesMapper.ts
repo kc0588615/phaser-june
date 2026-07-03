@@ -39,10 +39,6 @@ const HP_CAP_BASE: Partial<Record<MatchBattleNodeType, number>> = {
 };
 const HP_CAP_PER_DIFFICULTY = 2;
 
-const DEFENSE_GUARD: Record<CombatDefenseType, number> = {
-  shell: 12, size: 8, toxin: 0, camouflage: 0, speed: 0, none: 0,
-};
-
 const TIER_RANK: Record<CombatTier, number> = { common: 0, uncommon: 1, rare: 2, apex: 3 };
 
 // Per-archetype intent patterns, cycled deterministically by turn so the
@@ -63,9 +59,7 @@ const ARCHETYPE_PATTERNS: Record<CombatArchetype, IntentStep[]> = {
     { type: 'attack', base: 12, perDifficulty: 2, label: 'Fast Approach' },
   ],
   defensive: [
-    { type: 'guard', base: 8, perDifficulty: 1, label: 'Hunker Down' },
     { type: 'attack', base: 6, perDifficulty: 1, label: 'Defensive Display' },
-    { type: 'guard', base: 8, perDifficulty: 1, label: 'Hunker Down' },
     { type: 'attack', base: 6, perDifficulty: 2, label: 'Defensive Display' },
   ],
   evasive: [
@@ -79,7 +73,7 @@ const ARCHETYPE_PATTERNS: Record<CombatArchetype, IntentStep[]> = {
     { type: 'debuff', base: 0, perDifficulty: 0, debuffId: 'burn', label: 'Bright Flash' },
   ],
   ambush: [
-    { type: 'guard', base: 6, perDifficulty: 1, label: 'Lie in Wait' },
+    { type: 'attack', base: 7, perDifficulty: 1, label: 'Lie in Wait' },
     { type: 'attack', base: 14, perDifficulty: 2, label: 'Pounce' },
   ],
 };
@@ -143,7 +137,6 @@ export function createEnemyFromSpecies(
     name: input.commonName,
     maxHp,
     hp: maxHp,
-    guard: input.guardOverride ?? DEFENSE_GUARD[input.defenseType],
     intent: nextSpeciesIntent(input, nodeType, 1, scale),
   };
 }

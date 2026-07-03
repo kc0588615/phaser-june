@@ -1,11 +1,8 @@
 import React from 'react';
 import { useGameBridge } from '@/contexts/GameBridgeContext';
-import { EventBus } from '@/game/EventBus';
 import type { MatchBattleRunState } from '@/game/matchBattle/types';
 import { PIECE_CATALOG } from '@/game/matchBattle/catalog';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Zap } from 'lucide-react';
 
 interface Props {
   matchBattle: MatchBattleRunState | null;
@@ -18,7 +15,6 @@ export function MatchBattleCombatHud({ matchBattle }: Props) {
 
   const enemyPct = combat.enemy ? (combat.enemy.hp / combat.enemy.maxHp) * 100 : 0;
   const playerPct = (combat.playerHp / combat.playerMaxHp) * 100;
-  const focusReady = !!combat.enemy && combat.focusStored >= combat.maxAccel;
 
   return (
     <section className="absolute left-1.5 top-1.5 right-1.5 z-hud grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-1.5 pointer-events-none">
@@ -29,29 +25,12 @@ export function MatchBattleCombatHud({ matchBattle }: Props) {
         </div>
         <Progress value={playerPct} className="h-1.5 mt-1" />
         <div className="mt-1 flex flex-wrap items-center gap-1 text-[10px] text-ds-text-secondary">
-          <span>Cover {combat.guard}</span>
-          <span>Actions {combat.energy}/{combat.maxEnergy}</span>
-          <span>Focus {combat.focusStored}/{combat.maxAccel}</span>
+          <span>Turn {combat.turn}</span>
           {matchBattle.partner && (
             <span className="text-ds-emerald truncate max-w-full">
               {matchBattle.partner.commonName}: {matchBattle.partner.passive.description}
             </span>
           )}
-          <Button
-            type="button"
-            variant={focusReady ? 'default' : 'secondary'}
-            size="sm"
-            disabled={!focusReady}
-            className="pointer-events-auto h-5 gap-1 px-1.5 text-[10px] leading-none disabled:pointer-events-auto"
-            onClick={(event) => {
-              event.stopPropagation();
-              EventBus.emit('match-battle-focus-skill-requested', {});
-            }}
-            aria-label="Use Breakthrough skill"
-          >
-            <Zap className="size-3" />
-            Breakthrough
-          </Button>
         </div>
       </div>
 
@@ -83,6 +62,7 @@ export function MatchBattleCombatHud({ matchBattle }: Props) {
           <div className="flex gap-1.5">
             {matchBattle.piecePool.map((entry) => {
               const def = PIECE_CATALOG[entry.pieceId];
+              if (!def) return null;
               return (
                 <div key={entry.pieceId} className="min-w-[72px] rounded border border-ds-subtle bg-ds-bg/50 px-1.5 py-1">
                   <div className="text-[10px] font-bold" style={{ color: def.color }}>{def.label}</div>

@@ -6,8 +6,6 @@
 export interface MatchBattleCombatStats {
   damageDealt: number;
   damageTaken: number;
-  focusGained: number;
-  focusUsed: number;
   lootMatches: number;
   cluesRevealed: number;
   debuffsSeeded: number;
@@ -18,8 +16,6 @@ export function createMatchBattleCombatStats(): MatchBattleCombatStats {
   return {
     damageDealt: 0,
     damageTaken: 0,
-    focusGained: 0,
-    focusUsed: 0,
     lootMatches: 0,
     cluesRevealed: 0,
     debuffsSeeded: 0,

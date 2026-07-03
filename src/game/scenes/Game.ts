@@ -44,7 +44,7 @@ import {
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import { createEnemy, nextIntent, PIECE_CATALOG } from '@/game/matchBattle/catalog';
-import { resolveFocusSkill, resolveGearTriggers, type CombatEffectResult } from '@/game/matchBattle/combatEvents';
+import { resolveGearTriggers, type CombatEffectResult } from '@/game/matchBattle/combatEvents';
 import type { ArmamentDef, MatchBattleCombatState, MatchBattleNodeType } from '@/game/matchBattle/types';
 import { createMatchBattleCombatStats, logMatchBattleCombatEnd, type MatchBattleCombatStats } from '@/game/matchBattle/debug';
 import { createEnemyFromSpecies, nextSpeciesIntent, pickCombatant } from '@/game/matchBattle/speciesMapper';
@@ -288,7 +288,7 @@ export class Game extends Phaser.Scene {
         }
         if (this.movesText) {
             this.movesText.setText(this.matchBattleCombat
-                ? `Actions: ${this.matchBattleCombat.energy}/${this.matchBattleCombat.maxEnergy}`
+                ? `Turn: ${this.matchBattleCombat.turn}`
                 : `Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
         }
 
@@ -320,9 +320,9 @@ export class Game extends Phaser.Scene {
         if (this.matchBattleCombat) {
             EventBus.emit(EVT_GAME_HUD_UPDATED, {
                 score: this.backendPuzzle.getScore(),
-                movesRemaining: this.matchBattleCombat.energy,
-                movesUsed: this.matchBattleCombat.maxEnergy - this.matchBattleCombat.energy,
-                maxMoves: this.matchBattleCombat.maxEnergy,
+                movesRemaining: 0,
+                movesUsed: this.matchBattleCombat.turn,
+                maxMoves: 0,
                 streak: this.streak,
                 multiplier: this.currentMultiplier(),
                 moveMultiplier: this.lastAppliedMoveMultiplier,
@@ -353,9 +353,7 @@ export class Game extends Phaser.Scene {
         const log: string[] = [];
         for (const result of results) {
             if (result.hpDelta) this.applyPlayerHpDelta(combat, result.hpDelta);
-            if (result.guardDelta) combat.guard = Math.max(0, combat.guard + result.guardDelta);
-            if (result.attackDelta) combat.attack = Math.max(0, combat.attack + result.attackDelta);
-            if (result.focusDelta) this.addFocusStored(combat, result.focusDelta);
+            if (result.damageDelta) this.damageMatchBattleEnemy(combat, result.damageDelta);
             if (result.creditsDelta) creditsDelta += result.creditsDelta;
             if (result.log) log.push(result.log);
         }
@@ -363,20 +361,20 @@ export class Game extends Phaser.Scene {
         return { combat, creditsDelta };
     }
 
-    /** Mutate Focus charge with clamping; records gained/used for the tuning readout. */
-    private addFocusStored(combat: MatchBattleCombatState, amount: number): void {
-        const before = combat.focusStored;
-        combat.focusStored = Phaser.Math.Clamp(before + amount, 0, combat.maxAccel);
-        const delta = combat.focusStored - before;
-        if (delta > 0) this.matchBattleStats.focusGained += delta;
-        else if (delta < 0) this.matchBattleStats.focusUsed += -delta;
-    }
-
     /** Mutate player Stamina with clamping; records damage taken for the tuning readout. */
     private applyPlayerHpDelta(combat: MatchBattleCombatState, amount: number): void {
         const before = combat.playerHp;
         combat.playerHp = Phaser.Math.Clamp(before + amount, 0, combat.playerMaxHp);
         if (combat.playerHp < before) this.matchBattleStats.damageTaken += before - combat.playerHp;
+    }
+
+    private damageMatchBattleEnemy(combat: MatchBattleCombatState, amount: number): number {
+        if (!combat.enemy || amount <= 0) return 0;
+        const prevHp = combat.enemy.hp;
+        combat.enemy.hp = Math.max(0, prevHp - amount);
+        const dealt = prevHp - combat.enemy.hp;
+        this.matchBattleStats.damageDealt += dealt;
+        return dealt;
     }
 
     private emitClueRevealed(clue: CluePayload): void {
@@ -575,7 +573,6 @@ export class Game extends Phaser.Scene {
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
-        EventBus.on('match-battle-focus-skill-requested', this.handleMatchBattleFocusSkill, this);
         EventBus.on('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
 
         this.resetDragState(); // Resets isDragging etc.
@@ -1034,19 +1031,9 @@ export class Game extends Phaser.Scene {
         let combat = { ...this.matchBattleCombat, enemy: this.matchBattleCombat.enemy ? { ...this.matchBattleCombat.enemy } : null };
         const log: string[] = [];
 
-        const dealDamage = (amount: number, pierce = false) => {
-            if (!combat.enemy || amount <= 0) return 0;
-            const blocked = pierce ? 0 : Math.min(combat.enemy.guard, amount);
-            combat.enemy.guard -= blocked;
-            const prevHp = combat.enemy.hp;
-            combat.enemy.hp = Math.max(0, prevHp - (amount - blocked));
-            const dealt = prevHp - combat.enemy.hp;
-            this.matchBattleStats.damageDealt += dealt;
-            return dealt;
-        };
-
         const effectValue = (pieceId: ActionGemType, level: number, matchSize = 3) => {
-            const effect = PIECE_CATALOG[pieceId].effect;
+            const effect = PIECE_CATALOG[pieceId]?.effect;
+            if (!effect) return 0;
             const base = effect.baseValue + Math.max(0, level - 1) * effect.levelScaling;
             return base + Math.max(0, matchSize - 3);
         };
@@ -1059,38 +1046,24 @@ export class Game extends Phaser.Scene {
             const level = gem.level ?? 1;
             const pieceId = gem.pieceId as ActionGemType;
             const def = PIECE_CATALOG[pieceId];
+            if (!def) continue;
             const amount = effectValue(pieceId, level, match.length);
 
             if (def.trigger === 'match') {
                 switch (def.effect.stat) {
-                case 'pressure':
-                    {
-                        const total = amount + (this.matchBattlePartnerPassive?.pressureBonus ?? 0);
-                        combat.attack += total;
-                        dealDamage(total);
-                        log.push(`${def.label}: +${total} Data.`);
-                    }
+                case 'damage': {
+                    const total = amount + (this.matchBattlePartnerPassive?.pressureBonus ?? 0);
+                    this.damageMatchBattleEnemy(combat, total);
+                    log.push(`${def.label}: ${total} Data.`);
                     break;
-                case 'cover':
-                    combat.guard += amount;
-                    log.push(`${def.label}: +${amount} Cover.`);
+                }
+                case 'pierce':
+                    this.damageMatchBattleEnemy(combat, amount);
+                    log.push(`${def.label}: ${amount} Direct Data.`);
                     break;
-                case 'unblocked':
-                    dealDamage(amount, true);
-                    log.push(`${def.label}: ${amount} Direct View.`);
-                    break;
-                case 'damage_all':
-                    dealDamage(amount, false);
-                    log.push(`${def.label}: ${amount} Data.`);
-                    if (pieceId === 'caltrops') {
-                        this.applyPlayerHpDelta(combat, -2);
-                        this.addFocusStored(combat, 2);
-                        log.push('Off-Trail Scramble: spent 2 Stamina.');
-                    }
-                    break;
-                case 'focus':
-                    this.addFocusStored(combat, amount);
-                    log.push(`${def.label}: +${amount} Focus.`);
+                case 'heal':
+                    this.applyPlayerHpDelta(combat, amount);
+                    log.push(`${def.label}: +${amount} Stamina.`);
                     break;
                 default:
                     log.push(`${def.label} matched.`);
@@ -1098,15 +1071,7 @@ export class Game extends Phaser.Scene {
                 }
             }
 
-            const breakResult = this.resolveBreakPieces(match, gridState, combat);
-            combat = breakResult.combat;
-            log.push(...breakResult.log);
         }
-
-        const dropResult = this.resolveDropPieces(combat);
-        combat = dropResult.combat;
-        this.matchBattleCreditsDelta += dropResult.creditsDelta;
-        log.push(...dropResult.log);
 
         if (this.currentMoveSummary?.cascades) {
             // applyMatchBattlePieceEffects runs once per cascade phase, so the on_cascade trigger
@@ -1131,129 +1096,6 @@ export class Game extends Phaser.Scene {
         combat.log = [...log, ...combat.log].slice(0, 8);
         this.matchBattleCombat = combat;
         EventBus.emit('match-battle-combat-state-updated', combat);
-    }
-
-    private resolveBreakPieces(match: Coordinate[], gridState: any, combat: MatchBattleCombatState): { combat: MatchBattleCombatState; log: string[] } {
-        const seen = new Set<string>();
-        const log: string[] = [];
-        const nextCombat: MatchBattleCombatState = { ...combat, enemy: combat.enemy ? { ...combat.enemy } : null, log: [...combat.log] };
-        const dealDamage = (amount: number, pierce = false) => {
-            if (!nextCombat.enemy || amount <= 0) return;
-            const blocked = pierce ? 0 : Math.min(nextCombat.enemy.guard, amount);
-            nextCombat.enemy.guard -= blocked;
-            const prevHp = nextCombat.enemy.hp;
-            nextCombat.enemy.hp = Math.max(0, prevHp - (amount - blocked));
-            this.matchBattleStats.damageDealt += prevHp - nextCombat.enemy.hp;
-        };
-
-        for (const [mx, my] of match) {
-            for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]] as const) {
-                const nx = mx + dx;
-                const ny = my + dy;
-                const key = `${nx},${ny}`;
-                if (seen.has(key)) continue;
-                seen.add(key);
-                const cell = gridState[nx]?.[ny];
-                if (cell?.trigger !== 'break') continue;
-                // Per-swap dedupe: a surviving BREAK piece adjacent to a cascade-phase match must
-                // not fire again on later phases of the same swap.
-                if (cell.id != null) {
-                    if (this.matchBattleFiredBreakCells.has(cell.id)) continue;
-                    this.matchBattleFiredBreakCells.add(cell.id);
-                }
-                const level = cell.level ?? 1;
-                const pieceId = cell.pieceId as ActionGemType;
-                const def = PIECE_CATALOG[pieceId];
-                const amount = def.effect.baseValue + Math.max(0, level - 1) * def.effect.levelScaling;
-                if (pieceId === 'power') {
-                    // Discharge consumes stored Focus only. With zero stored, no damage — the piece breaks inert.
-                    if (nextCombat.focusStored <= 0) {
-                        log.push(`${def.label} BREAK: no stored Focus to discharge.`);
-                    } else {
-                        const charge = Math.min(def.effect.chargeCap ?? 5, nextCombat.focusStored);
-                        dealDamage(amount * charge, true);
-                        this.addFocusStored(nextCombat, -nextCombat.focusStored);
-                        log.push(`${def.label} BREAK: ${amount * charge} Direct View.`);
-                    }
-                } else if (pieceId === 'thought') {
-                    nextCombat.guard += amount;
-                    nextCombat.attack += amount;
-                    log.push(`${def.label} BREAK: +${amount} Cover/Approach.`);
-                } else if (pieceId === 'shield_unit') {
-                    nextCombat.guard += amount;
-                    log.push(`${def.label} BREAK: +${amount} Cover.`);
-                } else if (pieceId === 'multiplier') {
-                    const count = def.effect.spawnCount ?? 1;
-                    const debuffId = def.effect.spawnId ?? 'burn';
-                    let seeded = 0;
-                    for (let i = 0; i < count; i++) if (this.seedDebuff(debuffId)) seeded++;
-                    if (seeded > 0) log.push(`${def.label} BREAK: marked ${DEBUFF_LABELS[debuffId] ?? debuffId}.`);
-                }
-            }
-        }
-        return { combat: nextCombat, log };
-    }
-
-    private resolveDropPieces(combat: MatchBattleCombatState): { combat: MatchBattleCombatState; creditsDelta: number; log: string[] } {
-        const grid = this.backendPuzzle?.getGridState();
-        if (!grid) return { combat, creditsDelta: 0, log: [] };
-        const nextCombat: MatchBattleCombatState = { ...combat, enemy: combat.enemy ? { ...combat.enemy } : null, log: [...combat.log] };
-        const log: string[] = [];
-        let creditsDelta = 0;
-        const bottomY = this.activeGridRows() - 1;
-        for (let x = 0; x < this.activeGridCols(); x++) {
-            const cell = grid[x]?.[bottomY];
-            if (cell?.trigger !== 'drop' || !cell.pieceId || cell.id == null) continue;
-            if (this.matchBattleFiredDropCells.has(cell.id)) continue;
-            this.matchBattleFiredDropCells.add(cell.id);
-            const pieceId = cell.pieceId as ActionGemType;
-            const def = PIECE_CATALOG[pieceId];
-            const level = cell.level ?? 1;
-            const amount = def.effect.baseValue + Math.max(0, level - 1) * def.effect.levelScaling;
-            if (def.effect.stat === 'supplies') {
-                creditsDelta += amount;
-                log.push(`${def.label} DROP: +${amount} Grants.`);
-            } else if (def.effect.stat === 'pressure') {
-                nextCombat.attack += amount;
-                if (nextCombat.enemy) {
-                    const prevHp = nextCombat.enemy.hp;
-                    nextCombat.enemy.hp = Math.max(0, prevHp - amount);
-                    this.matchBattleStats.damageDealt += prevHp - nextCombat.enemy.hp;
-                }
-                log.push(`${def.label} DROP: +${amount} Data.`);
-            } else if (def.effect.transformCount) {
-                this.addFocusStored(nextCombat, def.effect.transformCount);
-                log.push(`${def.label} DROP: charged Focus.`);
-            }
-        }
-        return { combat: nextCombat, creditsDelta, log };
-    }
-
-    private handleMatchBattleFocusSkill(): void {
-        if (this.isPaused || this.isResolvingMove || !this.matchBattleCombat?.enemy) return;
-        if (this.matchBattleCombat.focusStored < this.matchBattleCombat.maxAccel) return;
-
-        const result = resolveFocusSkill(this.matchBattleCombat);
-        if (result.damage <= 0) return;
-
-        this.matchBattleStats.focusUsed += this.matchBattleCombat.focusStored;
-        if (this.matchBattleCombat.enemy && result.combat.enemy) {
-            this.matchBattleStats.damageDealt += this.matchBattleCombat.enemy.hp - result.combat.enemy.hp;
-        }
-
-        const combat: MatchBattleCombatState = {
-            ...result.combat,
-            log: [`Breakthrough: ${result.damage} Direct View.`, ...result.combat.log].slice(0, 8),
-        };
-
-        if (combat.enemy && combat.enemy.hp <= 0) {
-            this.finishMatchBattleCombatWin(combat);
-            return;
-        }
-
-        this.matchBattleCombat = combat;
-        EventBus.emit('match-battle-combat-state-updated', combat);
-        this.emitHud();
     }
 
     private finishMatchBattleCombatWin(combat: MatchBattleCombatState): void {
@@ -1281,29 +1123,21 @@ export class Game extends Phaser.Scene {
             enemy: { ...this.matchBattleCombat.enemy },
             log: [...this.matchBattleCombat.log],
         };
-        const freeMove = (this.currentMoveSummary?.swapLargestMatch ?? 0) >= MOVE_LARGE_MATCH_THRESHOLD;
 
-        if (didAnyMatch && !freeMove) {
-            combat.energy = Math.max(0, combat.energy - 1);
-            combat.log = [`Actions spent: ${combat.energy}/${combat.maxEnergy}.`, ...combat.log].slice(0, 8);
-        } else if (didAnyMatch && freeMove) {
-            combat.log = ['4+ match: free swap.', ...combat.log].slice(0, 8);
-        }
+        if (didAnyMatch) combat.log = ['Field action resolved.', ...combat.log].slice(0, 8);
 
         if (combat.enemy && combat.enemy.hp <= 0) {
             this.finishMatchBattleCombatWin(combat);
             return;
         }
 
-        if (combat.energy <= 0) {
-            combat = this.resolveEnemyTurn(combat);
-        }
+        combat = this.resolveEnemyTurn(combat);
 
         this.matchBattleCombat = combat;
         EventBus.emit('match-battle-combat-state-updated', combat);
         this.emitHud();
         if (this.movesText) {
-            this.movesText.setText(`Actions: ${combat.energy}/${combat.maxEnergy}`);
+            this.movesText.setText(`Turn: ${combat.turn}`);
         }
 
         if (combat.playerHp <= 0 && !this.nodeObjectiveCompleted) {
@@ -1326,11 +1160,8 @@ export class Game extends Phaser.Scene {
         const log: string[] = [];
 
         if (intent.type === 'attack' || intent.type === 'attack_debuff') {
-            const blocked = Math.min(combat.guard, intent.amount);
-            const hpDamage = intent.amount - blocked;
-            combat.guard -= blocked;
+            const hpDamage = intent.amount;
             this.applyPlayerHpDelta(combat, -hpDamage);
-            this.addFocusStored(combat, hpDamage);
             const hpLossEffects = resolveGearTriggers('on_hp_loss', this.matchBattleArmaments, {
                 combat,
                 turn: combat.turn,
@@ -1342,26 +1173,19 @@ export class Game extends Phaser.Scene {
             log.push(`${enemyName}: ${intent.label} for ${hpDamage}.`);
         }
 
-        if (intent.type === 'guard' && combat.enemy) {
-            combat.enemy.guard += intent.amount;
-            log.push(`${enemyName} gained Cover.`);
-        }
-
         if (intent.type === 'debuff' || intent.type === 'attack_debuff') {
             const seededId = intent.debuffId ?? 'burn';
             if (this.seedDebuff(seededId)) log.push(`${enemyName} marked ${DEBUFF_LABELS[seededId] ?? seededId}.`);
         }
 
         const nextTurn = combat.turn + 1;
-        combat.energy = combat.maxEnergy;
-        combat.attack = 0;
         combat.turn = nextTurn;
         if (combat.enemy) {
             combat.enemy.intent = this.matchBattleCombatant
                 ? nextSpeciesIntent(this.matchBattleCombatant, this.matchBattleNodeType, nextTurn, this.currentNodeDifficulty)
                 : nextIntent(this.matchBattleNodeType, nextTurn, this.currentNodeDifficulty);
         }
-        combat.log = [...log, `Actions refilled: ${combat.energy}/${combat.maxEnergy}.`, `Turn ${nextTurn}.`, ...combat.log].slice(0, 8);
+        combat.log = [...log, `Turn ${nextTurn}.`, ...combat.log].slice(0, 8);
         const turnEffects = resolveGearTriggers('turn_start', this.matchBattleArmaments, { combat, turn: nextTurn });
         const applied = this.applyCombatEffectResults(combat, turnEffects);
         combat = applied.combat;
@@ -1673,20 +1497,10 @@ export class Game extends Phaser.Scene {
                 let combat: MatchBattleCombatState = {
                     playerHp: baseCombat?.playerHp ?? 60,
                     playerMaxHp: baseCombat?.playerMaxHp ?? 60,
-                    guard: 0,
-                    attack: 0,
-                    energy: baseCombat?.maxEnergy ?? 4,
-                    maxEnergy: baseCombat?.maxEnergy ?? 4,
-                    maxAccel: baseCombat?.maxAccel ?? 10,
-                    focusStored: baseCombat?.focusStored ?? 0,
                     turn: 1,
                     enemy,
                     log: [`${enemy?.name ?? 'Route node'} engaged.`],
                 };
-                if (this.matchBattlePartnerPassive?.guardBonus) {
-                    combat.guard += this.matchBattlePartnerPassive.guardBonus;
-                    combat.log = [`Partner Cover: +${this.matchBattlePartnerPassive.guardBonus}.`, ...combat.log].slice(0, 8);
-                }
                 // Fresh combat: clear DROP fired-cell ids from any prior combat.
                 this.matchBattleFiredDropCells = new Set();
                 const startEffects = resolveGearTriggers('combat_start', this.matchBattleArmaments, { combat, turn: 1 });
@@ -1815,7 +1629,7 @@ export class Game extends Phaser.Scene {
             this.shuffleButtonContainer?.setVisible(true);
             if (this.movesText && this.backendPuzzle) {
                 this.movesText.setText(this.matchBattleCombat
-                    ? `Actions: ${this.matchBattleCombat.energy}/${this.matchBattleCombat.maxEnergy}`
+                    ? `Turn: ${this.matchBattleCombat.turn}`
                     : `Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
             }
             
@@ -2735,7 +2549,6 @@ export class Game extends Phaser.Scene {
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
-        EventBus.off('match-battle-focus-skill-requested', this.handleMatchBattleFocusSkill, this);
         EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
         EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
 

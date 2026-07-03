@@ -30,132 +30,48 @@ const RETIRED_PIECE_MAP: Partial<Record<ActionGemType, typeof MATCH_BATTLE_PIECE
   shield_unit: 'shield',
 };
 
-export const PIECE_CATALOG: Record<ActionGemType, PieceDef> = {
+export const PIECE_CATALOG: Partial<Record<ActionGemType, PieceDef>> = {
   sword: {
     id: 'sword',
     label: 'Spotting Scope',
     trigger: 'match',
-    role: 'Pressure',
-    description: 'MATCH: +1 Data per level.',
+    role: 'Damage',
+    description: 'MATCH: deal Data.',
     color: '#dc2626',
-    effect: { stat: 'pressure', baseValue: 1, levelScaling: 1 },
+    effect: { stat: 'damage', baseValue: 2, levelScaling: 1 },
   },
   shield: {
     id: 'shield',
     label: 'Camo Blind',
     trigger: 'match',
-    role: 'Cover',
-    description: 'MATCH: +1 Cover per level.',
+    role: 'Recovery',
+    description: 'MATCH: recover Stamina.',
     color: '#94a3b8',
-    effect: { stat: 'cover', baseValue: 1, levelScaling: 1 },
+    effect: { stat: 'heal', baseValue: 1, levelScaling: 1 },
   },
   staff: {
     id: 'staff',
     label: 'Telephoto Lens',
     trigger: 'match',
-    role: 'Pierce',
-    description: 'MATCH: deal Direct View per level (ignores Camouflage).',
+    role: 'Heavy',
+    description: 'MATCH: deal heavier Data.',
     color: '#6366f1',
-    effect: { stat: 'unblocked', baseValue: 1, levelScaling: 1 },
-  },
-  crate: {
-    id: 'crate',
-    label: 'Grant Cache',
-    trigger: 'drop',
-    role: 'Economy',
-    description: 'DROP: earn Grants when it lands on the bottom row.',
-    color: '#b45309',
-    effect: { stat: 'supplies', baseValue: 5, levelScaling: 1 },
-  },
-  power: {
-    id: 'power',
-    label: 'Camera Trap',
-    trigger: 'break',
-    role: 'Charge',
-    description: 'BREAK: adjacent matches discharge stored Focus as Data.',
-    color: '#06b6d4',
-    effect: { stat: 'unblocked', baseValue: 2, levelScaling: 1, chargeMultiplier: true, chargeCap: 5 },
-  },
-  thought: {
-    id: 'thought',
-    label: 'Field Guide',
-    trigger: 'break',
-    role: 'Support',
-    description: 'BREAK: strengthens nearby match output.',
-    color: '#10b981',
-    effect: { stat: 'cover', baseValue: 1, levelScaling: 1 },
-  },
-  key: {
-    id: 'key',
-    label: 'Critter Track',
-    trigger: 'drop',
-    role: 'Transform',
-    description: 'DROP: +1 Focus charge.',
-    color: '#f59e0b',
-    effect: { baseValue: 0, levelScaling: 0, transformCount: 1 },
-  },
-  multiplier: {
-    id: 'multiplier',
-    label: 'Camera Flash',
-    trigger: 'break',
-    role: 'Risk',
-    description: 'BREAK: seed Glare interference.',
-    color: '#ec4899',
-    effect: { baseValue: 0, levelScaling: 0, spawnId: 'burn', spawnCount: 1 },
-  },
-  grenade: {
-    id: 'grenade',
-    label: 'Drone Scan',
-    trigger: 'match',
-    role: 'Area',
-    description: 'MATCH: heavy Data on the target critter.',
-    color: '#f97316',
-    effect: { stat: 'damage_all', baseValue: 5, levelScaling: 1 },
-  },
-  blade_drive: {
-    id: 'blade_drive',
-    label: 'Trail Marker',
-    trigger: 'drop',
-    role: 'Pressure',
-    description: 'DROP: +3 Data.',
-    color: '#ef4444',
-    effect: { stat: 'pressure', baseValue: 3, levelScaling: 1 },
-  },
-  caltrops: {
-    id: 'caltrops',
-    label: 'Off-Trail Scramble',
-    trigger: 'match',
-    role: 'Risk',
-    description: 'MATCH: strong Data; spend 2 Stamina.',
-    color: '#7f1d1d',
-    effect: { stat: 'damage_all', baseValue: 4, levelScaling: 1 },
-  },
-  shield_unit: {
-    id: 'shield_unit',
-    label: 'Pop-up Hide',
-    trigger: 'break',
-    role: 'Cover',
-    description: 'BREAK: gain Cover.',
-    color: '#67e8f9',
-    effect: { stat: 'cover', baseValue: 1, levelScaling: 1 },
+    effect: { stat: 'pierce', baseValue: 3, levelScaling: 1 },
   },
 };
 
 export const ARMAMENT_CATALOG: ArmamentDef[] = [
   { id: 'assault_potion', name: 'Trail Mix', kind: 'risk', trigger: 'turn_start', description: '+4 Approach each turn; spend 2 Stamina.' },
-  { id: 'action_booster', name: 'Multi-Tool', kind: 'energy', description: '+1 max Action.' },
   { id: 'credit_ledger', name: 'Grant Ledger', kind: 'economy', trigger: 'combat_end', description: '+8 Grants after each encounter.' },
-  { id: 'iron_jaw', name: 'Reinforced Blind', kind: 'defense', trigger: 'combat_start', description: 'Start each encounter with 6 Cover.' },
-  { id: 'pain_transmitter', name: 'Endurance Log', kind: 'accel', trigger: 'on_hp_loss', description: 'Spent Stamina adds extra Focus.' },
-  { id: 'crescendo_earrings', name: 'Smartwatch', kind: 'scaling', trigger: 'on_cascade', description: 'Every cascade adds +1 Approach this turn.' },
+  { id: 'iron_jaw', name: 'Reinforced Blind', kind: 'defense', trigger: 'combat_start', description: '+3 Stamina at encounter start.' },
+  { id: 'pain_transmitter', name: 'Endurance Log', kind: 'scaling', trigger: 'on_hp_loss', description: 'Taking damage counters with Data.' },
+  { id: 'crescendo_earrings', name: 'Smartwatch', kind: 'scaling', trigger: 'on_cascade', description: 'Every cascade adds +1 Data.' },
 ];
 
 export const UPGRADE_CATALOG: UpgradeDef[] = [
   { id: 'board_col', name: 'Wider Viewfinder', type: 'board_col', cost: 3, description: 'Wider board, higher combo ceiling.' },
   { id: 'board_row', name: 'Deeper Range', type: 'board_row', cost: 3, description: 'Taller board, more drop setup.' },
   // 'snippet_row' upgrade removed: snippetsEnabled is true at MB init (createInitialMatchBattleState), so the purchase was a no-op.
-  { id: 'max_energy', name: 'Stamina Training', type: 'energy', cost: 2, description: 'One extra paid swap each turn.' },
-  { id: 'accel_cell', name: 'Focus Lens', type: 'accel', cost: 2, description: 'Lower Focus threshold needed to discharge.' },
   { id: 'arm_slot', name: 'Gear Harness', type: 'armament_slot', cost: 3, description: 'Carry one more Field Gear.' },
   { id: 'reduce_rate', name: 'Optimize Kit', type: 'piece_weight_down', cost: 1, description: 'Reduce a piece spawn weight; 0 removes it.' },
 ];
@@ -271,12 +187,6 @@ export function createInitialMatchBattleState(
     combat: {
       playerHp: 60 + hpBonus,
       playerMaxHp: 60 + hpBonus,
-      guard: 0,
-      attack: 0,
-      energy: 4,
-      maxEnergy: 4,
-      maxAccel: 10,
-      focusStored: 0,
       turn: 1,
       enemy: null,
       log: [],
@@ -331,10 +241,6 @@ export function normalizeMatchBattleRunState(
     combat: {
       ...base.combat,
       ...rawCombat,
-      guard: 0,
-      attack: 0,
-      energy: rawCombat?.maxEnergy ?? base.combat.maxEnergy,
-      focusStored: rawCombat?.focusStored ?? (rawCombat as { accel?: number } | undefined)?.accel ?? 0,
       turn: 1,
       log: [],
       enemy: null,
@@ -351,8 +257,8 @@ function normalizeRewardDraft(options: RewardOption[]): RewardOption[] {
       return {
         ...option,
         pieceId,
-        label: PIECE_CATALOG[pieceId].label,
-        description: PIECE_CATALOG[pieceId].description,
+        label: PIECE_CATALOG[pieceId]!.label,
+        description: PIECE_CATALOG[pieceId]!.description,
       };
     })
     .filter((option): option is RewardOption => Boolean(option));
@@ -428,7 +334,6 @@ export function createEnemy(type: MatchBattleNodeType, difficulty: number): Matc
     name: type === 'leader' ? 'Apex Specimen' : type === 'elite' ? 'Elusive Specimen' : type === 'challenge' ? 'Field Trial' : 'Skittish Critter',
     maxHp,
     hp: maxHp,
-    guard: type === 'elite' ? 6 : 0,
     intent: nextIntent(type, 1, scale),
   };
 }
@@ -454,8 +359,8 @@ export function createRewardDraft(run: MatchBattleRunState): RewardOption[] {
     ...chosenPieces.map((pieceId) => ({
       kind: 'piece' as const,
       pieceId,
-      label: PIECE_CATALOG[pieceId].label,
-      description: owned.has(pieceId) ? '+1 spawn weight for this piece.' : PIECE_CATALOG[pieceId].description,
+      label: PIECE_CATALOG[pieceId]!.label,
+      description: owned.has(pieceId) ? '+1 spawn weight for this piece.' : PIECE_CATALOG[pieceId]!.description,
     })),
     { kind: 'armament', armamentId: arm.id, label: arm.name, description: arm.description },
   ];

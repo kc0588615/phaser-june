@@ -342,6 +342,7 @@ export class BackendPuzzle {
         const piece = this.getPieceEntry(gemType);
         if (!piece) return createBoardCell(gemType, state);
         const def = PIECE_CATALOG[piece.pieceId];
+        if (!def) return createBoardCell(gemType, state);
         return createBoardCell(gemType, state, {
             pieceId: piece.pieceId,
             level: piece.level,

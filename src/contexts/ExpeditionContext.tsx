@@ -779,8 +779,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       // Repeatable upgrades may stack; single-use ones must not duplicate.
       const repeatable = upgrade.type === 'board_col'
         || upgrade.type === 'board_row'
-        || upgrade.type === 'energy'
-        || upgrade.type === 'accel'
         || upgrade.type === 'armament_slot'
         || upgrade.type === 'piece_weight_down';
       if (!repeatable && prev.matchBattle.upgrades.includes(upgrade.id)) return prev;
@@ -819,12 +817,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           break;
         case 'snippet':
           matchBattle.snippetsEnabled = true;
-          break;
-        case 'energy':
-          matchBattle.combat = { ...matchBattle.combat, maxEnergy: matchBattle.combat.maxEnergy + 1 };
-          break;
-        case 'accel':
-          matchBattle.combat = { ...matchBattle.combat, maxAccel: Math.max(4, matchBattle.combat.maxAccel - 1) };
           break;
         case 'armament_slot':
           matchBattle.maxGearSlots += 1;
@@ -1105,22 +1097,14 @@ function addMatchBattleArmament(
     return matchBattle;
   }
   const next = { ...matchBattle, armaments: [...matchBattle.armaments, arm] };
-  if (arm.id === 'action_booster') {
-    const maxEnergy = next.combat.maxEnergy + 1;
-    next.combat = { ...next.combat, maxEnergy, energy: maxEnergy };
-  }
   return next;
 }
 
 function resetMatchBattleCombatForNodeEntry(matchBattle: NonNullable<RunState['matchBattle']>): NonNullable<RunState['matchBattle']> {
-  const maxEnergy = matchBattle.combat.maxEnergy;
   return {
     ...matchBattle,
     combat: {
       ...matchBattle.combat,
-      guard: 0,
-      attack: 0,
-      energy: maxEnergy,
       turn: 1,
       enemy: null,
       log: [],

@@ -27,8 +27,8 @@ describe('speciesMapper', () => {
     });
 
     expect(nextSpeciesIntent(input, 'enemy', 1, 2)).toEqual({
-      type: 'guard',
-      amount: 10,
+      type: 'attack',
+      amount: 11,
       debuffId: undefined,
       label: 'Lie in Wait',
     });
@@ -71,7 +71,7 @@ describe('speciesMapper', () => {
     expect(pickCombatant([leader, regular], 'enemy', 0)).toBe(regular);
   });
 
-  it('creates enemies with compact-board hp, defense guard, and first-turn intent', () => {
+  it('creates enemies with compact-board hp and first-turn intent', () => {
     const enemy = createEnemyFromSpecies(
       combatant({
         speciesId: 42,
@@ -90,16 +90,15 @@ describe('speciesMapper', () => {
       name: 'River Turtle',
       maxHp: 26,
       hp: 26,
-      guard: 12,
       intent: {
-        type: 'guard',
-        amount: 14,
-        label: 'Hunker Down',
+        type: 'attack',
+        amount: 12,
+        label: 'Defensive Display',
       },
     });
   });
 
-  it('honors hp and guard overrides when present', () => {
+  it('honors hp overrides when present', () => {
     const enemy = createEnemyFromSpecies(
       combatant({
         hpOverride: 20,
@@ -111,7 +110,6 @@ describe('speciesMapper', () => {
 
     expect(enemy.maxHp).toBe(20);
     expect(enemy.hp).toBe(20);
-    expect(enemy.guard).toBe(5);
   });
 
   it('caps top-end species hp for compact-board leader fights', () => {
