@@ -46,11 +46,11 @@ export function MatchBattleCombatHud({ matchBattle, bankedScore }: Props) {
           <>
             <div className="flex items-center justify-between text-[10px] font-bold text-ds-text-primary">
               <span className="truncate">{combat.enemy.name}</span>
-              <span>{combat.enemy.hp}/{combat.enemy.maxHp}</span>
+              <span>Wariness {combat.enemy.hp}/{combat.enemy.maxHp}</span>
             </div>
             <Progress value={enemyPct} className="h-1.5 mt-1" />
             <div className="mt-1 text-[10px] text-ds-rose">
-              Intent: {combat.enemy.intent.label} {combat.enemy.intent.amount > 0 ? combat.enemy.intent.amount : ''}
+              Next: {combat.enemy.intent.label} {combat.enemy.intent.amount > 0 ? combat.enemy.intent.amount : ''}
             </div>
           </>
         ) : (

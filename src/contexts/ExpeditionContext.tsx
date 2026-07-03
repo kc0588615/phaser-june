@@ -490,7 +490,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const nextMatchBattle = resetMatchBattleCombatForNodeEntry({ ...matchBattle, routeNodes });
 
         if (nodeType === 'leader') {
-          setTimeout(() => toast.success('Leader cleared', { duration: 2200 }), 0);
+          setTimeout(() => toast.success('Apex documented!', { duration: 2200 }), 0);
           EventBus.emit('match-battle-run-ended', { outcome: 'won' });
           const wonMatchBattle = { ...nextMatchBattle, outcome: 'won' as const };
           const nextBankedScore = prev.bankedScore + nodeScore;

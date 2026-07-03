@@ -213,7 +213,7 @@ export function resolveTurn(
     next = applied.combat;
     scoreDelta += applied.scoreDelta;
     addStats(stats, applied.stats);
-    turnLog.push(`${enemyName}: ${intent.label} for ${hpDamage}.`);
+    turnLog.push(`${enemyName}: ${intent.label} — -${hpDamage} Stamina.`);
   }
 
   if (intent.type === 'debuff' || intent.type === 'attack_debuff') {

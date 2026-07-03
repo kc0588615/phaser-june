@@ -10,8 +10,8 @@ interface Props {
 
 const NODE_LABELS: Record<MatchBattleNodeType, string> = {
   enemy: 'Encounter',
-  elite: 'Elite',
-  leader: 'Leader',
+  elite: 'Rare Sighting',
+  leader: 'Apex Encounter',
   shop: 'Shop',
   treasure: 'Treasure',
   event: 'Event',
@@ -30,7 +30,7 @@ export function MatchBattleRouteMap({ matchBattle, onSelect }: Props) {
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <h2 className="m-0 text-2xl font-black text-ds-text-primary">Route Map</h2>
-            <p className="m-0 mt-1 text-ds-body text-ds-text-secondary">Choose the next field encounter. Harder nodes pay better.</p>
+            <p className="m-0 mt-1 text-ds-body text-ds-text-secondary">Pick your next sighting. Warier animals pay better.</p>
           </div>
           <div className="rounded-md border border-ds-subtle px-3 py-2 text-right">
             <div className="text-[10px] uppercase tracking-wider text-ds-text-muted">Build</div>
