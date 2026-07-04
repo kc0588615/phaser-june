@@ -41,6 +41,11 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
   const [pulseCollapsed, setPulseCollapsed] = useState(false);
   const prevProcessedCountRef = useRef(0);
   const autoExpandedRef = useRef(false);
+  const notebookRunId = useMemo(() => {
+    const mysteryId = comp?.mysteryProfile.speciesId ?? speciesId;
+    const routeStart = runState.expedition?.routePolyline?.[0];
+    return `${mysteryId}:${routeStart?.lon ?? 'x'}:${routeStart?.lat ?? 'x'}`;
+  }, [comp?.mysteryProfile.speciesId, runState.expedition?.routePolyline, speciesId]);
 
   useEffect(() => {
     if (comp?.referenceHistory.length) {
@@ -56,7 +61,7 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
     setLastResult(null);
     autoExpandedRef.current = false;
     prevProcessedCountRef.current = comp?.processedClues.length ?? 0;
-  }, [comp]);
+  }, [notebookRunId]);
 
   useEffect(() => {
     const count = comp?.processedClues.length ?? 0;
