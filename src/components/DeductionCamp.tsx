@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, A11y } from 'swiper/modules';
 import type { DeductionCampState, ClueCategoryKey, ComparativeDeductionState } from '@/types/expedition';
-import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS, deductionCatToWalletKey } from '@/types/expedition';
+import { getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS, deductionCatToWalletKey } from '@/types/expedition';
 import type { DeductionClue, ProcessedClue, DeductionProfile, ReferenceAttempt } from '@/lib/deductionEngine';
 import { isFilteringCategory, filterCandidates, getProfileKeyForCategory } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
@@ -14,6 +14,14 @@ import { StatPill } from '@/components/ui/stat-pill';
 
 import 'swiper/css';
 import 'swiper/css/free-mode';
+
+function getLegacyClueShopCost(purchased: number, fragmentCount: number, thoughtDiscountPct = 0): number {
+  const baseCosts = [40, 70, 110, 160, 220];
+  const base = baseCosts[Math.min(purchased, baseCosts.length - 1)];
+  const discount = Math.floor(fragmentCount / 3) * 15;
+  const discountedBase = Math.round((base - discount) * Math.max(0, 1 - thoughtDiscountPct));
+  return Math.max(10, discountedBase);
+}
 
 /* Lightweight canvas confetti — no deps */
 function fireConfetti(canvas: HTMLCanvasElement) {
@@ -662,7 +670,7 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
   const handleBuy = useCallback((cat: ClueCategoryKey) => {
     const entry = camp.clueShop.find(e => e.category === cat);
     if (!entry) return;
-    const cost = getClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
+    const cost = getLegacyClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
     if (cost > availableScore) return;
     onPurchase(cat, cost);
   }, [camp, availableScore, onPurchase]);
@@ -693,7 +701,7 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
             const meta = LEGACY_CATEGORY_META[cat];
             const entry = camp.clueShop.find(e => e.category === cat);
             if (!entry) return null;
-            const cost = getClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
+            const cost = getLegacyClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
             const canBuy = cost <= availableScore && !isCorrect;
             return (
               <button

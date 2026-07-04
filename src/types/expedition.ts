@@ -1,6 +1,5 @@
-import type { ActionGemType, ConsumableItem as DomainConsumableItem, ResourceWallet as DomainResourceWallet } from '@/expedition/domain';
+import type { ActionGemType } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
-import { createEmptyResourceWallet as createEmptyDomainResourceWallet } from '@/expedition/domain';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
 import type { RoutePoint } from '@/lib/expeditionRoute';
@@ -36,89 +35,17 @@ export interface ExpeditionData {
   nearestRiverDistM?: number | null;
 }
 
-export interface EncounterEffect {
-  type: 'bonus_gems' | 'score_boost' | 'objective_boost';
-  label: string;
-}
-
-export const ENCOUNTER_CATALOG: Record<string, EncounterEffect> = {
-  amphibian_signal:       { type: 'bonus_gems',      label: 'Amphibian Signal!' },
-  river_crossing:         { type: 'score_boost',      label: 'River Crossing!' },
-  trail_markings:         { type: 'objective_boost',  label: 'Trail Markings!' },
-  rare_track:             { type: 'bonus_gems',       label: 'Rare Track!' },
-  human_disturbance:      { type: 'score_boost',      label: 'Human Disturbance!' },
-  corridor_crossing:      { type: 'objective_boost',  label: 'Corridor Crossing!' },
-  vantage_scan:           { type: 'bonus_gems',       label: 'Vantage Scan!' },
-  urgent_tracking_window: { type: 'score_boost',      label: 'Urgent Window!' },
-  migration_shift:        { type: 'objective_boost',  label: 'Migration Shift!' },
-  discovery_event:        { type: 'bonus_gems',       label: 'Discovery!' },
-  wager_guess:            { type: 'objective_boost',  label: 'Wager!' },
-};
-
-export interface SouvenirDef {
-  id: string;
-  name: string;
-  emoji: string;
-  dropChance: number;
-}
-
-export const SOUVENIR_CATALOG: Record<string, SouvenirDef> = {
-  amphibian_signal:       { id: 'frog_charm',      name: 'Frog Charm',      emoji: '🐸', dropChance: 0.6 },
-  river_crossing:         { id: 'river_stone',     name: 'River Stone',     emoji: '🪨', dropChance: 0.5 },
-  trail_markings:         { id: 'trail_marker',    name: 'Trail Marker',    emoji: '🪵', dropChance: 0.5 },
-  rare_track:             { id: 'pawprint_fossil', name: 'Pawprint Fossil', emoji: '🐾', dropChance: 0.35 },
-  human_disturbance:      { id: 'urban_artifact',  name: 'Urban Artifact',  emoji: '🏗', dropChance: 0.4 },
-  corridor_crossing:      { id: 'feather',         name: 'Flight Feather',  emoji: '🪶', dropChance: 0.3 },
-  vantage_scan:           { id: 'spyglass_lens',   name: 'Spyglass Lens',   emoji: '🔭', dropChance: 0.3 },
-  urgent_tracking_window: { id: 'storm_crystal',   name: 'Storm Crystal',   emoji: '⚡', dropChance: 0.15 },
-  migration_shift:        { id: 'compass_shard',   name: 'Compass Shard',   emoji: '🧭', dropChance: 0.2 },
-  discovery_event:        { id: 'mystery_seed',    name: 'Mystery Seed',    emoji: '🌱', dropChance: 0.4 },
-  wager_guess:            { id: 'lucky_coin',      name: 'Lucky Coin',      emoji: '🪙', dropChance: 0.2 },
-};
-
 export type NodeType = 'collection' | 'standoff' | 'crisis' | 'store';
-
-export type ResourceWallet = DomainResourceWallet;
-export type ConsumableItem = DomainConsumableItem;
-
-export interface PassiveRelic {
-  id: string;
-  name: string;
-  effect: string;
-}
-
-export interface BattleState {
-  creatureHp: number;
-  creatureMaxHp: number;
-  creatureArmor: number;
-  playerHp: number;
-  playerMaxHp: number;
-  telegraph: string | null;
-  turnsUntilAction: number;
-  weaknesses: string[];
-  resistances: string[];
-}
 
 export interface RunState {
   phase: RunPhase;
   expedition: ExpeditionData | null;
   currentNodeIndex: number;
   activeAffinities: AffinityType[];
-  resourceWallet: ResourceWallet;
-  lootMatchSummary: Record<string, number>;
-  equippedPassives: PassiveRelic[];
-  consumables: ConsumableItem[];
-  pendingNodeModifiers: string[];
-  currentBattleState: BattleState | null;
-  souvenirs: SouvenirDef[];
-  // New economy fields
   bankedScore: number;
   clueFragments: ClueFragments;
-  triviaUnlocked: string[];
   deductionCamp: DeductionCampState | null;
   comparativeDeduction: ComparativeDeductionState | null;
-  currentNodeBonus: NodeBonusState | null;
-  lastNodeRewards: NodeRewardLanes | null;
   finalScore: number | null;
   totalThoughtDiscount: number;
   evidenceBundle: RunEvidenceBundle | null;
@@ -263,15 +190,6 @@ export interface NodeRewardLanes {
   tier: SpookTier;
 }
 
-/** Escalating cost for nth clue purchase in a category */
-export function getClueShopCost(purchased: number, fragmentCount: number, thoughtDiscountPct = 0): number {
-  const baseCosts = [40, 70, 110, 160, 220];
-  const base = baseCosts[Math.min(purchased, baseCosts.length - 1)];
-  const discount = Math.floor(fragmentCount / 3) * 15;
-  const discountedBase = Math.round((base - discount) * Math.max(0, 1 - thoughtDiscountPct));
-  return Math.max(10, discountedBase);
-}
-
 /** Guess bonus based on paid clue count */
 export function getGuessBonuses(totalPaidClues: number, isCorrect: boolean): { guessBonus: number; efficiencyBonus: number } {
   if (!isCorrect) return { guessBonus: 0, efficiencyBonus: 0 };
@@ -287,8 +205,4 @@ export function getDeductionFinalScore(camp: DeductionCampState): number {
   const isCorrect = camp.guessResult === 'correct';
   const { guessBonus, efficiencyBonus } = getGuessBonuses(totalPaidClues, isCorrect);
   return camp.bankedScore - camp.scoreSpent + guessBonus + efficiencyBonus;
-}
-
-export function createEmptyResourceWallet(): ResourceWallet {
-  return createEmptyDomainResourceWallet();
 }

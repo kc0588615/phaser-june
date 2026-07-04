@@ -2,12 +2,12 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic, ClueCategoryKey, ClueFragments, NodeRewardLanes, SpookTier } from '@/types/expedition';
+import type { ExpeditionData, ClueCategoryKey, NodeRewardLanes } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
 import type { ActionGemType, GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
-import type { ThreatType, EncounterConfig } from './encounterState';
+import type { ThreatType, EncounterConfig } from '@/lib/nodeScoring';
 import type { FeatureFingerprint } from '@/types/gis';
 
 // Define all event types and their payloads
@@ -88,44 +88,6 @@ export interface EventPayloads {
     featureFingerprints?: FeatureFingerprint[];
   };
   'expedition-start': Record<string, never>;
-  'battle-state-updated': {
-    battle: BattleState;
-    canAffordSkills: Record<string, boolean>;
-  };
-  'resource-wallet-updated': {
-    wallet: ResourceWallet;
-  };
-  'consumable-found': {
-    item: ConsumableItem;
-  };
-  'consumable-use-requested': {
-    itemInstanceId: string;
-  };
-  'consumable-used': {
-    item: ConsumableItem;
-  };
-  'store-opened': {
-    stock: Array<ConsumableItem | PassiveRelic>;
-    wallet: ResourceWallet;
-  };
-  'store-purchase-requested': {
-    itemId: string;
-    cost: Partial<ResourceWallet>;
-  };
-  'store-purchase-resolved': {
-    itemId: string;
-    success: boolean;
-    wallet: ResourceWallet;
-  };
-  'crisis-choice-requested': {
-    crisisId: string;
-    options: Array<{ id: string; label: string; cost?: Partial<ResourceWallet>; effect: string }>;
-  };
-  'crisis-choice-resolved': {
-    crisisId: string;
-    chosenOptionId: string;
-    modifier: string;
-  };
   'node-advance-requested': {
     nodeIndex: number;
     reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved' | 'escaped';
@@ -150,13 +112,9 @@ export interface EventPayloads {
     chipDamagePool?: number;
     overallResolved?: boolean;
   };
-  'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
-  'souvenir-dropped': { souvenir: SouvenirDef };
   // New economy events
-  'node-bonus-tick': { currentPool: number; startPool: number; pct: number; tier: SpookTier };
   'clue-fragment-earned': { category: ClueCategoryKey; amount: number; source: 'loot_match' | 'key_cache' | 'node_reward' };
   'clue-discount-earned': { amount: number; source: 'thought_match' };
-  'trivia-unlocked': { triviaId: string; scoreReward: number };
   'node-rewards-summary': NodeRewardLanes;
   'deduction-camp-purchase': { category: ClueCategoryKey; cost: number };
   'deduction-camp-guess': { guessedName: string; speciesId: number };

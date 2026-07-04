@@ -3,8 +3,8 @@ import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
-import type { ConsumableItem, RunState, SouvenirDef, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
-import { createEmptyResourceWallet, createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
+import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
+import { createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
 import { compareReference, filterCandidates, getNextClue, getEffectiveClueCost, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
@@ -23,20 +23,10 @@ const INITIAL_RUN_STATE: RunState = {
   expedition: null,
   currentNodeIndex: 0,
   activeAffinities: [],
-  resourceWallet: createEmptyResourceWallet(),
-  lootMatchSummary: {},
-  equippedPassives: [],
-  consumables: [],
-  pendingNodeModifiers: [],
-  currentBattleState: null,
-  souvenirs: [],
   bankedScore: 0,
   clueFragments: createEmptyClueFragments(),
-  triviaUnlocked: [],
   deductionCamp: null,
   comparativeDeduction: null,
-  currentNodeBonus: null,
-  lastNodeRewards: null,
   finalScore: null,
   totalThoughtDiscount: 0,
   evidenceBundle: null,
@@ -50,14 +40,11 @@ interface ExpeditionContextValue {
   handleAffinitySelected: (affinityId: AffinityType | null) => void;
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
-  handleCrisisToolSpend: () => ConsumableItem | null;
   handleDeductionPurchase: (category: ClueCategoryKey, cost: number) => void;
   handleDeductionGuessResult: (isCorrect: boolean) => void;
   handleProcessClue: (clueId: number) => void;
   handlePlaceReference: (referenceSpeciesId: number, clueId: number) => void;
   handleComparativeGuessResult: (isCorrect: boolean) => void;
-  /** Direct call replacing consumable-use-requested EventBus event */
-  useConsumable: (itemInstanceId: string) => void;
   /** Navigate to species list — replaces show-species-list EventBus event */
   showSpeciesList: (speciesId: number) => void;
   /** Register callback for show-species-list navigation */
@@ -73,7 +60,7 @@ export function useExpedition() {
 }
 
 export function ExpeditionProvider({ children }: { children: React.ReactNode }) {
-  const { hudRef, objectiveProgressRef, bonusPool } = useGameBridge();
+  const { hudRef } = useGameBridge();
 
   const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
   const [boardOpacity, setBoardOpacity] = useState(1);
@@ -90,17 +77,12 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const routePolylineRef = useRef<RoutePoint[]>([]);
   const runStateRef = useRef<RunState>(INITIAL_RUN_STATE);
   const lastObjectiveCheckpointAtRef = useRef(0);
+  const objectiveProgressRef = useRef<number>(0);
   const onShowSpeciesListRef = useRef<((speciesId: number) => void) | null>(null);
 
   useEffect(() => {
     runStateRef.current = runState;
   }, [runState]);
-
-  // Derive boardOpacity from bonusPool (replaces node-bonus-tick listener)
-  useEffect(() => {
-    if (!bonusPool) return;
-    setBoardOpacity(bonusPool.pct >= 0.5 ? 1 : 0.35 + bonusPool.pct * 1.3);
-  }, [bonusPool]);
 
   const resetRunStateLocal = useCallback(() => {
     expeditionPayloadRef.current = null;
@@ -258,7 +240,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const evidenceBundle = payload.featureFingerprints?.length
         ? buildRunEvidenceBundle(payload.featureFingerprints)
         : null;
-      const resourceWallet = mergeResourceWallet(resume.resourceWallet);
       const clueFragments = mergeClueFragments(resume.clueFragments);
       const bankedScore = typeof resume.bankedScore === 'number' ? resume.bankedScore : 0;
       const routeNodeIndex = data.run?.status === 'deduction' ? currentNodeIndex : Math.max(0, currentNodeIndex - 1);
@@ -284,7 +265,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           expedition,
           currentNodeIndex,
           activeAffinities: expedition.activeAffinities,
-          resourceWallet,
           clueFragments,
           bankedScore,
           deductionCamp: buildDeductionCampFromCheckpoint(bankedScore, clueFragments),
@@ -301,7 +281,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         expedition,
         currentNodeIndex,
         activeAffinities: expedition.activeAffinities,
-        resourceWallet,
         clueFragments,
         bankedScore,
         evidenceBundle,
@@ -351,7 +330,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           body: JSON.stringify({
             scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves,
             objectiveProgress: objProgress,
-            souvenirs: prev.souvenirs.length > 0 ? prev.souvenirs.map(s => ({ id: s.id, name: s.name })) : undefined,
             encounterOutcome: data.encounterOutcome ?? undefined,
           }),
         }).catch(err => console.error('Failed to complete node:', err));
@@ -400,15 +378,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     });
   }, [hudRef, objectiveProgressRef]);
 
-  const handleResourceWalletUpdate = useCallback((data: EventPayloads['resource-wallet-updated']) => {
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      const w = { ...prev.resourceWallet };
-      for (const [k, v] of Object.entries(data.wallet)) { if (k in w) (w as any)[k] += v; }
-      return { ...prev, resourceWallet: w };
-    });
-  }, []);
-
   const handleNodeObjectiveCheckpoint = useCallback((data: EventPayloads['node-objective-updated']) => {
     const state = runStateRef.current;
     if (state.phase !== 'in-run' || !runIdRef.current) return;
@@ -433,26 +402,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.emit('game-reset', undefined);
   }, [resetRunStateLocal]);
 
-  const handleCrisisToolSpend = useCallback((): ConsumableItem | null => {
-    const spentItem = runState.phase === 'in-run' ? runState.consumables[0] ?? null : null;
-    if (!spentItem) return null;
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      return { ...prev, consumables: prev.consumables.filter(item => item.instanceId !== spentItem.instanceId) };
-    });
-    toast(`Used ${spentItem.name} to bypass the crisis`, { duration: 1600 });
-    return spentItem;
-  }, [runState.phase, runState.consumables]);
-
-  const handleSouvenirDrop = useCallback((data: { souvenir: SouvenirDef }) => {
-    setRunState(prev => prev.phase === 'in-run' ? { ...prev, souvenirs: [...prev.souvenirs, data.souvenir] } : prev);
-  }, []);
-
-  const handleConsumableFound = useCallback((data: EventPayloads['consumable-found']) => {
-    setRunState(prev => prev.phase === 'in-run' ? { ...prev, consumables: [...prev.consumables, data.item] } : prev);
-    toast(`Crate yielded ${data.item.name}`, { duration: 1600 });
-  }, []);
-
   const handleClueFragmentEarned = useCallback((data: EventPayloads['clue-fragment-earned']) => {
     setRunState(prev => {
       if (prev.phase !== 'in-run') return prev;
@@ -473,7 +422,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     const totalReward = data.baseClearReward + data.preservedNodeBonus + data.triviaReward;
     setRunState(prev => {
       if (prev.phase !== 'in-run') return prev;
-      return { ...prev, bankedScore: prev.bankedScore + totalReward, lastNodeRewards: data };
+      return { ...prev, bankedScore: prev.bankedScore + totalReward };
     });
   }, []);
 
@@ -486,26 +435,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       if (exists) return prev;
       return { ...prev, deductionCamp: { ...prev.deductionCamp, revealedClues: [clue, ...prev.deductionCamp.revealedClues] } };
     });
-  }, []);
-
-  /** Direct call — replaces consumable-use-requested EventBus event */
-  const useConsumable = useCallback((itemInstanceId: string) => {
-    let consumedItem: ConsumableItem | null = null;
-    setRunState(prev => {
-      if (prev.phase !== 'in-run') return prev;
-      const nextConsumables = prev.consumables.filter((item) => {
-        const keep = item.instanceId !== itemInstanceId;
-        if (!keep) consumedItem = item;
-        return keep;
-      });
-      if (!consumedItem) return prev;
-      return { ...prev, consumables: nextConsumables };
-    });
-    const usedItem = consumedItem as ConsumableItem | null;
-    if (usedItem) {
-      EventBus.emit('consumable-used', { item: usedItem });
-      toast(`Used ${usedItem.name}`, { duration: 1400 });
-    }
   }, []);
 
   const handleDeductionPurchase = useCallback((category: ClueCategoryKey, cost: number) => {
@@ -698,9 +627,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.on('expedition-data-ready', handleExpeditionDataReady);
     EventBus.on('expedition-start', handleExpeditionStart);
     EventBus.on('node-advance-requested', handleNodeAdvanceRequested);
-    EventBus.on('resource-wallet-updated', handleResourceWalletUpdate);
-    EventBus.on('souvenir-dropped', handleSouvenirDrop);
-    EventBus.on('consumable-found', handleConsumableFound);
     EventBus.on('clue-fragment-earned', handleClueFragmentEarned);
     EventBus.on('clue-discount-earned', handleClueDiscountEarned);
     EventBus.on('clue-revealed', handleClueRevealed);
@@ -712,9 +638,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('expedition-data-ready', handleExpeditionDataReady);
       EventBus.off('expedition-start', handleExpeditionStart);
       EventBus.off('node-advance-requested', handleNodeAdvanceRequested);
-      EventBus.off('resource-wallet-updated', handleResourceWalletUpdate);
-      EventBus.off('souvenir-dropped', handleSouvenirDrop);
-      EventBus.off('consumable-found', handleConsumableFound);
       EventBus.off('clue-fragment-earned', handleClueFragmentEarned);
       EventBus.off('clue-discount-earned', handleClueDiscountEarned);
       EventBus.off('clue-revealed', handleClueRevealed);
@@ -722,18 +645,18 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('node-objective-updated', handleNodeObjectiveCheckpoint);
       EventBus.off('game-reset', resetRunStateLocal);
     };
-  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleResourceWalletUpdate, handleSouvenirDrop, handleConsumableFound, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
+  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleClueFragmentEarned, handleClueDiscountEarned, handleClueRevealed, handleNodeRewardsSummary, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
 
   const value = useMemo<ExpeditionContextValue>(() => ({
     runState, boardOpacity,
     correctSpeciesId: correctSpeciesIdRef.current,
     hiddenSpeciesName: hiddenSpeciesNameRef.current,
-    handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend,
+    handleAffinitySelected, handleRunResume, handleRunReset,
     handleDeductionPurchase, handleDeductionGuessResult,
     handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
-    useConsumable, showSpeciesList,
+    showSpeciesList,
     onShowSpeciesList: onShowSpeciesListRef,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, useConsumable, showSpeciesList]);
+  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionPurchase, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, showSpeciesList]);
 
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
@@ -813,7 +736,7 @@ function buildDeductionCampState(prev: RunState): DeductionCampState {
     clueFragments: { ...prev.clueFragments },
     clueShop: campShop,
     revealedClues: [],
-    triviaUnlocked: [...prev.triviaUnlocked],
+    triviaUnlocked: [],
     scoreSpent: 0,
     guessResult: null,
     guessBonusAwarded: 0,
@@ -856,7 +779,6 @@ function persistRunCheckpoint(
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        resourceWallet: { ...state.resourceWallet },
         clueFragments: { ...state.clueFragments },
         bankedScore: state.bankedScore,
         currentNodeIndex,
@@ -879,7 +801,6 @@ type ResumeRunResponse = {
     habitats: string[];
     rasterHabitats: RasterHabitatResult[];
     currentNodeIndex: number;
-    resourceWallet: Record<string, number>;
     clueFragments: Record<string, number>;
     bankedScore: number;
     featureFingerprints: FeatureFingerprint[];
@@ -917,16 +838,6 @@ function clampNodeIndex(index: unknown, nodeCount: number, status: string | unde
   const max = status === 'deduction' ? nodeCount : Math.max(0, nodeCount - 1);
   const value = typeof index === 'number' && Number.isFinite(index) ? Math.trunc(index) : 0;
   return Math.max(0, Math.min(max, value));
-}
-
-function mergeResourceWallet(value: unknown): RunState['resourceWallet'] {
-  const wallet = createEmptyResourceWallet();
-  if (!value || typeof value !== 'object') return wallet;
-  for (const key of Object.keys(wallet) as Array<keyof typeof wallet>) {
-    const next = (value as Record<string, unknown>)[key];
-    if (typeof next === 'number' && Number.isFinite(next)) wallet[key] = next;
-  }
-  return wallet;
 }
 
 function mergeClueFragments(value: unknown): RunState['clueFragments'] {
