@@ -7,16 +7,11 @@ slug: /intro
 
 # Phaser-June Documentation
 
-Technical documentation for **Phaser-June**, a biodiversity discovery game that combines a Phaser match board, Cesium geospatial exploration, and species deduction.
+Welcome to the technical documentation for **Phaser-June**, a biodiversity discovery game that combines match-3 puzzle mechanics with geospatial exploration.
 
 ## What is Phaser-June?
 
-Phaser-June lets players click a location on a 3D globe, generate a GIS-scored expedition, and play a match-board run using species and habitat data from Postgres.
-
-There are two documented game loops:
-
-- **Match Battle**: active direction. A branching combat route layers weighted board pieces, Stamina, Actions, Focus, field gear, upgrades, rewards, and checkpoint persistence over the Phaser board.
-- **Standard expedition**: legacy/useful runtime context. A GIS-generated node route feeds objective progress, spook meter rewards, clue fragments, and Deduction Camp.
+Phaser-June is a web application that lets players explore Earth's biodiversity through an interactive game. Players click on a 3D Cesium globe to select a location, then play a match-3 gem puzzle to unlock clues about species found in that habitat. The goal is to identify the mystery species based on the clues revealed.
 
 ## Tech Stack
 
@@ -27,7 +22,7 @@ There are two documented game loops:
 | **3D Globe** | Cesium / Resium |
 | **Database** | PostgreSQL (Hetzner VPS) |
 | **ORM** | Drizzle (postgres.js) |
-| **Auth** | Clerk |
+| **Auth** | Clerk (TBD) |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **Raster Data** | TiTiler (COG processing) |
 
@@ -64,9 +59,7 @@ This documentation follows the [Diátaxis framework](https://diataxis.fr/):
 | I want to... | Go to... |
 |--------------|----------|
 | Set up the project | [Quick Start](/docs/getting-started/quick-start) |
-| Understand the source layout | [Project Structure](/docs/getting-started/project-structure) |
-| Understand Match Battle | [Match Battle Guide](/docs/guides/game/match-battle) |
-| Understand the EventBus | [Event Types Reference](/docs/reference/event-types) |
+| Understand the EventBus | [EventBus Architecture](/docs/architecture/eventbus-display) |
 | Add a new clue type | [Clue Board Guide](/docs/guides/game/clue-board) |
 | Query species data | [Database Guide](/docs/guides/data/database-guide) |
 | Explore the API | [API Reference](/docs/api) |

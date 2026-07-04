@@ -4,101 +4,15 @@
 
 - [db](variables/db.md)
 
+## Functions
+
+- [ensureIcaaViewReady](functions/ensureIcaaViewReady.md)
+
 ## References
 
-### CombatArchetype
+### conservationStatuses
 
-Re-exports [CombatArchetype](schema/species/type-aliases/CombatArchetype.md)
-
-***
-
-### CombatAttackStyle
-
-Re-exports [CombatAttackStyle](schema/species/type-aliases/CombatAttackStyle.md)
-
-***
-
-### CombatDefenseType
-
-Re-exports [CombatDefenseType](schema/species/type-aliases/CombatDefenseType.md)
-
-***
-
-### CombatElement
-
-Re-exports [CombatElement](schema/species/type-aliases/CombatElement.md)
-
-***
-
-### CombatLocomotion
-
-Re-exports [CombatLocomotion](schema/species/type-aliases/CombatLocomotion.md)
-
-***
-
-### CombatSizeClass
-
-Re-exports [CombatSizeClass](schema/species/type-aliases/CombatSizeClass.md)
-
-***
-
-### CombatTier
-
-Re-exports [CombatTier](schema/species/type-aliases/CombatTier.md)
-
-***
-
-### DeductionClueCategory
-
-Re-exports [DeductionClueCategory](schema/species/type-aliases/DeductionClueCategory.md)
-
-***
-
-### DeductionUnlockMode
-
-Re-exports [DeductionUnlockMode](schema/species/type-aliases/DeductionUnlockMode.md)
-
-***
-
-### ecoGisLayers
-
-Re-exports [ecoGisLayers](schema/game/variables/ecoGisLayers.md)
-
-***
-
-### ecoLocationMastery
-
-Re-exports [ecoLocationMastery](schema/game/variables/ecoLocationMastery.md)
-
-***
-
-### ecoNodeAttempts
-
-Re-exports [ecoNodeAttempts](schema/game/variables/ecoNodeAttempts.md)
-
-***
-
-### ecoNodeGisSamples
-
-Re-exports [ecoNodeGisSamples](schema/game/variables/ecoNodeGisSamples.md)
-
-***
-
-### ecoRunNodes
-
-Re-exports [ecoRunNodes](schema/game/variables/ecoRunNodes.md)
-
-***
-
-### ecoRunSessions
-
-Re-exports [ecoRunSessions](schema/game/variables/ecoRunSessions.md)
-
-***
-
-### glwd1
-
-Re-exports [glwd1](schema/gis/variables/glwd1.md)
+Re-exports [conservationStatuses](schema/taxa/variables/conservationStatuses.md)
 
 ***
 
@@ -126,27 +40,27 @@ Re-exports [highScores](schema/game/variables/highScores.md)
 
 ***
 
-### iucn
+### icaa
 
-Re-exports [iucn](schema/species/variables/iucn.md)
-
-***
-
-### IUCN
-
-Re-exports [IUCN](types/type-aliases/IUCN.md)
+Re-exports [icaa](schema/species/variables/icaa.md)
 
 ***
 
-### naturalEarthCountries
+### ICAA
 
-Re-exports [naturalEarthCountries](schema/gis/variables/naturalEarthCountries.md)
+Re-exports [ICAA](types/type-aliases/ICAA.md)
 
 ***
 
-### naturalEarthPopulatedPlaces
+### icaaView
 
-Re-exports [naturalEarthPopulatedPlaces](schema/gis/variables/naturalEarthPopulatedPlaces.md)
+Re-exports [icaaView](schema/species/variables/icaaView.md)
+
+***
+
+### ICAAView
+
+Re-exports [ICAAView](types/type-aliases/ICAAView.md)
 
 ***
 
@@ -246,102 +160,96 @@ Re-exports [profiles](schema/player/variables/profiles.md)
 
 ***
 
-### ramsarWetland
+### sourceDatasets
 
-Re-exports [ramsarWetland](schema/gis/variables/ramsarWetland.md)
-
-***
-
-### runMemories
-
-Re-exports [runMemories](schema/game/variables/runMemories.md)
+Re-exports [sourceDatasets](schema/taxa/variables/sourceDatasets.md)
 
 ***
 
-### Species
+### taxa
 
-Re-exports [Species](types/type-aliases/Species.md)
-
-***
-
-### speciesCards
-
-Re-exports [speciesCards](schema/game/variables/speciesCards.md)
+Re-exports [taxa](schema/taxa/variables/taxa.md)
 
 ***
 
-### speciesCardUnlocks
+### taxonBehaviors
 
-Re-exports [speciesCardUnlocks](schema/game/variables/speciesCardUnlocks.md)
-
-***
-
-### speciesCombatTraits
-
-Re-exports [speciesCombatTraits](schema/species/variables/speciesCombatTraits.md)
+Re-exports [taxonBehaviors](schema/taxa/variables/taxonBehaviors.md)
 
 ***
 
-### SpeciesCombatTraits
+### taxonBioregions
 
-Re-exports [SpeciesCombatTraits](schema/species/type-aliases/SpeciesCombatTraits.md)
-
-***
-
-### speciesDeductionClues
-
-Re-exports [speciesDeductionClues](schema/species/variables/speciesDeductionClues.md)
+Re-exports [taxonBioregions](schema/taxa/variables/taxonBioregions.md)
 
 ***
 
-### speciesDeductionProfiles
+### taxonCommonNames
 
-Re-exports [speciesDeductionProfiles](schema/species/variables/speciesDeductionProfiles.md)
-
-***
-
-### SpeciesEcoregion
-
-Re-exports [SpeciesEcoregion](types/type-aliases/SpeciesEcoregion.md)
+Re-exports [taxonCommonNames](schema/taxa/variables/taxonCommonNames.md)
 
 ***
 
-### speciesEcoregions
+### taxonConservationAssessments
 
-Re-exports [speciesEcoregions](schema/species/variables/speciesEcoregions.md)
-
-***
-
-### SpeciesFact
-
-Re-exports [SpeciesFact](types/type-aliases/SpeciesFact.md)
+Re-exports [taxonConservationAssessments](schema/taxa/variables/taxonConservationAssessments.md)
 
 ***
 
-### speciesFacts
+### taxonDietItems
 
-Re-exports [speciesFacts](schema/species/variables/speciesFacts.md)
-
-***
-
-### speciesTable
-
-Re-exports [speciesTable](schema/species/variables/speciesTable.md)
+Re-exports [taxonDietItems](schema/taxa/variables/taxonDietItems.md)
 
 ***
 
-### wdpaPoints
+### taxonExternalIds
 
-Re-exports [wdpaPoints](schema/gis/variables/wdpaPoints.md)
-
-***
-
-### wdpaPolygons
-
-Re-exports [wdpaPolygons](schema/gis/variables/wdpaPolygons.md)
+Re-exports [taxonExternalIds](schema/taxa/variables/taxonExternalIds.md)
 
 ***
 
-### worldRivers
+### taxonHabitatTags
 
-Re-exports [worldRivers](schema/gis/variables/worldRivers.md)
+Re-exports [taxonHabitatTags](schema/taxa/variables/taxonHabitatTags.md)
+
+***
+
+### taxonKeyFacts
+
+Re-exports [taxonKeyFacts](schema/taxa/variables/taxonKeyFacts.md)
+
+***
+
+### taxonLifeDescriptions
+
+Re-exports [taxonLifeDescriptions](schema/taxa/variables/taxonLifeDescriptions.md)
+
+***
+
+### taxonNames
+
+Re-exports [taxonNames](schema/taxa/variables/taxonNames.md)
+
+***
+
+### taxonNameUsages
+
+Re-exports [taxonNameUsages](schema/taxa/variables/taxonNameUsages.md)
+
+***
+
+### taxonProfiles
+
+Re-exports [taxonProfiles](schema/taxa/variables/taxonProfiles.md)
+
+***
+
+### taxonRanges
+
+Re-exports [taxonRanges](schema/taxa/variables/taxonRanges.md)
+
+***
+
+### taxonThreats
+
+Re-exports [taxonThreats](schema/taxa/variables/taxonThreats.md)

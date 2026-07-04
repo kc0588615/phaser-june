@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunSessions, ecoRunNodes } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
-import { sanitizeMatchBattleBlob } from '@/lib/sanitizeMatchBattle';
 import type { RunNode } from '@/lib/nodeScoring';
 import { applyWaypointsToRunNodes } from '@/lib/nodeScoring';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
       featureFingerprints,
       routePolyline,
       expeditionSnapshot,
-      matchBattle,
     } = body as {
       lon: number;
       lat: number;
@@ -55,18 +53,10 @@ export async function POST(request: NextRequest) {
       featureFingerprints?: FeatureFingerprint[];
       routePolyline?: Array<{ lon: number; lat: number }>;
       expeditionSnapshot?: Record<string, unknown>;
-      matchBattle?: Record<string, unknown>;
     };
 
     if (!Number.isFinite(lon) || !Number.isFinite(lat) || !locationKey || !Array.isArray(nodes) || nodes.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: lon, lat, locationKey, nodes' }, { status: 400 });
-    }
-    let sanitizedMatchBattle: Record<string, unknown> | null = null;
-    if (matchBattle !== undefined && matchBattle !== null) {
-      sanitizedMatchBattle = sanitizeMatchBattleBlob(matchBattle);
-      if (sanitizedMatchBattle === null) {
-        return NextResponse.json({ error: 'Invalid matchBattle payload' }, { status: 400 });
-      }
     }
     const waypointAwareNodes = applyWaypointsToRunNodes(nodes);
 
@@ -96,9 +86,7 @@ export async function POST(request: NextRequest) {
             rasterHabitats: Array.isArray(rasterHabitats) ? rasterHabitats : [],
             featureFingerprints: Array.isArray(featureFingerprints) ? featureFingerprints : [],
             routePolyline: Array.isArray(routePolyline) ? routePolyline : [],
-            revealedDuringRun: [],
             expeditionSnapshot: expeditionSnapshot && typeof expeditionSnapshot === 'object' ? expeditionSnapshot : {},
-            matchBattle: sanitizedMatchBattle,
           },
         })
         .returning({ id: ecoRunSessions.id });
@@ -118,7 +106,7 @@ export async function POST(request: NextRequest) {
           nodeStatus: i === 0 ? 'active' : 'locked',
           hazardProfile: {
             obstacles: node.obstacles,
-            events: [],
+            events: node.events,
             requiredGems: node.requiredGems ?? [],
             counterGem: node.counterGem ?? null,
             obstacleFamily: node.obstacleFamily ?? null,
@@ -127,6 +115,7 @@ export async function POST(request: NextRequest) {
           boardContext: {
             rationale: node.rationale,
             difficulty: node.difficulty,
+            encounterConfig: node.encounterConfig ?? null,
             waypoint: node.waypoint ?? null,
             ...boardContext,
           },

@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
           endedAt: s.endedAt,
           affinities: meta?.activeAffinities ?? [],
           hasResumeSnapshot,
+          resourceWallet: meta?.resourceWallet ?? null,
           deductionSummary: meta?.deductionSummary ?? null,
           discoveredSpecies: memorySpecies ? {
             id: memorySpecies.id,

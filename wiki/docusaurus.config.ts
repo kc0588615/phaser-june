@@ -3,25 +3,16 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Phaser-June Wiki',
-  tagline: 'Maintainer docs for the biodiversity match-board expedition game',
+  title: 'Phaser-June',
+  tagline: 'A biodiversity discovery game built with Phaser, React, Cesium & Drizzle',
   favicon: 'img/favicon.ico',
 
   future: {
-    v4: {
-      removeLegacyPostBuildHeadAttribute: true,
-      useCssCascadeLayers: true,
-      siteStorageNamespacing: true,
-      mdx1CompatDisabledByDefault: true,
-      fasterByDefault: false,
-    },
+    v4: true,
   },
 
   markdown: {
     mermaid: true,
-    hooks: {
-      onBrokenMarkdownLinks: 'warn',
-    },
   },
   themes: [
     '@docusaurus/theme-mermaid',
@@ -46,6 +37,8 @@ const config: Config = {
   trailingSlash: false,
 
   onBrokenLinks: 'warn',
+  onBrokenMarkdownLinks: 'warn',
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -68,7 +61,7 @@ const config: Config = {
         skipErrorChecking: true,
         sanitizeComments: true,
         // Exclude Next.js special files
-        exclude: ['**/pages/_*.tsx', '**/pages/_*.ts', '**/__tests__/**', '**/*.test.ts', '**/*.test.tsx'],
+        exclude: ['**/pages/_*.tsx', '**/pages/_*.ts'],
       },
     ],
   ],
@@ -79,7 +72,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/kc0588615/phaser-june/edit/main/wiki/',
+          editUrl: 'https://github.com/kc0588615/phaser-june/tree/main/wiki/',
         },
         blog: false,
         theme: {
@@ -126,16 +119,15 @@ const config: Config = {
         {
           title: 'Learn',
           items: [
-            { label: 'Start Here', to: '/docs/intro' },
-            { label: 'Project Structure', to: '/docs/getting-started/project-structure' },
-            { label: 'Match Battle', to: '/docs/guides/game/match-battle' },
+            { label: 'Getting Started', to: '/docs/intro' },
+            { label: 'Tutorials', to: '/docs/category/tutorials' },
+            { label: 'Architecture', to: '/docs/category/architecture' },
           ],
         },
         {
           title: 'Reference',
           items: [
-            { label: 'Game Constants', to: '/docs/reference/game-constants' },
-            { label: 'Database Schema', to: '/docs/reference/database-schema' },
+            { label: 'How-To Guides', to: '/docs/category/guides' },
             { label: 'API Reference', to: '/docs/api' },
           ],
         },

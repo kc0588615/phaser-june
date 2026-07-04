@@ -14,7 +14,7 @@ const CLUE_TOAST_DURATION_MS = 5000;
 
 export function useSpeciesPanelState(toastsEnabled: boolean) {
   const {
-    hud, clues, latestClueBatch, speciesInfo,
+    hud, clues, latestClue, speciesInfo,
     allCluesRevealed, allSpeciesCompleted, guessResult,
   } = useGameBridge();
   const { showSpeciesList } = useExpedition();
@@ -25,41 +25,33 @@ export function useSpeciesPanelState(toastsEnabled: boolean) {
 
   const completionToastShownRef = useRef(false);
   const toastsEnabledRef = useRef(toastsEnabled);
-  const prevLatestClueBatchRef = useRef<CluePayload[] | null>(null);
+  const prevLatestClueRef = useRef<CluePayload | null>(null);
   const prevGuessResultRef = useRef(guessResult);
   const prevAllCluesRef = useRef(allCluesRevealed);
   const prevAllSpeciesRef = useRef(allSpeciesCompleted);
 
   useEffect(() => { toastsEnabledRef.current = toastsEnabled; }, [toastsEnabled]);
 
-  // Toast + discoveredClues tracking for new clue batches.
+  // Toast + discoveredClues tracking for new clues
   useEffect(() => {
-    if (latestClueBatch.length === 0 || latestClueBatch === prevLatestClueBatchRef.current) return;
-    prevLatestClueBatchRef.current = latestClueBatch;
+    if (!latestClue || latestClue === prevLatestClueRef.current) return;
+    prevLatestClueRef.current = latestClue;
 
     setDiscoveredClues(prev => {
-      const next = [...prev];
-      for (const clue of latestClueBatch) {
-        if (!next.some(c => c.name === clue.name)) {
-          next.push({ name: clue.name, color: clue.color, icon: clue.icon });
-        }
-      }
-      return next;
+      if (prev.some(c => c.name === latestClue.name)) return prev;
+      return [...prev, { name: latestClue.name, color: latestClue.color, icon: latestClue.icon }];
     });
 
     if (toastsEnabledRef.current) {
-      const firstClue = latestClueBatch[0];
-      const id = toast(latestClueBatch.length === 1 ? firstClue.name : `${latestClueBatch.length} clues revealed`, {
-        description: latestClueBatch.length === 1
-          ? firstClue.clue
-          : latestClueBatch.map(clue => clue.name).join(', '),
-        icon: firstClue.icon,
+      const id = toast(latestClue.name, {
+        description: latestClue.clue,
+        icon: latestClue.icon,
         duration: CLUE_TOAST_DURATION_MS,
-        style: { borderLeft: `4px solid ${firstClue.color}` },
+        style: { borderLeft: `4px solid ${latestClue.color}` },
       });
       window.setTimeout(() => { try { toast.dismiss(id); } catch { /* ok */ } }, CLUE_TOAST_DURATION_MS + 100);
     }
-  }, [latestClueBatch]);
+  }, [latestClue]);
 
   // Reset on new game (speciesInfo change with index === 1)
   useEffect(() => {

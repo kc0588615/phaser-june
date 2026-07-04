@@ -15,17 +15,13 @@ Complete reference for all environment variables used in the application.
 |----------|-------------|--------------|
 | `DATABASE_URL` | Postgres connection string (Drizzle) | Your Postgres provider (e.g., Hetzner) |
 | `NEXT_PUBLIC_CESIUM_ION_TOKEN` | Cesium Ion access token | [cesium.com/ion](https://cesium.com/ion) → Access Tokens |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk browser publishable key | Clerk dashboard |
-| `CLERK_SECRET_KEY` | Clerk server secret key | Clerk dashboard |
 
 ## Optional Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_TITILER_BASE_URL` | TiTiler raster service endpoint | Project default endpoint |
-| `NEXT_PUBLIC_COG_URL` | Cloud-Optimized GeoTIFF URL for habitat data | Project default COG |
-| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Clerk sign-in path | `/login` in `.env.example` |
-| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | Clerk post-sign-in path | `/` in `.env.example` |
+| `NEXT_PUBLIC_TITILER_BASE_URL` | TiTiler raster service endpoint | None (disables raster features) |
+| `NEXT_PUBLIC_COG_URL` | Cloud-Optimized GeoTIFF URL for habitat data | None |
 
 ## Configuration Paths
 
@@ -35,7 +31,7 @@ Complete reference for all environment variables used in the application.
 |------|------|------------------|----------|
 | **Minimal Local** | 2 min | None | UI only, no data |
 | **With Database** | 10 min | `DATABASE_URL` | Species data, tracking |
-| **Full Stack** | 15 min | Database + Cesium + Clerk | 3D globe, geospatial, authenticated tracking |
+| **Full Stack** | 15 min | All above + `NEXT_PUBLIC_CESIUM_ION_TOKEN` | 3D globe, geospatial |
 | **Raster Data** | +5 min | Add `TITILER_*` | Habitat raster analysis |
 
 ### Minimal Local Run (No External Services)
@@ -64,10 +60,6 @@ Add Cesium token to enable the 3D globe:
 ```env
 DATABASE_URL=postgresql://user:password@host:port/database?schema=public
 NEXT_PUBLIC_CESIUM_ION_TOKEN=your-cesium-token
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
 NEXT_PUBLIC_TITILER_BASE_URL=https://your-titiler-endpoint.com
 NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 ```
@@ -77,9 +69,8 @@ NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
 Environment variables are loaded in:
 - `src/db/index.ts` - Drizzle client
 - `drizzle.config.ts` - Drizzle CLI (introspection)
-- Clerk SDK/auth helpers - `NEXT_PUBLIC_CLERK_*`, `CLERK_SECRET_KEY`
 - `src/components/CesiumMap.tsx` - Cesium Ion token
-- `src/components/CesiumMap.tsx`, `src/app/api/protected-areas/at-point/route.ts`, `src/lib/speciesService.ts` - raster config
+- `next.config.mjs` - Build-time variables
 
 ## Validation
 

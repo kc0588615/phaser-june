@@ -1,36 +1,18 @@
 # Class: MoveAction
 
-Defined in: [src/game/MoveAction.ts:13](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L13)
+Defined in: [src/game/MoveAction.ts:8](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L8)
 
-Represents a player's board move.
+Represents a player's action of moving a row or column.
 
 ## Constructors
 
 ### Constructor
 
-> **new MoveAction**(`from`, `to`): `MoveAction`
-
-Defined in: [src/game/MoveAction.ts:21](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L21)
-
-#### Parameters
-
-##### from
-
-[`GridCoordinate`](../interfaces/GridCoordinate.md)
-
-##### to
-
-[`GridCoordinate`](../interfaces/GridCoordinate.md)
-
-#### Returns
-
-`MoveAction`
-
-### Constructor
-
 > **new MoveAction**(`rowOrCol`, `index`, `amount`): `MoveAction`
 
-Defined in: [src/game/MoveAction.ts:22](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L22)
+Defined in: [src/game/MoveAction.ts:15](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L15)
+
+Creates a MoveAction.
 
 #### Parameters
 
@@ -38,13 +20,19 @@ Defined in: [src/game/MoveAction.ts:22](https://github.com/kc0588615/phaser-june
 
 [`MoveDirection`](../type-aliases/MoveDirection.md)
 
+Whether a row or column was moved.
+
 ##### index
 
 `number`
 
+The index of the row or column moved.
+
 ##### amount
 
 `number`
+
+The number of cells shifted (positive for right/down, negative for left/up).
 
 #### Returns
 
@@ -56,15 +44,9 @@ Defined in: [src/game/MoveAction.ts:22](https://github.com/kc0588615/phaser-june
 
 > `readonly` **amount**: `number`
 
-Defined in: [src/game/MoveAction.ts:17](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L17)
+Defined in: [src/game/MoveAction.ts:18](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L18)
 
-***
-
-### from
-
-> `readonly` **from**: [`GridCoordinate`](../interfaces/GridCoordinate.md)
-
-Defined in: [src/game/MoveAction.ts:18](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L18)
+The number of cells shifted (positive for right/down, negative for left/up).
 
 ***
 
@@ -72,31 +54,19 @@ Defined in: [src/game/MoveAction.ts:18](https://github.com/kc0588615/phaser-june
 
 > `readonly` **index**: `number`
 
-Defined in: [src/game/MoveAction.ts:16](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L16)
+Defined in: [src/game/MoveAction.ts:17](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L17)
 
-***
-
-### mode
-
-> `readonly` **mode**: `"swap"` \| `"line"`
-
-Defined in: [src/game/MoveAction.ts:14](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L14)
+The index of the row or column moved.
 
 ***
 
 ### rowOrCol
 
-> `readonly` **rowOrCol**: [`MoveDirection`](../type-aliases/MoveDirection.md) \| `null`
+> `readonly` **rowOrCol**: [`MoveDirection`](../type-aliases/MoveDirection.md)
 
-Defined in: [src/game/MoveAction.ts:15](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L15)
+Defined in: [src/game/MoveAction.ts:16](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L16)
 
-***
-
-### to
-
-> `readonly` **to**: [`GridCoordinate`](../interfaces/GridCoordinate.md)
-
-Defined in: [src/game/MoveAction.ts:19](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L19)
+Whether a row or column was moved.
 
 ## Methods
 
@@ -104,7 +74,7 @@ Defined in: [src/game/MoveAction.ts:19](https://github.com/kc0588615/phaser-june
 
 > **getDistance**(): `number`
 
-Defined in: [src/game/MoveAction.ts:88](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L88)
+Defined in: [src/game/MoveAction.ts:38](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L38)
 
 Gets the absolute distance moved
 
@@ -114,37 +84,13 @@ Gets the absolute distance moved
 
 ***
 
-### isAdjacent()
-
-> **isAdjacent**(): `boolean`
-
-Defined in: [src/game/MoveAction.ts:63](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L63)
-
-#### Returns
-
-`boolean`
-
-***
-
 ### isHorizontal()
 
 > **isHorizontal**(): `boolean`
 
-Defined in: [src/game/MoveAction.ts:70](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L70)
+Defined in: [src/game/MoveAction.ts:24](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L24)
 
 Checks if this move is horizontal (row move)
-
-#### Returns
-
-`boolean`
-
-***
-
-### isNoop()
-
-> **isNoop**(): `boolean`
-
-Defined in: [src/game/MoveAction.ts:59](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L59)
 
 #### Returns
 
@@ -156,21 +102,9 @@ Defined in: [src/game/MoveAction.ts:59](https://github.com/kc0588615/phaser-june
 
 > **isPositiveDirection**(): `boolean`
 
-Defined in: [src/game/MoveAction.ts:97](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L97)
+Defined in: [src/game/MoveAction.ts:45](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L45)
 
 Checks if move is to the right (for rows) or down (for columns)
-
-#### Returns
-
-`boolean`
-
-***
-
-### isSwap()
-
-> **isSwap**(): `boolean`
-
-Defined in: [src/game/MoveAction.ts:55](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L55)
 
 #### Returns
 
@@ -182,7 +116,7 @@ Defined in: [src/game/MoveAction.ts:55](https://github.com/kc0588615/phaser-june
 
 > **isVertical**(): `boolean`
 
-Defined in: [src/game/MoveAction.ts:79](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L79)
+Defined in: [src/game/MoveAction.ts:31](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L31)
 
 Checks if this move is vertical (column move)
 
@@ -196,7 +130,7 @@ Checks if this move is vertical (column move)
 
 > **toString**(): `string`
 
-Defined in: [src/game/MoveAction.ts:109](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/game/MoveAction.ts#L109)
+Defined in: [src/game/MoveAction.ts:52](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/MoveAction.ts#L52)
 
 Returns a string representation of the move
 

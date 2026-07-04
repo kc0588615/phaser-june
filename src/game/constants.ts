@@ -8,18 +8,19 @@ import {
     type LootGemType,
     type GemType,
     type GemFamily,
+    type CurrencyKey,
     type BoardSpawnConfig,
     getGemFamily,
     DEFAULT_BOARD_SPAWN_CONFIG,
 } from '../expedition/domain';
 
 // --- Grid Configuration ---
-export const GRID_COLS = 4 as const;
-export const GRID_ROWS = 5 as const;
+export const GRID_COLS = 6 as const;
+export const GRID_ROWS = 6 as const;
 
 // --- Gem Configuration ---
 export { ACTION_GEM_TYPES, LOOT_GEM_TYPES, GEM_TYPES, getGemFamily, DEFAULT_BOARD_SPAWN_CONFIG };
-export type { ActionGemType, LootGemType, GemType, GemFamily, BoardSpawnConfig };
+export type { ActionGemType, LootGemType, GemType, GemFamily, CurrencyKey, BoardSpawnConfig };
 
 export const GEM_FRAME_COUNT = 8 as const; // Number of animation frames per gem type (explosion etc.)
 
@@ -100,6 +101,7 @@ export const HABITAT_GEM_MAP: Partial<Record<number, GemType>> = {
 } as const;
 
 // --- Game Mechanics Configuration ---
+export const MAX_MOVES = 50;
 export const STREAK_STEP = 0.25;           // +25% per streak level
 export const STREAK_CAP = 3.0;             // optional cap (x3.0)
 export const EARLY_BONUS_PER_SLOT = 100;

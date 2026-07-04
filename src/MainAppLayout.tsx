@@ -12,13 +12,18 @@ import { Toaster } from 'sonner';
 import { BottomTabBar } from './components/BottomTabBar';
 import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
+import { RunTrack } from './components/RunTrack';
+import { ActiveEncounterPanel } from './components/ActiveEncounterPanel';
+import { GemWallet } from './components/GemWallet';
+import { SouvenirPouch } from './components/SouvenirPouch';
+import { ConsumableTray } from './components/ConsumableTray';
 import { DeductionCamp } from './components/DeductionCamp';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ProfileContent } from './components/ProfileContent';
-import { MatchBattleCombatHud } from './components/MatchBattleCombatHud';
-import { MatchBattleRewardDraft } from './components/MatchBattleRewardDraft';
-import { MatchBattleRouteMap } from './components/MatchBattleRouteMap';
-import { UPGRADE_CATALOG } from '@/game/matchBattle/catalog';
+import { SpookMeter } from './components/SpookMeter';
+import { BankedScore } from './components/BankedScore';
+import { CrisisOverlay } from './components/CrisisOverlay';
+import { WALLET_DEFS } from '@/expedition/domain';
 import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import type { RunState } from '@/types/expedition';
@@ -41,11 +46,10 @@ function MainAppLayoutInner() {
 
     const {
         runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
-        handleAffinitySelected, handlePartnerSelected, handleRunResume, handleRunReset,
+        handleAffinitySelected, handleRunResume, handleRunReset, handleCrisisToolSpend,
         handleDeductionPurchase, handleDeductionGuessResult,
         handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
-        selectMatchBattleReward, rerollMatchBattleRewards, purchaseMatchBattleUpgrade, selectMatchBattleRouteNode,
-        showSpeciesList, onShowSpeciesList,
+        useConsumable, onShowSpeciesList,
     } = useExpedition();
 
     // Register show-species-list handler (replaces EventBus listener)
@@ -63,12 +67,10 @@ function MainAppLayoutInner() {
     };
 
     const inRun = runState.phase === 'in-run';
-    const showReward = runState.phase === 'reward';
-    const showRoute = runState.phase === 'route';
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
     const showDeduction = runState.phase === 'deduction';
-    const inExpedition = inRun || showReward || showRoute || showBriefing || showComplete || showDeduction;
+    const inExpedition = inRun || showBriefing || showComplete || showDeduction;
     const useSplitLayout = inRun;
 
     const handleTabChange = useCallback((tab: BaseTab) => {
@@ -90,10 +92,9 @@ function MainAppLayoutInner() {
         return resumed;
     }, [handleRunResume]);
 
-    const handleViewCapturedSpecies = useCallback((speciesId: number) => {
-        handleRunReset();
-        showSpeciesList(speciesId);
-    }, [handleRunReset, showSpeciesList]);
+    const currentNode = inRun && runState.expedition
+        ? runState.expedition.nodes[runState.currentNodeIndex]
+        : null;
 
     useEffect(() => {
         if (!phaserRef.current?.game) return;
@@ -128,6 +129,13 @@ function MainAppLayoutInner() {
                 left: (baseTab !== 'explore' && baseTab !== 'expedition' && !inExpedition) ? '-9999px' : '0',
                 display: 'flex', flexDirection: 'column', width: '100%', height: '100%'
             }}>
+                {/* RunTrack bar above Phaser canvas */}
+                <div style={{ display: inRun && runState.expedition ? 'block' : 'none' }}>
+                    {runState.expedition && (
+                        <RunTrack nodes={runState.expedition.nodes} currentNodeIndex={runState.currentNodeIndex} activeAffinities={runState.activeAffinities} />
+                    )}
+                </div>
+
                 <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
                         {/* Deduction Camp phase */}
@@ -144,7 +152,6 @@ function MainAppLayoutInner() {
                                     onProcessClue={handleProcessClue}
                                     onPlaceReference={handlePlaceReference}
                                     onComparativeGuess={handleComparativeGuessResult}
-                                    onViewSpecies={handleViewCapturedSpecies}
                                     onFinish={handleRunReset}
                                 />
                             </div>
@@ -171,8 +178,6 @@ function MainAppLayoutInner() {
                                         expedition={runState.expedition}
                                         onStart={() => EventBus.emit('expedition-start', {})}
                                         onSelectAffinity={handleAffinitySelected}
-                                        selectedPartnerId={runState.selectedPartner?.speciesId ?? null}
-                                        onSelectPartner={handlePartnerSelected}
                                         onClose={handleRunReset}
                                     />
                                 </div>
@@ -184,26 +189,6 @@ function MainAppLayoutInner() {
                             <RunCompleteSummary
                                 runState={runState}
                                 onReset={handleRunReset}
-                            />
-                        )}
-
-                        {showReward && runState.matchBattle && (
-                            <MatchBattleRewardDraft
-                                options={runState.matchBattle.rewardDraft}
-                                bankedScore={runState.bankedScore}
-                                rerollCost={runState.matchBattle.rerollCost}
-                                upgrades={UPGRADE_CATALOG}
-                                gearSlotsFull={runState.matchBattle.armaments.length >= runState.matchBattle.maxGearSlots}
-                                onSelect={selectMatchBattleReward}
-                                onReroll={rerollMatchBattleRewards}
-                                onUpgrade={purchaseMatchBattleUpgrade}
-                            />
-                        )}
-
-                        {showRoute && runState.matchBattle && (
-                            <MatchBattleRouteMap
-                                matchBattle={runState.matchBattle}
-                                onSelect={selectMatchBattleRouteNode}
                             />
                         )}
 
@@ -219,15 +204,43 @@ function MainAppLayoutInner() {
 
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
-                        {inRun && runState.matchBattle && (
-                            <MatchBattleCombatHud
-                                matchBattle={runState.matchBattle}
-                                bankedScore={runState.bankedScore}
-                                cluesGathered={runState.revealedDuringRun}
+                        {/* Active encounter panel */}
+                        {inRun && currentNode && (
+                            <ActiveEncounterPanel
+                                node={currentNode}
+                                nodeIndex={runState.currentNodeIndex}
+                                activeAffinities={runState.activeAffinities}
+                                onComplete={() => EventBus.emit('node-advance-requested', {
+                                    nodeIndex: runState.currentNodeIndex,
+                                    reason: 'analysis_complete',
+                                    source: 'panel',
+                                })}
                             />
                         )}
 
+                        {/* Thumb zone — bottom overlays */}
+                        {inRun && (
+                            <div className="absolute bottom-1.5 left-1.5 right-1.5 z-hud flex items-end gap-1.5">
+                                <div className="flex flex-col gap-ds-xs items-start shrink-0">
+                                    <div className="flex gap-ds-xs items-end">
+                                        <GemWallet wallet={runState.resourceWallet} />
+                                        {runState.souvenirs.length > 0 && <SouvenirPouch souvenirs={runState.souvenirs} />}
+                                    </div>
+                                    <ConsumableTray items={runState.consumables} onUse={useConsumable} />
+                                </div>
+                                <div className="flex-1 flex flex-col items-center gap-ds-xs">
+                                    <SpookMeter />
+                                    <BankedScore score={runState.bankedScore} />
+                                </div>
+                                <div className="shrink-0 w-px" />
+                            </div>
+                        )}
                     </div>
+
+                    {/* Crisis overlay — hoisted to cover both game regions but leave RunTrack visible */}
+                    {inRun && (
+                        <CrisisOverlay consumables={runState.consumables} onSpendTool={handleCrisisToolSpend} />
+                    )}
                 </div>
             </div>
 
@@ -259,10 +272,38 @@ function MainAppLayoutInner() {
                 background: 'var(--ds-background)',
             }}>
                 <h2 className="m-0 mb-1 text-lg font-semibold text-ds-text-primary">Inventory</h2>
-                <p className="m-0 mb-ds-lg text-ds-body text-ds-text-muted">Expedition rewards now resolve through Match Battle route rewards.</p>
-                <GlassPanel className="p-8 rounded-2xl text-center">
-                    <p className="m-0 text-ds-body text-ds-text-muted">No inventory items to manage.</p>
-                </GlassPanel>
+                <p className="m-0 mb-ds-lg text-ds-body text-ds-text-muted">Souvenirs collected during expeditions</p>
+
+                {runState.souvenirs.length > 0 ? (
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2.5">
+                        {runState.souvenirs.map((s, i) => (
+                            <GlassPanel key={`${s.id}-${i}`} className="flex flex-col items-center gap-ds-xs p-ds-md rounded-xl">
+                                <span className="text-3xl">{s.emoji}</span>
+                                <span className="text-ds-caption font-semibold text-ds-text-primary text-center">{s.name}</span>
+                            </GlassPanel>
+                        ))}
+                    </div>
+                ) : (
+                    <GlassPanel className="p-8 rounded-2xl text-center">
+                        <div className="text-3xl mb-ds-sm">🎒</div>
+                        <p className="m-0 text-ds-body text-ds-text-muted">No souvenirs yet. Complete expeditions to collect items!</p>
+                    </GlassPanel>
+                )}
+
+                {runState.consumables.length > 0 && (
+                    <>
+                        <h3 className="mt-5 mb-ds-sm text-ds-body font-semibold text-ds-text-primary">Consumables</h3>
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-2.5">
+                            {runState.consumables.map((c, i) => (
+                                <GlassPanel key={`${c.instanceId}-${i}`} className="flex flex-col items-center gap-ds-xs p-ds-md rounded-xl">
+                                    <span className="text-xl">🧪</span>
+                                    <span className="text-ds-caption font-semibold text-ds-text-primary text-center">{c.name}</span>
+                                    <span className="text-[9px] text-ds-text-muted">{c.effectType}</span>
+                                </GlassPanel>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Expedition tab */}
@@ -300,31 +341,16 @@ function RunCompleteSummary({ runState, onReset }: {
 }) {
     const { hud } = useGameBridge();
     const { hiddenSpeciesName } = useExpedition();
-    const capturedSpecies = runState.finalScore != null;
-    const matchBattleLost = runState.matchBattle?.outcome === 'lost' && !capturedSpecies;
-    const matchBattleCalled = runState.matchBattle?.outcome === 'called';
-    const title = capturedSpecies
-        ? 'Species Captured!'
-        : matchBattleLost
-            ? 'Out of Stamina'
-            : matchBattleCalled
-                ? 'Camp Report'
-                : 'Expedition Complete!';
     const stats = [
-        { label: 'Banked Score', value: String(runState.finalScore ?? hud.score), color: 'var(--ds-accent-cyan)' },
+        { label: 'Banked Score', value: String(hud.score), color: 'var(--ds-accent-cyan)' },
         { label: 'Nodes Done', value: String(runState.expedition?.nodes.length ?? 0), color: 'var(--ds-accent-emerald)' },
-        { label: 'Pieces', value: String(runState.matchBattle?.piecePool.length ?? 0), color: 'var(--ds-accent-amber)' },
-        { label: 'Gear', value: String(runState.matchBattle?.armaments.length ?? 0), color: 'var(--ds-gem-focus)' },
+        { label: 'Souvenirs', value: String(runState.souvenirs.length), color: 'var(--ds-accent-amber)' },
+        { label: 'Items Left', value: String(runState.consumables.length), color: 'var(--ds-gem-focus)' },
     ];
 
     return (
         <div className="absolute inset-0 z-panel flex flex-col items-center justify-center bg-[rgba(10,14,26,0.7)] backdrop-blur-md p-ds-xl gap-ds-lg">
-            <div className="text-[22px] font-bold text-ds-cyan">{title}</div>
-            {matchBattleLost && (
-                <div className="max-w-[320px] text-center text-ds-body text-ds-text-secondary">
-                    You ran out of Stamina.
-                </div>
-            )}
+            <div className="text-[22px] font-bold text-ds-cyan">Expedition Complete!</div>
             <div className="text-4xl font-bold text-ds-text-primary">
                 {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hud.score} pts
             </div>
@@ -361,6 +387,15 @@ function RunCompleteSummary({ runState, onReset }: {
                     })}
                 </div>
             )}
+
+            <div className="flex gap-ds-lg text-ds-body">
+                {WALLET_DEFS.map(({ key, color, label }) => (
+                    <div key={key} className="text-center">
+                        <div className="text-lg font-bold" style={{ color }}>{runState.resourceWallet[key]}</div>
+                        <div className="text-ds-caption text-ds-text-secondary">{label}</div>
+                    </div>
+                ))}
+            </div>
 
             <button
                 onClick={onReset}

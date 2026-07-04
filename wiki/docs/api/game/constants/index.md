@@ -1,5 +1,9 @@
 # game/constants
 
+## Type Aliases
+
+- [GemType](type-aliases/GemType.md)
+
 ## Variables
 
 - [ANIMATION\_DURATIONS](variables/ANIMATION_DURATIONS.md)
@@ -9,10 +13,12 @@
 - [DRAG\_THRESHOLD](variables/DRAG_THRESHOLD.md)
 - [EARLY\_BONUS\_PER\_SLOT](variables/EARLY_BONUS_PER_SLOT.md)
 - [GEM\_FRAME\_COUNT](variables/GEM_FRAME_COUNT.md)
+- [GEM\_TYPES](variables/GEM_TYPES.md)
 - [GRID\_COLS](variables/GRID_COLS.md)
 - [GRID\_ROWS](variables/GRID_ROWS.md)
 - [HABITAT\_GEM\_MAP](variables/HABITAT_GEM_MAP.md)
 - [INPUT\_THRESHOLDS](variables/INPUT_THRESHOLDS.md)
+- [MAX\_MOVES](variables/MAX_MOVES.md)
 - [MOVE\_HUGE\_MATCH\_THRESHOLD](variables/MOVE_HUGE_MATCH_THRESHOLD.md)
 - [MOVE\_LARGE\_MATCH\_THRESHOLD](variables/MOVE_LARGE_MATCH_THRESHOLD.md)
 - [MOVE\_THRESHOLD](variables/MOVE_THRESHOLD.md)
@@ -28,63 +34,3 @@
 - [TWEEN\_DURATION\_FALL\_PER\_UNIT](variables/TWEEN_DURATION_FALL_PER_UNIT.md)
 - [TWEEN\_DURATION\_LAYOUT\_UPDATE](variables/TWEEN_DURATION_LAYOUT_UPDATE.md)
 - [TWEEN\_DURATION\_SNAP](variables/TWEEN_DURATION_SNAP.md)
-
-## References
-
-### ACTION\_GEM\_TYPES
-
-Re-exports [ACTION_GEM_TYPES](../../expedition/domain/variables/ACTION_GEM_TYPES.md)
-
-***
-
-### ActionGemType
-
-Re-exports [ActionGemType](../../expedition/domain/type-aliases/ActionGemType.md)
-
-***
-
-### BoardSpawnConfig
-
-Re-exports [BoardSpawnConfig](../../expedition/domain/interfaces/BoardSpawnConfig.md)
-
-***
-
-### DEFAULT\_BOARD\_SPAWN\_CONFIG
-
-Re-exports [DEFAULT_BOARD_SPAWN_CONFIG](../../expedition/domain/variables/DEFAULT_BOARD_SPAWN_CONFIG.md)
-
-***
-
-### GEM\_TYPES
-
-Re-exports [GEM_TYPES](../../expedition/domain/variables/GEM_TYPES.md)
-
-***
-
-### GemFamily
-
-Re-exports [GemFamily](../../expedition/domain/type-aliases/GemFamily.md)
-
-***
-
-### GemType
-
-Re-exports [GemType](../../expedition/domain/type-aliases/GemType.md)
-
-***
-
-### getGemFamily
-
-Re-exports [getGemFamily](../../expedition/domain/functions/getGemFamily.md)
-
-***
-
-### LOOT\_GEM\_TYPES
-
-Re-exports [LOOT_GEM_TYPES](../../expedition/domain/variables/LOOT_GEM_TYPES.md)
-
-***
-
-### LootGemType
-
-Re-exports [LootGemType](../../expedition/domain/type-aliases/LootGemType.md)

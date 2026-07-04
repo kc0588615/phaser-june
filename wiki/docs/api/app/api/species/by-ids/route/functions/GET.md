@@ -1,13 +1,13 @@
 # Function: GET()
 
-> **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: `Record`\<`string`, `unknown`\>[]; \}\>\>
+> **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: `object`[]; \}\>\>
 
-Defined in: [src/app/api/species/by-ids/route.ts:12](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/app/api/species/by-ids/route.ts#L12)
+Defined in: [src/app/api/species/by-ids/route.ts:65](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/app/api/species/by-ids/route.ts#L65)
 
 GET /api/species/by-ids?ids=1,2,3
 POST /api/species/by-ids \{ ids: [1, 2, 3] \}
 
-Batch fetch species by their species.id values
+Batch fetch species by their ogc_fid values
 
 ## Parameters
 
@@ -17,4 +17,4 @@ Batch fetch species by their species.id values
 
 ## Returns
 
-`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: `Record`\<`string`, `unknown`\>[]; \}\>\>
+`Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: `object`[]; \}\>\>

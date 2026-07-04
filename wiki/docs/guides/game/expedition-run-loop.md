@@ -1,24 +1,18 @@
 ---
 sidebar_position: 4
 title: Expedition Run Loop
-description: Standard expedition nodes, spook pressure, encounters, and deduction handoff
+description: How expeditions, nodes, encounters, and souvenirs work
 tags: [guide, game, expedition, encounters, souvenirs]
 ---
 
 # Expedition Run Loop
 
-This page documents the standard GIS expedition loop. It remains useful for node generation, spook/objective mechanics, clue fragments, and Deduction Camp.
-
-For the active combat route, see [Match Battle](/docs/guides/game/match-battle).
-
-Standard loop: map click -> briefing -> 6-node route -> deduction -> completion summary.
-
-Match Battle loop: map click -> briefing -> branching combat route -> rewards/upgrades/route choices -> leader win or Stamina-loss summary.
+The expedition run loop is the core gameplay progression. A map click generates a 6-node expedition with GIS-driven node types, gem objectives, mid-node encounters, and souvenir drops.
 
 ## Run Phases
 
 ```
-idle -> briefing -> in-run -> deduction -> complete
+idle → briefing → in-run → complete
 ```
 
 | Phase | UI State | Trigger |
@@ -26,24 +20,20 @@ idle -> briefing -> in-run -> deduction -> complete
 | `idle` | Map interactive, waiting for click | App start / run reset |
 | `briefing` | ExpeditionBriefing shown, nodes previewed | `expedition-data-ready` event |
 | `in-run` | Puzzle active, nodes advance sequentially | `expedition-start` event |
-| `deduction` | Deduction Camp clue buying + species guess | Standard route ends or escape |
-| `complete` | Summary with score + outcome | Deduction finish or Match Battle end |
+| `complete` | Summary with score + gems + souvenirs | Last node completed |
 
-Match Battle additionally uses `reward` and `route` phases between combats.
-
-**State:** `RunState` in `src/types/expedition.ts`, managed by `src/contexts/ExpeditionContext.tsx`.
+**State:** `RunState` in `src/types/expedition.ts`, managed by `MainAppLayout.tsx`.
 
 ## Data Flow
 
 ```
 Map click
-  -> /api/protected-areas/at-point (GIS scoring + node gen)
-  -> CesiumMap emits expedition-data-ready
-  -> ExpeditionContext stores payload, shows briefing
-  -> Player starts -> cesium-location-selected emitted per node
-  -> Game.ts runs puzzle with node config + seeded obstacle state
-  -> Objective met or escape -> node-advance-requested
-  -> ExpeditionContext validates -> node-complete -> next node, deduction, or complete
+  → /api/protected-areas/at-point (GIS scoring + node gen)
+  → CesiumMap emits expedition-data-ready
+  → MainAppLayout stores payload, shows briefing
+  → Player starts → cesium-location-selected emitted per node (with boardContext)
+  → Game.ts runs puzzle with node config + seeded obstacle state
+  → Objective met → node-advance-requested → MainAppLayout validates → node-complete → next node or run complete
 ```
 
 ## Node Generation
@@ -52,21 +42,21 @@ Map click
 
 Six nodes per expedition:
 
-1. **Primary** - highest-scoring GIS layer -> node type
-2. **Modifiers (2-3)** - secondary layers above threshold
-3. **Fillers** - varied types ensuring unique gem pairs per run
-4. **Analysis** - always slot 6, no gem objective
+1. **Primary** — highest-scoring GIS layer → node type
+2. **Modifiers (2-3)** — secondary layers above threshold
+3. **Fillers** — varied types ensuring unique gem pairs per run
+4. **Analysis** — always slot 6, no gem objective
 
 ### Node Templates
 
-| Node Type | Required Gems | Events |
+| Node Type | Gems | Events |
 |-----------|------|--------|
-| `riverbank_sweep` | shield + power | amphibian_signal, river_crossing |
-| `dense_canopy` | sword + crate | trail_markings, rare_track |
-| `urban_fringe` | key + thought | human_disturbance, corridor_crossing |
-| `elevation_ridge` | staff + shield | vantage_scan |
-| `storm_window` | power + multiplier | urgent_tracking_window, migration_shift |
-| `custom` | crate + thought | discovery_event |
+| `riverbank_sweep` | blue + green | amphibian_signal, river_crossing |
+| `dense_canopy` | green + black | trail_markings, rare_track |
+| `urban_fringe` | red + orange | human_disturbance, corridor_crossing |
+| `elevation_ridge` | white + blue | vantage_scan |
+| `storm_window` | red + purple | urgent_tracking_window, migration_shift |
+| `custom` | purple + yellow | discovery_event |
 | `analysis` | (none) | wager_guess |
 
 Each template has a **unique gem pair**. Filler logic avoids repeating pairs already in the run.
@@ -74,8 +64,8 @@ Each template has a **unique gem pair**. Filler logic avoids repeating pairs alr
 ### Gem Objective
 
 - Gem-objective nodes get `objectiveTarget: 6`
-- Player matches required action gems to fill progress
-- Match-4+ of required gems instantly completes the node
+- Player matches required-color gems to fill progress
+- Match-4+ of required gems → instant node complete
 - Progress shown in ActiveEncounterPanel
 - Objective counting reads from `phaseResult.matchGridState` (snapshot before explode-and-replace)
 - Objective progress is independent of species/clue state — nodes with no species still track gem objectives
@@ -90,18 +80,6 @@ Obstacles are typed in `src/game/nodeObstacles.ts`. Some obstacles seed determin
 - Game/UI emits `node-advance-requested` when ready to advance
 - `MainAppLayout` validates the request, persists node completion, emits `node-complete`
 - `node-complete` is a fact emitted once by React, not a request signal
-
-## Spook Meter
-
-The standard loop uses a tracking pressure meter with three tiers.
-
-| Tier | Range | Effect |
-|------|-------|--------|
-| `stabilized` | `> 60%` | Best rewards, continue |
-| `spooked` | `20-60%` | Reduced rewards, continue |
-| `escaped` | `<= 20%` | Skip remaining nodes, enter Deduction Camp |
-
-When the meter escapes or moves run out, `Game.ts` emits `node-advance-requested` with `reason: 'escaped'`. React skips remaining nodes and moves to `phase: 'deduction'`.
 
 ## Encounters
 
@@ -139,27 +117,27 @@ Each encounter rolls against a per-item `dropChance` (0.15–0.6).
 
 **Catalog:** `SOUVENIR_CATALOG` in `src/types/expedition.ts` (11 items)
 
-| Item | Drop Chance |
-|------|-------------|
-| Frog Charm | 60% |
-| River Stone | 50% |
-| Trail Marker | 50% |
-| Pawprint Fossil | 35% |
-| Urban Artifact | 40% |
-| Flight Feather | 30% |
-| Spyglass Lens | 30% |
-| Storm Crystal | 15% |
-| Compass Shard | 20% |
-| Mystery Seed | 40% |
-| Lucky Coin | 20% |
+| Item | Emoji | Drop Chance |
+|------|-------|-------------|
+| Frog Charm | 🐸 | 60% |
+| River Stone | 🪨 | 50% |
+| Trail Marker | 🪵 | 50% |
+| Pawprint Fossil | 🐾 | 35% |
+| Urban Artifact | 🏗 | 40% |
+| Flight Feather | 🪶 | 30% |
+| Spyglass Lens | 🔭 | 30% |
+| Storm Crystal | ⚡ | 15% |
+| Compass Shard | 🧭 | 20% |
+| Mystery Seed | 🌱 | 40% |
+| Lucky Coin | 🪙 | 20% |
 
 Collected souvenirs shown in **SouvenirPouch** (bottom-left, next to GemWallet). Persisted to `eco_run_nodes.rewardProfile` jsonb on node complete.
 
-## Run Economy
+## Gem Wallet
 
-Action gems drive standard node objectives. Loot gems award clue fragments for Deduction Camp instead of directly revealing clues during board play.
+Clue reveals award a random gem type (`nature_gem`, `water_gem`, `knowledge_gem`, `craft_gem`) weighted by `resourceBias` from the expedition's GIS context.
 
-Wallet currencies are Supplies, Focus, Insight, and Samples. `GemWallet` remains the shared display for run resources.
+**Component:** `src/components/GemWallet.tsx`
 
 ## Route Trail
 
@@ -175,7 +153,7 @@ CesiumMap draws a synthetic trail on the globe:
 |-------|--------|---------|
 | `/api/runs` | POST | Create run session + nodes |
 | `/api/runs/[runId]/nodes/[nodeIndex]/complete` | POST | Mark node complete, persist score/moves/souvenirs |
-| `/api/runs/[runId]` | PATCH | Persist checkpoints, deduction state, final score, Match Battle metadata |
+| `/api/runs/[runId]` | PATCH | Persist gem wallet on run complete |
 
 ## Key Files
 
@@ -185,8 +163,7 @@ CesiumMap draws a synthetic trail on the globe:
 | `src/lib/nodeScoring.ts` | Node generation + scoring |
 | `src/game/scenes/Game.ts` | Objective tracking, encounter triggers, advancement requests |
 | `src/game/nodeObstacles.ts` | Obstacle typing, labels, deterministic board-state seeding |
-| `src/contexts/ExpeditionContext.tsx` | Phase state machine, request validation, persistence, node advancement |
-| `src/MainAppLayout.tsx` | Mounted layout for Cesium, Phaser, and overlays |
+| `src/MainAppLayout.tsx` | Phase state machine, request validation, persistence, node advancement |
 | `src/components/ActiveEncounterPanel.tsx` | Node panel, progress bar, analysis-node advance button, encounter flash |
 | `src/components/RunTrack.tsx` | Progress track bar |
 | `src/components/GemWallet.tsx` | Gem inventory |
@@ -209,7 +186,7 @@ CesiumMap draws a synthetic trail on the globe:
 
 ## Related Documentation
 
-- [Match Battle](/docs/guides/game/match-battle) - active combat route
-- [Event Types Reference](/docs/reference/event-types) - full event catalog
-- [Database Schema](/docs/reference/database-schema) - `eco_run_sessions` / `eco_run_nodes`
-- [Game Constants](/docs/reference/game-constants) - board sizing and gem constants
+- [Action Run Schema & GIS Sources](/docs/guides/data/database-guide) — GIS layer scoring
+- [Event Types Reference](/docs/reference/event-types) — Full event catalog
+- [Database Schema](/docs/reference/database-schema) — eco_run_sessions/nodes tables
+- [Game Constants](/docs/reference/game-constants) — Scoring multipliers

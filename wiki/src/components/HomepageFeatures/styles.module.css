@@ -1,26 +1,11 @@
 .features {
-  padding: 3rem 0;
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
   width: 100%;
 }
 
-.featureCard {
-  height: 100%;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 8px;
-  padding: 1.25rem;
-  background: var(--ifm-card-background-color);
-}
-
-.featureLabel {
-  display: inline-block;
-  margin-bottom: 0.75rem;
-  color: var(--ifm-color-primary);
-  font-weight: 800;
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
-}
-
-.featureCard p {
-  margin-bottom: 0;
-  line-height: 1.65;
+.featureSvg {
+  height: 200px;
+  width: 200px;
 }

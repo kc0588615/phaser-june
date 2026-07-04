@@ -33,15 +33,10 @@ const client = postgres(process.env.DATABASE_URL!, {
 });
 ```
 
-## PgBouncer Connection String
+## PgBouncer Parameter
 
-Use the PgBouncer host/port with TLS, but do not add `pgbouncer=true`.
-
-```env
-DATABASE_URL=postgresql://user:password@host:6432/database?sslmode=require
-```
-
-Older local URLs may contain `pgbouncer=true`; postgres.js does not accept that startup parameter. The repo strips it defensively in both:
+Your `DATABASE_URL` may include `pgbouncer=true`, but postgres.js does not accept
+the startup parameter. The repo strips it in both:
 
 - `src/db/index.ts`
 - `drizzle.config.ts`

@@ -2,87 +2,171 @@
 
 Current source of truth for the React + Phaser gameplay stack.
 
-Use with [MATCH_BATTLE_SYSTEM.md](./MATCH_BATTLE_SYSTEM.md). Older expedition docs are archived under `docs/archive/`.
+Use this doc before changing run flow, EventBus contracts, board logic, clue behavior, or the run economy.
 
-## Current Loop
+For the implemented affinity migration and current follow-up checklist, see [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
 
-1. Globe click selects a location and candidate species.
-2. Briefing opens with affinity and field-partner selection.
-3. Match Battle route starts: 4-6 depths, node types `enemy`, `elite`, `repair`, final `leader`.
-4. Combat uses a 4x5 board with 8 loot gems plus 3 tool pieces:
-   - `sword` / Spotting Scope: damage
-   - `staff` / Telephoto Lens: heavier direct damage
-   - `shield` / Camo Blind: stamina recovery
-5. Loot gems reveal clues during combat. `lootChance` is 0.35.
-6. Rewards, rerolls, and upgrades spend banked score only.
-7. Leader win or stamina loss enters Deduction Camp with `revealedDuringRun`.
-8. Correct species guess captures the species through `player_species_discoveries`.
+## Runtime ownership
 
-Moves are unlimited. Move count is retained for stats only.
+- React owns app layout, expedition phase state, run persistence, wallet/inventory state, deduction camp, and node advancement.
+- Phaser owns board state, input, matching, scoring, gem effect emission, spook meter, objective progress, and encounter triggers.
+- Cesium listens to completed-node events to update trail visuals.
+- Species/clue UI listens to game events but does not own puzzle state.
 
-## Runtime Ownership
+## Layout model
 
-- React owns app layout, expedition phase state, route/reward/upgrade state, run persistence, partner selection, Deduction Camp, and node advancement.
-- Phaser owns board state, input, matching, scoring, clue reveal emission, combat event emission, and board-side debuff application.
-- `src/game/matchBattle/combatResolver.ts` owns pure combat math: piece effects, gear effects, enemy turns, next intent, score deltas, stat deltas, and outcomes.
-- Cesium owns map rendering, click ingress, and route visuals.
+- `src/MainAppLayout.tsx` keeps Phaser, Cesium, and clue UI mounted.
+- Top area is the Phaser wrapper.
+- Bottom area keeps Cesium mounted for map phases, swaps to Deduction Camp and completion summary when needed, and renders the expedition briefing as an overlay on top of the map instead of replacing it.
+- Components should be hidden with CSS instead of unmounted when they need to preserve EventBus listeners or state.
 
-## EventBus
+## EventBus ownership rules
 
-Active categories:
+- Emit facts, not side effects.
+- Phaser can emit progress facts, spook meter ticks, gem effects, or completion/escape requests.
+- React decides whether a request advances the expedition.
+- React decides whether clue purchases or guesses are legal.
+- Only React emits the final `node-complete` event.
 
-- location: `cesium-location-selected`
-- board/HUD: `game-hud-updated`, `game-reset`, `game-restart`
-- run: `expedition-data-ready`, `expedition-start`, `node-advance-requested`, `node-complete`, `node-objective-updated`
-- Match Battle: `match-battle-combat-state-updated`, `match-battle-combat-ended`, `match-battle-reward-draft-opened`, `match-battle-route-node-selected`, `match-battle-run-ended`
-- clue/deduction: `clue-revealed`, `species-guess-submitted`, `deduction-camp-purchase`
-- auth/progress: `auth-user-ready`
+### Node progression contract
 
-`EventBus.ts` is fully typed. Emit facts only; React decides run-state transitions.
+1. Phaser emits `node-objective-updated` while a node is active.
+2. When the objective is met, Phaser emits `node-advance-requested` with `reason: 'objective_complete'`.
+3. When the spook meter hits escaped tier (or moves are exhausted during an expedition), Phaser emits `node-advance-requested` with `reason: 'escaped'`.
+4. Analysis nodes use a panel button that emits `node-advance-requested` with `reason: 'analysis_complete'`.
+5. `MainAppLayout` validates the request against current run state, persists node completion, advances `RunState`, then emits `node-complete`. On escape, it skips remaining nodes and transitions to Deduction Camp.
+6. `Game.ts` and `CesiumMap.tsx` listen to `node-complete` for board/trail cleanup only.
 
-## Board Model
+### Active run events
 
-- Default board: `GRID_COLS = 4`, `GRID_ROWS = 5`.
-- Match Battle can expand via `board_col` and `board_row`.
-- `BackendPuzzle` owns `BoardCell` state and returns cloned snapshots.
-- `ExplodeAndReplacePhase.matchGridState` captures matched gem identity before replacements.
-- `BoardView` renders the state already present in `BackendPuzzle`.
+- `expedition-data-ready`: Cesium/API -> React run setup
+- `expedition-start`: briefing overlay -> active run
+- `cesium-location-selected`: React -> Phaser node initialization
+- `node-objective-updated`: Phaser -> React/UI progress update
+- `node-bonus-tick`: Phaser -> UI spook meter state (currentPool, startPool, pct, tier)
+- `node-rewards-summary`: Phaser -> React per-node reward breakdown with spook tier
+- `clue-fragment-earned`: Phaser -> React category-specific fragment accumulation
+- `clue-discount-earned`: Phaser -> React thought-gem discount accumulation
+- `resource-wallet-updated`: Phaser/React -> UI wallet display sync
+- `node-advance-requested`: Phaser/UI -> React advancement request (includes reason: objective_complete, escaped, analysis_complete, etc.)
+- `node-complete`: React -> Phaser/Cesium/UI completion fact
+- `encounter-triggered`: Phaser -> UI flash/loot feedback
+- `souvenir-dropped`: Phaser -> React souvenir state
+- `deduction-camp-purchase`: React -> Phaser clue category purchase
 
-## Combat State
+Map click policy in the current runtime:
 
-`MatchBattleCombatState` is intentionally flat:
+- clicks are allowed during `idle` and `briefing`
+- clicks are blocked during `in-run` and `deduction`
+- clicking a new location during `briefing` replaces the current expedition payload and briefing overlay
 
-- `playerHp`
-- `playerMaxHp`
-- `turn`
-- `enemy`
-- `log`
+Typed in `src/game/EventBus.ts` but not active end-to-end in the current expedition loop:
 
-Enemy combat state is HP + intent only. Guard, energy/actions, focus, focus storage, max acceleration, fragments, and wallet currencies were removed.
+- `trivia-unlocked`
+- `deduction-camp-guess`
 
-## Persistence
+## Clue contract
 
-- Match Battle schema version is `4`.
-- Checkpoints persist sanitized between-combat state in `metadata.matchBattle`.
-- Combat enemy/log/turn reset on combat entry.
-- Legacy saved piece pools are normalized to current tool pieces.
-- Legacy wallet/currency fields are ignored.
+- The board uses **two gem families**:
+  - **Loot gems (8)** map to clue categories. During expeditions they award **clue fragments** (not direct reveals).
+  - **Action gems (8)** drive node objectives, encounters, and economy effects (Observe, Scan, Camouflage, Traverse, Focus, Field Notes, Backpack, Burst).
+- `src/game/gemSemantics.ts` and `src/expedition/domain.ts` are the runtime sources of truth.
+- During expeditions: loot matches emit `clue-fragment-earned`; clues are only revealed via Deduction Camp purchases (which emit `clue-revealed`).
+- During free-play: `clue-revealed` fires directly on loot matches (legacy behavior preserved).
 
-## Files To Inspect First
+## Board model
 
-- `src/MainAppLayout.tsx` - layout and run phase shell
-- `src/contexts/ExpeditionContext.tsx` - route, rewards, persistence, deduction handoff
-- `src/game/EventBus.ts` - typed event contracts
-- `src/game/scenes/Game.ts` - Phaser input, board adapter, EventBus emission
-- `src/game/BackendPuzzle.ts` - board state, matches, shuffle, move count
-- `src/game/BoardView.ts` - rendering and animation
-- `src/game/matchBattle/catalog.ts` - pieces, gear, upgrades, route map
-- `src/game/matchBattle/types.ts` - Match Battle contracts
-- `src/game/matchBattle/combatResolver.ts` - pure combat resolver
-- `src/game/matchBattle/speciesMapper.ts` - species combat traits to enemies/intents
-- `src/game/matchBattle/partner.ts` - field partner passives
-- `src/game/matchBattle/debug.ts` - tuning/debug summaries
-- `src/components/DeductionCamp.tsx` - clue review and capture guess
-- `src/components/MatchBattleCombatHud.tsx` - combat HUD
-- `src/components/MatchBattleRouteMap.tsx` - route UI
-- `src/components/MatchBattleRewardDraft.tsx` - rewards/upgrades
+Current backend board cells use:
+
+```ts
+interface BoardCell {
+  family: 'action' | 'loot';
+  gemType: GemType;
+  state?: BoardCellState;
+}
+```
+
+### Grid state snapshots
+
+`BackendPuzzle.getGridState()` returns a shallow clone (not a live reference). `getNextExplodeAndReplacePhase()` also captures a `matchGridState` snapshot after the swap but before explode-and-replace, bundled into the returned `ExplodeAndReplacePhase`. Callers should use `phaseResult.matchGridState` to read the original gem types at matched coordinates.
+
+### Objective progress is independent of species state
+
+`recordMatchesForSummary()` counts required-gem matches and emits `node-objective-updated` regardless of whether a species is selected. Clue emission still requires a selected species, but objective progress does not.
+
+### Implications
+
+- Obstacles have a stable cell model but are not yet game-state beyond visual seeding.
+- `BoardView` should only render state that already exists in `BackendPuzzle`, and mirrors `BoardCell.state` onto sprite metadata.
+
+### Spook meter contract
+
+- Phaser owns the per-node spook meter (decay timer, tier computation, escape detection).
+- Phaser disables inputs and sets `nodeObjectiveCompleted = true` before emitting escape.
+- React owns the run-level consequence (skip remaining nodes, transition to Deduction Camp).
+- See [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md#spook-meter-chase-pressure) for tier thresholds and multipliers.
+
+### Run state
+
+`RunState` (in `src/types/expedition.ts`) includes:
+
+- `phase`: idle → briefing → in-run → deduction → complete
+- `bankedScore`: accumulated research score across nodes
+- `clueFragments`: per-category fragment counts from loot matches
+- `resourceWallet`: 4 economy currencies (Supplies, Focus, Insight, Samples)
+- `consumables`: crate-dropped items (Signal Flare, Bait, Trail Map, Field Kit)
+- `deductionCamp`: clue shop, revealed clues, guess state, score spent
+- `currentNodeBonus`: typed placeholder for persisted spook state; currently initialized as `null` and not used as the live UI source
+- `lastNodeRewards`: most recent node reward breakdown with tier
+- `totalThoughtDiscount`: accumulated Field Notes discount for clue shop
+- `finalScore`: populated after correct deduction guess
+
+## Expedition schema vs runtime
+
+Current runtime supports:
+
+- 6-node expedition structure with GIS-driven node generation
+- node templates with typed obstacle definitions and deterministic board-state seeding
+- required action-gem objectives per node
+- spook meter with 3-tier outcomes (stabilized/spooked/escaped)
+- encounter triggers every 3rd match group, with souvenir drops
+- gem effect system (`src/expedition/gemEffects.ts`) routing action/loot matches to distinct effects
+- clue fragment accumulation from loot matches
+- banked score economy with Deduction Camp (clue purchases + species guess)
+- consumable items from crate matches
+- resource wallet (Supplies, Focus, Insight, Samples)
+- run persistence to `eco_run_sessions` / `eco_run_nodes`
+
+Current runtime does not yet support:
+
+- persisted per-board outcome/state evolution beyond initial seeded context
+- obstacle state machines beyond static seeded footprints (3 dynamic-only placeholders: flow_shift, low_visibility, time_pressure)
+- trivia content or active `trivia-unlocked` usage in expeditions
+- partial-run summary UI for escaped expeditions entering Deduction Camp
+
+## Safe extension order
+
+1. Keep node advancement single-owned by React.
+2. Evolve obstacle placeholders into active board mechanics.
+3. Add trivia content to feed the existing Scan / `trivia_boost` hooks.
+4. Build partial-run summary for escaped expeditions.
+5. Tune spook meter decay rates and clue pricing via playtesting.
+
+## Files to inspect first
+
+- `src/MainAppLayout.tsx` — run phase state machine, node advancement, deduction handlers
+- `src/game/EventBus.ts` — typed event contracts
+- `src/game/scenes/Game.ts` — board play, spook meter, gem effects, objective tracking, encounters
+- `src/game/BackendPuzzle.ts` — grid state, snapshots, match detection
+- `src/game/ExplodeAndReplacePhase.ts` — phase result + `matchGridState` snapshot
+- `src/game/boardTypes.ts` — cell schema
+- `src/game/gemSemantics.ts` — gem-to-category mapping
+- `src/game/nodeObstacles.ts` — obstacle typing, labels, board-state seeding
+- `src/expedition/domain.ts` — gem definitions, wallet defs, consumable blueprints
+- `src/expedition/gemEffects.ts` — gem effect routing
+- `src/types/expedition.ts` — RunState, SpookTier, economy types, helpers
+- `src/components/ActiveEncounterPanel.tsx` — spook meter UI, objective progress
+- `src/components/DeductionCamp.tsx` — clue market + species guess
+- `src/components/CesiumMap.tsx` — route trail, click guards
+- `docs/EXPEDITION_RUN_LOOP.md` — run loop + spook meter docs
+- `docs/DEDUCTION_CAMP_ECONOMY.md` — economy + deduction camp docs

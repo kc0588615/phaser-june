@@ -1,150 +1,23 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
 .heroBanner {
-  padding: 5rem 0 4rem;
+  padding: 4rem 0;
+  text-align: center;
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 80% 18%, rgba(37, 194, 160, 0.18), transparent 28rem),
-    linear-gradient(135deg, #0f172a 0%, #13251f 48%, #1f2a23 100%);
-  color: #f8fafc;
 }
 
-.heroGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-  gap: 3rem;
-  align-items: center;
-}
-
-.heroCopy {
-  max-width: 720px;
-}
-
-.kicker {
-  margin: 0 0 1rem;
-  color: #a7f3d0;
-  font-size: 0.84rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.heroTitle {
-  color: #ffffff;
-  font-size: clamp(2.5rem, 7vw, 5.2rem);
-  line-height: 0.96;
-  letter-spacing: 0;
-  margin-bottom: 1.2rem;
-}
-
-.heroSubtitle {
-  color: #dbeafe;
-  font-size: 1.18rem;
-  line-height: 1.65;
-  max-width: 620px;
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
 }
 
 .buttons {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 1.75rem;
-}
-
-.boardCard {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 8px;
-  padding: 1.25rem;
-  background: rgba(15, 23, 42, 0.7);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
-}
-
-.boardHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  color: #cbd5e1;
-}
-
-.boardHeader strong {
-  color: #ffffff;
-  font-size: 1.5rem;
-}
-
-.boardGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
-  aspect-ratio: 4 / 3;
-}
-
-.boardCell {
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent),
-    #1d4ed8;
-}
-
-.boardCell:nth-child(2n) {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent),
-    #16a34a;
-}
-
-.boardCell:nth-child(3n) {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent),
-    #d97706;
-}
-
-.boardCell:nth-child(5n) {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent),
-    #dc2626;
-}
-
-.boardCard p {
-  color: #cbd5e1;
-  line-height: 1.6;
-  margin: 1rem 0 0;
-}
-
-.quickLinks {
-  padding: 3rem 0 4rem;
-}
-
-.linkGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.linkGrid a {
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 8px;
-  padding: 1rem;
-  font-weight: 700;
-  color: var(--ifm-font-color-base);
-  background: var(--ifm-card-background-color);
-}
-
-.linkGrid a:hover {
-  text-decoration: none;
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
-}
-
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 3rem 0;
-  }
-
-  .heroGrid,
-  .linkGrid {
-    grid-template-columns: 1fr;
-  }
+  justify-content: center;
 }

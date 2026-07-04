@@ -2,14 +2,13 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, ClueCategoryKey } from '@/types/expedition';
+import type { ExpeditionData, EncounterEffect, SouvenirDef, ResourceWallet, BattleState, ConsumableItem, PassiveRelic, ClueCategoryKey, ClueFragments, NodeRewardLanes, SpookTier } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
 import type { ActionGemType, GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
+import type { ThreatType, EncounterConfig } from './encounterState';
 import type { FeatureFingerprint } from '@/types/gis';
-import type { ArmamentDef, MatchBattleBoardConfig, MatchBattleCombatState, MatchBattleNodeType, RewardOption } from './matchBattle/types';
-import type { SpeciesCombatInput } from './matchBattle/speciesMapper';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -31,16 +30,14 @@ export interface EventPayloads {
     objectiveProgress?: number;
     nodeIndex?: number;
     nodeType?: string;
+    events?: string[];
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
-    matchBattleConfig?: MatchBattleBoardConfig;
-    matchBattleNodeType?: MatchBattleNodeType;
-    matchBattleCombat?: MatchBattleCombatState;
-    matchBattleArmaments?: ArmamentDef[];
-    matchBattleCombatants?: SpeciesCombatInput[];
+    encounterConfig?: EncounterConfig | null;
   };
   'game-score-updated': {
     score: number;
+    movesRemaining: number;
   };
   'game-over': {
     finalScore: number;
@@ -73,7 +70,9 @@ export interface EventPayloads {
   };
   'game-hud-updated': {
     score: number;
+    movesRemaining: number;
     movesUsed: number;
+    maxMoves: number;
     streak: number;
     multiplier: number;
     moveMultiplier?: number;
@@ -89,16 +88,54 @@ export interface EventPayloads {
     featureFingerprints?: FeatureFingerprint[];
   };
   'expedition-start': Record<string, never>;
-  'match-battle-combat-state-updated': MatchBattleCombatState;
-  'match-battle-combat-ended': { outcome: 'won' | 'lost'; combat: MatchBattleCombatState; nodeIndex: number; cleanCapture: boolean; scoreDelta: number };
-  'match-battle-break-camp-requested': Record<string, never>;
-  'match-battle-reward-draft-opened': { options: RewardOption[] };
-  'match-battle-route-node-selected': { routeNodeId: string };
-  'match-battle-run-ended': { outcome: 'won' | 'lost' | 'called' };
+  'battle-state-updated': {
+    battle: BattleState;
+    canAffordSkills: Record<string, boolean>;
+  };
+  'resource-wallet-updated': {
+    wallet: ResourceWallet;
+  };
+  'consumable-found': {
+    item: ConsumableItem;
+  };
+  'consumable-use-requested': {
+    itemInstanceId: string;
+  };
+  'consumable-used': {
+    item: ConsumableItem;
+  };
+  'store-opened': {
+    stock: Array<ConsumableItem | PassiveRelic>;
+    wallet: ResourceWallet;
+  };
+  'store-purchase-requested': {
+    itemId: string;
+    cost: Partial<ResourceWallet>;
+  };
+  'store-purchase-resolved': {
+    itemId: string;
+    success: boolean;
+    wallet: ResourceWallet;
+  };
+  'crisis-choice-requested': {
+    crisisId: string;
+    options: Array<{ id: string; label: string; cost?: Partial<ResourceWallet>; effect: string }>;
+  };
+  'crisis-choice-resolved': {
+    crisisId: string;
+    chosenOptionId: string;
+    modifier: string;
+  };
   'node-advance-requested': {
     nodeIndex: number;
-    reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'escaped';
+    reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved' | 'escaped';
     source: 'game' | 'panel';
+    encounterOutcome?: {
+      threats: Array<{ id: string; threatType: string; progress: number; target: number; resolved: boolean }>;
+      finalSpookLevel: number;
+      outcome: 'success' | 'escaped' | 'partial';
+      chipDamageTotal: number;
+    };
   };
   'node-complete': { nodeIndex: number };
   'node-objective-updated': {
@@ -107,8 +144,22 @@ export interface EventPayloads {
     requiredGems: GemType[];
     counterGem?: ActionGemType | null;
     activeAffinities?: AffinityType[];
+    // Multi-threat encounter state
+    threats?: Array<{ id: string; threatType: ThreatType; counterGem: ActionGemType; progress: number; target: number; resolved: boolean }>;
+    spookLevel?: number;
+    chipDamagePool?: number;
+    overallResolved?: boolean;
   };
+  'encounter-triggered': { eventKey: string; effect: EncounterEffect; souvenirDrop?: SouvenirDef };
+  'souvenir-dropped': { souvenir: SouvenirDef };
+  // New economy events
+  'node-bonus-tick': { currentPool: number; startPool: number; pct: number; tier: SpookTier };
+  'clue-fragment-earned': { category: ClueCategoryKey; amount: number; source: 'loot_match' | 'key_cache' | 'node_reward' };
+  'clue-discount-earned': { amount: number; source: 'thought_match' };
+  'trivia-unlocked': { triviaId: string; scoreReward: number };
+  'node-rewards-summary': NodeRewardLanes;
   'deduction-camp-purchase': { category: ClueCategoryKey; cost: number };
+  'deduction-camp-guess': { guessedName: string; speciesId: number };
   'auth-user-ready': { playerId: string; sessionId?: string };
 }
 

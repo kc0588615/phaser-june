@@ -8,7 +8,6 @@
 
 - [executeRawQuery](functions/executeRawQuery.md)
 - [getClosestHabitat](functions/getClosestHabitat.md)
-- [getCombatTraitsByIds](functions/getCombatTraitsByIds.md)
 - [getSpeciesAtPoint](functions/getSpeciesAtPoint.md)
 - [getSpeciesBioregions](functions/getSpeciesBioregions.md)
 - [getSpeciesByConservationStatus](functions/getSpeciesByConservationStatus.md)

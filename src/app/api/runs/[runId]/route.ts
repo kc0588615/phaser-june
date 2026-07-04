@@ -6,7 +6,6 @@ import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 import { computeExpeditionRoutePolyline, getRouteBounds, type RoutePoint } from '@/lib/expeditionRoute';
 import { dedupeFeatureFingerprints, getGisStampClasses, sampleGisFeaturesForRoute } from '@/lib/gisFeatureSampling';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
-import { sanitizeMatchBattleBlob } from '@/lib/sanitizeMatchBattle';
 import { refreshSpeciesCardProgress } from '@/lib/speciesCardProgression.server';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { FeatureFingerprint } from '@/types/gis';
@@ -138,9 +137,9 @@ function buildResumePayload(session: EcoRunSessionRow, nodes: EcoRunNodeRow[]) {
     habitats: getStringArray(metadata.habitats),
     rasterHabitats: Array.isArray(metadata.rasterHabitats) ? metadata.rasterHabitats : [],
     currentNodeIndex: getNumberOrNull(metadata.currentNodeIndex) ?? Math.max(0, session.nodeIndexCurrent - 1),
-    revealedDuringRun: Array.isArray(metadata.revealedDuringRun) ? metadata.revealedDuringRun : [],
+    resourceWallet: getNumberRecord(metadata.resourceWallet),
+    clueFragments: getNumberRecord(metadata.clueFragments),
     bankedScore: getNumberOrNull(metadata.bankedScore) ?? session.scoreTotal,
-    matchBattle: metadata.matchBattle && typeof metadata.matchBattle === 'object' ? metadata.matchBattle : null,
     featureFingerprints: Array.isArray(metadata.featureFingerprints)
       ? metadata.featureFingerprints as FeatureFingerprint[]
       : [],
@@ -176,13 +175,15 @@ function reconstructRunNode(node: EcoRunNodeRow): RunNode {
     node_type: node.nodeType,
     difficulty: (Number.isInteger(difficulty) ? Math.max(1, Math.min(5, difficulty)) : 1) as RunNode['difficulty'],
     obstacles: Array.isArray(hazardProfile.obstacles) ? hazardProfile.obstacles as RunNode['obstacles'] : [],
-    events: [],
+    events: getStringArray(hazardProfile.events),
     rationale: typeof boardContext.rationale === 'string' ? boardContext.rationale : '',
     counterGem: typeof hazardProfile.counterGem === 'string' ? hazardProfile.counterGem as RunNode['counterGem'] : null,
     obstacleFamily: typeof hazardProfile.obstacleFamily === 'string' ? hazardProfile.obstacleFamily as RunNode['obstacleFamily'] : null,
     requiredGems: getStringArray(hazardProfile.requiredGems) as RunNode['requiredGems'],
     objectiveTarget: node.objectiveTarget,
-    encounterConfig: null,
+    encounterConfig: boardContext.encounterConfig && typeof boardContext.encounterConfig === 'object'
+      ? boardContext.encounterConfig as RunNode['encounterConfig']
+      : null,
     waypoint: boardContext.waypoint && typeof boardContext.waypoint === 'object'
       ? boardContext.waypoint as RunNode['waypoint']
       : undefined,
@@ -191,10 +192,10 @@ function reconstructRunNode(node: EcoRunNodeRow): RunNode {
 
 /**
  * PATCH /api/runs/[runId]
- * Update session metadata (checkpoint or deduction summary on completion).
+ * Update session metadata (e.g. resource wallet or deduction summary on completion).
  * When finalScore is provided, also persists a run_memories row.
  *
- * Body: { finalScore?: number; status?: 'active' | 'deduction'; deductionSummary?: Record<string, unknown> }
+ * Body: { resourceWallet?: Record<string, number>; finalScore?: number; status?: 'active' | 'deduction'; deductionSummary?: Record<string, unknown> }
  */
 export async function PATCH(
   request: NextRequest,
@@ -222,33 +223,29 @@ export async function PATCH(
     }
 
     const body = await request.json().catch(() => ({}));
-    const { finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, revealedDuringRun, bankedScore, currentNodeIndex, objectiveProgress, status, matchBattle } = body as {
+    const { resourceWallet, finalScore, deductionSummary, speciesId, featureFingerprints, routePolyline, clueFragments, bankedScore, currentNodeIndex, objectiveProgress, status } = body as {
+      resourceWallet?: Record<string, number>;
       finalScore?: number;
       status?: string;
       deductionSummary?: Record<string, unknown>;
       speciesId?: number;
       featureFingerprints?: unknown[];
       routePolyline?: unknown[];
-      revealedDuringRun?: unknown[];
+      clueFragments?: Record<string, number>;
       bankedScore?: number;
       currentNodeIndex?: number;
       objectiveProgress?: number;
-      matchBattle?: unknown;
     };
     const normalizedCheckpointRoute = normalizeRoutePolyline(routePolyline);
 
     const metadataPatch: Record<string, unknown> = {};
-    if (Array.isArray(revealedDuringRun)) metadataPatch.revealedDuringRun = revealedDuringRun;
+    if (resourceWallet) metadataPatch.resourceWallet = resourceWallet;
+    if (clueFragments) metadataPatch.clueFragments = clueFragments;
     if (typeof bankedScore === 'number') metadataPatch.bankedScore = bankedScore;
     if (Number.isInteger(currentNodeIndex)) metadataPatch.currentNodeIndex = currentNodeIndex;
     if (routePolyline) metadataPatch.routePolyline = normalizedCheckpointRoute;
     if (typeof finalScore === 'number') metadataPatch.finalScore = finalScore;
     if (deductionSummary) metadataPatch.deductionSummary = deductionSummary;
-    if (matchBattle !== undefined) {
-      const sanitized = sanitizeMatchBattleBlob(matchBattle);
-      if (sanitized === null) return NextResponse.json({ error: 'Invalid matchBattle payload' }, { status: 400 });
-      metadataPatch.matchBattle = sanitized;
-    }
 
     const runStatusPatch = status === 'active' || status === 'deduction' ? status : null;
     if (Object.keys(metadataPatch).length > 0 || runStatusPatch) {
@@ -314,6 +311,8 @@ export async function PATCH(
               objectiveProgress: n.objectiveProgress,
               scoreEarned: n.scoreEarned,
               movesUsed: n.movesUsed,
+              encounterOutcome: bc.encounterOutcome ?? null,
+              encounterConfig: bc.encounterConfig ?? null,
               waypoint: bc.waypoint ?? null,
             };
           });

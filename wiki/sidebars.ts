@@ -67,7 +67,6 @@ const sidebars: SidebarsConfig = {
             'guides/game/clue-board',
             'guides/game/species-discovery',
             'guides/game/expedition-run-loop',
-            'guides/game/match-battle',
           ],
         },
         {

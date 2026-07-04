@@ -1,4 +1,4 @@
-import type { GemType, GemFamily } from './constants';
+import type { GemType, GemFamily, CurrencyKey } from './constants';
 import {
     getGemFamily,
 } from './constants';
@@ -6,6 +6,7 @@ import { GemCategory } from './clueConfig';
 import {
     GEM_REGISTRY,
     getClueCategoryForGemType as getDomainClueCategoryForGemType,
+    getCurrencyKeyForGemType as getDomainCurrencyKeyForGemType,
     isActionGem as isDomainActionGem,
     isLootGem as isDomainLootGem,
 } from '../expedition/domain';
@@ -14,6 +15,7 @@ export interface GemSemanticDef {
     gemType: GemType;
     family: GemFamily;
     clueCategory: GemCategory | null;
+    resourceKey: CurrencyKey | null;
 }
 
 export const GEM_SEMANTICS: Record<GemType, GemSemanticDef> = Object.fromEntries(
@@ -23,12 +25,17 @@ export const GEM_SEMANTICS: Record<GemType, GemSemanticDef> = Object.fromEntries
             gemType: definition.gemType,
             family: definition.family,
             clueCategory: definition.clueCategory,
+            resourceKey: definition.currencyKey,
         },
     ])
 ) as Record<GemType, GemSemanticDef>;
 
 export function getClueCategoryForGemType(gemType: GemType): GemCategory | null {
     return getDomainClueCategoryForGemType(gemType);
+}
+
+export function getResourceKeyForGemType(gemType: GemType): CurrencyKey | null {
+    return getDomainCurrencyKeyForGemType(gemType);
 }
 
 export function isKnowledgeGem(gemType: GemType): boolean {

@@ -2,9 +2,10 @@
 
 > **getClosestHabitat**(`lon`, `lat`): `Promise`\<`SpatialSpeciesRow`\>
 
-Defined in: [src/lib/speciesQueries.ts:235](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/lib/speciesQueries.ts#L235)
+Defined in: [src/lib/speciesQueries.ts:262](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesQueries.ts#L262)
 
 Gets the closest species habitat to a point.
+Used when no species are found at the click location.
 
 ## Parameters
 

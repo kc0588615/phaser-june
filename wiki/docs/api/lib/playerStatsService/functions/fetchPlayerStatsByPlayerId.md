@@ -2,7 +2,7 @@
 
 > **fetchPlayerStatsByPlayerId**(`playerId`, `options`): `Promise`\<[`PlayerStats`](../../../components/PlayerStatsDashboard/types/interfaces/PlayerStats.md) \| `null`\>
 
-Defined in: [src/lib/playerStatsService.ts:72](https://github.com/kc0588615/phaser-june/blob/f5b941d3c604a25cd2422fbb2069c8fcf3fe9e88/src/lib/playerStatsService.ts#L72)
+Defined in: [src/lib/playerStatsService.ts:73](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/playerStatsService.ts#L73)
 
 Fetch player stats by player ID (for viewing other players)
 

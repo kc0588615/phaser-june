@@ -2,12 +2,11 @@ import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, A11y } from 'swiper/modules';
 import type { DeductionCampState, ClueCategoryKey, ComparativeDeductionState } from '@/types/expedition';
-import { getCaptureGrade, getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS } from '@/types/expedition';
+import { getClueShopCost, getGuessBonuses, getDeductionFinalScore, CLUE_CATEGORY_KEYS, deductionCatToWalletKey } from '@/types/expedition';
 import type { DeductionClue, ProcessedClue, DeductionProfile, ReferenceAttempt } from '@/lib/deductionEngine';
 import { isFilteringCategory, filterCandidates, getProfileKeyForCategory } from '@/lib/deductionEngine';
 import type { DeductionClueCategory } from '@/db/schema/species';
 import type { RunEvidenceBundle } from '@/types/gis';
-import { GemCategory } from '@/game/clueConfig';
 import { SpeciesGuessSelector } from './SpeciesGuessSelector';
 import { DenseClueGrid } from './DenseClueGrid';
 import { GlassPanel } from '@/components/ui/glass-panel';
@@ -71,17 +70,6 @@ const LEGACY_CATEGORY_META: Record<ClueCategoryKey, { label: string; icon: strin
   key_facts:      { label: 'Facts',   icon: '\u{1F52E}', color: 'var(--ds-gem-focus)' },
 };
 
-const CLUE_KEY_TO_GEM_CATEGORY: Record<ClueCategoryKey, GemCategory> = {
-  classification: GemCategory.CLASSIFICATION,
-  habitat: GemCategory.HABITAT,
-  geographic: GemCategory.GEOGRAPHIC,
-  morphology: GemCategory.MORPHOLOGY,
-  behavior: GemCategory.BEHAVIOR,
-  life_cycle: GemCategory.LIFE_CYCLE,
-  conservation: GemCategory.CONSERVATION,
-  key_facts: GemCategory.KEY_FACTS,
-};
-
 interface Props {
   camp: DeductionCampState;
   comp: ComparativeDeductionState | null;
@@ -93,13 +81,12 @@ interface Props {
   onProcessClue: (clueId: number) => void;
   onPlaceReference: (referenceSpeciesId: number, clueId: number) => void;
   onComparativeGuess: (isCorrect: boolean) => void;
-  onViewSpecies?: (speciesId: number) => void;
   onFinish: () => void;
 }
 
 export const DeductionCamp: React.FC<Props> = ({
   camp, comp, speciesId, hiddenSpeciesName, evidenceBundle,
-  onPurchase, onGuessResult, onProcessClue, onPlaceReference, onComparativeGuess, onViewSpecies, onFinish,
+  onPurchase, onGuessResult, onProcessClue, onPlaceReference, onComparativeGuess, onFinish,
 }) => {
   const availableScore = camp.bankedScore - camp.scoreSpent - (comp?.scoreSpent ?? 0);
   const isCorrect = camp.guessResult === 'correct' || comp?.guessResult === 'correct';
@@ -130,7 +117,6 @@ export const DeductionCamp: React.FC<Props> = ({
         onProcessClue={onProcessClue}
         onPlaceReference={onPlaceReference}
         onGuessResult={onComparativeGuess}
-        onViewSpecies={onViewSpecies}
         onFinish={onFinish}
         confettiRef={confettiRef}
       />
@@ -153,7 +139,7 @@ export const DeductionCamp: React.FC<Props> = ({
   ) : null;
   return <>{legacyEvidence}<LegacyClueShop camp={camp} speciesId={speciesId} hiddenSpeciesName={hiddenSpeciesName}
     availableScore={availableScore} isCorrect={isCorrect} isWrong={isWrong}
-    onPurchase={onPurchase} onGuessResult={onGuessResult} onViewSpecies={onViewSpecies} onFinish={onFinish} confettiRef={confettiRef} /></>;
+    onPurchase={onPurchase} onGuessResult={onGuessResult} onFinish={onFinish} confettiRef={confettiRef} /></>;
 };
 
 // ---------------------------------------------------------------------------
@@ -172,14 +158,13 @@ interface CompUIProps {
   onProcessClue: (clueId: number) => void;
   onPlaceReference: (referenceSpeciesId: number, clueId: number) => void;
   onGuessResult: (isCorrect: boolean) => void;
-  onViewSpecies?: (speciesId: number) => void;
   onFinish: () => void;
   confettiRef: React.RefObject<HTMLCanvasElement>;
 }
 
 function ComparativeDeductionUI({
   camp, comp, speciesId, hiddenSpeciesName, evidenceBundle, availableScore,
-  isCorrect, isWrong, onProcessClue, onPlaceReference, onGuessResult, onViewSpecies, onFinish, confettiRef,
+  isCorrect, isWrong, onProcessClue, onPlaceReference, onGuessResult, onFinish, confettiRef,
 }: CompUIProps) {
   const [selectedClueId, setSelectedClueId] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<ReferenceAttempt | null>(null);
@@ -238,7 +223,6 @@ function ComparativeDeductionUI({
   const { guessBonus, efficiencyBonus } = isCorrect
     ? getGuessBonuses(totalProcessed, true)
     : { guessBonus: 0, efficiencyBonus: 0 };
-  const captureGrade = isCorrect ? getCaptureGrade(totalProcessed, camp.wrongGuesses) : null;
 
   // Active filtering category (drives reference-card tag previews)
   const activeCategory = selectedClue && isFilteringCategory(selectedClue.category) ? selectedClue.category : null;
@@ -268,6 +252,8 @@ function ComparativeDeductionUI({
           <div className="flex flex-col gap-ds-xs">
             {Array.from(cluesByCategory.entries()).map(([category, clues]) => {
               const meta = CATEGORY_META[category] ?? { label: category, icon: '?', color: 'var(--ds-text-muted)' };
+              const catKey = deductionCatToWalletKey(category);
+              const fragCount = camp.clueFragments[catKey] ?? 0;
               const filtering = isFilteringCategory(category);
               return (
                 <div key={category}>
@@ -292,6 +278,8 @@ function ComparativeDeductionUI({
                           label={pc?.label ?? clue.label}
                           isSelected={isSelected}
                           isFiltering={filtering}
+                          fragmentCount={fragCount}
+                          thoughtDiscount={camp.thoughtDiscountPct}
                           availableScore={availableScore}
                           onProcess={() => {
                             if (!isProcessed) onProcessClue(clue.id);
@@ -371,15 +359,7 @@ function ComparativeDeductionUI({
         {/* Correct result */}
         {isCorrect && (
           <div role="status" aria-live="polite" className="text-center p-ds-md shrink-0">
-            <div className="mb-ds-sm flex flex-wrap items-center justify-center gap-2 text-xl font-bold text-ds-emerald">
-              <span>Captured {hiddenSpeciesName}</span>
-              {captureGrade && (
-                <span className="text-sm text-ds-amber" aria-label={`${captureGrade.tier} star ${captureGrade.label}`}>
-                  <span aria-hidden="true">{'★'.repeat(captureGrade.tier)}</span> {captureGrade.label}
-                </span>
-              )}
-            </div>
-            <div className="text-ds-body text-ds-text-secondary mb-ds-sm">This species is now in your field album.</div>
+            <div className="text-xl font-bold text-ds-emerald mb-ds-sm">Correct!</div>
             <div className="text-ds-body text-ds-text-secondary flex justify-center gap-ds-lg">
               <span>Guess bonus: +{guessBonus}</span>
               <span>Efficiency: +{efficiencyBonus}</span>
@@ -400,15 +380,7 @@ function ComparativeDeductionUI({
 
       {/* Return to Globe */}
       {isCorrect && (
-        <div className="shrink-0 px-ds-md pb-ds-md pt-ds-xs flex justify-center gap-ds-sm flex-wrap">
-          {onViewSpecies && (
-            <button
-              onClick={() => onViewSpecies(speciesId)}
-              className="py-ds-md px-6 text-ds-body font-bold text-ds-cyan border border-ds-cyan rounded-full cursor-pointer bg-transparent"
-            >
-              View Album Card
-            </button>
-          )}
+        <div className="shrink-0 px-ds-md pb-ds-md pt-ds-xs flex justify-center">
           <button
             onClick={onFinish}
             className="py-ds-md px-8 text-ds-body font-bold text-ds-bg border-none rounded-full cursor-pointer shadow-glow-cyan"
@@ -432,17 +404,22 @@ interface ClueRowProps {
   label: string;
   isSelected: boolean;
   isFiltering: boolean;
+  fragmentCount: number;
+  thoughtDiscount: number;
   availableScore: number;
   onProcess: () => void;
   onSelect: () => void;
   metaColor: string;
 }
 
-function ClueRow({ clue, status, label, isSelected, isFiltering, availableScore, onProcess, onSelect, metaColor }: ClueRowProps) {
+function ClueRow({ clue, status, label, isSelected, isFiltering, fragmentCount, thoughtDiscount, availableScore, onProcess, onSelect, metaColor }: ClueRowProps) {
   if (status === 'locked') {
     // Show cost + unlock button
-    const cost = Math.max(10, clue.baseCost);
-    const canAfford = availableScore >= cost;
+    const cost = clue.baseCost;
+    const currency = clue.unlockMode === 'fragment' ? 'frag' : 'pts';
+    const canAfford = clue.unlockMode === 'fragment'
+      ? fragmentCount >= cost
+      : availableScore >= cost;
     return (
       <button
         onClick={onProcess}
@@ -452,7 +429,7 @@ function ClueRow({ clue, status, label, isSelected, isFiltering, availableScore,
       >
         <span className="text-ds-text-muted flex-1 italic">Locked clue</span>
         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${canAfford ? 'bg-white/15 text-ds-text-primary' : 'bg-white/5 text-ds-text-muted'}`}>
-          {cost} pts
+          {cost} {currency}
         </span>
       </button>
     );
@@ -675,22 +652,17 @@ interface LegacyProps {
   isWrong: boolean;
   onPurchase: (category: ClueCategoryKey, cost: number) => void;
   onGuessResult: (isCorrect: boolean) => void;
-  onViewSpecies?: (speciesId: number) => void;
   onFinish: () => void;
   confettiRef: React.RefObject<HTMLCanvasElement>;
 }
 
-function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, isCorrect, isWrong, onPurchase, onGuessResult, onViewSpecies, onFinish, confettiRef }: LegacyProps) {
+function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, isCorrect, isWrong, onPurchase, onGuessResult, onFinish, confettiRef }: LegacyProps) {
   const totalPaid = camp.clueShop.reduce((sum, e) => sum + e.purchased, 0);
-  const revealedCategories = useMemo(
-    () => new Set(camp.revealedClues.map(clue => clue.category)),
-    [camp.revealedClues],
-  );
 
   const handleBuy = useCallback((cat: ClueCategoryKey) => {
     const entry = camp.clueShop.find(e => e.category === cat);
     if (!entry) return;
-    const cost = getClueShopCost(entry.purchased);
+    const cost = getClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
     if (cost > availableScore) return;
     onPurchase(cat, cost);
   }, [camp, availableScore, onPurchase]);
@@ -698,7 +670,6 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
   const { guessBonus, efficiencyBonus } = isCorrect
     ? getGuessBonuses(totalPaid, true)
     : { guessBonus: 0, efficiencyBonus: 0 };
-  const captureGrade = isCorrect ? getCaptureGrade(camp.revealedClues.length, camp.wrongGuesses) : null;
 
   const finalScore = getDeductionFinalScore(camp);
 
@@ -709,17 +680,20 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
         <StatPill label="Banked" value={camp.bankedScore} />
         <StatPill label="Spent" value={camp.scoreSpent} color="var(--ds-accent-rose)" />
         <StatPill label="Left" value={availableScore} color="var(--ds-accent-emerald)" />
+        {camp.thoughtDiscountPct > 0 && (
+          <StatPill label="Disc" value={`${Math.round(camp.thoughtDiscountPct * 100)}%`} color="var(--ds-gem-focus)" />
+        )}
       </GlassPanel>
 
       {/* Clue Market */}
       <div>
         <div className="text-ds-caption text-ds-text-secondary uppercase tracking-wider mb-1.5">Clue Market</div>
         <div className="flex gap-ds-sm overflow-x-auto py-ds-xs snap-x snap-mandatory">
-          {CLUE_CATEGORY_KEYS.filter(cat => !revealedCategories.has(CLUE_KEY_TO_GEM_CATEGORY[cat])).map(cat => {
+          {CLUE_CATEGORY_KEYS.map(cat => {
             const meta = LEGACY_CATEGORY_META[cat];
             const entry = camp.clueShop.find(e => e.category === cat);
             if (!entry) return null;
-            const cost = getClueShopCost(entry.purchased);
+            const cost = getClueShopCost(entry.purchased, entry.fragmentCount, camp.thoughtDiscountPct);
             const canBuy = cost <= availableScore && !isCorrect;
             return (
               <button
@@ -755,15 +729,7 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
 
       {isCorrect && (
         <div role="status" aria-live="polite" className="text-center p-ds-md shrink-0">
-          <div className="mb-ds-sm flex flex-wrap items-center justify-center gap-2 text-xl font-bold text-ds-emerald">
-            <span>Captured {hiddenSpeciesName}</span>
-            {captureGrade && (
-              <span className="text-sm text-ds-amber" aria-label={`${captureGrade.tier} star ${captureGrade.label}`}>
-                <span aria-hidden="true">{'★'.repeat(captureGrade.tier)}</span> {captureGrade.label}
-              </span>
-            )}
-          </div>
-          <div className="text-ds-body text-ds-text-secondary mb-ds-sm">This species is now in your field album.</div>
+          <div className="text-xl font-bold text-ds-emerald mb-ds-sm">Correct!</div>
           <div className="text-ds-body text-ds-text-secondary flex justify-center gap-ds-lg">
             <span>Guess bonus: +{guessBonus}</span>
             <span>Efficiency: +{efficiencyBonus}</span>
@@ -781,15 +747,9 @@ function LegacyClueShop({ camp, speciesId, hiddenSpeciesName, availableScore, is
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none z-confetti" />
 
       {isCorrect && (
-        <div className="flex justify-center gap-ds-sm flex-wrap">
-          {onViewSpecies && (
-            <button onClick={() => onViewSpecies(speciesId)}
-              className="py-ds-md px-6 text-ds-body font-bold text-ds-cyan border border-ds-cyan rounded-full cursor-pointer bg-transparent shrink-0">View Album Card</button>
-          )}
-          <button onClick={onFinish}
-            className="py-ds-md px-8 text-ds-body font-bold text-ds-bg border-none rounded-full cursor-pointer shrink-0 shadow-glow-cyan"
-            style={{ background: 'var(--ds-gradient-cta)' }}>Return to Globe</button>
-        </div>
+        <button onClick={onFinish}
+          className="mx-auto py-ds-md px-8 text-ds-body font-bold text-ds-bg border-none rounded-full cursor-pointer shrink-0 shadow-glow-cyan"
+          style={{ background: 'var(--ds-gradient-cta)' }}>Return to Globe</button>
       )}
     </div>
   );

@@ -1,47 +1,41 @@
-# Phaser-June Wiki
+# Website
 
-Docusaurus documentation site for Phaser-June. It contains maintainer guides, reference docs, and generated TypeDoc API pages for the game, GIS, database, and Match Battle systems.
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-## Install
+## Installation
 
 ```bash
-npm install
+yarn
 ```
 
 ## Local Development
 
 ```bash
-npm run start
+yarn start
 ```
 
-The dev server hot-reloads docs, pages, sidebars, and config changes.
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
 ## Build
 
 ```bash
-npm run build
+yarn build
 ```
 
-Static output is written to `wiki/build`.
-
-## Validate
-
-```bash
-npm run check
-```
-
-Runs TypeScript checking for the wiki config/components, then builds the Docusaurus site.
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
 ## Deployment
 
-This site is configured for GitHub Pages:
+Using SSH:
 
 ```bash
-npm run deploy
+USE_SSH=true yarn deploy
 ```
 
-Set `GIT_USER` when deploying from a local machine:
+Not using SSH:
 
 ```bash
-GIT_USER=<github-user> npm run deploy
+GIT_USER=<Your GitHub username> yarn deploy
 ```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
