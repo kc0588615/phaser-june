@@ -8,7 +8,7 @@ import { speciesService } from '@/lib/speciesService';
 interface SpeciesGuessSelectorProps {
   speciesId: number;
   disabled?: boolean;
-  onGuessSubmitted?: (isCorrect: boolean) => void;
+  onGuessSubmitted?: (isCorrect: boolean, guessedName: string) => void;
   hiddenSpeciesName?: string;
   /**
    * Explicit candidate pool to choose from. When supplied (e.g. from
@@ -169,7 +169,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
     });
     
     if (onGuessSubmitted) {
-      onGuessSubmitted(correct);
+      onGuessSubmitted(correct, selectedSpecies);
     }
   };
 

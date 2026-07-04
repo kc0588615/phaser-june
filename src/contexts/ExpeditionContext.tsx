@@ -43,7 +43,7 @@ interface ExpeditionContextValue {
   handleDeductionGuessResult: (isCorrect: boolean) => void;
   handleProcessClue: (clueId: number) => void;
   handlePlaceReference: (referenceSpeciesId: number, clueId: number) => void;
-  handleComparativeGuessResult: (isCorrect: boolean) => void;
+  handleComparativeGuessResult: (isCorrect: boolean, guessedName?: string) => void;
   /** Navigate to species list — replaces show-species-list EventBus event */
   showSpeciesList: (speciesId: number) => void;
   /** Register callback for show-species-list navigation */
@@ -456,10 +456,17 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     const speciesId = correctSpeciesIdRef.current;
     if (!speciesId) return;
 
-    const allSpeciesIds = Array.from({ length: 24 }, (_, i) => i + 1).filter(id => id !== speciesId && id !== 4 && id !== 11);
-    const albumParam = allSpeciesIds.join(',');
-
-    fetch(`/api/species/deduction?mysteryId=${speciesId}&albumIds=${albumParam}`)
+    fetch('/api/species/catalog')
+      .then(r => r.ok ? r.json() : null)
+      .then(catalog => {
+        const allSpeciesIds = Array.isArray(catalog?.species)
+          ? catalog.species
+              .map((species: { id?: unknown }) => species.id)
+              .filter((id: unknown): id is number => Number.isInteger(id) && id !== speciesId)
+          : [];
+        const albumParam = allSpeciesIds.join(',');
+        return fetch(`/api/species/deduction?mysteryId=${speciesId}&albumIds=${albumParam}`);
+      })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
@@ -536,7 +543,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
-  const handleComparativeGuessResult = useCallback((isCorrect: boolean) => {
+  const handleComparativeGuessResult = useCallback((isCorrect: boolean, guessedName?: string) => {
     setRunState(prev => {
       if (prev.phase !== 'mystery' || !prev.comparativeDeduction || !prev.deductionCamp) return prev;
       const comp = prev.comparativeDeduction;
@@ -557,7 +564,23 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         }
         return { ...prev, phase: 'complete' as const, comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus }, finalScore };
       }
-      return { ...prev, comparativeDeduction: { ...comp, guessResult: 'wrong' }, deductionCamp: { ...camp, scoreSpent: camp.scoreSpent + 25 } };
+      const guessedProfile = guessedName
+        ? comp.albumProfiles.find(profile => profile.commonName.toLowerCase() === guessedName.toLowerCase())
+        : null;
+      const eliminatedSpeciesIds = guessedProfile && !comp.eliminatedSpeciesIds.includes(guessedProfile.speciesId)
+        ? [...comp.eliminatedSpeciesIds, guessedProfile.speciesId]
+        : comp.eliminatedSpeciesIds;
+      const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
+      const candidateCount = filterCandidates(allProfiles, comp.confirmedTags, new Set(eliminatedSpeciesIds)).length;
+      return {
+        ...prev,
+        comparativeDeduction: {
+          ...comp,
+          guessResult: 'wrong',
+          eliminatedSpeciesIds,
+          candidateCount,
+        },
+      };
     });
   }, []);
 

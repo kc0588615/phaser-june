@@ -12,6 +12,7 @@ import { Toaster } from 'sonner';
 import { BottomTabBar } from './components/BottomTabBar';
 import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
+import { FieldNotebook } from './components/FieldNotebook';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ProfileContent } from './components/ProfileContent';
 import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
@@ -35,8 +36,9 @@ function MainAppLayoutInner() {
     const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     const {
-        runState, boardOpacity,
+        runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
         handleAffinitySelected, handleRunResume, handleRunReset,
+        handleComparativeGuessResult,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -125,10 +127,6 @@ function MainAppLayoutInner() {
                             />
                         </div>
 
-                        {inRun && runState.comparativeDeduction && (
-                            <MysteryClueStrip runState={runState} />
-                        )}
-
                         {/* Expedition Briefing */}
                         {showBriefing && runState.expedition && (
                             <div className="absolute inset-0 z-deduction flex flex-col justify-end">
@@ -164,6 +162,15 @@ function MainAppLayoutInner() {
                         )}
 
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+
+                        {inRun && runState.comparativeDeduction && (
+                            <FieldNotebook
+                                runState={runState}
+                                speciesId={correctSpeciesId}
+                                hiddenSpeciesName={hiddenSpeciesName}
+                                onGuess={handleComparativeGuessResult}
+                            />
+                        )}
 
                     </div>
                 </div>
@@ -226,33 +233,6 @@ function MainAppLayoutInner() {
                     },
                 }}
             />
-        </div>
-    );
-}
-
-function MysteryClueStrip({ runState }: { runState: RunState }) {
-    const processed = runState.comparativeDeduction?.processedClues ?? [];
-    const latest = processed.slice(-3).reverse();
-
-    return (
-        <div className="absolute left-ds-sm right-ds-sm bottom-ds-sm z-panel pointer-events-none">
-            <GlassPanel className="rounded-lg p-ds-sm">
-                <div className="flex items-center justify-between gap-ds-sm mb-1">
-                    <div className="text-ds-caption font-bold uppercase tracking-wider text-ds-cyan">Field clues</div>
-                    <div className="text-ds-badge text-ds-text-muted">{processed.length} found</div>
-                </div>
-                {latest.length > 0 ? (
-                    <div className="flex flex-col gap-1">
-                        {latest.map(clue => (
-                            <div key={clue.clueId} className="text-ds-caption text-ds-text-primary leading-snug">
-                                <span className="text-ds-text-muted">{clue.category.replace(/_/g, ' ')}: </span>{clue.label}
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-ds-caption text-ds-text-secondary">Match category gems to reveal facts.</div>
-                )}
-            </GlassPanel>
         </div>
     );
 }

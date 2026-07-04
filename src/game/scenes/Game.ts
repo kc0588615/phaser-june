@@ -1824,6 +1824,14 @@ export class Game extends Phaser.Scene {
             console.log("Game Scene: Wrong guess - resetting streak");
             this.incorrectGuessesThisSpecies++;
             this.onWrongGuess();
+            if (this.inExpeditionRun && this.backendPuzzle) {
+                this.backendPuzzle.registerMove();
+                this.backendPuzzle.registerMove();
+                this.emitHud();
+                if (this.backendPuzzle.isGameOver() && !this.nodeObjectiveCompleted) {
+                    this.finishNodeObjective('escaped');
+                }
+            }
         }
     }
 
