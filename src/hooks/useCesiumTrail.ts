@@ -71,7 +71,7 @@ function markerLabelForWaypoint(waypoint: ExpeditionWaypoint | null, routeIndex:
   if (!waypoint) return `Node ${routeIndex + 1}`;
   const typeLabel = getWaypointTypeLabel(waypoint.waypointType) ?? 'Waypoint';
   const name = waypoint.name.length > 22 ? `${waypoint.name.slice(0, 21)}…` : waypoint.name;
-  return `${waypoint.slot + 1}. ${typeLabel}: ${name}`;
+  return `${typeLabel}: ${name}`;
 }
 
 function getGameplayTrailPositions(route: RoutePoint[], currentSlot: number): RoutePoint[] {
@@ -293,43 +293,45 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
 
       void loadSpatialLayers(data.lon, data.lat, positions);
 
-      if (viewerRef.current?.cesiumElement && positions.length > 1) {
+      if (viewerRef.current?.cesiumElement && positions.length > 0) {
         const viewer = viewerRef.current.cesiumElement;
         const nodes = data.expedition.nodes;
 
-        // --- Full route polyline (upcoming segments — dashed gray) ---
-        const fullPolyline = viewer.entities.add({
-          polyline: {
-            positions: new ConstantProperty(
-              positions.map((p: RoutePoint) => Cartesian3.fromDegrees(p.lon, p.lat))
-            ),
-            material: new PolylineDashMaterialProperty({
-              color: CesiumColor.fromAlpha(CesiumColor.WHITE, 0.3),
-              dashLength: 10,
-            }),
-            width: new ConstantProperty(2),
-            clampToGround: new ConstantProperty(true),
-          },
-        });
-        trailEntitiesRef.current.push(fullPolyline);
+        if (positions.length > 1) {
+          // --- Full route polyline (upcoming segments, dashed gray) ---
+          const fullPolyline = viewer.entities.add({
+            polyline: {
+              positions: new ConstantProperty(
+                positions.map((p: RoutePoint) => Cartesian3.fromDegrees(p.lon, p.lat))
+              ),
+              material: new PolylineDashMaterialProperty({
+                color: CesiumColor.fromAlpha(CesiumColor.WHITE, 0.3),
+                dashLength: 10,
+              }),
+              width: new ConstantProperty(2),
+              clampToGround: new ConstantProperty(true),
+            },
+          });
+          trailEntitiesRef.current.push(fullPolyline);
 
-        // --- Completed segments polyline (solid cyan, grows with progress) ---
-        const completedPolyline = viewer.entities.add({
-          polyline: {
-            positions: new CallbackProperty(() => {
-              return getGameplayTrailPositions(trailPositionsRef.current, trailCurrentSlotRef.current).map((p: { lon: number; lat: number }) =>
-                Cartesian3.fromDegrees(p.lon, p.lat)
-              );
-            }, false) as any,
-            material: new PolylineGlowMaterialProperty({
-              glowPower: 0.15,
-              color: CesiumColor.CYAN.withAlpha(0.85),
-            }),
-            width: new ConstantProperty(4),
-            clampToGround: new ConstantProperty(true),
-          },
-        });
-        trailEntitiesRef.current.push(completedPolyline);
+          // --- Completed segments polyline (solid cyan, grows with progress) ---
+          const completedPolyline = viewer.entities.add({
+            polyline: {
+              positions: new CallbackProperty(() => {
+                return getGameplayTrailPositions(trailPositionsRef.current, trailCurrentSlotRef.current).map((p: { lon: number; lat: number }) =>
+                  Cartesian3.fromDegrees(p.lon, p.lat)
+                );
+              }, false) as any,
+              material: new PolylineGlowMaterialProperty({
+                glowPower: 0.15,
+                color: CesiumColor.CYAN.withAlpha(0.85),
+              }),
+              width: new ConstantProperty(4),
+              clampToGround: new ConstantProperty(true),
+            },
+          });
+          trailEntitiesRef.current.push(completedPolyline);
+        }
 
         // --- Node markers with type-aware emoji icons ---
         for (let i = 0; i < positions.length; i++) {
@@ -373,7 +375,8 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
 
         // Highlight first node (current)
         const firstRouteIdx = getRouteIndexForWaypointSlot(positions, 0);
-        const firstPt = trailEntitiesRef.current[(firstRouteIdx >= 0 ? firstRouteIdx : 0) + 2]; // 0/1 are polylines
+        const markerOffset = positions.length > 1 ? 2 : 0;
+        const firstPt = trailEntitiesRef.current[(firstRouteIdx >= 0 ? firstRouteIdx : 0) + markerOffset];
         if (firstPt?.point) {
           firstPt.point.color = new ConstantProperty(CesiumColor.YELLOW);
           firstPt.point.pixelSize = new ConstantProperty(ACTIVE_NODE_MARKER_SIZE);
@@ -417,8 +420,8 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
       if (completedIdx < 0) return;
       trailCurrentSlotRef.current = Math.max(trailCurrentSlotRef.current, data.nodeIndex + 1);
 
-      // Marker indices offset by 2 (polylines are at index 0 and 1)
-      const markerIdx = completedIdx + 2;
+      const markerOffset = trailPositionsRef.current.length > 1 ? 2 : 0;
+      const markerIdx = completedIdx + markerOffset;
       clearActiveMarker(trailActiveMarkerRef.current ?? undefined);
 
       // Mark completed node green
@@ -429,7 +432,7 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
 
       // Highlight next node
       const nextRouteIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, data.nodeIndex + 1);
-      const nextMarkerIdx = nextRouteIdx >= 0 ? nextRouteIdx + 2 : -1;
+      const nextMarkerIdx = nextRouteIdx >= 0 ? nextRouteIdx + markerOffset : -1;
       if (trailEntitiesRef.current[nextMarkerIdx]?.point) {
         trailEntitiesRef.current[nextMarkerIdx].point!.color = new ConstantProperty(CesiumColor.YELLOW);
         trailEntitiesRef.current[nextMarkerIdx].point!.pixelSize = new ConstantProperty(ACTIVE_NODE_MARKER_SIZE);

@@ -29,10 +29,10 @@ import type { FeatureFingerprint } from '../types/gis';
 import { getAppConfig } from '../utils/config';
 import { useCesiumTrail } from '../hooks/useCesiumTrail';
 import { useEcoregionLayer } from '../hooks/useEcoregionLayer';
-import { computeExpeditionRoutePolyline, normalizeRoutePolyline } from '../lib/expeditionRoute';
 import { applyWaypointsToRunNodes } from '../lib/nodeScoring';
-import type { ExpeditionWaypointResponse } from '../types/waypoints';
+import { getWaypointTypeLabel, type ExpeditionWaypoint, type ExpeditionWaypointResponse, type WaypointType } from '../types/waypoints';
 import { ANIMAL_MARKER, type EcoregionPreviewPick, type EcoregionProgress } from '../types/ecoregions';
+import { useExpedition } from '../contexts/ExpeditionContext';
 import { cn } from '@/lib/utils';
 
 const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || "https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com";
@@ -67,18 +67,21 @@ interface PendingSelection {
   activeAffinities: AffinityType[];
   availableAffinities: AffinityType[];
   ecoregionId: number | null;
+  activeAnchor?: ExpeditionWaypoint | null;
 }
 
-function getWaypointRouteOrFallback(
-  waypointData: ExpeditionWaypointResponse | null,
-  lon: number,
-  lat: number,
-  count: number,
-) {
-  const routePolyline = normalizeRoutePolyline(waypointData?.routePolyline);
-  return routePolyline.length > 0
-    ? routePolyline
-    : computeExpeditionRoutePolyline(lon, lat, count);
+const WAYPOINT_COLORS: Record<WaypointType, string> = {
+  city: '#f59e0b',
+  river: '#38bdf8',
+  lake: '#2563eb',
+  wetland: '#14b8a6',
+  protected_area: '#22c55e',
+  bioregion_edge: '#a78bfa',
+  basecamp: '#f97316',
+};
+
+function getActiveSiteRoute(lon: number, lat: number) {
+  return [{ lon, lat, waypointSlot: 0 }];
 }
 
 function attachWaypointsToNodes(nodes: RunNode[], waypointData: ExpeditionWaypointResponse | null): RunNode[] {
@@ -88,6 +91,26 @@ function attachWaypointsToNodes(nodes: RunNode[], waypointData: ExpeditionWaypoi
     ...node,
     waypoint: waypointsBySlot.get(index as 0 | 1 | 2 | 3 | 4 | 5),
   })));
+}
+
+function getAnchorKey(waypoint: ExpeditionWaypoint): string {
+  return `${waypoint.waypointType}:${waypoint.sourceTable ?? ''}:${waypoint.sourceId ?? ''}:${waypoint.slot}:${waypoint.lon.toFixed(4)},${waypoint.lat.toFixed(4)}`;
+}
+
+function getAnchorLabel(waypoint: ExpeditionWaypoint): string {
+  const typeLabel = getWaypointTypeLabel(waypoint.waypointType) ?? 'Site';
+  const name = waypoint.name.length > 26 ? `${waypoint.name.slice(0, 25)}...` : waypoint.name;
+  return `${typeLabel}: ${name}`;
+}
+
+function createActiveAnchorWaypointData(anchor: ExpeditionWaypoint, lon: number, lat: number): ExpeditionWaypointResponse {
+  const activeAnchor: ExpeditionWaypoint = { ...anchor, slot: 0 };
+  return {
+    origin: { lon, lat },
+    radiusKm: 0,
+    waypoints: [activeAnchor],
+    routePolyline: getActiveSiteRoute(lon, lat),
+  };
 }
 
 async function fetchWaypointData(lon: number, lat: number): Promise<ExpeditionWaypointResponse | null> {
@@ -130,23 +153,22 @@ function emitExpeditionReadyFromMapClick(input: {
   activeAffinities: AffinityType[];
   availableAffinities: AffinityType[];
   ecoregionId?: number | null;
+  activeAnchor?: ExpeditionWaypoint | null;
 }): boolean {
   const nodes = input.atPointData?.generated_nodes;
   if (!nodes?.length) return false;
 
-  const routePolyline = getWaypointRouteOrFallback(
-    input.waypointData,
-    input.lon,
-    input.lat,
-    nodes.length,
-  );
+  const routePolyline = getActiveSiteRoute(input.lon, input.lat);
+  const waypointData = input.activeAnchor
+    ? createActiveAnchorWaypointData(input.activeAnchor, input.lon, input.lat)
+    : null;
 
   EventBus.emit('expedition-data-ready', {
     lon: input.lon,
     lat: input.lat,
     ecoregionId: input.ecoregionId ?? null,
     expedition: {
-      nodes: attachWaypointsToNodes(nodes, input.waypointData),
+      nodes: attachWaypointsToNodes(nodes, waypointData),
       bioregion: input.atPointData?.bioregion ?? null,
       protectedAreas: input.atPointData?.protected_areas ?? [],
       actionBias: input.atPointData?.action_bias ?? {},
@@ -157,8 +179,9 @@ function emitExpeditionReadyFromMapClick(input: {
       modifierNodes: input.atPointData?.modifier_nodes ?? [],
       signals: input.atPointData?.signals ?? {},
       routePolyline,
-      waypoints: input.waypointData?.waypoints ?? [],
-      waypointRadiusKm: input.waypointData?.radiusKm ?? null,
+      waypoints: waypointData?.waypoints ?? [],
+      activeAnchor: waypointData?.waypoints[0] ?? null,
+      waypointRadiusKm: waypointData?.radiusKm ?? null,
       nearestRiverDistM: input.atPointData?.nearest_river_dist_m ?? null,
     },
     species: input.species,
@@ -176,6 +199,7 @@ interface CesiumMapProps {
 
 const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = 'idle' }) => {
   const viewerRef = useRef<any>(null);
+  const { playedAnchorKeys, markAnchorPlayed } = useExpedition();
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null);
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null);
   const [infoBoxData, setInfoBoxData] = useState<{
@@ -323,9 +347,15 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
     setupImagery();
   }, []);
 
-  const loadAreaDetails = useCallback((longitude: number, latitude: number) => {
+  const loadAreaDetails = useCallback((longitude: number, latitude: number, activeAnchor: ExpeditionWaypoint | null = null, autoStart = false) => {
     if (!viewerRef.current?.cesiumElement || isLoading) return;
     const viewer = viewerRef.current.cesiumElement;
+    const atPointParams = new URLSearchParams({
+      lon: String(longitude),
+      lat: String(latitude),
+      size: '500',
+    });
+    if (activeAnchor) atPointParams.set('anchorType', activeAnchor.waypointType);
 
     if (highlightedSpeciesSource) {
       viewer.dataSources.remove(highlightedSpeciesSource, true);
@@ -341,8 +371,10 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
     Promise.all([
       speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
       speciesService.getRasterHabitatDistribution(longitude, latitude),
-      fetch(`/api/protected-areas/at-point?lon=${longitude}&lat=${latitude}&size=500`).then(r => r.ok ? r.json() as Promise<AtPointData> : null).catch(() => null),
-      fetchWaypointData(longitude, latitude),
+      fetch(`/api/protected-areas/at-point?${atPointParams.toString()}`).then(r => r.ok ? r.json() as Promise<AtPointData> : null).catch(() => null),
+      activeAnchor
+        ? Promise.resolve(createActiveAnchorWaypointData(activeAnchor, longitude, latitude))
+        : fetchWaypointData(longitude, latitude),
       fetchEcoregionProgress(longitude, latitude),
     ])
       .then(async ([speciesResult, rasterHabitats, atPointData, waypointData, progress]) => {
@@ -411,7 +443,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
           const habitatList = Array.from(legacyHabitats);
 
           const availableAffinities = deriveAvailableAffinities(clickedSpecies.species);
-          setPendingSelection({
+          const selection: PendingSelection = {
             lon: cartographicLocation.longitude,
             lat: cartographicLocation.latitude,
             atPointData,
@@ -422,7 +454,10 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
             activeAffinities: getDefaultActiveAffinities(availableAffinities),
             availableAffinities,
             ecoregionId: progress?.ecoregion?.ecoregion_id ?? null,
-          });
+            activeAnchor,
+          };
+          setPendingSelection(selection);
+          if (autoStart) emitExpeditionReadyFromMapClick(selection);
         } else if (viewerRef.current) {
           const closestHabitatGeometry = await speciesService.getClosestHabitat(
             cartographicLocation.longitude,
@@ -466,7 +501,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
             }, 3000);
           }
 
-          setPendingSelection({
+          const selection: PendingSelection = {
             lon: cartographicLocation.longitude,
             lat: cartographicLocation.latitude,
             atPointData,
@@ -477,7 +512,9 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
             activeAffinities: [],
             availableAffinities: [],
             ecoregionId: progress?.ecoregion?.ecoregion_id ?? null,
-          });
+            activeAnchor,
+          };
+          setPendingSelection(selection);
         }
 
         const legacyHabitats = new Set<string>();
@@ -519,6 +556,13 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
         setIsLoading(false);
       });
   }, [isLoading, highlightedSpeciesSource]);
+
+  const handleAnchorClick = useCallback((waypoint: ExpeditionWaypoint) => {
+    if (expeditionBlocksMapClick || isLoading) return;
+    markAnchorPlayed(getAnchorKey(waypoint));
+    setSelectedEcoregion(null);
+    loadAreaDetails(waypoint.lon, waypoint.lat, waypoint, true);
+  }, [expeditionBlocksMapClick, isLoading, loadAreaDetails, markAnchorPlayed]);
 
   const exploreSelectedArea = useCallback(() => {
     if (!selectedEcoregion || selectedEcoregion.lon == null || selectedEcoregion.lat == null) return;
@@ -609,6 +653,38 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
             />
           </Entity>
         ))}
+
+        {!expeditionBlocksMapClick && pendingSelection?.waypointData?.waypoints.map((waypoint) => {
+          const key = getAnchorKey(waypoint);
+          const played = playedAnchorKeys.has(key);
+          const color = Color.fromCssColorString(WAYPOINT_COLORS[waypoint.waypointType] ?? '#38bdf8');
+          return (
+            <Entity
+              key={key}
+              name={getAnchorLabel(waypoint)}
+              position={Cartesian3.fromDegrees(waypoint.lon, waypoint.lat)}
+              onClick={() => handleAnchorClick(waypoint)}
+            >
+              <PointGraphics
+                pixelSize={played ? 13 : 18}
+                color={played ? color.withAlpha(0.28) : color.withAlpha(0.88)}
+                outlineColor={played ? Color.WHITE.withAlpha(0.55) : Color.WHITE}
+                outlineWidth={2}
+                heightReference={HeightReference.CLAMP_TO_GROUND}
+                disableDepthTestDistance={Number.POSITIVE_INFINITY}
+              />
+              <LabelGraphics
+                text={`${played ? 'Done: ' : ''}${getAnchorLabel(waypoint)}`}
+                font="13px Inter, system-ui, sans-serif"
+                fillColor={played ? Color.WHITE.withAlpha(0.68) : Color.WHITE}
+                outlineColor={Color.BLACK}
+                outlineWidth={2}
+                pixelOffset={new Cartesian2(10, -12)}
+                disableDepthTestDistance={Number.POSITIVE_INFINITY}
+              />
+            </Entity>
+          );
+        })}
       </Viewer>
       <ExploreMapOverlay
         info={infoBoxData}

@@ -31,6 +31,7 @@ export interface ExpeditionData {
   signals: Record<string, number>;
   routePolyline?: RoutePoint[];
   waypoints?: ExpeditionWaypoint[];
+  activeAnchor?: ExpeditionWaypoint | null;
   waypointRadiusKm?: number | null;
   nearestRiverDistM?: number | null;
 }

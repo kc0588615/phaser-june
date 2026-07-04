@@ -6,7 +6,7 @@
  */
 
 import type { ActionGemType, GemType } from '@/game/constants';
-import type { ExpeditionWaypoint } from '@/types/waypoints';
+import type { ExpeditionWaypoint, WaypointType } from '@/types/waypoints';
 import {
   getCounterGemForObstacleFamily,
   type NodeObstacle,
@@ -463,11 +463,15 @@ export function generateRunNodes(
   habitat: HabitatSignals,
   _threatenedCount: number,
   _protectedCoverage: number,
+  anchorType?: WaypointType | null,
 ): RunNode[] {
   const primaryType = mapFamilyToNodeType(selection.primaryNodeFamily, selection.primaryVariant);
   let template = NODE_TEMPLATES[primaryType] ?? NODE_TEMPLATES.custom;
 
-  if (template.node_type === 'custom' && habitat.water_ratio >= 0.2) {
+  const anchorNodeType = anchorType ? nodeTypeForAnchorType(anchorType) : null;
+  if (anchorNodeType) {
+    template = NODE_TEMPLATES[anchorNodeType] ?? NODE_TEMPLATES.custom;
+  } else if (template.node_type === 'custom' && habitat.water_ratio >= 0.2) {
     template = NODE_TEMPLATES.riverbank_sweep;
   } else if (template.node_type === 'custom' && habitat.forest_ratio >= 0.3) {
     template = NODE_TEMPLATES.dense_canopy;
@@ -483,4 +487,22 @@ export function generateRunNodes(
   };
 
   return [{ ...node, objectiveTarget: 0 }];
+}
+
+function nodeTypeForAnchorType(anchorType: WaypointType): keyof typeof NODE_TEMPLATES {
+  switch (anchorType) {
+    case 'river':
+    case 'lake':
+    case 'wetland':
+      return 'riverbank_sweep';
+    case 'basecamp':
+    case 'city':
+      return 'urban_fringe';
+    case 'protected_area':
+      return 'dense_canopy';
+    case 'bioregion_edge':
+      return 'custom';
+    default:
+      return 'custom';
+  }
 }

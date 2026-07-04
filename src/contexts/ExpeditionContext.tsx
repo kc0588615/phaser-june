@@ -19,6 +19,7 @@ import type { Species } from '@/types/database';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import { unlockSpeciesCardDiscovery } from '@/lib/speciesCardUnlocks';
+import { getWaypointTypeLabel, type ExpeditionWaypoint } from '@/types/waypoints';
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -50,6 +51,8 @@ interface ExpeditionContextValue {
   showSpeciesList: (speciesId: number) => void;
   /** Register callback for show-species-list navigation */
   onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
+  playedAnchorKeys: Set<string>;
+  markAnchorPlayed: (anchorKey: string) => void;
 }
 
 const ExpeditionContext = createContext<ExpeditionContextValue | null>(null);
@@ -65,6 +68,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
   const [boardOpacity, setBoardOpacity] = useState(1);
+  const [playedAnchorKeys, setPlayedAnchorKeys] = useState<Set<string>>(new Set());
 
   const expeditionPayloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
   const runIdRef = useRef<string | null>(null);
@@ -129,8 +133,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     plannedRoutePolylineRef.current = getExpeditionRoutePolyline(payload);
     routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
 
-    const sorted = [...payload.species].sort((a, b) => a.id - b.id);
-    const correct = sorted[0];
+    const correct = chooseMysterySpecies(payload.species, payload.expedition.activeAnchor ?? null);
     if (correct) {
       correctSpeciesIdRef.current = correct.id;
       hiddenSpeciesNameRef.current = correct.common_name || correct.scientific_name || 'Unknown Species';
@@ -162,6 +165,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           modifierNodes: payload.expedition.modifierNodes,
           signals: payload.expedition.signals,
           waypoints: payload.expedition.waypoints ?? [],
+          activeAnchor: payload.expedition.activeAnchor ?? null,
           waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null,
           nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
         },
@@ -484,6 +488,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     onShowSpeciesListRef.current?.(speciesId);
   }, []);
 
+  const markAnchorPlayed = useCallback((anchorKey: string) => {
+    setPlayedAnchorKeys(prev => {
+      if (prev.has(anchorKey)) return prev;
+      const next = new Set(prev);
+      next.add(anchorKey);
+      return next;
+    });
+  }, []);
+
   // --- Comparative deduction: fetch profiles when the mystery starts ---
   useEffect(() => {
     if (runState.phase !== 'mystery' || runState.comparativeDeduction) return;
@@ -504,9 +517,13 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
+        const anchorClues = buildAnchorGeographyClues(
+          expeditionPayloadRef.current?.expedition.activeAnchor ?? null,
+          data.mysteryProfile?.speciesId,
+        );
         const compState = createEmptyComparativeState(
           data.mysteryProfile,
-          data.mysteryClues,
+          [...anchorClues, ...data.mysteryClues],
           data.albumProfiles,
           buildHabitatSurvey(expeditionPayloadRef.current?.rasterHabitats ?? []),
         );
@@ -666,7 +683,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
     showSpeciesList,
     onShowSpeciesList: onShowSpeciesListRef,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, showSpeciesList]);
+    playedAnchorKeys,
+    markAnchorPlayed,
+  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, showSpeciesList, playedAnchorKeys, markAnchorPlayed]);
 
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
@@ -731,6 +750,103 @@ function buildHabitatLootWeights(rasterHabitats: RasterHabitatResult[]): Partial
   }
 
   return weights;
+}
+
+function chooseMysterySpecies(species: Species[], anchor: ExpeditionWaypoint | null): Species | undefined {
+  const sorted = [...species].sort((a, b) => a.id - b.id);
+  if (!anchor) return sorted[0];
+
+  return sorted
+    .map(candidate => ({ candidate, score: scoreSpeciesForAnchor(candidate, anchor) }))
+    .sort((a, b) => b.score - a.score || a.candidate.id - b.candidate.id)[0]?.candidate;
+}
+
+function scoreSpeciesForAnchor(species: Species, anchor: ExpeditionWaypoint): number {
+  const text = speciesSearchText(species);
+  if (anchor.waypointType === 'river' || anchor.waypointType === 'lake' || anchor.waypointType === 'wetland') {
+    let score = species.freshwater ? 5 : 0;
+    if (/(freshwater|river|stream|lake|wetland|marsh|swamp|aquatic|riparian)/.test(text)) score += 3;
+    if (species.marine || /marine|coastal|shore|estuary/.test(text)) score += 1;
+    return score;
+  }
+
+  if (anchor.waypointType === 'city' || anchor.waypointType === 'basecamp') {
+    return /(urban|city|town|settlement|artificial|built|garden|crop|agricultur|pasture)/.test(text) ? 3 : 0;
+  }
+
+  if (anchor.waypointType === 'protected_area') {
+    const code = (species.conservation_code ?? species.category ?? '').toUpperCase();
+    let score = /^(VU|EN|CR)$/.test(code) ? 4 : 0;
+    if (/(vulnerable|endangered|critically endangered|threatened)/.test(text)) score += 2;
+    return score;
+  }
+
+  return 0;
+}
+
+function speciesSearchText(species: Species): string {
+  const values = [
+    species.common_name,
+    species.scientific_name,
+    species.habitat_description,
+    Array.isArray(species.habitat_tags) ? species.habitat_tags.join(' ') : species.habitat_tags,
+    species.geographic_description,
+    species.distribution_comment,
+    species.conservation_text,
+    species.conservation_code,
+    species.category,
+    species.threats,
+  ];
+  return values.filter(Boolean).join(' ').toLowerCase();
+}
+
+function buildAnchorGeographyClues(anchor: ExpeditionWaypoint | null, speciesId: unknown): DeductionClue[] {
+  if (!anchor || typeof speciesId !== 'number') return [];
+  const typeLabel = getWaypointTypeLabel(anchor.waypointType) ?? 'Site';
+  const name = anchor.name || typeLabel;
+  const clues: DeductionClue[] = [
+    {
+      id: -2,
+      speciesId,
+      category: 'geography',
+      label: `Site: ${name} - ${anchorGeographyText(anchor)}`,
+      compareTags: null,
+      revealOrder: -2,
+      unlockMode: 'fragment',
+      baseCost: 0,
+      isFiltering: false,
+    },
+  ];
+
+  if (anchor.waypointType === 'protected_area') {
+    clues.push({
+      id: -1,
+      speciesId,
+      category: 'geography',
+      label: `Inside protected area: ${name}`,
+      compareTags: null,
+      revealOrder: -1,
+      unlockMode: 'fragment',
+      baseCost: 0,
+      isFiltering: false,
+    });
+  }
+
+  return clues;
+}
+
+function anchorGeographyText(anchor: ExpeditionWaypoint): string {
+  switch (anchor.waypointType) {
+    case 'river': return 'riverine corridor';
+    case 'lake': return 'lake margin';
+    case 'wetland': return 'wetland habitat';
+    case 'protected_area': return 'protected landscape';
+    case 'city':
+    case 'basecamp':
+      return 'human-edge habitat';
+    case 'bioregion_edge': return 'ecoregion transition';
+    default: return 'local survey site';
+  }
 }
 
 function emitBoardForNode(

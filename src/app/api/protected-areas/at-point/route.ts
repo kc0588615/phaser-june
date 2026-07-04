@@ -10,6 +10,7 @@ import {
 } from '@/lib/nodeScoring';
 import { buildSquare, buildSeed } from '@/lib/geoUtils';
 import { sampleGisFeaturesAtPoint } from '@/lib/gisFeatureSampling';
+import type { WaypointType } from '@/types/waypoints';
 
 interface ProtectedAreaRow {
   site_id: number;
@@ -73,6 +74,16 @@ interface WetlandRow {
   intersect_area_m2: number | null;
   [key: string]: unknown;
 }
+
+const WAYPOINT_TYPES = new Set<WaypointType>([
+  'city',
+  'river',
+  'lake',
+  'wetland',
+  'protected_area',
+  'bioregion_edge',
+  'basecamp',
+]);
 
 
 function getSignalRatios(habitats: RasterHabitatResult[]) {
@@ -182,6 +193,10 @@ export async function GET(request: NextRequest) {
     const lon = Number(searchParams.get('lon'));
     const lat = Number(searchParams.get('lat'));
     const sizeMeters = Math.min(Math.max(Number(searchParams.get('size') || '100'), 20), 1000);
+    const anchorTypeParam = searchParams.get('anchorType');
+    const anchorType = anchorTypeParam && WAYPOINT_TYPES.has(anchorTypeParam as WaypointType)
+      ? anchorTypeParam as WaypointType
+      : null;
     const debug = searchParams.get('debug') === 'true';
 
     if (!Number.isFinite(lon) || !Number.isFinite(lat)) {
@@ -482,6 +497,7 @@ export async function GET(request: NextRequest) {
       habitatSignals,
       threatenedSpecies.length,
       protectedCoverage,
+      anchorType,
     );
 
     // Telemetry logging for balance tuning
