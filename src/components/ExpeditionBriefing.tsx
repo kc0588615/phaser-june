@@ -18,6 +18,8 @@ function formatArea(expedition: ExpeditionData) {
 
 export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClose }) => {
   const biome = expedition.bioregion?.biome || 'Local species field notes';
+  const area = formatArea(expedition);
+  const threatenedCount = Number(expedition.signals.threatened_species_count ?? 0);
   const protectedAreas = expedition.protectedAreas
     .filter(area => area.name || area.designation)
     .slice(0, 3);
@@ -29,8 +31,8 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
     <div className="h-full min-h-0 flex-1 w-full overflow-y-auto p-ds-lg box-border flex flex-col gap-ds-md text-ds-text-primary">
       <div className="flex items-start justify-between gap-ds-md">
         <div>
-          <div className="text-ds-caption uppercase tracking-wide text-ds-text-secondary">Mystery species</div>
-          <h2 className="m-0 mt-1 text-xl font-semibold text-ds-text-primary">{formatArea(expedition)}</h2>
+          <div className="text-ds-caption uppercase tracking-wide text-ds-text-secondary">Globe field site</div>
+          <h2 className="m-0 mt-1 text-xl font-semibold text-ds-text-primary">Mystery Critter from {area}</h2>
           <div className="text-ds-body text-ds-text-secondary mt-1">{biome}</div>
         </div>
         {onClose && (
@@ -68,6 +70,11 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
         {expedition.waypointRadiusKm != null && (
           <Badge variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-ds-text-secondary">
             {expedition.waypointRadiusKm} km field area
+          </Badge>
+        )}
+        {threatenedCount > 0 && (
+          <Badge variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-accent-rose)]">
+            {threatenedCount} threatened nearby
           </Badge>
         )}
       </div>
