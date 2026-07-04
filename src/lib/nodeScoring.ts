@@ -48,6 +48,7 @@ export interface NodeSelection {
 export interface RunNode {
   node_type: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
+  moveBudget?: number;
   obstacles: NodeObstacle[];
   events: string[];
   rationale: string;
@@ -447,6 +448,7 @@ export function applyWaypointsToRunNodes(nodes: RunNode[]): RunNode[] {
       difficulty: waypoint.fallback
         ? Math.min(node.difficulty, 2) as RunNode['difficulty']
         : node.difficulty,
+      moveBudget: node.moveBudget,
       waypoint,
       rationale: waypointRationale(waypoint, template.rationale),
     };
@@ -458,104 +460,33 @@ export function applyWaypointsToRunNodes(nodes: RunNode[]): RunNode[] {
   });
 }
 
-/** Unified 6-node run generator. Derives all nodes from layer scores + habitat context. */
+export const MYSTERY_MOVE_BUDGET = 12;
+
+/** Single-node mystery generator. Derives the board context from layer scores + habitat context. */
 export function generateRunNodes(
   selection: NodeSelection,
   scores: LayerScore[],
   habitat: HabitatSignals,
-  threatenedCount: number,
-  protectedCoverage: number,
+  _threatenedCount: number,
+  _protectedCoverage: number,
 ): RunNode[] {
-  type PartialNode = Omit<RunNode, 'objectiveTarget'>;
-  const nodes: PartialNode[] = [];
-
-  // Node 1: primary from scoring
   const primaryType = mapFamilyToNodeType(selection.primaryNodeFamily, selection.primaryVariant);
-  const t1 = NODE_TEMPLATES[primaryType] ?? NODE_TEMPLATES.custom;
-  nodes.push({ ...t1, difficulty: scores[0]?.score > 0.5 ? 4 : 3 });
+  let template = NODE_TEMPLATES[primaryType] ?? NODE_TEMPLATES.custom;
 
-  // Nodes 2-4: from modifiers and habitat signals
-  const modifierTypes = selection.modifierNodes
-    .map((m) => {
-      const [fam, variant] = m.split(':') as [NodeFamily, string];
-      return mapFamilyToNodeType(fam, variant);
-    })
-    .filter((t) => t !== primaryType); // avoid duplicate of primary
-
-  for (const mt of modifierTypes.slice(0, 2)) {
-    const tmpl = NODE_TEMPLATES[mt] ?? NODE_TEMPLATES.custom;
-    nodes.push({ ...tmpl, difficulty: 3 });
+  if (template.node_type === 'custom' && habitat.water_ratio >= 0.2) {
+    template = NODE_TEMPLATES.riverbank_sweep;
+  } else if (template.node_type === 'custom' && habitat.forest_ratio >= 0.3) {
+    template = NODE_TEMPLATES.dense_canopy;
+  } else if (template.node_type === 'custom' && habitat.urban_ratio >= 0.15) {
+    template = NODE_TEMPLATES.urban_fringe;
   }
 
-  // Fill from habitat ratios if we still need nodes
-  if (nodes.length < 4 && habitat.water_ratio >= 0.2 && !nodes.some((n) => n.node_type === 'riverbank_sweep')) {
-    nodes.push({ ...NODE_TEMPLATES.riverbank_sweep, difficulty: habitat.water_ratio >= 0.4 ? 4 : 3 });
-  }
-  if (nodes.length < 4 && habitat.forest_ratio >= 0.3 && !nodes.some((n) => n.node_type === 'dense_canopy')) {
-    nodes.push({ ...NODE_TEMPLATES.dense_canopy, difficulty: habitat.forest_ratio >= 0.6 ? 4 : 3 });
-  }
-  if (nodes.length < 4 && habitat.urban_ratio >= 0.15 && !nodes.some((n) => n.node_type === 'urban_fringe')) {
-    nodes.push({ ...NODE_TEMPLATES.urban_fringe, difficulty: habitat.urban_ratio >= 0.35 ? 4 : 2 });
-  }
+  const difficulty: RunNode['difficulty'] = scores[0]?.score > 0.5 ? 4 : 3;
+  const node: Omit<RunNode, 'objectiveTarget'> = {
+    ...template,
+    difficulty,
+    moveBudget: MYSTERY_MOVE_BUDGET,
+  };
 
-  // Storm window if threatened species + low protection
-  if (nodes.length < 5 && threatenedCount >= 2 && protectedCoverage < 0.3) {
-    nodes.push({ ...NODE_TEMPLATES.storm_window, difficulty: 5 });
-  }
-
-  // Crisis nodes appear on higher-pressure expeditions and replace one filler slot.
-  const shouldAddCrisis = threatenedCount >= 2 || protectedCoverage < 0.2 || habitat.urban_ratio >= 0.35;
-  if (nodes.length < 5 && shouldAddCrisis && !nodes.some((n) => n.node_type === 'crisis')) {
-    const difficulty: RunNode['difficulty'] = threatenedCount >= 2 && protectedCoverage < 0.3 ? 4 : 3;
-    nodes.push({ ...NODE_TEMPLATES.crisis, difficulty });
-  }
-
-  // Fill remaining with varied tools — avoid repeating the same counter gem when possible.
-  const usedCounterGems = new Set(nodes.map((n) => n.counterGem).filter((value): value is ActionGemType => value != null));
-  const fillerPool = ['elevation_ridge', 'riverbank_sweep', 'urban_fringe', 'dense_canopy', 'custom'] as const;
-  let fillerIdx = 0;
-  while (nodes.length < 5) {
-    // Pick next filler whose counter gem is not already used
-    let picked = false;
-    for (let i = 0; i < fillerPool.length; i++) {
-      const candidate = fillerPool[(fillerIdx + i) % fillerPool.length];
-      const tmpl = NODE_TEMPLATES[candidate];
-      const counterGem = tmpl.counterGem;
-      if (counterGem && !usedCounterGems.has(counterGem)) {
-        nodes.push({ ...tmpl, difficulty: 2 });
-        usedCounterGems.add(counterGem);
-        fillerIdx = (fillerIdx + i + 1) % fillerPool.length;
-        picked = true;
-        break;
-      }
-    }
-    if (!picked) {
-      // All unique counter gems are exhausted — pick the next node type not already present when possible.
-      const usedNodeTypes = new Set(nodes.map((n) => n.node_type));
-      let fallbackTemplate: Omit<RunNode, 'difficulty' | 'objectiveTarget'> | null = null;
-      for (let i = 0; i < fillerPool.length; i++) {
-        const candidate = fillerPool[(fillerIdx + i) % fillerPool.length];
-        const tmpl = NODE_TEMPLATES[candidate];
-        if (!usedNodeTypes.has(tmpl.node_type)) {
-          fallbackTemplate = tmpl;
-          fillerIdx = (fillerIdx + i + 1) % fillerPool.length;
-          break;
-        }
-      }
-      if (!fallbackTemplate) {
-        fallbackTemplate = NODE_TEMPLATES[fillerPool[fillerIdx % fillerPool.length]];
-        fillerIdx++;
-      }
-      nodes.push({ ...fallbackTemplate, difficulty: 2 });
-    }
-  }
-
-  // Node 6: always analysis
-  nodes.push({ ...NODE_TEMPLATES.analysis, difficulty: 3 });
-
-  // objectiveTarget = sum of threat targets when encounter config exists, else legacy flat 6
-  return nodes.slice(0, 6).map(n => ({
-    ...n,
-    objectiveTarget: objectiveTargetForNode(n),
-  }));
+  return [{ ...node, objectiveTarget: objectiveTargetForNode(node) }];
 }

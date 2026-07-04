@@ -1256,8 +1256,10 @@ export class Game extends Phaser.Scene {
             });
             this.backendPuzzle.applyCellStateSeeds(boardContext.obstacleSeeds);
             this.backendPuzzle.resetMoves();
-            // Scale moves by node difficulty (default MAX_MOVES outside expeditions)
-            if (data.difficulty && data.difficulty >= 1) {
+            // Expedition mystery boards use a fixed fast pocket-game move budget.
+            if (data.moveBudget && data.moveBudget > 0) {
+                this.backendPuzzle.setMaxMoves(data.moveBudget);
+            } else if (data.difficulty && data.difficulty >= 1) {
                 const difficultyMoves = [50, 40, 30, 25, 20];
                 const moves = difficultyMoves[Math.min(data.difficulty - 1, 4)] ?? MAX_MOVES;
                 this.backendPuzzle.setMaxMoves(moves);
@@ -1755,42 +1757,6 @@ export class Game extends Phaser.Scene {
         this.checkAllCluesRevealed();
     }
 
-    private advanceToNextSpecies(): void {
-        this.currentSpeciesIndex++;
-
-        if (this.currentSpeciesIndex < this.currentSpecies.length) {
-            // Move to next species
-            this.selectedSpecies = this.currentSpecies[this.currentSpeciesIndex];
-            this.revealedClues.clear();
-            this.allCluesRevealed = false;
-            this.usedRasterHabitats.clear(); // Reset used raster habitats for new species
-            this.seenClueCategories.clear(); // Reset for early guess bonus calculation
-
-            // Reset species tracking counters for new species
-            this.clueCountThisSpecies = 0;
-            this.incorrectGuessesThisSpecies = 0;
-            this.speciesStartTime = Date.now();
-
-            // Reset all progressive clues for new species
-            resetAllProgressiveClues(this.selectedSpecies);
-            
-            console.log("Game Scene: Advancing to next species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "id:", this.selectedSpecies.id);
-            
-            // Emit event for new species
-            // Hide the species name - player needs to guess it
-            EventBus.emit('new-game-started', {
-                speciesName: 'Mystery Species',  // Hidden name for guessing game
-                speciesId: this.selectedSpecies.id,
-                totalSpecies: this.currentSpecies.length,
-                currentIndex: this.currentSpeciesIndex + 1,
-                hiddenSpeciesName: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species'  // Store real name internally
-            });
-        } else {
-            // This shouldn't happen as handleSpeciesGuess already handles the last species
-            console.log("Game Scene: Attempted to advance beyond last species");
-        }
-    }
-
     private handleSpeciesGuess(data: { guessedName: string; speciesId: number; isCorrect: boolean; actualName: string }): void {
         console.log("Game Scene: Species guess received:", data);
         
@@ -1811,44 +1777,24 @@ export class Game extends Phaser.Scene {
             // Apply early guess bonus with streak multiplier
             this.onCorrectGuess(DEFAULT_TOTAL_CLUE_SLOTS);
 
-            // Check if there are more species at this location
-            if (this.currentSpeciesIndex + 1 < this.currentSpecies.length) {
-                // Show success message and advance to next species after a delay
-                if (this.statusText && this.statusText.active) {
-                    this.statusText.setText(`Correct! You discovered the ${data.actualName}!\n\nPreparing next species...`);
-                }
-                
-                // Advance to next species after a short delay
-                this.time.delayedCall(3000, () => {
-                    this.advanceToNextSpecies();
-                    
-                    if (this.statusText && this.statusText.active) {
-                        this.statusText.setText('');
-                    }
+            console.log("Game Scene: Mystery species discovered!");
+            
+            if (this.statusText && this.statusText.active) {
+                this.statusText.setText(this.inExpeditionRun
+                    ? `Correct! You discovered the ${data.actualName}!\n\nComplete the field notes to continue.`
+                    : `Correct! You discovered the ${data.actualName}!\n\nClick on the globe to select a new location.`);
+            }
+            
+            this.time.delayedCall(1000, () => {
+                EventBus.emit('all-species-completed', {
+                    totalSpecies: 1
                 });
-            } else {
-                // All species at this location discovered
-                console.log("Game Scene: All species at this location discovered!");
-                
-                if (this.statusText && this.statusText.active) {
-                    this.statusText.setText(this.inExpeditionRun
-                        ? `Correct! You discovered the ${data.actualName}!\n\nComplete the node to continue.`
-                        : `Correct! You discovered the ${data.actualName}!\n\nAll species at this location have been discovered.\n\nClick on the globe to select a new location.`);
-                }
-                
-                // Emit event to signal completion after a delay to allow individual species toast to show first
-                this.time.delayedCall(1000, () => {
-                    EventBus.emit('all-species-completed', {
-                        totalSpecies: this.currentSpecies.length
-                    });
+            });
+            
+            if (!this.inExpeditionRun) {
+                this.time.delayedCall(5000, () => {
+                    this.resetForNewLocation();
                 });
-                
-                // Reset game state for new location (only outside expedition runs)
-                if (!this.inExpeditionRun) {
-                    this.time.delayedCall(5000, () => {
-                        this.resetForNewLocation();
-                    });
-                }
             }
         } else {
             // Wrong guess - reset streak

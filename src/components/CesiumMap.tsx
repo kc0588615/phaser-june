@@ -246,18 +246,9 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
   const startPendingSelection = useCallback(() => {
     if (!pendingSelection) return;
 
-    if (!emitExpeditionReadyFromMapClick({
+    emitExpeditionReadyFromMapClick({
       ...pendingSelection,
-    })) {
-      EventBus.emit('cesium-location-selected', {
-        ecoregionId: pendingSelection.ecoregionId,
-        species: pendingSelection.species,
-        rasterHabitats: pendingSelection.rasterHabitats,
-        habitats: pendingSelection.habitats,
-        lon: pendingSelection.lon,
-        lat: pendingSelection.lat,
-      });
-    }
+    });
   }, [pendingSelection]);
 
   useEffect(() => {

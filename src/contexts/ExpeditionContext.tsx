@@ -193,6 +193,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       ecoregionId: payload.ecoregionId ?? null,
       species: payload.species, rasterHabitats: payload.rasterHabitats,
       habitats: payload.habitats, difficulty: firstNode?.difficulty,
+      moveBudget: firstNode?.moveBudget,
       obstacles: firstNode?.obstacles, obstacleFamily: firstNode?.obstacleFamily,
       counterGem: firstNode?.counterGem, requiredGems: firstNode?.requiredGems,
       activeAffinities: activeAffinitiesRef.current,
@@ -305,15 +306,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       if (data.nodeIndex !== prev.currentNodeIndex) return prev;
       if (data.nodeIndex <= lastResolvedNodeRef.current) return prev;
 
-      if (data.reason === 'escaped') {
-        lastResolvedNodeRef.current = prev.currentNodeIndex;
-        routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, prev.currentNodeIndex);
-        const campState = buildDeductionCampState(prev);
-        if (runIdRef.current) persistRunCheckpoint(runIdRef.current, prev, prev.currentNodeIndex, routePolylineRef.current, 'deduction');
-        setTimeout(() => toast('Animal escaped! Reviewing gathered evidence...', { duration: 3000 }), 0);
-        return { ...prev, phase: 'deduction' as const, deductionCamp: campState };
-      }
-
       const nodeOrder = prev.currentNodeIndex + 1;
       const nextIndex = prev.currentNodeIndex + 1;
       lastResolvedNodeRef.current = prev.currentNodeIndex;
@@ -323,7 +315,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const nodeMoves = hudRef.current?.movesUsed ?? 0;
       const objProgress = objectiveProgressRef.current;
       if (runIdRef.current) {
-        persistRunCheckpoint(runIdRef.current, prev, nextIndex, routePolylineRef.current);
+        persistRunCheckpoint(runIdRef.current, prev, nextIndex, routePolylineRef.current, 'deduction');
         fetch(`/api/runs/${runIdRef.current}/nodes/${nodeOrder}/complete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -338,43 +330,12 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       EventBus.emit('node-complete', { nodeIndex: prev.currentNodeIndex });
       nodeStartScoreRef.current = hudRef.current?.score ?? 0;
 
-      if (nextIndex >= (prev.expedition?.nodes.length ?? 6)) {
-        const campState = buildDeductionCampState(prev);
-        setTimeout(() => toast.success('All nodes complete — time to identify!', { duration: 3000 }), 0);
-        return { ...prev, phase: 'deduction' as const, currentNodeIndex: nextIndex, deductionCamp: campState };
-      }
-
-      setTimeout(() => toast(`Node ${nodeOrder} complete — next up!`, { duration: 1500 }), 0);
-      const payload = expeditionPayloadRef.current;
-      if (payload) {
-        const nextNode = prev.expedition?.nodes[nextIndex];
-        objectiveProgressRef.current = 0;
-        setTimeout(() => {
-          const nextBoardContext = buildNodeBoardContext({
-            width: GRID_COLS, height: GRID_ROWS,
-            obstacles: nextNode?.obstacles ?? [], nodeIndex: nextIndex,
-          });
-          const nextBoardConfig = buildBoardSpawnConfigForNode(
-            nextNode?.node_type ?? 'custom', nextNode?.counterGem ?? null,
-            prev.expedition?.actionBias ?? {}, activeAffinitiesRef.current
-          );
-          const nodeLocation = getNodeRouteLocation(payload, nextIndex);
-          EventBus.emit('cesium-location-selected', {
-            lon: nodeLocation.lon, lat: nodeLocation.lat,
-            ecoregionId: payload.ecoregionId ?? null,
-            species: payload.species, rasterHabitats: payload.rasterHabitats,
-            habitats: payload.habitats, difficulty: nextNode?.difficulty,
-            obstacles: nextNode?.obstacles, obstacleFamily: nextNode?.obstacleFamily,
-            counterGem: nextNode?.counterGem, requiredGems: nextNode?.requiredGems,
-            activeAffinities: activeAffinitiesRef.current,
-            objectiveTarget: nextNode?.objectiveTarget, nodeIndex: nextIndex,
-            nodeType: nextNode?.node_type, events: nextNode?.events,
-            boardContext: nextBoardContext, boardConfig: nextBoardConfig,
-            encounterConfig: nextNode?.encounterConfig,
-          });
-        }, 100);
-      }
-      return { ...prev, currentNodeIndex: nextIndex };
+      const campState = buildDeductionCampState(prev);
+      const message = data.reason === 'escaped'
+        ? 'The animal slipped away. Review the evidence.'
+        : 'Field notes ready — time to identify.';
+      setTimeout(() => toast(message, { duration: 3000 }), 0);
+      return { ...prev, phase: 'deduction' as const, currentNodeIndex: nextIndex, deductionCamp: campState };
     });
   }, [hudRef, objectiveProgressRef]);
 
@@ -711,6 +672,7 @@ function emitBoardForNode(
     rasterHabitats: payload.rasterHabitats,
     habitats: payload.habitats,
     difficulty: node.difficulty,
+    moveBudget: node.moveBudget,
     obstacles: node.obstacles,
     obstacleFamily: node.obstacleFamily,
     counterGem: node.counterGem,

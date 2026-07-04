@@ -11,7 +11,7 @@ import type { AffinityType } from '@/expedition/affinities';
 
 /**
  * POST /api/runs
- * Create a new expedition run session with 6 pre-generated nodes.
+ * Create a new expedition run session with one mystery node.
  *
  * Body: { lon, lat, locationKey, nodes: RunNode[], activeAffinities?, bioregion?, realm?, biome?, runSeed?, ...resume snapshot }
  * Returns: { runId, nodeIds: string[] }
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (!Number.isFinite(lon) || !Number.isFinite(lat) || !locationKey || !Array.isArray(nodes) || nodes.length === 0) {
       return NextResponse.json({ error: 'Missing required fields: lon, lat, locationKey, nodes' }, { status: 400 });
     }
-    const waypointAwareNodes = applyWaypointsToRunNodes(nodes);
+    const waypointAwareNodes = applyWaypointsToRunNodes(nodes).slice(0, 1);
 
     // Resolve player from auth (optional — anonymous runs allowed)
     const playerId = await getPlayerIdFromClerk();
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           selectedLng: lon,
           selectedLat: lat,
           locationKey,
-          nodeCountPlanned: waypointAwareNodes.length,
+          nodeCountPlanned: 1,
           nodeIndexCurrent: 1,
           runSeed: runSeed ?? null,
           realm: realm ?? null,
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         return {
           runId: session.id,
           nodeOrder: i + 1,
-          nodeType: node.node_type,
+          nodeType: 'custom',
           nodeStatus: i === 0 ? 'active' : 'locked',
           hazardProfile: {
             obstacles: node.obstacles,

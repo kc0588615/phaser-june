@@ -21,6 +21,7 @@ export interface EventPayloads {
     species: Species[];
     rasterHabitats: RasterHabitatResult[];
     difficulty?: number;
+    moveBudget?: number;
     obstacles?: NodeObstacle[];
     obstacleFamily?: ObstacleFamily | null;
     counterGem?: ActionGemType | null;
