@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, A11y } from 'swiper/modules';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { RunState } from '@/types/expedition';
 import type { DeductionClue, DeductionProfile, ProcessedClue, ReferenceAttempt } from '@/lib/deductionEngine';
 import { filterCandidates, getProfileKeyForCategory, isFilteringCategory } from '@/lib/deductionEngine';
@@ -35,12 +36,53 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
   const comp = runState.comparativeDeduction;
   const [selectedClueId, setSelectedClueId] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<ReferenceAttempt | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [flashLabel, setFlashLabel] = useState<string | null>(null);
+  const [pulseCollapsed, setPulseCollapsed] = useState(false);
+  const prevProcessedCountRef = useRef(0);
+  const autoExpandedRef = useRef(false);
 
   useEffect(() => {
     if (comp?.referenceHistory.length) {
       setLastResult(comp.referenceHistory[comp.referenceHistory.length - 1]);
     }
   }, [comp?.referenceHistory]);
+
+  useEffect(() => {
+    setExpanded(false);
+    setFlashLabel(null);
+    setPulseCollapsed(false);
+    setSelectedClueId(null);
+    setLastResult(null);
+    autoExpandedRef.current = false;
+    prevProcessedCountRef.current = comp?.processedClues.length ?? 0;
+  }, [comp]);
+
+  useEffect(() => {
+    const count = comp?.processedClues.length ?? 0;
+    const prevCount = prevProcessedCountRef.current;
+    if (!comp || count <= prevCount) {
+      prevProcessedCountRef.current = count;
+      return;
+    }
+
+    const newest = comp.processedClues[count - 1];
+    if (!expanded && count === 1 && !autoExpandedRef.current) {
+      autoExpandedRef.current = true;
+      setExpanded(true);
+    } else if (!expanded && newest) {
+      setFlashLabel(newest.label);
+      setPulseCollapsed(true);
+      const timer = window.setTimeout(() => {
+        setFlashLabel(null);
+        setPulseCollapsed(false);
+      }, 4000);
+      prevProcessedCountRef.current = count;
+      return () => window.clearTimeout(timer);
+    }
+
+    prevProcessedCountRef.current = count;
+  }, [comp, comp?.processedClues.length, expanded]);
 
   const processedIds = useMemo(() => new Set(comp?.processedClues.map(clue => clue.clueId) ?? []), [comp?.processedClues]);
   const selectedClue = useMemo(() => {
@@ -71,6 +113,37 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
 
   const revealedClues = comp.processedClues.length;
   const guessFeedback = comp.lastWrongGuessFeedback;
+  const sortedMysteryClues = [...comp.mysteryClues].sort((a, b) => a.revealOrder - b.revealOrder);
+  const processedById = new Map(comp.processedClues.map(clue => [clue.clueId, clue]));
+  const revealedMysteryClues = sortedMysteryClues
+    .map(clue => ({ clue, processed: processedById.get(clue.id) ?? null }))
+    .filter((item): item is { clue: DeductionClue; processed: ProcessedClue } => item.processed !== null);
+  const lockedCount = Math.max(0, sortedMysteryClues.length - revealedMysteryClues.length);
+
+  if (!expanded) {
+    return (
+      <div className="absolute left-0 right-0 bottom-0 z-panel pointer-events-none">
+        <style>{`
+          @keyframes field-notebook-pulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(34, 211, 238, 0); border-color: var(--ds-border-subtle); }
+            50% { box-shadow: 0 0 18px rgba(34, 211, 238, 0.55); border-color: var(--ds-accent-cyan); }
+          }
+          .field-notebook-pulse { animation: field-notebook-pulse 1s ease-in-out 4; }
+        `}</style>
+        <button
+          onClick={() => setExpanded(true)}
+          className={`pointer-events-auto w-full h-10 px-ds-md border-x-0 border-b-0 border-t border-ds-subtle bg-ds-surface-elevated/95 backdrop-blur-md text-ds-text-primary flex items-center justify-between gap-ds-sm ${pulseCollapsed ? 'field-notebook-pulse' : ''}`}
+          aria-label="Open field notebook"
+        >
+          <span className="text-ds-caption font-bold uppercase tracking-wider text-ds-cyan">Field notebook</span>
+          <span className="min-w-0 flex-1 truncate text-center text-ds-caption text-ds-text-secondary">
+            {flashLabel ?? `${revealedClues} clues · ${candidateNames.length} candidates`}
+          </span>
+          <ChevronUp className="h-4 w-4 shrink-0 text-ds-text-secondary" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute left-0 right-0 bottom-0 z-panel pointer-events-none">
@@ -83,6 +156,14 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
           <div className="flex gap-2 text-ds-badge text-ds-text-secondary">
             <span>{revealedClues} clues</span>
             <span>{candidateNames.length} candidates</span>
+            <button
+              onClick={() => setExpanded(false)}
+              className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-md border border-ds-subtle text-ds-text-secondary hover:text-ds-text-primary"
+              aria-label="Collapse field notebook"
+              title="Collapse field notebook"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -90,27 +171,30 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
           <div className="min-w-0">
             <SectionLabel label="Revealed clues" />
             <div className="flex flex-col gap-1.5">
-              {comp.mysteryClues.sort((a, b) => a.revealOrder - b.revealOrder).map(clue => {
-                const processed = comp.processedClues.find(item => item.clueId === clue.id);
+              {revealedMysteryClues.map(({ clue, processed }) => {
                 const meta = CATEGORY_META[clue.category] ?? { label: clue.category, color: 'var(--ds-text-muted)' };
                 return (
                   <ClueRow
                     key={clue.id}
                     clue={clue}
-                    status={processed?.status ?? 'locked'}
-                    label={processed?.label ?? clue.label}
+                    status={processed.status}
+                    label={processed.label}
                     isSelected={selectedClueId === clue.id}
                     isFiltering={isFilteringCategory(clue.category)}
                     onSelect={() => {
-                      if (processed && processed.status === 'processed' && isFilteringCategory(processed.category)) {
+                      if (processed.status === 'processed' && isFilteringCategory(processed.category)) {
                         setSelectedClueId(selectedClueId === clue.id ? null : clue.id);
                       }
                     }}
-                    metaLabel={meta.label}
                     metaColor={meta.color}
                   />
                 );
               })}
+              {lockedCount > 0 && (
+                <div className="w-full px-2.5 py-1.5 rounded-lg text-[12px] bg-white/3 text-ds-text-muted italic">
+                  {lockedCount} clues locked - match gems to reveal
+                </div>
+              )}
             </div>
           </div>
 
@@ -172,28 +256,15 @@ function SectionLabel({ label }: { label: string }) {
 
 interface ClueRowProps {
   clue: DeductionClue;
-  status: ProcessedClue['status'] | 'locked';
+  status: ProcessedClue['status'];
   label: string;
   isSelected: boolean;
   isFiltering: boolean;
   onSelect: () => void;
-  metaLabel: string;
   metaColor: string;
 }
 
-function ClueRow({ clue, status, label, isSelected, isFiltering, onSelect, metaLabel, metaColor }: ClueRowProps) {
-  if (status === 'locked') {
-    return (
-      <div
-        className="w-full text-left px-2.5 py-1.5 rounded-lg text-[12px] flex items-center gap-2 bg-white/3 opacity-45"
-        style={{ borderLeft: `2px solid ${metaColor}40` }}
-      >
-        <span className="flex-1 text-ds-text-muted italic">{metaLabel} clue locked</span>
-        <span className="text-[9px] text-ds-text-muted">match gem</span>
-      </div>
-    );
-  }
-
+function ClueRow({ clue, status, label, isSelected, isFiltering, onSelect, metaColor }: ClueRowProps) {
   const canCompare = status === 'processed' && isFiltering;
   const statusIcon = status === 'confirmed' ? 'OK' : status === 'rejected' ? 'NO' : '...';
   const statusColor = status === 'confirmed' ? 'text-ds-emerald' : status === 'rejected' ? 'text-ds-rose' : 'text-ds-text-secondary';
