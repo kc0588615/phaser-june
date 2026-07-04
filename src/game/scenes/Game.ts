@@ -22,7 +22,6 @@ import { GemType, type ActionGemType } from '../constants';
 import { getClueCategoryForGemType } from '../gemSemantics';
 import {
   buildNodeBoardContext,
-  formatNodeObstacleLabel,
   getCounterGemForObstacleFamily,
   type NodeObstacle,
   type ObstacleFamily,
@@ -140,7 +139,6 @@ export class Game extends Phaser.Scene {
     // --- Backend Data ---
     private isBoardInitialized: boolean = false;
     private statusText: Phaser.GameObjects.Text | null = null;
-    private obstacleText: Phaser.GameObjects.Text | null = null;
     private scoreText: Phaser.GameObjects.Text | null = null;
     private movesText: Phaser.GameObjects.Text | null = null;
     private multiplierText: Phaser.GameObjects.Text | null = null;
@@ -467,15 +465,6 @@ export class Game extends Phaser.Scene {
             stroke: '#000000',
             strokeThickness: 3
         }).setOrigin(1, 0).setDepth(100);
-
-        // Obstacle indicator (shown during expedition nodes)
-        this.obstacleText = this.add.text(width / 2, 8, '', {
-            fontSize: '12px',
-            color: '#f59e0b',
-            stroke: '#000000',
-            strokeThickness: 2,
-            align: 'center',
-        }).setOrigin(0.5, 0).setDepth(100).setVisible(false);
 
         this.multiplierText = this.add.text(20, height - 55, '', {
             fontSize: '18px',
@@ -1268,16 +1257,6 @@ export class Game extends Phaser.Scene {
                 this.backendPuzzle.setMaxMoves(MAX_MOVES);
             }
 
-            // Show obstacle indicators if present
-            if (this.obstacleText) {
-                if (data.obstacles && data.obstacles.length > 0) {
-                    this.obstacleText.setText(data.obstacles.map(formatNodeObstacleLabel).join(' · '));
-                    this.obstacleText.setVisible(true);
-                } else {
-                    this.obstacleText.setVisible(false);
-                }
-            }
-
             this.calculateBoardDimensions(); // Recalculate for current scale
 
             if (!this.boardView) { // Should exist from create()
@@ -1944,7 +1923,6 @@ export class Game extends Phaser.Scene {
         this.isBoardInitialized = false;
         this.pauseButtonContainer?.setVisible(false);
         this.shuffleButtonContainer?.setVisible(false);
-        this.obstacleText?.setVisible(false);
 
         // Reset scoring for new node (keep species + raster data intact)
         this.streak = 0;

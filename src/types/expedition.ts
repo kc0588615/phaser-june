@@ -51,6 +51,7 @@ export interface RunState {
   evidenceBundle: RunEvidenceBundle | null;
   routeMatchCount: number;
   visitedWaypointSlot: number;
+  matchedGemCategories: ClueCategoryKey[];
   completionReason?: 'captured' | 'slipped';
 }
 

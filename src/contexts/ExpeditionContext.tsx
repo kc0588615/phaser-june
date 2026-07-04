@@ -37,6 +37,7 @@ const INITIAL_RUN_STATE: RunState = {
   evidenceBundle: null,
   routeMatchCount: 0,
   visitedWaypointSlot: 0,
+  matchedGemCategories: [],
 };
 
 interface ExpeditionContextValue {
@@ -391,19 +392,23 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         routeMatchCount: routeProgress.matchCount,
         visitedWaypointSlot: routeProgress.visitedSlot,
       };
+      const walletKey = deductionCatToWalletKey(data.category);
+      const matchedGemCategories = prev.matchedGemCategories.includes(walletKey)
+        ? prev.matchedGemCategories
+        : [...prev.matchedGemCategories, walletKey];
+      const signalPatch: Pick<RunState, 'matchedGemCategories'> = { matchedGemCategories };
       if (routeProgress.arrivedWaypoint) {
         EventBus.emit('route-progress-updated', { slot: routeProgress.visitedSlot });
         toast(`Arrived: ${routeProgress.arrivedWaypoint.name}`, { duration: 2200 });
       }
 
       if (!prev.comparativeDeduction) {
-        return { ...prev, ...routePatch };
+        return { ...prev, ...routePatch, ...signalPatch };
       }
       const comp = prev.comparativeDeduction;
       let nextComp = routeProgress.arrivedWaypoint
         ? addArrivalSiteFact(comp, routeProgress.arrivedWaypoint, routeProgress.visitedSlot)
         : comp;
-      const walletKey = deductionCatToWalletKey(data.category);
       if (walletKey === 'habitat') {
         const nextSurveyIndex = nextComp.habitatSurvey.findIndex(entry => !entry.revealed);
         if (nextSurveyIndex === -1) {
@@ -412,10 +417,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             return {
               ...prev,
               ...routePatch,
+              ...signalPatch,
               comparativeDeduction: { ...nextComp, habitatSurveyCompleteNotified: true },
             };
           }
-          return { ...prev, ...routePatch, comparativeDeduction: nextComp };
+          return { ...prev, ...routePatch, ...signalPatch, comparativeDeduction: nextComp };
         }
 
         const nextEntry = nextComp.habitatSurvey[nextSurveyIndex];
@@ -426,6 +432,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         return {
           ...prev,
           ...routePatch,
+          ...signalPatch,
           comparativeDeduction: { ...nextComp, habitatSurvey: nextSurvey },
         };
       }
@@ -436,7 +443,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         walletKey,
         processedIds,
       );
-      if (!nextClue) return { ...prev, ...routePatch, comparativeDeduction: nextComp };
+      if (!nextClue) return { ...prev, ...routePatch, ...signalPatch, comparativeDeduction: nextComp };
       const processed: ProcessedClue = {
         clueId: nextClue.id,
         category: nextClue.category,
@@ -449,6 +456,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       return {
         ...prev,
         ...routePatch,
+        ...signalPatch,
         comparativeDeduction: {
           ...nextComp,
           processedClues: [...nextComp.processedClues, processed],

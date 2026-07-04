@@ -13,6 +13,7 @@ import { BottomTabBar } from './components/BottomTabBar';
 import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
 import { FieldNotebook } from './components/FieldNotebook';
+import { GemSignalStrip } from './components/GemSignalStrip';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ProfileContent } from './components/ProfileContent';
 import { ExpeditionRouteRecap } from './components/ExpeditionRouteRecap';
@@ -163,6 +164,10 @@ function MainAppLayoutInner() {
                         )}
 
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
+
+                        {inRun && runState.phase === 'mystery' && (
+                            <GemSignalStrip matchedGemCategories={runState.matchedGemCategories} />
+                        )}
 
                         {inRun && runState.comparativeDeduction && (
                             <FieldNotebook
