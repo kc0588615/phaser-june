@@ -221,6 +221,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
   const [isLoading, setIsLoading] = useState(false);
   const [ecoregionProgress, setEcoregionProgress] = useState<EcoregionProgress | null>(null);
   const [pendingSelection, setPendingSelection] = useState<PendingSelection | null>(null);
+  const [regionWaypointData, setRegionWaypointData] = useState<ExpeditionWaypointResponse | null>(null);
   const [selectedEcoregion, setSelectedEcoregion] = useState<EcoregionPreviewPick | null>(null);
   const [highlightedSpeciesSource, setHighlightedSpeciesSource] = useState<GeoJsonDataSource | null>(null);
   const [showEcoregionLayer, setShowEcoregionLayer] = useState(true);
@@ -378,6 +379,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
       fetchEcoregionProgress(longitude, latitude),
     ])
       .then(async ([speciesResult, rasterHabitats, atPointData, waypointData, progress]) => {
+        if (!activeAnchor) setRegionWaypointData(waypointData);
         setEcoregionProgress(progress);
 
         const cartographicLocation = { longitude, latitude };
@@ -654,7 +656,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
           </Entity>
         ))}
 
-        {!expeditionBlocksMapClick && pendingSelection?.waypointData?.waypoints.map((waypoint) => {
+        {!expeditionBlocksMapClick && regionWaypointData?.waypoints.map((waypoint) => {
           const key = getAnchorKey(waypoint);
           const played = playedAnchorKeys.has(key);
           const color = Color.fromCssColorString(WAYPOINT_COLORS[waypoint.waypointType] ?? '#38bdf8');
