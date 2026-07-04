@@ -584,6 +584,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const eliminatedSpeciesIds = guessedProfile && !comp.eliminatedSpeciesIds.includes(guessedProfile.speciesId)
         ? [...comp.eliminatedSpeciesIds, guessedProfile.speciesId]
         : comp.eliminatedSpeciesIds;
+      const lastWrongGuessFeedback = guessedProfile
+        ? (Object.keys(comp.confirmedTags) as DeductionClueCategory[])
+            .filter(category => (comp.confirmedTags[category]?.length ?? 0) > 0)
+            .map(category => compareReference(comp.mysteryProfile, guessedProfile, category, comp.confirmedTags[category]))
+        : null;
       const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
       const candidateCount = filterCandidates(allProfiles, comp.confirmedTags, new Set(eliminatedSpeciesIds)).length;
       return {
@@ -593,6 +598,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           guessResult: 'wrong',
           eliminatedSpeciesIds,
           candidateCount,
+          lastWrongGuessFeedback,
         },
       };
     });

@@ -132,6 +132,7 @@ import type {
   DeductionClue,
   ProcessedClue,
   ReferenceAttempt,
+  ComparisonResult,
 } from '@/lib/deductionEngine';
 
 export interface ComparativeDeductionState {
@@ -159,6 +160,7 @@ export interface ComparativeDeductionState {
   /** Final guess */
   guessResult: 'pending' | 'correct' | 'wrong' | null;
   guessBonusAwarded: number;
+  lastWrongGuessFeedback: ComparisonResult[] | null;
 }
 
 export function createEmptyComparativeState(
@@ -180,6 +182,7 @@ export function createEmptyComparativeState(
     scoreSpent: 0,
     guessResult: null,
     guessBonusAwarded: 0,
+    lastWrongGuessFeedback: null,
   };
 }
 

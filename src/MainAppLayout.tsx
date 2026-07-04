@@ -38,7 +38,7 @@ function MainAppLayoutInner() {
     const {
         runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
         handleAffinitySelected, handleRunResume, handleRunReset,
-        handleComparativeGuessResult,
+        handlePlaceReference, handleComparativeGuessResult,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -168,6 +168,7 @@ function MainAppLayoutInner() {
                                 runState={runState}
                                 speciesId={correctSpeciesId}
                                 hiddenSpeciesName={hiddenSpeciesName}
+                                onPlaceReference={handlePlaceReference}
                                 onGuess={handleComparativeGuessResult}
                             />
                         )}
