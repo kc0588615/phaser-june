@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode, A11y } from 'swiper/modules';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { RunState } from '@/types/expedition';
 import type { DeductionClue, DeductionProfile, ProcessedClue, ReferenceAttempt } from '@/lib/deductionEngine';
@@ -8,9 +6,6 @@ import { filterCandidates, getProfileKeyForCategory, isFilteringCategory } from 
 import type { DeductionClueCategory } from '@/db/schema/species';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { SpeciesGuessSelector } from '@/components/SpeciesGuessSelector';
-
-import 'swiper/css';
-import 'swiper/css/free-mode';
 
 interface Props {
   runState: RunState;
@@ -231,7 +226,7 @@ function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceR
                 <div className="text-[11px] text-ds-text-secondary leading-snug">{lastResult.result.message}</div>
               </GlassPanel>
             )}
-            <AlbumSwiper
+            <SuspectCardGrid
               profiles={comp.albumProfiles}
               eliminatedIds={comp.eliminatedSpeciesIds}
               activeReferenceId={comp.activeReferenceId}
@@ -299,7 +294,7 @@ function ClueRow({ clue, status, label, isSelected, isFiltering, onSelect, metaC
   );
 }
 
-interface AlbumSwiperProps {
+interface SuspectCardGridProps {
   profiles: DeductionProfile[];
   eliminatedIds: number[];
   activeReferenceId: number | null;
@@ -308,22 +303,15 @@ interface AlbumSwiperProps {
   onSelect: (speciesId: number) => void;
 }
 
-function AlbumSwiper({ profiles, eliminatedIds, activeReferenceId, activeCategory, selectable, onSelect }: AlbumSwiperProps) {
+function SuspectCardGrid({ profiles, eliminatedIds, activeReferenceId, activeCategory, selectable, onSelect }: SuspectCardGridProps) {
   const eliminatedSet = useMemo(() => new Set(eliminatedIds), [eliminatedIds]);
 
   return (
-    <Swiper
-      modules={[FreeMode, A11y]}
-      slidesPerView="auto"
-      spaceBetween={8}
-      freeMode={{ enabled: true, sticky: false }}
-      a11y={{ prevSlideMessage: 'Previous card', nextSlideMessage: 'Next card' }}
-      className="!overflow-visible"
-    >
+    <div className="flex flex-wrap gap-2" role="list" aria-label="Suspect reference cards">
       {profiles.map(profile => {
         const eliminated = eliminatedSet.has(profile.speciesId);
         return (
-          <SwiperSlide key={profile.speciesId} style={{ width: 'auto' }}>
+          <div key={profile.speciesId} role="listitem">
             <ReferenceCard
               profile={profile}
               eliminated={eliminated}
@@ -332,10 +320,10 @@ function AlbumSwiper({ profiles, eliminatedIds, activeReferenceId, activeCategor
               selectable={selectable && !eliminated}
               onSelect={() => onSelect(profile.speciesId)}
             />
-          </SwiperSlide>
+          </div>
         );
       })}
-    </Swiper>
+    </div>
   );
 }
 
