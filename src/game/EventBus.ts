@@ -102,6 +102,7 @@ export interface EventPayloads {
     };
   };
   'node-complete': { nodeIndex: number };
+  'route-progress-updated': { slot: number };
   'node-objective-updated': {
     progress: number;
     target: number;

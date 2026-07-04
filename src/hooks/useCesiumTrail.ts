@@ -415,10 +415,10 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
       setTimeout(fitRoute, 1400);
     };
 
-    const onNodeComplete = (data: { nodeIndex: number }) => {
-      const completedIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, data.nodeIndex);
+    const advanceTrailToSlot = (slot: number) => {
+      const completedIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, Math.max(0, slot - 1));
       if (completedIdx < 0) return;
-      trailCurrentSlotRef.current = Math.max(trailCurrentSlotRef.current, data.nodeIndex + 1);
+      trailCurrentSlotRef.current = Math.max(trailCurrentSlotRef.current, slot);
 
       const markerOffset = trailPositionsRef.current.length > 1 ? 2 : 0;
       const markerIdx = completedIdx + markerOffset;
@@ -431,7 +431,7 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
       }
 
       // Highlight next node
-      const nextRouteIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, data.nodeIndex + 1);
+      const nextRouteIdx = getRouteIndexForWaypointSlot(trailPositionsRef.current, slot);
       const nextMarkerIdx = nextRouteIdx >= 0 ? nextRouteIdx + markerOffset : -1;
       if (trailEntitiesRef.current[nextMarkerIdx]?.point) {
         trailEntitiesRef.current[nextMarkerIdx].point!.color = new ConstantProperty(CesiumColor.YELLOW);
@@ -470,6 +470,14 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
       }
     };
 
+    const onNodeComplete = (data: { nodeIndex: number }) => {
+      advanceTrailToSlot(data.nodeIndex + 1);
+    };
+
+    const onRouteProgressUpdated = (data: EventPayloads['route-progress-updated']) => {
+      advanceTrailToSlot(data.slot);
+    };
+
     const onGameReset = () => {
       removeTrailEntities();
 
@@ -485,11 +493,13 @@ export function useCesiumTrail(viewerRef: MutableRefObject<any>) {
     EventBus.on('expedition-data-ready', onExpeditionReady);
     EventBus.on('expedition-start', onExpeditionStart);
     EventBus.on('node-complete', onNodeComplete);
+    EventBus.on('route-progress-updated', onRouteProgressUpdated);
     EventBus.on('game-reset', onGameReset);
     return () => {
       EventBus.off('expedition-data-ready', onExpeditionReady);
       EventBus.off('expedition-start', onExpeditionStart);
       EventBus.off('node-complete', onNodeComplete);
+      EventBus.off('route-progress-updated', onRouteProgressUpdated);
       EventBus.off('game-reset', onGameReset);
     };
   }, [viewerRef, removeTrailEntities, loadSpatialLayers]);

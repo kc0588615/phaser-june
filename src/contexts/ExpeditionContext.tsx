@@ -19,7 +19,9 @@ import type { Species } from '@/types/database';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import { unlockSpeciesCardDiscovery } from '@/lib/speciesCardUnlocks';
-import { getWaypointTypeLabel, type ExpeditionWaypoint } from '@/types/waypoints';
+import { type ExpeditionWaypoint } from '@/types/waypoints';
+
+const MATCHES_PER_LEG = 3;
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -33,6 +35,8 @@ const INITIAL_RUN_STATE: RunState = {
   finalScore: null,
   totalThoughtDiscount: 0,
   evidenceBundle: null,
+  routeMatchCount: 0,
+  visitedWaypointSlot: 0,
 };
 
 interface ExpeditionContextValue {
@@ -51,8 +55,6 @@ interface ExpeditionContextValue {
   showSpeciesList: (speciesId: number) => void;
   /** Register callback for show-species-list navigation */
   onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
-  playedAnchorKeys: Set<string>;
-  markAnchorPlayed: (anchorKey: string) => void;
 }
 
 const ExpeditionContext = createContext<ExpeditionContextValue | null>(null);
@@ -68,7 +70,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
   const [boardOpacity, setBoardOpacity] = useState(1);
-  const [playedAnchorKeys, setPlayedAnchorKeys] = useState<Set<string>>(new Set());
 
   const expeditionPayloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
   const runIdRef = useRef<string | null>(null);
@@ -133,7 +134,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     plannedRoutePolylineRef.current = getExpeditionRoutePolyline(payload);
     routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
 
-    const correct = chooseMysterySpecies(payload.species, payload.expedition.activeAnchor ?? null);
+    const correct = chooseMysterySpecies(payload.species, payload.expedition.waypoints ?? []);
     if (correct) {
       correctSpeciesIdRef.current = correct.id;
       hiddenSpeciesNameRef.current = correct.common_name || correct.scientific_name || 'Unknown Species';
@@ -165,7 +166,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           modifierNodes: payload.expedition.modifierNodes,
           signals: payload.expedition.signals,
           waypoints: payload.expedition.waypoints ?? [],
-          activeAnchor: payload.expedition.activeAnchor ?? null,
           waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null,
           nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
         },
@@ -385,40 +385,58 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const handleDeductionClueTriggered = useCallback((data: EventPayloads['deduction-clue-triggered']) => {
     setRunState(prev => {
-      if (prev.phase !== 'mystery' || !prev.comparativeDeduction) return prev;
+      if (prev.phase !== 'mystery') return prev;
+      const routeProgress = nextRouteProgress(prev);
+      const routePatch: Pick<RunState, 'routeMatchCount' | 'visitedWaypointSlot'> = {
+        routeMatchCount: routeProgress.matchCount,
+        visitedWaypointSlot: routeProgress.visitedSlot,
+      };
+      if (routeProgress.arrivedWaypoint) {
+        EventBus.emit('route-progress-updated', { slot: routeProgress.visitedSlot });
+        toast(`Arrived: ${routeProgress.arrivedWaypoint.name}`, { duration: 2200 });
+      }
+
+      if (!prev.comparativeDeduction) {
+        return { ...prev, ...routePatch };
+      }
       const comp = prev.comparativeDeduction;
+      let nextComp = routeProgress.arrivedWaypoint
+        ? addArrivalSiteFact(comp, routeProgress.arrivedWaypoint, routeProgress.visitedSlot)
+        : comp;
       const walletKey = deductionCatToWalletKey(data.category);
       if (walletKey === 'habitat') {
-        const nextSurveyIndex = comp.habitatSurvey.findIndex(entry => !entry.revealed);
+        const nextSurveyIndex = nextComp.habitatSurvey.findIndex(entry => !entry.revealed);
         if (nextSurveyIndex === -1) {
-          if (!comp.habitatSurveyCompleteNotified) {
+          if (!nextComp.habitatSurveyCompleteNotified) {
             toast('Habitat survey complete', { duration: 1800 });
             return {
               ...prev,
-              comparativeDeduction: { ...comp, habitatSurveyCompleteNotified: true },
+              ...routePatch,
+              comparativeDeduction: { ...nextComp, habitatSurveyCompleteNotified: true },
             };
           }
-          return prev;
+          return { ...prev, ...routePatch, comparativeDeduction: nextComp };
         }
 
-        const nextEntry = comp.habitatSurvey[nextSurveyIndex];
-        const nextSurvey = comp.habitatSurvey.map((entry, index) => (
+        const nextEntry = nextComp.habitatSurvey[nextSurveyIndex];
+        const nextSurvey = nextComp.habitatSurvey.map((entry, index) => (
           index === nextSurveyIndex ? { ...entry, revealed: true } : entry
         ));
         toast(`Habitat survey: ${nextEntry.habitatType} (${nextEntry.percentage}%)`, { duration: 2200 });
         return {
           ...prev,
-          comparativeDeduction: { ...comp, habitatSurvey: nextSurvey },
+          ...routePatch,
+          comparativeDeduction: { ...nextComp, habitatSurvey: nextSurvey },
         };
       }
 
-      const processedIds = new Set(comp.processedClues.map(clue => clue.clueId));
+      const processedIds = new Set(nextComp.processedClues.map(clue => clue.clueId));
       const nextClue = getNextClueForWalletKey(
-        comp.mysteryClues,
+        nextComp.mysteryClues,
         walletKey,
         processedIds,
       );
-      if (!nextClue) return prev;
+      if (!nextClue) return { ...prev, ...routePatch, comparativeDeduction: nextComp };
       const processed: ProcessedClue = {
         clueId: nextClue.id,
         category: nextClue.category,
@@ -430,9 +448,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       toast(nextClue.label, { duration: 2200 });
       return {
         ...prev,
+        ...routePatch,
         comparativeDeduction: {
-          ...comp,
-          processedClues: [...comp.processedClues, processed],
+          ...nextComp,
+          processedClues: [...nextComp.processedClues, processed],
         },
       };
     });
@@ -488,15 +507,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     onShowSpeciesListRef.current?.(speciesId);
   }, []);
 
-  const markAnchorPlayed = useCallback((anchorKey: string) => {
-    setPlayedAnchorKeys(prev => {
-      if (prev.has(anchorKey)) return prev;
-      const next = new Set(prev);
-      next.add(anchorKey);
-      return next;
-    });
-  }, []);
-
   // --- Comparative deduction: fetch profiles when the mystery starts ---
   useEffect(() => {
     if (runState.phase !== 'mystery' || runState.comparativeDeduction) return;
@@ -517,13 +527,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
-        const anchorClues = buildAnchorGeographyClues(
-          expeditionPayloadRef.current?.expedition.activeAnchor ?? null,
-          data.mysteryProfile?.speciesId,
-        );
         const compState = createEmptyComparativeState(
           data.mysteryProfile,
-          [...anchorClues, ...data.mysteryClues],
+          data.mysteryClues,
           data.albumProfiles,
           buildHabitatSurvey(expeditionPayloadRef.current?.rasterHabitats ?? []),
         );
@@ -683,9 +689,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
     showSpeciesList,
     onShowSpeciesList: onShowSpeciesListRef,
-    playedAnchorKeys,
-    markAnchorPlayed,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, showSpeciesList, playedAnchorKeys, markAnchorPlayed]);
+  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, showSpeciesList]);
 
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
@@ -752,12 +756,15 @@ function buildHabitatLootWeights(rasterHabitats: RasterHabitatResult[]): Partial
   return weights;
 }
 
-function chooseMysterySpecies(species: Species[], anchor: ExpeditionWaypoint | null): Species | undefined {
+function chooseMysterySpecies(species: Species[], waypoints: ExpeditionWaypoint[]): Species | undefined {
   const sorted = [...species].sort((a, b) => a.id - b.id);
-  if (!anchor) return sorted[0];
+  if (waypoints.length === 0) return sorted[0];
 
   return sorted
-    .map(candidate => ({ candidate, score: scoreSpeciesForAnchor(candidate, anchor) }))
+    .map(candidate => ({
+      candidate,
+      score: waypoints.reduce((sum, waypoint) => sum + scoreSpeciesForAnchor(candidate, waypoint), 0),
+    }))
     .sort((a, b) => b.score - a.score || a.candidate.id - b.candidate.id)[0]?.candidate;
 }
 
@@ -800,41 +807,6 @@ function speciesSearchText(species: Species): string {
   return values.filter(Boolean).join(' ').toLowerCase();
 }
 
-function buildAnchorGeographyClues(anchor: ExpeditionWaypoint | null, speciesId: unknown): DeductionClue[] {
-  if (!anchor || typeof speciesId !== 'number') return [];
-  const typeLabel = getWaypointTypeLabel(anchor.waypointType) ?? 'Site';
-  const name = anchor.name || typeLabel;
-  const clues: DeductionClue[] = [
-    {
-      id: -2,
-      speciesId,
-      category: 'geography',
-      label: `Site: ${name} - ${anchorGeographyText(anchor)}`,
-      compareTags: null,
-      revealOrder: -2,
-      unlockMode: 'fragment',
-      baseCost: 0,
-      isFiltering: false,
-    },
-  ];
-
-  if (anchor.waypointType === 'protected_area') {
-    clues.push({
-      id: -1,
-      speciesId,
-      category: 'geography',
-      label: `Inside protected area: ${name}`,
-      compareTags: null,
-      revealOrder: -1,
-      unlockMode: 'fragment',
-      baseCost: 0,
-      isFiltering: false,
-    });
-  }
-
-  return clues;
-}
-
 function anchorGeographyText(anchor: ExpeditionWaypoint): string {
   switch (anchor.waypointType) {
     case 'river': return 'riverine corridor';
@@ -847,6 +819,50 @@ function anchorGeographyText(anchor: ExpeditionWaypoint): string {
     case 'bioregion_edge': return 'ecoregion transition';
     default: return 'local survey site';
   }
+}
+
+function nextRouteProgress(prev: RunState): {
+  matchCount: number;
+  visitedSlot: number;
+  arrivedWaypoint: ExpeditionWaypoint | null;
+} {
+  const matchCount = prev.routeMatchCount + 1;
+  const maxSlot = Math.max(0, (prev.expedition?.waypoints?.length ?? 1) - 1);
+  if (matchCount % MATCHES_PER_LEG !== 0 || prev.visitedWaypointSlot >= maxSlot) {
+    return { matchCount, visitedSlot: prev.visitedWaypointSlot, arrivedWaypoint: null };
+  }
+
+  const visitedSlot = Math.min(prev.visitedWaypointSlot + 1, maxSlot);
+  const arrivedWaypoint = prev.expedition?.waypoints?.find(waypoint => waypoint.slot === visitedSlot) ?? null;
+  return { matchCount, visitedSlot, arrivedWaypoint };
+}
+
+function addArrivalSiteFact(
+  comp: ComparativeDeductionState,
+  waypoint: ExpeditionWaypoint,
+  slot: number,
+): ComparativeDeductionState {
+  const clueId = -10 - slot;
+  if (comp.processedClues.some(clue => clue.clueId === clueId)) return comp;
+  const siteFact: ProcessedClue = {
+    clueId,
+    category: 'geography',
+    label: buildSiteFactLabel(waypoint),
+    status: 'processed',
+    compareTags: null,
+    fragmentCost: 0,
+  };
+  return {
+    ...comp,
+    processedClues: [...comp.processedClues, siteFact],
+  };
+}
+
+function buildSiteFactLabel(waypoint: ExpeditionWaypoint): string {
+  if (waypoint.waypointType === 'protected_area') {
+    return `Inside protected area: ${waypoint.name}`;
+  }
+  return `Site: ${waypoint.name} - ${anchorGeographyText(waypoint)}`;
 }
 
 function emitBoardForNode(
