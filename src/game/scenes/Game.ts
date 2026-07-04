@@ -28,7 +28,7 @@ import {
   type ObstacleFamily,
 } from '../nodeObstacles';
 import type { AffinityType } from '@/expedition/affinities';
-import type { ClueCategoryKey } from '@/types/expedition';
+import type { DeductionClueCategory } from '@/db/schema/species';
 import { 
   GemCategory, 
   CLUE_CONFIG, 
@@ -61,6 +61,20 @@ function getCategoryKey(category: GemCategory): string {
         return slugify(config.categoryName);
     }
     return `category_${category}`;
+}
+
+function getDeductionCategoryForGemCategory(category: GemCategory): DeductionClueCategory | null {
+    switch (category) {
+        case GemCategory.CLASSIFICATION: return 'taxonomy';
+        case GemCategory.HABITAT: return 'habitat';
+        case GemCategory.GEOGRAPHIC: return 'geography';
+        case GemCategory.MORPHOLOGY: return 'morphology';
+        case GemCategory.BEHAVIOR: return 'behavior';
+        case GemCategory.LIFE_CYCLE: return 'reproduction';
+        case GemCategory.CONSERVATION: return 'conservation';
+        case GemCategory.KEY_FACTS: return 'key_fact';
+        default: return null;
+    }
 }
 
 function deriveClueFieldAndValue(payload: CluePayload): { field: string; value: string | null } {
@@ -243,20 +257,7 @@ export class Game extends Phaser.Scene {
         });
     }
 
-    private finishNodeObjective(reason: 'objective_complete' | 'escaped'): void {
-        if (reason === 'objective_complete') {
-            this.nodeObjectiveCompleted = true;
-            this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
-            this.time.delayedCall(250, () => {
-                EventBus.emit('node-advance-requested', {
-                    nodeIndex: this.currentNodeIndex,
-                    reason,
-                    source: 'game',
-                });
-            });
-            return;
-        }
-
+    private finishNodeObjective(reason: 'victory' | 'escaped'): void {
         this.nodeObjectiveCompleted = true;
         this.disableInputs();
         this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
@@ -354,7 +355,7 @@ export class Game extends Phaser.Scene {
             this.emitNodeObjectiveUpdated();
 
             if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
-                this.finishNodeObjective('objective_complete');
+                this.finishNodeObjective('victory');
             }
         }
 
@@ -515,7 +516,7 @@ export class Game extends Phaser.Scene {
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
-        EventBus.on('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
+        
 
         this.resetDragState(); // Resets isDragging etc.
         this.canMove = false; // Input disabled until board initialized by Cesium
@@ -1692,9 +1693,6 @@ export class Game extends Phaser.Scene {
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
         this.recordMatchesForSummary(matches, originalGridState);
         this.emitMatchEconomyRewards(matches, originalGridState);
-        // During expeditions, loot matches produce clue fragments (handled in emitExpeditionGemEffects)
-        // Direct clue reveals are deferred to Deduction Camp
-        if (this.inExpeditionRun) return;
         if (!this.selectedSpecies || matches.length === 0 || !originalGridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -1713,6 +1711,17 @@ export class Game extends Phaser.Scene {
         }
 
         categoryMaxMatch.forEach((maxLength, category) => {
+            if (this.inExpeditionRun) {
+                const deductionCategory = getDeductionCategoryForGemCategory(category);
+                if (deductionCategory) {
+                    EventBus.emit('deduction-clue-triggered', {
+                        category: deductionCategory,
+                        matchLength: maxLength,
+                        source: 'gem_match',
+                    });
+                }
+                return;
+            }
             if (maxLength >= MOVE_HUGE_MATCH_THRESHOLD) {
                 this.revealAllCluesForCategory(category);
             } else {
@@ -1728,7 +1737,6 @@ export class Game extends Phaser.Scene {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState);
         this.emitMatchEconomyRewards(matches, gridState);
-        if (this.inExpeditionRun) return;
         if (!this.selectedSpecies || matches.length === 0 || !gridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
@@ -1747,6 +1755,17 @@ export class Game extends Phaser.Scene {
         }
 
         categoryMaxMatch.forEach((maxLength, category) => {
+            if (this.inExpeditionRun) {
+                const deductionCategory = getDeductionCategoryForGemCategory(category);
+                if (deductionCategory) {
+                    EventBus.emit('deduction-clue-triggered', {
+                        category: deductionCategory,
+                        matchLength: maxLength,
+                        source: 'gem_match',
+                    });
+                }
+                return;
+            }
             if (maxLength >= MOVE_HUGE_MATCH_THRESHOLD) {
                 this.revealAllCluesForCategory(category);
             } else {
@@ -1794,6 +1813,10 @@ export class Game extends Phaser.Scene {
             if (!this.inExpeditionRun) {
                 this.time.delayedCall(5000, () => {
                     this.resetForNewLocation();
+                });
+            } else if (!this.nodeObjectiveCompleted) {
+                this.time.delayedCall(800, () => {
+                    this.finishNodeObjective('victory');
                 });
             }
         } else {
@@ -1897,26 +1920,6 @@ export class Game extends Phaser.Scene {
         this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
         // Light reset: clear board between expedition nodes (same species pool)
         this.prepareForNextNode();
-    }
-
-    /** Map ClueCategoryKey strings to GemCategory enum values */
-    private static readonly CATEGORY_KEY_TO_GEM: Record<ClueCategoryKey, GemCategory> = {
-        classification: GemCategory.CLASSIFICATION,
-        habitat: GemCategory.HABITAT,
-        geographic: GemCategory.GEOGRAPHIC,
-        morphology: GemCategory.MORPHOLOGY,
-        behavior: GemCategory.BEHAVIOR,
-        life_cycle: GemCategory.LIFE_CYCLE,
-        conservation: GemCategory.CONSERVATION,
-        key_facts: GemCategory.KEY_FACTS,
-    };
-
-    /** Handle deduction camp clue purchase — reveal one clue in the requested category */
-    private handleDeductionCampPurchase(data: EventPayloads['deduction-camp-purchase']): void {
-        const gemCat = Game.CATEGORY_KEY_TO_GEM[data.category];
-        if (gemCat !== undefined) {
-            this.revealCluesForCategory(gemCat, 1);
-        }
     }
 
     /** Clears board + scoring for next node without clearing species data or showing end-game text. */
@@ -2102,7 +2105,6 @@ export class Game extends Phaser.Scene {
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
-        EventBus.off('deduction-camp-purchase', this.handleDeductionCampPurchase, this);
         EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
 
         // Remove player tracking listeners if they exist

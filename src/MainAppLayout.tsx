@@ -12,7 +12,6 @@ import { Toaster } from 'sonner';
 import { BottomTabBar } from './components/BottomTabBar';
 import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
-import { DeductionCamp } from './components/DeductionCamp';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ProfileContent } from './components/ProfileContent';
 import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
@@ -36,10 +35,8 @@ function MainAppLayoutInner() {
     const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     const {
-        runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
+        runState, boardOpacity,
         handleAffinitySelected, handleRunResume, handleRunReset,
-        handleDeductionPurchase, handleDeductionGuessResult,
-        handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -57,11 +54,10 @@ function MainAppLayoutInner() {
         if (phaserRef.current) phaserRef.current.scene = scene;
     };
 
-    const inRun = runState.phase === 'in-run';
+    const inRun = runState.phase === 'mystery';
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
-    const showDeduction = runState.phase === 'deduction';
-    const inExpedition = inRun || showBriefing || showComplete || showDeduction;
+    const inExpedition = inRun || showBriefing || showComplete;
     const useSplitLayout = inRun;
 
     const handleTabChange = useCallback((tab: BaseTab) => {
@@ -118,25 +114,6 @@ function MainAppLayoutInner() {
             }}>
                 <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
-                        {/* Deduction Camp phase */}
-                        {showDeduction && runState.deductionCamp && (
-                            <div className="glass-bg absolute inset-0 z-deduction backdrop-blur-xl overflow-auto">
-                                <DeductionCamp
-                                    camp={runState.deductionCamp}
-                                    comp={runState.comparativeDeduction}
-                                    speciesId={correctSpeciesId}
-                                    hiddenSpeciesName={hiddenSpeciesName}
-                                    evidenceBundle={runState.evidenceBundle}
-                                    onPurchase={handleDeductionPurchase}
-                                    onGuessResult={handleDeductionGuessResult}
-                                    onProcessClue={handleProcessClue}
-                                    onPlaceReference={handlePlaceReference}
-                                    onComparativeGuess={handleComparativeGuessResult}
-                                    onFinish={handleRunReset}
-                                />
-                            </div>
-                        )}
-
                         {/* CesiumMap */}
                         <div style={{
                             display: viewMode === 'map' ? 'block' : 'none',
@@ -147,6 +124,10 @@ function MainAppLayoutInner() {
                                 onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
                             />
                         </div>
+
+                        {inRun && runState.comparativeDeduction && (
+                            <MysteryClueStrip runState={runState} />
+                        )}
 
                         {/* Expedition Briefing */}
                         {showBriefing && runState.expedition && (
@@ -173,7 +154,7 @@ function MainAppLayoutInner() {
                         )}
 
                         {/* SpeciesPanel always mounted but hidden */}
-                        <SpeciesPanel toastsEnabled={viewMode === 'map' && !showDeduction} style={{ display: 'none' }} />
+                        <SpeciesPanel toastsEnabled={viewMode === 'map'} style={{ display: 'none' }} />
 
                     </div>
 
@@ -245,6 +226,33 @@ function MainAppLayoutInner() {
                     },
                 }}
             />
+        </div>
+    );
+}
+
+function MysteryClueStrip({ runState }: { runState: RunState }) {
+    const processed = runState.comparativeDeduction?.processedClues ?? [];
+    const latest = processed.slice(-3).reverse();
+
+    return (
+        <div className="absolute left-ds-sm right-ds-sm bottom-ds-sm z-panel pointer-events-none">
+            <GlassPanel className="rounded-lg p-ds-sm">
+                <div className="flex items-center justify-between gap-ds-sm mb-1">
+                    <div className="text-ds-caption font-bold uppercase tracking-wider text-ds-cyan">Field clues</div>
+                    <div className="text-ds-badge text-ds-text-muted">{processed.length} found</div>
+                </div>
+                {latest.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                        {latest.map(clue => (
+                            <div key={clue.clueId} className="text-ds-caption text-ds-text-primary leading-snug">
+                                <span className="text-ds-text-muted">{clue.category.replace(/_/g, ' ')}: </span>{clue.label}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-ds-caption text-ds-text-secondary">Match category gems to reveal facts.</div>
+                )}
+            </GlassPanel>
         </div>
     );
 }

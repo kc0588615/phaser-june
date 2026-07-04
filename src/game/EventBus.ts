@@ -2,13 +2,14 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, ClueCategoryKey, NodeRewardLanes } from '@/types/expedition';
+import type { ExpeditionData, NodeRewardLanes } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
 import type { ActionGemType, GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { ThreatType, EncounterConfig } from '@/lib/nodeScoring';
 import type { FeatureFingerprint } from '@/types/gis';
+import type { DeductionClueCategory } from '@/db/schema/species';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -91,7 +92,7 @@ export interface EventPayloads {
   'expedition-start': Record<string, never>;
   'node-advance-requested': {
     nodeIndex: number;
-    reason: 'objective_complete' | 'analysis_complete' | 'victory' | 'retreat' | 'store_closed' | 'crisis_resolved' | 'escaped';
+    reason: 'victory' | 'escaped';
     source: 'game' | 'panel';
     encounterOutcome?: {
       threats: Array<{ id: string; threatType: string; progress: number; target: number; resolved: boolean }>;
@@ -113,11 +114,12 @@ export interface EventPayloads {
     chipDamagePool?: number;
     overallResolved?: boolean;
   };
-  // New economy events
-  'clue-fragment-earned': { category: ClueCategoryKey; amount: number; source: 'loot_match' | 'key_cache' | 'node_reward' };
-  'clue-discount-earned': { amount: number; source: 'thought_match' };
+  'deduction-clue-triggered': {
+    category: DeductionClueCategory;
+    matchLength: number;
+    source: 'gem_match';
+  };
   'node-rewards-summary': NodeRewardLanes;
-  'deduction-camp-purchase': { category: ClueCategoryKey; cost: number };
   'deduction-camp-guess': { guessedName: string; speciesId: number };
   'auth-user-ready': { playerId: string; sessionId?: string };
 }

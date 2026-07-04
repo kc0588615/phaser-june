@@ -388,12 +388,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
   }),
 };
 
-function objectiveTargetForNode(node: Omit<RunNode, 'objectiveTarget'>): number {
-  return node.encounterConfig
-    ? node.encounterConfig.threats.reduce((sum, threat) => sum + threat.target, 0)
-    : (node.counterGem ? 6 : 0);
-}
-
 function waypointNodeTemplateKey(waypoint: ExpeditionWaypoint, existingNode: RunNode): keyof typeof NODE_TEMPLATES {
   if (waypoint.nodeRole === 'final') return 'analysis';
   if (existingNode.node_type === 'crisis') return 'crisis';
@@ -455,7 +449,7 @@ export function applyWaypointsToRunNodes(nodes: RunNode[]): RunNode[] {
 
     return {
       ...tunedNode,
-      objectiveTarget: objectiveTargetForNode(tunedNode),
+      objectiveTarget: node.objectiveTarget,
     };
   });
 }
@@ -488,5 +482,5 @@ export function generateRunNodes(
     moveBudget: MYSTERY_MOVE_BUDGET,
   };
 
-  return [{ ...node, objectiveTarget: objectiveTargetForNode(node) }];
+  return [{ ...node, objectiveTarget: 0 }];
 }

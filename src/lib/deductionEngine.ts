@@ -7,6 +7,7 @@
  */
 
 import type { DeductionClueCategory } from '@/db/schema/species';
+import type { ClueCategoryKey } from '@/types/expedition';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -194,6 +195,29 @@ export function getNextClue(
     .sort((a, b) => a.revealOrder - b.revealOrder)[0] ?? null;
 }
 
+const WALLET_KEY_TO_DEDUCTION_CATEGORIES: Record<ClueCategoryKey, DeductionClueCategory[]> = {
+  classification: ['taxonomy'],
+  habitat: ['habitat'],
+  geographic: ['geography'],
+  morphology: ['morphology'],
+  behavior: ['behavior', 'diet'],
+  life_cycle: ['reproduction'],
+  conservation: ['conservation'],
+  key_facts: ['key_fact'],
+};
+
+/** Get the next unprocessed deduction clue for a matched board category. */
+export function getNextClueForWalletKey(
+  clues: DeductionClue[],
+  category: ClueCategoryKey,
+  processedClueIds: Set<number>,
+): DeductionClue | null {
+  const categories = WALLET_KEY_TO_DEDUCTION_CATEGORIES[category] ?? [];
+  return clues
+    .filter(c => categories.includes(c.category) && !processedClueIds.has(c.id))
+    .sort((a, b) => a.revealOrder - b.revealOrder)[0] ?? null;
+}
+
 /** Get all clues for a species grouped by category */
 export function groupCluesByCategory(
   clues: DeductionClue[],
@@ -205,21 +229,6 @@ export function groupCluesByCategory(
     map.set(c.category, arr);
   }
   return map;
-}
-
-/** Calculate effective cost for a clue given fragments and discount */
-export function getEffectiveClueCost(
-  clue: DeductionClue,
-  fragmentCount: number,
-  thoughtDiscountPct: number,
-): number {
-  if (clue.unlockMode === 'fragment') {
-    const discount = Math.floor(fragmentCount / 3) * 1;
-    const base = Math.max(1, clue.baseCost - discount);
-    return Math.max(1, Math.round(base * Math.max(0, 1 - thoughtDiscountPct)));
-  }
-  // Score-based clues: flat cost with thought discount only
-  return Math.max(10, Math.round(clue.baseCost * Math.max(0, 1 - thoughtDiscountPct)));
 }
 
 /** Check if a category is a filtering (comparative) category */

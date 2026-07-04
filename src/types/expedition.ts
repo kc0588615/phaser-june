@@ -8,7 +8,7 @@ import type { ExpeditionWaypoint } from '@/types/waypoints';
 
 export type { RunNode };
 
-export type RunPhase = 'idle' | 'briefing' | 'in-run' | 'deduction' | 'complete';
+export type RunPhase = 'idle' | 'briefing' | 'mystery' | 'complete';
 
 export type SpookTier = 'stabilized' | 'spooked' | 'escaped';
 
