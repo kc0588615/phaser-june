@@ -38,6 +38,14 @@ export async function unlockSpeciesCardFromClue(clue: CluePayload): Promise<void
   });
 }
 
+export async function unlockSpeciesCardDiscovery(speciesId: number): Promise<void> {
+  if (!Number.isFinite(speciesId) || speciesId <= 0) return;
+  await postSpeciesCardUnlock(speciesId, {
+    unlockType: 'discover',
+    payload: {},
+  });
+}
+
 async function postSpeciesCardUnlock(speciesId: number, body: { unlockType: string; payload: Record<string, unknown> }) {
   const response = await fetch(`/api/species/cards/${speciesId}/unlock`, {
     method: 'POST',

@@ -244,17 +244,22 @@ function RunCompleteSummary({ runState, onReset }: {
     onReset: () => void;
 }) {
     const { hud } = useGameBridge();
-    const { hiddenSpeciesName } = useExpedition();
+    const { hiddenSpeciesName, correctSpeciesId } = useExpedition();
+    const captured = runState.completionReason === 'captured'
+        || runState.comparativeDeduction?.guessResult === 'correct'
+        || runState.deductionCamp?.guessResult === 'correct';
     const stats = [
         { label: 'Banked Score', value: String(hud.score), color: 'var(--ds-accent-cyan)' },
-        { label: 'Nodes Done', value: String(runState.expedition?.nodes.length ?? 0), color: 'var(--ds-accent-emerald)' },
+        { label: 'Result', value: captured ? 'Captured' : 'Slipped', color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' },
         { label: 'Moves Used', value: String(hud.movesUsed), color: 'var(--ds-accent-amber)' },
-        { label: 'Clues', value: String(runState.deductionCamp?.revealedClues.length ?? 0), color: 'var(--ds-gem-focus)' },
+        { label: 'Clues', value: String(runState.comparativeDeduction?.processedClues.length ?? 0), color: 'var(--ds-gem-focus)' },
     ];
 
     return (
         <div className="absolute inset-0 z-panel flex flex-col items-center justify-center bg-[rgba(10,14,26,0.7)] backdrop-blur-md p-ds-xl gap-ds-lg">
-            <div className="text-[22px] font-bold text-ds-cyan">Expedition Complete!</div>
+            <div className="text-[22px] font-bold text-ds-cyan">
+                {captured ? 'Species Captured' : 'Species Slipped Away'}
+            </div>
             <div className="text-4xl font-bold text-ds-text-primary">
                 {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hud.score} pts
             </div>
@@ -268,15 +273,12 @@ function RunCompleteSummary({ runState, onReset }: {
                 ))}
             </div>
 
-            {runState.deductionCamp?.guessResult === 'correct' && hiddenSpeciesName && (
-                <GlassPanel borderColor="var(--ds-accent-emerald)" className="flex items-center gap-ds-sm px-ds-lg py-ds-sm rounded-xl">
-                    <span className="text-xl">🔬</span>
-                    <div>
-                        <div className="text-ds-badge font-bold text-ds-emerald uppercase tracking-wider">Species Discovered</div>
-                        <div className="text-ds-body font-semibold text-ds-text-primary">{hiddenSpeciesName}</div>
-                    </div>
-                </GlassPanel>
-            )}
+            <SpeciesJournalCard
+                speciesId={correctSpeciesId}
+                speciesName={hiddenSpeciesName}
+                captured={captured}
+                taxonomyTags={runState.comparativeDeduction?.mysteryProfile.taxonomyTags ?? []}
+            />
 
             {runState.activeAffinities.length > 0 && (
                 <div className="flex gap-ds-sm justify-center">
@@ -299,6 +301,58 @@ function RunCompleteSummary({ runState, onReset }: {
             >
                 Return to Globe
             </button>
+        </div>
+    );
+}
+
+function SpeciesJournalCard({ speciesId, speciesName, captured, taxonomyTags }: {
+    speciesId: number;
+    speciesName: string;
+    captured: boolean;
+    taxonomyTags: string[];
+}) {
+    const [species, setSpecies] = useState<Record<string, any> | null>(null);
+
+    useEffect(() => {
+        if (!speciesId) return;
+        let cancelled = false;
+        fetch(`/api/species/by-ids?ids=${speciesId}`)
+            .then(response => response.ok ? response.json() : null)
+            .then(data => {
+                if (!cancelled) setSpecies(Array.isArray(data?.species) ? data.species[0] ?? null : null);
+            })
+            .catch(error => console.error('Failed to load journal species:', error));
+        return () => { cancelled = true; };
+    }, [speciesId]);
+
+    const commonName = species?.common_name || speciesName || 'Mystery species';
+    const scientificName = species?.scientific_name || '';
+    const status = species?.iucn_status || species?.conservation_status || null;
+    const order = species?.order_name || species?.order || taxonomyTags.find(tag => tag.startsWith('order_'))?.replace(/^order_/, '');
+    const genus = species?.genus || taxonomyTags.find(tag => tag.startsWith('genus_'))?.replace(/^genus_/, '');
+
+    return (
+        <GlassPanel borderColor={captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)'} className="w-full max-w-[360px] rounded-lg p-ds-md">
+            <div className="text-ds-badge font-bold uppercase tracking-wider" style={{ color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' }}>
+                {captured ? 'Journal captured' : 'Answer revealed'}
+            </div>
+            <div className="text-lg font-semibold text-ds-text-primary mt-1">{commonName}</div>
+            {scientificName && <div className="text-ds-caption italic text-ds-text-secondary">{scientificName}</div>}
+            <div className="grid grid-cols-2 gap-2 mt-ds-sm">
+                {genus && <JournalFact label="Genus" value={genus} />}
+                {order && <JournalFact label="Order" value={order} />}
+                {status && <JournalFact label="Status" value={status} />}
+                <JournalFact label="Outcome" value={captured ? 'Collected' : 'Try again'} />
+            </div>
+        </GlassPanel>
+    );
+}
+
+function JournalFact({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-md bg-ds-surface-elevated border border-ds-subtle px-2 py-1.5">
+            <div className="text-[10px] uppercase tracking-wide text-ds-text-muted">{label}</div>
+            <div className="text-ds-caption text-ds-text-primary capitalize">{value.replace(/_/g, ' ')}</div>
         </div>
     );
 }

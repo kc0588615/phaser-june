@@ -49,6 +49,7 @@ export interface RunState {
   finalScore: number | null;
   totalThoughtDiscount: number;
   evidenceBundle: RunEvidenceBundle | null;
+  completionReason?: 'captured' | 'slipped';
 }
 
 // --- New Economy Types ---

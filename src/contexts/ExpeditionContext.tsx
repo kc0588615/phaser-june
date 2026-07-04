@@ -17,6 +17,7 @@ import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, ty
 import type { Species } from '@/types/database';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { RasterHabitatResult } from '@/lib/speciesService';
+import { unlockSpeciesCardDiscovery } from '@/lib/speciesCardUnlocks';
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -334,7 +335,13 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         ? 'The animal slipped away. Review the evidence.'
         : 'Field notes ready — time to identify.';
       setTimeout(() => toast(message, { duration: 3000 }), 0);
-      return { ...prev, phase: 'complete' as const, currentNodeIndex: nextIndex, deductionCamp: campState };
+      return {
+        ...prev,
+        phase: 'complete' as const,
+        currentNodeIndex: nextIndex,
+        deductionCamp: campState,
+        completionReason: data.reason === 'escaped' ? 'slipped' : 'captured',
+      };
     });
   }, [hudRef, objectiveProgressRef]);
 
@@ -562,7 +569,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
             })
             .catch(err => console.error('Failed to persist deduction:', err));
         }
-        return { ...prev, phase: 'complete' as const, comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus }, finalScore };
+        unlockSpeciesCardDiscovery(correctSpeciesIdRef.current).catch(err => console.error('Failed to unlock species card:', err));
+        return {
+          ...prev,
+          phase: 'complete' as const,
+          comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus },
+          finalScore,
+          completionReason: 'captured',
+        };
       }
       const guessedProfile = guessedName
         ? comp.albumProfiles.find(profile => profile.commonName.toLowerCase() === guessedName.toLowerCase())
