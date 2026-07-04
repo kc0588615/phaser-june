@@ -32,36 +32,26 @@ const CATEGORY_META: Record<string, { label: string; color: string }> = {
   conservation: { label: 'Conservation', color: 'var(--ds-accent-rose)' },
 };
 
-export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceReference, onGuess }: Props) {
+export function FieldNotebook(props: Props) {
+  const comp = props.runState.comparativeDeduction;
+  const notebookRunId = useMemo(() => {
+    const mysteryId = comp?.mysteryProfile.speciesId ?? props.speciesId;
+    const routeStart = props.runState.expedition?.routePolyline?.[0];
+    return `${mysteryId}:${routeStart?.lon ?? 'x'}:${routeStart?.lat ?? 'x'}`;
+  }, [comp?.mysteryProfile.speciesId, props.runState.expedition?.routePolyline, props.speciesId]);
+
+  return <FieldNotebookContent {...props} key={notebookRunId} />;
+}
+
+function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceReference, onGuess }: Props) {
   const comp = runState.comparativeDeduction;
   const [selectedClueId, setSelectedClueId] = useState<number | null>(null);
-  const [lastResult, setLastResult] = useState<ReferenceAttempt | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [flashLabel, setFlashLabel] = useState<string | null>(null);
-  const [pulseCollapsed, setPulseCollapsed] = useState(false);
-  const prevProcessedCountRef = useRef(0);
-  const autoExpandedRef = useRef(false);
-  const notebookRunId = useMemo(() => {
-    const mysteryId = comp?.mysteryProfile.speciesId ?? speciesId;
-    const routeStart = runState.expedition?.routePolyline?.[0];
-    return `${mysteryId}:${routeStart?.lon ?? 'x'}:${routeStart?.lat ?? 'x'}`;
-  }, [comp?.mysteryProfile.speciesId, runState.expedition?.routePolyline, speciesId]);
-
-  useEffect(() => {
-    if (comp?.referenceHistory.length) {
-      setLastResult(comp.referenceHistory[comp.referenceHistory.length - 1]);
-    }
-  }, [comp?.referenceHistory]);
-
-  useEffect(() => {
-    setExpanded(false);
-    setFlashLabel(null);
-    setPulseCollapsed(false);
-    setSelectedClueId(null);
-    setLastResult(null);
-    autoExpandedRef.current = false;
-    prevProcessedCountRef.current = comp?.processedClues.length ?? 0;
-  }, [notebookRunId]);
+  const prevProcessedCountRef = useRef(comp?.processedClues.length ?? 0);
+  const lastResult = useMemo<ReferenceAttempt | null>(() => (
+    comp?.referenceHistory.length ? comp.referenceHistory[comp.referenceHistory.length - 1] : null
+  ), [comp?.referenceHistory]);
 
   useEffect(() => {
     const count = comp?.processedClues.length ?? 0;
@@ -72,15 +62,10 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
     }
 
     const newest = comp.processedClues[count - 1];
-    if (!expanded && count === 1 && !autoExpandedRef.current) {
-      autoExpandedRef.current = true;
-      setExpanded(true);
-    } else if (!expanded && newest) {
+    if (!expanded && newest) {
       setFlashLabel(newest.label);
-      setPulseCollapsed(true);
       const timer = window.setTimeout(() => {
         setFlashLabel(null);
-        setPulseCollapsed(false);
       }, 4000);
       prevProcessedCountRef.current = count;
       return () => window.clearTimeout(timer);
@@ -138,8 +123,9 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
           .field-notebook-pulse { animation: field-notebook-pulse 1s ease-in-out 4; }
         `}</style>
         <button
+          type="button"
           onClick={() => setExpanded(true)}
-          className={`pointer-events-auto w-full h-10 px-ds-md border-x-0 border-b-0 border-t border-ds-subtle bg-ds-surface-elevated/95 backdrop-blur-md text-ds-text-primary flex items-center justify-between gap-ds-sm ${pulseCollapsed ? 'field-notebook-pulse' : ''}`}
+          className={`glass-bg pointer-events-auto w-full h-10 px-ds-md border-x-0 border-b-0 border-t border-ds-subtle text-ds-text-primary flex items-center justify-between gap-ds-sm ${flashLabel ? 'field-notebook-pulse' : ''}`}
           aria-label="Open field notebook"
         >
           <span className="text-ds-caption font-bold uppercase tracking-wider text-ds-cyan">Field notebook</span>
@@ -164,6 +150,7 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
             <span>{revealedClues} clues</span>
             <span>{candidateNames.length} candidates</span>
             <button
+              type="button"
               onClick={() => setExpanded(false)}
               className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-md border border-ds-subtle text-ds-text-secondary hover:text-ds-text-primary"
               aria-label="Collapse field notebook"
@@ -298,6 +285,7 @@ function ClueRow({ clue, status, label, isSelected, isFiltering, onSelect, metaC
 
   return (
     <button
+      type="button"
       onClick={onSelect}
       disabled={!canCompare}
       className={`w-full text-left px-2.5 py-1.5 rounded-lg transition-all text-[12px] flex items-center gap-2 ${isSelected ? 'ring-1 ring-ds-cyan glass-bg' : canCompare ? 'glass-bg cursor-pointer hover:bg-white/10' : 'bg-white/3 cursor-default'}`}
@@ -375,6 +363,7 @@ function ReferenceCard({ profile, eliminated, active, activeCategory, selectable
 
   return (
     <button
+      type="button"
       onClick={onSelect}
       disabled={!selectable}
       className={`

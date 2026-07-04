@@ -166,7 +166,7 @@ function MainAppLayoutInner() {
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
                         {inRun && runState.phase === 'mystery' && (
-                            <GemSignalStrip matchedGemCategories={runState.matchedGemCategories} />
+                            <GemSignalStrip runState={runState} />
                         )}
 
                         {inRun && runState.comparativeDeduction && (
