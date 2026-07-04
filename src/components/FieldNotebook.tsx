@@ -125,14 +125,14 @@ function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceR
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className={`glass-bg pointer-events-auto w-full h-10 px-ds-md border-x-0 border-b-0 border-t border-ds-subtle text-ds-text-primary flex items-center justify-between gap-ds-sm ${flashLabel ? 'field-notebook-pulse' : ''}`}
+          className={`glass-strip pointer-events-auto w-full h-10 px-ds-md border-x-0 border-b-0 border-t border-ds-subtle text-ds-text-primary flex items-center justify-between gap-ds-sm ${flashLabel ? 'field-notebook-pulse' : ''}`}
           aria-label="Open field notebook"
         >
-          <span className="text-ds-caption font-bold uppercase tracking-wider text-ds-cyan">Field notebook</span>
-          <span className="min-w-0 flex-1 truncate text-center text-ds-caption text-ds-text-secondary">
+          <span className="glass-strip-chip rounded-md px-2 py-0.5 text-ds-caption font-bold uppercase tracking-wider text-ds-cyan whitespace-nowrap">Field notebook</span>
+          <span className="glass-strip-text min-w-0 flex-1 truncate text-center text-ds-caption text-ds-text-primary">
             {flashLabel ?? `${revealedClues} clues · ${candidateNames.length} candidates`}
           </span>
-          <ChevronUp className="h-4 w-4 shrink-0 text-ds-text-secondary" />
+          <ChevronUp className="h-4 w-4 shrink-0 text-ds-text-primary" />
         </button>
       </div>
     );

@@ -122,17 +122,17 @@ function GemSignalStripContent({ runState }: GemSignalStripProps) {
         }
         .gem-signal-dot-pulse { animation: gem-signal-pulse 420ms ease-out; }
       `}</style>
-      <div className="glass-bg pointer-events-auto h-10 border-x-0 border-t-0 border-b border-ds-subtle px-ds-md flex items-center justify-between gap-ds-sm shadow-card">
+      <div className="glass-strip pointer-events-auto h-10 border-x-0 border-t-0 border-b border-ds-subtle px-ds-md flex items-center justify-between gap-ds-sm shadow-card">
         {tickerText ? (
-          <span className="min-w-0 flex-1 truncate text-ds-caption text-ds-text-primary">
+          <span className="glass-strip-text min-w-0 flex-1 truncate text-ds-caption text-ds-text-primary">
             {tickerText}
           </span>
         ) : (
-          <span className="text-ds-caption font-bold uppercase tracking-wider text-ds-cyan whitespace-nowrap">
+          <span className="glass-strip-chip rounded-md px-2 py-0.5 text-ds-caption font-bold uppercase tracking-wider text-ds-cyan whitespace-nowrap">
             Field signal
           </span>
         )}
-        <ul className="m-0 flex flex-1 list-none items-center justify-end gap-2 p-0" aria-label="Matched clue category signals">
+        <ul className="m-0 flex flex-none list-none items-center justify-end gap-2 p-0" aria-label="Matched clue category signals">
           {LOOT_GEM_TYPES.map((gemType) => {
             const walletKey = GEM_TO_WALLET_KEY[gemType];
             const matched = matchedSet.has(walletKey);

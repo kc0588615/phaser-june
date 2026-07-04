@@ -324,6 +324,21 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Translucent variant for in-run HUD strips. 0.6 alpha is the floor: over a
+   worst-case white gem the effective bg keeps #f1f5f9 text at ~4.7:1 (WCAG AA);
+   cyan captions need the darker .glass-strip-chip behind them to pass. */
+.glass-strip {
+  background: rgba(8, 12, 28, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.glass-strip-chip {
+  background: rgba(2, 6, 23, 0.55);
+}
+.glass-strip-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
 /* ── Shadow utility ── */
 .shadow-card {
   box-shadow: var(--ds-shadow-card);
