@@ -15,6 +15,7 @@ import { ExpeditionBriefing } from './components/ExpeditionBriefing';
 import { FieldNotebook } from './components/FieldNotebook';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ProfileContent } from './components/ProfileContent';
+import { ExpeditionRouteRecap } from './components/ExpeditionRouteRecap';
 import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import type { RunState } from '@/types/expedition';
@@ -274,6 +275,14 @@ function RunCompleteSummary({ runState, onReset }: {
                 ))}
             </div>
 
+            <ExpeditionRouteRecap
+                waypoints={runState.expedition?.waypoints ?? []}
+                routePolyline={runState.expedition?.routePolyline}
+                visitedWaypointSlot={runState.visitedWaypointSlot}
+                captured={captured}
+                speciesName={hiddenSpeciesName}
+            />
+
             <SpeciesJournalCard
                 speciesId={correctSpeciesId}
                 speciesName={hiddenSpeciesName}
@@ -296,6 +305,7 @@ function RunCompleteSummary({ runState, onReset }: {
             )}
 
             <button
+                type="button"
                 onClick={onReset}
                 className="mt-ds-sm py-ds-md px-8 text-ds-body font-bold text-ds-bg border-none rounded-full cursor-pointer shadow-glow-cyan"
                 style={{ background: 'var(--ds-gradient-cta)' }}
