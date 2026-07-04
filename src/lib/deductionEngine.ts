@@ -197,8 +197,8 @@ export function getNextClue(
 
 const WALLET_KEY_TO_DEDUCTION_CATEGORIES: Record<ClueCategoryKey, DeductionClueCategory[]> = {
   classification: ['taxonomy'],
-  habitat: ['habitat'],
-  geographic: ['geography'],
+  habitat: [],
+  geographic: ['geography', 'habitat'],
   morphology: ['morphology'],
   behavior: ['behavior', 'diet'],
   life_cycle: ['reproduction'],

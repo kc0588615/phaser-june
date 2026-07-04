@@ -143,7 +143,7 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
   blue: {
     gemType: 'blue',
     family: 'loot',
-    label: 'Geographic Loot',
+    label: 'Geography & Habitat',
     color: '#3b82f6',
     clueCategory: GemCategory.GEOGRAPHIC,
     currencyKey: null,
@@ -152,7 +152,7 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
   green: {
     gemType: 'green',
     family: 'loot',
-    label: 'Habitat Loot',
+    label: 'Habitat Survey',
     color: '#22c55e',
     clueCategory: GemCategory.HABITAT,
     currencyKey: null,
@@ -364,6 +364,7 @@ export function rollCrateConsumable(
 export interface BoardSpawnConfig {
   lootChance: number;
   actionWeights: Record<ActionGemType, number>;
+  lootWeights?: Partial<Record<LootGemType, number>>;
 }
 
 export const DEFAULT_ACTION_WEIGHTS: Record<ActionGemType, number> = {
@@ -380,6 +381,7 @@ export const DEFAULT_ACTION_WEIGHTS: Record<ActionGemType, number> = {
 export const DEFAULT_BOARD_SPAWN_CONFIG: BoardSpawnConfig = {
   lootChance: 0.12,
   actionWeights: { ...DEFAULT_ACTION_WEIGHTS },
+  lootWeights: {},
 };
 
 function normalizeActionWeights(weights: Partial<Record<ActionGemType, number>>): Record<ActionGemType, number> {
@@ -406,6 +408,7 @@ function normalizeActionWeights(weights: Partial<Record<ActionGemType, number>>)
 export function createBoardSpawnConfig(config?: {
   lootChance?: number;
   actionBias?: Partial<Record<ActionGemType, number>>;
+  lootWeights?: Partial<Record<LootGemType, number>>;
   objectiveActions?: ActionGemType[];
   nodeBoosts?: Partial<Record<ActionGemType, number>>;
   activeAffinities?: AffinityType[];
@@ -433,6 +436,7 @@ export function createBoardSpawnConfig(config?: {
   return {
     lootChance,
     actionWeights: normalizeActionWeights(mergedWeights),
+    lootWeights: config?.lootWeights ?? {},
   };
 }
 
@@ -516,7 +520,8 @@ export function buildBoardSpawnConfigForNode(
   nodeType: string,
   counterGem: ActionGemType | null = null,
   actionBias: Partial<Record<ActionGemType, number>> = {},
-  activeAffinities: AffinityType[] = []
+  activeAffinities: AffinityType[] = [],
+  lootWeights?: Partial<Record<LootGemType, number>>,
 ): BoardSpawnConfig {
   const meta = NODE_TYPE_BOARD_META[nodeType] ?? NODE_TYPE_BOARD_META.custom;
   const objectiveActions = counterGem ? [counterGem] : [];
@@ -526,5 +531,6 @@ export function buildBoardSpawnConfigForNode(
     objectiveActions,
     nodeBoosts: meta.nodeBoosts,
     activeAffinities,
+    lootWeights,
   });
 }

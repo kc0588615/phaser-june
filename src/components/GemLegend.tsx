@@ -7,8 +7,8 @@ interface GemLegendProps {
 export const GemLegend: React.FC<GemLegendProps> = ({ style }) => {
   const gemCategories = [
     { color: 'red', category: 'Classification', icon: '🧬', description: 'Taxonomic information' },
-    { color: 'green', category: 'Habitat', icon: '🌳', description: 'Where it lives' },
-    { color: 'blue', category: 'Geographic & Habitat', icon: '🗺️', description: 'Geographic range & habitat' },
+    { color: 'green', category: 'Habitat Survey', icon: '🌳', description: 'This location’s habitat mix' },
+    { color: 'blue', category: 'Geography & Habitat', icon: '🗺️', description: 'Range and species habitat facts' },
     { color: 'orange', category: 'Morphology', icon: '🐾', description: 'Physical appearance & dimensions' },
     { color: 'white', category: 'Behavior & Diet', icon: '💨', description: 'How it acts & what it eats' },
     { color: 'black', category: 'Life Cycle', icon: '⏳', description: 'Reproduction & lifespan' },

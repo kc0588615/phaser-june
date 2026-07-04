@@ -346,7 +346,7 @@ export const CLUE_CONFIG: Record<GemCategory, ClueConfigItem> = {
   },
   [GemCategory.HABITAT]: {
     color: 'green',
-    categoryName: 'Habitat',
+    categoryName: 'Habitat Survey',
     icon: '🌳',
     getClue: (species: Species) => {
       const habitats: string[] = [];

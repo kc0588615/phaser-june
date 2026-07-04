@@ -161,12 +161,21 @@ export interface ComparativeDeductionState {
   guessResult: 'pending' | 'correct' | 'wrong' | null;
   guessBonusAwarded: number;
   lastWrongGuessFeedback: ComparisonResult[] | null;
+  habitatSurvey: HabitatSurveyEntry[];
+  habitatSurveyCompleteNotified: boolean;
+}
+
+export interface HabitatSurveyEntry {
+  habitatType: string;
+  percentage: number;
+  revealed: boolean;
 }
 
 export function createEmptyComparativeState(
   mysteryProfile: DeductionProfile,
   mysteryClues: DeductionClue[],
   albumProfiles: DeductionProfile[],
+  habitatSurvey: HabitatSurveyEntry[] = [],
 ): ComparativeDeductionState {
   return {
     mysteryProfile,
@@ -183,6 +192,8 @@ export function createEmptyComparativeState(
     guessResult: null,
     guessBonusAwarded: 0,
     lastWrongGuessFeedback: null,
+    habitatSurvey,
+    habitatSurveyCompleteNotified: false,
   };
 }
 

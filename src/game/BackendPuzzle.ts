@@ -1,7 +1,7 @@
 // src/game/BackendPuzzle.ts
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { GEM_TYPES, ACTION_GEM_TYPES, LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type ActionGemType } from './constants';
+import { LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
 
@@ -13,6 +13,7 @@ export type GemPoolConfig = BoardSpawnConfig;
 const DEFAULT_GEM_POOL: GemPoolConfig = {
     lootChance: DEFAULT_BOARD_SPAWN_CONFIG.lootChance,
     actionWeights: { ...DEFAULT_BOARD_SPAWN_CONFIG.actionWeights },
+    lootWeights: { ...(DEFAULT_BOARD_SPAWN_CONFIG.lootWeights ?? {}) },
 };
 
 export class BackendPuzzle {
@@ -37,6 +38,7 @@ export class BackendPuzzle {
         this.gemPool = {
             lootChance: config.lootChance,
             actionWeights: { ...config.actionWeights },
+            lootWeights: { ...(config.lootWeights ?? {}) },
         };
     }
 
@@ -133,8 +135,8 @@ export class BackendPuzzle {
         // Fill the grid left-to-right, top-to-bottom
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
-                // Start with all possible gem types
-                let possibleGems = new Set(GEM_TYPES);
+                // Start with all clue-color gem types
+                let possibleGems = new Set<GemType>(LOOT_GEM_TYPES);
 
                 // Check if placing a gem would create a vertical match of 3
                 if (y >= 2) {
@@ -238,26 +240,23 @@ export class BackendPuzzle {
         return this.pickWeightedGem();
     }
 
-    /** Pick a random gem weighted by action-vs-loot board config. */
+    /** Pick a random clue gem. Action-gem spawn config remains for compatibility but is inert. */
     private pickWeightedGem(): GemType {
-        if (Math.random() < this.gemPool.lootChance) {
-            return LOOT_GEM_TYPES[Math.floor(Math.random() * LOOT_GEM_TYPES.length)];
-        }
-        return this.pickWeightedActionGem();
-    }
+        const weights = this.gemPool.lootWeights ?? {};
+        const total = LOOT_GEM_TYPES.reduce((sum, gemType) => {
+            const weight = weights[gemType] ?? 1;
+            return sum + (Number.isFinite(weight) && weight > 0 ? weight : 1);
+        }, 0);
+        let roll = Math.random() * total;
 
-    private pickWeightedActionGem(): ActionGemType {
-        const roll = Math.random();
-        let cursor = 0;
-
-        for (const gemType of ACTION_GEM_TYPES) {
-            cursor += this.gemPool.actionWeights[gemType] ?? 0;
-            if (roll <= cursor) {
+        for (const gemType of LOOT_GEM_TYPES) {
+            const weight = weights[gemType] ?? 1;
+            roll -= Number.isFinite(weight) && weight > 0 ? weight : 1;
+            if (roll <= 0) {
                 return gemType;
             }
         }
-
-        return ACTION_GEM_TYPES[ACTION_GEM_TYPES.length - 1];
+        return LOOT_GEM_TYPES[LOOT_GEM_TYPES.length - 1] as LootGemType;
     }
 
     /** Check if any single-cell row/col shift produces a match. */

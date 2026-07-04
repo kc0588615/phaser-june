@@ -3,7 +3,7 @@ import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
-import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState } from '@/types/expedition';
+import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState, HabitatSurveyEntry } from '@/types/expedition';
 import { createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
 import { compareReference, filterCandidates, getNextClueForWalletKey, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
@@ -12,6 +12,7 @@ import type { AffinityType } from '@/expedition/affinities';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
+import type { LootGemType } from '@/expedition/domain';
 import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
 import type { Species } from '@/types/database';
@@ -185,7 +186,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     });
     const firstBoardConfig = buildBoardSpawnConfigForNode(
       firstNode?.node_type ?? 'custom', firstNode?.counterGem ?? null,
-      payload.expedition.actionBias, activeAffinitiesRef.current
+      payload.expedition.actionBias, activeAffinitiesRef.current,
+      buildHabitatLootWeights(payload.rasterHabitats),
     );
     const firstLocation = getNodeRouteLocation(payload, 0);
     EventBus.emit('cesium-location-selected', {
@@ -381,10 +383,35 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     setRunState(prev => {
       if (prev.phase !== 'mystery' || !prev.comparativeDeduction) return prev;
       const comp = prev.comparativeDeduction;
+      const walletKey = deductionCatToWalletKey(data.category);
+      if (walletKey === 'habitat') {
+        const nextSurveyIndex = comp.habitatSurvey.findIndex(entry => !entry.revealed);
+        if (nextSurveyIndex === -1) {
+          if (!comp.habitatSurveyCompleteNotified) {
+            toast('Habitat survey complete', { duration: 1800 });
+            return {
+              ...prev,
+              comparativeDeduction: { ...comp, habitatSurveyCompleteNotified: true },
+            };
+          }
+          return prev;
+        }
+
+        const nextEntry = comp.habitatSurvey[nextSurveyIndex];
+        const nextSurvey = comp.habitatSurvey.map((entry, index) => (
+          index === nextSurveyIndex ? { ...entry, revealed: true } : entry
+        ));
+        toast(`Habitat survey: ${nextEntry.habitatType} (${nextEntry.percentage}%)`, { duration: 2200 });
+        return {
+          ...prev,
+          comparativeDeduction: { ...comp, habitatSurvey: nextSurvey },
+        };
+      }
+
       const processedIds = new Set(comp.processedClues.map(clue => clue.clueId));
       const nextClue = getNextClueForWalletKey(
         comp.mysteryClues,
-        deductionCatToWalletKey(data.category),
+        walletKey,
         processedIds,
       );
       if (!nextClue) return prev;
@@ -477,7 +504,12 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return;
-        const compState = createEmptyComparativeState(data.mysteryProfile, data.mysteryClues, data.albumProfiles);
+        const compState = createEmptyComparativeState(
+          data.mysteryProfile,
+          data.mysteryClues,
+          data.albumProfiles,
+          buildHabitatSurvey(expeditionPayloadRef.current?.rasterHabitats ?? []),
+        );
         setRunState(prev => {
           if (prev.phase !== 'mystery') return prev;
           // Auto-confirm habitat tags from GIS evidence + recompute candidates
@@ -660,6 +692,47 @@ function getNodeRouteLocation(payload: EventPayloads['expedition-data-ready'], n
     : { lon: payload.lon, lat: payload.lat };
 }
 
+function buildHabitatSurvey(rasterHabitats: RasterHabitatResult[]): HabitatSurveyEntry[] {
+  return [...rasterHabitats]
+    .filter(entry => typeof entry.habitat_type === 'string' && Number.isFinite(entry.percentage))
+    .sort((a, b) => b.percentage - a.percentage)
+    .map(entry => ({
+      habitatType: entry.habitat_type,
+      percentage: Math.round(entry.percentage * 10) / 10,
+      revealed: false,
+    }));
+}
+
+function buildHabitatLootWeights(rasterHabitats: RasterHabitatResult[]): Partial<Record<LootGemType, number>> {
+  const weights: Record<LootGemType, number> = {
+    black: 1,
+    blue: 1,
+    green: 1,
+    orange: 1,
+    red: 1,
+    white: 1,
+    yellow: 1,
+    purple: 1,
+  };
+
+  for (const habitat of rasterHabitats) {
+    const text = habitat.habitat_type.toLowerCase();
+    const pct = Number.isFinite(habitat.percentage)
+      ? Math.max(0, habitat.percentage > 1 ? habitat.percentage / 100 : habitat.percentage)
+      : 0;
+    if (pct <= 0) continue;
+
+    if (text.includes('forest')) weights.green += 3 * pct;
+    if (text.includes('savanna')) weights.orange += 3 * pct;
+    if (text.includes('shrub')) weights.black += 3 * pct;
+    if (text.includes('grass')) weights.white += 3 * pct;
+    if (/(wetland|marsh|bog)/.test(text)) weights.blue += 3 * pct;
+    if (text.includes('urban')) weights.red += 3 * pct;
+  }
+
+  return weights;
+}
+
 function emitBoardForNode(
   payload: EventPayloads['expedition-data-ready'],
   nodeIndex: number,
@@ -679,6 +752,7 @@ function emitBoardForNode(
     node.counterGem ?? null,
     payload.expedition.actionBias,
     activeAffinities,
+    buildHabitatLootWeights(payload.rasterHabitats),
   );
   const nodeLocation = getNodeRouteLocation(payload, nodeIndex);
   EventBus.emit('cesium-location-selected', {

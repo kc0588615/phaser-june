@@ -118,6 +118,8 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
 
   const revealedClues = comp.processedClues.length;
   const guessFeedback = comp.lastWrongGuessFeedback;
+  const revealedSurvey = comp.habitatSurvey.filter(entry => entry.revealed);
+  const hiddenSurveyCount = comp.habitatSurvey.length - revealedSurvey.length;
   const sortedMysteryClues = [...comp.mysteryClues].sort((a, b) => a.revealOrder - b.revealOrder);
   const processedById = new Map(comp.processedClues.map(clue => [clue.clueId, clue]));
   const revealedMysteryClues = sortedMysteryClues
@@ -175,6 +177,26 @@ export function FieldNotebook({ runState, speciesId, hiddenSpeciesName, onPlaceR
         <div className="grid gap-ds-sm lg:grid-cols-[minmax(220px,0.9fr)_minmax(260px,1fr)_320px]">
           <div className="min-w-0">
             <SectionLabel label="Revealed clues" />
+            {comp.habitatSurvey.length > 0 && (
+              <div className="mb-2 rounded-lg border border-ds-subtle bg-white/3 px-2.5 py-2">
+                <div className="text-[10px] uppercase tracking-wide text-ds-text-muted mb-1">Habitat survey</div>
+                <div className="flex flex-wrap gap-1">
+                  {revealedSurvey.map(entry => (
+                    <span
+                      key={entry.habitatType}
+                      className="rounded-full bg-[rgba(34,197,94,0.14)] border border-[rgba(34,197,94,0.25)] px-2 py-0.5 text-[10px] text-ds-text-primary"
+                    >
+                      {entry.habitatType} {entry.percentage}%
+                    </span>
+                  ))}
+                  {hiddenSurveyCount > 0 && (
+                    <span className="rounded-full bg-ds-surface-elevated border border-ds-subtle px-2 py-0.5 text-[10px] text-ds-text-muted">
+                      {hiddenSurveyCount} more - match green gems
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               {revealedMysteryClues.map(({ clue, processed }) => {
                 const meta = CATEGORY_META[clue.category] ?? { label: clue.category, color: 'var(--ds-text-muted)' };
