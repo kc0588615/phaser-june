@@ -39,7 +39,8 @@
         "verify:waypoints": "node scripts/verify-waypoints.mjs",
         "postinstall": "node scripts/copy-cesium-assets.js || symlink-dir node_modules/cesium/Build/Cesium public/cesium",
         "clean": "rm -rf .next dist public/cesium",
-        "db:introspect": "drizzle-kit introspect"
+        "db:introspect": "drizzle-kit introspect",
+        "seed:deduction": "npx tsx scripts/seed-deduction.ts"
     },
     "dependencies": {
         "@clerk/nextjs": "^7.0.8",
