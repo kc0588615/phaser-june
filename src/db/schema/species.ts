@@ -155,6 +155,10 @@ export const speciesDeductionProfiles = pgTable(
     behaviorTags: text('behavior_tags').array().notNull().default(sql`'{}'::text[]`),
     reproductionTags: text('reproduction_tags').array().notNull().default(sql`'{}'::text[]`),
     taxonomyTags: text('taxonomy_tags').array().notNull().default(sql`'{}'::text[]`),
+    geographyTags: text('geography_tags').array().notNull().default(sql`'{}'::text[]`),
+    conservationTags: text('conservation_tags').array().notNull().default(sql`'{}'::text[]`),
+    keyFactTags: text('key_fact_tags').array().notNull().default(sql`'{}'::text[]`),
+    signatureTag: text('signature_tag'),
     habitatNote: text('habitat_note'),
     morphologyNote: text('morphology_note'),
     dietNote: text('diet_note'),
@@ -171,6 +175,9 @@ export const speciesDeductionProfiles = pgTable(
     index('ix_deduction_profiles_behavior').using('gin', table.behaviorTags),
     index('ix_deduction_profiles_reproduction').using('gin', table.reproductionTags),
     index('ix_deduction_profiles_taxonomy').using('gin', table.taxonomyTags),
+    index('ix_deduction_profiles_geography').using('gin', table.geographyTags),
+    index('ix_deduction_profiles_conservation').using('gin', table.conservationTags),
+    index('ix_deduction_profiles_key_fact').using('gin', table.keyFactTags),
   ]
 );
 
