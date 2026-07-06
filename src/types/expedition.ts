@@ -138,6 +138,12 @@ import type {
   ComparisonResult,
 } from '@/lib/deductionEngine';
 
+export interface ConfirmedClue {
+  clueId: number;
+  category: DeductionClueCategory;
+  compareTags: string[];
+}
+
 export interface ComparativeDeductionState {
   /** Mystery species profile (tag arrays for comparison) */
   mysteryProfile: DeductionProfile;
@@ -151,8 +157,8 @@ export interface ComparativeDeductionState {
   activeReferenceId: number | null;
   /** History of all reference attempts */
   referenceHistory: ReferenceAttempt[];
-  /** Confirmed tags per category from successful comparisons */
-  confirmedTags: Partial<Record<DeductionClueCategory, string[]>>;
+  /** Confirmed clue-level constraints from successful comparisons */
+  confirmedClues: ConfirmedClue[];
   /** Species IDs eliminated via negative confirmation */
   eliminatedSpeciesIds: number[];
   /** Current candidate count after filtering */
@@ -187,7 +193,7 @@ export function createEmptyComparativeState(
     albumProfiles,
     activeReferenceId: null,
     referenceHistory: [],
-    confirmedTags: {},
+    confirmedClues: [],
     eliminatedSpeciesIds: [],
     candidateCount: albumProfiles.length + 1, // +1 for mystery species itself
     fragmentsSpent: {},

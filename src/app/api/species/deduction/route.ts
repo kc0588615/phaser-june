@@ -20,6 +20,10 @@ const profileColumns = {
   behaviorTags: speciesDeductionProfiles.behaviorTags,
   reproductionTags: speciesDeductionProfiles.reproductionTags,
   taxonomyTags: speciesDeductionProfiles.taxonomyTags,
+  geographyTags: speciesDeductionProfiles.geographyTags,
+  conservationTags: speciesDeductionProfiles.conservationTags,
+  keyFactTags: speciesDeductionProfiles.keyFactTags,
+  signatureTag: speciesDeductionProfiles.signatureTag,
 };
 
 const nameColumns = {
@@ -89,6 +93,10 @@ export async function GET(request: NextRequest) {
         behaviorTags: row.behaviorTags ?? [],
         reproductionTags: row.reproductionTags ?? [],
         taxonomyTags: row.taxonomyTags ?? [],
+        geographyTags: row.geographyTags ?? [],
+        conservationTags: row.conservationTags ?? [],
+        keyFactTags: row.keyFactTags ?? [],
+        signatureTag: row.signatureTag ?? null,
       };
     }
 

@@ -7,7 +7,7 @@
  */
 
 import type { DeductionClueCategory } from '@/db/schema/species';
-import type { ClueCategoryKey } from '@/types/expedition';
+import type { ClueCategoryKey, ConfirmedClue } from '@/types/expedition';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,6 +24,10 @@ export interface DeductionProfile {
   behaviorTags: string[];
   reproductionTags: string[];
   taxonomyTags: string[];
+  geographyTags: string[];
+  conservationTags: string[];
+  keyFactTags: string[];
+  signatureTag: string | null;
 }
 
 /** A clue row from species_deduction_clues */
@@ -63,12 +67,21 @@ export interface ProcessedClue {
   label: string;
   status: 'locked' | 'processed' | 'confirmed' | 'rejected';
   compareTags: string[] | null;
+  isFiltering: boolean;
   fragmentCost: number;
 }
 
-// The 6 filtering categories that map 1:1 to profile tag arrays
+// Filtering categories that map 1:1 to profile tag arrays.
 const FILTERING_CATEGORIES: DeductionClueCategory[] = [
-  'habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy',
+  'habitat',
+  'morphology',
+  'diet',
+  'behavior',
+  'reproduction',
+  'taxonomy',
+  'geography',
+  'conservation',
+  'key_fact',
 ];
 
 // Map category → profile key
@@ -79,6 +92,9 @@ const CATEGORY_TO_PROFILE_KEY: Record<string, keyof DeductionProfile> = {
   behavior: 'behaviorTags',
   reproduction: 'reproductionTags',
   taxonomy: 'taxonomyTags',
+  geography: 'geographyTags',
+  conservation: 'conservationTags',
+  key_fact: 'keyFactTags',
 };
 
 // ---------------------------------------------------------------------------
@@ -147,32 +163,30 @@ function formatTag(tag: string): string {
 // ---------------------------------------------------------------------------
 
 /**
- * Given all species profiles and a set of confirmed tag matches,
+ * Given all species profiles and a set of confirmed clue constraints,
  * return profiles that satisfy ALL confirmed constraints.
  *
- * confirmedTags: Record<category, tags[]> — each entry means
- * "the mystery species has these tags in this category".
+ * confirmedClues: each entry means "the mystery species has one of these
+ * compareTags in this category". Every clue entry must pass. Tags inside one
+ * clue are ORed; separate confirmed clues are ANDed.
  *
  * eliminatedSpeciesIds: species explicitly ruled out via negative confirmation.
  */
 export function filterCandidates(
   allProfiles: DeductionProfile[],
-  confirmedTags: Partial<Record<DeductionClueCategory, string[]>>,
+  confirmedClues: ConfirmedClue[],
   eliminatedSpeciesIds: Set<number>,
 ): DeductionProfile[] {
   return allProfiles.filter(p => {
     if (eliminatedSpeciesIds.has(p.speciesId)) return false;
 
-    for (const cat of FILTERING_CATEGORIES) {
-      const required = confirmedTags[cat];
-      if (!required || required.length === 0) continue;
-
-      const profileKey = CATEGORY_TO_PROFILE_KEY[cat];
+    for (const clue of confirmedClues) {
+      if (clue.compareTags.length === 0) continue;
+      const profileKey = CATEGORY_TO_PROFILE_KEY[clue.category];
       if (!profileKey) continue;
 
       const profileTags = p[profileKey] as string[];
-      // Candidate must share at least one of the confirmed tags
-      const hasOverlap = required.some(t => profileTags.includes(t));
+      const hasOverlap = clue.compareTags.some(t => profileTags.includes(t));
       if (!hasOverlap) return false;
     }
 

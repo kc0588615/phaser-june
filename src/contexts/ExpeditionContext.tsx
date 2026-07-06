@@ -3,11 +3,10 @@ import { EventBus } from '@/game/EventBus';
 import type { EventPayloads } from '@/game/EventBus';
 import { useGameBridge } from './GameBridgeContext';
 import { toast } from 'sonner';
-import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState, HabitatSurveyEntry } from '@/types/expedition';
+import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState, HabitatSurveyEntry, ConfirmedClue } from '@/types/expedition';
 import { createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
 import { compareReference, filterCandidates, getNextClueForWalletKey, applyEvidenceBundle } from '@/lib/deductionEngine';
 import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
-import type { DeductionClueCategory } from '@/db/schema/species';
 import type { AffinityType } from '@/expedition/affinities';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
@@ -22,6 +21,7 @@ import { unlockSpeciesCardDiscovery } from '@/lib/speciesCardUnlocks';
 import { type ExpeditionWaypoint } from '@/types/waypoints';
 
 const MATCHES_PER_LEG = 3;
+const EVIDENCE_CONFIRMED_CLUE_ID = -1;
 
 const INITIAL_RUN_STATE: RunState = {
   phase: 'idle',
@@ -450,6 +450,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         label: nextClue.label,
         status: 'processed',
         compareTags: nextClue.compareTags,
+        isFiltering: nextClue.isFiltering,
         fragmentCost: 0,
       };
       toast(nextClue.label, { duration: 2200 });
@@ -547,12 +548,15 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           if (prev.evidenceBundle) {
             const { confirmedCategories, confirmedHabitatTags } = applyEvidenceBundle(prev.evidenceBundle, compState.mysteryProfile);
             if (confirmedHabitatTags.length > 0) {
-              compState.confirmedTags = { ...compState.confirmedTags };
-              for (const cat of confirmedCategories) {
-                compState.confirmedTags[cat] = [...(compState.confirmedTags[cat] ?? []), ...confirmedHabitatTags];
-              }
+              compState.confirmedClues = confirmedCategories.reduce((confirmed, category) => (
+                addConfirmedClue(confirmed, {
+                  clueId: EVIDENCE_CONFIRMED_CLUE_ID,
+                  category,
+                  compareTags: confirmedHabitatTags,
+                })
+              ), compState.confirmedClues);
               const allProfiles = [...compState.albumProfiles, compState.mysteryProfile];
-              compState.candidateCount = filterCandidates(allProfiles, compState.confirmedTags, new Set(compState.eliminatedSpeciesIds)).length;
+              compState.candidateCount = filterCandidates(allProfiles, compState.confirmedClues, new Set(compState.eliminatedSpeciesIds)).length;
             }
           }
           return { ...prev, comparativeDeduction: compState };
@@ -570,7 +574,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const clue = comp.mysteryClues.find(c => c.id === clueId);
       if (!clue || comp.processedClues.some(pc => pc.clueId === clueId)) return prev;
 
-      const processed: ProcessedClue = { clueId: clue.id, category: clue.category, label: clue.label, status: 'processed', compareTags: clue.compareTags, fragmentCost: 0 };
+      const processed: ProcessedClue = { clueId: clue.id, category: clue.category, label: clue.label, status: 'processed', compareTags: clue.compareTags, isFiltering: clue.isFiltering, fragmentCost: 0 };
       return {
         ...prev,
         comparativeDeduction: { ...comp, processedClues: [...comp.processedClues, processed] },
@@ -583,18 +587,21 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       if (prev.phase !== 'mystery' || !prev.comparativeDeduction) return prev;
       const comp = prev.comparativeDeduction;
       const pClue = comp.processedClues.find(pc => pc.clueId === clueId);
-      if (!pClue || pClue.status !== 'processed' || !pClue.compareTags) return prev;
+      if (!pClue || pClue.status !== 'processed' || !pClue.isFiltering || !pClue.compareTags?.length) return prev;
       const refProfile = comp.albumProfiles.find(p => p.speciesId === referenceSpeciesId);
       if (!refProfile) return prev;
 
       const result = compareReference(comp.mysteryProfile, refProfile, pClue.category, pClue.compareTags);
       const attempt: import('@/lib/deductionEngine').ReferenceAttempt = { referenceSpeciesId, referenceName: refProfile.commonName, clueId, category: pClue.category, result };
 
-      const newConfirmed = { ...comp.confirmedTags };
+      let newConfirmedClues = comp.confirmedClues;
       const newEliminated = [...comp.eliminatedSpeciesIds];
       if (result.matched) {
-        const existing = newConfirmed[pClue.category] ?? [];
-        newConfirmed[pClue.category] = [...new Set([...existing, ...result.matchedTags])];
+        newConfirmedClues = addConfirmedClue(comp.confirmedClues, {
+          clueId,
+          category: pClue.category,
+          compareTags: pClue.compareTags,
+        });
       } else {
         if (!newEliminated.includes(referenceSpeciesId)) {
           newEliminated.push(referenceSpeciesId);
@@ -602,14 +609,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       }
 
       const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
-      const candidates = filterCandidates(allProfiles, newConfirmed, new Set(newEliminated));
+      const candidates = filterCandidates(allProfiles, newConfirmedClues, new Set(newEliminated));
       // On a match, mark the clue confirmed. On a mismatch, leave it 'processed'
       // so the player can compare against another reference rather than burning the clue.
       const updatedProcessed = result.matched
         ? comp.processedClues.map(pc => pc.clueId === clueId ? { ...pc, status: 'confirmed' as ProcessedClue['status'] } : pc)
         : comp.processedClues;
 
-      return { ...prev, comparativeDeduction: { ...comp, activeReferenceId: referenceSpeciesId, processedClues: updatedProcessed, referenceHistory: [...comp.referenceHistory, attempt], confirmedTags: newConfirmed, eliminatedSpeciesIds: newEliminated, candidateCount: candidates.length } };
+      return { ...prev, comparativeDeduction: { ...comp, activeReferenceId: referenceSpeciesId, processedClues: updatedProcessed, referenceHistory: [...comp.referenceHistory, attempt], confirmedClues: newConfirmedClues, eliminatedSpeciesIds: newEliminated, candidateCount: candidates.length } };
     });
   }, []);
 
@@ -624,7 +631,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
         if (runIdRef.current) {
           const rid = runIdRef.current;
-          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: Object.keys(comp.confirmedTags).length, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: routePolylineRef.current }) })
+          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: new Set(comp.confirmedClues.map(clue => clue.category)).size, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: routePolylineRef.current }) })
             .then((response) => {
               if (response.ok) {
                 window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: correctSpeciesIdRef.current } }));
@@ -648,12 +655,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         ? [...comp.eliminatedSpeciesIds, guessedProfile.speciesId]
         : comp.eliminatedSpeciesIds;
       const lastWrongGuessFeedback = guessedProfile
-        ? (Object.keys(comp.confirmedTags) as DeductionClueCategory[])
-            .filter(category => (comp.confirmedTags[category]?.length ?? 0) > 0)
-            .map(category => compareReference(comp.mysteryProfile, guessedProfile, category, comp.confirmedTags[category]))
+        ? comp.confirmedClues
+            .map(clue => compareReference(comp.mysteryProfile, guessedProfile, clue.category, clue.compareTags))
         : null;
       const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
-      const candidateCount = filterCandidates(allProfiles, comp.confirmedTags, new Set(eliminatedSpeciesIds)).length;
+      const candidateCount = filterCandidates(allProfiles, comp.confirmedClues, new Set(eliminatedSpeciesIds)).length;
       return {
         ...prev,
         comparativeDeduction: {
@@ -858,12 +864,19 @@ function addArrivalSiteFact(
     label: buildSiteFactLabel(waypoint),
     status: 'processed',
     compareTags: null,
+    isFiltering: false,
     fragmentCost: 0,
   };
   return {
     ...comp,
     processedClues: [...comp.processedClues, siteFact],
   };
+}
+
+function addConfirmedClue(confirmedClues: ConfirmedClue[], next: ConfirmedClue): ConfirmedClue[] {
+  if (next.compareTags.length === 0) return confirmedClues;
+  const withoutDuplicate = confirmedClues.filter(clue => clue.clueId !== next.clueId);
+  return [...withoutDuplicate, { ...next, compareTags: [...new Set(next.compareTags)] }];
 }
 
 function buildSiteFactLabel(waypoint: ExpeditionWaypoint): string {

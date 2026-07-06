@@ -74,12 +74,12 @@ function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceR
     if (!comp || !selectedClueId) return null;
     return comp.processedClues.find(clue => clue.clueId === selectedClueId) ?? null;
   }, [comp, selectedClueId]);
-  const activeCategory = selectedClue && isFilteringCategory(selectedClue.category) ? selectedClue.category : null;
+  const activeCategory = selectedClue?.isFiltering && isFilteringCategory(selectedClue.category) ? selectedClue.category : null;
 
   const candidateNames = useMemo(() => {
     if (!comp) return hiddenSpeciesName ? [hiddenSpeciesName] : [];
     const eliminatedSet = new Set(comp.eliminatedSpeciesIds);
-    const pool = filterCandidates(comp.albumProfiles, comp.confirmedTags, eliminatedSet);
+    const pool = filterCandidates(comp.albumProfiles, comp.confirmedClues, eliminatedSet);
     const names = pool.map(profile => profile.commonName);
     if (hiddenSpeciesName && hiddenSpeciesName !== 'Unknown Species' && !names.includes(hiddenSpeciesName)) {
       names.push(hiddenSpeciesName);
@@ -89,7 +89,7 @@ function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceR
 
   const handleReferenceSelect = useCallback((referenceSpeciesId: number) => {
     if (!selectedClueId || !selectedClue || selectedClue.status !== 'processed') return;
-    if (!isFilteringCategory(selectedClue.category)) return;
+    if (!selectedClue.isFiltering || !isFilteringCategory(selectedClue.category)) return;
     onPlaceReference(referenceSpeciesId, selectedClueId);
     setSelectedClueId(null);
   }, [onPlaceReference, selectedClue, selectedClueId]);
@@ -189,9 +189,9 @@ function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceR
                     status={processed.status}
                     label={processed.label}
                     isSelected={selectedClueId === clue.id}
-                    isFiltering={isFilteringCategory(clue.category)}
+                    isFiltering={processed.isFiltering && isFilteringCategory(clue.category)}
                     onSelect={() => {
-                      if (processed.status === 'processed' && isFilteringCategory(processed.category)) {
+                      if (processed.status === 'processed' && processed.isFiltering && isFilteringCategory(processed.category)) {
                         setSelectedClueId(selectedClueId === clue.id ? null : clue.id);
                       }
                     }}
@@ -231,7 +231,7 @@ function FieldNotebookContent({ runState, speciesId, hiddenSpeciesName, onPlaceR
               eliminatedIds={comp.eliminatedSpeciesIds}
               activeReferenceId={comp.activeReferenceId}
               activeCategory={activeCategory}
-              selectable={!!selectedClue && selectedClue.status === 'processed' && isFilteringCategory(selectedClue.category)}
+              selectable={!!selectedClue && selectedClue.status === 'processed' && selectedClue.isFiltering && isFilteringCategory(selectedClue.category)}
               onSelect={handleReferenceSelect}
             />
           </div>
