@@ -1,0 +1,160 @@
+{
+  "iucn_id": 15955,
+  "scientific_name": "Panthera tigris",
+  "common_name": "Tiger",
+  "profile": {
+    "habitat_tags": ["rainforest", "mangrove", "grassland"],
+    "morphology_tags": ["size_bucket:horse", "body_plan:robust", "stripes"],
+    "diet_tags": ["carnivore", "ambush"],
+    "behavior_tags": ["nocturnal", "solitary", "ambush"],
+    "reproduction_tags": ["den", "iteroparous", "15_25y"],
+    "taxonomy_tags": ["family:felidae", "genus:panthera"],
+    "geography_tags": ["climate_zone:tropical", "continent:asia", "habitat_tag:mangrove"],
+    "conservation_tags": ["iucn:EN", "poaching", "deforestation"],
+    "key_fact_tags": ["signature:swims_between_islands"],
+    "signature_tag": "signature:swims_between_islands",
+    "habitat_note": "Rainforest, mangrove, and tall grass at rivers.",
+    "morphology_note": "Coarse orange coat broken by black vertical bars.",
+    "diet_note": "Ambush hunter of large ungulates.",
+    "behavior_note": "Solitary and nocturnal outside brief mating windows.",
+    "reproduction_note": "Cubs raised in dens; independence around two years.",
+    "reference_summary": "Largest striped cat, solitary ambush predator across tropical Asia."
+  },
+  "clues": [
+    {
+      "category": "taxonomy",
+      "reveal_order": 1,
+      "label": "Prints show four toes with no visible claw marks.",
+      "compare_tags": ["family:felidae"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "taxonomy",
+      "reveal_order": 2,
+      "label": "Scat contains large ungulate hair, cached under leaves.",
+      "compare_tags": ["genus:panthera"],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "geography",
+      "reveal_order": 1,
+      "label": "Range extends across tropical monsoon forest.",
+      "compare_tags": ["climate_zone:tropical", "continent:asia"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "geography",
+      "reveal_order": 2,
+      "label": "Signs cluster near river islands and mangrove edges.",
+      "compare_tags": ["habitat_tag:mangrove"],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "morphology",
+      "reveal_order": 1,
+      "label": "Body the length of a small horse, heavily muscled.",
+      "compare_tags": ["size_bucket:horse", "body_plan:robust"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "morphology",
+      "reveal_order": 2,
+      "label": "Coarse orange coat broken by vertical black bars.",
+      "compare_tags": ["stripes"],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "behavior",
+      "reveal_order": 1,
+      "label": "Active from dusk to dawn, alone.",
+      "compare_tags": ["nocturnal", "solitary"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "behavior",
+      "reveal_order": 2,
+      "label": "Stalks close, then explodes in a short rush.",
+      "compare_tags": ["ambush"],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "diet",
+      "reveal_order": 1,
+      "label": "Kills weigh as much as the hunter or more.",
+      "compare_tags": ["carnivore"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "reproduction",
+      "reveal_order": 1,
+      "label": "Cubs stay in a hidden den for months.",
+      "compare_tags": ["den"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "conservation",
+      "reveal_order": 1,
+      "label": "Population fragmented and declining.",
+      "compare_tags": ["iucn:EN"],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "conservation",
+      "reveal_order": 2,
+      "label": "Snares and traded parts drive most losses.",
+      "compare_tags": ["poaching"],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "key_fact",
+      "reveal_order": 1,
+      "label": "Cubs learn to swim before they learn to climb.",
+      "compare_tags": [],
+      "unlock_mode": "score",
+      "base_cost": 60,
+      "is_filtering": false
+    },
+    {
+      "category": "key_fact",
+      "reveal_order": 2,
+      "label": "Roars carry across three kilometers of forest.",
+      "compare_tags": [],
+      "unlock_mode": "score",
+      "base_cost": 80,
+      "is_filtering": false
+    },
+    {
+      "category": "key_fact",
+      "reveal_order": 3,
+      "label": "Individuals cross wide rivers between island patches.",
+      "compare_tags": ["signature:swims_between_islands"],
+      "unlock_mode": "fragment",
+      "base_cost": 4,
+      "is_filtering": true
+    }
+  ]
+}
