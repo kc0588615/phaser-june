@@ -13,10 +13,11 @@ import { applyWaypointsToRunNodes, MYSTERY_NODE_COUNT, type RunNode } from '@/li
 import { projectRunCreateResponse } from '@/lib/runProjection';
 
 export async function POST(request: NextRequest) {
-  const secret = process.env.CASE_COMPILER_SECRET;
-  if (!secret) return NextResponse.json({ error: 'Case compiler unavailable: CASE_COMPILER_SECRET is not configured' }, { status: 503 });
-
   try {
+    const playerId = await getPlayerIdFromClerk();
+    if (!playerId) return NextResponse.json({ error: 'Sign in before starting an expedition' }, { status: 401 });
+    const secret = process.env.CASE_COMPILER_SECRET;
+    if (!secret) return NextResponse.json({ error: 'Case compiler unavailable: CASE_COMPILER_SECRET is not configured' }, { status: 503 });
     const body = await request.json();
     const lon = Number(body?.lon);
     const lat = Number(body?.lat);
@@ -69,8 +70,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Case compilation unavailable' }, { status: 503 });
     }
 
-    const playerId = await getPlayerIdFromClerk();
-    if (!playerId) return NextResponse.json({ error: 'Sign in before starting an expedition' }, { status: 401 });
     const insertedNodes = await db.transaction(async tx => {
       await tx.insert(ecoRunSessions).values({
         id: runId,
