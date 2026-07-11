@@ -11,6 +11,7 @@
 - **Risk**: MED-HIGH (touches persistence, API, board, and deduction loop simultaneously — mitigated by phase ordering: server-first, client-last)
 - **Depends on**: owner decision recorded 2026-07-10 (cross-agent design review, Claude ⇄ codex): the redesign direction is ACCEPTED; contract below is final
 - **Planned at**: 2026-07-10, working tree on `main` at `ea17a07` + uncommitted changes
+- **Revised 4**: 2026-07-10 — owner selected an evidence-backed six-mammal prototype (Tiger, Addax, Sunda Pangolin, Livingstone's Flying Fox, Asian Elephant, De Winton's Golden Mole); v0 cases contain exactly these six, not a 6–8 sample from legacy herp profiles; local curated dossiers/profiles and sources pass the tunnel-backed `--check` with zero writes; De Winton reproduction stays empty as an explicit research gap; compiler requires three positive regular eliminations with future-step viability and a singleton signature fallback; public board seeds are supplied independently and never derived from the secret case seed
 - **Revised 3.1**: 2026-07-10 — signature_tag must also live in exactly one semantically correct trait array (live check: both existing signature values sit in sparse arrays, 0/2 in common); signature CARD may use its sparse category while non-signature cards stay in the six common categories; node-row success gate scoped to nodeIndex 0-2 (obs-3 has no node row); reasoning-event PATCH awaited before advancing (explicit exception to the fire-and-forget non-goal; obs-2 commit durable before requesting obs-3); /guess server-rejects while any issued ref lacks a persisted interpretation; nodeIndex 0-2 ↔ node_order 1-3 mapping stated; pre-commit UI shows observationText only; stale wording removed
 - **Revised 3**: 2026-07-10 — coverage wording corrected (six legacy arrays populated in all 24 profiles; geography/conservation/key_fact/signature in only 2 — never "all 24 full"); obs-3 gate tightened to ALL THREE regular observations issued AND all three interpretations committed; endpoint/cardinality text reconciled to nodeIndex 0–3 and 0–4 total issued cards with interpretation required for obs-3
 - **Revised 2**: 2026-07-10 — live-DB verification via tunnel corrected fact #14; signature-card issuance path defined (`obs-3`); 3-node client sequencing specified (awaited node completion, run completes only via /guess)
@@ -49,7 +50,7 @@ Separately, `plans/012-july9-improved deducation game system` (no `.md`) is a 33
 - **Leak-closure removals**: `correctSpeciesId` from POST /api/runs body; the entire `GET /api/species/deduction?mysteryId=` endpoint; `resume.correctSpeciesId`; `correctSpeciesId`/`hiddenSpeciesName` from ExpeditionContext. Evidence delivered one card per earned observation via `POST /api/runs/:id/observations`; guess via `POST /api/runs/:id/guess` returning `{correct, contrastiveFeedback}` (feedback needs the mystery profile → server-side).
 - **Symmetric visibility**: full candidate list WITH all trait profiles is client-visible, answer sits among them indistinguishably — that's the game, not a leak. Card refs are opaque per-run indices, never `evidence_cards` row ids; no endpoint may dereference a card ref → species.
 - **Case snapshot split**: `case_public` (shuffled candidateIds, per-node objective options, boardSeeds) vs `case_private` (answerId, ordered chain, caseSeed). Only a public projection is ever serialized, including resume.
-- **Compiler**: deterministic seeded greedy. 6–8 candidates (answer included, each sharing ≥1 trait with answer). Chain = exactly 3 observations; score each unused evidence card by `|remaining/2 − eliminations|` + predicate-reuse penalty; seeded tie-break. Signature card appended as optional 4th ONLY on residual ambiguity (>1 surviving candidate). Snapshot is immutable — resume/replay never recompiles.
+- **Compiler**: deterministic seeded greedy over exactly the six owner-approved prototype mammals. Every ordinary evidence tag must occur in 2–5 of those six; all five distractors remain in every case. Chain = exactly 3 positive-elimination observations, preserving enough live candidates for the remaining steps; score each unused evidence card by `|remaining/2 − eliminations|` + predicate-reuse penalty; seeded tie-break. A signature card is appended as optional 4th ONLY when it reduces residual ambiguity to the answer alone. Snapshot is immutable — resume/replay never recompiles.
 - **v0 scope decision**: FIXED method per node (no 1-of-2 objective choice in v0). Consequence: 7 evidence cards per target (2 cards × 3 route methods + 1 signature) → 42 cards for 6 entities. The 1-of-2 choice (which requires 9–10 cards/target, ~55–60 total) is a v1 upgrade, gated on prototype metrics. NEVER rescue low card counts by offering only methods the answer has cards for — the offer pattern meta-leaks identity.
 - **Interpretation step**: REQUIRED, graded, non-blocking prediction. Before elimination applies, the player predicts which candidates the observation rules out; engine then applies the true elimination and renders the delta AS the contrastive feedback. Wrong predictions never halt progress.
 - **Schema scope** (CLAUDE.md simplicity rule): ONE new table (`evidence_cards`, compare tags as `text[]` column — no join table) + case snapshot jsonb on the existing runs table. DEFER: `trait_definitions`, `entity_traits`, `evidence_card_traits`, `run_reasoning_events` (jsonb array via existing PATCH first), `lore`. `species_deduction_profiles` stays authoritative for the slice. `species_deduction_clues` + the fragment economy get DEPRECATED — never run both systems.
@@ -101,13 +102,12 @@ Order is deliberate: schema → pure compiler → server API → board seeding �
 2. Read `src/db/schema/game.ts` (ecoRunSessions/ecoRunNodes), `src/app/api/runs/route.ts`, `src/app/api/runs/[runId]/route.ts` in full before touching anything.
 3. Check exact per-category coverage via postgres-tunnel skill (strip `?pgbouncer=true` for psql): `select count(*) filter (where cardinality(geography_tags)>0) geo, count(*) filter (where cardinality(conservation_tags)>0) cons, count(*) filter (where cardinality(key_fact_tags)>0) kf, count(*) filter (where signature_tag is not null) sig, count(*) total from species_deduction_profiles;`. Expected as of 2026-07-10: six common arrays populated in all 24; geo/cons/kf/sig = 2 each. Phase 0.5 is required regardless.
 
-### Phase 0.5 — Profile selection + signature authoring (hard gate for Phases 2–3 verification)
-Corrected scope per fact #14: all 24 profiles have the six legacy arrays populated; geography/conservation/key_fact arrays and `signature_tag` exist in only 2. Before any compiler/API integration testing:
-1. Select the 6 prototype species from the 24 (owner picks; favor mutual distinctness in habitat + morphology so candidate splits are non-trivial; tiger + addax included by default since they also have authored clue decks).
-2. Author `signature_tag` for the selected species missing one (≥4). Signature = a tag unique to that species within the full 24-species pool (validator-checked), since the candidate sample draws from the whole pool. Author BOTH the `signature_tag` column AND its membership in exactly one semantically correct trait array of that species (validator asserts the tag exists in exactly one array); that array's category becomes the signature card's `traitCategory` (sparse categories allowed here only).
-3. Quality pass on the 6 selected profiles against plan 012's findings: tags drawn from the shared vocabulary in `src/lib/deductionTags.ts`; no unique `genus:`-style tags OUTSIDE `signature_tag`; every non-signature tag used by evidence cards must appear in ≥2 profiles.
-4. Extend/reuse the seed loader validation (`scripts/seed-deduction.ts` or sibling) — per-category cross-species overlap report over the 6 (a category where all 6 share one tag can't split; zero overlap can't confirm).
-5. Gate: 6 selected species each have nonempty arrays + valid unique `signature_tag` in the tunneled DB; overlap report reviewed. **STOP for owner sign-off before Phase 2's compiler tests run against them.**
+### Phase 0.5 — Reviewed six-mammal content foundation (owner-approved; local gate complete)
+1. Prototype species are fixed: Tiger, Addax, Sunda Pangolin, Livingstone's Flying Fox, Asian Elephant, and De Winton's Golden Mole. Resolve their stable IUCN identities to current `species.id` values at runtime; never hardcode auto-increment IDs in the pure compiler.
+2. `db/seeds/deduction/*.json` is the reviewed source for curated `species` fields, authoritative source URLs, canonical profiles, and signatures. Tiger/Addax retain normalized 15-row legacy decks; the four new species have empty legacy decks because `evidence_cards` replaces them.
+3. Each signature is unique across the resulting full profile corpus and occurs in exactly one semantically correct host array. Every ordinary evidence-card tag must occur in 2–5 of the selected six. `genus:`, `misc:`, and `signature:` never serve as ordinary evidence.
+4. Truth exception: De Winton's golden mole has no reliable species-specific reproduction/lifespan/maturity data. Keep those DB fields null and `reproduction_tags` empty; do not import family-level assumptions.
+5. Gate completed locally: `npm run seed:deduction -- --check` passed through the WSL tunnel and reported the expected cross-species overlaps with zero writes. Owner approved the six-species package. Applying the content to production remains a separate live-DB approval STOP.
 
 ### Phase 1 — Vocabulary + schema (no behavior change)
 1. `src/expedition/domain.ts`: add
@@ -158,26 +158,29 @@ Corrected scope per fact #14: all 24 profiles have the six legacy arrays populat
      public: { candidateIds:number[]; nodeMethods:MethodType[]; boardSeeds:number[] };
      private: { answerId:number; chainCardIds:number[]; caseSeed:string };
    }
-   export function compileCase(input: {
+export function compileCase(input: {
      caseSeed: string;                    // hex string, already HMAC'd by caller
+     prototypeSpeciesIds: number[];       // exactly six, resolved by server
      speciesPool: DeductionProfile[];     // from species_deduction_profiles
      cardsBySpecies: Map<number, CompilerCard[]>;
      gisPrior: Map<number, number>;       // speciesId → soft weight ≥ 0 (habitat/waypoint fit)
      routeMethods: MethodType[];          // length 3, fixed per node in v0
+     boardSeeds: number[];                // three public, answer-independent uint32s
    }): CompiledCase | { error: string }
    ```
 2. Algorithm (keep it this simple — no entropy math, no search):
-   - `rng = mulberry32(hash32(caseSeed))` — implement both helpers in-file, ~10 lines.
-   - **Answer**: seeded weighted pick from pool by gisPrior, restricted to species with ≥2 cards per route method + 1 signature (else `{error}` — caller falls back to next-best answer candidate).
-   - **Candidates**: seeded weighted sample of 5–7 others (total 6–8) requiring each shares ≥1 compareTag with the answer in ≥1 category (prevents first-observation trivial elimination). Shuffle final array with rng (answer position must be uniform).
-   - **Chain**: greedy, exactly 3. At each step, over answer's unused cards whose `method === routeMethods[step]`: `elim(card)` = count of live candidates whose `profile[card.traitCategory]` does NOT contain `card.compareTag`; `score = |liveCount/2 − elim| + (predicateUsed ? 2 : 0) − specificity*0.1`; pick min, seeded tie-break; apply elimination to the live set.
-   - **Signature fallback**: if live set >1 after 3 steps, append the signature card as chain[3].
+   - Use independent `mulberry32(hash32(stream + caseSeed))` streams for answer choice, candidate shuffle, and chain tie-breaking.
+   - **Corpus validation**: require all six profiles, ≥2 valid cards for each route method per species, exactly one signature per species, globally unique card ids, ordinary tag frequency 2–5, and signature uniqueness. Fail the corpus; never silently shrink or bias it.
+   - **Answer**: seeded weighted pick from the sorted six by `gisPrior`; all-zero weights use seeded uniform choice.
+   - **Candidates**: include all five distractors and shuffle the six. No legacy herp or seventh entity may enter v0.
+   - **Chain**: greedy, exactly 3. At each step, over answer's unused cards whose `method === routeMethods[step]`: `elim(card)` = count of live non-answer candidates whose profile lacks the tag; require `elim > 0` and `liveAfter >= remainingRegularSteps + 1`; score `|liveCount/2 − elim| + (predicateUsed ? 2 : 0) − specificity*0.1`; pick with seeded tie-break and stable id fallback; apply elimination.
+   - **Signature fallback**: if live set >1 after 3 steps, append the signature only if it eliminates at least one candidate and leaves exactly the answer; otherwise return a typed error.
    - **Route methods**: v0 is the FIXED global sequence `['track','observe','survey']` (contract amendment) — the caller passes it as a constant. NOT derived from which cards the answer has — meta-leak rule. If a species lacks 2 cards per route method + signature, reject it at the Answer step, never bend the route.
    - **Runtime failure tolerance**: the compiler always emits a full 3-card chain; a player failing a node objective means that card is never ISSUED (server-side issuance check, Phase 3), not that the chain changes. The guess endpoint must accept guesses with 0–4 issued cards (3 regular + optional signature).
-3. `boardSeeds`: `hash32(caseSeed + ':board:' + nodeIndex)` — deterministic, one-way from caseSeed, safe to publish.
+3. `boardSeeds` are public inputs derived from run/location/route state by the server, independent of answer selection and `caseSeed`. The compiler validates and snapshots them; it never derives them from the secret seed.
 4. Tests `tests/lib/caseCompiler.test.ts`:
    - same input → byte-identical `JSON.stringify(CompiledCase)` (hash assert);
-   - different caseSeed → different candidate order;
+   - a set of different case seeds produces more than one candidate order (individual shuffle collisions are valid);
    - every chain card eliminates ≥1 candidate;
    - signature appears iff ambiguity remains;
    - answer never at a biased index (χ² over 500 seeds is overkill — assert uniform-ish over 100: no index >30%);
@@ -256,7 +259,7 @@ This is the biggest phase. `handleDeductionClueTriggered` is REPLACED, not adapt
 5. Gate: typecheck; full manual run on dev server (map click → briefing → 3 nodes → 3 observations+interpretations → guess wrong → feedback → guess right → complete); resume mid-case works; browser network tab shows NO answer-bearing field anywhere (verify by inspection — this is the acceptance test for the whole leak contract).
 
 ### Phase 6 — Content (can start parallel to Phases 3–5)
-1. 6 entities: `panthera_tigris` + `addax_nasomaculatus` seeds exist (`db/seeds/deduction/`); pick 4 more with rich `species_deduction_profiles` rows.
+1. The six entities are fixed and locally authored: Tiger, Addax, Sunda Pangolin, Livingstone's Flying Fox, Asian Elephant, and De Winton's Golden Mole. Production profile application remains approval-gated.
 2. Author `db/seeds/evidence/<species>.json`: 7 cards each = 2 per fixed route method (`track`, `observe`, `survey` — `METHOD_SLOTS`) + 1 signature (`isSignature: true`, `compareTag` = the profile's `signature_tag`, `traitCategory` = the one trait array hosting that tag — the only place a sparse category is permitted). 42 total. Fields per Phase 1 schema: every card has `traitCategory` and EXACTLY ONE `compareTag`, which the validator asserts is present in that species' `profile[traitCategory]` array (extend the validation approach in `scripts/seed-deduction.ts`). Heed plan 012's finding: no unique `genus:` tags as non-signature compareTags (identity giveaway) — a non-signature compareTag must appear in ≥2 of the 6 profiles.
 3. New `scripts/seed-evidence.ts` mirroring `scripts/seed-deduction.ts` (loader + validation + sequential-reduction report).
 4. Gate: seed loads; compiler smoke over the 6 entities (Phase 7 harness).
@@ -278,7 +281,7 @@ Delete in one commit, compiler-guided:
    - 100% compile without `{error}` and reach a unique answer by chain end (incl. signature fallback);
    - ≥90% resolve WITHOUT the signature fallback;
    - zero dead reveals (every chain card eliminates ≥1);
-   - mean eliminations per observation ∈ [1.5, 3.0] for 7-candidate cases;
+   - report signature rate and per-step elimination distribution for exactly six candidates; a no-signature case removes five candidates across three regular observations (mean 1.67), while an optional fourth signature changes the all-issued mean. Do not retain the impossible seven-candidate metric.
    - determinism: seed → snapshot hash stable across two runs of the script.
 2. Playtest metrics (from `metadata.reasoningEvents`, computed by a small `scripts/report-reasoning.mjs` or SQL):
    - interpretation accuracy (predicted vs actual elimination-set match) in 55–85% band with upward slope within a session (>90% early = distractor candidates too weak; <40% = card text failing);
