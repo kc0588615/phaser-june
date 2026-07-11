@@ -1,0 +1,92 @@
+{
+  "iucn_id": 7140,
+  "scientific_name": "Elephas maximus",
+  "common_name": "Asian Elephant",
+  "cards": [
+    {
+      "method": "track",
+      "observation_text": "Very broad, deep prints indicate a heavy, robust frame.",
+      "inference_text": "Retain candidates with a robust body plan.",
+      "trait_category": "morphology",
+      "primary_predicate": "body_plan:robust",
+      "compare_tags": ["body_plan:robust"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "track",
+      "observation_text": "A well-used trail crosses broad grassy openings.",
+      "inference_text": "Retain candidates associated with grassland habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:grassland",
+      "compare_tags": ["habitat_tag:grassland"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Related adults and young travel together as a cohesive group.",
+      "inference_text": "Retain candidates that normally form herds.",
+      "trait_category": "behavior",
+      "primary_predicate": "sociality:herd",
+      "compare_tags": ["sociality:herd"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Feeding observations show grasses, bark, roots, and other plants.",
+      "inference_text": "Retain candidates with a herbivorous diet.",
+      "trait_category": "diet",
+      "primary_predicate": "diet_type:herbivore",
+      "compare_tags": ["diet_type:herbivore"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Fresh sign continues into humid rainforest cover.",
+      "inference_text": "Retain candidates associated with rainforest habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:rainforest",
+      "compare_tags": ["habitat_tag:rainforest"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Long-term monitoring records calves across successive breeding cycles.",
+      "inference_text": "Retain candidates with an iteroparous life history.",
+      "trait_category": "reproduction",
+      "primary_predicate": "parity:iteroparous",
+      "compare_tags": ["parity:iteroparous"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "analyze",
+      "observation_text": "Reproductive records show gestation lasts nearly twenty-two months.",
+      "inference_text": "This exceptionally long gestation is the case signature.",
+      "trait_category": "reproduction",
+      "primary_predicate": "signature:nearly_twenty_two_month_gestation",
+      "compare_tags": ["signature:nearly_twenty_two_month_gestation"],
+      "is_signature": true,
+      "specificity": 3,
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed"
+    }
+  ]
+}
+

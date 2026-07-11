@@ -1,1057 +1,386 @@
-import React, { createContext, useContext, useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { EventBus } from '@/game/EventBus';
-import type { EventPayloads } from '@/game/EventBus';
-import { useGameBridge } from './GameBridgeContext';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import type { RunState, ClueCategoryKey, DeductionCampState, ClueShopEntry, ComparativeDeductionState, HabitatSurveyEntry, ConfirmedClue } from '@/types/expedition';
-import { createEmptyClueFragments, createEmptyComparativeState, CLUE_CATEGORY_KEYS, getDeductionFinalScore, getGuessBonuses, deductionCatToWalletKey } from '@/types/expedition';
-import { compareReference, filterCandidates, getNextClueForWalletKey, applyEvidenceBundle } from '@/lib/deductionEngine';
-import type { DeductionProfile, DeductionClue, ProcessedClue } from '@/lib/deductionEngine';
-import type { AffinityType } from '@/expedition/affinities';
+import { EventBus, type EventPayloads } from '@/game/EventBus';
+import { useGameBridge } from './GameBridgeContext';
+import type { CaseState, EarnedObservation, ExpeditionData, InterpretationEvent, RunState } from '@/types/expedition';
+import type { DeductionProfile, ComparisonResult } from '@/lib/deductionEngine';
+import { computeActualEliminatedIds } from '@/lib/runCaseState';
+import type { PublicCaseSnapshot, ClientRunProjection } from '@/lib/runProjection';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
-import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
-import type { LootGemType } from '@/expedition/domain';
-import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
+import { buildBoardSpawnConfigForNode, METHOD_GEM_MAP } from '@/expedition/domain';
+import type { AffinityType } from '@/expedition/affinities';
+import { createFlowState, currentNodeIndexForStep, missedEvidenceNodeIndexes, nextFlowStep, reconcileProjection, stageForStep, type CaseFlowState, type FlowStep } from '@/expedition/caseFlow';
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
 import type { Species } from '@/types/database';
-import type { FeatureFingerprint } from '@/types/gis';
-import type { RasterHabitatResult } from '@/lib/speciesService';
-import { unlockSpeciesCardDiscovery } from '@/lib/speciesCardUnlocks';
-import { type ExpeditionWaypoint } from '@/types/waypoints';
-
-const MATCHES_PER_LEG = 3;
-const EVIDENCE_CONFIRMED_CLUE_ID = -1;
 
 const INITIAL_RUN_STATE: RunState = {
-  phase: 'idle',
-  expedition: null,
-  currentNodeIndex: 0,
-  activeAffinities: [],
-  bankedScore: 0,
-  clueFragments: createEmptyClueFragments(),
-  deductionCamp: null,
-  comparativeDeduction: null,
-  finalScore: null,
-  totalThoughtDiscount: 0,
-  evidenceBundle: null,
-  routeMatchCount: 0,
-  visitedWaypointSlot: 0,
-  matchedGemCategories: [],
+  phase: 'idle', expedition: null, currentNodeIndex: 0, activeAffinities: [], bankedScore: 0,
+  clueFragments: { classification: 0, habitat: 0, geographic: 0, morphology: 0, behavior: 0, life_cycle: 0, conservation: 0, key_facts: 0 },
+  deductionCamp: null, comparativeDeduction: null, finalScore: null, totalThoughtDiscount: 0,
+  evidenceBundle: null, routeMatchCount: 0, visitedWaypointSlot: 0, matchedGemCategories: [],
+  resolvedSpeciesId: null, caseState: null,
 };
 
 interface ExpeditionContextValue {
   runState: RunState;
   boardOpacity: number;
-  correctSpeciesId: number;
-  hiddenSpeciesName: string;
-  handleAffinitySelected: (affinityId: AffinityType | null) => void;
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
-  handleDeductionGuessResult: (isCorrect: boolean) => void;
-  handleProcessClue: (clueId: number) => void;
-  handlePlaceReference: (referenceSpeciesId: number, clueId: number) => void;
-  handleComparativeGuessResult: (isCorrect: boolean, guessedName?: string) => void;
-  /** Navigate to species list — replaces show-species-list EventBus event */
+  handleCommitInterpretation: (obsRef: string, predictedIds: number[]) => Promise<boolean>;
+  handleGuess: (speciesId: number) => Promise<boolean>;
   showSpeciesList: (speciesId: number) => void;
-  /** Register callback for show-species-list navigation */
   onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
 }
 
 const ExpeditionContext = createContext<ExpeditionContextValue | null>(null);
+export function useExpedition() { const value = useContext(ExpeditionContext); if (!value) throw new Error('useExpedition must be used within ExpeditionProvider'); return value; }
 
-export function useExpedition() {
-  const ctx = useContext(ExpeditionContext);
-  if (!ctx) throw new Error('useExpedition must be used within ExpeditionProvider');
-  return ctx;
-}
+type CreatedRun = { runId: string; nodeIds: string[]; casePublic: PublicCaseSnapshot };
 
 export function ExpeditionProvider({ children }: { children: React.ReactNode }) {
   const { hudRef } = useGameBridge();
-
-  const [runState, setRunState] = useState<RunState>(INITIAL_RUN_STATE);
+  const [runState, setRunState] = useState(INITIAL_RUN_STATE);
   const [boardOpacity, setBoardOpacity] = useState(1);
-
-  const expeditionPayloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
+  const stateRef = useRef(runState);
+  const payloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
   const runIdRef = useRef<string | null>(null);
+  const pendingCreatedRunRef = useRef<CreatedRun | null>(null);
   const nodeIdsRef = useRef<string[]>([]);
-  const nodeStartScoreRef = useRef<number>(0);
-  const lastResolvedNodeRef = useRef<number>(-1);
-  const correctSpeciesIdRef = useRef<number>(0);
-  const hiddenSpeciesNameRef = useRef<string>('');
-  const activeAffinitiesRef = useRef<AffinityType[]>([]);
-  const plannedRoutePolylineRef = useRef<RoutePoint[]>([]);
-  const routePolylineRef = useRef<RoutePoint[]>([]);
-  const runStateRef = useRef<RunState>(INITIAL_RUN_STATE);
-  const lastObjectiveCheckpointAtRef = useRef(0);
-  const objectiveProgressRef = useRef<number>(0);
-  const onShowSpeciesListRef = useRef<((speciesId: number) => void) | null>(null);
+  const casePublicRef = useRef<PublicCaseSnapshot | null>(null);
+  const flowRef = useRef<CaseFlowState>(null!);
+  if (!flowRef.current) flowRef.current = createFlowState();
+  /** nodeIndex of the board currently mounted in the Phaser scene, null when torn down. */
+  const liveBoardRef = useRef<number | null>(null);
+  const startingRef = useRef(false);
+  const advancingRef = useRef(false);
+  const nodeStartScoreRef = useRef(0);
+  const objectiveProgressRef = useRef(0);
+  const resolvingNodeRef = useRef<number | null>(null);
+  const plannedRouteRef = useRef<RoutePoint[]>([]);
+  const routeRef = useRef<RoutePoint[]>([]);
+  const onShowSpeciesList = useRef<((speciesId: number) => void) | null>(null);
+  useEffect(() => { stateRef.current = runState; }, [runState]);
 
-  useEffect(() => {
-    runStateRef.current = runState;
-  }, [runState]);
-
-  const resetRunStateLocal = useCallback(() => {
-    expeditionPayloadRef.current = null;
-    runIdRef.current = null;
-    nodeIdsRef.current = [];
-    nodeStartScoreRef.current = 0;
-    lastResolvedNodeRef.current = -1;
-    correctSpeciesIdRef.current = 0;
-    hiddenSpeciesNameRef.current = '';
-    activeAffinitiesRef.current = [];
-    plannedRoutePolylineRef.current = [];
-    routePolylineRef.current = [];
-    lastObjectiveCheckpointAtRef.current = 0;
-    setBoardOpacity(1);
-    setRunState(INITIAL_RUN_STATE);
+  const resetLocal = useCallback(() => {
+    payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; nodeIdsRef.current = []; casePublicRef.current = null;
+    flowRef.current = createFlowState(); liveBoardRef.current = null; startingRef.current = false; advancingRef.current = false;
+    nodeStartScoreRef.current = 0; objectiveProgressRef.current = 0; resolvingNodeRef.current = null;
+    plannedRouteRef.current = []; routeRef.current = []; setBoardOpacity(1); setRunState(INITIAL_RUN_STATE);
   }, []);
+
+  const handleRunReset = useCallback(() => { resetLocal(); EventBus.emit('game-reset', undefined); }, [resetLocal]);
+
+  const emitBoardTracked = useCallback((payload: EventPayloads['expedition-data-ready'], publicCase: PublicCaseSnapshot, nodeIndex: number, objectiveProgress: number) => {
+    liveBoardRef.current = nodeIndex;
+    emitBoard(payload, publicCase, nodeIndex, objectiveProgress);
+  }, []);
+
+  /** Tears down the Phaser board exactly once, and only if that board is still mounted. */
+  const emitNodeCompleteIfLive = useCallback((nodeIndex: number) => {
+    if (liveBoardRef.current !== nodeIndex) return;
+    liveBoardRef.current = null;
+    EventBus.emit('node-complete', { nodeIndex });
+  }, []);
+
+  /**
+   * Drives the flow machine to its next stable beat (live board, pending
+   * interpretation, or guess), performing the durable calls in between.
+   */
+  const runFlow = useCallback(async () => {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+    try {
+      for (;;) {
+        const step: FlowStep = nextFlowStep(flowRef.current);
+        if (step.kind === 'board') {
+          const payload = payloadRef.current; const publicCase = casePublicRef.current;
+          if (!payload || !publicCase) throw new Error('Missing case data while advancing expedition');
+          objectiveProgressRef.current = 0; nodeStartScoreRef.current = 0;
+          setRunState(previous => previous.caseState ? { ...previous, currentNodeIndex: step.nodeIndex, caseState: { ...previous.caseState, stage: 'board', pendingInterpretationRef: null } } : previous);
+          emitBoardTracked(payload, publicCase, step.nodeIndex, 0);
+          return;
+        }
+        if (step.kind === 'interpret') {
+          setRunState(previous => previous.caseState ? { ...previous, currentNodeIndex: currentNodeIndexForStep(step), caseState: { ...previous.caseState, stage: 'interpreting', pendingInterpretationRef: step.ref } } : previous);
+          return;
+        }
+        if (step.kind === 'guess') {
+          setRunState(previous => previous.caseState ? { ...previous, currentNodeIndex: 2, caseState: { ...previous.caseState, stage: 'guess', pendingInterpretationRef: null } } : previous);
+          return;
+        }
+        if (step.kind === 'recover-observation') {
+          const observation = await requestObservation(runIdRef.current, step.nodeIndex, false);
+          if (!observation) throw new Error('Earned observation was not issued');
+          flowRef.current = { ...flowRef.current, issuedRefs: [...flowRef.current.issuedRefs, observation.ref] };
+          setRunState(previous => previous.caseState ? { ...previous, caseState: addObservation(previous.caseState, observation) } : previous);
+          continue;
+        }
+        // signature-attempt: exactly one try; any 403 settles it permanently.
+        const signature = await requestObservation(runIdRef.current, 3, true);
+        if (signature) {
+          flowRef.current = { ...flowRef.current, issuedRefs: [...flowRef.current.issuedRefs, signature.ref] };
+          setRunState(previous => previous.caseState ? { ...previous, caseState: addObservation(previous.caseState, signature) } : previous);
+        } else {
+          flowRef.current = { ...flowRef.current, signatureSettled: true };
+        }
+      }
+    } catch (error) {
+      console.error('[ExpeditionContext] Flow advance failed:', error);
+      toast.error('Could not advance the expedition — resume the run to retry.');
+    } finally { advancingRef.current = false; }
+  }, [emitBoardTracked]);
 
   const handleExpeditionDataReady = useCallback((data: EventPayloads['expedition-data-ready']) => {
-    expeditionPayloadRef.current = data;
-    activeAffinitiesRef.current = data.expedition.activeAffinities;
-    plannedRoutePolylineRef.current = getExpeditionRoutePolyline(data);
-    routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
-    const evidenceBundle = data.featureFingerprints?.length
-      ? buildRunEvidenceBundle(data.featureFingerprints)
-      : null;
-    setRunState({
-      ...INITIAL_RUN_STATE,
-      phase: 'briefing',
-      expedition: data.expedition,
-      activeAffinities: data.expedition.activeAffinities,
-      evidenceBundle,
-    });
-  }, []);
-
-  const handleExpeditionStart = useCallback(() => {
-    setRunState(prev => ({ ...prev, phase: 'mystery', activeAffinities: [...activeAffinitiesRef.current] }));
-    nodeStartScoreRef.current = 0;
-    lastResolvedNodeRef.current = -1;
-    objectiveProgressRef.current = 0;
-    setBoardOpacity(1);
-    const payload = expeditionPayloadRef.current;
-    if (!payload) return;
-    plannedRoutePolylineRef.current = getExpeditionRoutePolyline(payload);
-    routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, 0);
-
-    const correct = chooseMysterySpecies(payload.species, payload.expedition.waypoints ?? []);
-    if (correct) {
-      correctSpeciesIdRef.current = correct.id;
-      hiddenSpeciesNameRef.current = correct.common_name || correct.scientific_name || 'Unknown Species';
+    if (data.expedition.nodes.length !== 3) {
+      console.error('[ExpeditionContext] Expected exactly three generated method nodes.', data.expedition.nodes);
+      toast.error('Expedition generation failed: three field sites are required.');
+      return;
     }
-
-    const locationKey = `${payload.lon.toFixed(4)},${payload.lat.toFixed(4)}`;
-    fetch('/api/runs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        lon: payload.lon, lat: payload.lat, locationKey,
-        nodes: payload.expedition.nodes,
-        activeAffinities: activeAffinitiesRef.current,
-        bioregion: payload.expedition.bioregion?.bioregion ?? undefined,
-        realm: payload.expedition.bioregion?.realm ?? undefined,
-        biome: payload.expedition.bioregion?.biome ?? undefined,
-        correctSpeciesId: correct?.id,
-        speciesIds: payload.species.map(species => species.id),
-        habitats: payload.habitats,
-        rasterHabitats: payload.rasterHabitats,
-        featureFingerprints: payload.featureFingerprints ?? [],
-        routePolyline: plannedRoutePolylineRef.current,
-        expeditionSnapshot: {
-          protectedAreas: payload.expedition.protectedAreas,
-          actionBias: payload.expedition.actionBias,
-          availableAffinities: payload.expedition.availableAffinities,
-          primaryNodeFamily: payload.expedition.primaryNodeFamily,
-          primaryVariant: payload.expedition.primaryVariant,
-          modifierNodes: payload.expedition.modifierNodes,
-          signals: payload.expedition.signals,
-          waypoints: payload.expedition.waypoints ?? [],
-          waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null,
-          nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null,
-        },
-      }),
-    })
-      .then(r => {
-        if (!r.ok) { console.warn(`[ExpeditionContext] Run creation failed (${r.status}). Score persistence disabled for this run.`); return null; }
-        return r.json();
-      })
-      .then(data => {
-        if (data) {
-          runIdRef.current = data.runId;
-          nodeIdsRef.current = data.nodeIds;
-        }
-      })
-      .catch(err => console.error('Failed to create run session:', err));
-
-    const firstNode = payload.expedition.nodes[0];
-    const firstBoardContext = buildNodeBoardContext({
-      width: GRID_COLS, height: GRID_ROWS,
-      obstacles: firstNode?.obstacles ?? [], nodeIndex: 0,
-    });
-    const firstBoardConfig = buildBoardSpawnConfigForNode(
-      firstNode?.node_type ?? 'custom', firstNode?.counterGem ?? null,
-      payload.expedition.actionBias, activeAffinitiesRef.current,
-      buildHabitatLootWeights(payload.rasterHabitats),
-    );
-    const firstLocation = getNodeRouteLocation(payload, 0);
-    EventBus.emit('cesium-location-selected', {
-      lon: firstLocation.lon, lat: firstLocation.lat,
-      ecoregionId: payload.ecoregionId ?? null,
-      species: payload.species, rasterHabitats: payload.rasterHabitats,
-      habitats: payload.habitats, difficulty: firstNode?.difficulty,
-      moveBudget: firstNode?.moveBudget,
-      obstacles: firstNode?.obstacles, obstacleFamily: firstNode?.obstacleFamily,
-      counterGem: firstNode?.counterGem, requiredGems: firstNode?.requiredGems,
-      activeAffinities: activeAffinitiesRef.current,
-      objectiveTarget: firstNode?.objectiveTarget, nodeIndex: 0,
-      nodeType: firstNode?.node_type, events: firstNode?.events,
-      boardContext: firstBoardContext, boardConfig: firstBoardConfig,
-      encounterConfig: firstNode?.encounterConfig,
-    });
+    payloadRef.current = data;
+    plannedRouteRef.current = data.expedition.routePolyline?.length ? data.expedition.routePolyline : computeExpeditionRoutePolyline(data.lon, data.lat, 3);
+    routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
+    setRunState({ ...INITIAL_RUN_STATE, phase: 'briefing', expedition: data.expedition, activeAffinities: data.expedition.activeAffinities });
   }, []);
 
-  const handleAffinitySelected = useCallback((affinityId: AffinityType | null) => {
-    const nextAffinities = affinityId ? [affinityId] : [];
-    activeAffinitiesRef.current = nextAffinities;
-    setRunState(prev => {
-      if (!prev.expedition) return prev;
-      return { ...prev, activeAffinities: nextAffinities, expedition: { ...prev.expedition, activeAffinities: nextAffinities } };
-    });
-  }, []);
-
-  const handleRunResume = useCallback(async (runId: string): Promise<boolean> => {
+  const handleExpeditionStart = useCallback(async () => {
+    const payload = payloadRef.current;
+    if (!payload || payload.expedition.nodes.length !== 3) { toast.error('No valid three-site expedition is ready.'); return; }
+    if (startingRef.current || (runIdRef.current && !pendingCreatedRunRef.current)) return;
+    startingRef.current = true;
     try {
-      const runResponse = await fetch(`/api/runs/${runId}`);
-      if (!runResponse.ok) throw new Error(`Run fetch failed (${runResponse.status})`);
-      const data = await runResponse.json() as ResumeRunResponse;
-      const resume = data.resume;
-      if (!resume?.expedition?.nodes?.length) throw new Error('Run has no resumable expedition payload');
+      let created = pendingCreatedRunRef.current;
+      if (!created) {
+        const response = await fetch('/api/runs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildCreateBody(payload, plannedRouteRef.current)) });
+        if (!response.ok) {
+          const failure = await response.json().catch(() => ({})) as { error?: string };
+          toast.error(failure.error ?? `Run creation failed (${response.status})`);
+          return;
+        }
+        created = await response.json() as CreatedRun;
+        pendingCreatedRunRef.current = created;
+        runIdRef.current = created.runId;
+        nodeIdsRef.current = created.nodeIds;
+        casePublicRef.current = created.casePublic;
+      }
+      // All six symmetric profiles must be in hand before the run leaves briefing.
+      const profiles = await fetchProfiles(created.casePublic.candidateIds);
+      pendingCreatedRunRef.current = null;
+      flowRef.current = createFlowState();
+      const caseState = createCaseState(created.casePublic.candidateIds, profiles);
+      setRunState(previous => ({ ...previous, phase: 'mystery', caseState, currentNodeIndex: 0 }));
+      emitBoardTracked(payload, created.casePublic, 0, 0);
+    } catch (error) {
+      console.error('[ExpeditionContext] Failed to start expedition:', error);
+      toast.error('Could not start the expedition case.');
+    } finally { startingRef.current = false; }
+  }, [emitBoardTracked]);
 
-      const species = await fetchResumeSpecies(resume.speciesIds, resume.lon, resume.lat);
-      const expedition = {
-        ...resume.expedition,
-        activeAffinities: normalizeAffinities(resume.expedition.activeAffinities),
-        availableAffinities: normalizeAffinities(resume.expedition.availableAffinities),
+  const handleNodeAdvanceRequested = useCallback(async (event: EventPayloads['node-advance-requested']) => {
+    const current = stateRef.current;
+    if (current.phase !== 'mystery' || current.caseState?.stage !== 'board' || event.nodeIndex !== current.currentNodeIndex || resolvingNodeRef.current !== null) return;
+    const runId = runIdRef.current;
+    if (!runId) { toast.error('This expedition has no durable run session.'); return; }
+    resolvingNodeRef.current = event.nodeIndex; setBoardOpacity(1);
+    try {
+      const earnedScore = Math.max(0, (hudRef.current?.score ?? 0) - nodeStartScoreRef.current);
+      const complete = await fetch(`/api/runs/${runId}/nodes/${event.nodeIndex + 1}/complete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scoreEarned: earnedScore, movesUsed: hudRef.current?.movesUsed ?? 0, objectiveProgress: objectiveProgressRef.current }) });
+      if (!complete.ok) throw new Error(`Node completion failed (${complete.status})`);
+      routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, event.nodeIndex);
+      const objectiveMet = event.reason === 'victory';
+      flowRef.current = {
+        ...flowRef.current,
+        nodes: flowRef.current.nodes.map((node, index) => index === event.nodeIndex ? { completed: true, objectiveMet } : node),
       };
-      const payload: EventPayloads['expedition-data-ready'] = {
-        lon: resume.lon,
-        lat: resume.lat,
-        expedition,
-        species,
-        rasterHabitats: resume.rasterHabitats ?? [],
-        habitats: resume.habitats ?? [],
-        featureFingerprints: resume.featureFingerprints ?? [],
+      setRunState(previous => {
+        const next = { ...previous, bankedScore: previous.bankedScore + earnedScore };
+        if (!objectiveMet && next.caseState) {
+          next.caseState = { ...next.caseState, missedEvidenceNodeIndexes: [...next.caseState.missedEvidenceNodeIndexes, event.nodeIndex] };
+        }
+        return next;
+      });
+      if (objectiveMet) {
+        // The finished board stays mounted (inert) until the interpretation is durable.
+        toast('Evidence recorded. Interpret it before moving on.', { duration: 2400 });
+      } else {
+        toast('Evidence missed at this site. The expedition continues.', { duration: 2400 });
+        emitNodeCompleteIfLive(event.nodeIndex);
+      }
+      await runFlow();
+    } catch (error) {
+      console.error('[ExpeditionContext] Failed to resolve node:', error); toast.error('Could not save this field site. Try again.');
+    } finally { resolvingNodeRef.current = null; }
+  }, [emitNodeCompleteIfLive, hudRef, runFlow]);
+
+  const handleCommitInterpretation = useCallback(async (obsRef: string, predictedIds: number[]) => {
+    const runId = runIdRef.current; const current = stateRef.current; const caseState = current.caseState;
+    if (!runId || !caseState || caseState.pendingInterpretationRef !== obsRef) return false;
+    try {
+      const observation = caseState.observations.find(item => item.ref === obsRef);
+      if (!observation?.traitCategory || !observation.compareTag) throw new Error('Observation interpretation fields unavailable');
+      const live = caseState.profiles.filter(profile => !caseState.eliminatedIds.includes(profile.speciesId));
+      const actualIds = computeActualEliminatedIds(caseState.profiles, caseState.eliminatedIds, observation.traitCategory, observation.compareTag);
+      const predicted = [...new Set(predictedIds.filter(id => live.some(profile => profile.speciesId === id)))].sort((a, b) => a - b);
+      const interpretation: InterpretationEvent = { obsRef, predictedEliminatedIds: predicted, actualEliminatedIds: actualIds, correct: sameIds(predicted, actualIds), latencyMs: Math.min(Date.now() - observation.issuedAtMs, 3_600_000) };
+      const response = await fetch(`/api/runs/${runId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reasoningEvents: [interpretation] }) });
+      if (!response.ok) throw new Error(`Interpretation save failed (${response.status})`);
+      const result = await response.json() as { reasoningEventsCommitted?: string[] };
+      if (!result.reasoningEventsCommitted?.includes(obsRef)) throw new Error('Server did not commit interpretation');
+      flowRef.current = { ...flowRef.current, committedRefs: [...flowRef.current.committedRefs, obsRef] };
+      setRunState(previous => previous.caseState ? { ...previous, caseState: { ...previous.caseState, interpretations: [...previous.caseState.interpretations, interpretation], eliminatedIds: [...new Set([...previous.caseState.eliminatedIds, ...actualIds])], pendingInterpretationRef: null } } : previous);
+      // Interpretation is durable — now it is safe to leave this board.
+      const boardNodeIndex = liveBoardRef.current;
+      if (boardNodeIndex !== null && `obs-${boardNodeIndex}` === obsRef) emitNodeCompleteIfLive(boardNodeIndex);
+      await runFlow();
+      return true;
+    } catch (error) {
+      // The pending observation is untouched, so the commit button simply retries.
+      console.error('[ExpeditionContext] Failed to commit interpretation:', error);
+      toast.error('Interpretation not saved — try again.');
+      return false;
+    }
+  }, [emitNodeCompleteIfLive, runFlow]);
+
+  const handleGuess = useCallback(async (speciesId: number) => {
+    const runId = runIdRef.current;
+    if (!runId || stateRef.current.caseState?.stage !== 'guess') return false;
+    try {
+      const response = await fetch(`/api/runs/${runId}/guess`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ speciesId }) });
+      if (!response.ok) { toast.error('Guess could not be checked.'); return false; }
+      const result = await response.json() as { correct: boolean; contrastiveFeedback: ComparisonResult[]; finalScore?: number };
+      if (result.correct) {
+        // speciesId is the public candidate the player just selected — safe to keep client-side.
+        setRunState(previous => previous.caseState ? { ...previous, phase: 'complete', finalScore: result.finalScore ?? null, completionReason: 'captured', resolvedSpeciesId: speciesId, caseState: { ...previous.caseState, guessResult: 'correct', lastFeedback: null } } : previous);
+        window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId } }));
+      } else {
+        setRunState(previous => previous.caseState ? { ...previous, caseState: { ...previous.caseState, guessResult: 'wrong', lastFeedback: result.contrastiveFeedback } } : previous);
+      }
+      return result.correct;
+    } catch (error) {
+      console.error('[ExpeditionContext] Guess failed:', error);
+      toast.error('Guess could not be checked.');
+      return false;
+    }
+  }, []);
+
+  const handleObservationEarned = useCallback((_event: EventPayloads['observation-earned']) => {
+    setRunState(previous => ({ ...previous, routeMatchCount: previous.routeMatchCount + 1 }));
+  }, []);
+  const handleObjective = useCallback((event: EventPayloads['node-objective-updated']) => { objectiveProgressRef.current = event.progress; }, []);
+
+  const handleRunResume = useCallback(async (runId: string) => {
+    try {
+      const response = await fetch(`/api/runs/${runId}`); if (!response.ok) throw new Error(`Run fetch failed (${response.status})`);
+      const projection = await response.json() as ClientRunProjection;
+      const decision = reconcileProjection(projection);
+      if (decision.kind === 'legacy') { toast.error('Expedition format updated — start a new run.'); resetLocal(); return false; }
+      const profiles = await fetchProfiles(projection.casePublic!.candidateIds);
+      const expedition = expeditionFromProjection(projection);
+      if (expedition.nodes.length !== 3) throw new Error('Resume payload lacks three generated nodes');
+      const payload = payloadFromProjection(projection, expedition, profiles);
+      const interpretations = projection.checkpoint.reasoningEvents;
+      const observations = projection.observations.map(item => ({ ...item, traitCategory: item.traitCategory as EarnedObservation['traitCategory'], issuedAtMs: Date.now() }));
+      const baseCase: CaseState = {
+        ...createCaseState(projection.casePublic!.candidateIds, profiles),
+        observations, interpretations,
+        eliminatedIds: [...new Set(interpretations.flatMap(item => item.actualEliminatedIds))],
       };
-      const currentNodeIndex = clampNodeIndex(resume.currentNodeIndex, expedition.nodes.length, data.run?.status);
-      const correctSpecies = species.find(s => s.id === resume.correctSpeciesId) ?? [...species].sort((a, b) => a.id - b.id)[0];
-      const evidenceBundle = payload.featureFingerprints?.length
-        ? buildRunEvidenceBundle(payload.featureFingerprints)
-        : null;
-      const clueFragments = mergeClueFragments(resume.clueFragments);
-      const bankedScore = typeof resume.bankedScore === 'number' ? resume.bankedScore : 0;
-      const routeNodeIndex = data.run?.status === 'deduction' ? currentNodeIndex : Math.max(0, currentNodeIndex - 1);
+      runIdRef.current = runId; nodeIdsRef.current = projection.nodes.map(node => node.id); casePublicRef.current = projection.casePublic; payloadRef.current = payload;
+      plannedRouteRef.current = projection.checkpoint.routePolyline;
 
-      expeditionPayloadRef.current = payload;
-      runIdRef.current = runId;
-      nodeIdsRef.current = (data.nodes ?? []).sort((a, b) => a.nodeOrder - b.nodeOrder).map(node => node.id);
-      correctSpeciesIdRef.current = correctSpecies?.id ?? resume.correctSpeciesId ?? 0;
-      hiddenSpeciesNameRef.current = correctSpecies?.common_name || correctSpecies?.scientific_name || 'Unknown Species';
-      activeAffinitiesRef.current = expedition.activeAffinities;
-      plannedRoutePolylineRef.current = getExpeditionRoutePolyline(payload);
-      routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, routeNodeIndex);
-      nodeStartScoreRef.current = 0;
-      lastResolvedNodeRef.current = Math.max(-1, currentNodeIndex - 1);
-      const resumedObjectiveProgress = data.nodes?.find(node => node.nodeOrder === currentNodeIndex + 1)?.objectiveProgress ?? 0;
-      objectiveProgressRef.current = resumedObjectiveProgress;
-      setBoardOpacity(1);
-
-      if (data.run?.status === 'deduction') {
-        const deductionState: RunState = {
-          ...INITIAL_RUN_STATE,
-          phase: 'mystery',
-          expedition,
-          currentNodeIndex,
-          activeAffinities: expedition.activeAffinities,
-          clueFragments,
-          bankedScore,
-          deductionCamp: buildDeductionCampFromCheckpoint(bankedScore, clueFragments),
-          evidenceBundle,
-        };
-        setRunState(deductionState);
-        toast('Resumed mystery', { duration: 1800 });
+      if (decision.kind === 'completed') {
+        // Never re-emit a board for a completed run. No safe resolved id is
+        // projected, so the summary stays generic ('Case resolved').
+        routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 2);
+        setRunState({
+          ...INITIAL_RUN_STATE, phase: 'complete', expedition, currentNodeIndex: 2,
+          activeAffinities: expedition.activeAffinities, bankedScore: projection.run.scoreTotal ?? 0,
+          finalScore: decision.finalScore, completionReason: 'captured',
+          caseState: { ...baseCase, stage: 'guess', guessResult: 'correct' },
+        });
+        toast('Expedition already resolved', { duration: 1800 });
         return true;
       }
 
-      setRunState({
-        ...INITIAL_RUN_STATE,
-        phase: 'mystery',
-        expedition,
-        currentNodeIndex,
-        activeAffinities: expedition.activeAffinities,
-        clueFragments,
-        bankedScore,
-        evidenceBundle,
-      });
-
-      setTimeout(() => {
-        emitBoardForNode(payload, currentNodeIndex, expedition.activeAffinities, resumedObjectiveProgress);
-        toast('Resumed expedition checkpoint', { duration: 1800 });
-      }, 100);
-      return true;
-    } catch (error) {
-      console.error('Failed to resume run:', error);
-      toast.error('Could not resume that expedition');
-      return false;
-    }
-  }, [objectiveProgressRef]);
-
-  const handleNodeAdvanceRequested = useCallback((data: EventPayloads['node-advance-requested']) => {
-    setBoardOpacity(1);
-    setRunState(prev => {
-      if (prev.phase !== 'mystery') return prev;
-      if (data.nodeIndex !== prev.currentNodeIndex) return prev;
-      if (data.nodeIndex <= lastResolvedNodeRef.current) return prev;
-
-      const nodeOrder = prev.currentNodeIndex + 1;
-      const nextIndex = prev.currentNodeIndex + 1;
-      lastResolvedNodeRef.current = prev.currentNodeIndex;
-      routePolylineRef.current = getRoutePolylineThroughNode(plannedRoutePolylineRef.current, prev.currentNodeIndex);
-
-      const nodeScore = (hudRef.current?.score ?? 0) - nodeStartScoreRef.current;
-      const nodeMoves = hudRef.current?.movesUsed ?? 0;
-      const objProgress = objectiveProgressRef.current;
-      if (runIdRef.current) {
-        persistRunCheckpoint(runIdRef.current, prev, nextIndex, routePolylineRef.current, 'deduction');
-        fetch(`/api/runs/${runIdRef.current}/nodes/${nodeOrder}/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            scoreEarned: Math.max(0, nodeScore), movesUsed: nodeMoves,
-            objectiveProgress: objProgress,
-            encounterOutcome: data.encounterOutcome ?? undefined,
-          }),
-        }).catch(err => console.error('Failed to complete node:', err));
-      }
-
-      EventBus.emit('node-complete', { nodeIndex: prev.currentNodeIndex });
-      nodeStartScoreRef.current = hudRef.current?.score ?? 0;
-
-      const campState = buildDeductionCampState(prev);
-      const message = data.reason === 'escaped'
-        ? 'The animal slipped away. Review the evidence.'
-        : 'Field notes ready — time to identify.';
-      setTimeout(() => toast(message, { duration: 3000 }), 0);
-      return {
-        ...prev,
-        phase: 'complete' as const,
-        currentNodeIndex: nextIndex,
-        deductionCamp: campState,
-        completionReason: data.reason === 'escaped' ? 'slipped' : 'captured',
+      flowRef.current = decision.flow;
+      const step = decision.step;
+      const nodeIndex = currentNodeIndexForStep(step);
+      routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, nodeIndex);
+      const caseState: CaseState = {
+        ...baseCase,
+        stage: stageForStep(step),
+        pendingInterpretationRef: step.kind === 'interpret' ? step.ref : null,
+        missedEvidenceNodeIndexes: missedEvidenceNodeIndexes(decision.flow),
       };
-    });
-  }, [hudRef, objectiveProgressRef]);
-
-  const handleNodeObjectiveCheckpoint = useCallback((data: EventPayloads['node-objective-updated']) => {
-    const state = runStateRef.current;
-    if (state.phase !== 'mystery' || !runIdRef.current) return;
-    if (data.target <= 0 || data.progress <= 0) return;
-
-    const now = Date.now();
-    if (now - lastObjectiveCheckpointAtRef.current < 5000 && data.progress < data.target) return;
-    lastObjectiveCheckpointAtRef.current = now;
-
-    persistRunCheckpoint(
-      runIdRef.current,
-      state,
-      state.currentNodeIndex,
-      routePolylineRef.current,
-      undefined,
-      data.progress,
-    );
-  }, []);
-
-  const handleRunReset = useCallback(() => {
-    resetRunStateLocal();
-    EventBus.emit('game-reset', undefined);
-  }, [resetRunStateLocal]);
-
-  const handleNodeRewardsSummary = useCallback((data: EventPayloads['node-rewards-summary']) => {
-    const totalReward = data.baseClearReward + data.preservedNodeBonus + data.triviaReward;
-    setRunState(prev => {
-      if (prev.phase !== 'mystery') return prev;
-      return { ...prev, bankedScore: prev.bankedScore + totalReward };
-    });
-  }, []);
-
-  const handleDeductionClueTriggered = useCallback((data: EventPayloads['deduction-clue-triggered']) => {
-    setRunState(prev => {
-      if (prev.phase !== 'mystery') return prev;
-      const routeProgress = nextRouteProgress(prev);
-      const routePatch: Pick<RunState, 'routeMatchCount' | 'visitedWaypointSlot'> = {
-        routeMatchCount: routeProgress.matchCount,
-        visitedWaypointSlot: routeProgress.visitedSlot,
-      };
-      const walletKey = deductionCatToWalletKey(data.category);
-      const matchedGemCategories = prev.matchedGemCategories.includes(walletKey)
-        ? prev.matchedGemCategories
-        : [...prev.matchedGemCategories, walletKey];
-      const signalPatch: Pick<RunState, 'matchedGemCategories'> = { matchedGemCategories };
-      if (routeProgress.arrivedWaypoint) {
-        EventBus.emit('route-progress-updated', { slot: routeProgress.visitedSlot });
-        toast(`Arrived: ${routeProgress.arrivedWaypoint.name}`, { duration: 2200 });
+      setRunState({ ...INITIAL_RUN_STATE, phase: 'mystery', expedition, currentNodeIndex: nodeIndex, activeAffinities: expedition.activeAffinities, bankedScore: projection.run.scoreTotal ?? 0, caseState });
+      if (step.kind === 'board') {
+        const objectiveProgress = projection.nodes.find(node => node.nodeOrder === step.nodeIndex + 1)?.objectiveProgress ?? 0;
+        objectiveProgressRef.current = objectiveProgress;
+        window.setTimeout(() => emitBoardTracked(payload, projection.casePublic!, step.nodeIndex, objectiveProgress), 100);
+      } else if (step.kind === 'recover-observation' || step.kind === 'signature-attempt') {
+        void runFlow();
       }
+      toast('Expedition case resumed', { duration: 1800 }); return true;
+    } catch (error) { console.error('[ExpeditionContext] Resume failed:', error); toast.error('Could not resume that expedition'); return false; }
+  }, [emitBoardTracked, resetLocal, runFlow]);
 
-      if (!prev.comparativeDeduction) {
-        return { ...prev, ...routePatch, ...signalPatch };
-      }
-      const comp = prev.comparativeDeduction;
-      let nextComp = routeProgress.arrivedWaypoint
-        ? addArrivalSiteFact(comp, routeProgress.arrivedWaypoint, routeProgress.visitedSlot)
-        : comp;
-      if (walletKey === 'habitat') {
-        const nextSurveyIndex = nextComp.habitatSurvey.findIndex(entry => !entry.revealed);
-        if (nextSurveyIndex === -1) {
-          if (!nextComp.habitatSurveyCompleteNotified) {
-            toast('Habitat survey complete', { duration: 1800 });
-            return {
-              ...prev,
-              ...routePatch,
-              ...signalPatch,
-              comparativeDeduction: { ...nextComp, habitatSurveyCompleteNotified: true },
-            };
-          }
-          return { ...prev, ...routePatch, ...signalPatch, comparativeDeduction: nextComp };
-        }
-
-        const nextEntry = nextComp.habitatSurvey[nextSurveyIndex];
-        const nextSurvey = nextComp.habitatSurvey.map((entry, index) => (
-          index === nextSurveyIndex ? { ...entry, revealed: true } : entry
-        ));
-        toast(`Habitat survey: ${nextEntry.habitatType} (${nextEntry.percentage}%)`, { duration: 2200 });
-        return {
-          ...prev,
-          ...routePatch,
-          ...signalPatch,
-          comparativeDeduction: { ...nextComp, habitatSurvey: nextSurvey },
-        };
-      }
-
-      const processedIds = new Set(nextComp.processedClues.map(clue => clue.clueId));
-      const nextClue = getNextClueForWalletKey(
-        nextComp.mysteryClues,
-        walletKey,
-        processedIds,
-      );
-      if (!nextClue) return { ...prev, ...routePatch, ...signalPatch, comparativeDeduction: nextComp };
-      const processed: ProcessedClue = {
-        clueId: nextClue.id,
-        category: nextClue.category,
-        label: nextClue.label,
-        status: 'processed',
-        compareTags: nextClue.compareTags,
-        isFiltering: nextClue.isFiltering,
-        fragmentCost: 0,
-      };
-      toast(nextClue.label, { duration: 2200 });
-      return {
-        ...prev,
-        ...routePatch,
-        ...signalPatch,
-        comparativeDeduction: {
-          ...nextComp,
-          processedClues: [...nextComp.processedClues, processed],
-        },
-      };
-    });
-  }, []);
-
-  const handleDeductionGuessResult = useCallback((isCorrect: boolean) => {
-    setRunState(prev => {
-      if (prev.phase !== 'mystery' || !prev.deductionCamp) return prev;
-      const camp = { ...prev.deductionCamp };
-      const totalPaid = camp.clueShop.reduce((sum, e) => sum + e.purchased, 0);
-      if (isCorrect) {
-        const { guessBonus, efficiencyBonus } = getGuessBonuses(totalPaid, true);
-        camp.guessResult = 'correct';
-        camp.guessBonusAwarded = guessBonus + efficiencyBonus;
-        const finalScore = getDeductionFinalScore(camp);
-        if (runIdRef.current) {
-          const rid = runIdRef.current;
-          const deductionSummary = {
-            scoreSpent: camp.scoreSpent, purchasedClues: totalPaid,
-            revealedClues: camp.revealedClues.length,
-            thoughtDiscountPct: camp.thoughtDiscountPct, finalScore,
-          };
-          setTimeout(() => {
-            fetch(`/api/runs/${rid}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                finalScore,
-                deductionSummary,
-                speciesId: correctSpeciesIdRef.current || undefined,
-                featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [],
-                routePolyline: routePolylineRef.current,
-              }),
-            })
-              .then((response) => {
-                if (response.ok) {
-                  window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: correctSpeciesIdRef.current } }));
-                }
-              })
-              .catch(err => console.error('Failed to persist deduction summary:', err));
-          }, 0);
-        }
-        return { ...prev, phase: 'complete', deductionCamp: camp, finalScore };
-      } else {
-        camp.guessResult = 'wrong';
-        camp.scoreSpent += 25;
-      }
-      return { ...prev, deductionCamp: camp, finalScore: null };
-    });
-  }, []);
-
-  const showSpeciesList = useCallback((speciesId: number) => {
-    onShowSpeciesListRef.current?.(speciesId);
-  }, []);
-
-  // --- Comparative deduction: fetch profiles when the mystery starts ---
   useEffect(() => {
-    if (runState.phase !== 'mystery' || runState.comparativeDeduction) return;
-    const speciesId = correctSpeciesIdRef.current;
-    if (!speciesId) return;
+    EventBus.on('expedition-data-ready', handleExpeditionDataReady); EventBus.on('expedition-start', handleExpeditionStart);
+    EventBus.on('node-advance-requested', handleNodeAdvanceRequested); EventBus.on('observation-earned', handleObservationEarned);
+    EventBus.on('node-objective-updated', handleObjective); EventBus.on('game-reset', resetLocal);
+    return () => { EventBus.off('expedition-data-ready', handleExpeditionDataReady); EventBus.off('expedition-start', handleExpeditionStart); EventBus.off('node-advance-requested', handleNodeAdvanceRequested); EventBus.off('observation-earned', handleObservationEarned); EventBus.off('node-objective-updated', handleObjective); EventBus.off('game-reset', resetLocal); };
+  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleObservationEarned, handleObjective, resetLocal]);
 
-    fetch('/api/species/catalog')
-      .then(r => r.ok ? r.json() : null)
-      .then(catalog => {
-        const allSpeciesIds = Array.isArray(catalog?.species)
-          ? catalog.species
-              .map((species: { id?: unknown }) => species.id)
-              .filter((id: unknown): id is number => Number.isInteger(id) && id !== speciesId)
-          : [];
-        const albumParam = allSpeciesIds.join(',');
-        return fetch(`/api/species/deduction?mysteryId=${speciesId}&albumIds=${albumParam}`);
-      })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) return;
-        const compState = createEmptyComparativeState(
-          data.mysteryProfile,
-          data.mysteryClues,
-          data.albumProfiles,
-          buildHabitatSurvey(expeditionPayloadRef.current?.rasterHabitats ?? []),
-        );
-        setRunState(prev => {
-          if (prev.phase !== 'mystery') return prev;
-          // Auto-confirm habitat tags from GIS evidence + recompute candidates
-          if (prev.evidenceBundle) {
-            const { confirmedCategories, confirmedHabitatTags } = applyEvidenceBundle(prev.evidenceBundle, compState.mysteryProfile);
-            if (confirmedHabitatTags.length > 0) {
-              compState.confirmedClues = confirmedCategories.reduce((confirmed, category) => (
-                addConfirmedClue(confirmed, {
-                  clueId: EVIDENCE_CONFIRMED_CLUE_ID,
-                  category,
-                  compareTags: confirmedHabitatTags,
-                })
-              ), compState.confirmedClues);
-              const allProfiles = [...compState.albumProfiles, compState.mysteryProfile];
-              compState.candidateCount = filterCandidates(allProfiles, compState.confirmedClues, new Set(compState.eliminatedSpeciesIds)).length;
-            }
-          }
-          return { ...prev, comparativeDeduction: compState };
-        });
-      })
-      .catch(err => console.error('Failed to fetch deduction profiles:', err));
-  }, [runState.phase, runState.comparativeDeduction]);
-
-  // --- Comparative deduction handlers ---
-
-  const handleProcessClue = useCallback((clueId: number) => {
-    setRunState(prev => {
-      if (prev.phase !== 'mystery' || !prev.comparativeDeduction) return prev;
-      const comp = prev.comparativeDeduction;
-      const clue = comp.mysteryClues.find(c => c.id === clueId);
-      if (!clue || comp.processedClues.some(pc => pc.clueId === clueId)) return prev;
-
-      const processed: ProcessedClue = { clueId: clue.id, category: clue.category, label: clue.label, status: 'processed', compareTags: clue.compareTags, isFiltering: clue.isFiltering, fragmentCost: 0 };
-      return {
-        ...prev,
-        comparativeDeduction: { ...comp, processedClues: [...comp.processedClues, processed] },
-      };
-    });
-  }, []);
-
-  const handlePlaceReference = useCallback((referenceSpeciesId: number, clueId: number) => {
-    setRunState(prev => {
-      if (prev.phase !== 'mystery' || !prev.comparativeDeduction) return prev;
-      const comp = prev.comparativeDeduction;
-      const pClue = comp.processedClues.find(pc => pc.clueId === clueId);
-      if (!pClue || pClue.status !== 'processed' || !pClue.isFiltering || !pClue.compareTags?.length) return prev;
-      const refProfile = comp.albumProfiles.find(p => p.speciesId === referenceSpeciesId);
-      if (!refProfile) return prev;
-
-      const result = compareReference(comp.mysteryProfile, refProfile, pClue.category, pClue.compareTags);
-      const attempt: import('@/lib/deductionEngine').ReferenceAttempt = { referenceSpeciesId, referenceName: refProfile.commonName, clueId, category: pClue.category, result };
-
-      let newConfirmedClues = comp.confirmedClues;
-      const newEliminated = [...comp.eliminatedSpeciesIds];
-      if (result.matched) {
-        newConfirmedClues = addConfirmedClue(comp.confirmedClues, {
-          clueId,
-          category: pClue.category,
-          compareTags: pClue.compareTags,
-        });
-      } else {
-        if (!newEliminated.includes(referenceSpeciesId)) {
-          newEliminated.push(referenceSpeciesId);
-        }
-      }
-
-      const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
-      const candidates = filterCandidates(allProfiles, newConfirmedClues, new Set(newEliminated));
-      // On a match, mark the clue confirmed. On a mismatch, leave it 'processed'
-      // so the player can compare against another reference rather than burning the clue.
-      const updatedProcessed = result.matched
-        ? comp.processedClues.map(pc => pc.clueId === clueId ? { ...pc, status: 'confirmed' as ProcessedClue['status'] } : pc)
-        : comp.processedClues;
-
-      return { ...prev, comparativeDeduction: { ...comp, activeReferenceId: referenceSpeciesId, processedClues: updatedProcessed, referenceHistory: [...comp.referenceHistory, attempt], confirmedClues: newConfirmedClues, eliminatedSpeciesIds: newEliminated, candidateCount: candidates.length } };
-    });
-  }, []);
-
-  const handleComparativeGuessResult = useCallback((isCorrect: boolean, guessedName?: string) => {
-    setRunState(prev => {
-      if (prev.phase !== 'mystery' || !prev.comparativeDeduction || !prev.deductionCamp) return prev;
-      const comp = prev.comparativeDeduction;
-      const camp = prev.deductionCamp;
-      if (isCorrect) {
-        const totalClues = comp.processedClues.length;
-        const { guessBonus, efficiencyBonus } = getGuessBonuses(totalClues, true);
-        const finalScore = camp.bankedScore - camp.scoreSpent - comp.scoreSpent + guessBonus + efficiencyBonus;
-        if (runIdRef.current) {
-          const rid = runIdRef.current;
-          fetch(`/api/runs/${rid}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ finalScore, deductionSummary: { scoreSpent: camp.scoreSpent + comp.scoreSpent, processedClues: totalClues, confirmedCategories: new Set(comp.confirmedClues.map(clue => clue.category)).size, candidateCount: comp.candidateCount, referenceAttempts: comp.referenceHistory.length, finalScore }, speciesId: correctSpeciesIdRef.current || undefined, featureFingerprints: expeditionPayloadRef.current?.featureFingerprints ?? [], routePolyline: routePolylineRef.current }) })
-            .then((response) => {
-              if (response.ok) {
-                window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: correctSpeciesIdRef.current } }));
-              }
-            })
-            .catch(err => console.error('Failed to persist deduction:', err));
-        }
-        unlockSpeciesCardDiscovery(correctSpeciesIdRef.current).catch(err => console.error('Failed to unlock species card:', err));
-        return {
-          ...prev,
-          phase: 'complete' as const,
-          comparativeDeduction: { ...comp, guessResult: 'correct', guessBonusAwarded: guessBonus + efficiencyBonus },
-          finalScore,
-          completionReason: 'captured',
-        };
-      }
-      const guessedProfile = guessedName
-        ? comp.albumProfiles.find(profile => profile.commonName.toLowerCase() === guessedName.toLowerCase())
-        : null;
-      const eliminatedSpeciesIds = guessedProfile && !comp.eliminatedSpeciesIds.includes(guessedProfile.speciesId)
-        ? [...comp.eliminatedSpeciesIds, guessedProfile.speciesId]
-        : comp.eliminatedSpeciesIds;
-      const lastWrongGuessFeedback = guessedProfile
-        ? comp.confirmedClues
-            .map(clue => compareReference(comp.mysteryProfile, guessedProfile, clue.category, clue.compareTags))
-        : null;
-      const allProfiles = [...comp.albumProfiles, comp.mysteryProfile];
-      const candidateCount = filterCandidates(allProfiles, comp.confirmedClues, new Set(eliminatedSpeciesIds)).length;
-      return {
-        ...prev,
-        comparativeDeduction: {
-          ...comp,
-          guessResult: 'wrong',
-          eliminatedSpeciesIds,
-          candidateCount,
-          lastWrongGuessFeedback,
-        },
-      };
-    });
-  }, []);
-
-  // --- EventBus registration (expedition lifecycle only) ---
-  useEffect(() => {
-    EventBus.on('expedition-data-ready', handleExpeditionDataReady);
-    EventBus.on('expedition-start', handleExpeditionStart);
-    EventBus.on('node-advance-requested', handleNodeAdvanceRequested);
-    EventBus.on('deduction-clue-triggered', handleDeductionClueTriggered);
-    EventBus.on('node-rewards-summary', handleNodeRewardsSummary);
-    EventBus.on('node-objective-updated', handleNodeObjectiveCheckpoint);
-    EventBus.on('game-reset', resetRunStateLocal);
-
-    return () => {
-      EventBus.off('expedition-data-ready', handleExpeditionDataReady);
-      EventBus.off('expedition-start', handleExpeditionStart);
-      EventBus.off('node-advance-requested', handleNodeAdvanceRequested);
-      EventBus.off('deduction-clue-triggered', handleDeductionClueTriggered);
-      EventBus.off('node-rewards-summary', handleNodeRewardsSummary);
-      EventBus.off('node-objective-updated', handleNodeObjectiveCheckpoint);
-      EventBus.off('game-reset', resetRunStateLocal);
-    };
-  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleDeductionClueTriggered, handleNodeRewardsSummary, handleNodeObjectiveCheckpoint, resetRunStateLocal]);
-
-  const value = useMemo<ExpeditionContextValue>(() => ({
-    runState, boardOpacity,
-    correctSpeciesId: correctSpeciesIdRef.current,
-    hiddenSpeciesName: hiddenSpeciesNameRef.current,
-    handleAffinitySelected, handleRunResume, handleRunReset,
-    handleDeductionGuessResult,
-    handleProcessClue, handlePlaceReference, handleComparativeGuessResult,
-    showSpeciesList,
-    onShowSpeciesList: onShowSpeciesListRef,
-  }), [runState, boardOpacity, handleAffinitySelected, handleRunResume, handleRunReset, handleDeductionGuessResult, handleProcessClue, handlePlaceReference, handleComparativeGuessResult, showSpeciesList]);
-
+  const showSpeciesList = useCallback((speciesId: number) => onShowSpeciesList.current?.(speciesId), []);
+  const value = useMemo(() => ({ runState, boardOpacity, handleRunResume, handleRunReset, handleCommitInterpretation, handleGuess, showSpeciesList, onShowSpeciesList }), [runState, boardOpacity, handleRunResume, handleRunReset, handleCommitInterpretation, handleGuess, showSpeciesList]);
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
 
-// --- Helpers ---
+function createCaseState(candidateIds: number[], profiles: DeductionProfile[]): CaseState { return { stage: 'board', candidateIds, profiles, observations: [], interpretations: [], eliminatedIds: [], pendingInterpretationRef: null, missedEvidenceNodeIndexes: [], guessResult: null, lastFeedback: null }; }
+function addObservation(state: CaseState, observation: EarnedObservation): CaseState { return state.observations.some(item => item.ref === observation.ref) ? state : { ...state, observations: [...state.observations, observation], pendingInterpretationRef: observation.ref }; }
+function sameIds(left: number[], right: number[]) { return left.length === right.length && left.every((id, index) => id === right[index]); }
+async function fetchProfiles(ids: number[]): Promise<DeductionProfile[]> { const response = await fetch(`/api/species/profiles?ids=${ids.join(',')}`); if (!response.ok) throw new Error(`Profile fetch failed (${response.status})`); const body = await response.json() as { profiles?: DeductionProfile[] }; if (body.profiles?.length !== 6) throw new Error('Case profiles are incomplete'); return body.profiles; }
+async function requestObservation(runId: string | null, nodeIndex: number, tolerateForbidden: boolean): Promise<EarnedObservation | null> { if (!runId) return null; const response = await fetch(`/api/runs/${runId}/observations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nodeIndex }) }); if (tolerateForbidden && response.status === 403) return null; if (!response.ok) throw new Error(`Observation request failed (${response.status})`); return { ...await response.json(), issuedAtMs: Date.now() } as EarnedObservation; }
 
-function getExpeditionRoutePolyline(payload: EventPayloads['expedition-data-ready'] | null) {
-  if (!payload) return [];
-  return payload.expedition.routePolyline?.length
-    ? payload.expedition.routePolyline
-    : computeExpeditionRoutePolyline(payload.lon, payload.lat, payload.expedition.nodes.length);
+function emitBoard(payload: EventPayloads['expedition-data-ready'], publicCase: PublicCaseSnapshot, nodeIndex: number, objectiveProgress: number) {
+  const node = payload.expedition.nodes[nodeIndex]; if (!node) throw new Error(`Missing generated node ${nodeIndex}`);
+  const method = publicCase.nodeMethods[nodeIndex]; const methodGem = METHOD_GEM_MAP[method];
+  const boardConfig = buildBoardSpawnConfigForNode(node.node_type, { [methodGem]: 3 });
+  const location = node.waypoint ?? { lon: payload.lon, lat: payload.lat };
+  EventBus.emit('cesium-location-selected', { lon: location.lon, lat: location.lat, ecoregionId: payload.ecoregionId ?? null, species: payload.species, rasterHabitats: payload.rasterHabitats, habitats: payload.habitats, difficulty: node.difficulty, moveBudget: node.moveBudget, obstacles: node.obstacles, obstacleFamily: node.obstacleFamily, objectiveGem: methodGem, activeAffinities: payload.expedition.activeAffinities, objectiveTarget: node.objectiveTarget, objectiveProgress, nodeIndex, nodeType: node.node_type, events: node.events, boardSeed: publicCase.boardSeeds[nodeIndex], boardContext: buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: node.obstacles, nodeIndex }), boardConfig });
 }
 
-function getRoutePolylineThroughNode(route: Array<{ lon: number; lat: number }>, nodeIndex: number) {
-  if (route.length === 0) return [];
-  return getRoutePolylineThroughWaypointSlot(route, nodeIndex);
-}
+function buildCreateBody(payload: EventPayloads['expedition-data-ready'], routePolyline: RoutePoint[]) { return { lon: payload.lon, lat: payload.lat, locationKey: `${payload.lon.toFixed(4)},${payload.lat.toFixed(4)}`, nodes: payload.expedition.nodes, activeAffinities: payload.expedition.activeAffinities, bioregion: payload.expedition.bioregion?.bioregion ?? undefined, realm: payload.expedition.bioregion?.realm ?? undefined, biome: payload.expedition.bioregion?.biome ?? undefined, speciesIds: payload.species.map(species => species.id), habitats: payload.habitats, rasterHabitats: payload.rasterHabitats, featureFingerprints: payload.featureFingerprints ?? [], routePolyline, expeditionSnapshot: { protectedAreas: payload.expedition.protectedAreas, availableAffinities: payload.expedition.availableAffinities, primaryNodeFamily: payload.expedition.primaryNodeFamily, primaryVariant: payload.expedition.primaryVariant, modifierNodes: payload.expedition.modifierNodes, signals: payload.expedition.signals, waypoints: payload.expedition.waypoints ?? [], waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null, nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null } }; }
 
-function getNodeRouteLocation(payload: EventPayloads['expedition-data-ready'], nodeIndex: number) {
-  const waypoint = payload.expedition.nodes[nodeIndex]?.waypoint;
-  return waypoint
-    ? { lon: waypoint.lon, lat: waypoint.lat }
-    : { lon: payload.lon, lat: payload.lat };
-}
-
-function buildHabitatSurvey(rasterHabitats: RasterHabitatResult[]): HabitatSurveyEntry[] {
-  return [...rasterHabitats]
-    .filter(entry => typeof entry.habitat_type === 'string' && Number.isFinite(entry.percentage))
-    .sort((a, b) => b.percentage - a.percentage)
-    .map(entry => ({
-      habitatType: entry.habitat_type,
-      percentage: Math.round(entry.percentage * 10) / 10,
-      revealed: false,
-    }));
-}
-
-function buildHabitatLootWeights(rasterHabitats: RasterHabitatResult[]): Partial<Record<LootGemType, number>> {
-  const weights: Record<LootGemType, number> = {
-    black: 1,
-    blue: 1,
-    green: 1,
-    orange: 1,
-    red: 1,
-    white: 1,
-    yellow: 1,
-    purple: 1,
-  };
-
-  for (const habitat of rasterHabitats) {
-    const text = habitat.habitat_type.toLowerCase();
-    const pct = Number.isFinite(habitat.percentage)
-      ? Math.max(0, habitat.percentage > 1 ? habitat.percentage / 100 : habitat.percentage)
-      : 0;
-    if (pct <= 0) continue;
-
-    if (text.includes('forest')) weights.green += 3 * pct;
-    if (text.includes('savanna')) weights.orange += 3 * pct;
-    if (text.includes('shrub')) weights.black += 3 * pct;
-    if (text.includes('grass')) weights.white += 3 * pct;
-    if (/(wetland|marsh|bog)/.test(text)) weights.blue += 3 * pct;
-    if (text.includes('urban')) weights.red += 3 * pct;
-  }
-
-  return weights;
-}
-
-function chooseMysterySpecies(species: Species[], waypoints: ExpeditionWaypoint[]): Species | undefined {
-  const sorted = [...species].sort((a, b) => a.id - b.id);
-  if (waypoints.length === 0) return sorted[0];
-
-  return sorted
-    .map(candidate => ({
-      candidate,
-      score: waypoints.reduce((sum, waypoint) => sum + scoreSpeciesForAnchor(candidate, waypoint), 0),
-    }))
-    .sort((a, b) => b.score - a.score || a.candidate.id - b.candidate.id)[0]?.candidate;
-}
-
-function scoreSpeciesForAnchor(species: Species, anchor: ExpeditionWaypoint): number {
-  const text = speciesSearchText(species);
-  if (anchor.waypointType === 'river' || anchor.waypointType === 'lake' || anchor.waypointType === 'wetland') {
-    let score = species.freshwater ? 5 : 0;
-    if (/(freshwater|river|stream|lake|wetland|marsh|swamp|aquatic|riparian)/.test(text)) score += 3;
-    if (species.marine || /marine|coastal|shore|estuary/.test(text)) score += 1;
-    return score;
-  }
-
-  if (anchor.waypointType === 'city' || anchor.waypointType === 'basecamp') {
-    return /(urban|city|town|settlement|artificial|built|garden|crop|agricultur|pasture)/.test(text) ? 3 : 0;
-  }
-
-  if (anchor.waypointType === 'protected_area') {
-    const code = (species.conservation_code ?? species.category ?? '').toUpperCase();
-    let score = /^(VU|EN|CR)$/.test(code) ? 4 : 0;
-    if (/(vulnerable|endangered|critically endangered|threatened)/.test(text)) score += 2;
-    return score;
-  }
-
-  return 0;
-}
-
-function speciesSearchText(species: Species): string {
-  const values = [
-    species.common_name,
-    species.scientific_name,
-    species.habitat_description,
-    Array.isArray(species.habitat_tags) ? species.habitat_tags.join(' ') : species.habitat_tags,
-    species.geographic_description,
-    species.distribution_comment,
-    species.conservation_text,
-    species.conservation_code,
-    species.category,
-    species.threats,
-  ];
-  return values.filter(Boolean).join(' ').toLowerCase();
-}
-
-function anchorGeographyText(anchor: ExpeditionWaypoint): string {
-  switch (anchor.waypointType) {
-    case 'river': return 'riverine corridor';
-    case 'lake': return 'lake margin';
-    case 'wetland': return 'wetland habitat';
-    case 'protected_area': return 'protected landscape';
-    case 'city':
-    case 'basecamp':
-      return 'human-edge habitat';
-    case 'bioregion_edge': return 'ecoregion transition';
-    default: return 'local survey site';
-  }
-}
-
-function nextRouteProgress(prev: RunState): {
-  matchCount: number;
-  visitedSlot: number;
-  arrivedWaypoint: ExpeditionWaypoint | null;
-} {
-  const matchCount = prev.routeMatchCount + 1;
-  const maxSlot = Math.max(0, (prev.expedition?.waypoints?.length ?? 1) - 1);
-  if (matchCount % MATCHES_PER_LEG !== 0 || prev.visitedWaypointSlot >= maxSlot) {
-    return { matchCount, visitedSlot: prev.visitedWaypointSlot, arrivedWaypoint: null };
-  }
-
-  const visitedSlot = Math.min(prev.visitedWaypointSlot + 1, maxSlot);
-  const arrivedWaypoint = prev.expedition?.waypoints?.find(waypoint => waypoint.slot === visitedSlot) ?? null;
-  return { matchCount, visitedSlot, arrivedWaypoint };
-}
-
-function addArrivalSiteFact(
-  comp: ComparativeDeductionState,
-  waypoint: ExpeditionWaypoint,
-  slot: number,
-): ComparativeDeductionState {
-  const clueId = -10 - slot;
-  if (comp.processedClues.some(clue => clue.clueId === clueId)) return comp;
-  const siteFact: ProcessedClue = {
-    clueId,
-    category: 'geography',
-    label: buildSiteFactLabel(waypoint),
-    status: 'processed',
-    compareTags: null,
-    isFiltering: false,
-    fragmentCost: 0,
-  };
+function expeditionFromProjection(data: ClientRunProjection): ExpeditionData {
+  const snapshot = data.checkpoint.expeditionSnapshot;
   return {
-    ...comp,
-    processedClues: [...comp.processedClues, siteFact],
+    nodes: data.nodes.map(node => ({
+      node_type: node.nodeType,
+      difficulty: (node.difficulty ?? 3) as 1 | 2 | 3 | 4 | 5,
+      moveBudget: node.moveBudget,
+      obstacles: node.obstacles as ExpeditionData['nodes'][number]['obstacles'],
+      events: node.events as ExpeditionData['nodes'][number]['events'],
+      rationale: node.rationale ?? '',
+      obstacleFamily: null,
+      method: node.method,
+      objectiveType: 'method_match',
+      objectiveTarget: node.objectiveTarget ?? 0,
+      boardSeed: node.boardSeed,
+      waypoint: node.waypoint as ExpeditionData['nodes'][number]['waypoint'],
+    })),
+    bioregion: { bioregion: data.run.bioregion ?? null, realm: data.run.realm ?? null, biome: data.run.biome ?? null },
+    protectedAreas: snapshot.protectedAreas,
+    activeAffinities: data.checkpoint.activeAffinities as AffinityType[],
+    availableAffinities: snapshot.availableAffinities as AffinityType[],
+    primaryNodeFamily: snapshot.primaryNodeFamily,
+    primaryVariant: snapshot.primaryVariant,
+    modifierNodes: snapshot.modifierNodes,
+    signals: snapshot.signals,
+    routePolyline: data.checkpoint.routePolyline,
+    waypoints: snapshot.waypoints as ExpeditionData['waypoints'],
+    waypointRadiusKm: snapshot.waypointRadiusKm,
+    nearestRiverDistM: snapshot.nearestRiverDistM,
   };
 }
-
-function addConfirmedClue(confirmedClues: ConfirmedClue[], next: ConfirmedClue): ConfirmedClue[] {
-  if (next.compareTags.length === 0) return confirmedClues;
-  const withoutDuplicate = confirmedClues.filter(clue => clue.clueId !== next.clueId);
-  return [...withoutDuplicate, { ...next, compareTags: [...new Set(next.compareTags)] }];
-}
-
-function buildSiteFactLabel(waypoint: ExpeditionWaypoint): string {
-  if (waypoint.waypointType === 'protected_area') {
-    return `Inside protected area: ${waypoint.name}`;
-  }
-  return `Site: ${waypoint.name} - ${anchorGeographyText(waypoint)}`;
-}
-
-function emitBoardForNode(
-  payload: EventPayloads['expedition-data-ready'],
-  nodeIndex: number,
-  activeAffinities: AffinityType[],
-  objectiveProgress = 0,
-) {
-  const node = payload.expedition.nodes[nodeIndex];
-  if (!node) return;
-  const boardContext = buildNodeBoardContext({
-    width: GRID_COLS,
-    height: GRID_ROWS,
-    obstacles: node.obstacles ?? [],
-    nodeIndex,
-  });
-  const boardConfig = buildBoardSpawnConfigForNode(
-    node.node_type ?? 'custom',
-    node.counterGem ?? null,
-    payload.expedition.actionBias,
-    activeAffinities,
-    buildHabitatLootWeights(payload.rasterHabitats),
-  );
-  const nodeLocation = getNodeRouteLocation(payload, nodeIndex);
-  EventBus.emit('cesium-location-selected', {
-    lon: nodeLocation.lon,
-    lat: nodeLocation.lat,
-    ecoregionId: payload.ecoregionId ?? null,
-    species: payload.species,
-    rasterHabitats: payload.rasterHabitats,
-    habitats: payload.habitats,
-    difficulty: node.difficulty,
-    moveBudget: node.moveBudget,
-    obstacles: node.obstacles,
-    obstacleFamily: node.obstacleFamily,
-    counterGem: node.counterGem,
-    requiredGems: node.requiredGems,
-    activeAffinities,
-    objectiveTarget: node.objectiveTarget,
-    objectiveProgress,
-    nodeIndex,
-    nodeType: node.node_type,
-    events: node.events,
-    boardContext,
-    boardConfig,
-    encounterConfig: node.encounterConfig,
-  });
-}
-
-function buildDeductionCampState(prev: RunState): DeductionCampState {
-  const campShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(cat => ({
-    category: cat, purchased: 0, fragmentCount: prev.clueFragments[cat],
-  }));
-  return {
-    bankedScore: prev.bankedScore,
-    clueFragments: { ...prev.clueFragments },
-    clueShop: campShop,
-    revealedClues: [],
-    triviaUnlocked: [],
-    scoreSpent: 0,
-    guessResult: null,
-    guessBonusAwarded: 0,
-    thoughtDiscountPct: prev.totalThoughtDiscount,
-  };
-}
-
-function buildDeductionCampFromCheckpoint(
-  bankedScore: number,
-  clueFragments: RunState['clueFragments'],
-): DeductionCampState {
-  const clueShop: ClueShopEntry[] = CLUE_CATEGORY_KEYS.map(category => ({
-    category,
-    purchased: 0,
-    fragmentCount: clueFragments[category],
-  }));
-  return {
-    bankedScore,
-    clueFragments: { ...clueFragments },
-    clueShop,
-    revealedClues: [],
-    triviaUnlocked: [],
-    scoreSpent: 0,
-    guessResult: null,
-    guessBonusAwarded: 0,
-    thoughtDiscountPct: 0,
-  };
-}
-
-function persistRunCheckpoint(
-  runId: string,
-  state: RunState,
-  currentNodeIndex: number,
-  routePolyline: RoutePoint[],
-  status?: 'active' | 'deduction',
-  objectiveProgress?: number,
-) {
-  setTimeout(() => {
-    fetch(`/api/runs/${runId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        clueFragments: { ...state.clueFragments },
-        bankedScore: state.bankedScore,
-        currentNodeIndex,
-        objectiveProgress,
-        routePolyline,
-        status,
-      }),
-    }).catch(err => console.error('Failed to persist run checkpoint:', err));
-  }, 0);
-}
-
-type ResumeRunResponse = {
-  run?: { status?: string };
-  nodes?: Array<{ id: string; nodeOrder: number; objectiveProgress: number }>;
-  resume?: {
-    lon: number;
-    lat: number;
-    correctSpeciesId: number | null;
-    speciesIds: number[];
-    habitats: string[];
-    rasterHabitats: RasterHabitatResult[];
-    currentNodeIndex: number;
-    clueFragments: Record<string, number>;
-    bankedScore: number;
-    featureFingerprints: FeatureFingerprint[];
-    expedition: Omit<EventPayloads['expedition-data-ready']['expedition'], 'activeAffinities' | 'availableAffinities'> & {
-      activeAffinities: string[];
-      availableAffinities: string[];
-    };
-  };
-};
-
-async function fetchResumeSpecies(speciesIds: number[], lon: number, lat: number): Promise<Species[]> {
-  if (speciesIds.length === 0) return fetchResumeSpeciesNearPoint(lon, lat);
-  const response = await fetch(`/api/species/by-ids?ids=${speciesIds.join(',')}`);
-  if (!response.ok) return fetchResumeSpeciesNearPoint(lon, lat);
-  const data = await response.json() as { species?: Species[] };
-  const species = Array.isArray(data.species) ? data.species : [];
-  return species.length > 0 ? species : fetchResumeSpeciesNearPoint(lon, lat);
-}
-
-async function fetchResumeSpeciesNearPoint(lon: number, lat: number): Promise<Species[]> {
-  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return [];
-  const response = await fetch(`/api/species/in-radius?lon=${lon}&lat=${lat}&radius=10000`);
-  if (!response.ok) return [];
-  const data = await response.json() as { species?: Species[] };
-  return Array.isArray(data.species) ? data.species : [];
-}
-
-function normalizeAffinities(values: unknown): AffinityType[] {
-  return Array.isArray(values)
-    ? values.filter((value): value is AffinityType => typeof value === 'string' && value.length > 0)
-    : [];
-}
-
-function clampNodeIndex(index: unknown, nodeCount: number, status: string | undefined): number {
-  const max = status === 'deduction' ? nodeCount : Math.max(0, nodeCount - 1);
-  const value = typeof index === 'number' && Number.isFinite(index) ? Math.trunc(index) : 0;
-  return Math.max(0, Math.min(max, value));
-}
-
-function mergeClueFragments(value: unknown): RunState['clueFragments'] {
-  const fragments = createEmptyClueFragments();
-  if (!value || typeof value !== 'object') return fragments;
-  for (const key of CLUE_CATEGORY_KEYS) {
-    const next = (value as Record<string, unknown>)[key];
-    if (typeof next === 'number' && Number.isFinite(next)) fragments[key] = next;
-  }
-  return fragments;
-}
+function payloadFromProjection(data: ClientRunProjection, expedition: ExpeditionData, profiles: DeductionProfile[]): EventPayloads['expedition-data-ready'] { return { lon: data.run.selectedLng ?? 0, lat: data.run.selectedLat ?? 0, expedition, species: profiles.map(profile => ({ id: profile.speciesId, common_name: profile.commonName, scientific_name: profile.scientificName } as Species)), rasterHabitats: data.checkpoint.rasterHabitats, habitats: data.checkpoint.habitats, featureFingerprints: data.checkpoint.featureFingerprints as EventPayloads['expedition-data-ready']['featureFingerprints'] }; }

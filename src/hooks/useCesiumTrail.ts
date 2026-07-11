@@ -35,7 +35,6 @@ const NODE_TYPE_EMOJI: Record<string, string> = {
   elevation_ridge: '⛰️',
   storm_window: '⚡',
   analysis: '🔬',
-  crisis: '⚠️',
   custom: '🔎',
 };
 

@@ -1,4 +1,17 @@
-// src/game/scenes/Game.ts
+// Game scene — the Controller that glues the board together.
+//
+// Responsibilities, in one place:
+//   - pointer input: drag a row/column, decide if it's a legal move
+//   - ask BackendPuzzle (Model) what matched, tell BoardView (View) to animate
+//   - score the move (streaks, multipliers from constants.ts) and emit HUD
+//     updates over the EventBus
+//   - listen for expedition events ('cesium-location-selected',
+//     'expedition-start') to configure the board for the current node
+//     (spawn weights, obstacles, objective), and emit
+//     'deduction-clue-triggered' / 'node-advance-requested' back to React.
+//
+// If you are new here: read BackendPuzzle.ts first (the rules), then this
+// file top-to-bottom following handlePointerDown -> processMove.
 import Phaser from 'phaser';
 import { BackendPuzzle } from '../BackendPuzzle';
 import { MoveAction, MoveDirection } from '../MoveAction';
@@ -18,15 +31,12 @@ import {
 } from '../constants';
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
-import { GemType, type ActionGemType } from '../constants';
+import { GemType } from '../constants';
 import { getClueCategoryForGemType } from '../gemSemantics';
+import { GEM_METHOD_MAP } from '@/expedition/domain';
 import {
   buildNodeBoardContext,
-  getCounterGemForObstacleFamily,
-  type NodeObstacle,
-  type ObstacleFamily,
 } from '../nodeObstacles';
-import type { AffinityType } from '@/expedition/affinities';
 import type { DeductionClueCategory } from '@/db/schema/species';
 import { 
   GemCategory, 
@@ -190,16 +200,11 @@ export class Game extends Phaser.Scene {
     private inExpeditionRun: boolean = false;
 
     // Node objective tracking (gem matching targets)
-    private nodeRequiredGems: Set<GemType> = new Set();
-    private nodeCounterGem: ActionGemType | null = null;
-    private nodeObstacleFamily: ObstacleFamily | null = null;
-    private nodeObstacles: NodeObstacle[] = [];
-    private nodeActiveAffinities: AffinityType[] = [];
+    private nodeObjectiveGem: GemType | null = null;
     private nodeObjectiveTarget: number = 0;
     private nodeObjectiveProgress: number = 0;
     private nodeObjectiveCompleted: boolean = false;
     private currentNodeIndex: number = 0;
-    private currentNodeDifficulty: number = 3;
 
     constructor() {
         super('Game');
@@ -249,16 +254,12 @@ export class Game extends Phaser.Scene {
         EventBus.emit('node-objective-updated', {
             progress: this.nodeObjectiveProgress,
             target: this.nodeObjectiveTarget,
-            requiredGems: Array.from(this.nodeRequiredGems),
-            counterGem: this.nodeCounterGem,
-            activeAffinities: [...this.nodeActiveAffinities],
         });
     }
 
     private finishNodeObjective(reason: 'victory' | 'escaped'): void {
         this.nodeObjectiveCompleted = true;
         this.disableInputs();
-        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
         this.time.delayedCall(250, () => {
             EventBus.emit('node-advance-requested', {
                 nodeIndex: this.currentNodeIndex,
@@ -286,7 +287,6 @@ export class Game extends Phaser.Scene {
                 if (!this.nodeObjectiveCompleted) {
                     this.nodeObjectiveCompleted = true;
                     this.disableInputs();
-                    this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
                     this.time.delayedCall(250, () => {
                         EventBus.emit('node-advance-requested', {
                             nodeIndex: this.currentNodeIndex,
@@ -500,7 +500,6 @@ export class Game extends Phaser.Scene {
         this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.handlePointerUp, this);
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
-        EventBus.on('species-guess-submitted', this.handleSpeciesGuess, this);
         EventBus.on(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
@@ -718,7 +717,7 @@ export class Game extends Phaser.Scene {
             this.pauseOverlayResumeButton?.setVisible(false);
             this.pauseButtonContainer?.setVisible(true);
             this.shuffleButtonContainer?.setVisible(true);
-            if (this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.isResolvingMove && this.canMoveBeforePause) {
+            if (this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.isResolvingMove && this.canMoveBeforePause && !this.nodeObjectiveCompleted) {
                 this.canMove = true;
             }
             this.canMoveBeforePause = false;
@@ -890,7 +889,7 @@ export class Game extends Phaser.Scene {
             }
 
             if (matchGemType && this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
-                const requiredMatch = this.nodeRequiredGems.has(matchGemType) || matchGemType === this.nodeCounterGem;
+                const requiredMatch = matchGemType === this.nodeObjectiveGem;
                 if (requiredMatch) {
                     const contribution = Math.max(1, match.length - 2);
                     this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + contribution);
@@ -903,39 +902,6 @@ export class Game extends Phaser.Scene {
             this.emitNodeObjectiveUpdated();
 
         }
-    }
-
-    /** Resolve small non-clue match bonuses. RPG wallet/consumable rewards were removed. */
-    private emitMatchEconomyRewards(matches: Coordinate[][], gridState: any): void {
-        if (!matches || matches.length === 0 || !gridState) return;
-
-        for (const match of matches) {
-            if (match.length === 0) continue;
-            const [x, y] = match[0];
-            const gem = gridState[x]?.[y];
-            if (!gem) continue;
-
-            const bonus = match.length >= 4 ? 2 : 1;
-
-            if (gem.gemType === 'multiplier' && this.backendPuzzle) {
-                this.backendPuzzle.addBonusScore(25 * bonus);
-                this.emitHud();
-            }
-        }
-    }
-
-    /** Emit a simple node completion reward. */
-    private stopNodeBonusDecayAndEmitRewards(difficulty: number): void {
-        if (!this.inExpeditionRun) return;
-
-        const baseClearReward = 50 + 25 * difficulty;
-        EventBus.emit('node-rewards-summary', {
-            baseClearReward,
-            preservedNodeBonus: 0,
-            triviaReward: 0,
-            clueFragmentReward: {},
-            tier: 'stabilized',
-        });
     }
 
     private applyMoveBonuses(baseScore: number): { finalScore: number; multiplier: number; repeatedCategories: GemCategory[] } {
@@ -1192,16 +1158,11 @@ export class Game extends Phaser.Scene {
             this.speciesStartTime = Date.now();
             
             // Initialize node objective from expedition data
-            this.nodeObstacles = [...(data.obstacles ?? [])];
-            this.nodeObstacleFamily = data.obstacleFamily ?? null;
-            this.nodeCounterGem = data.counterGem ?? (this.nodeObstacleFamily ? getCounterGemForObstacleFamily(this.nodeObstacleFamily) : null);
-            this.nodeRequiredGems = new Set(data.requiredGems ?? (this.nodeCounterGem ? [this.nodeCounterGem] : []));
-            this.nodeActiveAffinities = [...(data.activeAffinities ?? [])];
+            this.nodeObjectiveGem = data.objectiveGem ?? null;
             this.nodeObjectiveTarget = data.objectiveTarget ?? 0;
             this.nodeObjectiveProgress = Phaser.Math.Clamp(data.objectiveProgress ?? 0, 0, this.nodeObjectiveTarget);
             this.nodeObjectiveCompleted = false;
             this.currentNodeIndex = data.nodeIndex ?? 0;
-            this.currentNodeDifficulty = data.difficulty ?? 3;
 
 
             // Store raster habitat data for green gem clues
@@ -1224,7 +1185,6 @@ export class Game extends Phaser.Scene {
                     speciesId: this.selectedSpecies.id,
                     totalSpecies: this.currentSpecies.length,
                     currentIndex: this.currentSpeciesIndex + 1,
-                    hiddenSpeciesName: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species'  // Store real name internally
                 });
             } else {
                 this.selectedSpecies = null;
@@ -1235,8 +1195,11 @@ export class Game extends Phaser.Scene {
             if (!this.backendPuzzle) { // Should exist from create()
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
             }
-            // Configure board spawning for action-first YMBAB-style nodes.
+            // Configure board spawning for action-first expedition nodes.
             this.backendPuzzle.setGemPool(data.boardConfig ?? DEFAULT_BOARD_SPAWN_CONFIG);
+            if (data.boardSeed !== undefined) {
+                this.backendPuzzle.setSeed(data.boardSeed);
+            }
             this.backendPuzzle.regenerateBoard();
             const boardContext = data.boardContext ?? buildNodeBoardContext({
                 width: GRID_COLS,
@@ -1566,7 +1529,8 @@ export class Game extends Phaser.Scene {
             }
         } finally {
             this.isResolvingMove = false;
-            if (!this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver()) {
+            // A finished objective keeps the board inert through interpretation.
+            if (!this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.nodeObjectiveCompleted) {
                 this.canMove = true;
             }
         }
@@ -1602,7 +1566,6 @@ export class Game extends Phaser.Scene {
             if (bonus > 0) {
                 this.backendPuzzle.addBonusScore(bonus);
             }
-            repeatedCategories.forEach(category => this.revealAllCluesForCategory(category));
             this.turnBaseTotalScore = finalScore;
         } else {
             multiplier = 1;
@@ -1671,10 +1634,10 @@ export class Game extends Phaser.Scene {
 
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any): void {
         this.recordMatchesForSummary(matches, originalGridState);
-        this.emitMatchEconomyRewards(matches, originalGridState);
         if (!this.selectedSpecies || matches.length === 0 || !originalGridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
+        const categoryMethod = new Map<GemCategory, NonNullable<(typeof GEM_METHOD_MAP)[keyof typeof GEM_METHOD_MAP]>>();
 
         for (const match of matches) {
             if (match.length === 0) continue;
@@ -1686,39 +1649,25 @@ export class Game extends Phaser.Scene {
             const current = categoryMaxMatch.get(category) ?? 0;
             if (match.length > current) {
                 categoryMaxMatch.set(category, match.length);
+                const method = GEM_METHOD_MAP[gem.gemType as keyof typeof GEM_METHOD_MAP];
+                if (method) categoryMethod.set(category, method);
             }
         }
 
+        if (!this.inExpeditionRun) return;
         categoryMaxMatch.forEach((maxLength, category) => {
-            if (this.inExpeditionRun) {
-                const deductionCategory = getDeductionCategoryForGemCategory(category);
-                if (deductionCategory) {
-                    EventBus.emit('deduction-clue-triggered', {
-                        category: deductionCategory,
-                        matchLength: maxLength,
-                        source: 'gem_match',
-                    });
-                }
-                return;
-            }
-            if (maxLength >= MOVE_HUGE_MATCH_THRESHOLD) {
-                this.revealAllCluesForCategory(category);
-            } else {
-                const cluesToReveal = maxLength >= MOVE_LARGE_MATCH_THRESHOLD ? 2 : 1;
-                this.revealCluesForCategory(category, cluesToReveal);
-            }
+            const method = categoryMethod.get(category);
+            if (method) EventBus.emit('observation-earned', { method, matchLength: maxLength, source: 'gem_match' });
         });
-
-        this.checkAllCluesRevealed();
     }
 
     private processMatchedGemsForClues(matches: Coordinate[][], gridStateOverride?: any): void {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState);
-        this.emitMatchEconomyRewards(matches, gridState);
         if (!this.selectedSpecies || matches.length === 0 || !gridState) return;
 
         const categoryMaxMatch = new Map<GemCategory, number>();
+        const categoryMethod = new Map<GemCategory, NonNullable<(typeof GEM_METHOD_MAP)[keyof typeof GEM_METHOD_MAP]>>();
 
         for (const match of matches) {
             if (match.length === 0) continue;
@@ -1730,32 +1679,19 @@ export class Game extends Phaser.Scene {
             const current = categoryMaxMatch.get(category) ?? 0;
             if (match.length > current) {
                 categoryMaxMatch.set(category, match.length);
+                const method = GEM_METHOD_MAP[gem.gemType as keyof typeof GEM_METHOD_MAP];
+                if (method) categoryMethod.set(category, method);
             }
         }
 
+        if (!this.inExpeditionRun) return;
         categoryMaxMatch.forEach((maxLength, category) => {
-            if (this.inExpeditionRun) {
-                const deductionCategory = getDeductionCategoryForGemCategory(category);
-                if (deductionCategory) {
-                    EventBus.emit('deduction-clue-triggered', {
-                        category: deductionCategory,
-                        matchLength: maxLength,
-                        source: 'gem_match',
-                    });
-                }
-                return;
-            }
-            if (maxLength >= MOVE_HUGE_MATCH_THRESHOLD) {
-                this.revealAllCluesForCategory(category);
-            } else {
-                const cluesToReveal = maxLength >= MOVE_LARGE_MATCH_THRESHOLD ? 2 : 1;
-                this.revealCluesForCategory(category, cluesToReveal);
-            }
+            const method = categoryMethod.get(category);
+            if (method) EventBus.emit('observation-earned', { method, matchLength: maxLength, source: 'gem_match' });
         });
-        this.checkAllCluesRevealed();
     }
 
-    private handleSpeciesGuess(data: { guessedName: string; speciesId: number; isCorrect: boolean; actualName: string }): void {
+    private handleSpeciesGuess(data: { guessedName: string; speciesId: number; isCorrect: boolean }): void {
         console.log("Game Scene: Species guess received:", data);
         
         // Check if this guess is for the current species
@@ -1779,8 +1715,8 @@ export class Game extends Phaser.Scene {
             
             if (this.statusText && this.statusText.active) {
                 this.statusText.setText(this.inExpeditionRun
-                    ? `Correct! You discovered the ${data.actualName}!\n\nComplete the field notes to continue.`
-                    : `Correct! You discovered the ${data.actualName}!\n\nClick on the globe to select a new location.`);
+                    ? 'Correct identification!\n\nComplete the field notes to continue.'
+                    : 'Correct identification!\n\nClick on the globe to select a new location.');
             }
             
             this.time.delayedCall(1000, () => {
@@ -1903,8 +1839,6 @@ export class Game extends Phaser.Scene {
     }
 
     private handleNodeComplete(): void {
-        // Emit rewards for nodes completed via panel (analysis nodes)
-        this.stopNodeBonusDecayAndEmitRewards(this.currentNodeDifficulty);
         // Light reset: clear board between expedition nodes (same species pool)
         this.prepareForNextNode();
     }
@@ -1941,11 +1875,7 @@ export class Game extends Phaser.Scene {
         if (this.movesText) this.movesText.setText('Moves: 0');
 
         // Reset objective progress
-        this.nodeRequiredGems.clear();
-        this.nodeCounterGem = null;
-        this.nodeObstacleFamily = null;
-        this.nodeObstacles = [];
-        this.nodeActiveAffinities = [];
+        this.nodeObjectiveGem = null;
         this.nodeObjectiveTarget = 0;
         this.nodeObjectiveProgress = 0;
         this.nodeObjectiveCompleted = false;
@@ -2086,7 +2016,6 @@ export class Game extends Phaser.Scene {
 
         // Remove EventBus listeners
         EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
-        EventBus.off('species-guess-submitted', this.handleSpeciesGuess, this);
         EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);

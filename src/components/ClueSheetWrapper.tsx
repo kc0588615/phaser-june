@@ -4,45 +4,15 @@ import { FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { CluePayload } from '../game/clueConfig';
-import { SpeciesGuessSelector } from './SpeciesGuessSelector';
-import { useGameBridge } from '@/contexts/GameBridgeContext';
 
 interface ClueSheetWrapperProps {
   clues: CluePayload[];
   speciesName: string;
   hasSelectedSpecies: boolean;
-  speciesId?: number;
-  hiddenSpeciesName?: string;
 }
 
-export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speciesName, hasSelectedSpecies, speciesId, hiddenSpeciesName }) => {
-  const { guessResult, speciesInfo } = useGameBridge();
+export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speciesName, hasSelectedSpecies }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isSpeciesDiscovered, setIsSpeciesDiscovered] = React.useState(false);
-  const [discoveredName, setDiscoveredName] = React.useState('');
-
-  // React to guess results from context
-  React.useEffect(() => {
-    if (guessResult?.isCorrect && guessResult.speciesId === speciesId) {
-      setIsSpeciesDiscovered(true);
-      setDiscoveredName(guessResult.actualName);
-    }
-  }, [guessResult, speciesId]);
-
-  // Reset on new species
-  React.useEffect(() => {
-    if (speciesId && speciesId > 0) { setIsSpeciesDiscovered(false); setDiscoveredName(''); }
-  }, [speciesId]);
-
-  // Reset on new game (detected via speciesInfo change)
-  const prevSpeciesInfoRef = useRef(speciesInfo);
-  React.useEffect(() => {
-    if (speciesInfo && speciesInfo !== prevSpeciesInfoRef.current) {
-      setIsSpeciesDiscovered(false);
-      setDiscoveredName('');
-    }
-    prevSpeciesInfoRef.current = speciesInfo;
-  }, [speciesInfo]);
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeSheet = useCallback(() => setIsOpen(false), []);
@@ -79,7 +49,7 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
         onClick={() => setIsOpen(true)}
       >
         <FileText className="h-4 w-4 mr-2" />
-        Guess Species ({clues.length} clues)
+        Field Notes ({clues.length})
       </Button>
 
       {isOpen && typeof window !== 'undefined' && createPortal(
@@ -88,6 +58,7 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
           <div ref={sheetRef} role="dialog" aria-modal="true" aria-label="Species detective clue sheet" className="fixed inset-y-0 right-0 w-full max-w-lg glass-bg border-l border-ds-subtle z-sheet flex flex-col">
             <div className="p-ds-xl border-b border-ds-subtle">
               <button
+                type="button"
                 onClick={closeSheet}
                 aria-label="Close clue sheet"
                 className="absolute right-ds-lg top-ds-lg p-ds-sm bg-transparent border-none text-ds-text-secondary cursor-pointer"
@@ -98,16 +69,9 @@ export const ClueSheetWrapper: React.FC<ClueSheetWrapperProps> = ({ clues, speci
                 Species Detective 🔍
               </h2>
               <p className="text-ds-body text-ds-text-secondary">
-                {isSpeciesDiscovered ? `✅ ${discoveredName}` : (speciesName || 'No species selected')}
+                {speciesName || 'No species selected'}
               </p>
             </div>
-
-            {speciesName === 'Mystery Species' && speciesId && !isSpeciesDiscovered && (
-              <div className="px-ds-xl py-ds-lg border-b border-ds-subtle">
-                <h3 className="text-ds-heading-sm font-semibold text-ds-cyan mb-ds-md">Guess the Species</h3>
-                <SpeciesGuessSelector key={`guess-${speciesId}`} speciesId={speciesId} disabled={false} hiddenSpeciesName={hiddenSpeciesName} />
-              </div>
-            )}
 
             <ScrollArea className="flex-1 px-ds-xl py-ds-xl">
               {clues.length === 0 ? (

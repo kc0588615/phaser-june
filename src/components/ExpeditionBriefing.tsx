@@ -1,12 +1,11 @@
 import React from 'react';
+import { SignInButton, useUser } from '@clerk/nextjs';
 import type { ExpeditionData } from '@/types/expedition';
-import type { AffinityType } from '@/expedition/affinities';
 import { Badge } from '@/components/ui/badge';
 
 interface Props {
   expedition: ExpeditionData;
   onStart: () => void;
-  onSelectAffinity: (affinityId: AffinityType | null) => void;
   onClose?: () => void;
 }
 
@@ -17,6 +16,7 @@ function formatArea(expedition: ExpeditionData) {
 }
 
 export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClose }) => {
+  const { isLoaded, isSignedIn } = useUser();
   const biome = expedition.bioregion?.biome || 'Local species field notes';
   const area = formatArea(expedition);
   const threatenedCount = Number(expedition.signals.threatened_species_count ?? 0);
@@ -37,6 +37,7 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
         </div>
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
             className="bg-transparent border border-ds-subtle rounded-md text-ds-text-secondary text-base leading-none px-ds-sm py-ds-xs cursor-pointer"
             aria-label="Back to map"
@@ -57,8 +58,8 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {protectedAreas.map((area, index) => (
-          <Badge key={`${area.name ?? area.designation}-${index}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
+        {protectedAreas.map(area => (
+          <Badge key={`${area.name ?? 'unnamed'}:${area.designation ?? 'unknown'}`} variant="secondary" className="text-ds-caption bg-ds-surface-elevated text-[var(--ds-gem-scan)]">
             {area.name || area.designation}
           </Badge>
         ))}
@@ -80,13 +81,27 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
       </div>
 
       <div className="mt-auto pt-ds-xs shrink-0">
-        <button
-          onClick={onStart}
-          className="w-full py-3.5 px-5 text-base font-bold text-ds-bg border-none rounded-full cursor-pointer text-center shadow-glow-cyan"
-          style={{ background: 'var(--ds-gradient-cta)' }}
-        >
-          Investigate
-        </button>
+        {isSignedIn ? (
+          <button
+            type="button"
+            onClick={onStart}
+            className="w-full py-3.5 px-5 text-base font-bold text-ds-bg border-none rounded-full cursor-pointer text-center shadow-glow-cyan"
+            style={{ background: 'var(--ds-gradient-cta)' }}
+          >
+            Investigate
+          </button>
+        ) : (
+          <SignInButton mode="redirect">
+            <button
+              type="button"
+              disabled={!isLoaded}
+              className="w-full py-3.5 px-5 text-base font-bold text-ds-bg border-none rounded-full cursor-pointer text-center shadow-glow-cyan disabled:cursor-wait disabled:opacity-60"
+              style={{ background: 'var(--ds-gradient-cta)' }}
+            >
+              Sign in to investigate
+            </button>
+          </SignInButton>
+        )}
       </div>
     </div>
   );

@@ -14,14 +14,11 @@ export const AFFINITY_TYPES = [
 ] as const;
 
 export type AffinityType = typeof AFFINITY_TYPES[number];
-export type AffinityGemType = 'sword' | 'staff' | 'shield' | 'key' | 'crate';
 
 export interface AffinityDefinition {
   id: AffinityType;
   label: string;
   familyLabel: string;
-  buffedGem: AffinityGemType;
-  shortEffect: string;
   color: string;
 }
 
@@ -30,80 +27,60 @@ export const AFFINITY_DEFINITIONS: Record<AffinityType, AffinityDefinition> = {
     id: 'avian',
     label: 'Avian Insight',
     familyLabel: 'Birds & Raptors',
-    buffedGem: 'staff',
-    shortEffect: 'Scan matches count double toward objective progress.',
     color: '#60a5fa',
   },
   feline: {
     id: 'feline',
     label: 'Feline Stalk',
     familyLabel: 'Big Cats & Stealth',
-    buffedGem: 'shield',
-    shortEffect: 'Camouflage slows spook decay harder for longer.',
     color: '#f59e0b',
   },
   amphibian: {
     id: 'amphibian',
     label: 'Amphibian Crossing',
     familyLabel: 'Amphibians & Frogs',
-    buffedGem: 'key',
-    shortEffect: 'Traverse matches count double on water-heavy nodes.',
     color: '#34d399',
   },
   primate: {
     id: 'primate',
     label: 'Primate Cache',
     familyLabel: 'Primates & Clever Mammals',
-    buffedGem: 'crate',
-    shortEffect: 'Pack matches upgrade crate drops to stronger tools.',
     color: '#f97316',
   },
   insect: {
     id: 'insect',
     label: 'Insect Swarm',
     familyLabel: 'Insects & Fast Fauna',
-    buffedGem: 'sword',
-    shortEffect: 'Observe cascades pay out extra combo score.',
     color: '#facc15',
   },
   ungulate: {
     id: 'ungulate',
     label: 'Herd Stride',
     familyLabel: 'Hoofed & Herds',
-    buffedGem: 'key',
-    shortEffect: 'Traverse grants a small background camouflage pulse.',
     color: '#fb7185',
   },
   reptile: {
     id: 'reptile',
     label: 'Thermal Read',
     familyLabel: 'Reptiles & Snakes',
-    buffedGem: 'staff',
-    shortEffect: 'Scan matches seed extra counter gems into the refill queue.',
     color: '#22c55e',
   },
   fish: {
     id: 'fish',
     label: 'Current Rider',
     familyLabel: 'Fish & Aquatic',
-    buffedGem: 'key',
-    shortEffect: 'Traverse negates extra spook pressure on water nodes.',
     color: '#38bdf8',
   },
   arachnid: {
     id: 'arachnid',
     label: 'Silk Trap',
     familyLabel: 'Arachnids & Spiders',
-    buffedGem: 'crate',
-    shortEffect: 'Pack guarantees a tactical sighting tool.',
     color: '#a78bfa',
   },
   burrower: {
     id: 'burrower',
     label: 'Burrower Hide',
     familyLabel: 'Burrowers & Rodents',
-    buffedGem: 'shield',
-    shortEffect: 'Camouflage effectiveness is doubled.',
     color: '#c084fc',
   },
 };
@@ -220,10 +197,6 @@ export function getAffinityDefinition(affinity: AffinityType): AffinityDefinitio
   return AFFINITY_DEFINITIONS[affinity];
 }
 
-export function getAffinityBuffedGem(affinity: AffinityType): AffinityGemType {
-  return AFFINITY_DEFINITIONS[affinity].buffedGem;
-}
-
 export function getAffinityForSpecies(species: Species): AffinityType | null {
   const family = normalizeTaxon(species.family);
   if (family && FAMILY_AFFINITY_MAP[family]) {
@@ -260,12 +233,4 @@ export function deriveAvailableAffinities(species: Species[]): AffinityType[] {
 
 export function getDefaultActiveAffinities(availableAffinities: AffinityType[]): AffinityType[] {
   return availableAffinities.length > 0 ? [availableAffinities[0]] : [];
-}
-
-export function affinityBuffsGem(affinity: AffinityType, gemType: string | null | undefined): boolean {
-  return gemType != null && AFFINITY_DEFINITIONS[affinity].buffedGem === gemType;
-}
-
-export function affinitySetBuffsGem(activeAffinities: AffinityType[], gemType: string | null | undefined): boolean {
-  return activeAffinities.some((affinity) => affinityBuffsGem(affinity, gemType));
 }

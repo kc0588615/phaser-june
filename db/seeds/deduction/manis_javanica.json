@@ -1,0 +1,103 @@
+{
+  "iucn_id": 12763,
+  "scientific_name": "Manis javanica",
+  "common_name": "Sunda Pangolin",
+  "species": {
+    "conservation_text": "Critically Endangered (CR).",
+    "habitat_description": "Primary and secondary tropical forest, scrub and swamp forest, plantations, and gardens from sea level to about 1,700 m.",
+    "habitat_tags": [
+      "primary tropical forest",
+      "secondary tropical forest",
+      "scrub forest",
+      "swamp forest",
+      "plantations",
+      "gardens"
+    ],
+    "geographic_description": "Occurs across mainland and island Southeast Asia.",
+    "marine": false,
+    "terrestrial": true,
+    "freshwater": false,
+    "colors": [
+      "brown"
+    ],
+    "pattern": "Overlapping scales.",
+    "shape_description": "Armoured mammal with a tapered tail and strong digging and climbing claws.",
+    "size_min_cm": null,
+    "size_max_cm": 140,
+    "weight_kg": null,
+    "diet_type": "Insectivore",
+    "diet_prey": "Ants and termites.",
+    "diet_flora": null,
+    "behavior_1": "Solitary and nocturnal; scansorial and semi-arboreal.",
+    "behavior_2": "Forages on the ground and in trees, uses burrows and tree hollows, and curls into a ball when threatened.",
+    "life_description_1": "Field observation supports one young and about 3-4 months of maternal care in a tree-hollow natal den.",
+    "life_description_2": "The young rides near the mother's tail base.",
+    "key_fact_1": "Overlapping keratin scales form protective armour.",
+    "key_fact_2": "Forages underground and in trees.",
+    "key_fact_3": "The young rides near its mother's tail base.",
+    "threats": "Hunting and international trade, habitat loss, and local road mortality.",
+    "taxonomic_comment": null,
+    "distribution_comment": null,
+    "lifespan": null,
+    "maturity": null,
+    "reproduction_type": "Viviparous",
+    "clutch_size": "One young observed",
+    "sources": [
+      "https://www.mammaldiversity.org/taxon/1005796/",
+      "https://www.nparks.gov.sg/florafaunaweb/fauna/2/1/212",
+      "https://www.pangolinsg.org/wp-content/uploads/sites/35/2018/06/Lim_Ng_2007_Home-range-activity-cycle-and-natal-den-usage-of-a-female-Sunda-pangolin-in-Singapore.pdf",
+      "https://nc.iucnredlist.org/redlist/amazing-species/manis-javanica/pdfs/original/manis-javanica.pdf"
+    ]
+  },
+  "profile": {
+    "habitat_tags": [
+      "habitat_tag:rainforest"
+    ],
+    "morphology_tags": [
+      "size_bucket:dog",
+      "body_plan:armored",
+      "distinctive_features:scales",
+      "distinctive_features:claws_digging"
+    ],
+    "diet_tags": [
+      "diet_type:carnivore",
+      "diet_type:insectivore",
+      "diet_type:myrmecophage"
+    ],
+    "behavior_tags": [
+      "activity_pattern:nocturnal",
+      "sociality:solitary",
+      "locomotion:scansorial",
+      "locomotion:arboreal",
+      "foraging_style:dig",
+      "foraging_style:forage"
+    ],
+    "reproduction_tags": [
+      "care_pattern:den",
+      "signature:young_rides_at_mothers_tail_base"
+    ],
+    "taxonomy_tags": [
+      "family:manidae",
+      "genus:manis"
+    ],
+    "geography_tags": [
+      "climate_zone:tropical",
+      "continent:asia"
+    ],
+    "conservation_tags": [
+      "iucn:CR",
+      "threat_tag:poaching",
+      "threat_tag:deforestation",
+      "threat_tag:roadkill"
+    ],
+    "key_fact_tags": [],
+    "signature_tag": "signature:young_rides_at_mothers_tail_base",
+    "habitat_note": "Tropical forests and modified habitats across Southeast Asia.",
+    "morphology_note": "Brown overlapping scales, tapered tail, and strong digging and climbing claws.",
+    "diet_note": "Insect-specialist carnivore feeding on ants and termites.",
+    "behavior_note": "Solitary nocturnal climber that forages and digs on the ground and in trees.",
+    "reproduction_note": "One observed young received maternal care in a tree-hollow natal den.",
+    "reference_summary": "Critically endangered Southeast Asian pangolin threatened by hunting and trade."
+  },
+  "clues": []
+}

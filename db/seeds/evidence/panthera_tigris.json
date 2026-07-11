@@ -1,0 +1,92 @@
+{
+  "iucn_id": 15955,
+  "scientific_name": "Panthera tigris",
+  "common_name": "Tiger",
+  "cards": [
+    {
+      "method": "track",
+      "observation_text": "A broad, deep print indicates a heavy, robust frame.",
+      "inference_text": "Retain candidates with a robust body plan.",
+      "trait_category": "morphology",
+      "primary_predicate": "body_plan:robust",
+      "compare_tags": ["body_plan:robust"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "track",
+      "observation_text": "Fresh spoor passes beneath a wet, closed forest canopy.",
+      "inference_text": "Retain candidates associated with rainforest habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:rainforest",
+      "compare_tags": ["habitat_tag:rainforest"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Camera detections cluster during the hours after dark.",
+      "inference_text": "Retain candidates with a nocturnal activity pattern.",
+      "trait_category": "behavior",
+      "primary_predicate": "activity_pattern:nocturnal",
+      "compare_tags": ["activity_pattern:nocturnal"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Repeated sightings show one adult moving without companions.",
+      "inference_text": "Retain candidates that are normally solitary.",
+      "trait_category": "behavior",
+      "primary_predicate": "sociality:solitary",
+      "compare_tags": ["sociality:solitary"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Field signs continue through tall grass and open cover.",
+      "inference_text": "Retain candidates associated with grassland habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:grassland",
+      "compare_tags": ["habitat_tag:grassland"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://nc.iucnredlist.org/redlist/amazing-species/panthera-tigris/pdfs/original/panthera-tigris.pdf",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "The strongest sign concentration lies inside humid rainforest.",
+      "inference_text": "Retain candidates associated with rainforest habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:rainforest",
+      "compare_tags": ["habitat_tag:rainforest"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://nc.iucnredlist.org/redlist/amazing-species/panthera-tigris/pdfs/original/panthera-tigris.pdf",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "analyze",
+      "observation_text": "Movement records include a single swim of about eight kilometres.",
+      "inference_text": "This exceptional long-distance swim is the case signature.",
+      "trait_category": "key_fact",
+      "primary_predicate": "signature:swims_eight_kilometers",
+      "compare_tags": ["signature:swims_eight_kilometers"],
+      "is_signature": true,
+      "specificity": 3,
+      "source": "https://animals.sandiegozoo.org/animals/tiger",
+      "review_status": "reviewed"
+    }
+  ]
+}
+

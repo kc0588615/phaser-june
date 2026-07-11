@@ -1,0 +1,98 @@
+{
+  "iucn_id": 18732,
+  "scientific_name": "Pteropus livingstonii",
+  "common_name": "Livingstone's Flying Fox",
+  "species": {
+    "conservation_text": "Endangered (EN), following the 2025 status change.",
+    "habitat_description": "Native montane rain and cloud forest on steep wet slopes, using the upper canopy.",
+    "habitat_tags": [
+      "montane rainforest",
+      "cloud forest",
+      "upper canopy"
+    ],
+    "geographic_description": "Endemic to Anjouan and Mohéli in the Comoros.",
+    "marine": false,
+    "terrestrial": true,
+    "freshwater": false,
+    "colors": [
+      "blackish",
+      "tawny or golden"
+    ],
+    "pattern": null,
+    "shape_description": "Large flying fox with rounded ears, dark wings, and a wingspan up to 1.4 m.",
+    "size_min_cm": null,
+    "size_max_cm": null,
+    "weight_kg": null,
+    "diet_type": "Frugivore and nectarivore",
+    "diet_prey": null,
+    "diet_flora": "Fruit, flowers, and nectar.",
+    "behavior_1": "Cathemeral and social at roosts.",
+    "behavior_2": "Forages in the upper canopy and flies with slow flapping and soaring.",
+    "life_description_1": "Produces one offspring annually, commonly in early September.",
+    "life_description_2": "Captive weaning may take up to eight months.",
+    "key_fact_1": "Endemic to two islands in the Comoros.",
+    "key_fact_2": "Has a wingspan up to 1.4 m despite a body mass near 0.6 kg.",
+    "key_fact_3": "Active during both day and night.",
+    "threats": "Forest conversion for farming, fuel, and construction, plus erosion and landslides.",
+    "taxonomic_comment": null,
+    "distribution_comment": null,
+    "lifespan": null,
+    "maturity": null,
+    "reproduction_type": "Viviparous and iteroparous",
+    "clutch_size": "One offspring annually",
+    "sources": [
+      "https://www.mammaldiversity.org/taxon/1004470/",
+      "https://nc.iucnredlist.org/redlist/content/attachment_files/2025-1_RL_Table_7.pdf",
+      "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527",
+      "https://www.cambridge.org/core/journals/oryx/article/bat-on-the-brink-a-rangewide-survey-of-the-critically-endangered-livingstones-fruit-bat-pteropus-livingstonii/26D69B17FD39154CC0CBE0C3472824D7"
+    ]
+  },
+  "profile": {
+    "habitat_tags": [
+      "habitat_tag:rainforest",
+      "habitat_tag:montane_forest"
+    ],
+    "morphology_tags": [
+      "size_bucket:rabbit",
+      "body_plan:graceful",
+      "distinctive_features:wings",
+      "signature:one_point_four_metre_wingspan"
+    ],
+    "diet_tags": [
+      "diet_type:frugivore",
+      "diet_type:nectarivore"
+    ],
+    "behavior_tags": [
+      "activity_pattern:cathemeral",
+      "sociality:colony",
+      "locomotion:arboreal",
+      "foraging_style:forage"
+    ],
+    "reproduction_tags": [
+      "parity:iteroparous"
+    ],
+    "taxonomy_tags": [
+      "family:pteropodidae",
+      "genus:pteropus"
+    ],
+    "geography_tags": [
+      "climate_zone:tropical",
+      "continent:africa",
+      "bioregion:comoros"
+    ],
+    "conservation_tags": [
+      "iucn:EN",
+      "threat_tag:deforestation",
+      "threat_tag:agriculture"
+    ],
+    "key_fact_tags": [],
+    "signature_tag": "signature:one_point_four_metre_wingspan",
+    "habitat_note": "Upper canopy of steep, wet montane rain and cloud forest.",
+    "morphology_note": "Blackish flying fox with rounded ears, dark wings, and a wingspan up to 1.4 metres.",
+    "diet_note": "Eats fruit, flowers, and nectar and disperses pollen and seeds.",
+    "behavior_note": "Cathemeral social roosting bat that forages in the upper canopy.",
+    "reproduction_note": "One offspring annually, with captive weaning taking up to eight months.",
+    "reference_summary": "Two-island Comoros endemic threatened mainly by forest conversion."
+  },
+  "clues": []
+}

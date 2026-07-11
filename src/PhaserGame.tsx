@@ -1,3 +1,8 @@
+// PhaserGame — the thin React wrapper around the Phaser engine.
+//
+// It boots Phaser exactly once (into the #game-container div) and exposes the
+// game + current scene through a ref. React never reaches into Phaser beyond
+// this; all gameplay communication goes through the EventBus.
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './game/main';
 import { EventBus } from './game/EventBus';

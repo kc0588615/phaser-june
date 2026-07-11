@@ -1,0 +1,92 @@
+{
+  "iucn_id": 18732,
+  "scientific_name": "Pteropus livingstonii",
+  "common_name": "Livingstone's Flying Fox",
+  "cards": [
+    {
+      "method": "track",
+      "observation_text": "Roost approaches lead into a wet, closed forest canopy.",
+      "inference_text": "Retain candidates associated with rainforest habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:rainforest",
+      "compare_tags": ["habitat_tag:rainforest"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://www.cambridge.org/core/journals/oryx/article/bat-on-the-brink-a-rangewide-survey-of-the-critically-endangered-livingstones-fruit-bat-pteropus-livingstonii/26D69B17FD39154CC0CBE0C3472824D7",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "track",
+      "observation_text": "Repeated feeding traces mark a route between canopy food trees.",
+      "inference_text": "Retain candidates that forage while moving through habitat.",
+      "trait_category": "behavior",
+      "primary_predicate": "foraging_style:forage",
+      "compare_tags": ["foraging_style:forage"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Most movement and resting occur among branches in the upper canopy.",
+      "inference_text": "Retain candidates with arboreal locomotion.",
+      "trait_category": "behavior",
+      "primary_predicate": "locomotion:arboreal",
+      "compare_tags": ["locomotion:arboreal"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Long-term records show adults can produce young in successive years.",
+      "inference_text": "Retain candidates with an iteroparous life history.",
+      "trait_category": "reproduction",
+      "primary_predicate": "parity:iteroparous",
+      "compare_tags": ["parity:iteroparous"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Roost surveys place activity high among branches above the ground.",
+      "inference_text": "Retain candidates with arboreal locomotion.",
+      "trait_category": "behavior",
+      "primary_predicate": "locomotion:arboreal",
+      "compare_tags": ["locomotion:arboreal"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://www.cambridge.org/core/journals/oryx/article/bat-on-the-brink-a-rangewide-survey-of-the-critically-endangered-livingstones-fruit-bat-pteropus-livingstonii/26D69B17FD39154CC0CBE0C3472824D7",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Yearly monitoring records new offspring across successive breeding seasons.",
+      "inference_text": "Retain candidates with an iteroparous life history.",
+      "trait_category": "reproduction",
+      "primary_predicate": "parity:iteroparous",
+      "compare_tags": ["parity:iteroparous"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "analyze",
+      "observation_text": "Measurements document a wingspan reaching about 1.4 metres.",
+      "inference_text": "This unusually large measured wingspan is the case signature.",
+      "trait_category": "morphology",
+      "primary_predicate": "signature:one_point_four_metre_wingspan",
+      "compare_tags": ["signature:one_point_four_metre_wingspan"],
+      "is_signature": true,
+      "specificity": 3,
+      "source": "https://academic.oup.com/mspecies/article/doi/10.1644/792.1/2600527",
+      "review_status": "reviewed"
+    }
+  ]
+}
+

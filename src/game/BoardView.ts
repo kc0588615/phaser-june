@@ -1,17 +1,20 @@
-// src/game/BoardView.ts
-// View: Manages the visual representation (Phaser Sprites) and animations.
+// BoardView — the visual half of the board (the View).
+//
+// It turns BackendPuzzle's grid into Phaser sprites and runs every animation:
+// drag previews, snap-back, explosions, falling refills, and resize tweens.
+// It never decides the rules — scenes/Game.ts asks BackendPuzzle what
+// happened, then tells this class what to animate.
 
 import Phaser from 'phaser';
 import {
     AssetKeys,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE,
-    GemType, GEM_FRAME_COUNT, ACTION_GEM_TYPES
+    GemType, GEM_FRAME_COUNT
 } from './constants';
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
 import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
-import { getGemDefinition } from '../expedition/domain';
 
 interface BoardConfig {
     cols: number;
@@ -50,27 +53,7 @@ export class BoardView {
         this.gemSize = config.gemSize;
         this.boardOffset = config.boardOffset;
         this.gemGroup = this.scene.add.group();
-        this.ensureGeneratedGemTextures();
         console.log("BoardView initialized");
-    }
-
-    /** Generate placeholder textures for action gems until dedicated art exists. */
-    private ensureGeneratedGemTextures(): void {
-        for (const type of ACTION_GEM_TYPES) {
-            const definition = getGemDefinition(type);
-            const color = Number(definition.color.replace('#', '0x'));
-            for (let i = 0; i < GEM_FRAME_COUNT; i++) {
-                const key = AssetKeys.GEM_TEXTURE(type, i);
-                if (this.scene.textures.exists(key)) continue;
-                const gfx = this.scene.add.graphics();
-                gfx.fillStyle(color, 1);
-                gfx.fillRoundedRect(2, 2, 28, 28, 8);
-                gfx.lineStyle(2, 0xffffff, 0.65);
-                gfx.strokeRoundedRect(4, 4, 24, 24, 7);
-                gfx.generateTexture(key, 32, 32);
-                gfx.destroy();
-            }
-        }
     }
 
     // --- Public Methods (Called by Controller: Game.js) ---

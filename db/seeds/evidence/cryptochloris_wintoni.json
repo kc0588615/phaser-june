@@ -1,0 +1,92 @@
+{
+  "iucn_id": 5748,
+  "scientific_name": "Cryptochloris wintoni",
+  "common_name": "De Winton's Golden Mole",
+  "cards": [
+    {
+      "method": "track",
+      "observation_text": "Feeding remains include small animal prey rather than plants.",
+      "inference_text": "Retain candidates with a carnivorous diet.",
+      "trait_category": "diet",
+      "primary_predicate": "diet_type:carnivore",
+      "compare_tags": ["diet_type:carnivore"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://ewt.org.za/wp-content/uploads/2022/11/13.-De-Wintons-Golden-Mole-Cryptochloris-wintoni-Critically-Endangered-Possibly-Extinct.pdf",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "track",
+      "observation_text": "Feeding traces contain insect larvae and pupal remains.",
+      "inference_text": "Retain candidates with an insectivorous diet.",
+      "trait_category": "diet",
+      "primary_predicate": "diet_type:insectivore",
+      "compare_tags": ["diet_type:insectivore"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://ewt.org.za/wp-content/uploads/2022/11/13.-De-Wintons-Golden-Mole-Cryptochloris-wintoni-Critically-Endangered-Possibly-Extinct.pdf",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Diet evidence shows repeated consumption of insects and their larvae.",
+      "inference_text": "Retain candidates with an insectivorous diet.",
+      "trait_category": "diet",
+      "primary_predicate": "diet_type:insectivore",
+      "compare_tags": ["diet_type:insectivore"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://ewt.org.za/wp-content/uploads/2022/11/13.-De-Wintons-Golden-Mole-Cryptochloris-wintoni-Critically-Endangered-Possibly-Extinct.pdf",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "The animal advances by digging through loose sand below the surface.",
+      "inference_text": "Retain candidates that dig while foraging.",
+      "trait_category": "behavior",
+      "primary_predicate": "foraging_style:dig",
+      "compare_tags": ["foraging_style:dig"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://link.springer.com/article/10.1007/s10531-023-02728-2",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Subsurface runs occur in loose sand within an arid desert landscape.",
+      "inference_text": "Retain candidates associated with desert habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:desert",
+      "compare_tags": ["habitat_tag:desert"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://link.springer.com/article/10.1007/s10531-023-02728-2",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Shallow tunnels bear narrow grooves from specialized digging claws.",
+      "inference_text": "Retain candidates with specialized digging claws.",
+      "trait_category": "morphology",
+      "primary_predicate": "distinctive_features:claws_digging",
+      "compare_tags": ["distinctive_features:claws_digging"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://link.springer.com/article/10.1007/s10531-023-02728-2",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "analyze",
+      "observation_text": "Soil DNA first revealed survival before a matching specimen was documented.",
+      "inference_text": "This rediscovery through soil DNA is the case signature.",
+      "trait_category": "key_fact",
+      "primary_predicate": "signature:rediscovered_by_soil_edna",
+      "compare_tags": ["signature:rediscovered_by_soil_edna"],
+      "is_signature": true,
+      "specificity": 3,
+      "source": "https://link.springer.com/article/10.1007/s10531-023-02728-2",
+      "review_status": "reviewed"
+    }
+  ]
+}
+

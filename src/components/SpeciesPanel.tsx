@@ -22,7 +22,6 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
     discoveredClues,
     isSpeciesDiscovered,
     discoveredSpeciesName,
-    hiddenSpeciesName,
     hud,
     hasSelectedSpecies,
   } = useSpeciesPanelState(toastsEnabled);
@@ -43,6 +42,7 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
         </div>
         {hud.maxMoves > 0 && hud.movesUsed >= hud.maxMoves && (
           <button
+            type="button"
             onClick={onRestart}
             className="px-3 py-1 bg-ds-cyan text-white border-none rounded text-sm font-medium cursor-pointer"
           >
@@ -73,8 +73,6 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
           clues={clues}
           speciesName={selectedSpeciesName}
           hasSelectedSpecies={hasSelectedSpecies}
-          speciesId={selectedSpeciesId}
-          hiddenSpeciesName={hiddenSpeciesName}
         />
       </div>
     </div>

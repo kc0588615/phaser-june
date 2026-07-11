@@ -1,3 +1,13 @@
+// MainAppLayout — the top-level shell of the app.
+//
+// It mounts the three big surfaces once and keeps them alive for the whole
+// session: the Cesium globe (CesiumMap), the Phaser match-3 board
+// (PhaserGame), and the species/clue panels. Views are switched by toggling
+// CSS visibility rather than unmounting, because unmounting would tear down
+// EventBus listeners and Phaser's canvas mid-run.
+//
+// Run state (phase, score, clues) lives in ExpeditionContext; this file only
+// decides *what is visible* for the current phase and tab.
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame';
 import CesiumMap from './components/CesiumMap';
@@ -38,9 +48,9 @@ function MainAppLayoutInner() {
     const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     const {
-        runState, boardOpacity, correctSpeciesId, hiddenSpeciesName,
-        handleAffinitySelected, handleRunResume, handleRunReset,
-        handlePlaceReference, handleComparativeGuessResult,
+        runState, boardOpacity,
+        handleRunResume, handleRunReset,
+        handleCommitInterpretation, handleGuess,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -138,7 +148,6 @@ function MainAppLayoutInner() {
                                     <ExpeditionBriefing
                                         expedition={runState.expedition}
                                         onStart={() => EventBus.emit('expedition-start', {})}
-                                        onSelectAffinity={handleAffinitySelected}
                                         onClose={handleRunReset}
                                     />
                                 </div>
@@ -165,17 +174,15 @@ function MainAppLayoutInner() {
 
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
-                        {inRun && runState.phase === 'mystery' && (
+                        {inRun && (
                             <GemSignalStrip runState={runState} />
                         )}
 
-                        {inRun && runState.comparativeDeduction && (
+                        {inRun && runState.caseState && (
                             <FieldNotebook
                                 runState={runState}
-                                speciesId={correctSpeciesId}
-                                hiddenSpeciesName={hiddenSpeciesName}
-                                onPlaceReference={handlePlaceReference}
-                                onGuess={handleComparativeGuessResult}
+                                onCommitInterpretation={handleCommitInterpretation}
+                                onGuess={handleGuess}
                             />
                         )}
 
@@ -251,15 +258,18 @@ function RunCompleteSummary({ runState, onReset }: {
     onReset: () => void;
 }) {
     const { hud } = useGameBridge();
-    const { hiddenSpeciesName, correctSpeciesId } = useExpedition();
-    const captured = runState.completionReason === 'captured'
-        || runState.comparativeDeduction?.guessResult === 'correct'
-        || runState.deductionCamp?.guessResult === 'correct';
+    const caseState = runState.caseState;
+    const captured = runState.completionReason === 'captured' || caseState?.guessResult === 'correct';
+    // Resolved identity is only known when this session made the correct guess;
+    // a resumed completed run stays generic ('Case resolved').
+    const resolvedProfile = runState.resolvedSpeciesId !== null
+        ? caseState?.profiles.find(profile => profile.speciesId === runState.resolvedSpeciesId) ?? null
+        : null;
     const stats = [
-        { label: 'Banked Score', value: String(hud.score), color: 'var(--ds-accent-cyan)' },
+        { label: 'Final Score', value: String(runState.finalScore ?? hud.score), color: 'var(--ds-accent-cyan)' },
         { label: 'Result', value: captured ? 'Captured' : 'Slipped', color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' },
-        { label: 'Moves Used', value: String(hud.movesUsed), color: 'var(--ds-accent-amber)' },
-        { label: 'Clues', value: String(runState.comparativeDeduction?.processedClues.length ?? 0), color: 'var(--ds-gem-focus)' },
+        { label: 'Observations', value: String(caseState?.observations.length ?? 0), color: 'var(--ds-accent-amber)' },
+        { label: 'Field Notes', value: String(caseState?.interpretations.length ?? 0), color: 'var(--ds-gem-focus)' },
     ];
 
     return (
@@ -268,7 +278,7 @@ function RunCompleteSummary({ runState, onReset }: {
                 {captured ? 'Species Captured' : 'Species Slipped Away'}
             </div>
             <div className="text-4xl font-bold text-ds-text-primary">
-                {runState.finalScore ?? runState.deductionCamp?.bankedScore ?? hud.score} pts
+                {runState.finalScore ?? hud.score} pts
             </div>
 
             <div className="grid grid-cols-2 gap-ds-sm w-full max-w-[300px]">
@@ -280,19 +290,21 @@ function RunCompleteSummary({ runState, onReset }: {
                 ))}
             </div>
 
+            {resolvedProfile && (
+                <SpeciesJournalCard
+                    speciesId={resolvedProfile.speciesId}
+                    speciesName={resolvedProfile.commonName}
+                    captured={captured}
+                    taxonomyTags={resolvedProfile.taxonomyTags}
+                />
+            )}
+
             <ExpeditionRouteRecap
                 waypoints={runState.expedition?.waypoints ?? []}
                 routePolyline={runState.expedition?.routePolyline}
                 visitedWaypointSlot={runState.visitedWaypointSlot}
                 captured={captured}
-                speciesName={hiddenSpeciesName}
-            />
-
-            <SpeciesJournalCard
-                speciesId={correctSpeciesId}
-                speciesName={hiddenSpeciesName}
-                captured={captured}
-                taxonomyTags={runState.comparativeDeduction?.mysteryProfile.taxonomyTags ?? []}
+                speciesName={resolvedProfile?.commonName ?? 'Case resolved'}
             />
 
             {runState.activeAffinities.length > 0 && (

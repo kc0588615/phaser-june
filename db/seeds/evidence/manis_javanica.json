@@ -1,0 +1,92 @@
+{
+  "iucn_id": 12763,
+  "scientific_name": "Manis javanica",
+  "common_name": "Sunda Pangolin",
+  "cards": [
+    {
+      "method": "track",
+      "observation_text": "Fresh trail sign lies beneath a humid, closed forest canopy.",
+      "inference_text": "Retain candidates associated with rainforest habitat.",
+      "trait_category": "habitat",
+      "primary_predicate": "habitat_tag:rainforest",
+      "compare_tags": ["habitat_tag:rainforest"],
+      "is_signature": false,
+      "specificity": 1,
+      "source": "https://www.nparks.gov.sg/florafaunaweb/fauna/2/1/212",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "track",
+      "observation_text": "The freshest tracks and feeding marks appear after dark.",
+      "inference_text": "Retain candidates with a nocturnal activity pattern.",
+      "trait_category": "behavior",
+      "primary_predicate": "activity_pattern:nocturnal",
+      "compare_tags": ["activity_pattern:nocturnal"],
+      "is_signature": false,
+      "specificity": 2,
+      "source": "https://www.pangolinsg.org/wp-content/uploads/sites/35/2018/06/Lim_Ng_2007_Home-range-activity-cycle-and-natal-den-usage-of-a-female-Sunda-pangolin-in-Singapore.pdf",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "Repeated detections show one adult moving without companions.",
+      "inference_text": "Retain candidates that are normally solitary.",
+      "trait_category": "behavior",
+      "primary_predicate": "sociality:solitary",
+      "compare_tags": ["sociality:solitary"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://www.nparks.gov.sg/florafaunaweb/fauna/2/1/212",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "observe",
+      "observation_text": "The animal climbs and travels along branches above the ground.",
+      "inference_text": "Retain candidates with arboreal locomotion.",
+      "trait_category": "behavior",
+      "primary_predicate": "locomotion:arboreal",
+      "compare_tags": ["locomotion:arboreal"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://www.nparks.gov.sg/florafaunaweb/fauna/2/1/212",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Feeding sites contain remains from ants and termites.",
+      "inference_text": "Retain candidates with an insectivorous diet.",
+      "trait_category": "diet",
+      "primary_predicate": "diet_type:insectivore",
+      "compare_tags": ["diet_type:insectivore"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://www.nparks.gov.sg/florafaunaweb/fauna/2/1/212",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "survey",
+      "observation_text": "Excavated soil bears paired grooves from powerful digging claws.",
+      "inference_text": "Retain candidates with specialized digging claws.",
+      "trait_category": "morphology",
+      "primary_predicate": "distinctive_features:claws_digging",
+      "compare_tags": ["distinctive_features:claws_digging"],
+      "is_signature": false,
+      "specificity": 3,
+      "source": "https://www.nparks.gov.sg/florafaunaweb/fauna/2/1/212",
+      "review_status": "reviewed"
+    },
+    {
+      "method": "analyze",
+      "observation_text": "Maternal records show a youngster riding at the base of the mother's tail.",
+      "inference_text": "This unusual position for carrying young is the case signature.",
+      "trait_category": "reproduction",
+      "primary_predicate": "signature:young_rides_at_mothers_tail_base",
+      "compare_tags": ["signature:young_rides_at_mothers_tail_base"],
+      "is_signature": true,
+      "specificity": 3,
+      "source": "https://www.pangolinsg.org/wp-content/uploads/sites/35/2018/06/Lim_Ng_2007_Home-range-activity-cycle-and-natal-den-usage-of-a-female-Sunda-pangolin-in-Singapore.pdf",
+      "review_status": "reviewed"
+    }
+  ]
+}
+

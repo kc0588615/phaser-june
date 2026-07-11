@@ -1,0 +1,262 @@
+{
+  "iucn_id": 512,
+  "scientific_name": "Addax nasomaculatus",
+  "common_name": "Addax",
+  "species": {
+    "conservation_text": "Critically Endangered (CR).",
+    "habitat_description": "Hyper-arid sandy and stony desert, gravel plains, rocky slopes, and semi-arid grassland.",
+    "habitat_tags": [
+      "sandy desert",
+      "stony desert",
+      "gravel plains",
+      "rocky slopes",
+      "semi-arid grassland"
+    ],
+    "geographic_description": "Formerly widespread across the Sahara; now restricted to tiny areas in Niger and restored populations in central Chad.",
+    "marine": false,
+    "terrestrial": true,
+    "freshwater": false,
+    "colors": [
+      "pale sandy white",
+      "dark brown"
+    ],
+    "pattern": "Dark X-like facial blaze and a darker winter coat.",
+    "shape_description": "Stocky antelope with broad spreading hooves and long spiral horns in both sexes.",
+    "size_min_cm": 150,
+    "size_max_cm": 170,
+    "weight_kg": null,
+    "diet_type": "Herbivore",
+    "diet_prey": null,
+    "diet_flora": "Desert grasses, shrubs, succulents, shoots, seeds, and melons.",
+    "behavior_1": "Feeds during cooler hours and at night, resting during the heat.",
+    "behavior_2": "Nomadic herds often number 5-20.",
+    "life_description_1": "Gestation lasts 257-270 days and normally produces one calf.",
+    "life_description_2": "The calf is concealed for about two weeks.",
+    "key_fact_1": "Broad spreading hooves are adapted to sand.",
+    "key_fact_2": "Coat colour changes seasonally.",
+    "key_fact_3": "Moisture from plants can replace drinking free water.",
+    "threats": "Illegal hunting, oil exploration, agriculture and livestock, insecurity, drought, and desertification.",
+    "taxonomic_comment": "The sole living species in the genus Addax.",
+    "distribution_comment": "Once occurred across Saharan nations; the remaining wild and restored populations occupy only a minute portion of that range.",
+    "lifespan": null,
+    "maturity": "Females mature at roughly 2-3 years and males at about 2 years.",
+    "reproduction_type": "Sexual, viviparous, and iteroparous",
+    "clutch_size": "Normally one calf",
+    "sources": [
+      "https://nationalzoo.si.edu/animals/addax",
+      "https://saharaconservation.org/sahel-and-sahara-fauna/addax/",
+      "https://www.marwell.org.uk/animals/addax/",
+      "https://animaldiversity.org/accounts/Addax_nasomaculatus/",
+      "https://iucn.org/crossroads-blog/202202/save-addax-antelope-oil-sector-and-government-must-work-together"
+    ]
+  },
+  "profile": {
+    "habitat_tags": [
+      "habitat_tag:desert",
+      "habitat_tag:grassland"
+    ],
+    "morphology_tags": [
+      "size_bucket:human",
+      "body_plan:robust",
+      "distinctive_features:horns",
+      "distinctive_features:mask_face"
+    ],
+    "diet_tags": [
+      "diet_type:herbivore"
+    ],
+    "behavior_tags": [
+      "activity_pattern:nocturnal",
+      "sociality:herd",
+      "foraging_style:graze",
+      "foraging_style:browse"
+    ],
+    "reproduction_tags": [
+      "parity:iteroparous"
+    ],
+    "taxonomy_tags": [
+      "family:bovidae",
+      "genus:addax"
+    ],
+    "geography_tags": [
+      "climate_zone:arid",
+      "continent:africa",
+      "bioregion:sahara"
+    ],
+    "conservation_tags": [
+      "iucn:CR",
+      "threat_tag:poaching",
+      "threat_tag:agriculture"
+    ],
+    "key_fact_tags": [
+      "signature:plant_moisture_replaces_drinking"
+    ],
+    "signature_tag": "signature:plant_moisture_replaces_drinking",
+    "habitat_note": "Hyper-arid desert, gravel plains, rocky slopes, and semi-arid grassland.",
+    "morphology_note": "Stocky pale antelope with broad spreading hooves and long spiral horns.",
+    "diet_note": "Herbivore eating desert grasses, shrubs, succulents, shoots, seeds, and melons.",
+    "behavior_note": "Feeds during cooler hours and at night in nomadic herds.",
+    "reproduction_note": "Gestation lasts 257 to 270 days and normally produces one calf.",
+    "reference_summary": "Critically endangered Saharan antelope adapted to extreme aridity."
+  },
+  "clues": [
+    {
+      "category": "taxonomy",
+      "reveal_order": 1,
+      "label": "A member of the bovid family.",
+      "compare_tags": [
+        "family:bovidae"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "taxonomy",
+      "reveal_order": 2,
+      "label": "Its classification includes a mammalian genus.",
+      "compare_tags": [],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": false
+    },
+    {
+      "category": "geography",
+      "reveal_order": 1,
+      "label": "Lives in arid climates.",
+      "compare_tags": [
+        "climate_zone:arid"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "geography",
+      "reveal_order": 2,
+      "label": "Native to Africa.",
+      "compare_tags": [
+        "continent:africa"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "morphology",
+      "reveal_order": 1,
+      "label": "Has a robust body plan.",
+      "compare_tags": [
+        "body_plan:robust"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "morphology",
+      "reveal_order": 2,
+      "label": "Both sexes have horns.",
+      "compare_tags": [
+        "distinctive_features:horns"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "behavior",
+      "reveal_order": 1,
+      "label": "Primarily feeds at night.",
+      "compare_tags": [
+        "activity_pattern:nocturnal"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "behavior",
+      "reveal_order": 2,
+      "label": "Lives in herds.",
+      "compare_tags": [
+        "sociality:herd"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "diet",
+      "reveal_order": 1,
+      "label": "Is herbivorous.",
+      "compare_tags": [
+        "diet_type:herbivore"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "reproduction",
+      "reveal_order": 1,
+      "label": "Breeds repeatedly across its lifetime.",
+      "compare_tags": [
+        "parity:iteroparous"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "conservation",
+      "reveal_order": 1,
+      "label": "Its conservation status is Critically Endangered.",
+      "compare_tags": [
+        "iucn:CR"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 2,
+      "is_filtering": true
+    },
+    {
+      "category": "conservation",
+      "reveal_order": 2,
+      "label": "Poaching is a threat.",
+      "compare_tags": [
+        "threat_tag:poaching"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 3,
+      "is_filtering": true
+    },
+    {
+      "category": "key_fact",
+      "reveal_order": 1,
+      "label": "Broad hooves spread weight over sand.",
+      "compare_tags": [],
+      "unlock_mode": "score",
+      "base_cost": 60,
+      "is_filtering": false
+    },
+    {
+      "category": "key_fact",
+      "reveal_order": 2,
+      "label": "Its coat changes colour seasonally.",
+      "compare_tags": [],
+      "unlock_mode": "score",
+      "base_cost": 80,
+      "is_filtering": false
+    },
+    {
+      "category": "key_fact",
+      "reveal_order": 3,
+      "label": "Plant moisture can replace drinking.",
+      "compare_tags": [
+        "signature:plant_moisture_replaces_drinking"
+      ],
+      "unlock_mode": "fragment",
+      "base_cost": 4,
+      "is_filtering": true
+    }
+  ]
+}

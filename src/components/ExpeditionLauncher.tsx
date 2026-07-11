@@ -28,7 +28,6 @@ interface ResumeRunSummary {
     nodeStatus: string;
     scoreEarned: number;
     movesUsed: number;
-    counterGem: string | null;
     obstacleFamily: string | null;
     waypoint?: { name?: string; waypointType?: string; fallback?: boolean } | null;
   }>;
@@ -39,6 +38,7 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
   const [resumeRuns, setResumeRuns] = useState<ResumeRunSummary[]>([]);
   const [loadingResumeRuns, setLoadingResumeRuns] = useState(false);
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
+  const [abandoningRunId, setAbandoningRunId] = useState<string | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
 
   const loadResumeRuns = useCallback(async (signal?: AbortSignal) => {
@@ -90,6 +90,22 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
       setLoadingResumeId(null);
     }
   }, [loadResumeRuns, onResume]);
+
+  const handleAbandon = useCallback(async (runId: string) => {
+    if (!window.confirm('Abandon this saved expedition? This cannot be resumed.')) return;
+    setAbandoningRunId(runId);
+    setResumeError(null);
+    try {
+      const response = await fetch(`/api/runs/${runId}/abandon`, { method: 'POST' });
+      if (!response.ok) throw new Error(`Abandon failed (${response.status})`);
+      setResumeRuns(previous => previous.filter(run => run.id !== runId));
+    } catch (error) {
+      console.error('Failed to abandon run:', error);
+      setResumeError('That expedition could not be abandoned.');
+    } finally {
+      setAbandoningRunId(null);
+    }
+  }, []);
 
   return (
     <div className="min-h-full px-ds-lg pt-14 pb-[104px] box-border text-ds-text-primary">
@@ -162,8 +178,10 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
                   key={run.id}
                   run={run}
                   loading={loadingResumeId === run.id}
-                  disabled={loadingResumeId != null}
+                  abandoning={abandoningRunId === run.id}
+                  disabled={loadingResumeId != null || abandoningRunId != null}
                   onResume={() => void handleResume(run.id)}
+                  onAbandon={() => void handleAbandon(run.id)}
                 />
               ))}
             </div>
@@ -181,13 +199,17 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
 function ResumeRunCard({
   run,
   loading,
+  abandoning,
   disabled,
   onResume,
+  onAbandon,
 }: {
   run: ResumeRunSummary;
   loading: boolean;
+  abandoning: boolean;
   disabled: boolean;
   onResume: () => void;
+  onAbandon: () => void;
 }) {
   const completedNodes = run.nodes.filter(node => node.nodeStatus === 'completed').length;
   const activeNode = run.nodes.find(node => node.nodeStatus === 'active')
@@ -238,15 +260,26 @@ function ResumeRunCard({
         </p>
       )}
 
-      <button
-        type="button"
-        disabled={disabled || !canResume}
-        onClick={onResume}
-        className="mt-ds-sm inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-ds-cyan/40 bg-ds-cyan/10 px-3 py-2 text-ds-caption font-semibold text-ds-cyan transition-colors hover:bg-ds-cyan/15 disabled:cursor-wait disabled:border-ds-subtle disabled:bg-ds-surface/70 disabled:text-ds-text-muted"
-      >
-        {loading && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
-        {canResume ? 'Resume' : 'Unavailable'}
-      </button>
+      <div className="mt-ds-sm flex gap-ds-xs">
+        <button
+          type="button"
+          disabled={disabled || !canResume}
+          onClick={onResume}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-ds-cyan/40 bg-ds-cyan/10 px-3 py-2 text-ds-caption font-semibold text-ds-cyan transition-colors hover:bg-ds-cyan/15 disabled:cursor-wait disabled:border-ds-subtle disabled:bg-ds-surface/70 disabled:text-ds-text-muted"
+        >
+          {loading && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
+          {canResume ? 'Resume' : 'Unavailable'}
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onAbandon}
+          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-2 text-ds-caption font-semibold text-destructive disabled:cursor-wait disabled:opacity-60"
+        >
+          {abandoning && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
+          Abandon
+        </button>
+      </div>
     </div>
   );
 }

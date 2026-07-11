@@ -5,6 +5,8 @@ loadEnv({ path: '.env.local', quiet: true });
 
 const baseUrl = process.env.WAYPOINT_BASE_URL || 'http://localhost:8080';
 const databaseUrl = process.env.VERIFY_DATABASE_URL || process.env.DATABASE_URL;
+const authCookie = process.env.WAYPOINT_AUTH_COOKIE;
+const MYSTERY_NODE_COUNT = 3;
 
 if (!databaseUrl) {
   console.error('Set VERIFY_DATABASE_URL or DATABASE_URL before running this script.');
@@ -37,7 +39,9 @@ function isValidLonLat(point) {
 }
 
 async function fetchJson(path, init) {
-  const response = await fetch(`${baseUrl}${path}`, init);
+  const headers = new Headers(init?.headers);
+  if (authCookie) headers.set('Cookie', authCookie);
+  const response = await fetch(`${baseUrl}${path}`, { ...init, headers });
   const body = await response.text();
   let data;
   try {
@@ -80,8 +84,6 @@ function expectedTemplateSignatureForWaypoint(waypoint, nodeType) {
       rationaleIncludes: null,
     };
   }
-  if (nodeType === 'crisis') return null;
-
   switch (waypoint.waypointType) {
     case 'protected_area':
       return {
@@ -121,7 +123,10 @@ async function createRun({ lon, lat, label = 'dense' }) {
   const atPointData = atPointResult.data;
   assert(Array.isArray(waypointData.waypoints) && waypointData.waypoints.length === 6, 'expected six waypoints');
   assert(Array.isArray(waypointData.routePolyline) && waypointData.routePolyline.length === 6, 'expected six route points');
-  assert(Array.isArray(atPointData.generated_nodes) && atPointData.generated_nodes.length === 6, 'expected six generated nodes');
+  assert(
+    Array.isArray(atPointData.generated_nodes) && atPointData.generated_nodes.length === MYSTERY_NODE_COUNT,
+    `expected ${MYSTERY_NODE_COUNT} generated nodes`,
+  );
 
   const nodes = attachWaypointsToNodes(atPointData.generated_nodes, waypointData.waypoints);
   const locationKey = `verify-waypoints:${label}:${lon.toFixed(4)},${lat.toFixed(4)}:${Date.now()}`;
@@ -161,7 +166,10 @@ async function createRun({ lon, lat, label = 'dense' }) {
 
   assert(runResult.response.status === 200, `run creation returned ${runResult.response.status}: ${JSON.stringify(runResult.data)}`);
   assert(typeof runResult.data.runId === 'string' && runResult.data.runId.length > 0, 'missing runId');
-  assert(Array.isArray(runResult.data.nodeIds) && runResult.data.nodeIds.length === 6, 'expected six nodeIds');
+  assert(
+    Array.isArray(runResult.data.nodeIds) && runResult.data.nodeIds.length === MYSTERY_NODE_COUNT,
+    `expected ${MYSTERY_NODE_COUNT} nodeIds`,
+  );
 
   return { runId: runResult.data.runId, waypointData, locationKey };
 }
@@ -192,7 +200,7 @@ async function verifyPersistedRun(runId, waypointData, locationKey) {
     WHERE run_id = ${runId}
     ORDER BY node_order
   `;
-  assert(nodes.length === 6, `expected six persisted nodes, got ${nodes.length}`);
+  assert(nodes.length === MYSTERY_NODE_COUNT, `expected ${MYSTERY_NODE_COUNT} persisted nodes, got ${nodes.length}`);
 
   for (const node of nodes) {
     const waypoint = node.board_context?.waypoint;
@@ -201,9 +209,8 @@ async function verifyPersistedRun(runId, waypointData, locationKey) {
     assert(isValidLonLat(waypoint), `node ${node.node_order}: invalid waypoint coordinates`);
     const expectedNodeType = expectedNodeTypeForWaypoint(waypoint);
     if (expectedNodeType) {
-      const crisisPreserved = waypoint.nodeRole !== 'final' && node.node_type === 'crisis';
       assert(
-        node.node_type === expectedNodeType || crisisPreserved,
+        node.node_type === expectedNodeType,
         `node ${node.node_order}: expected ${expectedNodeType}, got ${node.node_type}`,
       );
     }
@@ -248,7 +255,6 @@ async function checkpointAndVerifyResumeState(runId, waypointData) {
     body: JSON.stringify({
       currentNodeIndex: 0,
       objectiveProgress: 2,
-      resourceWallet: { wild: 1 },
       clueFragments: { habitat: 1 },
       bankedScore: 5,
       routePolyline: [firstRoutePoint],
@@ -271,7 +277,6 @@ async function checkpointAndVerifyResumeState(runId, waypointData) {
   assert(checkpointSession.run_status === 'active', 'checkpoint should keep session active');
   assert(checkpointSession.metadata?.currentNodeIndex === 0, 'checkpoint should persist 0-based currentNodeIndex');
   assert(checkpointSession.metadata?.bankedScore === 5, 'checkpoint should persist bankedScore');
-  assert(checkpointSession.metadata?.resourceWallet?.wild === 1, 'checkpoint should persist resourceWallet');
   assert(checkpointSession.metadata?.clueFragments?.habitat === 1, 'checkpoint should persist clueFragments');
   assert(
     Array.isArray(checkpointSession.metadata?.routePolyline)
@@ -295,13 +300,6 @@ async function checkpointAndVerifyResumeState(runId, waypointData) {
       scoreEarned: 7,
       movesUsed: 3,
       objectiveProgress: 5,
-      souvenirs: [{ id: 'verify-token', name: 'Verifier Token' }],
-      encounterOutcome: {
-        threats: [],
-        finalSpookLevel: 0,
-        outcome: 'stabilized',
-        chipDamageTotal: 0,
-      },
     }),
   });
 
@@ -322,7 +320,7 @@ async function checkpointAndVerifyResumeState(runId, waypointData) {
   assert(postCompleteSession.moves_used === 3, 'node completion should add moves');
 
   const completedNodes = await sql`
-    SELECT node_order, node_status, objective_progress, reward_profile, board_context
+    SELECT node_order, node_status, objective_progress
     FROM eco_run_nodes
     WHERE run_id = ${runId} AND node_order IN (1, 2)
     ORDER BY node_order
@@ -330,8 +328,6 @@ async function checkpointAndVerifyResumeState(runId, waypointData) {
   assert(completedNodes.length === 2, 'expected first two nodes after completion');
   assert(completedNodes[0].node_status === 'completed', 'node 1 should be completed');
   assert(completedNodes[0].objective_progress === 5, 'node 1 completion objectiveProgress mismatch');
-  assert(completedNodes[0].reward_profile?.souvenirs?.[0]?.id === 'verify-token', 'node 1 souvenir should persist');
-  assert(completedNodes[0].board_context?.encounterOutcome?.outcome === 'stabilized', 'node 1 encounterOutcome should persist');
   assert(completedNodes[1].node_status === 'active', 'node 2 should unlock as active');
 
   const staleCheckpoint = await fetchJson(`/api/runs/${runId}`, {
@@ -476,6 +472,118 @@ async function completeAndVerifyMemory(runId, waypointData) {
   console.log(`run memory: ok runId=${runId}`);
 }
 
+async function completeMysteryCaseAndVerifyMemory(runId) {
+  for (let nodeIndex = 0; nodeIndex < MYSTERY_NODE_COUNT; nodeIndex += 1) {
+    const nodeOrder = nodeIndex + 1;
+    const [node] = await sql`
+      SELECT objective_target
+      FROM eco_run_nodes
+      WHERE run_id = ${runId} AND node_order = ${nodeOrder}
+      LIMIT 1
+    `;
+    assert(node, `node ${nodeOrder} missing before completion`);
+
+    const completed = await fetchJson(`/api/runs/${runId}/nodes/${nodeOrder}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scoreEarned: 10 + nodeIndex,
+        movesUsed: 4,
+        objectiveProgress: node.objective_target,
+      }),
+    });
+    assert(completed.response.status === 200, `node ${nodeOrder} completion failed: ${JSON.stringify(completed.data)}`);
+
+    const observation = await fetchJson(`/api/runs/${runId}/observations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nodeIndex }),
+    });
+    assert(observation.response.status === 200, `observation ${nodeIndex} failed: ${JSON.stringify(observation.data)}`);
+    assert(observation.data.ref === `obs-${nodeIndex}`, `observation ${nodeIndex} ref mismatch`);
+
+    const interpretation = await fetchJson(`/api/runs/${runId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reasoningEvents: [{
+          obsRef: observation.data.ref,
+          predictedEliminatedIds: [],
+          actualEliminatedIds: [],
+          correct: false,
+          latencyMs: 1,
+        }],
+      }),
+    });
+    assert(interpretation.response.status === 200, `interpretation ${nodeIndex} failed: ${JSON.stringify(interpretation.data)}`);
+    assert(
+      interpretation.data.reasoningEventsCommitted?.includes(observation.data.ref),
+      `interpretation ${nodeIndex} was not committed`,
+    );
+  }
+
+  const signature = await fetchJson(`/api/runs/${runId}/observations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nodeIndex: 3 }),
+  });
+  if (signature.response.status === 200) {
+    const signatureCommit = await fetchJson(`/api/runs/${runId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reasoningEvents: [{
+          obsRef: signature.data.ref,
+          predictedEliminatedIds: [],
+          actualEliminatedIds: [],
+          correct: false,
+          latencyMs: 1,
+        }],
+      }),
+    });
+    assert(signatureCommit.response.status === 200, `signature interpretation failed: ${JSON.stringify(signatureCommit.data)}`);
+  } else {
+    assert(
+      signature.response.status === 403 && ['no_signature', 'not_eligible'].includes(signature.data.reason),
+      `unexpected signature response: ${signature.response.status} ${JSON.stringify(signature.data)}`,
+    );
+  }
+
+  const [privateRun] = await sql`
+    SELECT
+      (metadata->'casePrivate'->>'answerId')::int AS answer_id,
+      metadata->'casePublic'->'candidateIds' AS candidate_ids,
+      score_total
+    FROM eco_run_sessions
+    WHERE id = ${runId}
+    LIMIT 1
+  `;
+  assert(Number.isInteger(privateRun?.answer_id), 'integration harness could not read the private answer');
+  const wrongId = privateRun.candidate_ids.find(id => id !== privateRun.answer_id);
+  const wrong = await fetchJson(`/api/runs/${runId}/guess`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ speciesId: wrongId }),
+  });
+  assert(wrong.response.status === 200 && wrong.data.correct === false, `wrong guess failed: ${JSON.stringify(wrong.data)}`);
+  const guessed = await fetchJson(`/api/runs/${runId}/guess`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ speciesId: privateRun.answer_id }),
+  });
+  assert(guessed.response.status === 200 && guessed.data.correct === true, `correct guess failed: ${JSON.stringify(guessed.data)}`);
+
+  const [[session], [memory]] = await Promise.all([
+    sql`SELECT run_status, score_total FROM eco_run_sessions WHERE id = ${runId} LIMIT 1`,
+    sql`SELECT nodes, final_score FROM run_memories WHERE run_id = ${runId} LIMIT 1`,
+  ]);
+  assert(session?.run_status === 'completed', 'correct guess should complete the run');
+  assert(guessed.data.finalScore < privateRun.score_total + 350, 'wrong guess should decay the remaining deduction bonus');
+  assert(memory?.final_score === guessed.data.finalScore, 'memory final score mismatch');
+  assert(Array.isArray(memory.nodes) && memory.nodes.length === MYSTERY_NODE_COUNT, 'memory must contain three nodes');
+  console.log(`mystery case: ok runId=${runId} finalScore=${memory.final_score}`);
+}
+
 async function cleanupRun(runId) {
   await sql`DELETE FROM eco_run_sessions WHERE id = ${runId}`;
 
@@ -506,9 +614,7 @@ try {
   const created = await createRun({ lon: 2.3522, lat: 48.8566, label: 'paris' });
   runIds.push(created.runId);
   await verifyPersistedRun(created.runId, created.waypointData, created.locationKey);
-  await checkpointAndVerifyResumeState(created.runId, created.waypointData);
-  await checkpointAndVerifyDeductionState(created.runId, created.waypointData);
-  await completeAndVerifyMemory(created.runId, created.waypointData);
+  await completeMysteryCaseAndVerifyMemory(created.runId);
 
   const sparseCreated = await createRun({ lon: -150, lat: 0, label: 'mid-pacific' });
   runIds.push(sparseCreated.runId);

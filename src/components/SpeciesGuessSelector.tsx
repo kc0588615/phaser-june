@@ -1,286 +1,78 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { EventBus } from '@/game/EventBus';
-import { speciesService } from '@/lib/speciesService';
+import type { DeductionProfile } from '@/lib/deductionEngine';
 
 interface SpeciesGuessSelectorProps {
-  speciesId: number;
+  candidates: DeductionProfile[];
   disabled?: boolean;
-  onGuessSubmitted?: (isCorrect: boolean, guessedName: string) => void;
-  hiddenSpeciesName?: string;
-  /**
-   * Explicit candidate pool to choose from. When supplied (e.g. from
-   * deduction-narrowed candidates), the random fetch is skipped so the
-   * player's deduction work actually constrains the final guess list.
-   */
-  candidateNames?: string[];
+  onGuess: (speciesId: number) => Promise<boolean>;
 }
 
-export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({
-  speciesId,
-  disabled = false,
-  onGuessSubmitted,
-  hiddenSpeciesName: propHiddenSpeciesName,
-  candidateNames,
-}) => {
+export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({ candidates, disabled = false, onGuess }) => {
   const [open, setOpen] = useState(false);
-  const [selectedSpecies, setSelectedSpecies] = useState('');
-  const [candidateSpecies, setCandidateSpecies] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasGuessed, setHasGuessed] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [hiddenSpeciesName, setHiddenSpeciesName] = useState<string>(propHiddenSpeciesName || '');
-  const [guessedSpecies, setGuessedSpecies] = useState<Set<string>>(new Set());
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [guessedIds, setGuessedIds] = useState<Set<number>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
+  const [correct, setCorrect] = useState(false);
+  const selected = useMemo(() => candidates.find(candidate => candidate.speciesId === selectedId), [candidates, selectedId]);
 
-  // Update when prop changes
-  useEffect(() => {
-    if (propHiddenSpeciesName) {
-      setHiddenSpeciesName(propHiddenSpeciesName);
-    }
-  }, [propHiddenSpeciesName]);
-
-  // Listen for the hidden species name from new-game-started event
-  useEffect(() => {
-    const handleNewGame = (data: any) => {
-      if (data.hiddenSpeciesName) {
-        setHiddenSpeciesName(data.hiddenSpeciesName);
-        // Reset states for new game
-        setHasGuessed(false);
-        setIsCorrect(false);
-        setSelectedSpecies('');
-        setSearchTerm('');
-        setGuessedSpecies(new Set());
-      }
-    };
-
-    EventBus.on('new-game-started', handleNewGame);
-    return () => {
-      EventBus.off('new-game-started', handleNewGame);
-    };
-  }, []);
-
-  // Load candidate species when we have both speciesId and hiddenSpeciesName.
-  // If an explicit candidateNames pool is supplied, use it directly so the
-  // player's deduction narrows the actual guess list.
-  useEffect(() => {
-    if (!hiddenSpeciesName) return;
-    if (candidateNames && candidateNames.length > 0) {
-      const set = new Set(candidateNames);
-      if (hiddenSpeciesName && hiddenSpeciesName !== 'Unknown Species') {
-        set.add(hiddenSpeciesName);
-      }
-      setCandidateSpecies(Array.from(set));
-      setIsLoading(false);
-      return;
-    }
-    if (speciesId > 0) {
-      loadCandidateSpecies();
-    }
-  }, [speciesId, hiddenSpeciesName, candidateNames]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [open]);
-
-  const loadCandidateSpecies = async () => {
-    console.log('Loading candidate species, hiddenSpeciesName:', hiddenSpeciesName, 'speciesId:', speciesId);
-    setIsLoading(true);
+  const submit = async () => {
+    if (selectedId === null || submitting || correct) return;
+    setSubmitting(true);
     try {
-      // Fetch 9 random species names from the service (we'll add the correct one to make 10)
-      const randomSpecies = await speciesService.getRandomSpeciesNames(9, speciesId);
-      console.log('Random species from service:', randomSpecies);
-      
-      // Always include the correct answer
-      const allSpecies = [...randomSpecies];
-      if (hiddenSpeciesName && hiddenSpeciesName !== 'Unknown Species' && !allSpecies.includes(hiddenSpeciesName)) {
-        allSpecies.push(hiddenSpeciesName);
-      }
-      
-      // Shuffle the array so the correct answer isn't always last
-      const shuffled = [...new Set(allSpecies)].sort(() => Math.random() - 0.5).slice(0, 10);
-      console.log('Final shuffled species list:', shuffled);
-      setCandidateSpecies(shuffled);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Failed to load candidate species:', error);
-      // Fallback to hardcoded list
-      const fallback = [
-        'Loggerhead Sea Turtle',
-        'Hawksbill Sea Turtle',
-        'Leatherback Sea Turtle',
-        'Olive Ridley Sea Turtle',
-        'Kemp\'s Ridley Sea Turtle',
-        'Flatback Sea Turtle',
-        'Eastern Box Turtle',
-        'Painted Turtle',
-        'Red-eared Slider',
-        'Snapping Turtle',
-      ];
-      // Make sure hidden species is in fallback list
-      if (hiddenSpeciesName && !fallback.includes(hiddenSpeciesName)) {
-        fallback[Math.floor(Math.random() * fallback.length)] = hiddenSpeciesName;
-      }
-      console.log('Using fallback species list:', fallback);
-      setCandidateSpecies(fallback);
-      setIsLoading(false);
+      const isCorrect = await onGuess(selectedId);
+      setGuessedIds(previous => new Set(previous).add(selectedId));
+      setCorrect(isCorrect);
+      if (!isCorrect) setSelectedId(null);
+    } finally {
+      setSubmitting(false);
     }
   };
-
-  const handleGuessSubmit = () => {
-    if (!selectedSpecies || hasGuessed) return;
-
-    // Add to guessed species
-    setGuessedSpecies(prev => new Set(prev).add(selectedSpecies));
-
-    // Check if the guess is correct
-    const correct = selectedSpecies.toLowerCase() === hiddenSpeciesName.toLowerCase();
-    setIsCorrect(correct);
-    
-    if (correct) {
-      setHasGuessed(true);
-    } else {
-      // Allow more guesses if incorrect
-      setSelectedSpecies('');
-    }
-
-    // Emit the guess event with the result
-    EventBus.emit('species-guess-submitted', {
-      guessedName: selectedSpecies,
-      speciesId: speciesId,
-      isCorrect: correct,
-      actualName: hiddenSpeciesName
-    });
-    
-    if (onGuessSubmitted) {
-      onGuessSubmitted(correct, selectedSpecies);
-    }
-  };
-
-  const filteredSpecies = candidateSpecies.filter(species =>
-    species.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-2 items-center">
-        <div className="relative flex-1" ref={dropdownRef}>
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
           <button
-            onClick={() => setOpen(!open)}
-            disabled={disabled || hasGuessed || isLoading}
-            className={cn(
-              "w-full px-3 py-2 text-left bg-slate-800 border border-slate-600 rounded-md",
-              "hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed",
-              "flex items-center justify-between"
-            )}
+            type="button"
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            onClick={() => setOpen(value => !value)}
+            disabled={disabled || submitting || correct}
+            className="flex w-full items-center justify-between rounded-md border border-ds-subtle bg-black/20 px-3 py-2 text-left text-sm text-ds-text-primary disabled:opacity-50"
           >
-            <span className="truncate">
-              {selectedSpecies || (hasGuessed ? 'Correct!' : `Select a species... (${Math.max(0, candidateSpecies.length - guessedSpecies.size)} left)`)}
-            </span>
-            <ChevronDown className="h-4 w-4 opacity-50" />
+            <span>{correct ? 'Identification confirmed' : selected?.commonName ?? 'Select a candidate'}</span>
+            <ChevronDown className="h-4 w-4 opacity-60" />
           </button>
-          
           {open && (
-            <div className="absolute z-guess-dropdown w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-hidden">
-              <div className="p-2 border-b border-slate-700">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search species..."
-                  className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-sm focus:outline-none focus:border-cyan-500"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div className="max-h-48 overflow-y-auto">
-                {isLoading ? (
-                  <div className="px-3 py-2 text-sm text-slate-400">Loading species...</div>
-                ) : candidateSpecies.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-slate-400">No species loaded. Please wait...</div>
-                ) : filteredSpecies.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-slate-400">No species found matching "{searchTerm}"</div>
-                ) : (
-                  filteredSpecies.map((species) => {
-                    const isGuessed = guessedSpecies.has(species);
-                    return (
-                      <button
-                        key={species}
-                        onClick={() => {
-                          if (!isGuessed) {
-                            setSelectedSpecies(species);
-                            setOpen(false);
-                            setSearchTerm('');
-                          }
-                        }}
-                        disabled={isGuessed}
-                        className={cn(
-                          "w-full px-3 py-2 text-left text-sm",
-                          "flex items-center gap-2",
-                          isGuessed ? "opacity-50 cursor-not-allowed bg-slate-900 text-slate-500" : "hover:bg-slate-700",
-                          selectedSpecies === species && !isGuessed && "bg-slate-700"
-                        )}
-                      >
-                        {isGuessed ? (
-                          <span className="text-red-400">✗</span>
-                        ) : selectedSpecies === species ? (
-                          <Check className="h-3 w-3 text-cyan-400" />
-                        ) : (
-                          <span className="w-3"></span>
-                        )}
-                        <span className={cn(
-                          isGuessed && "line-through"
-                        )}>
-                          {species}
-                        </span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+            <div role="listbox" aria-label="Case candidates" className="absolute bottom-full z-guess-dropdown mb-1 max-h-56 w-full overflow-y-auto rounded-md border border-ds-subtle bg-ds-bg shadow-xl">
+              {candidates.map(candidate => {
+                const guessed = guessedIds.has(candidate.speciesId);
+                return (
+                  <button
+                    key={candidate.speciesId}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedId === candidate.speciesId}
+                    disabled={guessed}
+                    onClick={() => { setSelectedId(candidate.speciesId); setOpen(false); }}
+                    className={cn('flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/10 disabled:opacity-40', selectedId === candidate.speciesId && 'bg-white/10')}
+                  >
+                    {selectedId === candidate.speciesId ? <Check className="h-3.5 w-3.5 text-ds-cyan" /> : <span className="w-3.5" />}
+                    <span><span className={guessed ? 'line-through' : ''}>{candidate.commonName}</span> <i className="text-ds-text-muted">{candidate.scientificName}</i></span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
-        
-        <Button
-          onClick={handleGuessSubmit}
-          disabled={!selectedSpecies || hasGuessed || disabled}
-          variant={hasGuessed ? (isCorrect ? 'default' : 'secondary') : 'default'}
-          className={cn(
-            'min-w-[100px]',
-            isCorrect && 'bg-green-600 hover:bg-green-700'
-          )}
-        >
-          {hasGuessed ? (isCorrect ? 'Correct!' : 'Submitted') : 'Guess'}
+        <Button type="button" onClick={submit} disabled={selectedId === null || disabled || submitting || correct}>
+          {submitting ? 'Checking…' : 'Submit guess'}
         </Button>
       </div>
-      
-      {!hasGuessed && guessedSpecies.size > 0 && (
-        <p className="text-sm text-amber-400">
-          Incorrect. Buy more clues and try again.
-        </p>
-      )}
-      
-      {hasGuessed && isCorrect && (
-        <p className="text-sm text-green-400">
-          Correct! You discovered the {hiddenSpeciesName}!
-        </p>
-      )}
+      {guessedIds.size > 0 && !correct && <p role="status" className="text-xs text-ds-amber">Not a match. Compare the field evidence and try again.</p>}
     </div>
   );
 };

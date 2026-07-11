@@ -1,30 +1,23 @@
 /**
  * Proximity-based node family scoring for eco run generation.
  *
+ * Given the GIS layers near the clicked point (protected areas, water,
+ * bioregions, communities), this module scores each layer, picks the primary
+ * node family (selectNodes), and expands it into concrete run nodes with
+ * obstacles/board tuning (generateRunNodes + applyWaypointsToRunNodes).
+ * Used server-side by /api/runs when a run is created.
+ *
  * Polygon layers:  score = 0.7 * overlap_ratio + 0.3 * exp(-distance_m / 500)
  * Line layers:     score = exp(-distance_m / 500)  (overlap_ratio always 0)
+ *
+ * Behavior is pinned by tests/lib/nodeScoring.test.ts.
  */
 
-import type { ActionGemType, GemType } from '@/game/constants';
+import { METHOD_SLOTS, type MethodType } from '@/expedition/domain';
 import type { ExpeditionWaypoint, WaypointType } from '@/types/waypoints';
-import {
-  getCounterGemForObstacleFamily,
-  type NodeObstacle,
-  type ObstacleFamily,
-} from '@/game/nodeObstacles';
+import type { NodeObstacle, ObstacleFamily } from '@/game/nodeObstacles';
 
-export type ThreatType = 'quarry' | 'blocker' | 'hazard' | 'loot_cache' | 'time_pressure';
-
-export interface EncounterConfig {
-  threats: Array<{
-    threatType: ThreatType;
-    counterGem: ActionGemType;
-    altGem: ActionGemType | null;
-    target: number;
-    resistances: ObstacleFamily[];
-  }>;
-  baseSpookRate: number;
-}
+export { METHOD_SLOTS } from '@/expedition/domain';
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 
@@ -41,7 +34,6 @@ export interface NodeSelection {
   primaryNodeFamily: NodeFamily;
   primaryVariant: string;
   modifierNodes: string[];
-  actionBias: Partial<Record<ActionGemType, number>>;
   signals: Record<string, number>;
 }
 
@@ -52,11 +44,11 @@ export interface RunNode {
   obstacles: NodeObstacle[];
   events: string[];
   rationale: string;
-  counterGem: ActionGemType | null;
   obstacleFamily: ObstacleFamily | null;
-  requiredGems: GemType[];
+  method?: MethodType;
+  objectiveType?: 'method_match';
   objectiveTarget: number;
-  encounterConfig: EncounterConfig | null;
+  boardSeed?: number;
   waypoint?: ExpeditionWaypoint;
 }
 
@@ -65,6 +57,9 @@ export interface HabitatSignals {
   forest_ratio: number;
   urban_ratio: number;
 }
+
+export const METHOD_OBJECTIVE_BASE_TARGET = 6;
+export const MYSTERY_NODE_COUNT = METHOD_SLOTS.length;
 
 const MODIFIER_THRESHOLD = 0.1;
 const BIOREGION_FALLBACK_THRESHOLD = 0.05;
@@ -147,73 +142,8 @@ export function selectNodes(scores: LayerScore[]): NodeSelection {
     primaryNodeFamily: primary.nodeFamily,
     primaryVariant: primary.variant,
     modifierNodes: modifiers,
-    actionBias: computeActionBias(primary.nodeFamily, scores),
     signals,
   };
-}
-
-/** Derive board action bias from primary family + context. */
-function computeActionBias(primary: NodeFamily, scores: LayerScore[]): Partial<Record<ActionGemType, number>> {
-  const bias: Partial<Record<ActionGemType, number>> = {
-    sword: 0.125,
-    staff: 0.125,
-    shield: 0.125,
-    key: 0.125,
-    crate: 0.125,
-    power: 0.125,
-    thought: 0.125,
-    multiplier: 0.125,
-  };
-
-  if (primary === 'water_node') {
-    bias.shield = 0.22;
-    bias.power = 0.18;
-    bias.staff = 0.16;
-    bias.crate = 0.12;
-    bias.thought = 0.1;
-    bias.key = 0.08;
-    bias.sword = 0.08;
-    bias.multiplier = 0.06;
-  } else if (primary === 'bioregion_node') {
-    bias.sword = 0.18;
-    bias.crate = 0.17;
-    bias.thought = 0.15;
-    bias.shield = 0.14;
-    bias.power = 0.12;
-    bias.staff = 0.1;
-    bias.key = 0.08;
-    bias.multiplier = 0.06;
-  } else if (primary === 'protected_node') {
-    bias.key = 0.18;
-    bias.shield = 0.18;
-    bias.thought = 0.15;
-    bias.power = 0.14;
-    bias.multiplier = 0.12;
-    bias.staff = 0.09;
-    bias.sword = 0.08;
-    bias.crate = 0.06;
-  } else if (primary === 'community_node') {
-    bias.thought = 0.18;
-    bias.crate = 0.17;
-    bias.key = 0.14;
-    bias.shield = 0.14;
-    bias.power = 0.12;
-    bias.sword = 0.1;
-    bias.staff = 0.09;
-    bias.multiplier = 0.06;
-  }
-
-  // Water-heavy contexts should over-index on survival and charge generation.
-  const waterScore = scores.find((s) => s.nodeFamily === 'water_node');
-  if (waterScore && waterScore.score > 0.2 && primary !== 'water_node') {
-    bias.shield = Math.min((bias.shield ?? 0) + 0.05, 0.25);
-    bias.power = Math.min((bias.power ?? 0) + 0.04, 0.22);
-    bias.staff = Math.min((bias.staff ?? 0) + 0.03, 0.2);
-    bias.sword = Math.max((bias.sword ?? 0) - 0.03, 0.06);
-    bias.key = Math.max((bias.key ?? 0) - 0.02, 0.06);
-  }
-
-  return bias;
 }
 
 function createNodeTemplate(config: {
@@ -222,22 +152,17 @@ function createNodeTemplate(config: {
   events: string[];
   rationale: string;
   obstacleFamily: ObstacleFamily | null;
-  encounterConfig?: EncounterConfig | null;
 }): Omit<RunNode, 'difficulty' | 'objectiveTarget'> {
-  const counterGem = config.obstacleFamily ? getCounterGemForObstacleFamily(config.obstacleFamily) : null;
   return {
     node_type: config.node_type,
     obstacles: config.obstacles,
     events: config.events,
     rationale: config.rationale,
     obstacleFamily: config.obstacleFamily,
-    counterGem,
-    requiredGems: counterGem ? [counterGem] : [],
-    encounterConfig: config.encounterConfig ?? null,
   };
 }
 
-/** Node templates keyed by node_type — compatibility keeps requiredGems derived from counterGem. */
+/** Node templates keyed by node_type. */
 const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
   riverbank_sweep: createNodeTemplate({
     node_type: 'riverbank_sweep',
@@ -245,14 +170,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['flow_shift', 'mud_tiles'],
     events: ['amphibian_signal', 'river_crossing'],
     rationale: 'River proximity rewards steady traversal through unstable terrain.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
-        { threatType: 'blocker', counterGem: 'key', altGem: 'staff', target: 4, resistances: ['terrain'] },
-        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 2, resistances: [] },
-      ],
-      baseSpookRate: 2,
-    },
   }),
   dense_canopy: createNodeTemplate({
     node_type: 'dense_canopy',
@@ -260,14 +177,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['overgrowth', 'low_visibility'],
     events: ['trail_markings', 'rare_track'],
     rationale: 'Canopy routes choke sight lines and reward deliberate scanning.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'quarry', counterGem: 'sword', altGem: 'staff', target: 4, resistances: ['visibility'] },
-        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 3, resistances: [] },
-        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 3, resistances: [] },
-      ],
-      baseSpookRate: 2.5,
-    },
   }),
   urban_fringe: createNodeTemplate({
     node_type: 'urban_fringe',
@@ -275,14 +184,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['junk_blockers', 'noise_interference'],
     events: ['human_disturbance', 'corridor_crossing'],
     rationale: 'Urban edges stress gear and supplies more than raw speed.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'blocker', counterGem: 'key', altGem: 'crate', target: 3, resistances: ['panic'] },
-        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 3, resistances: [] },
-        { threatType: 'loot_cache', counterGem: 'crate', altGem: null, target: 2, resistances: [] },
-      ],
-      baseSpookRate: 2,
-    },
   }),
   elevation_ridge: createNodeTemplate({
     node_type: 'elevation_ridge',
@@ -290,28 +191,13 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['steep_terrain'],
     events: ['vantage_scan'],
     rationale: 'Ridge nodes turn narrow sighting windows into the main pressure point.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 5, resistances: ['sighting'] },
-        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 3, resistances: [] },
-      ],
-      baseSpookRate: 3,
-    },
   }),
   storm_window: createNodeTemplate({
     node_type: 'storm_window',
     obstacleFamily: 'alert',
     obstacles: ['time_pressure', 'signal_dropout'],
     events: ['urgent_tracking_window', 'migration_shift'],
-    rationale: 'Storm nodes lean on composure as the animal spooks faster under pressure.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'time_pressure', counterGem: 'staff', altGem: 'shield', target: 4, resistances: ['alert'] },
-        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 3, resistances: [] },
-        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
-      ],
-      baseSpookRate: 3.5,
-    },
+    rationale: 'Storm nodes lean on route timing and careful evidence gathering.',
   }),
   custom: createNodeTemplate({
     node_type: 'custom',
@@ -319,13 +205,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['unknown_terrain'],
     events: ['discovery_event'],
     rationale: 'Custom nodes reward field preparation when conditions turn unpredictable.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'hazard', counterGem: 'crate', altGem: 'shield', target: 3, resistances: ['panic'] },
-        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
-      ],
-      baseSpookRate: 2,
-    },
   }),
   protected_area_survey: createNodeTemplate({
     node_type: 'custom',
@@ -333,14 +212,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['limited_signal', 'steep_terrain'],
     events: ['vantage_scan', 'discovery_event'],
     rationale: 'Protected-area surveys trade speed for careful boundaries, permits, and evidence checks.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'blocker', counterGem: 'key', altGem: 'thought', target: 3, resistances: ['sighting'] },
-        { threatType: 'quarry', counterGem: 'sword', altGem: null, target: 3, resistances: [] },
-        { threatType: 'loot_cache', counterGem: 'thought', altGem: null, target: 2, resistances: [] },
-      ],
-      baseSpookRate: 1.8,
-    },
   }),
   basecamp_survey: createNodeTemplate({
     node_type: 'custom',
@@ -348,14 +219,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['limited_signal', 'unknown_terrain'],
     events: ['discovery_event', 'trail_markings'],
     rationale: 'Sparse-route basecamps emphasize orientation, signal checks, and keeping the field plan playable.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'hazard', counterGem: 'shield', altGem: 'crate', target: 2, resistances: ['alert'] },
-        { threatType: 'loot_cache', counterGem: 'crate', altGem: null, target: 2, resistances: [] },
-        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 2, resistances: [] },
-      ],
-      baseSpookRate: 1.5,
-    },
   }),
   ecotone_edge: createNodeTemplate({
     node_type: 'custom',
@@ -363,21 +226,6 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
     obstacles: ['low_visibility', 'flow_shift'],
     events: ['corridor_crossing', 'migration_shift'],
     rationale: 'Ecotone edges mix habitats and create shifting sight lines along the route boundary.',
-    encounterConfig: {
-      threats: [
-        { threatType: 'quarry', counterGem: 'sword', altGem: 'staff', target: 3, resistances: ['visibility'] },
-        { threatType: 'time_pressure', counterGem: 'staff', altGem: null, target: 3, resistances: [] },
-        { threatType: 'hazard', counterGem: 'shield', altGem: null, target: 2, resistances: [] },
-      ],
-      baseSpookRate: 2.4,
-    },
-  }),
-  crisis: createNodeTemplate({
-    node_type: 'crisis',
-    obstacleFamily: null,
-    obstacles: [],
-    events: [],
-    rationale: 'Field complications force a choice before the expedition can continue.',
   }),
   analysis: createNodeTemplate({
     node_type: 'analysis',
@@ -388,9 +236,8 @@ const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarg
   }),
 };
 
-function waypointNodeTemplateKey(waypoint: ExpeditionWaypoint, existingNode: RunNode): keyof typeof NODE_TEMPLATES {
+function waypointNodeTemplateKey(waypoint: ExpeditionWaypoint): keyof typeof NODE_TEMPLATES {
   if (waypoint.nodeRole === 'final') return 'analysis';
-  if (existingNode.node_type === 'crisis') return 'crisis';
 
   switch (waypoint.waypointType) {
     case 'river':
@@ -424,7 +271,7 @@ function waypointRationale(waypoint: ExpeditionWaypoint, baseRationale: string):
     case 'protected_area':
       return `Waypoint route enters ${waypoint.name}, emphasizing protected-area boundaries, access, and evidence checks.`;
     case 'bioregion_edge':
-      return `Waypoint route reaches ${waypoint.name}, where shifting habitat edges shape the encounter.`;
+      return `Waypoint route reaches ${waypoint.name}, where shifting habitat edges shape the fieldwork.`;
     case 'basecamp':
       return `Waypoint route starts from ${waypoint.name}, keeping the opening node anchored to the selected location.`;
   }
@@ -435,58 +282,156 @@ export function applyWaypointsToRunNodes(nodes: RunNode[]): RunNode[] {
     const waypoint = node.waypoint;
     if (!waypoint) return node;
 
-    const templateKey = waypointNodeTemplateKey(waypoint, node);
+    const templateKey = waypointNodeTemplateKey(waypoint);
     const template = NODE_TEMPLATES[templateKey] ?? NODE_TEMPLATES.custom;
-    const tunedNode: Omit<RunNode, 'objectiveTarget'> = {
+    const difficulty = waypoint.fallback
+      ? Math.min(node.difficulty, 2) as RunNode['difficulty']
+      : node.difficulty;
+
+    return {
+      ...node,
       ...template,
-      difficulty: waypoint.fallback
-        ? Math.min(node.difficulty, 2) as RunNode['difficulty']
-        : node.difficulty,
+      difficulty,
       moveBudget: node.moveBudget,
       waypoint,
       rationale: waypointRationale(waypoint, template.rationale),
-    };
-
-    return {
-      ...tunedNode,
-      objectiveTarget: node.objectiveTarget,
+      objectiveTarget: node.objectiveType === 'method_match'
+        ? methodObjectiveTargetForDifficulty(difficulty)
+        : node.objectiveTarget,
     };
   });
 }
 
 export const MYSTERY_MOVE_BUDGET = 12;
 
-/** Single-node mystery generator. Derives the board context from layer scores + habitat context. */
+function methodObjectiveTargetForDifficulty(difficulty: RunNode['difficulty']): number {
+  if (difficulty <= 2) return METHOD_OBJECTIVE_BASE_TARGET - 2;
+  if (difficulty >= 4) return METHOD_OBJECTIVE_BASE_TARGET + 2;
+  return METHOD_OBJECTIVE_BASE_TARGET;
+}
+
+function hashToUint32(value: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function deriveBoardSeedBase(
+  selection: NodeSelection,
+  scores: LayerScore[],
+  habitat: HabitatSignals,
+  threatenedCount: number,
+  protectedCoverage: number,
+  anchorType?: WaypointType | null,
+): number {
+  const scoreFingerprint = [...scores]
+    .sort((a, b) => `${a.nodeFamily}:${a.variant}`.localeCompare(`${b.nodeFamily}:${b.variant}`))
+    .map((score) => [
+      score.nodeFamily,
+      score.variant,
+      Number(score.score.toFixed(6)),
+      Number(score.overlapRatio.toFixed(6)),
+      Number(score.nearestDistanceM.toFixed(2)),
+    ]);
+  const signalFingerprint = Object.entries(selection.signals).sort(([a], [b]) => a.localeCompare(b));
+
+  return hashToUint32(JSON.stringify({
+    primary: [selection.primaryNodeFamily, selection.primaryVariant],
+    modifiers: selection.modifierNodes,
+    signals: signalFingerprint,
+    scores: scoreFingerprint,
+    habitat,
+    threatenedCount,
+    protectedCoverage: Number(protectedCoverage.toFixed(6)),
+    anchorType: anchorType ?? null,
+  }));
+}
+
+interface NodeTemplateCandidate {
+  template: Omit<RunNode, 'difficulty' | 'objectiveTarget'>;
+  difficulty: RunNode['difficulty'];
+}
+
+function selectNodeTemplateCandidates(
+  selection: NodeSelection,
+  scores: LayerScore[],
+  habitat: HabitatSignals,
+  anchorType?: WaypointType | null,
+): NodeTemplateCandidate[] {
+  const candidates: NodeTemplateCandidate[] = [];
+  const usedTemplateKeys = new Set<string>();
+  const addCandidate = (key: keyof typeof NODE_TEMPLATES, difficulty: RunNode['difficulty']) => {
+    if (usedTemplateKeys.has(key) || candidates.length >= MYSTERY_NODE_COUNT) return;
+    usedTemplateKeys.add(key);
+    candidates.push({ template: NODE_TEMPLATES[key] ?? NODE_TEMPLATES.custom, difficulty });
+  };
+
+  const primaryKey = anchorType
+    ? nodeTypeForAnchorType(anchorType)
+    : mapFamilyToNodeType(selection.primaryNodeFamily, selection.primaryVariant);
+  addCandidate(primaryKey as keyof typeof NODE_TEMPLATES, scores[0]?.score > 0.5 ? 4 : 3);
+
+  for (const modifier of selection.modifierNodes) {
+    const separator = modifier.indexOf(':');
+    if (separator < 0) continue;
+    const family = modifier.slice(0, separator) as NodeFamily;
+    const variant = modifier.slice(separator + 1);
+    addCandidate(mapFamilyToNodeType(family, variant) as keyof typeof NODE_TEMPLATES, 3);
+  }
+
+  if (habitat.water_ratio >= 0.2) {
+    addCandidate('riverbank_sweep', habitat.water_ratio >= 0.4 ? 4 : 3);
+  }
+  if (habitat.forest_ratio >= 0.3) {
+    addCandidate('dense_canopy', habitat.forest_ratio >= 0.6 ? 4 : 3);
+  }
+  if (habitat.urban_ratio >= 0.15) {
+    addCandidate('urban_fringe', habitat.urban_ratio >= 0.35 ? 4 : 2);
+  }
+
+  for (const filler of ['elevation_ridge', 'riverbank_sweep', 'urban_fringe', 'dense_canopy', 'custom'] as const) {
+    addCandidate(filler, 2);
+  }
+
+  return candidates.slice(0, MYSTERY_NODE_COUNT);
+}
+
+/** Three-node mystery generator. GIS chooses flavor; each slot earns one investigation method. */
 export function generateRunNodes(
   selection: NodeSelection,
   scores: LayerScore[],
   habitat: HabitatSignals,
-  _threatenedCount: number,
-  _protectedCoverage: number,
+  threatenedCount: number,
+  protectedCoverage: number,
   anchorType?: WaypointType | null,
 ): RunNode[] {
-  const primaryType = mapFamilyToNodeType(selection.primaryNodeFamily, selection.primaryVariant);
-  let template = NODE_TEMPLATES[primaryType] ?? NODE_TEMPLATES.custom;
+  const candidates = selectNodeTemplateCandidates(selection, scores, habitat, anchorType);
+  const seedBase = deriveBoardSeedBase(
+    selection,
+    scores,
+    habitat,
+    threatenedCount,
+    protectedCoverage,
+    anchorType,
+  );
 
-  const anchorNodeType = anchorType ? nodeTypeForAnchorType(anchorType) : null;
-  if (anchorNodeType) {
-    template = NODE_TEMPLATES[anchorNodeType] ?? NODE_TEMPLATES.custom;
-  } else if (template.node_type === 'custom' && habitat.water_ratio >= 0.2) {
-    template = NODE_TEMPLATES.riverbank_sweep;
-  } else if (template.node_type === 'custom' && habitat.forest_ratio >= 0.3) {
-    template = NODE_TEMPLATES.dense_canopy;
-  } else if (template.node_type === 'custom' && habitat.urban_ratio >= 0.15) {
-    template = NODE_TEMPLATES.urban_fringe;
-  }
+  return METHOD_SLOTS.map((method, slot) => {
+    const candidate = candidates[slot];
+    const difficulty = candidate.difficulty;
 
-  const difficulty: RunNode['difficulty'] = scores[0]?.score > 0.5 ? 4 : 3;
-  const node: Omit<RunNode, 'objectiveTarget'> = {
-    ...template,
-    difficulty,
-    moveBudget: MYSTERY_MOVE_BUDGET,
-  };
-
-  return [{ ...node, objectiveTarget: 0 }];
+    return {
+      ...candidate.template,
+      difficulty,
+      moveBudget: MYSTERY_MOVE_BUDGET,
+      method,
+      objectiveType: 'method_match',
+      objectiveTarget: methodObjectiveTargetForDifficulty(difficulty),
+      boardSeed: (seedBase + Math.imul(slot + 1, 0x9e3779b9)) >>> 0,
+    };
+  });
 }
 
 function nodeTypeForAnchorType(anchorType: WaypointType): keyof typeof NODE_TEMPLATES {

@@ -13,7 +13,6 @@ import 'swiper/css/effect-cards';
 type RunMemoryData = {
   nodes?: Array<{
     nodeType: string;
-    counterGem: string | null;
     obstacleFamily: string | null;
     scoreEarned: number;
     waypoint?: ExpeditionWaypointMemory | null;

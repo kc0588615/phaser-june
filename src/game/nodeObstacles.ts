@@ -1,5 +1,10 @@
+// Node obstacles — deterministic board hazards for expedition nodes.
+//
+// Each node type lists obstacles (mud tiles, overgrowth, ...). "Static" ones
+// are seeded onto specific cells as blockers the player must clear; the
+// placement is a pure function of (nodeIndex, obstacles, board size), so the
+// same node always produces the same layout — no stored state needed.
 import type { BoardCellState } from './boardTypes';
-import type { ActionGemType } from './constants';
 
 export const NODE_OBSTACLES = [
     'flow_shift',
@@ -55,14 +60,6 @@ export const OBSTACLE_FAMILY_LABELS: Record<ObstacleFamily, string> = {
     panic: 'Panic',
 };
 
-export const OBSTACLE_COUNTER_GEM_MAP: Record<ObstacleFamily, ActionGemType> = {
-    visibility: 'staff',
-    alert: 'shield',
-    terrain: 'key',
-    sighting: 'sword',
-    panic: 'crate',
-};
-
 export const NODE_OBSTACLE_FAMILY_MAP: Record<NodeObstacle, ObstacleFamily> = {
     flow_shift: 'terrain',
     mud_tiles: 'terrain',
@@ -76,13 +73,6 @@ export const NODE_OBSTACLE_FAMILY_MAP: Record<NodeObstacle, ObstacleFamily> = {
     unknown_terrain: 'panic',
     limited_signal: 'visibility',
 };
-
-export interface ObstacleRule {
-    obstacle: NodeObstacle;
-    effect: 'block_matches' | 'resist_gem' | 'force_clear_first' | 'reveal_then_clear';
-    targetGem?: ActionGemType;
-    clearCondition?: { gem: ActionGemType; count: number };
-}
 
 interface ObstacleSeedConfig {
     width: number;
@@ -156,10 +146,6 @@ export function formatNodeObstacleLabel(obstacle: NodeObstacle): string {
 
 export function getObstacleFamily(obstacle: NodeObstacle): ObstacleFamily {
     return NODE_OBSTACLE_FAMILY_MAP[obstacle];
-}
-
-export function getCounterGemForObstacleFamily(family: ObstacleFamily): ActionGemType {
-    return OBSTACLE_COUNTER_GEM_MAP[family];
 }
 
 export function buildNodeObstacleSeeds(config: ObstacleSeedConfig): CellStateSeed[] {

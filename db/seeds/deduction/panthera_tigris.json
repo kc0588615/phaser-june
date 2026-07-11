@@ -2,30 +2,111 @@
   "iucn_id": 15955,
   "scientific_name": "Panthera tigris",
   "common_name": "Tiger",
+  "species": {
+    "conservation_text": "Endangered (EN).",
+    "habitat_description": "Diverse Asian habitats with prey and cover, including tropical and temperate forests, evergreen forest, mangrove swamp, and grassland.",
+    "habitat_tags": [
+      "rainforest",
+      "temperate forest",
+      "evergreen forest",
+      "mangrove swamp",
+      "grassland"
+    ],
+    "geographic_description": "Fragmented across South and Southeast Asia, China, and the Russian Far East.",
+    "marine": false,
+    "terrestrial": true,
+    "freshwater": false,
+    "colors": [
+      "reddish orange",
+      "black and white"
+    ],
+    "pattern": "Prominent vertical black stripes that differ between individuals.",
+    "shape_description": "Very large, powerfully muscled cat with strong jaws, broad paws, and a long tail.",
+    "size_min_cm": 150,
+    "size_max_cm": 290,
+    "weight_kg": null,
+    "diet_type": "Carnivore",
+    "diet_prey": "Chiefly deer and wild boar, plus other vertebrates.",
+    "diet_flora": null,
+    "behavior_1": "Solitary and territorial; scent-marks and scratches trees.",
+    "behavior_2": "Primarily nocturnal stalk-and-ambush hunter and adept swimmer.",
+    "life_description_1": "Gestation is about 100 days; litters contain 1-7 cubs, usually 2-4.",
+    "life_description_2": "Cubs remain with their mother for 18-24 months and become independent at 2-3 years.",
+    "key_fact_1": "Each tiger has an individually identifiable stripe pattern.",
+    "key_fact_2": "A tiger can cross about 8 km of water.",
+    "key_fact_3": "A tiger may eat about 34 kg after a kill.",
+    "threats": "Poaching and trade, habitat fragmentation, prey loss, and agriculture-related conflict.",
+    "taxonomic_comment": "Species-wide entry; size, coat, climate, and distribution vary among regional populations and subspecies.",
+    "distribution_comment": "Historically widespread across much of Asia; surviving populations are fragmented and depend on connected habitat with sufficient prey.",
+    "lifespan": 15,
+    "maturity": "Females mature at about 3-4 years and males at about 4-5 years.",
+    "reproduction_type": "Sexual, viviparous, and iteroparous",
+    "clutch_size": "1-7 cubs, usually 2-4",
+    "sources": [
+      "https://nationalzoo.si.edu/animals/tiger",
+      "https://nc.iucnredlist.org/redlist/amazing-species/panthera-tigris/pdfs/original/panthera-tigris.pdf",
+      "https://animals.sandiegozoo.org/animals/tiger",
+      "https://www.catsg.org/living-species-tiger"
+    ]
+  },
   "profile": {
-    "habitat_tags": ["rainforest", "mangrove", "grassland"],
-    "morphology_tags": ["size_bucket:horse", "body_plan:robust", "stripes"],
-    "diet_tags": ["carnivore", "ambush"],
-    "behavior_tags": ["nocturnal", "solitary", "ambush"],
-    "reproduction_tags": ["den", "iteroparous", "15_25y"],
-    "taxonomy_tags": ["family:felidae", "genus:panthera"],
-    "geography_tags": ["climate_zone:tropical", "continent:asia", "habitat_tag:mangrove"],
-    "conservation_tags": ["iucn:EN", "poaching", "deforestation"],
-    "key_fact_tags": ["signature:swims_between_islands"],
-    "signature_tag": "signature:swims_between_islands",
-    "habitat_note": "Rainforest, mangrove, and tall grass at rivers.",
-    "morphology_note": "Coarse orange coat broken by black vertical bars.",
-    "diet_note": "Ambush hunter of large ungulates.",
-    "behavior_note": "Solitary and nocturnal outside brief mating windows.",
-    "reproduction_note": "Cubs raised in dens; independence around two years.",
-    "reference_summary": "Largest striped cat, solitary ambush predator across tropical Asia."
+    "habitat_tags": [
+      "habitat_tag:rainforest",
+      "habitat_tag:mangrove",
+      "habitat_tag:grassland"
+    ],
+    "morphology_tags": [
+      "size_bucket:horse",
+      "body_plan:robust",
+      "distinctive_features:stripes"
+    ],
+    "diet_tags": [
+      "diet_type:carnivore"
+    ],
+    "behavior_tags": [
+      "activity_pattern:nocturnal",
+      "sociality:solitary",
+      "foraging_style:ambush"
+    ],
+    "reproduction_tags": [
+      "care_pattern:den",
+      "parity:iteroparous",
+      "lifespan_bucket:5_15y"
+    ],
+    "taxonomy_tags": [
+      "family:felidae",
+      "genus:panthera"
+    ],
+    "geography_tags": [
+      "climate_zone:tropical",
+      "climate_zone:temperate",
+      "continent:asia"
+    ],
+    "conservation_tags": [
+      "iucn:EN",
+      "threat_tag:poaching",
+      "threat_tag:deforestation",
+      "threat_tag:agriculture"
+    ],
+    "key_fact_tags": [
+      "signature:swims_eight_kilometers"
+    ],
+    "signature_tag": "signature:swims_eight_kilometers",
+    "habitat_note": "Tropical and temperate forests, mangroves, and grasslands with prey and cover.",
+    "morphology_note": "Very large robust reddish-orange cat with unique black vertical stripes.",
+    "diet_note": "Carnivore feeding chiefly on deer, wild boar, and other vertebrates.",
+    "behavior_note": "Solitary territorial nocturnal stalk-and-ambush hunter and adept swimmer.",
+    "reproduction_note": "Usually two to four cubs remain with their mother for 18 to 24 months.",
+    "reference_summary": "Large striped Asian cat threatened by poaching, habitat fragmentation, and prey loss."
   },
   "clues": [
     {
       "category": "taxonomy",
       "reveal_order": 1,
-      "label": "Prints show four toes with no visible claw marks.",
-      "compare_tags": ["family:felidae"],
+      "label": "A member of the cat family.",
+      "compare_tags": [
+        "family:felidae"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -33,17 +114,19 @@
     {
       "category": "taxonomy",
       "reveal_order": 2,
-      "label": "Scat contains large ungulate hair, cached under leaves.",
-      "compare_tags": ["genus:panthera"],
+      "label": "Its classification includes a mammalian genus.",
+      "compare_tags": [],
       "unlock_mode": "fragment",
       "base_cost": 3,
-      "is_filtering": true
+      "is_filtering": false
     },
     {
       "category": "geography",
       "reveal_order": 1,
-      "label": "Range extends across tropical monsoon forest.",
-      "compare_tags": ["climate_zone:tropical", "continent:asia"],
+      "label": "Occurs in tropical climates.",
+      "compare_tags": [
+        "climate_zone:tropical"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -51,8 +134,10 @@
     {
       "category": "geography",
       "reveal_order": 2,
-      "label": "Signs cluster near river islands and mangrove edges.",
-      "compare_tags": ["habitat_tag:mangrove"],
+      "label": "Native to Asia.",
+      "compare_tags": [
+        "continent:asia"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 3,
       "is_filtering": true
@@ -60,8 +145,10 @@
     {
       "category": "morphology",
       "reveal_order": 1,
-      "label": "Body the length of a small horse, heavily muscled.",
-      "compare_tags": ["size_bucket:horse", "body_plan:robust"],
+      "label": "Has a robust body plan.",
+      "compare_tags": [
+        "body_plan:robust"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -69,8 +156,10 @@
     {
       "category": "morphology",
       "reveal_order": 2,
-      "label": "Coarse orange coat broken by vertical black bars.",
-      "compare_tags": ["stripes"],
+      "label": "Has vertical stripes.",
+      "compare_tags": [
+        "distinctive_features:stripes"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 3,
       "is_filtering": true
@@ -78,8 +167,10 @@
     {
       "category": "behavior",
       "reveal_order": 1,
-      "label": "Active from dusk to dawn, alone.",
-      "compare_tags": ["nocturnal", "solitary"],
+      "label": "Primarily active at night.",
+      "compare_tags": [
+        "activity_pattern:nocturnal"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -87,8 +178,10 @@
     {
       "category": "behavior",
       "reveal_order": 2,
-      "label": "Stalks close, then explodes in a short rush.",
-      "compare_tags": ["ambush"],
+      "label": "Usually lives alone.",
+      "compare_tags": [
+        "sociality:solitary"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 3,
       "is_filtering": true
@@ -96,8 +189,10 @@
     {
       "category": "diet",
       "reveal_order": 1,
-      "label": "Kills weigh as much as the hunter or more.",
-      "compare_tags": ["carnivore"],
+      "label": "Is carnivorous.",
+      "compare_tags": [
+        "diet_type:carnivore"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -105,8 +200,10 @@
     {
       "category": "reproduction",
       "reveal_order": 1,
-      "label": "Cubs stay in a hidden den for months.",
-      "compare_tags": ["den"],
+      "label": "Breeds repeatedly across its lifetime.",
+      "compare_tags": [
+        "parity:iteroparous"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -114,8 +211,10 @@
     {
       "category": "conservation",
       "reveal_order": 1,
-      "label": "Population fragmented and declining.",
-      "compare_tags": ["iucn:EN"],
+      "label": "Its conservation status is Endangered.",
+      "compare_tags": [
+        "iucn:EN"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 2,
       "is_filtering": true
@@ -123,8 +222,10 @@
     {
       "category": "conservation",
       "reveal_order": 2,
-      "label": "Snares and traded parts drive most losses.",
-      "compare_tags": ["poaching"],
+      "label": "Poaching is a threat.",
+      "compare_tags": [
+        "threat_tag:poaching"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 3,
       "is_filtering": true
@@ -132,7 +233,7 @@
     {
       "category": "key_fact",
       "reveal_order": 1,
-      "label": "Cubs learn to swim before they learn to climb.",
+      "label": "Stripe patterns identify individuals.",
       "compare_tags": [],
       "unlock_mode": "score",
       "base_cost": 60,
@@ -141,7 +242,7 @@
     {
       "category": "key_fact",
       "reveal_order": 2,
-      "label": "Roars carry across three kilometers of forest.",
+      "label": "May eat about 34 kilograms after a kill.",
       "compare_tags": [],
       "unlock_mode": "score",
       "base_cost": 80,
@@ -150,8 +251,10 @@
     {
       "category": "key_fact",
       "reveal_order": 3,
-      "label": "Individuals cross wide rivers between island patches.",
-      "compare_tags": ["signature:swims_between_islands"],
+      "label": "Can swim about eight kilometres.",
+      "compare_tags": [
+        "signature:swims_eight_kilometers"
+      ],
       "unlock_mode": "fragment",
       "base_cost": 4,
       "is_filtering": true

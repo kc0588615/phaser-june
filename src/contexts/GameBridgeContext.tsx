@@ -9,7 +9,6 @@ export interface SpeciesInfo {
   id: number;
   total: number;
   index: number;
-  hiddenName: string;
 }
 
 const INITIAL_HUD: GameHudUpdatedEvent = {
@@ -26,7 +25,6 @@ interface GameBridgeState {
   speciesInfo: SpeciesInfo | null;
   allCluesRevealed: boolean;
   allSpeciesCompleted: { totalSpecies: number } | null;
-  guessResult: EventPayloads['species-guess-submitted'] | null;
 }
 
 const GameBridgeContext = createContext<GameBridgeState | null>(null);
@@ -44,7 +42,6 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
   const [speciesInfo, setSpeciesInfo] = useState<SpeciesInfo | null>(null);
   const [allCluesRevealed, setAllCluesRevealed] = useState(false);
   const [allSpeciesCompleted, setAllSpeciesCompleted] = useState<{ totalSpecies: number } | null>(null);
-  const [guessResult, setGuessResult] = useState<EventPayloads['species-guess-submitted'] | null>(null);
 
   const hudRef = useRef<{ score: number; movesUsed: number }>({ score: 0, movesUsed: 0 });
   const clueSetRef = useRef(new Set<string>());
@@ -70,17 +67,16 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
     };
 
     const onNewGame = (d: EventPayloads['new-game-started']) => {
-      setSpeciesInfo({ name: d.speciesName, id: d.speciesId, total: d.totalSpecies, index: d.currentIndex, hiddenName: d.hiddenSpeciesName || '' });
+      setSpeciesInfo({ name: d.speciesName, id: d.speciesId, total: d.totalSpecies, index: d.currentIndex });
       setClues([]);
       setLatestClue(null);
       setAllCluesRevealed(false);
       setAllSpeciesCompleted(null);
-      setGuessResult(null);
       clueSetRef.current.clear();
     };
 
     const onNoSpecies = () => {
-      setSpeciesInfo({ name: 'No species found at this location', id: 0, total: 0, index: 0, hiddenName: '' });
+      setSpeciesInfo({ name: 'No species found at this location', id: 0, total: 0, index: 0 });
       setClues([]);
       setLatestClue(null);
       clueSetRef.current.clear();
@@ -88,7 +84,6 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
 
     const onAllClues = () => setAllCluesRevealed(true);
     const onAllSpecies = (d: EventPayloads['all-species-completed']) => setAllSpeciesCompleted(d);
-    const onGuess = (d: EventPayloads['species-guess-submitted']) => setGuessResult(d);
 
     const onReset = () => {
       setHud(INITIAL_HUD);
@@ -97,7 +92,6 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
       setSpeciesInfo(null);
       setAllCluesRevealed(false);
       setAllSpeciesCompleted(null);
-      setGuessResult(null);
       hudRef.current = { score: 0, movesUsed: 0 };
       clueSetRef.current.clear();
     };
@@ -108,7 +102,6 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
     EventBus.on('no-species-found', onNoSpecies);
     EventBus.on('all-clues-revealed', onAllClues);
     EventBus.on('all-species-completed', onAllSpecies);
-    EventBus.on('species-guess-submitted', onGuess);
     EventBus.on('game-reset', onReset);
 
     return () => {
@@ -118,14 +111,13 @@ export function GameBridgeProvider({ children }: { children: React.ReactNode }) 
       EventBus.off('no-species-found', onNoSpecies);
       EventBus.off('all-clues-revealed', onAllClues);
       EventBus.off('all-species-completed', onAllSpecies);
-      EventBus.off('species-guess-submitted', onGuess);
       EventBus.off('game-reset', onReset);
     };
   }, []);
 
   const value = useMemo<GameBridgeState>(() => ({
-    hud, hudRef, clues, latestClue, speciesInfo, allCluesRevealed, allSpeciesCompleted, guessResult,
-  }), [hud, clues, latestClue, speciesInfo, allCluesRevealed, allSpeciesCompleted, guessResult]);
+    hud, hudRef, clues, latestClue, speciesInfo, allCluesRevealed, allSpeciesCompleted,
+  }), [hud, clues, latestClue, speciesInfo, allCluesRevealed, allSpeciesCompleted]);
 
   return <GameBridgeContext.Provider value={value}>{children}</GameBridgeContext.Provider>;
 }

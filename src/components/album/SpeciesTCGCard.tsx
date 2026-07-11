@@ -48,7 +48,6 @@ interface SpeciesTCGCardProps {
   runMemory?: {
     nodes?: Array<{
       nodeType: string;
-      counterGem: string | null;
       obstacleFamily: string | null;
       scoreEarned: number;
       waypoint?: ExpeditionWaypointMemory | null;
@@ -452,7 +451,6 @@ function MemoryNodeChip({
 }: {
   node: {
     nodeType: string;
-    counterGem: string | null;
     obstacleFamily: string | null;
     waypoint?: ExpeditionWaypointMemory | null;
   };
@@ -474,9 +472,6 @@ function MemoryNodeChip({
       <p className="text-[9px] text-slate-400 truncate max-w-[64px]">{nodeLabel}</p>
       {waypointName && (
         <p className="text-[8px] text-emerald-300 truncate max-w-[72px]">{waypointName}</p>
-      )}
-      {node.counterGem && (
-        <p className="text-[8px] text-cyan-400">{node.counterGem}</p>
       )}
     </div>
   );

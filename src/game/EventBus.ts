@@ -1,15 +1,28 @@
+// EventBus — the single bridge between the React world (Cesium map, HUD,
+// panels, ExpeditionContext) and the Phaser world (the match-3 board).
+//
+// The two sides never import each other's components; they only communicate by
+// emitting and listening to the events declared in `EventPayloads` below.
+// A typical run flows through it like this:
+//
+//   CesiumMap  --'cesium-location-selected'-->  ExpeditionContext / Game scene
+//   Context    --'expedition-start'---------->  Game scene (board begins)
+//   Game scene --'deduction-clue-triggered'-->  Context (clue fragments)
+//   Game scene --'node-advance-requested'---->  Context (score banked, camp)
+//
+// To add an event: add its name + payload type to `EventPayloads`, then both
+// `EventBus.emit` and `EventBus.on` become type-checked for it everywhere.
 import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
-import type { ExpeditionData, NodeRewardLanes } from '@/types/expedition';
+import type { ExpeditionData } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
-import type { ActionGemType, GemType } from './constants';
+import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
-import type { ThreatType, EncounterConfig } from '@/lib/nodeScoring';
 import type { FeatureFingerprint } from '@/types/gis';
-import type { DeductionClueCategory } from '@/db/schema/species';
+import type { MethodType } from '@/expedition/domain';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -25,17 +38,16 @@ export interface EventPayloads {
     moveBudget?: number;
     obstacles?: NodeObstacle[];
     obstacleFamily?: ObstacleFamily | null;
-    counterGem?: ActionGemType | null;
-    requiredGems?: GemType[];
+    objectiveGem?: GemType;
     activeAffinities?: AffinityType[];
     objectiveTarget?: number;
     objectiveProgress?: number;
     nodeIndex?: number;
     nodeType?: string;
     events?: string[];
+    boardSeed?: number;
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
-    encounterConfig?: EncounterConfig | null;
   };
   'game-score-updated': {
     score: number;
@@ -51,7 +63,6 @@ export interface EventPayloads {
     speciesId: number;
     totalSpecies: number;
     currentIndex: number;
-    hiddenSpeciesName?: string;  // The real species name (hidden from player)
   };
   'game-reset': undefined;
   'no-species-found': {};
@@ -60,12 +71,6 @@ export interface EventPayloads {
   };
   'all-species-completed': {
     totalSpecies: number;
-  };
-  'species-guess-submitted': {
-    guessedName: string;
-    speciesId: number;
-    isCorrect: boolean;
-    actualName: string;
   };
   'show-species-list': {
     speciesId: number;
@@ -94,34 +99,18 @@ export interface EventPayloads {
     nodeIndex: number;
     reason: 'victory' | 'escaped';
     source: 'game' | 'panel';
-    encounterOutcome?: {
-      threats: Array<{ id: string; threatType: string; progress: number; target: number; resolved: boolean }>;
-      finalSpookLevel: number;
-      outcome: 'success' | 'escaped' | 'partial';
-      chipDamageTotal: number;
-    };
   };
   'node-complete': { nodeIndex: number };
   'route-progress-updated': { slot: number };
   'node-objective-updated': {
     progress: number;
     target: number;
-    requiredGems: GemType[];
-    counterGem?: ActionGemType | null;
-    activeAffinities?: AffinityType[];
-    // Multi-threat encounter state
-    threats?: Array<{ id: string; threatType: ThreatType; counterGem: ActionGemType; progress: number; target: number; resolved: boolean }>;
-    spookLevel?: number;
-    chipDamagePool?: number;
-    overallResolved?: boolean;
   };
-  'deduction-clue-triggered': {
-    category: DeductionClueCategory;
+  'observation-earned': {
+    method: MethodType;
     matchLength: number;
     source: 'gem_match';
   };
-  'node-rewards-summary': NodeRewardLanes;
-  'deduction-camp-guess': { guessedName: string; speciesId: number };
   'auth-user-ready': { playerId: string; sessionId?: string };
 }
 

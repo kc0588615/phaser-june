@@ -1,4 +1,11 @@
-// src/components/CesiumMap.tsx
+// CesiumMap — the 3D globe where every run starts.
+//
+// The player clicks a point on Earth; this component looks up what lives
+// there (species ranges, habitats, protected areas, waypoints via /api/*),
+// then emits 'cesium-location-selected' + expedition data on the EventBus.
+// From there ExpeditionContext takes over the run and the Phaser board is
+// configured for the location. It also draws route trails and habitat
+// highlights during a run (useCesiumTrail).
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Viewer, ImageryLayer, Entity, PointGraphics, LabelGraphics } from 'resium';
 import {
@@ -19,6 +26,7 @@ import {
   ColorMaterialProperty,
 } from 'cesium';
 import { Compass, Layers, Maximize2, Search } from 'lucide-react';
+import { toast } from 'sonner';
 import { EventBus } from '../game/EventBus';
 import { deriveAvailableAffinities, getDefaultActiveAffinities } from '../expedition/affinities';
 import type { AffinityType } from '../expedition/affinities';
@@ -47,7 +55,6 @@ interface AtPointData {
   generated_nodes?: RunNode[];
   bioregion?: ExpeditionData['bioregion'];
   protected_areas?: ExpeditionData['protectedAreas'];
-  action_bias?: ExpeditionData['actionBias'];
   primary_node_family?: string;
   primary_variant?: string;
   modifier_nodes?: string[];
@@ -169,7 +176,6 @@ function emitExpeditionReadyFromMapClick(input: {
       nodes: attachWaypointsToNodes(nodes, input.waypointData),
       bioregion: input.atPointData?.bioregion ?? null,
       protectedAreas: input.atPointData?.protected_areas ?? [],
-      actionBias: input.atPointData?.action_bias ?? {},
       activeAffinities: input.activeAffinities,
       availableAffinities: input.availableAffinities,
       primaryNodeFamily: input.atPointData?.primary_node_family ?? '',
@@ -267,9 +273,13 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
   const startPendingSelection = useCallback(() => {
     if (!pendingSelection) return;
 
-    emitExpeditionReadyFromMapClick({
+    const emitted = emitExpeditionReadyFromMapClick({
       ...pendingSelection,
     });
+    if (!emitted) {
+      toast.error('No expedition data here — try another spot');
+      setPendingSelection(null);
+    }
   }, [pendingSelection]);
 
   useEffect(() => {

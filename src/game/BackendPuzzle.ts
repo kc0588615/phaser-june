@@ -1,9 +1,18 @@
-// src/game/BackendPuzzle.ts
+// BackendPuzzle — the pure "rules engine" of the match-3 board (the Model).
+//
+// It owns the grid of gems, applies row/column shifts (MoveAction), finds
+// matches, refills columns, and tracks score + move budget. It knows nothing
+// about Phaser, sprites, or animation — BoardView renders what this class
+// decides, and scenes/Game.ts orchestrates the two.
+//
+// Because it is pure TypeScript, its behavior is pinned down by
+// tests/game/backendPuzzle.test.ts (`npm test`).
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { LOOT_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
+import { ACTIVE_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
 import type { CellStateSeed } from './nodeObstacles';
+import { mulberry32 } from '@/lib/seededRng';
 
 export type Gem = BoardCell;
 export type { BoardCell, PuzzleGrid };
@@ -11,8 +20,6 @@ export type { BoardCell, PuzzleGrid };
 export type GemPoolConfig = BoardSpawnConfig;
 
 const DEFAULT_GEM_POOL: GemPoolConfig = {
-    lootChance: DEFAULT_BOARD_SPAWN_CONFIG.lootChance,
-    actionWeights: { ...DEFAULT_BOARD_SPAWN_CONFIG.actionWeights },
     lootWeights: { ...(DEFAULT_BOARD_SPAWN_CONFIG.lootWeights ?? {}) },
 };
 
@@ -23,6 +30,7 @@ export class BackendPuzzle {
     private movesUsed: number = 0;
     private maxMoves: number = MAX_MOVES;
     private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
+    private rng: () => number = Math.random;
 
     constructor(
         public readonly width: number,
@@ -36,10 +44,15 @@ export class BackendPuzzle {
 
     setGemPool(config: GemPoolConfig): void {
         this.gemPool = {
-            lootChance: config.lootChance,
-            actionWeights: { ...config.actionWeights },
             lootWeights: { ...(config.lootWeights ?? {}) },
         };
+    }
+
+    setSeed(seed: number): void {
+        if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) {
+            throw new RangeError('Board seed must be a uint32.');
+        }
+        this.rng = mulberry32(seed);
     }
 
     /**
@@ -49,6 +62,7 @@ export class BackendPuzzle {
     regenerateBoard(): void {
         console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
+        this.nextGemsToSpawn = [];
         this.score = 0;
         this.movesUsed = 0;
     }
@@ -136,7 +150,7 @@ export class BackendPuzzle {
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 // Start with all clue-color gem types
-                let possibleGems = new Set<GemType>(LOOT_GEM_TYPES);
+                let possibleGems = new Set<GemType>(ACTIVE_GEM_TYPES);
 
                 // Check if placing a gem would create a vertical match of 3
                 if (y >= 2) {
@@ -168,7 +182,7 @@ export class BackendPuzzle {
                 // Fallback: pick any non-matching gem
                 if (!possibleGems.has(gemType)) {
                     const possibleGemsArray = Array.from(possibleGems);
-                    gemType = possibleGemsArray[Math.floor(Math.random() * possibleGemsArray.length)] as GemType;
+                    gemType = possibleGemsArray[Math.floor(this.rng() * possibleGemsArray.length)] as GemType;
                 }
 
                 grid[x][y] = createBoardCell(gemType);
@@ -240,23 +254,23 @@ export class BackendPuzzle {
         return this.pickWeightedGem();
     }
 
-    /** Pick a random clue gem. Action-gem spawn config remains for compatibility but is inert. */
+    /** Pick a weighted investigation-method gem. */
     private pickWeightedGem(): GemType {
         const weights = this.gemPool.lootWeights ?? {};
-        const total = LOOT_GEM_TYPES.reduce((sum, gemType) => {
+        const total = ACTIVE_GEM_TYPES.reduce((sum, gemType) => {
             const weight = weights[gemType] ?? 1;
             return sum + (Number.isFinite(weight) && weight > 0 ? weight : 1);
         }, 0);
-        let roll = Math.random() * total;
+        let roll = this.rng() * total;
 
-        for (const gemType of LOOT_GEM_TYPES) {
+        for (const gemType of ACTIVE_GEM_TYPES) {
             const weight = weights[gemType] ?? 1;
             roll -= Number.isFinite(weight) && weight > 0 ? weight : 1;
             if (roll <= 0) {
                 return gemType;
             }
         }
-        return LOOT_GEM_TYPES[LOOT_GEM_TYPES.length - 1] as LootGemType;
+        return ACTIVE_GEM_TYPES[ACTIVE_GEM_TYPES.length - 1] as LootGemType;
     }
 
     /** Check if any single-cell row/col shift produces a match. */
@@ -290,7 +304,7 @@ export class BackendPuzzle {
             // Fisher-Yates on gem types only
             const types = cells.map(c => c.cell.gemType);
             for (let i = types.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+                const j = Math.floor(this.rng() * (i + 1));
                 [types[i], types[j]] = [types[j], types[i]];
             }
             for (let i = 0; i < cells.length; i++) {

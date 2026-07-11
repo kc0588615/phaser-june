@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db, ecoRunSessions, ecoRunNodes, runMemories, speciesTable } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { getRecord } from '@/lib/runCaseState';
+import { projectDeductionSummary, projectRunForClient, projectRunMemory } from '@/lib/runProjection';
+
+const RESOURCE_WALLET_KEYS = ['habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'geographic', 'conservation'] as const;
 
 /**
  * GET /api/runs/list?status=completed&limit=20
@@ -50,8 +54,9 @@ export async function GET(request: NextRequest) {
           .where(eq(ecoRunNodes.runId, s.id))
           .orderBy(ecoRunNodes.nodeOrder);
 
-        const meta = s.metadata as Record<string, unknown>;
-        const hasResumeSnapshot = Boolean(meta?.expeditionSnapshot && typeof meta.expeditionSnapshot === 'object');
+        const meta = getRecord(s.metadata);
+        const publicRun = projectRunForClient(s);
+        const hasResumeSnapshot = Object.keys(getRecord(meta.expeditionSnapshot)).length > 0;
         const [memory] = await db
           .select()
           .from(runMemories)
@@ -69,36 +74,37 @@ export async function GET(request: NextRequest) {
             .limit(1)
           : [];
 
+        const publicMemory = projectRunMemory(memory);
+        const summary = publicRun.run;
         return {
-          id: s.id,
-          status: s.runStatus,
-          locationKey: s.locationKey,
-          realm: s.realm,
-          biome: s.biome,
-          bioregion: s.bioregion,
-          scoreTotal: s.scoreTotal,
-          finalScore: meta?.finalScore ?? null,
-          nodeCount: s.nodeCountPlanned,
-          startedAt: s.startedAt,
-          endedAt: s.endedAt,
-          affinities: meta?.activeAffinities ?? [],
+          id: summary.id,
+          status: summary.status,
+          locationKey: summary.locationKey,
+          realm: summary.realm,
+          biome: summary.biome,
+          bioregion: summary.bioregion,
+          scoreTotal: summary.scoreTotal,
+          finalScore: publicMemory?.finalScore ?? null,
+          nodeCount: summary.nodeCountPlanned,
+          startedAt: summary.startedAt,
+          endedAt: summary.endedAt,
+          affinities: publicRun.checkpoint.activeAffinities,
           hasResumeSnapshot,
-          resourceWallet: meta?.resourceWallet ?? null,
-          deductionSummary: meta?.deductionSummary ?? null,
-          discoveredSpecies: memorySpecies ? {
+          resourceWallet: projectResourceWallet(meta.resourceWallet),
+          deductionSummary: projectDeductionSummary(meta.deductionSummary),
+          discoveredSpecies: s.runStatus === 'completed' && memorySpecies ? {
             id: memorySpecies.id,
             name: memorySpecies.commonName || memorySpecies.scientificName,
           } : null,
-          routePolyline: memory?.routePolyline ?? [],
-          routeBounds: memory?.routeBounds ?? null,
-          gisFeaturesNearby: memory?.gisFeaturesNearby ?? [],
+          routePolyline: publicMemory?.routePolyline ?? [],
+          routeBounds: publicMemory?.routeBounds ?? null,
+          gisFeaturesNearby: publicMemory?.gisFeaturesNearby ?? [],
           nodes: nodes.map(n => ({
             nodeOrder: n.nodeOrder,
             nodeType: n.nodeType,
             nodeStatus: n.nodeStatus,
             scoreEarned: n.scoreEarned,
             movesUsed: n.movesUsed,
-            counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
             obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
             waypoint: ((n.boardContext as Record<string, unknown>)?.waypoint as Record<string, unknown> | null | undefined) ?? null,
           })),
@@ -111,4 +117,13 @@ export async function GET(request: NextRequest) {
     console.error('[API GET /api/runs/list] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch runs' }, { status: 500 });
   }
+}
+
+function projectResourceWallet(value: unknown): Record<string, number> | null {
+  const source = getRecord(value);
+  const projected = Object.fromEntries(RESOURCE_WALLET_KEYS.flatMap(key => {
+    const amount = source[key];
+    return typeof amount === 'number' && Number.isFinite(amount) ? [[key, amount]] : [];
+  }));
+  return Object.keys(projected).length > 0 ? projected : null;
 }

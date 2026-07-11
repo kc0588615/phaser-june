@@ -1,4 +1,3 @@
-import type { ActionGemType } from '@/expedition/domain';
 import type { AffinityType } from '@/expedition/affinities';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { CluePayload } from '@/game/clueConfig';
@@ -10,19 +9,43 @@ export type { RunNode };
 
 export type RunPhase = 'idle' | 'briefing' | 'mystery' | 'complete';
 
-export type SpookTier = 'stabilized' | 'spooked' | 'escaped';
+export interface EarnedObservation {
+  ref: string;
+  method: import('@/expedition/domain').MethodType;
+  observationText: string;
+  inferenceText?: string;
+  traitCategory?: import('@/db/schema/species').DeductionClueCategory;
+  compareTag?: string;
+  isSignature: boolean;
+  issuedAtMs: number;
+}
 
-export function getSpookTier(pct: number): SpookTier {
-  if (pct > 0.6) return 'stabilized';
-  if (pct > 0.2) return 'spooked';
-  return 'escaped';
+export interface InterpretationEvent {
+  obsRef: string;
+  predictedEliminatedIds: number[];
+  actualEliminatedIds: number[];
+  correct: boolean;
+  latencyMs: number;
+}
+
+export interface CaseState {
+  /** Sub-state of phase 'mystery': board play, evidence interpretation, or the final guess. */
+  stage: import('@/expedition/caseFlow').CaseStage;
+  candidateIds: number[];
+  profiles: import('@/lib/deductionEngine').DeductionProfile[];
+  observations: EarnedObservation[];
+  interpretations: InterpretationEvent[];
+  eliminatedIds: number[];
+  pendingInterpretationRef: string | null;
+  missedEvidenceNodeIndexes: number[];
+  guessResult: 'correct' | 'wrong' | null;
+  lastFeedback: import('@/lib/deductionEngine').ComparisonResult[] | null;
 }
 
 export interface ExpeditionData {
   nodes: RunNode[];
   bioregion: { bioregion: string | null; realm: string | null; biome: string | null } | null;
   protectedAreas: Array<{ name: string | null; designation: string | null; iucn_category: string | null }>;
-  actionBias: Partial<Record<ActionGemType, number>>;
   activeAffinities: AffinityType[];
   availableAffinities: AffinityType[];
   primaryNodeFamily: string;
@@ -34,8 +57,6 @@ export interface ExpeditionData {
   waypointRadiusKm?: number | null;
   nearestRiverDistM?: number | null;
 }
-
-export type NodeType = 'collection' | 'standoff' | 'crisis' | 'store';
 
 export interface RunState {
   phase: RunPhase;
@@ -53,6 +74,9 @@ export interface RunState {
   visitedWaypointSlot: number;
   matchedGemCategories: ClueCategoryKey[];
   completionReason?: 'captured' | 'slipped';
+  /** The public candidate the player selected on a server-confirmed correct guess. */
+  resolvedSpeciesId: number | null;
+  caseState: CaseState | null;
 }
 
 // --- New Economy Types ---
@@ -97,14 +121,6 @@ export function createEmptyClueFragments(): ClueFragments {
     classification: 0, habitat: 0, geographic: 0, morphology: 0,
     behavior: 0, life_cycle: 0, conservation: 0, key_facts: 0,
   };
-}
-
-export interface NodeBonusState {
-  startPool: number;
-  currentPool: number;
-  decayRate: number;
-  floorPct: number;
-  shieldSlowActive: boolean;
 }
 
 export interface ClueShopEntry {
@@ -204,14 +220,6 @@ export function createEmptyComparativeState(
     habitatSurvey,
     habitatSurveyCompleteNotified: false,
   };
-}
-
-export interface NodeRewardLanes {
-  baseClearReward: number;
-  preservedNodeBonus: number;
-  triviaReward: number;
-  clueFragmentReward: Partial<Record<ClueCategoryKey, number>>;
-  tier: SpookTier;
 }
 
 /** Guess bonus based on paid clue count */

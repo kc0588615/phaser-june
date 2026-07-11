@@ -1,0 +1,94 @@
+{
+  "iucn_id": 7140,
+  "scientific_name": "Elephas maximus",
+  "common_name": "Asian Elephant",
+  "species": {
+    "conservation_text": "Endangered (EN).",
+    "habitat_description": "Forests with grassy openings; uses large ranges while seeking plants and water.",
+    "habitat_tags": [
+      "rainforest",
+      "dry forest",
+      "grassland"
+    ],
+    "geographic_description": "Fragmented across 13 countries in South and Southeast Asia, from India to Borneo.",
+    "marine": false,
+    "terrestrial": true,
+    "freshwater": false,
+    "colors": [],
+    "pattern": null,
+    "shape_description": "Massive robust body with a trunk; many males have tusks.",
+    "size_min_cm": 180,
+    "size_max_cm": 380,
+    "weight_kg": null,
+    "diet_type": "Herbivore",
+    "diet_prey": null,
+    "diet_flora": "Grasses, leaves, roots, vines, twigs, shoots, bark, and fruit.",
+    "behavior_1": "Related females and young form cooperative herds; mature males are more solitary.",
+    "behavior_2": "Grazes and browses and communicates over kilometres with low-frequency calls.",
+    "life_description_1": "Matures at about 8-13 years; gestation lasts 21.5-22 months and usually produces one precocial calf.",
+    "life_description_2": "Birth intervals are about 3-8 years.",
+    "key_fact_1": "Pregnancy lasts nearly two years.",
+    "key_fact_2": "Uses infrasonic communication over kilometres.",
+    "key_fact_3": "Protecting its wide range benefits many other species.",
+    "threats": "Habitat fragmentation and loss, agriculture-related conflict, infrastructure, and poaching.",
+    "taxonomic_comment": null,
+    "distribution_comment": null,
+    "lifespan": null,
+    "maturity": "About 8-13 years",
+    "reproduction_type": "Viviparous and iteroparous",
+    "clutch_size": "Usually one calf",
+    "sources": [
+      "https://www.mammaldiversity.org/taxon/1000521/",
+      "https://nationalzoo.si.edu/animals/asian-elephant",
+      "https://iucn.org/news/species-survival-commission/202108/shrinking-spaces-worlds-largest-land-animal"
+    ]
+  },
+  "profile": {
+    "habitat_tags": [
+      "habitat_tag:rainforest",
+      "habitat_tag:dry_forest",
+      "habitat_tag:grassland"
+    ],
+    "morphology_tags": [
+      "size_bucket:elephant",
+      "body_plan:robust",
+      "distinctive_features:tusks"
+    ],
+    "diet_tags": [
+      "diet_type:herbivore"
+    ],
+    "behavior_tags": [
+      "sociality:herd",
+      "foraging_style:graze",
+      "foraging_style:browse"
+    ],
+    "reproduction_tags": [
+      "parity:iteroparous",
+      "care_pattern:precocial",
+      "signature:nearly_twenty_two_month_gestation"
+    ],
+    "taxonomy_tags": [
+      "family:elephantidae",
+      "genus:elephas"
+    ],
+    "geography_tags": [
+      "climate_zone:tropical",
+      "continent:asia"
+    ],
+    "conservation_tags": [
+      "iucn:EN",
+      "threat_tag:deforestation",
+      "threat_tag:agriculture",
+      "threat_tag:poaching"
+    ],
+    "key_fact_tags": [],
+    "signature_tag": "signature:nearly_twenty_two_month_gestation",
+    "habitat_note": "Asian forests with grassy openings across large plant- and water-seeking ranges.",
+    "morphology_note": "Massive robust elephant with a trunk and tusks in many males.",
+    "diet_note": "Herbivore eating grasses, woody browse, bark, roots, and fruit.",
+    "behavior_note": "Cooperative female-led herds graze, browse, and communicate with low-frequency calls.",
+    "reproduction_note": "Usually one precocial calf follows a gestation of nearly 22 months.",
+    "reference_summary": "Endangered wide-ranging Asian herbivore threatened by habitat loss, conflict, infrastructure, and poaching."
+  },
+  "clues": []
+}

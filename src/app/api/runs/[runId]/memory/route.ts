@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db, ecoRunSessions, ecoRunNodes, runMemories } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { isUuid } from '@/lib/runCaseState';
+import { projectRunMemory } from '@/lib/runProjection';
 
 /**
  * GET /api/runs/[runId]/memory
@@ -18,9 +20,7 @@ export async function GET(
     }
 
     const { runId } = await params;
-    if (!runId) {
-      return NextResponse.json({ error: 'Missing runId' }, { status: 400 });
-    }
+    if (!isUuid(runId)) return NextResponse.json({ error: 'Invalid runId' }, { status: 400 });
 
     // Check if run_memory already exists
     const [existing] = await db
@@ -33,7 +33,7 @@ export async function GET(
       if (existing.playerId !== playerId) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
-      return NextResponse.json({ memory: existing });
+      return NextResponse.json({ memory: projectRunMemory(existing) });
     }
 
     // Build from session + nodes
@@ -73,14 +73,11 @@ export async function GET(
           nodeOrder: n.nodeOrder,
           nodeType: n.nodeType,
           nodeStatus: n.nodeStatus,
-          counterGem: (n.hazardProfile as Record<string, unknown>)?.counterGem ?? null,
           obstacleFamily: (n.hazardProfile as Record<string, unknown>)?.obstacleFamily ?? null,
           objectiveTarget: n.objectiveTarget,
           objectiveProgress: n.objectiveProgress,
           scoreEarned: n.scoreEarned,
           movesUsed: n.movesUsed,
-          encounterOutcome: bc.encounterOutcome ?? null,
-          encounterConfig: bc.encounterConfig ?? null,
           waypoint: bc.waypoint ?? null,
         };
       }),
@@ -88,7 +85,7 @@ export async function GET(
       endedAt: session.endedAt,
     };
 
-    return NextResponse.json({ memory });
+    return NextResponse.json({ memory: projectRunMemory(memory) });
   } catch (error) {
     console.error('[API GET /api/runs/[runId]/memory] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch run memory' }, { status: 500 });

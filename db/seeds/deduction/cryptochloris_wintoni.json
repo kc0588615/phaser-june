@@ -1,0 +1,93 @@
+{
+  "iucn_id": 5748,
+  "scientific_name": "Cryptochloris wintoni",
+  "common_name": "De Winton's Golden Mole",
+  "species": {
+    "conservation_text": "Critically Endangered (CR).",
+    "habitat_description": "South African coastal dunes and sandy Namaqualand, with shallow subsurface runs in soft sand beneath vegetation.",
+    "habitat_tags": [
+      "coastal dunes",
+      "sandy desert"
+    ],
+    "geographic_description": "Known near Port Nolloth; eDNA suggests a broader west-coast occurrence, but that extent remains provisional.",
+    "marine": false,
+    "terrestrial": true,
+    "freshwater": false,
+    "colors": [
+      "pale fawn"
+    ],
+    "pattern": null,
+    "shape_description": "Compact golden mole about 9 cm long with long slender foreclaws.",
+    "size_min_cm": 9,
+    "size_max_cm": 9,
+    "weight_kg": null,
+    "diet_type": "Insectivore and carnivore",
+    "diet_prey": "Insect larvae, pupae, and legless lizards.",
+    "diet_flora": null,
+    "behavior_1": "Fossorial and digs shallow subsurface runs in soft sand.",
+    "behavior_2": "Runs may extend 50-60 m beneath vegetation.",
+    "life_description_1": null,
+    "life_description_2": null,
+    "key_fact_1": "Last documented in 1937 before its rediscovery.",
+    "key_fact_2": "Soil eDNA and a matched specimen established survival after more than eight decades.",
+    "key_fact_3": "Its abundance remains unknown.",
+    "threats": "Alluvial diamond mining, urban and industrial expansion, and coastal degradation.",
+    "taxonomic_comment": null,
+    "distribution_comment": "A broader west-coast occurrence inferred from eDNA remains provisional.",
+    "lifespan": null,
+    "maturity": null,
+    "reproduction_type": null,
+    "clutch_size": null,
+    "sources": [
+      "https://www.mammaldiversity.org/taxon/1000483/",
+      "https://ewt.org.za/wp-content/uploads/2022/11/13.-De-Wintons-Golden-Mole-Cryptochloris-wintoni-Critically-Endangered-Possibly-Extinct.pdf",
+      "https://link.springer.com/article/10.1007/s10531-023-02728-2",
+      "https://api.pageplace.de/preview/DT0400.9781775842675_A24351667/preview-9781775842675_A24351667.pdf"
+    ]
+  },
+  "profile": {
+    "habitat_tags": [
+      "habitat_tag:coastal",
+      "habitat_tag:desert"
+    ],
+    "morphology_tags": [
+      "size_bucket:mouse",
+      "body_plan:compact",
+      "distinctive_features:claws_digging"
+    ],
+    "diet_tags": [
+      "diet_type:insectivore",
+      "diet_type:carnivore"
+    ],
+    "behavior_tags": [
+      "locomotion:fossorial",
+      "foraging_style:dig"
+    ],
+    "reproduction_tags": [],
+    "taxonomy_tags": [
+      "family:chrysochloridae",
+      "genus:cryptochloris"
+    ],
+    "geography_tags": [
+      "climate_zone:arid",
+      "continent:africa",
+      "bioregion:namaqualand"
+    ],
+    "conservation_tags": [
+      "iucn:CR",
+      "threat_tag:mining",
+      "threat_tag:urban_development"
+    ],
+    "key_fact_tags": [
+      "signature:rediscovered_by_soil_edna"
+    ],
+    "signature_tag": "signature:rediscovered_by_soil_edna",
+    "habitat_note": "Coastal dunes and sandy Namaqualand near Port Nolloth.",
+    "morphology_note": "Compact pale fawn animal with long slender digging foreclaws.",
+    "diet_note": "Consumes insect larvae and pupae plus legless lizards.",
+    "behavior_note": "Fossorial digger making shallow subsurface runs in soft sand.",
+    "reproduction_note": null,
+    "reference_summary": "Critically endangered South African golden mole rediscovered through soil eDNA and a matched specimen."
+  },
+  "clues": []
+}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useGameBridge } from '@/contexts/GameBridgeContext';
-import { useExpedition } from '@/contexts/ExpeditionContext';
 import type { CluePayload } from '@/game/clueConfig';
 
 interface DiscoveredClue {
@@ -15,9 +14,8 @@ const CLUE_TOAST_DURATION_MS = 5000;
 export function useSpeciesPanelState(toastsEnabled: boolean) {
   const {
     hud, clues, latestClue, speciesInfo,
-    allCluesRevealed, allSpeciesCompleted, guessResult,
+    allCluesRevealed, allSpeciesCompleted,
   } = useGameBridge();
-  const { showSpeciesList } = useExpedition();
 
   const [discoveredClues, setDiscoveredClues] = useState<DiscoveredClue[]>([]);
   const [isSpeciesDiscovered, setIsSpeciesDiscovered] = useState(false);
@@ -26,7 +24,6 @@ export function useSpeciesPanelState(toastsEnabled: boolean) {
   const completionToastShownRef = useRef(false);
   const toastsEnabledRef = useRef(toastsEnabled);
   const prevLatestClueRef = useRef<CluePayload | null>(null);
-  const prevGuessResultRef = useRef(guessResult);
   const prevAllCluesRef = useRef(allCluesRevealed);
   const prevAllSpeciesRef = useRef(allSpeciesCompleted);
 
@@ -68,44 +65,7 @@ export function useSpeciesPanelState(toastsEnabled: boolean) {
     setIsSpeciesDiscovered(false);
     setDiscoveredSpeciesName('');
     if (speciesInfo.index === 1) completionToastShownRef.current = false;
-  }, [speciesInfo?.id, speciesInfo?.index]);
-
-  // Handle species guess result
-  useEffect(() => {
-    if (!guessResult || guessResult === prevGuessResultRef.current) return;
-    prevGuessResultRef.current = guessResult;
-
-    if (guessResult.isCorrect && guessResult.speciesId === (speciesInfo?.id ?? 0)) {
-      setIsSpeciesDiscovered(true);
-      setDiscoveredSpeciesName(guessResult.actualName);
-
-      toast.success('Correct!', {
-        description: (
-          <div>
-            You discovered the {guessResult.actualName}!
-            <button
-              onClick={() => showSpeciesList(guessResult.speciesId)}
-              className="block mt-2 text-blue-400 underline bg-transparent border-none p-0 cursor-pointer text-sm"
-            >
-              View in Species List
-            </button>
-          </div>
-        ),
-        duration: 5000,
-      });
-
-      try {
-        const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
-        if (!discovered.find((s: any) => s.id === guessResult.speciesId)) {
-          discovered.push({ id: guessResult.speciesId, idSource: 'species.id', name: guessResult.actualName, discoveredAt: new Date().toISOString() });
-          localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
-          window.dispatchEvent(new CustomEvent('species-discovered', { detail: { id: guessResult.speciesId, name: guessResult.actualName } }));
-        }
-      } catch (error) {
-        console.error('Error updating discovered species:', error);
-      }
-    }
-  }, [guessResult, speciesInfo?.id, showSpeciesList]);
+  }, [speciesInfo]);
 
   // All clues revealed toast
   useEffect(() => {
@@ -143,7 +103,6 @@ export function useSpeciesPanelState(toastsEnabled: boolean) {
     discoveredClues,
     isSpeciesDiscovered,
     discoveredSpeciesName,
-    hiddenSpeciesName: speciesInfo?.hiddenName ?? '',
     hud,
     hasSelectedSpecies,
   };

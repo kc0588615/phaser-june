@@ -1,3 +1,5 @@
+// Phaser boot config. Scene order matters: Boot -> Preloader (loads assets)
+// -> MainMenu -> Game (the match-3 board) -> GameOver.
 import { Boot } from './scenes/Boot';
 import { Game } from './scenes/Game';
 import { GameOver } from './scenes/GameOver';
