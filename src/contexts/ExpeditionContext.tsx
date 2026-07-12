@@ -137,6 +137,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       toast.error('Expedition generation failed: three field sites are required.');
       return;
     }
+    const pendingRunId = pendingCreatedRunRef.current?.runId;
+    if (pendingRunId) {
+      pendingCreatedRunRef.current = null;
+      runIdRef.current = null;
+      nodeIdsRef.current = [];
+      casePublicRef.current = null;
+      void abandonPendingRun(pendingRunId);
+    }
     payloadRef.current = data;
     plannedRouteRef.current = data.expedition.routePolyline?.length ? data.expedition.routePolyline : computeExpeditionRoutePolyline(data.lon, data.lat, 3);
     routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
@@ -340,6 +348,14 @@ function createCaseState(candidateIds: number[], profiles: DeductionProfile[]): 
 function addObservation(state: CaseState, observation: EarnedObservation): CaseState { return state.observations.some(item => item.ref === observation.ref) ? state : { ...state, observations: [...state.observations, observation], pendingInterpretationRef: observation.ref }; }
 function sameIds(left: number[], right: number[]) { return left.length === right.length && left.every((id, index) => id === right[index]); }
 async function fetchProfiles(ids: number[]): Promise<DeductionProfile[]> { const response = await fetch(`/api/species/profiles?ids=${ids.join(',')}`); if (!response.ok) throw new Error(`Profile fetch failed (${response.status})`); const body = await response.json() as { profiles?: DeductionProfile[] }; if (body.profiles?.length !== 6) throw new Error('Case profiles are incomplete'); return body.profiles; }
+async function abandonPendingRun(runId: string): Promise<void> {
+  try {
+    const response = await fetch(`/api/runs/${runId}/abandon`, { method: 'POST' });
+    if (!response.ok) console.error(`[ExpeditionContext] Pending run abandon failed (${response.status})`);
+  } catch (error) {
+    console.error('[ExpeditionContext] Pending run abandon failed:', error);
+  }
+}
 async function requestObservation(runId: string | null, nodeIndex: number, tolerateForbidden: boolean): Promise<EarnedObservation | null> { if (!runId) return null; const response = await fetch(`/api/runs/${runId}/observations`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nodeIndex }) }); if (tolerateForbidden && response.status === 403) return null; if (!response.ok) throw new Error(`Observation request failed (${response.status})`); return { ...await response.json(), issuedAtMs: Date.now() } as EarnedObservation; }
 
 function emitBoard(payload: EventPayloads['expedition-data-ready'], publicCase: PublicCaseSnapshot, nodeIndex: number, objectiveProgress: number) {
