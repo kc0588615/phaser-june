@@ -7,7 +7,7 @@ import type { DeductionProfile } from '@/lib/deductionEngine';
 interface SpeciesGuessSelectorProps {
   candidates: DeductionProfile[];
   disabled?: boolean;
-  onGuess: (speciesId: number) => Promise<boolean>;
+  onGuess: (speciesId: number) => Promise<boolean | null>;
 }
 
 export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({ candidates, disabled = false, onGuess }) => {
@@ -23,6 +23,7 @@ export const SpeciesGuessSelector: React.FC<SpeciesGuessSelectorProps> = ({ cand
     setSubmitting(true);
     try {
       const isCorrect = await onGuess(selectedId);
+      if (isCorrect === null) return;
       setGuessedIds(previous => new Set(previous).add(selectedId));
       setCorrect(isCorrect);
       if (!isCorrect) setSelectedId(null);

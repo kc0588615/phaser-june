@@ -10,7 +10,7 @@ import { SpeciesGuessSelector } from '@/components/SpeciesGuessSelector';
 interface Props {
   runState: RunState;
   onCommitInterpretation: (obsRef: string, predictedIds: number[]) => Promise<boolean>;
-  onGuess: (speciesId: number) => Promise<boolean>;
+  onGuess: (speciesId: number) => Promise<boolean | null>;
 }
 
 export function FieldNotebook({ runState, onCommitInterpretation, onGuess }: Props) {

@@ -26,7 +26,7 @@ interface ExpeditionContextValue {
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
   handleCommitInterpretation: (obsRef: string, predictedIds: number[]) => Promise<boolean>;
-  handleGuess: (speciesId: number) => Promise<boolean>;
+  handleGuess: (speciesId: number) => Promise<boolean | null>;
   showSpeciesList: (speciesId: number) => void;
   onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
 }
@@ -262,7 +262,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     if (!runId || stateRef.current.caseState?.stage !== 'guess') return false;
     try {
       const response = await fetch(`/api/runs/${runId}/guess`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ speciesId }) });
-      if (!response.ok) { toast.error('Guess could not be checked.'); return false; }
+      if (!response.ok) { toast.error('Guess could not be checked.'); return null; }
       const result = await response.json() as { correct: boolean; contrastiveFeedback: ComparisonResult[]; finalScore?: number };
       if (result.correct) {
         // speciesId is the public candidate the player just selected — safe to keep client-side.
@@ -275,7 +275,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error('[ExpeditionContext] Guess failed:', error);
       toast.error('Guess could not be checked.');
-      return false;
+      return null;
     }
   }, []);
 

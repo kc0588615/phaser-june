@@ -223,7 +223,7 @@ async function awardDiscovery(tx: RunTransaction, playerId: string, speciesId: n
     bestRunId: runId, bestRunScore: finalScore, conservationCode: species?.conservationCode ?? null,
     rarityTier: getSpeciesCardRarityTier(species?.conservationCode),
   }).onConflictDoUpdate({ target: [speciesCards.playerId, speciesCards.speciesId], set: {
-    discovered: true, firstDiscoveredAt: sql`COALESCE(${speciesCards.firstDiscoveredAt}, ${now})`, lastEncounteredAt: now,
+    discovered: true, firstDiscoveredAt: sql`COALESCE(${speciesCards.firstDiscoveredAt}, EXCLUDED.first_discovered_at)`, lastEncounteredAt: now,
     timesEncountered: sql`${speciesCards.timesEncountered} + 1`, bestRunId: sql`CASE WHEN COALESCE(${speciesCards.bestRunScore}, 0) < ${finalScore} THEN ${runId}::uuid ELSE ${speciesCards.bestRunId} END`,
     bestRunScore: sql`GREATEST(COALESCE(${speciesCards.bestRunScore}, 0), ${finalScore})`, updatedAt: now,
   } });
