@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const body = getRecord(await request.json().catch(() => ({})));
     const nodeIndex = body.nodeIndex;
     if (!Number.isInteger(nodeIndex) || (nodeIndex as number) < 0 || (nodeIndex as number) > 3) {
-      return NextResponse.json({ error: 'nodeIndex must be an integer from 0 through 3' }, { status: 409 });
+      return NextResponse.json({ error: 'nodeIndex must be an integer from 0 through 3' }, { status: 400 });
     }
 
     const result = await db.transaction(async tx => {
