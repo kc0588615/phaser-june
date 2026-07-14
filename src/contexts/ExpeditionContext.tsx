@@ -56,18 +56,26 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const advancingRef = useRef(false);
   const nodeStartScoreRef = useRef(0);
   const objectiveProgressRef = useRef(0);
+  const objectiveCheckpointTimerRef = useRef<number | null>(null);
   const resolvingNodeRef = useRef<number | null>(null);
   const plannedRouteRef = useRef<RoutePoint[]>([]);
   const routeRef = useRef<RoutePoint[]>([]);
   const onShowSpeciesList = useRef<((speciesId: number) => void) | null>(null);
   useEffect(() => { stateRef.current = runState; }, [runState]);
 
+  const cancelObjectiveCheckpoint = useCallback(() => {
+    if (objectiveCheckpointTimerRef.current === null) return;
+    window.clearTimeout(objectiveCheckpointTimerRef.current);
+    objectiveCheckpointTimerRef.current = null;
+  }, []);
+
   const resetLocal = useCallback(() => {
+    cancelObjectiveCheckpoint();
     payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; nodeIdsRef.current = []; casePublicRef.current = null;
     flowRef.current = createFlowState(); liveBoardRef.current = null; startingRef.current = false; advancingRef.current = false;
     nodeStartScoreRef.current = 0; objectiveProgressRef.current = 0; resolvingNodeRef.current = null;
     plannedRouteRef.current = []; routeRef.current = []; setBoardOpacity(1); setRunState(INITIAL_RUN_STATE);
-  }, []);
+  }, [cancelObjectiveCheckpoint]);
 
   const handleRunReset = useCallback(() => { resetLocal(); EventBus.emit('game-reset', undefined); }, [resetLocal]);
 
@@ -137,6 +145,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       toast.error('Expedition generation failed: three field sites are required.');
       return;
     }
+    cancelObjectiveCheckpoint();
     const pendingRunId = pendingCreatedRunRef.current?.runId;
     if (pendingRunId) {
       pendingCreatedRunRef.current = null;
@@ -149,7 +158,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     plannedRouteRef.current = data.expedition.routePolyline?.length ? data.expedition.routePolyline : computeExpeditionRoutePolyline(data.lon, data.lat, 3);
     routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
     setRunState({ ...INITIAL_RUN_STATE, phase: 'briefing', expedition: data.expedition, activeAffinities: data.expedition.activeAffinities });
-  }, []);
+  }, [cancelObjectiveCheckpoint]);
 
   const handleExpeditionStart = useCallback(async () => {
     const payload = payloadRef.current;
@@ -189,6 +198,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     if (current.phase !== 'mystery' || current.caseState?.stage !== 'board' || event.nodeIndex !== current.currentNodeIndex || resolvingNodeRef.current !== null) return;
     const runId = runIdRef.current;
     if (!runId) { toast.error('This expedition has no durable run session.'); return; }
+    cancelObjectiveCheckpoint();
     resolvingNodeRef.current = event.nodeIndex; setBoardOpacity(1);
     try {
       const earnedScore = Math.max(0, (hudRef.current?.score ?? 0) - nodeStartScoreRef.current);
@@ -218,7 +228,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error('[ExpeditionContext] Failed to resolve node:', error); toast.error('Could not save this field site. Try again.');
     } finally { resolvingNodeRef.current = null; }
-  }, [emitNodeCompleteIfLive, hudRef, runFlow]);
+  }, [cancelObjectiveCheckpoint, emitNodeCompleteIfLive, hudRef, runFlow]);
 
   const handleCommitInterpretation = useCallback(async (obsRef: string, predictedIds: number[]) => {
     const runId = runIdRef.current; const current = stateRef.current; const caseState = current.caseState;
@@ -274,7 +284,31 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const handleObservationEarned = useCallback((_event: EventPayloads['observation-earned']) => {
     setRunState(previous => ({ ...previous, routeMatchCount: previous.routeMatchCount + 1 }));
   }, []);
-  const handleObjective = useCallback((event: EventPayloads['node-objective-updated']) => { objectiveProgressRef.current = event.progress; }, []);
+  const handleObjective = useCallback((event: EventPayloads['node-objective-updated']) => {
+    objectiveProgressRef.current = event.progress;
+    cancelObjectiveCheckpoint();
+
+    const current = stateRef.current;
+    const runId = runIdRef.current;
+    if (!runId || current.phase !== 'mystery' || current.caseState?.stage !== 'board'
+      || !Number.isInteger(event.progress) || event.progress < 0 || event.target <= 0) return;
+
+    const nodeIndex = current.currentNodeIndex;
+    objectiveCheckpointTimerRef.current = window.setTimeout(() => {
+      objectiveCheckpointTimerRef.current = null;
+      const latest = stateRef.current;
+      if (runIdRef.current !== runId || latest.currentNodeIndex !== nodeIndex
+        || latest.phase !== 'mystery' || latest.caseState?.stage !== 'board') return;
+
+      void fetch(`/api/runs/${runId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentNodeIndex: nodeIndex, objectiveProgress: objectiveProgressRef.current }),
+      }).then(response => {
+        if (!response.ok) throw new Error(`Objective checkpoint failed (${response.status})`);
+      }).catch(error => console.error('[ExpeditionContext] Objective checkpoint failed:', error));
+    }, 1500);
+  }, [cancelObjectiveCheckpoint]);
 
   const handleRunResume = useCallback(async (runId: string) => {
     try {
@@ -336,8 +370,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     EventBus.on('expedition-data-ready', handleExpeditionDataReady); EventBus.on('expedition-start', handleExpeditionStart);
     EventBus.on('node-advance-requested', handleNodeAdvanceRequested); EventBus.on('observation-earned', handleObservationEarned);
     EventBus.on('node-objective-updated', handleObjective); EventBus.on('game-reset', resetLocal);
-    return () => { EventBus.off('expedition-data-ready', handleExpeditionDataReady); EventBus.off('expedition-start', handleExpeditionStart); EventBus.off('node-advance-requested', handleNodeAdvanceRequested); EventBus.off('observation-earned', handleObservationEarned); EventBus.off('node-objective-updated', handleObjective); EventBus.off('game-reset', resetLocal); };
-  }, [handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleObservationEarned, handleObjective, resetLocal]);
+    return () => { cancelObjectiveCheckpoint(); EventBus.off('expedition-data-ready', handleExpeditionDataReady); EventBus.off('expedition-start', handleExpeditionStart); EventBus.off('node-advance-requested', handleNodeAdvanceRequested); EventBus.off('observation-earned', handleObservationEarned); EventBus.off('node-objective-updated', handleObjective); EventBus.off('game-reset', resetLocal); };
+  }, [cancelObjectiveCheckpoint, handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleObservationEarned, handleObjective, resetLocal]);
 
   const showSpeciesList = useCallback((speciesId: number) => onShowSpeciesList.current?.(speciesId), []);
   const value = useMemo(() => ({ runState, boardOpacity, handleRunResume, handleRunReset, handleCommitInterpretation, handleGuess, showSpeciesList, onShowSpeciesList }), [runState, boardOpacity, handleRunResume, handleRunReset, handleCommitInterpretation, handleGuess, showSpeciesList]);
