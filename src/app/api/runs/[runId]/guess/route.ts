@@ -1,9 +1,11 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { db, ecoRunNodes, ecoRunSessions, evidenceCards, playerSpeciesDiscoveries, runMemories, speciesCards, speciesCardUnlocks, speciesDeductionProfiles, speciesTable } from '@/db';
+import { db, ecoLocationMastery, ecoRunNodes, ecoRunSessions, evidenceCards, playerSpeciesDiscoveries, runMemories, speciesCards, speciesCardUnlocks, speciesDeductionProfiles, speciesTable } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { compareReference, type DeductionProfile } from '@/lib/deductionEngine';
+import { sampleGisFeaturesForRoute } from '@/lib/gisFeatureSampling';
 import { decideGuess, getRecord, isUuid, parseEvidenceCard, parseIssuedObservations, parsePrivateCase } from '@/lib/runCaseState';
+import { buildLocationMasteryMetadata, buildRunMemoryArtifacts, getExpeditionRegionKeys, getRunAffinityTags, getRunGisStamps, resolveCompletedRunRoute } from '@/lib/runCompletion';
 import { getSpeciesCardRarityTier } from '@/lib/speciesCardProgression';
 import { refreshSpeciesCardProgress } from '@/lib/speciesCardProgression.server';
 import { getGuessBonuses } from '@/types/expedition';
@@ -15,6 +17,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const playerId = await getPlayerIdFromClerk();
     const speciesId = getRecord(await request.json().catch(() => ({}))).speciesId;
     if (!Number.isInteger(speciesId) || (speciesId as number) <= 0) return NextResponse.json({ error: 'Invalid speciesId' }, { status: 400 });
+
+    let completionArtifacts: ReturnType<typeof buildRunMemoryArtifacts> | null = null;
+    if (playerId) {
+      const [preSession] = await db.select().from(ecoRunSessions)
+        .where(and(eq(ecoRunSessions.id, runId), eq(ecoRunSessions.playerId, playerId))).limit(1);
+      const prePrivateCase = parsePrivateCase(getRecord(preSession?.metadata).casePrivate);
+      if (preSession?.runStatus === 'deduction' && prePrivateCase?.answerId === speciesId) {
+        const preNodes = await db.select().from(ecoRunNodes).where(eq(ecoRunNodes.runId, runId)).orderBy(ecoRunNodes.nodeOrder);
+        const route = resolveCompletedRunRoute(
+          preSession.selectedLng,
+          preSession.selectedLat,
+          preNodes,
+          getRecord(preSession.metadata).routePolyline,
+        );
+        try {
+          const fingerprints = await sampleGisFeaturesForRoute(route);
+          completionArtifacts = buildRunMemoryArtifacts(route, fingerprints);
+        } catch (error) {
+          console.error('[API POST /api/runs/[runId]/guess] Route GIS sampling failed:', error);
+          return NextResponse.json({ error: 'Could not finalize expedition GIS memory' }, { status: 503 });
+        }
+      }
+    }
 
     const result = await db.transaction(async tx => {
       await tx.execute(sql`SELECT id FROM eco_run_sessions WHERE id = ${runId}::uuid FOR UPDATE`);
@@ -57,6 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const now = new Date();
       const firstGuessCorrect = metadata.firstGuessCorrect === undefined ? true : metadata.firstGuessCorrect === true;
       const deductionSummary = { issuedEvidenceCount: issued.length, reasoningEventCount: committed.size, guessBonus, efficiencyBonus, bonusDecayPercent, wrongGuessCount, firstGuessCorrect };
+      if (!completionArtifacts) return response(503, { error: 'Could not resolve expedition completion artifacts' });
       await tx.update(ecoRunSessions).set({
         runStatus: 'completed', endedAt: now, scoreTotal: finalScore,
         speciesDiscoveredCount: sql`${ecoRunSessions.speciesDiscoveredCount} + 1`,
@@ -69,13 +95,84 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await tx.insert(runMemories).values({
         runId, playerId: session.playerId, speciesId: privateCase.answerId, locationKey: session.locationKey,
         startLon: session.selectedLng, startLat: session.selectedLat,
-        routePolyline: Array.isArray(metadata.routePolyline) ? metadata.routePolyline : [],
+        routePolyline: completionArtifacts.routePolyline,
+        routeBounds: completionArtifacts.routeBounds,
         nodes: nodes.map(node => ({ nodeOrder: node.nodeOrder, nodeType: node.nodeType, nodeStatus: node.nodeStatus, objectiveTarget: node.objectiveTarget, objectiveProgress: node.objectiveProgress, scoreEarned: node.scoreEarned, movesUsed: node.movesUsed })),
-        gisFeaturesNearby: Array.isArray(metadata.featureFingerprints) ? metadata.featureFingerprints : [],
+        gisFeaturesNearby: completionArtifacts.gisFeaturesNearby,
         deductionSummary, finalScore, realm: session.realm, biome: session.biome, bioregion: session.bioregion,
-      }).onConflictDoNothing({ target: runMemories.runId });
+      }).onConflictDoUpdate({
+        target: runMemories.runId,
+        set: {
+          speciesId: privateCase.answerId,
+          routePolyline: completionArtifacts.routePolyline,
+          routeBounds: completionArtifacts.routeBounds,
+          nodes: nodes.map(node => ({ nodeOrder: node.nodeOrder, nodeType: node.nodeType, nodeStatus: node.nodeStatus, objectiveTarget: node.objectiveTarget, objectiveProgress: node.objectiveProgress, scoreEarned: node.scoreEarned, movesUsed: node.movesUsed })),
+          gisFeaturesNearby: completionArtifacts.gisFeaturesNearby,
+          deductionSummary,
+          finalScore,
+        },
+      });
 
-      if (session.playerId) await awardDiscovery(tx, session.playerId, privateCase.answerId, session.gameSessionId, runId, finalScore, issued.length, wrongGuessCount, now);
+      if (session.playerId) {
+        await awardDiscovery(tx, session.playerId, privateCase.answerId, session.gameSessionId, runId, finalScore, issued.length, wrongGuessCount, now);
+
+        const [existingMastery] = await tx.select({ metadata: ecoLocationMastery.metadata })
+          .from(ecoLocationMastery)
+          .where(and(eq(ecoLocationMastery.playerId, session.playerId), eq(ecoLocationMastery.locationKey, session.locationKey)))
+          .limit(1);
+        const masteryMetadata = buildLocationMasteryMetadata(
+          existingMastery?.metadata,
+          completionArtifacts.gisFeaturesNearby,
+          { runId, finalScore, completedAt: now },
+        );
+        await tx.insert(ecoLocationMastery).values({
+          playerId: session.playerId,
+          locationKey: session.locationKey,
+          realm: session.realm,
+          biome: session.biome,
+          bioregion: session.bioregion,
+          runsCompleted: 1,
+          bestRunScore: finalScore,
+          lastPlayedAt: now,
+          metadata: masteryMetadata,
+        }).onConflictDoUpdate({
+          target: [ecoLocationMastery.playerId, ecoLocationMastery.locationKey],
+          set: {
+            realm: session.realm,
+            biome: session.biome,
+            bioregion: session.bioregion,
+            runsCompleted: sql`${ecoLocationMastery.runsCompleted} + 1`,
+            bestRunScore: sql`GREATEST(${ecoLocationMastery.bestRunScore}, ${finalScore})`,
+            lastPlayedAt: now,
+            metadata: sql`COALESCE(${ecoLocationMastery.metadata}, '{}'::jsonb) || ${JSON.stringify(masteryMetadata)}::jsonb`,
+          },
+        });
+
+        const stamps = getRunGisStamps(completionArtifacts.gisFeaturesNearby);
+        const regionsSeen = getExpeditionRegionKeys({ realm: session.realm, biome: session.biome, bioregion: session.bioregion });
+        const affinityTags = getRunAffinityTags(metadata);
+        await tx.update(speciesCards).set({
+          ...(stamps.length > 0 ? {
+            gisStamps: sql`(
+              SELECT COALESCE(jsonb_agg(DISTINCT val), '[]'::jsonb)
+              FROM jsonb_array_elements(COALESCE(${speciesCards.gisStamps}, '[]'::jsonb) || ${JSON.stringify(stamps)}::jsonb) AS val
+            )`,
+          } : {}),
+          ...(regionsSeen.length > 0 ? {
+            expeditionRegionsSeen: sql`(
+              SELECT COALESCE(jsonb_agg(DISTINCT val), '[]'::jsonb)
+              FROM jsonb_array_elements(COALESCE(${speciesCards.expeditionRegionsSeen}, '[]'::jsonb) || ${JSON.stringify(regionsSeen)}::jsonb) AS val
+            )`,
+          } : {}),
+          ...(affinityTags.length > 0 ? {
+            affinityTags: sql`(
+              SELECT COALESCE(jsonb_agg(DISTINCT val), '[]'::jsonb)
+              FROM jsonb_array_elements(COALESCE(${speciesCards.affinityTags}, '[]'::jsonb) || ${JSON.stringify(affinityTags)}::jsonb) AS val
+            )`,
+          } : {}),
+          updatedAt: now,
+        }).where(and(eq(speciesCards.playerId, session.playerId), eq(speciesCards.speciesId, privateCase.answerId)));
+      }
       return response(200, { correct: true, selectedSpeciesId: speciesId, contrastiveFeedback: [], finalScore });
     });
     if (result.body.correct === true && playerId) {

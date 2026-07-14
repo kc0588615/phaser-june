@@ -1,8 +1,11 @@
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { buildSquare } from '@/lib/geoUtils';
+import { dedupeFeatureFingerprints } from '@/lib/gisFeatureHelpers';
 import type { FeatureClass, FeatureFingerprint } from '@/types/gis';
 import type { RoutePoint } from '@/lib/expeditionRoute';
+
+export { dedupeFeatureFingerprints, getGisStampClasses } from '@/lib/gisFeatureHelpers';
 
 type EnabledLayerSet = Set<string>;
 
@@ -66,26 +69,6 @@ function toNumber(value: number | string | null | undefined): number {
 
 function layerEnabled(enabledLayers: EnabledLayerSet | undefined, layerKey: string): boolean {
   return !enabledLayers || enabledLayers.has(layerKey);
-}
-
-function fingerprintKey(fp: FeatureFingerprint): string {
-  return `${fp.featureClass}:${fp.sourceTable}:${String(fp.sourceId)}`;
-}
-
-export function dedupeFeatureFingerprints(fingerprints: FeatureFingerprint[]): FeatureFingerprint[] {
-  const byKey = new Map<string, FeatureFingerprint>();
-  for (const fp of fingerprints) {
-    const key = fingerprintKey(fp);
-    const existing = byKey.get(key);
-    if (!existing || fp.distanceM < existing.distanceM || fp.overlapRatio > existing.overlapRatio) {
-      byKey.set(key, fp);
-    }
-  }
-  return [...byKey.values()];
-}
-
-export function getGisStampClasses(fingerprints: FeatureFingerprint[]): FeatureClass[] {
-  return [...new Set(fingerprints.map((fp) => fp.featureClass))];
 }
 
 export async function sampleGisFeaturesAtPoint({
