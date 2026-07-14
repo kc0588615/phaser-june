@@ -1,4 +1,4 @@
-import { and, inArray, isNull, lt, or, sql } from 'drizzle-orm';
+import { and, inArray, lt } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunSessions } from '@/db';
 
@@ -16,11 +16,6 @@ export async function GET(request: NextRequest) {
     const abandoned = await db.update(ecoRunSessions).set({ runStatus: 'abandoned', endedAt: new Date() }).where(and(
       inArray(ecoRunSessions.runStatus, ['active', 'deduction']),
       lt(ecoRunSessions.startedAt, cutoff),
-      or(
-        isNull(ecoRunSessions.playerId),
-        sql`NOT (${ecoRunSessions.metadata} ? 'casePublic')`,
-        sql`NOT (${ecoRunSessions.metadata} ? 'expeditionSnapshot')`,
-      ),
     )).returning({ id: ecoRunSessions.id });
     return NextResponse.json({ abandoned: abandoned.length, staleDays: STALE_DAYS });
   } catch (error) {
