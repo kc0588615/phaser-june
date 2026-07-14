@@ -198,9 +198,10 @@ function emitExpeditionReadyFromMapClick(input: {
 interface CesiumMapProps {
   onSearchOpen?: () => void;
   expeditionPhase?: RunPhase;
+  activeWaypoint?: Pick<ExpeditionWaypoint, 'lon' | 'lat'> | null;
 }
 
-const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = 'idle' }) => {
+const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = 'idle', activeWaypoint = null }) => {
   const viewerRef = useRef<any>(null);
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null);
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null);
@@ -234,6 +235,8 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
   const { focusedEcoregion, isPreviewLoading, pickEcoregionAtPosition } = useEcoregionLayer(viewerRef, ecoregionLayerEnabled);
   const contextEcoregion = selectedEcoregion ?? focusedEcoregion;
   const expeditionBlocksMapClick = expeditionPhase !== 'idle';
+  const activeWaypointLon = activeWaypoint?.lon;
+  const activeWaypointLat = activeWaypoint?.lat;
 
   useEffect(() => {
     Ion.defaultAccessToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN || 'YOUR_FALLBACK_TOKEN';
@@ -255,6 +258,17 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
       window.clearTimeout(timeoutId);
     };
   }, [expeditionPhase]);
+
+  useEffect(() => {
+    if (expeditionPhase !== 'mystery' || activeWaypointLon === undefined || activeWaypointLat === undefined) return;
+    const viewer = viewerRef.current?.cesiumElement;
+    if (!viewer) return;
+    viewer.resize?.();
+    viewer.camera.flyTo({
+      destination: Cartesian3.fromDegrees(activeWaypointLon, activeWaypointLat, 75_000),
+      duration: 0.8,
+    });
+  }, [activeWaypointLat, activeWaypointLon, expeditionPhase]);
 
   const recenterGlobe = useCallback(() => {
     viewerRef.current?.cesiumElement?.camera?.flyHome?.(0.8);

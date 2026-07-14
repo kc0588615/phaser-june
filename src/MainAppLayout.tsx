@@ -73,6 +73,9 @@ function MainAppLayoutInner() {
     const showComplete = runState.phase === 'complete';
     const inExpedition = inRun || showBriefing || showComplete;
     const useSplitLayout = inRun;
+    const activeWaypoint = inRun
+        ? runState.expedition?.nodes[runState.currentNodeIndex]?.waypoint ?? null
+        : null;
 
     const handleTabChange = useCallback((tab: BaseTab) => {
         setBaseTab(tab);
@@ -135,6 +138,7 @@ function MainAppLayoutInner() {
                         }}>
                             <CesiumMap
                                 expeditionPhase={runState.phase}
+                                activeWaypoint={activeWaypoint}
                                 onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
                             />
                         </div>
