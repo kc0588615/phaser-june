@@ -1,4 +1,4 @@
-import { METHOD_SLOTS, type MethodType } from '@/expedition/domain';
+import { METHOD_SLOTS, METHOD_TYPES, type MethodType } from '@/expedition/domain';
 import {
   isCanonicalDeductionTag,
   validateDeductionTagProfile,
@@ -33,7 +33,7 @@ const ALL_CATEGORIES = [
   'key_fact',
 ] as const satisfies readonly DeductionProfileCategory[];
 
-const METHOD_SET = new Set<string>(['track', 'observe', 'listen', 'survey', 'analyze']);
+const METHOD_SET = new Set<string>(METHOD_TYPES);
 const CATEGORY_SET = new Set<string>(ALL_CATEGORIES);
 const ORDINARY_CATEGORY_SET = new Set<string>(EVIDENCE_ORDINARY_CATEGORIES);
 const PROHIBITED_ORDINARY_PREFIXES = ['genus:', 'misc:', 'signature:'] as const;

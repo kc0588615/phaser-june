@@ -68,12 +68,6 @@ export interface PublicCaseSnapshot {
   candidateIds: number[];
   nodeMethods: [...typeof METHOD_SLOTS];
   boardSeeds: [number, number, number];
-  objectiveOptions?: Array<{
-    nodeIndex: number;
-    method: MethodType;
-    objectiveType: string;
-    objectiveTarget: number;
-  }>;
 }
 
 export interface PublicRunNode {
@@ -306,7 +300,7 @@ function projectRunSummary(session: RunProjectionSource): PublicRunSummary {
   assignNumber(run, 'nodeIndexCurrent', session.nodeIndexCurrent);
   assignNumber(run, 'selectedLng', session.selectedLng);
   assignNumber(run, 'selectedLat', session.selectedLat);
-  const selectionZoom = getFiniteNumberOrNumericString(session.selectionZoom);
+  const selectionZoom = getFiniteNumber(session.selectionZoom);
   if (selectionZoom !== undefined) run.selectionZoom = selectionZoom;
   assignString(run, 'locationKey', session.locationKey);
   assignNullableString(run, 'realm', session.realm);
@@ -343,45 +337,12 @@ function projectCasePublic(value: unknown): PublicCaseSnapshot | null {
     return null;
   }
 
-  const projected: PublicCaseSnapshot = {
+  return {
     version: 1,
     candidateIds,
     nodeMethods: [...METHOD_SLOTS],
     boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
   };
-  if (source.objectiveOptions !== undefined) {
-    const objectiveOptions = projectObjectiveOptions(source.objectiveOptions);
-    if (!objectiveOptions) return null;
-    projected.objectiveOptions = objectiveOptions;
-  }
-  return projected;
-}
-
-function projectObjectiveOptions(value: unknown): PublicCaseSnapshot['objectiveOptions'] | null {
-  if (!Array.isArray(value) || value.length !== 3) return null;
-  const options: NonNullable<PublicCaseSnapshot['objectiveOptions']> = [];
-  const seen = new Set<number>();
-  for (const item of value) {
-    const source = getRecord(item);
-    const nodeIndex = getInteger(source.nodeIndex);
-    const method = getMethod(source.method);
-    const objectiveTarget = getInteger(source.objectiveTarget);
-    if (
-      nodeIndex === undefined
-      || nodeIndex < 0
-      || nodeIndex > 2
-      || seen.has(nodeIndex)
-      || method !== METHOD_SLOTS[nodeIndex]
-      || source.objectiveType !== 'method_match'
-      || objectiveTarget === undefined
-      || objectiveTarget < 0
-    ) {
-      return null;
-    }
-    seen.add(nodeIndex);
-    options.push({ nodeIndex, method, objectiveType: 'method_match', objectiveTarget });
-  }
-  return options.sort((a, b) => a.nodeIndex - b.nodeIndex);
 }
 
 /** Projects persisted node rows without exposing their raw JSONB payloads. */
@@ -704,14 +665,6 @@ function getFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
-function getFiniteNumberOrNumericString(value: unknown): number | undefined {
-  const direct = getFiniteNumber(value);
-  if (direct !== undefined) return direct;
-  if (typeof value !== 'string' || value.trim() === '') return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
 function getInteger(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isSafeInteger(value) ? value : undefined;
 }
@@ -755,11 +708,11 @@ function getObservationRef(value: unknown): string | undefined {
   return typeof value === 'string' && /^obs-[0-3]$/.test(value) ? value : undefined;
 }
 
-function getNumberRecord(value: unknown, allowedKeys?: ReadonlySet<string>): Record<string, number> {
+function getNumberRecord(value: unknown): Record<string, number> {
   const source = getRecord(value);
   const result: Record<string, number> = {};
   for (const [key, item] of Object.entries(source)) {
-    if (SENSITIVE_KEYS.has(key.toLowerCase()) || (allowedKeys && !allowedKeys.has(key))) continue;
+    if (SENSITIVE_KEYS.has(key.toLowerCase())) continue;
     const number = getFiniteNumber(item);
     if (number !== undefined) result[key] = number;
   }

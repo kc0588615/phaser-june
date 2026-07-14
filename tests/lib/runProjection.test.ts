@@ -25,7 +25,7 @@ describe('projectRunForClient', () => {
       nodeIndexCurrent: 2,
       selectedLng: -87.1,
       selectedLat: 41.2,
-      selectionZoom: '8.50',
+      selectionZoom: 8.5,
       locationKey: 'test-place',
       realm: 'Nearctic',
       biome: 'Forest',
@@ -296,22 +296,6 @@ describe('projectRunForClient', () => {
       candidateIds: [10, 20, 30, 40, 50, 60],
       nodeMethods: ['track', 'observe', 'survey'],
       boardSeeds: [101, 102, 103],
-      objectiveOptions: [{
-        nodeIndex: 0,
-        method: 'track',
-        objectiveType: 'method_match',
-        objectiveTarget: 6,
-      }, {
-        nodeIndex: 1,
-        method: 'observe',
-        objectiveType: 'method_match',
-        objectiveTarget: 7,
-      }, {
-        nodeIndex: 2,
-        method: 'survey',
-        objectiveType: 'method_match',
-        objectiveTarget: 8,
-      }],
     });
     assert.deepEqual(projection.observations, [{
       ref: 'obs-0',
@@ -504,29 +488,6 @@ describe('projectRunForClient', () => {
       { ...valid, nodeMethods: ['track', 'survey', 'observe'] },
       { ...valid, boardSeeds: [1, 2] },
       { ...valid, boardSeeds: [1, 2, 4_294_967_296] },
-      {
-        ...valid,
-        objectiveOptions: [
-          { nodeIndex: 0, method: 'track', objectiveType: 'method_match', objectiveTarget: 4 },
-          { nodeIndex: 1, method: 'observe', objectiveType: 'method_match', objectiveTarget: 4 },
-        ],
-      },
-      {
-        ...valid,
-        objectiveOptions: [
-          { nodeIndex: 0, method: 'track', objectiveType: 'method_match', objectiveTarget: 4 },
-          { nodeIndex: 1, method: 'survey', objectiveType: 'method_match', objectiveTarget: 4 },
-          { nodeIndex: 2, method: 'survey', objectiveType: 'method_match', objectiveTarget: 4 },
-        ],
-      },
-      {
-        ...valid,
-        objectiveOptions: [
-          { nodeIndex: 0, method: 'track', objectiveType: 'method_match', objectiveTarget: 4 },
-          { nodeIndex: 1, method: 'observe', objectiveType: 'method_match', objectiveTarget: 4 },
-          { nodeIndex: 2, method: 'survey', objectiveType: 'wrong', objectiveTarget: 4 },
-        ],
-      },
     ];
 
     for (const casePublic of malformed) {

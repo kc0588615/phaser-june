@@ -15,10 +15,8 @@ import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, ty
 import type { Species } from '@/types/database';
 
 const INITIAL_RUN_STATE: RunState = {
-  phase: 'idle', expedition: null, currentNodeIndex: 0, activeAffinities: [], bankedScore: 0,
-  clueFragments: { classification: 0, habitat: 0, geographic: 0, morphology: 0, behavior: 0, life_cycle: 0, conservation: 0, key_facts: 0 },
-  deductionCamp: null, comparativeDeduction: null, finalScore: null, totalThoughtDiscount: 0,
-  evidenceBundle: null, routeMatchCount: 0, visitedWaypointSlot: 0, matchedGemCategories: [],
+  phase: 'idle', expedition: null, currentNodeIndex: 0, bankedScore: 0,
+  finalScore: null, visitedWaypointSlot: 0,
   resolvedSpeciesId: null, caseState: null,
 };
 
@@ -157,7 +155,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     payloadRef.current = data;
     plannedRouteRef.current = data.expedition.routePolyline?.length ? data.expedition.routePolyline : computeExpeditionRoutePolyline(data.lon, data.lat, 3);
     routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
-    setRunState({ ...INITIAL_RUN_STATE, phase: 'briefing', expedition: data.expedition, activeAffinities: data.expedition.activeAffinities });
+    setRunState({ ...INITIAL_RUN_STATE, phase: 'briefing', expedition: data.expedition });
   }, [cancelObjectiveCheckpoint]);
 
   const handleExpeditionStart = useCallback(async () => {
@@ -281,9 +279,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
-  const handleObservationEarned = useCallback((_event: EventPayloads['observation-earned']) => {
-    setRunState(previous => ({ ...previous, routeMatchCount: previous.routeMatchCount + 1 }));
-  }, []);
   const handleObjective = useCallback((event: EventPayloads['node-objective-updated']) => {
     objectiveProgressRef.current = event.progress;
     cancelObjectiveCheckpoint();
@@ -336,7 +331,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 2);
         setRunState({
           ...INITIAL_RUN_STATE, phase: 'complete', expedition, currentNodeIndex: 2,
-          activeAffinities: expedition.activeAffinities, bankedScore: projection.run.scoreTotal ?? 0,
+          bankedScore: projection.run.scoreTotal ?? 0,
           finalScore: decision.finalScore, completionReason: 'captured',
           caseState: { ...baseCase, stage: 'guess', guessResult: 'correct' },
         });
@@ -354,7 +349,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         pendingInterpretationRef: step.kind === 'interpret' ? step.ref : null,
         missedEvidenceNodeIndexes: missedEvidenceNodeIndexes(decision.flow),
       };
-      setRunState({ ...INITIAL_RUN_STATE, phase: 'mystery', expedition, currentNodeIndex: nodeIndex, activeAffinities: expedition.activeAffinities, bankedScore: projection.run.scoreTotal ?? 0, caseState });
+      setRunState({ ...INITIAL_RUN_STATE, phase: 'mystery', expedition, currentNodeIndex: nodeIndex, bankedScore: projection.run.scoreTotal ?? 0, caseState });
       if (step.kind === 'board') {
         const objectiveProgress = projection.nodes.find(node => node.nodeOrder === step.nodeIndex + 1)?.objectiveProgress ?? 0;
         objectiveProgressRef.current = objectiveProgress;
@@ -368,10 +363,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     EventBus.on('expedition-data-ready', handleExpeditionDataReady); EventBus.on('expedition-start', handleExpeditionStart);
-    EventBus.on('node-advance-requested', handleNodeAdvanceRequested); EventBus.on('observation-earned', handleObservationEarned);
+    EventBus.on('node-advance-requested', handleNodeAdvanceRequested);
     EventBus.on('node-objective-updated', handleObjective); EventBus.on('game-reset', resetLocal);
-    return () => { cancelObjectiveCheckpoint(); EventBus.off('expedition-data-ready', handleExpeditionDataReady); EventBus.off('expedition-start', handleExpeditionStart); EventBus.off('node-advance-requested', handleNodeAdvanceRequested); EventBus.off('observation-earned', handleObservationEarned); EventBus.off('node-objective-updated', handleObjective); EventBus.off('game-reset', resetLocal); };
-  }, [cancelObjectiveCheckpoint, handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleObservationEarned, handleObjective, resetLocal]);
+    return () => { cancelObjectiveCheckpoint(); EventBus.off('expedition-data-ready', handleExpeditionDataReady); EventBus.off('expedition-start', handleExpeditionStart); EventBus.off('node-advance-requested', handleNodeAdvanceRequested); EventBus.off('node-objective-updated', handleObjective); EventBus.off('game-reset', resetLocal); };
+  }, [cancelObjectiveCheckpoint, handleExpeditionDataReady, handleExpeditionStart, handleNodeAdvanceRequested, handleObjective, resetLocal]);
 
   const showSpeciesList = useCallback((speciesId: number) => onShowSpeciesList.current?.(speciesId), []);
   const value = useMemo(() => ({ runState, boardOpacity, handleRunResume, handleRunReset, handleCommitInterpretation, handleGuess, showSpeciesList, onShowSpeciesList }), [runState, boardOpacity, handleRunResume, handleRunReset, handleCommitInterpretation, handleGuess, showSpeciesList]);

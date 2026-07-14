@@ -1,11 +1,11 @@
-import { METHOD_SLOTS, type MethodType } from '@/expedition/domain';
+import { METHOD_SLOTS, METHOD_TYPES, type MethodType } from '@/expedition/domain';
 import { createSeededStream } from '@/lib/seededRng';
 
 export const PROTOTYPE_SPECIES_COUNT = 6;
 export const FIXED_ROUTE_METHODS = METHOD_SLOTS;
 
 const UINT32_MAX = 0xffff_ffff;
-const METHOD_SET = new Set<string>(['track', 'observe', 'listen', 'survey', 'analyze']);
+const METHOD_SET = new Set<string>(METHOD_TYPES);
 
 export const CASE_TRAIT_CATEGORIES = [
   'habitat',

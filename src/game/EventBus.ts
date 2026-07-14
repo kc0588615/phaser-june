@@ -49,14 +49,6 @@ export interface EventPayloads {
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
   };
-  'game-score-updated': {
-    score: number;
-    movesRemaining: number;
-  };
-  'game-over': {
-    finalScore: number;
-    habitats: string[];
-  };
   'clue-revealed': CluePayload;
   'new-game-started': {
     speciesName: string;

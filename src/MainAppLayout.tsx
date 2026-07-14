@@ -307,9 +307,9 @@ function RunCompleteSummary({ runState, onReset }: {
                 speciesName={resolvedProfile?.commonName ?? 'Case resolved'}
             />
 
-            {runState.activeAffinities.length > 0 && (
+            {(runState.expedition?.activeAffinities ?? []).length > 0 && (
                 <div className="flex gap-ds-sm justify-center">
-                    {runState.activeAffinities.map(a => {
+                    {(runState.expedition?.activeAffinities ?? []).map(a => {
                         const def = AFFINITY_DEFINITIONS[a];
                         return (
                             <GlassPanel key={a} pill borderColor={def.color} className="flex items-center gap-1.5 px-3.5 py-1.5">
