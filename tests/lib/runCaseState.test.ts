@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
   computeActualEliminatedIds,
+  filterEliminatedCandidates,
+  getEliminatedCandidateIds,
   appendReasoningEvents,
   decideGuess,
   decideCheckpointMutation,
@@ -96,6 +98,19 @@ describe('run case metadata', () => {
     assert.equal(decideGuess('deduction', 1, 1), 'correct');
     assert.equal(decideGuess('completed', 1, 1), 'repeat_correct');
     assert.equal(decideGuess('completed', 2, 1), 'terminal_conflict');
+  });
+
+  test('eliminated candidates are rejected by server state and removed from selector input', () => {
+    const events = [
+      { obsRef: 'obs-0', predictedEliminatedIds: [2], actualEliminatedIds: [2, 3], correct: true, latencyMs: 10 },
+      { obsRef: 'invalid', predictedEliminatedIds: [4], actualEliminatedIds: [4], correct: true, latencyMs: 10 },
+    ];
+    const eliminated = getEliminatedCandidateIds(events);
+    assert.deepEqual([...eliminated], [2, 3]);
+    assert.deepEqual(
+      filterEliminatedCandidates([{ speciesId: 1 }, { speciesId: 2 }, { speciesId: 3 }], eliminated),
+      [{ speciesId: 1 }],
+    );
   });
 
   test('completed runs allow replays but reject new mutations', () => {

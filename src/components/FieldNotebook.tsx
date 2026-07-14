@@ -4,6 +4,7 @@ import type { RunState } from '@/types/expedition';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { filterEliminatedCandidates } from '@/lib/runCaseState';
 import { SpeciesGuessSelector } from '@/components/SpeciesGuessSelector';
 
 interface Props {
@@ -22,8 +23,7 @@ export function FieldNotebook({ runState, onCommitInterpretation, onGuess }: Pro
 
   const activeCandidates = useMemo(() => {
     if (!caseState) return [];
-    const eliminated = new Set(caseState.eliminatedIds);
-    return caseState.profiles.filter(profile => !eliminated.has(profile.speciesId));
+    return filterEliminatedCandidates(caseState.profiles, caseState.eliminatedIds);
   }, [caseState]);
   const eliminatedIds = useMemo(() => new Set(caseState?.eliminatedIds ?? []), [caseState?.eliminatedIds]);
 
@@ -75,8 +75,8 @@ export function FieldNotebook({ runState, onCommitInterpretation, onGuess }: Pro
             </div>
           ) : caseState.stage === 'guess' ? (
             <section className="grid gap-3 md:grid-cols-[1fr_1.2fr]">
-              <div><div className="text-[10px] font-semibold uppercase tracking-widest text-ds-emerald">Final deduction</div><h2 className="font-serif text-lg text-ds-text-primary">Name the animal behind the evidence.</h2><p className="mt-1 text-xs text-ds-text-muted">All six profiles remain visible; crossed-out candidates reflect your committed interpretations.</p></div>
-              <div><SpeciesGuessSelector candidates={caseState.profiles} onGuess={onGuess} />{caseState.lastFeedback?.map(item => <p key={`${item.category}:${item.message}`} className="mt-2 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-100">{item.message}</p>)}</div>
+              <div><div className="text-[10px] font-semibold uppercase tracking-widest text-ds-emerald">Final deduction</div><h2 className="font-serif text-lg text-ds-text-primary">Name the animal behind the evidence.</h2><p className="mt-1 text-xs text-ds-text-muted">Crossed-out candidates remain in the dossier for context; only live candidates can be identified.</p></div>
+              <div><SpeciesGuessSelector candidates={activeCandidates} onGuess={onGuess} />{caseState.lastFeedback?.map(item => <p key={`${item.category}:${item.message}`} className="mt-2 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-100">{item.message}</p>)}</div>
             </section>
           ) : latest && latestInterpretation ? (
             <section className="grid gap-3 md:grid-cols-[1fr_1fr]">

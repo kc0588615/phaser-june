@@ -4,7 +4,7 @@ import { db, ecoLocationMastery, ecoRunNodes, ecoRunSessions, evidenceCards, pla
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { compareReference, type DeductionProfile } from '@/lib/deductionEngine';
 import { sampleGisFeaturesForRoute } from '@/lib/gisFeatureSampling';
-import { decideGuess, getRecord, isUuid, parseEvidenceCard, parseIssuedObservations, parsePrivateCase } from '@/lib/runCaseState';
+import { decideGuess, getEliminatedCandidateIds, getRecord, isUuid, parseEvidenceCard, parseIssuedObservations, parsePrivateCase } from '@/lib/runCaseState';
 import { buildLocationMasteryMetadata, buildRunMemoryArtifacts, getExpeditionRegionKeys, getRunAffinityTags, getRunGisStamps, resolveCompletedRunRoute } from '@/lib/runCompletion';
 import { getSpeciesCardRarityTier } from '@/lib/speciesCardProgression';
 import { refreshSpeciesCardProgress } from '@/lib/speciesCardProgression.server';
@@ -56,6 +56,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (decision === 'not_ready') return response(409, { reason: 'not_guess_ready' });
       if (decision === 'terminal_conflict') return response(409, { reason: 'run_completed' });
       if (!candidateIds.includes(speciesId as number)) return response(400, { error: 'speciesId is not a case candidate' });
+      if (getEliminatedCandidateIds(metadata.reasoningEvents).has(speciesId as number)) {
+        return response(409, { reason: 'candidate_eliminated' });
+      }
       const issued = parseIssuedObservations(metadata.observationsIssued);
       const committed = new Set((Array.isArray(metadata.reasoningEvents) ? metadata.reasoningEvents : []).flatMap(value => {
         const ref = getRecord(value).obsRef;

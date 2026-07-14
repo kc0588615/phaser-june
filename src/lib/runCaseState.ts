@@ -119,6 +119,25 @@ export function parseReasoningEvent(value: unknown): ReasoningEventCommit | null
   };
 }
 
+export function getEliminatedCandidateIds(reasoningEvents: unknown): Set<number> {
+  const eliminated = new Set<number>();
+  if (!Array.isArray(reasoningEvents)) return eliminated;
+  for (const value of reasoningEvents) {
+    const event = parseReasoningEvent(value);
+    if (!event) continue;
+    for (const speciesId of event.actualEliminatedIds) eliminated.add(speciesId);
+  }
+  return eliminated;
+}
+
+export function filterEliminatedCandidates<T extends { speciesId: number }>(
+  candidates: readonly T[],
+  eliminatedIds: Iterable<number>,
+): T[] {
+  const eliminated = new Set(eliminatedIds);
+  return candidates.filter(candidate => !eliminated.has(candidate.speciesId));
+}
+
 export function appendReasoningEvents(
   existingValue: unknown,
   requestedValue: unknown,
