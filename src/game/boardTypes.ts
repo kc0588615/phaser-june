@@ -15,6 +15,19 @@ export interface BoardCell {
 
 export type PuzzleGrid = (BoardCell | null)[][];
 
+export interface BoardCheckpointV1 {
+    version: 1;
+    width: number;
+    height: number;
+    grid: PuzzleGrid;
+    score: number;
+    movesUsed: number;
+    maxMoves: number;
+    nextGemsToSpawn: GemType[];
+    allowedGemTypes: GemType[];
+    rngState: number;
+}
+
 export function createBoardCell(gemType: GemType, state?: BoardCellState): BoardCell {
     const cell: BoardCell = { family: getGemFamily(gemType), gemType };
     if (state) cell.state = state;

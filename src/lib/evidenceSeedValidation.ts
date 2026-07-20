@@ -5,6 +5,8 @@ import {
   type DeductionProfileCategory,
   type DeductionTagProfile,
 } from '@/lib/deductionTags';
+import { verifyTieredCaseCorpus, type CaseCorpusVerification } from '@/lib/caseCorpusVerifier';
+import type { CompilerCard, CompilerSpeciesProfile } from '@/lib/caseCompiler';
 
 export const EVIDENCE_PROTOTYPE_IUCN_IDS = [
   512,
@@ -16,6 +18,7 @@ export const EVIDENCE_PROTOTYPE_IUCN_IDS = [
 ] as const;
 
 export const EVIDENCE_ROUTE_METHODS = METHOD_SLOTS;
+export const EVIDENCE_METHODS = METHOD_TYPES;
 
 export const EVIDENCE_ORDINARY_CATEGORIES = [
   'habitat',
@@ -24,14 +27,12 @@ export const EVIDENCE_ORDINARY_CATEGORIES = [
   'behavior',
   'reproduction',
   'taxonomy',
-] as const satisfies readonly DeductionProfileCategory[];
-
-const ALL_CATEGORIES = [
-  ...EVIDENCE_ORDINARY_CATEGORIES,
   'geography',
   'conservation',
   'key_fact',
 ] as const satisfies readonly DeductionProfileCategory[];
+
+const ALL_CATEGORIES = EVIDENCE_ORDINARY_CATEGORIES;
 
 const METHOD_SET = new Set<string>(METHOD_TYPES);
 const CATEGORY_SET = new Set<string>(ALL_CATEGORIES);
@@ -87,6 +88,7 @@ export interface EvidenceSolvabilityReport {
 export interface EvidenceCorpusValidation {
   errors: string[];
   reports: EvidenceSolvabilityReport[];
+  exhaustive: CaseCorpusVerification;
   ordinaryTagFrequencies: Array<{
     traitCategory: DeductionProfileCategory;
     compareTag: string;
@@ -268,16 +270,22 @@ function findViableChain(
 
     const method = EVIDENCE_ROUTE_METHODS[stepIndex];
     const remainingSteps = EVIDENCE_ROUTE_METHODS.length - stepIndex - 1;
-    const candidates = seed.cards
-      .map((card, cardIndex) => ({ card, cardIndex }))
-      .filter(({ card, cardIndex }) => !card.is_signature && card.method === method && !usedCardIndexes.has(cardIndex))
-      .map(({ card, cardIndex }) => {
-        const remaining = applyCard(liveIds, card, dossiersById);
-        const eliminated = liveIds.filter(id => !remaining.includes(id));
-        return { card, cardIndex, remaining, eliminated };
-      })
-      .filter(({ remaining, eliminated }) => eliminated.length > 0 && remaining.length >= remainingSteps + 1)
-      .sort((left, right) => {
+    const candidates: Array<{
+      card: EvidenceSeedCard;
+      cardIndex: number;
+      remaining: number[];
+      eliminated: number[];
+    }> = [];
+    for (const [cardIndex, card] of seed.cards.entries()) {
+      if (card.is_signature || card.method !== method || usedCardIndexes.has(cardIndex)) continue;
+      const remaining = applyCard(liveIds, card, dossiersById);
+      const remainingIds = new Set(remaining);
+      const eliminated = liveIds.filter(id => !remainingIds.has(id));
+      if (eliminated.length > 0 && remaining.length >= remainingSteps + 1) {
+        candidates.push({ card, cardIndex, remaining, eliminated });
+      }
+    }
+    candidates.sort((left, right) => {
         const target = liveIds.length / 2;
         const scoreDifference = Math.abs(target - left.eliminated.length) - Math.abs(target - right.eliminated.length);
         if (scoreDifference !== 0) return scoreDifference;
@@ -342,11 +350,12 @@ export function validateEvidenceCorpus(
     if (seed.scientific_name !== dossier.scientificName || seed.common_name !== dossier.commonName) {
       errors.push(`${context}: names do not exactly match the deduction dossier`);
     }
-    if (seed.cards.length !== 7) errors.push(`${context}: requires exactly seven cards`);
+    if (seed.cards.length !== 16) errors.push(`${context}: requires exactly sixteen cards`);
 
     const methodCounts = new Map<MethodType, number>();
     const signatureCards = seed.cards.filter(card => card.is_signature);
     const cardKeys = new Set<string>();
+    const dossierSources = new Set(dossier.sources);
 
     for (const [cardIndex, card] of seed.cards.entries()) {
       const cardContext = `${context} card ${cardIndex + 1}`;
@@ -363,7 +372,7 @@ export function validateEvidenceCorpus(
       if (!profileHasTag(dossier, card.trait_category, tag)) {
         errors.push(`${cardContext}: tag "${tag}" is absent from profile.${card.trait_category}`);
       }
-      if (!/^https:\/\//u.test(card.source) || !dossier.sources.includes(card.source)) {
+      if (!/^https:\/\//u.test(card.source) || !dossierSources.has(card.source)) {
         errors.push(`${cardContext}: source must exactly match an HTTPS dossier source`);
       }
       if (card.observation_text.length > 180 || card.inference_text.length > 240) {
@@ -375,7 +384,7 @@ export function validateEvidenceCorpus(
       const leaks = leakedNameTerms(`${card.observation_text} ${card.inference_text}`, seeds);
       if (leaks.length > 0) errors.push(`${cardContext}: text leaks candidate name terms: ${leaks.join(', ')}`);
 
-      const cardKey = `${card.method}\u0000${card.trait_category}\u0000${tag}`;
+      const cardKey = `${card.method}\u0000${card.specificity}\u0000${card.trait_category}\u0000${tag}`;
       if (cardKeys.has(cardKey)) errors.push(`${cardContext}: duplicates a method/category/tag card`);
       cardKeys.add(cardKey);
 
@@ -395,9 +404,7 @@ export function validateEvidenceCorpus(
           errors.push(`${cardContext}: signature tag must occur in exactly its one declared profile array across the corpus`);
         }
       } else {
-        if (!EVIDENCE_ROUTE_METHODS.includes(card.method as typeof EVIDENCE_ROUTE_METHODS[number])) {
-          errors.push(`${cardContext}: ordinary method must be track, observe, or survey`);
-        }
+        if (!EVIDENCE_METHODS.includes(card.method)) errors.push(`${cardContext}: ordinary method is invalid`);
         if (!ORDINARY_CATEGORY_SET.has(card.trait_category)) {
           errors.push(`${cardContext}: ordinary card uses sparse trait category ${card.trait_category}`);
         }
@@ -416,14 +423,14 @@ export function validateEvidenceCorpus(
       }
     }
 
-    for (const method of EVIDENCE_ROUTE_METHODS) {
-      if ((methodCounts.get(method) ?? 0) !== 2) errors.push(`${context}: requires exactly two ${method} cards`);
+    for (const method of EVIDENCE_METHODS) {
+      const ordinary = seed.cards.filter(card => !card.is_signature && card.method === method);
+      if (ordinary.length !== 3 || new Set(ordinary.map(card => card.specificity)).size !== 3) {
+        errors.push(`${context}: ${method} requires exactly one ordinary card at each tier`);
+      }
     }
-    if ((methodCounts.get('analyze') ?? 0) !== 1 || signatureCards.length !== 1) {
-      errors.push(`${context}: requires exactly one analyze signature card`);
-    }
-    for (const method of ['listen'] as const) {
-      if ((methodCounts.get(method) ?? 0) !== 0) errors.push(`${context}: ${method} cards are deferred in v0`);
+    if ((methodCounts.get('analyze') ?? 0) !== 4 || signatureCards.length !== 1) {
+      errors.push(`${context}: requires fifteen ordinary cards and one analyze signature`);
     }
   }
 
@@ -441,5 +448,36 @@ export function validateEvidenceCorpus(
   const ordinaryTagFrequencies = [...frequencyEntries.values()].sort((left, right) =>
     `${left.traitCategory}:${left.compareTag}`.localeCompare(`${right.traitCategory}:${right.compareTag}`));
 
-  return { errors, reports, ordinaryTagFrequencies };
+  let cardId = 1;
+  const compilerProfiles: CompilerSpeciesProfile[] = dossiers.map(dossier => ({
+    speciesId: dossier.iucnId,
+    habitatTags: dossier.profile.habitat,
+    morphologyTags: dossier.profile.morphology,
+    dietTags: dossier.profile.diet,
+    behaviorTags: dossier.profile.behavior,
+    reproductionTags: dossier.profile.reproduction,
+    taxonomyTags: dossier.profile.taxonomy,
+    geographyTags: dossier.profile.geography,
+    conservationTags: dossier.profile.conservation,
+    keyFactTags: dossier.profile.key_fact,
+    signatureTag: dossier.profile.signatureTag,
+  }));
+  const compilerCards = new Map<number, CompilerCard[]>();
+  for (const seed of seeds) {
+    compilerCards.set(seed.iucn_id, seed.cards.map(card => ({
+      id: cardId++,
+      speciesId: seed.iucn_id,
+      method: card.method,
+      traitCategory: card.trait_category,
+      primaryPredicate: card.primary_predicate,
+      compareTag: card.compare_tags[0],
+      isSignature: card.is_signature,
+      specificity: card.specificity,
+    })));
+  }
+  const exhaustive = verifyTieredCaseCorpus(compilerProfiles, compilerCards);
+  if (exhaustive.shapeCount !== 9_720) errors.push(`exhaustive compiler enumerated ${exhaustive.shapeCount} shapes instead of 9720`);
+  errors.push(...exhaustive.errors.map(error => `case compiler: ${error}`));
+
+  return { errors, reports, exhaustive, ordinaryTagFrequencies };
 }

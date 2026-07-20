@@ -23,9 +23,28 @@ type SpeciesRow = {
   scientific_name: string;
 };
 
+type ExistingCardRow = {
+  id: number;
+  method: string;
+  specificity: number;
+  is_signature: boolean;
+  primary_predicate: string;
+  observation_text: string;
+  inference_text: string;
+  trait_category: string;
+  compare_tags: string[];
+  source: string | null;
+  review_status: string | null;
+};
+
 function stripPgBouncer(url: string): string {
   const parsed = new URL(url);
   parsed.searchParams.delete('pgbouncer');
+  if (process.env.EVIDENCE_USE_TUNNEL === '1') {
+    parsed.hostname = '127.0.0.1';
+    parsed.port = '55432';
+    parsed.searchParams.set('sslmode', 'disable');
+  }
   return parsed.toString();
 }
 
@@ -88,7 +107,14 @@ function printReport(
   }
 }
 
-async function writeEvidence(seeds: readonly EvidenceSeed[]): Promise<void> {
+function sameCard(existing: ExistingCardRow, card: EvidenceSeed['cards'][number]): boolean {
+  return existing.method === card.method
+    && existing.specificity === card.specificity
+    && existing.is_signature === card.is_signature
+    && existing.primary_predicate === card.primary_predicate;
+}
+
+async function syncEvidence(seeds: readonly EvidenceSeed[], dryRun: boolean): Promise<void> {
   loadEnv({ path: '.env.local', quiet: true });
   const databaseUrl = process.env.EVIDENCE_DATABASE_URL || process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -127,54 +153,71 @@ async function writeEvidence(seeds: readonly EvidenceSeed[]): Promise<void> {
       const tx = transaction as unknown as typeof sql;
       for (const seed of seeds) {
         const species = speciesByIucnId.get(seed.iucn_id)!;
-        await tx`
-          DELETE FROM public.evidence_cards
+        const existing = await tx<ExistingCardRow[]>`
+          SELECT id::integer, method, specificity, is_signature, primary_predicate,
+                 observation_text, inference_text, trait_category, compare_tags, source, review_status
+          FROM public.evidence_cards
           WHERE species_id = ${species.id}
+          ORDER BY id
         `;
+        const usedIds = new Set<number>();
+        let reused = 0;
+        let inserted = 0;
 
         for (const card of seed.cards) {
-          await tx`
-            INSERT INTO public.evidence_cards (
-              species_id,
-              method,
-              observation_text,
-              inference_text,
-              trait_category,
-              primary_predicate,
-              compare_tags,
-              is_signature,
-              specificity,
-              source,
-              review_status
-            ) VALUES (
-              ${species.id},
-              ${card.method},
-              ${card.observation_text},
-              ${card.inference_text},
-              ${card.trait_category},
-              ${card.primary_predicate},
-              ${tx.array(card.compare_tags)},
-              ${card.is_signature},
-              ${card.specificity},
-              ${card.source},
-              ${card.review_status}
-            )
-          `;
+          const match = existing.find(row => !usedIds.has(row.id) && sameCard(row, card));
+          if (match) {
+            usedIds.add(match.id);
+            reused += 1;
+            if (!dryRun) await tx`
+              UPDATE public.evidence_cards SET
+                observation_text = ${card.observation_text},
+                inference_text = ${card.inference_text},
+                trait_category = ${card.trait_category},
+                compare_tags = ${tx.array(card.compare_tags)},
+                source = ${card.source},
+                review_status = ${card.review_status}
+              WHERE id = ${match.id}
+            `;
+          } else {
+            inserted += 1;
+            if (!dryRun) await tx`
+              INSERT INTO public.evidence_cards (
+                species_id, method, observation_text, inference_text, trait_category,
+                primary_predicate, compare_tags, is_signature, specificity, source, review_status
+              ) VALUES (
+                ${species.id}, ${card.method}, ${card.observation_text}, ${card.inference_text},
+                ${card.trait_category}, ${card.primary_predicate}, ${tx.array(card.compare_tags)},
+                ${card.is_signature}, ${card.specificity}, ${card.source}, ${card.review_status}
+              )
+            `;
+          }
         }
-        console.log(`Replaced ${seed.cards.length} cards for ${seed.scientific_name}.`);
+        const archiveIds = existing.filter(row => row.review_status === 'reviewed' && !usedIds.has(row.id)).map(row => row.id);
+        if (!dryRun && archiveIds.length > 0) await tx`
+          UPDATE public.evidence_cards SET review_status = 'legacy'
+          WHERE id = ANY(${tx.array(archiveIds)}::bigint[])
+        `;
+        console.log(`${seed.scientific_name}: reuse/update ${reused}, insert ${inserted}, archive ${archiveIds.length}, preserve legacy ${existing.length - archiveIds.length - reused}.`);
       }
+      if (dryRun) throw new DryRunRollback();
     });
+  } catch (error) {
+    if (!(error instanceof DryRunRollback)) throw error;
   } finally {
     await sql.end();
   }
 }
 
+class DryRunRollback extends Error {}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const checkMode = args.length === 1 && args[0] === '--check';
+  const dryRunMode = args.length === 1 && args[0] === '--dry-run';
   const writeMode = args.length === 1 && args[0] === '--write';
-  if (!checkMode && !writeMode) {
-    throw new Error('Choose exactly one mode: --check (local, no DB) or --write (transactional DB replacement).');
+  if (!checkMode && !dryRunMode && !writeMode) {
+    throw new Error('Choose exactly one mode: --check, --dry-run, or --write.');
   }
 
   const { seeds, dossiers } = await loadLocalCorpus();
@@ -192,8 +235,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  await writeEvidence(seeds);
-  console.log('\nEvidence write complete.');
+  await syncEvidence(seeds, dryRunMode);
+  console.log(dryRunMode
+    ? '\nDry run complete. Transaction rolled back; no writes performed.'
+    : '\nEvidence write complete. Legacy rows were retained for in-progress v1 runs.');
 }
 
 main().catch((error: unknown) => {

@@ -1,4 +1,10 @@
 import { METHOD_SLOTS, METHOD_TYPES, type MethodType } from '@/expedition/domain';
+import { validatePersistedOfferTree, type MethodOfferTree } from '@/expedition/caseOffers';
+import { evidenceTierForMatchLength, isBestTargetMatchLength, type EvidenceQualityTier } from '@/expedition/evidenceQuality';
+import { EVIDENCE_FAMILIES, isEvidenceFamily, parseEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
+import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
+import type { BoardCheckpointV1 } from '@/game/boardTypes';
+import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 
 const METHOD_SET = new Set<string>(METHOD_TYPES);
 const UINT32_MAX = 0xffff_ffff;
@@ -48,12 +54,20 @@ const SENSITIVE_KEYS = new Set([
   'cardids',
   'chain',
   'chaincardids',
+  'cardidmatrix',
   'correctspeciesid',
   'guessedspeciesid',
   'hiddenspeciesname',
   'playerid',
   'observationsissued',
   'runseed',
+  'signaturecardid',
+  'familycardids',
+  'familyhintids',
+  'cascadehintids',
+  'hinttext',
+  'weaktag',
+  'bonusfacttext',
   'speciesid',
 ]);
 
@@ -63,12 +77,40 @@ export interface RunProjectionSource extends UnknownRecord {
   metadata?: unknown;
 }
 
-export interface PublicCaseSnapshot {
+export interface PublicCaseV1 {
   version: 1;
   candidateIds: number[];
   nodeMethods: [...typeof METHOD_SLOTS];
   boardSeeds: [number, number, number];
 }
+
+export interface PublicCaseV2 {
+  version: 2;
+  candidateIds: number[];
+  nodeTypes: [string, string, string];
+  boardSeeds: [number, number, number];
+  offerTree: MethodOfferTree;
+}
+
+export interface PublicCaseV3 {
+  version: 3;
+  candidateIds: number[];
+  boardSeeds: [number, number, number];
+  mapView: ExpeditionMapView;
+}
+
+export type PublicCaseSnapshot = PublicCaseV1 | PublicCaseV2 | PublicCaseV3;
+
+export type ProjectedNodeCaseState =
+  | 'offered'
+  | 'chosen'
+  | 'board_active'
+  | 'objective_met'
+  | 'objective_failed'
+  | 'evidence_issued'
+  | 'interpreted'
+  | 'cited'
+  | 'choice_ready';
 
 export interface PublicRunNode {
   id: string;
@@ -83,6 +125,19 @@ export interface PublicRunNode {
   boardSeed?: number;
   boardSamplingMethod?: string;
   method?: MethodType;
+  offeredMethods?: [MethodType, MethodType];
+  choiceOfferedAt?: string;
+  choiceLatencyMs?: number;
+  bestTargetMatchLength?: number;
+  evidenceQualityTier?: EvidenceQualityTier;
+  evidenceCharges?: EvidenceChargeState;
+  carriedCharges?: EvidenceChargeState;
+  offeredFamilies?: EvidenceFamily[];
+  selectedFamily?: EvidenceFamily;
+  selectedFamilies?: EvidenceFamily[];
+  boardCheckpoint?: BoardCheckpointV1;
+  travelEntry?: string;
+  caseState?: ProjectedNodeCaseState;
   rationale?: string;
   difficulty?: number;
   obstacles: string[];
@@ -105,6 +160,7 @@ export interface PublicMemoryNode {
   objectiveProgress?: number;
   scoreEarned?: number;
   movesUsed?: number;
+  obstacleFamily?: string | null;
   waypoint?: PublicRunCheckpoint['expeditionSnapshot']['waypoints'][number];
 }
 
@@ -130,6 +186,7 @@ export interface PublicRunMemory {
     efficiencyBonus?: number;
     wrongGuessCount?: number;
     firstGuessCorrect?: boolean;
+    citedEvidenceRefs?: string[];
     finalScore?: number;
   } | null;
   finalScore?: number | null;
@@ -141,12 +198,18 @@ export interface PublicRunMemory {
 
 export interface PublicIssuedObservation {
   ref: string;
-  method: MethodType;
+  method?: MethodType;
+  family?: EvidenceFamily;
   observationText: string;
   inferenceText?: string;
   traitCategory?: string;
   compareTag?: string;
   isSignature: boolean;
+  qualityTier?: EvidenceQualityTier;
+  actualEliminatedIds?: number[];
+  eliminationReasons?: Record<string, string>;
+  traitPhrase?: string;
+  candidateTraitPhrases?: Record<string, string>;
 }
 
 export interface PublicReasoningEvent {
@@ -175,6 +238,7 @@ export interface PublicRunCheckpoint {
   }>;
   routePolyline: Array<{ lon: number; lat: number; waypointSlot?: number }>;
   reasoningEvents: PublicReasoningEvent[];
+  citedEvidenceRefs: string[];
   expeditionSnapshot: {
     protectedAreas: Array<{
       name: string | null;
@@ -259,19 +323,23 @@ export function projectRunForClient(
   input: RunProjectionInput = {},
 ): ClientRunProjection {
   const metadata = getRecord(session.metadata);
-  const casePublic = projectCasePublic(metadata.casePublic);
+  const casePublic = parsePublicCaseSnapshot(metadata.casePublic);
+  const observations = Array.isArray(input.publicObservations)
+    ? input.publicObservations.flatMap(value => {
+        const observation = projectObservation(value);
+        return observation ? [observation] : [];
+      })
+    : [];
+  const reasoningEvents = projectReasoningEvents(metadata.reasoningEvents);
+  const citedEvidenceRefs = projectObservationRefs(metadata.citedEvidenceRefs);
+  const nodes = projectRunNodes(input.nodes);
 
   return {
     run: projectRunSummary(session),
     casePublic,
     checkpoint: projectCheckpoint(metadata),
-    observations: Array.isArray(input.publicObservations)
-      ? input.publicObservations.flatMap(value => {
-          const observation = projectObservation(value);
-          return observation ? [observation] : [];
-        })
-      : [],
-    nodes: projectRunNodes(input.nodes),
+    observations,
+    nodes: projectNodeCaseStates(nodes, observations, reasoningEvents, citedEvidenceRefs),
     memory: projectRunMemory(input.memory),
     legacy: casePublic === null,
   };
@@ -285,7 +353,7 @@ export function projectRunCreateResponse(input: {
 }): PublicRunCreateResponse {
   const runId = getString(input.runId);
   const nodeIds = getExactStringArray(input.nodeIds);
-  const casePublic = projectCasePublic(input.casePublic);
+  const casePublic = parsePublicCaseSnapshot(input.casePublic);
   if (!runId || !nodeIds || !casePublic) {
     throw new Error('Invalid public run create response');
   }
@@ -315,21 +383,15 @@ function projectRunSummary(session: RunProjectionSource): PublicRunSummary {
   return run;
 }
 
-function projectCasePublic(value: unknown): PublicCaseSnapshot | null {
+export function parsePublicCaseSnapshot(value: unknown): PublicCaseSnapshot | null {
   const source = getRecord(value);
   const candidateIds = getExactIntegerArray(source.candidateIds);
-  const nodeMethods = source.nodeMethods;
   const boardSeeds = source.boardSeeds;
 
-  if (
-    source.version !== 1
-    || !candidateIds
+  if (!candidateIds
     || candidateIds.length !== 6
     || candidateIds.some(id => id <= 0)
     || new Set(candidateIds).size !== 6
-    || !Array.isArray(nodeMethods)
-    || nodeMethods.length !== METHOD_SLOTS.length
-    || !METHOD_SLOTS.every((method, index) => nodeMethods[index] === method)
     || !Array.isArray(boardSeeds)
     || boardSeeds.length !== 3
     || boardSeeds.some(seed => getUint32(seed) === undefined)
@@ -337,12 +399,38 @@ function projectCasePublic(value: unknown): PublicCaseSnapshot | null {
     return null;
   }
 
-  return {
-    version: 1,
+  if (source.version === 1) {
+    const nodeMethods = source.nodeMethods;
+    if (!Array.isArray(nodeMethods) || nodeMethods.length !== METHOD_SLOTS.length
+      || !METHOD_SLOTS.every((method, index) => nodeMethods[index] === method)) return null;
+    return {
+      version: 1,
+      candidateIds,
+      nodeMethods: [...METHOD_SLOTS],
+      boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
+    };
+  }
+
+  const nodeTypes = getExactStringArray(source.nodeTypes);
+  if (source.version === 3) {
+    const mapView = parseExpeditionMapView(source.mapView);
+    if (!mapView) return null;
+    return {
+      version: 3,
+      candidateIds,
+      boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
+      mapView,
+    };
+  }
+  if (source.version !== 2 || !nodeTypes || nodeTypes.length !== 3) return null;
+  const offerTree = validatePersistedOfferTree(nodeTypes, source.offerTree);
+  return offerTree ? {
+    version: 2,
     candidateIds,
-    nodeMethods: [...METHOD_SLOTS],
+    nodeTypes: [nodeTypes[0], nodeTypes[1], nodeTypes[2]],
     boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
-  };
+    offerTree,
+  } : null;
 }
 
 /** Projects persisted node rows without exposing their raw JSONB payloads. */
@@ -376,6 +464,28 @@ export function projectRunNodes(value: unknown): PublicRunNode[] {
     assignString(node, 'boardSamplingMethod', source.boardSamplingMethod);
     const method = getMethod(source.method ?? boardContext.method);
     if (method) node.method = method;
+    const offeredMethods = getMethodPair(boardContext.offeredMethods);
+    if (offeredMethods) node.offeredMethods = offeredMethods;
+    assignDate(node, 'choiceOfferedAt', boardContext.choiceOfferedAt);
+    assignNonnegativeInteger(node, 'choiceLatencyMs', boardContext.choiceLatencyMs);
+    const bestTargetMatchLength = boardContext.bestTargetMatchLength;
+    if (isBestTargetMatchLength(bestTargetMatchLength)) {
+      node.bestTargetMatchLength = bestTargetMatchLength;
+      const tier = evidenceTierForMatchLength(bestTargetMatchLength);
+      if (tier) node.evidenceQualityTier = tier;
+    }
+    const evidenceCharges = parseEvidenceCharges(boardContext.evidenceCharges);
+    if (evidenceCharges) node.evidenceCharges = evidenceCharges;
+    const carriedCharges = parseEvidenceCharges(boardContext.carriedCharges);
+    if (carriedCharges) node.carriedCharges = carriedCharges;
+    const offeredFamilies = getEvidenceFamilies(boardContext.offeredFamilies);
+    if (offeredFamilies.length >= 2) node.offeredFamilies = offeredFamilies;
+    if (isEvidenceFamily(boardContext.selectedFamily)) node.selectedFamily = boardContext.selectedFamily;
+    const selectedFamilies = getEvidenceFamilies(boardContext.selectedFamilies);
+    if (selectedFamilies.length > 0) node.selectedFamilies = selectedFamilies;
+    const boardCheckpoint = parseBoardCheckpoint(boardContext.boardCheckpoint);
+    if (boardCheckpoint) node.boardCheckpoint = boardCheckpoint;
+    assignString(node, 'travelEntry', boardContext.travelEntry);
     assignString(node, 'rationale', boardContext.rationale);
     const difficulty = getInteger(boardContext.difficulty);
     if (difficulty !== undefined && difficulty >= 1 && difficulty <= 5) node.difficulty = difficulty;
@@ -429,6 +539,7 @@ function projectMemoryNodes(value: unknown): PublicMemoryNode[] {
     assignNonnegativeInteger(node, 'objectiveProgress', source.objectiveProgress);
     assignNumber(node, 'scoreEarned', source.scoreEarned);
     assignNonnegativeInteger(node, 'movesUsed', source.movesUsed);
+    assignNullableString(node, 'obstacleFamily', source.obstacleFamily);
     const waypoint = projectSingleWaypoint(source.waypoint);
     if (waypoint) node.waypoint = waypoint;
     return Object.keys(node).length > 0 ? [node] : [];
@@ -460,6 +571,7 @@ export function projectDeductionSummary(value: unknown): PublicRunMemory['deduct
   assignNumber(summary, 'guessBonus', source.guessBonus);
   assignNumber(summary, 'efficiencyBonus', source.efficiencyBonus);
   assignNonnegativeInteger(summary, 'wrongGuessCount', source.wrongGuessCount);
+  summary.citedEvidenceRefs = projectObservationRefs(source.citedEvidenceRefs);
   if (typeof source.firstGuessCorrect === 'boolean') summary.firstGuessCorrect = source.firstGuessCorrect;
   assignNumber(summary, 'finalScore', source.finalScore);
   return summary;
@@ -480,6 +592,7 @@ function projectCheckpoint(metadata: UnknownRecord): PublicRunCheckpoint {
     featureFingerprints: projectFeatureFingerprints(metadata.featureFingerprints),
     routePolyline: projectRoute(metadata.routePolyline),
     reasoningEvents: projectReasoningEvents(metadata.reasoningEvents),
+    citedEvidenceRefs: projectObservationRefs(metadata.citedEvidenceRefs),
     expeditionSnapshot: {
       protectedAreas: projectProtectedAreas(snapshot.protectedAreas),
       availableAffinities: getStringArray(snapshot.availableAffinities),
@@ -502,22 +615,67 @@ function projectObservation(value: unknown): PublicIssuedObservation | null {
   const source = getRecord(value);
   const ref = getObservationRef(source.ref);
   const method = getMethod(source.method);
+  const family = isEvidenceFamily(source.family) ? source.family : undefined;
   const observationText = getString(source.observationText);
-  if (!ref || !method || !observationText) return null;
+  if (!ref || (!method && !family) || !observationText) return null;
 
   const observation: PublicIssuedObservation = {
     ref,
-    method,
     observationText,
     isSignature: source.isSignature === true,
+    ...(method ? { method } : {}),
+    ...(family ? { family } : {}),
   };
+  const qualityTier = getInteger(source.qualityTier);
+  if (qualityTier === 1 || qualityTier === 2 || qualityTier === 3) observation.qualityTier = qualityTier;
   const inferenceText = getString(source.inferenceText);
   const traitCategory = getString(source.traitCategory);
   const compareTag = getString(source.compareTag);
   if (inferenceText !== undefined) observation.inferenceText = inferenceText;
   if (traitCategory && TRAIT_CATEGORIES.has(traitCategory)) observation.traitCategory = traitCategory;
   if (compareTag !== undefined) observation.compareTag = compareTag;
+  const actualEliminatedIds = getIntegerArray(source.actualEliminatedIds);
+  if (actualEliminatedIds.length > 0) observation.actualEliminatedIds = actualEliminatedIds;
+  const traitPhrase = getString(source.traitPhrase);
+  if (traitPhrase && traitPhrase.length <= 80) observation.traitPhrase = traitPhrase;
+  const eliminationReasonsSource = getRecord(source.eliminationReasons);
+  const eliminationReasons = Object.fromEntries(actualEliminatedIds.flatMap(id => {
+    const reason = getString(eliminationReasonsSource[String(id)]);
+    return reason && reason.length <= 80 ? [[String(id), reason]] : [];
+  }));
+  if (Object.keys(eliminationReasons).length > 0) observation.eliminationReasons = eliminationReasons;
+  const candidateTraitPhrases = Object.fromEntries(Object.entries(getRecord(source.candidateTraitPhrases)).flatMap(([id, phrase]) => {
+    const speciesId = Number(id);
+    return Number.isSafeInteger(speciesId) && speciesId > 0 && typeof phrase === 'string' && phrase.length > 0 && phrase.length <= 64
+      ? [[String(speciesId), phrase]]
+      : [];
+  }).slice(0, 6));
+  if (Object.keys(candidateTraitPhrases).length > 0) observation.candidateTraitPhrases = candidateTraitPhrases;
   return observation;
+}
+
+function projectNodeCaseStates(
+  nodes: PublicRunNode[],
+  observations: PublicIssuedObservation[],
+  interpretations: PublicReasoningEvent[],
+  citedRefs: string[],
+): PublicRunNode[] {
+  const issued = new Set(observations.map(observation => observation.ref));
+  const interpreted = new Set(interpretations.map(event => event.obsRef));
+  const cited = new Set(citedRefs);
+  return nodes.map((node, index) => {
+    const ref = `obs-${index}`;
+    let caseState: ProjectedNodeCaseState | undefined;
+    if (cited.has(ref)) caseState = 'cited';
+    else if (interpreted.has(ref)) caseState = 'interpreted';
+    else if (issued.has(ref)) caseState = 'evidence_issued';
+    else if (node.nodeStatus === 'active' && node.offeredFamilies?.length) caseState = 'choice_ready';
+    else if (node.nodeStatus === 'completed') caseState = (node.objectiveProgress ?? 0) >= (node.objectiveTarget ?? 0) ? 'objective_met' : 'objective_failed';
+    else if (node.nodeStatus === 'active' && (node.method || node.evidenceCharges)) caseState = 'board_active';
+    else if (node.method) caseState = 'chosen';
+    else if (node.choiceOfferedAt) caseState = 'offered';
+    return caseState ? { ...node, caseState } : node;
+  });
 }
 
 function projectReasoningEvents(value: unknown): PublicReasoningEvent[] {
@@ -699,6 +857,12 @@ function getMethod(value: unknown): MethodType | undefined {
   return typeof value === 'string' && METHOD_SET.has(value) ? value as MethodType : undefined;
 }
 
+function getEvidenceFamilies(value: unknown): EvidenceFamily[] {
+  if (!Array.isArray(value)) return [];
+  const result = value.filter(isEvidenceFamily);
+  return [...new Set(result)].filter(family => EVIDENCE_FAMILIES.includes(family));
+}
+
 function getUint32(value: unknown): number | undefined {
   const integer = getInteger(value);
   return integer !== undefined && integer >= 0 && integer <= UINT32_MAX ? integer : undefined;
@@ -706,6 +870,22 @@ function getUint32(value: unknown): number | undefined {
 
 function getObservationRef(value: unknown): string | undefined {
   return typeof value === 'string' && /^obs-[0-3]$/.test(value) ? value : undefined;
+}
+
+function projectObservationRefs(value: unknown): string[] {
+  return Array.isArray(value)
+    ? [...new Set(value.flatMap(item => {
+        const ref = getObservationRef(item);
+        return ref ? [ref] : [];
+      }))].sort()
+    : [];
+}
+
+function getMethodPair(value: unknown): [MethodType, MethodType] | undefined {
+  if (!Array.isArray(value) || value.length !== 2) return undefined;
+  const first = getMethod(value[0]);
+  const second = getMethod(value[1]);
+  return first && second && first !== second ? [first, second] : undefined;
 }
 
 function getNumberRecord(value: unknown): Record<string, number> {

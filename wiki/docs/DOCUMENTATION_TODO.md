@@ -37,13 +37,11 @@ These files are essential to understand before making any game changes.
 - [x] Node generation from GIS scoring (6 per expedition)
 - [x] Node templates with unique gem pairs
 - [x] Gem objectives + objective tracking in Game.ts
-- [x] Mid-node encounters (every 3rd match group)
-- [x] Encounter effects (bonus_gems, score_boost, objective_boost)
-- [x] Souvenir drops (11 items, probabilistic)
-- [x] Gem wallet + resource bias weighting
+- [x] Clue fragments from loot gem matches
+- [x] Banked score from board play
 - [x] Route trail (CesiumMap polyline + markers)
 - [x] API routes (runs, node-complete)
-- [x] EventBus events (6 new events documented)
+- [x] EventBus events documented
 - [x] eco_run_sessions + eco_run_nodes tables
 
 ---

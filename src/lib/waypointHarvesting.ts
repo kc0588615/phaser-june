@@ -10,13 +10,24 @@ import type {
   WaypointType,
   WdpaDesignationCategory,
 } from '@/types/waypoints';
+import {
+  MAX_RESEARCH_SITE_SPACING_KM,
+  PREFERRED_RESEARCH_SITE_SPACING_KM,
+  RELAXED_RESEARCH_SITE_SPACING_KM,
+  routeDistanceKm,
+  satisfiesResearchSiteSpacing,
+} from '@/expedition/siteSpacing';
 
 export interface ExpeditionWaypointRoute {
   origin: { lon: number; lat: number };
   radiusKm: number;
   waypoints: ExpeditionWaypoint[];
   routePolyline: Array<{ lon: number; lat: number; waypointSlot: number }>;
-  debug: { candidateCounts: Record<WaypointType, number> };
+  debug: {
+    candidateCounts: Record<WaypointType, number>;
+    researchSiteSpacing: 'preferred' | 'relaxed' | 'unavailable';
+    sameRegionFilterApplied: boolean;
+  };
 }
 
 interface HarvestOptions {
@@ -520,7 +531,10 @@ function fallbackCandidate(lon: number, lat: number, slot: number, role: Waypoin
   };
 }
 
-function selectWaypoints(candidates: Candidate[], lon: number, lat: number): ExpeditionWaypoint[] {
+function selectWaypoints(candidates: Candidate[], lon: number, lat: number): {
+  waypoints: ExpeditionWaypoint[];
+  spacing: 'preferred' | 'relaxed' | 'unavailable';
+} {
   const selectedKeys = new Set<string>();
   const selected: Array<Candidate | null> = [null, null, null, null, null, null];
 
@@ -540,9 +554,20 @@ function selectWaypoints(candidates: Candidate[], lon: number, lat: number): Exp
 
   selected[0] = fallbackCandidate(lon, lat, 0, 'start');
   selectedKeys.add(selected[0].key);
-
-  selected[1] = pickBest((candidate) => candidate.waypointType === 'river');
-  selected[2] = pickBest((candidate) => candidate.waypointType === 'lake' || candidate.waypointType === 'wetland');
+  const spaced = chooseResearchSites(selected[0], candidates, PREFERRED_RESEARCH_SITE_SPACING_KM)
+    ?? chooseResearchSites(selected[0], candidates, RELAXED_RESEARCH_SITE_SPACING_KM);
+  const spacing = spaced
+    ? (satisfiesResearchSiteSpacing([selected[0], ...spaced], PREFERRED_RESEARCH_SITE_SPACING_KM) ? 'preferred' : 'relaxed')
+    : 'unavailable';
+  if (spaced) {
+    selected[1] = spaced[0];
+    selected[2] = spaced[1];
+    selectedKeys.add(spaced[0].key);
+    selectedKeys.add(spaced[1].key);
+  } else {
+    selected[1] = pickBest((candidate) => candidate.waypointType === 'river');
+    selected[2] = pickBest((candidate) => candidate.waypointType === 'lake' || candidate.waypointType === 'wetland');
+  }
 
   selected[3] = pickBest((candidate) => candidate.waypointType === 'protected_area');
   const firstProtectedCategory = selected[3]?.designationCategory;
@@ -563,7 +588,7 @@ function selectWaypoints(candidates: Candidate[], lon: number, lat: number): Exp
     }
   }
 
-  return selected.map((maybeCandidate, index) => {
+  const waypoints = selected.map((maybeCandidate, index) => {
     const candidate = maybeCandidate ?? fallbackCandidate(lon, lat, index, NODE_ROLES[index]);
     return {
       slot: index as ExpeditionWaypoint['slot'],
@@ -580,16 +605,61 @@ function selectWaypoints(candidates: Candidate[], lon: number, lat: number): Exp
       fallback: candidate.fallback,
     };
   });
+  return { waypoints, spacing };
 }
 
-function routeDistanceKm(a: { lon: number; lat: number }, b: { lon: number; lat: number }): number {
-  const lat1 = (a.lat * Math.PI) / 180;
-  const lat2 = (b.lat * Math.PI) / 180;
-  const dLat = lat2 - lat1;
-  const dLon = ((b.lon - a.lon) * Math.PI) / 180;
-  const hav = Math.sin(dLat / 2) ** 2
-    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
+function chooseResearchSites(origin: Candidate, candidates: readonly Candidate[], minimumKm: number): [Candidate, Candidate] | null {
+  const eligible = candidates.filter(candidate => candidate.key !== origin.key
+    && routeDistanceKm(origin, candidate) >= minimumKm
+    && routeDistanceKm(origin, candidate) <= MAX_RESEARCH_SITE_SPACING_KM);
+  const ranked = [...eligible].sort((left, right) => researchSitePriority(right) - researchSitePriority(left));
+  for (const first of ranked) {
+    const second = ranked.find(candidate => candidate.key !== first.key
+      && routeDistanceKm(first, candidate) >= minimumKm
+      && routeDistanceKm(first, candidate) <= MAX_RESEARCH_SITE_SPACING_KM);
+    if (second) return [first, second];
+  }
+  return null;
+}
+
+function researchSitePriority(candidate: Candidate): number {
+  const typeBoost = candidate.waypointType === 'river' ? 40
+    : candidate.waypointType === 'lake' || candidate.waypointType === 'wetland' ? 35
+      : candidate.waypointType === 'protected_area' ? 25 : 0;
+  return typeBoost + candidate.rankScore;
+}
+
+async function filterCandidatesToOriginRegion(candidates: Candidate[], lon: number, lat: number): Promise<{
+  candidates: Candidate[];
+  applied: boolean;
+}> {
+  if (candidates.length === 0) return { candidates, applied: false };
+  try {
+    const payload = JSON.stringify(candidates.map(candidate => ({ key: candidate.key, lon: candidate.lon, lat: candidate.lat })));
+    const rows = await db.execute<{ key: string; region_found: boolean; same_region: boolean }>(sql`
+      WITH origin_region AS (
+        SELECT b.ogc_fid, b.wkb_geometry
+        FROM oneearth.oneearth_bioregion b
+        WHERE ST_Covers(b.wkb_geometry, ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326))
+        ORDER BY ST_Area(b.wkb_geometry) ASC
+        LIMIT 1
+      ), candidate_points AS (
+        SELECT p.key, p.lon, p.lat
+        FROM jsonb_to_recordset(${payload}::jsonb) AS p(key text, lon double precision, lat double precision)
+      )
+      SELECT p.key,
+        (r.ogc_fid IS NOT NULL) AS region_found,
+        COALESCE(ST_Covers(r.wkb_geometry, ST_SetSRID(ST_MakePoint(p.lon, p.lat), 4326)), false) AS same_region
+      FROM candidate_points p
+      LEFT JOIN origin_region r ON true
+    `);
+    if (!rows[0]?.region_found) return { candidates, applied: false };
+    const allowed = new Set([...rows].filter(row => row.same_region).map(row => row.key));
+    return { candidates: candidates.filter(candidate => allowed.has(candidate.key)), applied: true };
+  } catch (error) {
+    console.warn('[waypointHarvesting] Same-region filter unavailable:', error);
+    return { candidates, applied: false };
+  }
 }
 
 function buildRoutePolyline(waypoints: ExpeditionWaypoint[], origin: { lon: number; lat: number }) {
@@ -608,19 +678,29 @@ export async function harvestExpeditionWaypoints({ lon, lat }: HarvestOptions): 
 
   let finalRadiusKm = SEARCH_RADII_KM[SEARCH_RADII_KM.length - 1];
   let candidates: Candidate[] = [];
+  let regionFiltered: Awaited<ReturnType<typeof filterCandidatesToOriginRegion>> = { candidates: [], applied: false };
 
   for (const radiusKm of SEARCH_RADII_KM) {
     candidates = await harvestCandidates(lon, lat, radiusKm);
+    regionFiltered = await filterCandidatesToOriginRegion(candidates, lon, lat);
     finalRadiusKm = radiusKm;
-    if (hasEnoughCandidates(candidates)) break;
+    if (hasEnoughCandidates(candidates)
+      && chooseResearchSites(fallbackCandidate(lon, lat, 0, 'start'), regionFiltered.candidates, PREFERRED_RESEARCH_SITE_SPACING_KM)) break;
   }
 
-  const waypoints = selectWaypoints(candidates, lon, lat);
+  const selection = selectWaypoints(regionFiltered.candidates, lon, lat);
+  if (selection.spacing !== 'preferred') {
+    console.warn(`[waypointHarvesting] Research-site spacing fallback: ${selection.spacing}.`);
+  }
   return {
     origin: { lon, lat },
     radiusKm: finalRadiusKm,
-    waypoints,
-    routePolyline: buildRoutePolyline(waypoints, { lon, lat }),
-    debug: { candidateCounts: countCandidates(candidates) },
+    waypoints: selection.waypoints,
+    routePolyline: buildRoutePolyline(selection.waypoints, { lon, lat }),
+    debug: {
+      candidateCounts: countCandidates(candidates),
+      researchSiteSpacing: selection.spacing,
+      sameRegionFilterApplied: regionFiltered.applied,
+    },
   };
 }

@@ -17,6 +17,16 @@ export const WAYPOINT_TYPE_LABELS: Record<WaypointType, string> = {
   basecamp: 'Basecamp',
 };
 
+export const WAYPOINT_TYPE_COLORS: Record<WaypointType, string> = {
+  city: '#f59e0b',
+  river: '#38bdf8',
+  lake: '#2563eb',
+  wetland: '#14b8a6',
+  protected_area: '#22c55e',
+  bioregion_edge: '#a78bfa',
+  basecamp: '#f97316',
+};
+
 export function getWaypointTypeLabel(type: string | null | undefined): string | null {
   if (!type) return null;
   return WAYPOINT_TYPE_LABELS[type as WaypointType] ?? type.replace(/_/g, ' ');
@@ -55,17 +65,16 @@ export interface ExpeditionWaypoint {
   fallback: boolean;
 }
 
-export type ExpeditionWaypointMemory = Partial<Pick<
-  ExpeditionWaypoint,
-  | 'slot'
-  | 'waypointType'
-  | 'nodeRole'
-  | 'name'
-  | 'lon'
-  | 'lat'
-  | 'fallback'
-  | 'designationCategory'
->>;
+export interface ExpeditionWaypointMemory {
+  slot?: number;
+  waypointType?: string;
+  nodeRole?: string;
+  name?: string;
+  lon?: number;
+  lat?: number;
+  fallback?: boolean;
+  designationCategory?: string;
+}
 
 export interface WaypointRoutePoint {
   lon: number;
@@ -78,5 +87,9 @@ export interface ExpeditionWaypointResponse {
   radiusKm: number;
   waypoints: ExpeditionWaypoint[];
   routePolyline: WaypointRoutePoint[];
-  debug?: { candidateCounts: Record<WaypointType, number> };
+  debug?: {
+    candidateCounts: Record<WaypointType, number>;
+    researchSiteSpacing: 'preferred' | 'relaxed' | 'unavailable';
+    sameRegionFilterApplied: boolean;
+  };
 }

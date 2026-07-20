@@ -1,0 +1,57 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+# Use ! prefix to force-include something excluded by defaults.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+# --- From .gitignore (uncomment to exclude) ---
+
+# /node_modules
+# /.pnp
+# .pnp.js
+# .yarn/install-state.gz
+# /coverage
+# /.next/
+# /out/
+# /build
+# /dist
+# .DS_Store
+# *.pem
+# *.Zone.Identifier
+# *:Zone.Identifier
+# npm-debug.log*
+# yarn-debug.log*
+# yarn-error.log*
+# .env
+# .env*.local
+# .vercel
+# *.tsbuildinfo
+# next-env.d.ts
+# /public/cesium
+# repomix-output-*.xml
+# supabase_nextjs.txt
+# CLAUDE.md
+# CLUE_SYSTEM_GUIDE.mdx
+# /home/danby/phaser-june/.mcp.json
+# repomix-output-*.xml
+
+# --- Detected directories (uncomment to exclude) ---
+
+# docs/
+# scripts/
+
+# --- Non-project directories (excluded) ---
+.agents/
+wiki/
+.playwright-mcp/
+.claude/
+issues/
+public/cesium/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# *.test.*
+# *.spec.*
+# *.snap

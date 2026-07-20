@@ -146,6 +146,11 @@ const ARRAY_PROFILE_KEYS: ProfileTagKey[] = Object.values(PROFILE_KEYS_BY_CATEGO
 function stripPgBouncer(url: string): string {
   const parsed = new URL(url);
   parsed.searchParams.delete('pgbouncer');
+  if (process.env.DEDUCTION_USE_TUNNEL === '1') {
+    parsed.hostname = '127.0.0.1';
+    parsed.port = '55432';
+    parsed.searchParams.set('sslmode', 'disable');
+  }
   return parsed.toString();
 }
 
@@ -427,7 +432,8 @@ async function loadSeeds(): Promise<Array<{ fileName: string; seed: SeedJson }>>
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const checkMode = args.includes('--check');
-  const unknownArgs = args.filter(arg => arg !== '--check');
+  const profilesOnly = args.includes('--profiles-only');
+  const unknownArgs = args.filter(arg => arg !== '--check' && arg !== '--profiles-only');
   if (unknownArgs.length > 0) throw new Error(`Unknown argument(s): ${unknownArgs.join(', ')}`);
 
   const databaseUrl = process.env.DEDUCTION_DATABASE_URL || process.env.DATABASE_URL;
@@ -504,26 +510,28 @@ async function main(): Promise<void> {
         const species = selected.find(candidate => candidate.seed === seed)?.species;
         if (!species) throw new Error(`No species row found for ${seed.scientific_name} (${seed.iucn_id})`);
 
-        await tx`
-          UPDATE public.species SET
-            common_name = ${seed.common_name},
-            conservation_text = ${seed.species.conservation_text},
-            habitat_description = ${seed.species.habitat_description},
-            habitat_tags = ${tx.array(seed.species.habitat_tags)},
-            geographic_description = ${seed.species.geographic_description},
-            marine = ${seed.species.marine}, terrestrial = ${seed.species.terrestrial}, freshwater = ${seed.species.freshwater},
-            color_primary = ${seed.species.colors[0] ?? null}, color_secondary = ${seed.species.colors[1] ?? null},
-            pattern = ${seed.species.pattern}, shape_description = ${seed.species.shape_description},
-            size_min_cm = ${seed.species.size_min_cm}, size_max_cm = ${seed.species.size_max_cm}, weight_kg = ${seed.species.weight_kg},
-            diet_type = ${seed.species.diet_type}, diet_prey = ${seed.species.diet_prey}, diet_flora = ${seed.species.diet_flora},
-            behavior_1 = ${seed.species.behavior_1}, behavior_2 = ${seed.species.behavior_2},
-            life_description_1 = ${seed.species.life_description_1}, life_description_2 = ${seed.species.life_description_2},
-            key_fact_1 = ${seed.species.key_fact_1}, key_fact_2 = ${seed.species.key_fact_2}, key_fact_3 = ${seed.species.key_fact_3},
-            threats = ${seed.species.threats}, taxonomic_comment = ${seed.species.taxonomic_comment},
-            distribution_comment = ${seed.species.distribution_comment}, lifespan = ${seed.species.lifespan}, maturity = ${seed.species.maturity},
-            reproduction_type = ${seed.species.reproduction_type}, clutch_size = ${seed.species.clutch_size}, updated_at = NOW()
-          WHERE id = ${species.id}
-        `;
+        if (!profilesOnly) {
+          await tx`
+            UPDATE public.species SET
+              common_name = ${seed.common_name},
+              conservation_text = ${seed.species.conservation_text},
+              habitat_description = ${seed.species.habitat_description},
+              habitat_tags = ${tx.array(seed.species.habitat_tags)},
+              geographic_description = ${seed.species.geographic_description},
+              marine = ${seed.species.marine}, terrestrial = ${seed.species.terrestrial}, freshwater = ${seed.species.freshwater},
+              color_primary = ${seed.species.colors[0] ?? null}, color_secondary = ${seed.species.colors[1] ?? null},
+              pattern = ${seed.species.pattern}, shape_description = ${seed.species.shape_description},
+              size_min_cm = ${seed.species.size_min_cm}, size_max_cm = ${seed.species.size_max_cm}, weight_kg = ${seed.species.weight_kg},
+              diet_type = ${seed.species.diet_type}, diet_prey = ${seed.species.diet_prey}, diet_flora = ${seed.species.diet_flora},
+              behavior_1 = ${seed.species.behavior_1}, behavior_2 = ${seed.species.behavior_2},
+              life_description_1 = ${seed.species.life_description_1}, life_description_2 = ${seed.species.life_description_2},
+              key_fact_1 = ${seed.species.key_fact_1}, key_fact_2 = ${seed.species.key_fact_2}, key_fact_3 = ${seed.species.key_fact_3},
+              threats = ${seed.species.threats}, taxonomic_comment = ${seed.species.taxonomic_comment},
+              distribution_comment = ${seed.species.distribution_comment}, lifespan = ${seed.species.lifespan}, maturity = ${seed.species.maturity},
+              reproduction_type = ${seed.species.reproduction_type}, clutch_size = ${seed.species.clutch_size}, updated_at = NOW()
+            WHERE id = ${species.id}
+          `;
+        }
 
         await tx`
           INSERT INTO public.species_deduction_profiles (
@@ -586,6 +594,11 @@ async function main(): Promise<void> {
             updated_at = NOW()
         `;
 
+        if (profilesOnly) {
+          console.log(`Upserted ${seed.scientific_name}: 1 profile only`);
+          continue;
+        }
+
         await tx`
           DELETE FROM public.species_deduction_clues
           WHERE species_id = ${species.id}
@@ -626,7 +639,7 @@ async function main(): Promise<void> {
       }
     });
 
-    console.log(`Done. Seeded ${seeds.length} species.`);
+    console.log(`Done. Seeded ${seeds.length} ${profilesOnly ? 'deduction profiles only' : 'species'}.`);
   } finally {
     await sql.end();
   }

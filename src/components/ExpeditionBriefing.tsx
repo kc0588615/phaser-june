@@ -53,7 +53,7 @@ export const ExpeditionBriefing: React.FC<Props> = ({ expedition, onStart, onClo
           Match clue gems to reveal field notes, then identify the hidden species.
         </div>
         <div className="text-ds-caption text-ds-text-secondary mt-2">
-          You have 12 moves. Guess when the taxonomy and habitat clues point to one animal.
+          Three research sites will narrow six candidates. Match gems to steer what you investigate.
         </div>
       </div>
 

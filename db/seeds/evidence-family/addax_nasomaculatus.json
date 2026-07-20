@@ -1,0 +1,92 @@
+{
+  "iucn_id": 512,
+  "scientific_name": "Addax nasomaculatus",
+  "common_name": "Addax",
+  "cards": [
+    {
+      "family": "relatives",
+      "observation_text": "Genetic markers align with placental lineages whose eyes remain externally visible.",
+      "inference_text": "The lineage evidence favors candidates with exposed eyes.",
+      "trait_category": "taxonomy",
+      "compare_tag": "comparison_lineage:not_golden_mole",
+      "trait_phrase": "bovid lineage",
+      "bonus_fact_text": "Its closest living family group includes cattle, goats, sheep, and other bovids.",
+      "source": "https://nationalzoo.si.edu/animals/addax",
+      "review_status": "reviewed",
+      "hints": [
+        "The family tree bends away from a tiny underground specialist.",
+        "This lineage was built for open ground, not a life beneath loose sand.",
+        "The genetic signal does not settle among Africa's burrowing insect hunters.",
+        "Field team: cross-check the branch associated with subterranean mammals."
+      ]
+    },
+    {
+      "family": "body",
+      "observation_text": "The body measurements place the adult below one metric tonne.",
+      "inference_text": "The measured frame favors the smaller-bodied candidates.",
+      "trait_category": "morphology",
+      "compare_tag": "comparison_form:not_trunked_giant",
+      "trait_phrase": "spiral horns",
+      "bonus_fact_text": "Broad, spreading hooves help it move across loose desert sand.",
+      "source": "https://nationalzoo.si.edu/animals/addax",
+      "review_status": "reviewed",
+      "hints": [
+        "The outline is large, but not towering.",
+        "No flexible nose structure shows in the body scan.",
+        "The weight sits on a lighter frame than the heaviest land mammals.",
+        "Field team: the limb pattern rules out a column-footed giant."
+      ]
+    },
+    {
+      "family": "behavior",
+      "observation_text": "The subject stays mobile and flees along an open route when disturbed.",
+      "inference_text": "The response favors candidates that escape through movement.",
+      "trait_category": "behavior",
+      "compare_tag": "comparison_behavior:not_defensive_curler",
+      "trait_phrase": "nomadic herds",
+      "bonus_fact_text": "Nomadic herds often travel during cooler hours and rest through intense daytime heat.",
+      "source": "https://animaldiversity.org/accounts/Addax_nasomaculatus/",
+      "review_status": "reviewed",
+      "hints": [
+        "When alarmed, the animal keeps its body open and mobile.",
+        "The defense response favors movement over folding inward.",
+        "No tight protective posture appears in the disturbance notes.",
+        "Field team: this subject does not turn its body into armor."
+      ]
+    },
+    {
+      "family": "habits",
+      "observation_text": "The feeding trace contains plants, fruit, flowers, or small invertebrate remains.",
+      "inference_text": "The meal favors candidates that forage on vegetation or small foods.",
+      "trait_category": "diet",
+      "compare_tag": "comparison_diet:not_large_prey_hunter",
+      "trait_phrase": "desert plants",
+      "bonus_fact_text": "Moisture from grasses, shrubs, and succulents can replace free drinking water.",
+      "source": "https://nationalzoo.si.edu/animals/addax",
+      "review_status": "reviewed",
+      "hints": [
+        "The meal site holds no sign of a heavy chase or kill.",
+        "Food traces point away from muscle and bone.",
+        "The feeding pattern leaves vegetation disturbed, not prey remains.",
+        "Field team: this diner is not tracking hoofed quarry."
+      ]
+    },
+    {
+      "family": "place",
+      "observation_text": "The location record belongs to a continental habitat range.",
+      "inference_text": "The map evidence favors candidates with mainland populations.",
+      "trait_category": "geography",
+      "compare_tag": "comparison_range:not_comoros_islands",
+      "trait_phrase": "Sahara range",
+      "bonus_fact_text": "Wild and restored populations now occupy only a small part of the species' former Saharan range.",
+      "source": "https://saharaconservation.org/sahel-and-sahara-fauna/addax/",
+      "review_status": "reviewed",
+      "hints": [
+        "The map signal belongs to a broad landmass, not a small island chain.",
+        "No ocean crossing is needed to reach this field site.",
+        "The range marker sits far from humid volcanic islands.",
+        "Field team: keep the search on continental terrain."
+      ]
+    }
+  ]
+}

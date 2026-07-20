@@ -50,6 +50,7 @@ export const ecoRunSessions = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     playerId: uuid('player_id').references(() => profiles.userId, { onDelete: 'set null' }),
+    createRequestId: uuid('create_request_id'),
     gameSessionId: uuid('game_session_id').references(() => playerGameSessions.id, { onDelete: 'set null' }),
     runStatus: text('run_status').notNull().default('active'),
     runSeed: bigint('run_seed', { mode: 'number' }),
@@ -76,6 +77,9 @@ export const ecoRunSessions = pgTable(
     ixEcoRunSessionsStatusStarted: index('ix_eco_run_sessions_status_started').on(table.runStatus, table.startedAt),
     ixEcoRunSessionsLocationKey: index('ix_eco_run_sessions_location_key').on(table.locationKey),
     ixEcoRunSessionsSelectedPoint: index('ix_eco_run_sessions_selected_point').using('gist', table.selectedPoint),
+    uxEcoRunSessionsPlayerCreateRequest: uniqueIndex('ux_eco_run_sessions_player_create_request')
+      .on(table.playerId, table.createRequestId)
+      .where(sql`${table.createRequestId} IS NOT NULL`),
   })
 );
 

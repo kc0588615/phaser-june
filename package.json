@@ -44,7 +44,8 @@
         "clean": "rm -rf .next dist public/cesium",
         "db:introspect": "drizzle-kit introspect",
         "seed:deduction": "node scripts/run-typescript.mjs scripts/seed-deduction.ts",
-        "seed:evidence": "node scripts/run-typescript.mjs scripts/seed-evidence.ts"
+        "seed:evidence": "node scripts/run-typescript.mjs scripts/seed-evidence.ts",
+        "seed:evidence-family": "node scripts/run-typescript.mjs scripts/seed-evidence-family.ts"
     },
     "dependencies": {
         "@clerk/nextjs": "^7.0.8",
@@ -65,6 +66,7 @@
         "clsx": "^2.1.1",
         "drizzle-orm": "^0.44.0",
         "lucide-react": "^0.525.0",
+        "maplibre-gl": "^5.19.0",
         "next": "^16.1.0",
         "phaser": "^3.90.0",
         "postgres": "^3.4.5",

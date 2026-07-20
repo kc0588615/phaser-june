@@ -10,13 +10,29 @@ export type RunPhase = 'idle' | 'briefing' | 'mystery' | 'complete';
 
 export interface EarnedObservation {
   ref: string;
-  method: import('@/expedition/domain').MethodType;
+  method?: import('@/expedition/domain').MethodType;
+  family?: import('@/expedition/evidenceFamilies').EvidenceFamily;
   observationText: string;
   inferenceText?: string;
   traitCategory?: import('@/db/schema/species').DeductionClueCategory;
   compareTag?: string;
   isSignature: boolean;
+  qualityTier?: import('@/expedition/evidenceQuality').EvidenceQualityTier;
+  actualEliminatedIds?: number[];
+  eliminationReasons?: Record<string, string>;
+  candidateTraitPhrases?: Record<string, string>;
+  traitPhrase?: string;
   issuedAtMs: number;
+}
+
+/** A candidate fact earned by an off-method board match. Client-only; not persisted. */
+export interface FieldNote {
+  nodeIndex: number;
+  speciesId: number;
+  speciesName: string;
+  categoryName: string;
+  icon: string;
+  text: string;
 }
 
 export interface InterpretationEvent {
@@ -28,6 +44,8 @@ export interface InterpretationEvent {
 }
 
 export interface CaseState {
+  version: 1 | 2 | 3;
+  mapView: import('@/expedition/mapView').ExpeditionMapView | null;
   /** Sub-state of phase 'mystery': board play, evidence interpretation, or the final guess. */
   stage: import('@/expedition/caseFlow').CaseStage;
   candidateIds: number[];
@@ -39,6 +57,28 @@ export interface CaseState {
   missedEvidenceNodeIndexes: number[];
   guessResult: 'correct' | 'wrong' | null;
   lastFeedback: import('@/lib/deductionEngine').ComparisonResult[] | null;
+  offeredMethods: [import('@/expedition/domain').MethodType, import('@/expedition/domain').MethodType] | null;
+  selectedMethods: Array<import('@/expedition/domain').MethodType | null>;
+  objectiveProgress: number;
+  objectiveTarget: number;
+  bestTargetMatchLength: number;
+  nodeOutcomes: Array<'met' | 'failed' | null>;
+  citedObservationRefs: string[];
+  fieldNotes: FieldNote[];
+  evidenceCharges: import('@/expedition/evidenceFamilies').EvidenceChargeState;
+  carriedCharges: import('@/expedition/evidenceFamilies').EvidenceChargeState;
+  offeredFamilies: import('@/expedition/evidenceFamilies').EvidenceFamily[];
+  selectedFamilies: import('@/expedition/evidenceFamilies').EvidenceFamily[];
+  travelEntry: string | null;
+  hintFeed: Array<{
+    id: string;
+    text: string;
+    kind: 'evidence' | 'cascade';
+    family?: import('@/expedition/evidenceFamilies').EvidenceFamily;
+  }>;
+  eliminationReasons: Record<string, string>;
+  familyTraits: Partial<Record<import('@/expedition/evidenceFamilies').EvidenceFamily, string>>;
+  candidateFamilyTraits: Record<string, Partial<Record<import('@/expedition/evidenceFamilies').EvidenceFamily, string>>>;
 }
 
 export interface ExpeditionData {
@@ -58,6 +98,7 @@ export interface ExpeditionData {
 }
 
 export interface RunState {
+  runId: string | null;
   phase: RunPhase;
   expedition: ExpeditionData | null;
   currentNodeIndex: number;

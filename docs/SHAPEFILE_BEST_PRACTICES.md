@@ -1,0 +1,358 @@
+# IUCN Shapefile Import Guide
+
+Current architecture: raw IUCN range shapefiles land in the `iucn` table with **source-owned field names**.
+Game/app data lives on the `species` table. They join via `species.iucn_id = iucn.id_no`.
+
+> The pre-2026-04 version of this doc (which described an app-shaped `icaa` table and the abandoned
+> taxa/taxon normalization schema) is archived at `docs/archive/SHAPEFILE_BEST_PRACTICES_pre_iucn.mdx`.
+
+---
+
+## Table of Contents
+
+1. [Architecture](#architecture)
+2. [Raw IUCN Field Map](#raw-iucn-field-map)
+3. [Import Pipeline](#import-pipeline)
+4. [Preflight Validation](#preflight-validation)
+5. [Merge to Production](#merge-to-production)
+6. [Post-Import Tasks](#post-import-tasks)
+
+---
+
+## Architecture
+
+```
+iucn (ogc_fid PK, id_no, sci_name, wkb_geometry, ...)
+  ← raw IUCN shapefile import; source-owned field names; geometry only
+  ← do NOT add app-authored columns here
+
+species (id PK, iucn_id, scientific_name, common_name, ...)
+  ← curated game/app table; stable FK target for all game tables
+  ← joins to iucn via: species.iucn_id = iucn.id_no
+
+game tables → FK → species.id (stable; survives shapefile reimport)
+```
+
+Spatial join pattern:
+```sql
+SELECT s.*, i.wkb_geometry
+FROM species s
+JOIN iucn i ON i.id_no = s.iucn_id::numeric
+WHERE ST_Contains(i.wkb_geometry, ST_SetSRID(ST_MakePoint($lon, $lat), 4326))
+```
+
+---
+
+## Raw IUCN Field Map
+
+These are the raw IUCN shapefile field names as they appear in the `iucn` DB table.
+Do not rename or reshape these — the table is source-owned.
+
+```text
+# Identifiers / Geometry
+ogc_fid        integer    PK (ogr2ogr import artifact)
+wkb_geometry   geometry   Range polygon(s), SRID 4326
+id_no          numeric    IUCN species ID — joins to species.iucn_id
+sci_name       text       Scientific name
+tax_comm       text       Taxonomic comment
+
+# Classification
+kingdom        text
+phylum         text
+class          text       (reserved word — quote in raw SQL: "class")
+order_         text       (trailing underscore avoids reserved word)
+family         text
+genus          text
+category       text       IUCN Red List category (e.g. EN, VU, CR)
+
+# Habitat flags
+marine         boolean
+terrestria     boolean    (truncated to 10 chars by shapefile format)
+freshwater     boolean
+island         text       Island names in current IUCN releases; do not coerce to boolean
+
+# Range metadata
+origin         numeric    Code: 1=Native, 2=Reintroduced, etc.
+presence       numeric    Code: 1=Extant, 2=Probably extant, etc.
+seasonal       numeric    Code: 1=Resident, 2=Breeding season, etc.
+
+# Attribution
+compiler       text
+yrcompiled     numeric    Year compiled
+citation       text
+source         text
+dist_comm      text       Distribution comment
+subspecies     text
+subpop         text
+legend         text
+
+# GIS metadata
+generalisd     numeric    1=generalised range, 0=detailed
+shape_leng     numeric    Computed by GIS
+shape_area     numeric    Computed by GIS
+```
+
+---
+
+## Import Pipeline
+
+Prefer GeoPackage (.gpkg) over Shapefile to avoid 10-char field-name limits.
+
+```
+Raw Shapefile → convert to GeoPackage → import to iucn_staging → validate → merge to iucn
+```
+
+### 1. Create staging table
+
+```sql
+DROP TABLE IF EXISTS iucn_staging;
+CREATE UNLOGGED TABLE iucn_staging (
+  id_no       numeric,
+  sci_name    text,
+  tax_comm    text,
+  kingdom     text,
+  phylum      text,
+  class       text,
+  order_      text,
+  family      text,
+  genus       text,
+  category    text,
+  marine      boolean,
+  terrestria  boolean,
+  freshwater  boolean,
+  island      text,
+  origin      numeric,
+  presence    numeric,
+  seasonal    numeric,
+  compiler    text,
+  yrcompiled  numeric,
+  citation    text,
+  source      text,
+  dist_comm   text,
+  subspecies  text,
+  subpop      text,
+  legend      text,
+  generalisd  numeric,
+  shape_leng  numeric,
+  shape_area  numeric,
+  wkb_geometry geometry(MultiPolygon, 4326)
+);
+```
+
+### 2. Import with ogr2ogr
+
+```bash
+psql -c "TRUNCATE iucn_staging;" "$DATABASE_URL"
+
+ogr2ogr -f PostgreSQL \
+  "PG:$DATABASE_URL" \
+  your_iucn_export.gpkg \
+  -nln iucn_staging \
+  -append \
+  -nlt PROMOTE_TO_MULTI \
+  -lco GEOMETRY_NAME=wkb_geometry
+```
+
+---
+
+## Preflight Validation
+
+Run before merging. Gate 1 must pass; 2–4 should pass; 5 is informational.
+
+```sql
+-- 1. NULL id_no (will break join to species) — MUST PASS
+SELECT COUNT(*) AS null_id_no FROM iucn_staging WHERE id_no IS NULL;
+
+-- 2. Invalid geometry — SHOULD PASS
+SELECT COUNT(*) AS invalid FROM iucn_staging WHERE NOT ST_IsValid(wkb_geometry);
+
+-- 3. Geometry type (should be MULTIPOLYGON) — SHOULD PASS
+SELECT GeometryType(wkb_geometry), COUNT(*) FROM iucn_staging GROUP BY 1;
+
+-- 4. SRID (should be 4326) — SHOULD PASS
+SELECT DISTINCT ST_SRID(wkb_geometry) FROM iucn_staging;
+
+-- 5. Duplicate id_no in staging — INFORMATIONAL (expected; IUCN has multiple polygons per species)
+SELECT id_no, COUNT(*) as row_count
+FROM iucn_staging
+GROUP BY id_no HAVING COUNT(*) > 1
+ORDER BY row_count DESC;
+
+-- 6. Coverage: staging id_no values not yet in species table (new species to add)
+SELECT COUNT(*) AS new_species_count
+FROM (SELECT DISTINCT id_no FROM iucn_staging) s
+LEFT JOIN species sp ON sp.iucn_id = s.id_no::bigint
+WHERE sp.id IS NULL;
+```
+
+Fix invalid geometry before merge:
+
+```sql
+UPDATE iucn_staging
+SET wkb_geometry = ST_Multi(ST_CollectionExtract(ST_MakeValid(wkb_geometry), 3))
+WHERE NOT ST_IsValid(wkb_geometry);
+```
+
+---
+
+## Merge to Production
+
+`iucn` preserves **all raw range rows** — multiple rows per `id_no` are expected (subspecies,
+seasonal ranges, disjoint polygons). Do not use `id_no` as a unique merge key.
+
+Game database FKs point to `species.id`, not `iucn.ogc_fid`, so `ogc_fid` can safely be
+reassigned on reimport. Do not store or migrate client state by `ogc_fid`; it is an
+import-owned row id and can point to a different species after a full replace.
+
+The two safe merge strategies are:
+
+### Option A: Full replace (recommended for full shapefile reimports)
+
+Fastest and simplest. Reassigns `ogc_fid` but that's safe since no game FKs depend on it.
+
+```sql
+BEGIN;
+TRUNCATE iucn;
+INSERT INTO iucn (
+  id_no, sci_name, tax_comm, kingdom, phylum, class, order_, family, genus,
+  category, marine, terrestria, freshwater, island,
+  origin, presence, seasonal, compiler, yrcompiled, citation, source,
+  dist_comm, subspecies, subpop, legend, generalisd, shape_leng, shape_area, wkb_geometry
+)
+SELECT
+  s.id_no, s.sci_name, s.tax_comm, s.kingdom, s.phylum, s.class, s.order_, s.family, s.genus,
+  s.category, s.marine, s.terrestria, s.freshwater, s.island,
+  s.origin, s.presence, s.seasonal, s.compiler, s.yrcompiled, s.citation, s.source,
+  s.dist_comm, s.subspecies, s.subpop, s.legend, s.generalisd, s.shape_leng, s.shape_area, s.wkb_geometry
+FROM iucn_staging s;
+COMMIT;
+```
+
+### Option B: Targeted replace by id_no (for partial updates)
+
+Delete all existing rows for each id_no found in staging, then insert the new rows.
+Preserves `ogc_fid` values for species NOT in the update set.
+
+```sql
+BEGIN;
+DELETE FROM iucn
+WHERE id_no IN (SELECT DISTINCT id_no FROM iucn_staging);
+
+INSERT INTO iucn (
+  id_no, sci_name, tax_comm, kingdom, phylum, class, order_, family, genus,
+  category, marine, terrestria, freshwater, island,
+  origin, presence, seasonal, compiler, yrcompiled, citation, source,
+  dist_comm, subspecies, subpop, legend, generalisd, shape_leng, shape_area, wkb_geometry
+)
+SELECT
+  s.id_no, s.sci_name, s.tax_comm, s.kingdom, s.phylum, s.class, s.order_, s.family, s.genus,
+  s.category, s.marine, s.terrestria, s.freshwater, s.island,
+  s.origin, s.presence, s.seasonal, s.compiler, s.yrcompiled, s.citation, s.source,
+  s.dist_comm, s.subspecies, s.subpop, s.legend, s.generalisd, s.shape_leng, s.shape_area, s.wkb_geometry
+FROM iucn_staging s;
+COMMIT;
+```
+
+### Sync species table after merge
+
+`species` has one row per `id_no`. After updating `iucn`, sync taxonomy and habitat
+flags by grouping on `id_no`. Use `BOOL_OR` for flags because IUCN may have multiple
+range rows for the same species and any row can carry a true habitat flag:
+
+```sql
+UPDATE species s SET
+  scientific_name = sub.sci_name,
+  kingdom = sub.kingdom,
+  phylum  = sub.phylum,
+  class   = sub.class,
+  taxon_order = sub.order_,
+  family  = sub.family,
+  genus   = sub.genus,
+  marine      = COALESCE(sub.marine, false),
+  terrestrial = COALESCE(sub.terrestria, false),
+  freshwater  = COALESCE(sub.freshwater, false)
+FROM (
+  SELECT
+    id_no,
+    MAX(sci_name) AS sci_name,
+    MAX(kingdom) AS kingdom,
+    MAX(phylum) AS phylum,
+    MAX(class) AS class,
+    MAX(order_) AS order_,
+    MAX(family) AS family,
+    MAX(genus) AS genus,
+    BOOL_OR(COALESCE(marine, false)) AS marine,
+    BOOL_OR(COALESCE(terrestria, false)) AS terrestria,
+    BOOL_OR(COALESCE(freshwater, false)) AS freshwater
+  FROM iucn
+  WHERE id_no IS NOT NULL
+  GROUP BY id_no
+) sub
+WHERE sub.id_no = s.iucn_id::numeric;
+```
+
+For newly imported `id_no` values, seed minimal `species` rows before testing map
+clicks. Spatial APIs join `species` to `iucn`, so raw `iucn` polygons alone are not
+returned by `/api/species/in-radius` or `/api/species/closest`.
+
+```sql
+INSERT INTO species (
+  iucn_id, scientific_name, common_name,
+  kingdom, phylum, class, taxon_order, family, genus,
+  conservation_code, taxonomic_comment, distribution_comment,
+  marine, terrestrial, freshwater
+)
+SELECT
+  i.id_no::bigint,
+  MAX(i.sci_name),
+  MAX(i.sci_name), -- raw IUCN has no common_name; enrich later
+  MAX(i.kingdom), MAX(i.phylum), MAX(i.class), MAX(i.order_), MAX(i.family), MAX(i.genus),
+  MAX(i.category), MAX(i.tax_comm), MAX(i.dist_comm),
+  COALESCE(BOOL_OR(i.marine), false),
+  COALESCE(BOOL_OR(i.terrestria), false),
+  COALESCE(BOOL_OR(i.freshwater), false)
+FROM iucn i
+WHERE i.id_no IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM species s WHERE s.iucn_id = i.id_no::bigint
+  )
+GROUP BY i.id_no
+ON CONFLICT (iucn_id) DO NOTHING;
+```
+
+---
+
+## Post-Import Tasks
+
+### FK integrity check
+
+Game tables FK to `species.id`, not `iucn.ogc_fid`. Verify species coverage:
+
+```sql
+-- Species in game tables but missing from iucn
+SELECT s.id, s.scientific_name
+FROM species s
+LEFT JOIN iucn i ON i.id_no = s.iucn_id::numeric
+WHERE i.ogc_fid IS NULL;
+```
+
+### Re-index
+
+```sql
+CREATE INDEX IF NOT EXISTS ix_iucn_wkb_geometry ON iucn USING GIST(wkb_geometry);
+ANALYZE iucn;
+```
+
+### Cleanup
+
+```sql
+DROP TABLE IF EXISTS iucn_staging;
+```
+
+### Drizzle re-introspection
+
+If the `iucn` table schema changed (new columns, type changes):
+
+```bash
+npm run db:introspect
+```

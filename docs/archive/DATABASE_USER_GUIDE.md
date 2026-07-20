@@ -1,0 +1,838 @@
+# Database User Guide
+
+> **OUTDATED — architecture superseded (2026-04-22)**
+> This guide describes the old `icaa_view` / taxa-table normalization approach, which has been
+> removed. The current architecture uses:
+> - `iucn` — raw IUCN range shapefile table (source-owned field names: id_no, sci_name, etc.)
+> - `species` — curated game/app table (stable FK target for all game tables)
+> - All game FKs point to `species.id`; spatial joins use `species.iucn_id = iucn.id_no`
+>
+> See `docs/SPECIES_TABLE_SIMPLIFICATION_PLAN.md` for the current architecture and
+> `docs/SHAPEFILE_BEST_PRACTICES.mdx` for the ETL/import guide.
+
+## Overview
+
+This guide provides historical documentation for the database architecture used in the Species Discovery Game. It focuses on the (now-removed) `icaa_view` compatibility view and the normalized biodiversity schema. Kept for historical reference; do not follow for new development.
+
+## Current Database Architecture
+
+### Technology Stack
+- **Database**: PostgreSQL 15+ (Hetzner VPS) with PostGIS extension
+- **Connection**: Drizzle ORM (postgres.js). Prisma is no longer used.
+- **Spatial Features**: PostGIS for geographic queries
+- **Real-time**: None (Standard REST/Server Actions)
+
+See `docs/SHAPEFILE_BEST_PRACTICES.mdx` for pre-import guidance on spatial data fields and types.
+
+### Database Tables
+
+#### 1. `icaa_view` (Compatibility View - Primary Read Path)
+The app reads species data through `icaa_view`, which exposes legacy columns while sourcing from the normalized tables (`taxa`, `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`, etc.).
+
+- Preserves existing column names used by the app
+- Backed by normalized tables for multi-source support
+- Required at runtime (startup check fails fast if missing via `ensureIcaaViewReady` in `src/db/index.ts`)
+
+See `docs/NORMALIZED_BIODIVERSITY_SCHEMA.md` for the full model and backfill rules.
+
+#### 2. Normalized Biodiversity Tables (Strict 3NF)
+Core tables for taxonomy, profiles, external IDs, and multi-value fields:
+
+- `taxa`, `taxon_names`, `taxon_name_usages`
+- `source_datasets`, `taxon_external_ids`
+- `conservation_statuses`, `taxon_conservation_assessments`
+- `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`
+- `taxon_common_names`
+- `taxon_behaviors`, `taxon_key_facts`, `taxon_life_descriptions`
+- `taxon_habitat_tags`, `taxon_threats`, `taxon_diet_items`
+
+These are created by migrations 004/005/006 and populated via the backfill script.
+
+#### 3. `icaa` Table (Import-Owned Species Data)
+Raw shapefile import table. Do not query directly in app code; use `icaa_view`.
+It remains the ingestion source for backfills and external data refreshes.
+
+**Key Identifiers:**
+- `ogc_fid` (number) - Primary key, unique identifier for each species
+- `species_id` (number) - IUCN species ID (external)
+
+#### 4. `high_scores` Table
+- `id` (uuid) - Primary key
+- `player_id` (uuid, nullable) - Optional FK to `profiles.user_id` for authenticated players
+- `username` (string) - Player name (legacy/guest-friendly)
+- `score` (number) - Game score
+- `created_at` (timestamptz) - Score submission time
+
+**Note:** `player_id` is optional so legacy anonymous scores remain valid.
+
+## Maintenance Tasks
+
+After applying schema migrations on an existing database, run the stats backfill once:
+
+```bash
+npx tsx scripts/backfill-player-stats.ts
+```
+
+## Conventions and Best Practices
+
+These conventions apply to app-owned tables and new schema changes. Import-owned tables
+(for example, `icaa` and `oneearth_bioregion`) may not comply; prefer views or staged
+transforms instead of renaming or retyping import columns.
+
+### Naming
+- Table names: lowercase, snake_case, plural (users, order_items)
+- Column names: lowercase, snake_case, singular (email, status)
+- Primary keys: `id` with `bigint GENERATED ALWAYS AS IDENTITY` (use UUID only for externally sourced IDs)
+- Foreign keys: `singular_table_id` (user_id)
+- Timestamps: `_at` suffix with `timestamptz`
+- Dates: `_on` suffix
+- Booleans: `is_` or `has_` prefix
+
+### Data Types
+- Use `text` for strings; use `CHECK` constraints if length matters
+- Use `timestamptz` for timestamps
+- Use `numeric` or integer cents for money; avoid `money`
+- Use `jsonb` for JSON data
+- Avoid `varchar(255)` or other arbitrary limits; use `text` unless a strict business rule requires a length check
+- Avoid `char(n)` (fixed-width, padded, usually slower)
+Rationale: Postgres stores `text`/`varchar` the same (varlena + TOAST), so length limits only add checks and schema debt.
+
+### Constraints and Indexes (Named)
+- Indexes: `ix_tablename_columns` (example: ix_users_email)
+- Foreign keys: `fk_tablename_reference` (example: fk_orders_user_id)
+- Unique constraints: `uq_tablename_columns` (example: uq_users_email)
+- Check constraints: `ck_tablename_rule` (example: ck_users_age_positive)
+
+### Querying
+- Always alias tables in raw SQL
+- Avoid `NOT IN (...)` with nullable columns; use `NOT EXISTS` or `LEFT JOIN ... IS NULL`
+- Avoid `BETWEEN` for timestamps; use `>=` and `<` bounds
+
+### Example: Compliant Tables
+```sql
+CREATE TABLE users (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT uq_users_email UNIQUE (email),
+  CONSTRAINT ck_users_email_valid CHECK (length(email) > 3)
+);
+
+CREATE TABLE orders (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id bigint NOT NULL,
+  total numeric(10, 2) NOT NULL,
+  placed_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT fk_orders_user_id
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE INDEX ix_orders_user_id ON orders (user_id);
+```
+
+## ICAA View Field Mappings
+
+### Clue Category Dependencies
+
+The clue system directly depends on specific database fields exposed by `icaa_view`. Here's the complete mapping:
+
+#### 1. Classification (Red Gems) 🧬
+**Database Fields Used:**
+- `taxonomic_comment` - Taxonomic comments/context (revealed first)
+- `phylum` - Phylum level classification
+- `class` - Class level classification
+- `taxon_order` - Order level classification
+- `family` - Family level classification
+- `genus` - Genus level classification
+- `scientific_name` - Full scientific name (revealed last)
+
+**Clue Generation Logic:**
+Progressive revelation from least to most specific:
+```typescript
+// Reveals taxonomy step by step
+'taxonomic_comment' → 'phylum' → 'class' → 'taxon_order' → 'family' → 'genus' → 'scientific_name'
+```
+
+#### 2. Habitat (Green Gems) 🌳
+**Database Fields Used:**
+- `aquatic` (boolean) - Lives in water
+- `freshwater` (boolean) - Freshwater habitat
+- `terrestrial` (boolean) - Terrestrial habitat
+- `marine` (boolean) - Marine habitat
+
+**Special Case:** Green gems primarily use raster habitat data from TiTiler service for detailed habitat percentages.
+
+#### 3. Geographic & Habitat (Blue Gems) 🗺️
+**Database Fields Used (progressive):**
+- `geographic_description` - Geographic range description
+- `distribution_comment` - Distribution details
+- `habitat_description` - Habitat description
+- `habitat_tags` - Habitat tags/keywords
+
+#### 4. Morphology (Orange Gems) 🐆
+**Database Fields Used (progressive):**
+- `pattern` - Pattern description
+- `color_primary` - Primary color
+- `color_secondary` - Secondary color
+- `shape_description` - Shape description
+- `size_max_cm` (number) - Maximum size in centimeters
+- `weight_kg` (number) - Weight in kilograms
+
+#### 5. Behavior & Diet (Yellow Gems) 💨
+**Database Fields Used (progressive):**
+- `behavior_1` - Primary behavior description
+- `behavior_2` - Secondary behavior description
+- `diet_type` - Type of diet
+- `diet_prey` - Prey species
+- `diet_flora` - Plant diet
+
+#### 6. Life Cycle (Black Gems) ⏳
+**Database Fields Used (progressive):**
+- `life_description_1` - Primary life cycle description
+- `life_description_2` - Secondary life cycle description
+- `lifespan` - Lifespan information (fallback)
+- `maturity` - Age at maturity (fallback)
+- `reproduction_type` - Reproduction type (fallback)
+- `clutch_size` - Clutch/litter size (fallback)
+
+#### 7. Conservation (White Gems) 🛡️
+**Database Fields Used (progressive):**
+- `conservation_text` - Conservation status description
+- `threats` - Known threats
+- `conservation_code` - IUCN code (fallback)
+- `category` - Conservation category (fallback)
+
+#### 8. Key Facts (Purple Gems) 🔮
+**Database Fields Used (progressive):**
+- `key_fact_1` - Primary key fact
+- `key_fact_2` - Secondary key fact
+- `key_fact_3` - Tertiary key fact
+
+## Files Affected by Database Changes
+
+When modifying the biodiversity schema or `icaa_view`, the following files need to be updated:
+
+### 1. Type Definitions
+**File:** `/src/types/database.ts`
+- Update the `Species` interface with new/modified fields
+- Ensure TypeScript types match PostgreSQL column types
+
+### 2. Clue Configuration
+**File:** `/src/game/clueConfig.ts`
+- Update `getClue()` functions if field names change
+- Add logic for new fields in appropriate categories
+- Modify clue generation logic as needed
+
+### 3. Species Service
+**File:** `/src/lib/speciesService.ts`
+- Update queries if selecting specific fields
+- Modify any field-specific logic
+
+### 4. Database Functions (PostgreSQL)
+- `get_species_at_point` - Point-based spatial queries (deprecated in favor of radius queries)
+- `get_species_in_radius` - Circle intersection queries for species discovery
+- `/api/species/closest` - Finds nearest habitat polygon when no species found (PostGIS `<->`)
+
+**Deprecated:**
+- `get_habitat_distribution_10km` - **Replaced by TiTiler COG statistics** (Dec 2025)
+
+### 5. External Services
+
+#### TiTiler (Habitat Raster Analysis)
+Habitat distribution within a 10km bounding box of clicked points uses TiTiler for categorical statistics on Cloud Optimized GeoTIFF (COG).
+
+**Configuration (`.env.local`):**
+```bash
+NEXT_PUBLIC_TITILER_BASE_URL=https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com
+NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif
+```
+
+**Implementation:** `src/lib/speciesService.ts` → `getRasterHabitatDistribution()`
+
+**Flow:**
+1. User clicks map → lon/lat captured
+2. Create 10km bounding box GeoJSON (`createBboxGeoJSON()`)
+3. POST to `/cog/statistics?categorical=true&max_size=512` with bbox geometry
+4. Parse histogram: `[[counts], [values]]` format (numpy style)
+5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with database `habitat_colormap` fallback)
+6. Return `{habitat_type, percentage}[]` sorted by percentage descending
+
+**Visual sync:** CesiumMap shows red rectangle (`RectangleGraphics`) matching exact bbox sent to TiTiler.
+
+**Key files:**
+- `src/lib/speciesService.ts` - TiTiler query logic, colormap lookup
+- `src/components/CesiumMap.tsx` - Visual bbox rendering, click handling
+- `src/components/HabitatLegend.tsx` - Habitat type display with color chips
+- `src/config/habitatColors.ts` - Habitat label → color mapping
+
+**Benefits vs. legacy raster RPC:**
+- No `habitat_raster` table storage required
+- Direct COG access from S3
+- Serverless TiTiler scales independently
+- Raster updates = swap COG file (no DB migration)
+
+**Related Table:**
+- `habitat_colormap` - Maps integer habitat codes to labels (value → label)
+
+**See also:** [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) for full migration details
+
+## Guidelines for Database Changes
+
+Follow the conventions above for app-owned tables. Treat import-owned tables as
+read-only; use views or staged transforms if you need canonical naming or types.
+
+### Schema Change Checklist
+
+Before you ship a schema change:
+- Confirm naming: plural tables, singular columns, `id`, `_at`/`_on`, `is_`/`has_`
+- Confirm types: `timestamptz`, `text`, `jsonb`, `numeric` or integer cents for money
+- Name constraints and indexes with `ix_`/`uq_`/`fk_`/`ck_` prefixes
+- Add indexes for FKs and hot query paths (especially leaderboard or radius queries)
+- Update types and usage: `src/db/types.ts`, `src/types/database.ts`, `src/game/clueConfig.ts`
+- Refresh introspection: `npm run db:introspect`
+
+### Adding New Species
+
+1. **Required Fields:**
+   - `common_name` or `scientific_name` (at least one)
+   - `wkb_geometry` (for location-based queries)
+   - At least one field per clue category for complete gameplay
+
+2. **Best Practices:**
+   - Populate as many fields as possible
+   - Use consistent formatting for taxonomic names
+   - Ensure geometry is valid PostGIS format
+   - Test spatial queries after adding
+
+3. **SQL Example (import path):**
+```sql
+INSERT INTO icaa (
+  common_name, scientific_name, genus, family,
+  habitat_description, geographic_description, pattern,
+  diet_type, life_description_1, conservation_text, key_fact_1,
+  wkb_geometry
+) VALUES (
+  'Example Species', 'Examplus specius', 'Examplus', 'Examplidae',
+  'Forest habitats', 'Found in North America', 'Spotted pattern',
+  'Omnivore', 'Lives 10-15 years', 'Least Concern', 'Unique feature',
+  ST_GeomFromText('POLYGON((...))', 4326)
+);
+```
+
+**After insert:** run the normalization backfill (migration `005_normalized_biodiversity_backfill.sql`)
+or a targeted backfill to populate the normalized tables and `icaa_view`.
+
+### Modifying Clue Fields
+
+1. **Adding New Fields:**
+   - Add field to `Species` interface in `database.ts`
+   - Determine appropriate clue category
+   - Update corresponding `getClue()` function in `clueConfig.ts`
+   - Run TypeScript checks: `npm run typecheck`
+
+2. **Renaming Fields:**
+   - Update field name in `Species` interface
+   - Find/replace all usages in `clueConfig.ts`
+   - Update any direct field references in components
+   - Test clue generation thoroughly
+
+3. **Removing Fields:**
+   - Check if field is used in `clueConfig.ts`
+   - Ensure clue category has alternative fields
+   - Remove from `Species` interface
+   - Test that clues still generate properly
+
+### Example: Adding a New Field
+
+To add a `migration_pattern` field:
+
+1. **Database Migration:**
+```sql
+-- Import column (shapefile source)
+ALTER TABLE icaa ADD COLUMN migration_pattern TEXT;
+
+-- Normalized storage (preferred for reads)
+ALTER TABLE taxon_profiles ADD COLUMN migration_pattern TEXT;
+```
+
+2. **Update Type Definition:**
+```typescript
+// src/types/database.ts
+export interface Species {
+  // ... existing fields
+  migration_pattern?: string;
+}
+```
+
+3. **Update Backfill + View:**
+   - Add to `005_normalized_biodiversity_backfill.sql` (map icaa → taxon_profiles)
+   - Add to `006_normalized_biodiversity_views.sql` so `icaa_view` exposes it
+
+4. **Update Clue Logic:**
+```typescript
+// src/game/clueConfig.ts
+[GemCategory.BEHAVIOR]: {
+  getClue: (species: Species) => {
+    // ... existing logic
+    if (species.migration_pattern) {
+      behaviorInfo.push(`Migration: ${species.migration_pattern}`);
+    }
+    // ... rest of function
+  }
+}
+```
+
+## Spatial Queries and PostGIS
+
+### Circle-Based Species Discovery (Current Implementation)
+
+The game uses **circle intersection queries** instead of point-based queries to find species habitats. This allows players to discover species whose habitats intersect with the 10km search radius, making gameplay more intuitive.
+
+#### `get_species_in_radius` Function
+```sql
+CREATE OR REPLACE FUNCTION public.get_species_in_radius(
+  lon double precision,
+  lat double precision,
+  radius_m double precision
+)
+RETURNS TABLE(
+  ogc_fid integer,
+  common_name text,
+  scientific_name text,
+  -- ... all other fields ...
+  wkb_geometry json  -- Returns GeoJSON for direct use in frontend
+)
+LANGUAGE sql STABLE PARALLEL SAFE AS
+$$
+  WITH center AS (
+    SELECT ST_SetSRID(ST_Point(lon, lat), 4326)::geography AS g
+  ),
+  circle AS (
+    SELECT ST_Buffer((SELECT g FROM center), radius_m)::geometry AS geom
+  )
+  SELECT
+    s.ogc_fid,
+    s.common_name,
+    s.scientific_name,
+    -- ... other fields ...
+    ST_AsGeoJSON(s.wkb_geometry)::json as wkb_geometry  -- Key: Returns GeoJSON
+  FROM public.icaa_view s
+  JOIN circle c
+    ON ST_Intersects(s.wkb_geometry, c.geom);
+$$;
+```
+
+#### Key Design Decisions
+
+1. **Geography vs Geometry**: Uses PostGIS `geography` type for accurate meter-based buffering
+2. **GeoJSON Output**: Returns `ST_AsGeoJSON()` instead of WKT text for direct Cesium consumption
+3. **Intersection Logic**: Uses `ST_Intersects()` instead of `ST_Contains()` for broader discovery
+
+### Visual Highlighting System
+
+#### Red Highlighting (Species Found)
+When species are discovered, their **complete MULTIPOLYGON geometries** are highlighted in red:
+
+```typescript
+// Frontend processing (CesiumMap.tsx)
+for (const species of speciesResult.species) {
+  if (species.wkb_geometry) {
+    const feature = {
+      type: 'Feature',
+      properties: { ogc_fid: species.ogc_fid, common_name: species.common_name },
+      geometry: species.wkb_geometry  // Direct GeoJSON from database
+    };
+    features.push(feature);
+  }
+}
+
+// Load into Cesium as red polygons
+await redDataSource.load({ type: 'FeatureCollection', features });
+```
+
+#### Blue Highlighting (No Species Found)
+Uses the `/api/species/closest` API route, which returns GeoJSON directly:
+
+```sql
+-- API route uses ST_AsGeoJSON for geometry
+SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa_view ...
+```
+
+### Geometry Data Flow
+
+```
+┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
+│   PostGIS       │    │  Next.js API + Drizzle│   │     Cesium      │
+│   MULTIPOLYGON  │ ─→ │  ST_AsGeoJSON (json) │ ─→ │  GeoJsonDataSource
+│   (wkb_geometry)│    │  /api/species/*      │    │  Red/Blue Polygons
+└─────────────────┘    └──────────────────────┘    └─────────────────┘
+```
+
+**Critical**: The geometry must be returned as **GeoJSON** (not WKT) to preserve complete MULTIPOLYGON structures for Cesium rendering.
+
+### Performance Optimizations
+
+#### Spatial Indexes
+```sql
+-- Essential for spatial query performance
+-- Use ix_ prefix for new indexes (legacy names may differ)
+CREATE INDEX IF NOT EXISTS ix_taxon_ranges_wkb_geometry
+  ON public.taxon_ranges
+  USING gist (wkb_geometry);
+```
+
+#### Query Patterns
+- **10km radius**: Matches the visual search circles on the map
+- **Geography buffering**: Accurate meter-based distance calculations
+- **Parallel safe**: Functions can run in parallel for better performance
+
+### Legacy Implementation (Deprecated)
+
+#### Point-Based Queries
+```sql
+-- Old approach - only found species if click was exactly inside polygon
+CREATE OR REPLACE FUNCTION get_species_at_point(lon float, lat float)
+RETURNS SETOF icaa_view AS $$
+BEGIN
+  RETURN QUERY
+  SELECT * FROM icaa_view
+  WHERE ST_Contains(wkb_geometry, ST_SetSRID(ST_MakePoint(lon, lat), 4326));
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Why Circle Queries Are Better:**
+- More forgiving for players (intersects 10km radius vs exact point)
+- Matches visual search area shown on map
+- Discovers species in nearby habitats, not just at exact click location
+
+### Frontend Integration Notes
+
+#### Species Service
+```typescript
+// src/lib/speciesService.ts
+export async function getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number) {
+  const response = await fetch(
+    `/api/species/in-radius?lon=${longitude}&lat=${latitude}&radius=${radiusMeters}`
+  );
+
+  if (!response.ok) {
+    return { species: [], count: 0 };
+  }
+
+  const data = await response.json();
+  return {
+    species: data.species || [],
+    count: data.count || 0
+  };
+}
+```
+
+#### Map Click Handler
+```typescript
+// CesiumMap.tsx - Uses 10km radius constant
+const SPECIES_RADIUS_METERS = 10000.0;
+
+const [speciesResult, rasterResult] = await Promise.all([
+  speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
+  speciesService.getRasterHabitatDistribution(longitude, latitude)
+]);
+```
+
+### Troubleshooting Spatial Issues
+
+#### Common Problems
+
+1. **Polygons Not Appearing**
+   - Check if function returns GeoJSON (`ST_AsGeoJSON`) not WKT (`ST_AsText`)
+   - Verify geometry field name matches frontend expectations
+
+2. **Only Partial Polygons Show**
+   - Ensure WKT parser handles full MULTIPOLYGON, not just first ring
+   - Use GeoJSON directly to preserve complete geometry
+
+3. **No Species Found**
+   - Verify spatial index exists: `\d+ taxon_ranges` should show GIST index
+   - Check radius parameter (10000 = 10km)
+   - Confirm SRID 4326 is used consistently
+
+#### Debugging Queries
+```sql
+-- Test radius query manually
+SELECT ogc_fid, common_name, ST_Area(wkb_geometry) as area_sqm
+FROM public.get_species_in_radius(-80.0, 25.0, 10000.0);
+
+-- Check geometry validity
+SELECT ogc_fid, ST_IsValid(wkb_geometry), ST_GeometryType(wkb_geometry)
+FROM icaa_view
+WHERE ogc_fid = 23;
+```
+
+## Cesium Polygon Rendering
+
+### Visual Highlighting Implementation
+
+The application uses Cesium's `GeoJsonDataSource` to render species habitat polygons with visual highlighting. Understanding the rendering system is crucial for maintaining proper visualization.
+
+#### Polygon Highlighting Types
+
+1. **Red Highlighting** - Species found at location
+2. **Blue (Cyan) Highlighting** - Closest habitat when no species found
+
+#### Cesium Rendering Pipeline
+
+```typescript
+// Load GeoJSON directly from database
+const redDataSource = new GeoJsonDataSource('species-hit-highlight');
+await redDataSource.load({
+  type: 'FeatureCollection',
+  features: geoJsonFeatures  // Direct from ST_AsGeoJSON()
+});
+
+// Style polygons with proper depth handling
+redDataSource.entities.values.forEach(entity => {
+  if (entity.polygon) {
+    entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+    entity.polygon.outline = new ConstantProperty(true);
+    entity.polygon.outlineColor = new ConstantProperty(CesiumColor.RED);
+    entity.polygon.outlineWidth = new ConstantProperty(2);
+    
+    // Critical for overlapping polygons
+    entity.polygon.height = new ConstantProperty(1.0);
+    entity.polygon.extrudedHeight = new ConstantProperty(2.0);
+    entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+    entity.polygon.zIndex = new ConstantProperty(100);
+  }
+});
+```
+
+### Overlapping Polygon Issues
+
+#### Problem: Brazil Rendering Bug
+
+**Symptoms:**
+- Polygon boundaries appear but fill color doesn't render
+- Only outlines visible instead of solid color highlighting
+- Occurs specifically in areas with overlapping habitat polygons
+
+**Root Cause:**
+Cesium requires explicit z-index and height properties for proper depth sorting when polygons overlap. Without these properties:
+
+1. **Depth sorting conflicts** - Cesium can't determine rendering order
+2. **Transparency blending issues** - Multiple overlapping transparent materials cause artifacts
+3. **Z-fighting** - Polygons at same height level compete for pixels
+
+#### Solution: Explicit Depth Control
+
+**Implementation Pattern:**
+```typescript
+// Red polygons (species found) - Higher priority
+entity.polygon.height = new ConstantProperty(1.0);           // Slightly elevated
+entity.polygon.extrudedHeight = new ConstantProperty(2.0);   // Small extrusion
+entity.polygon.zIndex = new ConstantProperty(100);           // High render priority
+entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+
+// Blue polygons (closest habitat) - Lower priority  
+entity.polygon.height = new ConstantProperty(0.5);           // Lower elevation
+entity.polygon.extrudedHeight = new ConstantProperty(1.5);   // Smaller extrusion
+entity.polygon.zIndex = new ConstantProperty(50);            // Lower render priority
+```
+
+**Key Properties:**
+
+1. **`height`** - Base elevation above ground
+2. **`extrudedHeight`** - Creates slight 3D effect for visibility
+3. **`zIndex`** - Explicit rendering order (higher = on top)
+4. **`heightReference`** - Ensures proper ground clamping
+
+#### File Location
+**Primary Implementation:** `src/components/CesiumMap.tsx`
+- Lines 324-338: Red polygon styling (species found)
+- Lines 393-406: Blue polygon styling (closest habitat)
+
+### Cesium Rendering Best Practices
+
+#### 1. Z-Index Hierarchy
+
+Establish clear rendering order:
+```typescript
+// Suggested z-index values
+const Z_INDEX = {
+  BASE_IMAGERY: 0,           // TiTiler habitat raster
+  CLOSEST_HABITAT: 50,       // Blue highlight
+  SPECIES_HIGHLIGHT: 100,    // Red highlight
+  QUERY_CIRCLES: 150,        // Search radius indicators
+  UI_ELEMENTS: 200           // Click markers, labels
+};
+```
+
+#### 2. Height Differentiation
+
+Use subtle height differences to prevent z-fighting:
+```typescript
+const POLYGON_HEIGHTS = {
+  CLOSEST_HABITAT: 0.5,      // Just above ground
+  SPECIES_HIGHLIGHT: 1.0,    // Higher than closest habitat
+  EXTRUSION_HEIGHT_DIFF: 0.5 // Small extrusion for 3D effect
+};
+```
+
+#### 3. Alpha Values for Overlaps
+
+Balance visibility and transparency:
+```typescript
+const ALPHA_VALUES = {
+  SPECIES_HIGHLIGHT: 0.5,    // Semi-transparent red
+  CLOSEST_HABITAT: 0.7,      // More opaque blue
+  OUTLINE: 1.0               // Fully opaque outlines
+};
+```
+
+### Troubleshooting Polygon Rendering
+
+#### Issue: Fill Color Not Appearing
+
+**Diagnosis Steps:**
+1. Check browser console for Cesium errors
+2. Verify GeoJSON geometry is valid
+3. Confirm z-index and height properties are set
+4. Test with single polygon (non-overlapping area)
+
+**Common Fixes:**
+```typescript
+// Ensure all required properties are set
+entity.polygon.material = new ColorMaterialProperty(color);
+entity.polygon.height = new ConstantProperty(heightValue);
+entity.polygon.zIndex = new ConstantProperty(zIndexValue);
+entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+```
+
+#### Issue: Polygons Flickering
+
+**Cause:** Z-fighting between polygons at same height
+**Solution:** Use different height values for different polygon types
+
+#### Issue: Outlines Only, No Fill
+
+**Cause:** Missing or incorrect material property
+**Solution:** Verify `ColorMaterialProperty` is properly constructed:
+```typescript
+// Correct
+entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+
+// Incorrect - may cause rendering issues
+entity.polygon.material = CesiumColor.RED; // Wrong type
+```
+
+### Performance Considerations
+
+#### Polygon Count Optimization
+
+**Current Limits:**
+- Red highlighting: All species in 10km radius (typically 1-20 polygons)
+- Blue highlighting: Single closest habitat polygon
+- Total on screen: Usually < 50 polygons simultaneously
+
+**Memory Management:**
+```typescript
+// Always clean up previous highlights
+if (highlightedSpeciesSource) {
+  viewer.dataSources.remove(highlightedSpeciesSource, true);  // true = destroy
+  setHighlightedSpeciesSource(null);
+}
+```
+
+#### Complex Geometry Handling
+
+**MULTIPOLYGON Support:**
+- Database returns complete MULTIPOLYGON as GeoJSON
+- Cesium handles complex geometries automatically
+- No need to split into separate entities
+
+**Performance Tips:**
+1. Use `STABLE PARALLEL SAFE` in PostGIS functions
+2. Limit polygon complexity with `ST_Simplify()` if needed
+3. Remove data sources when not needed
+4. Set appropriate level-of-detail for complex coastlines
+
+### Integration with Database Functions
+
+#### Geometry Format Requirements
+
+**Critical:** Always return GeoJSON from database functions:
+```sql
+-- Correct - Returns GeoJSON for direct Cesium use
+SELECT ST_AsGeoJSON(wkb_geometry)::json as wkb_geometry
+FROM icaa_view;
+
+-- Incorrect - WKT requires parsing and loses precision
+SELECT ST_AsText(wkb_geometry) as wkb_geometry  -- Don't use
+FROM icaa_view;
+```
+
+#### Coordinate System Consistency
+
+**SRID 4326 Required:**
+- All geometries must use WGS84 (SRID 4326)
+- Cesium expects longitude/latitude coordinates
+- PostGIS functions handle projection automatically
+
+### Future Improvements
+
+#### Advanced Rendering Features
+
+1. **Dynamic LOD** - Simplify polygons based on zoom level
+2. **Clustering** - Group nearby small polygons
+3. **Fade Animations** - Smooth transitions between highlights
+4. **Custom Shaders** - Advanced visual effects for different species types
+
+#### Performance Optimizations
+
+1. **Polygon Caching** - Store frequently accessed geometries
+2. **Viewport Culling** - Only render polygons in view
+3. **Batch Processing** - Group polygon updates for better performance
+
+## Environment Variables
+
+Database connection configured via:
+- `DATABASE_URL` - Postgres connection string (server-only)
+- `NEXT_PUBLIC_TITILER_BASE_URL` - TiTiler endpoint (optional)
+- `NEXT_PUBLIC_COG_URL` - Habitat COG URL (optional)
+
+## Common Issues and Solutions
+
+### Issue: Clues Not Generating
+**Cause:** Missing or null fields in database
+**Solution:** Ensure species has at least one non-null field per category
+
+### Issue: Species Not Found at Location
+**Cause:** Invalid or missing geometry
+**Solution:** Verify `wkb_geometry` is valid PostGIS geometry
+
+### Issue: TypeScript Errors After Schema Change
+**Cause:** Type definitions out of sync
+**Solution:** Update `Species` interface to match database schema
+
+## Future Considerations
+
+### Database Optimization
+1. Add indexes for frequently queried fields
+2. Consider partitioning for large species datasets
+3. Implement caching for species data
+
+### Schema Evolution
+1. Use database migrations for version control
+2. Document all schema changes
+3. Test backwards compatibility
+
+### Performance Monitoring
+1. Monitor query performance
+2. Track spatial query efficiency
+3. Optimize based on usage patterns
+
+## ORM Choice
+
+Drizzle is the current ORM. Use the query builder for CRUD and `db.execute(sql\`...\`)` for PostGIS spatial queries. Schema authority is hybrid: app tables are code-defined, spatial tables are import-owned and introspected for types.

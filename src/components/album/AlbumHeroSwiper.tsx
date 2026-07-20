@@ -3,29 +3,11 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectCards, Keyboard, A11y, Virtual } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import { X } from 'lucide-react';
-import SpeciesTCGCard from '@/components/album/SpeciesTCGCard';
+import SpeciesTCGCard, { type SpeciesCardRunMemory } from '@/components/album/SpeciesTCGCard';
 import type { Species } from '@/types/database';
 import type { FeatureClass } from '@/types/gis';
-import type { ExpeditionWaypointMemory } from '@/types/waypoints';
 import 'swiper/css';
 import 'swiper/css/effect-cards';
-
-type RunMemoryData = {
-  nodes?: Array<{
-    nodeType: string;
-    obstacleFamily: string | null;
-    scoreEarned: number;
-    waypoint?: ExpeditionWaypointMemory | null;
-  }>;
-  routePolyline?: Array<{ lon: number; lat: number }>;
-  routeBounds?: { minLon: number; minLat: number; maxLon: number; maxLat: number } | null;
-  realm?: string;
-  biome?: string;
-  bioregion?: string;
-  finalScore?: number | null;
-  startedAt?: string;
-  gisFeaturesNearby?: Array<{ featureClass: string }>;
-};
 
 type CardData = {
   gisStamps?: FeatureClass[];
@@ -36,7 +18,6 @@ type CardData = {
   bestRunScore?: number | null;
   affinityTags?: string[];
   timesEncountered?: number;
-  expeditionRegionsSeen?: string[];
   cardVariant?: string | null;
 };
 
@@ -57,51 +38,55 @@ export default function AlbumHeroSwiper({
 }: AlbumHeroSwiperProps) {
   const swiperRef = useRef<SwiperType>();
   const [activeIndex, setActiveIndex] = useState(initialIndex);
-  const [runMemoryCache, setRunMemoryCache] = useState<Record<number, RunMemoryData | null>>({});
+  const [runMemoryCache, setRunMemoryCache] = useState<Record<number, SpeciesCardRunMemory | null>>({});
   const [cardDataCache, setCardDataCache] = useState<Record<number, CardData>>({});
 
   // Fetch run memory + card data for the currently focused species
-  const inFlightRef = useRef(new Set<number>());
   useEffect(() => {
     const species = speciesList[activeIndex];
     if (!species) return;
     const sid = species.id;
-    if (sid in runMemoryCache || inFlightRef.current.has(sid)) return;
+    if (sid in runMemoryCache) return;
 
-    inFlightRef.current.add(sid);
-
-    fetch(`/api/species/cards/${sid}`)
-      .then(r => {
-        if (!r.ok) { inFlightRef.current.delete(sid); return null; }
-        return r.json();
-      })
-      .then(data => {
-        if (!data) return;
-        if (data.card) {
-          setCardDataCache(prev => ({
-            ...prev,
-            [sid]: {
-              gisStamps: Array.isArray(data.card.gisStamps) ? data.card.gisStamps as FeatureClass[] : undefined,
-              factsUnlocked: Array.isArray(data.card.factsUnlocked) ? data.card.factsUnlocked as string[] : undefined,
-              clueCategoriesUnlocked: Array.isArray(data.card.clueCategoriesUnlocked) ? data.card.clueCategoriesUnlocked as string[] : undefined,
-              completionPct: typeof data.card.completionPct === 'number' ? data.card.completionPct : undefined,
-              rarityTier: typeof data.card.rarityTier === 'string' ? data.card.rarityTier : undefined,
-              bestRunScore: typeof data.card.bestRunScore === 'number' ? data.card.bestRunScore : null,
-              affinityTags: Array.isArray(data.card.affinityTags) ? data.card.affinityTags as string[] : undefined,
-              timesEncountered: typeof data.card.timesEncountered === 'number' ? data.card.timesEncountered : undefined,
-              expeditionRegionsSeen: Array.isArray(data.card.expeditionRegionsSeen) ? data.card.expeditionRegionsSeen as string[] : undefined,
-              cardVariant: typeof data.card.cardVariant === 'string' ? data.card.cardVariant : null,
-            },
-          }));
+    const controller = new AbortController();
+    let ignore = false;
+    async function loadCard() {
+      try {
+        const response = await fetch(`/api/species/cards/${sid}`, { signal: controller.signal });
+        if (!response.ok) return;
+        if (ignore) return;
+        const data = await response.json();
+        if (!ignore) {
+          if (data.card) {
+            setCardDataCache(previous => ({
+              ...previous,
+              [sid]: {
+                gisStamps: Array.isArray(data.card.gisStamps) ? data.card.gisStamps as FeatureClass[] : undefined,
+                factsUnlocked: Array.isArray(data.card.factsUnlocked) ? data.card.factsUnlocked as string[] : undefined,
+                clueCategoriesUnlocked: Array.isArray(data.card.clueCategoriesUnlocked) ? data.card.clueCategoriesUnlocked as string[] : undefined,
+                completionPct: typeof data.card.completionPct === 'number' ? data.card.completionPct : undefined,
+                rarityTier: typeof data.card.rarityTier === 'string' ? data.card.rarityTier : undefined,
+                bestRunScore: typeof data.card.bestRunScore === 'number' ? data.card.bestRunScore : null,
+                affinityTags: Array.isArray(data.card.affinityTags) ? data.card.affinityTags as string[] : undefined,
+                timesEncountered: typeof data.card.timesEncountered === 'number' ? data.card.timesEncountered : undefined,
+                cardVariant: typeof data.card.cardVariant === 'string' ? data.card.cardVariant : null,
+              },
+            }));
+          }
+          const memory = Array.isArray(data.memories) ? data.memories[0] ?? null : null;
+          setRunMemoryCache(previous => ({ ...previous, [sid]: memory }));
         }
-        if (data.memories?.length > 0) {
-          const mem = data.memories[data.memories.length - 1];
-          setRunMemoryCache(prev => ({ ...prev, [sid]: mem }));
-        } else {
-          setRunMemoryCache(prev => ({ ...prev, [sid]: null }));
+      } catch (error) {
+        if ((error as { name?: string }).name !== 'AbortError') {
+          console.error('Failed to load species card:', error);
         }
-      })
-      .catch(() => { inFlightRef.current.delete(sid); });
+      }
+    }
+    void loadCard();
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
   }, [activeIndex, speciesList, runMemoryCache]);
 
   const handleSlideChange = useCallback((swiper: SwiperType) => {
@@ -115,6 +100,7 @@ export default function AlbumHeroSwiper({
     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center">
       {/* Close button */}
       <button
+        type="button"
         onClick={onClose}
         className="absolute top-4 right-4 z-[110] p-2 rounded-full bg-slate-800/80 border border-slate-700 text-white hover:bg-slate-700 transition-colors"
         aria-label="Close focused view"
@@ -159,7 +145,9 @@ export default function AlbumHeroSwiper({
             const memory = runMemoryCache[species.id] ?? undefined;
             const cardData = cardDataCache[species.id];
             const gisStamps = cardData?.gisStamps
-              ?? memory?.gisFeaturesNearby?.map(f => f.featureClass as FeatureClass).filter(Boolean)
+              ?? memory?.gisFeaturesNearby?.flatMap(feature => typeof feature.featureClass === 'string'
+                ? [feature.featureClass as FeatureClass]
+                : [])
               ?? undefined;
             return (
               <SwiperSlide key={species.id} virtualIndex={index} className="!overflow-visible">
@@ -176,7 +164,6 @@ export default function AlbumHeroSwiper({
                   bestRunScore={cardData?.bestRunScore}
                   affinityTags={cardData?.affinityTags}
                   timesEncountered={cardData?.timesEncountered}
-                  expeditionRegionsSeen={cardData?.expeditionRegionsSeen}
                   cardVariant={cardData?.cardVariant}
                 />
               </SwiperSlide>

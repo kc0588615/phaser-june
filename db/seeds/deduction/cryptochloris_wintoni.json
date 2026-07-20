@@ -51,27 +51,56 @@
       "habitat_tag:desert"
     ],
     "morphology_tags": [
+      "gameplay_size:small_medium",
       "size_bucket:mouse",
       "body_plan:compact",
-      "distinctive_features:claws_digging"
+      "distinctive_features:claws_digging",
+      "comparison_form:not_horned_antelope",
+      "comparison_form:not_trunked_giant",
+      "comparison_form:not_scaled_digger",
+      "comparison_form:not_striped_cat",
+      "comparison_form:not_winged_mammal"
     ],
     "diet_tags": [
+      "food_source:animals",
       "diet_type:insectivore",
-      "diet_type:carnivore"
+      "diet_type:carnivore",
+      "comparison_diet:not_desert_browser",
+      "comparison_diet:not_bulk_browser",
+      "comparison_diet:not_ant_specialist",
+      "comparison_diet:not_large_prey_hunter",
+      "comparison_diet:not_fruit_flower_forager"
     ],
     "behavior_tags": [
+      "social_pattern:solitary",
       "locomotion:fossorial",
-      "foraging_style:dig"
+      "foraging_style:dig",
+      "comparison_behavior:not_desert_herd",
+      "comparison_behavior:not_matriarchal_herd",
+      "comparison_behavior:not_defensive_curler",
+      "comparison_behavior:not_solitary_ambusher",
+      "comparison_behavior:not_canopy_colony"
     ],
     "reproduction_tags": [],
     "taxonomy_tags": [
+      "superorder:afrotheria",
       "family:chrysochloridae",
-      "genus:cryptochloris"
+      "genus:cryptochloris",
+      "comparison_lineage:not_bovid",
+      "comparison_lineage:not_elephant",
+      "comparison_lineage:not_pangolin",
+      "comparison_lineage:not_big_cat",
+      "comparison_lineage:not_fruit_bat"
     ],
     "geography_tags": [
       "climate_zone:arid",
       "continent:africa",
-      "bioregion:namaqualand"
+      "bioregion:namaqualand",
+      "comparison_range:not_sahara_sahel",
+      "comparison_range:not_south_asian_mainland",
+      "comparison_range:not_southeast_asian_forest",
+      "comparison_range:not_asian_big_cat_range",
+      "comparison_range:not_comoros_islands"
     ],
     "conservation_tags": [
       "iucn:CR",
@@ -79,7 +108,17 @@
       "threat_tag:urban_development"
     ],
     "key_fact_tags": [
-      "signature:rediscovered_by_soil_edna"
+      "signature:rediscovered_by_soil_edna",
+      "research_signal:non_saharan_range",
+      "research_signal:subtonne_body_mass",
+      "research_signal:non_scaled_body_cover",
+      "research_signal:not_large_prey_specialist",
+      "research_signal:ground_contact_travel",
+      "research_signal:digging_trace",
+      "research_signal:vertebrate_predation",
+      "research_signal:substrate_vibration",
+      "research_signal:arid_ground",
+      "research_signal:nonvisual_foraging"
     ],
     "signature_tag": "signature:rediscovered_by_soil_edna",
     "habitat_note": "Coastal dunes and sandy Namaqualand near Port Nolloth.",

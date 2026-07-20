@@ -1,6 +1,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { projectRunCreateResponse, projectRunForClient } from '@/lib/runProjection';
+import { deriveMethodOfferTree } from '@/expedition/caseOffers';
 
 const PRIVATE_VALUES = [
   'PRIVATE_CASE_SEED',
@@ -14,6 +15,59 @@ const PRIVATE_VALUES = [
 ];
 
 describe('projectRunForClient', () => {
+  test('projects v3 family progress without private answer, card ids, or bonus facts', () => {
+    const projection = projectRunForClient({
+      id: 'run-v3', runStatus: 'active', metadata: {
+        casePublic: {
+          version: 3, candidateIds: [1, 2, 3, 4, 5, 6], boardSeeds: [10, 20, 30],
+          mapView: {
+            bounds: [-2, -2, 2, 2],
+            route: [0, 1, 2].map(nodeIndex => ({ nodeIndex, lon: nodeIndex - 1, lat: nodeIndex - 1, biome: 'Forest', nearestFeature: `Site ${nodeIndex + 1}` })),
+            speciesRange: 'PRIVATE_RANGE',
+          },
+        },
+        casePrivate: { version: 3, answerId: 4, caseSeed: 'secret', familyCardIds: { body: 900 } },
+        evidenceApplications: [{ cardId: 900, bonusFactText: 'PRIVATE_FACT' }],
+      },
+    }, {
+      publicObservations: [{
+        ref: 'obs-0', family: 'body', observationText: 'A large body frame left a clear sign.',
+        traitCategory: 'morphology', compareTag: 'gameplay_size:large', actualEliminatedIds: [2, 5],
+        eliminationReasons: { 2: 'body mismatch', 5: 'body mismatch' }, traitPhrase: 'large-framed',
+        candidateTraitPhrases: { 1: 'striped coat', 2: 'spiral horns', 3: 'grasping trunk', 4: 'keratin scales', 5: 'flight wings', 6: 'digging claws', 99: 'ignored extra' },
+        isSignature: false, cardId: 900, bonusFactText: 'PRIVATE_FACT',
+      }],
+      nodes: [{
+        id: 'node-v3', nodeOrder: 1, nodeType: 'custom', nodeStatus: 'active',
+        objectiveTarget: 6, objectiveProgress: 2, movesUsed: 2,
+        boardContext: {
+          caseVersion: 3,
+          evidenceCharges: { relatives: 1, body: 4, behavior: 0, habits: 1, place: 0 },
+          carriedCharges: { relatives: 1, body: 0, behavior: 0, habits: 1, place: 0 },
+          familyHintIds: { body: [700, 701, 702] }, cascadeHintIds: [800], hintText: 'PRIVATE_HINT',
+          selectedFamilies: [], segmentMovesUsed: 2,
+        },
+        hazardProfile: {},
+      }],
+    });
+    assert.equal(projection.casePublic?.version, 3);
+    assert.equal(projection.observations[0].family, 'body');
+    assert.deepEqual(projection.observations[0].actualEliminatedIds, [2, 5]);
+    assert.deepEqual(projection.observations[0].eliminationReasons, { 2: 'body mismatch', 5: 'body mismatch' });
+    assert.equal(projection.observations[0].traitPhrase, 'large-framed');
+    assert.deepEqual(projection.observations[0].candidateTraitPhrases, { 1: 'striped coat', 2: 'spiral horns', 3: 'grasping trunk', 4: 'keratin scales', 5: 'flight wings', 6: 'digging claws' });
+    assert.deepEqual(projection.nodes[0].evidenceCharges, { relatives: 1, body: 4, behavior: 0, habits: 1, place: 0 });
+    assert.deepEqual(projection.nodes[0].carriedCharges, { relatives: 1, body: 0, behavior: 0, habits: 1, place: 0 });
+    const serialized = JSON.stringify(projection);
+    assert.equal(serialized.includes('PRIVATE_FACT'), false);
+    assert.equal(serialized.includes('familyCardIds'), false);
+    assert.equal(serialized.includes('familyHintIds'), false);
+    assert.equal(serialized.includes('cascadeHintIds'), false);
+    assert.equal(serialized.includes('PRIVATE_HINT'), false);
+    assert.equal(serialized.includes('900'), false);
+    assert.equal(serialized.includes('PRIVATE_RANGE'), false);
+  });
+
   test('allowlists the session, nested metadata, and explicit observation content', () => {
     const session = {
       id: 'run-1',
@@ -221,6 +275,7 @@ describe('projectRunForClient', () => {
           objectiveProgress: 6,
           scoreEarned: 90,
           movesUsed: 5,
+          obstacleFamily: 'terrain',
           speciesId: 'PRIVATE_SPECIES',
           waypoint: {
             slot: 1,
@@ -327,6 +382,7 @@ describe('projectRunForClient', () => {
       movesUsed: 5,
       boardSeed: 4_294_967_295,
       boardSamplingMethod: 'center_point',
+      caseState: 'interpreted',
       method: 'track',
       rationale: 'A public field rationale.',
       difficulty: 2,
@@ -369,6 +425,7 @@ describe('projectRunForClient', () => {
         objectiveProgress: 6,
         scoreEarned: 90,
         movesUsed: 5,
+        obstacleFamily: 'terrain',
         waypoint: {
           slot: 1,
           waypointType: 'river',
@@ -400,6 +457,7 @@ describe('projectRunForClient', () => {
         referenceAttempts: 1,
         issuedEvidenceCount: 4,
         reasoningEventCount: 4,
+        citedEvidenceRefs: [],
         guessBonus: 250,
         efficiencyBonus: 100,
         wrongGuessCount: 1,
@@ -471,6 +529,49 @@ describe('projectRunForClient', () => {
     assert.deepEqual(session.metadata.casePublic.candidateIds, [1, 2, 3, 4, 5, 6]);
     assert.deepEqual(session.metadata.habitats, ['forest']);
     assert.equal(session.metadata.routePolyline[0].lon, 1);
+  });
+
+  test('projects v2 offer, choice, and quality state without private matrix leakage', () => {
+    const nodeTypes = ['riverbank_sweep', 'dense_canopy', 'storm_window'] as const;
+    const projection = projectRunForClient({
+      runStatus: 'active',
+      metadata: {
+        casePublic: {
+          version: 2,
+          candidateIds: [1, 2, 3, 4, 5, 6],
+          nodeTypes,
+          boardSeeds: [11, 22, 33],
+          offerTree: deriveMethodOfferTree(nodeTypes),
+        },
+        casePrivate: {
+          version: 2,
+          answerId: 'PRIVATE_ANSWER',
+          cardIdMatrix: 'PRIVATE_CARD_ID',
+          signatureCardId: 'PRIVATE_CHAIN_ID',
+        },
+      },
+    }, {
+      nodes: [{
+        id: 'node-1', nodeOrder: 1, nodeType: nodeTypes[0], nodeStatus: 'active',
+        boardContext: {
+          method: 'survey',
+          offeredMethods: ['track', 'survey'],
+          choiceOfferedAt: '2026-07-18T00:00:00.000Z',
+          choiceLatencyMs: 900,
+          bestTargetMatchLength: 5,
+        },
+        hazardProfile: {},
+      }],
+    });
+
+    assert.equal(projection.casePublic?.version, 2);
+    assert.deepEqual(projection.nodes[0], {
+      id: 'node-1', nodeOrder: 1, nodeType: nodeTypes[0], nodeStatus: 'active',
+      obstacles: [], events: [], method: 'survey', offeredMethods: ['track', 'survey'],
+      choiceOfferedAt: '2026-07-18T00:00:00.000Z', choiceLatencyMs: 900,
+      bestTargetMatchLength: 5, evidenceQualityTier: 3, caseState: 'board_active',
+    });
+    assertNoPrivateData(projection);
   });
 
   test('marks every malformed case snapshot as legacy', () => {
@@ -545,10 +646,12 @@ function assertNoPrivateData(value: unknown): void {
     'answerid',
     'chain',
     'chaincardids',
+    'cardidmatrix',
     'cardid',
     'cardids',
     'observationsissued',
     'runseed',
+    'signaturecardid',
     'playerid',
     'speciesid',
     'guessedspeciesid',

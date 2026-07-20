@@ -360,3 +360,90 @@ body {
   white-space: nowrap;
   border-width: 0;
 }
+@keyframes roster-cross-in {
+  0% { opacity: 0; transform: scale(1.8) rotate(-12deg); }
+  70% { opacity: 1; transform: scale(.9) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+.roster-cross { animation: roster-cross-in 360ms cubic-bezier(.2,.8,.2,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .roster-cross { animation: none; }
+}
+
+/* Expedition map HUD (Plan 018 v3) */
+.map-hud-canvas.maplibregl-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.map-hud-canvas .maplibregl-canvas {
+  outline: none;
+}
+.map-hud-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  padding: 12px;
+  background: rgba(4, 10, 12, 0.6);
+  backdrop-filter: blur(2px);
+}
+.map-hud-fullscreen-panel {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+}
+.map-site-marker {
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+.map-site-marker-dot {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 2.5px solid #3d2f18;
+  font: 700 11px/1 system-ui, sans-serif;
+  color: #f4eeda;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.map-site-marker--visited .map-site-marker-dot { background: #4e6e46; }
+.map-site-marker--current .map-site-marker-dot {
+  background: #b3542e;
+  animation: map-marker-pulse 1.6s ease-out infinite;
+}
+.map-site-marker--upcoming .map-site-marker-dot {
+  background: rgba(244, 238, 218, 0.55);
+  border-style: dashed;
+  opacity: 0.75;
+}
+.map-site-marker-label {
+  margin-top: 3px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 6px;
+  background: rgba(61, 47, 24, 0.85);
+  padding: 2px 6px;
+  font: 600 10px/1.2 system-ui, sans-serif;
+  color: #f4eeda;
+}
+@keyframes map-marker-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(179, 84, 46, 0.55); }
+  100% { box-shadow: 0 0 0 14px rgba(179, 84, 46, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-site-marker--current .map-site-marker-dot { animation: none; }
+}

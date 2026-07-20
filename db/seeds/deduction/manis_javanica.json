@@ -54,35 +54,64 @@
       "habitat_tag:rainforest"
     ],
     "morphology_tags": [
+      "gameplay_size:small_medium",
       "size_bucket:dog",
       "body_plan:armored",
       "distinctive_features:scales",
-      "distinctive_features:claws_digging"
+      "distinctive_features:claws_digging",
+      "comparison_form:not_horned_antelope",
+      "comparison_form:not_sand_digger",
+      "comparison_form:not_trunked_giant",
+      "comparison_form:not_striped_cat",
+      "comparison_form:not_winged_mammal"
     ],
     "diet_tags": [
+      "food_source:animals",
       "diet_type:carnivore",
       "diet_type:insectivore",
-      "diet_type:myrmecophage"
+      "diet_type:myrmecophage",
+      "comparison_diet:not_desert_browser",
+      "comparison_diet:not_soil_insect_hunter",
+      "comparison_diet:not_bulk_browser",
+      "comparison_diet:not_large_prey_hunter",
+      "comparison_diet:not_fruit_flower_forager"
     ],
     "behavior_tags": [
+      "social_pattern:solitary",
       "activity_pattern:nocturnal",
       "sociality:solitary",
       "locomotion:scansorial",
       "locomotion:arboreal",
       "foraging_style:dig",
-      "foraging_style:forage"
+      "foraging_style:forage",
+      "comparison_behavior:not_desert_herd",
+      "comparison_behavior:not_sand_swimmer",
+      "comparison_behavior:not_matriarchal_herd",
+      "comparison_behavior:not_solitary_ambusher",
+      "comparison_behavior:not_canopy_colony"
     ],
     "reproduction_tags": [
       "care_pattern:den",
       "signature:young_rides_at_mothers_tail_base"
     ],
     "taxonomy_tags": [
+      "superorder:laurasiatheria",
       "family:manidae",
-      "genus:manis"
+      "genus:manis",
+      "comparison_lineage:not_bovid",
+      "comparison_lineage:not_golden_mole",
+      "comparison_lineage:not_elephant",
+      "comparison_lineage:not_big_cat",
+      "comparison_lineage:not_fruit_bat"
     ],
     "geography_tags": [
       "climate_zone:tropical",
-      "continent:asia"
+      "continent:asia",
+      "comparison_range:not_sahara_sahel",
+      "comparison_range:not_namaqualand_dunes",
+      "comparison_range:not_south_asian_mainland",
+      "comparison_range:not_asian_big_cat_range",
+      "comparison_range:not_comoros_islands"
     ],
     "conservation_tags": [
       "iucn:CR",
@@ -90,7 +119,18 @@
       "threat_tag:deforestation",
       "threat_tag:roadkill"
     ],
-    "key_fact_tags": [],
+    "key_fact_tags": [
+      "research_signal:non_saharan_range",
+      "research_signal:larger_than_mouse",
+      "research_signal:subtonne_body_mass",
+      "research_signal:not_large_prey_specialist",
+      "research_signal:ground_contact_travel",
+      "research_signal:digging_trace",
+      "research_signal:arboreal_foraging",
+      "research_signal:solitary_quiet",
+      "research_signal:forest_edge_feeding",
+      "research_signal:keratin_defense"
+    ],
     "signature_tag": "signature:young_rides_at_mothers_tail_base",
     "habitat_note": "Tropical forests and modified habitats across Southeast Asia.",
     "morphology_note": "Brown overlapping scales, tapered tail, and strong digging and climbing claws.",

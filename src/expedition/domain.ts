@@ -164,6 +164,7 @@ export function isLootGem(gemType: GemType): gemType is LootGemType {
 
 export interface BoardSpawnConfig {
   lootWeights?: Partial<Record<LootGemType, number>>;
+  allowedGemTypes?: LootGemType[];
 }
 
 export const DEFAULT_BOARD_SPAWN_CONFIG: BoardSpawnConfig = {
@@ -172,9 +173,11 @@ export const DEFAULT_BOARD_SPAWN_CONFIG: BoardSpawnConfig = {
 
 export function createBoardSpawnConfig(config?: {
   lootWeights?: Partial<Record<LootGemType, number>>;
+  allowedGemTypes?: LootGemType[];
 }): BoardSpawnConfig {
   return {
     lootWeights: config?.lootWeights ?? {},
+    ...(config?.allowedGemTypes ? { allowedGemTypes: [...config.allowedGemTypes] } : {}),
   };
 }
 
@@ -215,6 +218,7 @@ export function getRunNodeLabel(node: {
 export function buildBoardSpawnConfigForNode(
   _nodeType: string,
   lootWeights?: Partial<Record<LootGemType, number>>,
+  allowedGemTypes?: LootGemType[],
 ): BoardSpawnConfig {
-  return createBoardSpawnConfig({ lootWeights });
+  return createBoardSpawnConfig({ lootWeights, allowedGemTypes });
 }

@@ -7,8 +7,8 @@
 //
 //   CesiumMap  --'cesium-location-selected'-->  ExpeditionContext / Game scene
 //   Context    --'expedition-start'---------->  Game scene (board begins)
-//   Game scene --'deduction-clue-triggered'-->  Context (clue fragments)
-//   Game scene --'node-advance-requested'---->  Context (score banked, camp)
+//   Game scene --'node-objective-updated'---->  Context (progress + sample quality)
+//   Game scene --'node-advance-requested'---->  Context (durable node completion)
 //
 // To add an event: add its name + payload type to `EventPayloads`, then both
 // `EventBus.emit` and `EventBus.on` become type-checked for it everywhere.
@@ -22,7 +22,8 @@ import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
-import type { MethodType } from '@/expedition/domain';
+import type { BoardCheckpointV1 } from './boardTypes';
+import type { EvidenceChargeState, EvidenceFamily } from '@/expedition/evidenceFamilies';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -42,14 +43,31 @@ export interface EventPayloads {
     activeAffinities?: AffinityType[];
     objectiveTarget?: number;
     objectiveProgress?: number;
+    bestTargetMatchLength?: number;
     nodeIndex?: number;
     nodeType?: string;
     events?: string[];
     boardSeed?: number;
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
+    /** Case snapshot version — verb rules apply to v2 only (v1 runs keep legacy counting). */
+    caseVersion?: number;
+    /** Public case candidates — the pool field-note drips draw from. */
+    candidateIds?: number[];
+    /** Full rows for those candidates (drips need clue fields; location species may not cover them). */
+    candidateSpecies?: Species[];
+    boardCheckpoint?: BoardCheckpointV1;
   };
   'clue-revealed': CluePayload;
+  /** Off-method 4+ match earned a fact about a public candidate (client-only). */
+  'field-note-dripped': {
+    nodeIndex: number;
+    speciesId: number;
+    speciesName: string;
+    categoryName: string;
+    icon: string;
+    text: string;
+  };
   'new-game-started': {
     speciesName: string;
     speciesId: number;
@@ -97,11 +115,19 @@ export interface EventPayloads {
   'node-objective-updated': {
     progress: number;
     target: number;
+    bestTargetMatchLength: number;
   };
-  'observation-earned': {
-    method: MethodType;
-    matchLength: number;
-    source: 'gem_match';
+  'evidence-move-resolved': {
+    nodeIndex: number;
+    moveNumber: number;
+    directClears: EvidenceChargeState;
+    directMatchFamilies: EvidenceFamily[];
+    cascadeCount: number;
+    boardCheckpoint: BoardCheckpointV1;
+  };
+  'evidence-progress-committed': {
+    nodeIndex: number;
+    moveNumber: number;
   };
   'auth-user-ready': { playerId: string; sessionId?: string };
 }

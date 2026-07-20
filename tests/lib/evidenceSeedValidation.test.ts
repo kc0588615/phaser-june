@@ -2,12 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  FIXED_ROUTE_METHODS,
-  compileCase,
-  type CompilerCard,
-  type CompilerSpeciesProfile,
-} from '@/lib/caseCompiler';
+import { type CompilerCard, type CompilerSpeciesProfile } from '@/lib/caseCompiler';
+import { compileCaseV2 } from '@/lib/caseCompilerV2';
 import {
   EVIDENCE_PROTOTYPE_IUCN_IDS,
   parseEvidenceProfileDossier,
@@ -104,13 +100,14 @@ function profileHasCardTag(profile: CompilerSpeciesProfile, card: CompilerCard):
 }
 
 describe('evidence seed corpus', () => {
-  test('loads exactly 42 reviewed cards with valid atomic tags, sources, and chains', () => {
+  test('loads exactly 96 reviewed cards with valid tiers, sources, nesting, and exhaustive paths', () => {
     const { seeds, dossiers } = loadCorpus();
     const validation = validateEvidenceCorpus(seeds, dossiers);
 
     assert.deepEqual(validation.errors, []);
     assert.equal(seeds.length, 6);
-    assert.equal(seeds.reduce((total, seed) => total + seed.cards.length, 0), 42);
+    assert.equal(seeds.reduce((total, seed) => total + seed.cards.length, 0), 96);
+    assert.equal(validation.exhaustive.shapeCount, 9_720);
     assert.equal(validation.reports.length, 6);
     for (const report of validation.reports) {
       assert.equal(report.steps.length, 3);
@@ -120,37 +117,34 @@ describe('evidence seed corpus', () => {
     assert.ok(validation.ordinaryTagFrequencies.every(entry => entry.count >= 2 && entry.count <= 5));
   });
 
-  test('compiler resolves every possible answer across deterministic tie-breaks with no dead reveal', () => {
+  test('v2 compiler materializes every answer matrix without changing the public offer tree', () => {
     const { seeds, dossiers } = loadCorpus();
-    const { profiles, cardsBySpecies, cardsById } = compilerCorpus(seeds, dossiers);
+    const { profiles, cardsBySpecies } = compilerCorpus(seeds, dossiers);
     const prototypeSpeciesIds = [...EVIDENCE_PROTOTYPE_IUCN_IDS];
 
     for (const answerId of prototypeSpeciesIds) {
-      for (let sample = 1; sample <= 24; sample += 1) {
-        const result = compileCase({
+      for (let sample = 1; sample <= 4; sample += 1) {
+        const result = compileCaseV2({
           caseSeed: (answerId * 100 + sample).toString(16).padStart(64, '0'),
           prototypeSpeciesIds,
           speciesPool: profiles,
           cardsBySpecies,
           gisPrior: new Map(prototypeSpeciesIds.map(speciesId => [speciesId, speciesId === answerId ? 1 : 0])),
-          routeMethods: [...FIXED_ROUTE_METHODS],
           boardSeeds: [11, 22, 33],
+          nodeTypes: ['riverbank_sweep', 'dense_canopy', 'storm_window'],
+          forcedAnswerId: answerId,
         });
 
         assert.ok(!('error' in result), 'expected evidence corpus to compile');
         assert.equal(result.private.answerId, answerId);
-        assert.equal(result.private.chainCardIds.length, 3, 'ordinary cards should uniquely solve the prototype');
-
-        let liveProfiles = profiles;
-        for (const cardId of result.private.chainCardIds) {
-          const card = cardsById.get(cardId);
-          assert.ok(card);
-          const next = liveProfiles.filter(profile => profileHasCardTag(profile, card));
-          assert.ok(next.length < liveProfiles.length, 'every issued card must eliminate at least one candidate');
-          assert.ok(next.some(profile => profile.speciesId === answerId), 'answer must survive every card');
-          liveProfiles = next;
-        }
-        assert.deepEqual(liveProfiles.map(profile => profile.speciesId), [answerId]);
+        assert.equal(Object.values(result.private.cardIdMatrix).flat().length, 15);
+        const comparison = compileCaseV2({
+          caseSeed: 'f'.repeat(64), prototypeSpeciesIds, speciesPool: profiles, cardsBySpecies,
+          gisPrior: new Map(), boardSeeds: [11, 22, 33],
+          nodeTypes: ['riverbank_sweep', 'dense_canopy', 'storm_window'], forcedAnswerId: prototypeSpeciesIds.at(-1),
+        });
+        assert.ok(!('error' in comparison));
+        assert.deepEqual(result.public.offerTree, comparison.public.offerTree);
       }
     }
   });
@@ -182,7 +176,6 @@ describe('evidence seed corpus', () => {
 
     const errors = validateEvidenceCorpus(mutated, dossiers).errors.join('\n');
     assert.match(errors, /signature tag must occur in exactly its one declared profile array/u);
-    assert.match(errors, /no viable three-step positive-elimination chain/u);
+    assert.match(errors, /case compiler|tier nesting|answer/u);
   });
 });
-

@@ -53,39 +53,79 @@
       "habitat_tag:montane_forest"
     ],
     "morphology_tags": [
+      "gameplay_size:small_medium",
       "size_bucket:rabbit",
       "body_plan:graceful",
       "distinctive_features:wings",
-      "signature:one_point_four_metre_wingspan"
+      "signature:one_point_four_metre_wingspan",
+      "comparison_form:not_horned_antelope",
+      "comparison_form:not_sand_digger",
+      "comparison_form:not_trunked_giant",
+      "comparison_form:not_scaled_digger",
+      "comparison_form:not_striped_cat"
     ],
     "diet_tags": [
+      "food_source:plants",
       "diet_type:frugivore",
-      "diet_type:nectarivore"
+      "diet_type:nectarivore",
+      "comparison_diet:not_desert_browser",
+      "comparison_diet:not_soil_insect_hunter",
+      "comparison_diet:not_bulk_browser",
+      "comparison_diet:not_ant_specialist",
+      "comparison_diet:not_large_prey_hunter"
     ],
     "behavior_tags": [
+      "social_pattern:group",
       "activity_pattern:cathemeral",
       "sociality:colony",
       "locomotion:arboreal",
-      "foraging_style:forage"
+      "foraging_style:forage",
+      "comparison_behavior:not_desert_herd",
+      "comparison_behavior:not_sand_swimmer",
+      "comparison_behavior:not_matriarchal_herd",
+      "comparison_behavior:not_defensive_curler",
+      "comparison_behavior:not_solitary_ambusher"
     ],
     "reproduction_tags": [
       "parity:iteroparous"
     ],
     "taxonomy_tags": [
+      "superorder:laurasiatheria",
       "family:pteropodidae",
-      "genus:pteropus"
+      "genus:pteropus",
+      "comparison_lineage:not_bovid",
+      "comparison_lineage:not_golden_mole",
+      "comparison_lineage:not_elephant",
+      "comparison_lineage:not_pangolin",
+      "comparison_lineage:not_big_cat"
     ],
     "geography_tags": [
       "climate_zone:tropical",
       "continent:africa",
-      "bioregion:comoros"
+      "bioregion:comoros",
+      "comparison_range:not_sahara_sahel",
+      "comparison_range:not_namaqualand_dunes",
+      "comparison_range:not_south_asian_mainland",
+      "comparison_range:not_southeast_asian_forest",
+      "comparison_range:not_asian_big_cat_range"
     ],
     "conservation_tags": [
       "iucn:EN",
       "threat_tag:deforestation",
       "threat_tag:agriculture"
     ],
-    "key_fact_tags": [],
+    "key_fact_tags": [
+      "research_signal:non_saharan_range",
+      "research_signal:larger_than_mouse",
+      "research_signal:subtonne_body_mass",
+      "research_signal:non_scaled_body_cover",
+      "research_signal:not_large_prey_specialist",
+      "research_signal:tree_feeding_debris",
+      "research_signal:arboreal_foraging",
+      "research_signal:contact_calls",
+      "research_signal:fragmented_forest",
+      "research_signal:nonvisual_foraging"
+    ],
     "signature_tag": "signature:one_point_four_metre_wingspan",
     "habitat_note": "Upper canopy of steep, wet montane rain and cloud forest.",
     "morphology_note": "Blackish flying fox with rounded ears, dark wings, and a wingspan up to 1.4 metres.",

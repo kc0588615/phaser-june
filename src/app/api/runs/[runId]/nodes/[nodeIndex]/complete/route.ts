@@ -1,8 +1,11 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunNodes, ecoRunSessions } from '@/db';
+import { getMethodOfferAtPath, isMethodType } from '@/expedition/caseOffers';
+import { evidenceTierForMatchLength } from '@/expedition/evidenceQuality';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
-import { isUuid, validateNodeCompletionInput } from '@/lib/runCaseState';
+import { decideQualityCheckpoint, getRecord, isUuid, parsePrivateCase, validateNodeCompletionInput } from '@/lib/runCaseState';
+import { parsePublicCaseSnapshot } from '@/lib/runProjection';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ runId: string; nodeIndex: string }> }) {
   try {
@@ -26,17 +29,51 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const [node] = await tx.select().from(ecoRunNodes).where(and(eq(ecoRunNodes.runId, runId), eq(ecoRunNodes.nodeOrder, nodeOrder))).limit(1);
       if (!node) return { status: 404, body: { error: 'Node not found' } };
       const isLastNode = nodeOrder >= session.nodeCountPlanned;
-      if (node.nodeStatus === 'completed') return { status: 200, body: { completed: true, duplicate: true, isLastNode, nodeOrder } };
+      const metadata = getRecord(session.metadata);
+      const publicCase = parsePublicCaseSnapshot(metadata.casePublic);
+      const privateCase = parsePrivateCase(metadata.casePrivate);
+      const boardContext = getRecord(node.boardContext);
+      if (publicCase?.version === 3 || privateCase?.version === 3) {
+        return { status: 409, body: { reason: 'v3_uses_evidence_choice' } };
+      }
+      if (node.nodeStatus === 'completed') {
+        const bestTargetMatchLength = typeof boardContext.bestTargetMatchLength === 'number' ? boardContext.bestTargetMatchLength : 0;
+        return { status: 200, body: { completed: true, duplicate: true, isLastNode, nodeOrder, objectiveMet: node.objectiveProgress >= node.objectiveTarget, bestTargetMatchLength, qualityTier: evidenceTierForMatchLength(bestTargetMatchLength) } };
+      }
       if (node.nodeStatus !== 'active') return { status: 409, body: { error: 'Node is not active' } };
+      if (publicCase?.version === 2 && (privateCase?.version !== 2 || !isMethodType(boardContext.method))) {
+        return { status: 409, body: { reason: 'method_not_chosen' } };
+      }
 
-      // v0 trust boundary: board score/moves/progress are bounded client telemetry.
+      const quality = decideQualityCheckpoint(node.nodeStatus, boardContext.bestTargetMatchLength, telemetry.bestTargetMatchLength);
+      if (quality.kind === 'reject') return { status: 409, body: { reason: quality.reason } };
+      const bestTargetMatchLength = quality.bestTargetMatchLength;
+      const objectiveMet = telemetry.objectiveProgress >= node.objectiveTarget;
+
+      // Solo-play trust boundary: bounded board totals and best target group only.
       await tx.update(ecoRunNodes).set({
         nodeStatus: 'completed', scoreEarned: telemetry.scoreEarned, movesUsed: telemetry.movesUsed,
         objectiveProgress: telemetry.objectiveProgress, endedAt: new Date(), updatedAt: new Date(),
+        boardContext: { ...boardContext, bestTargetMatchLength, objectiveMet },
       }).where(eq(ecoRunNodes.id, node.id));
       if (!isLastNode) {
-        await tx.update(ecoRunNodes).set({ nodeStatus: 'active', startedAt: new Date(), updatedAt: new Date() })
-          .where(and(eq(ecoRunNodes.runId, runId), eq(ecoRunNodes.nodeOrder, nodeOrder + 1)));
+        const [nextNode] = await tx.select().from(ecoRunNodes).where(and(
+          eq(ecoRunNodes.runId, runId),
+          eq(ecoRunNodes.nodeOrder, nodeOrder + 1),
+        )).limit(1);
+        let nextContext = getRecord(nextNode?.boardContext);
+        if (publicCase?.version === 2 && !objectiveMet) {
+          const priorNodes = await tx.select().from(ecoRunNodes).where(eq(ecoRunNodes.runId, runId)).orderBy(ecoRunNodes.nodeOrder);
+          const choices = priorNodes.slice(0, nodeOrder).flatMap(value => {
+            const method = value.id === node.id ? boardContext.method : getRecord(value.boardContext).method;
+            return isMethodType(method) ? [method] : [];
+          });
+          const offeredMethods = getMethodOfferAtPath(publicCase.offerTree, choices);
+          if (!offeredMethods) return { status: 409, body: { reason: 'invalid_offer_path' } };
+          nextContext = { ...nextContext, offeredMethods, choiceOfferedAt: new Date().toISOString() };
+        }
+        if (nextNode) await tx.update(ecoRunNodes).set({ nodeStatus: 'active', boardContext: nextContext, startedAt: new Date(), updatedAt: new Date() })
+          .where(eq(ecoRunNodes.id, nextNode.id));
       }
       await tx.update(ecoRunSessions).set({
         scoreTotal: sql`${ecoRunSessions.scoreTotal} + ${telemetry.scoreEarned}`,
@@ -44,7 +81,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         nodeIndexCurrent: isLastNode ? nodeOrder : nodeOrder + 1,
         ...(isLastNode ? { runStatus: 'deduction' } : {}),
       }).where(eq(ecoRunSessions.id, runId));
-      return { status: 200, body: { completed: true, duplicate: false, isLastNode, nodeOrder } };
+      return { status: 200, body: { completed: true, duplicate: false, isLastNode, nodeOrder, objectiveMet, bestTargetMatchLength, qualityTier: objectiveMet ? evidenceTierForMatchLength(bestTargetMatchLength) : null } };
     });
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {

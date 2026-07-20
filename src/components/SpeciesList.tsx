@@ -2,16 +2,15 @@ import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useSpeciesData } from '@/hooks/useSpeciesData';
 import AlbumHeroSwiper from '@/components/album/AlbumHeroSwiper';
-import { Loader2, Album, FileQuestion, Map, TreeDeciduous } from 'lucide-react';
+import { Loader2, Album, FileQuestion, TreeDeciduous } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 import { AlbumTab } from '@/components/species-list/AlbumTab';
 import { CasesTab } from '@/components/species-list/CasesTab';
-import { RunsTab } from '@/components/species-list/RunsTab';
 import { TaxonomyTab } from '@/components/species-list/TaxonomyTab';
-import type { AlbumSortMode, CasesGroupMode, RunSummary, SpeciesCardSummary } from '@/components/species-list/types';
+import type { AlbumSortMode, CasesGroupMode, SpeciesCardSummary } from '@/components/species-list/types';
 
 const RARITY_RANK: Record<string, number> = {
   legendary: 5,
@@ -46,26 +45,14 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const [heroSpeciesList, setHeroSpeciesList] = useState<Species[]>([]);
   const [heroInitialIndex, setHeroInitialIndex] = useState(0);
 
-  // Runs tab state
-  const [runs, setRuns] = useState<RunSummary[]>([]);
-  const [runsLoading, setRunsLoading] = useState(false);
-  const [runsLoaded, setRunsLoaded] = useState(false);
-
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement | null>(null);
   const lastScrollTop = useRef(0);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const loadDiscoveredSpecies = useCallback(async () => {
+    const localMap = readLocalDiscoveries();
     try {
-      const localDiscovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
-      const localMap: Record<number, { name: string; discoveredAt: string }> = {};
-      localDiscovered.forEach((d: any) => {
-        if (typeof d?.id === 'number') {
-          localMap[d.id] = { name: d.name || '', discoveredAt: d.discoveredAt || '' };
-        }
-      });
-
       if (!isUserLoaded || !isSignedIn) {
         setDiscoveredSpecies(localMap);
         setCardProgress({});
@@ -104,17 +91,8 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       setDiscoveredSpecies({ ...localMap, ...serverMap });
       setCardProgress(progressMap);
     } catch (error) {
-      try {
-        const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
-        const discoveredMap: Record<number, { name: string; discoveredAt: string }> = {};
-        discovered.forEach((d: any) => {
-          discoveredMap[d.id] = { name: d.name, discoveredAt: d.discoveredAt };
-        });
-        setDiscoveredSpecies(discoveredMap);
-        setCardProgress({});
-      } catch (fallbackError) {
-        console.error('Error loading discovered species:', fallbackError);
-      }
+      setDiscoveredSpecies(localMap);
+      setCardProgress({});
       console.error('Error loading discovered species:', error);
     }
   }, [isSignedIn, isUserLoaded]);
@@ -122,23 +100,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   useEffect(() => {
     void loadDiscoveredSpecies();
   }, [loadDiscoveredSpecies]);
-
-  // Fetch runs when user opens runs tab
-  const fetchRuns = useCallback(() => {
-    if (!isUserLoaded || !isSignedIn || runsLoaded || runsLoading) return;
-    setRunsLoading(true);
-    fetch('/api/runs/list?status=completed&limit=20')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.runs) {
-          setRuns(data.runs);
-          setRunsLoaded(true);
-        }
-        // Don't mark loaded on null (401/error) so it retries when auth is ready
-      })
-      .catch(err => console.error('Failed to fetch runs:', err))
-      .finally(() => setRunsLoading(false));
-  }, [isSignedIn, isUserLoaded, runsLoaded, runsLoading]);
 
   const openHeroView = useCallback((list: Species[], index: number) => {
     setHeroSpeciesList(list);
@@ -517,7 +478,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
 
   return (
     <div className="flex flex-col h-full bg-background w-full relative">
-      <Tabs defaultValue="album" className="flex flex-col h-full" onValueChange={(v) => { if (v === 'runs') fetchRuns(); }}>
+      <Tabs defaultValue="album" className="flex flex-col h-full">
         {/* Global header */}
         <div className="flex-shrink-0 px-5 pt-5 pb-2 bg-background relative z-50">
           <div className="flex items-center justify-between mb-3">
@@ -528,6 +489,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
             <div className="flex items-center gap-2">
               {onBack && (
                 <button
+                  type="button"
                   onClick={onBack}
                   className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground rounded-md flex items-center gap-2 transition-colors"
                 >
@@ -538,15 +500,12 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
           </div>
 
           {/* Tab navigation */}
-          <TabsList className="w-full grid grid-cols-4 h-10">
+          <TabsList className="w-full grid grid-cols-3 h-10">
             <TabsTrigger value="album" className="text-xs sm:text-sm gap-1">
               <Album className="size-3.5 hidden sm:block" />Album
             </TabsTrigger>
             <TabsTrigger value="cases" className="text-xs sm:text-sm gap-1">
               <FileQuestion className="size-3.5 hidden sm:block" />Cases
-            </TabsTrigger>
-            <TabsTrigger value="runs" className="text-xs sm:text-sm gap-1">
-              <Map className="size-3.5 hidden sm:block" />Runs
             </TabsTrigger>
             <TabsTrigger value="taxonomy" className="text-xs sm:text-sm gap-1">
               <TreeDeciduous className="size-3.5 hidden sm:block" />Taxonomy
@@ -586,6 +545,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
               <p className="text-destructive font-semibold mb-2">Error loading species</p>
               <p className="text-sm text-muted-foreground mb-3">{error.message || 'Unknown error occurred'}</p>
               <button
+                type="button"
                 onClick={() => refetch()}
                 disabled={isFetching}
                 className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -627,16 +587,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
                 casesGroupBy={casesGroupBy}
                 onCasesGroupByChange={setCasesGroupBy}
                 onOpenHero={openHeroView}
-              />
-            </TabsContent>
-
-            {/* ===== RUNS TAB ===== */}
-            <TabsContent value="runs" className="flex-1 overflow-hidden mt-0">
-              <RunsTab
-                runs={runs}
-                runsLoading={runsLoading}
-                runsLoaded={runsLoaded}
-                onFetchRuns={fetchRuns}
               />
             </TabsContent>
 
@@ -694,4 +644,23 @@ function compareSpeciesName(a: Species, b: Species): number {
   const aName = a.common_name || a.scientific_name || '';
   const bName = b.common_name || b.scientific_name || '';
   return aName.localeCompare(bName) || a.id - b.id;
+}
+
+function readLocalDiscoveries(): Record<number, { name: string; discoveredAt: string }> {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
+    if (!Array.isArray(value)) return {};
+    return Object.fromEntries(value.flatMap(item => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+      const discovery = item as Record<string, unknown>;
+      if (typeof discovery.id !== 'number') return [];
+      return [[discovery.id, {
+        name: typeof discovery.name === 'string' ? discovery.name : '',
+        discoveredAt: typeof discovery.discoveredAt === 'string' ? discovery.discoveredAt : '',
+      }]];
+    }));
+  } catch (error) {
+    console.error('Error reading local discoveries:', error);
+    return {};
+  }
 }

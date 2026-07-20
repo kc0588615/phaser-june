@@ -1,192 +1,84 @@
 ---
 sidebar_position: 4
 title: Expedition Run Loop
-description: How expeditions, nodes, encounters, and souvenirs work
-tags: [guide, game, expedition, encounters, souvenirs]
+description: Current expedition progression
+tags: [guide, game, expedition]
 ---
 
 # Expedition Run Loop
 
-The expedition run loop is the core gameplay progression. A map click generates a 6-node expedition with GIS-driven node types, gem objectives, mid-node encounters, and souvenir drops.
+V3 simplifies the player loop to map -> six matches -> evidence-family choice -> automatic elimination -> species guess. V1/v2 runs keep their original flows. New v3 creation remains feature-gated until its reviewed database corpus is deployed.
 
-## Run Phases
+## Flow
 
-```
-idle → briefing → in-run → complete
-```
+1. Player clicks a map location.
+2. `CesiumMap` gathers nearby species, habitats, waypoints, GIS signals, and available affinities.
+3. React shows `ExpeditionBriefing`.
+4. Player starts the expedition.
+5. `/api/runs` creates a versioned case and three board seeds.
+6. At each site, six legal matches advance automatically. Directly cleared DNA/paw/eye/leaf-and-fang/map-pin gems charge Relatives/Body/Behavior/Habits/Place totals.
+7. The HUD previews which top families the current totals would offer. Cascades score but do not charge evidence.
+8. After move six, the player selects one offered family. The server applies its reviewed fixed-strength clue and removes incompatible candidates.
+9. The chosen family locks and stops spawning; other totals carry to the next site.
+10. A persistent field-radio ticker reports soft hints while the family rail shows charge and carry state.
+11. The persistent six-species roster records clue families and elimination reasons.
+12. After three clues, the player taps a live roster species. No interpretation prediction or citation is required in v3.
 
-| Phase | UI State | Trigger |
-|-------|----------|---------|
-| `idle` | Map interactive, waiting for click | App start / run reset |
-| `briefing` | ExpeditionBriefing shown, nodes previewed | `expedition-data-ready` event |
-| `in-run` | Puzzle active, nodes advance sequentially | `expedition-start` event |
-| `complete` | Summary with score + gems + souvenirs | Last node completed |
+The three earned clues stay visible as Observation / Inference / Ruled out entries. Every candidate retains its portrait and gains a candidate-specific trait phrase for each played family, so the roster shows why the evidence separated the animals.
 
-**State:** `RunState` in `src/types/expedition.ts`, managed by `MainAppLayout.tsx`.
+During the run, a MapLibre regional map shows the three research sites and route. Sites prefer 150–800 km spacing inside one contiguous One Earth region, with a 100 km non-failing fallback. Cesium remains the region-selection and completed-run recap surface. Answer range geometry stays server-side until the correct verdict.
 
-## Data Flow
+No energy or Insight currency exists. Score and guess bonuses are unchanged server-side; score is hidden in v3 until it has a visible reward.
 
-```
-Map click
-  → /api/protected-areas/at-point (GIS scoring + node gen)
-  → CesiumMap emits expedition-data-ready
-  → MainAppLayout stores payload, shows briefing
-  → Player starts → cesium-location-selected emitted per node (with boardContext)
-  → Game.ts runs puzzle with node config + seeded obstacle state
-  → Objective met → node-advance-requested → MainAppLayout validates → node-complete → next node or run complete
-```
+## State
 
-## Node Generation
+`RunState` in `src/types/expedition.ts` tracks:
 
-**Source:** `src/lib/nodeScoring.ts` — `generateRunNodes()`
+- phase
+- expedition payload
+- current node index
+- banked score
+- method offers and selections
+- v3 family totals, likely choices, locked families, and exact board checkpoint
+- v2 best-target-match quality and interpretation/citation state
+- v3 fixed-strength observations and automatic eliminations
+- route progress
+- final score and completion reason
 
-Six nodes per expedition:
-
-1. **Primary** — highest-scoring GIS layer → node type
-2. **Modifiers (2-3)** — secondary layers above threshold
-3. **Fillers** — varied types ensuring unique gem pairs per run
-4. **Analysis** — always slot 6, no gem objective
-
-### Node Templates
-
-| Node Type | Gems | Events |
-|-----------|------|--------|
-| `riverbank_sweep` | blue + green | amphibian_signal, river_crossing |
-| `dense_canopy` | green + black | trail_markings, rare_track |
-| `urban_fringe` | red + orange | human_disturbance, corridor_crossing |
-| `elevation_ridge` | white + blue | vantage_scan |
-| `storm_window` | red + purple | urgent_tracking_window, migration_shift |
-| `custom` | purple + yellow | discovery_event |
-| `analysis` | (none) | wager_guess |
-
-Each template has a **unique gem pair**. Filler logic avoids repeating pairs already in the run.
-
-### Gem Objective
-
-- Gem-objective nodes get `objectiveTarget: 6`
-- Player matches required-color gems to fill progress
-- Match-4+ of required gems → instant node complete
-- Progress shown in ActiveEncounterPanel
-- Objective counting reads from `phaseResult.matchGridState` (snapshot before explode-and-replace)
-- Objective progress is independent of species/clue state — nodes with no species still track gem objectives
-
-### Obstacle Seeding
-
-Obstacles are typed in `src/game/nodeObstacles.ts`. Some obstacles seed deterministic per-cell board state via `boardContext` (generated once, shared by runtime and persistence). Static seeded obstacles: `mud_tiles`, `overgrowth`, `junk_blockers`, `steep_terrain`, `signal_dropout`, `noise_interference`, `unknown_terrain`, `limited_signal`. Dynamic-only placeholders (no cell mechanic yet): `flow_shift`, `low_visibility`, `time_pressure`.
-
-### Node Advancement
-
-- Phaser owns objective tracking; React owns expedition advancement
-- Game/UI emits `node-advance-requested` when ready to advance
-- `MainAppLayout` validates the request, persists node completion, emits `node-complete`
-- `node-complete` is a fact emitted once by React, not a request signal
-
-## Encounters
-
-Mid-node events fire after every **3rd cumulative match group**.
-
-**Source:** `Game.ts` — `applyEncounter()`
-
-### Trigger Logic
-
-```
-nodeMatchGroupTotal += moveSummary.matchGroups  (per move)
-expected = floor(nodeMatchGroupTotal / 3)
-if expected > nodeEncounterIndex → fire encounter
-```
-
-Events cycle through the node's `events[]` array.
-
-### Effect Types
-
-| Effect | Action |
-|--------|--------|
-| `bonus_gems` | Queue required-color gems into next cascade |
-| `score_boost` | +50 flat score |
-| `objective_boost` | +2 objective progress (can trigger auto-complete) |
-
-**Catalog:** `ENCOUNTER_CATALOG` in `src/types/expedition.ts` (11 event types)
-
-### Encounter Flash
-
-ActiveEncounterPanel shows a brief overlay with the effect label + souvenir emoji (if dropped). Auto-dismisses after 2s.
-
-## Souvenir Drops
-
-Each encounter rolls against a per-item `dropChance` (0.15–0.6).
-
-**Catalog:** `SOUVENIR_CATALOG` in `src/types/expedition.ts` (11 items)
-
-| Item | Emoji | Drop Chance |
-|------|-------|-------------|
-| Frog Charm | 🐸 | 60% |
-| River Stone | 🪨 | 50% |
-| Trail Marker | 🪵 | 50% |
-| Pawprint Fossil | 🐾 | 35% |
-| Urban Artifact | 🏗 | 40% |
-| Flight Feather | 🪶 | 30% |
-| Spyglass Lens | 🔭 | 30% |
-| Storm Crystal | ⚡ | 15% |
-| Compass Shard | 🧭 | 20% |
-| Mystery Seed | 🌱 | 40% |
-| Lucky Coin | 🪙 | 20% |
-
-Collected souvenirs shown in **SouvenirPouch** (bottom-left, next to GemWallet). Persisted to `eco_run_nodes.rewardProfile` jsonb on node complete.
-
-## Gem Wallet
-
-Clue reveals award a random gem type (`nature_gem`, `water_gem`, `knowledge_gem`, `craft_gem`) weighted by `resourceBias` from the expedition's GIS context.
-
-**Component:** `src/components/GemWallet.tsx`
-
-## Route Trail
-
-CesiumMap draws a synthetic trail on the globe:
-- Positions fanned NE from click center (~300m spacing)
-- Dashed cyan polyline (reactive via `CallbackProperty`)
-- Point markers: gray = future, yellow = current, cyan = completed
-- Cleanup on `game-reset`
-
-## API Routes
+## Persistence
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/runs` | POST | Create run session + nodes |
-| `/api/runs/[runId]/nodes/[nodeIndex]/complete` | POST | Mark node complete, persist score/moves/souvenirs |
-| `/api/runs/[runId]` | PATCH | Persist gem wallet on run complete |
+| `/api/runs` | POST | Create run session and node rows. |
+| `/api/runs/[runId]/research-choice` | POST | Lock a contextual method choice. |
+| `/api/runs/[runId]` | PATCH | Save checkpoint metadata. |
+| `/api/runs/[runId]/nodes/[nodeIndex]/complete` | POST | Mark node complete and persist score/moves/objective progress. |
+| `/api/runs/[runId]/evidence-progress` | POST | Commit a v3 move and full board checkpoint. |
+| `/api/runs/[runId]/evidence-choice` | POST | Apply a v3 family clue and activate the next site. |
+| `/api/runs/[runId]/range` | GET | Return answer range GeoJSON after an owner’s correct v3 verdict. |
 
 ## Key Files
 
 | File | Role |
 |------|------|
-| `src/types/expedition.ts` | Types, catalogs, RunState |
-| `src/lib/nodeScoring.ts` | Node generation + scoring |
-| `src/game/scenes/Game.ts` | Objective tracking, encounter triggers, advancement requests |
-| `src/game/nodeObstacles.ts` | Obstacle typing, labels, deterministic board-state seeding |
-| `src/MainAppLayout.tsx` | Phase state machine, request validation, persistence, node advancement |
-| `src/components/ActiveEncounterPanel.tsx` | Node panel, progress bar, analysis-node advance button, encounter flash |
-| `src/components/RunTrack.tsx` | Progress track bar |
-| `src/components/GemWallet.tsx` | Gem inventory |
-| `src/components/SouvenirPouch.tsx` | Souvenir display |
-| `src/components/ExpeditionBriefing.tsx` | Briefing card |
-| `src/components/CesiumMap.tsx` | Route trail |
+| `src/types/expedition.ts` | Run state and clue economy types. |
+| `src/lib/nodeScoring.ts` | GIS-driven node generation. |
+| `src/game/scenes/Game.ts` | Board control, scoring, objective tracking. |
+| `src/game/nodeObstacles.ts` | Obstacle typing and deterministic board-state seeding. |
+| `src/contexts/ExpeditionContext.tsx` | Run phase state, persistence, node advancement. |
+| `src/components/FieldHintTicker.tsx` | Queued deterministic field-radio hints. |
+| `src/components/EvidenceFamilyRail.tsx` | Family totals, carries, locks, and choices. |
+| `src/components/CandidateRoster.tsx` | Candidate journal and final guess surface. |
+| `src/components/ExpeditionBriefing.tsx` | Start-run briefing. |
+| `src/components/CesiumMap.tsx` | Map selection and route trail. |
 
 ## EventBus Events
 
 | Event | Direction | Purpose |
 |-------|-----------|---------|
-| `expedition-data-ready` | React → React | Expedition generated, show briefing |
-| `expedition-start` | React → React | Player starts run |
-| `cesium-location-selected` | React → Phaser | Init puzzle with node params |
-| `node-objective-updated` | Phaser → React | Progress bar update |
-| `node-advance-requested` | Phaser/UI → React | Node ready to advance (request) |
-| `node-complete` | React → Phaser/Cesium/UI | Node done (fact), advance |
-| `encounter-triggered` | Phaser → React | Show encounter flash |
-| `souvenir-dropped` | Phaser → React | Collect souvenir |
-
-## Related Documentation
-
-- [Action Run Schema & GIS Sources](/docs/guides/data/database-guide) — GIS layer scoring
-- [Event Types Reference](/docs/reference/event-types) — Full event catalog
-- [Database Schema](/docs/reference/database-schema) — eco_run_sessions/nodes tables
-- [Game Constants](/docs/reference/game-constants) — Scoring multipliers
+| `expedition-data-ready` | React to React | Expedition generated, show briefing. |
+| `expedition-start` | React to React | Player starts run. |
+| `cesium-location-selected` | React to Phaser | Initialize puzzle with node params. |
+| `node-objective-updated` | Phaser to React | Progress bar update. |
+| `node-advance-requested` | Phaser/UI to React | Node ready to advance. |
+| `node-complete` | React to Phaser/Cesium/UI | Node completion fact. |

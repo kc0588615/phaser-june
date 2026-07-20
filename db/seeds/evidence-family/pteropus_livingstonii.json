@@ -1,0 +1,92 @@
+{
+  "iucn_id": 18732,
+  "scientific_name": "Pteropus livingstonii",
+  "common_name": "Livingstone's Flying Fox",
+  "cards": [
+    {
+      "family": "relatives",
+      "observation_text": "The genetic lineage retains claws or nails on at least one locomotor limb.",
+      "inference_text": "The lineage evidence favors mammals with grasping or weight-bearing digits.",
+      "trait_category": "taxonomy",
+      "compare_tag": "comparison_lineage:not_bovid",
+      "trait_phrase": "chiropteran lineage",
+      "bonus_fact_text": "It belongs to the fruit-bat family, a group of large bats native to the Old World.",
+      "source": "https://www.batcon.org/bat/livingstones-fruit-bat/",
+      "review_status": "reviewed",
+      "hints": [
+        "The family tree turns away from horn-bearing hoofed mammals.",
+        "No ruminant-line marker appears in the sample.",
+        "This branch does not lead toward cattle and antelopes.",
+        "Field team: move past the even-toed grazers."
+      ]
+    },
+    {
+      "family": "body",
+      "observation_text": "The eyes remain externally visible and face forward or outward.",
+      "inference_text": "The head evidence favors candidates with exposed eyes.",
+      "trait_category": "morphology",
+      "compare_tag": "comparison_form:not_sand_digger",
+      "trait_phrase": "flight-adapted wings",
+      "bonus_fact_text": "Its body is far smaller than its wingspan, which can reach roughly 1.4 metres.",
+      "source": "https://www.batcon.org/bat/livingstones-fruit-bat/",
+      "review_status": "reviewed",
+      "hints": [
+        "The front limbs spread wide instead of shoveling forward.",
+        "No wedge-shaped digging hand appears in the scan.",
+        "The body favors reach and lift over pushing through sand.",
+        "Field team: these forelimbs were not built as spades."
+      ]
+    },
+    {
+      "family": "behavior",
+      "observation_text": "Movement is organized around territories, temporary herds, solitary routes, or roost colonies.",
+      "inference_text": "The activity record favors flexible or place-centered social movement.",
+      "trait_category": "behavior",
+      "compare_tag": "comparison_behavior:not_matriarchal_herd",
+      "trait_phrase": "canopy roost colonies",
+      "bonus_fact_text": "Groups roost high in montane-forest trees and travel between feeding and roosting sites.",
+      "source": "https://www.batcon.org/bat/livingstones-fruit-bat/",
+      "review_status": "reviewed",
+      "hints": [
+        "The group gathers above the ground rather than marching across it.",
+        "Social ties center on a shared roost, not a walking herd.",
+        "No heavy family trail connects the resting sites.",
+        "Field team: look upward for the gathering place."
+      ]
+    },
+    {
+      "family": "habits",
+      "observation_text": "Feeding draws from vegetation, fruit, general invertebrates, or vertebrate prey.",
+      "inference_text": "The meal favors candidates with broad plant or animal food sources.",
+      "trait_category": "diet",
+      "compare_tag": "comparison_diet:not_ant_specialist",
+      "trait_phrase": "fruit and flowers",
+      "bonus_fact_text": "Fruit and flower feeding helps move seeds and pollen through island forests.",
+      "source": "https://www.batcon.org/bat/livingstones-fruit-bat/",
+      "review_status": "reviewed",
+      "hints": [
+        "The meal trace comes from plants above ground.",
+        "No opened insect nest marks the feeding site.",
+        "Sweet pulp and flower fragments outweigh chitin.",
+        "Field team: follow the canopy's seasonal food."
+      ]
+    },
+    {
+      "family": "place",
+      "observation_text": "Range records center on desert, coastal dune, tropical forest, or oceanic island habitats.",
+      "inference_text": "The map evidence favors candidates concentrated in those landscapes.",
+      "trait_category": "geography",
+      "compare_tag": "comparison_range:not_asian_big_cat_range",
+      "trait_phrase": "Comoros islands",
+      "bonus_fact_text": "The species survives only on two islands in the Comoros archipelago.",
+      "source": "https://www.batcon.org/bat/livingstones-fruit-bat/",
+      "review_status": "reviewed",
+      "hints": [
+        "The map pin sits across an ocean from continental Asia.",
+        "This range is island-bound and very small.",
+        "Volcanic slopes replace a vast mainland habitat sweep.",
+        "Field team: narrow the map to western Indian Ocean islands."
+      ]
+    }
+  ]
+}

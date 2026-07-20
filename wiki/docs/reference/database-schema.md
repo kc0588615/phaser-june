@@ -106,7 +106,7 @@ Session tracking per player.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | uuid | Primary key |
+| `id` | bigint | Primary key |
 | `player_id` | uuid | FK to profiles.user_id |
 | `started_at` | timestamptz | Session start |
 | `ended_at` | timestamptz | Session end |
@@ -122,7 +122,7 @@ Per-species discovery records.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | uuid | Primary key |
+| `id` | bigint | Identity primary key |
 | `player_id` | uuid | FK to profiles.user_id |
 | `species_id` | integer | FK to icaa.ogc_fid |
 | `session_id` | uuid | FK to player_game_sessions.id |
@@ -221,9 +221,9 @@ Per-node records within an expedition run.
 | `objective_type` | text | Objective category |
 | `objective_target` | integer | Target count |
 | `objective_progress` | integer | Current progress |
-| `hazard_profile` | jsonb | Obstacles + events config |
-| `reward_profile` | jsonb | Souvenirs and other rewards |
-| `reward_claimed` | boolean | Whether rewards collected |
+| `hazard_profile` | jsonb | Obstacles + event labels |
+| `reward_profile` | jsonb | Reserved score metadata |
+| `reward_claimed` | boolean | Whether node completion was claimed |
 | `score_earned` | integer | Score for this node |
 | `moves_used` | integer | Moves for this node |
 | `board_seed` | integer | Reproducible board seed |
@@ -231,6 +231,34 @@ Per-node records within an expedition run.
 | `ended_at` | timestamptz | Node end |
 | `created_at` | timestamptz | Created timestamp |
 | `updated_at` | timestamptz | Updated timestamp |
+
+### evidence_family_cards
+
+Reviewed v3 deduction content. Migration 026 adds one immutable clue/fact row per species and evidence family.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `species_id` | integer | Species owning the card |
+| `family` | text | `relatives`, `body`, `behavior`, `habits`, or `place` |
+| `observation_text` | text | Positive, species-name-free raw finding |
+| `inference_text` | text | One-line implication pinned with the finding |
+| `trait_category` | text | Controlled deduction profile category |
+| `compare_tag` | text | Controlled tag used for elimination |
+| `trait_phrase` | text | Short roster trait learned with the clue |
+| `bonus_fact_text` | text | Fact unlocked after correct identification |
+| `source` | text | Review source |
+| `review_status` | text | `reviewed` for deployable content |
+
+Unique constraint: `(species_id, family)`. V3 private snapshots retain selected card IDs; public run projections never expose card IDs or unselected facts.
+
+### evidence_family_hints
+
+Reviewed species/family field-radio lines. Each row has `species_id`, `family`, `sequence_index`, `hint_text`, and a compiler-checked `weak_tag`. Unique constraint: `(species_id, family, sequence_index)`.
+
+### cascade_hints
+
+Reviewed family-neutral cascade flavor. Rows contain only `sequence_index`, `hint_text`, and review metadata; they never carry a species, family, or deduction tag.
 
 ### habitat_colormap
 

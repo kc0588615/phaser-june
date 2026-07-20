@@ -45,11 +45,15 @@ export function resolveCompletedRunRoute(
   nodes: readonly CompletionNode[],
   fallbackRoute: unknown,
 ): RoutePoint[] {
-  const route: RoutePoint[] = [{ lon: startLon, lat: startLat }];
+  const route: RoutePoint[] = [{ lon: startLon, lat: startLat, waypointSlot: 0 }];
   for (const node of nodes) {
     if (node.nodeStatus !== 'completed') continue;
     const waypoint = record(record(node.boardContext).waypoint);
-    const point = normalizeRoutePolyline([waypoint])[0];
+    const slot = Number(waypoint.slot ?? waypoint.waypointSlot);
+    const point = normalizeRoutePolyline([{
+      ...waypoint,
+      ...(Number.isInteger(slot) ? { waypointSlot: slot } : {}),
+    }])[0];
     if (point) route.push(point);
   }
 

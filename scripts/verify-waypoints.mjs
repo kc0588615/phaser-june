@@ -41,12 +41,14 @@ async function verifyCase({ name, lon, lat }) {
   assert(response.status === 200, `${name}: expected HTTP 200, got ${response.status}`);
   assert(isValidLonLat(data.origin), `${name}: invalid origin`);
   assert(data.origin.lon === lon && data.origin.lat === lat, `${name}: origin mismatch`);
-  assert([25, 50, 75].includes(data.radiusKm), `${name}: unexpected radius ${data.radiusKm}`);
+  assert([75, 150, 250].includes(data.radiusKm), `${name}: unexpected radius ${data.radiusKm}`);
   assert(Array.isArray(data.waypoints), `${name}: waypoints must be an array`);
   assert(data.waypoints.length === 6, `${name}: expected six waypoints, got ${data.waypoints.length}`);
   assert(Array.isArray(data.routePolyline), `${name}: routePolyline must be an array`);
   assert(data.routePolyline.length === 6, `${name}: routePolyline must include six waypoint refs`);
   assert(data.debug?.candidateCounts && typeof data.debug.candidateCounts === 'object', `${name}: missing debug candidateCounts`);
+  assert(['preferred', 'relaxed', 'unavailable'].includes(data.debug?.researchSiteSpacing), `${name}: missing spacing diagnostic`);
+  if (data.debug.researchSiteSpacing !== 'unavailable') assert(data.debug.sameRegionFilterApplied === true, `${name}: same-region filter was not applied`);
 
   const slots = new Set();
   for (const waypoint of data.waypoints) {
@@ -73,7 +75,25 @@ async function verifyCase({ name, lon, lat }) {
 
   const typeSummary = data.waypoints.map((waypoint) => waypoint.waypointType).join(',');
   const fallbackCount = data.waypoints.filter((waypoint) => waypoint.fallback).length;
-  console.log(`${name}: ok radius=${data.radiusKm} route=${routeSlots.join(',')} types=${typeSummary} protectedCategories=${protectedCategories.join(',') || '-'} fallbacks=${fallbackCount}`);
+  const researchSites = data.waypoints.slice(0, 3);
+  const pairDistances = [];
+  for (let left = 0; left < researchSites.length; left += 1) {
+    for (let right = left + 1; right < researchSites.length; right += 1) {
+      pairDistances.push(distanceKm(researchSites[left], researchSites[right]));
+    }
+  }
+  if (data.debug.researchSiteSpacing === 'preferred') assert(pairDistances.every(distance => distance >= 150 && distance <= 800), `${name}: preferred spacing contract failed`);
+  if (data.debug.researchSiteSpacing === 'relaxed') assert(pairDistances.every(distance => distance >= 100 && distance <= 800), `${name}: relaxed spacing contract failed`);
+  console.log(`${name}: ok radius=${data.radiusKm} spacing=${data.debug.researchSiteSpacing} route=${routeSlots.join(',')} types=${typeSummary} protectedCategories=${protectedCategories.join(',') || '-'} fallbacks=${fallbackCount}`);
+}
+
+function distanceKm(a, b) {
+  const lat1 = a.lat * Math.PI / 180;
+  const lat2 = b.lat * Math.PI / 180;
+  const dLat = lat2 - lat1;
+  const dLon = (b.lon - a.lon) * Math.PI / 180;
+  const hav = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
 }
 
 async function verifyInvalidRequest() {

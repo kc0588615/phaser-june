@@ -25,6 +25,7 @@
 *:Zone.Identifier
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -54,3 +55,17 @@ CLUE_SYSTEM_GUIDE.mdx
 
 # Repomix
 repomix-output-*.xml
+
+# Generated tool output
+/.playwright-mcp/
+/.understand-anything/*
+!/.understand-anything/.understandignore
+
+# Temporary test artifacts
+/phaser-svg-query-test.png
+/phaser-svg-test.png
+/next
+/template-nextjs@1.2.0
+
+# Raw agent transcript
+/plans/012-july9-improved deducation game system

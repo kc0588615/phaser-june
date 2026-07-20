@@ -56,17 +56,35 @@
       "habitat_tag:grassland"
     ],
     "morphology_tags": [
+      "gameplay_size:large",
       "size_bucket:horse",
       "body_plan:robust",
-      "distinctive_features:stripes"
+      "distinctive_features:stripes",
+      "comparison_form:not_horned_antelope",
+      "comparison_form:not_sand_digger",
+      "comparison_form:not_trunked_giant",
+      "comparison_form:not_scaled_digger",
+      "comparison_form:not_winged_mammal"
     ],
     "diet_tags": [
-      "diet_type:carnivore"
+      "food_source:animals",
+      "diet_type:carnivore",
+      "comparison_diet:not_desert_browser",
+      "comparison_diet:not_soil_insect_hunter",
+      "comparison_diet:not_bulk_browser",
+      "comparison_diet:not_ant_specialist",
+      "comparison_diet:not_fruit_flower_forager"
     ],
     "behavior_tags": [
+      "social_pattern:solitary",
       "activity_pattern:nocturnal",
       "sociality:solitary",
-      "foraging_style:ambush"
+      "foraging_style:ambush",
+      "comparison_behavior:not_desert_herd",
+      "comparison_behavior:not_sand_swimmer",
+      "comparison_behavior:not_matriarchal_herd",
+      "comparison_behavior:not_defensive_curler",
+      "comparison_behavior:not_canopy_colony"
     ],
     "reproduction_tags": [
       "care_pattern:den",
@@ -74,13 +92,24 @@
       "lifespan_bucket:5_15y"
     ],
     "taxonomy_tags": [
+      "superorder:laurasiatheria",
       "family:felidae",
-      "genus:panthera"
+      "genus:panthera",
+      "comparison_lineage:not_bovid",
+      "comparison_lineage:not_golden_mole",
+      "comparison_lineage:not_elephant",
+      "comparison_lineage:not_pangolin",
+      "comparison_lineage:not_fruit_bat"
     ],
     "geography_tags": [
       "climate_zone:tropical",
       "climate_zone:temperate",
-      "continent:asia"
+      "continent:asia",
+      "comparison_range:not_sahara_sahel",
+      "comparison_range:not_namaqualand_dunes",
+      "comparison_range:not_south_asian_mainland",
+      "comparison_range:not_southeast_asian_forest",
+      "comparison_range:not_comoros_islands"
     ],
     "conservation_tags": [
       "iucn:EN",
@@ -89,7 +118,17 @@
       "threat_tag:agriculture"
     ],
     "key_fact_tags": [
-      "signature:swims_eight_kilometers"
+      "signature:swims_eight_kilometers",
+      "research_signal:non_saharan_range",
+      "research_signal:larger_than_mouse",
+      "research_signal:subtonne_body_mass",
+      "research_signal:non_scaled_body_cover",
+      "research_signal:ground_contact_travel",
+      "research_signal:large_ground_impression",
+      "research_signal:vertebrate_predation",
+      "research_signal:solitary_quiet",
+      "research_signal:fragmented_forest",
+      "research_signal:endangered_megafauna_cohort"
     ],
     "signature_tag": "signature:swims_eight_kilometers",
     "habitat_note": "Tropical and temperate forests, mangroves, and grasslands with prey and cover.",

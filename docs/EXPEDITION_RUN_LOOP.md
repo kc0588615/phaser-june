@@ -1,262 +1,65 @@
 # Expedition Run Loop
 
-Current runtime doc. For cross-system ownership rules, read [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md) first.
+The runtime supports v1/v2 compatibility and the Plan 018 v3 loop. New-run selection is server-gated by `EXPEDITION_CASE_VERSION`; the safe default is v2 until migration 026 and the reviewed family corpus are deployed.
 
-For the current additive `counterGem` + affinity migration status, see [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
+## V3 flow
 
-This document now describes both:
+1. `POST /api/runs` creates three nodes, six candidates, public board seeds, a public three-site `mapView`, and a private immutable five-family card map.
+2. Each site accepts exactly six legal matches. Every match advances progress; sites cannot fail.
+3. Only unique gem cells cleared by the direct resolution add literal family totals. Cascades still score and animate but add no evidence.
+4. Red DNA = Relatives, orange Paw = Body, yellow Eye = Behavior, green Leaf/Fang = Habits, and blue Pin = Place. Each gem is the family silhouette; the HUD always shows icon, name, total, likely choices, and six-move progress.
+5. After move six, all unused families tied at or above second place are offered. The selected family resets, locks, and stops spawning; other totals carry forward.
+6. The server applies one fixed-strength reviewed clue and automatically eliminates incompatible candidates. There is no evidence tier, signature, interpretation prediction, or citation step.
+7. After three distinct clues, the player guesses among one to three candidates. Wrong guesses may be revised. A correct guess unlocks the three selected-family facts on the species card.
 
-- the **current shipped/runtime loop**
-- the **planned pressure-loop evolution** toward a softer YMBAB-style chase model
+Each clue is pinned in a three-slot evidence log as Observation, Inference, and Ruled out. The candidate roster remains visible, including eliminated species, and each played family reveals that family’s own trait phrase for all six candidates. The in-run Cesium globe is replaced by a MapLibre regional route map; Cesium remains the selection and recap surface. The answer range is available only from the authenticated post-verdict range endpoint.
 
-Core gameplay loop: map click → expedition briefing → 6-node run → deduction camp → completion summary.
+Every accepted move persists the full board grid, blocker state, score, refill queue, allowed gems, move count, and RNG state. Identical retries are idempotent; conflicting same-move retries return `move_locked`. No move log is stored.
 
-## Design Position
+Between sites, the journal uses stored waypoints and safe distance wording (`near`, `approaching`). It does not claim crossing or entering without a stored relation.
 
-The project is no longer aiming for a literal *You Must Build A Boat* clone.
+The three playable waypoints prefer 150–800 km pairwise spacing inside the basecamp’s contiguous One Earth polygon. Selection retries at 75, 150, and 250 km search radii, relaxes to a 100 km floor, then records an `unavailable` diagnostic instead of failing run creation.
 
-The current game keeps several YMBAB-inspired structural elements:
+## V2 compatibility flow
 
-- a 6x6 wraparound action board
-- action-gem-driven node objectives
-- crates/consumables
-- encounter events tied to board output
+## Flow
 
-But it intentionally diverges in its emotional core:
+1. `POST /api/runs` creates three nodes, a six-candidate case, board seeds, a public method-offer tree, and a private immutable evidence matrix.
+2. Before each board, Field Notebook offers two unused methods derived only from public node types and prior choices.
+3. `POST /api/runs/[runId]/research-choice` locks the choice. Same-method retries are idempotent; different retries return `choice_locked`.
+4. The chosen method becomes the board objective. Each method applies a counting verb (`src/expedition/methodVerbs.ts`): Track needs a fresh trail (within 2 moves of the last method match; any method match rewarms a cold trail), Observe counts only 4+ matches, Survey counts only matches touching seeded board zones, Listen doubles cascade contributions, Analyze counts everything.
+5. Phaser reports objective progress plus the largest selected-method match from direct resolution only; cascades count for progress, never for sampling quality. A met objective with no direct method match still earns Broad.
+5a. Off-method matches of 4+ drip one fact about a public case candidate (max 1/move, 4/node, seeded rotation). Client-only study material (`field-note-dripped` → `caseState.fieldNotes`); never persisted, never cites, never leaks the answer.
+6. Node completion stores the final bounded maximum. Failed objectives issue no evidence.
+7. Successful match 3/4/5-8 issues Broad/Replicated/High-resolution evidence from the private card matrix.
+8. The player predicts eliminations, then commits the interpretation. Inference and tags stay hidden until commit.
+9. After three nodes, an eligible signature may resolve residual ambiguity.
+10. Final deduction cites exactly `min(2, interpreted observations)` issued, interpreted refs, then selects a species.
 
-- no hard left-edge death state
-- no direct clue-reveal pressure during node play
-- a calmer banked-score economy with a post-run deduction phase
+Methods never repeat, including after a failed node. Evidence quality measures sampling only; interpretation accuracy is separate.
 
-The intended identity is now:
+## Versions
 
-- **YMBAB-inspired board grammar**
-- **expedition node progression**
-- **science discovery and species deduction as the meta-loop**
+- v1 snapshots retain fixed Track -> Observe -> Survey and their stored evidence chain.
+- v2 snapshots use contextual offers and tiered card matrices.
+- v3 snapshots use six-move family charging, fixed-strength clues, automatic elimination, and exact board checkpoints.
+- Missing private version plus a valid `chainCardIds` is v1.
+- Invalid snapshots are rejected; v1 runs are not reset into v2.
 
-## Current Runtime vs Planned Direction
+## Economy
 
-### Current runtime
+No energy or Insight currency exists. No move log is stored. Board score, guess bonus, efficiency bonus, and wrong-guess bonus decay are unchanged.
 
-- Nodes are solved by matching required action gems until `objectiveTarget` is filled.
-- Pressure comes from the **spook meter** (tracking window that decays each second) plus move limits as a secondary lever.
-- Three per-node outcomes: **stabilized** (best rewards), **spooked** (reduced rewards), **escaped** (run ends early → Deduction Camp).
-- Loot gems award clue fragments instead of direct clue reveals.
-- After the route (or early escape), the player spends banked score in Deduction Camp to buy clues and make a species guess.
-- Action gem labels use fieldwork language (Observe, Scan, Camouflage, Traverse, Focus, Field Notes, Backpack, Burst).
+## Persistence
 
-## Run Phases
+- `POST /api/runs`: idempotent versioned creation by `createRequestId`.
+- `POST /api/runs/[runId]/research-choice`: locked method selection and server choice latency.
+- `PATCH /api/runs/[runId]`: objective/quality checkpoint and interpretation commit.
+- `POST /api/runs/[runId]/nodes/[nodeIndex]/complete`: atomic objective result and final quality.
+- `POST /api/runs/[runId]/observations`: server-only evidence issuance.
+- `POST /api/runs/[runId]/guess`: citation validation and species verdict.
+- `POST /api/runs/[runId]/evidence-progress`: v3 move totals, exact board checkpoint, deterministic soft hints, and cascade flavor.
+- `POST /api/runs/[runId]/evidence-choice`: v3 family lock, observation/inference application, all-candidate trait phrases, per-candidate elimination reasons, and next-site activation.
+- `GET /api/runs/[runId]/range`: simplified answer range GeoJSON, owner-only and locked until a correct completed v3 verdict.
 
-`RunPhase`: `idle` → `briefing` → `in-run` → `deduction` → `complete`
-
-- **idle**: waiting for map click
-- **briefing**: ExpeditionBriefing shown as a dismissible overlay on the Cesium map. Player can close it (✕ button) to return to the map and click a different location. Map clicks are not blocked during briefing — clicking a new location replaces the current briefing with fresh expedition data.
-- **in-run**: puzzle active, nodes advance sequentially. Map clicks blocked.
-- **deduction**: Deduction Camp — player spends banked score to buy clues and guess the species (see [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md)). Map clicks blocked. Clue-reveal toasts are suppressed; purchased clues appear directly in the DenseClueGrid.
-- **complete**: all nodes done, summary shown
-
-State tracked in `RunState` (`src/types/expedition.ts`), managed by `MainAppLayout.tsx`.
-
-## Data Flow
-
-1. Map click → `/api/protected-areas/at-point` → GIS scoring + node generation
-2. CesiumMap emits `expedition-data-ready` with `ExpeditionData` payload
-3. MainAppLayout stores payload, shows briefing, sets `phase: 'briefing'`
-4. Player clicks Start → `expedition-start` event → `phase: 'in-run'`
-5. MainAppLayout emits `cesium-location-selected` with first node's params
-6. Game.ts `initializeBoardFromCesium` receives node config (requiredGems, objectiveTarget, events, etc.)
-7. Player matches gems → objective progress → `node-objective-updated`
-8. When a node is ready to advance, game/UI emits `node-advance-requested`
-9. MainAppLayout validates request, persists node completion, advances run state, emits `node-complete`
-
-## Node Generation
-
-**File:** `src/lib/nodeScoring.ts` — `generateRunNodes()`
-
-6 nodes per expedition:
-- **Node 1**: Primary from highest-scoring GIS layer
-- **Nodes 2-4**: Modifiers from secondary layers + habitat signals
-- **Node 5**: Filler (varied type avoiding duplicate gem pairs) or storm_window
-- **Node 6**: Always `analysis` (no gem objective)
-
-### Node Templates
-
-| Node Type | Required Gems | Obstacles | Events |
-|-----------|---------------|-----------|--------|
-| `riverbank_sweep` | shield, power | flow_shift, mud_tiles | amphibian_signal, river_crossing |
-| `dense_canopy` | sword, crate | overgrowth, low_visibility | trail_markings, rare_track |
-| `urban_fringe` | key, thought | junk_blockers, noise_interference | human_disturbance, corridor_crossing |
-| `elevation_ridge` | staff, shield | steep_terrain | vantage_scan |
-| `storm_window` | power, multiplier | time_pressure, signal_dropout | urgent_tracking_window, migration_shift |
-| `custom` | crate, thought | unknown_terrain | discovery_event |
-| `analysis` | (none) | limited_signal | wager_guess |
-
-Each template has a unique gem pair to ensure variety within an expedition. Filler logic cycles through unused gem pairs.
-
-### Obstacle Seeding
-
-- Obstacles are typed in `src/game/nodeObstacles.ts`.
-- Some obstacles now seed deterministic per-cell board state during node initialization.
-- `boardContext` is generated once from node index + obstacle list and reused by runtime/persistence.
-- Current static seeded footprints:
-  - `mud_tiles`
-  - `overgrowth`
-  - `junk_blockers`
-  - `steep_terrain`
-  - `signal_dropout`
-  - `noise_interference`
-  - `unknown_terrain`
-  - `limited_signal`
-- Current dynamic-only placeholders with no per-cell mechanic yet:
-  - `flow_shift`
-  - `low_visibility`
-  - `time_pressure`
-
-The seeded state is visual/system scaffolding only right now; it does not yet change match resolution.
-
-### Gem Objective
-
-Nodes with `requiredGems.length > 0` get `objectiveTarget: 6`. Player matches the required action gems for the node objective. Loot-colored clue gems do not drive node completion; they feed clue fragments for the deduction phase. Match-4+ of required objective gems instantly completes the node.
-
-## Node Objective Tracking (Game.ts)
-
-- `nodeRequiredGems: Set<GemType>` — action gems that count toward objective
-- `nodeObjectiveProgress: number` — incremented per matched required gem
-- `nodeObjectiveTarget: number` — target count (6 for gem nodes, 0 for analysis)
-- `nodeObjectiveCompleted: boolean` — prevents double-fire
-
-Objective counting reads gem types from `phaseResult.matchGridState` (snapshot taken after swap, before explode-and-replace). This is independent of species/clue state — nodes with no species still track gem objectives. Progress is emitted via `node-objective-updated`. `ActiveEncounterPanel` is display-only for gem-objective nodes.
-
-## Node Advancement Ownership
-
-- Phaser owns objective tracking.
-- React owns expedition advancement and persistence.
-- `node-complete` is a completion fact emitted once by `MainAppLayout`, not a request signal.
-- Analysis nodes use a panel button that emits `node-advance-requested`.
-
-## Spook Meter (Chase Pressure)
-
-The node bonus decay timer has been re-themed and mechanically upgraded into an **animal tracking / spook meter** with three outcome tiers per node.
-
-### Tier thresholds
-
-| Tier | % Range | Base reward | Bonus multiplier | Run effect |
-|------|---------|-------------|------------------|------------|
-| **Stabilized** | > 60% | 1.0x | 1.0x | Continue to next node |
-| **Spooked** | 20–60% | 0.75x | 0.5x | Continue with reduced rewards |
-| **Escaped** | ≤ 20% | 0.5x | 0x | Skip remaining nodes → Deduction Camp |
-
-- `SpookTier` type and `getSpookTier(pct)` helper in `src/types/expedition.ts`
-- Meter floor lowered from 40% to 20% to create the escaped zone
-- `node-bonus-tick` event now includes `tier: SpookTier`
-- `node-advance-requested` reason union includes `'escaped'`
-
-### Escape behavior
-
-When the spook meter drops to ≤ 20%, or moves are exhausted without completing the objective:
-
-1. Game.ts stops the decay timer and emits `node-rewards-summary` with escaped tier multipliers
-2. Game.ts emits `node-advance-requested` with `reason: 'escaped'`
-3. MainAppLayout skips remaining nodes and transitions directly to `phase: 'deduction'`
-4. Player enters Deduction Camp with whatever banked score + fragments they accumulated
-
-Spook state does **not** carry between nodes — each node resets fresh. The structural consequence of escape is fewer completed nodes (fewer fragments, less banked score), making Deduction Camp harder but still playable.
-
-### Gem effect integration
-
-- `shield` (Camouflage) → `decay_slow` effect halves meter decay for 5s
-- `power` (Focus) → `score_multiply` effect boosts node payout
-- Moves exhausted during expeditions now triggers escape instead of the GameOver scene
-
-### Why not a pure YMBAB treadmill
-
-A literal left-edge fail state would conflict with the explorer-science tone. The compromise: live urgency without harsh punishment, and partial-information runs still produce meaningful deduction gameplay.
-
-## Encounters
-
-Every 3rd cumulative match group within a node triggers an encounter from the node's `events[]` array.
-
-- `nodeMatchGroupTotal` accumulates across all moves + cascades
-- Events cycle if more encounters fire than events available
-- Each encounter applies an effect + rolls a souvenir
-
-### Encounter Effects (`ENCOUNTER_CATALOG`)
-
-| Effect | Behavior |
-|--------|----------|
-| `bonus_gems` | Queues required-color gems into next cascade |
-| `score_boost` | +50 flat score |
-| `objective_boost` | +2 objective progress (can trigger auto-complete) |
-
-### Souvenir Drops (`SOUVENIR_CATALOG`)
-
-Each encounter rolls against `dropChance` (0.15–0.6). Drops collected in `RunState.souvenirs`, displayed in SouvenirPouch, persisted to `rewardProfile` jsonb on `eco_run_nodes`.
-
-## Run Economy
-
-- Loot-colored clue gems award clue fragments by category during the run.
-- Action gems drive node scoring, encounters, and end-of-run deduction discounts.
-- `GemWallet` remains displayed for legacy resources and crate rewards, but the expedition clue loop is no longer based on direct clue reveals during board play.
-
-### Gem semantic remap (implemented)
-
-Action gem labels have been re-themed from combat abstractions to fieldwork verbs. Code-level `GemType` enum values are unchanged; only display labels in `src/expedition/domain.ts` changed.
-
-| Code value | Label | Effect |
-|------------|-------|--------|
-| `sword` | Observe | direct_score |
-| `staff` | Scan | trivia_boost |
-| `shield` | Camouflage | decay_slow (spook meter buffer) |
-| `key` | Traverse | open_cache |
-| `power` | Focus | score_multiply |
-| `thought` | Field Notes | clue_discount |
-| `crate` | Backpack | grant_consumable |
-| `multiplier` | Burst | combo_enhance |
-
-Wallet currencies: Supplies, Focus, Insight, Samples.
-Consumables: Signal Flare, Bait, Trail Map, Field Kit.
-
-## Route Trail (CesiumMap)
-
-Synthetic positions fanned NE from click center (~300m spacing). Dashed cyan polyline + point markers (gray=future, yellow=current, cyan=completed). Uses `CallbackProperty` for reactive updates.
-
-## API Routes
-
-- `POST /api/runs` — create run session + nodes
-- `POST /api/runs/[runId]/nodes/[nodeIndex]/complete` — mark node done, persist score/moves/souvenirs
-- `PATCH /api/runs/[runId]` — persist run metadata on completion (resource wallet, final score, deduction summary)
-
-Initial node persistence now stores generated board context alongside rationale/difficulty.
-
-## Key Files
-
-| File | Role |
-|------|------|
-| `src/types/expedition.ts` | RunState, RunNode, ExpeditionData, encounter/souvenir catalogs |
-| `src/lib/nodeScoring.ts` | Node generation, scoring, templates |
-| `src/game/scenes/Game.ts` | Objective tracking, encounter triggers, advancement requests |
-| `src/game/nodeObstacles.ts` | Obstacle typing, labels, deterministic board-state seeding |
-| `src/MainAppLayout.tsx` | Run phase state machine, request validation, persistence, node advancement |
-| `src/components/ActiveEncounterPanel.tsx` | Node info panel, objective progress bar, analysis-node advance button, encounter flash |
-| `src/components/RunTrack.tsx` | Node progress track bar |
-| `src/components/GemWallet.tsx` | Gem inventory display |
-| `src/components/SouvenirPouch.tsx` | Souvenir collection display |
-| `src/components/ExpeditionBriefing.tsx` | Pre-run briefing card |
-| `src/components/CesiumMap.tsx` | Route trail polyline + node markers |
-
-## Planned Next Steps
-
-1. ~~Spook meter with stabilized/spooked/escaped tiers~~ — done
-2. Reduce the design importance of move caps so nodes feel less like discrete turn budgets.
-3. ~~Visible tracking/escape state in the HUD~~ — done
-4. ~~Re-theme gems and encounters around fieldwork instead of combat~~ — done
-5. Keep Deduction Camp as the primary end-of-run sink and identity anchor.
-6. Tune spook meter decay rates and tier thresholds via playtesting.
-7. Support partial-run summaries in Deduction Camp for escaped expeditions.
-
-## DB Tables
-
-- `eco_run_sessions` — run metadata, score totals, gem wallet
-- `eco_run_nodes` — per-node objectives, rewards, status
-
-See also: [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) for GIS layer scoring details.
+Deferred: durable move logs, legacy economy cleanup, and album/foil quality surfacing.

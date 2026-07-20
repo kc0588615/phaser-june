@@ -1,0 +1,92 @@
+{
+  "iucn_id": 7140,
+  "scientific_name": "Elephas maximus",
+  "common_name": "Asian Elephant",
+  "cards": [
+    {
+      "family": "relatives",
+      "observation_text": "The genetic sample comes from a placental lineage that retains functional teeth.",
+      "inference_text": "The lineage evidence favors toothed mammal branches.",
+      "trait_category": "taxonomy",
+      "compare_tag": "comparison_lineage:not_pangolin",
+      "trait_phrase": "proboscidean lineage",
+      "bonus_fact_text": "Its wider lineage includes hyraxes, sea cows, tenrecs, and golden moles.",
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed",
+      "hints": [
+        "The family tree avoids the branch of scale-armored mammals.",
+        "This lineage does not converge on the specialist ant eaters.",
+        "Genetic markers point away from toothless, keratin-plated forms.",
+        "Field team: the sample belongs elsewhere in the mammal tree."
+      ]
+    },
+    {
+      "family": "body",
+      "observation_text": "The feet end in hooves, nails, fixed claws, or wing digits.",
+      "inference_text": "The limb evidence favors candidates with fixed weight-bearing digits.",
+      "trait_category": "morphology",
+      "compare_tag": "comparison_form:not_striped_cat",
+      "trait_phrase": "grasping trunk",
+      "bonus_fact_text": "Its trunk combines breathing, smelling, touching, grasping, and sound production.",
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed",
+      "hints": [
+        "The silhouette is broad and upright, not low and feline.",
+        "No banded coat pattern appears in the sample.",
+        "The feet support weight rather than a stalking stride.",
+        "Field team: this is not a striped four-pawed hunter."
+      ]
+    },
+    {
+      "family": "behavior",
+      "observation_text": "Travel and resting traces remain in contact with land or soil.",
+      "inference_text": "The route favors candidates whose daily movement is ground-based.",
+      "trait_category": "behavior",
+      "compare_tag": "comparison_behavior:not_canopy_colony",
+      "trait_phrase": "matriarchal herds",
+      "bonus_fact_text": "Related females and young form social herds led by experienced adults.",
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed",
+      "hints": [
+        "The social group gathers on the ground.",
+        "Resting sites leave heavy traces below the trees.",
+        "No hanging roost or aerial departure appears in the log.",
+        "Field team: the group travels together at ground level."
+      ]
+    },
+    {
+      "family": "habits",
+      "observation_text": "Food comes from forest vegetation, soil invertebrates, or animal prey.",
+      "inference_text": "The meal favors candidates tied to richer feeding grounds.",
+      "trait_category": "diet",
+      "compare_tag": "comparison_diet:not_desert_browser",
+      "trait_phrase": "bulk plant browser",
+      "bonus_fact_text": "A varied plant diet can include grasses, bark, roots, leaves, and cultivated crops.",
+      "source": "https://nationalzoo.si.edu/animals/asian-elephant",
+      "review_status": "reviewed",
+      "hints": [
+        "This feeder needs a great volume of vegetation.",
+        "The meal site is too abundant for a sparse-desert specialist.",
+        "Bark, roots, and leafy growth all show disturbance.",
+        "Field team: think bulk feeding, not moisture-saving bites."
+      ]
+    },
+    {
+      "family": "place",
+      "observation_text": "The range record comes from inland desert, Asian forest, or an oceanic island.",
+      "inference_text": "The map evidence favors candidates associated with those regional landscapes.",
+      "trait_category": "geography",
+      "compare_tag": "comparison_range:not_namaqualand_dunes",
+      "trait_phrase": "South and Southeast Asia",
+      "bonus_fact_text": "Remaining populations occur in fragmented habitats across South and Southeast Asia.",
+      "source": "https://www.worldwildlife.org/species/asian-elephant",
+      "review_status": "reviewed",
+      "hints": [
+        "The map footprint spans far more than one coastal dune belt.",
+        "This range crosses forests and grasslands on a continental scale.",
+        "The location signal points east of southern Africa.",
+        "Field team: widen the search across tropical Asia."
+      ]
+    }
+  ]
+}

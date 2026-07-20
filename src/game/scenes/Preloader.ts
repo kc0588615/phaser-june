@@ -26,6 +26,13 @@ export class Preloader extends Phaser.Scene {
                 this.load.image(key, path);
             }
         });
+        (['red', 'orange', 'yellow', 'green', 'blue'] as GemType[]).forEach(type => {
+            this.load.svg(
+                AssetKeys.EVIDENCE_GEM_TEXTURE(type),
+                `${assetsFullPath}evidence/${type}.svg?v=018-2`,
+                { width: 128, height: 128 },
+            );
+        });
 
         // Load sounds if/when added
         // this.load.audio(AssetKeys.SOUND_MATCH, [`${assetsFullPath}sounds/match.ogg`, `${assetsFullPath}sounds/match.mp3`]);

@@ -15,13 +15,29 @@ function flow(overrides: Partial<CaseFlowState>): CaseFlowState {
   return { ...createFlowState(), ...overrides };
 }
 
-const DONE = { completed: true, objectiveMet: true };
-const MISSED = { completed: true, objectiveMet: false };
-const OPEN = { completed: false, objectiveMet: false };
+const DONE = { completed: true, objectiveMet: true, chosenMethod: 'track' as const };
+const MISSED = { completed: true, objectiveMet: false, chosenMethod: 'track' as const };
+const OPEN = { completed: false, objectiveMet: false, chosenMethod: null };
 
 describe('nextFlowStep', () => {
   it('starts a fresh run on board 0', () => {
     assert.deepEqual(nextFlowStep(createFlowState()), { kind: 'board', nodeIndex: 0 });
+  });
+
+  it('starts a fresh v2 run at method choice, then opens the chosen board', () => {
+    const state = createFlowState(2);
+    assert.deepEqual(nextFlowStep(state), { kind: 'choose_method', nodeIndex: 0 });
+    state.nodes[0].chosenMethod = 'survey';
+    assert.deepEqual(nextFlowStep(state), { kind: 'board', nodeIndex: 0 });
+  });
+
+  it('opens a v3 choice after six moves and guesses after three applied clues', () => {
+    const state = createFlowState(3);
+    assert.deepEqual(nextFlowStep(state), { kind: 'board', nodeIndex: 0 });
+    state.nodes[0].segmentMovesUsed = 6;
+    assert.deepEqual(nextFlowStep(state), { kind: 'choose_evidence', nodeIndex: 0 });
+    state.nodes = state.nodes.map(node => ({ ...node, completed: true, objectiveMet: true, chosenFamily: 'body', segmentMovesUsed: 6 }));
+    assert.deepEqual(nextFlowStep(state), { kind: 'guess' });
   });
 
   it('recovers the earned observation right after a victorious node completes', () => {
@@ -54,7 +70,7 @@ describe('nextFlowStep', () => {
     assert.deepEqual(nextFlowStep(state), { kind: 'signature-attempt' });
   });
 
-  it('goes to guess when the signature attempt has been settled by a 403', () => {
+  it('goes to guess when the signature attempt reports unavailable', () => {
     const state = flow({ nodes: [DONE, DONE, DONE], issuedRefs: ['obs-0', 'obs-1', 'obs-2'], committedRefs: ['obs-0', 'obs-1', 'obs-2'], signatureSettled: true });
     assert.deepEqual(nextFlowStep(state), { kind: 'guess' });
   });
@@ -83,6 +99,7 @@ describe('nextFlowStep', () => {
 describe('stageForStep / currentNodeIndexForStep', () => {
   it('maps steps onto the three case stages', () => {
     assert.equal(stageForStep({ kind: 'board', nodeIndex: 1 }), 'board');
+    assert.equal(stageForStep({ kind: 'choose_method', nodeIndex: 1 }), 'choose_method');
     assert.equal(stageForStep({ kind: 'interpret', ref: 'obs-1' }), 'interpreting');
     assert.equal(stageForStep({ kind: 'recover-observation', nodeIndex: 0 }), 'interpreting');
     assert.equal(stageForStep({ kind: 'signature-attempt' }), 'interpreting');
@@ -91,6 +108,7 @@ describe('stageForStep / currentNodeIndexForStep', () => {
 
   it('reports the node the HUD should call current', () => {
     assert.equal(currentNodeIndexForStep({ kind: 'board', nodeIndex: 2 }), 2);
+    assert.equal(currentNodeIndexForStep({ kind: 'choose_method', nodeIndex: 1 }), 1);
     assert.equal(currentNodeIndexForStep({ kind: 'interpret', ref: 'obs-1' }), 1);
     assert.equal(currentNodeIndexForStep({ kind: 'interpret', ref: 'obs-3' }), 2);
     assert.equal(currentNodeIndexForStep({ kind: 'signature-attempt' }), 2);

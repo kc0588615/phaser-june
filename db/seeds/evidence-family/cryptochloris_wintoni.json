@@ -1,0 +1,92 @@
+{
+  "iucn_id": 5748,
+  "scientific_name": "Cryptochloris wintoni",
+  "common_name": "De Winton's Golden Mole",
+  "cards": [
+    {
+      "family": "relatives",
+      "observation_text": "Genetic markers align with placental lineages whose adults remain below one metric tonne.",
+      "inference_text": "The lineage evidence favors smaller-bodied mammal branches.",
+      "trait_category": "taxonomy",
+      "compare_tag": "comparison_lineage:not_elephant",
+      "trait_phrase": "afrotherian lineage",
+      "bonus_fact_text": "Golden moles share an ancient African lineage with elephants, tenrecs, and aardvarks.",
+      "source": "https://www.rewild.org/news/de-wintons-golden-mole-rediscovered",
+      "review_status": "reviewed",
+      "hints": [
+        "The family tree shares old roots with giants but takes another branch.",
+        "The genetic trail turns away from trunk-bearing mammals.",
+        "Ancient African ancestry is present without the heaviest body plan.",
+        "Field team: follow the smaller offshoot of this deep lineage."
+      ]
+    },
+    {
+      "family": "body",
+      "observation_text": "The primary body surface is fur, hair, or bare skin.",
+      "inference_text": "The covering favors candidates with a flexible outer surface.",
+      "trait_category": "morphology",
+      "compare_tag": "comparison_form:not_scaled_digger",
+      "trait_phrase": "digging foreclaws",
+      "bonus_fact_text": "Its compact body and powerful foreclaws are specialized for moving through sand.",
+      "source": "https://www.rewild.org/news/de-wintons-golden-mole-rediscovered",
+      "review_status": "reviewed",
+      "hints": [
+        "The surface sample feels soft rather than plated.",
+        "No shingle-like armor appears along the back.",
+        "The protective covering bends continuously instead of overlapping.",
+        "Field team: the body scan found no keratin shield."
+      ]
+    },
+    {
+      "family": "behavior",
+      "observation_text": "Movement traces show continuous searching along a feeding route.",
+      "inference_text": "The route favors candidates that forage while traveling.",
+      "trait_category": "behavior",
+      "compare_tag": "comparison_behavior:not_solitary_ambusher",
+      "trait_phrase": "sand swimming",
+      "bonus_fact_text": "It travels through loose coastal dunes in shallow tunnels that can leave subtle surface ridges.",
+      "source": "https://www.rewild.org/news/de-wintons-golden-mole-rediscovered",
+      "review_status": "reviewed",
+      "hints": [
+        "The trail is continuous and close to the ground, not a patient stalk.",
+        "No waiting point overlooks a prey path.",
+        "Movement notes show searching rather than a sudden pounce.",
+        "Field team: this subject is not shadowing a large target."
+      ]
+    },
+    {
+      "family": "habits",
+      "observation_text": "The feeding trace lies at ground level or within loose soil.",
+      "inference_text": "The meal favors candidates that forage on land or underground.",
+      "trait_category": "diet",
+      "compare_tag": "comparison_diet:not_fruit_flower_forager",
+      "trait_phrase": "soil invertebrates",
+      "bonus_fact_text": "Its diet is expected to center on small invertebrates found in sandy soils.",
+      "source": "https://www.rewild.org/news/de-wintons-golden-mole-rediscovered",
+      "review_status": "reviewed",
+      "hints": [
+        "The meal trace lies below the branches.",
+        "No fruit pulp or flower fragments appear at the feeding site.",
+        "The foraging path runs through substrate rather than foliage.",
+        "Field team: search low for very small animal prey."
+      ]
+    },
+    {
+      "family": "place",
+      "observation_text": "The range record connects to coastline or forest cover.",
+      "inference_text": "The map evidence favors coastal or forest-associated candidates.",
+      "trait_category": "geography",
+      "compare_tag": "comparison_range:not_sahara_sahel",
+      "trait_phrase": "Namaqualand dunes",
+      "bonus_fact_text": "The known habitat lies in the coastal dunes of South Africa's Namaqualand region.",
+      "source": "https://www.rewild.org/news/de-wintons-golden-mole-rediscovered",
+      "review_status": "reviewed",
+      "hints": [
+        "These dunes meet cool coastal air rather than an inland desert belt.",
+        "The map point sits well south of the great northern desert.",
+        "Ocean influence reaches this sandy habitat.",
+        "Field team: shift the map toward Africa's southwestern coast."
+      ]
+    }
+  ]
+}

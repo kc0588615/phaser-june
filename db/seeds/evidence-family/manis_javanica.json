@@ -1,0 +1,92 @@
+{
+  "iucn_id": 12763,
+  "scientific_name": "Manis javanica",
+  "common_name": "Sunda Pangolin",
+  "cards": [
+    {
+      "family": "relatives",
+      "observation_text": "Genetic markers track placental branches with plant-processing, digging, or flight specializations.",
+      "inference_text": "The lineage evidence favors mammals shaped by those specializations.",
+      "trait_category": "taxonomy",
+      "compare_tag": "comparison_lineage:not_big_cat",
+      "trait_phrase": "pholidotan lineage",
+      "bonus_fact_text": "Pangolins form their own mammal order and are more closely related to carnivorans than to armadillos.",
+      "source": "https://www.worldwildlife.org/species/sunda-pangolin",
+      "review_status": "reviewed",
+      "hints": [
+        "The family tree passes near predators but leaves the cat branch behind.",
+        "The genetic sample is not from a true feline.",
+        "Shared ancestry does not mean a shared hunting lineage here.",
+        "Field team: look beyond the familiar big-paw branch."
+      ]
+    },
+    {
+      "family": "body",
+      "observation_text": "The forelimbs retain compact digits for support, grasping, or digging.",
+      "inference_text": "The limb evidence favors candidates built for surfaces and soil.",
+      "trait_category": "morphology",
+      "compare_tag": "comparison_form:not_winged_mammal",
+      "trait_phrase": "keratin scales",
+      "bonus_fact_text": "Overlapping keratin scales protect most of its body when it curls into a ball.",
+      "source": "https://www.worldwildlife.org/species/sunda-pangolin",
+      "review_status": "reviewed",
+      "hints": [
+        "The forelimbs meet the ground instead of stretching into airfoils.",
+        "No flight membrane appears between the digits.",
+        "The body plan is built for climbing and digging, not lift.",
+        "Field team: keep this subject on a solid surface."
+      ]
+    },
+    {
+      "family": "behavior",
+      "observation_text": "Movement centers on a stable home range, territory, tunnel system, or roost.",
+      "inference_text": "The route favors candidates that repeatedly use a familiar area.",
+      "trait_category": "behavior",
+      "compare_tag": "comparison_behavior:not_desert_herd",
+      "trait_phrase": "defensive curling",
+      "bonus_fact_text": "It usually forages alone at night and can climb as well as dig.",
+      "source": "https://www.worldwildlife.org/species/sunda-pangolin",
+      "review_status": "reviewed",
+      "hints": [
+        "The tracks belong to one quiet traveler.",
+        "No broad line of hoofprints crosses the open ground.",
+        "Movement stays close to cover rather than roaming with a herd.",
+        "Field team: this route was made alone."
+      ]
+    },
+    {
+      "family": "habits",
+      "observation_text": "Feeding focuses on plants, fruit, termites, ants, or vertebrate prey.",
+      "inference_text": "The meal favors candidates with a concentrated food target.",
+      "trait_category": "diet",
+      "compare_tag": "comparison_diet:not_soil_insect_hunter",
+      "trait_phrase": "ants and termites",
+      "bonus_fact_text": "A long sticky tongue collects ants and termites from nests opened by strong claws.",
+      "source": "https://www.worldwildlife.org/species/sunda-pangolin",
+      "review_status": "reviewed",
+      "hints": [
+        "The feeding marks focus on organized insect nests.",
+        "This diner does not sift broadly through beach sand.",
+        "Opened chambers suggest a narrow prey search.",
+        "Field team: follow the trail toward ants and termites."
+      ]
+    },
+    {
+      "family": "place",
+      "observation_text": "Range records connect to arid Africa, coastal southern Africa, broader Asian forest, or oceanic islands.",
+      "inference_text": "The map evidence favors candidates centered in those regions.",
+      "trait_category": "geography",
+      "compare_tag": "comparison_range:not_south_asian_mainland",
+      "trait_phrase": "Southeast Asian forests",
+      "bonus_fact_text": "Its range extends through parts of mainland and island Southeast Asia.",
+      "source": "https://www.worldwildlife.org/species/sunda-pangolin",
+      "review_status": "reviewed",
+      "hints": [
+        "The range tightens toward humid Southeast Asia.",
+        "The western edge stops short of a wider subcontinental sweep.",
+        "Island and peninsula forests matter more than open mainland breadth.",
+        "Field team: narrow the map toward the southeast."
+      ]
+    }
+  ]
+}

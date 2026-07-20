@@ -1,18 +1,14 @@
 # Database User Guide
 
-> **OUTDATED — architecture superseded (2026-04-22)**
-> This guide describes the old `icaa_view` / taxa-table normalization approach, which has been
-> removed. The current architecture uses:
-> - `iucn` — raw IUCN range shapefile table (source-owned field names: id_no, sci_name, etc.)
-> - `species` — curated game/app table (stable FK target for all game tables)
-> - All game FKs point to `species.id`; spatial joins use `species.iucn_id = iucn.id_no`
->
-> See `docs/SPECIES_TABLE_SIMPLIFICATION_PLAN.md` for the current architecture and
-> `docs/SHAPEFILE_BEST_PRACTICES.mdx` for the ETL/import guide.
+> **Checked against live DB: 2026-07-05.**
+> Current clue data lives in `species`, `species_facts`,
+> `species_deduction_profiles`, `species_deduction_clues`,
+> `player_clue_unlocks`, and `species_card_unlocks`.
+> The old `icaa_view` / `taxa` / `icaa` clue read path is gone from the live DB.
 
 ## Overview
 
-This guide provides historical documentation for the database architecture used in the Species Discovery Game. It focuses on the (now-removed) `icaa_view` compatibility view and the normalized biodiversity schema. Kept for historical reference; do not follow for new development.
+This guide documents the current app-owned clue tables and related database conventions for the Species Discovery Game.
 
 ## Current Database Architecture
 
@@ -22,41 +18,69 @@ This guide provides historical documentation for the database architecture used 
 - **Spatial Features**: PostGIS for geographic queries
 - **Real-time**: None (Standard REST/Server Actions)
 
-See `docs/SHAPEFILE_BEST_PRACTICES.mdx` for pre-import guidance on spatial data fields and types.
+See `docs/SHAPEFILE_BEST_PRACTICES.md` for pre-import guidance on spatial data fields and types.
 
 ### Database Tables
 
-#### 1. `icaa_view` (Compatibility View - Primary Read Path)
-The app reads species data through `icaa_view`, which exposes legacy columns while sourcing from the normalized tables (`taxa`, `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`, etc.).
+#### 1. `species`
+Curated game/app species table. Stable FK target for clue and game tables.
 
-- Preserves existing column names used by the app
-- Backed by normalized tables for multi-source support
-- Required at runtime (startup check fails fast if missing via `ensureIcaaViewReady` in `src/db/index.ts`)
+#### 2. `species_facts`
+Ordered source facts used by species cards and legacy clue fields.
 
-See `docs/NORMALIZED_BIODIVERSITY_SCHEMA.md` for the full model and backfill rules.
+- `species_id` -> `species.id`
+- `category`
+- `fact_text`
+- `sort_order`
+- Unique: `(species_id, category, sort_order)`
 
-#### 2. Normalized Biodiversity Tables (Strict 3NF)
-Core tables for taxonomy, profiles, external IDs, and multi-value fields:
+Live categories: `behavior`, `diet_flora`, `diet_prey`, `key_fact`,
+`life_description`, `threat`.
 
-- `taxa`, `taxon_names`, `taxon_name_usages`
-- `source_datasets`, `taxon_external_ids`
-- `conservation_statuses`, `taxon_conservation_assessments`
-- `taxon_profiles`, `taxon_ranges`, `taxon_bioregions`
-- `taxon_common_names`
-- `taxon_behaviors`, `taxon_key_facts`, `taxon_life_descriptions`
-- `taxon_habitat_tags`, `taxon_threats`, `taxon_diet_items`
+#### 3. `species_deduction_profiles`
+One row per species with tag arrays and summary notes for deduction/comparison.
 
-These are created by migrations 004/005/006 and populated via the backfill script.
+- PK/FK: `species_id` -> `species.id`
+- Tag arrays: `habitat_tags`, `morphology_tags`, `diet_tags`, `behavior_tags`,
+  `reproduction_tags`, `taxonomy_tags`
+- Notes: `habitat_note`, `morphology_note`, `diet_note`, `behavior_note`,
+  `reproduction_note`, `reference_summary`
 
-#### 3. `icaa` Table (Import-Owned Species Data)
-Raw shapefile import table. Do not query directly in app code; use `icaa_view`.
-It remains the ingestion source for backfills and external data refreshes.
+#### 4. `species_deduction_clues`
+Current normalized clue table.
 
-**Key Identifiers:**
-- `ogc_fid` (number) - Primary key, unique identifier for each species
-- `species_id` (number) - IUCN species ID (external)
+- `species_id` -> `species.id`
+- `category`
+- `label`
+- `compare_tags`
+- `reveal_order`
+- `unlock_mode`: `fragment` or `score`
+- `base_cost`
+- `is_filtering`
+- Unique index in Drizzle: `(species_id, category, reveal_order)`
 
-#### 4. `high_scores` Table
+Live category check values: `habitat`, `morphology`, `diet`, `behavior`,
+`reproduction`, `taxonomy`, `key_fact`, `geography`, `conservation`.
+
+#### 5. `player_clue_unlocks`
+Persisted player clue unlock history.
+
+- `player_id` -> `profiles.user_id`
+- `species_id` -> `species.id`
+- Optional `discovery_id` -> `player_species_discoveries.id`
+- `clue_category`, `clue_field`, `clue_value`
+- Optional `run_node_id` -> `eco_run_nodes.id`
+
+#### 6. `species_card_unlocks`
+Persisted species-card unlock event log.
+
+- `player_id` -> `profiles.user_id`
+- `species_id` -> `species.id`
+- Optional `run_id` -> `eco_run_sessions.id`
+- `unlock_type`
+- `payload` jsonb
+
+#### 7. `high_scores`
 - `id` (uuid) - Primary key
 - `player_id` (uuid, nullable) - Optional FK to `profiles.user_id` for authenticated players
 - `username` (string) - Player name (legacy/guest-friendly)
@@ -133,105 +157,104 @@ CREATE TABLE orders (
 CREATE INDEX ix_orders_user_id ON orders (user_id);
 ```
 
-## ICAA View Field Mappings
+## Current Clue Database
 
-### Clue Category Dependencies
+Live check, 2026-07-05:
 
-The clue system directly depends on specific database fields exposed by `icaa_view`. Here's the complete mapping:
+| Table | Rows |
+| --- | ---: |
+| `species` | 22 |
+| `species_facts` | 218 |
+| `species_deduction_profiles` | 22 |
+| `species_deduction_clues` | 341 |
+| `player_clue_unlocks` | 55 |
+| `species_card_unlocks` | 28 |
 
-#### 1. Classification (Red Gems) 🧬
-**Database Fields Used:**
-- `taxonomic_comment` - Taxonomic comments/context (revealed first)
-- `phylum` - Phylum level classification
-- `class` - Class level classification
-- `taxon_order` - Order level classification
-- `family` - Family level classification
-- `genus` - Genus level classification
-- `scientific_name` - Full scientific name (revealed last)
+The current clue source of truth is `species_deduction_clues`, joined to
+`species` by `species_id`. It does not depend on `icaa_view`.
 
-**Clue Generation Logic:**
-Progressive revelation from least to most specific:
-```typescript
-// Reveals taxonomy step by step
-'taxonomic_comment' → 'phylum' → 'class' → 'taxon_order' → 'family' → 'genus' → 'scientific_name'
+### Deduction Clue Categories
+
+| Category | Clues | Species | Reveal order | Unlock modes |
+| --- | ---: | ---: | --- | --- |
+| `behavior` | 44 | 22 | 1-2 | `fragment` |
+| `conservation` | 22 | 22 | 1 | `score` |
+| `diet` | 33 | 22 | 1-2 | `fragment` |
+| `geography` | 22 | 22 | 1 | `score` |
+| `habitat` | 44 | 22 | 1-2 | `fragment` |
+| `key_fact` | 66 | 22 | 1-3 | `score` |
+| `morphology` | 44 | 22 | 1-2 | `fragment` |
+| `reproduction` | 22 | 22 | 1 | `fragment` |
+| `taxonomy` | 44 | 22 | 1-2 | `score` |
+
+### Fact Categories
+
+`species_facts` currently has:
+
+| Category | Facts | Species | Sort order |
+| --- | ---: | ---: | --- |
+| `behavior` | 44 | 22 | 1-2 |
+| `diet_flora` | 22 | 22 | 1 |
+| `diet_prey` | 20 | 20 | 1 |
+| `key_fact` | 66 | 22 | 1-3 |
+| `life_description` | 44 | 22 | 1-2 |
+| `threat` | 22 | 22 | 1 |
+
+### Clue Row Semantics
+
+`species_deduction_clues` rows are authored clues:
+
+```sql
+species_id   integer not null references species(id) on delete cascade
+category     text not null
+label        text not null
+compare_tags text[]
+reveal_order smallint not null default 1
+unlock_mode  text not null default 'fragment'
+base_cost    smallint not null default 2
+is_filtering boolean not null default true
+created_at   timestamptz not null default now()
 ```
 
-#### 2. Habitat (Green Gems) 🌳
-**Database Fields Used:**
-- `aquatic` (boolean) - Lives in water
-- `freshwater` (boolean) - Freshwater habitat
-- `terrestrial` (boolean) - Terrestrial habitat
-- `marine` (boolean) - Marine habitat
+Constraints:
 
-**Special Case:** Green gems primarily use raster habitat data from TiTiler service for detailed habitat percentages.
+- `category` must be one of `habitat`, `morphology`, `diet`, `behavior`,
+  `reproduction`, `taxonomy`, `key_fact`, `geography`, `conservation`.
+- `unlock_mode` must be `fragment` or `score`.
+- Drizzle defines uniqueness on `(species_id, category, reveal_order)`.
 
-#### 3. Geographic & Habitat (Blue Gems) 🗺️
-**Database Fields Used (progressive):**
-- `geographic_description` - Geographic range description
-- `distribution_comment` - Distribution details
-- `habitat_description` - Habitat description
-- `habitat_tags` - Habitat tags/keywords
-
-#### 4. Morphology (Orange Gems) 🐆
-**Database Fields Used (progressive):**
-- `pattern` - Pattern description
-- `color_primary` - Primary color
-- `color_secondary` - Secondary color
-- `shape_description` - Shape description
-- `size_max_cm` (number) - Maximum size in centimeters
-- `weight_kg` (number) - Weight in kilograms
-
-#### 5. Behavior & Diet (Yellow Gems) 💨
-**Database Fields Used (progressive):**
-- `behavior_1` - Primary behavior description
-- `behavior_2` - Secondary behavior description
-- `diet_type` - Type of diet
-- `diet_prey` - Prey species
-- `diet_flora` - Plant diet
-
-#### 6. Life Cycle (Black Gems) ⏳
-**Database Fields Used (progressive):**
-- `life_description_1` - Primary life cycle description
-- `life_description_2` - Secondary life cycle description
-- `lifespan` - Lifespan information (fallback)
-- `maturity` - Age at maturity (fallback)
-- `reproduction_type` - Reproduction type (fallback)
-- `clutch_size` - Clutch/litter size (fallback)
-
-#### 7. Conservation (White Gems) 🛡️
-**Database Fields Used (progressive):**
-- `conservation_text` - Conservation status description
-- `threats` - Known threats
-- `conservation_code` - IUCN code (fallback)
-- `category` - Conservation category (fallback)
-
-#### 8. Key Facts (Purple Gems) 🔮
-**Database Fields Used (progressive):**
-- `key_fact_1` - Primary key fact
-- `key_fact_2` - Secondary key fact
-- `key_fact_3` - Tertiary key fact
+`compare_tags` drive comparative filtering. `is_filtering=false` means the clue
+is display/progress information but not a filter tag clue.
 
 ## Files Affected by Database Changes
 
-When modifying the biodiversity schema or `icaa_view`, the following files need to be updated:
+When modifying clue tables, update the schema, types, seed/import code, and UI consumers together.
 
-### 1. Type Definitions
-**File:** `/src/types/database.ts`
-- Update the `Species` interface with new/modified fields
-- Ensure TypeScript types match PostgreSQL column types
+### 1. Drizzle Schema
+**File:** `src/db/schema/species.ts`
+- `speciesFacts`
+- `speciesDeductionProfiles`
+- `speciesDeductionClues`
 
-### 2. Clue Configuration
-**File:** `/src/game/clueConfig.ts`
-- Update `getClue()` functions if field names change
-- Add logic for new fields in appropriate categories
-- Modify clue generation logic as needed
+**File:** `src/db/schema/player.ts`
+- `playerClueUnlocks`
 
-### 3. Species Service
-**File:** `/src/lib/speciesService.ts`
-- Update queries if selecting specific fields
-- Modify any field-specific logic
+**File:** `src/db/schema/game.ts`
+- `speciesCardUnlocks`
 
-### 4. Database Functions (PostgreSQL)
+### 2. Types
+**Files:** `src/db/types.ts`, `src/types/database.ts`
+- Refresh inferred Drizzle exports when tables change.
+- Keep legacy `Species` fields only if current UI still reads them.
+
+### 3. Clue Consumers
+**Files:**
+- `src/game/clueConfig.ts` - legacy progressive gem clue fallback.
+- `src/lib/speciesCardUnlocks.ts` - maps clue events to card unlock payloads.
+- API routes that read/write `species_deduction_clues`, `player_clue_unlocks`,
+  or `species_card_unlocks`.
+
+### 4. Database Functions and Spatial APIs
 - `get_species_at_point` - Point-based spatial queries (deprecated in favor of radius queries)
 - `get_species_in_radius` - Circle intersection queries for species discovery
 - `/api/species/closest` - Finds nearest habitat polygon when no species found (PostGIS `<->`)
@@ -291,98 +314,85 @@ Before you ship a schema change:
 - Confirm types: `timestamptz`, `text`, `jsonb`, `numeric` or integer cents for money
 - Name constraints and indexes with `ix_`/`uq_`/`fk_`/`ck_` prefixes
 - Add indexes for FKs and hot query paths (especially leaderboard or radius queries)
-- Update types and usage: `src/db/types.ts`, `src/types/database.ts`, `src/game/clueConfig.ts`
+- Update types and usage: `src/db/schema/*`, `src/db/types.ts`, API routes, clue/card UI
 - Refresh introspection: `npm run db:introspect`
 
 ### Adding New Species
 
 1. **Required Fields:**
    - `common_name` or `scientific_name` (at least one)
-   - `wkb_geometry` (for location-based queries)
-   - At least one field per clue category for complete gameplay
+   - Geometry/source range data if the species should appear in map discovery
+   - One `species_deduction_profiles` row
+   - Enough `species_deduction_clues` rows for the deduction categories used by gameplay
 
 2. **Best Practices:**
    - Populate as many fields as possible
    - Use consistent formatting for taxonomic names
    - Ensure geometry is valid PostGIS format
    - Test spatial queries after adding
+   - Keep `species_facts` and `species_deduction_clues` in sync when both are used
 
-3. **SQL Example (import path):**
+3. **Minimum clue rows:**
 ```sql
-INSERT INTO icaa (
-  common_name, scientific_name, genus, family,
-  habitat_description, geographic_description, pattern,
-  diet_type, life_description_1, conservation_text, key_fact_1,
-  wkb_geometry
+INSERT INTO species_deduction_profiles (
+  species_id, habitat_tags, morphology_tags, diet_tags, behavior_tags,
+  reproduction_tags, taxonomy_tags, reference_summary
 ) VALUES (
-  'Example Species', 'Examplus specius', 'Examplus', 'Examplidae',
-  'Forest habitats', 'Found in North America', 'Spotted pattern',
-  'Omnivore', 'Lives 10-15 years', 'Least Concern', 'Unique feature',
-  ST_GeomFromText('POLYGON((...))', 4326)
+  23,
+  ARRAY['forest'],
+  ARRAY['spotted'],
+  ARRAY['omnivore'],
+  ARRAY['nocturnal'],
+  ARRAY['egg_laying'],
+  ARRAY['aves'],
+  'Short comparative summary.'
 );
+
+INSERT INTO species_deduction_clues (
+  species_id, category, label, compare_tags, reveal_order,
+  unlock_mode, base_cost, is_filtering
+) VALUES
+  (23, 'habitat', 'Lives in forest habitats', ARRAY['forest'], 1, 'fragment', 2, true),
+  (23, 'taxonomy', 'Class: AVES', ARRAY['aves'], 1, 'score', 80, true),
+  (23, 'key_fact', 'Has a distinctive field mark.', NULL, 1, 'score', 60, false);
 ```
 
-**After insert:** run the normalization backfill (migration `005_normalized_biodiversity_backfill.sql`)
-or a targeted backfill to populate the normalized tables and `icaa_view`.
-
-### Modifying Clue Fields
+### Modifying Clue Data
 
 1. **Adding New Fields:**
-   - Add field to `Species` interface in `database.ts`
+   - Add column/table change in `src/db/schema/species.ts`
+   - Add a migration
+   - Refresh `src/db/types.ts`
    - Determine appropriate clue category
-   - Update corresponding `getClue()` function in `clueConfig.ts`
+   - Update query/API/UI code that reads the clue rows
    - Run TypeScript checks: `npm run typecheck`
 
-2. **Renaming Fields:**
-   - Update field name in `Species` interface
-   - Find/replace all usages in `clueConfig.ts`
-   - Update any direct field references in components
-   - Test clue generation thoroughly
+2. **Adding New Categories:**
+   - Add the category to `DeductionClueCategory` in `src/db/schema/species.ts`
+   - Add/update the DB check constraint
+   - Update any UI filters, card unlock mapping, and seed/import logic
 
-3. **Removing Fields:**
-   - Check if field is used in `clueConfig.ts`
-   - Ensure clue category has alternative fields
-   - Remove from `Species` interface
-   - Test that clues still generate properly
+3. **Renaming or Removing Categories:**
+   - Migrate existing `species_deduction_clues.category` values
+   - Migrate `player_clue_unlocks.clue_category` if historical unlocks must remain queryable
+   - Update `species_card_unlocks.payload` readers if payloads store the old category
 
-### Example: Adding a New Field
+### Example: Adding a New Deduction Clue
 
-To add a `migration_pattern` field:
-
-1. **Database Migration:**
 ```sql
--- Import column (shapefile source)
-ALTER TABLE icaa ADD COLUMN migration_pattern TEXT;
-
--- Normalized storage (preferred for reads)
-ALTER TABLE taxon_profiles ADD COLUMN migration_pattern TEXT;
-```
-
-2. **Update Type Definition:**
-```typescript
-// src/types/database.ts
-export interface Species {
-  // ... existing fields
-  migration_pattern?: string;
-}
-```
-
-3. **Update Backfill + View:**
-   - Add to `005_normalized_biodiversity_backfill.sql` (map icaa → taxon_profiles)
-   - Add to `006_normalized_biodiversity_views.sql` so `icaa_view` exposes it
-
-4. **Update Clue Logic:**
-```typescript
-// src/game/clueConfig.ts
-[GemCategory.BEHAVIOR]: {
-  getClue: (species: Species) => {
-    // ... existing logic
-    if (species.migration_pattern) {
-      behaviorInfo.push(`Migration: ${species.migration_pattern}`);
-    }
-    // ... rest of function
-  }
-}
+INSERT INTO species_deduction_clues (
+  species_id, category, label, compare_tags, reveal_order,
+  unlock_mode, base_cost, is_filtering
+) VALUES (
+  1,
+  'behavior',
+  'Uses basking sites near wetland edges.',
+  ARRAY['basking', 'wetland'],
+  3,
+  'fragment',
+  4,
+  true
+);
 ```
 
 ## Spatial Queries and PostGIS

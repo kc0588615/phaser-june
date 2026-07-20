@@ -15,7 +15,7 @@ import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
 import { useAuthBridge } from './hooks/useAuthBridge';
 import { useExpedition } from './contexts/ExpeditionContext';
-import { GameBridgeProvider, useGameBridge } from './contexts/GameBridgeContext';
+import { GameBridgeProvider } from './contexts/GameBridgeContext';
 import { ExpeditionProvider } from './contexts/ExpeditionContext';
 import { EventBus } from './game/EventBus';
 import { Toaster } from 'sonner';
@@ -24,12 +24,15 @@ import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
 import { FieldNotebook } from './components/FieldNotebook';
 import { GemSignalStrip } from './components/GemSignalStrip';
+import { CandidateRoster } from './components/CandidateRoster';
+import { EvidenceFamilyRail } from './components/EvidenceFamilyRail';
+import { FieldHintTicker } from './components/FieldHintTicker';
+import { EvidenceOnboarding } from './components/EvidenceOnboarding';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
+import { ExpeditionMapHud } from './components/ExpeditionMapHud';
 import { ProfileContent } from './components/ProfileContent';
-import { ExpeditionRouteRecap } from './components/ExpeditionRouteRecap';
-import { AFFINITY_DEFINITIONS } from '@/expedition/affinities';
+import { RunCompleteSummary } from './components/RunCompleteSummary';
 import { GlassPanel } from '@/components/ui/glass-panel';
-import type { RunState } from '@/types/expedition';
 
 function ProfileTabContent() {
     return (
@@ -39,6 +42,14 @@ function ProfileTabContent() {
         </div>
     );
 }
+
+const APP_STYLE: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100vw',
+    height: '100vh',
+    overflow: 'hidden',
+};
 
 function MainAppLayoutInner() {
     useAuthBridge();
@@ -50,7 +61,7 @@ function MainAppLayoutInner() {
     const {
         runState, boardOpacity,
         handleRunResume, handleRunReset,
-        handleCommitInterpretation, handleGuess,
+        handleCommitInterpretation, handleChooseMethod, handleChooseEvidenceFamily, handleGuess,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -71,6 +82,12 @@ function MainAppLayoutInner() {
     const inRun = runState.phase === 'mystery';
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
+    // v3 runs swap the in-run Cesium panel for the 2D MapLibre HUD (Plan 018);
+    // Cesium stays mounted (display:none) so its EventBus listeners survive.
+    // The HUD also stays up through a captured completion so it can fetch and
+    // animate the answer-range reveal (the range API unlocks on completion).
+    const showV3MapHud = runState.caseState?.version === 3
+        && (inRun || (showComplete && runState.caseState.guessResult === 'correct'));
     const inExpedition = inRun || showBriefing || showComplete;
     const useSplitLayout = inRun;
     const activeWaypoint = inRun
@@ -102,7 +119,6 @@ function MainAppLayoutInner() {
         return () => window.cancelAnimationFrame(rafId);
     }, [useSplitLayout, viewMode]);
 
-    const appStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', width: '100vw', height: '100vh', overflow: 'hidden' };
     const phaserGameWrapperStyle: React.CSSProperties = {
         width: '100%', height: useSplitLayout ? '60%' : '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -122,7 +138,7 @@ function MainAppLayoutInner() {
     };
 
     return (
-        <div id="app-container" style={appStyle}>
+        <div id="app-container" style={APP_STYLE}>
             {/* Game layout — off-screen when not on explore/expedition tab */}
             <div style={{
                 position: (baseTab !== 'explore' && baseTab !== 'expedition' && !inExpedition) ? 'absolute' : 'relative',
@@ -131,23 +147,39 @@ function MainAppLayoutInner() {
             }}>
                 <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
-                        {/* CesiumMap */}
+                        {/* CesiumMap — hidden (not unmounted) while the v3 map HUD is up */}
                         <div style={{
-                            display: viewMode === 'map' ? 'block' : 'none',
+                            display: viewMode === 'map' && !showV3MapHud ? 'block' : 'none',
                             height: '100%', width: '100%'
                         }}>
                             <CesiumMap
                                 expeditionPhase={runState.phase}
                                 activeWaypoint={activeWaypoint}
+                                suspended={showV3MapHud}
                                 onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
                             />
                         </div>
 
+                        {/* v3 2D map HUD (mystery phase + captured completion) */}
+                        {showV3MapHud && (
+                            <div style={{
+                                display: viewMode === 'map' ? 'flex' : 'none',
+                                height: '100%', width: '100%', minHeight: 0,
+                            }}>
+                                <ExpeditionMapHud runState={runState} />
+                            </div>
+                        )}
+
                         {/* Expedition Briefing */}
                         {showBriefing && runState.expedition && (
                             <div className="absolute inset-0 z-deduction flex flex-col justify-end">
-                                <div style={{ flex: '0 0 25%', background: 'rgba(10,14,26,0.4)' }}
-                                    onClick={() => EventBus.emit('game-reset', undefined)} />
+                                <button
+                                    type="button"
+                                    aria-label="Close expedition briefing"
+                                    className="border-0 p-0"
+                                    style={{ flex: '0 0 25%', background: 'rgba(10,14,26,0.4)' }}
+                                    onClick={() => EventBus.emit('game-reset', undefined)}
+                                />
                                 <div className="glass-bg border-t border-ds-subtle" style={{ flex: '0 0 75%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                                     <ExpeditionBriefing
                                         expedition={runState.expedition}
@@ -178,16 +210,30 @@ function MainAppLayoutInner() {
 
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
-                        {inRun && (
+                        {inRun && runState.caseState?.version !== 3 && (
                             <GemSignalStrip runState={runState} />
                         )}
 
                         {inRun && runState.caseState && (
+                            runState.caseState.version !== 3
+                            || runState.caseState.stage === 'choose_evidence'
+                        ) && (
                             <FieldNotebook
                                 runState={runState}
                                 onCommitInterpretation={handleCommitInterpretation}
+                                onChooseMethod={handleChooseMethod}
+                                onChooseEvidenceFamily={handleChooseEvidenceFamily}
                                 onGuess={handleGuess}
                             />
+                        )}
+
+                        {inRun && runState.caseState?.version === 3 && (
+                            <>
+                                <FieldHintTicker feed={runState.caseState.hintFeed} />
+                                <EvidenceFamilyRail caseState={runState.caseState} onChoose={handleChooseEvidenceFamily} />
+                                <CandidateRoster runState={runState} onGuess={handleGuess} />
+                                <EvidenceOnboarding />
+                            </>
                         )}
 
                     </div>
@@ -251,140 +297,6 @@ function MainAppLayoutInner() {
                     },
                 }}
             />
-        </div>
-    );
-}
-
-// --- Run completion summary overlay ---
-
-function RunCompleteSummary({ runState, onReset }: {
-    runState: RunState;
-    onReset: () => void;
-}) {
-    const { hud } = useGameBridge();
-    const caseState = runState.caseState;
-    const captured = runState.completionReason === 'captured' || caseState?.guessResult === 'correct';
-    // Resolved identity is only known when this session made the correct guess;
-    // a resumed completed run stays generic ('Case resolved').
-    const resolvedProfile = runState.resolvedSpeciesId !== null
-        ? caseState?.profiles.find(profile => profile.speciesId === runState.resolvedSpeciesId) ?? null
-        : null;
-    const stats = [
-        { label: 'Final Score', value: String(runState.finalScore ?? hud.score), color: 'var(--ds-accent-cyan)' },
-        { label: 'Result', value: captured ? 'Captured' : 'Slipped', color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' },
-        { label: 'Observations', value: String(caseState?.observations.length ?? 0), color: 'var(--ds-accent-amber)' },
-        { label: 'Field Notes', value: String(caseState?.interpretations.length ?? 0), color: 'var(--ds-gem-focus)' },
-    ];
-
-    return (
-        <div className="absolute inset-0 z-panel flex flex-col items-center justify-center bg-[rgba(10,14,26,0.7)] backdrop-blur-md p-ds-xl gap-ds-lg">
-            <div className="text-[22px] font-bold text-ds-cyan">
-                {captured ? 'Species Captured' : 'Species Slipped Away'}
-            </div>
-            <div className="text-4xl font-bold text-ds-text-primary">
-                {runState.finalScore ?? hud.score} pts
-            </div>
-
-            <div className="grid grid-cols-2 gap-ds-sm w-full max-w-[300px]">
-                {stats.map(({ label, value, color }) => (
-                    <GlassPanel key={label} className="rounded-lg p-2.5 text-center">
-                        <div className="text-xl font-bold" style={{ color }}>{value}</div>
-                        <div className="text-ds-badge font-medium text-ds-text-muted uppercase tracking-wider">{label}</div>
-                    </GlassPanel>
-                ))}
-            </div>
-
-            {resolvedProfile && (
-                <SpeciesJournalCard
-                    speciesId={resolvedProfile.speciesId}
-                    speciesName={resolvedProfile.commonName}
-                    captured={captured}
-                    taxonomyTags={resolvedProfile.taxonomyTags}
-                />
-            )}
-
-            <ExpeditionRouteRecap
-                waypoints={runState.expedition?.waypoints ?? []}
-                routePolyline={runState.expedition?.routePolyline}
-                visitedWaypointSlot={runState.visitedWaypointSlot}
-                captured={captured}
-                speciesName={resolvedProfile?.commonName ?? 'Case resolved'}
-            />
-
-            {(runState.expedition?.activeAffinities ?? []).length > 0 && (
-                <div className="flex gap-ds-sm justify-center">
-                    {(runState.expedition?.activeAffinities ?? []).map(a => {
-                        const def = AFFINITY_DEFINITIONS[a];
-                        return (
-                            <GlassPanel key={a} pill borderColor={def.color} className="flex items-center gap-1.5 px-3.5 py-1.5">
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: def.color }} />
-                                <span className="text-ds-body font-semibold" style={{ color: def.color }}>{def.label}</span>
-                            </GlassPanel>
-                        );
-                    })}
-                </div>
-            )}
-
-            <button
-                type="button"
-                onClick={onReset}
-                className="mt-ds-sm py-ds-md px-8 text-ds-body font-bold text-ds-bg border-none rounded-full cursor-pointer shadow-glow-cyan"
-                style={{ background: 'var(--ds-gradient-cta)' }}
-            >
-                Return to Globe
-            </button>
-        </div>
-    );
-}
-
-function SpeciesJournalCard({ speciesId, speciesName, captured, taxonomyTags }: {
-    speciesId: number;
-    speciesName: string;
-    captured: boolean;
-    taxonomyTags: string[];
-}) {
-    const [species, setSpecies] = useState<Record<string, any> | null>(null);
-
-    useEffect(() => {
-        if (!speciesId) return;
-        let cancelled = false;
-        fetch(`/api/species/by-ids?ids=${speciesId}`)
-            .then(response => response.ok ? response.json() : null)
-            .then(data => {
-                if (!cancelled) setSpecies(Array.isArray(data?.species) ? data.species[0] ?? null : null);
-            })
-            .catch(error => console.error('Failed to load journal species:', error));
-        return () => { cancelled = true; };
-    }, [speciesId]);
-
-    const commonName = species?.common_name || speciesName || 'Mystery species';
-    const scientificName = species?.scientific_name || '';
-    const status = species?.iucn_status || species?.conservation_status || null;
-    const order = species?.order_name || species?.order || taxonomyTags.find(tag => tag.startsWith('order_'))?.replace(/^order_/, '');
-    const genus = species?.genus || taxonomyTags.find(tag => tag.startsWith('genus_'))?.replace(/^genus_/, '');
-
-    return (
-        <GlassPanel borderColor={captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)'} className="w-full max-w-[360px] rounded-lg p-ds-md">
-            <div className="text-ds-badge font-bold uppercase tracking-wider" style={{ color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' }}>
-                {captured ? 'Journal captured' : 'Answer revealed'}
-            </div>
-            <div className="text-lg font-semibold text-ds-text-primary mt-1">{commonName}</div>
-            {scientificName && <div className="text-ds-caption italic text-ds-text-secondary">{scientificName}</div>}
-            <div className="grid grid-cols-2 gap-2 mt-ds-sm">
-                {genus && <JournalFact label="Genus" value={genus} />}
-                {order && <JournalFact label="Order" value={order} />}
-                {status && <JournalFact label="Status" value={status} />}
-                <JournalFact label="Outcome" value={captured ? 'Collected' : 'Try again'} />
-            </div>
-        </GlassPanel>
-    );
-}
-
-function JournalFact({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="rounded-md bg-ds-surface-elevated border border-ds-subtle px-2 py-1.5">
-            <div className="text-[10px] uppercase tracking-wide text-ds-text-muted">{label}</div>
-            <div className="text-ds-caption text-ds-text-primary capitalize">{value.replace(/_/g, ' ')}</div>
         </div>
     );
 }

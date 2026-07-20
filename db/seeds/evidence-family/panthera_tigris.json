@@ -1,0 +1,92 @@
+{
+  "iucn_id": 15955,
+  "scientific_name": "Panthera tigris",
+  "common_name": "Tiger",
+  "cards": [
+    {
+      "family": "relatives",
+      "observation_text": "The genetic lineage retains compact forelimb digits for land movement or digging.",
+      "inference_text": "The lineage evidence favors mammals with compact forelimbs.",
+      "trait_category": "taxonomy",
+      "compare_tag": "comparison_lineage:not_fruit_bat",
+      "trait_phrase": "felid lineage",
+      "bonus_fact_text": "It belongs to the big-cat genus that also includes lions, leopards, jaguars, and snow leopards.",
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed",
+      "hints": [
+        "The family tree stays with ground mammals rather than taking flight.",
+        "No bat-line marker appears in the sample.",
+        "The genetic branch does not lead toward winged fruit foragers.",
+        "Field team: keep this lineage out of the roost."
+      ]
+    },
+    {
+      "family": "body",
+      "observation_text": "The feet carry pads, nails, or claws.",
+      "inference_text": "The footprint favors candidates with padded or claw-bearing feet.",
+      "trait_category": "morphology",
+      "compare_tag": "comparison_form:not_horned_antelope",
+      "trait_phrase": "striped coat",
+      "bonus_fact_text": "Each individual's stripe pattern is distinct, including the pattern visible on its skin.",
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed",
+      "hints": [
+        "The head profile has no permanent horn core.",
+        "Padded feet replace a divided hoofprint.",
+        "The stride is flexible rather than stiff-legged and ungulate.",
+        "Field team: no horned grazer made these marks."
+      ]
+    },
+    {
+      "family": "behavior",
+      "observation_text": "The travel line remains visible across the ground surface.",
+      "inference_text": "The route favors candidates that leave exposed tracks.",
+      "trait_category": "behavior",
+      "compare_tag": "comparison_behavior:not_sand_swimmer",
+      "trait_phrase": "solitary ambush",
+      "bonus_fact_text": "Adults usually hunt alone and communicate territory with scent marks, scrapes, and calls.",
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed",
+      "hints": [
+        "The trail remains fully above ground.",
+        "No subsurface ridge follows the travel line.",
+        "Movement crosses soil instead of flowing through it.",
+        "Field team: this subject leaves exposed tracks."
+      ]
+    },
+    {
+      "family": "habits",
+      "observation_text": "Feeding occurs in focused grazing bouts, prey searches, or fruit visits.",
+      "inference_text": "The meal favors candidates that use concentrated feeding sessions.",
+      "trait_category": "diet",
+      "compare_tag": "comparison_diet:not_bulk_browser",
+      "trait_phrase": "large vertebrate prey",
+      "bonus_fact_text": "It is an ambush predator whose prey can include deer, wild pigs, and other large mammals.",
+      "source": "https://nationalzoo.si.edu/animals/tiger",
+      "review_status": "reviewed",
+      "hints": [
+        "Vegetation is cover here, not the meal.",
+        "The feeding site holds protein-rich remains.",
+        "No mass stripping of bark or branches appears nearby.",
+        "Field team: this diner follows moving food."
+      ]
+    },
+    {
+      "family": "place",
+      "observation_text": "Range records include arid, temperate, coastal, or oceanic habitats.",
+      "inference_text": "The map evidence favors candidates with habitat beyond one tropical forest belt.",
+      "trait_category": "geography",
+      "compare_tag": "comparison_range:not_southeast_asian_forest",
+      "trait_phrase": "Asian forest range",
+      "bonus_fact_text": "Wild populations occupy separated habitats from the Russian Far East through South and Southeast Asia.",
+      "source": "https://www.worldwildlife.org/species/tiger",
+      "review_status": "reviewed",
+      "hints": [
+        "The map reaches both colder forests and tropical cover.",
+        "This range is broader than one humid forest belt.",
+        "Northern latitude signals appear beside southern ones.",
+        "Field team: stretch the search across much of Asia."
+      ]
+    }
+  ]
+}

@@ -42,6 +42,9 @@ export class BoardView {
     private gemsSprites: (Phaser.GameObjects.Sprite | null)[][] = []; // The 2D array [x][y] mirroring the logical grid
     private gemGroup: Phaser.GameObjects.Group; // Group for efficient management
     private overlayGraphics: (Phaser.GameObjects.Graphics | null)[][] = []; // Obstacle overlay visuals
+    private surveyZones: ReadonlyArray<{ x: number; y: number; width: number; height: number }> = [];
+    private surveyZoneGraphics: Phaser.GameObjects.Graphics | null = null; // Survey verb plot highlights
+    private evidenceFamilyMode = false;
 
     constructor(scene: Phaser.Scene, config: BoardConfig) {
         if (!scene || !(scene instanceof Phaser.Scene)) {
@@ -106,6 +109,7 @@ export class BoardView {
         console.log("BoardView: Updating visual layout.");
         this.gemSize = newGemSize;
         this.boardOffset = newBoardOffset;
+        this.drawSurveyZones();
 
         this.iterateSprites((sprite, x, y) => {
             const targetPos = this.getSpritePosition(x, y);
@@ -128,6 +132,38 @@ export class BoardView {
         console.log("BoardView: Updating dimensions (no animation).");
         this.gemSize = newGemSize;
         this.boardOffset = newBoardOffset;
+        this.drawSurveyZones();
+    }
+
+    /** Sets the survey-verb plot highlights (empty array clears them). */
+    setSurveyZones(zones: ReadonlyArray<{ x: number; y: number; width: number; height: number }>): void {
+        this.surveyZones = zones;
+        this.drawSurveyZones();
+    }
+
+    /** V3 uses family silhouettes; color is only a secondary cue. */
+    setEvidenceFamilyMode(enabled: boolean): void {
+        this.evidenceFamilyMode = enabled;
+    }
+
+    private drawSurveyZones(): void {
+        if (this.surveyZoneGraphics) {
+            this.surveyZoneGraphics.destroy();
+            this.surveyZoneGraphics = null;
+        }
+        if (this.surveyZones.length === 0) return;
+
+        const gfx = this.scene.add.graphics();
+        gfx.setDepth(5); // above gems, below obstacle overlays (10) — a light wash marks the plot
+        for (const zone of this.surveyZones) {
+            const left = this.boardOffset.x + zone.x * this.gemSize;
+            const top = this.boardOffset.y + zone.y * this.gemSize;
+            gfx.fillStyle(0xd9b45b, 0.10);
+            gfx.fillRoundedRect(left + 2, top + 2, zone.width * this.gemSize - 4, zone.height * this.gemSize - 4, 8);
+            gfx.lineStyle(2, 0xd9b45b, 0.55);
+            gfx.strokeRoundedRect(left + 2, top + 2, zone.width * this.gemSize - 4, zone.height * this.gemSize - 4, 8);
+        }
+        this.surveyZoneGraphics = gfx;
     }
 
     /** Visually moves sprites during drag, handling wrapping. */
@@ -317,6 +353,20 @@ export class BoardView {
 
                     explosionPromises.push(new Promise<void>((resolveExplosion) => {
                         this.scene.tweens.killTweensOf(sprite);
+                        if (this.evidenceFamilyMode) {
+                            this.scene.tweens.add({
+                                targets: sprite,
+                                alpha: 0,
+                                scale: this.calculateSpriteScale(sprite) * 1.25,
+                                duration: TWEEN_DURATION_EXPLODE,
+                                ease: 'Quad.easeOut',
+                                onComplete: () => {
+                                    this.safelyDestroySprite(sprite);
+                                    resolveExplosion();
+                                },
+                            });
+                            return;
+                        }
                         
                         // Get the gem type from sprite data
                         const gemType = sprite.getData('gemType') as GemType;
@@ -574,6 +624,11 @@ export class BoardView {
         }
         this.overlayGraphics = [];
 
+        if (this.surveyZoneGraphics) {
+            this.surveyZoneGraphics.destroy();
+            this.surveyZoneGraphics = null;
+        }
+
         // Clear Phaser group without recreating it
         if (this.gemGroup) {
             try {
@@ -602,7 +657,9 @@ export class BoardView {
     /** Creates a single sprite, adds to group, stores data, places in gemsSprites array. */
     private createSprite(gridX: number, gridY: number, cellOrGemType: BoardCell | GemType, startVisualY?: number): Phaser.GameObjects.Sprite | null {
         const gemType = typeof cellOrGemType === 'string' ? cellOrGemType : cellOrGemType.gemType;
-        const textureKey = AssetKeys.GEM_TEXTURE(gemType, 0); // Default frame
+        const textureKey = this.evidenceFamilyMode
+            ? AssetKeys.EVIDENCE_GEM_TEXTURE(gemType)
+            : AssetKeys.GEM_TEXTURE(gemType, 0);
         if (!this.scene.textures.exists(textureKey)) {
             console.error(`Texture missing: ${textureKey}`); return null;
         }

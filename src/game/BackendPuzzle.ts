@@ -10,9 +10,10 @@
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
 import { ACTIVE_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
-import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type PuzzleGrid } from './boardTypes';
+import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type BoardCheckpointV1, type PuzzleGrid } from './boardTypes';
+import { parseBoardCheckpoint } from './boardCheckpoint';
 import type { CellStateSeed } from './nodeObstacles';
-import { mulberry32 } from '@/lib/seededRng';
+import { createStatefulMulberry32, type StatefulRng } from '@/lib/seededRng';
 
 export type Gem = BoardCell;
 export type { BoardCell, PuzzleGrid };
@@ -21,6 +22,7 @@ export type GemPoolConfig = BoardSpawnConfig;
 
 const DEFAULT_GEM_POOL: GemPoolConfig = {
     lootWeights: { ...(DEFAULT_BOARD_SPAWN_CONFIG.lootWeights ?? {}) },
+    allowedGemTypes: [...ACTIVE_GEM_TYPES],
 };
 
 export class BackendPuzzle {
@@ -31,6 +33,7 @@ export class BackendPuzzle {
     private maxMoves: number = MAX_MOVES;
     private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
     private rng: () => number = Math.random;
+    private statefulRng: StatefulRng | null = null;
 
     constructor(
         public readonly width: number,
@@ -43,8 +46,13 @@ export class BackendPuzzle {
     }
 
     setGemPool(config: GemPoolConfig): void {
+        const allowedGemTypes = config.allowedGemTypes?.filter(gemType => ACTIVE_GEM_TYPES.includes(gemType));
+        if (allowedGemTypes && allowedGemTypes.length < 3) {
+            throw new RangeError('A board requires at least three allowed gem types.');
+        }
         this.gemPool = {
             lootWeights: { ...(config.lootWeights ?? {}) },
+            allowedGemTypes: allowedGemTypes ? [...new Set(allowedGemTypes)] : [...ACTIVE_GEM_TYPES],
         };
     }
 
@@ -52,7 +60,8 @@ export class BackendPuzzle {
         if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) {
             throw new RangeError('Board seed must be a uint32.');
         }
-        this.rng = mulberry32(seed);
+        this.statefulRng = createStatefulMulberry32(seed);
+        this.rng = () => this.statefulRng!.next();
     }
 
     /**
@@ -65,6 +74,7 @@ export class BackendPuzzle {
         this.nextGemsToSpawn = [];
         this.score = 0;
         this.movesUsed = 0;
+        if (!this.hasAnyValidMove()) this.shuffle();
     }
 
     getScore(): number {
@@ -89,6 +99,39 @@ export class BackendPuzzle {
 
     getGridState(): PuzzleGrid {
         return this.cloneGridState(this.puzzleState);
+    }
+
+    exportCheckpoint(): BoardCheckpointV1 {
+        if (!this.statefulRng) throw new Error('A seeded board is required for checkpoint export.');
+        return {
+            version: 1,
+            width: this.width,
+            height: this.height,
+            grid: this.getGridState(),
+            score: this.score,
+            movesUsed: this.movesUsed,
+            maxMoves: this.maxMoves,
+            nextGemsToSpawn: [...this.nextGemsToSpawn],
+            allowedGemTypes: [...(this.gemPool.allowedGemTypes ?? ACTIVE_GEM_TYPES)],
+            rngState: this.statefulRng.getState(),
+        };
+    }
+
+    importCheckpoint(value: unknown): void {
+        const checkpoint = parseBoardCheckpoint(value, { width: this.width, height: this.height });
+        if (!checkpoint) throw new TypeError('Invalid board checkpoint.');
+        const rng = createStatefulMulberry32(checkpoint.rngState);
+        this.statefulRng = rng;
+        this.rng = () => rng.next();
+        this.puzzleState = this.cloneGridState(checkpoint.grid);
+        this.score = checkpoint.score;
+        this.movesUsed = checkpoint.movesUsed;
+        this.maxMoves = checkpoint.maxMoves;
+        this.nextGemsToSpawn = [...checkpoint.nextGemsToSpawn];
+        this.gemPool = {
+            lootWeights: {},
+            allowedGemTypes: [...checkpoint.allowedGemTypes] as LootGemType[],
+        };
     }
 
     addBonusScore(points: number): void {
@@ -150,7 +193,7 @@ export class BackendPuzzle {
         for (let x = 0; x < width; x++) {
             for (let y = 0; y < height; y++) {
                 // Start with all clue-color gem types
-                let possibleGems = new Set<GemType>(ACTIVE_GEM_TYPES);
+                let possibleGems = new Set<GemType>(this.getAllowedGemTypes());
 
                 // Check if placing a gem would create a vertical match of 3
                 if (y >= 2) {
@@ -257,20 +300,21 @@ export class BackendPuzzle {
     /** Pick a weighted investigation-method gem. */
     private pickWeightedGem(): GemType {
         const weights = this.gemPool.lootWeights ?? {};
-        const total = ACTIVE_GEM_TYPES.reduce((sum, gemType) => {
+        const allowedGemTypes = this.getAllowedGemTypes();
+        const total = allowedGemTypes.reduce((sum, gemType) => {
             const weight = weights[gemType] ?? 1;
             return sum + (Number.isFinite(weight) && weight > 0 ? weight : 1);
         }, 0);
         let roll = this.rng() * total;
 
-        for (const gemType of ACTIVE_GEM_TYPES) {
+        for (const gemType of allowedGemTypes) {
             const weight = weights[gemType] ?? 1;
             roll -= Number.isFinite(weight) && weight > 0 ? weight : 1;
             if (roll <= 0) {
                 return gemType;
             }
         }
-        return ACTIVE_GEM_TYPES[ACTIVE_GEM_TYPES.length - 1] as LootGemType;
+        return allowedGemTypes[allowedGemTypes.length - 1] as LootGemType;
     }
 
     /** Check if any single-cell row/col shift produces a match. */
@@ -488,7 +532,16 @@ export class BackendPuzzle {
     }
 
     private cloneGridState(grid: PuzzleGrid): PuzzleGrid {
-        return grid.map(col => col.map(cell => cell ? { ...cell } : null));
+        return grid.map(col => col.map(cell => cell ? {
+            ...cell,
+            ...(cell.state ? { state: { ...cell.state, flags: [...(cell.state.flags ?? [])] } } : {}),
+        } : null));
+    }
+
+    private getAllowedGemTypes(): LootGemType[] {
+        return this.gemPool.allowedGemTypes?.length
+            ? [...this.gemPool.allowedGemTypes]
+            : [...ACTIVE_GEM_TYPES];
     }
 
 }

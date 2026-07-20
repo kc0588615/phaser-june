@@ -1,41 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { AlertCircle, ArrowRight, Clock, Compass, Loader2, MapPin, RefreshCw, Route, Swords } from 'lucide-react';
+import { ExpeditionHistory } from '@/components/ExpeditionHistory';
 import { getRunNodeLabel } from '@/expedition/domain';
+import type { RunSummary } from '@/types/runSummary';
 
 interface ExpeditionLauncherProps {
   onStart: () => void;
   onResume: (runId: string) => Promise<boolean> | boolean;
 }
 
-interface ResumeRunSummary {
-  id: string;
-  status: string;
-  locationKey: string;
-  realm: string | null;
-  biome: string | null;
-  bioregion: string | null;
-  scoreTotal: number;
-  finalScore: number | null;
-  nodeCount: number;
-  startedAt: string;
-  endedAt: string | null;
-  affinities: string[];
-  hasResumeSnapshot?: boolean;
-  nodes: Array<{
-    nodeOrder: number;
-    nodeType: string;
-    nodeStatus: string;
-    scoreEarned: number;
-    movesUsed: number;
-    obstacleFamily: string | null;
-    waypoint?: { name?: string; waypointType?: string; fallback?: boolean } | null;
-  }>;
-}
-
 export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProps) {
   const { isLoaded, isSignedIn } = useUser();
-  const [resumeRuns, setResumeRuns] = useState<ResumeRunSummary[]>([]);
+  const [resumeRuns, setResumeRuns] = useState<RunSummary[]>([]);
+  const [completedRuns, setCompletedRuns] = useState<RunSummary[]>([]);
   const [loadingResumeRuns, setLoadingResumeRuns] = useState(false);
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
   const [abandoningRunId, setAbandoningRunId] = useState<string | null>(null);
@@ -44,6 +22,7 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
   const loadResumeRuns = useCallback(async (signal?: AbortSignal) => {
     if (!isLoaded || !isSignedIn) {
       setResumeRuns([]);
+      setCompletedRuns([]);
       setResumeError(null);
       setLoadingResumeRuns(false);
       return;
@@ -52,14 +31,17 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
     setLoadingResumeRuns(true);
     setResumeError(null);
     try {
-      const response = await fetch('/api/runs/list?status=active,deduction&limit=5', { signal });
+      const response = await fetch('/api/runs/list?status=active,deduction,completed&limit=50', { signal });
       if (response.status === 401 || response.status === 403) {
         setResumeRuns([]);
+        setCompletedRuns([]);
         return;
       }
       if (!response.ok) throw new Error(`Resume list failed (${response.status})`);
       const data = await response.json();
-      setResumeRuns(Array.isArray(data?.runs) ? data.runs : []);
+      const runs = Array.isArray(data?.runs) ? data.runs as RunSummary[] : [];
+      setResumeRuns(runs.filter(run => run.status === 'active' || run.status === 'deduction').slice(0, 5));
+      setCompletedRuns(runs.filter(run => run.status === 'completed'));
     } catch (error) {
       if ((error as { name?: string }).name === 'AbortError') return;
       console.error('Failed to load resumable runs:', error);
@@ -108,7 +90,7 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
   }, []);
 
   return (
-    <div className="min-h-full px-ds-lg pt-14 pb-[104px] box-border text-ds-text-primary">
+    <div className="flex min-h-full justify-center px-ds-lg pt-14 pb-[104px] box-border text-ds-text-primary">
       <div className="mx-auto flex w-full max-w-md flex-col gap-ds-lg">
         <div className="flex items-center gap-ds-sm">
           <div className="flex size-10 items-center justify-center rounded-lg border border-ds-subtle glass-bg text-ds-cyan">
@@ -191,6 +173,8 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
             </p>
           )}
         </section>
+
+        <ExpeditionHistory runs={completedRuns} loading={loadingResumeRuns} />
       </div>
     </div>
   );
@@ -204,7 +188,7 @@ function ResumeRunCard({
   onResume,
   onAbandon,
 }: {
-  run: ResumeRunSummary;
+  run: RunSummary;
   loading: boolean;
   abandoning: boolean;
   disabled: boolean;
@@ -287,5 +271,5 @@ function ResumeRunCard({
 function formatRunDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Saved';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }

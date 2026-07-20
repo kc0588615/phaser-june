@@ -6,44 +6,53 @@
 // The server stays authoritative: every step here only decides which durable
 // call or UI beat comes next; verdicts and issuance still come from the API.
 import type { ClientRunProjection } from '@/lib/runProjection';
+import type { MethodType } from '@/expedition/domain';
+import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
 
 /** Sub-state of run phase 'mystery'. Only a correct server /guess verdict leaves 'guess'. */
-export type CaseStage = 'board' | 'interpreting' | 'guess';
+export type CaseStage = 'choose_method' | 'choose_evidence' | 'board' | 'interpreting' | 'guess';
 
 export interface FlowNode {
   completed: boolean;
   /** objectiveProgress >= objectiveTarget on the completed node row. */
   objectiveMet: boolean;
+  chosenMethod: MethodType | null;
+  chosenFamily?: EvidenceFamily | null;
+  segmentMovesUsed?: number;
 }
 
 export interface CaseFlowState {
+  version: 1 | 2 | 3;
   /** Exactly three route nodes, index = client nodeIndex (DB node_order - 1). */
   nodes: FlowNode[];
   /** Refs of issued observations (obs-0..obs-3). */
   issuedRefs: string[];
   /** Refs whose interpretation commit is durable server-side. */
   committedRefs: string[];
-  /** True once the single obs-3 attempt came back 403 (no_signature / not_eligible). */
+  /** True once the single obs-3 attempt reports unavailable (no_signature / not_eligible). */
   signatureSettled: boolean;
 }
 
 export type FlowStep =
+  | { kind: 'choose_method'; nodeIndex: number }
+  | { kind: 'choose_evidence'; nodeIndex: number }
   | { kind: 'board'; nodeIndex: number }
   | { kind: 'interpret'; ref: string }
   /** Node succeeded but its observation was never issued (crash after /complete). */
   | { kind: 'recover-observation'; nodeIndex: number }
-  /** Try POST /observations {nodeIndex: 3} exactly once; 403 settles it. */
+  /** Try POST /observations {nodeIndex: 3} exactly once; unavailable settles it. */
   | { kind: 'signature-attempt' }
   | { kind: 'guess' };
 
 const ALL_REFS = ['obs-0', 'obs-1', 'obs-2', 'obs-3'] as const;
 
-export function createFlowState(): CaseFlowState {
+export function createFlowState(version: 1 | 2 | 3 = 1): CaseFlowState {
   return {
+    version,
     nodes: [
-      { completed: false, objectiveMet: false },
-      { completed: false, objectiveMet: false },
-      { completed: false, objectiveMet: false },
+      { completed: false, objectiveMet: false, chosenMethod: null, chosenFamily: null, segmentMovesUsed: 0 },
+      { completed: false, objectiveMet: false, chosenMethod: null, chosenFamily: null, segmentMovesUsed: 0 },
+      { completed: false, objectiveMet: false, chosenMethod: null, chosenFamily: null, segmentMovesUsed: 0 },
     ],
     issuedRefs: [],
     committedRefs: [],
@@ -52,6 +61,17 @@ export function createFlowState(): CaseFlowState {
 }
 
 export function nextFlowStep(state: CaseFlowState): FlowStep {
+  if (state.version === 3) {
+    for (let nodeIndex = 0; nodeIndex < 3; nodeIndex += 1) {
+      const node = state.nodes[nodeIndex];
+      if (!node?.completed) {
+        return (node.segmentMovesUsed ?? 0) >= 6 && !node.chosenFamily
+          ? { kind: 'choose_evidence', nodeIndex }
+          : { kind: 'board', nodeIndex };
+      }
+    }
+    return { kind: 'guess' };
+  }
   const issued = new Set(state.issuedRefs);
   const committed = new Set(state.committedRefs);
   // An issued-but-uncommitted observation is always the next beat (earliest first):
@@ -61,7 +81,10 @@ export function nextFlowStep(state: CaseFlowState): FlowStep {
   }
   for (let nodeIndex = 0; nodeIndex < 3; nodeIndex++) {
     const node = state.nodes[nodeIndex];
-    if (!node?.completed) return { kind: 'board', nodeIndex };
+    if (!node?.completed) {
+      if (state.version === 2 && !node.chosenMethod) return { kind: 'choose_method', nodeIndex };
+      return { kind: 'board', nodeIndex };
+    }
     if (node.objectiveMet && !issued.has(`obs-${nodeIndex}`)) {
       return { kind: 'recover-observation', nodeIndex };
     }
@@ -71,6 +94,8 @@ export function nextFlowStep(state: CaseFlowState): FlowStep {
 }
 
 export function stageForStep(step: FlowStep): CaseStage {
+  if (step.kind === 'choose_method') return 'choose_method';
+  if (step.kind === 'choose_evidence') return 'choose_evidence';
   if (step.kind === 'board') return 'board';
   if (step.kind === 'guess') return 'guess';
   // interpret / recover-observation / signature-attempt are all beats of the
@@ -80,7 +105,7 @@ export function stageForStep(step: FlowStep): CaseStage {
 
 /** Which node the HUD should call current while a step is active. */
 export function currentNodeIndexForStep(step: FlowStep): number {
-  if (step.kind === 'board' || step.kind === 'recover-observation') return step.nodeIndex;
+  if (step.kind === 'choose_method' || step.kind === 'choose_evidence' || step.kind === 'board' || step.kind === 'recover-observation') return step.nodeIndex;
   if (step.kind === 'interpret') {
     const nodeIndex = Number(step.ref.slice(4));
     return Math.min(Number.isNaN(nodeIndex) ? 2 : nodeIndex, 2);
@@ -111,11 +136,15 @@ export function reconcileProjection(projection: ClientRunProjection): ResumeDeci
   }
   const sortedNodes = [...projection.nodes].sort((a, b) => a.nodeOrder - b.nodeOrder);
   const flow: CaseFlowState = {
+    version: projection.casePublic.version,
     nodes: [0, 1, 2].map(nodeIndex => {
       const node = sortedNodes[nodeIndex];
       return {
         completed: node?.nodeStatus === 'completed',
         objectiveMet: !!node && (node.objectiveProgress ?? 0) >= (node.objectiveTarget ?? 0),
+        chosenMethod: node?.method ?? (projection.casePublic?.version === 1 ? projection.casePublic.nodeMethods[nodeIndex] : null),
+        chosenFamily: node?.selectedFamily ?? null,
+        segmentMovesUsed: node?.movesUsed ?? 0,
       };
     }),
     issuedRefs: projection.observations.map(observation => observation.ref),

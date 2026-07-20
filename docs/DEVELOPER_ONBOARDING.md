@@ -47,6 +47,7 @@ npm run start    # http://localhost:3000
 ---
 
 ## 1) Start Here
+- New to the codebase? Read the guided walkthrough first: [CODEBASE_TOUR.md](./CODEBASE_TOUR.md) (life of a run, directory map, glossary, common-change table).
 - Project overview & setup: [docs/README.md](./README.md) (install, env vars, scripts).
 - Run the app: `npm install`, `cp .env.example .env.local`, set database + Cesium env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
 
@@ -56,18 +57,18 @@ npm run start    # http://localhost:3000
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `boardTypes.ts` defines extensible cell schema, `gemSemantics.ts` defines shared gem meaning, `nodeObstacles.ts` defines typed obstacle contracts + seeded cell state, and `MoveAction.ts` / `ExplodeAndReplacePhase.ts` handle swaps/cascades.
 - UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
-- Expedition run loop: `src/types/expedition.ts` (RunState, catalogs), `src/lib/nodeScoring.ts` (node generation), `src/MainAppLayout.tsx` (phase state machine). Run creates 6 nodes from GIS scoring; each node has gem objectives, encounters (every 3rd match group), and souvenir drops. Components: `ExpeditionBriefing` (dismissible overlay on map — player can close and click a different location), `RunTrack`, `ActiveEncounterPanel`, `GemWallet`, `SouvenirPouch`. - Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes` tables.
+- Expedition run loop: `src/types/expedition.ts` (RunState), `src/contexts/ExpeditionContext.tsx` (phase state + persistence), `src/lib/nodeScoring.ts` (GIS node generation), `src/MainAppLayout.tsx` (layout). Run creates a persisted mystery node, matches clue/objective gems, then moves into deduction/completion UI. Components: `ExpeditionBriefing`, `GemSignalStrip`, `FieldNotebook`, `ExpeditionRouteRecap`. Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes`.
 
 ## 3) Recommended Reading Path
 1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../CLAUDE.md](../CLAUDE.md).
 Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
-2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
+2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
-4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
-5) **Partial runtime / schema context:** [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md), [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md).
-6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
+4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./archive/STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
+5) **Partial runtime / schema context:** [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
+6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [DATABASE_ER_PLAY_PATH.md](./DATABASE_ER_PLAY_PATH.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
 7) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
-8) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
+8) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./archive/BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
 
 ## 4) Full Document Index (every .md)
 
@@ -78,14 +79,13 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - [PAGE_ROUTING_INFRASTRUCTURE.md](./PAGE_ROUTING_INFRASTRUCTURE.md) — Next.js routing.
 
 **Expedition Run Loop**
-- [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) — run phases, node generation, encounters, souvenirs, gem wallet, route trail.
+- [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md) — run phases, node generation, scoring, route trail.
 - [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md) — implemented `counterGem` + affinity migration, follow-up work, and related files.
-- [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md) — banked score, clue fragments, Deduction Camp, spook-tier rewards.
+- [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md) — banked score, clue fragments, deduction scoring.
 - [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) — GIS layer scoring, node family taxonomy, DB schema; partially forward-looking.
-- [YMBAB_CONVERSION.md](./YMBAB_CONVERSION.md) — historical handoff for the action/loot conversion.
 
 **Game Board & Clues**
-- [CLUE_BOARD_IMPLEMENTATION.md](./CLUE_BOARD_IMPLEMENTATION.md) — historical/free-play clue-board flow; not the expedition runtime source of truth.
+- [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md) — historical/free-play clue-board flow; not the expedition runtime source of truth.
 - [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md) — species progression and discovery flow.
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — habitat hit/highlight flow.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG integration for habitat stats.
@@ -93,19 +93,20 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 
 **UI & Styling**
 - [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md) — component library usage.
-- [STYLE_MAPPING.md](./STYLE_MAPPING.md) — design tokens and style references.
+- [STYLE_MAPPING.md](./archive/STYLE_MAPPING.md) — design tokens and style references.
 - [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md) — species card UX changes.
 - [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md) — mobile UX adjustments.
 - [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md) — breadcrumb/dropdown behavior.
 
 **Data, Auth, and Platform**
 - [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Drizzle queries, TiTiler integration.
+- [DATABASE_ER_PLAY_PATH.md](./DATABASE_ER_PLAY_PATH.md) — live ER diagram + fields used when a game is played.
 - [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md) — schema and species data sourcing.
 - [DRIZZLE_ORM_GUIDE.md](./DRIZZLE_ORM_GUIDE.md) — Drizzle usage patterns.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG migration from legacy raster storage.
 - [DRIZZLE_VERCEL_MIGRATION.md](./DRIZZLE_VERCEL_MIGRATION.md) — Drizzle + Vercel server runtime setup.
-- [NORMALIZED_BIODIVERSITY_SCHEMA.md](./NORMALIZED_BIODIVERSITY_SCHEMA.md) — normalized 3NF biodiversity schema.
-- [SHAPEFILE_BEST_PRACTICES.mdx](./SHAPEFILE_BEST_PRACTICES.mdx) — shapefile prep and ETL guide.
+- [NORMALIZED_BIODIVERSITY_SCHEMA.md](./archive/NORMALIZED_BIODIVERSITY_SCHEMA.md) — normalized 3NF biodiversity schema (archived).
+- [SHAPEFILE_BEST_PRACTICES.md](./SHAPEFILE_BEST_PRACTICES.md) — shapefile prep and ETL guide.
 
 **Player Tracking & Stats**
 - [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md) — telemetry + Drizzle writes.
@@ -114,7 +115,7 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md) — review of stats dashboard work.
 
 **Biodiversity & Map Content**
-- [BIOREGION_FEATURE_SUMMARY.md](./BIOREGION_FEATURE_SUMMARY.md) — overview of bioregion feature.
+- [BIOREGION_FEATURE_SUMMARY.md](./archive/BIOREGION_FEATURE_SUMMARY.md) — overview of bioregion feature.
 - [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md) — implementation notes for bioregions.
 - [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md) — ecoregion details.
 

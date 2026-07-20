@@ -5,6 +5,7 @@
 
 import { sql } from 'drizzle-orm';
 import type { MethodType } from '@/expedition/domain';
+import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
 import {
   bigint,
   boolean,
@@ -228,6 +229,75 @@ export const evidenceCards = pgTable(
     index('ix_evidence_cards_species_method').on(table.speciesId, table.method),
     index('ix_evidence_cards_compare').using('gin', table.compareTags),
   ]
+);
+
+export const evidenceFamilyCards = pgTable(
+  'evidence_family_cards',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+    family: text('family').notNull().$type<EvidenceFamily>(),
+    observationText: text('observation_text').notNull(),
+    inferenceText: text('inference_text').notNull(),
+    traitCategory: text('trait_category').notNull().$type<DeductionClueCategory>(),
+    compareTag: text('compare_tag').notNull(),
+    traitPhrase: text('trait_phrase').notNull(),
+    bonusFactText: text('bonus_fact_text').notNull(),
+    source: text('source').notNull(),
+    reviewStatus: text('review_status').notNull().default('reviewed'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('uq_evidence_family_cards_species_family').on(table.speciesId, table.family),
+    check(
+      'ck_evidence_family_cards_family',
+      sql`${table.family} IN ('relatives', 'body', 'behavior', 'habits', 'place')`,
+    ),
+    check(
+      'ck_evidence_family_cards_trait_category',
+      sql`${table.traitCategory} IN ('habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation')`,
+    ),
+    check('ck_evidence_family_cards_review_status', sql`${table.reviewStatus} = 'reviewed'`),
+    index('ix_evidence_family_cards_species').on(table.speciesId),
+    index('ix_evidence_family_cards_family').on(table.family),
+    index('ix_evidence_family_cards_compare_tag').on(table.compareTag),
+  ],
+);
+
+export const evidenceFamilyHints = pgTable(
+  'evidence_family_hints',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+    family: text('family').notNull().$type<EvidenceFamily>(),
+    sequenceIndex: smallint('sequence_index').notNull(),
+    hintText: text('hint_text').notNull(),
+    weakTag: text('weak_tag').notNull(),
+    reviewStatus: text('review_status').notNull().default('reviewed'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('uq_evidence_family_hints_species_family_sequence').on(table.speciesId, table.family, table.sequenceIndex),
+    check('ck_evidence_family_hints_family', sql`${table.family} IN ('relatives', 'body', 'behavior', 'habits', 'place')`),
+    check('ck_evidence_family_hints_sequence', sql`${table.sequenceIndex} BETWEEN 0 AND 9`),
+    check('ck_evidence_family_hints_review_status', sql`${table.reviewStatus} = 'reviewed'`),
+    index('ix_evidence_family_hints_species_family').on(table.speciesId, table.family),
+  ],
+);
+
+export const cascadeHints = pgTable(
+  'cascade_hints',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    sequenceIndex: smallint('sequence_index').notNull().unique(),
+    hintText: text('hint_text').notNull(),
+    reviewStatus: text('review_status').notNull().default('reviewed'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check('ck_cascade_hints_sequence', sql`${table.sequenceIndex} BETWEEN 0 AND 99`),
+    check('ck_cascade_hints_review_status', sql`${table.reviewStatus} = 'reviewed'`),
+  ],
 );
 
 export const speciesDeductionClues = pgTable(

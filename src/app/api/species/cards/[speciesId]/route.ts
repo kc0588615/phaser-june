@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { db, speciesCards, runMemories } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { projectRunMemory } from '@/lib/runProjection';
 
 /**
  * GET /api/species/cards/[speciesId]
@@ -32,9 +33,17 @@ export async function GET(
     const memories = await db
       .select()
       .from(runMemories)
-      .where(and(eq(runMemories.playerId, playerId), eq(runMemories.speciesId, sid)));
+      .where(and(eq(runMemories.playerId, playerId), eq(runMemories.speciesId, sid)))
+      .orderBy(desc(runMemories.createdAt))
+      .limit(10);
 
-    return NextResponse.json({ card: card ?? null, memories });
+    return NextResponse.json({
+      card: card ?? null,
+      memories: memories.flatMap(memory => {
+        const projected = projectRunMemory(memory);
+        return projected ? [projected] : [];
+      }),
+    });
   } catch (error) {
     console.error('[API GET /api/species/cards/[speciesId]] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch species card' }, { status: 500 });

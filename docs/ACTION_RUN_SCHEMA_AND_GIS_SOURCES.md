@@ -151,10 +151,10 @@ Persist to `eco_node_gis_samples`:
 - `white` → conservation
 - `purple` → key_facts
 
-### Wallet + crate effects
+### Score effects
 
-- The expedition wallet still tracks `gold`, `power`, `thought`, and `dust`.
-- Crate action-gem matches can also roll consumables such as Signal Flare, Bait, Trail Map, and Field Kit.
+- `bankedScore` is the only run reward currency.
+- Crate action-gem matches contribute through score/objective effects only.
 
 ## Mission Node JSON Contract
 

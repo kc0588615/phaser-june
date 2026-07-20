@@ -165,7 +165,7 @@ Educational content should be unlocked, staged, and tied to player action.
 - Globe tap: curiosity
 - Expedition briefing: anticipation
 - Match-3 obstacles: tension
-- Crisis events: improvisation
+- Route pivots: improvisation
 - Deduction camp: inference and suspense
 - Card reveal: payoff
 - Binder revisit: pride and intimacy
@@ -815,8 +815,8 @@ Each GIS feature category should influence:
 
 1. Node selection
 2. Obstacle families
-3. Crisis event candidates
-4. Reward modifiers
+3. Obstacle pressure
+4. Score modifiers
 5. Card-back stamps
 
 ### Examples
@@ -947,9 +947,7 @@ At minimum, every run memory should capture:
 - actual completed nodes
 - route polyline
 - GIS features involved
-- items used
 - obstacles encountered
-- crisis events encountered
 - deduction result
 - final score
 

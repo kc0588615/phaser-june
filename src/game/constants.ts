@@ -59,6 +59,7 @@ export const AssetKeys = {
     BACKGROUND: 'background',
     // Helper to get gem texture key (assuming frame 0 is the default idle state)
     GEM_TEXTURE: (type: GemType, frame: number = 0): string => `${type}_gem_${frame}`,
+    EVIDENCE_GEM_TEXTURE: (type: GemType): string => `evidence_gem_${type}`,
     // Add sound keys here when implemented
     // SOUND_MATCH: 'match_sound',
     // SOUND_FALL: 'fall_sound',
@@ -109,8 +110,6 @@ export const MOVE_LARGE_MATCH_THRESHOLD = 4;
 export const MOVE_HUGE_MATCH_THRESHOLD = 5;
 export const MULTIPLIER_LARGE_MATCH = 1.25;
 export const MULTIPLIER_HUGE_MATCH = 1.5;
-export const MULTIPLIER_MULTI_CATEGORY = 1.15;
-export const MULTIPLIER_REPEAT_CATEGORY = 1.25;
 
 // --- Game States (Optional: For more complex state machines) ---
 // export const GameState = {

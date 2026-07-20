@@ -39,7 +39,7 @@ import { useCesiumTrail } from '../hooks/useCesiumTrail';
 import { useEcoregionLayer } from '../hooks/useEcoregionLayer';
 import { computeExpeditionRoutePolyline, normalizeRoutePolyline } from '../lib/expeditionRoute';
 import { applyWaypointsToRunNodes } from '../lib/nodeScoring';
-import { getWaypointTypeLabel, type ExpeditionWaypoint, type ExpeditionWaypointResponse, type WaypointType } from '../types/waypoints';
+import { getWaypointTypeLabel, WAYPOINT_TYPE_COLORS, type ExpeditionWaypoint, type ExpeditionWaypointResponse } from '../types/waypoints';
 import { ANIMAL_MARKER, type EcoregionPreviewPick, type EcoregionProgress } from '../types/ecoregions';
 import { cn } from '@/lib/utils';
 
@@ -75,16 +75,6 @@ interface PendingSelection {
   availableAffinities: AffinityType[];
   ecoregionId: number | null;
 }
-
-const WAYPOINT_COLORS: Record<WaypointType, string> = {
-  city: '#f59e0b',
-  river: '#38bdf8',
-  lake: '#2563eb',
-  wetland: '#14b8a6',
-  protected_area: '#22c55e',
-  bioregion_edge: '#a78bfa',
-  basecamp: '#f97316',
-};
 
 function getWaypointRouteOrFallback(
   waypointData: ExpeditionWaypointResponse | null,
@@ -199,9 +189,11 @@ interface CesiumMapProps {
   onSearchOpen?: () => void;
   expeditionPhase?: RunPhase;
   activeWaypoint?: Pick<ExpeditionWaypoint, 'lon' | 'lat'> | null;
+  /** Pause the render loop while hidden (v3 map HUD up) to free GPU/WebGL pressure. */
+  suspended?: boolean;
 }
 
-const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = 'idle', activeWaypoint = null }) => {
+const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = 'idle', activeWaypoint = null, suspended = false }) => {
   const viewerRef = useRef<any>(null);
   const [imageryProvider, setImageryProvider] = useState<UrlTemplateImageryProvider | null>(null);
   const [clickedLonLat, setClickedLonLat] = useState<{ lon: number, lat: number } | null>(null);
@@ -258,6 +250,18 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
       window.clearTimeout(timeoutId);
     };
   }, [expeditionPhase]);
+
+  // Pause the Cesium render loop while the v3 map HUD replaces this panel, so
+  // MapLibre isn't competing with a hidden globe for GPU/WebGL resources.
+  useEffect(() => {
+    const viewer = viewerRef.current?.cesiumElement;
+    if (!viewer || viewer.isDestroyed?.()) return;
+    viewer.useDefaultRenderLoop = !suspended;
+    if (!suspended) {
+      viewer.resize?.();
+      viewer.scene?.requestRender?.();
+    }
+  }, [suspended]);
 
   useEffect(() => {
     if (expeditionPhase !== 'mystery' || activeWaypointLon === undefined || activeWaypointLat === undefined) return;
@@ -665,7 +669,7 @@ const CesiumMap: React.FC<CesiumMapProps> = ({ onSearchOpen, expeditionPhase = '
 
         {!expeditionBlocksMapClick && regionWaypointData?.waypoints.map((waypoint) => {
           const key = getAnchorKey(waypoint);
-          const color = Color.fromCssColorString(WAYPOINT_COLORS[waypoint.waypointType] ?? '#38bdf8');
+          const color = Color.fromCssColorString(WAYPOINT_TYPE_COLORS[waypoint.waypointType] ?? '#38bdf8');
           return (
             <Entity
               key={key}

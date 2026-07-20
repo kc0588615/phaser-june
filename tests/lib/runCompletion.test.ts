@@ -29,6 +29,7 @@ test('correct-run artifacts populate memory, mastery, and card aggregates', () =
   );
 
   assert.equal(memory.routePolyline.length, 4);
+  assert.deepEqual(memory.routePolyline.map(point => point.waypointSlot), [0, undefined, undefined, undefined]);
   assert.deepEqual(memory.routeBounds, { minLon: -90, minLat: 40, maxLon: -87, maxLat: 43 });
   assert.equal(memory.gisFeaturesNearby.length, 2);
   assert.deepEqual(getRunGisStamps(fingerprints), ['river', 'protected_area']);
