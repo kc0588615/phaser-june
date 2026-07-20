@@ -1,8 +1,8 @@
 # Function: POST()
 
-> **POST**(`request`): `Promise`\<`NextResponse`\<\{ `species`: `object`[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
+> **POST**(`request`): `Promise`\<`NextResponse`\<\{ `species`: `Record`\<`string`, `unknown`\>[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
 
-Defined in: [src/app/api/species/by-ids/route.ts:100](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/app/api/species/by-ids/route.ts#L100)
+Defined in: [src/app/api/species/by-ids/route.ts:46](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/app/api/species/by-ids/route.ts#L46)
 
 ## Parameters
 
@@ -12,4 +12,4 @@ Defined in: [src/app/api/species/by-ids/route.ts:100](https://github.com/kc05886
 
 ## Returns
 
-`Promise`\<`NextResponse`\<\{ `species`: `object`[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
+`Promise`\<`NextResponse`\<\{ `species`: `Record`\<`string`, `unknown`\>[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>

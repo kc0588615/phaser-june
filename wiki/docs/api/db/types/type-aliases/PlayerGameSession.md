@@ -2,4 +2,4 @@
 
 > **PlayerGameSession** = `InferSelectModel`\<*typeof* [`playerGameSessions`](../../schema/player/variables/playerGameSessions.md)\>
 
-Defined in: [src/db/types.ts:17](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/db/types.ts#L17)
+Defined in: [src/db/types.ts:19](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/db/types.ts#L19)

@@ -1,6 +1,6 @@
 # Interface: Database
 
-Defined in: [src/types/database.ts:182](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L182)
+Defined in: [src/types/database.ts:213](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/database.ts#L213)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/database.ts:182](https://github.com/kc0588615/phaser-june
 
 > **public**: `object`
 
-Defined in: [src/types/database.ts:183](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/types/database.ts#L183)
+Defined in: [src/types/database.ts:214](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/database.ts#L214)
 
 #### Tables
 
@@ -29,22 +29,6 @@ Defined in: [src/types/database.ts:183](https://github.com/kc0588615/phaser-june
 ##### Tables.high\_scores.Update
 
 > **Update**: `Partial`\<`Omit`\<[`HighScore`](HighScore.md), `"id"` \| `"created_at"`\>\>
-
-##### Tables.icaa
-
-> **icaa**: `object`
-
-##### Tables.icaa.Insert
-
-> **Insert**: `Omit`\<[`Species`](Species.md), `"ogc_fid"`\>
-
-##### Tables.icaa.Row
-
-> **Row**: [`Species`](Species.md)
-
-##### Tables.icaa.Update
-
-> **Update**: `Partial`\<`Omit`\<[`Species`](Species.md), `"ogc_fid"`\>\>
 
 ##### Tables.player\_clue\_unlocks
 
@@ -126,17 +110,25 @@ Defined in: [src/types/database.ts:183](https://github.com/kc0588615/phaser-june
 
 > **Update**: `Partial`\<`Omit`\<[`Profile`](Profile.md), `"user_id"` \| `"created_at"` \| `"updated_at"`\>\>
 
+##### Tables.species
+
+> **species**: `object`
+
+##### Tables.species.Insert
+
+> **Insert**: `Omit`\<[`Species`](Species.md), `"id"`\>
+
+##### Tables.species.Row
+
+> **Row**: [`Species`](Species.md)
+
+##### Tables.species.Update
+
+> **Update**: `Partial`\<`Omit`\<[`Species`](Species.md), `"id"`\>\>
+
 #### Views
 
 > **Views**: `object`
-
-##### Views.icaa\_view
-
-> **icaa\_view**: `object`
-
-##### Views.icaa\_view.Row
-
-> **Row**: [`Species`](Species.md)
 
 ##### Views.player\_leaderboard
 

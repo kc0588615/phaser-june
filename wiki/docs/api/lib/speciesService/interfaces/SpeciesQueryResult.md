@@ -1,6 +1,6 @@
 # Interface: SpeciesQueryResult
 
-Defined in: [src/lib/speciesService.ts:3](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesService.ts#L3)
+Defined in: [src/lib/speciesService.ts:3](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesService.ts#L3)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/speciesService.ts:3](https://github.com/kc0588615/phaser-ju
 
 > **count**: `number`
 
-Defined in: [src/lib/speciesService.ts:5](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesService.ts#L5)
+Defined in: [src/lib/speciesService.ts:5](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesService.ts#L5)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [src/lib/speciesService.ts:5](https://github.com/kc0588615/phaser-ju
 
 > **species**: [`Species`](../../../types/database/interfaces/Species.md)[]
 
-Defined in: [src/lib/speciesService.ts:4](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesService.ts#L4)
+Defined in: [src/lib/speciesService.ts:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesService.ts#L4)

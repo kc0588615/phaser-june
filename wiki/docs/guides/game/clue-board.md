@@ -79,7 +79,7 @@ Each gem color corresponds to a clue category:
 | Color | Category | Icon | Database Fields |
 |-------|----------|------|-----------------|
 | Red | Classification | 🧬 | `phylum`, `class`, `order_`, `family`, `genus`, `sci_name` |
-| Green | Habitat (Raster) | 🌳 | Cesium raster data |
+| Green | Habitat (Raster) | 🌳 | MapLibre raster data |
 | Blue | Geographic | 🗺️ | `geo_desc`, `dist_comm`, `hab_desc` |
 | Orange | Morphology | 🐆 | `pattern`, `color_prim`, `size_max`, `weight_kg` |
 | Yellow | Behavior & Diet | 💨 | `behav_1`, `diet_type`, `diet_prey` |

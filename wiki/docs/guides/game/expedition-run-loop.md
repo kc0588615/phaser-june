@@ -12,7 +12,7 @@ V3 simplifies the player loop to map -> six matches -> evidence-family choice ->
 ## Flow
 
 1. Player clicks a map location.
-2. `CesiumMap` gathers nearby species, habitats, waypoints, GIS signals, and available affinities.
+2. `MapLibreExploreMap` gathers nearby species, habitats, waypoints, GIS signals, and available affinities.
 3. React shows `ExpeditionBriefing`.
 4. Player starts the expedition.
 5. `/api/runs` creates a versioned case and three board seeds.
@@ -26,7 +26,7 @@ V3 simplifies the player loop to map -> six matches -> evidence-family choice ->
 
 The three earned clues stay visible as Observation / Inference / Ruled out entries. Every candidate retains its portrait and gains a candidate-specific trait phrase for each played family, so the roster shows why the evidence separated the animals.
 
-During the run, a MapLibre regional map shows the three research sites and route. Sites prefer 150–800 km spacing inside one contiguous One Earth region, with a 100 km non-failing fallback. Cesium remains the region-selection and completed-run recap surface. Answer range geometry stays server-side until the correct verdict.
+During the run, a MapLibre regional map shows the three research sites and route. Sites prefer 150–800 km spacing inside one contiguous One Earth region, with a 100 km non-failing fallback. MapLibre remains the region-selection and completed-run recap surface. Answer range geometry stays server-side until the correct verdict.
 
 No energy or Insight currency exists. Score and guess bonuses are unchanged server-side; score is hidden in v3 until it has a visible reward.
 
@@ -70,7 +70,7 @@ No energy or Insight currency exists. Score and guess bonuses are unchanged serv
 | `src/components/EvidenceFamilyRail.tsx` | Family totals, carries, locks, and choices. |
 | `src/components/CandidateRoster.tsx` | Candidate journal and final guess surface. |
 | `src/components/ExpeditionBriefing.tsx` | Start-run briefing. |
-| `src/components/CesiumMap.tsx` | Map selection and route trail. |
+| `src/components/MapLibreExploreMap.tsx` | Map selection and route trail. |
 
 ## EventBus Events
 
@@ -78,7 +78,7 @@ No energy or Insight currency exists. Score and guess bonuses are unchanged serv
 |-------|-----------|---------|
 | `expedition-data-ready` | React to React | Expedition generated, show briefing. |
 | `expedition-start` | React to React | Player starts run. |
-| `cesium-location-selected` | React to Phaser | Initialize puzzle with node params. |
+| `map-location-selected` | React to Phaser | Initialize puzzle with node params. |
 | `node-objective-updated` | Phaser to React | Progress bar update. |
 | `node-advance-requested` | Phaser/UI to React | Node ready to advance. |
-| `node-complete` | React to Phaser/Cesium/UI | Node completion fact. |
+| `node-complete` | React to Phaser/MapLibre/UI | Node completion fact. |

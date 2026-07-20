@@ -45,17 +45,17 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Build/serve static: `npm run build && npm run serve` (serves `dist/`); or `npm start`
 - Typecheck: `npm run typecheck`
 - Drizzle: `npm run db:introspect`
-- Env: set `DATABASE_URL`, `NEXT_PUBLIC_CESIUM_ION_TOKEN` (+ optional `NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`) in `.env.local`. Clerk keys TBD.
+- Env: set `DATABASE_URL` (+ optional `NEXT_PUBLIC_MAP_STYLE_URL`, `NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`) in `.env.local`. Clerk keys TBD.
 
 ## Where Things Live
-- Layout host: `src/MainAppLayout.tsx` (keeps Cesium + Phaser mounted; viewMode toggles map/clues/species list).
+- Layout host: `src/MainAppLayout.tsx` (keeps MapLibre + Phaser mounted; viewMode toggles map/clues/species list).
 - Phaser entry: `src/PhaserGame.tsx` boots `src/game/main.ts` -> scenes (Boot, Preloader, MainMenu, Game, GameOver).
-- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: location (`cesium-location-selected`), board (`game-hud-updated`, `game-over`, `game-reset`), expedition (`expedition-start`, `node-complete`, `node-advance-requested`), clue/deduction, auth/progress.
+- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: location (`map-location-selected`), board (`game-hud-updated`, `game-over`, `game-reset`), expedition (`expedition-start`, `node-complete`, `node-advance-requested`), clue/deduction, auth/progress.
 - Controller: `src/game/scenes/Game.ts` (input, move flow, streak/score, HUD emit, node objectives).
 - Model: `src/game/BackendPuzzle.ts` (board state, matches, move registration), `src/game/boardTypes.ts` (cell schema), `src/game/gemSemantics.ts` (shared gem meaning config), `src/game/nodeObstacles.ts` (typed obstacle contracts + seeded cell state), `src/game/clueConfig.ts` (CluePayload, clue category keys).
 - Move pipeline: `src/game/MoveAction.ts`, `src/game/ExplodeAndReplacePhase.ts` (swap/cascade).
 - View: `src/game/BoardView.ts` (sprite layout/animation, resize tweens).
-- Map ingress: `src/components/CesiumMap.tsx` (click -> emits `cesium-location-selected`, highlights habitats/species polygons).
+- Map ingress: `src/components/MapLibreExploreMap.tsx` (click -> expedition data, highlights habitats/species polygons).
 - HUD/clues: `src/components/SpeciesPanel.tsx` (listens to clue + HUD events; emits `show-species-list`).
 - Species catalog: `src/components/SpeciesList.tsx` (React Query, filters, localStorage discoveries).
 - Expedition run: `src/types/expedition.ts` (RunState, clue fragments, deduction state), `src/contexts/ExpeditionContext.tsx` (run state/persistence), `src/expedition/` (affinities.ts, domain.ts), `src/lib/nodeScoring.ts` (node generation from GIS), `src/components/ExpeditionBriefing.tsx`, `src/components/FieldNotebook.tsx`, `src/components/ExpeditionRouteRecap.tsx`.
@@ -72,7 +72,7 @@ Read relevant docs before big edits.
 - Affinity system: `docs/AFFINITY_MIGRATION_IMPLEMENTATION.md`.
 - Album/TCG: `docs/SPECIES_ALBUM_TCG_SYSTEM_SPEC.md`, `docs/SPECIES_ALBUM_TCG_INTEGRATION_TODO.md` (Phase 2-3 remaining work).
 - Comparative ref slot: `docs/COMPARATIVE_REFERENCE_SLOT.md`.
-- Map/data: `docs/CESIUM_UI_CUSTOMIZATION.md`, `docs/HABITAT_HIGHLIGHT_IMPLEMENTATION.md`, `docs/HABITAT_RASTER_MIGRATION.md`.
+- Map/data: `docs/MAPLIBRE_UI_CUSTOMIZATION.md`, `docs/HABITAT_HIGHLIGHT_IMPLEMENTATION.md`, `docs/HABITAT_RASTER_MIGRATION.md`.
 - UI/styling: `docs/SHADCN_IMPLEMENTATION_GUIDE.md`, `docs/SPECIES_CARD_UI_IMPROVEMENTS.md`, `docs/SPECIES_UI_MOBILE_IMPROVEMENTS.md`, `docs/SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md`.
 - Data/auth: `docs/DATABASE_USER_GUIDE.md`, `docs/SPECIES_DATABASE_IMPLEMENTATION.md`, `docs/SPECIES_TABLE_SIMPLIFICATION_PLAN.md` (species table + iucn rename), `docs/DRIZZLE_ORM_GUIDE.md`, `docs/DRIZZLE_VERCEL_MIGRATION.md`.
 - Tracking/stats: `docs/PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md`, `docs/PLAYER_TRACKING_INTEGRATION_PLAN.md`, `docs/PLAYER_STATS_DASHBOARD_INTEGRATION.md`, `docs/PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md`.

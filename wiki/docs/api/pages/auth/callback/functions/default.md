@@ -1,9 +1,9 @@
 # Function: default()
 
-> **default**(): `Element`
+> **default**(): `null`
 
-Defined in: [src/pages/auth/callback.tsx:6](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/pages/auth/callback.tsx#L6)
+Defined in: [src/pages/auth/callback.tsx:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/pages/auth/callback.tsx#L4)
 
 ## Returns
 
-`Element`
+`null`

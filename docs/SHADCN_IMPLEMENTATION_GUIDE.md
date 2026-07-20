@@ -295,7 +295,7 @@ useEffect(() => {
 Layer 0 (z-index: auto): Document flow
 Layer 1 (z-index: 1): Phaser game canvas
 Layer 50 (z-index: 50): Standard UI elements
-Layer 1000 (z-index: 1000): Cesium minimize button
+Layer 1000 (z-index: 1000): MapLibre minimize button
 Layer 9999 (z-index: 9999): Modal overlays
 Layer 10000 (z-index: 10000): Modal content
 ```

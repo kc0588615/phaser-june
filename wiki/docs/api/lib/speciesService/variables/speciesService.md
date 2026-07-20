@@ -2,7 +2,7 @@
 
 > `const` **speciesService**: `object`
 
-Defined in: [src/lib/speciesService.ts:127](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesService.ts#L127)
+Defined in: [src/lib/speciesService.ts:127](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesService.ts#L127)
 
 ## Type Declaration
 
@@ -115,7 +115,7 @@ Get bioregion data for multiple species
 
 > **getSpeciesByIds**(`ids`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>
 
-Get species by their ogc_fid values
+Get species by their species.id values
 
 #### Parameters
 
@@ -131,7 +131,7 @@ Get species by their ogc_fid values
 
 > **getSpeciesGeoJSON**(`speciesIds`): `Promise`\<`any`\>
 
-Render species polygons on Cesium (returns GeoJSON)
+Return species polygons as GeoJSON for map rendering.
 
 #### Parameters
 

@@ -58,13 +58,13 @@ It's a **typed pub/sub system** where:
 
 **Example:** Sending map selection to game
 
-### React Side (CesiumMap.tsx)
+### React Side (MapLibreExploreMap.tsx)
 
 ```typescript
 import { EventBus } from '@/game/EventBus';
 
 const handleMapClick = (lon: number, lat: number, species: Species[]) => {
-  EventBus.emit('cesium-location-selected', {
+  EventBus.emit('map-location-selected', {
     lon,
     lat,
     species,
@@ -78,10 +78,10 @@ const handleMapClick = (lon: number, lat: number, species: Species[]) => {
 
 ```typescript
 create() {
-  EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
+  EventBus.on('map-location-selected', this.initializeBoardFromMap, this);
 }
 
-private initializeBoardFromCesium(data: {
+private initializeBoardFromMap(data: {
   lon: number;
   lat: number;
   species: Species[];
@@ -92,7 +92,7 @@ private initializeBoardFromCesium(data: {
 }
 
 shutdown() {
-  EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
+  EventBus.off('map-location-selected', this.initializeBoardFromMap, this);
 }
 ```
 
@@ -302,4 +302,4 @@ useEffect(() => {
 
 ## Next Tutorial
 
-[Cesium Integration](/docs/tutorials/cesium-integration) - Adding 3D globe interactions
+[MapLibre Integration](/docs/tutorials/maplibre-integration) - Adding 3D globe interactions

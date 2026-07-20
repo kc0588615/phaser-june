@@ -23,7 +23,7 @@ When a player clicks a location:
 private speciesQueue: Species[] = [];
 private currentSpeciesIndex: number = 0;
 
-private initializeBoardFromCesium(data: LocationData) {
+private initializeBoardFromMap(data: LocationData) {
   this.speciesQueue = data.species;
   this.currentSpeciesIndex = 0;
   this.startNextSpecies();

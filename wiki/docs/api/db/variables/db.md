@@ -2,4 +2,4 @@
 
 > `const` **db**: `PostgresJsDatabase`\<[`db/schema`](../schema/index.md)\> & `object`
 
-Defined in: [src/db/index.ts:31](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/db/index.ts#L31)
+Defined in: [src/db/index.ts:30](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/db/index.ts#L30)

@@ -65,7 +65,7 @@ All 8 FK relationships migrated from `icaa.ogc_fid` to `species.id` via temp tab
 - 15+ components/hooks: all `.ogc_fid` references changed to `.id`
 - `src/game/scenes/Game.ts`: 15+ `.ogc_fid` → `.id`
 - `src/game/clueConfig.ts`, `src/expedition/affinities.ts`: removed `species.aquatic` refs
-- `src/components/CesiumMap.tsx`: GeoJSON property key `ogc_fid` → `species_id`; removed aquatic refs
+- `src/components/MapLibreExploreMap.tsx`: GeoJSON property key `ogc_fid` → `species_id`; removed aquatic refs
 - `src/app/api/species/at-point/route.ts`, `in-radius/route.ts`: switched to `s.*` for full column coverage
 - `src/app/api/species/closest/route.ts`: fixed DISTINCT ON with subquery (inner dedupes per species, outer picks globally closest)
 - `src/app/api/discoveries/migrate/route.ts`: accepts localStorage entries marked with `idSource: 'species.id'` only. Legacy `ogc_fid` bridging was removed because `ogc_fid` is reassigned by raw IUCN reimports and can silently map old clients to the wrong species.

@@ -22,7 +22,7 @@ The app is three independent surfaces that stay mounted the whole session:
 
 | World | Tech | Entry file |
 |---|---|---|
-| Globe | Cesium (via resium) | `src/components/CesiumMap.tsx` |
+| Globe | MapLibre (via maplibre) | `src/components/MapLibreExploreMap.tsx` |
 | Board | Phaser 3 | `src/PhaserGame.tsx` → `src/game/main.ts` |
 | UI/HUD | React + shadcn | `src/MainAppLayout.tsx` |
 
@@ -33,8 +33,8 @@ EventBus's `EventPayloads` and grep for its `emit`/`on` calls.
 
 ## Life of a run (follow this in the code)
 
-1. **Click the globe** — `CesiumMap.tsx` queries `/api/*` for what's at the
-   point and emits `cesium-location-selected` with species + habitat data.
+1. **Click the globe** — `MapLibreExploreMap.tsx` queries `/api/*` for what's at the
+   point and emits `map-location-selected` with species + habitat data.
 2. **Run is generated** — `/api/runs` (in `src/app/api/runs/route.ts`) scores
    the nearby GIS layers with `src/lib/nodeScoring.ts`, picks a node type
    (riverbank, canopy, ridge...), and persists an `eco_run_sessions` row.
@@ -77,7 +77,7 @@ src/
   contexts/
     ExpeditionContext.tsx  run state machine (phases, banking, persistence)
     GameBridgeContext.tsx  HUD score snapshots from the board
-  components/           React UI (CesiumMap, SpeciesPanel, FieldNotebook, ...)
+  components/           React UI (MapLibreExploreMap, SpeciesPanel, FieldNotebook, ...)
   lib/                  server + shared logic (nodeScoring, deductionEngine,
                         speciesQueries, playerTracking, ...)
   app/api/              Next.js API routes (runs, species, layers, ...)
@@ -122,6 +122,6 @@ are characterization tests, so a failure means observable behavior changed.
 | Change board size | `GRID_COLS/GRID_ROWS` in `src/game/constants.ts` |
 | Change clue text/categories | `src/game/clueConfig.ts`, seeds in `db/seeds/deduction/` |
 | Change run phases/persistence | `src/contexts/ExpeditionContext.tsx`, `/api/runs/*` |
-| Change the map behavior | `src/components/CesiumMap.tsx` |
+| Change the map behavior | `src/components/MapLibreExploreMap.tsx` |
 | Change deduction rules | `src/lib/deductionEngine.ts` |
 | Touch the database | `src/db/schema/*` + a NEW migration in `src/db/migrations/` (never edit applied ones) |

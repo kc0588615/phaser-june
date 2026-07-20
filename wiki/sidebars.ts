@@ -32,7 +32,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'tutorials/first-phaser-scene',
         'tutorials/react-phaser-bridge',
-        'tutorials/cesium-integration',
+        'tutorials/maplibre-integration',
       ],
     },
     {
@@ -73,7 +73,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Map & Geospatial',
           items: [
-            'guides/map/cesium-customization',
+            'guides/map/maplibre-customization',
             'guides/map/habitat-highlight',
             'guides/map/habitat-raster',
           ],

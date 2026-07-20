@@ -59,7 +59,7 @@ private gemTypeToCategory: Record<string, GemCategory> = {
 
 ### Habitat (Green 🌳)
 
-**Source:** Cesium raster data (not database text fields)
+**Source:** MapLibre raster data (not database text fields)
 
 Uses `rasterHabitats` from TiTiler COG query. Returns habitat type with percentage coverage.
 

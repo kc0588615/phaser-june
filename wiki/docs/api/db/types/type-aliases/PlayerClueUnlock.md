@@ -2,4 +2,4 @@
 
 > **PlayerClueUnlock** = `InferSelectModel`\<*typeof* [`playerClueUnlocks`](../../schema/player/variables/playerClueUnlocks.md)\>
 
-Defined in: [src/db/types.ts:19](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/db/types.ts#L19)
+Defined in: [src/db/types.ts:21](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/db/types.ts#L21)

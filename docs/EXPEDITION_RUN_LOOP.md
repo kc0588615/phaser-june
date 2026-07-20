@@ -12,7 +12,7 @@ The runtime supports v1/v2 compatibility and the Plan 018 v3 loop. New-run selec
 6. The server applies one fixed-strength reviewed clue and automatically eliminates incompatible candidates. There is no evidence tier, signature, interpretation prediction, or citation step.
 7. After three distinct clues, the player guesses among one to three candidates. Wrong guesses may be revised. A correct guess unlocks the three selected-family facts on the species card.
 
-Each clue is pinned in a three-slot evidence log as Observation, Inference, and Ruled out. The candidate roster remains visible, including eliminated species, and each played family reveals that family’s own trait phrase for all six candidates. The in-run Cesium globe is replaced by a MapLibre regional route map; Cesium remains the selection and recap surface. The answer range is available only from the authenticated post-verdict range endpoint.
+Each clue is pinned in a three-slot evidence log as Observation, Inference, and Ruled out. The candidate roster remains visible, including eliminated species, and each played family reveals that family’s own trait phrase for all six candidates. The in-run MapLibre globe is replaced by a MapLibre regional route map; MapLibre remains the selection and recap surface. The answer range is available only from the authenticated post-verdict range endpoint.
 
 Every accepted move persists the full board grid, blocker state, score, refill queue, allowed gems, move count, and RNG state. Identical retries are idempotent; conflicting same-move retries return `move_locked`. No move log is stored.
 

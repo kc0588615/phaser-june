@@ -11,7 +11,7 @@ Welcome to the technical documentation for **Phaser-June**, a biodiversity disco
 
 ## What is Phaser-June?
 
-Phaser-June is a web application that lets players explore Earth's biodiversity through an interactive game. Players click on a 3D Cesium globe to select a location, then play a match-3 gem puzzle to unlock clues about species found in that habitat. The goal is to identify the mystery species based on the clues revealed.
+Phaser-June is a web application that lets players explore Earth's biodiversity through an interactive game. Players click on a 3D MapLibre globe to select a location, then play a match-3 gem puzzle to unlock clues about species found in that habitat. The goal is to identify the mystery species based on the clues revealed.
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Phaser-June is a web application that lets players explore Earth's biodiversity 
 |-------|------------|
 | **Game Engine** | Phaser 3 |
 | **UI Framework** | React + Next.js |
-| **3D Globe** | Cesium / Resium |
+| **3D Globe** | MapLibre / MapLibre |
 | **Database** | PostgreSQL (Hetzner VPS) |
 | **ORM** | Drizzle (postgres.js) |
 | **Auth** | Clerk (TBD) |

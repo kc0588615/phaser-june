@@ -2,7 +2,7 @@
 
 > **trackSpeciesDiscovery**(`playerId`, `speciesId`, `options`): `Promise`\<`string` \| `null`\>
 
-Defined in: [src/lib/playerTracking.ts:370](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/playerTracking.ts#L370)
+Defined in: [src/lib/playerTracking.ts:368](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/playerTracking.ts#L368)
 
 Track a species discovery
 Links all pending clues to this discovery
@@ -20,6 +20,18 @@ Links all pending clues to this discovery
 ### options
 
 #### cluesUnlockedBeforeGuess
+
+`number`
+
+#### foundEcoregionId?
+
+`number` \| `null`
+
+#### foundLat?
+
+`number`
+
+#### foundLon?
 
 `number`
 

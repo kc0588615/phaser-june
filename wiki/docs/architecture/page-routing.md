@@ -16,7 +16,7 @@ This document describes the page routing infrastructure using Next.js server run
 Example: `index.tsx`
 
 - Uses `MainAppLayout.tsx` for game-specific functionality
-- Manages Phaser game canvas and Cesium 3D map
+- Manages Phaser game canvas and MapLibre 3D map
 - Requires complex state management and EventBus communication
 
 ### 2. Simple Content Pages
@@ -64,7 +64,7 @@ Provides:
   trailingSlash: true,
   images: { unoptimized: true },
   webpack: (config, { webpack, isServer }) => {
-    // Cesium + client fallbacks
+    // MapLibre + client fallbacks
   }
 }
 ```

@@ -1,6 +1,6 @@
 # Developer Onboarding
 
-This is the entry point for engineers joining the Phaser + Next.js + Cesium + Drizzle project. It explains how the app is structured, what to read next, and where every doc lives.
+This is the entry point for engineers joining the Phaser + Next.js + MapLibre + Drizzle project. It explains how the app is structured, what to read next, and where every doc lives.
 
 ---
 
@@ -30,7 +30,7 @@ npm run start    # http://localhost:3000
 
 **Wiki Structure (Diátaxis Framework):**
 - `docs/getting-started/` — Quick setup, project structure
-- `docs/tutorials/` — Learning paths (Phaser scenes, EventBus, Cesium)
+- `docs/tutorials/` — Learning paths (Phaser scenes, EventBus, MapLibre)
 - `docs/architecture/` — System design explanations
 - `docs/guides/` — Task-specific how-to recipes
 - `docs/reference/` — Lookup tables (events, schema, env vars)
@@ -49,21 +49,21 @@ npm run start    # http://localhost:3000
 ## 1) Start Here
 - New to the codebase? Read the guided walkthrough first: [CODEBASE_TOUR.md](./CODEBASE_TOUR.md) (life of a run, directory map, glossary, common-change table).
 - Project overview & setup: [docs/README.md](./README.md) (install, env vars, scripts).
-- Run the app: `npm install`, `cp .env.example .env.local`, set database + Cesium env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
+- Run the app: `npm install`, `cp .env.example .env.local`, set database + MapLibre env vars, then `npm run dev` (port 8080) or `npm run build && npm run serve`.
 
 ## 2) How the Codebase is Shaped
-- Layout host: `src/MainAppLayout.tsx` keeps Cesium map + Phaser canvas mounted; toggles view modes.
+- Layout host: `src/MainAppLayout.tsx` keeps MapLibre map + Phaser canvas mounted; toggles view modes.
 - React ↔ Phaser bridge: `src/PhaserGame.tsx` boots `src/game/main.ts`, which registers scenes (Boot → Preloader → MainMenu → Game → GameOver).
-- Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `cesium-location-selected`, `game-hud-updated`).
+- Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `map-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `boardTypes.ts` defines extensible cell schema, `gemSemantics.ts` defines shared gem meaning, `nodeObstacles.ts` defines typed obstacle contracts + seeded cell state, and `MoveAction.ts` / `ExplodeAndReplacePhase.ts` handle swaps/cascades.
-- UI layer: `src/components/CesiumMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
+- UI layer: `src/components/MapLibreExploreMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
 - Expedition run loop: `src/types/expedition.ts` (RunState), `src/contexts/ExpeditionContext.tsx` (phase state + persistence), `src/lib/nodeScoring.ts` (GIS node generation), `src/MainAppLayout.tsx` (layout). Run creates a persisted mystery node, matches clue/objective gems, then moves into deduction/completion UI. Components: `ExpeditionBriefing`, `GemSignalStrip`, `FieldNotebook`, `ExpeditionRouteRecap`. Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes`.
 
 ## 3) Recommended Reading Path
 1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../CLAUDE.md](../CLAUDE.md).
 Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
-3) **Map & data ingress:** [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
+3) **Map & data ingress:** [MAPLIBRE_UI_CUSTOMIZATION.md](./MAPLIBRE_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./archive/STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
 5) **Partial runtime / schema context:** [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
 6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [DATABASE_ER_PLAY_PATH.md](./DATABASE_ER_PLAY_PATH.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
@@ -89,7 +89,7 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md) — species progression and discovery flow.
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — habitat hit/highlight flow.
 - [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md) — TiTiler COG integration for habitat stats.
-- [CESIUM_UI_CUSTOMIZATION.md](./CESIUM_UI_CUSTOMIZATION.md) — Cesium map UX changes.
+- [MAPLIBRE_UI_CUSTOMIZATION.md](./MAPLIBRE_UI_CUSTOMIZATION.md) — MapLibre map UX changes.
 
 **UI & Styling**
 - [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md) — component library usage.
@@ -138,7 +138,7 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - [archive/normalization_review_sql.md](./archive/normalization_review_sql.md)
 
 ## 5) Quick Code Navigation
-- **Map click → briefing → board init:** `src/components/CesiumMap.tsx` emits `expedition-data-ready` → `MainAppLayout` shows briefing overlay (dismissible; map stays interactive). Player clicks Start → `expedition-start` → `cesium-location-selected` → `Game.ts.initializeBoardFromCesium`. CesiumMap only blocks clicks during `in-run` and `deduction` phases.
+- **Map click → briefing → board init:** `src/components/MapLibreExploreMap.tsx` emits `expedition-data-ready` → `MainAppLayout` shows briefing overlay (dismissible; map stays interactive). Player clicks Start → `expedition-start` → `map-location-selected` → `Game.ts.initializeBoardFromMap`. MapLibreExploreMap only blocks clicks during `in-run` and `deduction` phases.
 - **HUD updates:** `Game.ts.emitHud` → `EventBus 'game-hud-updated'` → `src/components/SpeciesPanel.tsx`.
 - **Species list sync:** `SpeciesPanel` emits `show-species-list` → `src/MainAppLayout.tsx` toggles view and scrolls `SpeciesList`.
 - **Data access:** `src/lib/speciesService.ts` (RPCs), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (session + telemetry).
@@ -149,14 +149,14 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - Loot asset files: `{color}_gem_{frame}.png`, frames `0-7` (0 = idle, 1-7 = explosion), served from `public/assets/` via the `assets/` base path.
 - Total shipped loot gem images: 64 (8 loot types × 8 frames), plus `bg.png` and `logo.png`.
 - Habitat-to-gem mapping for board seeding (`HABITAT_GEM_MAP`): Forests (100-109) → green; Savannas (200-202) → orange; Shrublands (300-308) → black; Grasslands (400-407) → white; Wetlands (500-518) → blue; Urban/Artificial (1400-1406) → red; default/unknown → white.
-- Green gem clues are not from the ICAA species text table; they consume Cesium `rasterHabitat` results (`habitat_type`, `percentage`) in the order returned (service currently returns highest % first), emitting `Search Area is {percentage}% {habitat_type}` until exhausted.
+- Green gem clues are not from the ICAA species text table; they consume MapLibre `rasterHabitat` results (`habitat_type`, `percentage`) in the order returned (service currently returns highest % first), emitting `Search Area is {percentage}% {habitat_type}` until exhausted.
 
 **Loot clue sources by gem (matches map through `src/game/gemSemantics.ts`)**
 
 | Color (asset key) | Category | Icon | Clue source (progressive order) | Example output |
 | --- | --- | --- | --- | --- |
 | red | Classification | 🧬 | `taxonomic_comment`, `phylum`, `class`, `taxon_order`, `family`, `genus`, `scientific_name` | `Genus: Panthera` |
-| green | Habitat (Cesium) | 🌳 | Cesium click `rasterHabitats` (`habitat_type` with `percentage`, uses returned order) | `Search Area is 62% Mangroves` |
+| green | Habitat (MapLibre) | 🌳 | MapLibre click `rasterHabitats` (`habitat_type` with `percentage`, uses returned order) | `Search Area is 62% Mangroves` |
 | blue | Geographic & Habitat text | 🗺️ | `geographic_description`, `distribution_comment`, `habitat_description`, `habitat_tags` | `Habitat: tropical rainforests` |
 | orange | Morphology | 🐆 | `pattern`, `color_primary`, `color_secondary`, `shape_description`, `size_max_cm`, `weight_kg` | `Primary color: chestnut` |
 | yellow | Behavior & Diet | 💨 | `behavior_1`, `behavior_2`, `diet_type`, `diet_prey`, `diet_flora` | `Diet type: Carnivore` |
@@ -166,6 +166,6 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 
 Notes:
 - Behavior + diet clues are emitted by matching yellow gems. Conservation clues are emitted by matching white gems.
-- Habitat text fields (`habitat_description`, `habitat_tags`) now ride with the blue Geographic gem. The green gem exclusively returns Cesium habitat legend values.
+- Habitat text fields (`habitat_description`, `habitat_tags`) now ride with the blue Geographic gem. The green gem exclusively returns MapLibre habitat legend values.
 
 Use this doc as the hub: follow the recommended reading path, then dive into the specific files linked above before modifying the game.

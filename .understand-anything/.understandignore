@@ -29,7 +29,6 @@
 # .vercel
 # *.tsbuildinfo
 # next-env.d.ts
-# /public/cesium
 # repomix-output-*.xml
 # supabase_nextjs.txt
 # CLAUDE.md
@@ -48,7 +47,6 @@ wiki/
 .playwright-mcp/
 .claude/
 issues/
-public/cesium/
 
 # --- Test file patterns (uncomment to exclude) ---
 

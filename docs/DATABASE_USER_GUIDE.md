@@ -283,11 +283,11 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 5. Map integer codes to labels via `STATIC_HABITAT_CODE_TO_LABEL` (with database `habitat_colormap` fallback)
 6. Return `{habitat_type, percentage}[]` sorted by percentage descending
 
-**Visual sync:** CesiumMap shows red rectangle (`RectangleGraphics`) matching exact bbox sent to TiTiler.
+**Visual sync:** MapLibreExploreMap shows red rectangle (`RectangleGraphics`) matching exact bbox sent to TiTiler.
 
 **Key files:**
 - `src/lib/speciesService.ts` - TiTiler query logic, colormap lookup
-- `src/components/CesiumMap.tsx` - Visual bbox rendering, click handling
+- `src/components/MapLibreExploreMap.tsx` - Visual bbox rendering, click handling
 - `src/components/HabitatLegend.tsx` - Habitat type display with color chips
 - `src/config/habitatColors.ts` - Habitat label → color mapping
 
@@ -438,7 +438,7 @@ $$;
 #### Key Design Decisions
 
 1. **Geography vs Geometry**: Uses PostGIS `geography` type for accurate meter-based buffering
-2. **GeoJSON Output**: Returns `ST_AsGeoJSON()` instead of WKT text for direct Cesium consumption
+2. **GeoJSON Output**: Returns `ST_AsGeoJSON()` instead of WKT text for direct MapLibre consumption
 3. **Intersection Logic**: Uses `ST_Intersects()` instead of `ST_Contains()` for broader discovery
 
 ### Visual Highlighting System
@@ -447,7 +447,7 @@ $$;
 When species are discovered, their **complete MULTIPOLYGON geometries** are highlighted in red:
 
 ```typescript
-// Frontend processing (CesiumMap.tsx)
+// Frontend processing (MapLibreExploreMap.tsx)
 for (const species of speciesResult.species) {
   if (species.wkb_geometry) {
     const feature = {
@@ -459,7 +459,7 @@ for (const species of speciesResult.species) {
   }
 }
 
-// Load into Cesium as red polygons
+// Load into MapLibre as red polygons
 await redDataSource.load({ type: 'FeatureCollection', features });
 ```
 
@@ -475,13 +475,13 @@ SELECT ST_AsGeoJSON(wkb_geometry) FROM icaa_view ...
 
 ```
 ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
-│   PostGIS       │    │  Next.js API + Drizzle│   │     Cesium      │
+│   PostGIS       │    │  Next.js API + Drizzle│   │     MapLibre      │
 │   MULTIPOLYGON  │ ─→ │  ST_AsGeoJSON (json) │ ─→ │  GeoJsonDataSource
 │   (wkb_geometry)│    │  /api/species/*      │    │  Red/Blue Polygons
 └─────────────────┘    └──────────────────────┘    └─────────────────┘
 ```
 
-**Critical**: The geometry must be returned as **GeoJSON** (not WKT) to preserve complete MULTIPOLYGON structures for Cesium rendering.
+**Critical**: The geometry must be returned as **GeoJSON** (not WKT) to preserve complete MULTIPOLYGON structures for MapLibre rendering.
 
 ### Performance Optimizations
 
@@ -543,7 +543,7 @@ export async function getSpeciesInRadius(longitude: number, latitude: number, ra
 
 #### Map Click Handler
 ```typescript
-// CesiumMap.tsx - Uses 10km radius constant
+// MapLibreExploreMap.tsx - Uses 10km radius constant
 const SPECIES_RADIUS_METERS = 10000.0;
 
 const [speciesResult, rasterResult] = await Promise.all([
@@ -581,18 +581,18 @@ FROM icaa_view
 WHERE ogc_fid = 23;
 ```
 
-## Cesium Polygon Rendering
+## MapLibre Polygon Rendering
 
 ### Visual Highlighting Implementation
 
-The application uses Cesium's `GeoJsonDataSource` to render species habitat polygons with visual highlighting. Understanding the rendering system is crucial for maintaining proper visualization.
+The application uses MapLibre's `GeoJsonDataSource` to render species habitat polygons with visual highlighting. Understanding the rendering system is crucial for maintaining proper visualization.
 
 #### Polygon Highlighting Types
 
 1. **Red Highlighting** - Species found at location
 2. **Blue (Cyan) Highlighting** - Closest habitat when no species found
 
-#### Cesium Rendering Pipeline
+#### MapLibre Rendering Pipeline
 
 ```typescript
 // Load GeoJSON directly from database
@@ -605,9 +605,9 @@ await redDataSource.load({
 // Style polygons with proper depth handling
 redDataSource.entities.values.forEach(entity => {
   if (entity.polygon) {
-    entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+    entity.polygon.material = new ColorMaterialProperty(MapLibreColor.RED.withAlpha(0.5));
     entity.polygon.outline = new ConstantProperty(true);
-    entity.polygon.outlineColor = new ConstantProperty(CesiumColor.RED);
+    entity.polygon.outlineColor = new ConstantProperty(MapLibreColor.RED);
     entity.polygon.outlineWidth = new ConstantProperty(2);
     
     // Critical for overlapping polygons
@@ -629,9 +629,9 @@ redDataSource.entities.values.forEach(entity => {
 - Occurs specifically in areas with overlapping habitat polygons
 
 **Root Cause:**
-Cesium requires explicit z-index and height properties for proper depth sorting when polygons overlap. Without these properties:
+MapLibre requires explicit z-index and height properties for proper depth sorting when polygons overlap. Without these properties:
 
-1. **Depth sorting conflicts** - Cesium can't determine rendering order
+1. **Depth sorting conflicts** - MapLibre can't determine rendering order
 2. **Transparency blending issues** - Multiple overlapping transparent materials cause artifacts
 3. **Z-fighting** - Polygons at same height level compete for pixels
 
@@ -659,11 +659,11 @@ entity.polygon.zIndex = new ConstantProperty(50);            // Lower render pri
 4. **`heightReference`** - Ensures proper ground clamping
 
 #### File Location
-**Primary Implementation:** `src/components/CesiumMap.tsx`
+**Primary Implementation:** `src/components/MapLibreExploreMap.tsx`
 - Lines 324-338: Red polygon styling (species found)
 - Lines 393-406: Blue polygon styling (closest habitat)
 
-### Cesium Rendering Best Practices
+### MapLibre Rendering Best Practices
 
 #### 1. Z-Index Hierarchy
 
@@ -706,7 +706,7 @@ const ALPHA_VALUES = {
 #### Issue: Fill Color Not Appearing
 
 **Diagnosis Steps:**
-1. Check browser console for Cesium errors
+1. Check browser console for MapLibre errors
 2. Verify GeoJSON geometry is valid
 3. Confirm z-index and height properties are set
 4. Test with single polygon (non-overlapping area)
@@ -731,10 +731,10 @@ entity.polygon.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_G
 **Solution:** Verify `ColorMaterialProperty` is properly constructed:
 ```typescript
 // Correct
-entity.polygon.material = new ColorMaterialProperty(CesiumColor.RED.withAlpha(0.5));
+entity.polygon.material = new ColorMaterialProperty(MapLibreColor.RED.withAlpha(0.5));
 
 // Incorrect - may cause rendering issues
-entity.polygon.material = CesiumColor.RED; // Wrong type
+entity.polygon.material = MapLibreColor.RED; // Wrong type
 ```
 
 ### Performance Considerations
@@ -759,7 +759,7 @@ if (highlightedSpeciesSource) {
 
 **MULTIPOLYGON Support:**
 - Database returns complete MULTIPOLYGON as GeoJSON
-- Cesium handles complex geometries automatically
+- MapLibre handles complex geometries automatically
 - No need to split into separate entities
 
 **Performance Tips:**
@@ -774,7 +774,7 @@ if (highlightedSpeciesSource) {
 
 **Critical:** Always return GeoJSON from database functions:
 ```sql
--- Correct - Returns GeoJSON for direct Cesium use
+-- Correct - Returns GeoJSON for direct MapLibre use
 SELECT ST_AsGeoJSON(wkb_geometry)::json as wkb_geometry
 FROM icaa_view;
 
@@ -787,7 +787,7 @@ FROM icaa_view;
 
 **SRID 4326 Required:**
 - All geometries must use WGS84 (SRID 4326)
-- Cesium expects longitude/latitude coordinates
+- MapLibre expects longitude/latitude coordinates
 - PostGIS functions handle projection automatically
 
 ### Future Improvements

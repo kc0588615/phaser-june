@@ -2,13 +2,27 @@
 
 > `const` **AssetKeys**: `object`
 
-Defined in: [src/game/constants.ts:45](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/constants.ts#L45)
+Defined in: [src/game/constants.ts:57](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/constants.ts#L57)
 
 ## Type Declaration
 
 ### BACKGROUND
 
 > `readonly` **BACKGROUND**: `"background"` = `'background'`
+
+### EVIDENCE\_GEM\_TEXTURE()
+
+> `readonly` **EVIDENCE\_GEM\_TEXTURE**: (`type`) => `string`
+
+#### Parameters
+
+##### type
+
+`"black"` | `"blue"` | `"green"` | `"orange"` | `"red"` | `"white"` | `"yellow"` | `"purple"`
+
+#### Returns
+
+`string`
 
 ### GEM\_TEXTURE()
 

@@ -207,7 +207,7 @@ The implementation uses the `species` table directly (`icaa_view` and normalized
 - Game continues running in background
 - All unlocked clues preserved
 - Current game progress maintained
-- Cesium map state preserved
+- MapLibre map state preserved
 
 ## Dependencies Added
 

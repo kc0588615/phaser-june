@@ -39,7 +39,7 @@ These files are essential to understand before making any game changes.
 - [x] Gem objectives + objective tracking in Game.ts
 - [x] Clue fragments from loot gem matches
 - [x] Banked score from board play
-- [x] Route trail (CesiumMap polyline + markers)
+- [x] Route trail (MapLibreExploreMap polyline + markers)
 - [x] API routes (runs, node-complete)
 - [x] EventBus events documented
 - [x] eco_run_sessions + eco_run_nodes tables
@@ -221,9 +221,9 @@ These files are essential to understand before making any game changes.
 
 ---
 
-### 11. CesiumMap Deep Dive
+### 11. MapLibreExploreMap Deep Dive
 
-**Source:** `src/components/CesiumMap.tsx`
+**Source:** `src/components/MapLibreExploreMap.tsx`
 **Current State:** Tutorial covers basics
 **Location:** `docs/guides/map/`
 
@@ -234,7 +234,7 @@ These files are essential to understand before making any game changes.
 - [ ] Performance optimization
 - [ ] TiTiler integration details
 
-**Expand:** `cesium-customization.md`
+**Expand:** `maplibre-customization.md`
 
 ---
 

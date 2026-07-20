@@ -2,9 +2,7 @@
 
 > **getSpeciesCountByStatus**(): `Promise`\<`Record`\<`string`, `number`\>\>
 
-Defined in: [src/lib/speciesQueries.ts:326](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesQueries.ts#L326)
-
-Gets count of species by conservation status.
+Defined in: [src/lib/speciesQueries.ts:289](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesQueries.ts#L289)
 
 ## Returns
 

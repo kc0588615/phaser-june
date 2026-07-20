@@ -1,83 +1,31 @@
 ---
 sidebar_position: 4
 title: Environment Variables
-description: Complete reference for all configuration variables
+description: Runtime and build configuration
 tags: [reference, config, environment]
 ---
 
-# Environment Variables Reference
+# Environment Variables
 
-Complete reference for all environment variables used in the application.
+## Required
 
-## Required Variables
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL/PgBouncer URL with TLS |
+| `CASE_COMPILER_SECRET` | Server-only case compiler secret |
+| `CRON_SECRET` | Server-only cron authorization |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk browser key |
+| `CLERK_SECRET_KEY` | Clerk server key |
 
-| Variable | Description | Where to Get |
-|----------|-------------|--------------|
-| `DATABASE_URL` | Postgres connection string (Drizzle) | Your Postgres provider (e.g., Hetzner) |
-| `NEXT_PUBLIC_CESIUM_ION_TOKEN` | Cesium Ion access token | [cesium.com/ion](https://cesium.com/ion) → Access Tokens |
+## Optional
 
-## Optional Variables
+| Variable | Purpose | Default |
+|---|---|---|
+| `EXPEDITION_CASE_VERSION` | New-run case format | `3` in the example environment |
+| `NEXT_PUBLIC_MAP_STYLE_URL` | Hosted/self-hosted MapLibre style | Network-independent app fallback |
+| `NEXT_PUBLIC_TITILER_BASE_URL` | Habitat TileJSON/statistics endpoint | Deployed app endpoint |
+| `NEXT_PUBLIC_COG_URL` | Habitat Cloud-Optimized GeoTIFF | Deployed habitat COG |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Sign-in route | `/login` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | Post-sign-in route | `/` |
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_TITILER_BASE_URL` | TiTiler raster service endpoint | None (disables raster features) |
-| `NEXT_PUBLIC_COG_URL` | Cloud-Optimized GeoTIFF URL for habitat data | None |
-
-## Configuration Paths
-
-### Setup Options (Choose Your Path)
-
-| Path | Time | Variables Needed | Features |
-|------|------|------------------|----------|
-| **Minimal Local** | 2 min | None | UI only, no data |
-| **With Database** | 10 min | `DATABASE_URL` | Species data, tracking |
-| **Full Stack** | 15 min | All above + `NEXT_PUBLIC_CESIUM_ION_TOKEN` | 3D globe, geospatial |
-| **Raster Data** | +5 min | Add `TITILER_*` | Habitat raster analysis |
-
-### Minimal Local Run (No External Services)
-
-For quick UI development without backend:
-
-```bash
-npm install
-npm run dev
-```
-
-The app will show placeholder data and the Cesium globe won't load, but React components and Phaser game are functional.
-
-### With Database (Species Data)
-
-```bash
-cp .env.example .env.local
-# Edit .env.local with DATABASE_URL
-npm run dev
-```
-
-### Full Stack (With Globe)
-
-Add Cesium token to enable the 3D globe:
-
-```env
-DATABASE_URL=postgresql://user:password@host:port/database?schema=public
-NEXT_PUBLIC_CESIUM_ION_TOKEN=your-cesium-token
-NEXT_PUBLIC_TITILER_BASE_URL=https://your-titiler-endpoint.com
-NEXT_PUBLIC_COG_URL=https://your-s3-bucket/habitat.tif
-```
-
-## Source File
-
-Environment variables are loaded in:
-- `src/db/index.ts` - Drizzle client
-- `drizzle.config.ts` - Drizzle CLI (introspection)
-- `src/components/CesiumMap.tsx` - Cesium Ion token
-- `next.config.mjs` - Build-time variables
-
-## Validation
-
-Check your setup:
-
-```typescript
-// In browser console after app loads
-console.log('Cesium token present:', !!process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN);
-fetch('/api/species/catalog').then(r => console.log('Species API ok:', r.ok));
-```
+MapLibre needs no vendor token. If a custom style fails, clear `NEXT_PUBLIC_MAP_STYLE_URL` to verify the local fallback.

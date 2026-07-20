@@ -40,7 +40,7 @@ export type FlowStep =
   | { kind: 'interpret'; ref: string }
   /** Node succeeded but its observation was never issued (crash after /complete). */
   | { kind: 'recover-observation'; nodeIndex: number }
-  /** Try POST /observations {nodeIndex: 3} exactly once; unavailable settles it. */
+  /** Try POST /observations for node index 3 exactly once; unavailable settles it. */
   | { kind: 'signature-attempt' }
   | { kind: 'guess' };
 

@@ -10,7 +10,7 @@ This document describes the page routing infrastructure for the Phaser June game
 
 1. **Complex Game Pages** (e.g., `index.tsx`)
    - Uses `MainAppLayout.tsx` for game-specific functionality
-   - Manages Phaser game canvas and Cesium 3D map
+   - Manages Phaser game canvas and MapLibre 3D map
    - Requires complex state management and inter-component communication
 
 2. **Simple Content Pages** (e.g., `highscores.tsx`)
@@ -47,7 +47,7 @@ interface SimpleLayoutProps {
   trailingSlash: true,
   images: { unoptimized: true },
   webpack: (config, { webpack, isServer }) => {
-    // Cesium + client fallbacks
+    // MapLibre + client fallbacks
   }
 }
 ```
@@ -55,7 +55,7 @@ interface SimpleLayoutProps {
 ### Important Notes
 - Server runtime is required for API routes and database access.
 - `trailingSlash: true` is kept for URL consistency across pages.
-- Builds use `next build --webpack` to keep Cesium’s webpack config.
+- Builds use `next build --webpack` to keep MapLibre’s webpack config.
 - Headers in `next.config.mjs` apply normally.
 
 ## Adding New Pages

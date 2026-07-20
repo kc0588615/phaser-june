@@ -6,12 +6,12 @@ Current source of truth for React + Phaser gameplay.
 
 - React owns app layout, expedition phase state, run persistence, deduction state, and node advancement.
 - Phaser owns board state, input, matching, scoring, HUD events, clue events, and node objective progress.
-- Cesium owns map clicks, field-site selection, route trail rendering, and habitat/species overlays.
+- MapLibre owns map clicks, field-site selection, route trail rendering, and habitat/species overlays.
 - Species/clue UI listens to typed events but does not own puzzle state.
 
 ## Active Loop
 
-1. `CesiumMap` emits `expedition-data-ready` after a valid map click.
+1. `MapLibreExploreMap` emits `expedition-data-ready` after a valid map click.
 2. `ExpeditionContext` stores the payload and shows `ExpeditionBriefing`.
 3. `expedition-start` creates a versioned case. V3 starts a six-move research site.
 4. Phaser reports each accepted v3 move with exact board state and direct-clear family counts.
@@ -26,7 +26,7 @@ V1 and v2 runs retain their original flows. New-run version selection is server-
 
 - `expedition-data-ready`
 - `expedition-start`
-- `cesium-location-selected`
+- `map-location-selected`
 - `game-hud-updated`
 - `evidence-move-resolved`
 - `evidence-progress-committed`
@@ -73,7 +73,7 @@ Run persistence is stored in `eco_run_sessions` and `eco_run_nodes`. Current wri
 - `src/game/nodeObstacles.ts` - obstacle/cell seed types
 - `src/expedition/domain.ts` - gem registry and board spawn config
 - `src/lib/nodeScoring.ts` - GIS-driven node generation
-- `src/components/CesiumMap.tsx` - field-site selection and route trail
+- `src/components/MapLibreExploreMap.tsx` - field-site selection and route trail
 - `src/components/ExpeditionBriefing.tsx` - pre-run briefing
 - `src/components/FieldHintTicker.tsx` - v3 live field-radio feed
 - `src/components/EvidenceFamilyRail.tsx` - v3 totals, carry state, and inline choices

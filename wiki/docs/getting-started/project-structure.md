@@ -29,7 +29,7 @@ phaser-june/
 │   │
 │   ├── components/         # React components
 │   │   ├── ui/             # shadcn/ui components
-│   │   ├── CesiumMap.tsx   # 3D globe
+│   │   ├── MapLibreExploreMap.tsx   # 3D globe
 │   │   ├── SpeciesPanel.tsx  # Clue display
 │   │   └── SpeciesList.tsx   # Species catalog
 │   │
@@ -56,8 +56,7 @@ phaser-june/
 │   └── PhaserGame.tsx      # React-Phaser bridge
 │
 ├── public/
-│   ├── assets/             # Game sprites (gems)
-│   └── cesium/             # Cesium static assets
+│   └── assets/             # Game sprites (gems)
 │
 ├── docs/                   # Source documentation (migrated to wiki)
 ├── wiki/                   # Docusaurus documentation site
@@ -76,7 +75,7 @@ phaser-june/
 | File | Purpose |
 |------|---------|
 | `src/pages/index.tsx` | Landing page, renders MainAppLayout |
-| `src/MainAppLayout.tsx` | Orchestrates Cesium, Phaser, and UI panels |
+| `src/MainAppLayout.tsx` | Orchestrates MapLibre, Phaser, and UI panels |
 | `src/PhaserGame.tsx` | Creates Phaser.Game instance, exposes ref |
 
 ### Game Logic (MVC Pattern)

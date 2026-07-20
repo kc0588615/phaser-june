@@ -164,7 +164,7 @@ Simple test component created to isolate popover issues.
 - **Location**: SpeciesList.tsx lines 221 and 266
 
 ### 3. TypeScript Build Errors (PRE-EXISTING)
-- Multiple TypeScript errors in unrelated files (CesiumMap.tsx, SpeciesCard.tsx)
+- Multiple TypeScript errors in unrelated files (MapLibreExploreMap.tsx, SpeciesCard.tsx)
 - These existed before the ecoregion implementation
 - Do not affect the ecoregion functionality
 

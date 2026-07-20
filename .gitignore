@@ -41,8 +41,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Cesium
-/public/cesium
 repomix-output-*.xml
 
 # nextJS

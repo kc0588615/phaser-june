@@ -26,14 +26,7 @@ const nextConfig = {
     generateEtags: true,
 
     // Webpack configuration
-    webpack: (config, { webpack, isServer }) => {
-        // Define global Cesium variable
-        config.plugins.push(
-            new webpack.DefinePlugin({
-                'CESIUM_BASE_URL': JSON.stringify('/cesium/')
-            })
-        );
-
+    webpack: (config, { isServer }) => {
         // Client-side optimizations
         if (!isServer) {
             config.resolve.fallback = {
@@ -68,19 +61,6 @@ const nextConfig = {
                     {
                         key: 'Referrer-Policy',
                         value: 'strict-origin-when-cross-origin'
-                    }
-                ]
-            },
-            {
-                source: '/cesium/:path*',
-                headers: [
-                    {
-                        key: 'Cache-Control',
-                        value: 'public, max-age=31536000, immutable'
-                    },
-                    {
-                        key: 'Access-Control-Allow-Origin',
-                        value: '*'
                     }
                 ]
             },

@@ -1,7 +1,7 @@
 # Habitat Highlight Implementation
 
 ## Overview
-This implementation adds visual feedback when users click on the Cesium globe in areas with no species. Instead of leaving users confused about why nothing happened, the system now finds and highlights the nearest habitat polygon for 3 seconds, guiding them to click on a productive area.
+This implementation adds visual feedback when users click on the MapLibre globe in areas with no species. Instead of leaving users confused about why nothing happened, the system now finds and highlights the nearest habitat polygon for 3 seconds, guiding them to click on a productive area.
 
 ## What Was Implemented
 
@@ -18,12 +18,12 @@ This implementation adds visual feedback when users click on the Cesium globe in
 - **Error Handling**: Logs errors and returns null on failure
 
 ### 3. UI Implementation (Frontend)
-**File**: `src/components/CesiumMap.tsx`
+**File**: `src/components/MapLibreExploreMap.tsx`
 
 #### New Imports:
 ```typescript
 GeoJsonDataSource,
-Color as CesiumColor
+Color as MapLibreColor
 ```
 
 #### Map Click Handler Updates:
@@ -40,7 +40,7 @@ Color as CesiumColor
 **TODO 1: Add Loading State**
 ```
 Task: Show loading indicator while finding closest habitat
-Location: CesiumMap.tsx before calling `getClosestHabitat`
+Location: MapLibreExploreMap.tsx before calling `getClosestHabitat`
 Implementation: Set loading state, show spinner/message, clear after response
 ```
 
@@ -81,17 +81,17 @@ Benefit: Faster nearest-neighbor queries
 ## Code Reference
 
 ### Classes and Components:
-- `CesiumMap` (React Component): `src/components/CesiumMap.tsx`
+- `MapLibreExploreMap` (React Component): `src/components/MapLibreExploreMap.tsx`
   - Main map component handling user interactions
 
 ### Functions:
 - `GET /api/species/closest`: API route at `src/app/api/species/closest/route.ts`
 - `getClosestHabitat`: Service method at `src/lib/speciesService.ts`
-- `handleMapClick`: Event handler at `src/components/CesiumMap.tsx`
+- `handleMapClick`: Event handler at `src/components/MapLibreExploreMap.tsx`
 
 ### Key Variables:
 - `closestHabitatGeometry`: Stores GeoJSON result
-- `highlightDataSource`: Cesium data source for rendering (line 288)
+- `highlightDataSource`: MapLibre data source for rendering (line 288)
 - `'habitat-highlight'`: Data source name for highlight layer
 
 ### Event Flow:

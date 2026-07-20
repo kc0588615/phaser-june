@@ -320,7 +320,7 @@ export enum GemCategory {
   /** Red gems - Taxonomic classification (phylum → species) */
   CLASSIFICATION = 0,
 
-  /** Green gems - Habitat from Cesium raster data */
+  /** Green gems - Habitat from MapLibre raster data */
   HABITAT = 1,
 
   // ...

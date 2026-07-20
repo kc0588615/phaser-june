@@ -1,14 +1,14 @@
 # Function: getSpeciesByConservationStatus()
 
-> **getSpeciesByConservationStatus**(`categories`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>
+> **getSpeciesByConservationStatus**(`codes`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>
 
-Defined in: [src/lib/speciesQueries.ts:173](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesQueries.ts#L173)
+Defined in: [src/lib/speciesQueries.ts:149](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesQueries.ts#L149)
 
-Filters species by conservation status (IUCN category).
+Filters species by conservation status.
 
 ## Parameters
 
-### categories
+### codes
 
 `string`[]
 

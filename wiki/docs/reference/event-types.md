@@ -14,7 +14,7 @@ Source of truth: `src/game/EventBus.ts`.
 | Event | Direction | Purpose |
 |-------|-----------|---------|
 | `current-scene-ready` | Phaser to React | Game scene is initialized. |
-| `cesium-location-selected` | React to Phaser | Start or refresh board from selected map/node data. |
+| `map-location-selected` | React to Phaser | Start or refresh board from selected map/node data. |
 | `game-score-updated` | Phaser to React | Legacy score/move update payload. |
 | `game-over` | Phaser to React | Board run ended. |
 | `clue-revealed` | Phaser to React | Species clue is revealed from board play. |
@@ -31,7 +31,7 @@ Source of truth: `src/game/EventBus.ts`.
 | `expedition-start` | React to React | Player started the staged expedition. |
 | `node-advance-requested` | Phaser/UI to React | Current node is ready to complete or escape. |
 | `node-complete` | React to Phaser/UI | Node completion was validated and persisted. |
-| `route-progress-updated` | React to Cesium/UI | Route slot changed. |
+| `route-progress-updated` | React to MapLibre/UI | Route slot changed. |
 | `node-objective-updated` | Phaser to React | Required-gem objective progress changed. |
 | `evidence-move-resolved` | Phaser to React | V3 direct-clear totals and full board checkpoint are ready to persist. |
 | `evidence-progress-committed` | React to Phaser | V3 checkpoint is durable; board input may resume before move six. |
@@ -39,7 +39,7 @@ Source of truth: `src/game/EventBus.ts`.
 
 ## Core Payloads
 
-### `cesium-location-selected`
+### `map-location-selected`
 
 ```ts
 {

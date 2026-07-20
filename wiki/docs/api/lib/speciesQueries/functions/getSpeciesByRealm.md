@@ -2,9 +2,9 @@
 
 > **getSpeciesByRealm**(`realm`): `Promise`\<[`Species`](../../../types/database/interfaces/Species.md)[]\>
 
-Defined in: [src/lib/speciesQueries.ts:187](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesQueries.ts#L187)
+Defined in: [src/lib/speciesQueries.ts:162](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesQueries.ts#L162)
 
-Filters species by realm (biogeographic region).
+Filters species by realm.
 
 ## Parameters
 

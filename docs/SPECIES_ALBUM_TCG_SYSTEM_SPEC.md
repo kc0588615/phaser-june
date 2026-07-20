@@ -10,8 +10,8 @@
   - `src/components/SpeciesCarousel.tsx`
   - `src/components/FamilyCardStack.tsx`
   - `src/components/SpeciesTree.tsx`
-  - `src/components/CesiumMap.tsx`
-  - `src/hooks/useCesiumTrail.ts`
+  - `src/components/MapLibreExploreMap.tsx`
+  - `src/hooks/useMapLibreTrail.ts`
   - `src/hooks/useExpeditionRun.ts`
   - `src/app/api/runs/*`
 
@@ -84,7 +84,7 @@ The unlocked trivia is the educational reward.
 - Node completion:
   - `src/app/api/runs/[runId]/nodes/[nodeIndex]/complete/route.ts`
 - Route trail rendering:
-  - `src/hooks/useCesiumTrail.ts`
+  - `src/hooks/useMapLibreTrail.ts`
 - Run state machine:
   - `src/hooks/useExpeditionRun.ts`
 - Current species list shell:
@@ -953,7 +953,7 @@ At minimum, every run memory should capture:
 
 ## 15.2 Route Representation
 
-Current route trail in `useCesiumTrail` uses synthetic positions. For the card system, persist a canonical version:
+Current route trail in `useMapLibreTrail` uses synthetic positions. For the card system, persist a canonical version:
 
 - route points used in map rendering
 - node labels

@@ -20,8 +20,8 @@ Migrated habitat distribution queries from legacy `habitat_raster` storage to Ti
      - **New:** TiTiler POST `/cog/statistics?categorical=true`
    - Output interface unchanged: `RasterHabitatResult[]`
 
-2. **src/components/CesiumMap.tsx**
-   - Added `RectangleGraphics` import from resium
+2. **src/components/MapLibreExploreMap.tsx**
+   - Added `RectangleGraphics` import from maplibre
    - Added `queryBounds` state for visual bbox
    - Replaced `EllipseGraphics` (circle) with `RectangleGraphics` (bbox)
    - Visual now 100% matches TiTiler query geometry
@@ -52,7 +52,7 @@ DROP TABLE IF EXISTS habitat_raster;
 
 ### Before (Legacy Raster RPC)
 ```
-User Click → CesiumMap (circle visual)
+User Click → MapLibreExploreMap (circle visual)
            ↓
 Legacy RPC: get_habitat_distribution_10km(lon, lat)
            ↓
@@ -65,7 +65,7 @@ ST_Buffer(10km circle) + ST_ValueCount
 
 ### After (TiTiler)
 ```
-User Click → CesiumMap
+User Click → MapLibreExploreMap
            ↓
 Compute 10km bbox + setQueryBounds (rectangle visual)
            ↓
@@ -84,7 +84,7 @@ Map codes via STATIC_HABITAT_CODE_TO_LABEL
 
 ### Bounding Box Calculation
 ```typescript
-// Same formula in speciesService.ts and CesiumMap.tsx
+// Same formula in speciesService.ts and MapLibreExploreMap.tsx
 const metersPerDegreeLat = 111320;
 const metersPerDegreeLon = 111320 * Math.cos(latitude * Math.PI / 180);
 const deltaLat = 10000 / metersPerDegreeLat;  // 10km
@@ -135,7 +135,7 @@ NEXT_PUBLIC_COG_URL=https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.t
 | File | Changes |
 |------|---------|
 | `src/lib/speciesService.ts` | TiTiler query, bbox helper, colormap |
-| `src/components/CesiumMap.tsx` | RectangleGraphics, queryBounds state |
+| `src/components/MapLibreExploreMap.tsx` | RectangleGraphics, queryBounds state |
 | `docs/DATABASE_USER_GUIDE.md` | TiTiler documentation |
 | `docs/HABITAT_RASTER_MIGRATION.md` | This file |
 

@@ -1,6 +1,6 @@
 # Class: Preloader
 
-Defined in: [src/game/scenes/Preloader.ts:4](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/scenes/Preloader.ts#L4)
+Defined in: [src/game/scenes/Preloader.ts:5](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/scenes/Preloader.ts#L5)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [src/game/scenes/Preloader.ts:4](https://github.com/kc0588615/phaser
 
 > **new Preloader**(): `Preloader`
 
-Defined in: [src/game/scenes/Preloader.ts:5](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/scenes/Preloader.ts#L5)
+Defined in: [src/game/scenes/Preloader.ts:6](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/scenes/Preloader.ts#L6)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [src/game/scenes/Preloader.ts:5](https://github.com/kc0588615/phaser
 
 > **create**(): `void`
 
-Defined in: [src/game/scenes/Preloader.ts:119](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/scenes/Preloader.ts#L119)
+Defined in: [src/game/scenes/Preloader.ts:105](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/scenes/Preloader.ts#L105)
 
 #### Returns
 
@@ -40,7 +40,7 @@ Defined in: [src/game/scenes/Preloader.ts:119](https://github.com/kc0588615/phas
 
 > **preload**(): `void`
 
-Defined in: [src/game/scenes/Preloader.ts:9](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/game/scenes/Preloader.ts#L9)
+Defined in: [src/game/scenes/Preloader.ts:10](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/scenes/Preloader.ts#L10)
 
 #### Returns
 

@@ -236,7 +236,7 @@ npx tsx scripts/backfill-player-stats.ts
 ## Navigation Points
 
 ### From Game UI
-1. **UserMenu** (top-right of Cesium map area)
+1. **UserMenu** (top-right of MapLibre map area)
    - "Stats" button → `/stats`
 
 ### From Stats Page

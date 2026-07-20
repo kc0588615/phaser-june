@@ -2,10 +2,9 @@
 
 > **getSpeciesInRadius**(`lon`, `lat`, `radiusMeters`): `Promise`\<`SpatialSpeciesRow`[]\>
 
-Defined in: [src/lib/speciesQueries.ts:219](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/lib/speciesQueries.ts#L219)
+Defined in: [src/lib/speciesQueries.ts:193](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesQueries.ts#L193)
 
 Finds species within a radius of a geographic point.
-Uses PostGIS ST_DWithin for efficient spatial query.
 
 ## Parameters
 

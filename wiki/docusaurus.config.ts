@@ -4,11 +4,13 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Phaser-June',
-  tagline: 'A biodiversity discovery game built with Phaser, React, Cesium & Drizzle',
+  tagline: 'A biodiversity discovery game built with Phaser, React, MapLibre, and Drizzle',
   favicon: 'img/favicon.ico',
 
   future: {
-    v4: true,
+    v4: {
+      fasterByDefault: false,
+    },
   },
 
   markdown: {

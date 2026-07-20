@@ -57,7 +57,7 @@ Core tracking logic is implemented, but writes are gated until auth provides a u
 ### 6. Game.ts - Counter Resets
 **Reset tracking counters when starting new species:**
 
-**initializeBoardFromCesium()** (Lines 849-852):
+**initializeBoardFromMap()** (Lines 849-852):
 - Resets counters when loading new location
 - Sets species start time to now
 

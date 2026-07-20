@@ -2,7 +2,7 @@
 sidebar_position: 2
 title: Habitat Highlighting
 description: Visualizing habitat polygons on the globe
-tags: [guide, cesium, habitats]
+tags: [guide, maplibre, habitats]
 ---
 
 # Habitat Highlight Implementation
@@ -23,4 +23,4 @@ Display habitat polygons when a location is selected.
 ))}
 ```
 
-See [Cesium Integration](/docs/tutorials/cesium-integration) for more.
+See [MapLibre Integration](/docs/tutorials/maplibre-integration) for more.

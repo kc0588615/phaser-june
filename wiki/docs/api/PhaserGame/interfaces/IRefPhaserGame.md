@@ -1,6 +1,6 @@
 # Interface: IRefPhaserGame
 
-Defined in: [src/PhaserGame.tsx:5](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/PhaserGame.tsx#L5)
+Defined in: [src/PhaserGame.tsx:10](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/PhaserGame.tsx#L10)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/PhaserGame.tsx:5](https://github.com/kc0588615/phaser-june/blob
 
 > **game**: `Game` \| `null`
 
-Defined in: [src/PhaserGame.tsx:7](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/PhaserGame.tsx#L7)
+Defined in: [src/PhaserGame.tsx:12](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/PhaserGame.tsx#L12)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [src/PhaserGame.tsx:7](https://github.com/kc0588615/phaser-june/blob
 
 > **scene**: `Scene` \| `null`
 
-Defined in: [src/PhaserGame.tsx:8](https://github.com/kc0588615/phaser-june/blob/2c42124790104a6e4e53747f896c57465af1ab63/src/PhaserGame.tsx#L8)
+Defined in: [src/PhaserGame.tsx:13](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/PhaserGame.tsx#L13)

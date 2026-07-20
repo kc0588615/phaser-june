@@ -14,7 +14,7 @@ The deduction engine (`src/lib/deductionEngine.ts` — `filterCandidates`, `comp
 |---|---|---|
 | red | classification | taxonomy (order/family/genus) |
 | blue | geographic + habitat text | geography + habitat description tags |
-| green | habitat_survey | **Cesium raster only, not species table** |
+| green | habitat_survey | **MapLibre raster only, not species table** |
 | orange | morphology | color/pattern/shape/size |
 | yellow | behavior + diet | behavior + diet type/prey/flora |
 | black | life_cycle | reproduction + life description |
@@ -105,14 +105,14 @@ Filtering categories after change:
 |---|---|---|
 | taxonomy | yes | order/family safer than genus in slot 2 (too strong) |
 | geography | **yes** | new — climate_zone, continent, bioregion, island |
-| habitat | yes | vocab standardized against Cesium raster habitat types |
+| habitat | yes | vocab standardized against MapLibre raster habitat types |
 | morphology | yes | size_bucket, body_plan, distinctive_features |
 | diet | yes | diet_type + foraging_style |
 | behavior | yes | activity_pattern + sociality |
 | reproduction | yes | parity, care_pattern, lifespan_bucket |
 | conservation | **yes** | new — threat_tag list; iucn code alone too coarse |
 | key_fact | **yes on `kf_3` only** | `kf_1`/`kf_2` are payoff prose (`isFiltering: false`); `kf_3` filters via `compareTags = [signatureTag]` as late-game single-suspect discriminator |
-| habitat_survey (green) | no | auto-confirmed from Cesium raster, not from species table |
+| habitat_survey (green) | no | auto-confirmed from MapLibre raster, not from species table |
 
 Wire `key_fact` into `CATEGORY_TO_PROFILE_KEY` only after `keyFactTags`/`signatureTag` exist on the profile — otherwise `compareReference` treats it as non-comparable.
 
@@ -174,7 +174,7 @@ export type TagCategory = keyof typeof TAG_VOCAB;
 export function isKnownTag(tag: string): boolean { return ALL_TAGS.has(tag); }
 ```
 
-`habitat_tag` vocabulary MUST be kept aligned with the Cesium raster habitat types the green gem reveals, so cross-category matches confirm rather than duplicate or contradict.
+`habitat_tag` vocabulary MUST be kept aligned with the MapLibre raster habitat types the green gem reveals, so cross-category matches confirm rather than duplicate or contradict.
 
 Tags on a profile carry their category prefix in the stored value where useful (e.g. `family:felidae`, `genus:panthera` for taxonomy). Enum-style tags for behavior/morphology/etc. can be stored bare (e.g. `nocturnal`, `stripes`) since their category is implied by which array they live in.
 

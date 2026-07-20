@@ -4,7 +4,7 @@ Affinities are still live, but only as lightweight taxonomy-derived run modifier
 
 ## Current Behavior
 
-- `CesiumMap` derives available affinities from nearby species.
+- `MapLibreExploreMap` derives available affinities from nearby species.
 - The first available affinity is selected by default.
 - `ExpeditionContext` threads `activeAffinities` through run state, run metadata, node initialization, and board spawn config.
 - `createBoardSpawnConfig` gives a small spawn-weight boost to the selected affinity gem.
@@ -14,7 +14,7 @@ Affinities are still live, but only as lightweight taxonomy-derived run modifier
 
 - `src/expedition/affinities.ts`
 - `src/expedition/domain.ts`
-- `src/components/CesiumMap.tsx`
+- `src/components/MapLibreExploreMap.tsx`
 - `src/contexts/ExpeditionContext.tsx`
 - `src/MainAppLayout.tsx`
 - `src/app/api/runs/route.ts`
