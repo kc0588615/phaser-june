@@ -220,12 +220,6 @@ body {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* Override Cesium fullscreen button position */
-.cesium-viewer .cesium-viewer-fullscreenContainer {
-  /* Only move the fullscreen button container up */
-  margin-bottom: 60px !important;
-}
-
 /* Line clamp utilities for better text truncation */
 .line-clamp-3 {
   overflow: hidden;
@@ -372,15 +366,45 @@ body {
   .roster-cross { animation: none; }
 }
 
-/* Expedition map HUD (Plan 018 v3) */
+/* MapLibre exploration globe + expedition HUD */
+.explore-map-canvas.maplibregl-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 .map-hud-canvas.maplibregl-map {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
+.explore-map-canvas .maplibregl-canvas,
 .map-hud-canvas .maplibregl-canvas {
   outline: none;
+}
+.explore-map-animal-marker {
+  display: block;
+  transform: translateY(-10px);
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
+  pointer-events: none;
+}
+.explore-map-waypoint-label {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(4, 12, 18, 0.78);
+  color: #f1f5f9;
+  font: 600 11px/1.25 ui-sans-serif, system-ui, sans-serif;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  pointer-events: none;
 }
 .map-hud-fullscreen {
   position: fixed;

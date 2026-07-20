@@ -14,8 +14,8 @@ export default function Home() {
     return (
         <>
             <Head>
-                <title>Phaser Cesium Next.js</title> {/* Update title */}
-                <meta name="description" content="Phaser 3 and Cesium with Next.js" />
+                <title>Critter Connect</title>
+                <meta name="description" content="Explore biodiversity through map-based expeditions." />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
                 <link rel="icon" href="/favicon.png" />
             </Head>

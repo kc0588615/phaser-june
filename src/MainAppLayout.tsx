@@ -1,7 +1,7 @@
 // MainAppLayout — the top-level shell of the app.
 //
 // It mounts the three big surfaces once and keeps them alive for the whole
-// session: the Cesium globe (CesiumMap), the Phaser match-3 board
+// session: the MapLibre globe, the Phaser match-3 board
 // (PhaserGame), and the species/clue panels. Views are switched by toggling
 // CSS visibility rather than unmounting, because unmounting would tear down
 // EventBus listeners and Phaser's canvas mid-run.
@@ -10,7 +10,7 @@
 // decides *what is visible* for the current phase and tab.
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame';
-import CesiumMap from './components/CesiumMap';
+import MapLibreExploreMap from './components/MapLibreExploreMap';
 import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
 import { useAuthBridge } from './hooks/useAuthBridge';
@@ -82,8 +82,8 @@ function MainAppLayoutInner() {
     const inRun = runState.phase === 'mystery';
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
-    // v3 runs swap the in-run Cesium panel for the 2D MapLibre HUD (Plan 018);
-    // Cesium stays mounted (display:none) so its EventBus listeners survive.
+    // v3 runs swap the exploration globe for the dedicated regional HUD.
+    // Both map components stay mounted so their state/listeners survive.
     // The HUD also stays up through a captured completion so it can fetch and
     // animate the answer-range reveal (the range API unlocks on completion).
     const showV3MapHud = runState.caseState?.version === 3
@@ -128,7 +128,7 @@ function MainAppLayoutInner() {
         pointerEvents: useSplitLayout ? 'auto' : 'none', flexShrink: 0,
         borderTop: useSplitLayout ? '2px solid #555' : 'none',
     };
-    const cesiumContainerStyle: React.CSSProperties = {
+    const mapContainerStyle: React.CSSProperties = {
         width: '100%', height: useSplitLayout ? '40%' : '100%',
         minHeight: '0px',
         position: useSplitLayout ? 'relative' : 'absolute',
@@ -146,16 +146,16 @@ function MainAppLayoutInner() {
                 display: 'flex', flexDirection: 'column', width: '100%', height: '100%'
             }}>
                 <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                    <div id="cesium-map-wrapper" style={cesiumContainerStyle}>
-                        {/* CesiumMap — hidden (not unmounted) while the v3 map HUD is up */}
+                    <div id="map-wrapper" style={mapContainerStyle}>
+                        {/* Exploration globe — hidden, paused, but not unmounted under the v3 HUD. */}
                         <div style={{
                             display: viewMode === 'map' && !showV3MapHud ? 'block' : 'none',
                             height: '100%', width: '100%'
                         }}>
-                            <CesiumMap
+                            <MapLibreExploreMap
                                 expeditionPhase={runState.phase}
                                 activeWaypoint={activeWaypoint}
-                                suspended={showV3MapHud}
+                                active={viewMode === 'map' && !showV3MapHud}
                                 onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
                             />
                         </div>

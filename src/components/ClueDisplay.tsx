@@ -129,7 +129,7 @@ export const ClueDisplay: React.FC<ClueDisplayProps> = ({ style }) => {
     return (
       <div style={containerStyle}>
         <h2>Species Discovery</h2>
-        <p>Click on the Cesium map to select a location and discover species.</p>
+        <p>Click on the globe to select a location and discover species.</p>
         <p>Match gems to reveal clues about each species.</p>
         <button 
           style={legendButtonStyle}

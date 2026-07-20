@@ -395,7 +395,7 @@ export const speciesService = {
   },
 
   /**
-   * Render species polygons on Cesium (returns GeoJSON)
+   * Return species polygons as GeoJSON for map rendering.
    */
   async getSpeciesGeoJSON(speciesIds: number[]): Promise<any> {
     try {

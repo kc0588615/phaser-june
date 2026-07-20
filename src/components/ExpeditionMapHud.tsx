@@ -1,7 +1,6 @@
 // ExpeditionMapHud — in-run 2D map panel for v3 expeditions (Plan 018).
 //
-// Replaces the Cesium globe while a v3 mystery run is active. Upper region is a
-// MapLibre map styled as a field-notebook topo sheet with the dashed route and
+// Upper region is a MapLibre map styled as a field-notebook topo sheet with the dashed route and
 // three research-site markers (visited / current / upcoming); lower region is
 // the persistent readout: travel note + three-slot EvidenceLog. Tapping a
 // marker focuses that site's slot in the readout.
@@ -10,16 +9,18 @@
 // wider zoom range; Escape or the close button exits, and `#app-container` is
 // made inert (board stays visible but keyboard-dead) while the overlay is open.
 //
-// Base tiles: MapLibre demo tiles restyled inline (plan-approved first cut).
-// Set NEXT_PUBLIC_MAP_STYLE_URL to swap in a self-hosted PMTiles style later.
+// NEXT_PUBLIC_MAP_STYLE_URL may supply a hosted/self-hosted basemap. The
+// fallback is network-independent; app GIS APIs provide the map context.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import maplibregl from 'maplibre-gl';
-import type { StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Maximize2, X } from 'lucide-react';
 import type { RunState } from '@/types/expedition';
 import { getWaypointTypeLabel } from '@/types/waypoints';
+import { addLandscapeLayers } from '@/lib/maplibreLayers';
+import { applyMapProjection, resolveMapStyle, restoreCustomLayerOrder } from '@/lib/maplibreStyle';
+import { buildRouteFeature, getMapSiteStatus, type MapSiteStatus } from '@/lib/maplibreGeoJSON';
 import { EvidenceLog } from './EvidenceLog';
 
 // Zoom clamps approximate the plan's scales: ~1:6M regional context up to
@@ -29,10 +30,8 @@ const PANEL_MAX_ZOOM = 10;
 const FULL_MIN_ZOOM = 2;
 const FULL_MAX_ZOOM = 13;
 const FIT_PADDING = 48;
-/** Give demotiles + WebGL first frame a bounded window before showing Retry. */
+/** Give style + WebGL first frame a bounded window before showing Retry. */
 const MAP_LOAD_TIMEOUT_MS = 8000;
-
-type SiteStatus = 'visited' | 'current' | 'upcoming';
 
 interface SiteDatum {
   nodeIndex: number;
@@ -42,35 +41,7 @@ interface SiteDatum {
   typeLabel: string | null;
   distKm: number | null;
   biome: string | null;
-  status: SiteStatus;
-}
-
-const NOTEBOOK_STYLE: StyleSpecification = {
-  version: 8,
-  name: 'field-notebook',
-  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-  sources: {
-    demotiles: { type: 'vector', url: 'https://demotiles.maplibre.org/tiles/tiles.json' },
-  },
-  layers: [
-    { id: 'paper-water', type: 'background', paint: { 'background-color': '#b9ccc9' } },
-    {
-      id: 'land', type: 'fill', source: 'demotiles', 'source-layer': 'countries',
-      paint: { 'fill-color': '#ece4cd' },
-    },
-    {
-      id: 'graticule', type: 'line', source: 'demotiles', 'source-layer': 'geolines',
-      paint: { 'line-color': 'rgba(122,109,80,0.3)', 'line-width': 0.6, 'line-dasharray': [1, 3] },
-    },
-    {
-      id: 'country-ink', type: 'line', source: 'demotiles', 'source-layer': 'countries',
-      paint: { 'line-color': '#a5936a', 'line-width': 0.8 },
-    },
-  ],
-};
-
-function resolveMapStyle(): string | StyleSpecification {
-  return process.env.NEXT_PUBLIC_MAP_STYLE_URL || NOTEBOOK_STYLE;
+  status: MapSiteStatus;
 }
 
 function buildMarkerElement(site: SiteDatum): HTMLButtonElement {
@@ -110,9 +81,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       const lon = point?.lon ?? waypoint?.lon;
       const lat = point?.lat ?? waypoint?.lat;
       if (!Number.isFinite(lon) || !Number.isFinite(lat)) return [];
-      const status: SiteStatus = nodeIndex < runState.currentNodeIndex ? 'visited'
-        : nodeIndex === runState.currentNodeIndex ? (guessing ? 'visited' : 'current')
-        : 'upcoming';
+      const status = getMapSiteStatus(nodeIndex, runState.currentNodeIndex, guessing);
       return [{
         nodeIndex,
         name: waypoint?.name || point?.nearestFeature || `Site ${nodeIndex + 1}`,
@@ -244,7 +213,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       try {
         map = new maplibregl.Map({
           container: host,
-          style: resolveMapStyle(),
+          style: resolveMapStyle('expedition'),
           center: [0, 0],
           zoom: 6,
           minZoom: PANEL_MIN_ZOOM,
@@ -263,7 +232,10 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       mapRef.current = map;
 
       const handleLoad = () => {
-        if (map) markReady(map);
+        if (map) {
+          applyMapProjection(map, 'expedition');
+          markReady(map);
+        }
       };
       // Later source/tile work makes map.loaded() false again. Only the initial
       // load may replace the map with the retry cover.
@@ -279,7 +251,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       };
       const handleContextLost = (event: { originalEvent?: Event }) => {
         event.originalEvent?.preventDefault?.();
-        markError('Map graphics context lost — retry after Cesium/Phaser settle');
+        markError('Map graphics context lost — retry after Phaser settles');
       };
       const handleContextRestored = () => {
         if (cancelled || !map) return;
@@ -291,6 +263,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       };
 
       map.on('load', handleLoad);
+      map.on('style.load', () => { if (map) applyMapProjection(map, 'expedition'); });
       map.on('error', handleError);
       map.on('webglcontextlost', handleContextLost);
       map.on('webglcontextrestored', handleContextRestored);
@@ -329,11 +302,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-    const routeData: GeoJSON.Feature<GeoJSON.LineString> = {
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: routeCoords },
-      properties: {},
-    };
+    const routeData = buildRouteFeature(routeCoords);
     const source = map.getSource('expedition-route') as maplibregl.GeoJSONSource | undefined;
     if (source) {
       source.setData(routeData);
@@ -349,6 +318,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         layout: { 'line-join': 'round' },
         paint: { 'line-color': '#7a522c', 'line-width': 2, 'line-dasharray': [1.8, 2.4] },
       });
+      restoreCustomLayerOrder(map);
     }
     markersRef.current.forEach(marker => marker.remove());
     const markerEntries = sites.map(site => {
@@ -424,8 +394,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         const data = await response.json() as Record<string, GeoJSON.FeatureCollection>;
         const map = mapRef.current;
         if (!map) return;
-        const beforeId = map.getLayer('expedition-route-casing') ? 'expedition-route-casing' : undefined;
-        addLandscapeLayers(map, data, beforeId);
+        addLandscapeLayers(map, data);
       } catch { /* contextual layers are optional; route play remains available */ }
     })();
     return () => controller.abort();
@@ -452,6 +421,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
           id: 'answer-range-line', type: 'line', source: 'answer-range',
           paint: { 'line-color': 'rgba(78,143,91,0)', 'line-width': 1.2, 'line-color-transition': { duration: 1200 } },
         }, beforeId);
+        restoreCustomLayerOrder(map);
         requestAnimationFrame(() => {
           mapRef.current?.setPaintProperty('answer-range-fill', 'fill-opacity', 0.24);
           mapRef.current?.setPaintProperty('answer-range-line', 'line-color', 'rgba(78,143,91,0.85)');
@@ -617,50 +587,4 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       )}
     </div>
   );
-}
-
-function addLandscapeLayers(
-  map: maplibregl.Map,
-  data: Record<string, GeoJSON.FeatureCollection>,
-  beforeId?: string,
-) {
-  const addSource = (id: string, collection?: GeoJSON.FeatureCollection) => {
-    if (!collection?.features?.length || map.getSource(id)) return false;
-    map.addSource(id, { type: 'geojson', data: collection });
-    return true;
-  };
-  if (addSource('map-biome', data.bioregions)) {
-    map.addLayer({
-      id: 'map-biome-fill', type: 'fill', source: 'map-biome',
-      paint: { 'fill-color': '#9b8b5c', 'fill-opacity': 0.08 },
-    }, beforeId);
-    map.addLayer({
-      id: 'map-biome-line', type: 'line', source: 'map-biome',
-      paint: { 'line-color': 'rgba(105,85,46,.72)', 'line-width': 1.2, 'line-dasharray': [2, 2] },
-    }, beforeId);
-  }
-  if (addSource('map-protected', data.protected_areas)) {
-    map.addLayer({
-      id: 'map-protected-fill', type: 'fill', source: 'map-protected',
-      paint: { 'fill-color': '#5f8f62', 'fill-opacity': 0.19 },
-    }, beforeId);
-    map.addLayer({
-      id: 'map-protected-line', type: 'line', source: 'map-protected',
-      paint: { 'line-color': 'rgba(57,101,61,.75)', 'line-width': 0.8 },
-    }, beforeId);
-  }
-  for (const [key, color, opacity] of [
-    ['lakes', '#7ca9b7', 0.45],
-    ['wetlands', '#82aaa0', 0.3],
-  ] as const) {
-    const sourceId = `map-${key}`;
-    if (addSource(sourceId, data[key])) map.addLayer({
-      id: `${sourceId}-fill`, type: 'fill', source: sourceId,
-      paint: { 'fill-color': color, 'fill-opacity': opacity },
-    }, beforeId);
-  }
-  if (addSource('map-rivers', data.rivers)) map.addLayer({
-    id: 'map-rivers-line', type: 'line', source: 'map-rivers',
-    paint: { 'line-color': '#699bac', 'line-width': 1.1, 'line-opacity': 0.8 },
-  }, beforeId);
 }

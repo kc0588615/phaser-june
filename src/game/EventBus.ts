@@ -1,11 +1,11 @@
-// EventBus — the single bridge between the React world (Cesium map, HUD,
+// EventBus — the single bridge between the React world (map, HUD,
 // panels, ExpeditionContext) and the Phaser world (the match-3 board).
 //
 // The two sides never import each other's components; they only communicate by
 // emitting and listening to the events declared in `EventPayloads` below.
 // A typical run flows through it like this:
 //
-//   CesiumMap  --'cesium-location-selected'-->  ExpeditionContext / Game scene
+//   Explore map --'map-location-selected'---->  ExpeditionContext / Game scene
 //   Context    --'expedition-start'---------->  Game scene (board begins)
 //   Game scene --'node-objective-updated'---->  Context (progress + sample quality)
 //   Game scene --'node-advance-requested'---->  Context (durable node completion)
@@ -28,7 +28,7 @@ import type { EvidenceChargeState, EvidenceFamily } from '@/expedition/evidenceF
 // Define all event types and their payloads
 export interface EventPayloads {
   'current-scene-ready': Phaser.Scene;
-  'cesium-location-selected': {
+  'map-location-selected': {
     lon: number;
     lat: number;
     ecoregionId?: number | null;

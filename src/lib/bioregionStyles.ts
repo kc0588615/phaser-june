@@ -1,4 +1,4 @@
-/** Bioregion biome/realm → color mapping for Cesium polygon styling */
+/** Bioregion biome/realm → color mapping for polygon styling. */
 
 const BIOME_STYLES: Record<string, { fill: string; outline: string }> = {
   'Tropical & Subtropical Moist Broadleaf Forests': { fill: '#2f855a', outline: '#14532d' },

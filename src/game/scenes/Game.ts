@@ -5,7 +5,7 @@
 //   - ask BackendPuzzle (Model) what matched, tell BoardView (View) to animate
 //   - score the move (streaks, multipliers from constants.ts) and emit HUD
 //     updates over the EventBus
-//   - listen for expedition events ('cesium-location-selected',
+//   - listen for expedition events ('map-location-selected',
 //     'expedition-start') to configure the board for the current node
 //     (spawn weights, obstacles, objective), and emit
 //     objective-quality telemetry / 'node-advance-requested' back to React.
@@ -566,7 +566,7 @@ export class Game extends Phaser.Scene {
         this.input.on(Phaser.Input.Events.POINTER_UP, this.handlePointerUp, this);
         this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.handlePointerUp, this);
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-        EventBus.on('cesium-location-selected', this.initializeBoardFromCesium, this);
+        EventBus.on('map-location-selected', this.initializeBoardFromMap, this);
         EventBus.on(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
@@ -575,7 +575,7 @@ export class Game extends Phaser.Scene {
         
 
         this.resetDragState(); // Resets isDragging etc.
-        this.canMove = false; // Input disabled until board initialized by Cesium
+        this.canMove = false; // Input disabled until board initialized by map data
         this.isBoardInitialized = false;
 
         EventBus.emit('current-scene-ready', this);
@@ -588,7 +588,7 @@ export class Game extends Phaser.Scene {
         // Bind shutdown to Phaser scene lifecycle so listeners are cleaned on stop/restart/HMR
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
 
-        console.log("Game Scene: Create method finished. Waiting for Cesium data.");
+        console.log("Game Scene: Create method finished. Waiting for map data.");
     }
 
     private handleAuthUserReady = (data: { playerId: string; sessionId?: string }) => {
@@ -1261,8 +1261,8 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private initializeBoardFromCesium(data: EventPayloads['cesium-location-selected']): void {
-        console.log("Game Scene: Received 'cesium-location-selected' data:", data);
+    private initializeBoardFromMap(data: EventPayloads['map-location-selected']): void {
+        console.log("Game Scene: Received 'map-location-selected' data:", data);
         this.canMove = false; // Disable moves during reinitialization
         this.isBoardInitialized = false; // Mark as not ready
         const { width, height } = this.scale;
@@ -1449,7 +1449,7 @@ export class Game extends Phaser.Scene {
             this.emitHud();
 
         } catch (error) {
-            console.error("Game Scene: Error initializing board from Cesium data:", error);
+            console.error("Game Scene: Error initializing board from map data:", error);
             if (this.statusText && this.statusText.active) {
                 if (this.hasActiveDisplayList()) {
                     this.statusText.destroy();
@@ -2008,7 +2008,7 @@ export class Game extends Phaser.Scene {
             this.boardView.destroyBoard();
         }
 
-        // Reset board/move state (cesium-location-selected will reinitialize)
+        // Reset board/move state (map-location-selected will reinitialize)
         this.canMove = false;
         this.isBoardInitialized = false;
         this.pauseButtonContainer?.setVisible(false);
@@ -2183,7 +2183,7 @@ export class Game extends Phaser.Scene {
         }
 
         // Remove EventBus listeners
-        EventBus.off('cesium-location-selected', this.initializeBoardFromCesium, this);
+        EventBus.off('map-location-selected', this.initializeBoardFromMap, this);
         EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);
