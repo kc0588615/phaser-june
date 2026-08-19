@@ -28,22 +28,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (action) {
       case 'trackClueUnlock': {
-        const { speciesId, clueCategory, clueField, clueValue, discoveryId } = params;
+        const { speciesId, clueCategory, clueField, clueValue } = params;
         const wasNew = await pt.trackClueUnlock(
-          profile.userId, speciesId, clueCategory, clueField, clueValue ?? null, discoveryId ?? null
+          profile.userId, speciesId, clueCategory, clueField, clueValue ?? null
         );
         return res.json({ wasNew });
       }
 
       case 'updateSessionProgress': {
         const { sessionId, moves, score, speciesDiscovered, cluesUnlocked } = params;
-        await pt.updateSessionProgress(sessionId, moves, score, speciesDiscovered, cluesUnlocked);
+        const updated = await pt.updateSessionProgress(profile.userId, sessionId, moves, score, speciesDiscovered, cluesUnlocked);
+        if (!updated) return res.status(404).json({ error: 'Session not found' });
         return res.json({ ok: true });
       }
 
       case 'forceSessionUpdate': {
         const { sessionId, moves, score, speciesDiscovered, cluesUnlocked } = params;
-        await pt.forceSessionUpdate(sessionId, moves, score, speciesDiscovered, cluesUnlocked);
+        const updated = await pt.forceSessionUpdate(profile.userId, sessionId, moves, score, speciesDiscovered, cluesUnlocked);
+        if (!updated) return res.status(404).json({ error: 'Session not found' });
         return res.json({ ok: true });
       }
 
@@ -74,7 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'endGameSession': {
         const { sessionId, finalMoves, finalScore } = params;
-        await pt.endGameSession(sessionId, finalMoves, finalScore);
+        const ended = await pt.endGameSession(profile.userId, sessionId, finalMoves, finalScore);
+        if (!ended) return res.status(404).json({ error: 'Session not found' });
         return res.json({ ok: true });
       }
 

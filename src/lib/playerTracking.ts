@@ -15,7 +15,7 @@ let playerClueUnlocks: any;
 let playerSpeciesDiscoveries: any;
 let playerStats: any;
 let speciesTable: any;
-let eq: any, and: any, isNull: any, desc: any, inArray: any, count: any, sum: any, sql: any;
+let eq: any, and: any, isNull: any, desc: any, count: any, sum: any, sql: any;
 
 async function ensureServerDeps() {
   if (!isServer) return false;
@@ -25,7 +25,6 @@ async function ensureServerDeps() {
     and = drizzleOps.and;
     isNull = drizzleOps.isNull;
     desc = drizzleOps.desc;
-    inArray = drizzleOps.inArray;
     count = drizzleOps.count;
     sum = drizzleOps.sum;
     sql = drizzleOps.sql;
@@ -45,21 +44,6 @@ async function ensureServerDeps() {
   }
   return true;
 }
-
-// Session tracking
-interface SessionState {
-  id: string;
-  playerId: string;
-  startTime: number;
-  speciesStartTime: number; // Reset per species for time-to-discover
-  pendingClueIds: string[]; // Clue IDs waiting for discovery_id
-}
-
-let currentSession: SessionState | null = null;
-
-// Debounce timer for session updates
-let sessionUpdateTimer: NodeJS.Timeout | null = null;
-const SESSION_UPDATE_DEBOUNCE = 10000; // 10 seconds
 
 /**
  * Start or resume a game session
@@ -85,16 +69,6 @@ export async function startGameSession(playerId: string): Promise<string | null>
     const existingSession = existingSessions[0];
 
     if (existingSession) {
-      // Resume existing session
-      currentSession = {
-        id: existingSession.id,
-        playerId,
-        startTime: existingSession.startedAt
-          ? new Date(existingSession.startedAt).getTime()
-          : Date.now(),
-        speciesStartTime: Date.now(),
-        pendingClueIds: [],
-      };
       return existingSession.id;
     }
 
@@ -113,14 +87,6 @@ export async function startGameSession(playerId: string): Promise<string | null>
 
     const session = result[0];
 
-    currentSession = {
-      id: session.id,
-      playerId,
-      startTime: Date.now(),
-      speciesStartTime: Date.now(),
-      pendingClueIds: [],
-    };
-
     return session.id;
   } catch (err) {
     console.error('Failed to start game session:', err);
@@ -129,117 +95,57 @@ export async function startGameSession(playerId: string): Promise<string | null>
 }
 
 /**
- * End the current game session
+ * End an owned game session
  */
 export async function endGameSession(
+  playerId: string,
   sessionId: string,
   finalMoves: number,
   finalScore: number
-): Promise<void> {
-  if (!(await ensureServerDeps())) return; // Client-side no-op
-
-  const playerId = currentSession?.playerId;
-  let resolvedPlayerId = playerId;
-
-  // DB fallback if session state missing (do not queue on lookup failure)
-  if (!resolvedPlayerId) {
-    try {
-      const rows = await db
-        .select({ playerId: playerGameSessions.playerId })
-        .from(playerGameSessions)
-        .where(eq(playerGameSessions.id, sessionId))
-        .limit(1);
-      resolvedPlayerId = rows[0]?.playerId ?? null;
-    } catch (err) {
-      console.error('Failed to resolve playerId for session end:', err);
-    }
-  }
+): Promise<boolean> {
+  if (!(await ensureServerDeps())) return false; // Client-side no-op
 
   try {
-    await db
+    const result = await db
       .update(playerGameSessions)
       .set({
         endedAt: new Date(),
         totalMoves: finalMoves,
         totalScore: finalScore,
       })
-      .where(eq(playerGameSessions.id, sessionId));
+      .where(
+        and(
+          eq(playerGameSessions.id, sessionId),
+          eq(playerGameSessions.playerId, playerId),
+        )
+      )
+      .returning({ id: playerGameSessions.id });
 
-    currentSession = null;
+    if (result.length === 0) return false;
 
-    // Clear debounce timer
-    if (sessionUpdateTimer) {
-      clearTimeout(sessionUpdateTimer);
-      sessionUpdateTimer = null;
-    }
-
-    // Refresh stats on session end (non-blocking)
-    if (resolvedPlayerId) {
-      refreshPlayerStats(resolvedPlayerId).catch((err) => {
-        console.error('Failed to refresh player stats on session end:', err);
-      });
-    }
+    await refreshPlayerStats(playerId);
+    return true;
   } catch (err) {
     console.error('Failed to end game session:', err);
+    throw err;
   }
 }
 
 /**
- * Update session progress (DEBOUNCED)
- * Batches rapid updates to reduce database load
+ * Update progress for an owned game session
  */
 export async function updateSessionProgress(
+  playerId: string,
   sessionId: string,
   moves: number,
   score: number,
   speciesDiscovered: number,
   cluesUnlocked: number
-): Promise<void> {
-  if (!isServer) return; // Client-side no-op
-
-  // Clear existing timer
-  if (sessionUpdateTimer) {
-    clearTimeout(sessionUpdateTimer);
-  }
-
-  // Debounce: wait 10 seconds before writing
-  sessionUpdateTimer = setTimeout(async () => {
-    if (!(await ensureServerDeps())) return;
-    try {
-      await db
-        .update(playerGameSessions)
-        .set({
-          totalMoves: moves,
-          totalScore: score,
-          speciesDiscoveredInSession: speciesDiscovered,
-          cluesUnlockedInSession: cluesUnlocked,
-        })
-        .where(eq(playerGameSessions.id, sessionId));
-    } catch (err) {
-      console.error('Failed to update session progress:', err);
-    }
-  }, SESSION_UPDATE_DEBOUNCE);
-}
-
-/**
- * Force immediate session update (for critical events like species discovery)
- */
-export async function forceSessionUpdate(
-  sessionId: string,
-  moves: number,
-  score: number,
-  speciesDiscovered: number,
-  cluesUnlocked: number
-): Promise<void> {
-  if (!(await ensureServerDeps())) return; // Client-side no-op
-
-  if (sessionUpdateTimer) {
-    clearTimeout(sessionUpdateTimer);
-    sessionUpdateTimer = null;
-  }
+): Promise<boolean> {
+  if (!(await ensureServerDeps())) return false; // Client-side no-op
 
   try {
-    await db
+    const result = await db
       .update(playerGameSessions)
       .set({
         totalMoves: moves,
@@ -247,10 +153,34 @@ export async function forceSessionUpdate(
         speciesDiscoveredInSession: speciesDiscovered,
         cluesUnlockedInSession: cluesUnlocked,
       })
-      .where(eq(playerGameSessions.id, sessionId));
+      .where(
+        and(
+          eq(playerGameSessions.id, sessionId),
+          eq(playerGameSessions.playerId, playerId),
+        )
+      )
+      .returning({ id: playerGameSessions.id });
+    return result.length > 0;
   } catch (err) {
-    console.error('Failed to force session update:', err);
+    console.error('Failed to update session progress:', err);
+    throw err;
   }
+}
+
+/**
+ * Force immediate session update (for critical events like species discovery)
+ */
+export async function forceSessionUpdate(
+  playerId: string,
+  sessionId: string,
+  moves: number,
+  score: number,
+  speciesDiscovered: number,
+  cluesUnlocked: number
+): Promise<boolean> {
+  return updateSessionProgress(
+    playerId, sessionId, moves, score, speciesDiscovered, cluesUnlocked
+  );
 }
 
 /**
@@ -262,91 +192,54 @@ export async function trackClueUnlock(
   speciesId: number,
   clueCategory: string,
   clueField: string,
-  clueValue: string | null = null,
-  discoveryId: string | null = null
+  clueValue: string | null = null
 ): Promise<boolean | null> {
   if (!(await ensureServerDeps())) return null; // Client-side no-op
 
   try {
     let clue: { id: string; unlockedAt: Date | null };
 
-    if (discoveryId) {
-      // If discoveryId provided, use onConflictDoUpdate to link it
-      const result = await db
-        .insert(playerClueUnlocks)
-        .values({
-          playerId,
-          speciesId,
-          discoveryId,
-          clueCategory,
-          clueField,
-          clueValue,
-        })
-        .onConflictDoUpdate({
-          target: [
-            playerClueUnlocks.playerId,
-            playerClueUnlocks.speciesId,
-            playerClueUnlocks.clueCategory,
-            playerClueUnlocks.clueField,
-          ],
-          set: { discoveryId },
-        })
-        .returning({
-          id: playerClueUnlocks.id,
-          unlockedAt: playerClueUnlocks.unlockedAt,
-        });
+    const result = await db
+      .insert(playerClueUnlocks)
+      .values({
+        playerId,
+        speciesId,
+        clueCategory,
+        clueField,
+        clueValue,
+      })
+      .onConflictDoNothing({
+        target: [
+          playerClueUnlocks.playerId,
+          playerClueUnlocks.speciesId,
+          playerClueUnlocks.clueCategory,
+          playerClueUnlocks.clueField,
+        ],
+      })
+      .returning({
+        id: playerClueUnlocks.id,
+        unlockedAt: playerClueUnlocks.unlockedAt,
+      });
+
+    if (result.length > 0) {
       clue = result[0];
     } else {
-      // No discoveryId - use onConflictDoNothing, then fetch existing if needed
-      const result = await db
-        .insert(playerClueUnlocks)
-        .values({
-          playerId,
-          speciesId,
-          clueCategory,
-          clueField,
-          clueValue,
-        })
-        .onConflictDoNothing({
-          target: [
-            playerClueUnlocks.playerId,
-            playerClueUnlocks.speciesId,
-            playerClueUnlocks.clueCategory,
-            playerClueUnlocks.clueField,
-          ],
-        })
-        .returning({
+      const existing = await db
+        .select({
           id: playerClueUnlocks.id,
           unlockedAt: playerClueUnlocks.unlockedAt,
-        });
-
-      if (result.length > 0) {
-        // Insert succeeded (new clue)
-        clue = result[0];
-      } else {
-        // Conflict - fetch existing clue
-        const existing = await db
-          .select({
-            id: playerClueUnlocks.id,
-            unlockedAt: playerClueUnlocks.unlockedAt,
-          })
-          .from(playerClueUnlocks)
-          .where(
-            and(
-              eq(playerClueUnlocks.playerId, playerId),
-              eq(playerClueUnlocks.speciesId, speciesId),
-              eq(playerClueUnlocks.clueCategory, clueCategory),
-              eq(playerClueUnlocks.clueField, clueField)
-            )
+        })
+        .from(playerClueUnlocks)
+        .where(
+          and(
+            eq(playerClueUnlocks.playerId, playerId),
+            eq(playerClueUnlocks.speciesId, speciesId),
+            eq(playerClueUnlocks.clueCategory, clueCategory),
+            eq(playerClueUnlocks.clueField, clueField)
           )
-          .limit(1);
-        clue = existing[0];
-      }
-    }
-
-    // Store clue ID for later discovery_id linking
-    if (!discoveryId && currentSession) {
-      currentSession.pendingClueIds.push(clue.id);
+        )
+        .limit(1);
+      clue = existing[0];
     }
 
     // Check if this was a create (new) or update (existing)
@@ -363,7 +256,7 @@ export async function trackClueUnlock(
 
 /**
  * Track a species discovery
- * Links all pending clues to this discovery
+ * Links unlocked clues for this player and species to this discovery
  */
 export async function trackSpeciesDiscovery(
   playerId: string,
@@ -382,11 +275,26 @@ export async function trackSpeciesDiscovery(
   if (!(await ensureServerDeps())) return null; // Client-side no-op
 
   try {
-    const sessionId = options.sessionId || currentSession?.id || null;
-    const pendingClueIds = currentSession?.pendingClueIds || [];
+    const requestedSessionId = options.sessionId ?? null;
 
     // Use transaction for atomic operation
     const result = await db.transaction(async (tx: any) => {
+      let sessionId: string | null = null;
+
+      if (requestedSessionId) {
+        const ownedSession = await tx
+          .select({ id: playerGameSessions.id })
+          .from(playerGameSessions)
+          .where(
+            and(
+              eq(playerGameSessions.id, requestedSessionId),
+              eq(playerGameSessions.playerId, playerId),
+            )
+          )
+          .limit(1);
+        sessionId = ownedSession[0] ? requestedSessionId : null;
+      }
+
       // Upsert discovery (idempotent)
       const discoveryResult = await tx
         .insert(playerSpeciesDiscoveries)
@@ -416,58 +324,32 @@ export async function trackSpeciesDiscovery(
 
       const discovery = discoveryResult[0];
 
-      // Link pending clues to this discovery
-      if (pendingClueIds.length > 0) {
-        await tx
-          .update(playerClueUnlocks)
-          .set({ discoveryId: discovery.id })
-          .where(
-            and(
-              inArray(playerClueUnlocks.id, pendingClueIds),
-              isNull(playerClueUnlocks.discoveryId)
-            )
-          );
-      }
+      await tx
+        .update(playerClueUnlocks)
+        .set({ discoveryId: discovery.id })
+        .where(
+          and(
+            eq(playerClueUnlocks.playerId, playerId),
+            eq(playerClueUnlocks.speciesId, speciesId),
+            isNull(playerClueUnlocks.discoveryId),
+          )
+        );
 
       return discovery;
     });
-
-    // Clear pending clues
-    if (currentSession) {
-      currentSession.pendingClueIds = [];
-      currentSession.speciesStartTime = Date.now();
-    }
 
     // Update localStorage for offline support
     if (typeof window !== 'undefined') {
       updateLocalStorageDiscovery(speciesId);
     }
 
-    // Refresh player_stats asynchronously (don't block return)
-    refreshPlayerStats(playerId).catch((err) => {
-      console.error('Failed to refresh player stats after discovery:', err);
-    });
+    await refreshPlayerStats(playerId);
 
     return result.id;
   } catch (err) {
     console.error('Failed to track species discovery:', err);
-    return null;
+    throw err;
   }
-}
-
-/**
- * Calculate time to discover in seconds (per species)
- */
-export function calculateTimeToDiscover(): number | null {
-  if (!currentSession) return null;
-  return Math.floor((Date.now() - currentSession.speciesStartTime) / 1000);
-}
-
-/**
- * Get current session ID
- */
-export function getCurrentSessionId(): string | null {
-  return currentSession?.id || null;
 }
 
 /**
