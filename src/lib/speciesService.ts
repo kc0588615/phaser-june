@@ -11,7 +11,7 @@ export interface RasterHabitatResult {
   percentage: number;
 }
 
-// Static habitat code → label map (baseline; keep in sync with habitatColors.ts)
+// Static habitat code → label map (baseline)
 const STATIC_HABITAT_CODE_TO_LABEL: Record<number, string> = {
   0: "Water",
   100: "Forest", 101: "Forest - Boreal", 102: "Forest - Subarctic", 103: "Forest - Subantarctic",
