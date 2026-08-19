@@ -5,7 +5,9 @@ The application has two MapLibre surfaces:
 - `src/components/MapLibreExploreMap.tsx`: globe exploration, ecoregion selection, habitat raster, species ranges, and expedition ingress.
 - `src/components/ExpeditionMapHud.tsx`: Mercator regional route/evidence map for v3 runs.
 
-Both use `src/lib/maplibreStyle.ts`. `NEXT_PUBLIC_MAP_STYLE_URL` may supply a production style. Without it, the app uses a network-independent background style and adds local/API GeoJSON context.
+Both use `src/lib/maplibreStyle.ts`. `NEXT_PUBLIC_MAP_STYLE_URL` may supply a production style. Without it, the app uses the shared dark fallback style and adds API GeoJSON context.
+
+Both surfaces use the same TiTiler habitat raster. The expedition HUD renders the active One Earth region as an outline only and identifies the dominant habitat at the current research site.
 
 ## Exploration controls
 

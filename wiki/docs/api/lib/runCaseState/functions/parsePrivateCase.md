@@ -1,8 +1,10 @@
 # Function: parsePrivateCase()
 
-> **parsePrivateCase**(`value`): [`PrivateCaseSnapshot`](../type-aliases/PrivateCaseSnapshot.md) \| `null`
+> **parsePrivateCase**(`value`): [`PrivateCaseV3`](../interfaces/PrivateCaseV3.md) \| `null`
 
-Defined in: [src/lib/runCaseState.ts:135](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L135)
+Defined in: [src/lib/runCaseState.ts:88](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L88)
+
+v3 only — stored v1/v2 private cases parse to null (legacy runs).
 
 ## Parameters
 
@@ -12,4 +14,4 @@ Defined in: [src/lib/runCaseState.ts:135](https://github.com/kc0588615/phaser-ju
 
 ## Returns
 
-[`PrivateCaseSnapshot`](../type-aliases/PrivateCaseSnapshot.md) \| `null`
+[`PrivateCaseV3`](../interfaces/PrivateCaseV3.md) \| `null`

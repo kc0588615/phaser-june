@@ -1,22 +1,14 @@
 # Interface: FlowNode
 
-Defined in: [src/expedition/caseFlow.ts:15](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/caseFlow.ts#L15)
+Defined in: [src/expedition/caseFlow.ts:14](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/caseFlow.ts#L14)
 
 ## Properties
 
-### chosenFamily?
+### chosenFamily
 
-> `optional` **chosenFamily**: `"behavior"` \| `"relatives"` \| `"body"` \| `"habits"` \| `"place"` \| `null`
+> **chosenFamily**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"` \| `null`
 
-Defined in: [src/expedition/caseFlow.ts:20](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/caseFlow.ts#L20)
-
-***
-
-### chosenMethod
-
-> **chosenMethod**: `"track"` \| `"observe"` \| `"listen"` \| `"survey"` \| `"analyze"` \| `null`
-
-Defined in: [src/expedition/caseFlow.ts:19](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/caseFlow.ts#L19)
+Defined in: [src/expedition/caseFlow.ts:16](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/caseFlow.ts#L16)
 
 ***
 
@@ -24,22 +16,12 @@ Defined in: [src/expedition/caseFlow.ts:19](https://github.com/kc0588615/phaser-
 
 > **completed**: `boolean`
 
-Defined in: [src/expedition/caseFlow.ts:16](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/caseFlow.ts#L16)
+Defined in: [src/expedition/caseFlow.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/caseFlow.ts#L15)
 
 ***
 
-### objectiveMet
+### segmentMovesUsed
 
-> **objectiveMet**: `boolean`
+> **segmentMovesUsed**: `number`
 
-Defined in: [src/expedition/caseFlow.ts:18](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/caseFlow.ts#L18)
-
-objectiveProgress \>= objectiveTarget on the completed node row.
-
-***
-
-### segmentMovesUsed?
-
-> `optional` **segmentMovesUsed**: `number`
-
-Defined in: [src/expedition/caseFlow.ts:21](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/caseFlow.ts#L21)
+Defined in: [src/expedition/caseFlow.ts:17](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/caseFlow.ts#L17)

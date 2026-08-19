@@ -2,7 +2,7 @@
 
 > **endGameSession**(`sessionId`, `finalMoves`, `finalScore`): `Promise`\<`void`\>
 
-Defined in: [src/lib/playerTracking.ts:134](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/playerTracking.ts#L134)
+Defined in: [src/lib/playerTracking.ts:134](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/playerTracking.ts#L134)
 
 End the current game session
 

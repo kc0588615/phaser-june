@@ -53,7 +53,7 @@ export function useMapLibreEcoregions(
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
-    for (const id of ['ecoregion-fill', 'ecoregion-line']) {
+    for (const id of ['ecoregion-fill', 'ecoregion-line', 'ecoregion-label']) {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', enabled ? 'visible' : 'none');
     }
     if (!enabled) {
@@ -97,53 +97,76 @@ export function useMapLibreEcoregions(
     (async () => {
       setIsPreviewLoading(true);
       try {
-        const response = await fetch(ALL_ECOREGIONS_URL, { signal: controller.signal });
-        if (!response.ok) throw new Error(`Ecoregions failed (${response.status})`);
-        const data = await response.json() as EcoregionPreviewResponse;
-        if (cancelled) return;
-        const collection: GeoJSON.FeatureCollection = {
-          type: 'FeatureCollection',
-          features: data.features.flatMap(feature => feature.geometry ? [{
-            type: 'Feature' as const,
-            id: feature.id,
-            properties: feature.properties,
-            geometry: feature.geometry as GeoJSON.Geometry,
-          }] : []),
-        };
-        map.addSource('ecoregions', {
-          type: 'geojson',
-          data: collection,
-          generateId: true,
-          attribution: 'One Earth ecoregions',
-        });
-        map.addLayer({
-          id: 'ecoregion-fill', type: 'fill', source: 'ecoregions',
-          paint: {
-            'fill-color': ['coalesce', ['get', 'COLOR'], '#70A800'],
-            'fill-opacity': [
-              'case',
-              ['boolean', ['feature-state', 'selected'], false], 0.86,
-              ['boolean', ['feature-state', 'hover'], false], 0.8,
-              0.68,
-            ],
-          },
-          layout: { visibility: enabledRef.current ? 'visible' : 'none' },
-        });
-        map.addLayer({
-          id: 'ecoregion-line', type: 'line', source: 'ecoregions',
-          paint: {
-            'line-color': ['coalesce', ['get', 'COLOR_BIO'], ['get', 'COLOR'], '#38A700'],
-            'line-opacity': 0.95,
-            'line-width': [
-              'case',
-              ['boolean', ['feature-state', 'selected'], false], 2.4,
-              ['boolean', ['feature-state', 'hover'], false], 1.8,
-              0.8,
-            ],
-          },
-          layout: { visibility: enabledRef.current ? 'visible' : 'none' },
-        });
-        restoreCustomLayerOrder(map);
+        // Source/layers survive WebGL context loss; only fetch/add on first run.
+        if (!map.getSource('ecoregions')) {
+          const response = await fetch(ALL_ECOREGIONS_URL, { signal: controller.signal });
+          if (!response.ok) throw new Error(`Ecoregions failed (${response.status})`);
+          const data = await response.json() as EcoregionPreviewResponse;
+          if (cancelled) return;
+          const collection: GeoJSON.FeatureCollection = {
+            type: 'FeatureCollection',
+            features: data.features.flatMap(feature => feature.geometry ? [{
+              type: 'Feature' as const,
+              id: feature.id,
+              properties: feature.properties,
+              geometry: feature.geometry as GeoJSON.Geometry,
+            }] : []),
+          };
+          map.addSource('ecoregions', {
+            type: 'geojson',
+            data: collection,
+            generateId: true,
+            attribution: 'One Earth ecoregions',
+          });
+          map.addLayer({
+            id: 'ecoregion-fill', type: 'fill', source: 'ecoregions',
+            paint: {
+              'fill-color': ['coalesce', ['get', 'COLOR'], '#70A800'],
+              'fill-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'selected'], false], 0.86,
+                ['boolean', ['feature-state', 'hover'], false], 0.8,
+                0.68,
+              ],
+            },
+            layout: { visibility: enabledRef.current ? 'visible' : 'none' },
+          });
+          map.addLayer({
+            id: 'ecoregion-line', type: 'line', source: 'ecoregions',
+            paint: {
+              'line-color': ['coalesce', ['get', 'COLOR_BIO'], ['get', 'COLOR'], '#38A700'],
+              'line-opacity': 0.95,
+              'line-width': [
+                'case',
+                ['boolean', ['feature-state', 'selected'], false], 2.4,
+                ['boolean', ['feature-state', 'hover'], false], 1.8,
+                0.8,
+              ],
+            },
+            layout: { visibility: enabledRef.current ? 'visible' : 'none' },
+          });
+          map.addLayer({
+            id: 'ecoregion-label', type: 'symbol', source: 'ecoregions',
+            minzoom: 2.5,
+            layout: {
+              visibility: enabledRef.current ? 'visible' : 'none',
+              'text-field': ['get', 'ECO_NAME'],
+              'text-font': ['Open Sans Regular'],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 2.5, 9, 7, 13],
+              'text-max-width': 12,
+              'text-variable-anchor': ['center', 'top', 'bottom'],
+              'text-radial-offset': 0.35,
+              'text-justify': 'auto',
+            },
+            paint: {
+              'text-color': '#ecfeff',
+              'text-halo-color': 'rgba(3, 12, 20, 0.92)',
+              'text-halo-width': 1.5,
+              'text-halo-blur': 0.5,
+            },
+          });
+          restoreCustomLayerOrder(map);
+        }
         map.on('mousemove', 'ecoregion-fill', onMouseMove);
         map.on('mouseleave', 'ecoregion-fill', onMouseLeave);
         map.on('moveend', pickAtCenter);

@@ -2,7 +2,7 @@
 
 > **useMapLibreEcoregions**(`mapRef`, `ready`, `enabled`, `generation`): `object`
 
-Defined in: src/hooks/useMapLibreEcoregions.ts:15
+Defined in: [src/hooks/useMapLibreEcoregions.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/hooks/useMapLibreEcoregions.ts#L15)
 
 ## Parameters
 

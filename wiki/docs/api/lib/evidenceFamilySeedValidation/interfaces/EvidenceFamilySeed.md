@@ -1,6 +1,6 @@
 # Interface: EvidenceFamilySeed
 
-Defined in: [src/lib/evidenceFamilySeedValidation.ts:19](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceFamilySeedValidation.ts#L19)
+Defined in: [src/lib/evidenceFamilySeedValidation.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceFamilySeedValidation.ts#L19)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/evidenceFamilySeedValidation.ts:19](https://github.com/kc05
 
 > **cards**: [`EvidenceFamilySeedCard`](EvidenceFamilySeedCard.md)[]
 
-Defined in: [src/lib/evidenceFamilySeedValidation.ts:23](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceFamilySeedValidation.ts#L23)
+Defined in: [src/lib/evidenceFamilySeedValidation.ts:23](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceFamilySeedValidation.ts#L23)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/evidenceFamilySeedValidation.ts:23](https://github.com/kc05
 
 > **common\_name**: `string`
 
-Defined in: [src/lib/evidenceFamilySeedValidation.ts:22](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceFamilySeedValidation.ts#L22)
+Defined in: [src/lib/evidenceFamilySeedValidation.ts:22](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceFamilySeedValidation.ts#L22)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/evidenceFamilySeedValidation.ts:22](https://github.com/kc05
 
 > **iucn\_id**: `number`
 
-Defined in: [src/lib/evidenceFamilySeedValidation.ts:20](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceFamilySeedValidation.ts#L20)
+Defined in: [src/lib/evidenceFamilySeedValidation.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceFamilySeedValidation.ts#L20)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/lib/evidenceFamilySeedValidation.ts:20](https://github.com/kc05
 
 > **scientific\_name**: `string`
 
-Defined in: [src/lib/evidenceFamilySeedValidation.ts:21](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceFamilySeedValidation.ts#L21)
+Defined in: [src/lib/evidenceFamilySeedValidation.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceFamilySeedValidation.ts#L21)

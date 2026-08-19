@@ -1,10 +1,10 @@
 # Function: groupSpeciesByTaxonomy()
 
-> **groupSpeciesByTaxonomy**(`species`): `Record`\<`string`, `Record`\<`string`, `Record`\<`string`, [`Species`](../../../types/database/interfaces/Species.md)[]\>\>\>
+> **groupSpeciesByTaxonomy**(`species`): [`TaxonomyHierarchy`](../../../types/speciesBrowser/type-aliases/TaxonomyHierarchy.md)
 
-Defined in: [src/utils/ecoregion.ts:88](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/utils/ecoregion.ts#L88)
+Defined in: [src/utils/ecoregion.ts:89](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/utils/ecoregion.ts#L89)
 
-Group species by taxonomic hierarchy (class -\> order -\> family)
+Group species by the browse hierarchy (class -\> order -\> family -\> genus).
 
 ## Parameters
 
@@ -14,4 +14,4 @@ Group species by taxonomic hierarchy (class -\> order -\> family)
 
 ## Returns
 
-`Record`\<`string`, `Record`\<`string`, `Record`\<`string`, [`Species`](../../../types/database/interfaces/Species.md)[]\>\>\>
+[`TaxonomyHierarchy`](../../../types/speciesBrowser/type-aliases/TaxonomyHierarchy.md)

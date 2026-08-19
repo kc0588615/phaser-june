@@ -2,7 +2,7 @@
 
 > **deriveEvidenceHintIds**(`counts`, `matchedFamilies`, `idsByFamily`): `number`[]
 
-Defined in: [src/lib/evidenceRunState.ts:185](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceRunState.ts#L185)
+Defined in: [src/lib/evidenceRunState.ts:185](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L185)
 
 ## Parameters
 
@@ -12,7 +12,7 @@ Defined in: [src/lib/evidenceRunState.ts:185](https://github.com/kc0588615/phase
 
 ### matchedFamilies
 
-readonly (`"behavior"` \| `"relatives"` \| `"body"` \| `"habits"` \| `"place"`)[]
+readonly (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
 ### idsByFamily
 

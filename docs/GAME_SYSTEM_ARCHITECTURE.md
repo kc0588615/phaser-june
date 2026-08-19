@@ -13,14 +13,14 @@ Current source of truth for React + Phaser gameplay.
 
 1. `MapLibreExploreMap` emits `expedition-data-ready` after a valid map click.
 2. `ExpeditionContext` stores the payload and shows `ExpeditionBriefing`.
-3. `expedition-start` creates a versioned case. V3 starts a six-move research site.
-4. Phaser reports each accepted v3 move with exact board state and direct-clear family counts.
+3. `expedition-start` creates a v3 case and starts a six-move research site.
+4. Phaser reports each accepted move with exact board state and direct-clear family counts.
 5. After move six, the server offers the highest-charged unused evidence families.
 6. The player chooses a family; the server applies its fixed-strength clue and eliminates incompatible candidates.
 7. The selected family locks, the next board excludes it, and remaining charge carries forward.
 8. After three clues, the player guesses among the surviving candidates.
 
-V1 and v2 runs retain their original flows. New-run version selection is server-controlled by `EXPEDITION_CASE_VERSION`; it defaults to v2 until v3 data is deployed.
+Stored v1/v2 cases are not playable and are rejected on resume.
 
 ## Active Events
 
@@ -31,11 +31,9 @@ V1 and v2 runs retain their original flows. New-run version selection is server-
 - `evidence-move-resolved`
 - `evidence-progress-committed`
 - `node-objective-updated`
-- `node-advance-requested`
 - `node-complete`
 - `route-progress-updated`
 - `clue-revealed`
-- `species-guess-submitted`
 - `show-species-list`
 - `game-reset`
 - `auth-user-ready`

@@ -34,6 +34,7 @@ export class BackendPuzzle {
     private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
     private rng: () => number = Math.random;
     private statefulRng: StatefulRng | null = null;
+    private fieldSignalSpawned: boolean = false;
 
     constructor(
         public readonly width: number,
@@ -74,6 +75,7 @@ export class BackendPuzzle {
         this.nextGemsToSpawn = [];
         this.score = 0;
         this.movesUsed = 0;
+        this.fieldSignalSpawned = false;
         if (!this.hasAnyValidMove()) this.shuffle();
     }
 
@@ -114,6 +116,7 @@ export class BackendPuzzle {
             nextGemsToSpawn: [...this.nextGemsToSpawn],
             allowedGemTypes: [...(this.gemPool.allowedGemTypes ?? ACTIVE_GEM_TYPES)],
             rngState: this.statefulRng.getState(),
+            ...(this.fieldSignalSpawned ? { fieldSignalSpawned: true } : {}),
         };
     }
 
@@ -128,6 +131,7 @@ export class BackendPuzzle {
         this.movesUsed = checkpoint.movesUsed;
         this.maxMoves = checkpoint.maxMoves;
         this.nextGemsToSpawn = [...checkpoint.nextGemsToSpawn];
+        this.fieldSignalSpawned = checkpoint.fieldSignalSpawned === true;
         this.gemPool = {
             lootWeights: {},
             allowedGemTypes: [...checkpoint.allowedGemTypes] as LootGemType[],
@@ -149,6 +153,14 @@ export class BackendPuzzle {
 
     setMaxMoves(max: number): void {
         this.maxMoves = max;
+    }
+
+    hasFieldSignalSpawned(): boolean {
+        return this.fieldSignalSpawned;
+    }
+
+    markFieldSignalSpawned(): void {
+        this.fieldSignalSpawned = true;
     }
 
     applyCellStateSeeds(seeds: CellStateSeed[]): void {
@@ -372,6 +384,7 @@ export class BackendPuzzle {
         this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
         this.nextGemsToSpawn = [];
         this.movesUsed = 0;
+        this.fieldSignalSpawned = false;
         console.log("BackendPuzzle reset: new random board generated.");
     }
 

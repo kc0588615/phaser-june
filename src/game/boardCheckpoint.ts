@@ -50,6 +50,7 @@ export function parseBoardCheckpoint(
     const movesUsed = source.movesUsed;
     const maxMoves = source.maxMoves;
     const rngState = source.rngState;
+    const fieldSignalSpawned = source.fieldSignalSpawned;
     if (!Number.isInteger(width) || (width as number) < 3 || (width as number) > 12
         || !Number.isInteger(height) || (height as number) < 3 || (height as number) > 12
         || expected?.width !== undefined && width !== expected.width
@@ -58,7 +59,8 @@ export function parseBoardCheckpoint(
         || !Number.isInteger(maxMoves) || (maxMoves as number) < 1 || (maxMoves as number) > 50
         || expected?.maxMoves !== undefined && maxMoves !== expected.maxMoves
         || !Number.isInteger(movesUsed) || (movesUsed as number) < 0 || (movesUsed as number) > (maxMoves as number)
-        || !Number.isInteger(rngState) || (rngState as number) < 0 || (rngState as number) > UINT32_MAX) return null;
+        || !Number.isInteger(rngState) || (rngState as number) < 0 || (rngState as number) > UINT32_MAX
+        || fieldSignalSpawned !== undefined && typeof fieldSignalSpawned !== 'boolean') return null;
 
     if (!Array.isArray(source.allowedGemTypes) || source.allowedGemTypes.length < 3
         || source.allowedGemTypes.length > ACTIVE_GEM_TYPES.length) return null;
@@ -92,5 +94,6 @@ export function parseBoardCheckpoint(
         nextGemsToSpawn: [...source.nextGemsToSpawn] as GemType[],
         allowedGemTypes: [...allowedGemTypes] as GemType[],
         rngState: rngState as number,
+        ...(fieldSignalSpawned === true ? { fieldSignalSpawned: true } : {}),
     };
 }

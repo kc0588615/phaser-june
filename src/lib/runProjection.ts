@@ -1,12 +1,8 @@
-import { METHOD_SLOTS, METHOD_TYPES, type MethodType } from '@/expedition/domain';
-import { validatePersistedOfferTree, type MethodOfferTree } from '@/expedition/caseOffers';
-import { evidenceTierForMatchLength, isBestTargetMatchLength, type EvidenceQualityTier } from '@/expedition/evidenceQuality';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, parseEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 
-const METHOD_SET = new Set<string>(METHOD_TYPES);
 const UINT32_MAX = 0xffff_ffff;
 const NODE_OBSTACLES = new Set([
   'flow_shift',
@@ -77,21 +73,6 @@ export interface RunProjectionSource extends UnknownRecord {
   metadata?: unknown;
 }
 
-export interface PublicCaseV1 {
-  version: 1;
-  candidateIds: number[];
-  nodeMethods: [...typeof METHOD_SLOTS];
-  boardSeeds: [number, number, number];
-}
-
-export interface PublicCaseV2 {
-  version: 2;
-  candidateIds: number[];
-  nodeTypes: [string, string, string];
-  boardSeeds: [number, number, number];
-  offerTree: MethodOfferTree;
-}
-
 export interface PublicCaseV3 {
   version: 3;
   candidateIds: number[];
@@ -99,17 +80,13 @@ export interface PublicCaseV3 {
   mapView: ExpeditionMapView;
 }
 
-export type PublicCaseSnapshot = PublicCaseV1 | PublicCaseV2 | PublicCaseV3;
+export type PublicCaseSnapshot = PublicCaseV3;
 
 export type ProjectedNodeCaseState =
-  | 'offered'
-  | 'chosen'
   | 'board_active'
   | 'objective_met'
   | 'objective_failed'
   | 'evidence_issued'
-  | 'interpreted'
-  | 'cited'
   | 'choice_ready';
 
 export interface PublicRunNode {
@@ -124,12 +101,6 @@ export interface PublicRunNode {
   movesUsed?: number;
   boardSeed?: number;
   boardSamplingMethod?: string;
-  method?: MethodType;
-  offeredMethods?: [MethodType, MethodType];
-  choiceOfferedAt?: string;
-  choiceLatencyMs?: number;
-  bestTargetMatchLength?: number;
-  evidenceQualityTier?: EvidenceQualityTier;
   evidenceCharges?: EvidenceChargeState;
   carriedCharges?: EvidenceChargeState;
   offeredFamilies?: EvidenceFamily[];
@@ -175,19 +146,11 @@ export interface PublicRunMemory {
   nodes: PublicMemoryNode[];
   gisFeaturesNearby: PublicRunCheckpoint['featureFingerprints'];
   deductionSummary: {
-    scoreSpent?: number;
-    processedClues?: number;
-    confirmedCategories?: number;
-    candidateCount?: number;
-    referenceAttempts?: number;
     issuedEvidenceCount?: number;
-    reasoningEventCount?: number;
     guessBonus?: number;
     efficiencyBonus?: number;
     wrongGuessCount?: number;
     firstGuessCorrect?: boolean;
-    citedEvidenceRefs?: string[];
-    finalScore?: number;
   } | null;
   finalScore?: number | null;
   realm?: string | null;
@@ -198,26 +161,13 @@ export interface PublicRunMemory {
 
 export interface PublicIssuedObservation {
   ref: string;
-  method?: MethodType;
-  family?: EvidenceFamily;
+  family: EvidenceFamily;
   observationText: string;
   inferenceText?: string;
   traitCategory?: string;
-  compareTag?: string;
-  isSignature: boolean;
-  qualityTier?: EvidenceQualityTier;
   actualEliminatedIds?: number[];
   eliminationReasons?: Record<string, string>;
-  traitPhrase?: string;
   candidateTraitPhrases?: Record<string, string>;
-}
-
-export interface PublicReasoningEvent {
-  obsRef: string;
-  predictedEliminatedIds: number[];
-  actualEliminatedIds: number[];
-  correct: boolean;
-  latencyMs: number;
 }
 
 export interface PublicRunCheckpoint {
@@ -237,8 +187,6 @@ export interface PublicRunCheckpoint {
     properties: { bioregion?: string; realm?: string; biome?: string };
   }>;
   routePolyline: Array<{ lon: number; lat: number; waypointSlot?: number }>;
-  reasoningEvents: PublicReasoningEvent[];
-  citedEvidenceRefs: string[];
   expeditionSnapshot: {
     protectedAreas: Array<{
       name: string | null;
@@ -330,8 +278,6 @@ export function projectRunForClient(
         return observation ? [observation] : [];
       })
     : [];
-  const reasoningEvents = projectReasoningEvents(metadata.reasoningEvents);
-  const citedEvidenceRefs = projectObservationRefs(metadata.citedEvidenceRefs);
   const nodes = projectRunNodes(input.nodes);
 
   return {
@@ -339,7 +285,7 @@ export function projectRunForClient(
     casePublic,
     checkpoint: projectCheckpoint(metadata),
     observations,
-    nodes: projectNodeCaseStates(nodes, observations, reasoningEvents, citedEvidenceRefs),
+    nodes: projectNodeCaseStates(nodes, observations),
     memory: projectRunMemory(input.memory),
     legacy: casePublic === null,
   };
@@ -383,12 +329,14 @@ function projectRunSummary(session: RunProjectionSource): PublicRunSummary {
   return run;
 }
 
+/** v3 only — stored v1/v2 snapshots parse to null and resume as legacy runs. */
 export function parsePublicCaseSnapshot(value: unknown): PublicCaseSnapshot | null {
   const source = getRecord(value);
   const candidateIds = getExactIntegerArray(source.candidateIds);
   const boardSeeds = source.boardSeeds;
 
-  if (!candidateIds
+  if (source.version !== 3
+    || !candidateIds
     || candidateIds.length !== 6
     || candidateIds.some(id => id <= 0)
     || new Set(candidateIds).size !== 6
@@ -399,38 +347,14 @@ export function parsePublicCaseSnapshot(value: unknown): PublicCaseSnapshot | nu
     return null;
   }
 
-  if (source.version === 1) {
-    const nodeMethods = source.nodeMethods;
-    if (!Array.isArray(nodeMethods) || nodeMethods.length !== METHOD_SLOTS.length
-      || !METHOD_SLOTS.every((method, index) => nodeMethods[index] === method)) return null;
-    return {
-      version: 1,
-      candidateIds,
-      nodeMethods: [...METHOD_SLOTS],
-      boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
-    };
-  }
-
-  const nodeTypes = getExactStringArray(source.nodeTypes);
-  if (source.version === 3) {
-    const mapView = parseExpeditionMapView(source.mapView);
-    if (!mapView) return null;
-    return {
-      version: 3,
-      candidateIds,
-      boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
-      mapView,
-    };
-  }
-  if (source.version !== 2 || !nodeTypes || nodeTypes.length !== 3) return null;
-  const offerTree = validatePersistedOfferTree(nodeTypes, source.offerTree);
-  return offerTree ? {
-    version: 2,
+  const mapView = parseExpeditionMapView(source.mapView);
+  if (!mapView) return null;
+  return {
+    version: 3,
     candidateIds,
-    nodeTypes: [nodeTypes[0], nodeTypes[1], nodeTypes[2]],
     boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
-    offerTree,
-  } : null;
+    mapView,
+  };
 }
 
 /** Projects persisted node rows without exposing their raw JSONB payloads. */
@@ -462,18 +386,6 @@ export function projectRunNodes(value: unknown): PublicRunNode[] {
     const boardSeed = getUint32(source.boardSeed);
     if (boardSeed !== undefined) node.boardSeed = boardSeed;
     assignString(node, 'boardSamplingMethod', source.boardSamplingMethod);
-    const method = getMethod(source.method ?? boardContext.method);
-    if (method) node.method = method;
-    const offeredMethods = getMethodPair(boardContext.offeredMethods);
-    if (offeredMethods) node.offeredMethods = offeredMethods;
-    assignDate(node, 'choiceOfferedAt', boardContext.choiceOfferedAt);
-    assignNonnegativeInteger(node, 'choiceLatencyMs', boardContext.choiceLatencyMs);
-    const bestTargetMatchLength = boardContext.bestTargetMatchLength;
-    if (isBestTargetMatchLength(bestTargetMatchLength)) {
-      node.bestTargetMatchLength = bestTargetMatchLength;
-      const tier = evidenceTierForMatchLength(bestTargetMatchLength);
-      if (tier) node.evidenceQualityTier = tier;
-    }
     const evidenceCharges = parseEvidenceCharges(boardContext.evidenceCharges);
     if (evidenceCharges) node.evidenceCharges = evidenceCharges;
     const carriedCharges = parseEvidenceCharges(boardContext.carriedCharges);
@@ -561,19 +473,11 @@ export function projectDeductionSummary(value: unknown): PublicRunMemory['deduct
   if (value === null || value === undefined) return null;
   const source = getRecord(value);
   const summary: NonNullable<PublicRunMemory['deductionSummary']> = {};
-  assignNumber(summary, 'scoreSpent', source.scoreSpent);
-  assignNumber(summary, 'processedClues', source.processedClues);
-  assignNumber(summary, 'confirmedCategories', source.confirmedCategories);
-  assignNumber(summary, 'candidateCount', source.candidateCount);
-  assignNumber(summary, 'referenceAttempts', source.referenceAttempts);
   assignNonnegativeInteger(summary, 'issuedEvidenceCount', source.issuedEvidenceCount);
-  assignNonnegativeInteger(summary, 'reasoningEventCount', source.reasoningEventCount);
   assignNumber(summary, 'guessBonus', source.guessBonus);
   assignNumber(summary, 'efficiencyBonus', source.efficiencyBonus);
   assignNonnegativeInteger(summary, 'wrongGuessCount', source.wrongGuessCount);
-  summary.citedEvidenceRefs = projectObservationRefs(source.citedEvidenceRefs);
   if (typeof source.firstGuessCorrect === 'boolean') summary.firstGuessCorrect = source.firstGuessCorrect;
-  assignNumber(summary, 'finalScore', source.finalScore);
   return summary;
 }
 
@@ -591,8 +495,6 @@ function projectCheckpoint(metadata: UnknownRecord): PublicRunCheckpoint {
     rasterHabitats: projectRasterHabitats(metadata.rasterHabitats),
     featureFingerprints: projectFeatureFingerprints(metadata.featureFingerprints),
     routePolyline: projectRoute(metadata.routePolyline),
-    reasoningEvents: projectReasoningEvents(metadata.reasoningEvents),
-    citedEvidenceRefs: projectObservationRefs(metadata.citedEvidenceRefs),
     expeditionSnapshot: {
       protectedAreas: projectProtectedAreas(snapshot.protectedAreas),
       availableAffinities: getStringArray(snapshot.availableAffinities),
@@ -614,42 +516,34 @@ function projectCheckpoint(metadata: UnknownRecord): PublicRunCheckpoint {
 function projectObservation(value: unknown): PublicIssuedObservation | null {
   const source = getRecord(value);
   const ref = getObservationRef(source.ref);
-  const method = getMethod(source.method);
   const family = isEvidenceFamily(source.family) ? source.family : undefined;
   const observationText = getString(source.observationText);
-  if (!ref || (!method && !family) || !observationText) return null;
+  if (!ref || !family || !observationText) return null;
 
   const observation: PublicIssuedObservation = {
     ref,
     observationText,
-    isSignature: source.isSignature === true,
-    ...(method ? { method } : {}),
-    ...(family ? { family } : {}),
+    family,
   };
-  const qualityTier = getInteger(source.qualityTier);
-  if (qualityTier === 1 || qualityTier === 2 || qualityTier === 3) observation.qualityTier = qualityTier;
   const inferenceText = getString(source.inferenceText);
   const traitCategory = getString(source.traitCategory);
-  const compareTag = getString(source.compareTag);
   if (inferenceText !== undefined) observation.inferenceText = inferenceText;
   if (traitCategory && TRAIT_CATEGORIES.has(traitCategory)) observation.traitCategory = traitCategory;
-  if (compareTag !== undefined) observation.compareTag = compareTag;
   const actualEliminatedIds = getIntegerArray(source.actualEliminatedIds);
   if (actualEliminatedIds.length > 0) observation.actualEliminatedIds = actualEliminatedIds;
-  const traitPhrase = getString(source.traitPhrase);
-  if (traitPhrase && traitPhrase.length <= 80) observation.traitPhrase = traitPhrase;
   const eliminationReasonsSource = getRecord(source.eliminationReasons);
   const eliminationReasons = Object.fromEntries(actualEliminatedIds.flatMap(id => {
     const reason = getString(eliminationReasonsSource[String(id)]);
     return reason && reason.length <= 80 ? [[String(id), reason]] : [];
   }));
   if (Object.keys(eliminationReasons).length > 0) observation.eliminationReasons = eliminationReasons;
-  const candidateTraitPhrases = Object.fromEntries(Object.entries(getRecord(source.candidateTraitPhrases)).flatMap(([id, phrase]) => {
-    const speciesId = Number(id);
-    return Number.isSafeInteger(speciesId) && speciesId > 0 && typeof phrase === 'string' && phrase.length > 0 && phrase.length <= 64
+  const candidateTraitPhrasesSource = getRecord(source.candidateTraitPhrases);
+  const candidateTraitPhrases = Object.fromEntries(actualEliminatedIds.flatMap(speciesId => {
+    const phrase = candidateTraitPhrasesSource[String(speciesId)];
+    return typeof phrase === 'string' && phrase.length > 0 && phrase.length <= 64
       ? [[String(speciesId), phrase]]
       : [];
-  }).slice(0, 6));
+  }));
   if (Object.keys(candidateTraitPhrases).length > 0) observation.candidateTraitPhrases = candidateTraitPhrases;
   return observation;
 }
@@ -657,41 +551,16 @@ function projectObservation(value: unknown): PublicIssuedObservation | null {
 function projectNodeCaseStates(
   nodes: PublicRunNode[],
   observations: PublicIssuedObservation[],
-  interpretations: PublicReasoningEvent[],
-  citedRefs: string[],
 ): PublicRunNode[] {
   const issued = new Set(observations.map(observation => observation.ref));
-  const interpreted = new Set(interpretations.map(event => event.obsRef));
-  const cited = new Set(citedRefs);
   return nodes.map((node, index) => {
     const ref = `obs-${index}`;
     let caseState: ProjectedNodeCaseState | undefined;
-    if (cited.has(ref)) caseState = 'cited';
-    else if (interpreted.has(ref)) caseState = 'interpreted';
-    else if (issued.has(ref)) caseState = 'evidence_issued';
+    if (issued.has(ref)) caseState = 'evidence_issued';
     else if (node.nodeStatus === 'active' && node.offeredFamilies?.length) caseState = 'choice_ready';
     else if (node.nodeStatus === 'completed') caseState = (node.objectiveProgress ?? 0) >= (node.objectiveTarget ?? 0) ? 'objective_met' : 'objective_failed';
-    else if (node.nodeStatus === 'active' && (node.method || node.evidenceCharges)) caseState = 'board_active';
-    else if (node.method) caseState = 'chosen';
-    else if (node.choiceOfferedAt) caseState = 'offered';
+    else if (node.nodeStatus === 'active' && node.evidenceCharges) caseState = 'board_active';
     return caseState ? { ...node, caseState } : node;
-  });
-}
-
-function projectReasoningEvents(value: unknown): PublicReasoningEvent[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap(item => {
-    const source = getRecord(item);
-    const obsRef = getObservationRef(source.obsRef ?? source.opaqueCardRef);
-    const latencyMs = getFiniteNumber(source.latencyMs);
-    if (!obsRef || latencyMs === undefined || typeof source.correct !== 'boolean') return [];
-    return [{
-      obsRef,
-      predictedEliminatedIds: getIntegerArray(source.predictedEliminatedIds ?? source.prediction),
-      actualEliminatedIds: getIntegerArray(source.actualEliminatedIds ?? source.actual),
-      correct: source.correct,
-      latencyMs,
-    }];
   });
 }
 
@@ -853,10 +722,6 @@ function getAllowedStringArray(value: unknown, allowed: ReadonlySet<string>): st
   return getStringArray(value).filter(item => allowed.has(item));
 }
 
-function getMethod(value: unknown): MethodType | undefined {
-  return typeof value === 'string' && METHOD_SET.has(value) ? value as MethodType : undefined;
-}
-
 function getEvidenceFamilies(value: unknown): EvidenceFamily[] {
   if (!Array.isArray(value)) return [];
   const result = value.filter(isEvidenceFamily);
@@ -869,23 +734,7 @@ function getUint32(value: unknown): number | undefined {
 }
 
 function getObservationRef(value: unknown): string | undefined {
-  return typeof value === 'string' && /^obs-[0-3]$/.test(value) ? value : undefined;
-}
-
-function projectObservationRefs(value: unknown): string[] {
-  return Array.isArray(value)
-    ? [...new Set(value.flatMap(item => {
-        const ref = getObservationRef(item);
-        return ref ? [ref] : [];
-      }))].sort()
-    : [];
-}
-
-function getMethodPair(value: unknown): [MethodType, MethodType] | undefined {
-  if (!Array.isArray(value) || value.length !== 2) return undefined;
-  const first = getMethod(value[0]);
-  const second = getMethod(value[1]);
-  return first && second && first !== second ? [first, second] : undefined;
+  return typeof value === 'string' && /^obs-[0-2]$/.test(value) ? value : undefined;
 }
 
 function getNumberRecord(value: unknown): Record<string, number> {

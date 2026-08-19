@@ -1,6 +1,6 @@
 # Interface: EcoregionFoundPoint
 
-Defined in: [src/types/ecoregions.ts:58](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L58)
+Defined in: [src/types/ecoregions.ts:58](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L58)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/ecoregions.ts:58](https://github.com/kc0588615/phaser-jun
 
 > **animal\_icon**: `string`
 
-Defined in: [src/types/ecoregions.ts:64](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L64)
+Defined in: [src/types/ecoregions.ts:64](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L64)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/ecoregions.ts:64](https://github.com/kc0588615/phaser-jun
 
 > **animal\_type**: `string`
 
-Defined in: [src/types/ecoregions.ts:63](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L63)
+Defined in: [src/types/ecoregions.ts:63](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L63)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/ecoregions.ts:63](https://github.com/kc0588615/phaser-jun
 
 > **common\_name**: `string` \| `null`
 
-Defined in: [src/types/ecoregions.ts:61](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L61)
+Defined in: [src/types/ecoregions.ts:61](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L61)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/types/ecoregions.ts:61](https://github.com/kc0588615/phaser-jun
 
 > **discovered\_at**: `string`
 
-Defined in: [src/types/ecoregions.ts:67](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L67)
+Defined in: [src/types/ecoregions.ts:67](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L67)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/types/ecoregions.ts:67](https://github.com/kc0588615/phaser-jun
 
 > **discovery\_id**: `string`
 
-Defined in: [src/types/ecoregions.ts:59](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L59)
+Defined in: [src/types/ecoregions.ts:59](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L59)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/types/ecoregions.ts:59](https://github.com/kc0588615/phaser-jun
 
 > **lat**: `number`
 
-Defined in: [src/types/ecoregions.ts:66](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L66)
+Defined in: [src/types/ecoregions.ts:66](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L66)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/types/ecoregions.ts:66](https://github.com/kc0588615/phaser-jun
 
 > **lon**: `number`
 
-Defined in: [src/types/ecoregions.ts:65](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L65)
+Defined in: [src/types/ecoregions.ts:65](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L65)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/types/ecoregions.ts:65](https://github.com/kc0588615/phaser-jun
 
 > **scientific\_name**: `string` \| `null`
 
-Defined in: [src/types/ecoregions.ts:62](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L62)
+Defined in: [src/types/ecoregions.ts:62](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L62)
 
 ***
 
@@ -72,4 +72,4 @@ Defined in: [src/types/ecoregions.ts:62](https://github.com/kc0588615/phaser-jun
 
 > **species\_id**: `number`
 
-Defined in: [src/types/ecoregions.ts:60](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L60)
+Defined in: [src/types/ecoregions.ts:60](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L60)

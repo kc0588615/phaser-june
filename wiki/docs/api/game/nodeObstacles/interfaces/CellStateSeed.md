@@ -1,6 +1,6 @@
 # Interface: CellStateSeed
 
-Defined in: [src/game/nodeObstacles.ts:26](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/nodeObstacles.ts#L26)
+Defined in: [src/game/nodeObstacles.ts:26](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/nodeObstacles.ts#L26)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/game/nodeObstacles.ts:26](https://github.com/kc0588615/phaser-j
 
 > **state**: [`BoardCellState`](../../boardTypes/interfaces/BoardCellState.md)
 
-Defined in: [src/game/nodeObstacles.ts:29](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/nodeObstacles.ts#L29)
+Defined in: [src/game/nodeObstacles.ts:29](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/nodeObstacles.ts#L29)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/game/nodeObstacles.ts:29](https://github.com/kc0588615/phaser-j
 
 > **x**: `number`
 
-Defined in: [src/game/nodeObstacles.ts:27](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/nodeObstacles.ts#L27)
+Defined in: [src/game/nodeObstacles.ts:27](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/nodeObstacles.ts#L27)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [src/game/nodeObstacles.ts:27](https://github.com/kc0588615/phaser-j
 
 > **y**: `number`
 
-Defined in: [src/game/nodeObstacles.ts:28](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/nodeObstacles.ts#L28)
+Defined in: [src/game/nodeObstacles.ts:28](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/nodeObstacles.ts#L28)

@@ -1,7 +1,7 @@
 # Variable: ACTIVE\_GEM\_TYPES
 
-> `const` **ACTIVE\_GEM\_TYPES**: (`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`)[]
+> `const` **ACTIVE\_GEM\_TYPES**: readonly [`LootGemType`](../type-aliases/LootGemType.md)[]
 
-Defined in: [src/expedition/domain.ts:48](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/domain.ts#L48)
+Defined in: [src/expedition/domain.ts:30](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L30)
 
-The only loot ids allowed to spawn in the investigation-method board.
+Asset-backed evidence gems available before v3 family locks narrow the pool.

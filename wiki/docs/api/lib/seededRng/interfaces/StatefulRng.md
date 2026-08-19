@@ -1,6 +1,6 @@
 # Interface: StatefulRng
 
-Defined in: [src/lib/seededRng.ts:13](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/seededRng.ts#L13)
+Defined in: [src/lib/seededRng.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/seededRng.ts#L13)
 
 ## Methods
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/seededRng.ts:13](https://github.com/kc0588615/phaser-june/b
 
 > **getState**(): `number`
 
-Defined in: [src/lib/seededRng.ts:15](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/seededRng.ts#L15)
+Defined in: [src/lib/seededRng.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/seededRng.ts#L15)
 
 #### Returns
 
@@ -20,7 +20,7 @@ Defined in: [src/lib/seededRng.ts:15](https://github.com/kc0588615/phaser-june/b
 
 > **next**(): `number`
 
-Defined in: [src/lib/seededRng.ts:14](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/seededRng.ts#L14)
+Defined in: [src/lib/seededRng.ts:14](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/seededRng.ts#L14)
 
 #### Returns
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/seededRng.ts:14](https://github.com/kc0588615/phaser-june/b
 
 > **setState**(`state`): `void`
 
-Defined in: [src/lib/seededRng.ts:16](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/seededRng.ts#L16)
+Defined in: [src/lib/seededRng.ts:16](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/seededRng.ts#L16)
 
 #### Parameters
 

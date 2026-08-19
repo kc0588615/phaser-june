@@ -2,7 +2,7 @@
 
 > **parseBoardCheckpoint**(`value`, `expected?`): [`BoardCheckpointV1`](../../boardTypes/interfaces/BoardCheckpointV1.md) \| `null`
 
-Defined in: [src/game/boardCheckpoint.ts:41](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/boardCheckpoint.ts#L41)
+Defined in: [src/game/boardCheckpoint.ts:41](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/boardCheckpoint.ts#L41)
 
 ## Parameters
 

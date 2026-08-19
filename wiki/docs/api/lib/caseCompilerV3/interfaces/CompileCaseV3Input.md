@@ -1,6 +1,6 @@
 # Interface: CompileCaseV3Input
 
-Defined in: [src/lib/caseCompilerV3.ts:54](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L54)
+Defined in: [src/lib/caseCompilerV3.ts:54](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L54)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/caseCompilerV3.ts:54](https://github.com/kc0588615/phaser-j
 
 > **boardSeeds**: readonly `number`[]
 
-Defined in: [src/lib/caseCompilerV3.ts:62](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L62)
+Defined in: [src/lib/caseCompilerV3.ts:62](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L62)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/caseCompilerV3.ts:62](https://github.com/kc0588615/phaser-j
 
 > **cardsBySpecies**: `ReadonlyMap`\<`number`, readonly [`CompilerEvidenceFamilyCard`](CompilerEvidenceFamilyCard.md)[]\>
 
-Defined in: [src/lib/caseCompilerV3.ts:58](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L58)
+Defined in: [src/lib/caseCompilerV3.ts:58](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L58)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/caseCompilerV3.ts:58](https://github.com/kc0588615/phaser-j
 
 > **cascadeHints**: readonly [`CompilerCascadeHint`](CompilerCascadeHint.md)[]
 
-Defined in: [src/lib/caseCompilerV3.ts:60](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L60)
+Defined in: [src/lib/caseCompilerV3.ts:60](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L60)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/caseCompilerV3.ts:60](https://github.com/kc0588615/phaser-j
 
 > **caseSeed**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:55](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L55)
+Defined in: [src/lib/caseCompilerV3.ts:55](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L55)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/lib/caseCompilerV3.ts:55](https://github.com/kc0588615/phaser-j
 
 > `optional` **forcedAnswerId**: `number`
 
-Defined in: [src/lib/caseCompilerV3.ts:64](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L64)
+Defined in: [src/lib/caseCompilerV3.ts:64](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L64)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/lib/caseCompilerV3.ts:64](https://github.com/kc0588615/phaser-j
 
 > **gisPrior**: `ReadonlyMap`\<`number`, `number`\>
 
-Defined in: [src/lib/caseCompilerV3.ts:61](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L61)
+Defined in: [src/lib/caseCompilerV3.ts:61](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L61)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/lib/caseCompilerV3.ts:61](https://github.com/kc0588615/phaser-j
 
 > **hintsBySpecies**: `ReadonlyMap`\<`number`, readonly [`CompilerEvidenceFamilyHint`](CompilerEvidenceFamilyHint.md)[]\>
 
-Defined in: [src/lib/caseCompilerV3.ts:59](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L59)
+Defined in: [src/lib/caseCompilerV3.ts:59](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L59)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/lib/caseCompilerV3.ts:59](https://github.com/kc0588615/phaser-j
 
 > **mapView**: [`ExpeditionMapView`](../../../expedition/mapView/interfaces/ExpeditionMapView.md)
 
-Defined in: [src/lib/caseCompilerV3.ts:63](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L63)
+Defined in: [src/lib/caseCompilerV3.ts:63](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L63)
 
 ***
 
@@ -72,12 +72,12 @@ Defined in: [src/lib/caseCompilerV3.ts:63](https://github.com/kc0588615/phaser-j
 
 > **prototypeSpeciesIds**: readonly `number`[]
 
-Defined in: [src/lib/caseCompilerV3.ts:56](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L56)
+Defined in: [src/lib/caseCompilerV3.ts:56](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L56)
 
 ***
 
 ### speciesPool
 
-> **speciesPool**: readonly [`CompilerSpeciesProfile`](../../caseCompiler/interfaces/CompilerSpeciesProfile.md)[]
+> **speciesPool**: readonly [`CompilerSpeciesProfile`](../../caseTraits/interfaces/CompilerSpeciesProfile.md)[]
 
-Defined in: [src/lib/caseCompilerV3.ts:57](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L57)
+Defined in: [src/lib/caseCompilerV3.ts:57](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L57)

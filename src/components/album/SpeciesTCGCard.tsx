@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Image from 'next/image';
 import { RotateCw } from 'lucide-react';
 import { ExpeditionRouteMap } from '@/components/ExpeditionRouteMap';
 import { AFFINITY_TYPES, getAffinityDefinition, type AffinityType } from '@/expedition/affinities';
@@ -171,9 +172,23 @@ export default function SpeciesTCGCard({
               }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={cn('text-7xl drop-shadow-2xl', !isDiscovered && 'opacity-15 grayscale')} aria-hidden="true">
-                {isDiscovered ? classMeta.emoji : '?'}
-              </span>
+              {isDiscovered ? (
+                <div className="relative grid size-24 place-items-center">
+                  <span className="absolute text-7xl opacity-30 grayscale" aria-hidden="true">{classMeta.emoji}</span>
+                  <Image
+                    src={`/api/species/cards/${species.id}/plate`}
+                    alt={`${species.common_name || species.scientific_name || 'Species'} field plate`}
+                    width={64}
+                    height={64}
+                    unoptimized
+                    className="relative size-24 object-contain drop-shadow-2xl [image-rendering:pixelated]"
+                    draggable={false}
+                    onError={event => event.currentTarget.remove()}
+                  />
+                </div>
+              ) : (
+                <span className="text-7xl opacity-15 grayscale drop-shadow-2xl" aria-hidden="true">?</span>
+              )}
               <span className="mt-1 font-mono text-[8px] uppercase tracking-[0.24em] text-slate-500">
                 {isDiscovered ? `${classMeta.label} field plate` : 'Undiscovered'}
               </span>

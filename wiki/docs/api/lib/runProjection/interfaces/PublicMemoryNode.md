@@ -1,6 +1,6 @@
 # Interface: PublicMemoryNode
 
-Defined in: [src/lib/runProjection.ts:155](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L155)
+Defined in: [src/lib/runProjection.ts:126](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L126)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runProjection.ts:155](https://github.com/kc0588615/phaser-j
 
 > `optional` **movesUsed**: `number`
 
-Defined in: [src/lib/runProjection.ts:162](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L162)
+Defined in: [src/lib/runProjection.ts:133](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L133)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runProjection.ts:162](https://github.com/kc0588615/phaser-j
 
 > `optional` **nodeOrder**: `number`
 
-Defined in: [src/lib/runProjection.ts:156](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L156)
+Defined in: [src/lib/runProjection.ts:127](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L127)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/runProjection.ts:156](https://github.com/kc0588615/phaser-j
 
 > `optional` **nodeStatus**: `string`
 
-Defined in: [src/lib/runProjection.ts:158](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L158)
+Defined in: [src/lib/runProjection.ts:129](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L129)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/runProjection.ts:158](https://github.com/kc0588615/phaser-j
 
 > `optional` **nodeType**: `string`
 
-Defined in: [src/lib/runProjection.ts:157](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L157)
+Defined in: [src/lib/runProjection.ts:128](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L128)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/lib/runProjection.ts:157](https://github.com/kc0588615/phaser-j
 
 > `optional` **objectiveProgress**: `number`
 
-Defined in: [src/lib/runProjection.ts:160](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L160)
+Defined in: [src/lib/runProjection.ts:131](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L131)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/lib/runProjection.ts:160](https://github.com/kc0588615/phaser-j
 
 > `optional` **objectiveTarget**: `number`
 
-Defined in: [src/lib/runProjection.ts:159](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L159)
+Defined in: [src/lib/runProjection.ts:130](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L130)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/lib/runProjection.ts:159](https://github.com/kc0588615/phaser-j
 
 > `optional` **obstacleFamily**: `string` \| `null`
 
-Defined in: [src/lib/runProjection.ts:163](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L163)
+Defined in: [src/lib/runProjection.ts:134](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L134)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/lib/runProjection.ts:163](https://github.com/kc0588615/phaser-j
 
 > `optional` **scoreEarned**: `number`
 
-Defined in: [src/lib/runProjection.ts:161](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L161)
+Defined in: [src/lib/runProjection.ts:132](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L132)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [src/lib/runProjection.ts:161](https://github.com/kc0588615/phaser-j
 
 > `optional` **waypoint**: `object`
 
-Defined in: [src/lib/runProjection.ts:164](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L164)
+Defined in: [src/lib/runProjection.ts:135](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L135)
 
 #### designationCategory?
 

@@ -2,7 +2,7 @@
 
 > **Checked against live DB: 2026-07-11** via WSL SSH tunnel (`127.0.0.1:55432` → Postgres).
 > Database name: **`phaser_june`**. One Postgres instance; GIS “datasets” are **schemas**, not separate databases.
-> Focus: tables and fields **utilized when a game is played** (map → mystery run → boards → evidence → guess).
+> Focus: tables and fields **utilized by the v3 expedition loop** (map → three evidence-family boards → guess).
 > Source of truth for app types: `src/db/schema/*`. Re-verify with `postgres-tunnel` skill after migrations.
 
 Related: [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [SHAPEFILE_BEST_PRACTICES.md](./SHAPEFILE_BEST_PRACTICES.md).
@@ -13,7 +13,7 @@ Related: [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [ACTION_RUN_SCHEMA_
 
 | Schema | Role | Approx rows (2026-07-11) |
 |---|---|---|
-| **`public`** | App/game tables | species 50 · runs 183 · nodes 952 · evidence_cards 42 · profiles 4 |
+| **`public`** | App/game tables | species, runs, nodes, evidence-family corpus, profiles |
 | **`oneearth`** | Bioregion polygons + legend colors | bioregion 827 |
 | **`unesco`** | Rivers | world_rivers 5 104 |
 | **`wpda`** | Protected areas | polygons ~307k · points 7 663 |
@@ -33,16 +33,16 @@ MAP CLICK (GIS READ)
         │
         ▼
 POST /api/runs (WRITE)
-  species + species_deduction_profiles + evidence_cards  → case compiler
+  species + species_deduction_profiles
+  + evidence_family_cards / evidence_family_hints / cascade_hints → v3 compiler
   INSERT eco_run_sessions + eco_run_nodes
   casePrivate / casePublic / board seeds → session.metadata jsonb
         │
         ▼
-BOARDS (client Phaser; durable checkpoints only)
-  PATCH  /api/runs/:id                 → metadata + optional node progress
-  POST   /api/runs/:id/nodes/:n/complete → eco_run_nodes + session score
-  POST   /api/runs/:id/observations    → evidence_cards R; metadata.observationsIssued
-  PATCH  reasoningEvents               → metadata.reasoningEvents
+THREE BOARDS (client Phaser; six moves each)
+  POST /api/runs/:id/evidence-progress → board checkpoint, charges, hints
+  POST /api/runs/:id/evidence-choice   → selected family, elimination, node advance
+  metadata.evidenceApplications stores the three applied family cards
         │
         ▼
 POST /api/runs/:id/guess (TERMINAL WRITE)
@@ -73,7 +73,8 @@ erDiagram
   species ||--o{ species_cards : "card for"
   species ||--o{ species_card_unlocks : "unlock of"
   species ||--o| species_deduction_profiles : "tags for"
-  species ||--o{ evidence_cards : "deck for"
+  species ||--o{ evidence_family_cards : "family cards for"
+  species ||--o{ evidence_family_hints : "progress hints for"
   species ||--o{ species_deduction_clues : "legacy clues"
   species ||--o{ species_facts : "facts"
   species ||--o{ species_ecoregions : "overlaps"
@@ -140,15 +141,25 @@ erDiagram
     int guessed_species_id FK
   }
 
-  evidence_cards {
+  evidence_family_cards {
     bigint id PK
     int species_id FK
-    text method
+    text family
     text observation_text
     text inference_text
     text trait_category
-    text_array compare_tags
-    bool is_signature
+    text compare_tag
+    text trait_phrase
+    text bonus_fact_text
+  }
+
+  evidence_family_hints {
+    bigint id PK
+    int species_id FK
+    text family
+    smallint sequence_index
+    text hint_text
+    text weak_tag
   }
 
   species_deduction_profiles {
@@ -182,12 +193,13 @@ profiles ──┬── player_game_sessions
 
 species ──┬── iucn (iucn_id = id_no)           [ranges — spatial R]
           ├── species_deduction_profiles       [elimination tags]
-          ├── evidence_cards                   [issued observations — 013]
+          ├── evidence_family_cards            [v3 hard evidence]
+          ├── evidence_family_hints            [v3 board hints]
           ├── species_deduction_clues          [legacy free-play deck]
           ├── species_facts / species_ecoregions
           └── species_combat_traits            [dead combat remnant]
 
-eco_run_sessions.metadata ──► casePrivate | casePublic | observationsIssued | reasoningEvents
+eco_run_sessions.metadata ──► casePrivate | casePublic | evidenceApplications
                               (private answer never projected to client)
 ```
 
@@ -197,11 +209,11 @@ eco_run_sessions.metadata ──► casePrivate | casePublic | observationsIssue
 
 | Tier | Tables | Role during a played game |
 |---|---|---|
-| **A — every modern mystery run** | `eco_run_sessions`, `eco_run_nodes`, `species`, `species_deduction_profiles`, `evidence_cards`, `iucn` + GIS schemas on map click | Core loop |
+| **A — every v3 mystery run** | `eco_run_sessions`, `eco_run_nodes`, `species`, `species_deduction_profiles`, `evidence_family_cards`, `evidence_family_hints`, `cascade_hints`, `iucn` + GIS schemas on map click | Core loop |
 | **B — finish / resume / list** | `run_memories`, `profiles` | Recap & ownership |
 | **C — auth rewards** | `player_species_discoveries`, `species_cards`, `species_card_unlocks`, optional `player_game_sessions` / `player_stats` | Discovery persistence |
 | **D — map flavor** | `habitat_colormap`, rivers / PA / lakes / wetlands / bioregion | Node scoring & map UI (not board cells) |
-| **E — legacy / unused this loop** | `species_deduction_clues` (if cards-only), `species_combat_traits`, `eco_node_attempts` (0 rows), `eco_node_gis_samples` (0 rows), old metadata wallets | Schema present, not hot path |
+| **E — legacy / unused this loop** | `evidence_cards`, `species_deduction_clues`, `species_combat_traits`, `eco_node_attempts` (0 rows), `eco_node_gis_samples` (0 rows), old metadata wallets | Database history only; no runtime mapping or route |
 
 ---
 
@@ -218,7 +230,7 @@ eco_run_sessions.metadata ──► casePrivate | casePublic | observationsIssue
 | `game_session_id` | uuid → `player_game_sessions` | Optional outer session |
 | `run_status` | text | `active` → terminal states |
 | `run_seed` | bigint | Case RNG (private path) |
-| `node_count_planned` | smallint | v0: 3 |
+| `node_count_planned` | smallint | v3: 3 |
 | `node_index_current` | smallint | Cursor |
 | `selected_lng` / `selected_lat` | float8 | Map click |
 | `selected_point` | geometry(Point,4326) | Spatial index |
@@ -231,7 +243,10 @@ eco_run_sessions.metadata ──► casePrivate | casePublic | observationsIssue
 | `started_at` / `ended_at` | timestamptz | Lifecycle |
 | **`metadata`** | **jsonb** | **Primary case store** |
 
-##### `metadata` keys (live inventory 2026-07-11)
+##### `metadata` keys
+
+The counts below are a historical 2026-07-11 inventory. Current v3 writes only the case snapshots,
+GIS/resume data, `evidenceApplications`, guess metrics, and terminal summary.
 
 | Key | n sessions | Role |
 |---|---:|---|
@@ -244,24 +259,23 @@ eco_run_sessions.metadata ──► casePrivate | casePublic | observationsIssue
 | `correctSpeciesId` | 68 | **Legacy** answer leak surface (old runs) |
 | `resourceWallet` / `gemWallet` / `clueFragments` | legacy | Pre-013 wallets |
 | `finalScore` / `deductionSummary` | ~25 | Terminal scoring |
-| **`casePrivate`** | 2 | Answer id, card chain, private seed (server only) |
-| **`casePublic`** | 2 | Candidate ids, methods, public `boardSeeds` |
-| **`observationsIssued`** | 2 | Issued evidence refs + card ids |
-| **`reasoningEvents`** | 2 | Interpretations / eliminations |
+| **`casePrivate`** | 2 | v3 answer id, family card/hint ids, private seed (server only) |
+| **`casePublic`** | 2 | v3 candidate ids, public board seeds, map view |
+| **`evidenceApplications`** | current | Three selected families and server-derived eliminations |
 
-New Plan-013 runs put case truth in `casePrivate` / `casePublic`. Older rows still carry `correctSpeciesId` and wallet blobs.
+Older rows still carry `correctSpeciesId`, wallets, issued observations, and reasoning blobs. They are not parsed as resumable expeditions.
 
-#### `eco_run_nodes` — method sites (3 per modern run)
+#### `eco_run_nodes` — evidence-family sites (3 per v3 run)
 
 | Column | Type | Play use |
 |---|---|---|
 | `id` | uuid PK | Node id |
 | `run_id` | uuid → sessions | Parent run |
 | `node_order` | smallint | 1..n (unique with run) |
-| `node_type` | text | Method / family type |
+| `node_type` | text | GIS site type |
 | `node_status` | text | `locked` / `active` / `completed` |
-| `objective_type` | text | e.g. method match |
-| `objective_target` / `objective_progress` | int | Match target |
+| `objective_type` | text | `evidence_family` |
+| `objective_target` / `objective_progress` | int | Six-move segment progress |
 | `move_budget` / `moves_used` | int | Per-board budget |
 | `board_seed` | bigint | Deterministic board |
 | `board_sampling_method` | text | GIS sample mode |
@@ -271,7 +285,7 @@ New Plan-013 runs put case truth in `casePrivate` / `casePublic`. Older rows sti
 | `wager_tier` / `wager_result` | text | Legacy wager |
 | `guessed_species_id` | int → species | Written on `/guess` |
 | `guess_correct` | bool | Guess outcome |
-| `score_earned` | int | Banked at complete |
+| `score_earned` | int | Banked at evidence choice |
 | `dominant_habitat` | text | Habitat label |
 | `center_point` / `bbox` | geometry | Spatial context |
 | `started_at` / `ended_at` / `created_at` / `updated_at` | timestamptz | Timing |
@@ -347,11 +361,22 @@ Live status mix: locked ~493 · active ~124 · completed ~335 (includes multi-no
 
 **R** run create, `/api/species/profiles`, guess contrastive feedback.
 
-#### `evidence_cards` (42) — Plan 013 deck
+#### v3 evidence-family corpus
+
+`evidence_family_cards` stores one reviewed hard clue per species and family
+(`relatives`, `body`, `behavior`, `habits`, `place`). Its runtime fields are `species_id`, `family`,
+`observation_text`, `inference_text`, `trait_category`, `compare_tag`, `trait_phrase`, and
+`bonus_fact_text`.
+
+`evidence_family_hints` stores ordered weak hints per species/family. `cascade_hints` stores the
+global ordered cascade-hint feed. Run creation snapshots only their private ids; progress and choice
+routes hydrate public text server-side.
+
+#### `evidence_cards` (42) — retired v1/v2 deck
 
 | Column | Type | Role |
 |---|---|---|
-| `id` | bigint identity PK | Card id stored in `observationsIssued` |
+| `id` | bigint identity PK | Historical card id |
 | `species_id` | int → species | Answer / pool species |
 | `method` | text | `track\|observe\|listen\|survey\|analyze` |
 | `observation_text` | text | Pre-commit player text |
@@ -367,7 +392,7 @@ Live status mix: locked ~493 · active ~124 · completed ~335 (includes multi-no
 #### `species_deduction_clues` (371) — legacy
 
 `id`, `species_id`, `category`, `label`, `compare_tags`, `reveal_order`, `unlock_mode`, `base_cost`, `is_filtering`.  
-Older free-play / pre-compiler path. Observation issue prefers **`evidence_cards`**.
+Older free-play / pre-compiler path. No v3 expedition route reads this table.
 
 #### Supporting species tables
 
@@ -413,13 +438,15 @@ Guest runs may omit `player_id` and skip discovery/card writes.
 
 ---
 
-## 6. Live content snapshot (2026-07-11)
+## 6. Historical content snapshot (2026-07-11)
+
+This predates the v3 evidence-family corpus; re-query before using it for capacity decisions.
 
 | Entity | Count |
 |---|---:|
 | Species | 50 |
 | Deduction profiles | 28 |
-| Evidence cards | 42 |
+| Retired v1/v2 evidence cards | 42 |
 | Deduction clues (legacy) | 371 |
 | Run sessions | 183 (**2** with `casePrivate`/`casePublic`) |
 | Run nodes | 952 |
@@ -435,10 +462,10 @@ Guest runs may omit `player_id` and skip discovery/card writes.
 | Concern | Location |
 |---|---|
 | Schema | `src/db/schema/{game,player,species,gis}.ts` |
-| Run create / case | `src/app/api/runs/route.ts`, `src/lib/caseCompiler.ts` |
+| Run create / case | `src/app/api/runs/route.ts`, `src/lib/caseCompilerV3.ts` |
 | Projection (no private leak) | `src/lib/runProjection.ts` |
 | Case state helpers | `src/lib/runCaseState.ts` |
-| Observations / guess | `src/app/api/runs/[runId]/observations`, `.../guess` |
+| Evidence / guess | `src/app/api/runs/[runId]/evidence-progress`, `.../evidence-choice`, `.../guess` |
 | Map at-point | `src/app/api/protected-areas/at-point`, `src/app/api/species/at-point` |
 | Node generation | `src/lib/nodeScoring.ts` |
 | Client run loop | `src/contexts/ExpeditionContext.tsx` |

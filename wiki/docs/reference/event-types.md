@@ -15,26 +15,22 @@ Source of truth: `src/game/EventBus.ts`.
 |-------|-----------|---------|
 | `current-scene-ready` | Phaser to React | Game scene is initialized. |
 | `map-location-selected` | React to Phaser | Start or refresh board from selected map/node data. |
-| `game-score-updated` | Phaser to React | Legacy score/move update payload. |
-| `game-over` | Phaser to React | Board run ended. |
 | `clue-revealed` | Phaser to React | Species clue is revealed from board play. |
 | `new-game-started` | Phaser to React | Mystery species context is ready. |
 | `game-reset` | Phaser/React | Reset run/game UI. |
 | `no-species-found` | Phaser to React | Selected map point has no playable species. |
 | `all-clues-revealed` | Phaser to React | Current species has all clues. |
 | `all-species-completed` | Phaser to React | Location species queue is complete. |
-| `species-guess-submitted` | React to Phaser | Player submitted a species guess. |
 | `show-species-list` | React to React | Switch layout to species list. |
 | `game-hud-updated` | Phaser to React | Current score, moves, streak, multiplier. |
 | `game-restart` | React to Phaser | Restart current board flow. |
 | `expedition-data-ready` | React to React | Map click produced expedition data and briefing inputs. |
 | `expedition-start` | React to React | Player started the staged expedition. |
-| `node-advance-requested` | Phaser/UI to React | Current node is ready to complete or escape. |
-| `node-complete` | React to Phaser/UI | Node completion was validated and persisted. |
+| `node-complete` | React to Phaser/UI | Evidence choice completed; advance to the next v3 board. |
 | `route-progress-updated` | React to MapLibre/UI | Route slot changed. |
-| `node-objective-updated` | Phaser to React | Required-gem objective progress changed. |
-| `evidence-move-resolved` | Phaser to React | V3 direct-clear totals and full board checkpoint are ready to persist. |
-| `evidence-progress-committed` | React to Phaser | V3 checkpoint is durable; board input may resume before move six. |
+| `node-objective-updated` | Phaser to React | Six-move segment progress changed. |
+| `evidence-move-resolved` | Phaser to React | v3 direct-clear totals and full board checkpoint are ready to persist. |
+| `evidence-progress-committed` | React to Phaser | v3 checkpoint is durable; board input may resume before move six. |
 | `auth-user-ready` | React to React | Authenticated player/session IDs are available. |
 
 ## Core Payloads
@@ -53,17 +49,17 @@ Source of truth: `src/game/EventBus.ts`.
   moveBudget?: number;
   obstacles?: NodeObstacle[];
   obstacleFamily?: ObstacleFamily | null;
-  counterGem?: ActionGemType | null;
-  requiredGems?: GemType[];
   activeAffinities?: AffinityType[];
   objectiveTarget?: number;
   objectiveProgress?: number;
-  bestTargetMatchLength?: number;
   nodeIndex?: number;
   nodeType?: string;
   events?: string[];
+  boardSeed?: number;
   boardContext?: NodeBoardContext;
   boardConfig?: BoardSpawnConfig;
+  candidateIds?: number[];
+  candidateSpecies?: Species[];
   boardCheckpoint?: BoardCheckpointV1;
 }
 ```
@@ -83,23 +79,12 @@ Source of truth: `src/game/EventBus.ts`.
 }
 ```
 
-### `node-advance-requested`
-
-```ts
-{
-  nodeIndex: number;
-  reason: 'victory' | 'escaped';
-  source: 'game' | 'panel';
-}
-```
-
 ### `node-objective-updated`
 
 ```ts
 {
   progress: number;
   target: number;
-  bestTargetMatchLength: number;
 }
 ```
 

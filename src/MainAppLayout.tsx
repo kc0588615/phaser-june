@@ -23,10 +23,8 @@ import { BottomTabBar } from './components/BottomTabBar';
 import type { BaseTab } from './components/BottomTabBar';
 import { ExpeditionBriefing } from './components/ExpeditionBriefing';
 import { FieldNotebook } from './components/FieldNotebook';
-import { GemSignalStrip } from './components/GemSignalStrip';
 import { CandidateRoster } from './components/CandidateRoster';
 import { EvidenceFamilyRail } from './components/EvidenceFamilyRail';
-import { FieldHintTicker } from './components/FieldHintTicker';
 import { EvidenceOnboarding } from './components/EvidenceOnboarding';
 import { ExpeditionLauncher } from './components/ExpeditionLauncher';
 import { ExpeditionMapHud } from './components/ExpeditionMapHud';
@@ -61,7 +59,7 @@ function MainAppLayoutInner() {
     const {
         runState, boardOpacity,
         handleRunResume, handleRunReset,
-        handleCommitInterpretation, handleChooseMethod, handleChooseEvidenceFamily, handleGuess,
+        handleChooseEvidenceFamily, handleGuess,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -82,11 +80,11 @@ function MainAppLayoutInner() {
     const inRun = runState.phase === 'mystery';
     const showBriefing = runState.phase === 'briefing';
     const showComplete = runState.phase === 'complete';
-    // v3 runs swap the exploration globe for the dedicated regional HUD.
+    // Runs swap the exploration globe for the dedicated regional HUD.
     // Both map components stay mounted so their state/listeners survive.
     // The HUD also stays up through a captured completion so it can fetch and
     // animate the answer-range reveal (the range API unlocks on completion).
-    const showV3MapHud = runState.caseState?.version === 3
+    const showMapHud = runState.caseState != null
         && (inRun || (showComplete && runState.caseState.guessResult === 'correct'));
     const inExpedition = inRun || showBriefing || showComplete;
     const useSplitLayout = inRun;
@@ -147,21 +145,21 @@ function MainAppLayoutInner() {
             }}>
                 <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     <div id="map-wrapper" style={mapContainerStyle}>
-                        {/* Exploration globe — hidden, paused, but not unmounted under the v3 HUD. */}
+                        {/* Exploration globe — hidden, paused, but not unmounted under the run HUD. */}
                         <div style={{
-                            display: viewMode === 'map' && !showV3MapHud ? 'block' : 'none',
+                            display: viewMode === 'map' && !showMapHud ? 'block' : 'none',
                             height: '100%', width: '100%'
                         }}>
                             <MapLibreExploreMap
                                 expeditionPhase={runState.phase}
                                 activeWaypoint={activeWaypoint}
-                                active={viewMode === 'map' && !showV3MapHud}
+                                active={viewMode === 'map' && !showMapHud}
                                 onSearchOpen={() => { setViewMode('species'); setBaseTab('field-guide'); }}
                             />
                         </div>
 
-                        {/* v3 2D map HUD (mystery phase + captured completion) */}
-                        {showV3MapHud && (
+                        {/* 2D map HUD (mystery phase + captured completion) */}
+                        {showMapHud && (
                             <div style={{
                                 display: viewMode === 'map' ? 'flex' : 'none',
                                 height: '100%', width: '100%', minHeight: 0,
@@ -210,26 +208,15 @@ function MainAppLayoutInner() {
 
                         <PhaserGame ref={phaserRef} currentActiveScene={handlePhaserSceneReady} />
 
-                        {inRun && runState.caseState?.version !== 3 && (
-                            <GemSignalStrip runState={runState} />
-                        )}
-
-                        {inRun && runState.caseState && (
-                            runState.caseState.version !== 3
-                            || runState.caseState.stage === 'choose_evidence'
-                        ) && (
+                        {inRun && runState.caseState?.stage === 'choose_evidence' && (
                             <FieldNotebook
                                 runState={runState}
-                                onCommitInterpretation={handleCommitInterpretation}
-                                onChooseMethod={handleChooseMethod}
                                 onChooseEvidenceFamily={handleChooseEvidenceFamily}
-                                onGuess={handleGuess}
                             />
                         )}
 
-                        {inRun && runState.caseState?.version === 3 && (
+                        {inRun && runState.caseState && (
                             <>
-                                <FieldHintTicker feed={runState.caseState.hintFeed} />
                                 <EvidenceFamilyRail caseState={runState.caseState} onChoose={handleChooseEvidenceFamily} />
                                 <CandidateRoster runState={runState} onGuess={handleGuess} />
                                 <EvidenceOnboarding />

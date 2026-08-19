@@ -2,7 +2,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyHints } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
-import { applyEvidenceProgress, deriveCascadeHintId, deriveEvidenceHintIds, parseEvidenceProgressInput, parseV3NodeEvidenceState } from '@/lib/evidenceRunState';
+import { applyEvidenceProgress, deriveCascadeHintId, deriveEvidenceHintIds, getEvidenceHintFamilies, parseEvidenceProgressInput, parseV3NodeEvidenceState, shouldIssueCascadeHint } from '@/lib/evidenceRunState';
 import { getRecord, isUuid, parsePrivateCase } from '@/lib/runCaseState';
 import { parsePublicCaseSnapshot } from '@/lib/runProjection';
 
@@ -37,10 +37,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const applied = applyEvidenceProgress(state, input);
       if ('error' in applied) return response(409, { reason: applied.error });
       const duplicate = input.moveNumber === node.movesUsed;
-      const hintIds = duplicate ? applied.state.lastHintIds : deriveEvidenceHintIds(state.hintCounts, input.directMatchFamilies, privateCase.familyHintIds);
+      const hintFamilies = getEvidenceHintFamilies(input);
+      const hintIds = duplicate ? applied.state.lastHintIds : deriveEvidenceHintIds(state.hintCounts, hintFamilies, privateCase.familyHintIds);
       const cascadeHintId = duplicate
         ? applied.state.lastCascadeHintId
-        : input.cascadeCount > 0
+        : shouldIssueCascadeHint(input)
           ? deriveCascadeHintId(state.cascadeHintCount, privateCase.cascadeHintIds) ?? undefined
           : undefined;
       const persistedState = { ...applied.state, lastHintIds: hintIds, ...(cascadeHintId ? { lastCascadeHintId: cascadeHintId } : {}) };

@@ -2,7 +2,7 @@
 
 > **getOrderDisplayName**(`order`): `string`
 
-Defined in: [src/utils/ecoregion.ts:130](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/utils/ecoregion.ts#L130)
+Defined in: [src/utils/ecoregion.ts:138](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/utils/ecoregion.ts#L138)
 
 Get display name for an order
 

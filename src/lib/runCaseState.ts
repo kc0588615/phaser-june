@@ -1,11 +1,7 @@
-import { METHOD_TYPES, type MethodType } from '@/expedition/domain';
-import { getMethodOfferAtPath, isMethodType } from '@/expedition/caseOffers';
-import { evidenceTierForMatchLength, isBestTargetMatchLength, type EvidenceQualityTier } from '@/expedition/evidenceQuality';
-import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseCompiler';
-import type { PublicCaseV2 } from '@/lib/runProjection';
+import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseTraits';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
+import type { FieldFact } from '@/types/expedition';
 
-const METHOD_SET = new Set<string>(METHOD_TYPES);
 const CATEGORY_SET = new Set<string>(CASE_TRAIT_CATEGORIES);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -27,24 +23,8 @@ export const RUN_CHECKPOINT_LIMITS = {
   objectiveProgress: 1_000_000,
   latencyMs: 3_600_000,
   candidateId: 2_147_483_647,
-  bestTargetMatchLength: 8,
   choiceJustificationLength: 500,
 } as const;
-
-export interface PrivateCaseV1 {
-  version: 1;
-  answerId: number;
-  chainCardIds: number[];
-  caseSeed: string;
-}
-
-export interface PrivateCaseV2 {
-  version: 2;
-  answerId: number;
-  caseSeed: string;
-  cardIdMatrix: Record<MethodType, [number, number, number]>;
-  signatureCardId: number;
-}
 
 export interface PrivateCaseV3 {
   version: 3;
@@ -55,7 +35,7 @@ export interface PrivateCaseV3 {
   cascadeHintIds: number[];
 }
 
-export type PrivateCaseSnapshot = PrivateCaseV1 | PrivateCaseV2 | PrivateCaseV3;
+export type PrivateCaseSnapshot = PrivateCaseV3;
 
 export interface V3EvidenceApplicationRecord {
   nodeIndex: number;
@@ -79,23 +59,7 @@ export interface EvidenceFamilyCardContent {
   compareTag: string;
 }
 
-export interface IssuedObservationRecord {
-  nodeIndex: number;
-  ref: string;
-  cardId: number;
-  issuedAt: string;
-  qualityTier?: EvidenceQualityTier;
-}
-
-export interface ReasoningEventCommit {
-  obsRef: string;
-  predictedEliminatedIds: number[];
-  actualEliminatedIds: number[];
-  correct: boolean;
-  latencyMs: number;
-}
-
-/** Client-safe elimination: compares one public marker across the symmetric candidate profiles. */
+/** Server-authoritative elimination: compares one private marker across symmetric candidate profiles. */
 export function computeActualEliminatedIds(
   profiles: ReadonlyArray<Pick<import('@/lib/deductionEngine').DeductionProfile,
     'speciesId' | 'habitatTags' | 'morphologyTags' | 'dietTags' | 'behaviorTags'
@@ -115,70 +79,36 @@ export function computeActualEliminatedIds(
   return eliminatedIds.sort((a, b) => a - b);
 }
 
-export interface EvidenceCardContent {
-  id: number;
-  method: MethodType;
-  observationText: string;
-  inferenceText: string;
-  traitCategory: CaseTraitCategory;
-  compareTag: string;
-  isSignature: boolean;
-  specificity: EvidenceQualityTier;
-}
-
 export function getRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
     : {};
 }
 
+/** v3 only — stored v1/v2 private cases parse to null (legacy runs). */
 export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
   const source = getRecord(value);
-  if (source.version === 3) {
-    const idsSource = getRecord(source.familyCardIds);
-    const hintIdsSource = getRecord(source.familyHintIds);
-    const familyCardIds = {} as Record<EvidenceFamily, number>;
-    const familyHintIds = {} as Record<EvidenceFamily, number[]>;
-    for (const family of EVIDENCE_FAMILIES) {
-      if (!isPositiveInteger(idsSource[family])) return null;
-      familyCardIds[family] = idsSource[family] as number;
-      const hintIds = parsePositiveIntegerArray(hintIdsSource[family], 5);
-      if (hintIds.length < 3) return null;
-      familyHintIds[family] = hintIds;
-    }
-    const cascadeHintIds = parsePositiveIntegerArray(source.cascadeHintIds, 30);
-    const allFamilyHintIds = EVIDENCE_FAMILIES.flatMap(family => familyHintIds[family]);
-    return isPositiveInteger(source.answerId)
-      && typeof source.caseSeed === 'string'
-      && /^[a-f0-9]{64}$/i.test(source.caseSeed)
-      && cascadeHintIds.length >= 12
-      && new Set(Object.values(familyCardIds)).size === EVIDENCE_FAMILIES.length
-      && new Set(allFamilyHintIds).size === allFamilyHintIds.length
-      ? { version: 3, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, cascadeHintIds }
-      : null;
+  if (source.version !== 3) return null;
+  const idsSource = getRecord(source.familyCardIds);
+  const hintIdsSource = getRecord(source.familyHintIds);
+  const familyCardIds = {} as Record<EvidenceFamily, number>;
+  const familyHintIds = {} as Record<EvidenceFamily, number[]>;
+  for (const family of EVIDENCE_FAMILIES) {
+    if (!isPositiveInteger(idsSource[family])) return null;
+    familyCardIds[family] = idsSource[family] as number;
+    const hintIds = parsePositiveIntegerArray(hintIdsSource[family], 5);
+    if (hintIds.length < 3) return null;
+    familyHintIds[family] = hintIds;
   }
-  if (source.version === 2) {
-    const matrixSource = getRecord(source.cardIdMatrix);
-    const matrix = {} as PrivateCaseV2['cardIdMatrix'];
-    for (const method of METHOD_TYPES) {
-      const ids = parsePositiveIntegerArray(matrixSource[method], 3);
-      if (ids.length !== 3) return null;
-      matrix[method] = [ids[0], ids[1], ids[2]];
-    }
-    return isPositiveInteger(source.answerId)
-      && typeof source.caseSeed === 'string'
-      && /^[a-f0-9]{64}$/i.test(source.caseSeed)
-      && isPositiveInteger(source.signatureCardId)
-      ? { version: 2, answerId: source.answerId, caseSeed: source.caseSeed, cardIdMatrix: matrix, signatureCardId: source.signatureCardId }
-      : null;
-  }
-  const chainCardIds = parsePositiveIntegerArray(source.chainCardIds, 4);
+  const cascadeHintIds = parsePositiveIntegerArray(source.cascadeHintIds, 30);
+  const allFamilyHintIds = EVIDENCE_FAMILIES.flatMap(family => familyHintIds[family]);
   return isPositiveInteger(source.answerId)
     && typeof source.caseSeed === 'string'
     && /^[a-f0-9]{64}$/i.test(source.caseSeed)
-    && chainCardIds.length >= 3
-    && chainCardIds.length <= 4
-    ? { version: 1, answerId: source.answerId, chainCardIds, caseSeed: source.caseSeed }
+    && cascadeHintIds.length >= 12
+    && new Set(Object.values(familyCardIds)).size === EVIDENCE_FAMILIES.length
+    && new Set(allFamilyHintIds).size === allFamilyHintIds.length
+    ? { version: 3, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, cascadeHintIds }
     : null;
 }
 
@@ -230,22 +160,36 @@ export function parseEvidenceFamilyCard(value: unknown): EvidenceFamilyCardConte
     : null;
 }
 
+export function resolveFieldFacts(
+  applications: readonly V3EvidenceApplicationRecord[],
+  cards: readonly EvidenceFamilyCardContent[],
+): FieldFact[] {
+  const cardsById = new Map(cards.map(card => [card.id, card]));
+  return [...applications].sort((left, right) => left.nodeIndex - right.nodeIndex).flatMap(application => {
+    const card = cardsById.get(application.cardId);
+    return card?.family === application.family
+      ? [{ nodeIndex: application.nodeIndex, family: application.family, text: card.bonusFactText }]
+      : [];
+  });
+}
+
 export function hydrateFamilyObservation(
   card: EvidenceFamilyCardContent,
   application: V3EvidenceApplicationRecord,
 ): Record<string, unknown> {
+  const candidateTraitPhrases = Object.fromEntries(application.actualEliminatedIds.flatMap(speciesId => {
+    const phrase = application.candidateTraitPhrases[String(speciesId)];
+    return typeof phrase === 'string' && phrase.trim() ? [[String(speciesId), phrase]] : [];
+  }));
   return {
     ref: application.ref,
     family: card.family,
     observationText: card.observationText,
     inferenceText: card.inferenceText,
     traitCategory: card.traitCategory,
-    compareTag: card.compareTag,
     actualEliminatedIds: application.actualEliminatedIds,
     eliminationReasons: application.eliminationReasons,
-    candidateTraitPhrases: application.candidateTraitPhrases,
-    traitPhrase: card.traitPhrase,
-    isSignature: false,
+    candidateTraitPhrases,
   };
 }
 
@@ -258,159 +202,12 @@ function parseCandidateTraitPhrases(value: unknown): Record<string, string> | nu
   return Object.fromEntries(entries) as Record<string, string>;
 }
 
-export function parseIssuedObservations(value: unknown): IssuedObservationRecord[] {
-  if (!Array.isArray(value)) return [];
-  const seen = new Set<number>();
-  return value.flatMap(item => {
-    const source = getRecord(item);
-    const nodeIndex = source.nodeIndex;
-    if (!Number.isInteger(nodeIndex) || (nodeIndex as number) < 0 || (nodeIndex as number) > 3 || seen.has(nodeIndex as number)) return [];
-    const expectedRef = `obs-${nodeIndex}`;
-    if (source.ref !== expectedRef || !isPositiveInteger(source.cardId) || typeof source.issuedAt !== 'string') return [];
-    seen.add(nodeIndex as number);
-    const qualityTier = source.qualityTier;
-    if (qualityTier !== undefined && qualityTier !== 1 && qualityTier !== 2 && qualityTier !== 3) return [];
-    return [{ nodeIndex: nodeIndex as number, ref: expectedRef, cardId: source.cardId, issuedAt: source.issuedAt, ...(qualityTier ? { qualityTier } : {}) }];
-  });
-}
-
-export function parseReasoningEvent(value: unknown): ReasoningEventCommit | null {
-  const source = getRecord(value);
-  const obsRef = typeof source.obsRef === 'string' && /^obs-[0-3]$/.test(source.obsRef) ? source.obsRef : null;
-  const predicted = parsePositiveIntegerArray(source.predictedEliminatedIds, 6);
-  const actual = parsePositiveIntegerArray(source.actualEliminatedIds, 6);
-  const latencyMs = source.latencyMs;
-  if (!obsRef || !Number.isInteger(latencyMs) || (latencyMs as number) < 0 || (latencyMs as number) > RUN_CHECKPOINT_LIMITS.latencyMs) return null;
-  return {
-    obsRef,
-    predictedEliminatedIds: predicted,
-    actualEliminatedIds: actual,
-    correct: sameIntegerSet(predicted, actual),
-    latencyMs: latencyMs as number,
-  };
-}
-
-export function getEliminatedCandidateIds(reasoningEvents: unknown): Set<number> {
-  const eliminated = new Set<number>();
-  if (!Array.isArray(reasoningEvents)) return eliminated;
-  for (const value of reasoningEvents) {
-    const event = parseReasoningEvent(value);
-    if (!event) continue;
-    for (const speciesId of event.actualEliminatedIds) eliminated.add(speciesId);
-  }
-  return eliminated;
-}
-
 export function filterEliminatedCandidates<T extends { speciesId: number }>(
   candidates: readonly T[],
   eliminatedIds: Iterable<number>,
 ): T[] {
   const eliminated = new Set(eliminatedIds);
   return candidates.filter(candidate => !eliminated.has(candidate.speciesId));
-}
-
-export function appendReasoningEvents(
-  existingValue: unknown,
-  requestedValue: unknown,
-  issued: readonly IssuedObservationRecord[],
-): { events: ReasoningEventCommit[]; rejected: boolean } {
-  const existing = Array.isArray(existingValue)
-    ? existingValue.flatMap(value => {
-        const parsed = parseReasoningEvent(value);
-        return parsed ? [parsed] : [];
-      })
-    : [];
-  const requested = Array.isArray(requestedValue) ? requestedValue : [];
-  const issuedRefs = new Set(issued.map(item => item.ref));
-  const byRef = new Map(existing.map(event => [event.obsRef, event]));
-  let rejected = false;
-  for (const value of requested) {
-    const event = parseReasoningEvent(value);
-    if (!event || !issuedRefs.has(event.obsRef)) {
-      rejected = true;
-      continue;
-    }
-    if (!byRef.has(event.obsRef)) byRef.set(event.obsRef, event);
-  }
-  return { events: [...byRef.values()].sort((a, b) => a.obsRef.localeCompare(b.obsRef)), rejected };
-}
-
-export function serverVerifyReasoningEvent(
-  value: unknown,
-  issued: readonly IssuedObservationRecord[],
-  candidateIds: readonly number[],
-  card: EvidenceCardContent | null,
-  profiles: readonly Record<string, unknown>[],
-): ReasoningEventCommit | null {
-  const parsed = parseReasoningEvent(value);
-  if (!parsed || !issued.some(item => item.ref === parsed.obsRef) || !card) return null;
-  const profileKey = CATEGORY_TO_PROFILE_KEY[card.traitCategory];
-  const actual = candidateIds.filter(speciesId => {
-    const profile = profiles.find(item => item.speciesId === speciesId);
-    const tags = profile?.[profileKey];
-    return !Array.isArray(tags) || !tags.includes(card.compareTag);
-  });
-  return {
-    ...parsed,
-    actualEliminatedIds: actual,
-    correct: sameIntegerSet(parsed.predictedEliminatedIds, actual),
-  };
-}
-
-export function verifyReasoningEventBatch(
-  existingValue: unknown,
-  requestedValue: unknown,
-  issued: readonly IssuedObservationRecord[],
-  candidateIds: readonly number[],
-  cards: ReadonlyMap<number, EvidenceCardContent>,
-  profiles: readonly Record<string, unknown>[],
-): { events: ReasoningEventCommit[]; committedRefs: string[]; error: string | null } {
-  const existing = Array.isArray(existingValue) ? existingValue.flatMap(value => {
-    const parsed = parseReasoningEvent(value);
-    return parsed ? [parsed] : [];
-  }) : [];
-  const byRef = new Map(existing.map(event => [event.obsRef, event]));
-  const orderedIssued = [...issued].sort((a, b) => a.nodeIndex - b.nodeIndex);
-  const issuanceByRef = new Map(orderedIssued.map(item => [item.ref, item]));
-  const existingRefs = new Set(existing.map(event => event.obsRef));
-  if (existingRefs.size !== existing.length) return { events: existing, committedRefs: [], error: 'invalid' };
-  const committedPrefixLength = orderedIssued.findIndex(item => !existingRefs.has(item.ref));
-  const prefixLength = committedPrefixLength === -1 ? orderedIssued.length : committedPrefixLength;
-  if (existing.some(event => !issuanceByRef.has(event.obsRef))
-    || orderedIssued.slice(prefixLength).some(item => existingRefs.has(item.ref))) {
-    return { events: existing, committedRefs: [], error: 'invalid' };
-  }
-  const requested = Array.isArray(requestedValue) ? requestedValue : [];
-  const requestedByRef = new Map<string, unknown>();
-  for (const value of requested) {
-    const ref = getRecord(value).obsRef;
-    if (typeof ref !== 'string' || !issuanceByRef.has(ref)) return { events: existing, committedRefs: [], error: 'unissued' };
-    if (!requestedByRef.has(ref)) requestedByRef.set(ref, value);
-  }
-
-  const live = new Set(candidateIds);
-  for (const issuance of orderedIssued.slice(0, prefixLength)) {
-    const event = byRef.get(issuance.ref)!;
-    for (const id of event.actualEliminatedIds) live.delete(id);
-  }
-  const requestedPending = orderedIssued.slice(prefixLength).filter(item => requestedByRef.has(item.ref));
-  if (requestedPending.length > 0) {
-    const requestedRefs = new Set(requestedPending.map(item => item.ref));
-    const requestedPrefix = orderedIssued.slice(prefixLength, prefixLength + requestedPending.length);
-    if (requestedPrefix.some(item => !requestedRefs.has(item.ref))) {
-      return { events: existing, committedRefs: [], error: 'out_of_order' };
-    }
-  }
-  const committedRefs: string[] = [];
-  for (const issuance of orderedIssued) {
-    if (byRef.has(issuance.ref) || !requestedByRef.has(issuance.ref)) continue;
-    const verified = serverVerifyReasoningEvent(requestedByRef.get(issuance.ref), issued, [...live], cards.get(issuance.cardId) ?? null, profiles);
-    if (!verified) return { events: existing, committedRefs: [], error: 'invalid' };
-    byRef.set(issuance.ref, verified);
-    committedRefs.push(issuance.ref);
-    for (const id of verified.actualEliminatedIds) live.delete(id);
-  }
-  return { events: [...byRef.values()].sort((a, b) => a.obsRef.localeCompare(b.obsRef)), committedRefs, error: null };
 }
 
 export function isUuid(value: string): boolean {
@@ -430,167 +227,10 @@ export function resolveRunCreationIdentifiers(
 
 export type GuessDecision = 'not_ready' | 'wrong' | 'correct' | 'repeat_correct' | 'terminal_conflict';
 
-export type TerminalMutationDecision = 'allow' | 'idempotent' | 'reject';
-
-export function decideObservationIssuance(runStatus: string | null | undefined, alreadyIssued: boolean): TerminalMutationDecision {
-  if (alreadyIssued) return 'idempotent';
-  return runStatus === 'completed' ? 'reject' : 'allow';
-}
-
-export function decideCheckpointMutation(runStatus: string | null | undefined, changesState: boolean): TerminalMutationDecision {
-  if (runStatus !== 'completed') return 'allow';
-  return changesState ? 'reject' : 'idempotent';
-}
-
 export function decideGuess(runStatus: string | null | undefined, selectedId: number, answerId: number): GuessDecision {
   if (runStatus === 'completed') return selectedId === answerId ? 'repeat_correct' : 'terminal_conflict';
   if (runStatus !== 'deduction') return 'not_ready';
   return selectedId === answerId ? 'correct' : 'wrong';
-}
-
-export function hydrateObservation(card: EvidenceCardContent, nodeIndex: number, qualityTier?: EvidenceQualityTier) {
-  return {
-    ref: `obs-${nodeIndex}`,
-    method: card.method,
-    observationText: card.observationText,
-    inferenceText: card.inferenceText,
-    traitCategory: card.traitCategory,
-    compareTag: card.compareTag,
-    isSignature: card.isSignature,
-    ...(qualityTier ? { qualityTier } : {}),
-  };
-}
-
-export function parseEvidenceCard(value: unknown): EvidenceCardContent | null {
-  const source = getRecord(value);
-  const compareTags = Array.isArray(source.compareTags) ? source.compareTags : [];
-  return isPositiveInteger(source.id)
-    && typeof source.method === 'string' && METHOD_SET.has(source.method)
-    && typeof source.observationText === 'string' && source.observationText.length > 0
-    && typeof source.inferenceText === 'string' && source.inferenceText.length > 0
-    && typeof source.traitCategory === 'string' && CATEGORY_SET.has(source.traitCategory)
-    && compareTags.length === 1 && typeof compareTags[0] === 'string'
-    && typeof source.isSignature === 'boolean'
-    && (source.specificity === 1 || source.specificity === 2 || source.specificity === 3)
-    ? {
-        id: source.id,
-        method: source.method as MethodType,
-        observationText: source.observationText,
-        inferenceText: source.inferenceText,
-        traitCategory: source.traitCategory as CaseTraitCategory,
-        compareTag: compareTags[0],
-        isSignature: source.isSignature,
-        specificity: source.specificity,
-      }
-    : null;
-}
-
-export function validateNodeCompletionInput(value: unknown): { scoreEarned: number; movesUsed: number; objectiveProgress: number; bestTargetMatchLength: number } | null {
-  const source = getRecord(value);
-  const scoreEarned = source.scoreEarned ?? 0;
-  const movesUsed = source.movesUsed ?? 0;
-  const objectiveProgress = source.objectiveProgress ?? 0;
-  const bestTargetMatchLength = source.bestTargetMatchLength ?? 0;
-  if (!boundedInteger(scoreEarned, RUN_CHECKPOINT_LIMITS.bankedScore)
-    || !boundedInteger(movesUsed, 10_000)
-    || !boundedInteger(objectiveProgress, RUN_CHECKPOINT_LIMITS.objectiveProgress)
-    || !isBestTargetMatchLength(bestTargetMatchLength)) return null;
-  return { scoreEarned, movesUsed, objectiveProgress, bestTargetMatchLength } as {
-    scoreEarned: number; movesUsed: number; objectiveProgress: number; bestTargetMatchLength: number;
-  };
-}
-
-export type MethodChoiceDecision =
-  | { kind: 'commit'; method: MethodType; offered: [MethodType, MethodType] }
-  | { kind: 'idempotent'; method: MethodType; offered: [MethodType, MethodType] }
-  | { kind: 'reject'; reason: 'invalid_method' | 'not_active' | 'not_offered' | 'method_reused' | 'choice_locked' | 'invalid_offer_path' };
-
-export function decideMethodChoice(input: {
-  publicCase: PublicCaseV2;
-  nodeIndex: number;
-  nodeStatus: string;
-  requestedMethod: unknown;
-  persistedMethod: unknown;
-  priorMethods: readonly MethodType[];
-}): MethodChoiceDecision {
-  if (!isMethodType(input.requestedMethod)) return { kind: 'reject', reason: 'invalid_method' };
-  const offered = getMethodOfferAtPath(input.publicCase.offerTree, input.priorMethods);
-  if (!offered || input.nodeIndex !== input.priorMethods.length) return { kind: 'reject', reason: 'invalid_offer_path' };
-  if (isMethodType(input.persistedMethod)) {
-    return input.persistedMethod === input.requestedMethod
-      ? { kind: 'idempotent', method: input.persistedMethod, offered }
-      : { kind: 'reject', reason: 'choice_locked' };
-  }
-  if (input.nodeStatus !== 'active') return { kind: 'reject', reason: 'not_active' };
-  if (input.priorMethods.includes(input.requestedMethod)) return { kind: 'reject', reason: 'method_reused' };
-  if (!offered.includes(input.requestedMethod)) return { kind: 'reject', reason: 'not_offered' };
-  return { kind: 'commit', method: input.requestedMethod, offered };
-}
-
-export type QualityCheckpointDecision =
-  | { kind: 'store'; bestTargetMatchLength: number }
-  | { kind: 'idempotent'; bestTargetMatchLength: number }
-  | { kind: 'reject'; reason: 'invalid_quality' | 'node_not_active' };
-
-export function decideQualityCheckpoint(
-  nodeStatus: string,
-  existingValue: unknown,
-  incomingValue: unknown,
-): QualityCheckpointDecision {
-  if (!isBestTargetMatchLength(incomingValue)) return { kind: 'reject', reason: 'invalid_quality' };
-  const existing = isBestTargetMatchLength(existingValue) ? existingValue : 0;
-  if (nodeStatus !== 'active') return incomingValue <= existing
-    ? { kind: 'idempotent', bestTargetMatchLength: existing }
-    : { kind: 'reject', reason: 'node_not_active' };
-  const bestTargetMatchLength = Math.max(existing, incomingValue);
-  return bestTargetMatchLength === existing
-    ? { kind: 'idempotent', bestTargetMatchLength }
-    : { kind: 'store', bestTargetMatchLength };
-}
-
-export function qualityTierForSuccessfulNode(
-  objectiveProgress: number,
-  objectiveTarget: number,
-  bestTargetMatchLength: number,
-): EvidenceQualityTier | null {
-  if (objectiveProgress < objectiveTarget) return null;
-  // Tier tracks direct-swap matches only, so a cascade-only completion can
-  // arrive with no qualifying length; a met objective still earns Broad.
-  return evidenceTierForMatchLength(bestTargetMatchLength) ?? 1;
-}
-
-export function isV2SignatureInterpretationEligible(
-  issued: readonly IssuedObservationRecord[],
-  interpretedRefs: ReadonlySet<string>,
-): boolean {
-  return issued.some(item => item.nodeIndex < 3 && interpretedRefs.has(item.ref))
-    && issued.filter(item => item.nodeIndex < 3).every(item => interpretedRefs.has(item.ref));
-}
-
-export type CitationValidation =
-  | { ok: true; refs: string[] }
-  | { ok: false; reason: 'wrong_count' | 'duplicate' | 'unissued' | 'uninterpreted' | 'invalid_ref' };
-
-export function validateEvidenceCitations(
-  value: unknown,
-  issued: readonly IssuedObservationRecord[],
-  interpretedRefs: ReadonlySet<string>,
-): CitationValidation {
-  if (!Array.isArray(value) || value.some(ref => typeof ref !== 'string' || !/^obs-[0-3]$/.test(ref))) {
-    return { ok: false, reason: 'invalid_ref' };
-  }
-  const refs = value as string[];
-  if (new Set(refs).size !== refs.length) return { ok: false, reason: 'duplicate' };
-  const required = Math.min(2, interpretedRefs.size);
-  if (refs.length !== required) return { ok: false, reason: 'wrong_count' };
-  const issuedRefs = new Set(issued.map(item => item.ref));
-  if (refs.some(ref => !issuedRefs.has(ref))) return { ok: false, reason: 'unissued' };
-  if (refs.some(ref => !interpretedRefs.has(ref))) return { ok: false, reason: 'uninterpreted' };
-  return { ok: true, refs: [...refs] };
-}
-
-function boundedInteger(value: unknown, max: number): value is number {
-  return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= max;
 }
 
 function isPositiveInteger(value: unknown): value is number {
@@ -601,10 +241,4 @@ function parsePositiveIntegerArray(value: unknown, maxLength: number): number[] 
   if (!Array.isArray(value) || value.length > maxLength) return [];
   const values = value.filter(isPositiveInteger);
   return values.length === value.length && new Set(values).size === values.length ? values : [];
-}
-
-function sameIntegerSet(left: readonly number[], right: readonly number[]): boolean {
-  if (left.length !== right.length) return false;
-  const rightValues = new Set(right);
-  return left.every(value => rightValues.has(value));
 }

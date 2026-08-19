@@ -1,4 +1,5 @@
 import type { Species } from '@/types/database';
+import { getAppConfig } from '@/utils/config';
 
 export interface SpeciesQueryResult {
   species: Species[];
@@ -128,10 +129,11 @@ export const speciesService = {
   /**
    * Query species within a radius of a given point
    */
-  async getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number): Promise<SpeciesQueryResult> {
+  async getSpeciesInRadius(longitude: number, latitude: number, radiusMeters: number, signal?: AbortSignal): Promise<SpeciesQueryResult> {
     try {
       const response = await fetch(
-        `/api/species/in-radius?lon=${longitude}&lat=${latitude}&radius=${radiusMeters}`
+        `/api/species/in-radius?lon=${longitude}&lat=${latitude}&radius=${radiusMeters}`,
+        { signal }
       );
 
       if (!response.ok) {
@@ -146,7 +148,7 @@ export const speciesService = {
         count: data.count || 0
       };
     } catch (error) {
-      console.error('Error in getSpeciesInRadius:', error);
+      if ((error as Error).name !== 'AbortError') console.error('Error in getSpeciesInRadius:', error);
       return { species: [], count: 0 };
     }
   },
@@ -226,15 +228,9 @@ export const speciesService = {
   /**
    * Get habitat distribution within 10km of a point using TiTiler statistics on COG
    */
-  async getRasterHabitatDistribution(longitude: number, latitude: number): Promise<RasterHabitatResult[]> {
+  async getRasterHabitatDistribution(longitude: number, latitude: number, signal?: AbortSignal): Promise<RasterHabitatResult[]> {
     try {
-      const titilerBaseUrl = process.env.NEXT_PUBLIC_TITILER_BASE_URL;
-      const cogUrl = process.env.NEXT_PUBLIC_COG_URL;
-
-      if (!titilerBaseUrl || !cogUrl) {
-        console.error('TiTiler or COG URL not configured in environment');
-        return [];
-      }
+      const { titilerBaseUrl, cogUrl } = await getAppConfig();
 
       const radiusMeters = 10000;
       const { feature: bboxFeature } = createBboxGeoJSON(longitude, latitude, radiusMeters);
@@ -254,7 +250,8 @@ export const speciesService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(featureCollection)
+        body: JSON.stringify(featureCollection),
+        signal
       });
 
       if (!response.ok) {
@@ -347,7 +344,7 @@ export const speciesService = {
       return resolved;
 
     } catch (error) {
-      console.error('Error in getRasterHabitatDistribution:', error);
+      if ((error as Error).name !== 'AbortError') console.error('Error in getRasterHabitatDistribution:', error);
       return [];
     }
   },
@@ -423,10 +420,11 @@ export const speciesService = {
    * Get the closest habitat polygon when no species are found at a point
    * Uses PostGIS nearest-neighbor search with no distance limit
    */
-  async getClosestHabitat(longitude: number, latitude: number): Promise<any> {
+  async getClosestHabitat(longitude: number, latitude: number, signal?: AbortSignal): Promise<any> {
     try {
       const response = await fetch(
-        `/api/species/closest?lon=${longitude}&lat=${latitude}`
+        `/api/species/closest?lon=${longitude}&lat=${latitude}`,
+        { signal }
       );
 
       if (!response.ok) {
@@ -441,7 +439,7 @@ export const speciesService = {
       }
       return null;
     } catch (error) {
-      console.error('Error in getClosestHabitat:', error);
+      if ((error as Error).name !== 'AbortError') console.error('Error in getClosestHabitat:', error);
       return null;
     }
   }

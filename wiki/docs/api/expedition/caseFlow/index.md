@@ -15,7 +15,6 @@
 
 - [createFlowState](functions/createFlowState.md)
 - [currentNodeIndexForStep](functions/currentNodeIndexForStep.md)
-- [missedEvidenceNodeIndexes](functions/missedEvidenceNodeIndexes.md)
 - [nextFlowStep](functions/nextFlowStep.md)
 - [reconcileProjection](functions/reconcileProjection.md)
 - [stageForStep](functions/stageForStep.md)

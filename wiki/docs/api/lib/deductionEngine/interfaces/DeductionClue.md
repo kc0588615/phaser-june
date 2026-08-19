@@ -1,6 +1,6 @@
 # Interface: DeductionClue
 
-Defined in: [src/lib/deductionEngine.ts:34](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L34)
+Defined in: [src/lib/deductionEngine.ts:34](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L34)
 
 A clue row from species_deduction_clues
 
@@ -10,7 +10,7 @@ A clue row from species_deduction_clues
 
 > **baseCost**: `number`
 
-Defined in: [src/lib/deductionEngine.ts:42](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L42)
+Defined in: [src/lib/deductionEngine.ts:42](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L42)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/lib/deductionEngine.ts:42](https://github.com/kc0588615/phaser-
 
 > **category**: [`DeductionClueCategory`](../../../db/schema/species/type-aliases/DeductionClueCategory.md)
 
-Defined in: [src/lib/deductionEngine.ts:37](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L37)
+Defined in: [src/lib/deductionEngine.ts:37](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L37)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/lib/deductionEngine.ts:37](https://github.com/kc0588615/phaser-
 
 > **compareTags**: `string`[] \| `null`
 
-Defined in: [src/lib/deductionEngine.ts:39](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L39)
+Defined in: [src/lib/deductionEngine.ts:39](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L39)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [src/lib/deductionEngine.ts:39](https://github.com/kc0588615/phaser-
 
 > **id**: `number`
 
-Defined in: [src/lib/deductionEngine.ts:35](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L35)
+Defined in: [src/lib/deductionEngine.ts:35](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L35)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [src/lib/deductionEngine.ts:35](https://github.com/kc0588615/phaser-
 
 > **isFiltering**: `boolean`
 
-Defined in: [src/lib/deductionEngine.ts:43](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L43)
+Defined in: [src/lib/deductionEngine.ts:43](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L43)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [src/lib/deductionEngine.ts:43](https://github.com/kc0588615/phaser-
 
 > **label**: `string`
 
-Defined in: [src/lib/deductionEngine.ts:38](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L38)
+Defined in: [src/lib/deductionEngine.ts:38](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L38)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [src/lib/deductionEngine.ts:38](https://github.com/kc0588615/phaser-
 
 > **revealOrder**: `number`
 
-Defined in: [src/lib/deductionEngine.ts:40](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L40)
+Defined in: [src/lib/deductionEngine.ts:40](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L40)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [src/lib/deductionEngine.ts:40](https://github.com/kc0588615/phaser-
 
 > **speciesId**: `number`
 
-Defined in: [src/lib/deductionEngine.ts:36](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L36)
+Defined in: [src/lib/deductionEngine.ts:36](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L36)
 
 ***
 
@@ -74,4 +74,4 @@ Defined in: [src/lib/deductionEngine.ts:36](https://github.com/kc0588615/phaser-
 
 > **unlockMode**: `"score"` \| `"fragment"`
 
-Defined in: [src/lib/deductionEngine.ts:41](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L41)
+Defined in: [src/lib/deductionEngine.ts:41](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L41)

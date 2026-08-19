@@ -8,7 +8,7 @@
 //   - listen for expedition events ('map-location-selected',
 //     'expedition-start') to configure the board for the current node
 //     (spawn weights, obstacles, objective), and emit
-//     objective-quality telemetry / 'node-advance-requested' back to React.
+//     evidence progress/checkpoints back to React.
 //
 // If you are new here: read BackendPuzzle.ts first (the rules), then this
 // file top-to-bottom following handlePointerDown -> processMove.
@@ -50,17 +50,9 @@ import {
 } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
-import { updateBestTargetMatchLength } from '@/expedition/evidenceQuality';
-import { GEM_METHOD_MAP, type MethodType } from '@/expedition/domain';
 import { GEM_EVIDENCE_FAMILIES, createEmptyEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import {
-    FIELD_NOTE_DRIPS_PER_NODE,
-    FIELD_NOTE_MIN_MATCH_LENGTH,
-    METHOD_VERB_RULES,
-    generateSurveyZones,
-    verbContribution,
-    type SurveyZone,
-} from '@/expedition/methodVerbs';
+import { getExpeditionBoardSafeArea } from '../expeditionHudLayout';
+import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '../fieldSignal';
 
 const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
 
@@ -133,6 +125,9 @@ interface MoveSummary {
     cascades: number;
     directEvidenceCells: Map<string, EvidenceFamily>;
     directMatchFamilies: EvidenceFamily[];
+    signalClearedFamily?: EvidenceFamily;
+    /** Length of the direct match that cleared the field signal; 4+ pays two soft hints. */
+    signalClearMatchLength?: number;
 }
 
 export class Game extends Phaser.Scene {
@@ -142,7 +137,6 @@ export class Game extends Phaser.Scene {
 
     // --- Controller State ---
     private canMove: boolean = false; // Start false, true after board init
-    private caseVersion: number = 0;
     private isDragging: boolean = false;
     private dragStartX: number = 0;
     private dragStartY: number = 0;
@@ -205,30 +199,15 @@ export class Game extends Phaser.Scene {
     // Touch event handlers
     private _touchPreventDefaults: ((e: Event) => void) | null = null;
     
-    // Expedition run state — when true, node-complete handles transitions (not auto-reset)
+    // Expedition run state — when true, node-complete advances to the next v3 board.
     private inExpeditionRun: boolean = false;
 
-    // Node objective tracking (gem matching targets)
-    private nodeObjectiveGem: GemType | null = null;
+    // Node objective tracking (six evidence moves per research site)
     private nodeObjectiveTarget: number = 0;
     private nodeObjectiveProgress: number = 0;
-    private nodeBestTargetMatchLength: number = 0;
     private nodeObjectiveCompleted: boolean = false;
     private currentNodeIndex: number = 0;
-
-    // Method verb state (which method-color matches count — see methodVerbs.ts)
-    private nodeMethod: MethodType | null = null;
-    private movesSinceCountingMatch: number | null = null; // null until first method match
-    private methodMatchThisMove: boolean = false;
-    private surveyZones: SurveyZone[] = [];
-    private verbHintText: Phaser.GameObjects.Text | null = null;
-
-    // Field-note drip state (off-method matches buy candidate facts)
-    private candidateIds: number[] = [];
-    private candidateSpecies: Species[] = [];
-    private nodeBoardSeed: number = 0;
-    private fieldNoteDripsThisNode: number = 0;
-    private pendingFieldNoteDrip: { category: GemCategory; length: number } | null = null;
+    private currentBoardSeed: number | null = null;
 
     constructor() {
         super('Game');
@@ -278,19 +257,6 @@ export class Game extends Phaser.Scene {
         EventBus.emit('node-objective-updated', {
             progress: this.nodeObjectiveProgress,
             target: this.nodeObjectiveTarget,
-            bestTargetMatchLength: this.nodeBestTargetMatchLength,
-        });
-    }
-
-    private finishNodeObjective(reason: 'victory' | 'escaped'): void {
-        this.nodeObjectiveCompleted = true;
-        this.disableInputs();
-        this.time.delayedCall(250, () => {
-            EventBus.emit('node-advance-requested', {
-                nodeIndex: this.currentNodeIndex,
-                reason,
-                source: 'game',
-            });
         });
     }
 
@@ -307,21 +273,9 @@ export class Game extends Phaser.Scene {
 
         // Check game over
         if (this.backendPuzzle.isGameOver() && this.canMove && !this.isPaused) {
-            if (this.inExpeditionRun) {
-                // Expedition: moves exhausted triggers escape, not GameOver scene
-                if (!this.nodeObjectiveCompleted) {
-                    this.nodeObjectiveCompleted = true;
-                    this.disableInputs();
-                    this.time.delayedCall(250, () => {
-                        EventBus.emit('node-advance-requested', {
-                            nodeIndex: this.currentNodeIndex,
-                            reason: 'escaped',
-                            source: 'game',
-                        });
-                    });
-                }
-                return;
-            }
+            // Expedition boards never reach here: input stays disabled after the
+            // sixth move until the evidence choice advances the run.
+            if (this.inExpeditionRun) return;
             this.disableInputs();
             const finalScore = this.backendPuzzle.getScore();
             this.emitHud();
@@ -354,7 +308,7 @@ export class Game extends Phaser.Scene {
     }
 
     private handleEvidenceProgressCommitted(data: EventPayloads['evidence-progress-committed']): void {
-        if (this.caseVersion !== 3 || data.nodeIndex !== this.currentNodeIndex || !this.backendPuzzle
+        if (data.nodeIndex !== this.currentNodeIndex || !this.backendPuzzle
             || data.moveNumber !== this.backendPuzzle.getMovesUsed()) return;
         if (data.moveNumber < 6 && !this.isPaused && !this.isResolvingMove) this.canMove = true;
     }
@@ -368,7 +322,14 @@ export class Game extends Phaser.Scene {
         baseTurnScore: number,
         didAnyMatch: boolean,
         moveMultiplier: number,
-        evidenceTelemetry?: { directClears: EvidenceChargeState; directMatchFamilies: EvidenceFamily[]; cascadeCount: number },
+        evidenceTelemetry?: {
+            directClears: EvidenceChargeState;
+            directMatchFamilies: EvidenceFamily[];
+            cascadeCount: number;
+            signalCleared: boolean;
+            signalClearedFamily?: EvidenceFamily;
+            signalHintCount?: 1 | 2;
+        },
     ): void {
         if (!this.backendPuzzle) return;
 
@@ -380,21 +341,11 @@ export class Game extends Phaser.Scene {
             if (this.movesText) {
                 this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
             }
-            // Trail bookkeeping (track verb): freshness ages one step per
-            // resolved move unless this move touched the method color.
-            if (this.methodMatchThisMove) {
-                this.movesSinceCountingMatch = 0;
-            } else if (this.movesSinceCountingMatch !== null) {
-                this.movesSinceCountingMatch += 1;
-            }
-            this.methodMatchThisMove = false;
-            this.updateVerbHintText();
-            if (this.caseVersion !== 3) this.resolveFieldNoteDrip();
         }
 
         this.emitHud();
 
-        if (didAnyMatch && this.caseVersion === 3 && evidenceTelemetry) {
+        if (didAnyMatch && evidenceTelemetry) {
             this.nodeObjectiveProgress = this.backendPuzzle.getMovesUsed();
             this.emitNodeObjectiveUpdated();
             this.disableInputs();
@@ -407,23 +358,9 @@ export class Game extends Phaser.Scene {
             return;
         }
 
-        // Emit node objective progress to React
-        if (this.nodeObjectiveTarget > 0) {
-            this.emitNodeObjectiveUpdated();
-
-            if (this.nodeObjectiveProgress >= this.nodeObjectiveTarget && !this.nodeObjectiveCompleted) {
-                this.finishNodeObjective('victory');
-            }
-        }
-
-        // Disable input and transition when moves hit limit
+        // Non-expedition boards still end via GameOver when moves run out.
         if (this.backendPuzzle.isGameOver()) {
-            if (this.inExpeditionRun) {
-                if (!this.nodeObjectiveCompleted) {
-                    this.finishNodeObjective('escaped');
-                }
-                return;
-            }
+            if (this.inExpeditionRun) return;
             this.disableInputs();
             this.emitHud();
             const finalScore = this.backendPuzzle.getScore();
@@ -532,14 +469,6 @@ export class Game extends Phaser.Scene {
             strokeThickness: 2
         }).setDepth(100);
         this.updateMultiplierText(1);
-
-        // Method verb status (trail freshness for track nodes)
-        this.verbHintText = this.add.text(width - 20, height - 55, '', {
-            fontSize: '16px',
-            color: '#dccc9d',
-            stroke: '#000000',
-            strokeThickness: 2
-        }).setOrigin(1, 0).setDepth(100);
 
         this.calculateBoardDimensions();
 
@@ -924,8 +853,6 @@ export class Game extends Phaser.Scene {
             summary.matchGroups += matches.length;
         }
 
-        let objectiveProgressChanged = false;
-
         for (const match of matches) {
             if (summary && match.length > summary.largestMatch) {
                 summary.largestMatch = match.length;
@@ -940,14 +867,14 @@ export class Game extends Phaser.Scene {
 
                 if (summary) {
                     summary.gemTypesMatched.add(gem.gemType);
-                    if (!isCascade && this.caseVersion === 3) {
+                    if (!isCascade) {
                         const family = GEM_EVIDENCE_FAMILIES[gem.gemType as GemType];
                         if (family) summary.directEvidenceCells.set(`${x},${y}`, family);
                     }
                 }
             }
 
-            if (summary && !isCascade && this.caseVersion === 3 && matchGemType) {
+            if (summary && !isCascade && matchGemType) {
                 const family = GEM_EVIDENCE_FAMILIES[matchGemType];
                 if (family) summary.directMatchFamilies.push(family);
             }
@@ -961,48 +888,20 @@ export class Game extends Phaser.Scene {
                         const key = `${nx},${ny}`;
                         if (!adjacentBlockerCoords.has(key) && !match.some(([cx, cy]) => cx === nx && cy === ny)) {
                             adjacentBlockerCoords.add(key);
-                            this.backendPuzzle.damageBlocker(nx, ny);
+                            const adjacentCell = state[nx]?.[ny];
+                            if (adjacentCell?.state?.blockerId === FIELD_SIGNAL_BLOCKER_ID) {
+                                const payout = applyFieldSignalMatch(this.backendPuzzle, matchGemType, match.length, isCascade);
+                                if (payout && summary && match.length > (summary.signalClearMatchLength ?? 0)) {
+                                    summary.signalClearedFamily = payout.family;
+                                    summary.signalClearMatchLength = match.length;
+                                }
+                            } else {
+                                this.backendPuzzle.damageBlocker(nx, ny);
+                            }
                         }
                     }
                 }
             }
-
-            if (matchGemType && this.nodeObjectiveTarget > 0 && !this.nodeObjectiveCompleted) {
-                const requiredMatch = matchGemType === this.nodeObjectiveGem;
-                if (requiredMatch) {
-                    // Verb decides whether this group counts (trail window, min
-                    // length, zones, cascade bonus); quality tier tracks the
-                    // best DIRECT method match regardless of counting.
-                    const contribution = this.nodeMethod
-                        ? verbContribution(this.nodeMethod, match.length, {
-                            isCascade,
-                            movesSinceCountingMatch: this.movesSinceCountingMatch,
-                            cells: match,
-                            zones: this.surveyZones,
-                        })
-                        : Math.max(1, match.length - 2);
-                    if (contribution > 0) {
-                        this.nodeObjectiveProgress = Math.min(this.nodeObjectiveTarget, this.nodeObjectiveProgress + contribution);
-                        objectiveProgressChanged = true;
-                    }
-                    // Any method match refreshes the trail, even a non-counting
-                    // one — a cold trail is picked up again, never soft-locked.
-                    this.methodMatchThisMove = true;
-                    // Direct-only tier is a v2 verb rule; legacy (no verb) keeps cascades tier-eligible.
-                    this.nodeBestTargetMatchLength = updateBestTargetMatchLength(this.nodeBestTargetMatchLength, match.length, true, this.nodeMethod ? !isCascade : true);
-                } else if (this.inExpeditionRun && match.length >= FIELD_NOTE_MIN_MATCH_LENGTH) {
-                    // Off-method 4+ match: candidate-fact drip, largest group per move wins
-                    const category = getClueCategoryForGemType(matchGemType);
-                    if (category !== null && (!this.pendingFieldNoteDrip || match.length > this.pendingFieldNoteDrip.length)) {
-                        this.pendingFieldNoteDrip = { category, length: match.length };
-                    }
-                }
-            }
-        }
-
-        if (objectiveProgressChanged && this.nodeObjectiveTarget > 0) {
-            this.emitNodeObjectiveUpdated();
-
         }
     }
 
@@ -1024,65 +923,6 @@ export class Game extends Phaser.Scene {
 
         const finalScore = Math.round(baseScore * multiplier);
         return { finalScore, multiplier };
-    }
-
-    /** Turns this move's best off-method 4+ match into one candidate fact.
-     *  Seeded rotation over the public candidate pool; capped per node. Facts
-     *  are labeled with the candidate's name, so nothing leaks the answer. */
-    private resolveFieldNoteDrip(): void {
-        const drip = this.pendingFieldNoteDrip;
-        this.pendingFieldNoteDrip = null;
-        if (!drip || this.fieldNoteDripsThisNode >= FIELD_NOTE_DRIPS_PER_NODE) return;
-
-        // Drips cover ALL six public candidates — the location species list may
-        // hold only one of them, which would pin every note to the same animal.
-        const pool = this.candidateSpecies.length > 0
-            ? this.candidateSpecies
-            : this.candidateIds.length > 0
-                ? this.currentSpecies.filter(species => this.candidateIds.includes(species.id))
-                : this.currentSpecies;
-        if (pool.length === 0) return;
-
-        const config = CLUE_CONFIG[drip.category];
-        const startIndex = (this.nodeBoardSeed + this.fieldNoteDripsThisNode) % pool.length;
-        for (let offset = 0; offset < pool.length; offset++) {
-            const species = pool[(startIndex + offset) % pool.length];
-            let text = '';
-            try {
-                text = config.getClue(species) ?? '';
-            } catch (error) {
-                console.warn('Game Scene: Field-note clue lookup failed:', error);
-            }
-            if (!text) continue; // category exhausted for this candidate — rotate on
-
-            this.fieldNoteDripsThisNode++;
-            EventBus.emit('field-note-dripped', {
-                nodeIndex: this.currentNodeIndex,
-                speciesId: species.id,
-                speciesName: species.common_name || species.scientific_name || 'Candidate',
-                categoryName: config.categoryName,
-                icon: config.icon,
-                text,
-            });
-            return;
-        }
-    }
-
-    private updateVerbHintText(): void {
-        if (!this.verbHintText) return;
-        const rule = this.nodeMethod ? METHOD_VERB_RULES[this.nodeMethod] : null;
-        if (!rule || rule.kind !== 'trail' || this.nodeObjectiveCompleted) {
-            this.verbHintText.setText('');
-            return;
-        }
-        if (this.movesSinceCountingMatch === null) {
-            this.verbHintText.setText('Trail: open');
-        } else {
-            const movesLeft = rule.windowMoves - this.movesSinceCountingMatch;
-            this.verbHintText.setText(movesLeft > 0
-                ? `Trail: fresh (${movesLeft} move${movesLeft === 1 ? '' : 's'})`
-                : 'Trail: cold — find it again');
-        }
     }
 
     private updateMultiplierText(multiplier: number): void {
@@ -1306,44 +1146,19 @@ export class Game extends Phaser.Scene {
             this.speciesStartTime = Date.now();
             
             // Initialize node objective from expedition data
-            this.caseVersion = data.caseVersion ?? 0;
-            this.scoreText?.setVisible(this.caseVersion !== 3);
-            this.multiplierText?.setVisible(this.caseVersion !== 3);
-            this.movesText?.setVisible(this.caseVersion !== 3);
-            this.nodeObjectiveGem = data.objectiveGem ?? null;
-            this.nodeObjectiveTarget = this.caseVersion === 3 ? 6 : data.objectiveTarget ?? 0;
+            this.scoreText?.setVisible(false);
+            this.multiplierText?.setVisible(false);
+            this.movesText?.setVisible(false);
+            this.nodeObjectiveTarget = 6;
             this.nodeObjectiveProgress = Phaser.Math.Clamp(data.objectiveProgress ?? 0, 0, this.nodeObjectiveTarget);
-            this.nodeBestTargetMatchLength = data.bestTargetMatchLength === 0
-                || (Number.isInteger(data.bestTargetMatchLength) && (data.bestTargetMatchLength ?? 0) >= 3 && (data.bestTargetMatchLength ?? 0) <= 8)
-                ? data.bestTargetMatchLength ?? 0
-                : 0;
             this.nodeObjectiveCompleted = false;
             this.currentNodeIndex = data.nodeIndex ?? 0;
+            this.currentBoardSeed = data.boardSeed ?? null;
 
             // Expedition boards always carry a nodeIndex; free-play clicks never
             // do. Deriving from the payload also covers run resume, which
             // re-emits the board without an 'expedition-start' event.
             if (data.nodeIndex !== undefined) this.inExpeditionRun = true;
-
-            // Method verb setup: gem → method, fresh trail, survey zones.
-            // v2 cases only — v1 runs keep legacy counting (every method match
-            // counts, cascades update the quality tier).
-            this.nodeMethod = data.caseVersion === 2 && this.nodeObjectiveGem
-                ? GEM_METHOD_MAP[this.nodeObjectiveGem] ?? null
-                : null;
-            this.movesSinceCountingMatch = null;
-            this.methodMatchThisMove = false;
-
-            // Field-note drip setup
-            this.candidateIds = data.candidateIds ?? [];
-            // Same array/objects each node — clueConfig progress is WeakMap-keyed on the rows.
-            this.candidateSpecies = data.candidateSpecies?.length
-                ? [...data.candidateSpecies].sort((a, b) => a.id - b.id)
-                : [];
-            this.nodeBoardSeed = data.boardSeed ?? 0;
-            this.fieldNoteDripsThisNode = 0;
-            this.pendingFieldNoteDrip = null;
-
 
             // Store raster habitat data for green gem clues
             this.rasterHabitats = [...data.rasterHabitats];
@@ -1380,7 +1195,7 @@ export class Game extends Phaser.Scene {
             if (data.boardSeed !== undefined) {
                 this.backendPuzzle.setSeed(data.boardSeed);
             }
-            const restoringCheckpoint = this.caseVersion === 3 && data.boardCheckpoint;
+            const restoringCheckpoint = data.boardCheckpoint;
             if (restoringCheckpoint) this.backendPuzzle.importCheckpoint(restoringCheckpoint);
             else this.backendPuzzle.regenerateBoard();
             const boardContext = data.boardContext ?? buildNodeBoardContext({
@@ -1417,18 +1232,11 @@ export class Game extends Phaser.Scene {
                 // Update boardView dimensions without animating (board will be recreated)
                 this.boardView.updateDimensions(this.gemSize, this.boardOffset);
             }
-            this.boardView.setEvidenceFamilyMode(this.caseVersion === 3);
+            this.boardView.setEvidenceFamilyMode(true);
 
             // Destroy old board sprites and create new ones based on the (potentially new) backendPuzzle state
             if (this.boardView.destroyBoard) this.boardView.destroyBoard();
             this.boardView.createBoard(this.backendPuzzle.getGridState());
-
-            // Survey nodes get seeded plot highlights; other verbs clear them.
-            this.surveyZones = this.nodeMethod === 'survey'
-                ? generateSurveyZones(data.boardSeed ?? boardContext.seed, GRID_COLS, GRID_ROWS, boardContext.obstacleSeeds)
-                : [];
-            this.boardView.setSurveyZones(this.surveyZones);
-            this.updateVerbHintText();
 
             if (this.statusText && this.statusText.active) {
                 this.statusText.destroy();
@@ -1482,22 +1290,12 @@ export class Game extends Phaser.Scene {
             return;
         }
         
-        // Responsive breakpoints
-        const MOBILE_BREAKPOINT = 768;
         const MAX_GEM_SIZE = 80; // Maximum gem size for desktop
         const MIN_GEM_SIZE = 24; // Minimum gem size for very small screens
-        
-        // Determine if we're on mobile or desktop
-        const isMobile = width < MOBILE_BREAKPOINT;
-        const stripReserve = this.caseVersion === 3 ? 48 : isMobile ? 16 : 24;
-        const railReserve = this.caseVersion === 3 ? (isMobile ? 120 : 152) : 0;
-        const rosterReserve = this.caseVersion === 3 ? (isMobile ? 106 : 96) : 24;
-        
-        // Calculate usable space with different factors for mobile vs desktop
-        const usableWidth = this.caseVersion === 3
-            ? Math.max(180, width - railReserve - 24)
-            : isMobile ? width * 0.95 : width * 0.85;
-        const usableHeight = Math.max(170, height - stripReserve - rosterReserve);
+
+        const safeArea = getExpeditionBoardSafeArea(width);
+        const usableWidth = Math.max(180, width - safeArea.left - safeArea.right - 24);
+        const usableHeight = Math.max(170, height - safeArea.top - safeArea.bottom);
         
         // Calculate gem size based on available space
         const sizeFromWidth = Math.floor(usableWidth / GRID_COLS);
@@ -1511,21 +1309,18 @@ export class Game extends Phaser.Scene {
         const boardWidth = GRID_COLS * this.gemSize;
         const boardHeight = GRID_ROWS * this.gemSize;
         
-        // Position board based on screen size, reserving space for the runner strip.
-        const maxTopMargin = Math.max(height - boardHeight - rosterReserve, stripReserve);
-        const minTopMargin = Math.min(stripReserve, maxTopMargin);
-        const preferredTop = this.caseVersion === 3
-            ? Math.round(stripReserve + (height - stripReserve - rosterReserve - boardHeight) / 2)
-            : Math.round((height - boardHeight) / 2);
+        const maxTopMargin = Math.max(height - boardHeight - safeArea.bottom, safeArea.top);
+        const minTopMargin = Math.min(safeArea.top, maxTopMargin);
+        const preferredTop = Math.round(safeArea.top + (usableHeight - boardHeight) / 2);
         const topOffset = Phaser.Math.Clamp(preferredTop, minTopMargin, maxTopMargin);
 
-        // Always center the board horizontally regardless of screen size
+        const boardAreaWidth = width - safeArea.left - safeArea.right;
         this.boardOffset = {
-            x: Math.round((width - railReserve - boardWidth) / 2),
+            x: Math.round(safeArea.left + (boardAreaWidth - boardWidth) / 2),
             y: topOffset
         };
         
-        console.log(`Board dimensions calculated: ${isMobile ? 'Mobile' : 'Desktop'} mode, gem size: ${this.gemSize}, position: (${this.boardOffset.x}, ${this.boardOffset.y})`);
+        console.log(`Board dimensions calculated: ${safeArea.dualRail ? 'Dual rail' : 'Dock'} mode, gem size: ${this.gemSize}, position: (${this.boardOffset.x}, ${this.boardOffset.y})`);
     }
 
     private handleResize(): void {
@@ -1769,13 +1564,19 @@ export class Game extends Phaser.Scene {
             multiplier = 1;
         }
 
-        const evidenceTelemetry = this.caseVersion === 3 && this.currentMoveSummary
+        const evidenceTelemetry = this.inExpeditionRun && this.currentMoveSummary
             ? {
                 directClears: this.evidenceCountsFromSummary(this.currentMoveSummary),
                 directMatchFamilies: this.currentMoveSummary.directMatchFamilies,
                 cascadeCount: this.currentMoveSummary.cascades,
+                signalCleared: this.currentMoveSummary.signalClearedFamily !== undefined,
+                signalClearedFamily: this.currentMoveSummary.signalClearedFamily,
+                signalHintCount: this.currentMoveSummary.signalClearedFamily === undefined
+                    ? undefined
+                    : ((this.currentMoveSummary.signalClearMatchLength ?? 3) >= 4 ? 2 : 1) as 1 | 2,
             }
             : undefined;
+        this.placeFieldSignalAfterCascade();
         this.currentMoveSummary = null;
 
         // Move is fully resolved, apply turn resolution
@@ -1783,6 +1584,22 @@ export class Game extends Phaser.Scene {
 
         // Reset flags for next move
         this.anyMatchThisTurn = false;
+    }
+
+    private placeFieldSignalAfterCascade(): void {
+        if (!this.backendPuzzle || !this.boardView || !this.currentMoveSummary
+            || this.currentMoveSummary.cascades < 1 || this.backendPuzzle.hasFieldSignalSpawned()
+            || this.currentBoardSeed === null) return;
+        const seed = buildFieldSignalSeed(
+            this.backendPuzzle.getGridState(),
+            this.currentBoardSeed,
+            this.currentNodeIndex,
+            this.backendPuzzle.getMovesUsed() + 1,
+        );
+        if (!seed) return;
+        this.backendPuzzle.applyCellStateSeeds([seed]);
+        this.backendPuzzle.markFieldSignalSpawned();
+        this.boardView.syncCellStates(this.backendPuzzle.getGridState());
     }
 
     private async handleCascades(): Promise<void> {
@@ -1843,65 +1660,6 @@ export class Game extends Phaser.Scene {
     private processMatchedGemsForClues(matches: Coordinate[][], isCascade: boolean, gridStateOverride?: any): void {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState, isCascade);
-    }
-
-    private handleSpeciesGuess(data: { guessedName: string; speciesId: number; isCorrect: boolean }): void {
-        console.log("Game Scene: Species guess received:", data);
-        
-        // Check if this guess is for the current species
-        if (!this.selectedSpecies || data.speciesId !== this.selectedSpecies.id) {
-            console.log("Game Scene: Guess is for a different species, ignoring");
-            return;
-        }
-        
-        if (data.isCorrect) {
-            console.log("Game Scene: Correct species identified!");
-
-            // Track discovery if authenticated
-            if (this.currentUserId && this.backendPuzzle) {
-                this.trackDiscovery(data.speciesId);
-            }
-
-            // Apply early guess bonus with streak multiplier
-            this.onCorrectGuess(DEFAULT_TOTAL_CLUE_SLOTS);
-
-            console.log("Game Scene: Mystery species discovered!");
-            
-            if (this.statusText && this.statusText.active) {
-                this.statusText.setText(this.inExpeditionRun
-                    ? 'Correct identification!\n\nComplete the field notes to continue.'
-                    : 'Correct identification!\n\nClick on the globe to select a new location.');
-            }
-            
-            this.time.delayedCall(1000, () => {
-                EventBus.emit('all-species-completed', {
-                    totalSpecies: 1
-                });
-            });
-            
-            if (!this.inExpeditionRun) {
-                this.time.delayedCall(5000, () => {
-                    this.resetForNewLocation();
-                });
-            } else if (!this.nodeObjectiveCompleted) {
-                this.time.delayedCall(800, () => {
-                    this.finishNodeObjective('victory');
-                });
-            }
-        } else {
-            // Wrong guess - reset streak
-            console.log("Game Scene: Wrong guess - resetting streak");
-            this.incorrectGuessesThisSpecies++;
-            this.onWrongGuess();
-            if (this.inExpeditionRun && this.backendPuzzle) {
-                this.backendPuzzle.registerMove();
-                this.backendPuzzle.registerMove();
-                this.emitHud();
-                if (this.backendPuzzle.isGameOver() && !this.nodeObjectiveCompleted) {
-                    this.finishNodeObjective('escaped');
-                }
-            }
-        }
     }
 
     private async trackDiscovery(speciesId: number): Promise<void> {
@@ -1983,8 +1741,6 @@ export class Game extends Phaser.Scene {
         this.inExpeditionRun = false;
         // Full cleanup when React signals run ended
         this.currentSpecies = [];
-        this.candidateIds = [];
-        this.candidateSpecies = [];
         this.selectedSpecies = null;
         this.currentSpeciesIndex = 0;
         this.rasterHabitats = [];
@@ -2020,6 +1776,7 @@ export class Game extends Phaser.Scene {
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
         this.currentMoveSummary = null;
+        this.currentBoardSeed = null;
         this.lastAppliedMoveMultiplier = 1;
         this.updateMultiplierText(1);
         this.isResolvingMove = false;
@@ -2030,23 +1787,9 @@ export class Game extends Phaser.Scene {
         if (this.movesText) this.movesText.setText('Moves: 0');
 
         // Reset objective progress
-        this.nodeObjectiveGem = null;
         this.nodeObjectiveTarget = 0;
         this.nodeObjectiveProgress = 0;
-        this.nodeBestTargetMatchLength = 0;
         this.nodeObjectiveCompleted = false;
-
-        // Reset method verb state
-        this.nodeMethod = null;
-        this.movesSinceCountingMatch = null;
-        this.methodMatchThisMove = false;
-        this.surveyZones = [];
-        this.boardView?.setSurveyZones([]);
-        this.updateVerbHintText();
-
-        // Reset field-note drip state (candidateIds persist for the run payload)
-        this.fieldNoteDripsThisNode = 0;
-        this.pendingFieldNoteDrip = null;
 
         // Clear clue state for fresh node
         this.revealedClues.clear();
@@ -2229,10 +1972,6 @@ export class Game extends Phaser.Scene {
         if (this.multiplierText) {
             this.multiplierText.destroy();
             this.multiplierText = null;
-        }
-        if (this.verbHintText) {
-            this.verbHintText.destroy();
-            this.verbHintText = null;
         }
         if (this.pauseButtonContainer) {
             this.pauseButtonContainer.destroy(true);

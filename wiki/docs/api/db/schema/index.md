@@ -56,12 +56,6 @@ Re-exports [ecoRunSessions](game/variables/ecoRunSessions.md)
 
 ***
 
-### evidenceCards
-
-Re-exports [evidenceCards](species/variables/evidenceCards.md)
-
-***
-
 ### evidenceFamilyCards
 
 Re-exports [evidenceFamilyCards](species/variables/evidenceFamilyCards.md)

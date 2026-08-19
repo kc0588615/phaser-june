@@ -2,7 +2,7 @@
 
 > **getFamilyDisplayName**(`scientificFamily`): `string`
 
-Defined in: [src/config/familyCommonNames.ts:161](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/config/familyCommonNames.ts#L161)
+Defined in: [src/config/familyCommonNames.ts:194](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/config/familyCommonNames.ts#L194)
 
 Get a display-friendly family name with common name in parentheses
 

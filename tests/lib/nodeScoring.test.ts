@@ -8,8 +8,6 @@ import {
   selectNodes,
   generateRunNodes,
   applyWaypointsToRunNodes,
-  METHOD_OBJECTIVE_BASE_TARGET,
-  METHOD_SLOTS,
   MYSTERY_MOVE_BUDGET,
   MYSTERY_NODE_COUNT,
   type LayerScore,
@@ -55,7 +53,6 @@ function baseNode(overrides: Partial<RunNode>): RunNode {
     events: [],
     rationale: 'base',
     obstacleFamily: null,
-    objectiveTarget: 8,
     ...overrides,
   };
 }
@@ -142,24 +139,13 @@ describe('selectNodes', () => {
 });
 
 describe('generateRunNodes', () => {
-  test('creates the fixed three-method route with deterministic public board seeds', () => {
+  test('creates three v3 sites with deterministic public board seeds', () => {
     const scores = [layer({ nodeFamily: 'protected_node', variant: 'reserve', score: 0.4 })];
     const habitat = { water_ratio: 0, forest_ratio: 0, urban_ratio: 0 };
     const first = generateRunNodes(selection(), scores, habitat, 2, 0.25);
     const second = generateRunNodes(selection(), scores, habitat, 2, 0.25);
 
     assert.equal(first.length, MYSTERY_NODE_COUNT);
-    assert.deepEqual(first.map((node) => node.method), METHOD_SLOTS);
-    assert.deepEqual(first.map((node) => node.objectiveType), [
-      'method_match',
-      'method_match',
-      'method_match',
-    ]);
-    assert.deepEqual(first.map((node) => node.objectiveTarget), [
-      METHOD_OBJECTIVE_BASE_TARGET,
-      METHOD_OBJECTIVE_BASE_TARGET - 2,
-      METHOD_OBJECTIVE_BASE_TARGET - 2,
-    ]);
     assert.deepEqual(first.map((node) => node.moveBudget), [
       MYSTERY_MOVE_BUDGET,
       MYSTERY_MOVE_BUDGET,
@@ -175,7 +161,7 @@ describe('generateRunNodes', () => {
     assert.deepEqual(second, first);
   });
 
-  test('uses GIS primary/modifier/habitat flavor while preserving fixed method order', () => {
+  test('uses GIS primary, modifier, and habitat flavor', () => {
     const nodes = generateRunNodes(
       selection({
         primaryNodeFamily: 'water_node',
@@ -193,8 +179,6 @@ describe('generateRunNodes', () => {
       'dense_canopy',
       'elevation_ridge',
     ]);
-    assert.deepEqual(nodes.map((node) => node.method), ['track', 'observe', 'survey']);
-    assert.deepEqual(nodes.map((node) => node.objectiveTarget), [8, 6, 4]);
   });
 
   test('context changes board seeds without using any answer input', () => {
@@ -225,7 +209,6 @@ describe('applyWaypointsToRunNodes', () => {
     ]);
     assert.equal(tuned.node_type, 'riverbank_sweep');
     assert.equal(tuned.difficulty, 3);
-    assert.equal(tuned.objectiveTarget, 8);
   });
 
   test('final waypoint becomes the analysis node', () => {
@@ -251,21 +234,16 @@ describe('applyWaypointsToRunNodes', () => {
     assert.equal(tuned.difficulty, 2);
   });
 
-  test('waypoint tuning preserves method and board seed and rescales method objective', () => {
+  test('waypoint tuning preserves board seed while clamping fallback difficulty', () => {
     const [tuned] = applyWaypointsToRunNodes([
       baseNode({
         difficulty: 5,
-        method: 'survey',
-        objectiveType: 'method_match',
-        objectiveTarget: 8,
         boardSeed: 123,
         waypoint: waypoint({ fallback: true }),
       }),
     ]);
 
-    assert.equal(tuned.method, 'survey');
     assert.equal(tuned.boardSeed, 123);
     assert.equal(tuned.difficulty, 2);
-    assert.equal(tuned.objectiveTarget, 4);
   });
 });

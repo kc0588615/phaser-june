@@ -2,7 +2,7 @@
 
 > **projectRunForClient**(`session`, `input`): [`ClientRunProjection`](../interfaces/ClientRunProjection.md)
 
-Defined in: [src/lib/runProjection.ts:321](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L321)
+Defined in: [src/lib/runProjection.ts:271](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L271)
 
 Builds the only run shape that API adapters may serialize.
 

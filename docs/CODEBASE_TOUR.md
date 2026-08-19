@@ -7,14 +7,12 @@ your day-to-day map. The deeper reference index lives in
 
 ## The game in one paragraph
 
-The player clicks a point on a 3D globe. The game looks up the real
+The player clicks a point on the MapLibre globe. The game looks up the real
 biodiversity there (species ranges, habitats, protected areas from a PostGIS
-database), secretly picks a mystery species, and drops the player into a
-match-3 board themed for that location. Matching colored "loot" gems earns
-clue fragments in eight trivia categories (habitat, morphology, behavior, ...).
-When the board node ends, the player uses those clues — plus comparisons
-against species cards they already own — to deduce which species they were
-tracking. Correct guesses grow their species album.
+database), secretly picks a mystery species, and builds a three-site v3 case.
+Each six-move match-3 board charges five evidence families. The player selects
+one offered family after each board, ruling out candidates until the final
+guess. Correct guesses grow their species album.
 
 ## The three worlds and the bridge
 
@@ -34,7 +32,7 @@ EventBus's `EventPayloads` and grep for its `emit`/`on` calls.
 ## Life of a run (follow this in the code)
 
 1. **Click the globe** — `MapLibreExploreMap.tsx` queries `/api/*` for what's at the
-   point and emits `map-location-selected` with species + habitat data.
+   point and emits `expedition-data-ready` with species, habitat, and route data.
 2. **Run is generated** — `/api/runs` (in `src/app/api/runs/route.ts`) scores
    the nearby GIS layers with `src/lib/nodeScoring.ts`, picks a node type
    (riverbank, canopy, ridge...), and persists an `eco_run_sessions` row.
@@ -43,16 +41,16 @@ EventBus's `EventPayloads` and grep for its `emit`/`on` calls.
    `mystery` and tells the board to start via `expedition-start`.
 4. **Board play** — `src/game/scenes/Game.ts` (Controller) reads input,
    `src/game/BackendPuzzle.ts` (Model, pure logic) resolves matches,
-   `src/game/BoardView.ts` (View) animates. Loot-gem matches emit
-   `deduction-clue-triggered`; the context converts them into clue fragments.
-5. **Node complete** — the scene emits `node-advance-requested`; the context
-   banks the score, checkpoints to `/api/runs/[runId]`, and enters the
-   deduction phase.
-6. **Deduction** — `src/lib/deductionEngine.ts` compares the mystery species'
-   tag profile against reference cards the player slots in
-   (`FieldNotebook.tsx` UI). A correct guess awards bonuses
-   (`getDeductionFinalScore` in `src/types/expedition.ts`) and unlocks the
-   species card.
+   `src/game/BoardView.ts` (View) animates. Each move emits
+   `evidence-move-resolved`; `/evidence-progress` persists its checkpoint and
+   returns deterministic field hints.
+5. **Evidence choice** — after six moves, `EvidenceFamilyRail.tsx` and
+   `FieldNotebook.tsx` offer the highest charged unused families.
+   `/evidence-choice` applies the selected hard clue, records eliminations,
+   banks the score, and advances to the next board.
+6. **Guess** — after three evidence applications, `CandidateRoster.tsx` submits
+   the final candidate to `/guess`. A correct answer writes the run memory,
+   discovery, and species-card rewards.
 
 ## Directory map
 

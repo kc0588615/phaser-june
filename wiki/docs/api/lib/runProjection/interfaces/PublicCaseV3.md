@@ -1,6 +1,6 @@
 # Interface: PublicCaseV3
 
-Defined in: [src/lib/runProjection.ts:95](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L95)
+Defined in: [src/lib/runProjection.ts:76](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L76)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runProjection.ts:95](https://github.com/kc0588615/phaser-ju
 
 > **boardSeeds**: \[`number`, `number`, `number`\]
 
-Defined in: [src/lib/runProjection.ts:98](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L98)
+Defined in: [src/lib/runProjection.ts:79](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L79)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runProjection.ts:98](https://github.com/kc0588615/phaser-ju
 
 > **candidateIds**: `number`[]
 
-Defined in: [src/lib/runProjection.ts:97](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L97)
+Defined in: [src/lib/runProjection.ts:78](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L78)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/runProjection.ts:97](https://github.com/kc0588615/phaser-ju
 
 > **mapView**: [`ExpeditionMapView`](../../../expedition/mapView/interfaces/ExpeditionMapView.md)
 
-Defined in: [src/lib/runProjection.ts:99](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L99)
+Defined in: [src/lib/runProjection.ts:80](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L80)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/lib/runProjection.ts:99](https://github.com/kc0588615/phaser-ju
 
 > **version**: `3`
 
-Defined in: [src/lib/runProjection.ts:96](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L96)
+Defined in: [src/lib/runProjection.ts:77](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L77)

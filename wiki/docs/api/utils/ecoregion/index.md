@@ -16,3 +16,4 @@
 - [getUniqueOrders](functions/getUniqueOrders.md)
 - [groupSpeciesByCategory](functions/groupSpeciesByCategory.md)
 - [groupSpeciesByTaxonomy](functions/groupSpeciesByTaxonomy.md)
+- [normalizeTaxonName](functions/normalizeTaxonName.md)

@@ -18,7 +18,7 @@ export function EvidenceFamilyRail({ caseState, onChoose }: { caseState: CaseSta
   const choosing = caseState.stage === 'choose_evidence';
 
   return (
-    <aside className="absolute bottom-[84px] right-2 top-12 z-[65] flex w-[112px] flex-col rounded-2xl border border-white/15 bg-[rgba(7,17,20,.88)] p-2 shadow-2xl backdrop-blur-md md:bottom-[92px] md:right-4 md:w-[132px]" aria-label="Evidence families">
+    <aside className="absolute bottom-[108px] right-2 top-2 z-[65] flex w-[112px] flex-col rounded-2xl border border-white/15 bg-[rgba(7,17,20,.88)] p-2 shadow-2xl backdrop-blur-md sm:bottom-[76px] sm:right-4 sm:w-[132px] lg:bottom-2" aria-label="Evidence families">
       <div className="mb-2 px-1 text-[9px] font-bold uppercase tracking-[.16em] text-cyan-100/65">
         <div className="flex items-center gap-1.5"><RadioTower className="h-3 w-3" /> Evidence</div>
         <div className="mt-1.5 flex gap-1" aria-label={`${caseState.objectiveProgress} of 6 moves complete`}>
@@ -38,7 +38,7 @@ export function EvidenceFamilyRail({ caseState, onChoose }: { caseState: CaseSta
               </span>
               <span className="min-w-0 flex-1 text-left">
                 <span className="block truncate text-[10px] font-bold text-white">{EVIDENCE_FAMILY_LABELS[family]}</span>
-                <span className="block truncate text-[9px] text-white/55">{isLocked ? caseState.familyTraits[family] || 'studied' : EVIDENCE_FAMILY_QUESTIONS[family]}</span>
+                <span className="block truncate text-[9px] text-white/55">{isLocked ? 'Evidence logged' : EVIDENCE_FAMILY_QUESTIONS[family]}</span>
               </span>
               {isLocked ? <Lock className="h-3 w-3 shrink-0 text-white/35" /> : <b className="font-mono text-xs text-white">{caseState.evidenceCharges[family]}</b>}
             </>
@@ -48,7 +48,7 @@ export function EvidenceFamilyRail({ caseState, onChoose }: { caseState: CaseSta
               {content}
             </button>
           ) : (
-            <div key={family} className={`flex min-w-0 items-center gap-1.5 rounded-xl border px-1.5 ${isLocked ? 'border-white/5 bg-white/[.025] opacity-60' : 'border-white/10 bg-white/[.04]'}`} title={isLocked ? `Already studied: ${caseState.familyTraits[family] ?? EVIDENCE_FAMILY_LABELS[family]}` : `${EVIDENCE_FAMILY_LABELS[family]} charge`}>
+            <div key={family} className={`flex min-w-0 items-center gap-1.5 rounded-xl border px-1.5 ${isLocked ? 'border-white/5 bg-white/[.025] opacity-60' : 'border-white/10 bg-white/[.04]'}`} title={isLocked ? `${EVIDENCE_FAMILY_LABELS[family]} evidence logged` : `${EVIDENCE_FAMILY_LABELS[family]} charge`}>
               {content}
             </div>
           );

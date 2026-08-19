@@ -1,6 +1,6 @@
 # Interface: RunProjectionInput
 
-Defined in: [src/lib/runProjection.ts:302](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L302)
+Defined in: [src/lib/runProjection.ts:252](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L252)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runProjection.ts:302](https://github.com/kc0588615/phaser-j
 
 > `optional` **memory**: `unknown`
 
-Defined in: [src/lib/runProjection.ts:306](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L306)
+Defined in: [src/lib/runProjection.ts:256](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L256)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runProjection.ts:306](https://github.com/kc0588615/phaser-j
 
 > `optional` **nodes**: readonly `unknown`[]
 
-Defined in: [src/lib/runProjection.ts:305](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L305)
+Defined in: [src/lib/runProjection.ts:255](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L255)
 
 ***
 
@@ -24,6 +24,6 @@ Defined in: [src/lib/runProjection.ts:305](https://github.com/kc0588615/phaser-j
 
 > `optional` **publicObservations**: readonly `unknown`[]
 
-Defined in: [src/lib/runProjection.ts:304](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L304)
+Defined in: [src/lib/runProjection.ts:254](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L254)
 
 Hydrated, already-issued card content. Stored issuance rows are never read.

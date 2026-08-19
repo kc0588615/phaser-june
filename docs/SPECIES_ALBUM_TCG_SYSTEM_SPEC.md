@@ -79,14 +79,15 @@ The unlocked trivia is the educational reward.
 
 - Run session creation:
   - `src/app/api/runs/route.ts`
-- Run patching:
+- Run resume projection:
   - `src/app/api/runs/[runId]/route.ts`
-- Node completion:
-  - `src/app/api/runs/[runId]/nodes/[nodeIndex]/complete/route.ts`
-- Route trail rendering:
-  - `src/hooks/useMapLibreTrail.ts`
+- Evidence progress and site completion:
+  - `src/app/api/runs/[runId]/evidence-progress/route.ts`
+  - `src/app/api/runs/[runId]/evidence-choice/route.ts`
+- Route rendering:
+  - `src/components/ExpeditionMapHud.tsx`
 - Run state machine:
-  - `src/hooks/useExpeditionRun.ts`
+  - `src/contexts/ExpeditionContext.tsx`
 - Current species list shell:
   - `src/components/SpeciesList.tsx`
 - Current card:
@@ -1045,7 +1046,7 @@ Add:
 - GIS feature summary
 - candidate stamps
 
-### `PATCH /api/runs/[runId]`
+### `POST /api/runs/[runId]/evidence-progress`
 
 Add:
 
@@ -1053,7 +1054,7 @@ Add:
 - event log
 - card unlock outcome
 
-### `POST /api/runs/[runId]/nodes/[nodeIndex]/complete`
+### `POST /api/runs/[runId]/evidence-choice`
 
 Add:
 

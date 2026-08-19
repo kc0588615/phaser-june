@@ -36,14 +36,12 @@
         "typecheck": "tsc --noEmit",
         "test": "node scripts/run-tests.mjs",
         "typecheck:watch": "tsc --noEmit --watch",
-        "verify:waypoint-run": "node scripts/verify-waypoint-run-integration.mjs",
         "verify:waypoints": "node scripts/verify-waypoints.mjs",
         "verify:case-compiler": "node scripts/run-typescript.mjs scripts/verify-case-compiler.ts",
         "report:reasoning": "node scripts/run-typescript.mjs scripts/report-reasoning.ts",
         "clean": "rm -rf .next dist",
         "db:introspect": "drizzle-kit introspect",
         "seed:deduction": "node scripts/run-typescript.mjs scripts/seed-deduction.ts",
-        "seed:evidence": "node scripts/run-typescript.mjs scripts/seed-evidence.ts",
         "seed:evidence-family": "node scripts/run-typescript.mjs scripts/seed-evidence-family.ts"
     },
     "dependencies": {

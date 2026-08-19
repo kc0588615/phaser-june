@@ -1,6 +1,6 @@
 # Interface: ExpeditionWaypointResponse
 
-Defined in: [src/types/waypoints.ts:85](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L85)
+Defined in: [src/types/waypoints.ts:85](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L85)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/waypoints.ts:85](https://github.com/kc0588615/phaser-june
 
 > `optional` **debug**: `object`
 
-Defined in: [src/types/waypoints.ts:90](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L90)
+Defined in: [src/types/waypoints.ts:90](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L90)
 
 #### candidateCounts
 
@@ -28,7 +28,7 @@ Defined in: [src/types/waypoints.ts:90](https://github.com/kc0588615/phaser-june
 
 > **origin**: `object`
 
-Defined in: [src/types/waypoints.ts:86](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L86)
+Defined in: [src/types/waypoints.ts:86](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L86)
 
 #### lat
 
@@ -44,7 +44,7 @@ Defined in: [src/types/waypoints.ts:86](https://github.com/kc0588615/phaser-june
 
 > **radiusKm**: `number`
 
-Defined in: [src/types/waypoints.ts:87](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L87)
+Defined in: [src/types/waypoints.ts:87](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L87)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [src/types/waypoints.ts:87](https://github.com/kc0588615/phaser-june
 
 > **routePolyline**: [`WaypointRoutePoint`](WaypointRoutePoint.md)[]
 
-Defined in: [src/types/waypoints.ts:89](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L89)
+Defined in: [src/types/waypoints.ts:89](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L89)
 
 ***
 
@@ -60,4 +60,4 @@ Defined in: [src/types/waypoints.ts:89](https://github.com/kc0588615/phaser-june
 
 > **waypoints**: [`ExpeditionWaypoint`](ExpeditionWaypoint.md)[]
 
-Defined in: [src/types/waypoints.ts:88](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L88)
+Defined in: [src/types/waypoints.ts:88](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L88)

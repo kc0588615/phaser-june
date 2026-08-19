@@ -2,7 +2,7 @@
 
 > **getEcoregions**(`species`): `string`[]
 
-Defined in: [src/utils/ecoregion.ts:7](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/utils/ecoregion.ts#L7)
+Defined in: [src/utils/ecoregion.ts:8](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/utils/ecoregion.ts#L8)
 
 Extract unique ecoregions from species data
 

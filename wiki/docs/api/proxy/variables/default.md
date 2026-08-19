@@ -2,4 +2,4 @@
 
 > `const` **default**: `NextMiddleware`
 
-Defined in: [src/proxy.ts:8](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/proxy.ts#L8)
+Defined in: [src/proxy.ts:8](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/proxy.ts#L8)

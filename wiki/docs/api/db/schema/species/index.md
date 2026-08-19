@@ -8,7 +8,6 @@
 ## Variables
 
 - [cascadeHints](variables/cascadeHints.md)
-- [evidenceCards](variables/evidenceCards.md)
 - [evidenceFamilyCards](variables/evidenceFamilyCards.md)
 - [evidenceFamilyHints](variables/evidenceFamilyHints.md)
 - [iucn](variables/iucn.md)

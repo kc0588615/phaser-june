@@ -2,7 +2,7 @@
 
 > **hasFamilyCommonName**(`scientificFamily`): `boolean`
 
-Defined in: [src/config/familyCommonNames.ts:224](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/config/familyCommonNames.ts#L224)
+Defined in: [src/config/familyCommonNames.ts:257](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/config/familyCommonNames.ts#L257)
 
 Check if a family has a common name mapping
 

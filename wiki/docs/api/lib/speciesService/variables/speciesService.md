@@ -2,13 +2,13 @@
 
 > `const` **speciesService**: `object`
 
-Defined in: [src/lib/speciesService.ts:127](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesService.ts#L127)
+Defined in: [src/lib/speciesService.ts:127](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesService.ts#L127)
 
 ## Type Declaration
 
 ### getClosestHabitat()
 
-> **getClosestHabitat**(`longitude`, `latitude`): `Promise`\<`any`\>
+> **getClosestHabitat**(`longitude`, `latitude`, `signal?`): `Promise`\<`any`\>
 
 Get the closest habitat polygon when no species are found at a point
 Uses PostGIS nearest-neighbor search with no distance limit
@@ -22,6 +22,10 @@ Uses PostGIS nearest-neighbor search with no distance limit
 ##### latitude
 
 `number`
+
+##### signal?
+
+`AbortSignal`
 
 #### Returns
 
@@ -57,7 +61,7 @@ Get random species names for the guessing game
 
 ### getRasterHabitatDistribution()
 
-> **getRasterHabitatDistribution**(`longitude`, `latitude`): `Promise`\<[`RasterHabitatResult`](../interfaces/RasterHabitatResult.md)[]\>
+> **getRasterHabitatDistribution**(`longitude`, `latitude`, `signal?`): `Promise`\<[`RasterHabitatResult`](../interfaces/RasterHabitatResult.md)[]\>
 
 Get habitat distribution within 10km of a point using TiTiler statistics on COG
 
@@ -70,6 +74,10 @@ Get habitat distribution within 10km of a point using TiTiler statistics on COG
 ##### latitude
 
 `number`
+
+##### signal?
+
+`AbortSignal`
 
 #### Returns
 
@@ -145,7 +153,7 @@ Return species polygons as GeoJSON for map rendering.
 
 ### getSpeciesInRadius()
 
-> **getSpeciesInRadius**(`longitude`, `latitude`, `radiusMeters`): `Promise`\<[`SpeciesQueryResult`](../interfaces/SpeciesQueryResult.md)\>
+> **getSpeciesInRadius**(`longitude`, `latitude`, `radiusMeters`, `signal?`): `Promise`\<[`SpeciesQueryResult`](../interfaces/SpeciesQueryResult.md)\>
 
 Query species within a radius of a given point
 
@@ -162,6 +170,10 @@ Query species within a radius of a given point
 ##### radiusMeters
 
 `number`
+
+##### signal?
+
+`AbortSignal`
 
 #### Returns
 

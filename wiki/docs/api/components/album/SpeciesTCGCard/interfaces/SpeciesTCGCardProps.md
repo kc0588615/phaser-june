@@ -1,6 +1,6 @@
 # Interface: SpeciesTCGCardProps
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:60](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L60)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:60](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L60)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:60](https://github.com/kc05
 
 > `optional` **affinityTags**: `string`[]
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:71](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L71)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:71](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L71)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:71](https://github.com/kc05
 
 > `optional` **bestRunScore**: `number` \| `null`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:70](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L70)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:70](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L70)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:70](https://github.com/kc05
 
 > `optional` **cardVariant**: `string` \| `null`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:73](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L73)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:73](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L73)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:73](https://github.com/kc05
 
 > `optional` **clueCategoriesUnlocked**: `string`[]
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:67](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L67)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:67](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L67)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:67](https://github.com/kc05
 
 > `optional` **completionPct**: `number`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:68](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L68)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:68](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L68)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:68](https://github.com/kc05
 
 > `optional` **discoveredAt**: `string`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:63](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L63)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:63](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L63)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:63](https://github.com/kc05
 
 > `optional` **factsUnlocked**: `string`[]
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:66](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L66)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:66](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L66)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:66](https://github.com/kc05
 
 > `optional` **gisStamps**: [`FeatureClass`](../../../../types/gis/type-aliases/FeatureClass.md)[]
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:65](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L65)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:65](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L65)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:65](https://github.com/kc05
 
 > `optional` **initialFlipped**: `boolean`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:74](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L74)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:74](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L74)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:74](https://github.com/kc05
 
 > **isDiscovered**: `boolean`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:62](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L62)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:62](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L62)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:62](https://github.com/kc05
 
 > `optional` **onFlip**: () => `void`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:75](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L75)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:75](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L75)
 
 #### Returns
 
@@ -100,7 +100,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:75](https://github.com/kc05
 
 > `optional` **rarityTier**: `string`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:69](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L69)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:69](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L69)
 
 ***
 
@@ -108,7 +108,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:69](https://github.com/kc05
 
 > `optional` **runMemory**: [`SpeciesCardRunMemory`](../type-aliases/SpeciesCardRunMemory.md) \| `null`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:64](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L64)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:64](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L64)
 
 ***
 
@@ -116,7 +116,7 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:64](https://github.com/kc05
 
 > **species**: [`Species`](../../../../types/database/interfaces/Species.md)
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:61](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L61)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:61](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L61)
 
 ***
 
@@ -124,4 +124,4 @@ Defined in: [src/components/album/SpeciesTCGCard.tsx:61](https://github.com/kc05
 
 > `optional` **timesEncountered**: `number`
 
-Defined in: [src/components/album/SpeciesTCGCard.tsx:72](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/album/SpeciesTCGCard.tsx#L72)
+Defined in: [src/components/album/SpeciesTCGCard.tsx:72](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/album/SpeciesTCGCard.tsx#L72)

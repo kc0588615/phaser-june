@@ -13,11 +13,8 @@
  * Behavior is pinned by tests/lib/nodeScoring.test.ts.
  */
 
-import { METHOD_SLOTS, type MethodType } from '@/expedition/domain';
 import type { ExpeditionWaypoint, WaypointType } from '@/types/waypoints';
 import type { NodeObstacle, ObstacleFamily } from '@/game/nodeObstacles';
-
-export { METHOD_SLOTS } from '@/expedition/domain';
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
 
@@ -45,9 +42,6 @@ export interface RunNode {
   events: string[];
   rationale: string;
   obstacleFamily: ObstacleFamily | null;
-  method?: MethodType;
-  objectiveType?: 'method_match';
-  objectiveTarget: number;
   boardSeed?: number;
   waypoint?: ExpeditionWaypoint;
 }
@@ -58,8 +52,7 @@ export interface HabitatSignals {
   urban_ratio: number;
 }
 
-export const METHOD_OBJECTIVE_BASE_TARGET = 6;
-export const MYSTERY_NODE_COUNT = METHOD_SLOTS.length;
+export const MYSTERY_NODE_COUNT = 3;
 
 const MODIFIER_THRESHOLD = 0.1;
 const BIOREGION_FALLBACK_THRESHOLD = 0.05;
@@ -152,7 +145,7 @@ function createNodeTemplate(config: {
   events: string[];
   rationale: string;
   obstacleFamily: ObstacleFamily | null;
-}): Omit<RunNode, 'difficulty' | 'objectiveTarget'> {
+}): Omit<RunNode, 'difficulty'> {
   return {
     node_type: config.node_type,
     obstacles: config.obstacles,
@@ -163,7 +156,7 @@ function createNodeTemplate(config: {
 }
 
 /** Node templates keyed by node_type. */
-const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty' | 'objectiveTarget'>> = {
+const NODE_TEMPLATES: Record<string, Omit<RunNode, 'difficulty'>> = {
   riverbank_sweep: createNodeTemplate({
     node_type: 'riverbank_sweep',
     obstacleFamily: 'terrain',
@@ -295,20 +288,11 @@ export function applyWaypointsToRunNodes(nodes: RunNode[]): RunNode[] {
       moveBudget: node.moveBudget,
       waypoint,
       rationale: waypointRationale(waypoint, template.rationale),
-      objectiveTarget: node.objectiveType === 'method_match'
-        ? methodObjectiveTargetForDifficulty(difficulty)
-        : node.objectiveTarget,
     };
   });
 }
 
-export const MYSTERY_MOVE_BUDGET = 12;
-
-function methodObjectiveTargetForDifficulty(difficulty: RunNode['difficulty']): number {
-  if (difficulty <= 2) return METHOD_OBJECTIVE_BASE_TARGET - 2;
-  if (difficulty >= 4) return METHOD_OBJECTIVE_BASE_TARGET + 2;
-  return METHOD_OBJECTIVE_BASE_TARGET;
-}
+export const MYSTERY_MOVE_BUDGET = 6;
 
 function hashToUint32(value: string): number {
   let hash = 2166136261;
@@ -351,7 +335,7 @@ function deriveBoardSeedBase(
 }
 
 interface NodeTemplateCandidate {
-  template: Omit<RunNode, 'difficulty' | 'objectiveTarget'>;
+  template: Omit<RunNode, 'difficulty'>;
   difficulty: RunNode['difficulty'];
 }
 
@@ -399,7 +383,7 @@ function selectNodeTemplateCandidates(
   return candidates.slice(0, MYSTERY_NODE_COUNT);
 }
 
-/** Three-node mystery generator. GIS chooses flavor; each slot earns one investigation method. */
+/** Three-node mystery generator. GIS chooses flavor; v3 applies one evidence family at each site. */
 export function generateRunNodes(
   selection: NodeSelection,
   scores: LayerScore[],
@@ -418,7 +402,7 @@ export function generateRunNodes(
     anchorType,
   );
 
-  return METHOD_SLOTS.map((method, slot) => {
+  return Array.from({ length: MYSTERY_NODE_COUNT }, (_, slot) => {
     const candidate = candidates[slot];
     const difficulty = candidate.difficulty;
 
@@ -426,9 +410,6 @@ export function generateRunNodes(
       ...candidate.template,
       difficulty,
       moveBudget: MYSTERY_MOVE_BUDGET,
-      method,
-      objectiveType: 'method_match',
-      objectiveTarget: methodObjectiveTargetForDifficulty(difficulty),
       boardSeed: (seedBase + Math.imul(slot + 1, 0x9e3779b9)) >>> 0,
     };
   });

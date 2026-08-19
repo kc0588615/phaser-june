@@ -2,7 +2,7 @@
 
 > **POST**(`request`, `__namedParameters`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `ok`: `boolean`; \}\>\>
 
-Defined in: [src/app/api/species/cards/\[speciesId\]/unlock/route.ts:15](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/app/api/species/cards/[speciesId]/unlock/route.ts#L15)
+Defined in: [src/app/api/species/cards/\[speciesId\]/unlock/route.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/app/api/species/cards/[speciesId]/unlock/route.ts#L15)
 
 POST /api/species/cards/[speciesId]/unlock
 Record an unlock event (discover, fact, stamp, clue, clue_category, set-complete).

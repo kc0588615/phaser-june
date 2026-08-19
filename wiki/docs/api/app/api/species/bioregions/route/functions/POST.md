@@ -2,7 +2,7 @@
 
 > **POST**(`request`): `Promise`\<`NextResponse`\<\{ `bioregions`: `object`[]; \}\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
 
-Defined in: [src/app/api/species/bioregions/route.ts:38](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/app/api/species/bioregions/route.ts#L38)
+Defined in: [src/app/api/species/bioregions/route.ts:38](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/app/api/species/bioregions/route.ts#L38)
 
 ## Parameters
 

@@ -1,5 +1,5 @@
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, PROTOTYPE_SPECIES_COUNT, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseCompiler';
+import { CASE_TRAIT_CATEGORIES, PROTOTYPE_SPECIES_COUNT, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { createSeededStream } from '@/lib/seededRng';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 

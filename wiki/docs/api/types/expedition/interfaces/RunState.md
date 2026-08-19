@@ -1,6 +1,6 @@
 # Interface: RunState
 
-Defined in: [src/types/expedition.ts:100](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L100)
+Defined in: [src/types/expedition.ts:71](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L71)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/expedition.ts:100](https://github.com/kc0588615/phaser-ju
 
 > **bankedScore**: `number`
 
-Defined in: [src/types/expedition.ts:105](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L105)
+Defined in: [src/types/expedition.ts:76](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L76)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/expedition.ts:105](https://github.com/kc0588615/phaser-ju
 
 > **caseState**: [`CaseState`](CaseState.md) \| `null`
 
-Defined in: [src/types/expedition.ts:111](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L111)
+Defined in: [src/types/expedition.ts:82](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L82)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/expedition.ts:111](https://github.com/kc0588615/phaser-ju
 
 > `optional` **completionReason**: `"captured"` \| `"slipped"`
 
-Defined in: [src/types/expedition.ts:108](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L108)
+Defined in: [src/types/expedition.ts:79](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L79)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/types/expedition.ts:108](https://github.com/kc0588615/phaser-ju
 
 > **currentNodeIndex**: `number`
 
-Defined in: [src/types/expedition.ts:104](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L104)
+Defined in: [src/types/expedition.ts:75](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L75)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/types/expedition.ts:104](https://github.com/kc0588615/phaser-ju
 
 > **expedition**: [`ExpeditionData`](ExpeditionData.md) \| `null`
 
-Defined in: [src/types/expedition.ts:103](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L103)
+Defined in: [src/types/expedition.ts:74](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L74)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/types/expedition.ts:103](https://github.com/kc0588615/phaser-ju
 
 > **finalScore**: `number` \| `null`
 
-Defined in: [src/types/expedition.ts:106](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L106)
+Defined in: [src/types/expedition.ts:77](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L77)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/types/expedition.ts:106](https://github.com/kc0588615/phaser-ju
 
 > **phase**: [`RunPhase`](../type-aliases/RunPhase.md)
 
-Defined in: [src/types/expedition.ts:102](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L102)
+Defined in: [src/types/expedition.ts:73](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L73)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/types/expedition.ts:102](https://github.com/kc0588615/phaser-ju
 
 > **resolvedSpeciesId**: `number` \| `null`
 
-Defined in: [src/types/expedition.ts:110](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L110)
+Defined in: [src/types/expedition.ts:81](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L81)
 
 The public candidate the player selected on a server-confirmed correct guess.
 
@@ -74,7 +74,7 @@ The public candidate the player selected on a server-confirmed correct guess.
 
 > **runId**: `string` \| `null`
 
-Defined in: [src/types/expedition.ts:101](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L101)
+Defined in: [src/types/expedition.ts:72](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L72)
 
 ***
 
@@ -82,4 +82,4 @@ Defined in: [src/types/expedition.ts:101](https://github.com/kc0588615/phaser-ju
 
 > **visitedWaypointSlot**: `number`
 
-Defined in: [src/types/expedition.ts:107](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L107)
+Defined in: [src/types/expedition.ts:78](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L78)

@@ -11,9 +11,8 @@ import { speciesService } from '@/lib/speciesService';
 import type { Species } from '@/types/database';
 import type { ExpeditionData, RunNode, RunPhase } from '@/types/expedition';
 import type { FeatureFingerprint } from '@/types/gis';
-import { getAppConfig } from '@/utils/config';
 import { useMapLibreEcoregions } from '@/hooks/useMapLibreEcoregions';
-import { computeExpeditionRoutePolyline, normalizeRoutePolyline } from '@/lib/expeditionRoute';
+import { computeExpeditionRoutePolyline, getRouteBounds, normalizeRoutePolyline } from '@/lib/expeditionRoute';
 import { applyWaypointsToRunNodes } from '@/lib/nodeScoring';
 import {
   getWaypointTypeLabel,
@@ -23,12 +22,15 @@ import {
 } from '@/types/waypoints';
 import { ANIMAL_MARKER, type EcoregionPreviewPick, type EcoregionProgress } from '@/types/ecoregions';
 import { applyMapProjection, resolveMapStyle, restoreCustomLayerOrder } from '@/lib/maplibreStyle';
-import { removeMapLayersAndSource, setGeoJSONSource } from '@/lib/maplibreLayers';
+import {
+  addHabitatRasterLayer,
+  addLandscapeLayers,
+  removeMapLayersAndSource,
+  setGeoJSONSource,
+} from '@/lib/maplibreLayers';
 import { globeZoomAdjustment } from '@/lib/maplibreGeoJSON';
 import { cn } from '@/lib/utils';
 
-const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL || 'https://j8dwwxhoad.execute-api.us-east-2.amazonaws.com';
-const COG_URL = process.env.NEXT_PUBLIC_COG_URL || 'https://habitat-cog.s3.us-east-2.amazonaws.com/habitat_cog.tif';
 const SPECIES_RADIUS_METERS = 10_000;
 const WAYPOINT_FETCH_TIMEOUT_MS = 4_000;
 const MAP_LOAD_TIMEOUT_MS = 10_000;
@@ -99,6 +101,35 @@ async function fetchWaypointData(lon: number, lat: number): Promise<ExpeditionWa
     return null;
   } finally {
     window.clearTimeout(timeoutId);
+  }
+}
+
+async function fetchLandscapeData(
+  lon: number,
+  lat: number,
+  waypointData: ExpeditionWaypointResponse | null,
+  signal: AbortSignal,
+): Promise<Record<string, GeoJSON.FeatureCollection> | null> {
+  const params = new URLSearchParams({ lon: String(lon), lat: String(lat) });
+  const route = normalizeRoutePolyline(waypointData?.routePolyline);
+  const bounds = getRouteBounds(route);
+  if (bounds && bounds.maxLon - bounds.minLon < 20) {
+    const padding = 0.35;
+    params.set('west', String(Math.max(-180, bounds.minLon - padding)));
+    params.set('south', String(Math.max(-90, bounds.minLat - padding)));
+    params.set('east', String(Math.min(180, bounds.maxLon + padding)));
+    params.set('north', String(Math.min(90, bounds.maxLat + padding)));
+  }
+  try {
+    const response = await fetch(`/api/layers/near-point?${params}`, { signal });
+    return response.ok
+      ? response.json() as Promise<Record<string, GeoJSON.FeatureCollection>>
+      : null;
+  } catch (error) {
+    if ((error as { name?: string }).name !== 'AbortError') {
+      console.warn('[MapLibreExploreMap] Landscape context unavailable:', error);
+    }
+    return null;
   }
 }
 
@@ -243,8 +274,10 @@ export default function MapLibreExploreMap({
     const onStyleLoad = () => {
       if (map) applyMapProjection(map, 'explore');
     };
-    const onError = (event: { error?: Error }) => {
-      if (loaded || cancelled) return;
+    const onError = (event: { error?: Error; sourceId?: string; tile?: unknown }) => {
+      // Tile/source errors are transient (map still renders); only style-level
+      // failures before first load are fatal.
+      if (loaded || cancelled || event.sourceId || event.tile) return;
       setMapStatus('error');
       setMapError(event.error?.message ?? 'Map style failed to load');
     };
@@ -346,40 +379,7 @@ export default function MapLibreExploreMap({
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const controller = new AbortController();
-    (async () => {
-      try {
-        const config = await getAppConfig().catch(() => ({ cogUrl: COG_URL, titilerBaseUrl: TITILER_BASE_URL }));
-        const tileJsonUrl = `${config.titilerBaseUrl}/cog/WebMercatorQuad/tilejson.json?url=${encodeURIComponent(config.cogUrl)}&colormap_name=habitat_custom&nodata=0`;
-        const response = await fetch(tileJsonUrl, { signal: controller.signal });
-        if (!response.ok) throw new Error(`TileJSON failed (${response.status})`);
-        const tileJson = await response.json() as {
-          tiles?: string[];
-          bounds?: [number, number, number, number];
-          minzoom?: number;
-          maxzoom?: number;
-          attribution?: string;
-        };
-        if (!tileJson.tiles?.length || map.getSource('habitat-raster-source')) return;
-        map.addSource('habitat-raster-source', {
-          type: 'raster',
-          tiles: tileJson.tiles,
-          tileSize: 256,
-          minzoom: tileJson.minzoom ?? 0,
-          maxzoom: tileJson.maxzoom ?? 18,
-          bounds: tileJson.bounds,
-          attribution: tileJson.attribution || 'IUCN Habitat Map via TiTiler',
-        });
-        map.addLayer({
-          id: 'habitat-raster', type: 'raster', source: 'habitat-raster-source',
-          paint: { 'raster-opacity': 0.7 },
-        });
-        restoreCustomLayerOrder(map);
-      } catch (error) {
-        if ((error as { name?: string }).name !== 'AbortError') {
-          console.warn('[MapLibreExploreMap] Habitat raster unavailable:', error);
-        }
-      }
-    })();
+    void addHabitatRasterLayer(map, controller.signal);
     return () => controller.abort();
   }, [mapGeneration, mapReady]);
 
@@ -401,8 +401,8 @@ export default function MapLibreExploreMap({
 
     try {
       const [speciesResult, rasterHabitats, atPointData, waypointData, progress] = await Promise.all([
-        speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS),
-        speciesService.getRasterHabitatDistribution(longitude, latitude),
+        speciesService.getSpeciesInRadius(longitude, latitude, SPECIES_RADIUS_METERS, controller.signal),
+        speciesService.getRasterHabitatDistribution(longitude, latitude, controller.signal),
         fetch(`/api/protected-areas/at-point?${atPointParams}`, { signal: controller.signal })
           .then(response => response.ok ? response.json() as Promise<AtPointData> : null)
           .catch(() => null),
@@ -412,6 +412,11 @@ export default function MapLibreExploreMap({
       if (requestId !== selectionRequestRef.current) return;
       setRegionWaypointData(waypointData);
       setEcoregionProgress(progress);
+      const landscapeData = await fetchLandscapeData(longitude, latitude, waypointData, controller.signal);
+      if (requestId !== selectionRequestRef.current) return;
+      if (landscapeData) {
+        addLandscapeLayers(map, landscapeData, { labels: true, cities: true });
+      }
 
       const species = speciesResult.species;
       const habitatList = habitatsForSpecies(species);
@@ -434,7 +439,7 @@ export default function MapLibreExploreMap({
           restoreCustomLayerOrder(map);
         }
       } else {
-        const closestHabitat = await speciesService.getClosestHabitat(longitude, latitude);
+        const closestHabitat = await speciesService.getClosestHabitat(longitude, latitude, controller.signal);
         if (requestId !== selectionRequestRef.current) return;
         if (closestHabitat) {
           setGeoJSONSource(map, 'habitat-highlight', {

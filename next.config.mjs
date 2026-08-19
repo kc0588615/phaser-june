@@ -6,6 +6,9 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     outputFileTracingRoot: projectRoot,
+    outputFileTracingIncludes: {
+        '/*': ['server-assets/field-plates/*.png']
+    },
 
     // Server runtime enabled for Drizzle/API routes
     // (removed output: 'export')

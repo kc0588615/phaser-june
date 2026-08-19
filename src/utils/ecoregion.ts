@@ -1,4 +1,5 @@
 import type { Species } from '@/types/database';
+import type { TaxonomyHierarchy } from '@/types/speciesBrowser';
 import { getFamilyDisplayName } from '@/config/familyCommonNames';
 
 /**
@@ -83,15 +84,16 @@ export function groupSpeciesByCategory(species: Species[]): Record<string, Recor
 }
 
 /**
- * Group species by taxonomic hierarchy (class -> order -> family)
+ * Group species by the browse hierarchy (class -> order -> family -> genus).
  */
-export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Record<string, Record<string, Species[]>>> {
-  const grouped: Record<string, Record<string, Record<string, Species[]>>> = {};
+export function groupSpeciesByTaxonomy(species: Species[]): TaxonomyHierarchy {
+  const grouped: TaxonomyHierarchy = {};
 
   species.forEach(sp => {
-    const className = sp.class || 'Unknown';
-    const orderName = sp.taxon_order || 'Unknown';
-    const family = sp.family || 'Unknown';
+    const className = normalizeTaxonName(sp.class);
+    const orderName = normalizeTaxonName(sp.taxon_order);
+    const family = normalizeTaxonName(sp.family);
+    const genus = normalizeTaxonName(sp.genus);
 
     if (!grouped[className]) {
       grouped[className] = {};
@@ -102,20 +104,26 @@ export function groupSpeciesByTaxonomy(species: Species[]): Record<string, Recor
     }
 
     if (!grouped[className][orderName][family]) {
-      grouped[className][orderName][family] = [];
+      grouped[className][orderName][family] = {};
     }
 
-    grouped[className][orderName][family].push(sp);
+    if (!grouped[className][orderName][family][genus]) {
+      grouped[className][orderName][family][genus] = [];
+    }
+
+    grouped[className][orderName][family][genus].push(sp);
   });
 
-  // Sort species within each family by common name
+  // Sort species within each genus by common name.
   Object.values(grouped).forEach(orders => {
     Object.values(orders).forEach(families => {
-      Object.values(families).forEach(speciesList => {
-        speciesList.sort((a, b) => {
-          const nameA = a.common_name || a.scientific_name || '';
-          const nameB = b.common_name || b.scientific_name || '';
-          return nameA.localeCompare(nameB);
+      Object.values(families).forEach(genera => {
+        Object.values(genera).forEach(speciesList => {
+          speciesList.sort((a, b) => {
+            const nameA = a.common_name || a.scientific_name || '';
+            const nameB = b.common_name || b.scientific_name || '';
+            return nameA.localeCompare(nameB);
+          });
         });
       });
     });
@@ -195,7 +203,7 @@ export function getUniqueGenera(species: Species[]): string[] {
   
   species.forEach(sp => {
     if (sp.genus && sp.genus !== 'NULL' && sp.genus !== 'null') {
-      genera.add(sp.genus);
+      genera.add(normalizeTaxonName(sp.genus));
     }
   });
   
@@ -210,7 +218,7 @@ export function getUniqueFamilies(species: Species[]): string[] {
   
   species.forEach(sp => {
     if (sp.family && sp.family !== 'NULL' && sp.family !== 'null') {
-      families.add(sp.family);
+      families.add(normalizeTaxonName(sp.family));
     }
   });
   
@@ -232,9 +240,17 @@ export function getUniqueOrders(species: Species[]): string[] {
 
   species.forEach(sp => {
     if (sp.taxon_order && sp.taxon_order !== 'NULL' && sp.taxon_order !== 'null') {
-      orders.add(sp.taxon_order);
+      orders.add(normalizeTaxonName(sp.taxon_order));
     }
   });
 
   return Array.from(orders).sort();
+}
+
+export function normalizeTaxonName(value?: string | null): string {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'unknown') {
+    return 'Unknown';
+  }
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
 }

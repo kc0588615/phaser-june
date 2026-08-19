@@ -1,6 +1,6 @@
 # Interface: PublicIssuedObservation
 
-Defined in: [src/lib/runProjection.ts:199](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L199)
+Defined in: [src/lib/runProjection.ts:162](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L162)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runProjection.ts:199](https://github.com/kc0588615/phaser-j
 
 > `optional` **actualEliminatedIds**: `number`[]
 
-Defined in: [src/lib/runProjection.ts:209](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L209)
+Defined in: [src/lib/runProjection.ts:169](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L169)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runProjection.ts:209](https://github.com/kc0588615/phaser-j
 
 > `optional` **candidateTraitPhrases**: `Record`\<`string`, `string`\>
 
-Defined in: [src/lib/runProjection.ts:212](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L212)
+Defined in: [src/lib/runProjection.ts:172](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L172)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/runProjection.ts:212](https://github.com/kc0588615/phaser-j
 
 > `optional` **compareTag**: `string`
 
-Defined in: [src/lib/runProjection.ts:206](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L206)
+Defined in: [src/lib/runProjection.ts:168](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L168)
 
 ***
 
@@ -32,15 +32,15 @@ Defined in: [src/lib/runProjection.ts:206](https://github.com/kc0588615/phaser-j
 
 > `optional` **eliminationReasons**: `Record`\<`string`, `string`\>
 
-Defined in: [src/lib/runProjection.ts:210](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L210)
+Defined in: [src/lib/runProjection.ts:170](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L170)
 
 ***
 
-### family?
+### family
 
-> `optional` **family**: `"behavior"` \| `"relatives"` \| `"body"` \| `"habits"` \| `"place"`
+> **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [src/lib/runProjection.ts:202](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L202)
+Defined in: [src/lib/runProjection.ts:164](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L164)
 
 ***
 
@@ -48,23 +48,7 @@ Defined in: [src/lib/runProjection.ts:202](https://github.com/kc0588615/phaser-j
 
 > `optional` **inferenceText**: `string`
 
-Defined in: [src/lib/runProjection.ts:204](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L204)
-
-***
-
-### isSignature
-
-> **isSignature**: `boolean`
-
-Defined in: [src/lib/runProjection.ts:207](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L207)
-
-***
-
-### method?
-
-> `optional` **method**: `"track"` \| `"observe"` \| `"listen"` \| `"survey"` \| `"analyze"`
-
-Defined in: [src/lib/runProjection.ts:201](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L201)
+Defined in: [src/lib/runProjection.ts:166](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L166)
 
 ***
 
@@ -72,15 +56,7 @@ Defined in: [src/lib/runProjection.ts:201](https://github.com/kc0588615/phaser-j
 
 > **observationText**: `string`
 
-Defined in: [src/lib/runProjection.ts:203](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L203)
-
-***
-
-### qualityTier?
-
-> `optional` **qualityTier**: [`EvidenceQualityTier`](../../../expedition/evidenceQuality/type-aliases/EvidenceQualityTier.md)
-
-Defined in: [src/lib/runProjection.ts:208](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L208)
+Defined in: [src/lib/runProjection.ts:165](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L165)
 
 ***
 
@@ -88,7 +64,7 @@ Defined in: [src/lib/runProjection.ts:208](https://github.com/kc0588615/phaser-j
 
 > **ref**: `string`
 
-Defined in: [src/lib/runProjection.ts:200](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L200)
+Defined in: [src/lib/runProjection.ts:163](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L163)
 
 ***
 
@@ -96,7 +72,7 @@ Defined in: [src/lib/runProjection.ts:200](https://github.com/kc0588615/phaser-j
 
 > `optional` **traitCategory**: `string`
 
-Defined in: [src/lib/runProjection.ts:205](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L205)
+Defined in: [src/lib/runProjection.ts:167](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L167)
 
 ***
 
@@ -104,4 +80,4 @@ Defined in: [src/lib/runProjection.ts:205](https://github.com/kc0588615/phaser-j
 
 > `optional` **traitPhrase**: `string`
 
-Defined in: [src/lib/runProjection.ts:211](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L211)
+Defined in: [src/lib/runProjection.ts:171](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L171)

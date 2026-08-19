@@ -11,7 +11,6 @@ Copy `.env.example` to `.env.local` and set `DATABASE_URL`. The URL must target 
 
 ```env
 DATABASE_URL=postgresql://user:password@host:6432/database?sslmode=require
-EXPEDITION_CASE_VERSION=3
 
 # Optional hosted/self-hosted MapLibre style
 NEXT_PUBLIC_MAP_STYLE_URL=

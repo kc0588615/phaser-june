@@ -1,6 +1,6 @@
 # Interface: ExpeditionMapRoutePoint
 
-Defined in: [src/expedition/mapView.ts:1](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/mapView.ts#L1)
+Defined in: [src/expedition/mapView.ts:1](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/mapView.ts#L1)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/expedition/mapView.ts:1](https://github.com/kc0588615/phaser-ju
 
 > **biome**: `string` \| `null`
 
-Defined in: [src/expedition/mapView.ts:5](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/mapView.ts#L5)
+Defined in: [src/expedition/mapView.ts:5](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/mapView.ts#L5)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/expedition/mapView.ts:5](https://github.com/kc0588615/phaser-ju
 
 > **lat**: `number`
 
-Defined in: [src/expedition/mapView.ts:3](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/mapView.ts#L3)
+Defined in: [src/expedition/mapView.ts:3](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/mapView.ts#L3)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/expedition/mapView.ts:3](https://github.com/kc0588615/phaser-ju
 
 > **lon**: `number`
 
-Defined in: [src/expedition/mapView.ts:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/mapView.ts#L4)
+Defined in: [src/expedition/mapView.ts:4](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/mapView.ts#L4)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/expedition/mapView.ts:4](https://github.com/kc0588615/phaser-ju
 
 > **nearestFeature**: `string` \| `null`
 
-Defined in: [src/expedition/mapView.ts:6](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/mapView.ts#L6)
+Defined in: [src/expedition/mapView.ts:6](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/mapView.ts#L6)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [src/expedition/mapView.ts:6](https://github.com/kc0588615/phaser-ju
 
 > **nodeIndex**: `0` \| `1` \| `2`
 
-Defined in: [src/expedition/mapView.ts:2](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/mapView.ts#L2)
+Defined in: [src/expedition/mapView.ts:2](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/mapView.ts#L2)

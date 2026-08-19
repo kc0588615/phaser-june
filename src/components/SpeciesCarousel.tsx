@@ -7,22 +7,26 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 
 import SpeciesCard from '@/components/SpeciesCard';
-import { getFamilyDisplayNameFromSpecies } from '@/utils/ecoregion';
+import { TaxonomyLineageHeader } from '@/components/species-list/TaxonomyLineageHeader';
 import type { Species } from '@/types/database';
 
 interface SpeciesCarouselProps {
   family: string;
+  genus: string;
+  className: string;
+  order: string;
   speciesList: Species[];
   discoveredSpecies: Record<number, { name: string; discoveredAt: string }>;
-  category: string;
   onNavigateToTop: () => void;
 }
 
 export default function SpeciesCarousel({
   family,
+  genus,
+  className,
+  order,
   speciesList,
   discoveredSpecies,
-  category,
   onNavigateToTop,
 }: SpeciesCarouselProps) {
   const prevRef = useRef<HTMLButtonElement | null>(null);
@@ -59,29 +63,19 @@ export default function SpeciesCarousel({
   };
 
   return (
-    <div className="relative bg-slate-700/50 border border-slate-600 rounded-lg overflow-visible w-full max-w-full">
-      {/* Slide counter - FORCED to wrap at narrow width */}
-      <div className="px-2 sm:px-3 py-2 bg-slate-800/70 border-b border-slate-600">
-        <div className="flex flex-wrap items-center justify-center gap-1" style={{ width: '100%' }}>
-          {speciesList.length > 1 && (
-            <span
-              className="text-slate-300 font-mono"
-              style={{
-                  fontSize: 'clamp(10px, 2vw, 12px)',
-                  whiteSpace: 'nowrap',
-                  minWidth: 'max-content'
-                }}
-              >
-                {currentSlide + 1}/{speciesList.length}
-              </span>
-            )}
-        </div>
-      </div>
+    <div className="relative w-full max-w-full overflow-visible rounded-lg border border-border bg-card/50">
+      <TaxonomyLineageHeader
+        className={className}
+        order={order}
+        family={family}
+        genus={genus}
+        speciesCount={speciesList.length}
+      />
 
       {/* Swiper Container - Mobile-first with proper padding to prevent clipping */}
       <div className="relative w-full overflow-visible px-4 sm:px-6">
         <Swiper
-          key={`species-carousel-${enableLoop ? 'loop' : 'no-loop'}`} // force re-init if loop setting changes
+          key={`${className}-${order}-${family}-${genus}-${enableLoop ? 'loop' : 'no-loop'}`}
           modules={[Navigation, A11y, Keyboard]}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
@@ -128,6 +122,12 @@ export default function SpeciesCarousel({
           updateOnWindowResize
           roundLengths
           keyboard={{ enabled: true, onlyInViewport: true }}
+          a11y={{
+            containerMessage: `${genus} species in the ${family} taxonomic family`,
+            slideLabelMessage: '{{index}} of {{slidesLength}}',
+            prevSlideMessage: 'Previous species',
+            nextSlideMessage: 'Next species',
+          }}
           navigation={{
             prevEl: prevRef.current,
             nextEl: nextRef.current,
@@ -154,7 +154,7 @@ export default function SpeciesCarousel({
                 <div className="p-2 sm:p-3 w-full" style={{ maxWidth: '100%' }}>
                   <SpeciesCard
                     species={species}
-                    category={category}
+                    category={order}
                     speciesPositionLabel={`Species ${index + 1} of ${speciesList.length}`}
                     isDiscovered={isDiscovered}
                     discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
@@ -170,6 +170,7 @@ export default function SpeciesCarousel({
         {speciesList.length > 1 && (
           <>
             <button
+              type="button"
               ref={prevRef}
               className={`absolute left-1 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all min-w-[40px] min-h-[40px] items-center justify-center flex bg-slate-900/90 border border-slate-700 backdrop-blur shadow-lg ${
                 isBeginning ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/95'
@@ -180,6 +181,7 @@ export default function SpeciesCarousel({
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
+              type="button"
               ref={nextRef}
               className={`absolute right-1 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all min-w-[40px] min-h-[40px] items-center justify-center flex bg-slate-900/90 border border-slate-700 backdrop-blur shadow-lg ${
                 isEnd ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/95'
@@ -197,6 +199,7 @@ export default function SpeciesCarousel({
           <div className="flex justify-center pt-2 pb-3 px-2 sm:hidden">
             <div className="bg-slate-900/80 border border-slate-700 rounded-full shadow-md backdrop-blur px-3 py-1.5 flex items-center gap-2 w-full">
               <button
+                type="button"
                 className={`px-2 py-1 rounded-full min-w-[50px] ${
                   isBeginning ? 'bg-slate-800/60 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'
                 }`}
@@ -214,6 +217,7 @@ export default function SpeciesCarousel({
                 {currentSlide + 1}/{speciesList.length}
               </span>
               <button
+                type="button"
                 className={`px-2 py-1 rounded-full min-w-[50px] ${
                   isEnd ? 'bg-slate-800/60 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'
                 }`}

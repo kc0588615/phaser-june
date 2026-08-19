@@ -1,6 +1,6 @@
 # Interface: SpeciesCardProgressInput
 
-Defined in: [src/lib/speciesCardProgression.ts:11](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesCardProgression.ts#L11)
+Defined in: [src/lib/speciesCardProgression.ts:11](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L11)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/speciesCardProgression.ts:11](https://github.com/kc0588615/
 
 > **clueCategoriesUnlocked**: `unknown`
 
-Defined in: [src/lib/speciesCardProgression.ts:15](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesCardProgression.ts#L15)
+Defined in: [src/lib/speciesCardProgression.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L15)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/speciesCardProgression.ts:15](https://github.com/kc0588615/
 
 > **discovered**: `boolean`
 
-Defined in: [src/lib/speciesCardProgression.ts:12](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesCardProgression.ts#L12)
+Defined in: [src/lib/speciesCardProgression.ts:12](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L12)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/speciesCardProgression.ts:12](https://github.com/kc0588615/
 
 > **factsUnlocked**: `unknown`
 
-Defined in: [src/lib/speciesCardProgression.ts:14](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesCardProgression.ts#L14)
+Defined in: [src/lib/speciesCardProgression.ts:14](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L14)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/speciesCardProgression.ts:14](https://github.com/kc0588615/
 
 > **gisStamps**: `unknown`
 
-Defined in: [src/lib/speciesCardProgression.ts:16](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesCardProgression.ts#L16)
+Defined in: [src/lib/speciesCardProgression.ts:16](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L16)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [src/lib/speciesCardProgression.ts:16](https://github.com/kc0588615/
 
 > **timesEncountered**: `number`
 
-Defined in: [src/lib/speciesCardProgression.ts:13](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/speciesCardProgression.ts#L13)
+Defined in: [src/lib/speciesCardProgression.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L13)

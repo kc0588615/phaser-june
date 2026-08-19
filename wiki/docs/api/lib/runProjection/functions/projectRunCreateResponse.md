@@ -2,7 +2,7 @@
 
 > **projectRunCreateResponse**(`input`): [`PublicRunCreateResponse`](../interfaces/PublicRunCreateResponse.md)
 
-Defined in: [src/lib/runProjection.ts:349](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L349)
+Defined in: [src/lib/runProjection.ts:297](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L297)
 
 All create-route output passes through this explicit three-field boundary.
 

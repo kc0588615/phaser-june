@@ -7,8 +7,8 @@
 //
 //   Explore map --'map-location-selected'---->  ExpeditionContext / Game scene
 //   Context    --'expedition-start'---------->  Game scene (board begins)
-//   Game scene --'node-objective-updated'---->  Context (progress + sample quality)
-//   Game scene --'node-advance-requested'---->  Context (durable node completion)
+//   Game scene --'evidence-move-resolved'----> Context (durable v3 checkpoint)
+//   Context    --'node-complete'-------------> Game scene (next board begins)
 //
 // To add an event: add its name + payload type to `EventPayloads`, then both
 // `EventBus.emit` and `EventBus.on` become type-checked for it everywhere.
@@ -18,7 +18,6 @@ import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { CluePayload } from './clueConfig';
 import type { ExpeditionData } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
-import type { GemType } from './constants';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
@@ -39,35 +38,22 @@ export interface EventPayloads {
     moveBudget?: number;
     obstacles?: NodeObstacle[];
     obstacleFamily?: ObstacleFamily | null;
-    objectiveGem?: GemType;
     activeAffinities?: AffinityType[];
     objectiveTarget?: number;
     objectiveProgress?: number;
-    bestTargetMatchLength?: number;
     nodeIndex?: number;
     nodeType?: string;
     events?: string[];
     boardSeed?: number;
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
-    /** Case snapshot version — verb rules apply to v2 only (v1 runs keep legacy counting). */
-    caseVersion?: number;
-    /** Public case candidates — the pool field-note drips draw from. */
+    /** Public case candidates. */
     candidateIds?: number[];
-    /** Full rows for those candidates (drips need clue fields; location species may not cover them). */
+    /** Full rows for those candidates. */
     candidateSpecies?: Species[];
     boardCheckpoint?: BoardCheckpointV1;
   };
   'clue-revealed': CluePayload;
-  /** Off-method 4+ match earned a fact about a public candidate (client-only). */
-  'field-note-dripped': {
-    nodeIndex: number;
-    speciesId: number;
-    speciesName: string;
-    categoryName: string;
-    icon: string;
-    text: string;
-  };
   'new-game-started': {
     speciesName: string;
     speciesId: number;
@@ -105,17 +91,11 @@ export interface EventPayloads {
     featureFingerprints?: FeatureFingerprint[];
   };
   'expedition-start': Record<string, never>;
-  'node-advance-requested': {
-    nodeIndex: number;
-    reason: 'victory' | 'escaped';
-    source: 'game' | 'panel';
-  };
   'node-complete': { nodeIndex: number };
   'route-progress-updated': { slot: number };
   'node-objective-updated': {
     progress: number;
     target: number;
-    bestTargetMatchLength: number;
   };
   'evidence-move-resolved': {
     nodeIndex: number;
@@ -123,6 +103,10 @@ export interface EventPayloads {
     directClears: EvidenceChargeState;
     directMatchFamilies: EvidenceFamily[];
     cascadeCount: number;
+    signalCleared: boolean;
+    signalClearedFamily?: EvidenceFamily;
+    /** 1 for a direct 3-match clear, 2 for 4+. Present iff signalCleared. */
+    signalHintCount?: 1 | 2;
     boardCheckpoint: BoardCheckpointV1;
   };
   'evidence-progress-committed': {

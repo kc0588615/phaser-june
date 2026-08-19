@@ -1,6 +1,6 @@
 # Interface: EcoregionProgressGroup
 
-Defined in: [src/types/ecoregions.ts:51](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L51)
+Defined in: [src/types/ecoregions.ts:51](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L51)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/ecoregions.ts:51](https://github.com/kc0588615/phaser-jun
 
 > **animal\_icon**: `string`
 
-Defined in: [src/types/ecoregions.ts:53](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L53)
+Defined in: [src/types/ecoregions.ts:53](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L53)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/ecoregions.ts:53](https://github.com/kc0588615/phaser-jun
 
 > **animal\_type**: `string`
 
-Defined in: [src/types/ecoregions.ts:52](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L52)
+Defined in: [src/types/ecoregions.ts:52](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L52)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/ecoregions.ts:52](https://github.com/kc0588615/phaser-jun
 
 > **found\_species**: `number`
 
-Defined in: [src/types/ecoregions.ts:55](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L55)
+Defined in: [src/types/ecoregions.ts:55](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L55)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/types/ecoregions.ts:55](https://github.com/kc0588615/phaser-jun
 
 > **total\_species**: `number`
 
-Defined in: [src/types/ecoregions.ts:54](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L54)
+Defined in: [src/types/ecoregions.ts:54](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L54)

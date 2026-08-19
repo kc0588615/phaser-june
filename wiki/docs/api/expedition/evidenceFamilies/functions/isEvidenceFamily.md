@@ -1,8 +1,8 @@
 # Function: isEvidenceFamily()
 
-> **isEvidenceFamily**(`value`): value is "behavior" \| "relatives" \| "body" \| "habits" \| "place"
+> **isEvidenceFamily**(`value`): value is "relatives" \| "body" \| "behavior" \| "habits" \| "place"
 
-Defined in: [src/expedition/evidenceFamilies.ts:48](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/expedition/evidenceFamilies.ts#L48)
+Defined in: [src/expedition/evidenceFamilies.ts:48](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/evidenceFamilies.ts#L48)
 
 ## Parameters
 
@@ -12,4 +12,4 @@ Defined in: [src/expedition/evidenceFamilies.ts:48](https://github.com/kc0588615
 
 ## Returns
 
-value is "behavior" \| "relatives" \| "body" \| "habits" \| "place"
+value is "relatives" \| "body" \| "behavior" \| "habits" \| "place"

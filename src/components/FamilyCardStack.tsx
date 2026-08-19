@@ -5,6 +5,7 @@ import type { Swiper as SwiperType } from 'swiper';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Species } from '@/types/database';
 import SpeciesCard from '@/components/SpeciesCard';
+import { TaxonomyLineageHeader } from '@/components/species-list/TaxonomyLineageHeader';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -13,17 +14,21 @@ import 'swiper/css/pagination';
 
 interface FamilyCardStackProps {
   family: string;
+  genus: string;
+  className: string;
+  order: string;
   speciesList: Species[];
   discoveredSpecies: Record<number, { name: string; discoveredAt: string }>;
-  category: string;
   onNavigateToTop: () => void;
 }
 
 export default function FamilyCardStack({
   family,
+  genus,
+  className,
+  order,
   speciesList,
   discoveredSpecies,
-  category,
   onNavigateToTop
 }: FamilyCardStackProps) {
   const swiperRef = useRef<SwiperType>();
@@ -31,10 +36,9 @@ export default function FamilyCardStack({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
-  const [containerReady, setContainerReady] = useState(false);
 
   // Generate unique IDs for navigation buttons (slug-safe)
-  const slug = family.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+  const slug = `${className}-${order}-${family}-${genus}`.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
   const prevButtonId = `swiper-prev-${slug}`;
   const nextButtonId = `swiper-next-${slug}`;
   const paginationId = `swiper-pagination-${slug}`;
@@ -51,28 +55,6 @@ export default function FamilyCardStack({
         swiperRef.current.destroy(true, true);
       }
     };
-  }, []);
-
-  // Container readiness detection with ResizeObserver
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const checkReady = () => {
-      // Mark ready only when element has layout
-      setContainerReady(el.clientWidth > 0);
-    };
-    const ro = new ResizeObserver(() => {
-      checkReady();
-      const s = swiperRef.current;
-      if (!s || s.destroyed) return;
-      s.update();
-      if (typeof s.updateAutoHeight === 'function') {
-        s.updateAutoHeight.call(s, 0);
-      }
-    });
-    checkReady();
-    ro.observe(el);
-    return () => ro.disconnect();
   }, []);
 
   const handleSlideChange = (swiper: SwiperType) => {
@@ -122,41 +104,20 @@ export default function FamilyCardStack({
   }, []);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="relative bg-slate-700/50 border border-slate-600 rounded-lg overflow-visible w-full max-w-full"
+      className="relative w-full max-w-full overflow-visible rounded-lg border border-border bg-card/50"
     >
-      {/* Family Header */}
-      <div className="px-2 sm:px-3 md:px-4 py-2 bg-slate-800/70 border-b border-slate-600">
-        <div className="flex flex-wrap items-center justify-between gap-1" style={{ width: '100%' }}>
-          <span 
-            className="text-muted-foreground"
-            style={{ 
-              fontSize: 'clamp(9px, 2vw, 12px)',
-              whiteSpace: 'nowrap',
-              minWidth: 'max-content'
-            }}
-          >
-            {speciesList.length} species
-          </span>
-          {speciesList.length > 1 && (
-            <span 
-              className="text-slate-300 font-mono"
-              style={{ 
-                fontSize: 'clamp(10px, 2vw, 12px)',
-                whiteSpace: 'nowrap',
-                minWidth: 'max-content'
-              }}
-            >
-              {currentSlide + 1}/{speciesList.length}
-            </span>
-          )}
-        </div>
-      </div>
+      <TaxonomyLineageHeader
+        className={className}
+        order={order}
+        family={family}
+        genus={genus}
+        speciesCount={speciesList.length}
+      />
 
       {/* Swiper Container */}
       <div
-        ref={containerRef}
         className="relative w-full overflow-visible px-2 sm:px-3"
         style={{
           paddingLeft: 'max(env(safe-area-inset-left, 0px), 8px)',
@@ -164,7 +125,7 @@ export default function FamilyCardStack({
         }}
       >
         <Swiper
-          key={`${slug}-${enableLoop ? 'loop' : 'no-loop'}`} // force re-init if loop setting changes
+          key={`${className}-${order}-${slug}-${genus}-${enableLoop ? 'loop' : 'no-loop'}`}
           modules={[Navigation, Pagination, Keyboard, A11y]}
           onBeforeInit={(swiper) => {
             // Bind external navigation reliably
@@ -240,6 +201,8 @@ export default function FamilyCardStack({
           simulateTouch
           touchStartPreventDefault={false}
           a11y={{
+            containerMessage: `${genus} species in the ${family} taxonomic family`,
+            slideLabelMessage: '{{index}} of {{slidesLength}}',
             prevSlideMessage: 'Previous species',
             nextSlideMessage: 'Next species',
           }}
@@ -253,7 +216,7 @@ export default function FamilyCardStack({
                 <div className="p-1 sm:p-2 w-full" style={{ maxWidth: '100%' }}>
                   <SpeciesCard
                     species={species}
-                    category={category}
+                    category={order}
                     speciesPositionLabel={`Species ${index + 1} of ${speciesList.length}`}
                     isDiscovered={isDiscovered}
                     discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
@@ -273,6 +236,7 @@ export default function FamilyCardStack({
           >
             <div className="bg-slate-900/85 border border-slate-700 rounded-full shadow-md backdrop-blur px-2 py-1.5 flex items-center gap-2 w-full">
               <button
+                type="button"
                 className={`px-2.5 py-1.5 rounded-full min-w-[56px] ${
                   isBeginning ? 'bg-slate-800/60 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'
                 }`}
@@ -290,6 +254,7 @@ export default function FamilyCardStack({
                 {currentSlide + 1}/{speciesList.length}
               </span>
               <button
+                type="button"
                 className={`px-2.5 py-1.5 rounded-full min-w-[56px] ${
                   isEnd ? 'bg-slate-800/60 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'
                 }`}
@@ -308,6 +273,7 @@ export default function FamilyCardStack({
         {speciesList.length > 1 && (
           <>
             <button
+              type="button"
               id={prevButtonId}
               className={`hidden lg:flex absolute left-2 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
                 isBeginning ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/90'
@@ -318,6 +284,7 @@ export default function FamilyCardStack({
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
+              type="button"
               id={nextButtonId}
               className={`hidden lg:flex absolute right-2 top-1/2 -translate-y-1/2 z-carousel-nav p-2 rounded-full transition-all touch-manipulation min-w-[44px] min-h-[44px] items-center justify-center bg-slate-900/80 border border-slate-700 backdrop-blur shadow-lg ${
                 isEnd ? 'text-slate-500 cursor-not-allowed' : 'text-white hover:bg-slate-800/90'

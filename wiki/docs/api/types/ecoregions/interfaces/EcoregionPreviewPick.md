@@ -1,6 +1,6 @@
 # Interface: EcoregionPreviewPick
 
-Defined in: [src/types/ecoregions.ts:11](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L11)
+Defined in: [src/types/ecoregions.ts:11](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L11)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/ecoregions.ts:11](https://github.com/kc0588615/phaser-jun
 
 > **id**: `string` \| `number` \| `null`
 
-Defined in: [src/types/ecoregions.ts:12](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L12)
+Defined in: [src/types/ecoregions.ts:12](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L12)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/ecoregions.ts:12](https://github.com/kc0588615/phaser-jun
 
 > `optional` **lat**: `number`
 
-Defined in: [src/types/ecoregions.ts:14](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L14)
+Defined in: [src/types/ecoregions.ts:14](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L14)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/ecoregions.ts:14](https://github.com/kc0588615/phaser-jun
 
 > `optional` **lon**: `number`
 
-Defined in: [src/types/ecoregions.ts:13](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L13)
+Defined in: [src/types/ecoregions.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L13)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/types/ecoregions.ts:13](https://github.com/kc0588615/phaser-jun
 
 > **properties**: [`EcoregionPreviewProperties`](EcoregionPreviewProperties.md)
 
-Defined in: [src/types/ecoregions.ts:15](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/ecoregions.ts#L15)
+Defined in: [src/types/ecoregions.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L15)

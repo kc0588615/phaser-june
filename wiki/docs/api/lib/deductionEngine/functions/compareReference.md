@@ -2,7 +2,7 @@
 
 > **compareReference**(`mysteryProfile`, `referenceProfile`, `category`, `compareTags?`): [`ComparisonResult`](../interfaces/ComparisonResult.md)
 
-Defined in: [src/lib/deductionEngine.ts:112](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/deductionEngine.ts#L112)
+Defined in: [src/lib/deductionEngine.ts:112](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L112)
 
 Compare a mystery species against a reference card for a specific category.
 Returns whether any tags overlap and which ones matched.

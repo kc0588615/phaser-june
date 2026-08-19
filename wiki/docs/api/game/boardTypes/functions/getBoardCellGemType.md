@@ -2,7 +2,7 @@
 
 > **getBoardCellGemType**(`cell`): `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"` \| `null`
 
-Defined in: [src/game/boardTypes.ts:37](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/boardTypes.ts#L37)
+Defined in: [src/game/boardTypes.ts:37](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/boardTypes.ts#L37)
 
 ## Parameters
 

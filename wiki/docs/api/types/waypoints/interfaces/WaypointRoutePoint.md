@@ -1,6 +1,6 @@
 # Interface: WaypointRoutePoint
 
-Defined in: [src/types/waypoints.ts:79](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L79)
+Defined in: [src/types/waypoints.ts:79](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L79)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/waypoints.ts:79](https://github.com/kc0588615/phaser-june
 
 > **lat**: `number`
 
-Defined in: [src/types/waypoints.ts:81](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L81)
+Defined in: [src/types/waypoints.ts:81](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L81)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/waypoints.ts:81](https://github.com/kc0588615/phaser-june
 
 > **lon**: `number`
 
-Defined in: [src/types/waypoints.ts:80](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L80)
+Defined in: [src/types/waypoints.ts:80](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L80)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [src/types/waypoints.ts:80](https://github.com/kc0588615/phaser-june
 
 > **waypointSlot**: `number`
 
-Defined in: [src/types/waypoints.ts:82](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L82)
+Defined in: [src/types/waypoints.ts:82](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L82)

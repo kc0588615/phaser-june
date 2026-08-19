@@ -2,9 +2,9 @@
 
 > **generateRunNodes**(`selection`, `scores`, `habitat`, `threatenedCount`, `protectedCoverage`, `anchorType?`): [`RunNode`](../interfaces/RunNode.md)[]
 
-Defined in: [src/lib/nodeScoring.ts:403](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/nodeScoring.ts#L403)
+Defined in: [src/lib/nodeScoring.ts:387](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L387)
 
-Three-node mystery generator. GIS chooses flavor; each slot earns one investigation method.
+Three-node mystery generator. GIS chooses flavor; v3 applies one evidence family at each site.
 
 ## Parameters
 

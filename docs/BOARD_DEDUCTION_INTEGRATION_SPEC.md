@@ -1,5 +1,7 @@
 # Board–Deduction Integration Spec
 
+> Superseded by the v3 evidence-family loop and Plan 020. Deleted method-choice paths below are historical design context only.
+
 **Status: Phases A and B implemented.**
 - Phase A: all five verb rules in `src/expedition/methodVerbs.ts`, direct-only tier with Broad floor for cascade-only completions, tier legend + verb copy in FieldNotebook, survey zone rendering, in-scene trail HUD. Open question 1 resolved: any method match rewarms a cold trail (contributes 0, next one counts) — no soft-lock.
 - Phase B: implemented in the Phaser scene, not the context (simpler than specced — `Game.ts` already holds full Species rows + the progressive clue getters, so it resolves drips locally and emits display-ready `field-note-dripped`; context appends to `caseState.fieldNotes`, client-only). `candidateIds` rides the board payload. Off-method 4+ match → 1 fact/move, 4/node cap, seeded candidate rotation skipping exhausted categories. UI: latest note on the board bar, full list at the guess stage. On resume, drips degrade gracefully (resume payload has skeletal species rows; notes from before resume are not restored).

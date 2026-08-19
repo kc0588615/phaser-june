@@ -2,4 +2,4 @@
 
 > **Profile** = `InferSelectModel`\<*typeof* [`profiles`](../../schema/player/variables/profiles.md)\>
 
-Defined in: [src/db/types.ts:18](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/db/types.ts#L18)
+Defined in: [src/db/types.ts:18](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/db/types.ts#L18)

@@ -1,6 +1,6 @@
 # Class: DiscoveryMigrationService
 
-Defined in: [src/services/discoveryMigrationService.ts:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/services/discoveryMigrationService.ts#L4)
+Defined in: [src/services/discoveryMigrationService.ts:4](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/services/discoveryMigrationService.ts#L4)
 
 ## Constructors
 
@@ -18,7 +18,7 @@ Defined in: [src/services/discoveryMigrationService.ts:4](https://github.com/kc0
 
 > `static` **migrateLocalDiscoveries**(`userId`): `Promise`\<`void`\>
 
-Defined in: [src/services/discoveryMigrationService.ts:9](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/services/discoveryMigrationService.ts#L9)
+Defined in: [src/services/discoveryMigrationService.ts:9](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/services/discoveryMigrationService.ts#L9)
 
 Migrate localStorage discoveries to database on first login
 Call this after successful authentication
@@ -39,7 +39,7 @@ Call this after successful authentication
 
 > `static` **needsMigration**(): `boolean`
 
-Defined in: [src/services/discoveryMigrationService.ts:66](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/services/discoveryMigrationService.ts#L66)
+Defined in: [src/services/discoveryMigrationService.ts:66](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/services/discoveryMigrationService.ts#L66)
 
 Check if migration is needed (has local data + not yet migrated)
 

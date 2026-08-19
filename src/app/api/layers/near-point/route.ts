@@ -43,6 +43,31 @@ export async function GET(request: NextRequest) {
     const areaNorth = hasBounds ? north : Math.min(90, lat + 0.35);
     const pointWkt = `SRID=4326;POINT(${lon} ${lat})`;
 
+    let cityFeatures: unknown[] = [];
+    try {
+      const rows = await db.execute<GeoJsonRow>(sql`
+        WITH
+          pt AS (SELECT ST_GeomFromEWKT(${pointWkt}) AS geom),
+          area AS (SELECT ST_MakeEnvelope(${areaWest}, ${areaSouth}, ${areaEast}, ${areaNorth}, 4326) AS geom)
+        SELECT
+          ST_AsGeoJSON(c.geom) AS geojson,
+          json_build_object(
+            'gid', c.gid,
+            'name', COALESCE(NULLIF(c.nameascii, ''), NULLIF(c.name, ''), 'Settlement'),
+            'population', c.pop_max,
+            'distance_m', ST_Distance(c.geom::geography, pt.geom::geography)
+          )::text AS properties
+        FROM natural_earth.populated_places c
+        CROSS JOIN pt
+        CROSS JOIN area
+        WHERE c.geom && area.geom
+          AND ST_Intersects(c.geom, area.geom)
+        ORDER BY c.pop_max DESC NULLS LAST, ST_Distance(c.geom::geography, pt.geom::geography) ASC
+        LIMIT 80
+      `);
+      cityFeatures = [...rows].map(toFeature);
+    } catch { /* no data */ }
+
     let riverFeatures: unknown[] = [];
     try {
       const rows = await db.execute<GeoJsonRow>(sql`
@@ -161,6 +186,7 @@ export async function GET(request: NextRequest) {
     } catch { /* no data */ }
 
     return NextResponse.json({
+      cities: { type: 'FeatureCollection', features: cityFeatures },
       rivers: { type: 'FeatureCollection', features: riverFeatures },
       protected_areas: { type: 'FeatureCollection', features: paFeatures },
       bioregions: { type: 'FeatureCollection', features: bioregionFeatures },

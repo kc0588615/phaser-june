@@ -50,7 +50,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 ## Where Things Live
 - Layout host: `src/MainAppLayout.tsx` (keeps MapLibre + Phaser mounted; viewMode toggles map/clues/species list).
 - Phaser entry: `src/PhaserGame.tsx` boots `src/game/main.ts` -> scenes (Boot, Preloader, MainMenu, Game, GameOver).
-- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: location (`map-location-selected`), board (`game-hud-updated`, `game-over`, `game-reset`), expedition (`expedition-start`, `node-complete`, `node-advance-requested`), clue/deduction, auth/progress.
+- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: location (`map-location-selected`), board (`game-hud-updated`, `game-reset`), expedition (`expedition-start`, `evidence-move-resolved`, `evidence-progress-committed`, `node-complete`), clue/deduction, auth/progress.
 - Controller: `src/game/scenes/Game.ts` (input, move flow, streak/score, HUD emit, node objectives).
 - Model: `src/game/BackendPuzzle.ts` (board state, matches, move registration), `src/game/boardTypes.ts` (cell schema), `src/game/gemSemantics.ts` (shared gem meaning config), `src/game/nodeObstacles.ts` (typed obstacle contracts + seeded cell state), `src/game/clueConfig.ts` (CluePayload, clue category keys).
 - Move pipeline: `src/game/MoveAction.ts`, `src/game/ExplodeAndReplacePhase.ts` (swap/cascade).

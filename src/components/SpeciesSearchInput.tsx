@@ -3,13 +3,12 @@ import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import type { GroupedSpecies, JumpTarget } from "@/types/speciesBrowser";
+import type { JumpTarget } from "@/types/speciesBrowser";
 import type { Species } from "@/types/database";
-import { getOrderFromCategory, getCategoryOrderMapping, getCategoryFromOrder, getUniqueGenera, getUniqueFamilies, getUniqueOrders, getFamilyDisplayNameFromSpecies } from "@/utils/ecoregion";
+import { getUniqueGenera, getUniqueFamilies, getUniqueOrders, getFamilyDisplayNameFromSpecies, normalizeTaxonName } from "@/utils/ecoregion";
 import { searchFamiliesByCommonName, getFamilyCommonName } from "@/config/familyCommonNames";
 
 interface SpeciesSearchInputProps {
-  grouped: GroupedSpecies;
   ecoregionList: string[];
   realmList: string[];
   biomeList: string[];
@@ -22,13 +21,25 @@ interface SpeciesSearchInputProps {
 interface SearchOption {
   value: string;
   label: string;
-  type: 'category' | 'genus' | 'family' | 'order' | 'ecoregion' | 'realm' | 'biome' | 'species';
-  category?: string;
+  type: 'class' | 'order' | 'family' | 'genus' | 'ecoregion' | 'realm' | 'biome' | 'species';
   speciesData?: Species;
 }
 
+function getTypeLabel(type: string) {
+  switch (type) {
+    case 'class': return 'Class';
+    case 'genus': return 'Genus';
+    case 'family': return 'Taxonomic family';
+    case 'order': return 'Order';
+    case 'species': return 'Species';
+    case 'ecoregion': return 'Ecoregion';
+    case 'realm': return 'Realm';
+    case 'biome': return 'Biome';
+    default: return type;
+  }
+}
+
 export function SpeciesSearchInput({
-  grouped,
   ecoregionList,
   realmList,
   biomeList,
@@ -47,14 +58,8 @@ export function SpeciesSearchInput({
   const searchOptions = React.useMemo(() => {
     const options: SearchOption[] = [];
 
-    // Add category search options (both singular and plural forms)
-    const categoryMapping = getCategoryOrderMapping();
-    Object.keys(categoryMapping).forEach(categoryName => {
-      options.push({
-        value: categoryName,
-        label: categoryName,
-        type: 'category'
-      });
+    [...new Set(species.map(sp => normalizeTaxonName(sp.class)))].sort().forEach(className => {
+      options.push({ value: className, label: className, type: 'class' });
     });
 
     // Add all unique genus values
@@ -134,7 +139,7 @@ export function SpeciesSearchInput({
     });
 
     return options;
-  }, [grouped, ecoregionList, realmList, biomeList, species]);
+  }, [ecoregionList, realmList, biomeList, species]);
 
   // Filter options based on search query
   const filteredOptions = React.useMemo(() => {
@@ -146,10 +151,11 @@ export function SpeciesSearchInput({
     
     // Also search for families by common name if query doesn't match existing options
     if (filteredResults.length < 5) {
+      const availableFamilies = new Set(getUniqueFamilies(species));
       const familyMatches = searchFamiliesByCommonName(searchQuery);
       familyMatches.forEach(scientificFamily => {
         const commonName = getFamilyCommonName(scientificFamily);
-        if (commonName && !filteredResults.some(option => option.value === scientificFamily && option.type === 'family')) {
+        if (availableFamilies.has(scientificFamily) && commonName && !filteredResults.some(option => option.value === scientificFamily && option.type === 'family')) {
           filteredResults.push({
             value: scientificFamily,
             label: `${commonName} (${scientificFamily})`,
@@ -160,7 +166,7 @@ export function SpeciesSearchInput({
     }
     
     return filteredResults.slice(0, 10); // Limit to 10 results
-  }, [searchQuery, searchOptions]);
+  }, [searchQuery, searchOptions, species]);
 
   // Handle click outside
   React.useEffect(() => {
@@ -196,14 +202,10 @@ export function SpeciesSearchInput({
       onJump({ type: 'family', value: option.value });
     } else if (option.type === 'order') {
       onJump({ type: 'order', value: option.value });
+    } else if (option.type === 'class') {
+      onJump({ type: 'class', value: option.value });
     } else if (option.type === 'species' && option.speciesData) {
       onJump({ type: 'species', value: option.speciesData.id.toString() });
-    } else if (option.type === 'category') {
-      // Convert category to order value for filtering
-      const orderValue = getOrderFromCategory(option.value);
-      if (orderValue) {
-        onJump({ type: 'order', value: orderValue });
-      }
     }
   };
 
@@ -237,20 +239,6 @@ export function SpeciesSearchInput({
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'category': return 'Category';
-      case 'genus': return 'Genus';
-      case 'family': return 'Family';
-      case 'order': return 'Order';
-      case 'species': return 'Species';
-      case 'ecoregion': return 'Ecoregion';
-      case 'realm': return 'Realm';
-      case 'biome': return 'Biome';
-      default: return type;
-    }
-  };
-
   return (
     <div className="w-full space-y-3">
       <div className="relative">
@@ -259,7 +247,11 @@ export function SpeciesSearchInput({
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search species, family, genus, order, location"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="taxonomy-search-results"
+            aria-expanded={showResults && filteredOptions.length > 0}
+            placeholder="Search discovered species and taxonomy"
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setSearchQuery(e.target.value);
@@ -280,14 +272,19 @@ export function SpeciesSearchInput({
         {/* Search Results Dropdown */}
         {showResults && filteredOptions.length > 0 && (
           <div 
+            id="taxonomy-search-results"
             ref={resultsRef}
+            role="listbox"
             className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-700 rounded-md shadow-xl max-h-[50vh] sm:max-h-[60vh] overflow-y-auto"
           >
             {filteredOptions.map((option, index) => (
-              <div
+              <button
+                type="button"
+                role="option"
+                aria-selected={selectedIndex === index}
                 key={`${option.type}-${option.value}-${option.label}`}
                 className={cn(
-                  "px-4 py-3 cursor-pointer transition-colors border-b border-slate-700/50 last:border-0",
+                  "block w-full px-4 py-3 text-left cursor-pointer transition-colors border-b border-slate-700/50 last:border-0",
                   "hover:bg-slate-700",
                   selectedIndex === index && "bg-slate-700"
                 )}
@@ -299,7 +296,7 @@ export function SpeciesSearchInput({
                     {getTypeLabel(option.type)}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -312,12 +309,16 @@ export function SpeciesSearchInput({
           className="w-fit bg-blue-600/20 border-blue-600/50 text-blue-300"
         >
           <span className="mr-2 capitalize">
-            {selectedFilter.type}: {selectedFilter.value}
+            {getTypeLabel(selectedFilter.type)}: {selectedFilter.value}
           </span>
-          <X 
-            className="h-3 w-3 cursor-pointer hover:text-blue-100 transition-colors"
-            onClick={onClearFilter} 
-          />
+          <button
+            type="button"
+            aria-label="Clear taxonomy filter"
+            className="rounded-sm transition-colors hover:text-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={onClearFilter}
+          >
+            <X className="h-3 w-3" aria-hidden="true" />
+          </button>
         </Badge>
       )}
     </div>

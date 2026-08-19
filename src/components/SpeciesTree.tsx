@@ -17,7 +17,7 @@ interface SpeciesTreeProps {
 interface TreeNode {
   id: string;
   name: string;
-  type: 'class' | 'order' | 'family' | 'species';
+  type: 'class' | 'order' | 'family' | 'genus' | 'species';
   children?: string[];
   speciesData?: Species;
 }
@@ -43,7 +43,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
       };
       roots.push(classId);
       
-      Object.entries(orders).forEach(([orderName, genera]) => {
+      Object.entries(orders).forEach(([orderName, families]) => {
         const orderId = `order-${className}-${orderName}`;
         const orderChildren: string[] = [];
 
@@ -55,27 +55,41 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
         };
         classChildren.push(orderId);
 
-        Object.entries(genera).forEach(([familyName, speciesList]) => {
+        Object.entries(families).forEach(([familyName, genera]) => {
           const familyId = `family-${className}-${orderName}-${familyName}`;
           const familyChildren: string[] = [];
+          const speciesCount = Object.values(genera).reduce((total, speciesList) => total + speciesList.length, 0);
           
           data[familyId] = {
             id: familyId,
-            name: `${getFamilyDisplayNameFromSpecies(familyName)} (${speciesList.length})`,
+            name: `${getFamilyDisplayNameFromSpecies(familyName)} (${speciesCount})`,
             type: 'family',
             children: familyChildren
           };
           orderChildren.push(familyId);
           
-          speciesList.forEach((sp) => {
-            const speciesId = `species-${sp.id}`;
-            data[speciesId] = {
-              id: speciesId,
-              name: sp.common_name || sp.scientific_name || 'Unknown',
-              type: 'species',
-              speciesData: sp
+          Object.entries(genera).forEach(([genusName, speciesList]) => {
+            const genusId = `genus-${className}-${orderName}-${familyName}-${genusName}`;
+            const genusChildren: string[] = [];
+
+            data[genusId] = {
+              id: genusId,
+              name: `${genusName} (${speciesList.length})`,
+              type: 'genus',
+              children: genusChildren,
             };
-            familyChildren.push(speciesId);
+            familyChildren.push(genusId);
+
+            speciesList.forEach((sp) => {
+              const speciesId = `species-${sp.id}`;
+              data[speciesId] = {
+                id: speciesId,
+                name: sp.common_name || sp.scientific_name || 'Unknown',
+                type: 'species',
+                speciesData: sp
+              };
+              genusChildren.push(speciesId);
+            });
           });
         });
       });
@@ -122,6 +136,9 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
       // Filter by family
       const familyName = itemData.name.split(' (')[0]; // Extract family name without count
       onFilterSelect({ type: 'family', value: familyName });
+    } else if (itemData?.type === 'genus') {
+      const genusName = itemData.name.split(' (')[0];
+      onFilterSelect({ type: 'genus', value: genusName });
     } else if (itemData?.type === 'order') {
       // Filter by order — ID format: order-{class}-{order}
       const orderName = itemData.id.split('-').slice(2).join('-');
@@ -163,6 +180,8 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
               isFilterMatch = itemData.speciesData?.id.toString() === selectedFilter.value;
             } else if (selectedFilter.type === 'family' && itemData?.type === 'family') {
               isFilterMatch = itemData.name.split(' (')[0] === selectedFilter.value;
+            } else if (selectedFilter.type === 'genus' && itemData?.type === 'genus') {
+              isFilterMatch = itemData.name.split(' (')[0] === selectedFilter.value;
             } else if (selectedFilter.type === 'order' && itemData?.type === 'order') {
               isFilterMatch = itemData.id.split('-').slice(2).join('-') === selectedFilter.value;
             } else if (selectedFilter.type === 'class' && itemData?.type === 'class') {
@@ -172,9 +191,17 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
           
           return (
             <div
-              {...item.getProps()}
               key={`tree-item-${item.getId()}-${itemData?.type || 'unknown'}`}
+              {...item.getProps()}
+              role="treeitem"
+              tabIndex={0}
               onClick={() => handleItemClick(item)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleItemClick(item);
+                }
+              }}
               className={cn(
                 "flex items-center py-1 px-2 rounded cursor-pointer transition-colors",
                 "hover:bg-slate-700/50",
@@ -204,6 +231,7 @@ export function SpeciesTree({ species, onFilterSelect, selectedFilter }: Species
                 itemData?.type === 'class' && "font-semibold text-slate-200",
                 itemData?.type === 'order' && "font-medium text-slate-300",
                 itemData?.type === 'family' && "text-slate-400",
+                itemData?.type === 'genus' && "text-slate-300 italic",
                 itemData?.type === 'species' && "text-slate-300 hover:text-slate-100"
               )}>
                 {item.getItemName()}

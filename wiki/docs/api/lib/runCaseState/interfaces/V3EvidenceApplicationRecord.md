@@ -1,6 +1,6 @@
 # Interface: V3EvidenceApplicationRecord
 
-Defined in: [src/lib/runCaseState.ts:60](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L60)
+Defined in: [src/lib/runCaseState.ts:39](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L39)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runCaseState.ts:60](https://github.com/kc0588615/phaser-jun
 
 > **actualEliminatedIds**: `number`[]
 
-Defined in: [src/lib/runCaseState.ts:65](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L65)
+Defined in: [src/lib/runCaseState.ts:44](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L44)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runCaseState.ts:65](https://github.com/kc0588615/phaser-jun
 
 > **candidateTraitPhrases**: `Record`\<`string`, `string`\>
 
-Defined in: [src/lib/runCaseState.ts:67](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L67)
+Defined in: [src/lib/runCaseState.ts:46](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L46)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/runCaseState.ts:67](https://github.com/kc0588615/phaser-jun
 
 > **cardId**: `number`
 
-Defined in: [src/lib/runCaseState.ts:63](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L63)
+Defined in: [src/lib/runCaseState.ts:42](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L42)
 
 ***
 
@@ -32,15 +32,15 @@ Defined in: [src/lib/runCaseState.ts:63](https://github.com/kc0588615/phaser-jun
 
 > **eliminationReasons**: `Record`\<`string`, `string`\>
 
-Defined in: [src/lib/runCaseState.ts:66](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L66)
+Defined in: [src/lib/runCaseState.ts:45](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L45)
 
 ***
 
 ### family
 
-> **family**: `"behavior"` \| `"relatives"` \| `"body"` \| `"habits"` \| `"place"`
+> **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [src/lib/runCaseState.ts:64](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L64)
+Defined in: [src/lib/runCaseState.ts:43](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L43)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/lib/runCaseState.ts:64](https://github.com/kc0588615/phaser-jun
 
 > **issuedAt**: `string`
 
-Defined in: [src/lib/runCaseState.ts:68](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L68)
+Defined in: [src/lib/runCaseState.ts:47](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L47)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/lib/runCaseState.ts:68](https://github.com/kc0588615/phaser-jun
 
 > **nodeIndex**: `number`
 
-Defined in: [src/lib/runCaseState.ts:61](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L61)
+Defined in: [src/lib/runCaseState.ts:40](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L40)
 
 ***
 
@@ -64,4 +64,4 @@ Defined in: [src/lib/runCaseState.ts:61](https://github.com/kc0588615/phaser-jun
 
 > **ref**: `string`
 
-Defined in: [src/lib/runCaseState.ts:62](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L62)
+Defined in: [src/lib/runCaseState.ts:41](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L41)

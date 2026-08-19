@@ -4,14 +4,12 @@
 // =============================================================================
 
 import { sql } from 'drizzle-orm';
-import type { MethodType } from '@/expedition/domain';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
 import {
   bigint,
   boolean,
   check,
   doublePrecision,
-  foreignKey,
   geometry,
   index,
   integer,
@@ -191,45 +189,6 @@ export type DeductionClueCategory =
   | 'taxonomy' | 'key_fact' | 'geography' | 'conservation';
 
 export type DeductionUnlockMode = 'fragment' | 'score';
-
-export const evidenceCards = pgTable(
-  'evidence_cards',
-  {
-    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-    speciesId: integer('species_id').notNull(),
-    method: text('method').notNull().$type<MethodType>(),
-    observationText: text('observation_text').notNull(),
-    inferenceText: text('inference_text').notNull(),
-    traitCategory: text('trait_category').notNull().$type<DeductionClueCategory>(),
-    primaryPredicate: text('primary_predicate').notNull(),
-    compareTags: text('compare_tags').array().notNull(),
-    isSignature: boolean('is_signature').notNull().default(false),
-    specificity: smallint('specificity').notNull().default(2),
-    source: text('source'),
-    reviewStatus: text('review_status'),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    foreignKey({
-      name: 'fk_evidence_cards_species',
-      columns: [table.speciesId],
-      foreignColumns: [speciesTable.id],
-    }).onDelete('cascade'),
-    check(
-      'ck_evidence_cards_method',
-      sql`${table.method} IN ('track', 'observe', 'listen', 'survey', 'analyze')`,
-    ),
-    check(
-      'ck_evidence_cards_trait_category',
-      sql`${table.traitCategory} IN ('habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation')`,
-    ),
-    check('ck_evidence_cards_compare_tags_atomic', sql`cardinality(${table.compareTags}) = 1`),
-    check('ck_evidence_cards_specificity', sql`${table.specificity} BETWEEN 1 AND 3`),
-    index('ix_evidence_cards_species').on(table.speciesId),
-    index('ix_evidence_cards_species_method').on(table.speciesId, table.method),
-    index('ix_evidence_cards_compare').using('gin', table.compareTags),
-  ]
-);
 
 export const evidenceFamilyCards = pgTable(
   'evidence_family_cards',

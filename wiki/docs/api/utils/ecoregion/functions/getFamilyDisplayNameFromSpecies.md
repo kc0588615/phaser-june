@@ -2,7 +2,7 @@
 
 > **getFamilyDisplayNameFromSpecies**(`family`): `string`
 
-Defined in: [src/utils/ecoregion.ts:223](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/utils/ecoregion.ts#L223)
+Defined in: [src/utils/ecoregion.ts:231](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/utils/ecoregion.ts#L231)
 
 Get display name for a family (with common name if available)
 

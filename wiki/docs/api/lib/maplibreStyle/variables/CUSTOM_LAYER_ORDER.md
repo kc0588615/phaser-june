@@ -2,4 +2,4 @@
 
 > `const` **CUSTOM\_LAYER\_ORDER**: readonly \[`"habitat-raster"`, `"ecoregion-fill"`, `"ecoregion-line"`, `"map-biome-fill"`, `"map-biome-line"`, `"map-protected-fill"`, `"map-protected-line"`, `"map-lakes-fill"`, `"map-wetlands-fill"`, `"map-rivers-line"`, `"species-highlight-fill"`, `"species-highlight-line"`, `"habitat-highlight-fill"`, `"habitat-highlight-line"`, `"answer-range-fill"`, `"answer-range-line"`, `"expedition-route-casing"`, `"expedition-route-line"`, `"discovered-species-points"`, `"region-waypoints"`\]
 
-Defined in: src/lib/maplibreStyle.ts:16
+Defined in: [src/lib/maplibreStyle.ts:16](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/maplibreStyle.ts#L16)

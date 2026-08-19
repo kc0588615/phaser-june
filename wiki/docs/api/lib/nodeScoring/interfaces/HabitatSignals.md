@@ -1,6 +1,6 @@
 # Interface: HabitatSignals
 
-Defined in: [src/lib/nodeScoring.ts:55](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/nodeScoring.ts#L55)
+Defined in: [src/lib/nodeScoring.ts:49](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L49)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/nodeScoring.ts:55](https://github.com/kc0588615/phaser-june
 
 > **forest\_ratio**: `number`
 
-Defined in: [src/lib/nodeScoring.ts:57](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/nodeScoring.ts#L57)
+Defined in: [src/lib/nodeScoring.ts:51](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L51)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/nodeScoring.ts:57](https://github.com/kc0588615/phaser-june
 
 > **urban\_ratio**: `number`
 
-Defined in: [src/lib/nodeScoring.ts:58](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/nodeScoring.ts#L58)
+Defined in: [src/lib/nodeScoring.ts:52](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L52)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [src/lib/nodeScoring.ts:58](https://github.com/kc0588615/phaser-june
 
 > **water\_ratio**: `number`
 
-Defined in: [src/lib/nodeScoring.ts:56](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/nodeScoring.ts#L56)
+Defined in: [src/lib/nodeScoring.ts:50](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L50)

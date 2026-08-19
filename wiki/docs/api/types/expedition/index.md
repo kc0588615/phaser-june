@@ -6,8 +6,6 @@
 - [ConfirmedClue](interfaces/ConfirmedClue.md)
 - [EarnedObservation](interfaces/EarnedObservation.md)
 - [ExpeditionData](interfaces/ExpeditionData.md)
-- [FieldNote](interfaces/FieldNote.md)
-- [InterpretationEvent](interfaces/InterpretationEvent.md)
 - [RunState](interfaces/RunState.md)
 
 ## Type Aliases

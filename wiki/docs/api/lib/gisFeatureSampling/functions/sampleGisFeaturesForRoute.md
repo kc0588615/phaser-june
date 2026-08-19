@@ -2,7 +2,7 @@
 
 > **sampleGisFeaturesForRoute**(`points`, `options`): `Promise`\<[`FeatureFingerprint`](../../../types/gis/interfaces/FeatureFingerprint.md)[]\>
 
-Defined in: [src/lib/gisFeatureSampling.ts:261](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/gisFeatureSampling.ts#L261)
+Defined in: [src/lib/gisFeatureSampling.ts:261](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/gisFeatureSampling.ts#L261)
 
 ## Parameters
 

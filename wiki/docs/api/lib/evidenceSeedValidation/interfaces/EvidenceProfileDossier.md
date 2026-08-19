@@ -1,6 +1,6 @@
 # Interface: EvidenceProfileDossier
 
-Defined in: [src/lib/evidenceSeedValidation.ts:64](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceSeedValidation.ts#L64)
+Defined in: [src/lib/evidenceSeedValidation.ts:17](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceSeedValidation.ts#L17)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/evidenceSeedValidation.ts:64](https://github.com/kc0588615/
 
 > **commonName**: `string`
 
-Defined in: [src/lib/evidenceSeedValidation.ts:67](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceSeedValidation.ts#L67)
+Defined in: [src/lib/evidenceSeedValidation.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceSeedValidation.ts#L20)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/evidenceSeedValidation.ts:67](https://github.com/kc0588615/
 
 > **iucnId**: `number`
 
-Defined in: [src/lib/evidenceSeedValidation.ts:65](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceSeedValidation.ts#L65)
+Defined in: [src/lib/evidenceSeedValidation.ts:18](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceSeedValidation.ts#L18)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/evidenceSeedValidation.ts:65](https://github.com/kc0588615/
 
 > **profile**: [`DeductionTagProfile`](../../deductionTags/type-aliases/DeductionTagProfile.md)
 
-Defined in: [src/lib/evidenceSeedValidation.ts:69](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceSeedValidation.ts#L69)
+Defined in: [src/lib/evidenceSeedValidation.ts:22](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceSeedValidation.ts#L22)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/evidenceSeedValidation.ts:69](https://github.com/kc0588615/
 
 > **scientificName**: `string`
 
-Defined in: [src/lib/evidenceSeedValidation.ts:66](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceSeedValidation.ts#L66)
+Defined in: [src/lib/evidenceSeedValidation.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceSeedValidation.ts#L19)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [src/lib/evidenceSeedValidation.ts:66](https://github.com/kc0588615/
 
 > **sources**: readonly `string`[]
 
-Defined in: [src/lib/evidenceSeedValidation.ts:68](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceSeedValidation.ts#L68)
+Defined in: [src/lib/evidenceSeedValidation.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceSeedValidation.ts#L21)

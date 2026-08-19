@@ -12,6 +12,7 @@ import {
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
+import { countLiveFieldSignals, getFieldSignalFamily, isFieldSignal } from '@/game/fieldSignal';
 import { getRecord } from '@/lib/runCaseState';
 
 export interface EvidenceProgressInput {
@@ -20,6 +21,11 @@ export interface EvidenceProgressInput {
   directClears: EvidenceChargeState;
   directMatchFamilies: EvidenceFamily[];
   cascadeCount: number;
+  signalCleared: boolean;
+  signalClearedFamily?: EvidenceFamily;
+  /** Soft hints the clear pays: 1 for a direct 3-match, 2 for 4+. Present iff signalCleared.
+   *  Client-asserted — see isValidFieldSignalTransition for what is actually enforced. */
+  signalHintCount?: 1 | 2;
   boardCheckpoint: BoardCheckpointV1;
 }
 
@@ -47,24 +53,42 @@ export function parseEvidenceProgressInput(value: unknown): EvidenceProgressInpu
     ? source.directMatchFamilies.filter(isEvidenceFamily)
     : [];
   const cascadeCount = source.cascadeCount;
+  const signalCleared = source.signalCleared ?? false;
+  const signalClearedFamily = source.signalClearedFamily;
+  const signalHintCount = source.signalHintCount;
   const boardCheckpoint = parseBoardCheckpoint(source.boardCheckpoint, { width: GRID_COLS, height: GRID_ROWS, maxMoves: 6 });
   if (!Number.isInteger(nodeIndex) || (nodeIndex as number) < 0 || (nodeIndex as number) > 2
     || !Number.isInteger(moveNumber) || (moveNumber as number) < 1 || (moveNumber as number) > 6
     || !directClears || directMatchFamilies.length < 1 || directMatchFamilies.length > 24
     || directMatchFamilies.length !== (source.directMatchFamilies as unknown[]).length
     || !Number.isInteger(cascadeCount) || (cascadeCount as number) < 0 || (cascadeCount as number) > 24
+    || typeof signalCleared !== 'boolean'
+    || signalCleared && !isEvidenceFamily(signalClearedFamily)
+    || !signalCleared && signalClearedFamily !== undefined
+    || signalCleared && signalHintCount !== 1 && signalHintCount !== 2
+    || !signalCleared && signalHintCount !== undefined
     || !boardCheckpoint || boardCheckpoint.movesUsed !== moveNumber
     || byteLength(boardCheckpoint) > 32_768) return null;
   const total = EVIDENCE_FAMILIES.reduce((sum, family) => sum + directClears[family], 0);
   if (total < 3 || total > GRID_COLS * GRID_ROWS
     || EVIDENCE_FAMILIES.some(family => directClears[family] > GRID_COLS * GRID_ROWS
       || (directClears[family] > 0) !== directMatchFamilies.includes(family))) return null;
+  if (signalCleared) {
+    const family = signalClearedFamily as EvidenceFamily;
+    const minimumClear = signalHintCount === 2 ? 4 : 3;
+    if (!directMatchFamilies.includes(family) || directClears[family] < minimumClear) return null;
+  }
   return {
     nodeIndex: nodeIndex as number,
     moveNumber: moveNumber as number,
     directClears,
     directMatchFamilies,
     cascadeCount: cascadeCount as number,
+    signalCleared,
+    ...(signalCleared ? {
+      signalClearedFamily: signalClearedFamily as EvidenceFamily,
+      signalHintCount: signalHintCount as 1 | 2,
+    } : {}),
     boardCheckpoint,
   };
 }
@@ -119,6 +143,11 @@ export function evidenceMoveDigest(input: EvidenceProgressInput): string {
     directClears: Object.fromEntries(EVIDENCE_FAMILIES.map(family => [family, input.directClears[family]])),
     directMatchFamilies: input.directMatchFamilies,
     cascadeCount: input.cascadeCount,
+    ...(input.signalCleared ? {
+      signalCleared: true,
+      signalClearedFamily: input.signalClearedFamily,
+      signalHintCount: input.signalHintCount,
+    } : {}),
     boardCheckpoint: input.boardCheckpoint,
   };
   return createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
@@ -138,6 +167,7 @@ export function applyEvidenceProgress(
   const expectedAllowed = getAllowedEvidenceGemTypes(state.selectedFamilies).sort();
   const actualAllowed = [...input.boardCheckpoint.allowedGemTypes].sort();
   if (expectedAllowed.length !== actualAllowed.length || expectedAllowed.some((gem, index) => gem !== actualAllowed[index])) return { error: 'checkpoint_mismatch' };
+  if (!isValidFieldSignalTransition(state.boardCheckpoint, input)) return { error: 'checkpoint_mismatch' };
   const evidenceCharges = { ...state.evidenceCharges };
   const hintCounts = { ...state.hintCounts };
   for (const family of EVIDENCE_FAMILIES) {
@@ -146,6 +176,7 @@ export function applyEvidenceProgress(
     evidenceCharges[family] = next;
   }
   for (const family of input.directMatchFamilies) hintCounts[family] += 1;
+  if (input.signalClearedFamily) hintCounts[input.signalClearedFamily] += input.signalHintCount ?? 1;
   const segmentMovesUsed = input.moveNumber;
   return {
     digest,
@@ -164,6 +195,46 @@ export function applyEvidenceProgress(
         : [],
     },
   };
+}
+
+function isValidFieldSignalTransition(
+  previous: BoardCheckpointV1 | undefined,
+  input: EvidenceProgressInput,
+): boolean {
+  const next = input.boardCheckpoint;
+  const previousSignals = previous ? getLiveFieldSignalFamilies(previous) : [];
+  const nextSignals = getLiveFieldSignalFamilies(next);
+  if (previousSignals === null || nextSignals === null) return false;
+  const previouslySpawned = previous?.fieldSignalSpawned === true;
+  const nowSpawned = next.fieldSignalSpawned === true;
+  if (previouslySpawned && !nowSpawned) return false;
+  if (nextSignals.length > 0 && !nowSpawned) return false;
+
+  if (input.signalCleared) {
+    // The payout family comes from the clearing match, not the gem under the tile, so it is
+    // no longer checkable against the board. What stays enforced: a signal was live, it is
+    // gone now, and at most one payout can exist per site.
+    if (previousSignals.length !== 1 || nextSignals.length !== 0) return false;
+  } else if (previousSignals.length === 1 && nextSignals.length === 0) {
+    // A cascade may destroy the signal, but never earns its family payout.
+    if (input.cascadeCount < 1) return false;
+  }
+
+  if (nextSignals.length === 1 && previousSignals.length === 0) {
+    if (previouslySpawned || input.cascadeCount < 1) return false;
+  }
+  if (previousSignals.length === 1 && nextSignals.length === 1
+    && previousSignals[0] !== nextSignals[0]) return false;
+  return !input.signalCleared || nowSpawned;
+}
+
+/** One entry per live signal tile; the entry is the under-tile family (or null) and is only
+ *  used to check the tile stayed put across a move. */
+function getLiveFieldSignalFamilies(checkpoint: BoardCheckpointV1): (EvidenceFamily | null)[] | null {
+  if (countLiveFieldSignals(checkpoint.grid) > 1) return null;
+  return checkpoint.grid.flatMap(column => column.flatMap(cell => (
+    isFieldSignal(cell) ? [getFieldSignalFamily(cell)] : []
+  )));
 }
 
 function createHintCounts(): EvidenceChargeState {
@@ -194,6 +265,17 @@ export function deriveEvidenceHintIds(
     cursors[family] += 1;
     return id;
   });
+}
+
+/** Direct-match families in order, then the signal payout family repeated once per hint. */
+export function getEvidenceHintFamilies(input: EvidenceProgressInput): EvidenceFamily[] {
+  if (!input.signalClearedFamily) return [...input.directMatchFamilies];
+  const payout = Array<EvidenceFamily>(input.signalHintCount ?? 1).fill(input.signalClearedFamily);
+  return [...input.directMatchFamilies, ...payout];
+}
+
+export function shouldIssueCascadeHint(input: EvidenceProgressInput): boolean {
+  return input.cascadeCount > 0 && !input.signalCleared;
 }
 
 export function deriveCascadeHintId(count: number, ids: readonly number[]): number | null {

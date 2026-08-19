@@ -7,7 +7,7 @@ tags: [guide, game, expedition]
 
 # Expedition Run Loop
 
-V3 simplifies the player loop to map -> six matches -> evidence-family choice -> automatic elimination -> species guess. V1/v2 runs keep their original flows. New v3 creation remains feature-gated until its reviewed database corpus is deployed.
+Expeditions use the v3 loop: map -> six matches -> evidence-family choice -> automatic elimination -> species guess. Stored v1/v2 cases are rejected on resume.
 
 ## Flow
 
@@ -15,7 +15,7 @@ V3 simplifies the player loop to map -> six matches -> evidence-family choice ->
 2. `MapLibreExploreMap` gathers nearby species, habitats, waypoints, GIS signals, and available affinities.
 3. React shows `ExpeditionBriefing`.
 4. Player starts the expedition.
-5. `/api/runs` creates a versioned case and three board seeds.
+5. `/api/runs` creates a v3 case and three board seeds.
 6. At each site, six legal matches advance automatically. Directly cleared DNA/paw/eye/leaf-and-fang/map-pin gems charge Relatives/Body/Behavior/Habits/Place totals.
 7. The HUD previews which top families the current totals would offer. Cascades score but do not charge evidence.
 8. After move six, the player selects one offered family. The server applies its reviewed fixed-strength clue and removes incompatible candidates.
@@ -38,10 +38,8 @@ No energy or Insight currency exists. Score and guess bonuses are unchanged serv
 - expedition payload
 - current node index
 - banked score
-- method offers and selections
-- v3 family totals, likely choices, locked families, and exact board checkpoint
-- v2 best-target-match quality and interpretation/citation state
-- v3 fixed-strength observations and automatic eliminations
+- family totals, likely choices, locked families, and exact board checkpoint
+- fixed-strength observations and automatic eliminations
 - route progress
 - final score and completion reason
 
@@ -50,12 +48,11 @@ No energy or Insight currency exists. Score and guess bonuses are unchanged serv
 | Route | Method | Purpose |
 |-------|--------|---------|
 | `/api/runs` | POST | Create run session and node rows. |
-| `/api/runs/[runId]/research-choice` | POST | Lock a contextual method choice. |
-| `/api/runs/[runId]` | PATCH | Save checkpoint metadata. |
-| `/api/runs/[runId]/nodes/[nodeIndex]/complete` | POST | Mark node complete and persist score/moves/objective progress. |
-| `/api/runs/[runId]/evidence-progress` | POST | Commit a v3 move and full board checkpoint. |
-| `/api/runs/[runId]/evidence-choice` | POST | Apply a v3 family clue and activate the next site. |
-| `/api/runs/[runId]/range` | GET | Return answer range GeoJSON after an owner’s correct v3 verdict. |
+| `/api/runs/[runId]` | GET | Resume an owner’s v3 run. |
+| `/api/runs/[runId]/evidence-progress` | POST | Commit a move and full board checkpoint. |
+| `/api/runs/[runId]/evidence-choice` | POST | Apply a family clue and activate the next site. |
+| `/api/runs/[runId]/guess` | POST | Check the final species guess. |
+| `/api/runs/[runId]/range` | GET | Return answer range GeoJSON after an owner’s correct verdict. |
 
 ## Key Files
 
@@ -80,5 +77,6 @@ No energy or Insight currency exists. Score and guess bonuses are unchanged serv
 | `expedition-start` | React to React | Player starts run. |
 | `map-location-selected` | React to Phaser | Initialize puzzle with node params. |
 | `node-objective-updated` | Phaser to React | Progress bar update. |
-| `node-advance-requested` | Phaser/UI to React | Node ready to advance. |
-| `node-complete` | React to Phaser/MapLibre/UI | Node completion fact. |
+| `evidence-move-resolved` | Phaser to React | Persist the move and board checkpoint. |
+| `evidence-progress-committed` | React to Phaser | Resume input after persistence. |
+| `node-complete` | React to Phaser/MapLibre/UI | Evidence selected; advance to the next board. |

@@ -143,7 +143,6 @@ function choiceBody(
   return {
     ok: true, duplicate, observation: hydrateFamilyObservation(card, application),
     evidenceCharges, selectedFamilies, travelEntry, isLastNode, scoreEarned,
-    traitPhrase: card.traitPhrase,
     eliminationReasons: application.eliminationReasons,
   };
 }

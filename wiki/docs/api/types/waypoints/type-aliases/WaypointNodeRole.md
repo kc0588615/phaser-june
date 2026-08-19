@@ -2,4 +2,4 @@
 
 > **WaypointNodeRole** = `"start"` \| `"river"` \| `"water"` \| `"protected_area"` \| `"protected_area_alt"` \| `"final"`
 
-Defined in: [src/types/waypoints.ts:35](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L35)
+Defined in: [src/types/waypoints.ts:35](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L35)

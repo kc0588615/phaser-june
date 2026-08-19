@@ -1,39 +1,69 @@
-import { useEffect, useState } from 'react';
-import { Radio, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronRight, Sparkles } from 'lucide-react';
 import type { CaseState } from '@/types/expedition';
+import { cn } from '@/lib/utils';
 
 type Hint = CaseState['hintFeed'][number];
-const MESSAGE_DURATION_MS = 4000;
+const HINT_DISPLAY_MS = 3_200;
 
-export function FieldHintTicker({ feed }: { feed: Hint[] }) {
-  const [messageIndex, setMessageIndex] = useState(0);
-  const current = feed[messageIndex] ?? feed[0] ?? null;
+export function FieldHintTicker({ feed, className = '' }: { feed: Hint[]; className?: string }) {
+  const [current, setCurrent] = useState<Hint | null>(() => feed.at(-1) ?? null);
+  const queuedRef = useRef<Hint[]>([]);
+  const seenIdsRef = useRef<Set<string> | null>(null);
+  if (seenIdsRef.current === null) {
+    seenIdsRef.current = new Set(feed.map(hint => hint.id));
+  }
+  const seenIds = seenIdsRef.current;
 
   useEffect(() => {
-    setMessageIndex(index => feed.length === 0 ? 0 : Math.min(index, feed.length - 1));
-  }, [feed.length]);
+    if (feed.length === 0) {
+      queuedRef.current = [];
+      seenIds.clear();
+      return;
+    }
+
+    const additions = feed.filter(hint => {
+      if (seenIds.has(hint.id)) return false;
+      seenIds.add(hint.id);
+      return true;
+    });
+    if (additions.length === 0) return;
+
+    const wasIdle = queuedRef.current.length === 0;
+    queuedRef.current.push(...additions);
+    if (wasIdle) setCurrent(queuedRef.current.shift() ?? null);
+  }, [feed, seenIds]);
 
   useEffect(() => {
-    if (!current || feed.length < 2) return;
+    if (queuedRef.current.length === 0) return;
     const timer = window.setTimeout(() => {
-      setMessageIndex(index => (index + 1) % feed.length);
-    }, MESSAGE_DURATION_MS);
+      setCurrent(queuedRef.current.shift() ?? null);
+    }, HINT_DISPLAY_MS);
     return () => window.clearTimeout(timer);
-  }, [current?.id, feed.length]);
+  }, [current]);
+
+  const visibleCurrent = current && feed.includes(current) ? current : feed[0] ?? null;
 
   return (
-    <section className="pointer-events-none absolute left-3 right-3 top-0 z-[70] flex h-9 items-center overflow-hidden border-b border-cyan-200/25 bg-[rgb(6,22,27)] md:left-14 md:right-40" aria-label="Field radio">
-      <div className="flex h-full shrink-0 items-center gap-1.5 border-r border-cyan-100/20 bg-[rgb(10,35,41)] px-3 text-[10px] font-bold uppercase tracking-[.18em] text-cyan-100">
-        {current?.kind === 'cascade' ? <Sparkles className="h-3.5 w-3.5 text-amber-300" /> : <Radio className="h-3.5 w-3.5 text-cyan-300" />}
-        Radio
-      </div>
-      <div className="h-full min-w-0 flex-1" aria-live="polite" aria-atomic="true">
-        {current ? (
-          <p key={current.id} className="m-0 flex h-full items-center truncate px-4 font-mono text-xs text-cyan-50">
-            {current.kind === 'cascade' ? 'MULTIPLE SIGNALS · ' : 'FIELD TEAM · '}{current.text}
+    <section
+      className={cn(
+        'flex h-8 min-w-0 items-center overflow-hidden rounded-lg border border-cyan-100/15 bg-[rgba(3,18,22,.88)] shadow-lg backdrop-blur-sm',
+        className,
+      )}
+      aria-label="Field radio"
+    >
+      <span className="grid h-full w-7 shrink-0 place-items-center text-cyan-200/65" aria-hidden="true">
+        {visibleCurrent?.kind === 'cascade'
+          ? <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+          : <ChevronRight className="h-4 w-4" />}
+      </span>
+      <div className="h-full min-w-0 flex-1 pr-2" aria-live="polite" aria-atomic="true">
+        {visibleCurrent ? (
+          <p key={visibleCurrent.id} className="field-hint-arrive m-0 flex h-full items-center truncate font-mono text-[10px] italic text-cyan-50/85">
+            {visibleCurrent.kind === 'cascade' ? 'MULTIPLE SIGNALS · ' : 'FIELD TEAM · '}{visibleCurrent.text}
           </p>
         ) : (
-          <p className="m-0 flex h-full items-center px-4 font-mono text-[11px] text-cyan-100/50">Listening for field signals…</p>
+          <p className="m-0 flex h-full items-center truncate font-mono text-[10px] italic text-white/38">Listening for field signals…</p>
         )}
       </div>
     </section>

@@ -1,6 +1,6 @@
 # Interface: ConfirmedClue
 
-Defined in: [src/types/expedition.ts:119](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L119)
+Defined in: [src/types/expedition.ts:90](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L90)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/expedition.ts:119](https://github.com/kc0588615/phaser-ju
 
 > **category**: [`DeductionClueCategory`](../../../db/schema/species/type-aliases/DeductionClueCategory.md)
 
-Defined in: [src/types/expedition.ts:121](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L121)
+Defined in: [src/types/expedition.ts:92](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L92)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/expedition.ts:121](https://github.com/kc0588615/phaser-ju
 
 > **clueId**: `number`
 
-Defined in: [src/types/expedition.ts:120](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L120)
+Defined in: [src/types/expedition.ts:91](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L91)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [src/types/expedition.ts:120](https://github.com/kc0588615/phaser-ju
 
 > **compareTags**: `string`[]
 
-Defined in: [src/types/expedition.ts:122](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/expedition.ts#L122)
+Defined in: [src/types/expedition.ts:93](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/expedition.ts#L93)

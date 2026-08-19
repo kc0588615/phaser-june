@@ -743,6 +743,9 @@ export class BoardView {
             case 'signal':
                 sprite.setTint(0x38bdf8);
                 break;
+            case 'field_signal':
+                sprite.setTint(0x67e8f9);
+                break;
             case 'noise':
                 sprite.setTint(0xf59e0b);
                 break;
@@ -781,7 +784,22 @@ export class BoardView {
         const flags = this.gemsSprites[x]?.[y]?.getData('cellState')?.flags as string[] | undefined;
         const isVisibility = flags?.some((f: string) => ['overgrowth', 'low_visibility', 'signal_dropout', 'limited_signal'].includes(f));
 
-        if (isVisibility) {
+        if (blockerId === 'field_signal') {
+            // Field cache: bright receiver icon, deliberately unlike hazard overlays.
+            gfx.fillStyle(0x082f49, 0.72);
+            gfx.fillRoundedRect(pos.x - half * 0.82, pos.y - half * 0.82, this.gemSize * 0.82, this.gemSize * 0.82, 7);
+            gfx.lineStyle(2.2, 0xfef3c7, 0.95);
+            gfx.strokeRoundedRect(pos.x - half * 0.82, pos.y - half * 0.82, this.gemSize * 0.82, this.gemSize * 0.82, 7);
+            gfx.fillStyle(0xfbbf24, 1);
+            gfx.fillCircle(pos.x, pos.y + half * 0.24, Math.max(2.5, half * 0.1));
+            gfx.lineStyle(2, 0xfef3c7, 1);
+            gfx.lineBetween(pos.x, pos.y + half * 0.16, pos.x, pos.y - half * 0.3);
+            for (const radius of [half * 0.28, half * 0.48]) {
+                gfx.beginPath();
+                gfx.arc(pos.x, pos.y - half * 0.2, radius, Math.PI * 1.14, Math.PI * 1.86);
+                gfx.strokePath();
+            }
+        } else if (isVisibility) {
             // Fog overlay — translucent white cloud
             gfx.fillStyle(0xffffff, 0.3);
             gfx.fillRoundedRect(pos.x - half, pos.y - half, this.gemSize, this.gemSize, 6);
@@ -863,5 +881,13 @@ export class BoardView {
               sprite.setScale(this.calculateSpriteScale(sprite));
               sprite.setAlpha(1); // Ensure visible
          });
+    }
+
+    /** Refreshes blocker metadata and overlays without rebuilding the board. */
+    syncCellStates(grid: PuzzleGrid): void {
+        this.iterateSprites((sprite, x, y) => {
+            const cell = grid[x]?.[y];
+            if (cell) this.applyBoardCellDataToSprite(sprite, cell);
+        });
     }
 }

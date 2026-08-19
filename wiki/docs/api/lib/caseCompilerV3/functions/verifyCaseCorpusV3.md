@@ -2,13 +2,13 @@
 
 > **verifyCaseCorpusV3**(`profiles`, `cardsBySpecies`, `hintsBySpecies`): `object`
 
-Defined in: [src/lib/caseCompilerV3.ts:139](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/caseCompilerV3.ts#L139)
+Defined in: [src/lib/caseCompilerV3.ts:139](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L139)
 
 ## Parameters
 
 ### profiles
 
-readonly [`CompilerSpeciesProfile`](../../caseCompiler/interfaces/CompilerSpeciesProfile.md)[]
+readonly [`CompilerSpeciesProfile`](../../caseTraits/interfaces/CompilerSpeciesProfile.md)[]
 
 ### cardsBySpecies
 

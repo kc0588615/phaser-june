@@ -1,6 +1,6 @@
 # Interface: SpeciesCardSummary
 
-Defined in: [src/components/species-list/types.ts:1](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/species-list/types.ts#L1)
+Defined in: [src/components/species-list/types.ts:1](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/species-list/types.ts#L1)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/components/species-list/types.ts:1](https://github.com/kc058861
 
 > `optional` **bestRunScore**: `number` \| `null`
 
-Defined in: [src/components/species-list/types.ts:5](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/species-list/types.ts#L5)
+Defined in: [src/components/species-list/types.ts:5](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/species-list/types.ts#L5)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/components/species-list/types.ts:5](https://github.com/kc058861
 
 > `optional` **cardVariant**: `string` \| `null`
 
-Defined in: [src/components/species-list/types.ts:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/species-list/types.ts#L4)
+Defined in: [src/components/species-list/types.ts:4](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/species-list/types.ts#L4)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/components/species-list/types.ts:4](https://github.com/kc058861
 
 > `optional` **completionPct**: `number`
 
-Defined in: [src/components/species-list/types.ts:2](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/species-list/types.ts#L2)
+Defined in: [src/components/species-list/types.ts:2](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/species-list/types.ts#L2)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/components/species-list/types.ts:2](https://github.com/kc058861
 
 > `optional` **rarityTier**: `string`
 
-Defined in: [src/components/species-list/types.ts:3](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/species-list/types.ts#L3)
+Defined in: [src/components/species-list/types.ts:3](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/species-list/types.ts#L3)

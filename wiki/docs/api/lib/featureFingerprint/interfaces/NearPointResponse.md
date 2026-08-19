@@ -1,6 +1,6 @@
 # Interface: NearPointResponse
 
-Defined in: [src/lib/featureFingerprint.ts:20](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/featureFingerprint.ts#L20)
+Defined in: [src/lib/featureFingerprint.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureFingerprint.ts#L20)
 
 Shape returned by /api/layers/near-point
 
@@ -10,7 +10,7 @@ Shape returned by /api/layers/near-point
 
 > **bioregions**: `FeatureCollection`
 
-Defined in: [src/lib/featureFingerprint.ts:23](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/featureFingerprint.ts#L23)
+Defined in: [src/lib/featureFingerprint.ts:23](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureFingerprint.ts#L23)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/lib/featureFingerprint.ts:23](https://github.com/kc0588615/phas
 
 > **lakes**: `FeatureCollection`
 
-Defined in: [src/lib/featureFingerprint.ts:25](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/featureFingerprint.ts#L25)
+Defined in: [src/lib/featureFingerprint.ts:25](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureFingerprint.ts#L25)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/lib/featureFingerprint.ts:25](https://github.com/kc0588615/phas
 
 > **protected\_areas**: `FeatureCollection`
 
-Defined in: [src/lib/featureFingerprint.ts:22](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/featureFingerprint.ts#L22)
+Defined in: [src/lib/featureFingerprint.ts:22](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureFingerprint.ts#L22)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [src/lib/featureFingerprint.ts:22](https://github.com/kc0588615/phas
 
 > **rivers**: `FeatureCollection`
 
-Defined in: [src/lib/featureFingerprint.ts:21](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/featureFingerprint.ts#L21)
+Defined in: [src/lib/featureFingerprint.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureFingerprint.ts#L21)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [src/lib/featureFingerprint.ts:21](https://github.com/kc0588615/phas
 
 > **wetlands**: `FeatureCollection`
 
-Defined in: [src/lib/featureFingerprint.ts:24](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/featureFingerprint.ts#L24)
+Defined in: [src/lib/featureFingerprint.ts:24](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureFingerprint.ts#L24)

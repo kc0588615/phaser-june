@@ -4,7 +4,7 @@ import { useSpeciesData } from '@/hooks/useSpeciesData';
 import AlbumHeroSwiper from '@/components/album/AlbumHeroSwiper';
 import { Loader2, Album, FileQuestion, TreeDeciduous } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { getEcoregions, getRealms, getBiomes, groupSpeciesByCategory } from '@/utils/ecoregion';
+import { getEcoregions, getRealms, getBiomes, groupSpeciesByTaxonomy, normalizeTaxonName } from '@/utils/ecoregion';
 import type { Species } from '@/types/database';
 import type { JumpTarget } from '@/types/speciesBrowser';
 import { AlbumTab } from '@/components/species-list/AlbumTab';
@@ -32,8 +32,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
 
   const [selectedFilter, setSelectedFilter] = useState<{ type: string; value: string } | null>(null);
   const [openAccordions, setOpenAccordions] = useState<string[]>([]);
-  const [showStickyHeaders, setShowStickyHeaders] = useState(false);
-  const [showClassification, setShowClassification] = useState(false);
   const [discoveredSpecies, setDiscoveredSpecies] = useState<Record<number, { name: string; discoveredAt: string }>>({});
   const [cardProgress, setCardProgress] = useState<Record<number, SpeciesCardSummary>>({});
   const [albumSort, setAlbumSort] = useState<AlbumSortMode>('recent');
@@ -45,10 +43,7 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   const [heroSpeciesList, setHeroSpeciesList] = useState<Species[]>([]);
   const [heroInitialIndex, setHeroInitialIndex] = useState(0);
 
-  const refs = useRef<Record<string, HTMLDivElement | null>>({});
   const gridRef = useRef<HTMLDivElement | null>(null);
-  const lastScrollTop = useRef(0);
-  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const loadDiscoveredSpecies = useCallback(async () => {
     const localMap = readLocalDiscoveries();
@@ -142,49 +137,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     };
   }, [loadDiscoveredSpecies]);
 
-  // Scroll direction detection
-  useEffect(() => {
-    const scrollContainer = gridRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (!scrollContainer) return;
-
-    const handleScroll = () => {
-      const currentScrollTop = scrollContainer.scrollTop;
-      
-      // Clear existing timeout
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-
-      // Detect scroll direction with a threshold to prevent jitter
-      const scrollDelta = currentScrollTop - lastScrollTop.current;
-      
-      if (scrollDelta < -5 && currentScrollTop > 200) {
-        // Scrolling up with threshold and not near top
-        setShowStickyHeaders(true);
-      } else if (scrollDelta > 5) {
-        // Scrolling down with threshold
-        setShowStickyHeaders(false);
-      }
-
-      lastScrollTop.current = currentScrollTop;
-
-      // Hide sticky headers after scrolling stops or when near top
-      scrollTimeout.current = setTimeout(() => {
-        if (currentScrollTop <= 200) {
-          setShowStickyHeaders(false);
-        }
-      }, 2000);
-    };
-
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      scrollContainer.removeEventListener('scroll', handleScroll);
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-    };
-  }, [isLoading]); // Re-attach when loading completes
-
   // Effect to scroll to a specific species when scrollToSpeciesId is provided
   useEffect(() => {
     if (!scrollToSpeciesId || isLoading) return;
@@ -195,16 +147,12 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     const targetSpecies = species.find(s => s.id === scrollToSpeciesId);
     if (!targetSpecies) return;
 
-    // Determine which category the species belongs to
-    const categories = groupSpeciesByCategory([targetSpecies]);
-    const targetCategory = Object.keys(categories)[0];
-    
-    if (!targetCategory) return;
+    const targetAccordion = `${normalizeTaxonName(targetSpecies.class)}:${normalizeTaxonName(targetSpecies.taxon_order)}`;
 
     // Open the accordion for this category
     setOpenAccordions(prev => {
-      if (!prev.includes(targetCategory)) {
-        return [...prev, targetCategory];
+      if (!prev.includes(targetAccordion)) {
+        return [...prev, targetAccordion];
       }
       return prev;
     });
@@ -242,13 +190,13 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       case 'biome':
         return species.filter(s => s.biome === selectedFilter.value);
       case 'class':
-        return species.filter(s => s.class === selectedFilter.value);
+        return species.filter(s => normalizeTaxonName(s.class) === selectedFilter.value);
       case 'order':
-        return species.filter(s => s.taxon_order === selectedFilter.value);
+        return species.filter(s => normalizeTaxonName(s.taxon_order) === selectedFilter.value);
       case 'genus':
-        return species.filter(s => s.genus === selectedFilter.value);
+        return species.filter(s => normalizeTaxonName(s.genus) === selectedFilter.value);
       case 'family':
-        return species.filter(s => s.family === selectedFilter.value);
+        return species.filter(s => normalizeTaxonName(s.family) === selectedFilter.value);
       case 'species':
         return species.filter(s => s.id.toString() === selectedFilter.value);
       default:
@@ -345,66 +293,16 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [unknownSpecies, casesGroupBy]);
 
-  // Count species per order for discovered and unknown
-  const { knownCounts, unknownCounts, totalCounts } = useMemo(() => {
-    const knownOrderCounts: Record<string, number> = {};
-    const unknownOrderCounts: Record<string, number> = {};
-    const totalOrderCounts: Record<string, number> = {};
+  const discoveredCatalog = useMemo(
+    () => species.filter(sp => Boolean(discoveredSpecies[sp.id])),
+    [species, discoveredSpecies]
+  );
+  const taxonomyHierarchy = useMemo(() => groupSpeciesByTaxonomy(knownSpecies), [knownSpecies]);
 
-    knownSpecies.forEach(sp => {
-      const order = sp.taxon_order || 'Unknown';
-      knownOrderCounts[order] = (knownOrderCounts[order] || 0) + 1;
-      totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
-    });
-
-    unknownSpecies.forEach(sp => {
-      const order = sp.taxon_order || 'Unknown';
-      unknownOrderCounts[order] = (unknownOrderCounts[order] || 0) + 1;
-      totalOrderCounts[order] = (totalOrderCounts[order] || 0) + 1;
-    });
-
-    return { knownCounts: knownOrderCounts, unknownCounts: unknownOrderCounts, totalCounts: totalOrderCounts };
-  }, [knownSpecies, unknownSpecies]);
-
-  // Group species by category and genus
-  const groupedKnown = useMemo(() => groupSpeciesByCategory(knownSpecies), [knownSpecies]);
-  const groupedUnknown = useMemo(() => groupSpeciesByCategory(unknownSpecies), [unknownSpecies]);
-  
-  // Combined grouped data for search component
-  const grouped = useMemo(() => {
-    const combined: Record<string, Record<string, Species[]>> = {};
-    
-    // Add known species
-    Object.entries(groupedKnown).forEach(([category, genera]) => {
-      combined[category] = { ...genera };
-    });
-    
-    // Add unknown species
-    Object.entries(groupedUnknown).forEach(([category, genera]) => {
-      if (combined[category]) {
-        Object.entries(genera).forEach(([genus, species]) => {
-          if (combined[category][genus]) {
-            combined[category][genus] = [...combined[category][genus], ...species];
-          } else {
-            combined[category][genus] = species;
-          }
-        });
-      } else {
-        combined[category] = genera;
-      }
-    });
-    
-    return combined;
-  }, [groupedKnown, groupedUnknown]);
-  
-  // Extract unique ecoregions, realms, and biomes
-  const ecoregionList = useMemo(() => getEcoregions(species), [species]);
-  const realmList = useMemo(() => getRealms(species), [species]);
-  const biomeList = useMemo(() => getBiomes(species), [species]);
-
-  const setRef = (id: string) => (el: HTMLDivElement | null) => {
-    refs.current[id] = el;
-  };
+  // Taxonomy search indexes discoveries only; unknown identities stay in Cases.
+  const ecoregionList = useMemo(() => getEcoregions(discoveredCatalog), [discoveredCatalog]);
+  const realmList = useMemo(() => getRealms(discoveredCatalog), [discoveredCatalog]);
+  const biomeList = useMemo(() => getBiomes(discoveredCatalog), [discoveredCatalog]);
 
   const getViewport = () => {
     const root = gridRef.current;
@@ -412,68 +310,14 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
   };
 
   const onJump = (target: JumpTarget) => {
-    if (target.type === 'ecoregion' || target.type === 'realm' || target.type === 'biome' || 
-        target.type === 'species' || target.type === 'order' || target.type === 'class') {
-      setSelectedFilter({ type: target.type, value: target.value });
-      // Scroll the ScrollArea viewport to top
-      const viewport = getViewport();
-      viewport?.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // Handle category, genus, and family navigation
-    if (target.type === 'genus' && typeof target.value === 'string') {
-      // Simple genus filter
-      setSelectedFilter({ type: 'genus', value: target.value });
-      // Scroll the ScrollArea viewport to top
-      const viewport = getViewport();
-      viewport?.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    
-    if (target.type === 'family' && typeof target.value === 'string') {
-      // Simple family filter
-      setSelectedFilter({ type: 'family', value: target.value });
-      // Scroll the ScrollArea viewport to top
-      const viewport = getViewport();
-      viewport?.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    
-    let elementId: string;
-    if (target.type === 'category') {
-      elementId = target.value;
-    } else if (target.type === 'genus' && typeof target.value === 'object') {
-      elementId = `${target.value.category}-${target.value.genus}`;
-    } else if (target.type === 'family' && typeof target.value === 'object') {
-      elementId = `${target.value.category}-${target.value.family}`;
-    } else {
-      // Default case - should not happen
-      elementId = '';
-    }
-
-    const element = refs.current[elementId];
+    if (typeof target.value !== 'string') return;
+    setSelectedFilter({ type: target.type, value: target.value });
     const viewport = getViewport();
-    if (element && viewport) {
-      // Compute offset within the viewport
-      const elTop = element.getBoundingClientRect().top;
-      const vpTop = viewport.getBoundingClientRect().top;
-      const current = viewport.scrollTop;
-      const top = current + (elTop - vpTop) - 8;
-      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-      viewport.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
-    } else {
-      // fallback to native scroll
-      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    viewport?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onClearFilter = () => {
     setSelectedFilter(null);
-  };
-
-  const onTreeFilterSelect = (filter: { type: string; value: string; speciesData?: Species }) => {
-    setSelectedFilter({ type: filter.type, value: filter.value });
   };
 
   return (
@@ -593,29 +437,21 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
             {/* ===== TAXONOMY TAB ===== */}
             <TabsContent value="taxonomy" className="flex-1 flex flex-col overflow-hidden mt-0">
               <TaxonomyTab
-                species={species}
-                filteredSpecies={filteredSpecies}
-                knownSpecies={knownSpecies}
-                unknownSpecies={unknownSpecies}
-                grouped={grouped}
+                searchableSpecies={discoveredCatalog}
+                filteredSpecies={knownSpecies}
+                discoveredCount={discoveredCatalog.length}
+                unknownSpeciesCount={species.length - discoveredCatalog.length}
+                taxonomyHierarchy={taxonomyHierarchy}
                 ecoregionList={ecoregionList}
                 realmList={realmList}
                 biomeList={biomeList}
                 selectedFilter={selectedFilter}
-                showClassification={showClassification}
                 openAccordions={openAccordions}
-                showStickyHeaders={showStickyHeaders}
                 discoveredSpecies={discoveredSpecies}
-                knownCounts={knownCounts}
-                totalCounts={totalCounts}
                 gridRef={gridRef}
-                setRef={setRef}
                 onJump={onJump}
                 onClearFilter={onClearFilter}
-                onTreeFilterSelect={onTreeFilterSelect}
-                onToggleClassification={() => setShowClassification((value) => !value)}
                 onOpenAccordionsChange={setOpenAccordions}
-                onStickyHeadersChange={setShowStickyHeaders}
               />
             </TabsContent>
           </>

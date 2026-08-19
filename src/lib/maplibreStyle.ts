@@ -17,13 +17,21 @@ export const CUSTOM_LAYER_ORDER = [
   'habitat-raster',
   'ecoregion-fill',
   'ecoregion-line',
+  'ecoregion-label',
   'map-biome-fill',
   'map-biome-line',
+  'map-biome-label',
   'map-protected-fill',
   'map-protected-line',
+  'map-protected-label',
   'map-lakes-fill',
+  'map-lakes-label',
   'map-wetlands-fill',
+  'map-wetlands-label',
   'map-rivers-line',
+  'map-rivers-label',
+  'map-cities-points',
+  'map-cities-label',
   'species-highlight-fill',
   'species-highlight-line',
   'habitat-highlight-fill',
@@ -47,19 +55,20 @@ const EXPLORE_SKY: NonNullable<StyleSpecification['sky']> = {
   ],
 };
 
-/** Network-independent style. Map context is supplied by local/API GeoJSON. */
+/** Shared basemap. Projection changes by surface; cartography stays consistent. */
 export function createFallbackMapStyle(surface: MapSurface): StyleSpecification {
   const explore = surface === 'explore';
   return {
     version: 8,
-    name: explore ? 'biodiversity-globe' : 'field-notebook',
+    name: 'biodiversity-basemap',
     projection: { type: explore ? 'globe' : 'mercator' },
     ...(explore ? { sky: EXPLORE_SKY } : {}),
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {},
     layers: [{
       id: 'map-background',
       type: 'background',
-      paint: { 'background-color': explore ? '#071923' : '#b9ccc9' },
+      paint: { 'background-color': '#071923' },
     }],
   };
 }

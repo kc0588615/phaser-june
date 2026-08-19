@@ -6,6 +6,7 @@ import SpeciesTCGCard, {
 import { ExpeditionRouteMap } from '@/components/ExpeditionRouteMap';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { useGameBridge } from '@/contexts/GameBridgeContext';
+import { EVIDENCE_FAMILY_LABELS } from '@/expedition/evidenceFamilies';
 import type { RunState } from '@/types/expedition';
 import type { Species } from '@/types/database';
 import type { FeatureClass } from '@/types/gis';
@@ -94,7 +95,7 @@ export function RunCompleteSummary({ runState, onReset }: {
     { label: 'Final Score', value: String(runState.finalScore ?? hud.score), color: 'var(--ds-accent-cyan)' },
     { label: 'Result', value: captured ? 'Captured' : 'Slipped', color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' },
     { label: 'Observations', value: String(caseState?.observations.length ?? 0), color: 'var(--ds-accent-amber)' },
-    { label: 'Field Notes', value: String(caseState?.interpretations.length ?? 0), color: 'var(--ds-gem-focus)' },
+    { label: 'Evidence Families', value: String(caseState?.selectedFamilies.length ?? 0), color: 'var(--ds-gem-focus)' },
   ];
 
   return (
@@ -133,6 +134,28 @@ export function RunCompleteSummary({ runState, onReset }: {
               captured={captured}
               ariaLabel="Completed expedition route"
             />
+          </GlassPanel>
+        )}
+
+        {captured && runState.fieldFacts.length > 0 && (
+          <GlassPanel className="w-full max-w-[360px] rounded-xl border-amber-100/15 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-200/35" />
+              <h2 className="m-0 font-mono text-[9px] font-bold uppercase tracking-[.2em] text-amber-100/80">
+                Verdict field notes
+              </h2>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-200/35" />
+            </div>
+            <ol className="m-0 grid list-none gap-2 p-0">
+              {runState.fieldFacts.map(fact => (
+                <li key={`${fact.nodeIndex}-${fact.family}`} className="rounded-lg border border-white/[.06] bg-black/15 px-2.5 py-2">
+                  <p className="m-0 font-mono text-[7px] font-semibold uppercase tracking-[.16em] text-cyan-100/55">
+                    Site {fact.nodeIndex + 1} · {EVIDENCE_FAMILY_LABELS[fact.family]}
+                  </p>
+                  <p className="m-0 mt-1 text-[11px] leading-snug text-ds-text-secondary">{fact.text}</p>
+                </li>
+              ))}
+            </ol>
           </GlassPanel>
         )}
 

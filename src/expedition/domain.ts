@@ -1,7 +1,7 @@
 // Gem domain — the single source of truth for what gems exist and mean.
 //
-// Investigation methods use five asset-backed color gems. Three other color
-// ids remain registered for old board/memory data but do not spawn.
+// Evidence families use five asset-backed color gems. Three other color ids
+// remain registered for stored board data but do not spawn in v3 expeditions.
 //
 // GEM_REGISTRY holds the per-gem metadata (label, color, clue category);
 // createBoardSpawnConfig / buildBoardSpawnConfigForNode compute the weighted
@@ -26,37 +26,8 @@ export type LootGemType = typeof LOOT_GEM_TYPES[number];
 export type GemType = LootGemType;
 export type GemFamily = 'loot';
 
-export const METHOD_TYPES = ['track', 'observe', 'listen', 'survey', 'analyze'] as const;
-export type MethodType = typeof METHOD_TYPES[number];
-
-/** Fixed v0 route slots. Board acquisition and case compilation share this order. */
-export const METHOD_SLOTS = ['track', 'observe', 'survey'] as const satisfies readonly MethodType[];
-
-export const METHOD_GEM_MAP: Record<MethodType, LootGemType> = {
-  track: 'orange',
-  observe: 'red',
-  listen: 'yellow',
-  survey: 'green',
-  analyze: 'blue',
-};
-
-export const GEM_METHOD_MAP: Partial<Record<LootGemType, MethodType>> = Object.fromEntries(
-  METHOD_TYPES.map((method) => [METHOD_GEM_MAP[method], method]),
-) as Partial<Record<LootGemType, MethodType>>;
-
-/** The only loot ids allowed to spawn in the investigation-method board. */
-export const ACTIVE_GEM_TYPES = METHOD_TYPES.map(
-  method => METHOD_GEM_MAP[method],
-) as LootGemType[];
-
-/** Player-facing method names (grades 6-12 outdoor-tech tone). */
-export const METHOD_LABELS: Record<MethodType, string> = {
-  track: 'Track',
-  observe: 'Observe',
-  listen: 'Listen',
-  survey: 'Survey',
-  analyze: 'Analyze',
-};
+/** Asset-backed evidence gems available before v3 family locks narrow the pool. */
+export const ACTIVE_GEM_TYPES: readonly LootGemType[] = ['orange', 'red', 'yellow', 'green', 'blue'];
 
 export interface GemDefinition {
   gemType: GemType;

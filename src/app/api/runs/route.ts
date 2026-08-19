@@ -1,13 +1,12 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceCards, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles, speciesTable } from '@/db';
+import { cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles, speciesTable } from '@/db';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { buildAnswerPrior } from '@/lib/answerPrior';
-import { type CompilerCard, type CompilerSpeciesProfile } from '@/lib/caseCompiler';
-import { compileCaseV2 } from '@/lib/caseCompilerV2';
+import { type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { compileCaseV3, type CompilerCascadeHint, type CompilerEvidenceFamilyCard, type CompilerEvidenceFamilyHint } from '@/lib/caseCompilerV3';
 import { createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
 import { EVIDENCE_PROTOTYPE_IUCN_IDS } from '@/lib/evidenceSeedValidation';
@@ -25,7 +24,6 @@ export async function POST(request: NextRequest) {
     const secret = process.env.CASE_COMPILER_SECRET;
     if (!secret) return NextResponse.json({ error: 'Case compiler unavailable: CASE_COMPILER_SECRET is not configured' }, { status: 503 });
     const body = await request.json();
-    const caseVersion = process.env.EXPEDITION_CASE_VERSION === '3' ? 3 : 2;
     const identifiers = resolveRunCreationIdentifiers(body?.createRequestId, randomUUID);
     if (!identifiers) return NextResponse.json({ error: 'createRequestId must be a UUID when provided' }, { status: 400 });
     const { runId, createRequestId } = identifiers;
@@ -57,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (!metadataInput) return NextResponse.json({ error: 'Run metadata exceeds allowed shape or size' }, { status: 400 });
 
     let preparedNodes = applyWaypointsToRunNodes(nodes);
-    if (caseVersion === 3 && !nodesMeetResearchSpacing(preparedNodes)) {
+    if (!nodesMeetResearchSpacing(preparedNodes)) {
       try {
         const harvested = await harvestExpeditionWaypoints({ lon, lat });
         preparedNodes = applyWaypointsToRunNodes(nodes.map((node, index) => ({
@@ -71,14 +69,14 @@ export async function POST(request: NextRequest) {
           waypointRadiusKm: harvested.radiusKm,
         };
       } catch (error) {
-        console.warn('[API POST /api/runs] V3 waypoint spacing repair unavailable:', error);
+        console.warn('[API POST /api/runs] Waypoint spacing repair unavailable:', error);
       }
     }
-    if (caseVersion === 3 && !nodesMeetResearchSpacing(preparedNodes)) {
-      console.warn('[API POST /api/runs] V3 run created with unavailable research-site spacing.');
+    if (!nodesMeetResearchSpacing(preparedNodes)) {
+      console.warn('[API POST /api/runs] Run created with unavailable research-site spacing.');
     }
     if (!hasValidNodeContract(preparedNodes)) {
-      return NextResponse.json({ error: 'Expected three valid method-objective nodes' }, { status: 400 });
+      return NextResponse.json({ error: 'Expected three valid expedition nodes' }, { status: 400 });
     }
 
     const speciesRows = await db.select().from(speciesTable).where(inArray(speciesTable.iucnId, [...EVIDENCE_PROTOTYPE_IUCN_IDS]));
@@ -89,73 +87,47 @@ export async function POST(request: NextRequest) {
     const speciesIds = speciesRows.map(row => row.id);
     const [profileRows, cardRows, hintRows, cascadeRows] = await Promise.all([
       db.select().from(speciesDeductionProfiles).where(inArray(speciesDeductionProfiles.speciesId, speciesIds)),
-      caseVersion === 3
-        ? db.select().from(evidenceFamilyCards).where(and(
-            inArray(evidenceFamilyCards.speciesId, speciesIds),
-            eq(evidenceFamilyCards.reviewStatus, 'reviewed'),
-          ))
-        : db.select().from(evidenceCards).where(and(
-            inArray(evidenceCards.speciesId, speciesIds),
-            eq(evidenceCards.reviewStatus, 'reviewed'),
-          )),
-      caseVersion === 3
-        ? db.select().from(evidenceFamilyHints).where(and(
-            inArray(evidenceFamilyHints.speciesId, speciesIds),
-            eq(evidenceFamilyHints.reviewStatus, 'reviewed'),
-          ))
-        : Promise.resolve([]),
-      caseVersion === 3
-        ? db.select().from(cascadeHints).where(eq(cascadeHints.reviewStatus, 'reviewed'))
-        : Promise.resolve([]),
+      db.select().from(evidenceFamilyCards).where(and(
+        inArray(evidenceFamilyCards.speciesId, speciesIds),
+        eq(evidenceFamilyCards.reviewStatus, 'reviewed'),
+      )),
+      db.select().from(evidenceFamilyHints).where(and(
+        inArray(evidenceFamilyHints.speciesId, speciesIds),
+        eq(evidenceFamilyHints.reviewStatus, 'reviewed'),
+      )),
+      db.select().from(cascadeHints).where(eq(cascadeHints.reviewStatus, 'reviewed')),
     ]);
     const profiles = profileRows as CompilerSpeciesProfile[];
 
     const caseSeed = createHmac('sha256', secret).update(runId).digest('hex');
     const gisPrior = buildAnswerPrior(speciesRows.map(row => ({ speciesId: row.id, ...row })), getWaypointAnchors(metadataInput.expeditionSnapshot));
-    const compiled = caseVersion === 3
-      ? compileCaseV3({
-          caseSeed,
-          prototypeSpeciesIds: speciesIds,
-          speciesPool: profiles,
-          cardsBySpecies: new Map<number, CompilerEvidenceFamilyCard[]>((cardRows as typeof evidenceFamilyCards.$inferSelect[]).reduce<Array<[number, CompilerEvidenceFamilyCard[]]>>((entries, row) => {
-            const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
-            const card: CompilerEvidenceFamilyCard = { ...row };
-            if (existing) existing[1].push(card); else entries.push([row.speciesId, [card]]);
-            return entries;
-          }, [])),
-          hintsBySpecies: new Map<number, CompilerEvidenceFamilyHint[]>((hintRows as typeof evidenceFamilyHints.$inferSelect[]).reduce<Array<[number, CompilerEvidenceFamilyHint[]]>>((entries, row) => {
-            const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
-            const hint: CompilerEvidenceFamilyHint = { ...row };
-            if (existing) existing[1].push(hint); else entries.push([row.speciesId, [hint]]);
-            return entries;
-          }, [])),
-          cascadeHints: (cascadeRows as typeof cascadeHints.$inferSelect[]).map((row): CompilerCascadeHint => ({ ...row })),
-          gisPrior,
-          boardSeeds: preparedNodes.map(node => node.boardSeed!),
-          mapView: deriveExpeditionMapView(preparedNodes, { lon, lat }, stringOrNull(body.biome)),
-        })
-      : compileCaseV2({
-          caseSeed,
-          prototypeSpeciesIds: speciesIds,
-          speciesPool: profiles,
-          cardsBySpecies: new Map<number, CompilerCard[]>((cardRows as typeof evidenceCards.$inferSelect[]).reduce<Array<[number, CompilerCard[]]>>((entries, row) => {
-            if (row.compareTags.length !== 1) return entries;
-            const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
-            const card: CompilerCard = { ...row, compareTag: row.compareTags[0] };
-            if (existing) existing[1].push(card); else entries.push([row.speciesId, [card]]);
-            return entries;
-          }, [])),
-          gisPrior,
-          boardSeeds: preparedNodes.map(node => node.boardSeed!),
-          nodeTypes: preparedNodes.map(node => node.node_type),
-        });
+    const compiled = compileCaseV3({
+      caseSeed,
+      prototypeSpeciesIds: speciesIds,
+      speciesPool: profiles,
+      cardsBySpecies: new Map<number, CompilerEvidenceFamilyCard[]>(cardRows.reduce<Array<[number, CompilerEvidenceFamilyCard[]]>>((entries, row) => {
+        const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
+        const card: CompilerEvidenceFamilyCard = { ...row };
+        if (existing) existing[1].push(card); else entries.push([row.speciesId, [card]]);
+        return entries;
+      }, [])),
+      hintsBySpecies: new Map<number, CompilerEvidenceFamilyHint[]>(hintRows.reduce<Array<[number, CompilerEvidenceFamilyHint[]]>>((entries, row) => {
+        const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
+        const hint: CompilerEvidenceFamilyHint = { ...row };
+        if (existing) existing[1].push(hint); else entries.push([row.speciesId, [hint]]);
+        return entries;
+      }, [])),
+      cascadeHints: cascadeRows.map((row): CompilerCascadeHint => ({ ...row })),
+      gisPrior,
+      boardSeeds: preparedNodes.map(node => node.boardSeed!),
+      mapView: deriveExpeditionMapView(preparedNodes, { lon, lat }, stringOrNull(body.biome)),
+    });
     if ('error' in compiled) {
       console.error('[API POST /api/runs] Compiler rejected corpus:', compiled.error, compiled.message);
       return NextResponse.json({ error: 'Case compilation unavailable' }, { status: 503 });
     }
 
     const created = await db.transaction(async tx => {
-      const choiceOfferedAt = new Date();
       const insertedSession = await tx.insert(ecoRunSessions).values({
         id: runId,
         playerId,
@@ -172,9 +144,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           casePublic: compiled.public,
           casePrivate: compiled.private,
-          observationsIssued: [],
           evidenceApplications: [],
-          reasoningEvents: [],
           ...metadataInput,
         },
       }).onConflictDoNothing().returning({ id: ecoRunSessions.id });
@@ -207,26 +177,20 @@ export async function POST(request: NextRequest) {
         boardContext: {
           rationale: node.rationale,
           difficulty: node.difficulty,
-          ...(compiled.version === 2 && index === 0 ? {
-            offeredMethods: compiled.public.offerTree.offered,
-            choiceOfferedAt: choiceOfferedAt.toISOString(),
-          } : {}),
-          ...(compiled.version === 3 ? {
-            caseVersion: 3,
-            evidenceCharges: createEmptyEvidenceCharges(),
-            carriedCharges: createEmptyEvidenceCharges(),
-            hintCounts: createEmptyEvidenceCharges(),
-            cascadeHintCount: 0,
-            lastHintIds: [],
-            selectedFamilies: [],
-            segmentMovesUsed: 0,
-          } : {}),
+          caseVersion: 3,
+          evidenceCharges: createEmptyEvidenceCharges(),
+          carriedCharges: createEmptyEvidenceCharges(),
+          hintCounts: createEmptyEvidenceCharges(),
+          cascadeHintCount: 0,
+          lastHintIds: [],
+          selectedFamilies: [],
+          segmentMovesUsed: 0,
           waypoint: node.waypoint ?? null,
           ...buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: node.obstacles, nodeIndex: index }),
         },
-        objectiveType: compiled.version === 3 ? 'evidence_family' : 'method_match',
-        objectiveTarget: compiled.version === 3 ? 6 : node.objectiveTarget,
-        moveBudget: compiled.version === 3 ? 6 : node.moveBudget ?? 0,
+        objectiveType: 'evidence_family',
+        objectiveTarget: 6,
+        moveBudget: 6,
         boardSeed: node.boardSeed,
       }))).returning({ id: ecoRunNodes.id, nodeOrder: ecoRunNodes.nodeOrder });
       return {
@@ -244,9 +208,8 @@ export async function POST(request: NextRequest) {
 }
 
 function hasValidNodeContract(nodes: RunNode[]): boolean {
-  return nodes.length === MYSTERY_NODE_COUNT && nodes.every((node) => node.objectiveType === 'method_match'
-    && Number.isInteger(node.objectiveTarget) && node.objectiveTarget > 0
-    && Number.isInteger(node.boardSeed) && node.boardSeed! >= 0 && node.boardSeed! <= 0xffff_ffff);
+  return nodes.length === MYSTERY_NODE_COUNT && nodes.every((node) => Number.isInteger(node.boardSeed)
+    && node.boardSeed! >= 0 && node.boardSeed! <= 0xffff_ffff);
 }
 
 function nodesMeetResearchSpacing(nodes: readonly RunNode[]): boolean {

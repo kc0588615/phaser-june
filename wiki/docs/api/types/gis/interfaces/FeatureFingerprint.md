@@ -1,6 +1,6 @@
 # Interface: FeatureFingerprint
 
-Defined in: [src/types/gis.ts:3](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L3)
+Defined in: [src/types/gis.ts:3](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L3)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/gis.ts:3](https://github.com/kc0588615/phaser-june/blob/9
 
 > **distanceM**: `number`
 
-Defined in: [src/types/gis.ts:8](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L8)
+Defined in: [src/types/gis.ts:8](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L8)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/gis.ts:8](https://github.com/kc0588615/phaser-june/blob/9
 
 > **featureClass**: [`FeatureClass`](../type-aliases/FeatureClass.md)
 
-Defined in: [src/types/gis.ts:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L4)
+Defined in: [src/types/gis.ts:4](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L4)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/gis.ts:4](https://github.com/kc0588615/phaser-june/blob/9
 
 > **name**: `string` \| `null`
 
-Defined in: [src/types/gis.ts:7](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L7)
+Defined in: [src/types/gis.ts:7](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L7)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/types/gis.ts:7](https://github.com/kc0588615/phaser-june/blob/9
 
 > **overlapRatio**: `number`
 
-Defined in: [src/types/gis.ts:9](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L9)
+Defined in: [src/types/gis.ts:9](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L9)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/types/gis.ts:9](https://github.com/kc0588615/phaser-june/blob/9
 
 > **properties**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/types/gis.ts:10](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L10)
+Defined in: [src/types/gis.ts:10](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L10)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/types/gis.ts:10](https://github.com/kc0588615/phaser-june/blob/
 
 > **sourceId**: `string` \| `number`
 
-Defined in: [src/types/gis.ts:6](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L6)
+Defined in: [src/types/gis.ts:6](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L6)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: [src/types/gis.ts:6](https://github.com/kc0588615/phaser-june/blob/9
 
 > **sourceTable**: `string`
 
-Defined in: [src/types/gis.ts:5](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/gis.ts#L5)
+Defined in: [src/types/gis.ts:5](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/gis.ts#L5)

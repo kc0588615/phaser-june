@@ -1,8 +1,8 @@
 # Function: familySeedToCompilerProfiles()
 
-> **familySeedToCompilerProfiles**(`dossiers`): [`CompilerSpeciesProfile`](../../caseCompiler/interfaces/CompilerSpeciesProfile.md)[]
+> **familySeedToCompilerProfiles**(`dossiers`): [`CompilerSpeciesProfile`](../../caseTraits/interfaces/CompilerSpeciesProfile.md)[]
 
-Defined in: [src/lib/evidenceFamilySeedValidation.ts:143](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/evidenceFamilySeedValidation.ts#L143)
+Defined in: [src/lib/evidenceFamilySeedValidation.ts:143](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceFamilySeedValidation.ts#L143)
 
 ## Parameters
 
@@ -12,4 +12,4 @@ readonly [`EvidenceProfileDossier`](../../evidenceSeedValidation/interfaces/Evid
 
 ## Returns
 
-[`CompilerSpeciesProfile`](../../caseCompiler/interfaces/CompilerSpeciesProfile.md)[]
+[`CompilerSpeciesProfile`](../../caseTraits/interfaces/CompilerSpeciesProfile.md)[]

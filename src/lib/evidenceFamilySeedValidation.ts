@@ -1,5 +1,5 @@
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseCompiler';
+import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { isCanonicalDeductionTag } from '@/lib/deductionTags';
 import type { EvidenceProfileDossier } from '@/lib/evidenceSeedValidation';
 

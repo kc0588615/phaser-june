@@ -2,7 +2,7 @@
 
 > **applyWaypointsToRunNodes**(`nodes`): [`RunNode`](../interfaces/RunNode.md)[]
 
-Defined in: [src/lib/nodeScoring.ts:280](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/nodeScoring.ts#L280)
+Defined in: [src/lib/nodeScoring.ts:273](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L273)
 
 ## Parameters
 

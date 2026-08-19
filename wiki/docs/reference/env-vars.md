@@ -21,7 +21,6 @@ tags: [reference, config, environment]
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `EXPEDITION_CASE_VERSION` | New-run case format | `3` in the example environment |
 | `NEXT_PUBLIC_MAP_STYLE_URL` | Hosted/self-hosted MapLibre style | Network-independent app fallback |
 | `NEXT_PUBLIC_TITILER_BASE_URL` | Habitat TileJSON/statistics endpoint | Deployed app endpoint |
 | `NEXT_PUBLIC_COG_URL` | Habitat Cloud-Optimized GeoTIFF | Deployed habitat COG |

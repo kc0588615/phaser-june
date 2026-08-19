@@ -2,7 +2,7 @@
 
 > **computeActualEliminatedIds**(`profiles`, `alreadyEliminatedIds`, `traitCategory`, `compareTag`): `number`[]
 
-Defined in: [src/lib/runCaseState.ts:99](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runCaseState.ts#L99)
+Defined in: [src/lib/runCaseState.ts:62](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L62)
 
 Client-safe elimination: compares one public marker across the symmetric candidate profiles.
 
@@ -18,7 +18,7 @@ readonly `number`[]
 
 ### traitCategory
 
-`"habitat"` | `"morphology"` | `"diet"` | `"behavior"` | `"reproduction"` | `"taxonomy"` | `"key_fact"` | `"geography"` | `"conservation"`
+`"behavior"` | `"habitat"` | `"morphology"` | `"diet"` | `"reproduction"` | `"taxonomy"` | `"key_fact"` | `"geography"` | `"conservation"`
 
 ### compareTag
 

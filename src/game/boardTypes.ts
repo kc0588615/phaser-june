@@ -26,6 +26,8 @@ export interface BoardCheckpointV1 {
     nextGemsToSpawn: GemType[];
     allowedGemTypes: GemType[];
     rngState: number;
+    /** Durable one-per-site lifecycle marker; remains true after the tile clears. */
+    fieldSignalSpawned?: boolean;
 }
 
 export function createBoardCell(gemType: GemType, state?: BoardCellState): BoardCell {

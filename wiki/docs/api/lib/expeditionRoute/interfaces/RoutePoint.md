@@ -1,6 +1,6 @@
 # Interface: RoutePoint
 
-Defined in: [src/lib/expeditionRoute.ts:1](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/expeditionRoute.ts#L1)
+Defined in: [src/lib/expeditionRoute.ts:1](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/expeditionRoute.ts#L1)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/expeditionRoute.ts:1](https://github.com/kc0588615/phaser-j
 
 > **lat**: `number`
 
-Defined in: [src/lib/expeditionRoute.ts:3](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/expeditionRoute.ts#L3)
+Defined in: [src/lib/expeditionRoute.ts:3](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/expeditionRoute.ts#L3)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/expeditionRoute.ts:3](https://github.com/kc0588615/phaser-j
 
 > **lon**: `number`
 
-Defined in: [src/lib/expeditionRoute.ts:2](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/expeditionRoute.ts#L2)
+Defined in: [src/lib/expeditionRoute.ts:2](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/expeditionRoute.ts#L2)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [src/lib/expeditionRoute.ts:2](https://github.com/kc0588615/phaser-j
 
 > `optional` **waypointSlot**: `number`
 
-Defined in: [src/lib/expeditionRoute.ts:4](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/expeditionRoute.ts#L4)
+Defined in: [src/lib/expeditionRoute.ts:4](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/expeditionRoute.ts#L4)

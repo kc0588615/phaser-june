@@ -1,8 +1,8 @@
 # Function: projectDeductionSummary()
 
-> **projectDeductionSummary**(`value`): \{ `candidateCount?`: `number`; `citedEvidenceRefs?`: `string`[]; `confirmedCategories?`: `number`; `efficiencyBonus?`: `number`; `finalScore?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `processedClues?`: `number`; `reasoningEventCount?`: `number`; `referenceAttempts?`: `number`; `scoreSpent?`: `number`; `wrongGuessCount?`: `number`; \} \| `null`
+> **projectDeductionSummary**(`value`): \{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `wrongGuessCount?`: `number`; \} \| `null`
 
-Defined in: [src/lib/runProjection.ts:560](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L560)
+Defined in: [src/lib/runProjection.ts:474](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L474)
 
 ## Parameters
 
@@ -12,4 +12,4 @@ Defined in: [src/lib/runProjection.ts:560](https://github.com/kc0588615/phaser-j
 
 ## Returns
 
-\{ `candidateCount?`: `number`; `citedEvidenceRefs?`: `string`[]; `confirmedCategories?`: `number`; `efficiencyBonus?`: `number`; `finalScore?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `processedClues?`: `number`; `reasoningEventCount?`: `number`; `referenceAttempts?`: `number`; `scoreSpent?`: `number`; `wrongGuessCount?`: `number`; \} \| `null`
+\{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `wrongGuessCount?`: `number`; \} \| `null`

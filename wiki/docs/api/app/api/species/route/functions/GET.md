@@ -2,7 +2,7 @@
 
 > **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `species`: [`Species`](../../../../../types/database/interfaces/Species.md); \}\> \| `NextResponse`\<\{ `count`: `number`; `query`: `string`; `species`: `object`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `realm`: `string`; `species`: [`Species`](../../../../../types/database/interfaces/Species.md)[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: [`Species`](../../../../../types/database/interfaces/Species.md)[]; `statuses`: `string`[]; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
 
-Defined in: [src/app/api/species/route.ts:58](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/app/api/species/route.ts#L58)
+Defined in: [src/app/api/species/route.ts:58](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/app/api/species/route.ts#L58)
 
 GET /api/species
 

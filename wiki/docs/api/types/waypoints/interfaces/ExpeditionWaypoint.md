@@ -1,6 +1,6 @@
 # Interface: ExpeditionWaypoint
 
-Defined in: [src/types/waypoints.ts:53](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L53)
+Defined in: [src/types/waypoints.ts:53](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L53)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/waypoints.ts:53](https://github.com/kc0588615/phaser-june
 
 > `optional` **designationCategory**: [`WdpaDesignationCategory`](../type-aliases/WdpaDesignationCategory.md)
 
-Defined in: [src/types/waypoints.ts:64](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L64)
+Defined in: [src/types/waypoints.ts:64](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L64)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/waypoints.ts:64](https://github.com/kc0588615/phaser-june
 
 > **distKm**: `number`
 
-Defined in: [src/types/waypoints.ts:60](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L60)
+Defined in: [src/types/waypoints.ts:60](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L60)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/waypoints.ts:60](https://github.com/kc0588615/phaser-june
 
 > **fallback**: `boolean`
 
-Defined in: [src/types/waypoints.ts:65](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L65)
+Defined in: [src/types/waypoints.ts:65](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L65)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/types/waypoints.ts:65](https://github.com/kc0588615/phaser-june
 
 > **lat**: `number`
 
-Defined in: [src/types/waypoints.ts:59](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L59)
+Defined in: [src/types/waypoints.ts:59](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L59)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/types/waypoints.ts:59](https://github.com/kc0588615/phaser-june
 
 > **lon**: `number`
 
-Defined in: [src/types/waypoints.ts:58](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L58)
+Defined in: [src/types/waypoints.ts:58](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L58)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/types/waypoints.ts:58](https://github.com/kc0588615/phaser-june
 
 > **name**: `string`
 
-Defined in: [src/types/waypoints.ts:57](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L57)
+Defined in: [src/types/waypoints.ts:57](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L57)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/types/waypoints.ts:57](https://github.com/kc0588615/phaser-june
 
 > **nodeRole**: [`WaypointNodeRole`](../type-aliases/WaypointNodeRole.md)
 
-Defined in: [src/types/waypoints.ts:56](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L56)
+Defined in: [src/types/waypoints.ts:56](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L56)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [src/types/waypoints.ts:56](https://github.com/kc0588615/phaser-june
 
 > **rankScore**: `number`
 
-Defined in: [src/types/waypoints.ts:61](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L61)
+Defined in: [src/types/waypoints.ts:61](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L61)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [src/types/waypoints.ts:61](https://github.com/kc0588615/phaser-june
 
 > **slot**: `0` \| `1` \| `2` \| `3` \| `4` \| `5`
 
-Defined in: [src/types/waypoints.ts:54](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L54)
+Defined in: [src/types/waypoints.ts:54](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L54)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [src/types/waypoints.ts:54](https://github.com/kc0588615/phaser-june
 
 > **sourceId**: `string` \| `number` \| `null`
 
-Defined in: [src/types/waypoints.ts:63](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L63)
+Defined in: [src/types/waypoints.ts:63](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L63)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [src/types/waypoints.ts:63](https://github.com/kc0588615/phaser-june
 
 > **sourceTable**: `string` \| `null`
 
-Defined in: [src/types/waypoints.ts:62](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L62)
+Defined in: [src/types/waypoints.ts:62](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L62)
 
 ***
 
@@ -96,4 +96,4 @@ Defined in: [src/types/waypoints.ts:62](https://github.com/kc0588615/phaser-june
 
 > **waypointType**: [`WaypointType`](../type-aliases/WaypointType.md)
 
-Defined in: [src/types/waypoints.ts:55](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/types/waypoints.ts#L55)
+Defined in: [src/types/waypoints.ts:55](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/waypoints.ts#L55)

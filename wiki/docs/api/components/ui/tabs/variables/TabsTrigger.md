@@ -2,4 +2,4 @@
 
 > `const` **TabsTrigger**: `ForwardRefExoticComponent`\<`Omit`\<`TabsTriggerProps` & `RefAttributes`\<`HTMLButtonElement`\>, `"ref"`\> & `RefAttributes`\<`HTMLButtonElement`\>\>
 
-Defined in: [src/components/ui/tabs.tsx:25](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/components/ui/tabs.tsx#L25)
+Defined in: [src/components/ui/tabs.tsx:25](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/ui/tabs.tsx#L25)

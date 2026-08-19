@@ -1,14 +1,14 @@
 # Interface: ClientRunProjection
 
-Defined in: [src/lib/runProjection.ts:292](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L292)
+Defined in: [src/lib/runProjection.ts:242](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L242)
 
 ## Properties
 
 ### casePublic
 
-> **casePublic**: [`PublicCaseSnapshot`](../type-aliases/PublicCaseSnapshot.md) \| `null`
+> **casePublic**: [`PublicCaseV3`](PublicCaseV3.md) \| `null`
 
-Defined in: [src/lib/runProjection.ts:294](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L294)
+Defined in: [src/lib/runProjection.ts:244](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L244)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runProjection.ts:294](https://github.com/kc0588615/phaser-j
 
 > **checkpoint**: [`PublicRunCheckpoint`](PublicRunCheckpoint.md)
 
-Defined in: [src/lib/runProjection.ts:295](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L295)
+Defined in: [src/lib/runProjection.ts:245](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L245)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/runProjection.ts:295](https://github.com/kc0588615/phaser-j
 
 > **legacy**: `boolean`
 
-Defined in: [src/lib/runProjection.ts:299](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L299)
+Defined in: [src/lib/runProjection.ts:249](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L249)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/runProjection.ts:299](https://github.com/kc0588615/phaser-j
 
 > **memory**: [`PublicRunMemory`](PublicRunMemory.md) \| `null`
 
-Defined in: [src/lib/runProjection.ts:298](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L298)
+Defined in: [src/lib/runProjection.ts:248](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L248)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/lib/runProjection.ts:298](https://github.com/kc0588615/phaser-j
 
 > **nodes**: [`PublicRunNode`](PublicRunNode.md)[]
 
-Defined in: [src/lib/runProjection.ts:297](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L297)
+Defined in: [src/lib/runProjection.ts:247](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L247)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/lib/runProjection.ts:297](https://github.com/kc0588615/phaser-j
 
 > **observations**: [`PublicIssuedObservation`](PublicIssuedObservation.md)[]
 
-Defined in: [src/lib/runProjection.ts:296](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L296)
+Defined in: [src/lib/runProjection.ts:246](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L246)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: [src/lib/runProjection.ts:296](https://github.com/kc0588615/phaser-j
 
 > **run**: [`PublicRunSummary`](PublicRunSummary.md)
 
-Defined in: [src/lib/runProjection.ts:293](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/lib/runProjection.ts#L293)
+Defined in: [src/lib/runProjection.ts:243](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L243)

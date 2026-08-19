@@ -1,6 +1,6 @@
 # Class: ExplodeAndReplacePhase
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:13](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L13)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L13)
 
 Represents the result of applying moves: matches found and replacements needed.
 
@@ -10,7 +10,7 @@ Represents the result of applying moves: matches found and replacements needed.
 
 > **new ExplodeAndReplacePhase**(`matches`, `replacements`, `matchGridState`): `ExplodeAndReplacePhase`
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:19](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L19)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L19)
 
 Creates an ExplodeAndReplacePhase result.
 
@@ -42,7 +42,7 @@ The new gems needed per column.
 
 > `readonly` **matches**: [`Match`](../type-aliases/Match.md)[] = `[]`
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:20](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L20)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L20)
 
 The coordinates of matched gems.
 
@@ -52,7 +52,7 @@ The coordinates of matched gems.
 
 > `readonly` **matchGridState**: [`PuzzleGrid`](../../boardTypes/type-aliases/PuzzleGrid.md) \| `null` = `null`
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:22](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L22)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:22](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L22)
 
 ***
 
@@ -60,7 +60,7 @@ Defined in: [src/game/ExplodeAndReplacePhase.ts:22](https://github.com/kc0588615
 
 > `readonly` **replacements**: [`ColumnReplacement`](../type-aliases/ColumnReplacement.md)[] = `[]`
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:21](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L21)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L21)
 
 The new gems needed per column.
 
@@ -70,7 +70,7 @@ The new gems needed per column.
 
 > **getAllMatchedCoordinates**(): `Set`\<`string`\>
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:36](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L36)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:36](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L36)
 
 Gets all unique coordinates from all matches
 
@@ -84,7 +84,7 @@ Gets all unique coordinates from all matches
 
 > **getReplacementsForColumn**(`columnIndex`): (`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`)[]
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:56](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L56)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:56](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L56)
 
 Gets replacement gems for a specific column
 
@@ -104,7 +104,7 @@ Gets replacement gems for a specific column
 
 > **getTotalReplacements**(): `number`
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:49](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L49)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:49](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L49)
 
 Gets the total number of gems that will be replaced
 
@@ -118,7 +118,7 @@ Gets the total number of gems that will be replaced
 
 > **isNothingToDo**(): `boolean`
 
-Defined in: [src/game/ExplodeAndReplacePhase.ts:29](https://github.com/kc0588615/phaser-june/blob/920f8fb16170def93f7b6148984124639037198d/src/game/ExplodeAndReplacePhase.ts#L29)
+Defined in: [src/game/ExplodeAndReplacePhase.ts:29](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/ExplodeAndReplacePhase.ts#L29)
 
 Checks if any matches occurred in this phase.
 

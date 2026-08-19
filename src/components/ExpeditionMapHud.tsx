@@ -1,27 +1,30 @@
 // ExpeditionMapHud — in-run 2D map panel for v3 expeditions (Plan 018).
 //
-// Upper region is a MapLibre map styled as a field-notebook topo sheet with the dashed route and
-// three research-site markers (visited / current / upcoming); lower region is
-// the persistent readout: travel note + three-slot EvidenceLog. Tapping a
-// marker focuses that site's slot in the readout.
+// Upper region is a MapLibre map sharing the exploration globe's habitat cartography, with the dashed route and
+// three research-site markers (visited / current / upcoming); the lower region
+// keeps only issued evidence in a compact readout. Full reasoning opens over
+// the fullscreen map.
 //
 // Fullscreen moves the single map instance into a body portal overlay with a
 // wider zoom range; Escape or the close button exits, and `#app-container` is
 // made inert (board stays visible but keyboard-dead) while the overlay is open.
 //
-// NEXT_PUBLIC_MAP_STYLE_URL may supply a hosted/self-hosted basemap. The
-// fallback is network-independent; app GIS APIs provide the map context.
+// NEXT_PUBLIC_MAP_STYLE_URL may supply a hosted/self-hosted basemap. App GIS
+// APIs and the shared habitat raster provide ecological context.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Maximize2, X } from 'lucide-react';
+import { Leaf, Maximize2, NotebookPen, X } from 'lucide-react';
 import type { RunState } from '@/types/expedition';
 import { getWaypointTypeLabel } from '@/types/waypoints';
-import { addLandscapeLayers } from '@/lib/maplibreLayers';
+import { addHabitatRasterLayer, addLandscapeLayers } from '@/lib/maplibreLayers';
 import { applyMapProjection, resolveMapStyle, restoreCustomLayerOrder } from '@/lib/maplibreStyle';
 import { buildRouteFeature, getMapSiteStatus, type MapSiteStatus } from '@/lib/maplibreGeoJSON';
+import { speciesService, type RasterHabitatResult } from '@/lib/speciesService';
 import { EvidenceLog } from './EvidenceLog';
+import { FieldPlate } from './FieldPlate';
+import { FieldHintTicker } from './FieldHintTicker';
 
 // Zoom clamps approximate the plan's scales: ~1:6M regional context up to
 // ~1:500k single-site detail in the panel; fullscreen unlocks a wider range.
@@ -60,6 +63,28 @@ function buildMarkerElement(site: SiteDatum): HTMLButtonElement {
     element.appendChild(label);
   }
   return element;
+}
+
+function HabitatReadout({ habitat, loading }: {
+  habitat: RasterHabitatResult | null;
+  loading: boolean;
+}) {
+  return (
+    <div className="flex max-w-[min(72vw,320px)] items-center gap-2 rounded-lg border border-emerald-200/25 bg-[rgba(3,18,20,.9)] px-2.5 py-1.5 text-left shadow-lg backdrop-blur-sm">
+      <Leaf className="h-3.5 w-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
+      <span className="min-w-0">
+        <span className="block text-[8px] font-bold uppercase tracking-[.17em] text-emerald-200/65">Habitat type</span>
+        <span className="block truncate text-[10px] font-semibold text-emerald-50">
+          {loading ? 'Reading landscape…' : habitat?.habitat_type ?? 'Unclassified habitat'}
+        </span>
+      </span>
+      {habitat && (
+        <span className="ml-auto shrink-0 font-mono text-[9px] text-emerald-100/60">
+          {Math.round(habitat.percentage)}%
+        </span>
+      )}
+    </div>
+  );
 }
 
 export function ExpeditionMapHud({ runState, onSiteClick }: {
@@ -105,10 +130,13 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
 
   const [focusNodeIndex, setFocusNodeIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showEvidenceDetail, setShowEvidenceDetail] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   /** Cover state: loading placeholder, ready (hidden), or error/retry (replaces placeholder). */
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [mapError, setMapError] = useState<string | null>(null);
+  const [dominantHabitat, setDominantHabitat] = useState<RasterHabitatResult | null>(null);
+  const [habitatLoading, setHabitatLoading] = useState(false);
   /** Bump to tear down and recreate the MapLibre instance (Retry). */
   const [initToken, setInitToken] = useState(0);
 
@@ -128,6 +156,22 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
     setFocusNodeIndex(nodeIndex);
     onSiteClick?.(nodeIndex);
   }, [onSiteClick]);
+
+  const openMapFullscreen = useCallback(() => {
+    setShowEvidenceDetail(false);
+    setIsFullscreen(true);
+  }, []);
+
+  const openEvidenceDetail = useCallback((nodeIndex?: number) => {
+    if (nodeIndex !== undefined) setFocusNodeIndex(nodeIndex);
+    setShowEvidenceDetail(true);
+    setIsFullscreen(true);
+  }, []);
+
+  const closeFullscreen = useCallback(() => {
+    setIsFullscreen(false);
+    setShowEvidenceDetail(false);
+  }, []);
 
   const retryMap = useCallback(() => {
     setMapReady(false);
@@ -239,8 +283,9 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       };
       // Later source/tile work makes map.loaded() false again. Only the initial
       // load may replace the map with the retry cover.
-      const handleError = (event: { error?: Error | { message?: string } }) => {
-        if (cancelled || !map || hasCompletedInitialLoad) return;
+      const handleError = (event: { error?: Error | { message?: string }; sourceId?: string; tile?: unknown }) => {
+        // Tile/source errors are transient; only style-level failures are fatal.
+        if (cancelled || !map || hasCompletedInitialLoad || event.sourceId || event.tile) return;
         const raw = event?.error;
         const message = raw instanceof Error
           ? raw.message
@@ -311,12 +356,12 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       map.addLayer({
         id: 'expedition-route-casing', type: 'line', source: 'expedition-route',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': 'rgba(122,82,44,0.22)', 'line-width': 5.5 },
+        paint: { 'line-color': 'rgba(3,12,20,.78)', 'line-width': 6 },
       });
       map.addLayer({
         id: 'expedition-route-line', type: 'line', source: 'expedition-route',
         layout: { 'line-join': 'round' },
-        paint: { 'line-color': '#7a522c', 'line-width': 2, 'line-dasharray': [1.8, 2.4] },
+        paint: { 'line-color': '#67e8f9', 'line-width': 2.25, 'line-dasharray': [1.8, 2.4] },
       });
       restoreCustomLayerOrder(map);
     }
@@ -369,6 +414,31 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   const showRange = caseState?.guessResult === 'correct';
   const layerOriginLon = sites[0]?.lon;
   const layerOriginLat = sites[0]?.lat;
+  const habitatSite = sites[runState.currentNodeIndex] ?? sites[0];
+
+  // The same classified habitat raster used by the exploration globe.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const controller = new AbortController();
+    void addHabitatRasterLayer(map, controller.signal);
+    return () => controller.abort();
+  }, [mapReady]);
+
+  // Name the dominant classified habitat around the current research site.
+  useEffect(() => {
+    if (!habitatSite) return;
+    const controller = new AbortController();
+    setHabitatLoading(true);
+    void speciesService.getRasterHabitatDistribution(habitatSite.lon, habitatSite.lat, controller.signal)
+      .then(habitats => {
+        if (!controller.signal.aborted) setDominantHabitat(habitats[0] ?? null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setHabitatLoading(false);
+      });
+    return () => controller.abort();
+  }, [habitatSite]);
 
   // Public landscape context only: water, protected areas, and the active
   // One Earth boundary. Species geometry is fetched through the locked range
@@ -394,7 +464,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         const data = await response.json() as Record<string, GeoJSON.FeatureCollection>;
         const map = mapRef.current;
         if (!map) return;
-        addLandscapeLayers(map, data);
+        addLandscapeLayers(map, data, { labels: true, cities: true, regionFill: false });
       } catch { /* contextual layers are optional; route play remains available */ }
     })();
     return () => controller.abort();
@@ -499,7 +569,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
     const fullscreenTrigger = fullscreenButtonRef.current;
     app?.setAttribute('inert', '');
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsFullscreen(false);
+      if (event.key === 'Escape') closeFullscreen();
     };
     document.addEventListener('keydown', onKeyDown);
     closeButtonRef.current?.focus();
@@ -508,14 +578,14 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       document.removeEventListener('keydown', onKeyDown);
       fullscreenTrigger?.focus();
     };
-  }, [isFullscreen]);
+  }, [closeFullscreen, isFullscreen]);
 
   if (!caseState) return null;
   const focusedSite = focusNodeIndex !== null ? sites.find(site => site.nodeIndex === focusNodeIndex) ?? null : null;
 
   return (
     <div className="relative flex h-full w-full min-h-0 flex-col" aria-label="Expedition map">
-      <div className="relative min-h-0 flex-[3] overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <div ref={panelSlotRef} className="absolute inset-0" />
         {mapStatus !== 'ready' && (
           <div className="absolute inset-0 z-[1] grid place-items-center bg-[#0b1a1d] px-4 text-center">
@@ -545,37 +615,78 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         <button
           ref={fullscreenButtonRef}
           type="button"
-          onClick={() => setIsFullscreen(true)}
+          onClick={openMapFullscreen}
           aria-label="Expand map to fullscreen"
           className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-lg border border-white/20 bg-[rgba(7,17,20,.85)] text-cyan-100 shadow-lg backdrop-blur-sm transition hover:bg-[rgba(14,32,36,.95)]"
         >
           <Maximize2 className="h-4 w-4" />
         </button>
-        {focusedSite && (
-          <div className="absolute bottom-2 left-2 right-12 z-10 rounded-lg border border-white/15 bg-[rgba(7,17,20,.88)] px-2.5 py-1.5 text-[10px] text-white/80 backdrop-blur-sm">
-            <b className="mr-1 text-cyan-100">Site {focusedSite.nodeIndex + 1} · {focusedSite.name}</b>
-            {focusedSite.typeLabel && <span className="mr-1">{focusedSite.typeLabel}.</span>}
-            {focusedSite.status === 'current' && focusedSite.biome && <span className="mr-1">Biome: {focusedSite.biome}.</span>}
-            {focusedSite.distKm !== null && <span>Near here, {focusedSite.distKm.toFixed(1)} km from basecamp.</span>}
+        <div className="pointer-events-none absolute left-2 top-2 z-10">
+          <HabitatReadout habitat={dominantHabitat} loading={habitatLoading} />
+        </div>
+        {!isFullscreen && (
+          <div className="pointer-events-none absolute bottom-2 left-2 right-12 z-10 flex flex-col gap-1.5">
+            {focusedSite && (
+              <div className="rounded-lg border border-white/15 bg-[rgba(7,17,20,.88)] px-2.5 py-1.5 text-[10px] text-white/80 backdrop-blur-sm">
+                <b className="mr-1 text-cyan-100">Site {focusedSite.nodeIndex + 1} · {focusedSite.name}</b>
+                {focusedSite.typeLabel && <span className="mr-1">{focusedSite.typeLabel}.</span>}
+                {focusedSite.status === 'current' && focusedSite.biome && <span className="mr-1">Biome: {focusedSite.biome}.</span>}
+                {focusedSite.distKm !== null && <span>Near here, {focusedSite.distKm.toFixed(1)} km from basecamp.</span>}
+              </div>
+            )}
+            <FieldHintTicker feed={caseState.hintFeed} />
           </div>
         )}
       </div>
 
-      <div className="min-h-0 flex-[2] overflow-y-auto border-t border-ds-subtle bg-[rgba(7,17,20,.92)] px-2 py-2">
+      <div className="max-h-[44%] flex-none overflow-y-auto border-t border-ds-subtle bg-[rgba(7,17,20,.92)] px-2 py-1.5">
         {caseState.travelEntry && (
-          <p className="m-0 mb-1.5 rounded-lg bg-white/[.04] px-2 py-1 text-[10px] italic text-amber-100/80">{caseState.travelEntry}</p>
+          <p className="m-0 mb-1 rounded-lg bg-white/[.04] px-2 py-1 text-[9px] italic text-amber-100/75">{caseState.travelEntry}</p>
         )}
-        <EvidenceLog caseState={caseState} focusNodeIndex={focusNodeIndex} />
+        <div className="flex items-start gap-2">
+          {runState.runId && <FieldPlate runId={runState.runId} selectedFamilies={caseState.selectedFamilies} />}
+          <div className="min-w-0 flex-1">
+            <EvidenceLog
+              caseState={caseState}
+              focusNodeIndex={focusNodeIndex}
+              variant="compact"
+              onOpenDetail={openEvidenceDetail}
+            />
+          </div>
+        </div>
       </div>
 
       {isFullscreen && createPortal(
         <div className="map-hud-fullscreen" role="dialog" aria-modal="true" aria-label="Expedition map, fullscreen">
           <div className="map-hud-fullscreen-panel">
             <div ref={overlaySlotRef} className="absolute inset-0" />
+            <div className="pointer-events-none absolute left-3 top-3 z-10">
+              <HabitatReadout habitat={dominantHabitat} loading={habitatLoading} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEvidenceDetail(value => !value)}
+              aria-expanded={showEvidenceDetail}
+              className="absolute right-14 top-3 z-20 flex h-9 items-center gap-1.5 rounded-lg border border-white/20 bg-[rgba(7,17,20,.85)] px-2.5 text-[9px] font-bold uppercase tracking-[.12em] text-cyan-100 shadow-lg backdrop-blur-sm transition-colors hover:bg-[rgba(14,32,36,.95)]"
+            >
+              <NotebookPen className="h-3.5 w-3.5" />
+              Evidence {caseState.observations.filter(observation => observation.family).length}/3
+            </button>
+            {showEvidenceDetail && (
+              <aside className="absolute bottom-12 left-3 right-3 z-20 max-h-[58%] overflow-y-auto rounded-xl border border-cyan-100/20 bg-[rgba(5,17,21,.95)] p-3 shadow-2xl backdrop-blur-md md:bottom-3 md:left-auto md:right-3 md:top-14 md:max-h-none md:w-[360px]" aria-label="Full evidence details">
+                {caseState.travelEntry && (
+                  <p className="m-0 mb-2 rounded-lg bg-white/[.04] px-2 py-1.5 text-[10px] italic text-amber-100/75">{caseState.travelEntry}</p>
+                )}
+                <EvidenceLog caseState={caseState} focusNodeIndex={focusNodeIndex} variant="detail" />
+              </aside>
+            )}
+            <div className={`pointer-events-none absolute bottom-3 left-3 z-10 ${showEvidenceDetail ? 'right-3 md:right-[380px]' : 'right-3'}`}>
+              <FieldHintTicker feed={caseState.hintFeed} />
+            </div>
             <button
               ref={closeButtonRef}
               type="button"
-              onClick={() => setIsFullscreen(false)}
+              onClick={closeFullscreen}
               aria-label="Close fullscreen map"
               className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-lg border border-white/20 bg-[rgba(7,17,20,.85)] text-cyan-100 shadow-lg backdrop-blur-sm transition hover:bg-[rgba(14,32,36,.95)]"
             >

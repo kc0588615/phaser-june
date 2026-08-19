@@ -22,6 +22,34 @@ export interface FamilyMapping {
  * Core mapping of scientific family names to common names
  */
 export const FAMILY_COMMON_NAMES: Record<string, string> = {
+  // Mammals
+  'Ailuridae': 'red pandas',
+  'Bovidae': 'cattle, antelopes, goats & sheep',
+  'Bradypodidae': 'three-toed sloths',
+  'Canidae': 'dogs',
+  'Cercopithecidae': 'Old World monkeys',
+  'Chlamyphoridae': 'armadillos',
+  'Chrysochloridae': 'golden moles',
+  'Dasyuridae': 'carnivorous marsupials',
+  'Daubentoniidae': 'aye-ayes',
+  'Elephantidae': 'elephants',
+  'Equidae': 'horses, zebras & asses',
+  'Felidae': 'cats',
+  'Giraffidae': 'giraffes & okapis',
+  'Hominidae': 'great apes',
+  'Macropodidae': 'kangaroos & wallabies',
+  'Macroscelididae': 'sengis',
+  'Manidae': 'pangolins',
+  'Mustelidae': 'weasels, otters & badgers',
+  'Ochotonidae': 'pikas',
+  'Pteropodidae': 'Old World fruit bats',
+  'Rhinocerotidae': 'rhinoceroses',
+  'Sciuridae': 'squirrels',
+  'Solenodontidae': 'solenodons',
+  'Tachyglossidae': 'echidnas',
+  'Thylacomyidae': 'bilbies',
+  'Vombatidae': 'wombats',
+
   // Amphibians - Frogs and Toads
   'Arthroleptidae': 'squeakers & African tree frogs',
   'Ascaphidae': 'tailed frogs',
@@ -150,7 +178,12 @@ export function getFamilyCommonName(scientificFamily: string): string | null {
   if (!scientificFamily || scientificFamily === 'Unknown' || scientificFamily === 'NULL') {
     return null;
   }
-  return FAMILY_COMMON_NAMES[scientificFamily] || null;
+  const exact = FAMILY_COMMON_NAMES[scientificFamily];
+  if (exact) return exact;
+  const matchingKey = Object.keys(FAMILY_COMMON_NAMES).find(
+    family => family.toLowerCase() === scientificFamily.toLowerCase(),
+  );
+  return matchingKey ? FAMILY_COMMON_NAMES[matchingKey] : null;
 }
 
 /**

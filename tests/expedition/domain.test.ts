@@ -2,11 +2,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ACTIVE_GEM_TYPES,
   LOOT_GEM_TYPES,
-  METHOD_TYPES,
-  METHOD_GEM_MAP,
-  GEM_METHOD_MAP,
   GEM_TYPES,
   GEM_REGISTRY,
   createBoardSpawnConfig,
@@ -37,33 +33,21 @@ describe('gem registry', () => {
     assert.equal(new Set(categories).size, LOOT_GEM_TYPES.length);
   });
 
-  test('investigation methods map bijectively onto five frozen loot gem ids', () => {
-    assert.equal(new Set(Object.values(METHOD_GEM_MAP)).size, METHOD_TYPES.length);
-    for (const method of METHOD_TYPES) {
-      const gemType = METHOD_GEM_MAP[method];
-      assert.ok(LOOT_GEM_TYPES.includes(gemType));
-      assert.equal(GEM_METHOD_MAP[gemType], method);
-    }
-    for (const disabledGem of ['black', 'white', 'purple'] as const) {
-      assert.equal(GEM_METHOD_MAP[disabledGem], undefined);
-      assert.equal(ACTIVE_GEM_TYPES.includes(disabledGem), false);
-    }
-  });
 });
 
 describe('createBoardSpawnConfig', () => {
-  test('defaults to an empty method-weight override', () => {
+  test('defaults to an empty gem-weight override', () => {
     const config = createBoardSpawnConfig();
     assert.deepEqual(config, { lootWeights: {} });
   });
 
-  test('preserves explicit method weights', () => {
+  test('preserves explicit gem weights', () => {
     assert.deepEqual(createBoardSpawnConfig({ lootWeights: { red: 3 } }), { lootWeights: { red: 3 } });
   });
 });
 
 describe('buildBoardSpawnConfigForNode', () => {
-  test('forwards method weights without node-type action boosts', () => {
+  test('forwards gem weights without node-type action boosts', () => {
     const config = buildBoardSpawnConfigForNode('riverbank_sweep', { orange: 3 });
     assert.deepEqual(config, { lootWeights: { orange: 3 } });
   });
