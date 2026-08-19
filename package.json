@@ -1,25 +1,26 @@
 {
-    "name": "template-nextjs",
+    "name": "critter-connect",
     "version": "1.2.0",
-    "description": "A Phaser 3 Next.js project template that demonstrates Next.js with React communication and uses Vite for bundling.",
+    "private": true,
+    "description": "A biodiversity exploration and match-3 deduction game built with Phaser, Next.js, MapLibre, and Drizzle.",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/phaserjs/template-nextjs.git"
+        "url": "git+https://github.com/kc0588615/phaser-june.git"
     },
-    "author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
     "license": "MIT",
-    "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
     "bugs": {
-        "url": "https://github.com/phaserjs/template-nextjs/issues"
+        "url": "https://github.com/kc0588615/phaser-june/issues"
     },
-    "homepage": "https://github.com/phaserjs/template-nextjs#readme",
+    "homepage": "https://github.com/kc0588615/phaser-june#readme",
     "keywords": [
         "phaser",
         "phaser3",
         "next",
         "nextjs",
-        "vite",
-        "typescript"
+        "typescript",
+        "maplibre",
+        "biodiversity",
+        "game"
     ],
     "engines": {
         "node": "22.x",
