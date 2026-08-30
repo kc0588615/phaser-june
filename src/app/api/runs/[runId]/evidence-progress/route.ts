@@ -5,7 +5,7 @@ import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { applyEvidenceProgress, deriveCascadeHintId, deriveEvidenceHintIds, getEvidenceHintFamilies, parseV3NodeEvidenceState, shouldIssueCascadeHint, type EvidenceProgressInput } from '@/lib/evidenceRunState';
 import { getRecord, isUuid, parsePrivateCase } from '@/lib/runCaseState';
 import { parsePublicCaseSnapshot } from '@/lib/runProjection';
-import { evidenceMoveSubmissionDigest, parseEvidenceMoveSubmission, verifyEvidenceMove } from '@/lib/evidenceMoveVerification';
+import { evidenceMoveSubmissionDigest, parseEvidenceMoveSubmission, verifyEvidenceMoveDetailed } from '@/lib/evidenceMoveVerification';
 import { buildNodeBoardContext, NODE_OBSTACLES, type NodeObstacle } from '@/game/nodeObstacles';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           return response(409, { reason: 'move_out_of_order' });
         }
         const obstacles = getNodeObstacles(node.hazardProfile);
-        input = verifyEvidenceMove(submission, {
+        const verification = verifyEvidenceMoveDetailed(submission, {
           previousCheckpoint: state.boardCheckpoint,
           boardSeed: node.boardSeed!,
           selectedFamilies: state.selectedFamilies,
@@ -59,7 +59,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
             nodeIndex: submission.nodeIndex,
           }).obstacleSeeds,
         });
-        if (!input) return response(409, { reason: 'unverified_move' });
+        if (!verification.ok) {
+          console.warn('[evidence-progress] Move replay rejected', {
+            runId, nodeIndex: submission.nodeIndex, moveNumber: submission.moveNumber,
+            move: submission.move, detail: verification.reason,
+          });
+          return response(409, { reason: 'unverified_move', detail: verification.reason });
+        }
+        input = verification.input;
         const applied = applyEvidenceProgress(state, input);
         if ('error' in applied) return response(409, { reason: applied.error });
         appliedState = { ...applied.state, lastSubmissionDigest: submissionDigest };

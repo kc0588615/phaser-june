@@ -32,6 +32,19 @@ export interface EvidenceMoveVerificationContext {
   obstacleSeeds: CellStateSeed[];
 }
 
+export type EvidenceMoveVerificationFailure =
+  | 'previous_move_number'
+  | 'move_has_no_match'
+  | 'empty_move_phase'
+  | 'checkpoint_score'
+  | 'checkpoint_rng'
+  | 'checkpoint_grid'
+  | 'checkpoint_metadata';
+
+export type EvidenceMoveVerificationResult =
+  | { ok: true; input: EvidenceProgressInput }
+  | { ok: false; reason: EvidenceMoveVerificationFailure };
+
 export function parseEvidenceMoveSubmission(value: unknown): EvidenceMoveSubmission | null {
   const source = getRecord(value);
   const move = getRecord(source.move);
@@ -66,10 +79,18 @@ export function verifyEvidenceMove(
   submission: EvidenceMoveSubmission,
   context: EvidenceMoveVerificationContext,
 ): EvidenceProgressInput | null {
+  const result = verifyEvidenceMoveDetailed(submission, context);
+  return result.ok ? result.input : null;
+}
+
+export function verifyEvidenceMoveDetailed(
+  submission: EvidenceMoveSubmission,
+  context: EvidenceMoveVerificationContext,
+): EvidenceMoveVerificationResult {
   const puzzle = createPuzzle(context, submission.nodeIndex);
-  if (puzzle.getMovesUsed() !== submission.moveNumber - 1) return null;
+  if (puzzle.getMovesUsed() !== submission.moveNumber - 1) return { ok: false, reason: 'previous_move_number' };
   const move = new MoveAction(submission.move.rowOrCol, submission.move.index, submission.move.amount);
-  if (puzzle.getMatchesFromHypotheticalMove(move).length === 0) return null;
+  if (puzzle.getMatchesFromHypotheticalMove(move).length === 0) return { ok: false, reason: 'move_has_no_match' };
 
   const summary: ReplaySummary = {
     largestMatch: 0,
@@ -79,7 +100,7 @@ export function verifyEvidenceMove(
   };
   const scoreBefore = puzzle.getScore();
   const directPhase = puzzle.getNextExplodeAndReplacePhase([move]);
-  if (directPhase.isNothingToDo()) return null;
+  if (directPhase.isNothingToDo()) return { ok: false, reason: 'empty_move_phase' };
   processPhase(puzzle, directPhase, false, summary);
   for (;;) {
     const cascade = puzzle.getNextExplodeAndReplacePhase([]);
@@ -105,11 +126,12 @@ export function verifyEvidenceMove(
   }
   puzzle.registerMove();
   const verifiedCheckpoint = puzzle.exportCheckpoint();
-  if (JSON.stringify(verifiedCheckpoint) !== JSON.stringify(submission.boardCheckpoint)) return null;
+  const checkpointFailure = getCheckpointFailure(verifiedCheckpoint, submission.boardCheckpoint);
+  if (checkpointFailure) return { ok: false, reason: checkpointFailure };
 
   const directClears = createEmptyEvidenceCharges();
   for (const family of summary.directEvidenceCells.values()) directClears[family] += 1;
-  return {
+  return { ok: true, input: {
     nodeIndex: submission.nodeIndex,
     moveNumber: submission.moveNumber,
     directClears,
@@ -121,7 +143,21 @@ export function verifyEvidenceMove(
       signalHintCount: (summary.signalClearMatchLength ?? 3) >= 4 ? 2 : 1,
     } : {}),
     boardCheckpoint: verifiedCheckpoint,
-  };
+  } };
+}
+
+function getCheckpointFailure(
+  expected: BoardCheckpointV1,
+  actual: BoardCheckpointV1,
+): EvidenceMoveVerificationFailure | null {
+  if (expected.score !== actual.score) return 'checkpoint_score';
+  if (expected.rngState !== actual.rngState) return 'checkpoint_rng';
+  if (JSON.stringify(expected.grid) !== JSON.stringify(actual.grid)) return 'checkpoint_grid';
+  const { grid: expectedGrid, score: expectedScore, rngState: expectedRng, ...expectedMetadata } = expected;
+  const { grid: actualGrid, score: actualScore, rngState: actualRng, ...actualMetadata } = actual;
+  void expectedGrid; void expectedScore; void expectedRng;
+  void actualGrid; void actualScore; void actualRng;
+  return JSON.stringify(expectedMetadata) === JSON.stringify(actualMetadata) ? null : 'checkpoint_metadata';
 }
 
 interface ReplaySummary {

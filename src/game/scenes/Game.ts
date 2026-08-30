@@ -591,7 +591,7 @@ export class Game extends Phaser.Scene {
     }
 
     private handleShuffle(): void {
-        if (!this.backendPuzzle || !this.boardView || !this.canMove || this.isPaused) return;
+        if (this.inExpeditionRun || !this.backendPuzzle || !this.boardView || !this.canMove || this.isPaused) return;
         this.backendPuzzle.shuffle();
         this.boardView.destroyBoard();
         this.boardView.createBoard(this.backendPuzzle.getGridState());
@@ -708,7 +708,7 @@ export class Game extends Phaser.Scene {
             this.pauseOverlayTitle?.setVisible(false);
             this.pauseOverlayResumeButton?.setVisible(false);
             this.pauseButtonContainer?.setVisible(true);
-            this.shuffleButtonContainer?.setVisible(true);
+            this.shuffleButtonContainer?.setVisible(!this.inExpeditionRun);
             if (this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.isResolvingMove && this.canMoveBeforePause && !this.nodeObjectiveCompleted) {
                 this.canMove = true;
             }
@@ -1237,7 +1237,7 @@ export class Game extends Phaser.Scene {
 
             this.positionPauseButton();
             this.pauseButtonContainer?.setVisible(true);
-            this.shuffleButtonContainer?.setVisible(true);
+            this.shuffleButtonContainer?.setVisible(!this.inExpeditionRun);
             if (this.movesText && this.backendPuzzle) {
                 this.movesText.setText(`Moves: ${this.backendPuzzle.getMovesUsed()}/${this.backendPuzzle.getMaxMoves()}`);
             }
@@ -1433,6 +1433,7 @@ export class Game extends Phaser.Scene {
 
     private async handlePointerUp(pointer: Phaser.Input.Pointer): Promise<void> {
         if (this.isPaused) return;
+        let awaitingEvidenceCommit = false;
         // Store these values *before* calling resetDragState or any async operation
         const wasDragging = this.isDragging;
         const currentDragDirection = this.dragDirection;
@@ -1496,6 +1497,7 @@ export class Game extends Phaser.Scene {
                     this.boardView.snapDraggedGemsToFinalGridPositions();
                     this.isResolvingMove = true;
                     await this.applyMoveAndHandleResults(moveAction);
+                    awaitingEvidenceCommit = this.inExpeditionRun;
                 } else {
                     console.log(`Pointer up: Move resulted in NO matches. Snapping back.`);
                     await this.boardView.snapBack(dSprites, dStartPositions, currentDragDirection || undefined, deltaX, deltaY);
@@ -1512,7 +1514,7 @@ export class Game extends Phaser.Scene {
         } finally {
             this.isResolvingMove = false;
             // A finished objective keeps the board inert through interpretation.
-            if (!this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.nodeObjectiveCompleted) {
+            if (!awaitingEvidenceCommit && !this.isPaused && this.backendPuzzle && !this.backendPuzzle.isGameOver() && !this.nodeObjectiveCompleted) {
                 this.canMove = true;
             }
         }

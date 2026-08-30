@@ -331,7 +331,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(event),
       });
-      if (!response.ok) throw new Error(`Evidence progress failed (${response.status})`);
+      if (!response.ok) {
+        const failure = await response.json().catch(() => ({})) as { error?: string; reason?: string; detail?: string };
+        const cause = [failure.reason, failure.detail].filter(Boolean).join('/');
+        throw new Error(`Evidence progress failed (${response.status}${cause ? `: ${cause}` : ''})`);
+      }
       const result = await response.json() as {
         duplicate?: boolean;
         segmentMovesUsed: number;
