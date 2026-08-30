@@ -2,6 +2,7 @@ import { EVIDENCE_FAMILIES, isEvidenceFamily, parseEvidenceCharges, type Evidenc
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
+import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution, type PublicMysteryCase } from '@/lib/mysteryCase';
 
 const UINT32_MAX = 0xffff_ffff;
 const NODE_OBSTACLES = new Set([
@@ -73,14 +74,15 @@ export interface RunProjectionSource extends UnknownRecord {
   metadata?: unknown;
 }
 
-export interface PublicCaseV3 {
-  version: 3;
+export interface PublicCaseV4 {
+  version: 4;
   candidateIds: number[];
   boardSeeds: [number, number, number];
   mapView: ExpeditionMapView;
+  mystery: PublicMysteryCase;
 }
 
-export type PublicCaseSnapshot = PublicCaseV3;
+export type PublicCaseSnapshot = PublicCaseV4;
 
 export type ProjectedNodeCaseState =
   | 'board_active'
@@ -245,6 +247,12 @@ export interface ClientRunProjection {
   nodes: PublicRunNode[];
   memory: PublicRunMemory | null;
   legacy: boolean;
+  verdict: {
+    resolvedSpeciesId: number;
+    resolvedExplanationId: string;
+    fieldFacts: Array<{ nodeIndex: number; family: EvidenceFamily; text: string }>;
+    resolution: MysteryResolution;
+  } | null;
 }
 
 export interface RunProjectionInput {
@@ -252,6 +260,7 @@ export interface RunProjectionInput {
   publicObservations?: readonly unknown[];
   nodes?: readonly unknown[];
   memory?: unknown;
+  verdict?: unknown;
 }
 
 export interface PublicRunCreateResponse {
@@ -288,6 +297,7 @@ export function projectRunForClient(
     nodes: projectNodeCaseStates(nodes, observations),
     memory: projectRunMemory(input.memory),
     legacy: casePublic === null,
+    verdict: projectVerdict(input.verdict),
   };
 }
 
@@ -329,13 +339,13 @@ function projectRunSummary(session: RunProjectionSource): PublicRunSummary {
   return run;
 }
 
-/** v3 only — stored v1/v2 snapshots parse to null and resume as legacy runs. */
+/** v4 only — earlier snapshots parse to null and resume as legacy runs. */
 export function parsePublicCaseSnapshot(value: unknown): PublicCaseSnapshot | null {
   const source = getRecord(value);
   const candidateIds = getExactIntegerArray(source.candidateIds);
   const boardSeeds = source.boardSeeds;
 
-  if (source.version !== 3
+  if (source.version !== 4
     || !candidateIds
     || candidateIds.length !== 6
     || candidateIds.some(id => id <= 0)
@@ -348,13 +358,34 @@ export function parsePublicCaseSnapshot(value: unknown): PublicCaseSnapshot | nu
   }
 
   const mapView = parseExpeditionMapView(source.mapView);
-  if (!mapView) return null;
+  const mystery = parsePublicMysteryCase(source.mystery);
+  if (!mapView || !mystery) return null;
   return {
-    version: 3,
+    version: 4,
     candidateIds,
     boardSeeds: [boardSeeds[0] as number, boardSeeds[1] as number, boardSeeds[2] as number],
     mapView,
+    mystery,
   };
+}
+
+function projectVerdict(value: unknown): ClientRunProjection['verdict'] {
+  const source = getRecord(value);
+  const resolvedSpeciesId = getInteger(source.resolvedSpeciesId);
+  const resolvedExplanationId = getString(source.resolvedExplanationId);
+  const resolution = parseMysteryResolution(source.resolution);
+  const fieldFacts = Array.isArray(source.fieldFacts) ? source.fieldFacts.flatMap(item => {
+    const fact = getRecord(item);
+    const nodeIndex = getInteger(fact.nodeIndex);
+    const family = isEvidenceFamily(fact.family) ? fact.family : null;
+    const copy = getString(fact.text);
+    return nodeIndex !== undefined && nodeIndex >= 0 && nodeIndex <= 2 && family && copy
+      ? [{ nodeIndex, family, text: copy }]
+      : [];
+  }) : [];
+  return resolvedSpeciesId !== undefined && resolvedSpeciesId > 0 && resolvedExplanationId && resolution
+    ? { resolvedSpeciesId, resolvedExplanationId, fieldFacts, resolution }
+    : null;
 }
 
 /** Projects persisted node rows without exposing their raw JSONB payloads. */

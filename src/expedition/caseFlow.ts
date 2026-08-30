@@ -8,8 +8,8 @@
 import type { ClientRunProjection } from '@/lib/runProjection';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
 
-/** Sub-state of run phase 'mystery'. Only a correct server /guess verdict leaves 'guess'. */
-export type CaseStage = 'choose_evidence' | 'board' | 'interpreting' | 'guess';
+/** Sub-state of run phase 'mystery'. Only a correct server diagnosis leaves 'guess'. */
+export type CaseStage = 'incident' | 'choose_evidence' | 'board' | 'interpreting' | 'guess';
 
 export interface FlowNode {
   completed: boolean;

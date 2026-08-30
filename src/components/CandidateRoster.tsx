@@ -5,26 +5,22 @@ import { eliminatedCandidateTraitPhrase } from '@/expedition/candidateTraits';
 import type { RunState } from '@/types/expedition';
 import { EvidenceFamilyIcon } from './EvidenceFamilyIcon';
 
-export function CandidateRoster({ runState, onGuess }: { runState: RunState; onGuess: (speciesId: number) => Promise<boolean | null> }) {
+export function CandidateRoster({ runState }: { runState: RunState }) {
   const caseState = runState.caseState;
   const [openId, setOpenId] = useState<number | null>(null);
   if (!caseState) return null;
   const eliminated = new Set(caseState.eliminatedIds);
-  const guessing = caseState.stage === 'guess';
   const selectedFamilySet = new Set(caseState.selectedFamilies);
 
   return (
     <section
-      className={`absolute bottom-1 left-2 right-[120px] z-[66] rounded-2xl border bg-[rgba(7,17,20,.92)] px-2 py-1.5 shadow-2xl backdrop-blur-md transition-colors sm:bottom-2 sm:left-4 sm:right-[152px] lg:bottom-2 lg:right-auto lg:top-2 lg:w-[132px] lg:overflow-y-auto lg:p-2 ${
-        guessing ? 'border-amber-300/55 shadow-amber-950/30' : 'border-white/15'
-      }`}
+      className="absolute bottom-1 left-2 right-[120px] z-[66] rounded-2xl border border-white/15 bg-[rgba(7,17,20,.92)] px-2 py-1.5 shadow-2xl backdrop-blur-md transition-colors sm:bottom-2 sm:left-4 sm:right-[152px] lg:bottom-2 lg:right-auto lg:top-2 lg:w-[132px] lg:overflow-y-auto lg:p-2"
       aria-label="Candidate roster"
     >
       <div className="mb-1 flex items-center justify-between gap-2 px-1 lg:mb-2 lg:block">
         <p className="m-0 text-[9px] font-bold uppercase tracking-[.16em] text-cyan-100/60">
           Roster · {caseState.candidateIds.length - eliminated.size} possible
         </p>
-        {guessing && <p className="m-0 text-[9px] font-bold uppercase tracking-[.12em] text-amber-200 lg:mt-1">Choose animal</p>}
       </div>
       <div className="grid grid-cols-3 gap-1 sm:grid-cols-6 lg:grid-cols-1 lg:gap-1.5">
         {caseState.profiles.map(profile => {
@@ -34,14 +30,12 @@ export function CandidateRoster({ runState, onGuess }: { runState: RunState; onG
           const initials = profile.commonName.split(/\s+/).map(word => word[0]).join('').slice(0, 2).toUpperCase();
           const portrait = candidatePortrait(profile.scientificName) ?? initials;
           const activate = () => {
-            if (guessing && !isOut) void onGuess(profile.speciesId);
-            else setOpenId(previous => previous === profile.speciesId ? null : profile.speciesId);
+            setOpenId(previous => previous === profile.speciesId ? null : profile.speciesId);
           };
           return (
             <button
               key={profile.speciesId}
               type="button"
-              disabled={guessing && isOut}
               onClick={activate}
               className={`group relative min-w-0 rounded-xl border px-1 py-1 text-left transition-colors ${
                 isOpen ? 'col-span-3 sm:col-span-6 lg:col-span-1' : ''
@@ -50,12 +44,10 @@ export function CandidateRoster({ runState, onGuess }: { runState: RunState; onG
                   ? 'border-amber-300 bg-amber-300/15'
                   : isOut
                     ? `border-red-400/15 bg-red-950/15 ${isOpen ? 'opacity-75' : 'opacity-40'}`
-                    : guessing
-                      ? 'border-amber-200/25 bg-amber-100/[.06] hover:border-amber-200 hover:bg-amber-100/[.14] focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200'
-                      : 'border-white/10 bg-white/[.04] hover:border-cyan-200/45 hover:bg-cyan-100/[.08]'
+                    : 'border-white/10 bg-white/[.04] hover:border-cyan-200/45 hover:bg-cyan-100/[.08]'
               }`}
-              aria-label={`${profile.commonName}${isOut ? ', eliminated' : guessing ? ', choose as answer' : ''}`}
-              aria-expanded={guessing ? undefined : isOpen}
+              aria-label={`${profile.commonName}${isOut ? ', eliminated' : ''}`}
+              aria-expanded={isOpen}
             >
               <div className="flex items-center gap-1.5">
                 <span className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-full border text-[10px] font-black ${isOut ? 'border-red-300/30 bg-slate-700 grayscale' : 'border-cyan-100/25 bg-gradient-to-br from-cyan-300/25 to-emerald-300/10 text-cyan-50'}`}>
@@ -83,7 +75,7 @@ export function CandidateRoster({ runState, onGuess }: { runState: RunState; onG
                   </span>
                 </span>
               </div>
-              {isOpen && !guessing && (
+              {isOpen && (
                 <span className="mt-1.5 block border-t border-white/10 pt-1.5 text-[9px] leading-snug text-white/65">
                   <i className="block truncate text-white/50">{profile.scientificName}</i>
                   {isOut && (

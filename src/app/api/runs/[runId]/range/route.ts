@@ -18,7 +18,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ run
     if (!session) return NextResponse.json({ error: 'Run not found' }, { status: 404 });
     if (session.playerId !== playerId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     const privateCase = parsePrivateCase(getRecord(session.metadata).casePrivate);
-    if (privateCase?.version !== 3 || session.runStatus !== 'completed') {
+    if (privateCase?.version !== 4 || session.runStatus !== 'completed') {
       return NextResponse.json({ error: 'Species range is locked' }, { status: 409 });
     }
     const rows = await db.execute<{ geometry: Record<string, unknown> | null }>(sql`

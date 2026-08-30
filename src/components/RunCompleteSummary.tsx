@@ -10,6 +10,7 @@ import { EVIDENCE_FAMILY_LABELS } from '@/expedition/evidenceFamilies';
 import type { RunState } from '@/types/expedition';
 import type { Species } from '@/types/database';
 import type { FeatureClass } from '@/types/gis';
+import { CaseResolution } from '@/components/CaseResolution';
 
 type CardProgress = Pick<
   SpeciesTCGCardProps,
@@ -93,7 +94,7 @@ export function RunCompleteSummary({ runState, onReset }: {
 
   const stats = [
     { label: 'Final Score', value: String(runState.finalScore ?? hud.score), color: 'var(--ds-accent-cyan)' },
-    { label: 'Result', value: captured ? 'Captured' : 'Slipped', color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' },
+    { label: 'Result', value: captured ? 'Solved' : 'Open', color: captured ? 'var(--ds-accent-emerald)' : 'var(--ds-accent-amber)' },
     { label: 'Observations', value: String(caseState?.observations.length ?? 0), color: 'var(--ds-accent-amber)' },
     { label: 'Evidence Families', value: String(caseState?.selectedFamilies.length ?? 0), color: 'var(--ds-gem-focus)' },
   ];
@@ -103,7 +104,7 @@ export function RunCompleteSummary({ runState, onReset }: {
       <div className="mx-auto flex min-h-full w-full max-w-md flex-col items-center justify-center gap-4 px-5 py-8">
         <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.28em] text-ds-cyan">
           <span className="h-px w-8 bg-gradient-to-r from-transparent to-ds-cyan/70" />
-          {captured ? 'Species Captured' : 'Species Slipped Away'}
+          {captured ? 'Ecological Case Resolved' : 'Case Remains Open'}
           <span className="h-px w-8 bg-gradient-to-l from-transparent to-ds-cyan/70" />
         </div>
 
@@ -135,6 +136,14 @@ export function RunCompleteSummary({ runState, onReset }: {
               ariaLabel="Completed expedition route"
             />
           </GlassPanel>
+        )}
+
+        {captured && caseState && runState.caseResolution && (
+          <CaseResolution
+            mystery={caseState.mystery}
+            resolution={runState.caseResolution}
+            explanationId={runState.resolvedExplanationId}
+          />
         )}
 
         {captured && runState.fieldFacts.length > 0 && (

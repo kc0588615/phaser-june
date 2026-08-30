@@ -31,6 +31,8 @@ import { ExpeditionMapHud } from './components/ExpeditionMapHud';
 import { ProfileContent } from './components/ProfileContent';
 import { RunCompleteSummary } from './components/RunCompleteSummary';
 import { GlassPanel } from '@/components/ui/glass-panel';
+import { CaseIncidentIntro } from '@/components/CaseIncidentIntro';
+import { CaseDiagnosisPanel } from '@/components/CaseDiagnosisPanel';
 
 function ProfileTabContent() {
     return (
@@ -59,7 +61,7 @@ function MainAppLayoutInner() {
     const {
         runState, boardOpacity,
         handleRunResume, handleRunReset,
-        handleChooseEvidenceFamily, handleGuess,
+        handleChooseEvidenceFamily, handleAcknowledgeIncident, handleDiagnosis,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -215,15 +217,23 @@ function MainAppLayoutInner() {
                             />
                         )}
 
-                        {inRun && runState.caseState && (
+                        {inRun && runState.caseState && !['incident', 'guess'].includes(runState.caseState.stage) && (
                             <>
                                 <EvidenceFamilyRail caseState={runState.caseState} onChoose={handleChooseEvidenceFamily} />
-                                <CandidateRoster runState={runState} onGuess={handleGuess} />
+                                <CandidateRoster runState={runState} />
                                 <EvidenceOnboarding />
                             </>
                         )}
 
                     </div>
+
+                    {inRun && runState.caseState?.stage === 'incident' && (
+                        <CaseIncidentIntro mystery={runState.caseState.mystery} onContinue={() => void handleAcknowledgeIncident()} />
+                    )}
+
+                    {inRun && runState.caseState?.stage === 'guess' && (
+                        <CaseDiagnosisPanel runState={runState} onSubmit={handleDiagnosis} />
+                    )}
                 </div>
             </div>
 

@@ -7,7 +7,7 @@
 //
 //   Explore map --'map-location-selected'---->  ExpeditionContext / Game scene
 //   Context    --'expedition-start'---------->  Game scene (board begins)
-//   Game scene --'evidence-move-resolved'----> Context (durable v3 checkpoint)
+//   Game scene --'evidence-move-resolved'----> Context (server-replayed checkpoint)
 //   Context    --'node-complete'-------------> Game scene (next board begins)
 //
 // To add an event: add its name + payload type to `EventPayloads`, then both
@@ -22,7 +22,6 @@ import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObsta
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { BoardCheckpointV1 } from './boardTypes';
-import type { EvidenceChargeState, EvidenceFamily } from '@/expedition/evidenceFamilies';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -100,13 +99,7 @@ export interface EventPayloads {
   'evidence-move-resolved': {
     nodeIndex: number;
     moveNumber: number;
-    directClears: EvidenceChargeState;
-    directMatchFamilies: EvidenceFamily[];
-    cascadeCount: number;
-    signalCleared: boolean;
-    signalClearedFamily?: EvidenceFamily;
-    /** 1 for a direct 3-match clear, 2 for 4+. Present iff signalCleared. */
-    signalHintCount?: 1 | 2;
+    move: { rowOrCol: 'row' | 'col'; index: number; amount: number };
     boardCheckpoint: BoardCheckpointV1;
   };
   'evidence-progress-committed': {

@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { CompilerEvidenceFamilyCard, CompilerEvidenceFamilyHint } from '../src/lib/caseCompilerV3';
-import { compileCaseV3, verifyCaseCorpusV3 } from '../src/lib/caseCompilerV3';
+import { compileCaseV4, verifyCaseCorpusV3 } from '../src/lib/caseCompilerV3';
 import {
   EVIDENCE_PROTOTYPE_IUCN_IDS,
   parseEvidenceProfileDossier,
@@ -12,6 +12,7 @@ import {
   parseEvidenceFamilySeed,
   validateEvidenceFamilyCorpus,
 } from '../src/lib/evidenceFamilySeedValidation';
+import { getMysteryCaseForIucnId } from '../src/lib/mysteryCaseCatalog.server';
 
 const root = process.cwd();
 const reportOnly = process.argv.slice(2).includes('--report');
@@ -69,7 +70,17 @@ const errors = [
   ...validateEvidenceFamilyCorpus(familySeeds, dossiers),
   ...verification.errors,
 ];
-const forcedCases = profiles.map(profile => compileCaseV3({
+const mysteryCasesBySpeciesId = new Map(profiles.flatMap(profile => {
+  const mystery = getMysteryCaseForIucnId(profile.speciesId);
+  return mystery ? [[profile.speciesId, mystery] as const] : [];
+}));
+const answerTermsBySpeciesId = new Map(dossiers.map(dossier => [dossier.iucnId, [
+  dossier.commonName,
+  dossier.scientificName,
+  dossier.scientificName.split(/\s+/u)[0],
+  ...dossier.commonName.split(/\s+/u),
+]]));
+const forcedCases = profiles.map(profile => compileCaseV4({
   caseSeed: 'c'.repeat(64),
   prototypeSpeciesIds: profiles.map(item => item.speciesId),
   speciesPool: profiles,
@@ -88,11 +99,13 @@ const forcedCases = profiles.map(profile => compileCaseV3({
       nearestFeature: `Site ${nodeIndex + 1}`,
     })) as import('../src/expedition/mapView').ExpeditionMapView['route'],
   },
+  mysteryCasesBySpeciesId,
+  answerTermsBySpeciesId,
   forcedAnswerId: profile.speciesId,
 }));
-if (forcedCases.some(compiled => 'error' in compiled)) errors.push('Forced-answer v3 compilation failed.');
+if (forcedCases.some(compiled => 'error' in compiled)) errors.push('Forced-answer v4 compilation failed.');
 const publicVariants = new Set(forcedCases.flatMap(compiled => 'error' in compiled ? [] : [JSON.stringify(compiled.public)]));
-if (publicVariants.size !== 1) errors.push('V3 public projection changes with forced answer.');
+if (publicVariants.size !== profiles.length) errors.push('Every forced answer must produce its authored public incident.');
 if (verification.pathCount !== 360) errors.push(`Expected 360 v3 paths, got ${verification.pathCount}.`);
 
 console.log(`Enumerated ${verification.pathCount.toLocaleString()} v3 family paths.`);
@@ -102,5 +115,5 @@ if (errors.length > 0) {
   for (const error of errors.slice(0, 30)) console.log(`- ${error}`);
   if (!reportOnly) process.exitCode = 1;
 } else {
-  console.log('V3 answer survival, monotone candidates, residual, hint safety, and answer-neutral public projection passed.');
+  console.log('V4 authored cases plus v3 evidence survival, monotone candidates, residual, and hint safety passed.');
 }

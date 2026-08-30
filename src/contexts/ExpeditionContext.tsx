@@ -13,11 +13,12 @@ import type { AffinityType } from '@/expedition/affinities';
 import { createFlowState, currentNodeIndexForStep, nextFlowStep, reconcileProjection, stageForStep, type CaseFlowState, type FlowStep } from '@/expedition/caseFlow';
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
 import type { Species } from '@/types/database';
+import type { DiagnosisFeedback, MysteryResolution } from '@/lib/mysteryCase';
 
 const INITIAL_RUN_STATE: RunState = {
   runId: null, phase: 'idle', expedition: null, currentNodeIndex: 0, bankedScore: 0,
   finalScore: null, visitedWaypointSlot: 0,
-  resolvedSpeciesId: null, fieldFacts: [], caseState: null,
+  resolvedSpeciesId: null, resolvedExplanationId: null, fieldFacts: [], caseResolution: null, caseState: null,
 };
 
 interface ExpeditionContextValue {
@@ -26,7 +27,8 @@ interface ExpeditionContextValue {
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
   handleChooseEvidenceFamily: (family: EvidenceFamily) => Promise<boolean>;
-  handleGuess: (speciesId: number) => Promise<boolean | null>;
+  handleAcknowledgeIncident: () => Promise<void>;
+  handleDiagnosis: (speciesId: number, explanationId: string) => Promise<boolean | null>;
   showSpeciesList: (speciesId: number) => void;
   onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
 }
@@ -49,8 +51,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   // Full species rows for the six case candidates — the field-note drip pool.
   // Held per run so object refs stay stable (clueConfig progress is WeakMap-keyed).
   const candidateSpeciesRef = useRef<Species[]>([]);
-  const flowRef = useRef<CaseFlowState>(null!);
-  if (flowRef.current === null) flowRef.current = createFlowState();
+  const [initialFlow] = useState(createFlowState);
+  const flowRef = useRef<CaseFlowState>(initialFlow);
   /** nodeIndex of the board currently mounted in the Phaser scene, null when torn down. */
   const liveBoardRef = useRef<number | null>(null);
   const startingRef = useRef(false);
@@ -175,13 +177,17 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       candidateSpeciesRef.current = await fetchCandidateSpecies(created.casePublic.candidateIds);
       pendingCreatedRunRef.current = null;
       flowRef.current = createFlowState();
-      const caseState = createCaseState(created.casePublic, profiles);
+      const caseState = { ...createCaseState(created.casePublic, profiles), stage: 'incident' as const };
       setRunState(previous => ({ ...previous, runId: created.runId, phase: 'mystery', caseState, currentNodeIndex: 0 }));
-      await runFlow();
     } catch (error) {
       console.error('[ExpeditionContext] Failed to start expedition:', error);
       toast.error('Could not start the expedition case.');
     } finally { startingRef.current = false; }
+  }, []);
+
+  const handleAcknowledgeIncident = useCallback(async () => {
+    if (stateRef.current.caseState?.stage !== 'incident') return;
+    await runFlow();
   }, [runFlow]);
 
   const handleChooseEvidenceFamily = useCallback(async (family: EvidenceFamily) => {
@@ -244,25 +250,55 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     }
   }, [emitNodeCompleteIfLive, runFlow]);
 
-  const handleGuess = useCallback(async (speciesId: number) => {
+  const handleDiagnosis = useCallback(async (speciesId: number, explanationId: string) => {
     const runId = runIdRef.current;
     const activeCase = stateRef.current.caseState;
     if (!runId || activeCase?.stage !== 'guess') return false;
     try {
-      const response = await fetch(`/api/runs/${runId}/guess`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ speciesId }) });
-      if (!response.ok) { toast.error('Guess could not be checked.'); return null; }
-      const result = await response.json() as { correct: boolean; contrastiveFeedback: ComparisonResult[]; finalScore?: number; fieldFacts?: FieldFact[] };
+      const response = await fetch(`/api/runs/${runId}/guess`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ speciesId, explanationId }),
+      });
+      if (!response.ok) { toast.error('Diagnosis could not be checked.'); return null; }
+      const result = await response.json() as {
+        correct: boolean;
+        contrastiveFeedback: ComparisonResult[];
+        diagnosisFeedback: DiagnosisFeedback;
+        finalScore?: number;
+        fieldFacts?: FieldFact[];
+        resolution?: MysteryResolution;
+        selectedExplanationId?: string;
+      };
       if (result.correct) {
         // speciesId is the public candidate the player just selected — safe to keep client-side.
-        setRunState(previous => previous.caseState ? { ...previous, phase: 'complete', finalScore: result.finalScore ?? null, completionReason: 'captured', resolvedSpeciesId: speciesId, fieldFacts: result.fieldFacts ?? [], caseState: { ...previous.caseState, guessResult: 'correct', lastFeedback: null } } : previous);
+        setRunState(previous => previous.caseState ? {
+          ...previous,
+          phase: 'complete',
+          finalScore: result.finalScore ?? null,
+          completionReason: 'captured',
+          resolvedSpeciesId: speciesId,
+          resolvedExplanationId: result.selectedExplanationId ?? explanationId,
+          fieldFacts: result.fieldFacts ?? [],
+          caseResolution: result.resolution ?? null,
+          caseState: { ...previous.caseState, guessResult: 'correct', lastFeedback: null, diagnosisFeedback: result.diagnosisFeedback },
+        } : previous);
         window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId } }));
       } else {
-        setRunState(previous => previous.caseState ? { ...previous, caseState: { ...previous.caseState, guessResult: 'wrong', lastFeedback: result.contrastiveFeedback } } : previous);
+        setRunState(previous => previous.caseState ? {
+          ...previous,
+          caseState: {
+            ...previous.caseState,
+            guessResult: 'wrong',
+            lastFeedback: result.contrastiveFeedback,
+            diagnosisFeedback: result.diagnosisFeedback,
+          },
+        } : previous);
       }
       return result.correct;
     } catch (error) {
-      console.error('[ExpeditionContext] Guess failed:', error);
-      toast.error('Guess could not be checked.');
+      console.error('[ExpeditionContext] Diagnosis failed:', error);
+      toast.error('Diagnosis could not be checked.');
       return null;
     }
   }, []);
@@ -302,6 +338,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         evidenceCharges: CaseState['evidenceCharges'];
         offeredFamilies: EvidenceFamily[];
         hintLines?: string[];
+        hintFamilies?: EvidenceFamily[];
         cascadeHintLine?: string | null;
       };
       flowRef.current = {
@@ -323,7 +360,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
               id: `${event.nodeIndex}-${event.moveNumber}-e-${index}`,
               text,
               kind: 'evidence' as const,
-              family: event.directMatchFamilies[index] ?? event.signalClearedFamily,
+              family: result.hintFamilies?.[index],
             })),
             ...(result.cascadeHintLine ? [{ id: `${event.nodeIndex}-${event.moveNumber}-c`, text: result.cascadeHintLine, kind: 'cascade' as const }] : []),
           ]),
@@ -374,6 +411,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           ...INITIAL_RUN_STATE, runId, phase: 'complete', expedition, currentNodeIndex: 2,
           bankedScore: projection.run.scoreTotal ?? 0,
           finalScore: decision.finalScore, completionReason: 'captured',
+          resolvedSpeciesId: projection.verdict?.resolvedSpeciesId ?? null,
+          resolvedExplanationId: projection.verdict?.resolvedExplanationId ?? null,
+          fieldFacts: projection.verdict?.fieldFacts ?? [],
+          caseResolution: projection.verdict?.resolution ?? null,
           caseState: { ...baseCase, stage: 'guess', guessResult: 'correct' },
         });
         toast('Expedition already resolved', { duration: 1800 });
@@ -417,13 +458,24 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   }, [handleExpeditionDataReady, handleExpeditionStart, handleObjective, handleEvidenceMoveResolved, resetLocal]);
 
   const showSpeciesList = useCallback((speciesId: number) => onShowSpeciesList.current?.(speciesId), []);
-  const value = useMemo(() => ({ runState, boardOpacity, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleGuess, showSpeciesList, onShowSpeciesList }), [runState, boardOpacity, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleGuess, showSpeciesList]);
+  const value = useMemo(() => ({
+    runState,
+    boardOpacity,
+    handleRunResume,
+    handleRunReset,
+    handleChooseEvidenceFamily,
+    handleAcknowledgeIncident,
+    handleDiagnosis,
+    showSpeciesList,
+    onShowSpeciesList,
+  }), [runState, boardOpacity, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleDiagnosis, showSpeciesList]);
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
 
 function createCaseState(publicCase: PublicCaseSnapshot, profiles: DeductionProfile[]): CaseState { return {
-  version: 3,
+  version: 4,
   mapView: publicCase.mapView,
+  mystery: publicCase.mystery,
   stage: 'board',
   candidateIds: publicCase.candidateIds,
   profiles,
@@ -431,6 +483,7 @@ function createCaseState(publicCase: PublicCaseSnapshot, profiles: DeductionProf
   eliminatedIds: [],
   guessResult: null,
   lastFeedback: null,
+  diagnosisFeedback: null,
   objectiveProgress: 0,
   objectiveTarget: 0,
   nodeOutcomes: [null, null, null],

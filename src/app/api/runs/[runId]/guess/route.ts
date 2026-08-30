@@ -4,7 +4,7 @@ import { db, ecoLocationMastery, ecoRunNodes, ecoRunSessions, evidenceFamilyCard
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { compareReference } from '@/lib/deductionEngine';
 import { sampleGisFeaturesForRoute } from '@/lib/gisFeatureSampling';
-import { decideGuess, getRecord, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications, resolveFieldFacts } from '@/lib/runCaseState';
+import { decideDiagnosis, getRecord, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications, resolveFieldFacts } from '@/lib/runCaseState';
 import { buildLocationMasteryMetadata, buildRunMemoryArtifacts, getExpeditionRegionKeys, getRunAffinityTags, getRunGisStamps, resolveCompletedRunRoute } from '@/lib/runCompletion';
 import { getSpeciesCardRarityTier } from '@/lib/speciesCardProgression';
 import { refreshSpeciesCardProgress } from '@/lib/speciesCardProgression.server';
@@ -17,14 +17,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const playerId = await getPlayerIdFromClerk();
     const requestBody = getRecord(await request.json().catch(() => ({})));
     const speciesId = requestBody.speciesId;
+    const explanationId = requestBody.explanationId;
     if (!Number.isInteger(speciesId) || (speciesId as number) <= 0) return NextResponse.json({ error: 'Invalid speciesId' }, { status: 400 });
+    if (typeof explanationId !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(explanationId) || explanationId.length > 80) {
+      return NextResponse.json({ error: 'Invalid explanationId' }, { status: 400 });
+    }
 
     let completionArtifacts: ReturnType<typeof buildRunMemoryArtifacts> | null = null;
     if (playerId) {
       const [preSession] = await db.select().from(ecoRunSessions)
         .where(and(eq(ecoRunSessions.id, runId), eq(ecoRunSessions.playerId, playerId))).limit(1);
       const prePrivateCase = parsePrivateCase(getRecord(preSession?.metadata).casePrivate);
-      if (preSession?.runStatus === 'deduction' && prePrivateCase?.answerId === speciesId) {
+      if (preSession?.runStatus === 'deduction'
+        && prePrivateCase?.answerId === speciesId
+        && prePrivateCase?.mystery.answerExplanationId === explanationId) {
         const preNodes = await db.select().from(ecoRunNodes).where(eq(ecoRunNodes.runId, runId)).orderBy(ecoRunNodes.nodeOrder);
         const route = resolveCompletedRunRoute(
           preSession.selectedLng,
@@ -53,17 +59,35 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const publicCase = getRecord(metadata.casePublic);
       const candidateIds = Array.isArray(publicCase.candidateIds) ? publicCase.candidateIds.filter((id): id is number => Number.isInteger(id)) : [];
       if (!privateCase || candidateIds.length !== 6) return response(409, { reason: 'legacy_run' });
-      const decision = decideGuess(session.runStatus, speciesId as number, privateCase.answerId);
-      if (decision === 'not_ready') return response(409, { reason: 'not_guess_ready' });
-      if (decision === 'terminal_conflict') return response(409, { reason: 'run_completed' });
-      if (decision === 'repeat_correct') {
+      if (!(explanationId in privateCase.mystery.explanationFeedback)) {
+        return response(400, { error: 'explanationId is not a case choice' });
+      }
+      const decision = decideDiagnosis(
+        session.runStatus,
+        speciesId as number,
+        explanationId,
+        privateCase.answerId,
+        privateCase.mystery.answerExplanationId,
+      );
+      if (decision.outcome === 'not_ready') return response(409, { reason: 'not_guess_ready' });
+      if (decision.outcome === 'terminal_conflict') return response(409, { reason: 'run_completed' });
+      if (decision.outcome === 'repeat_correct') {
         const repeatApplications = parseV3EvidenceApplications(metadata.evidenceApplications);
         const fieldFacts = await loadFieldFacts(tx, repeatApplications);
         if (fieldFacts.length !== repeatApplications.length || fieldFacts.length !== 3) {
           return response(503, { error: 'Verdict facts unavailable' });
         }
         const existingFinalScore = typeof metadata.finalScore === 'number' ? metadata.finalScore : session.scoreTotal;
-        return response(200, { correct: true, selectedSpeciesId: speciesId, contrastiveFeedback: [], finalScore: existingFinalScore, fieldFacts });
+        return response(200, {
+          correct: true,
+          selectedSpeciesId: speciesId,
+          selectedExplanationId: explanationId,
+          contrastiveFeedback: [],
+          diagnosisFeedback: supportedDiagnosisFeedback(privateCase, explanationId),
+          finalScore: existingFinalScore,
+          fieldFacts,
+          resolution: privateCase.mystery.resolution,
+        });
       }
       if (!candidateIds.includes(speciesId as number)) return response(400, { error: 'speciesId is not a case candidate' });
       const v3Applications = parseV3EvidenceApplications(metadata.evidenceApplications);
@@ -73,13 +97,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       const wrongGuessCount = Number.isSafeInteger(metadata.wrongGuessCount) && (metadata.wrongGuessCount as number) >= 0
         ? metadata.wrongGuessCount as number : 0;
-      if (decision === 'wrong') {
-        const feedback = await buildV3Feedback(tx, privateCase.answerId, speciesId as number, v3Applications);
+      if (decision.outcome === 'wrong') {
+        const feedback = decision.speciesCorrect
+          ? []
+          : await buildV3Feedback(tx, privateCase.answerId, speciesId as number, v3Applications);
         const guessMetrics = { wrongGuessCount: wrongGuessCount + 1, ...(metadata.firstGuessCorrect === undefined ? { firstGuessCorrect: false } : {}) };
         await tx.update(ecoRunSessions).set({ metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify(guessMetrics)}::jsonb` }).where(eq(ecoRunSessions.id, runId));
         await tx.update(ecoRunNodes).set({ guessedSpeciesId: speciesId as number, guessCorrect: false, updatedAt: new Date() })
           .where(and(eq(ecoRunNodes.runId, runId), eq(ecoRunNodes.nodeOrder, session.nodeCountPlanned)));
-        return response(200, { correct: false, selectedSpeciesId: speciesId, contrastiveFeedback: feedback });
+        return response(200, {
+          correct: false,
+          selectedSpeciesId: speciesId,
+          selectedExplanationId: explanationId,
+          contrastiveFeedback: feedback,
+          diagnosisFeedback: {
+            speciesVerdict: decision.speciesCorrect ? 'supported' : 'revise',
+            explanationVerdict: decision.explanationCorrect ? 'supported' : 'revise',
+            explanationText: privateCase.mystery.explanationFeedback[explanationId],
+          },
+        });
       }
 
       const fieldFacts = await loadFieldFacts(tx, v3Applications);
@@ -96,7 +132,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       await tx.update(ecoRunSessions).set({
         runStatus: 'completed', endedAt: now, scoreTotal: finalScore,
         speciesDiscoveredCount: sql`${ecoRunSessions.speciesDiscoveredCount} + 1`,
-        metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify({ finalScore, deductionSummary, wrongGuessCount, firstGuessCorrect, awardsApplied: true })}::jsonb`,
+        metadata: sql`${ecoRunSessions.metadata} || ${JSON.stringify({ finalScore, deductionSummary, wrongGuessCount, firstGuessCorrect, awardsApplied: true, resolvedExplanationId: explanationId })}::jsonb`,
       }).where(eq(ecoRunSessions.id, runId));
       await tx.update(ecoRunNodes).set({ guessedSpeciesId: speciesId as number, guessCorrect: true, updatedAt: now })
         .where(and(eq(ecoRunNodes.runId, runId), eq(ecoRunNodes.nodeOrder, session.nodeCountPlanned)));
@@ -210,7 +246,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           updatedAt: now,
         }).where(and(eq(speciesCards.playerId, session.playerId), eq(speciesCards.speciesId, privateCase.answerId)));
       }
-      return response(200, { correct: true, selectedSpeciesId: speciesId, contrastiveFeedback: [], finalScore, fieldFacts });
+      return response(200, {
+        correct: true,
+        selectedSpeciesId: speciesId,
+        selectedExplanationId: explanationId,
+        contrastiveFeedback: [],
+        diagnosisFeedback: supportedDiagnosisFeedback(privateCase, explanationId),
+        finalScore,
+        fieldFacts,
+        resolution: privateCase.mystery.resolution,
+      });
     });
     if (result.body.correct === true && playerId) {
       try {
@@ -284,6 +329,14 @@ async function awardDiscovery(tx: RunTransaction, playerId: string, speciesId: n
 }
 
 function response(status: number, body: Record<string, unknown>) { return { status, body }; }
+
+function supportedDiagnosisFeedback(privateCase: NonNullable<ReturnType<typeof parsePrivateCase>>, explanationId: string) {
+  return {
+    speciesVerdict: 'supported',
+    explanationVerdict: 'supported',
+    explanationText: privateCase.mystery.explanationFeedback[explanationId],
+  };
+}
 
 function applyWrongGuessDecay(
   bonuses: { guessBonus: number; efficiencyBonus: number },

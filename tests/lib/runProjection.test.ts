@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { projectRunCreateResponse, projectRunForClient } from '@/lib/runProjection';
 
 const CASE_PUBLIC = {
-  version: 3 as const,
+  version: 4 as const,
   candidateIds: [1, 2, 3, 4, 5, 6],
   boardSeeds: [10, 20, 30] as [number, number, number],
   mapView: {
@@ -20,16 +20,26 @@ const CASE_PUBLIC = {
       { nodeIndex: 2; lon: number; lat: number; biome: string; nearestFeature: string },
     ],
   },
+  mystery: {
+    id: 'test-case', title: 'Test case', incident: 'Something changed in the field.',
+    atmosphere: 'The signal is broad.', question: 'What explains the change?',
+    location: { label: 'Test site', basis: 'GIS-selected sites.', confidence: 'contextual' as const },
+    explanationChoices: [
+      { id: 'choice-a', label: 'Choice A', description: 'First explanation.' },
+      { id: 'choice-b', label: 'Choice B', description: 'Second explanation.' },
+      { id: 'choice-c', label: 'Choice C', description: 'Third explanation.' },
+    ],
+  },
 };
 
-describe('v3 run projection', () => {
+describe('v4 run projection', () => {
   test('projects family evidence without private answer or card data', () => {
     const projection = projectRunForClient({
       id: 'run-v3',
       runStatus: 'active',
       metadata: {
         casePublic: { ...CASE_PUBLIC, speciesRange: 'PRIVATE_RANGE' },
-        casePrivate: { version: 3, answerId: 4, caseSeed: 'PRIVATE_SEED', familyCardIds: { body: 900 } },
+        casePrivate: { version: 4, answerId: 4, caseSeed: 'PRIVATE_SEED', familyCardIds: { body: 900 } },
         evidenceApplications: [{ cardId: 900, bonusFactText: 'PRIVATE_FACT' }],
       },
     }, {
@@ -124,11 +134,12 @@ describe('v3 run projection', () => {
     assert.equal(JSON.stringify(projection).includes('PRIVATE_CARD'), false);
   });
 
-  test('marks missing, v1, and v2 snapshots as legacy', () => {
+  test('marks missing and earlier snapshots as legacy', () => {
     for (const casePublic of [
       undefined,
       { version: 1, candidateIds: [1, 2, 3, 4, 5, 6], boardSeeds: [1, 2, 3] },
       { version: 2, candidateIds: [1, 2, 3, 4, 5, 6], boardSeeds: [1, 2, 3] },
+      { version: 3, candidateIds: [1, 2, 3, 4, 5, 6], boardSeeds: [1, 2, 3] },
     ]) {
       const projection = projectRunForClient({ metadata: { casePublic } });
       assert.equal(projection.casePublic, null);
@@ -142,6 +153,7 @@ describe('v3 run projection', () => {
       { ...CASE_PUBLIC, candidateIds: [1, 2, 3, 4, 5, 5] },
       { ...CASE_PUBLIC, boardSeeds: [1, 2, 4_294_967_296] },
       { ...CASE_PUBLIC, mapView: null },
+      { ...CASE_PUBLIC, mystery: null },
     ];
     for (const casePublic of malformed) {
       assert.equal(projectRunForClient({ metadata: { casePublic } }).legacy, true);

@@ -21,7 +21,7 @@ function projection(overrides: Partial<ClientRunProjection> = {}): ClientRunProj
   return {
     run: { id: 'run-v3', status: 'active', scoreTotal: 100 },
     casePublic: {
-      version: 3,
+      version: 4,
       candidateIds: [1, 2, 3, 4, 5, 6],
       boardSeeds: [10, 20, 30],
       mapView: {
@@ -33,6 +33,16 @@ function projection(overrides: Partial<ClientRunProjection> = {}): ClientRunProj
           biome: 'Forest',
           nearestFeature: `Site ${nodeIndex + 1}`,
         })) as NonNullable<ClientRunProjection['casePublic']>['mapView']['route'],
+      },
+      mystery: {
+        id: 'test-case', title: 'Test case', incident: 'Something changed in the field.',
+        atmosphere: 'The signal is broad.', question: 'What explains the change?',
+        location: { label: 'Test site', basis: 'GIS-selected sites.', confidence: 'contextual' },
+        explanationChoices: [
+          { id: 'choice-a', label: 'Choice A', description: 'First explanation.' },
+          { id: 'choice-b', label: 'Choice B', description: 'Second explanation.' },
+          { id: 'choice-c', label: 'Choice C', description: 'Third explanation.' },
+        ],
       },
     },
     checkpoint: {
@@ -47,6 +57,7 @@ function projection(overrides: Partial<ClientRunProjection> = {}): ClientRunProj
     nodes: [],
     memory: null,
     legacy: false,
+    verdict: null,
     ...overrides,
   };
 }

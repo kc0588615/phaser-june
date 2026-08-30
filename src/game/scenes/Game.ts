@@ -50,7 +50,7 @@ import {
 } from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
-import { GEM_EVIDENCE_FAMILIES, createEmptyEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
+import { GEM_EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { getExpeditionBoardSafeArea } from '../expeditionHudLayout';
 import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '../fieldSignal';
 
@@ -323,12 +323,7 @@ export class Game extends Phaser.Scene {
         didAnyMatch: boolean,
         moveMultiplier: number,
         evidenceTelemetry?: {
-            directClears: EvidenceChargeState;
-            directMatchFamilies: EvidenceFamily[];
-            cascadeCount: number;
-            signalCleared: boolean;
-            signalClearedFamily?: EvidenceFamily;
-            signalHintCount?: 1 | 2;
+            move: { rowOrCol: MoveDirection; index: number; amount: number };
         },
     ): void {
         if (!this.backendPuzzle) return;
@@ -743,12 +738,6 @@ export class Game extends Phaser.Scene {
             directEvidenceCells: new Map(),
             directMatchFamilies: [],
         };
-    }
-
-    private evidenceCountsFromSummary(summary: MoveSummary | null): EvidenceChargeState {
-        const counts = createEmptyEvidenceCharges();
-        for (const family of summary?.directEvidenceCells.values() ?? []) counts[family] += 1;
-        return counts;
     }
 
     // --- Player Tracking Event Handlers ---
@@ -1566,14 +1555,7 @@ export class Game extends Phaser.Scene {
 
         const evidenceTelemetry = this.inExpeditionRun && this.currentMoveSummary
             ? {
-                directClears: this.evidenceCountsFromSummary(this.currentMoveSummary),
-                directMatchFamilies: this.currentMoveSummary.directMatchFamilies,
-                cascadeCount: this.currentMoveSummary.cascades,
-                signalCleared: this.currentMoveSummary.signalClearedFamily !== undefined,
-                signalClearedFamily: this.currentMoveSummary.signalClearedFamily,
-                signalHintCount: this.currentMoveSummary.signalClearedFamily === undefined
-                    ? undefined
-                    : ((this.currentMoveSummary.signalClearMatchLength ?? 3) >= 4 ? 2 : 1) as 1 | 2,
+                move: { rowOrCol: moveAction.rowOrCol, index: moveAction.index, amount: moveAction.amount },
             }
             : undefined;
         this.placeFieldSignalAfterCascade();

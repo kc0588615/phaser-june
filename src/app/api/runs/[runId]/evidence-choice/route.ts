@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const metadata = getRecord(session.metadata);
       const publicCase = parsePublicCaseSnapshot(metadata.casePublic);
       const privateCase = parsePrivateCase(metadata.casePrivate);
-      if (publicCase?.version !== 3 || privateCase?.version !== 3) return response(409, { error: 'Evidence choice requires a v3 run' });
+      if (publicCase?.version !== 4 || privateCase?.version !== 4) return response(409, { error: 'Evidence choice requires a v4 run' });
       const nodes = await tx.select().from(ecoRunNodes).where(eq(ecoRunNodes.runId, runId)).orderBy(ecoRunNodes.nodeOrder);
       const node = nodes.find(candidate => candidate.nodeOrder === nodeOrder);
       if (!node) return response(404, { error: 'Node not found' });
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         await tx.update(ecoRunNodes).set({
           nodeStatus: 'active', startedAt: new Date(), updatedAt: new Date(),
           boardContext: {
-            ...getRecord(nextNode.boardContext), caseVersion: 3, evidenceCharges: nextCharges,
+            ...getRecord(nextNode.boardContext), caseVersion: 4, evidenceCharges: nextCharges,
             carriedCharges: nextCharges, hintCounts: createEmptyEvidenceCharges(), cascadeHintCount: 0,
             selectedFamilies, segmentMovesUsed: 0, offeredFamilies: [], lastHintIds: [], travelEntry,
           },

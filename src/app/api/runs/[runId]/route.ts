@@ -2,7 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, runMemories } from '@/db';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
-import { getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard, parseV3EvidenceApplications } from '@/lib/runCaseState';
+import { getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications, resolveFieldFacts } from '@/lib/runCaseState';
 import { projectRunForClient } from '@/lib/runProjection';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
@@ -20,20 +20,37 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       db.select().from(runMemories).where(eq(runMemories.runId, runId)).limit(1),
     ]);
     const metadata = getRecord(session.metadata);
-    const publicObservations = await hydrateObservations(metadata.evidenceApplications);
-    return NextResponse.json(projectRunForClient(session, { nodes, memory: memories[0] ?? null, publicObservations }));
+    const evidence = await hydrateEvidence(metadata.evidenceApplications);
+    const privateCase = parsePrivateCase(metadata.casePrivate);
+    const verdict = session.runStatus === 'completed' && privateCase ? {
+      resolvedSpeciesId: privateCase.answerId,
+      resolvedExplanationId: privateCase.mystery.answerExplanationId,
+      fieldFacts: evidence.fieldFacts,
+      resolution: privateCase.mystery.resolution,
+    } : null;
+    return NextResponse.json(projectRunForClient(session, {
+      nodes,
+      memory: memories[0] ?? null,
+      publicObservations: evidence.observations,
+      verdict,
+    }));
   } catch (error) {
     console.error('[API GET /api/runs/[runId]] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch run' }, { status: 500 });
   }
 }
 
-async function hydrateObservations(value: unknown): Promise<Record<string, unknown>[]> {
+async function hydrateEvidence(value: unknown) {
   const applications = parseV3EvidenceApplications(value);
   const cards = applications.length === 0 ? [] : await db.select().from(evidenceFamilyCards)
     .where(inArray(evidenceFamilyCards.id, applications.map(item => item.cardId)));
-  return applications.flatMap(application => {
+  const parsedCards = cards.flatMap(value => {
+    const card = parseEvidenceFamilyCard(value);
+    return card ? [card] : [];
+  });
+  const observations = applications.flatMap(application => {
     const card = parseEvidenceFamilyCard(cards.find(value => value.id === application.cardId));
     return card ? [hydrateFamilyObservation(card, application)] : [];
   });
+  return { observations, fieldFacts: resolveFieldFacts(applications, parsedCards) };
 }

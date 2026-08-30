@@ -7,7 +7,7 @@ import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { buildAnswerPrior } from '@/lib/answerPrior';
 import { type CompilerSpeciesProfile } from '@/lib/caseTraits';
-import { compileCaseV3, type CompilerCascadeHint, type CompilerEvidenceFamilyCard, type CompilerEvidenceFamilyHint } from '@/lib/caseCompilerV3';
+import { compileCaseV4, type CompilerCascadeHint, type CompilerEvidenceFamilyCard, type CompilerEvidenceFamilyHint } from '@/lib/caseCompilerV3';
 import { createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
 import { EVIDENCE_PROTOTYPE_IUCN_IDS } from '@/lib/evidenceSeedValidation';
 import { applyWaypointsToRunNodes, MYSTERY_NODE_COUNT, type RunNode } from '@/lib/nodeScoring';
@@ -16,6 +16,7 @@ import { resolveRunCreationIdentifiers } from '@/lib/runCaseState';
 import { deriveExpeditionMapView } from '@/expedition/mapView';
 import { RELAXED_RESEARCH_SITE_SPACING_KM, satisfiesResearchSiteSpacing } from '@/expedition/siteSpacing';
 import { harvestExpeditionWaypoints } from '@/lib/waypointHarvesting';
+import { getMysteryCaseForIucnId } from '@/lib/mysteryCaseCatalog.server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     const caseSeed = createHmac('sha256', secret).update(runId).digest('hex');
     const gisPrior = buildAnswerPrior(speciesRows.map(row => ({ speciesId: row.id, ...row })), getWaypointAnchors(metadataInput.expeditionSnapshot));
-    const compiled = compileCaseV3({
+    const compiled = compileCaseV4({
       caseSeed,
       prototypeSpeciesIds: speciesIds,
       speciesPool: profiles,
@@ -121,6 +122,11 @@ export async function POST(request: NextRequest) {
       gisPrior,
       boardSeeds: preparedNodes.map(node => node.boardSeed!),
       mapView: deriveExpeditionMapView(preparedNodes, { lon, lat }, stringOrNull(body.biome)),
+      mysteryCasesBySpeciesId: new Map(speciesRows.flatMap(row => {
+        const mystery = getMysteryCaseForIucnId(Number(row.iucnId));
+        return mystery ? [[row.id, mystery] as const] : [];
+      })),
+      answerTermsBySpeciesId: new Map(speciesRows.map(row => [row.id, answerTerms(row.commonName, row.scientificName)])),
     });
     if ('error' in compiled) {
       console.error('[API POST /api/runs] Compiler rejected corpus:', compiled.error, compiled.message);
@@ -177,7 +183,7 @@ export async function POST(request: NextRequest) {
         boardContext: {
           rationale: node.rationale,
           difficulty: node.difficulty,
-          caseVersion: 3,
+          caseVersion: 4,
           evidenceCharges: createEmptyEvidenceCharges(),
           carriedCharges: createEmptyEvidenceCharges(),
           hintCounts: createEmptyEvidenceCharges(),
@@ -229,6 +235,15 @@ function getWaypointAnchors(snapshotValue: unknown): Array<{ waypointType: strin
 function record(value: unknown): Record<string, unknown> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}; }
 function stringArray(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []; }
 function stringOrNull(value: unknown): string | null { return typeof value === 'string' && value ? value : null; }
+
+function answerTerms(commonName: string | null, scientificName: string | null): string[] {
+  return [...new Set([
+    commonName,
+    scientificName,
+    scientificName?.split(/\s+/u)[0],
+    ...(commonName?.split(/\s+/u) ?? []),
+  ].filter((value): value is string => typeof value === 'string' && value.length >= 4))];
+}
 
 function validateMetadataInput(body: Record<string, unknown>) {
   const activeAffinities = boundedStringArray(body.activeAffinities, 12, 80);

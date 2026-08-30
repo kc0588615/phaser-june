@@ -27,9 +27,10 @@ export interface FieldFact {
 }
 
 export interface CaseState {
-  version: 3;
+  version: 4;
   mapView: import('@/expedition/mapView').ExpeditionMapView | null;
-  /** Sub-state of phase 'mystery': board play, evidence choice/reveal, or the final guess. */
+  mystery: import('@/lib/mysteryCase').PublicMysteryCase;
+  /** Sub-state of phase 'mystery': incident, board play, evidence choice/reveal, or final diagnosis. */
   stage: import('@/expedition/caseFlow').CaseStage;
   candidateIds: number[];
   profiles: import('@/lib/deductionEngine').DeductionProfile[];
@@ -37,6 +38,7 @@ export interface CaseState {
   eliminatedIds: number[];
   guessResult: 'correct' | 'wrong' | null;
   lastFeedback: import('@/lib/deductionEngine').ComparisonResult[] | null;
+  diagnosisFeedback: import('@/lib/mysteryCase').DiagnosisFeedback | null;
   objectiveProgress: number;
   objectiveTarget: number;
   nodeOutcomes: Array<'met' | 'failed' | null>;
@@ -79,9 +81,11 @@ export interface RunState {
   finalScore: number | null;
   visitedWaypointSlot: number;
   completionReason?: 'captured' | 'slipped';
-  /** The public candidate the player selected on a server-confirmed correct guess. */
+  /** The public candidate selected in a server-confirmed correct diagnosis. */
   resolvedSpeciesId: number | null;
+  resolvedExplanationId: string | null;
   fieldFacts: FieldFact[];
+  caseResolution: import('@/lib/mysteryCase').MysteryResolution | null;
   caseState: CaseState | null;
 }
 

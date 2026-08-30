@@ -23,8 +23,7 @@ export interface EvidenceProgressInput {
   cascadeCount: number;
   signalCleared: boolean;
   signalClearedFamily?: EvidenceFamily;
-  /** Soft hints the clear pays: 1 for a direct 3-match, 2 for 4+. Present iff signalCleared.
-   *  Client-asserted — see isValidFieldSignalTransition for what is actually enforced. */
+  /** Soft hints the verified clear pays: 1 for a direct 3-match, 2 for 4+. */
   signalHintCount?: 1 | 2;
   boardCheckpoint: BoardCheckpointV1;
 }
@@ -40,6 +39,7 @@ export interface V3NodeEvidenceState {
   segmentMovesUsed: number;
   boardCheckpoint?: BoardCheckpointV1;
   lastMoveDigest?: string;
+  lastSubmissionDigest?: string;
   lastHintIds: number[];
   lastCascadeHintId?: number;
 }
@@ -95,7 +95,7 @@ export function parseEvidenceProgressInput(value: unknown): EvidenceProgressInpu
 
 export function parseV3NodeEvidenceState(value: unknown): V3NodeEvidenceState | null {
   const source = getRecord(value);
-  if (source.caseVersion !== 3) return null;
+  if (source.caseVersion !== 4) return null;
   const evidenceCharges = parseEvidenceCharges(source.evidenceCharges);
   if (!evidenceCharges) return null;
   const carriedCharges = parseEvidenceCharges(source.carriedCharges) ?? { ...evidenceCharges };
@@ -131,6 +131,7 @@ export function parseV3NodeEvidenceState(value: unknown): V3NodeEvidenceState | 
     segmentMovesUsed: segmentMovesUsed as number,
     ...(boardCheckpoint ? { boardCheckpoint } : {}),
     ...(typeof source.lastMoveDigest === 'string' && /^[a-f0-9]{64}$/.test(source.lastMoveDigest) ? { lastMoveDigest: source.lastMoveDigest } : {}),
+    ...(typeof source.lastSubmissionDigest === 'string' && /^[a-f0-9]{64}$/.test(source.lastSubmissionDigest) ? { lastSubmissionDigest: source.lastSubmissionDigest } : {}),
     lastHintIds,
     ...(lastCascadeHintId ? { lastCascadeHintId: lastCascadeHintId as number } : {}),
   };

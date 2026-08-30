@@ -2,6 +2,7 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeActualEliminatedIds,
+  decideDiagnosis,
   decideGuess,
   filterEliminatedCandidates,
   hydrateFamilyObservation,
@@ -14,7 +15,7 @@ import {
 } from '@/lib/runCaseState';
 
 const PRIVATE_CASE = {
-  version: 3 as const,
+  version: 4 as const,
   answerId: 7,
   caseSeed: 'b'.repeat(64),
   familyCardIds: { relatives: 1, body: 2, behavior: 3, habits: 4, place: 5 },
@@ -23,13 +24,32 @@ const PRIVATE_CASE = {
     habits: [40, 41, 42], place: [50, 51, 52],
   },
   cascadeHintIds: Array.from({ length: 12 }, (_, index) => 100 + index),
+  mystery: {
+    answerExplanationId: 'choice-a',
+    explanationFeedback: {
+      'choice-a': 'This explanation fits.',
+      'choice-b': 'This explanation needs revision.',
+      'choice-c': 'This explanation misses the pattern.',
+    },
+    resolution: {
+      headline: 'Resolved.',
+      diagnosis: 'The evidence supports the diagnosis.',
+      evidenceChain: ['First observation.', 'Second observation.'],
+      ecologicalRole: 'This species has an ecological role.',
+      taxonomy: 'This species belongs to a mammal lineage.',
+      misconception: 'The visible correlation was not sufficient.',
+      rejectedAlternatives: ['Alternative one lacked support.', 'Alternative two lacked support.'],
+      sources: [{ label: 'Source', url: 'https://example.com/source' }],
+    },
+  },
 };
 
 describe('v3 run case metadata', () => {
-  test('accepts v3 private cases and rejects old versions', () => {
+  test('accepts v4 private cases and rejects old versions', () => {
     assert.deepEqual(parsePrivateCase(PRIVATE_CASE), PRIVATE_CASE);
     assert.equal(parsePrivateCase({ version: 1, answerId: 7, chainCardIds: [1, 2, 3], caseSeed: 'a'.repeat(64) }), null);
     assert.equal(parsePrivateCase({ version: 2, answerId: 7, caseSeed: 'a'.repeat(64) }), null);
+    assert.equal(parsePrivateCase({ ...PRIVATE_CASE, version: 3 }), null);
     assert.equal(parsePrivateCase({ ...PRIVATE_CASE, familyHintIds: { ...PRIVATE_CASE.familyHintIds, place: [10, 51, 52] } }), null);
   });
 
@@ -133,6 +153,18 @@ describe('v3 run case metadata', () => {
     assert.equal(decideGuess('deduction', 1, 1), 'correct');
     assert.equal(decideGuess('completed', 1, 1), 'repeat_correct');
     assert.equal(decideGuess('completed', 2, 1), 'terminal_conflict');
+  });
+
+  test('evaluates species and explanation independently', () => {
+    assert.deepEqual(decideDiagnosis('deduction', 7, 'choice-b', 7, 'choice-a'), {
+      outcome: 'wrong', speciesCorrect: true, explanationCorrect: false,
+    });
+    assert.deepEqual(decideDiagnosis('deduction', 8, 'choice-a', 7, 'choice-a'), {
+      outcome: 'wrong', speciesCorrect: false, explanationCorrect: true,
+    });
+    assert.deepEqual(decideDiagnosis('deduction', 7, 'choice-a', 7, 'choice-a'), {
+      outcome: 'correct', speciesCorrect: true, explanationCorrect: true,
+    });
   });
 
   test('validates run and retry UUIDs independently', () => {

@@ -1,6 +1,7 @@
 import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseTraits';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import type { FieldFact } from '@/types/expedition';
+import { parsePrivateMysteryCase, type PrivateMysteryCase } from '@/lib/mysteryCase';
 
 const CATEGORY_SET = new Set<string>(CASE_TRAIT_CATEGORIES);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -27,12 +28,13 @@ export const RUN_CHECKPOINT_LIMITS = {
 } as const;
 
 export interface PrivateCaseV3 {
-  version: 3;
+  version: 4;
   answerId: number;
   caseSeed: string;
   familyCardIds: Record<EvidenceFamily, number>;
   familyHintIds: Record<EvidenceFamily, number[]>;
   cascadeHintIds: number[];
+  mystery: PrivateMysteryCase;
 }
 
 export type PrivateCaseSnapshot = PrivateCaseV3;
@@ -85,10 +87,10 @@ export function getRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-/** v3 only — stored v1/v2 private cases parse to null (legacy runs). */
+/** v4 only — earlier private cases parse to null (legacy runs). */
 export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
   const source = getRecord(value);
-  if (source.version !== 3) return null;
+  if (source.version !== 4) return null;
   const idsSource = getRecord(source.familyCardIds);
   const hintIdsSource = getRecord(source.familyHintIds);
   const familyCardIds = {} as Record<EvidenceFamily, number>;
@@ -101,6 +103,7 @@ export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
     familyHintIds[family] = hintIds;
   }
   const cascadeHintIds = parsePositiveIntegerArray(source.cascadeHintIds, 30);
+  const mystery = parsePrivateMysteryCase(source.mystery);
   const allFamilyHintIds = EVIDENCE_FAMILIES.flatMap(family => familyHintIds[family]);
   return isPositiveInteger(source.answerId)
     && typeof source.caseSeed === 'string'
@@ -108,7 +111,8 @@ export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
     && cascadeHintIds.length >= 12
     && new Set(Object.values(familyCardIds)).size === EVIDENCE_FAMILIES.length
     && new Set(allFamilyHintIds).size === allFamilyHintIds.length
-    ? { version: 3, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, cascadeHintIds }
+    && mystery
+    ? { version: 4, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, cascadeHintIds, mystery }
     : null;
 }
 
@@ -231,6 +235,31 @@ export function decideGuess(runStatus: string | null | undefined, selectedId: nu
   if (runStatus === 'completed') return selectedId === answerId ? 'repeat_correct' : 'terminal_conflict';
   if (runStatus !== 'deduction') return 'not_ready';
   return selectedId === answerId ? 'correct' : 'wrong';
+}
+
+export interface DiagnosisDecision {
+  outcome: GuessDecision;
+  speciesCorrect: boolean;
+  explanationCorrect: boolean;
+}
+
+export function decideDiagnosis(
+  runStatus: string | null | undefined,
+  selectedSpeciesId: number,
+  selectedExplanationId: string,
+  answerSpeciesId: number,
+  answerExplanationId: string,
+): DiagnosisDecision {
+  const speciesCorrect = selectedSpeciesId === answerSpeciesId;
+  const explanationCorrect = selectedExplanationId === answerExplanationId;
+  if (runStatus === 'completed') {
+    return { outcome: speciesCorrect && explanationCorrect ? 'repeat_correct' : 'terminal_conflict', speciesCorrect, explanationCorrect };
+  }
+  return {
+    outcome: runStatus !== 'deduction' ? 'not_ready' : speciesCorrect && explanationCorrect ? 'correct' : 'wrong',
+    speciesCorrect,
+    explanationCorrect,
+  };
 }
 
 function isPositiveInteger(value: unknown): value is number {
