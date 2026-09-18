@@ -5,8 +5,8 @@
   "cards": [
     {
       "family": "relatives",
-      "observation_text": "Genetic markers align with placental lineages whose adults remain below one metric tonne.",
-      "inference_text": "The lineage evidence favors smaller-bodied mammal branches.",
+      "observation_text": "The lineage comparison excludes the branch of living trunked giants.",
+      "inference_text": "The sample belongs elsewhere on the mammal family tree.",
       "trait_category": "taxonomy",
       "compare_tag": "comparison_lineage:not_elephant",
       "trait_phrase": "afrotherian lineage",
@@ -22,8 +22,8 @@
     },
     {
       "family": "body",
-      "observation_text": "The primary body surface is fur, hair, or bare skin.",
-      "inference_text": "The covering favors candidates with a flexible outer surface.",
+      "observation_text": "The body covering lacks an outer coat of overlapping armor scales.",
+      "inference_text": "Fur, sparse hair, and exposed skin remain compatible with this finding.",
       "trait_category": "morphology",
       "compare_tag": "comparison_form:not_scaled_digger",
       "trait_phrase": "digging foreclaws",
@@ -39,8 +39,8 @@
     },
     {
       "family": "behavior",
-      "observation_text": "Movement traces show continuous searching along a feeding route.",
-      "inference_text": "The route favors candidates that forage while traveling.",
+      "observation_text": "The feeding behavior record excludes stalking and ambushing large prey.",
+      "inference_text": "Keep the candidates that gather plants or search for smaller food.",
       "trait_category": "behavior",
       "compare_tag": "comparison_behavior:not_solitary_ambusher",
       "trait_phrase": "sand swimming",
@@ -56,8 +56,8 @@
     },
     {
       "family": "habits",
-      "observation_text": "The feeding trace lies at ground level or within loose soil.",
-      "inference_text": "The meal favors candidates that forage on land or underground.",
+      "observation_text": "The diet is not centered on fruit and flowers.",
+      "inference_text": "The candidate that specializes in those foods can be set aside.",
       "trait_category": "diet",
       "compare_tag": "comparison_diet:not_fruit_flower_forager",
       "trait_phrase": "soil invertebrates",
@@ -73,8 +73,8 @@
     },
     {
       "family": "place",
-      "observation_text": "The range record connects to coastline or forest cover.",
-      "inference_text": "The map evidence favors coastal or forest-associated candidates.",
+      "observation_text": "The native range falls outside the Sahara and its southern dryland fringe.",
+      "inference_text": "The desert specialist tied to that region is a mismatch.",
       "trait_category": "geography",
       "compare_tag": "comparison_range:not_sahara_sahel",
       "trait_phrase": "Namaqualand dunes",

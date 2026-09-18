@@ -5,8 +5,8 @@
   "cards": [
     {
       "family": "relatives",
-      "observation_text": "The genetic lineage retains claws or nails on at least one locomotor limb.",
-      "inference_text": "The lineage evidence favors mammals with grasping or weight-bearing digits.",
+      "observation_text": "The lineage report places this animal outside the bovid family.",
+      "inference_text": "The horned grazer belongs to the excluded branch.",
       "trait_category": "taxonomy",
       "compare_tag": "comparison_lineage:not_bovid",
       "trait_phrase": "chiropteran lineage",
@@ -22,8 +22,8 @@
     },
     {
       "family": "body",
-      "observation_text": "The eyes remain externally visible and face forward or outward.",
-      "inference_text": "The head evidence favors candidates with exposed eyes.",
+      "observation_text": "The eyes are visible externally rather than concealed beneath skin.",
+      "inference_text": "The candidate with skin-covered eyes is incompatible with this finding.",
       "trait_category": "morphology",
       "compare_tag": "comparison_form:not_sand_digger",
       "trait_phrase": "flight-adapted wings",
@@ -39,8 +39,8 @@
     },
     {
       "family": "behavior",
-      "observation_text": "Movement is organized around territories, temporary herds, solitary routes, or roost colonies.",
-      "inference_text": "The activity record favors flexible or place-centered social movement.",
+      "observation_text": "The social record excludes the trunked giant's family herds led by an older female.",
+      "inference_text": "Other arrangements, including solitary life and different kinds of groups, remain possible.",
       "trait_category": "behavior",
       "compare_tag": "comparison_behavior:not_matriarchal_herd",
       "trait_phrase": "canopy roost colonies",
@@ -56,8 +56,8 @@
     },
     {
       "family": "habits",
-      "observation_text": "Feeding draws from vegetation, fruit, general invertebrates, or vertebrate prey.",
-      "inference_text": "The meal favors candidates with broad plant or animal food sources.",
+      "observation_text": "The diet record shows this animal is not an ant-and-termite specialist.",
+      "inference_text": "Cross off the candidate dedicated to those insect colonies.",
       "trait_category": "diet",
       "compare_tag": "comparison_diet:not_ant_specialist",
       "trait_phrase": "fruit and flowers",
@@ -73,8 +73,8 @@
     },
     {
       "family": "place",
-      "observation_text": "Range records center on desert, coastal dune, tropical forest, or oceanic island habitats.",
-      "inference_text": "The map evidence favors candidates concentrated in those landscapes.",
+      "observation_text": "The mapped range differs from the striped big cat's Asian distribution.",
+      "inference_text": "That candidate's range is a mismatch; the clue leaves the other range profiles open.",
       "trait_category": "geography",
       "compare_tag": "comparison_range:not_asian_big_cat_range",
       "trait_phrase": "Comoros islands",

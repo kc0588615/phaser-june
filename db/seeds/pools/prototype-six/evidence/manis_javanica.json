@@ -5,8 +5,8 @@
   "cards": [
     {
       "family": "relatives",
-      "observation_text": "Genetic markers track placental branches with plant-processing, digging, or flight specializations.",
-      "inference_text": "The lineage evidence favors mammals shaped by those specializations.",
+      "observation_text": "The lineage comparison places the animal outside the cat family.",
+      "inference_text": "Remove the feline candidate from the shortlist.",
       "trait_category": "taxonomy",
       "compare_tag": "comparison_lineage:not_big_cat",
       "trait_phrase": "pholidotan lineage",
@@ -22,8 +22,8 @@
     },
     {
       "family": "body",
-      "observation_text": "The forelimbs retain compact digits for support, grasping, or digging.",
-      "inference_text": "The limb evidence favors candidates built for surfaces and soil.",
+      "observation_text": "The forelimbs lack the elongated fingers and flight membrane of a wing.",
+      "inference_text": "The winged candidate is incompatible with this anatomy.",
       "trait_category": "morphology",
       "compare_tag": "comparison_form:not_winged_mammal",
       "trait_phrase": "keratin scales",
@@ -39,8 +39,8 @@
     },
     {
       "family": "behavior",
-      "observation_text": "Movement centers on a stable home range, territory, tunnel system, or roost.",
-      "inference_text": "The route favors candidates that repeatedly use a familiar area.",
+      "observation_text": "The movement record excludes nomadic herding through Saharan desert.",
+      "inference_text": "The desert-herd candidate drops out; other social patterns remain possible.",
       "trait_category": "behavior",
       "compare_tag": "comparison_behavior:not_desert_herd",
       "trait_phrase": "defensive curling",
@@ -56,8 +56,8 @@
     },
     {
       "family": "habits",
-      "observation_text": "Feeding focuses on plants, fruit, termites, ants, or vertebrate prey.",
-      "inference_text": "The meal favors candidates with a concentrated food target.",
+      "observation_text": "The diet record excludes specialization in hunting small invertebrates through loose coastal sand.",
+      "inference_text": "The sand-foraging specialist is a mismatch; other feeding strategies remain possible.",
       "trait_category": "diet",
       "compare_tag": "comparison_diet:not_soil_insect_hunter",
       "trait_phrase": "ants and termites",
@@ -73,8 +73,8 @@
     },
     {
       "family": "place",
-      "observation_text": "Range records connect to arid Africa, coastal southern Africa, broader Asian forest, or oceanic islands.",
-      "inference_text": "The map evidence favors candidates centered in those regions.",
+      "observation_text": "The mapped range does not match the trunked giant's South and Southeast Asian distribution.",
+      "inference_text": "Cross off that regional range profile; this clue alone does not locate the animal.",
       "trait_category": "geography",
       "compare_tag": "comparison_range:not_south_asian_mainland",
       "trait_phrase": "Southeast Asian forests",

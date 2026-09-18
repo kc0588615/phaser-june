@@ -5,8 +5,8 @@
   "cards": [
     {
       "family": "relatives",
-      "observation_text": "The genetic lineage retains compact forelimb digits for land movement or digging.",
-      "inference_text": "The lineage evidence favors mammals with compact forelimbs.",
+      "observation_text": "The lineage report places this animal outside the fruit-eating bat branch.",
+      "inference_text": "The winged candidate belongs to a different branch of the family tree.",
       "trait_category": "taxonomy",
       "compare_tag": "comparison_lineage:not_fruit_bat",
       "trait_phrase": "felid lineage",
@@ -22,8 +22,8 @@
     },
     {
       "family": "body",
-      "observation_text": "The feet carry pads, nails, or claws.",
-      "inference_text": "The footprint favors candidates with padded or claw-bearing feet.",
+      "observation_text": "The feet lack the paired hooves of the horned grazer.",
+      "inference_text": "The hoofed candidate can be crossed off; the remaining foot types are still possible.",
       "trait_category": "morphology",
       "compare_tag": "comparison_form:not_horned_antelope",
       "trait_phrase": "striped coat",
@@ -39,8 +39,8 @@
     },
     {
       "family": "behavior",
-      "observation_text": "The travel line remains visible across the ground surface.",
-      "inference_text": "The route favors candidates that leave exposed tracks.",
+      "observation_text": "The movement record excludes swimming through loose sand beneath the surface.",
+      "inference_text": "Set aside the specialized sand swimmer, while keeping other ways of moving in play.",
       "trait_category": "behavior",
       "compare_tag": "comparison_behavior:not_sand_swimmer",
       "trait_phrase": "solitary ambush",
@@ -56,8 +56,8 @@
     },
     {
       "family": "habits",
-      "observation_text": "Feeding occurs in focused grazing bouts, prey searches, or fruit visits.",
-      "inference_text": "The meal favors candidates that use concentrated feeding sessions.",
+      "observation_text": "The diet record excludes consuming vegetation in the daily bulk required by a multi-tonne browser.",
+      "inference_text": "The largest plant eater is a mismatch; this clue does not distinguish meat, insects, or smaller plant meals.",
       "trait_category": "diet",
       "compare_tag": "comparison_diet:not_bulk_browser",
       "trait_phrase": "large vertebrate prey",
@@ -73,8 +73,8 @@
     },
     {
       "family": "place",
-      "observation_text": "Range records include arid, temperate, coastal, or oceanic habitats.",
-      "inference_text": "The map evidence favors candidates with habitat beyond one tropical forest belt.",
+      "observation_text": "The mapped range differs from the scale-armored insect eater's Southeast Asian distribution.",
+      "inference_text": "Remove that range profile from consideration; the other regions remain possible.",
       "trait_category": "geography",
       "compare_tag": "comparison_range:not_southeast_asian_forest",
       "trait_phrase": "Asian forest range",

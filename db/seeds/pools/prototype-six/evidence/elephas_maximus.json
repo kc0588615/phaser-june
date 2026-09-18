@@ -5,8 +5,8 @@
   "cards": [
     {
       "family": "relatives",
-      "observation_text": "The genetic sample comes from a placental lineage that retains functional teeth.",
-      "inference_text": "The lineage evidence favors toothed mammal branches.",
+      "observation_text": "The lineage report excludes the toothless, scale-armored branch.",
+      "inference_text": "The candidate from that branch is no longer a match.",
       "trait_category": "taxonomy",
       "compare_tag": "comparison_lineage:not_pangolin",
       "trait_phrase": "proboscidean lineage",
@@ -22,8 +22,8 @@
     },
     {
       "family": "body",
-      "observation_text": "The feet end in hooves, nails, fixed claws, or wing digits.",
-      "inference_text": "The limb evidence favors candidates with fixed weight-bearing digits.",
+      "observation_text": "The body record does not show the combination of a striped coat and feline paws.",
+      "inference_text": "Cross off the candidate with that combination; the other body plans still fit.",
       "trait_category": "morphology",
       "compare_tag": "comparison_form:not_striped_cat",
       "trait_phrase": "grasping trunk",
@@ -39,8 +39,8 @@
     },
     {
       "family": "behavior",
-      "observation_text": "Travel and resting traces remain in contact with land or soil.",
-      "inference_text": "The route favors candidates whose daily movement is ground-based.",
+      "observation_text": "The resting behavior record excludes communal roosting in treetops.",
+      "inference_text": "The canopy-colony candidate can be removed from consideration.",
       "trait_category": "behavior",
       "compare_tag": "comparison_behavior:not_canopy_colony",
       "trait_phrase": "matriarchal herds",
@@ -56,8 +56,8 @@
     },
     {
       "family": "habits",
-      "observation_text": "Food comes from forest vegetation, soil invertebrates, or animal prey.",
-      "inference_text": "The meal favors candidates tied to richer feeding grounds.",
+      "observation_text": "The diet record excludes specialization in sparse Saharan grasses and shrubs.",
+      "inference_text": "The candidate adapted to that desert forage is a poor fit.",
       "trait_category": "diet",
       "compare_tag": "comparison_diet:not_desert_browser",
       "trait_phrase": "bulk plant browser",
@@ -73,8 +73,8 @@
     },
     {
       "family": "place",
-      "observation_text": "The range record comes from inland desert, Asian forest, or an oceanic island.",
-      "inference_text": "The map evidence favors candidates associated with those regional landscapes.",
+      "observation_text": "The native range extends beyond the coastal dunes of Namaqualand.",
+      "inference_text": "A species confined to that dune belt cannot explain this range.",
       "trait_category": "geography",
       "compare_tag": "comparison_range:not_namaqualand_dunes",
       "trait_phrase": "South and Southeast Asia",
