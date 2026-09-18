@@ -1,29 +1,14 @@
-## Postgres Database Access
+# Archived Database Access Notes
 
-Use the `postgres-tunnel` skill for database access.
+> Superseded by [DATABASE_ACCESS.md](../DATABASE_ACCESS.md). Do not use old
+> commands from this file's Git history.
 
-## Connection
+The historical setup forwarded WSL port 55432 to PgBouncer and referenced an
+older SSH key. The current `postgres-tunnel` skill exists and instead forwards:
 
-Database: `phaser_june`
-Local forwarded port: `55432`
-Remote target: `127.0.0.1:6432`
-
-Start the SSH tunnel in a long-lived terminal:
-
-```bash
-ssh -i ~/.ssh/hetzner_id_ed25519 -L 55432:127.0.0.1:6432 root@178.156.159.183
+```text
+127.0.0.1:55432 → SSH → 172.18.0.2:5432 (raw PostgreSQL)
 ```
 
-Connect with `psql` from another terminal:
-
-```bash
-PGPASSWORD='N?+kxWMf7&8i@sq' psql -h localhost -p 55432 -U postgres -d phaser_june
-```
-
-For scripts/migrations:
-
-```bash
-PGPASSWORD='N?+kxWMf7&8i@sq' psql -h localhost -p 55432 -U postgres -d phaser_june -v ON_ERROR_STOP=1 -f path/to/migration.sql
-```
-
-Prefer read-only checks first. Use explicit transactions for writes unless a migration already handles them.
+The historical password was rotated and removed from the working tree. Current
+credentials must come from `DATABASE_URL`; never recover or reuse the old value.

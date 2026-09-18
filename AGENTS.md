@@ -31,10 +31,12 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 This project has been through multiple migrations: Supabase -> Prisma/Hetzner -> Drizzle/Hetzner. There should be zero remaining Supabase and Prisma references in the codebase. If you encounter any Supabase or Prisma imports, env vars, or references, flag them for removal. Do not suggest Supabase or Prisma-based solutions.
 
 ## Database Access
-- Use the `postgres-tunnel` skill for Postgres access.
-- Inspect/query through the SSH tunnel with `psql`.
+- Codex/WSL database work uses the installed `postgres-tunnel` skill.
+- App/runtime traffic uses `DATABASE_URL` through TLS PgBouncer on port 6432.
+- WSL agents inspect/query raw Postgres through `127.0.0.1:55432` via the SSH tunnel.
+- Windows/QGIS uses a separate Windows-local tunnel on port 5433; agents do not use it.
 - Do not set up a new database MCP server.
-- Connection goes through PgBouncer on port 6432 with TLS; do not use `?pgbouncer=true` param (causes empty introspection).
+- Do not add `?pgbouncer=true` (invalid for `psql`/postgres.js; causes introspection issues).
 - Always use the `DATABASE_URL` from environment, never hardcode connection strings.
 - Always wrap database lookups and external calls in try/catch blocks.
 - In migration scripts, verify imported modules are available in the migration context (migrations run in isolation).
