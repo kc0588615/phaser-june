@@ -23,3 +23,13 @@ Recreate the table from the `.schema.txt` description, then:
 ```
 
 `player_clue_unlocks` contains player identifiers. Keep this directory private.
+
+## 2026-09-17 legacy deduction profiles
+
+`2026-09-17-species_deduction_profiles_legacy22.csv` holds the 22
+`species_deduction_profiles` rows for species that belong to no `case_pools`
+entry. They used the pre-canonical unprefixed tag style (`forest`,
+`egg_laying`, `piscivore`) and had no evidence cards, so no expedition could
+ever select them. Plan 031 Phase 5 deletes them so the `trait_tags`
+vocabulary can be enforced. To bring one back, author a new pool of six and
+re-tag it with the canonical `prefix:value` vocabulary in `trait_tags`.

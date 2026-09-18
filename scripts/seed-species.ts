@@ -4,7 +4,7 @@ import { config as loadEnv } from 'dotenv';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { and, eq, getTableColumns } from 'drizzle-orm';
-import { speciesTable, speciesNotes, speciesDeductionProfiles } from '../src/db/schema';
+import { speciesTable, speciesNotes, speciesDeductionProfiles, traitTags } from '../src/db/schema';
 import { parseEvidenceProfileDossier } from '../src/lib/evidenceSeedValidation';
 
 const NOTE_FIELDS = {
@@ -39,6 +39,15 @@ async function main() {
   try {
     const db = drizzle(client);
     await db.transaction(async tx => {
+      const vocabulary = new Map((await tx.select().from(traitTags)).map(row => [row.tag, row.category]));
+      for (const { dossier } of seeds) {
+        for (const [category, values] of Object.entries(dossier.profile)) {
+          if (category === 'signatureTag') continue;
+          for (const tag of values ?? []) if (vocabulary.get(tag) !== category) {
+            throw new Error(`${dossier.scientificName}: ${tag} is absent from trait_tags or belongs to another category.`);
+          }
+        }
+      }
       for (const { raw, dossier } of seeds) {
         const data: Record<string, unknown> = {};
         for (const [key, column] of Object.entries(getTableColumns(speciesTable))) {

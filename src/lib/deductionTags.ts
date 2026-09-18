@@ -290,3 +290,12 @@ export function countDeductionTagOverlaps(
 export function isKnownTag(tag: string): boolean {
   return ALL_TAGS.has(tag) || WHITELISTED_TAG_PREFIXES.some(prefix => tag.startsWith(prefix));
 }
+
+/** Finite vocabulary shared by the SQL seed generator and compiler verification. */
+export function canonicalTraitVocabulary(): Array<{ tag: string; category: DeductionProfileCategory; isFiltering: boolean }> {
+  return Object.entries(VOCAB_KEYS_BY_PROFILE_CATEGORY).flatMap(([category, keys]) => keys.flatMap(key =>
+    TAG_VOCAB_BY_KEY[key].map(value => {
+      const tag = `${key}:${value}`;
+      return { tag, category: category as DeductionProfileCategory, isFiltering: isFilteringDeductionTag(tag) };
+    })));
+}

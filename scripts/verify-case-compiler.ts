@@ -1,3 +1,4 @@
+import { canonicalTraitVocabulary } from '../src/lib/deductionTags';
 import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import postgres from 'postgres';
@@ -22,6 +23,16 @@ async function main() {
   const client = postgres(url.toString(), { max: 1, connect_timeout: 10 });
   try {
     const db = drizzle(client, { schema });
+    const vocabulary = new Map((await db.select().from(schema.traitTags)).map(row => [row.tag, row]));
+    for (const expected of canonicalTraitVocabulary()) {
+      const actual = vocabulary.get(expected.tag);
+      if (!actual || actual.category !== expected.category || actual.isFiltering !== expected.isFiltering) {
+        throw new Error(`trait_tags differs from the TypeScript vocabulary: ${expected.tag}`);
+      }
+    }
+    const unknownTags = await db.select().from(schema.deductionProfileUnknownTags);
+    if (unknownTags.length) throw new Error(`${unknownTags.length} unknown profile tags.`);
+    console.log(`${vocabulary.size} registered trait tags; zero unknown profile tags.`);
     const poolSlug = process.argv.find(arg => arg.startsWith('--pool='))?.slice(7);
     const pools = await db.select().from(schema.casePools).where(poolSlug
       ? eq(schema.casePools.slug, poolSlug) : eq(schema.casePools.reviewStatus, 'reviewed')).orderBy(schema.casePools.id);

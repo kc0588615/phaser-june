@@ -1,0 +1,37 @@
+                                                Table "public.species_deduction_profiles"
+      Column       |           Type           | Collation | Nullable |   Default    | Storage  | Compression | Stats target | Description 
+-------------------+--------------------------+-----------+----------+--------------+----------+-------------+--------------+-------------
+ habitat_tags      | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ morphology_tags   | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ diet_tags         | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ behavior_tags     | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ reproduction_tags | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ habitat_note      | text                     |           |          |              | extended |             |              | 
+ morphology_note   | text                     |           |          |              | extended |             |              | 
+ diet_note         | text                     |           |          |              | extended |             |              | 
+ behavior_note     | text                     |           |          |              | extended |             |              | 
+ reproduction_note | text                     |           |          |              | extended |             |              | 
+ reference_summary | text                     |           |          |              | extended |             |              | 
+ created_at        | timestamp with time zone |           | not null | now()        | plain    |             |              | 
+ updated_at        | timestamp with time zone |           | not null | now()        | plain    |             |              | 
+ taxonomy_tags     | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ species_id        | integer                  |           | not null |              | plain    |             |              | 
+ geography_tags    | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ conservation_tags | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ key_fact_tags     | text[]                   |           | not null | '{}'::text[] | extended |             |              | 
+ signature_tag     | text                     |           |          |              | extended |             |              | 
+Indexes:
+    "species_deduction_profiles_pkey" PRIMARY KEY, btree (species_id)
+    "ix_deduction_profiles_behavior" gin (behavior_tags)
+    "ix_deduction_profiles_conservation" gin (conservation_tags)
+    "ix_deduction_profiles_diet" gin (diet_tags)
+    "ix_deduction_profiles_geography" gin (geography_tags)
+    "ix_deduction_profiles_habitat" gin (habitat_tags)
+    "ix_deduction_profiles_key_fact" gin (key_fact_tags)
+    "ix_deduction_profiles_morphology" gin (morphology_tags)
+    "ix_deduction_profiles_reproduction" gin (reproduction_tags)
+    "ix_deduction_profiles_taxonomy" gin (taxonomy_tags)
+Foreign-key constraints:
+    "species_deduction_profiles_species_id_fkey" FOREIGN KEY (species_id) REFERENCES species(id) ON DELETE CASCADE
+Access method: heap
+

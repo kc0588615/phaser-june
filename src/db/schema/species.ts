@@ -391,3 +391,20 @@ export const speciesNotes = pgTable('species_notes', {
   check('species_notes_sort_order_check', sql`${table.sortOrder} BETWEEN 1 AND 9`),
   check('species_notes_source_url_check', sql`${table.sourceUrl} IS NULL OR ${table.sourceUrl} LIKE 'https://%'`),
 ]);
+
+export const traitTags = pgTable('trait_tags', {
+  tag: text('tag').primaryKey(),
+  category: text('category').notNull().$type<DeductionClueCategory>(),
+  isFiltering: boolean('is_filtering').notNull().default(true),
+  description: text('description'),
+}, table => [
+  check('trait_tags_tag_check', sql`${table.tag} ~ '^[a-z_]+:[A-Za-z0-9_]+$'`),
+  check('trait_tags_category_check', sql`${table.category} IN ('habitat','morphology','diet','behavior','reproduction','taxonomy','key_fact','geography','conservation')`),
+]);
+
+export const deductionProfileUnknownTags = pgView('deduction_profile_unknown_tags', {
+  speciesId: integer('species_id'), tag: text('tag'),
+}).as(sql`SELECT p.species_id, t.tag FROM species_deduction_profiles p
+  CROSS JOIN LATERAL unnest(p.habitat_tags || p.morphology_tags || p.diet_tags || p.behavior_tags || p.reproduction_tags
+    || p.taxonomy_tags || p.geography_tags || p.conservation_tags || p.key_fact_tags) AS t(tag)
+  LEFT JOIN trait_tags k ON k.tag = t.tag WHERE k.tag IS NULL`);
