@@ -31,7 +31,6 @@
         "dev-local": "node log.js dev & next dev --webpack -p 8080",
         "build": "npm run typecheck && next build --webpack",
         "build-local": "node log.js build & npm run typecheck && next build --webpack",
-        "vercel-build": "npm run typecheck && next build --webpack",
         "serve": "next start -p 8080",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
@@ -43,6 +42,7 @@
         "clean": "rm -rf .next dist",
         "db:introspect": "drizzle-kit introspect",
         "seed:mystery-cases": "node scripts/run-typescript.mjs scripts/seed-mystery-cases.ts",
+        "seed:pools": "node scripts/run-typescript.mjs scripts/seed-pools.ts",
         "seed:species": "node scripts/run-typescript.mjs scripts/seed-species.ts",
         "seed:evidence-family": "node scripts/run-typescript.mjs scripts/seed-evidence-family.ts"
     },

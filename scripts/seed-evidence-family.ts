@@ -18,6 +18,7 @@ async function loadFiles<T>(directory: string, parse: (value: unknown, file: str
 }
 
 async function loadCorpus() {
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(poolSlug)) throw new Error('Invalid pool slug.');
   const root = process.cwd();
   pool = JSON.parse(await readFile(path.join(poolDirectory, 'pool.json'), 'utf8'));
   if (pool.slug !== poolSlug || pool.species_iucn_ids.length !== 6 || new Set(pool.species_iucn_ids).size !== 6) throw new Error('Pool must have six distinct members.');

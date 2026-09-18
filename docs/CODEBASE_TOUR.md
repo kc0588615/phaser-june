@@ -66,8 +66,7 @@ src/
     BoardView.ts        View: sprites + animations
     boardTypes.ts       cell/grid types
     constants.ts        grid size, scoring multipliers, animation timings
-    gemSemantics.ts     gem -> clue category helpers
-    clueConfig.ts       clue categories + per-category clue payloads
+    gemSemantics.ts     gem family helpers
     nodeObstacles.ts    deterministic board hazards per node (tested)
   expedition/
     domain.ts           gem registry + spawn-weight math (tested)
@@ -81,6 +80,8 @@ src/
   app/api/              Next.js API routes (runs, species, layers, ...)
   db/schema/            Drizzle schema; db/migrations/ = SQL history
   types/                shared TS types (expedition RunState, waypoints, gis)
+db/seeds/species/       species dossiers, profiles, and prose notes
+db/seeds/pools/<slug>/  pool.json, evidence/, cases/
 tests/                  characterization tests (mirrors src/ layout)
 scripts/run-tests.mjs   offline test runner (esbuild + node:test)
 ```
@@ -90,7 +91,7 @@ scripts/run-tests.mjs   offline test runner (esbuild + node:test)
 - **Run / expedition** — one play session started from a map click.
 - **Node** — one board encounter within a run (currently runs have a single
   mystery node; the route/multi-node plumbing still exists).
-- **Loot gems** — the 8 colored gems; each maps to a clue category.
+- **Loot gems** — the 8 colored gems; evidence-family meaning is configured in `evidenceFamilies.ts`.
 - **Action gems** — sword/staff/shield/key/crate/power/thought/multiplier;
   used for objectives and countering obstacles.
 - **Clue fragments** — per-category currency earned by matching loot gems.
@@ -118,7 +119,7 @@ are characterization tests, so a failure means observable behavior changed.
 | Change what a gem means | `src/expedition/domain.ts` (GEM_REGISTRY) |
 | Add/adjust a node type | `src/lib/nodeScoring.ts` (NODE_TEMPLATES) + `domain.ts` (board meta) |
 | Change board size | `GRID_COLS/GRID_ROWS` in `src/game/constants.ts` |
-| Change clue text/categories | `src/game/clueConfig.ts`, seeds in `db/seeds/deduction/` |
+| Author species, evidence, or cases | `db/seeds/species/`, `db/seeds/pools/<slug>/`; see `docs/CONTENT_AUTHORING.md` |
 | Change run phases/persistence | `src/contexts/ExpeditionContext.tsx`, `/api/runs/*` |
 | Change the map behavior | `src/components/MapLibreExploreMap.tsx` |
 | Change deduction rules | `src/lib/deductionEngine.ts` |

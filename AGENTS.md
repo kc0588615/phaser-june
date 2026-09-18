@@ -21,7 +21,7 @@ Guidance for Codex in this repo. Keep instructions short; prefer facts over pros
 - ORM: Drizzle (migrated from Prisma, which was migrated from Supabase)
 - Database: PostgreSQL with PostGIS on Hetzner VPS, accessed via PgBouncer with TLS
 - Auth: Clerk
-- Hosting: Vercel (frontend), Hetzner VPS (database/services)
+- Hosting: local Next.js dev server in WSL (frontend), Hetzner VPS (database/services)
 - Docs: Docusaurus wiki with TypeDoc
 
 ## Important: Prefer Simplicity
@@ -52,7 +52,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Phaser entry: `src/PhaserGame.tsx` boots `src/game/main.ts` -> scenes (Boot, Preloader, MainMenu, Game, GameOver).
 - Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: location (`map-location-selected`), board (`game-hud-updated`, `game-reset`), expedition (`expedition-start`, `evidence-move-resolved`, `evidence-progress-committed`, `node-complete`), clue/deduction, auth/progress.
 - Controller: `src/game/scenes/Game.ts` (input, move flow, streak/score, HUD emit, node objectives).
-- Model: `src/game/BackendPuzzle.ts` (board state, matches, move registration), `src/game/boardTypes.ts` (cell schema), `src/game/gemSemantics.ts` (shared gem meaning config), `src/game/nodeObstacles.ts` (typed obstacle contracts + seeded cell state), `src/game/clueConfig.ts` (CluePayload, clue category keys).
+- Model: `src/game/BackendPuzzle.ts` (board state, matches, move registration), `src/game/boardTypes.ts` (cell schema), `src/game/gemSemantics.ts` (shared gem meaning config), `src/game/nodeObstacles.ts` (typed obstacle contracts + seeded cell state).
 - Move pipeline: `src/game/MoveAction.ts`, `src/game/ExplodeAndReplacePhase.ts` (swap/cascade).
 - View: `src/game/BoardView.ts` (sprite layout/animation, resize tweens).
 - Map ingress: `src/components/MapLibreExploreMap.tsx` (click -> expedition data, highlights habitats/species polygons).
@@ -61,6 +61,8 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Expedition run: `src/types/expedition.ts` (RunState, clue fragments, deduction state), `src/contexts/ExpeditionContext.tsx` (run state/persistence), `src/expedition/` (affinities.ts, domain.ts), `src/lib/nodeScoring.ts` (node generation from GIS), `src/components/ExpeditionBriefing.tsx`, `src/components/FieldNotebook.tsx`, `src/components/ExpeditionRouteRecap.tsx`.
 - Data layer: `src/db/schema/*` (schema), `src/db/index.ts` (singleton), `src/lib/speciesQueries.ts` (Drizzle queries), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (sessions, clue/discovery writes).
 - Styles/UI: shadcn in `src/components/ui/*`, global CSS in `src/styles/globals.css`, Tailwind config at root.
+
+- Content authoring: `db/seeds/species/`, `db/seeds/pools/<slug>/` (pool.json, evidence/, cases/); `docs/CONTENT_AUTHORING.md`.
 
 ## Docs Map
 Read relevant docs before big edits.

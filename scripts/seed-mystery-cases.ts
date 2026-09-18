@@ -66,7 +66,11 @@ async function main(): Promise<void> {
           && cases.find(row => row.speciesId === speciesId)?.reviewStatus === 'reviewed') continue;
         differences++;
         console.log(`${seed.public.id}: ${write ? 'upserting' : 'differs from database'}`);
-        if (!write) continue;
+        if (!write) {
+          const stored = existing.get(speciesId);
+          if (stored) console.log(`Database version for ${seed.public.id}.json:\n${JSON.stringify({ species_iucn_id: seed.species_iucn_id, ...stored }, null, 2)}`);
+          continue;
+        }
         const values = { poolId: pool.id, speciesId, slug: seed.public.id, title: seed.public.title,
           incident: seed.public.incident, atmosphere: seed.public.atmosphere, question: seed.public.question, reviewStatus: 'reviewed' };
         const [conflict] = await tx.select().from(schema.mysteryCases).where(eq(schema.mysteryCases.slug, values.slug));
