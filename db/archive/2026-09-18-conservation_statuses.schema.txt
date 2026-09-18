@@ -1,0 +1,13 @@
+                                                       Table "public.conservation_statuses"
+   Column   |           Type           | Collation | Nullable |           Default            | Storage  | Compression | Stats target | Description 
+------------+--------------------------+-----------+----------+------------------------------+----------+-------------+--------------+-------------
+ id         | bigint                   |           | not null | generated always as identity | plain    |             |              | 
+ code       | text                     |           | not null |                              | extended |             |              | 
+ label      | text                     |           | not null |                              | extended |             |              | 
+ sort_order | integer                  |           | not null |                              | plain    |             |              | 
+ created_at | timestamp with time zone |           | not null | now()                        | plain    |             |              | 
+Indexes:
+    "conservation_statuses_pkey" PRIMARY KEY, btree (id)
+    "conservation_statuses_code_key" UNIQUE CONSTRAINT, btree (code)
+Access method: heap
+

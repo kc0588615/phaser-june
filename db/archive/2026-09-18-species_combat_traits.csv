@@ -1,0 +1,23 @@
+species_id,size_class,combat_archetype,locomotion,defense_type,attack_style,primary_element,combat_tier,hp_override,guard_override,custom_move_ids,notes,created_at,updated_at
+2,medium,ambush,terrestrial,shell,bite,water,common,,,,,2026-06-11 04:25:39.42763+00,2026-06-11 04:26:50.02+00
+3,tiny,ambush,terrestrial,none,bite,water,rare,,,,,2026-06-11 04:25:39.577539+00,2026-06-11 04:26:50.184+00
+4,small,defensive,terrestrial,shell,bite,water,apex,,,,,2026-06-11 04:25:39.726607+00,2026-06-11 04:26:50.348+00
+5,small,aggressive,arboreal,none,bite,water,common,,,,,2026-06-11 04:25:39.894824+00,2026-06-11 04:26:50.524+00
+6,tiny,aggressive,arboreal,none,bite,water,common,,,,,2026-06-11 04:25:40.078289+00,2026-06-11 04:26:50.701+00
+7,small,evasive,terrestrial,none,bite,water,common,,,,,2026-06-11 04:25:40.265428+00,2026-06-11 04:26:50.859+00
+8,tiny,evasive,terrestrial,none,bite,water,common,,,,,2026-06-11 04:25:40.420153+00,2026-06-11 04:26:51.014+00
+9,tiny,toxic,arboreal,toxin,toxin,water,common,,,,,2026-06-11 04:25:40.565471+00,2026-06-11 04:26:51.173+00
+10,small,aggressive,terrestrial,none,bite,water,common,,,,,2026-06-11 04:25:40.708697+00,2026-06-11 04:26:51.337+00
+11,medium,aggressive,terrestrial,none,bite,water,rare,,,,,2026-06-11 04:25:40.866048+00,2026-06-11 04:26:51.51+00
+12,small,defensive,terrestrial,shell,none,water,rare,,,,,2026-06-11 04:25:41.046432+00,2026-06-11 04:26:51.689+00
+13,small,aggressive,terrestrial,none,bite,water,rare,,,,,2026-06-11 04:25:41.236067+00,2026-06-11 04:26:51.87+00
+14,tiny,defensive,burrowing,none,bite,earth,common,,,,,2026-06-11 04:25:41.396713+00,2026-06-11 04:26:52.041+00
+15,small,defensive,terrestrial,shell,none,earth,apex,,,,,2026-06-11 04:25:41.5339+00,2026-06-11 04:26:52.209+00
+16,tiny,evasive,terrestrial,none,bite,water,rare,,,,,2026-06-11 04:25:41.667696+00,2026-06-11 04:26:52.375+00
+17,medium,defensive,aquatic,shell,none,water,rare,,,,,2026-06-11 04:25:41.806969+00,2026-06-11 04:26:52.834+00
+18,large,defensive,aquatic,shell,bite,water,apex,,,,,2026-06-11 04:25:41.961847+00,2026-06-11 04:26:52.985+00
+19,large,defensive,terrestrial,shell,charge,earth,uncommon,,,,,2026-06-11 04:25:42.124426+00,2026-06-11 04:26:53.13+00
+20,medium,defensive,terrestrial,shell,none,earth,uncommon,,,,,2026-06-11 04:25:42.311442+00,2026-06-11 04:26:53.276+00
+21,medium,defensive,terrestrial,shell,none,forest,apex,,,,,2026-06-11 04:25:42.455918+00,2026-06-11 04:26:53.434+00
+22,medium,defensive,terrestrial,shell,none,forest,common,,,,,2026-06-11 04:25:42.581126+00,2026-06-11 04:26:53.6+00
+1,small,defensive,terrestrial,shell,none,water,rare,,,,,2026-06-11 04:25:39.268256+00,2026-06-11 04:26:49.87+00

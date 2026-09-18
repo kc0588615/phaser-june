@@ -1,0 +1,10 @@
+id,code,label,sort_order,created_at
+1,EX,Extinct,1,2026-01-27 03:38:25.365597+00
+2,EW,Extinct in the Wild,2,2026-01-27 03:38:25.365597+00
+3,CR,Critically Endangered,3,2026-01-27 03:38:25.365597+00
+4,EN,Endangered,4,2026-01-27 03:38:25.365597+00
+5,VU,Vulnerable,5,2026-01-27 03:38:25.365597+00
+6,NT,Near Threatened,6,2026-01-27 03:38:25.365597+00
+7,LC,Least Concern,7,2026-01-27 03:38:25.365597+00
+8,DD,Data Deficient,8,2026-01-27 03:38:25.365597+00
+9,NE,Not Evaluated,9,2026-01-27 03:38:25.365597+00

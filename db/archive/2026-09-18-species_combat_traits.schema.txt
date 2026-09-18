@@ -1,0 +1,32 @@
+                                                Table "public.species_combat_traits"
+      Column      |           Type           | Collation | Nullable | Default | Storage  | Compression | Stats target | Description 
+------------------+--------------------------+-----------+----------+---------+----------+-------------+--------------+-------------
+ species_id       | integer                  |           | not null |         | plain    |             |              | 
+ size_class       | text                     |           | not null |         | extended |             |              | 
+ combat_archetype | text                     |           | not null |         | extended |             |              | 
+ locomotion       | text                     |           | not null |         | extended |             |              | 
+ defense_type     | text                     |           | not null |         | extended |             |              | 
+ attack_style     | text                     |           | not null |         | extended |             |              | 
+ primary_element  | text                     |           | not null |         | extended |             |              | 
+ combat_tier      | text                     |           | not null |         | extended |             |              | 
+ hp_override      | integer                  |           |          |         | plain    |             |              | 
+ guard_override   | integer                  |           |          |         | plain    |             |              | 
+ custom_move_ids  | text[]                   |           |          |         | extended |             |              | 
+ notes            | text                     |           |          |         | extended |             |              | 
+ created_at       | timestamp with time zone |           | not null | now()   | plain    |             |              | 
+ updated_at       | timestamp with time zone |           | not null | now()   | plain    |             |              | 
+Indexes:
+    "species_combat_traits_pkey" PRIMARY KEY, btree (species_id)
+    "ix_species_combat_traits_tier" btree (combat_tier)
+Check constraints:
+    "species_combat_traits_attack_style_check" CHECK (attack_style = ANY (ARRAY['bite'::text, 'constrict'::text, 'toxin'::text, 'charge'::text, 'peck'::text, 'none'::text]))
+    "species_combat_traits_combat_archetype_check" CHECK (combat_archetype = ANY (ARRAY['aggressive'::text, 'defensive'::text, 'evasive'::text, 'toxic'::text, 'ambush'::text]))
+    "species_combat_traits_combat_tier_check" CHECK (combat_tier = ANY (ARRAY['common'::text, 'uncommon'::text, 'rare'::text, 'apex'::text]))
+    "species_combat_traits_defense_type_check" CHECK (defense_type = ANY (ARRAY['shell'::text, 'camouflage'::text, 'toxin'::text, 'speed'::text, 'size'::text, 'none'::text]))
+    "species_combat_traits_locomotion_check" CHECK (locomotion = ANY (ARRAY['aquatic'::text, 'arboreal'::text, 'burrowing'::text, 'terrestrial'::text, 'flying'::text]))
+    "species_combat_traits_primary_element_check" CHECK (primary_element = ANY (ARRAY['water'::text, 'earth'::text, 'forest'::text, 'urban'::text, 'mountain'::text]))
+    "species_combat_traits_size_class_check" CHECK (size_class = ANY (ARRAY['tiny'::text, 'small'::text, 'medium'::text, 'large'::text, 'massive'::text]))
+Foreign-key constraints:
+    "species_combat_traits_species_id_fkey" FOREIGN KEY (species_id) REFERENCES species(id) ON DELETE CASCADE
+Access method: heap
+

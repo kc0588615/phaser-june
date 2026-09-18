@@ -23,6 +23,15 @@ Recreate the table from the `.schema.txt` description, then:
 
 `player_clue_unlocks` was archived here briefly and then deleted on 2026-09-18: the game is in testing and player data is not retained.
 
+## 2026-09-18 unused tables
+
+CSV + `\d+` archives from production `phaser_june` before plan 032 dropped them. Zero readers in `src/` or `scripts/`.
+
+| Table | Rows |
+|---|---|
+| species_combat_traits | 22 |
+| conservation_statuses | 9 |
+
 ## 2026-09-17 legacy deduction profiles
 
 `2026-09-17-species_deduction_profiles_legacy22.csv` holds the 22
