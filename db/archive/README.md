@@ -9,7 +9,6 @@ plus the `\d+` description of the table at archive time.
 
 | Table | Rows |
 |---|---|
-| player_clue_unlocks | 55 |
 | species_facts | 218 |
 | species_deduction_clues | 371 |
 | evidence_cards | 132 |
@@ -22,7 +21,7 @@ Recreate the table from the `.schema.txt` description, then:
 \copy public.<table> FROM 'db/archive/2026-09-17-<table>.csv' WITH (FORMAT csv, HEADER true)
 ```
 
-`player_clue_unlocks` contains player identifiers. Keep this directory private.
+`player_clue_unlocks` was archived here briefly and then deleted on 2026-09-18: the game is in testing and player data is not retained.
 
 ## 2026-09-17 legacy deduction profiles
 
