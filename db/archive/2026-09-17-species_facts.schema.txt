@@ -1,0 +1,17 @@
+                                                          Table "public.species_facts"
+   Column   |   Type   | Collation | Nullable |                  Default                  | Storage  | Compression | Stats target | Description 
+------------+----------+-----------+----------+-------------------------------------------+----------+-------------+--------------+-------------
+ id         | integer  |           | not null | nextval('species_facts_id_seq'::regclass) | plain    |             |              | 
+ species_id | integer  |           | not null |                                           | plain    |             |              | 
+ category   | text     |           | not null |                                           | extended |             |              | 
+ fact_text  | text     |           | not null |                                           | extended |             |              | 
+ sort_order | smallint |           | not null | 1                                         | plain    |             |              | 
+Indexes:
+    "species_facts_pkey" PRIMARY KEY, btree (id)
+    "ix_species_facts_category" btree (species_id, category)
+    "ix_species_facts_species" btree (species_id)
+    "species_facts_species_id_category_sort_order_key" UNIQUE CONSTRAINT, btree (species_id, category, sort_order)
+Foreign-key constraints:
+    "species_facts_species_id_fkey" FOREIGN KEY (species_id) REFERENCES species(id) ON DELETE CASCADE
+Access method: heap
+

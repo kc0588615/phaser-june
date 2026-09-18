@@ -1,0 +1,26 @@
+                                                                   Table "public.species_deduction_clues"
+    Column    |           Type           | Collation | Nullable |                       Default                       | Storage  | Compression | Stats target | Description 
+--------------+--------------------------+-----------+----------+-----------------------------------------------------+----------+-------------+--------------+-------------
+ id           | integer                  |           | not null | nextval('species_deduction_clues_id_seq'::regclass) | plain    |             |              | 
+ category     | text                     |           | not null |                                                     | extended |             |              | 
+ label        | text                     |           | not null |                                                     | extended |             |              | 
+ compare_tags | text[]                   |           |          |                                                     | extended |             |              | 
+ reveal_order | smallint                 |           | not null | 1                                                   | plain    |             |              | 
+ unlock_mode  | text                     |           | not null | 'fragment'::text                                    | extended |             |              | 
+ base_cost    | smallint                 |           | not null | 2                                                   | plain    |             |              | 
+ is_filtering | boolean                  |           | not null | true                                                | plain    |             |              | 
+ created_at   | timestamp with time zone |           | not null | now()                                               | plain    |             |              | 
+ species_id   | integer                  |           | not null |                                                     | plain    |             |              | 
+Indexes:
+    "species_deduction_clues_pkey" PRIMARY KEY, btree (id)
+    "ix_deduction_clues_category" btree (species_id, category)
+    "ix_deduction_clues_compare" gin (compare_tags)
+    "ix_deduction_clues_species" btree (species_id)
+    "uq_deduction_clues_species_cat_order" UNIQUE, btree (species_id, category, reveal_order)
+Check constraints:
+    "species_deduction_clues_category_check" CHECK (category = ANY (ARRAY['habitat'::text, 'morphology'::text, 'diet'::text, 'behavior'::text, 'reproduction'::text, 'taxonomy'::text, 'key_fact'::text, 'geography'::text, 'conservation'::text]))
+    "species_deduction_clues_unlock_mode_check" CHECK (unlock_mode = ANY (ARRAY['fragment'::text, 'score'::text]))
+Foreign-key constraints:
+    "species_deduction_clues_species_id_fkey" FOREIGN KEY (species_id) REFERENCES species(id) ON DELETE CASCADE
+Access method: heap
+

@@ -1,0 +1,372 @@
+id,category,label,compare_tags,reveal_order,unlock_mode,base_cost,is_filtering,created_at,species_id
+342,reproduction,Reproduction: Oviparous. Clutch: 8-15. Lifespan: 77 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,1
+23,habitat,"Prefers shallow, clear standing water with abundant aquatic vegetation, but also uses open grasslands for nesting.","{lentic,grassland,aquatic}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,1
+210,taxonomy,"Family: EMYDIDAE, Genus: Emydoidea","{emydoidea,emydidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,1
+1,habitat,Lives in freshwater aquatic environments,"{freshwater,aquatic,terrestrial,wetland}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,1
+343,reproduction,Reproduction: Oviparous. Clutch: 12-18. Lifespan: 65 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,2
+112,diet,"Plant diet: algae, leaves, acorns, pecans","{folivore,granivore}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,2
+68,morphology,Primary color: Olive / Brown / Tan. Pattern: Its leathery upper shell is olive to tan with small dark spots or circles. The underside is a light cream or white color.,"{leathery_skin,yellow_coloration,dark_coloration,brown_coloration,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,2
+24,habitat,"Found in nearly any type of freshwater body, but prefers a soft bottom with sandbars or mudbanks for basking and nesting","{grassland,muddy_substrate,arid}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,2
+211,taxonomy,"Family: TRIONYCHIDAE, Genus: Apalone","{apalone,trionychidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,2
+123,behavior,"An ambush predator that buries itself in sand or mud at the bottom of a river, with only its head exposed.",{ambush_predator},1,fragment,2,t,2026-04-12 02:54:11.560457+00,2
+299,geography,"Has a very large native range covering most of the United States east of the Rocky Mountains, southern Canada, and northern Mexico.",,1,score,50,f,2026-04-12 02:54:11.560457+00,2
+277,key_fact,"Unlike most turtles, its shell is not made of hard scutes but is a soft, flexible, leathery disk.",,3,score,100,f,2026-04-12 02:54:11.560457+00,2
+2,habitat,Lives in freshwater aquatic environments,"{lentic,freshwater,arid,riverine,aquatic,terrestrial,wetland}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,2
+345,reproduction,Reproduction: Oviparous. Clutch: four to ten eggs. Lifespan: 10 years,"{metamorphosis,egg_laying,short_lived,oral_brooding}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,3
+70,morphology,Primary color: Leaf green or bark brown. Pattern: Pointed nose and triangular head mimic fallen leaf,"{green_coloration,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,3
+147,behavior,Diurnal sit and wait hunter that chirps a soft peep call and basks in sun patches,{vocal},2,fragment,3,t,2026-04-12 02:54:11.560457+00,3
+213,taxonomy,"Family: Rhinodermatidae, Genus: Rhinoderma","{rhinodermatidae,rhinoderma}",2,score,120,t,2026-04-12 02:54:11.560457+00,3
+125,behavior,Male shelters developing tadpoles inside vocal sac; releases live froglets from mouth,{parental_care},1,fragment,2,t,2026-04-12 02:54:11.560457+00,3
+301,geography,Elevation sea level to one thousand one hundred meter in coastal and Andean ranges,,1,score,50,f,2026-04-12 02:54:11.560457+00,3
+279,key_fact,Perfect leaf disguise lets it vanish among forest litter,,3,score,100,f,2026-04-12 02:54:11.560457+00,3
+45,morphology,"Has a high, domed upper shell (carapace) and a hinged lower shell (plastron) that allows it to close completely.","{shelled,domed_shell,dark_coloration,brown_coloration,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,1
+46,morphology,"Has a flat, leathery, pancake-like shell instead of a hard dome, and a long, snorkel-like snout.","{shelled,large_bodied,leathery_skin,flattened_body,domed_shell,brown_coloration,specialized_snout,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,2
+48,morphology,Small flat body with long slender limbs and tiny webbing,"{tiny,green_coloration,flattened_body,webbed_digits,brown_coloration,slender}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,3
+4,habitat,Lives in freshwater aquatic environments,"{temperate,forest,freshwater,riverine,aquatic,terrestrial,wetland}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,3
+346,reproduction,"Reproduction: Oviparous. Clutch: 13 eggs per clutch, up to 2 clutches per year. Lifespan: 30 years",{egg_laying},1,fragment,2,t,2026-04-12 03:02:50.757208+00,4
+114,diet,Plant diet: Occasional fruit or fallen figs,{frugivore},2,fragment,3,t,2026-04-12 02:54:11.560457+00,4
+71,morphology,Primary color: Chocolate-brown carapace. Pattern: Serrated posterior rim and pale bridge mottling,"{spined,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,4
+27,habitat,"Nocturnal stream-bank ambusher that hides beneath flat rocks in clear, fast water up to 1 200 m elevation.","{montane,nocturnal_habitat,rocky,riverine}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,4
+148,behavior,Aggressive when handled; delivers powerful bite and emits a raspy hiss.,{aggressive},2,fragment,3,t,2026-04-12 02:54:11.560457+00,4
+214,taxonomy,"Family: Platysternidae, Genus: Platysternon","{platysternon,platysternidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,4
+126,behavior,"Climbs waterfalls using tail, claws and beak; can scale vertical mossy rock.","{climber,bone_claw_defense}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,4
+302,geography,"Scattered headwaters across southern China, Hainan, Myanmar, Thailand, Laos and Vietnam.",,1,score,50,f,2026-04-12 02:54:11.560457+00,4
+280,key_fact,"Represents an entire family on its own, no close living relatives share its quirky build.",,3,score,100,f,2026-04-12 02:54:11.560457+00,4
+49,morphology,"Enormous head fixed outside the shell; hooked beak, long prehensile tail and vise-like jaws.","{shelled,brown_coloration,beak,prehensile_tail}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,4
+5,habitat,Lives in freshwater aquatic environments,"{montane,forest,freshwater,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,4
+347,reproduction,Reproduction: Oviparous. Clutch: 200–1000 eggs. Lifespan: 8 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,5
+28,habitat,"Spends most of its life 20–30 m up in emergent trees, gliding between trunks and descending only to mate.","{forest,arboreal}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,5
+72,morphology,Primary color: Vivid leaf-green dorsal. Pattern: Huge yellow toe pads and jet-black membranes give the feet a superhero-cape look.,"{yellow_coloration,green_coloration,dark_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,5
+149,behavior,"At dusk, pairs build frothy, golf-ball-size nests on leaves that hang above rain-filled pools.",{nest_builder},2,fragment,3,t,2026-04-12 02:54:11.560457+00,5
+215,taxonomy,"Family: Rhacophoridae, Genus: Rhacophorus","{rhacophorus,rhacophoridae}",2,score,120,t,2026-04-12 02:54:11.560457+00,5
+127,behavior,"Launches from branches and glides up to 15 m, steering with outstretched webbed fingers and toes.",{glider},1,fragment,2,t,2026-04-12 02:54:11.560457+00,5
+303,geography,"Sea level to roughly 600 m throughout Sundaland, wherever closed-canopy forest still stands.",,1,score,50,f,2026-04-12 02:54:11.560457+00,5
+281,key_fact,"First described by Alfred Russel Wallace’s expedition, hence a name that literally ‘flies’ in evolutionary history.",,3,score,100,f,2026-04-12 02:54:11.560457+00,5
+6,habitat,Lives in freshwater aquatic environments,"{forest,lentic,freshwater,tropical,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,5
+348,reproduction,Reproduction: oviparous. Clutch: twenty to fifty eggs. Lifespan: 5 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,6
+73,morphology,Primary color: bright leaf green. Pattern: large crimson eyes and white belly with smooth skin,"{red_coloration,leathery_skin,green_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,6
+29,habitat,Spends nights clinging to broad leaves high above forest ponds then descends to lay eggs on overhanging vegetation,"{forest,aquatic}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,6
+150,behavior,Egg clutches jiggle when attacked so tadpoles drop into water early to escape,"{parental_care,anti_predator}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,6
+216,taxonomy,"Family: Phyllomedusidae, Genus: Agalychnis","{agalychnis,phyllomedusidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,6
+128,behavior,Flashes red eyes and blue flanks to startle predators then snaps them shut to vanish,{startle_display},1,fragment,2,t,2026-04-12 02:54:11.560457+00,6
+89,diet,"Diet type: Omnivore. Preys on: crayfish, small animals, carrion","{scavenger,omnivore,piscivore,crustacean_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,1
+90,diet,"Diet type: Omnivore (Primarily Carnivore). Preys on: crayfish, fish, insects, snails, carrion","{scavenger,folivore,molluscivore,omnivore,carnivore,piscivore,insect_eater,crustacean_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,2
+92,diet,Diet type: Carnivore. Preys on: Ants; springtails; small beetles; spiders,"{carnivore,insect_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,3
+93,diet,"Diet type: Carnivore (opportunistic). Preys on: Snails, crabs, freshwater shrimp, small fish, carrion","{crustacean_eater,frugivore,scavenger,molluscivore,carnivore,piscivore}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,4
+94,diet,Diet type: Carnivore. Preys on: Moths; crickets; beetles; arboreal spiders,"{carnivore,insect_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,5
+304,geography,Sea level to about seven hundred metres across humid Caribbean lowlands and patchy Pacific slopes,,1,score,50,f,2026-04-12 02:54:11.560457+00,6
+282,key_fact,Eggs sense snake vibrations and can hatch early turning aerial ambush into splash escape,,3,score,100,f,2026-04-12 02:54:11.560457+00,6
+238,key_fact,Iconic frog with traffic light colours that advertises the rainforest in posters worldwide,,1,score,60,f,2026-04-12 02:54:11.560457+00,6
+95,diet,Diet type: insectivore. Preys on: moths; crickets; flies; small grasshoppers,{insect_eater},1,fragment,2,t,2026-04-12 02:54:11.560457+00,6
+7,habitat,Lives in freshwater aquatic environments,"{forest,freshwater,tropical,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,6
+74,morphology,Primary color: mossy olive brown. Pattern: broad dark mid-back band with black limbs,"{striped,dark_coloration,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,7
+30,habitat,Adults hide along rocky forest torrents by day then prowl banks on humid nights,"{forest,rocky}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,7
+151,behavior,Males grow ‘hair’ that boosts skin breathing during underwater egg guarding,"{parental_care,bimodal_respiration,dermal_respiration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,7
+217,taxonomy,"Family: Arthroleptidae, Genus: Trichobatrachus","{trichobatrachus,arthroleptidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,7
+129,behavior,Breaks its own toe bones to project sharp claws when grabbed,{bone_claw_defense},1,fragment,2,t,2026-04-12 02:54:11.560457+00,7
+305,geography,Lowland to mid-elevation 30–1500 m across Central African equatorial belt,,1,score,50,f,2026-04-12 02:54:11.560457+00,7
+283,key_fact,Frog is roasted and eaten in Cameroon where hunters spear it in rivers,,3,score,100,f,2026-04-12 02:54:11.560457+00,7
+261,key_fact,Hairy flanks are not fur but skin threads packed with blood vessels,,2,score,80,f,2026-04-12 02:54:11.560457+00,7
+239,key_fact,Nicknamed Wolverine frog because it pops claws in self defence,,1,score,60,f,2026-04-12 02:54:11.560457+00,7
+96,diet,Diet type: insectivore. Preys on: beetles; crickets; millipedes; small spiders,{insect_eater},1,fragment,2,t,2026-04-12 02:54:11.560457+00,7
+8,habitat,Lives in freshwater aquatic environments,"{forest,freshwater,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,7
+76,morphology,Primary color: mottled olive brown. Pattern: fine bumps and a dark eye stripe,"{rough_texture,striped,dark_coloration,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,8
+32,habitat,Lives all year in frigid clear streams where water tumbles over stones; adults shelter in moist leaf litter nearby,"{forest,riverine}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,8
+153,behavior,Internal fertilisation underwater with the male tail organ,{internal_fertilization},2,fragment,3,t,2026-04-12 02:54:11.560457+00,8
+219,taxonomy,"Family: Ascaphidae, Genus: Ascaphus","{ascaphidae,ascaphus}",2,score,120,t,2026-04-12 02:54:11.560457+00,8
+98,diet,Diet type: insectivore. Preys on: aquatic insect larvae; small snails; spiders,"{molluscivore,insect_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,8
+131,behavior,Voiceless frog that uses body signals instead of croaks beside roaring streams,{voiceless},1,fragment,2,t,2026-04-12 02:54:11.560457+00,8
+307,geography,Elevation sea level to about two thousand metre across the Pacific Northwest and northern Rocky outliers,,1,score,50,f,2026-04-12 02:54:11.560457+00,8
+285,key_fact,Adults are completely mute and cannot croak,,3,score,100,f,2026-04-12 02:54:11.560457+00,8
+263,key_fact,Tadpoles cling to rocks like living limpets with a suction cup mouth,,2,score,80,f,2026-04-12 02:54:11.560457+00,8
+241,key_fact,Only North American frog that mates with internal fertilisation thanks to a tail that is not really a tail,,1,score,60,f,2026-04-12 02:54:11.560457+00,8
+10,habitat,Lives in freshwater aquatic environments,"{montane,forest,freshwater,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,8
+77,morphology,Primary color: bright blue yellow black mix. Pattern: irregular stripes blotches and spots varying by morph,"{yellow_coloration,blue_coloration,striped,dark_coloration,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,9
+33,habitat,Active by day on damp forest floor around canopy gaps; requires small water pockets for tadpoles,{forest},2,fragment,3,t,2026-04-12 02:54:11.560457+00,9
+154,behavior,Rarely calls; relies on vivid warning colours to deter predators,"{aposematic,vocal}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,9
+220,taxonomy,"Family: Dendrobatidae, Genus: Dendrobates","{dendrobatidae,dendrobates}",2,score,120,t,2026-04-12 02:54:11.560457+00,9
+99,diet,Diet type: insectivore. Preys on: ants; termites; fruit flies; tiny beetles; mites,{insect_eater},1,fragment,2,t,2026-04-12 02:54:11.560457+00,9
+132,behavior,Males guard eggs then ferry tadpoles piggyback to rain pools,{parental_care},1,fragment,2,t,2026-04-12 02:54:11.560457+00,9
+308,geography,Sea level to about six hundred metres across the eastern Guiana Shield; especially common near streams that cross sandy soil,,1,score,50,f,2026-04-12 02:54:11.560457+00,9
+286,key_fact,Blue ‘azureus’ morph lives on tiny forest islands in a vast savanna sea,,3,score,100,f,2026-04-12 02:54:11.560457+00,9
+264,key_fact,One of the few dart frogs whose male rarely uses vocal calls,,2,score,80,f,2026-04-12 02:54:11.560457+00,9
+242,key_fact,Its skin dyes parrot feathers in legends giving rise to the common name,,1,score,60,f,2026-04-12 02:54:11.560457+00,9
+11,habitat,Lives in freshwater aquatic environments,"{forest,freshwater,tropical,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,9
+78,morphology,Primary color: mottled brown grey. Pattern: speckled warty skin with rough ridges,"{grey_coloration,rough_texture,brown_coloration,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,10
+34,habitat,Lies motionless buried in leaf litter or soft mud on the floor of dark still waters,"{forest,muddy_substrate}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,10
+155,behavior,Males perform underwater somersaults while pressing eggs onto female back,"{parental_care,mating_acrobatics}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,10
+221,taxonomy,"Family: Pipidae, Genus: Pipa","{pipidae,pipa}",2,score,120,t,2026-04-12 02:54:11.560457+00,10
+133,behavior,Creates instant vacuum to suck prey into tongueless mouth,{suction_feeder},1,fragment,2,t,2026-04-12 02:54:11.560457+00,10
+309,geography,Sea level to four hundred metres across the Amazon and Orinoco drainage and coastal Guiana shield,,1,score,50,f,2026-04-12 02:54:11.560457+00,10
+287,key_fact,Star shaped finger tips detect tiny ripples in pitch dark water,,3,score,100,f,2026-04-12 02:54:11.560457+00,10
+265,key_fact,Gives birth to live froglets that erupt from pockets in mums back,,2,score,80,f,2026-04-12 02:54:11.560457+00,10
+243,key_fact,Pancake flat body lets it vanish in leaf litter like a muddy doormat,,1,score,60,f,2026-04-12 02:54:11.560457+00,10
+100,diet,Diet type: carnivore. Preys on: small fish; aquatic insects; worms; crustaceans,"{crustacean_eater,vermivore,carnivore,piscivore,insect_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,10
+12,habitat,Lives in freshwater aquatic environments,"{forest,lentic,freshwater,riverine,aquatic,terrestrial,wetland}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,10
+156,behavior,Lacks vocal sac and communicates with short whistles and body movements,"{voiceless,social_display}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,11
+79,morphology,Primary color: olive green brown. Pattern: rough grainy skin with speckled limbs,"{rough_texture,green_coloration,brown_coloration,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,11
+35,habitat,Adults perch on boulders at night and retreat under water during the day,{rocky},2,fragment,3,t,2026-04-12 02:54:11.560457+00,11
+222,taxonomy,"Family: Conrauidae, Genus: Conraua","{conrauidae,conraua}",2,score,120,t,2026-04-12 02:54:11.560457+00,11
+134,behavior,Males shift heavy stones to build nursery pools for eggs,{nest_builder},1,fragment,2,t,2026-04-12 02:54:11.560457+00,11
+57,morphology,Flat broad head huge hind legs and fully webbed feet as big as a human hand,"{green_coloration,flattened_body,webbed_digits,brown_coloration,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,11
+310,geography,Sea level to three hundred metres within a coastal corridor about one hundred fifty kilometres inland,,1,score,50,f,2026-04-12 02:54:11.560457+00,11
+288,key_fact,Even with a giant adult the tadpole is no bigger than that of a common frog,,3,score,100,f,2026-04-12 02:54:11.560457+00,11
+266,key_fact,Stone-moving parents males drag rocks half their weight to craft safe pools,,2,score,80,f,2026-04-12 02:54:11.560457+00,11
+244,key_fact,Largest frog on Earth and able to leap three metres in a single bound,,1,score,60,f,2026-04-12 02:54:11.560457+00,11
+101,diet,Diet type: carnivore. Preys on: crabs; insects; fish; other frogs; small snakes,"{herpetivore,carnivore,piscivore,insect_eater,crustacean_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,11
+13,habitat,Lives in freshwater aquatic environments,"{freshwater,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,11
+116,diet,"Plant diet: Fallen figs, palm fruit, mushrooms, young leaves","{frugivore,folivore,fungivore}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,12
+80,morphology,"Primary color: Chestnut to ebony. Pattern: Saw-toothed marginal scutes give a spiky outline, esp. in juveniles","{striped,spined,dark_coloration,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,12
+36,habitat,Secretive forest-floor dweller; favours deep leaf litter in closed-canopy rainforest up to 900 m,{forest},2,fragment,3,t,2026-04-12 02:54:11.560457+00,12
+157,behavior,"Can emit a high-pitched squeal, a rarity among turtles, when seized",{vocal},2,fragment,3,t,2026-04-12 02:54:11.560457+00,12
+223,taxonomy,"Family: Geoemydidae, Genus: Heosemys","{geoemydidae,heosemys}",2,score,120,t,2026-04-12 02:54:11.560457+00,12
+135,behavior,Diurnal; shifts to crepuscular activity in hot weather; dives into pools when alarmed,"{diurnal,nest_builder,crepuscular}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,12
+58,morphology,Peaked vertebral keel; shell ridges mimic thorny forest seed pods.,"{shelled,brown_coloration}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,12
+311,geography,Sundaland and Indochina; populations highly fragmented,,1,score,50,f,2026-04-12 02:54:11.560457+00,12
+289,key_fact,"Its Latin name means thorny, yet traders dub it the Dracula Turtle for its fiery plastron",,3,score,100,f,2026-04-12 02:54:11.560457+00,12
+267,key_fact,"If cornered, this turtle squeals like a rubber duck, startling predators and keepers alike",,2,score,80,f,2026-04-12 02:54:11.560457+00,12
+245,key_fact,"Juveniles wear a jagged crown of shell spines, nature scaltrops in the leaf litter",,1,score,60,f,2026-04-12 02:54:11.560457+00,12
+102,diet,"Diet type: Omnivore. Preys on: Snails, earthworms, carrion","{frugivore,vermivore,scavenger,folivore,molluscivore,omnivore}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,12
+14,habitat,Lives in freshwater aquatic environments,"{montane,forest,freshwater,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,12
+81,morphology,Primary color: Tomato red. Pattern: Smooth skin with tiny pale flecks,"{red_coloration,leathery_skin,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,13
+37,habitat,Spends daylight buried under leaf litter; emerges after heavy rain to breed in shallow pools,"{forest,lentic}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,13
+158,behavior,Males give a low honk call from the water edge on warm rainy nights,{vocal},2,fragment,3,t,2026-04-12 02:54:11.560457+00,13
+224,taxonomy,"Family: Microhylidae, Genus: Dyscophus","{dyscophus,microhylidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,13
+59,morphology,Plump round body with short limbs and wide flat head,"{rounded_body,red_coloration,flattened_body,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,13
+312,geography,Known mainly from towns near Antongil Bay such as Maroantsetra and Rantabe; low elevation coastal plain,,1,score,50,f,2026-04-12 02:54:11.560457+00,13
+290,key_fact,Lives only in the same island that is home to lemurs and chameleons,,3,score,100,f,2026-04-12 02:54:11.560457+00,13
+246,key_fact,Bright red skin makes it look like a bouncing tomato,,1,score,60,f,2026-04-12 02:54:11.560457+00,13
+136,behavior,Inflates like a balloon and exudes sticky toxin when grabbed,"{toxic,inflates_defense}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,13
+103,diet,Diet type: Carnivore. Preys on: Ants; termites; small beetles; worms,"{vermivore,carnivore,insect_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,13
+15,habitat,Lives in freshwater aquatic environments,"{forest,freshwater,aquatic,terrestrial,wetland}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,13
+83,morphology,Primary color: sandy brown. Pattern: dark blotches on back with translucent skin on the sides,"{yellow_coloration,dark_coloration,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,14
+39,habitat,Burrows in loose sand behind the beach line and surfaces at night when mist wets the ground,{arid},2,fragment,3,t,2026-04-12 02:54:11.560457+00,14
+160,behavior,Spends daylight hidden in self dug sand burrow,{burrower},2,fragment,3,t,2026-04-12 02:54:11.560457+00,14
+226,taxonomy,"Family: Brevicipitidae, Genus: Breviceps","{breviceps,brevicipitidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,14
+105,diet,Diet type: insectivore. Preys on: moths; termites; woodlice; small beetles,{insect_eater},1,fragment,2,t,2026-04-12 02:54:11.560457+00,14
+188,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,1
+189,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,2
+191,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,3
+192,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,4
+193,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,5
+194,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,6
+195,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,7
+197,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,8
+198,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,9
+199,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,10
+200,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,11
+201,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,12
+202,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,13
+61,morphology,Round squat body with short limbs and chubby appearance,"{tiny,rounded_body,yellow_coloration,brown_coloration}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,14
+314,geography,Found within ten kilometres of the Atlantic from Lüderitz Namibia to Port Nolloth South Africa,,1,score,50,f,2026-04-12 02:54:11.560457+00,14
+292,key_fact,Can bury itself in seconds using shovel like hind feet,,3,score,100,f,2026-04-12 02:54:11.560457+00,14
+270,key_fact,Relies on nightly sea fog for drinking water in the desert,,2,score,80,f,2026-04-12 02:54:11.560457+00,14
+248,key_fact,Internet famous squeaky frog that looks like a puffball with eyes,,1,score,60,f,2026-04-12 02:54:11.560457+00,14
+204,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,14
+138,behavior,Inflates body and lets out a loud squeak when disturbed,"{vocal,inflates_defense}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,14
+17,habitat,Exclusively land-dwelling,"{coastal,scrubland,arid,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,14
+120,diet,"Plant diet: Dry grasses, succulents, leaves; seldom drinks free water","{folivore,grazer,succulent_feeder}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,15
+86,morphology,Primary color: Brown-tan carapace. Pattern: Dark radiating lines camouflage on each scute,"{striped,dark_coloration,brown_coloration,radiating_pattern}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,15
+42,habitat,Flat-shelled climber that wedges into narrow rock cracks on sun-baked hillsides 301 800 m a.s.l.,"{montane,rocky}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,15
+163,behavior,Groups of up to 10 share the same crack; rare sociality for tortoises.,{social},2,fragment,3,t,2026-04-12 02:54:11.560457+00,15
+229,taxonomy,"Family: Testudinidae, Genus: Malacochersus","{testudinidae,malacochersus}",2,score,120,t,2026-04-12 02:54:11.560457+00,15
+108,diet,Diet type: Herbivore (opportunistic),"{herbivore,folivore,grazer,succulent_feeder}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,15
+64,morphology,"Ultra-flat, flexible shell with open-latticed bone; rear lump ossified.","{shelled,flattened_body,brown_coloration,radiating_pattern}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,15
+254,key_fact,"It has one of the longest generation times of any turtle, taking 36-47 years for one generation to replace the next.",,2,score,80,f,2026-04-12 02:54:11.560457+00,1
+232,key_fact,"Its bottom shell (plastron) is hinged, allowing it to fully close up for protection.",,1,score,60,f,2026-04-12 02:54:11.560457+00,1
+255,key_fact,"Has a very long, tubular snout with nostrils at the tip, which it uses like a snorkel to breathe while buried underwater.",,2,score,80,f,2026-04-12 02:54:11.560457+00,2
+233,key_fact,"Its name comes from the small, cone-like spines found along the front edge of its upper shell.",,1,score,60,f,2026-04-12 02:54:11.560457+00,2
+257,key_fact,Only frog whose male carries young in throat until fully formed,,2,score,80,f,2026-04-12 02:54:11.560457+00,3
+235,key_fact,Discovered by Charles Darwin during voyage of the Beagle,,1,score,60,f,2026-04-12 02:54:11.560457+00,3
+258,key_fact,"Its tail works like an extra limb, bracing the body as it climbs slick granite waterfalls.",,2,score,80,f,2026-04-12 02:54:11.560457+00,4
+236,key_fact,"Only modern turtle whose skull is too large to retract, protected instead by horn-like scales.",,1,score,60,f,2026-04-12 02:54:11.560457+00,4
+259,key_fact,"Black velvet between the toes turns into living wings, letting it surf the humid night air.",,2,score,80,f,2026-04-12 02:54:11.560457+00,5
+237,key_fact,Largest of Asia’s ‘parachute’ frogs – its splayed feet can eclipse a golf ball.,,1,score,60,f,2026-04-12 02:54:11.560457+00,5
+260,key_fact,Huge red eyes inspired the common name and help blind night predators with sudden flash,,2,score,80,f,2026-04-12 02:54:11.560457+00,6
+268,key_fact,Sticky skin secretions can gum up the mouth of a snake,,2,score,80,f,2026-04-12 02:54:11.560457+00,13
+441,taxonomy,A member of the bovid family.,{family:bovidae},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+442,taxonomy,Its classification includes a mammalian genus.,{},2,fragment,3,f,2026-07-19 04:20:16.614538+00,50
+443,geography,Lives in arid climates.,{climate_zone:arid},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+444,geography,Native to Africa.,{continent:africa},2,fragment,3,t,2026-07-19 04:20:16.614538+00,50
+445,morphology,Has a robust body plan.,{body_plan:robust},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+446,morphology,Both sexes have horns.,{distinctive_features:horns},2,fragment,3,t,2026-07-19 04:20:16.614538+00,50
+447,behavior,Primarily feeds at night.,{activity_pattern:nocturnal},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+448,behavior,Lives in herds.,{sociality:herd},2,fragment,3,t,2026-07-19 04:20:16.614538+00,50
+449,diet,Is herbivorous.,{diet_type:herbivore},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+450,reproduction,Breeds repeatedly across its lifetime.,{parity:iteroparous},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+451,conservation,Its conservation status is Critically Endangered.,{iucn:CR},1,fragment,2,t,2026-07-19 04:20:16.614538+00,50
+452,conservation,Poaching is a threat.,{threat_tag:poaching},2,fragment,3,t,2026-07-19 04:20:16.614538+00,50
+453,key_fact,Broad hooves spread weight over sand.,{},1,score,60,f,2026-07-19 04:20:16.614538+00,50
+454,key_fact,Its coat changes colour seasonally.,{},2,score,80,f,2026-07-19 04:20:16.614538+00,50
+455,key_fact,Plant moisture can replace drinking.,{signature:plant_moisture_replaces_drinking},3,fragment,4,t,2026-07-19 04:20:16.614538+00,50
+456,taxonomy,A member of the cat family.,{family:felidae},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+457,taxonomy,Its classification includes a mammalian genus.,{},2,fragment,3,f,2026-07-19 04:20:16.614538+00,25
+458,geography,Occurs in tropical climates.,{climate_zone:tropical},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+459,geography,Native to Asia.,{continent:asia},2,fragment,3,t,2026-07-19 04:20:16.614538+00,25
+460,morphology,Has a robust body plan.,{body_plan:robust},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+461,morphology,Has vertical stripes.,{distinctive_features:stripes},2,fragment,3,t,2026-07-19 04:20:16.614538+00,25
+462,behavior,Primarily active at night.,{activity_pattern:nocturnal},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+463,behavior,Usually lives alone.,{sociality:solitary},2,fragment,3,t,2026-07-19 04:20:16.614538+00,25
+464,diet,Is carnivorous.,{diet_type:carnivore},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+465,reproduction,Breeds repeatedly across its lifetime.,{parity:iteroparous},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+466,conservation,Its conservation status is Endangered.,{iucn:EN},1,fragment,2,t,2026-07-19 04:20:16.614538+00,25
+467,conservation,Poaching is a threat.,{threat_tag:poaching},2,fragment,3,t,2026-07-19 04:20:16.614538+00,25
+468,key_fact,Stripe patterns identify individuals.,{},1,score,60,f,2026-07-19 04:20:16.614538+00,25
+469,key_fact,May eat about 34 kilograms after a kill.,{},2,score,80,f,2026-07-19 04:20:16.614538+00,25
+470,key_fact,Can swim about eight kilometres.,{signature:swims_eight_kilometers},3,fragment,4,t,2026-07-19 04:20:16.614538+00,25
+298,geography,"Found in the Great Lakes region, the upper Mississippi basin, and scattered populations in the northeastern United States and Nova Scotia, Canada.",,1,score,50,f,2026-04-12 02:54:11.560457+00,1
+276,key_fact,"Despite being a turtle, it is highly mobile on land and will travel long distances between wetlands.",,3,score,100,f,2026-04-12 02:54:11.560457+00,1
+144,behavior,"Leaves strong scent trails, making it vulnerable to predators like raccoons and foxes.",{scent_trail},2,fragment,3,t,2026-04-12 02:54:11.560457+00,1
+320,conservation,Status: EN. Endangered,,1,score,40,f,2026-04-12 02:54:11.560457+00,1
+145,behavior,Forages by actively thrusting its long snout into vegetation or under rocks.,{active_forager},2,fragment,3,t,2026-04-12 02:54:11.560457+00,2
+321,conservation,Status: LC. Least Concern,,1,score,40,f,2026-04-12 02:54:11.560457+00,2
+323,conservation,Status: EN. Populations falling due to forest loss disease and climate warming,,1,score,40,f,2026-04-12 02:54:11.560457+00,3
+324,conservation,"Status: CR. Intense demand for the pet, food and traditional-medicine trades has decimated populations across it",,1,score,40,f,2026-04-12 02:54:11.560457+00,4
+325,conservation,Status: LC. Still widespread but disappearing from logged and palm-oil landscapes; needs intact canopy.,,1,score,40,f,2026-04-12 02:54:11.560457+00,5
+326,conservation,Status: LC. Stable overall but suffers where forest is cleared or water bodies are polluted,,1,score,40,f,2026-04-12 02:54:11.560457+00,6
+327,conservation,Status: LC. Locally common but hunted for meat and impacted by river pollution,,1,score,40,f,2026-04-12 02:54:11.560457+00,7
+329,conservation,Status: LC. Populations stable but sensitive to logging that warms streams and adds silt,,1,score,40,f,2026-04-12 02:54:11.560457+00,8
+330,conservation,Status: LC. Widespread and adaptable but vulnerable to habitat loss and illegal pet trade in blue morphs,,1,score,40,f,2026-04-12 02:54:11.560457+00,9
+331,conservation,Status: LC. Widespread and common but suffers locally from polluted water and habitat loss,,1,score,40,f,2026-04-12 02:54:11.560457+00,10
+332,conservation,Status: EN. Hunted for meat and export and harmed by logging dams and polluted water,,1,score,40,f,2026-04-12 02:54:11.560457+00,11
+333,conservation,Status: EN. Illegal pet trade and habitat loss have cut wild numbers by >50 % in three generations,,1,score,40,f,2026-04-12 02:54:11.560457+00,12
+334,conservation,Status: EN. Numbers falling because of pet trade demand and loss of swamp forest,,1,score,40,f,2026-04-12 02:54:11.560457+00,13
+336,conservation,Status: NT. Small range makes it vulnerable to mining and coastal development,,1,score,40,f,2026-04-12 02:54:11.560457+00,14
+20,habitat,Exclusively land-dwelling,"{scrubland,arid,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,15
+339,conservation,Status: CR. Over-collection for pet trade & habitat clearing have cut numbers >80 % in 30 yrs.,,1,score,40,f,2026-04-12 02:54:11.560457+00,15
+317,geography,"Scattered kopjes across southern Kenya, northern & eastern Tanzania; single Zambian site",,1,score,50,f,2026-04-12 02:54:11.560457+00,15
+295,key_fact,Nicknamed the crepe or pizza-box tortoise; looks cooked flat yet climbs vertical rock.,,3,score,100,f,2026-04-12 02:54:11.560457+00,15
+273,key_fact,"Instead of hiding inside, it *dashes* and wedges tightpredators cant pry it free.",,2,score,80,f,2026-04-12 02:54:11.560457+00,15
+251,key_fact,"Only tortoise whose shell flexes, lighter than balsa, riddled with gaps.",,1,score,60,f,2026-04-12 02:54:11.560457+00,15
+26,habitat,Hides among wet leaves and moss by day; often near shallow shaded streams,"{lentic,riverine}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,3
+207,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,15
+141,behavior,Runs & climbs with surprising speed; escapes by chimney-climbing into crevices.,"{climber,fast_runner}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,15
+87,morphology,Primary color: dusky purple. Pattern: smooth balloon like skin with tiny dimples,"{purple_coloration,leathery_skin}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,16
+43,habitat,Lives two metres underground in loose humus rich soil then tunnels to forest streams for brief breeding burst,"{forest,riverine}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,16
+164,behavior,Males call with a muffled honk while hidden under leaf litter near torrents,"{vocal,burrower}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,16
+230,taxonomy,"Family: Nasikabatrachidae, Genus: Nasikabatrachus","{nasikabatrachus,nasikabatrachidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,16
+109,diet,Diet type: insectivore. Preys on: termites; ants; tiny soil arthropods,{insect_eater},1,fragment,2,t,2026-04-12 02:54:11.560457+00,16
+65,morphology,Round bloated body tiny eyes and a pointed pig snout perfect for termite digging,"{purple_coloration,tiny,rounded_body,specialized_snout}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,16
+21,habitat,Lives in freshwater aquatic environments,"{forest,freshwater,riverine,aquatic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,16
+340,conservation,Status: EN. Fossorial habits hide shrinking numbers threatened by forest clearing agriculture and check dams,,1,score,40,f,2026-04-12 02:54:11.560457+00,16
+318,geography,Known from less than thirty localities along a six hundred kilometre arc of the southern Western Ghats,,1,score,50,f,2026-04-12 02:54:11.560457+00,16
+296,key_fact,Shares its closest relatives with tiny Seychelles frogs a living echo of ancient Gondwana,,3,score,100,f,2026-04-12 02:54:11.560457+00,16
+274,key_fact,Emerges only during the first heavy rains then vanishes underground for the rest of the year,,2,score,80,f,2026-04-12 02:54:11.560457+00,16
+252,key_fact,Looks like a purple balloon with a pig nose not your classic frog shape,,1,score,60,f,2026-04-12 02:54:11.560457+00,16
+208,taxonomy,"Class: AMPHIBIA, Order: ANURA","{anura,amphibia}",1,score,80,t,2026-04-12 02:54:11.560457+00,16
+142,behavior,Spends three hundred sixty days a year buried and silent emerging for just a couple of monsoon nights,"{burrower,voiceless,ambush_predator}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,16
+115,diet,"Plant diet: Figs, fallen fruit, riverine vegetation","{frugivore,folivore}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,17
+75,morphology,Primary color: Grey-olive carapace. Pattern: Smooth leathery shell without scutes,"{grey_coloration,leathery_skin,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,17
+31,habitat,Fully aquatic species inhabiting turbid tropical rivers and still backwaters; nests on exposed sandbars late dry season.,"{tropical,arid,riverine,aquatic}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,17
+152,behavior,Females migrate en masse to sandy bars to lay eggs that remain in suspended development until first wet-season flood.,"{parental_care,migratory,burrower}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,17
+218,taxonomy,"Family: Carettochelyidae, Genus: Carettochelys","{carettochelys,carettochelyidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,17
+130,behavior,Highly aquatic; surfaces briefly to breathe then cruises mid-water using marine-style flippers.,{swimmer},1,fragment,2,t,2026-04-12 02:54:11.560457+00,17
+53,morphology,"Flipper-like forelimbs, pig-like fleshy snout with nasal openings at tip, pliable shell covered in skin.","{grey_coloration,flipper_limbs,shelled,large_bodied,leathery_skin,brown_coloration,specialized_snout}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,17
+328,conservation,"Status: EN. Populations declining due to illegal egg and adult harvest for pet and meat trade, habitat alteratio",,1,score,40,f,2026-04-12 02:54:11.560457+00,17
+306,geography,Elevation 0150 m; distribution fragmented into several large river basins across southern New Guinea and the Top End of Australia.,,1,score,50,f,2026-04-12 02:54:11.560457+00,17
+284,key_fact,Locally called Fly River Turtle; culturally significant and historically traded thousands of kilometres by Indigenous communities.,,3,score,100,f,2026-04-12 02:54:11.560457+00,17
+262,key_fact,"Eggs exhibit facultative diapause, remaining viable for over 12 months if kept dry.",,2,score,80,f,2026-04-12 02:54:11.560457+00,17
+240,key_fact,"Only freshwater turtle with true flippers, convergent with marine turtles.",,1,score,60,f,2026-04-12 02:54:11.560457+00,17
+196,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,17
+97,diet,"Diet type: Omnivore. Preys on: Aquatic insects, freshwater prawns, snails, carrion","{crustacean_eater,frugivore,scavenger,folivore,molluscivore,omnivore,insect_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,17
+9,habitat,Lives in freshwater aquatic environments,"{lentic,freshwater,tropical,arid,riverine,aquatic}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,17
+117,diet,"Plant diet: Aquatic vegetation (e.g., water hyacinth)",{folivore},2,fragment,3,t,2026-04-12 02:54:11.560457+00,18
+82,morphology,Primary color: Olive-grey dorsum. Pattern: Fine pale speckles on carapace & limbs,"{grey_coloration,brown_coloration,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,18
+38,habitat,"Prefers deep pools of large turbid rivers & associated lakes with soft, sandy or muddy substrates.","{muddy_substrate,arid,riverine}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,18
+225,taxonomy,"Family: Trionychidae, Genus: Rafetus","{rafetus,trionychidae}",2,score,120,t,2026-04-12 02:54:11.560457+00,18
+165,behavior,"Males ram and clash loudly in dominance bouts, sometimes flipping rivals onto their backs.",{social_display},2,fragment,3,t,2026-04-12 02:54:11.560457+00,20
+122,behavior,Is highly mobile and travels extensively between different wetlands.,"{migratory,scent_trail}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,1
+60,morphology,"Flattened, leathery carapace; elongated tubular snout; powerful webbed limbs.","{grey_coloration,shelled,large_bodied,leathery_skin,flattened_body,webbed_digits,brown_coloration,specialized_snout,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,18
+335,conservation,"Status: CR. With only one confirmed male in China and  3 turtles in Vietnam, species is functionally extinct; in",,1,score,40,f,2026-04-12 02:54:11.560457+00,18
+313,geography,"Confirmed remnant sites: Suzhou Zoo (China), Dong Mo & Xuan Khanh Lakes (Vietnam); elevation  0100 m.",,1,score,50,f,2026-04-12 02:54:11.560457+00,18
+291,key_fact,eDNA surveys & artificial insemination provide last hope for recovery.,,3,score,100,f,2026-04-12 02:54:11.560457+00,18
+269,key_fact,Largest living freshwater turtle; record weight 169 kg.,,2,score,80,f,2026-04-12 02:54:11.560457+00,18
+247,key_fact,Possibly the worlds rarest vertebrate fewer than five individuals remain.,,1,score,60,f,2026-04-12 02:54:11.560457+00,18
+203,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,18
+137,behavior,"Secretive; surfaces briefly to breathe, spends most time buried in mud.","{swimmer,ambush_predator,burrower}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,18
+104,diet,"Diet type: Omnivore (carnivore-leaning). Preys on: Fish, crabs, snails, frogs","{folivore,molluscivore,herpetivore,omnivore,carnivore,piscivore,crustacean_eater}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,18
+16,habitat,Lives in freshwater aquatic environments,"{lentic,freshwater,riverine,aquatic}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,18
+118,diet,"Plant diet: Grasses, forbs, cactus pads, fallen fruit; can survive > 12 months without fresh food or water by sl","{frugivore,grazer,succulent_feeder}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,19
+84,morphology,Primary color: Dark brown-black. Pattern: Carapace either domed or saddle-backed depending on subspecies,"{dark_coloration,brown_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,19
+40,habitat,"Uses arid cactus lowlands in the cool season and migrates to lush, humid highlands during the wet season",{arid},2,fragment,3,t,2026-04-12 02:54:11.560457+00,19
+161,behavior,Seasonal altitudinal migrations track plant growth and moisture,{migratory},2,fragment,3,t,2026-04-12 02:54:11.560457+00,19
+227,taxonomy,"Family: Testudinidae, Genus: Chelonoidis","{testudinidae,chelonoidis}",2,score,120,t,2026-04-12 02:54:11.560457+00,19
+62,morphology,"Massive elephant-like limbs, long neck, variable shell profile.","{shelled,large_bodied,dark_coloration,brown_coloration}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,19
+337,conservation,Status: VU. Head-starting and predator eradication have raised wild numbers from ~3 000 in the 1970s to > 15 000,,1,score,40,f,2026-04-12 02:54:11.560457+00,19
+315,geography,Restricted to nine major islands and several islets; elevational range sea-level to ~1 200 m.,,1,score,50,f,2026-04-12 02:54:11.560457+00,19
+293,key_fact,"Tortoises store water in pericardial sacs, enabling months-long fasting voyages",,3,score,100,f,2026-04-12 02:54:11.560457+00,19
+271,key_fact,Genomic evidence shows the lineage rafted >1 000 km from South America 23 Myr ago,,2,score,80,f,2026-04-12 02:54:11.560457+00,19
+249,key_fact,Island-specific shell shapes inspired Charles Darwins ideas on adaptive radiation in 1835,,1,score,60,f,2026-04-12 02:54:11.560457+00,19
+205,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,19
+139,behavior,Diurnal; may rest up to 16 hours a day under vegetation or in mud wallows,{diurnal},1,fragment,2,t,2026-04-12 02:54:11.560457+00,19
+106,diet,Diet type: Herbivore. Preys on: N/A,"{frugivore,herbivore,grazer,succulent_feeder}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,19
+18,habitat,Exclusively land-dwelling,"{scrubland,arid,volcanic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,19
+44,habitat,Burrow-dwelling grazer that escapes blistering heat in tunnels up to 3 m deep and 10 m long.,"{arid,burrower_habitat}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,20
+121,diet,"Plant diet: Coarse grasses, forbs, succulents, fallen dry-season blooms; gains moisture from drought-resistant p","{grazer,succulent_feeder}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,20
+88,morphology,"Primary color: Sand-buff carapace. Pattern: Elevated growth annuli on each scute give a rugged, saddle-backed look.",{yellow_coloration},2,fragment,3,t,2026-04-12 02:54:11.560457+00,20
+231,taxonomy,"Family: Testudinidae, Genus: Centrochelys","{testudinidae,centrochelys}",2,score,120,t,2026-04-12 02:54:11.560457+00,20
+209,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,20
+110,diet,Diet type: Herbivore,"{herbivore,grazer,succulent_feeder}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,20
+66,morphology,Massive forelimbs armoured with overlapping scales; hind legs sport conical spurs that inspired its name.,"{large_bodied,yellow_coloration,spined}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,20
+22,habitat,Exclusively land-dwelling,"{scrubland,arid,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,20
+341,conservation,"Status: VU. Wild numbers shrinking as overgrazing, desertification and trade harvest erode remaining strongholds",,1,score,40,f,2026-04-12 02:54:11.560457+00,20
+319,geography,Broad but patchy band south of the Sahara from Senegal and Mauritania eastward to Sudan and Ethiopia.,,1,score,50,f,2026-04-12 02:54:11.560457+00,20
+297,key_fact,Named for the prominent thigh spurs it brandishes like medieval spikes on its hind legs.,,3,score,100,f,2026-04-12 02:54:11.560457+00,20
+275,key_fact,"A master excavator that engineers cool, humid burrow networks sheltering lizards, rodents and even jackals.",,2,score,80,f,2026-04-12 02:54:11.560457+00,20
+253,key_fact,Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.,,1,score,60,f,2026-04-12 02:54:11.560457+00,20
+67,morphology,"Primary color: Black / Dark Brown. Pattern: Has a dark, smooth upper shell often covered in yellow spots or flecks, with a distinctive bright yellow chin and throat.","{red_coloration,leathery_skin,yellow_coloration,dark_coloration,brown_coloration,spotted}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,1
+50,morphology,"Broad, flat body with parachute-like skin flaps; toes spread wider than its head when fully splayed.","{gliding_membranes,green_coloration,flattened_body}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,5
+51,morphology,Slender limbs with jumbo suction pads and soft body ideal for leaf life,"{tiny,adhesive_pads,green_coloration,leathery_skin,slender}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,6
+52,morphology,Robust body short snout and wide head males sprout hair-like skin filaments on flanks and thighs,"{dermal_filaments,striped,brown_coloration,specialized_snout}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,7
+54,morphology,Slender body with flat head; vertical pupils; males carry a tail-like copulatory organ,"{prehensile_tail,tiny,flattened_body,striped,brown_coloration,slender}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,8
+55,morphology,Sturdy limbs smooth skin and adhesive toe pads suited to short climbs,"{tiny,adhesive_pads,yellow_coloration,blue_coloration,striped,dark_coloration,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,9
+56,morphology,Extremely flat triangle head star finger tips and wide splayed limbs,"{grey_coloration,flattened_body,brown_coloration,spotted}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,10
+111,diet,"Plant diet: plant material, seeds",{granivore},2,fragment,3,t,2026-04-12 02:54:11.560457+00,1
+349,reproduction,Reproduction: oviparous. Clutch: one hundred to two hundred eggs. Lifespan: 15 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,7
+351,reproduction,Reproduction: oviparous. Clutch: forty to eighty eggs. Lifespan: 20 years,{egg_laying},1,fragment,2,t,2026-04-12 03:02:50.757208+00,8
+352,reproduction,Reproduction: oviparous. Clutch: two to six eggs. Lifespan: 8 years,"{metamorphosis,egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,9
+353,reproduction,Reproduction: oviparous. Clutch: up to one hundred eggs. Lifespan: 8 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,10
+354,reproduction,Reproduction: oviparous. Clutch: three hundred to eight hundred eggs. Lifespan: 15 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,11
+355,reproduction,Reproduction: Oviparous (egg-laying). Clutch: 14 eggs per clutch; up to 3 clutches yr. Lifespan: 40 years,{egg_laying},1,fragment,2,t,2026-04-12 03:02:50.757208+00,12
+356,reproduction,Reproduction: Oviparous. Clutch: From one thousand to fifteen hundred eggs. Lifespan: 8 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,13
+358,reproduction,Reproduction: oviparous. Clutch: twelve to fifteen eggs. Lifespan: 6 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,14
+361,reproduction,"Reproduction: Oviparous. Clutch: 1 egg per clutch, repeated every 48 wks in season. Lifespan: 30 years",{egg_laying},1,fragment,2,t,2026-04-12 03:02:50.757208+00,15
+362,reproduction,Reproduction: oviparous. Clutch: up to three thousand eggs. Lifespan: 7 years,"{egg_laying,short_lived}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,16
+350,reproduction,Reproduction: Oviparous (egg-laying). Clutch: 7–35 eggs per clutch; nests multiple times per year. Lifespan: 35 years,{egg_laying},1,fragment,2,t,2026-04-12 03:02:50.757208+00,17
+159,behavior,"Capable of bimodal respiration, absorbing oxygen through pharyngeal lining.",{bimodal_respiration},2,fragment,3,t,2026-04-12 02:54:11.560457+00,18
+357,reproduction,Reproduction: Oviparous (egg-laying). Clutch: 20–80 eggs per clutch. Lifespan: 100 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,18
+359,reproduction,Reproduction: Oviparous (egg-laying). Clutch: 2–16 eggs per clutch; up to 3 clutches per year. Lifespan: 175 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,19
+363,reproduction,Reproduction: Oviparous. Clutch: 15–30 eggs per clutch. Lifespan: 70 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,20
+143,behavior,"Crepuscular; emerges at dawn and dusk to forage, retreating underground during midday extremes.","{crepuscular,burrower}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,20
+360,reproduction,Reproduction: Oviparous (egg-laying). Clutch: 3 to 12 eggs. Lifespan: 100 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,21
+119,diet,"Plant diet: Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new g","{frugivore,grazer,succulent_feeder}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,21
+85,morphology,"Primary color: Yellow / Off-white. Pattern: Brilliant yellow lines radiating from the center of each dark shell plate, creating a 'star' pattern.","{yellow_coloration,striped,dark_coloration,radiating_pattern}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,21
+41,habitat,"Prefers dry regions of brush, thorn (Diderae) forests, and woodlands of southern Madagascar.","{forest,scrubland,arid}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,21
+162,behavior,"Males perform noisy mating rituals, bobbing heads and sometimes lifting the female with their shell.",{social_display},2,fragment,3,t,2026-04-12 02:54:11.560457+00,21
+228,taxonomy,"Family: Testudinidae, Genus: Astrochelys","{testudinidae,astrochelys}",2,score,120,t,2026-04-12 02:54:11.560457+00,21
+63,morphology,"High-domed carapace with smooth (not pyramidal) scutes, a blunt head, and elephantine feet.","{shelled,yellow_coloration,domed_shell,radiating_pattern}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,21
+316,geography,Occurs naturally only in the extreme southern and southwestern part of Madagascar. Introduced to the islands of Réunion and Mauritius.,,1,score,50,f,2026-04-12 02:54:11.560457+00,21
+338,conservation,Status: CR. Critically Endangered,,1,score,40,f,2026-04-12 02:54:11.560457+00,21
+294,key_fact,Grazing makes up 80-90% of its diet.,,3,score,100,f,2026-04-12 02:54:11.560457+00,21
+272,key_fact,"Unlike other star tortoises, its carapace scutes are smooth and not raised into pyramidal shapes.",,2,score,80,f,2026-04-12 02:54:11.560457+00,21
+250,key_fact,"The oldest recorded individual, Tu'i Malila, lived to be an estimated 188 years old.",,1,score,60,f,2026-04-12 02:54:11.560457+00,21
+206,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,21
+140,behavior,"Diurnal (active during the day). Known to graze regularly in the same area, keeping vegetation trimmed.",{diurnal},1,fragment,2,t,2026-04-12 02:54:11.560457+00,21
+107,diet,Diet type: Herbivore. Preys on: N/A,"{frugivore,herbivore,grazer,succulent_feeder}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,21
+19,habitat,Exclusively land-dwelling,"{forest,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,21
+344,reproduction,Reproduction: Oviparous (egg-laying). Clutch: Unknown. Lifespan: 125 years,"{long_lived,egg_laying}",1,fragment,2,t,2026-04-12 03:02:50.757208+00,22
+113,diet,"Plant diet: Fed primarily on greens, grasses, native fruit, and low-hanging cactus pads.","{frugivore,grazer,succulent_feeder}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,22
+69,morphology,Primary color: Dark Grey / Black. Pattern: Distinctive saddleback-shaped carapace.,"{grey_coloration,dark_coloration}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,22
+25,habitat,"Inhabited deciduous forests, evergreen montane forests, and humid grasslands. Juveniles stayed in the warmer lowland are","{montane,forest,grassland}",2,fragment,3,t,2026-04-12 02:54:11.560457+00,22
+146,behavior,"A critical ecosystem engineer, shaping the island's vegetation through herbivory and seed dispersal.",{ecosystem_engineer},2,fragment,3,t,2026-04-12 02:54:11.560457+00,22
+212,taxonomy,"Family: Testudinidae, Genus: Chelonoidis","{testudinidae,chelonoidis}",2,score,120,t,2026-04-12 02:54:11.560457+00,22
+124,behavior,Diurnal (active during the day). Rested for about 16 hours a day.,"{diurnal,ecosystem_engineer}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,22
+300,geography,"Historically endemic to Pinta Island, Galápagos, Ecuador. Now extinct in its native range, though hybrids exist on Isabela Island.",,1,score,50,f,2026-04-12 02:54:11.560457+00,22
+322,conservation,Status: EX. Classified as Extinct (EX) by IUCN. Efforts are underway to 'resurrect' the lineage using recently f,,1,score,40,f,2026-04-12 02:54:11.560457+00,22
+278,key_fact,"Its extinction diminished the Pinta Island ecosystem, as it was a top herbivore and ecosystem engineer.",,3,score,100,f,2026-04-12 02:54:11.560457+00,22
+256,key_fact,"First-generation hybrids have been found on Wolf Volcano, offering a chance to resurrect the Pinta lineage.",,2,score,80,f,2026-04-12 02:54:11.560457+00,22
+234,key_fact,"The last known individual was named Lonesome George, who became a global icon for conservation.",,1,score,60,f,2026-04-12 02:54:11.560457+00,22
+190,taxonomy,"Class: REPTILIA, Order: TESTUDINES","{testudines,reptilia}",1,score,80,t,2026-04-12 02:54:11.560457+00,22
+91,diet,Diet type: Herbivore. Preys on: N/A,"{frugivore,herbivore,grazer,succulent_feeder}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,22
+47,morphology,"Characterized by a prominent saddleback-shaped carapace, which distinguishes it from dome-shelled tortoises.","{grey_coloration,shelled,large_bodied,saddleback_shell,domed_shell,dark_coloration}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,22
+3,habitat,Exclusively land-dwelling,"{montane,forest,volcanic,terrestrial}",1,fragment,2,t,2026-04-12 02:54:11.560457+00,22

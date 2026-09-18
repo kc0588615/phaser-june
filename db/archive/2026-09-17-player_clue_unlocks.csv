@@ -1,0 +1,56 @@
+id,player_id,discovery_id,clue_category,clue_field,clue_value,unlocked_at,run_node_id,species_id
+f0eeffef-650b-4a33-aae6-78cc6815c3f2,4d748fa0-528f-44d1-8438-bcc62a143b06,,conservation,conservation,Endangered,2025-10-24 20:56:33.242+00,,1
+f0bcb2b4-7007-4e69-88e9-171564beb4e3,4d748fa0-528f-44d1-8438-bcc62a143b06,,life_cycle,life_cycle,"Has an extremely long generation time, calculated at 36-47 years.",2025-10-24 20:56:39.012+00,,1
+27a0cf4e-86c8-4116-8748-16aec3f15407,4d748fa0-528f-44d1-8438-bcc62a143b06,,geographic_habitat,habitat,"wetland, grassland, shrubland, standing-water, temporary-wetland",2025-10-24 20:57:10.406+00,,1
+c9df3626-bf4a-4ca1-91ba-e7e4311db324,4d748fa0-528f-44d1-8438-bcc62a143b06,,morphology,primary_color,Black / Dark Brown,2025-10-24 20:58:53.655+00,,1
+cb4f6686-ea15-492c-accf-481b2bc77240,4d748fa0-528f-44d1-8438-bcc62a143b06,,behavior_diet,diet_type,Omnivore,2025-10-24 20:59:08.921+00,,1
+b6e3631a-d996-4e0a-ade3-01a753c7f0fe,4d748fa0-528f-44d1-8438-bcc62a143b06,,morphology,secondary_color,Bright Yellow,2025-10-24 20:59:30.471+00,,1
+d9a91f18-08ab-46b7-945f-7757b990f537,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,behavior_diet,Creates instant vacuum to suck prey into tongueless mouth,2025-11-14 02:07:41.467+00,,10
+f5d05476-b2b3-42af-aac6-574d24f2eb28,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,conservation,conservation,Widespread and common but suffers locally from polluted water and habitat loss,2025-11-14 02:07:45.876+00,,10
+e2480cb8-2595-44f4-a689-0c0514b029a9,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,classification,phylum,CHORDATA,2025-11-14 18:29:21.728+00,,2
+ae875deb-9d7d-4e7b-88bd-affbc730f588,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,morphology,morphology,Its leathery upper shell is olive to tan with small dark spots or circles. The underside is a light cream or white color.,2025-11-14 18:29:38.132+00,,2
+ecb43bec-30d3-4716-adad-29cbda6f9f80,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,behavior_diet,"Crepuscular; emerges at dawn and dusk to forage, retreating underground during midday extremes.",2025-10-21 03:49:56.686+00,,20
+47a4161a-e6e0-4e86-9f22-20160443f587,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,geographic_habitat,geographic_habitat,Broad but patchy band south of the Sahara from Senegal and Mauritania eastward to Sudan and Ethiopia.,2025-10-21 03:49:56.939+00,,20
+4f2893ca-c65f-44f7-b13f-658706600a22,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,life_cycle,life_cycle,Female fastens egg strings beneath large stream rocks where cold current supplies oxygen,2025-10-21 04:09:51.883+00,,8
+6adfae32-ad97-482d-9879-33630fd1a213,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,habitat,habitat,Search Area is 84.14% Forest - Subtropical-tropical moist lowland,2025-12-05 00:59:09.955+00,,4
+7316f96b-7f51-4b29-bc98-ec1d4c08be9a,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,habitat,habitat,Search Area is 77.58% Forest - Temperate,2025-10-21 04:10:00.392+00,,8
+f6200542-ffb4-4283-bb98-068318ed9a10,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,behavior_diet,Voiceless frog that uses body signals instead of croaks beside roaring streams,2025-10-21 04:10:03.048+00,,8
+497b184d-a848-4045-9f55-078f1a698e4f,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,conservation,threats,"Over-collection, hydropower dams, sedimentation, deforestation, by-catch in eel traps.",2025-12-05 00:59:18.677+00,,4
+833d1721-dbe1-4e03-be6c-bb7401a749b2,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,habitat,habitat,Search Area is 53.46% Desert - Hot,2025-10-21 04:14:12.719+00,,20
+cc383328-6b38-4ef9-a272-80355e1d4615,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,classification,classification,Named in honour of naturalist Alfred Russel Wallace,2025-10-21 04:22:44.325+00,,5
+df9b816e-dd46-4fee-ab1b-100bdd41c8b4,4d748fa0-528f-44d1-8438-bcc62a143b06,,geographic_habitat,geographic_habitat,"Found in the Great Lakes region, the upper Mississippi basin, and scattered populations in the northeastern United States and Nova Scotia, Canada.",2025-10-24 20:56:03.463+00,,1
+e8222c3e-627c-43d6-8ba2-93ec83a816d4,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,key_facts,key_facts,Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.,2025-12-07 19:02:08.63+00,,20
+0208f0cd-6857-479d-811c-a813e354434f,4d748fa0-528f-44d1-8438-bcc62a143b06,,habitat,habitat,Search Area is 63.89% Forest - Temperate,2025-10-24 20:56:05.827+00,,1
+e1f16648-b473-4c50-b54d-fdb7a08b8c1a,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,classification,classification,Largest mainland tortoise; first described by L. H. Gray in 1835,2025-12-07 19:02:34.727+00,,20
+fa7c6d7d-f31f-4c6e-8d73-caf46332262e,4d748fa0-528f-44d1-8438-bcc62a143b06,,classification,class,REPTILIA,2025-10-24 20:56:06.45+00,,1
+48e21adc-0610-4c57-aff8-e57808a48409,4d748fa0-528f-44d1-8438-bcc62a143b06,,classification,phylum,CHORDATA,2025-10-24 20:56:06.464+00,,1
+84638457-5ba1-4052-92bf-d007efdc87eb,4d748fa0-528f-44d1-8438-bcc62a143b06,,key_facts,key_facts,"Its bottom shell (plastron) is hinged, allowing it to fully close up for protection.",2025-10-24 20:56:10.234+00,,1
+0c69ad4e-c835-4ccf-bd3e-16a168787696,4d748fa0-528f-44d1-8438-bcc62a143b06,,classification,order,TESTUDINES,2025-10-24 20:56:18.49+00,,1
+146c9332-9ec0-48ba-b5f5-1f5208528782,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,morphology,morphology,"Elevated growth annuli on each scute give a rugged, saddle-backed look.",2025-12-12 04:51:03.15+00,,20
+6dcfb176-5773-43c5-8ec7-c7f3709a11ca,4d748fa0-528f-44d1-8438-bcc62a143b06,,behavior_diet,preys_on,"crayfish, small animals, carrion",2025-10-24 20:59:08.94+00,,1
+d7b5bd33-06da-4087-82aa-27003658cf2a,4d748fa0-528f-44d1-8438-bcc62a143b06,,behavior_diet,eats_plants,"plant material, seeds",2025-10-24 20:59:25.001+00,,1
+fed82121-aa9e-4e46-a726-ff90a92bd431,4d748fa0-528f-44d1-8438-bcc62a143b06,,classification,scientific_name,Emydoidea blandingii,2025-10-24 20:59:37.233+00,,1
+a433c430-edfd-4847-97c1-6bddb4e5b64d,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,preys_on,small fish; aquatic insects; worms; crustaceans,2025-11-14 02:09:30.156+00,,10
+37d9fa81-1331-4201-847a-9e963425d8c8,4d748fa0-528f-44d1-8438-bcc62a143b06,,conservation,threats,"habitat loss, road mortality, nest predation, illegal collection for the pet trade",2025-10-24 20:56:33.783+00,,1
+7800f4de-0457-4bf6-b16d-0e130c0bcac4,4d748fa0-528f-44d1-8438-bcc62a143b06,,classification,family,EMYDIDAE,2025-10-24 20:58:42.105+00,,1
+5326d5f2-b2e9-4d5e-b62c-1c9af89b2f64,4d748fa0-528f-44d1-8438-bcc62a143b06,,morphology,morphology,"Has a dark, smooth upper shell often covered in yellow spots or flecks, with a distinctive bright yellow chin and throat.",2025-10-24 20:58:53.646+00,,1
+1a9fa36f-9bc9-4a6b-a522-4d7db7d98797,4d748fa0-528f-44d1-8438-bcc62a143b06,,classification,genus,Emydoidea,2025-10-24 20:59:37.235+00,,1
+c17ee59c-845b-4ea2-a14d-3695b7c0789e,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,key_facts,key_facts,Pancake flat body lets it vanish in leaf litter like a muddy doormat,2025-11-14 02:07:38.365+00,,10
+64ffebca-7712-4af9-ba00-e5467b490aad,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,morphology,primary_color,mottled brown grey,2025-11-14 02:07:41.375+00,,10
+e17e6831-7052-4bf5-89a9-ebcaf0ae9171,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,morphology,morphology,speckled warty skin with rough ridges,2025-11-14 02:07:41.467+00,,10
+b22616cd-61dd-4962-b9a5-b6ce75b23661,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,diet_type,carnivore,2025-11-14 02:07:42.646+00,,10
+2f364f3b-474f-4703-9977-ae6717c29383,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,life_cycle,life_cycle,Eggs sink into the female skin forming honeycomb pockets where they grow safely,2025-11-14 02:07:48.553+00,,10
+5e5875c8-5b09-4c1a-a47c-dfb95f0b1354,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,behavior_diet,"An ambush predator that buries itself in sand or mud at the bottom of a river, with only its head exposed.",2025-11-14 18:29:04.209+00,,2
+bdae64e8-ea19-410e-8334-482ae8deede7,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,geographic_habitat,geographic_habitat,"Has a very large native range covering most of the United States east of the Rocky Mountains, southern Canada, and northern Mexico.",2025-11-14 18:29:18.611+00,,2
+c9a35b5b-c273-44a5-81af-4e01965186fb,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,conservation,conservation,Least Concern,2025-11-30 05:24:10.669+00,,2
+d3a14f3c-4780-4322-a4ac-f24d9b156507,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,behavior_diet,"Climbs waterfalls using tail, claws and beak; can scale vertical mossy rock.",2025-12-05 00:58:57.245+00,,4
+283e96d1-0255-4a39-b0e1-93dba052617e,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,conservation,conservation,"Intense demand for the pet, food and traditional-medicine trades has decimated populations across its range.",2025-12-05 00:59:07.786+00,,4
+22b95d04-81e1-41d3-8c30-84a4876e04cd,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,classification,classification,Sole living member of the family Platysternidae,2025-12-05 00:59:09.322+00,,4
+5345235f-0d01-4447-acf6-494700e8f13e,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,behavior_diet,diet_type,Carnivore (opportunistic),2025-12-05 00:59:20.2+00,,4
+fcffa94a-42f5-4316-8653-76f6fd896104,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,conservation,conservation,"Wild numbers shrinking as overgrazing, desertification and trade harvest erode remaining strongholds.",2025-12-07 19:02:08.138+00,,20
+c57cea41-7154-4e5d-9e88-ad97c4626b7d,4d748fa0-528f-44d1-8438-bcc62a143b06,,behavior_diet,behavior_diet,Is highly mobile and travels extensively between different wetlands.,2025-10-24 20:56:19.133+00,,1
+9c563696-5dfc-4d6c-bb28-9e6093364b9b,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,morphology,secondary_color,pale belly,2025-11-14 02:07:47.989+00,,10
+1e5f8be7-af02-45ac-a0e4-41313956a2c2,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,classification,classification,Largest member of the tongueless toad family,2025-11-14 02:09:30.766+00,,10
+324e4d1a-76b6-4a66-abe8-5f88a64caa34,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,geographic_habitat,geographic_habitat,Sea level to four hundred metres across the Amazon and Orinoco drainage and coastal Guiana shield,2025-11-14 02:09:40.412+00,,10
+18470614-057b-495d-9a49-cf4929bdfc84,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,morphology,morphology,Serrated posterior rim and pale bridge mottling,2025-12-05 00:59:11.303+00,,4
+cd5cce9b-a621-41b4-8d74-8019b364d262,1cb0565c-9e08-4db2-b16d-ba5aca23d9d2,,life_cycle,life_cycle,Nest is a shallow cavity in streamside sand or moss bank during early summer.,2025-12-05 00:59:20.194+00,,4

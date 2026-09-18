@@ -1,0 +1,219 @@
+id,species_id,category,fact_text,sort_order
+1,1,key_fact,"Its bottom shell (plastron) is hinged, allowing it to fully close up for protection.",1
+2,1,key_fact,"It has one of the longest generation times of any turtle, taking 36-47 years for one generation to replace the next.",2
+3,1,key_fact,"Despite being a turtle, it is highly mobile on land and will travel long distances between wetlands.",3
+4,1,behavior,Is highly mobile and travels extensively between different wetlands.,1
+5,1,behavior,"Leaves strong scent trails, making it vulnerable to predators like raccoons and foxes.",2
+6,1,life_description,"Has an extremely long generation time, calculated at 36-47 years.",1
+7,1,life_description,"Females reach maturity very late, between 14 and 20 years of age.",2
+8,1,diet_prey,"crayfish, small animals, carrion",1
+9,1,diet_flora,"plant material, seeds",1
+10,1,threat,"habitat loss, road mortality, nest predation, illegal collection for the pet trade",1
+11,2,key_fact,"Its name comes from the small, cone-like spines found along the front edge of its upper shell.",1
+12,2,key_fact,"Has a very long, tubular snout with nostrils at the tip, which it uses like a snorkel to breathe while buried underwater.",2
+13,2,key_fact,"Unlike most turtles, its shell is not made of hard scutes but is a soft, flexible, leathery disk.",3
+14,2,behavior,"An ambush predator that buries itself in sand or mud at the bottom of a river, with only its head exposed.",1
+15,2,behavior,Forages by actively thrusting its long snout into vegetation or under rocks.,2
+16,2,life_description,Females can produce two clutches of eggs per year in warmer climates.,1
+17,2,life_description,Has a generation time of about 25 years.,2
+18,2,diet_prey,"crayfish, fish, insects, snails, carrion",1
+19,2,diet_flora,"algae, leaves, acorns, pecans",1
+20,2,threat,"nest predation (raccoons), human harvest (for food/pets), boat strikes, habitat modification from dams",1
+21,3,key_fact,Discovered by Charles Darwin during voyage of the Beagle,1
+22,3,key_fact,Only frog whose male carries young in throat until fully formed,2
+23,3,key_fact,Perfect leaf disguise lets it vanish among forest litter,3
+24,3,behavior,Male shelters developing tadpoles inside vocal sac; releases live froglets from mouth,1
+25,3,behavior,Diurnal sit and wait hunter that chirps a soft peep call and basks in sun patches,2
+26,3,life_description,Female deposits eggs on moist ground close to stream; male guards until tadpoles hatch,1
+27,3,life_description,Inside vocal sac tadpoles complete metamorphosis in six weeks then leap out as mini frogs,2
+28,3,diet_prey,Ants; springtails; small beetles; spiders,1
+29,3,diet_flora,None,1
+30,3,threat,Deforestation; plantation forestry; chytrid fungus; drought; wildfire,1
+31,4,key_fact,"Only modern turtle whose skull is too large to retract, protected instead by horn-like scales.",1
+32,4,key_fact,"Its tail works like an extra limb, bracing the body as it climbs slick granite waterfalls.",2
+33,4,key_fact,"Represents an entire family on its own, no close living relatives share its quirky build.",3
+34,4,behavior,"Climbs waterfalls using tail, claws and beak; can scale vertical mossy rock.",1
+35,4,behavior,Aggressive when handled; delivers powerful bite and emits a raspy hiss.,2
+36,4,life_description,Nest is a shallow cavity in streamside sand or moss bank during early summer.,1
+37,4,life_description,Hatchlings boast proportionally giant heads and tails nearly the length of the shell.,2
+38,4,diet_prey,"Snails, crabs, freshwater shrimp, small fish, carrion",1
+39,4,diet_flora,Occasional fruit or fallen figs,1
+40,4,threat,"Over-collection, hydropower dams, sedimentation, deforestation, by-catch in eel traps.",1
+41,5,key_fact,Largest of Asia’s ‘parachute’ frogs – its splayed feet can eclipse a golf ball.,1
+42,5,key_fact,"Black velvet between the toes turns into living wings, letting it surf the humid night air.",2
+43,5,key_fact,"First described by Alfred Russel Wallace’s expedition, hence a name that literally ‘flies’ in evolutionary history.",3
+44,5,behavior,"Launches from branches and glides up to 15 m, steering with outstretched webbed fingers and toes.",1
+45,5,behavior,"At dusk, pairs build frothy, golf-ball-size nests on leaves that hang above rain-filled pools.",2
+46,5,life_description,"Female whips mucous into foam with her hind legs, then embeds fertilised eggs inside the airy cradle.",1
+47,5,life_description,"Tadpoles wriggle free when rain softens the nest, plopping straight into the pool below to finish growing.",2
+48,5,diet_prey,Moths; crickets; beetles; arboreal spiders,1
+49,5,diet_flora,None,1
+50,5,threat,Deforestation; peat-swamp drainage; local pet collection; pesticide drift,1
+51,6,key_fact,Iconic frog with traffic light colours that advertises the rainforest in posters worldwide,1
+52,6,key_fact,Huge red eyes inspired the common name and help blind night predators with sudden flash,2
+53,6,key_fact,Eggs sense snake vibrations and can hatch early turning aerial ambush into splash escape,3
+54,6,behavior,Flashes red eyes and blue flanks to startle predators then snaps them shut to vanish,1
+55,6,behavior,Egg clutches jiggle when attacked so tadpoles drop into water early to escape,2
+56,6,life_description,Couples in amplexus stick gelatinous eggs to leaf undersides above still water,1
+57,6,life_description,Tadpoles develop into tiny tree climbers in about ten weeks,2
+58,6,diet_prey,moths; crickets; flies; small grasshoppers,1
+59,6,diet_flora,none,1
+60,6,threat,deforestation; agrochemical runoff; chytrid fungus; pet trade,1
+61,7,key_fact,Nicknamed Wolverine frog because it pops claws in self defence,1
+62,7,key_fact,Hairy flanks are not fur but skin threads packed with blood vessels,2
+63,7,key_fact,Frog is roasted and eaten in Cameroon where hunters spear it in rivers,3
+64,7,behavior,Breaks its own toe bones to project sharp claws when grabbed,1
+65,7,behavior,Males grow ‘hair’ that boosts skin breathing during underwater egg guarding,2
+66,7,life_description,Eggs anchored under submerged stones in swift water where males stay to defend,1
+67,7,life_description,Tadpoles cling to rocks with suction mouthparts until metamorphosis,2
+68,7,diet_prey,beetles; crickets; millipedes; small spiders,1
+69,7,diet_flora,none,1
+70,7,threat,habitat loss; stream siltation; bushmeat harvest; water pollution,1
+71,8,key_fact,Only North American frog that mates with internal fertilisation thanks to a tail that is not really a tail,1
+72,8,key_fact,Tadpoles cling to rocks like living limpets with a suction cup mouth,2
+73,8,key_fact,Adults are completely mute and cannot croak,3
+74,8,behavior,Voiceless frog that uses body signals instead of croaks beside roaring streams,1
+75,8,behavior,Internal fertilisation underwater with the male tail organ,2
+76,8,life_description,Female fastens egg strings beneath large stream rocks where cold current supplies oxygen,1
+77,8,life_description,Tadpoles cling with suctorial mouths for up to four years before hopping onto land during wet nights,2
+78,8,diet_prey,aquatic insect larvae; small snails; spiders,1
+79,8,diet_flora,none,1
+80,8,threat,logging; road building; sedimentation; water warming; small dams,1
+81,9,key_fact,Its skin dyes parrot feathers in legends giving rise to the common name,1
+82,9,key_fact,One of the few dart frogs whose male rarely uses vocal calls,2
+83,9,key_fact,Blue ‘azureus’ morph lives on tiny forest islands in a vast savanna sea,3
+84,9,behavior,Males guard eggs then ferry tadpoles piggyback to rain pools,1
+85,9,behavior,Rarely calls; relies on vivid warning colours to deter predators,2
+86,9,life_description,Eggs deposited under fallen leaves or inside buttress roots in moist micro-cavities,1
+87,9,life_description,Tadpoles grow in phytotelmata; siblings may cannibalise weaker larvae for protein,2
+88,9,diet_prey,ants; termites; fruit flies; tiny beetles; mites,1
+89,9,diet_flora,none,1
+90,9,threat,deforestation; mining run-off; selective collection of colourful morphs; climate warming,1
+91,10,key_fact,Pancake flat body lets it vanish in leaf litter like a muddy doormat,1
+92,10,key_fact,Gives birth to live froglets that erupt from pockets in mums back,2
+93,10,key_fact,Star shaped finger tips detect tiny ripples in pitch dark water,3
+94,10,behavior,Creates instant vacuum to suck prey into tongueless mouth,1
+95,10,behavior,Males perform underwater somersaults while pressing eggs onto female back,2
+96,10,life_description,Eggs sink into the female skin forming honeycomb pockets where they grow safely,1
+97,10,life_description,Fully formed froglets burst through mothers back skin after around three months,2
+98,10,diet_prey,small fish; aquatic insects; worms; crustaceans,1
+99,10,diet_flora,none,1
+100,10,threat,water pollution; dam construction; wetland drainage; aquarium trade,1
+101,11,key_fact,Largest frog on Earth and able to leap three metres in a single bound,1
+102,11,key_fact,Stone-moving parents males drag rocks half their weight to craft safe pools,2
+103,11,key_fact,Even with a giant adult the tadpole is no bigger than that of a common frog,3
+104,11,behavior,Males shift heavy stones to build nursery pools for eggs,1
+105,11,behavior,Lacks vocal sac and communicates with short whistles and body movements,2
+106,11,life_description,Tadpoles feed on one river algae species and stay in rapids for nearly three months,1
+107,11,life_description,Young frogs linger at shallow margins before growing into river giants,2
+108,11,diet_prey,crabs; insects; fish; other frogs; small snakes,1
+109,11,diet_flora,none,1
+110,11,threat,over harvest; habitat loss; siltation; dam construction; pet trade,1
+111,12,key_fact,"Juveniles wear a jagged crown of shell spines, nature scaltrops in the leaf litter",1
+112,12,key_fact,"If cornered, this turtle squeals like a rubber duck, startling predators and keepers alike",2
+113,12,key_fact,"Its Latin name means thorny, yet traders dub it the Dracula Turtle for its fiery plastron",3
+114,12,behavior,Diurnal; shifts to crepuscular activity in hot weather; dives into pools when alarmed,1
+115,12,behavior,Can emit a high-pitched squeala rarity among turtleswhen seized,2
+116,12,life_description,Females clear leaf litter and bury parchment-shelled eggs in shallow forest nests.,1
+117,12,life_description,Hatchlings sport bright orange marginal spines that dull with age.,2
+118,12,diet_prey,"Snails, earthworms, carrion",1
+119,12,diet_flora,"Fallen figs, palm fruit, mushrooms, young leaves",1
+120,12,threat,"Unsustainable trade, logging, oil-palm expansion, forest fires, road mortality",1
+121,13,key_fact,Bright red skin makes it look like a bouncing tomato,1
+122,13,key_fact,Sticky skin secretions can gum up the mouth of a snake,2
+123,13,key_fact,Lives only in the same island that is home to lemurs and chameleons,3
+124,13,behavior,Inflates like a balloon and exudes sticky toxin when grabbed,1
+125,13,behavior,Males give a low honk call from the water edge on warm rainy nights,2
+126,13,life_description,Eggs float on the water surface and hatch in about thirty six hours,1
+127,13,life_description,Tadpoles grow fast and change into tiny red froglets in roughly six weeks,2
+128,13,diet_prey,Ants; termites; small beetles; worms,1
+129,13,diet_flora,None,1
+130,13,threat,Deforestation; polluted runoff; over collection for pets; predatory fish and mosquitoes,1
+131,14,key_fact,Internet famous squeaky frog that looks like a puffball with eyes,1
+132,14,key_fact,Relies on nightly sea fog for drinking water in the desert,2
+133,14,key_fact,Can bury itself in seconds using shovel like hind feet,3
+134,14,behavior,Inflates body and lets out a loud squeak when disturbed,1
+135,14,behavior,Spends daylight hidden in self dug sand burrow,2
+136,14,life_description,Eggs are laid in a humid chamber and develop directly into tiny froglets,1
+137,14,life_description,Advertisement call sounds like a rubber toy and travels far on still foggy nights,2
+138,14,diet_prey,moths; termites; woodlice; small beetles,1
+139,14,diet_flora,none,1
+140,14,threat,habitat loss; diamond mining; off road vehicles; climate change,1
+141,15,key_fact,"Only tortoise whose shell flexes, lighter than balsa, riddled with gaps.",1
+142,15,key_fact,"Instead of hiding inside, it *dashes* and wedges tightpredators cant pry it free.",2
+143,15,key_fact,Nicknamed the crepe or pizza-box tortoise; looks cooked flat yet climbs vertical rock.,3
+144,15,behavior,Runs & climbs with surprising speed; escapes by chimney-climbing into crevices.,1
+145,15,behavior,Groups of up to 10 share the same crack; rare sociality for tortoises.,2
+146,15,life_description,Female digs shallow nest in sandy soil or deposits egg inside crevice mid-year.,1
+147,15,life_description,Hatchling starts domed; shell flattens as bone fontanelles remain unossified.,2
+148,15,diet_flora,"Dry grasses, succulents, leaves; seldom drinks free water",1
+149,15,threat,"Illegal trade, bush-clearing, charcoal burning, goat over-grazing, fires.",1
+150,16,key_fact,Looks like a purple balloon with a pig nose not your classic frog shape,1
+151,16,key_fact,Emerges only during the first heavy rains then vanishes underground for the rest of the year,2
+152,16,key_fact,Shares its closest relatives with tiny Seychelles frogs a living echo of ancient Gondwana,3
+153,16,behavior,Spends three hundred sixty days a year buried and silent emerging for just a couple of monsoon nights,1
+154,16,behavior,Males call with a muffled honk while hidden under leaf litter near torrents,2
+155,16,life_description,Pairs lay eggs in shaded rock pools of fast streams; embryos hatch in two days,1
+156,16,life_description,Tadpoles cling to vertical rocks with suction mouths and metamorphose in about one hundred days,2
+157,16,diet_prey,termites; ants; tiny soil arthropods,1
+158,16,diet_flora,none,1
+159,16,threat,deforestation; soil compaction; dam projects; climate change; local harvest of tadpoles,1
+160,17,key_fact,"Only freshwater turtle with true flippers, convergent with marine turtles.",1
+161,17,key_fact,"Eggs exhibit facultative diapause, remaining viable for over 12 months if kept dry.",2
+162,17,key_fact,Locally called Fly River Turtle; culturally significant and historically traded thousands of kilometres by Indigenous communities.,3
+163,17,behavior,Highly aquatic; surfaces briefly to breathe then cruises mid-water using marine-style flippers.,1
+164,17,behavior,Females migrate en masse to sandy bars to lay eggs that remain in suspended development until first wet-season flood.,2
+165,17,life_description,"Embryos can delay hatching for months until inundated by seasonal rains, enabling synchronous emergence.",1
+166,17,life_description,During extreme dry spells juveniles and adults may aestivate in damp riverbed mud.,2
+167,17,diet_prey,"Aquatic insects, freshwater prawns, snails, carrion",1
+168,17,diet_flora,"Figs, fallen fruit, riverine vegetation",1
+169,17,threat,"Unregulated international pet trade, over-harvest for food, sand-bar mining, river dams, increased nest predation by feral pigs and dogs.",1
+170,18,key_fact,Possibly the worlds rarest vertebrate fewer than five individuals remain.,1
+171,18,key_fact,Largest living freshwater turtle; record weight 169 kg.,2
+172,18,key_fact,eDNA surveys & artificial insemination provide last hope for recovery.,3
+173,18,behavior,"Secretive; surfaces briefly to breathe, spends most time buried in mud.",1
+174,18,behavior,"Capable of bimodal respiration, absorbing oxygen through pharyngeal lining.",2
+175,18,life_description,"Nests on sandy banks at night; incubation ~90 days, temperature-dependent sex determination.",1
+176,18,life_description,Captive pair produced > 100 eggs between 20082015 but none hatched.,2
+177,18,diet_prey,"Fish, crabs, snails, frogs",1
+178,18,diet_flora,"Aquatic vegetation (e.g., water hyacinth)",1
+179,18,threat,"Historical over-harvest, wetland loss, dam construction, pollution, bycatch; now extreme Allee effect.",1
+180,19,key_fact,Island-specific shell shapes inspired Charles Darwins ideas on adaptive radiation in 1835,1
+181,19,key_fact,Genomic evidence shows the lineage rafted >1 000 km from South America 23 Myr ago,2
+182,19,key_fact,"Tortoises store water in pericardial sacs, enabling months-long fasting voyages",3
+183,19,behavior,Diurnal; may rest up to 16 hours a day under vegetation or in mud wallows,1
+184,19,behavior,Seasonal altitudinal migrations track plant growth and moisture,2
+185,19,life_description,Females dig ~30 cm-deep flask-shaped nests in sunny sandy soils.,1
+186,19,life_description,Hatchlings remain in warmer coastal zones 510 yrs before moving upslope.,2
+187,19,diet_prey,N/A,1
+188,19,diet_flora,"Grasses, forbs, cactus pads, fallen fruit; can survive > 12 months without fresh food or water by slowing metabolism",1
+189,19,threat,"Historic over-harvest, egg predation by rats, browsing by feral goats, emerging drought risk from climate change",1
+190,20,key_fact,Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.,1
+191,20,key_fact,"A master excavator that engineers cool, humid burrow networks sheltering lizards, rodents and even jackals.",2
+192,20,key_fact,Named for the prominent thigh spurs it brandishes like medieval spikes on its hind legs.,3
+193,20,behavior,"Crepuscular; emerges at dawn and dusk to forage, retreating underground during midday extremes.",1
+194,20,behavior,"Males ram and clash loudly in dominance bouts, sometimes flipping rivals onto their backs.",2
+195,20,life_description,Female excavates a flask-shaped chamber at the burrow entrance and guards the nest for several days.,1
+196,20,life_description,Hatchlings linger in the natal tunnel until late rains soften surrounding soils for surface emergence.,2
+197,20,diet_flora,"Coarse grasses, forbs, succulents, fallen dry-season blooms; gains moisture from drought-resistant plants.",1
+198,20,threat,"Livestock competition, bush-meat hunting, pet export, expanding agriculture, climate-driven drought.",1
+199,21,key_fact,"The oldest recorded individual, Tu'i Malila, lived to be an estimated 188 years old.",1
+200,21,key_fact,"Unlike other star tortoises, its carapace scutes are smooth and not raised into pyramidal shapes.",2
+201,21,key_fact,Grazing makes up 80-90% of its diet.,3
+202,21,behavior,"Diurnal (active during the day). Known to graze regularly in the same area, keeping vegetation trimmed.",1
+203,21,behavior,"Males perform noisy mating rituals, bobbing heads and sometimes lifting the female with their shell.",2
+204,21,life_description,"Female digs a 15-20 cm deep hole to lay eggs, then departs. Incubation is very long, lasting 5 to 8 months.",1
+205,21,life_description,Hatchlings are 3.2-4.0 cm and are white or off-white. They attain their high-domed carapace soon after hatching.,2
+206,21,diet_prey,N/A,1
+207,21,diet_flora,"Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new growth over mature growth.",1
+208,21,threat,"Habitat loss, poaching for food, and over-exploitation in the international pet trade. Numbers are declining rapidly.",1
+209,22,key_fact,"The last known individual was named Lonesome George, who became a global icon for conservation.",1
+210,22,key_fact,"First-generation hybrids have been found on Wolf Volcano, offering a chance to resurrect the Pinta lineage.",2
+211,22,key_fact,"Its extinction diminished the Pinta Island ecosystem, as it was a top herbivore and ecosystem engineer.",3
+212,22,behavior,Diurnal (active during the day). Rested for about 16 hours a day.,1
+213,22,behavior,"A critical ecosystem engineer, shaping the island's vegetation through herbivory and seed dispersal.",2
+214,22,life_description,Females migrated to nesting zones to lay eggs. All modern breeding attempts with Lonesome George and other subspecies failed.,1
+215,22,life_description,"The last known individual, Lonesome George, died in 2012. His body is preserved as a taxidermy specimen, serving as a powerful symbol.",2
+216,22,diet_prey,N/A,1
+217,22,diet_flora,"Fed primarily on greens, grasses, native fruit, and low-hanging cactus pads.",1
+218,22,threat,"Over-harvesting by whalers in the 19th century and severe habitat destruction caused by invasive, introduced goats.",1

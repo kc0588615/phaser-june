@@ -1,0 +1,30 @@
+                                                              Table "public.evidence_cards"
+      Column       |           Type           | Collation | Nullable |           Default            | Storage  | Compression | Stats target | Description 
+-------------------+--------------------------+-----------+----------+------------------------------+----------+-------------+--------------+-------------
+ id                | bigint                   |           | not null | generated always as identity | plain    |             |              | 
+ species_id        | integer                  |           | not null |                              | plain    |             |              | 
+ method            | text                     |           | not null |                              | extended |             |              | 
+ observation_text  | text                     |           | not null |                              | extended |             |              | 
+ inference_text    | text                     |           | not null |                              | extended |             |              | 
+ trait_category    | text                     |           | not null |                              | extended |             |              | 
+ primary_predicate | text                     |           | not null |                              | extended |             |              | 
+ compare_tags      | text[]                   |           | not null |                              | extended |             |              | 
+ is_signature      | boolean                  |           | not null | false                        | plain    |             |              | 
+ specificity       | smallint                 |           | not null | 2                            | plain    |             |              | 
+ source            | text                     |           |          |                              | extended |             |              | 
+ review_status     | text                     |           |          |                              | extended |             |              | 
+ created_at        | timestamp with time zone |           | not null | now()                        | plain    |             |              | 
+Indexes:
+    "evidence_cards_pkey" PRIMARY KEY, btree (id)
+    "ix_evidence_cards_compare" gin (compare_tags)
+    "ix_evidence_cards_species" btree (species_id)
+    "ix_evidence_cards_species_method" btree (species_id, method)
+Check constraints:
+    "ck_evidence_cards_compare_tags_atomic" CHECK (cardinality(compare_tags) = 1)
+    "ck_evidence_cards_method" CHECK (method = ANY (ARRAY['track'::text, 'observe'::text, 'listen'::text, 'survey'::text, 'analyze'::text]))
+    "ck_evidence_cards_specificity" CHECK (specificity >= 1 AND specificity <= 3)
+    "ck_evidence_cards_trait_category" CHECK (trait_category = ANY (ARRAY['habitat'::text, 'morphology'::text, 'diet'::text, 'behavior'::text, 'reproduction'::text, 'taxonomy'::text, 'key_fact'::text, 'geography'::text, 'conservation'::text]))
+Foreign-key constraints:
+    "fk_evidence_cards_species" FOREIGN KEY (species_id) REFERENCES species(id) ON DELETE CASCADE
+Access method: heap
+
