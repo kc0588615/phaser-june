@@ -2,11 +2,15 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import postgres from 'postgres';
-import { EVIDENCE_PROTOTYPE_IUCN_IDS, parseEvidenceProfileDossier } from '../src/lib/evidenceSeedValidation';
+import { parseEvidenceProfileDossier } from '../src/lib/evidenceSeedValidation';
 import { parseCascadeHintSeed, parseEvidenceFamilySeed, validateEvidenceFamilyCorpus, type CascadeHintSeed, type EvidenceFamilySeed } from '../src/lib/evidenceFamilySeedValidation';
 
 loadEnv({ path: path.join(process.cwd(), '.env.local') });
 loadEnv();
+
+const poolSlug = process.argv.find(arg => arg.startsWith('--pool='))?.slice(7) ?? 'prototype-six';
+const poolDirectory = path.join(process.cwd(), 'db/seeds/pools', poolSlug);
+let pool: { slug: string; species_iucn_ids: number[]; evidence_directory: string };
 
 async function loadFiles<T>(directory: string, parse: (value: unknown, file: string) => T): Promise<T[]> {
   const files = (await readdir(directory)).filter(file => file.endsWith('.json')).sort();
@@ -15,11 +19,13 @@ async function loadFiles<T>(directory: string, parse: (value: unknown, file: str
 
 async function loadCorpus() {
   const root = process.cwd();
-  const seedRoot = path.join(root, 'db/seeds/evidence-family');
+  pool = JSON.parse(await readFile(path.join(poolDirectory, 'pool.json'), 'utf8'));
+  if (pool.slug !== poolSlug || pool.species_iucn_ids.length !== 6 || new Set(pool.species_iucn_ids).size !== 6) throw new Error('Pool must have six distinct members.');
+  const seedRoot = path.resolve(poolDirectory, pool.evidence_directory);
   const files = (await readdir(seedRoot)).filter(file => file.endsWith('.json') && file !== 'cascade_hints.json').sort();
   const seeds = await Promise.all(files.map(async file => parseEvidenceFamilySeed(JSON.parse(await readFile(path.join(seedRoot, file), 'utf8')) as unknown, file)));
   const cascadeHints = parseCascadeHintSeed(JSON.parse(await readFile(path.join(seedRoot, 'cascade_hints.json'), 'utf8')) as unknown);
-  const selected = new Set<number>(EVIDENCE_PROTOTYPE_IUCN_IDS);
+  const selected = new Set<number>(pool.species_iucn_ids);
   const dossiers = (await loadFiles(path.join(root, 'db/seeds/deduction'), parseEvidenceProfileDossier))
     .filter(dossier => selected.has(dossier.iucnId));
   return { seeds, dossiers, cascadeHints };
@@ -62,9 +68,13 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
         to_regclass('public.cascade_hints')::text AS cascades
     `;
     if (!tables[0]?.cards || !tables[0]?.hints || !tables[0]?.cascades) throw new Error('Plan 018 evidence tables are absent; apply migration 026 first.');
+    const [poolRow] = await sql<{ id: number }[]>`SELECT id FROM case_pools WHERE slug = ${poolSlug}`;
+    if (!poolRow) throw new Error(`Missing pool ${poolSlug}.`);
+    const poolId = poolRow.id;
     const speciesRows = await sql<{ id: number; iucn_id: number; scientific_name: string }[]>`
-      SELECT id, iucn_id::integer AS iucn_id, scientific_name FROM species
-      WHERE iucn_id = ANY(${sql.array([...EVIDENCE_PROTOTYPE_IUCN_IDS])}::bigint[])
+      SELECT s.id, s.iucn_id::integer AS iucn_id, s.scientific_name FROM species s
+      JOIN case_pool_members m ON m.species_id = s.id
+      WHERE m.pool_id = ${poolId} AND s.iucn_id = ANY(${sql.array([...pool.species_iucn_ids])}::bigint[])
     `;
     const speciesByIucn = new Map(speciesRows.map(row => [row.iucn_id, row]));
     for (const seed of seeds) {
@@ -77,11 +87,11 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
         const speciesId = speciesByIucn.get(seed.iucn_id)!.id;
         const existing = await tx<ExistingRow[]>`
           SELECT id::integer, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status
-          FROM evidence_family_cards WHERE species_id = ${speciesId} ORDER BY family
+          FROM evidence_family_cards WHERE pool_id = ${poolId} AND species_id = ${speciesId} ORDER BY family
         `;
         const existingHints = await tx<ExistingHintRow[]>`
           SELECT family, sequence_index::integer, hint_text, weak_tag
-          FROM evidence_family_hints WHERE species_id = ${speciesId} ORDER BY family, sequence_index
+          FROM evidence_family_hints WHERE pool_id = ${poolId} AND species_id = ${speciesId} ORDER BY family, sequence_index
         `;
         let unchanged = 0;
         let upserted = 0;
@@ -93,10 +103,10 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
             upserted += 1;
             if (!dryRun) await tx`
             INSERT INTO evidence_family_cards
-              (species_id, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status)
-            VALUES (${speciesId}, ${card.family}, ${card.observation_text}, ${card.inference_text}, ${card.trait_category}, ${card.compare_tag},
+              (pool_id, species_id, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status)
+            VALUES (${poolId}, ${speciesId}, ${card.family}, ${card.observation_text}, ${card.inference_text}, ${card.trait_category}, ${card.compare_tag},
                     ${card.trait_phrase}, ${card.bonus_fact_text}, ${card.source}, ${card.review_status})
-            ON CONFLICT (species_id, family) DO UPDATE SET
+            ON CONFLICT (pool_id, species_id, family) DO UPDATE SET
               observation_text = EXCLUDED.observation_text, inference_text = EXCLUDED.inference_text,
               trait_category = EXCLUDED.trait_category,
               compare_tag = EXCLUDED.compare_tag, bonus_fact_text = EXCLUDED.bonus_fact_text,
@@ -110,9 +120,9 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
               hintUpserted += 1;
               if (!dryRun) await tx`
               INSERT INTO evidence_family_hints
-                (species_id, family, sequence_index, hint_text, weak_tag, review_status)
-              VALUES (${speciesId}, ${card.family}, ${sequenceIndex}, ${hintText}, ${card.compare_tag}, 'reviewed')
-              ON CONFLICT (species_id, family, sequence_index) DO UPDATE SET
+                (pool_id, species_id, family, sequence_index, hint_text, weak_tag, review_status)
+              VALUES (${poolId}, ${speciesId}, ${card.family}, ${sequenceIndex}, ${hintText}, ${card.compare_tag}, 'reviewed')
+              ON CONFLICT (pool_id, species_id, family, sequence_index) DO UPDATE SET
                 hint_text = EXCLUDED.hint_text, weak_tag = EXCLUDED.weak_tag, review_status = EXCLUDED.review_status
               `;
             }
@@ -124,7 +134,7 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
           for (const row of staleCards) await tx`DELETE FROM evidence_family_cards WHERE id = ${row.id}`;
           for (const row of staleHints) await tx`
             DELETE FROM evidence_family_hints
-            WHERE species_id = ${speciesId} AND family = ${row.family} AND sequence_index = ${row.sequence_index}
+            WHERE pool_id = ${poolId} AND species_id = ${speciesId} AND family = ${row.family} AND sequence_index = ${row.sequence_index}
           `;
         }
         console.log(`${seed.scientific_name}: ${unchanged} cards unchanged, ${upserted} card insert/update, ${staleCards.length} stale cards; ${hintUpserted} hint insert/update, ${staleHints.length} stale hints.`);
@@ -160,8 +170,9 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
 class DryRunRollback extends Error {}
 
 async function main(): Promise<void> {
-  const [mode] = process.argv.slice(2);
-  if (!['--check', '--dry-run', '--write'].includes(mode) || process.argv.slice(2).length !== 1) {
+  const args = process.argv.slice(2).filter(arg => !arg.startsWith('--pool='));
+  const [mode] = args;
+  if (!['--check', '--dry-run', '--write'].includes(mode) || args.length !== 1) {
     throw new Error('Choose exactly one mode: --check, --dry-run, or --write.');
   }
   const { seeds, dossiers, cascadeHints } = await loadCorpus();

@@ -1,0 +1,14 @@
+{
+  "slug": "prototype-six",
+  "title": "Prototype Six",
+  "review_status": "reviewed",
+  "species_iucn_ids": [
+    512,
+    5748,
+    7140,
+    12763,
+    15955,
+    18732
+  ],
+  "evidence_directory": "../../evidence-family"
+}

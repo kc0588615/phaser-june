@@ -5,15 +5,6 @@ import {
   type DeductionTagProfile,
 } from '@/lib/deductionTags';
 
-export const EVIDENCE_PROTOTYPE_IUCN_IDS = [
-  512,
-  5_748,
-  7_140,
-  12_763,
-  15_955,
-  18_732,
-] as const;
-
 export interface EvidenceProfileDossier {
   iucnId: number;
   scientificName: string;

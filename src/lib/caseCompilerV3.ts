@@ -1,5 +1,5 @@
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, PROTOTYPE_SPECIES_COUNT, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { CASE_TRAIT_CATEGORIES, POOL_SIZE, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { createSeededStream } from '@/lib/seededRng';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 import {
@@ -77,8 +77,8 @@ export interface CompileCaseV4Input {
 
 export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
   if (!/^[0-9a-f]{64}$/.test(input.caseSeed)) return fail('invalid_case_seed', 'caseSeed must be a lowercase SHA-256 digest.');
-  if (input.prototypeSpeciesIds.length !== PROTOTYPE_SPECIES_COUNT
-    || new Set(input.prototypeSpeciesIds).size !== PROTOTYPE_SPECIES_COUNT
+  if (input.prototypeSpeciesIds.length !== POOL_SIZE
+    || new Set(input.prototypeSpeciesIds).size !== POOL_SIZE
     || input.prototypeSpeciesIds.some(id => !Number.isSafeInteger(id) || id <= 0)) return fail('invalid_species_ids', 'Exactly six unique species ids are required.');
   if (input.boardSeeds.length !== 3 || input.boardSeeds.some(seed => !Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff)) return fail('invalid_board_seeds', 'Exactly three uint32 board seeds are required.');
   const mapView = parseExpeditionMapView(input.mapView);
@@ -89,7 +89,7 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
   for (const profile of input.speciesPool) {
     if (idSet.has(profile.speciesId)) profileById.set(profile.speciesId, profile);
   }
-  if (profileById.size !== PROTOTYPE_SPECIES_COUNT) return fail('invalid_profiles', 'Every prototype needs one deduction profile.');
+  if (profileById.size !== POOL_SIZE) return fail('invalid_profiles', 'Every prototype needs one deduction profile.');
   const profiles = [...profileById.values()];
   for (const speciesId of ids) {
     const mystery = input.mysteryCasesBySpeciesId.get(speciesId);

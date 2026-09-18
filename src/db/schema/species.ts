@@ -190,10 +190,27 @@ export type DeductionClueCategory =
 
 export type DeductionUnlockMode = 'fragment' | 'score';
 
+export const casePools = pgTable('case_pools', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  reviewStatus: text('review_status').notNull().default('draft'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, table => [
+  check('case_pools_slug_check', sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+  check('case_pools_review_status_check', sql`${table.reviewStatus} IN ('draft', 'reviewed')`),
+]);
+
+export const casePoolMembers = pgTable('case_pool_members', {
+  poolId: bigint('pool_id', { mode: 'number' }).notNull().references(() => casePools.id, { onDelete: 'cascade' }),
+  speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'restrict' }),
+}, table => [primaryKey({ columns: [table.poolId, table.speciesId] })]);
+
 export const evidenceFamilyCards = pgTable(
   'evidence_family_cards',
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    poolId: bigint('pool_id', { mode: 'number' }).notNull().references(() => casePools.id, { onDelete: 'cascade' }),
     speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
     family: text('family').notNull().$type<EvidenceFamily>(),
     observationText: text('observation_text').notNull(),
@@ -207,7 +224,7 @@ export const evidenceFamilyCards = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('uq_evidence_family_cards_species_family').on(table.speciesId, table.family),
+    uniqueIndex('uq_evidence_family_cards_pool_species_family').on(table.poolId, table.speciesId, table.family),
     check(
       'ck_evidence_family_cards_family',
       sql`${table.family} IN ('relatives', 'body', 'behavior', 'habits', 'place')`,
@@ -227,6 +244,7 @@ export const evidenceFamilyHints = pgTable(
   'evidence_family_hints',
   {
     id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    poolId: bigint('pool_id', { mode: 'number' }).notNull().references(() => casePools.id, { onDelete: 'cascade' }),
     speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
     family: text('family').notNull().$type<EvidenceFamily>(),
     sequenceIndex: smallint('sequence_index').notNull(),
@@ -236,7 +254,7 @@ export const evidenceFamilyHints = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('uq_evidence_family_hints_species_family_sequence').on(table.speciesId, table.family, table.sequenceIndex),
+    uniqueIndex('uq_evidence_family_hints_pool_species_family_sequence').on(table.poolId, table.speciesId, table.family, table.sequenceIndex),
     check('ck_evidence_family_hints_family', sql`${table.family} IN ('relatives', 'body', 'behavior', 'habits', 'place')`),
     check('ck_evidence_family_hints_sequence', sql`${table.sequenceIndex} BETWEEN 0 AND 9`),
     check('ck_evidence_family_hints_review_status', sql`${table.reviewStatus} = 'reviewed'`),

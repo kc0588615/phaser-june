@@ -1,5 +1,5 @@
 // Shared case-corpus vocabulary (formerly exported by the v1 case compiler).
-export const PROTOTYPE_SPECIES_COUNT = 6;
+export const POOL_SIZE = 6;
 
 export const CASE_TRAIT_CATEGORIES = [
   'habitat',

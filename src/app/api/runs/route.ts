@@ -1,15 +1,15 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles, speciesTable } from '@/db';
+import { casePools, casePoolMembers, cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles, speciesTable } from '@/db';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { buildAnswerPrior } from '@/lib/answerPrior';
-import { type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { POOL_SIZE, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { compileCaseV4, type CompilerCascadeHint, type CompilerEvidenceFamilyCard, type CompilerEvidenceFamilyHint } from '@/lib/caseCompilerV3';
 import { createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
-import { EVIDENCE_PROTOTYPE_IUCN_IDS } from '@/lib/evidenceSeedValidation';
+import { createSeededStream } from '@/lib/seededRng';
 import { applyWaypointsToRunNodes, MYSTERY_NODE_COUNT, type RunNode } from '@/lib/nodeScoring';
 import { parsePublicCaseSnapshot, projectRunCreateResponse } from '@/lib/runProjection';
 import { resolveRunCreationIdentifiers } from '@/lib/runCaseState';
@@ -80,19 +80,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Expected three valid expedition nodes' }, { status: 400 });
     }
 
-    const speciesRows = await db.select().from(speciesTable).where(inArray(speciesTable.iucnId, [...EVIDENCE_PROTOTYPE_IUCN_IDS]));
-    if (speciesRows.length !== EVIDENCE_PROTOTYPE_IUCN_IDS.length
-      || new Set(speciesRows.map(row => row.iucnId)).size !== EVIDENCE_PROTOTYPE_IUCN_IDS.length) {
-      return NextResponse.json({ error: 'Prototype species corpus is unavailable' }, { status: 503 });
+    const caseSeed = createHmac('sha256', secret).update(runId).digest('hex');
+    const pools = await db.select().from(casePools).where(eq(casePools.reviewStatus, 'reviewed')).orderBy(casePools.id);
+    if (pools.length === 0) return NextResponse.json({ error: 'Reviewed case pool unavailable' }, { status: 503 });
+    const pool = pools[Math.floor(createSeededStream(caseSeed, 'pool-selection')() * pools.length)];
+    const members = await db.select({ species: speciesTable }).from(casePoolMembers)
+      .innerJoin(speciesTable, eq(speciesTable.id, casePoolMembers.speciesId))
+      .where(eq(casePoolMembers.poolId, pool.id)).orderBy(speciesTable.id);
+    const speciesRows = members.map(row => row.species);
+    if (speciesRows.length !== POOL_SIZE || new Set(speciesRows.map(row => row.iucnId)).size !== POOL_SIZE) {
+      return NextResponse.json({ error: 'Case pool must contain six distinct species' }, { status: 503 });
     }
     const speciesIds = speciesRows.map(row => row.id);
     const [profileRows, cardRows, hintRows, cascadeRows] = await Promise.all([
       db.select().from(speciesDeductionProfiles).where(inArray(speciesDeductionProfiles.speciesId, speciesIds)),
       db.select().from(evidenceFamilyCards).where(and(
+        eq(evidenceFamilyCards.poolId, pool.id),
         inArray(evidenceFamilyCards.speciesId, speciesIds),
         eq(evidenceFamilyCards.reviewStatus, 'reviewed'),
       )),
       db.select().from(evidenceFamilyHints).where(and(
+        eq(evidenceFamilyHints.poolId, pool.id),
         inArray(evidenceFamilyHints.speciesId, speciesIds),
         eq(evidenceFamilyHints.reviewStatus, 'reviewed'),
       )),
@@ -100,7 +108,6 @@ export async function POST(request: NextRequest) {
     ]);
     const profiles = profileRows as CompilerSpeciesProfile[];
 
-    const caseSeed = createHmac('sha256', secret).update(runId).digest('hex');
     const gisPrior = buildAnswerPrior(speciesRows.map(row => ({ speciesId: row.id, ...row })), getWaypointAnchors(metadataInput.expeditionSnapshot));
     const compiled = compileCaseV4({
       caseSeed,
