@@ -60,13 +60,13 @@ npm run start    # http://localhost:3000
 - Expedition run loop: `src/types/expedition.ts` (RunState), `src/contexts/ExpeditionContext.tsx` (phase state + persistence), `src/lib/nodeScoring.ts` (GIS node generation), `src/MainAppLayout.tsx` (layout). A v3 run plays three six-move evidence-family boards, chooses one family after each board, then guesses. Components: `ExpeditionBriefing`, `ExpeditionMapHud`, `EvidenceFamilyRail`, `CandidateRoster`, `FieldNotebook`, `ExpeditionRouteRecap`. Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes`.
 
 ## 3) Recommended Reading Path
-1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../CLAUDE.md](../CLAUDE.md).
+1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../AGENTS.md](../AGENTS.md).
 Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
 2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [MAPLIBRE_UI_CUSTOMIZATION.md](./MAPLIBRE_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./archive/STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
 5) **Partial runtime / schema context:** [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
-6) **Data layer:** [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [DATABASE_ER_PLAY_PATH.md](./DATABASE_ER_PLAY_PATH.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
+6) **Data layer:** [DATABASE_ACCESS.md](./DATABASE_ACCESS.md), [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [DATABASE_ER_PLAY_PATH.md](./DATABASE_ER_PLAY_PATH.md), [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md).
 7) **Player tracking & stats:** [PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md](./PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md), [PLAYER_TRACKING_INTEGRATION_PLAN.md](./PLAYER_TRACKING_INTEGRATION_PLAN.md), [PLAYER_STATS_DASHBOARD_INTEGRATION.md](./PLAYER_STATS_DASHBOARD_INTEGRATION.md), [PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md](./PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md).
 8) **Biodiversity content:** [BIOREGION_FEATURE_SUMMARY.md](./archive/BIOREGION_FEATURE_SUMMARY.md), [BIOREGION_IMPLEMENTATION.md](./BIOREGION_IMPLEMENTATION.md), [ECOREGION_IMPLEMENTATION.md](./ECOREGION_IMPLEMENTATION.md).
 
@@ -99,6 +99,7 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md) — breadcrumb/dropdown behavior.
 
 **Data, Auth, and Platform**
+- [DATABASE_ACCESS.md](./DATABASE_ACCESS.md) — app PgBouncer, WSL agent tunnel, Windows/QGIS routes.
 - [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md) — Postgres tables, Drizzle queries, TiTiler integration.
 - [DATABASE_ER_PLAY_PATH.md](./DATABASE_ER_PLAY_PATH.md) — live ER diagram + fields used when a game is played.
 - [SPECIES_DATABASE_IMPLEMENTATION.md](./SPECIES_DATABASE_IMPLEMENTATION.md) — schema and species data sourcing.

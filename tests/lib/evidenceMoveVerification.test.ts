@@ -4,10 +4,10 @@ import { BackendPuzzle } from '@/game/BackendPuzzle';
 import type { ExplodeAndReplacePhase } from '@/game/ExplodeAndReplacePhase';
 import { GRID_COLS, GRID_ROWS, MOVE_HUGE_MATCH_THRESHOLD, MOVE_LARGE_MATCH_THRESHOLD, MULTIPLIER_HUGE_MATCH, MULTIPLIER_LARGE_MATCH } from '@/game/constants';
 import { MoveAction } from '@/game/MoveAction';
-import type { PuzzleGrid } from '@/game/boardTypes';
+import type { BoardCheckpointV1, PuzzleGrid } from '@/game/boardTypes';
 import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '@/game/fieldSignal';
 import { buildNodeBoardContext, type CellStateSeed } from '@/game/nodeObstacles';
-import { parseEvidenceMoveSubmission, verifyEvidenceMove } from '@/lib/evidenceMoveVerification';
+import { parseEvidenceMoveSubmission, verifyEvidenceMove, verifyEvidenceMoveDetailed } from '@/lib/evidenceMoveVerification';
 
 describe('server evidence move verification', () => {
   test('replays the selected move and rejects forged checkpoints', () => {
@@ -40,10 +40,73 @@ describe('server evidence move verification', () => {
     const forged = structuredClone(submission);
     forged.boardCheckpoint.score += 100;
     assert.equal(verifyEvidenceMove(forged, { boardSeed, selectedFamilies: [], obstacleSeeds: [] }), null);
+
+    const forgedGrid = structuredClone(submission);
+    const cell = forgedGrid.boardCheckpoint.grid[0][0]!;
+    cell.gemType = cell.gemType === 'red' ? 'blue' : 'red';
+    const rejected = verifyEvidenceMoveDetailed(forgedGrid, { boardSeed, selectedFamilies: [], obstacleSeeds: [] });
+    assert.equal(rejected.ok, false);
+    if (!rejected.ok) {
+      assert.equal(rejected.reason, 'checkpoint_grid');
+      assert.deepEqual(rejected.gridDifference, {
+        x: 0, y: 0, expected: submission.boardCheckpoint.grid[0][0], actual: cell,
+      });
+    }
+  });
+
+  test('requires the saved obstacle layout after server waypoint repair', () => {
+    const boardSeed = 2604764839;
+    const savedSeeds = buildNodeBoardContext({
+      width: GRID_COLS, height: GRID_ROWS,
+      obstacles: ['limited_signal', 'unknown_terrain'], nodeIndex: 0,
+    }).obstacleSeeds;
+    for (const obstacleSeeds of [[], savedSeeds]) {
+      const puzzle = initialPuzzle(boardSeed, obstacleSeeds);
+      const move = findValidMove(puzzle);
+      const largestMatch = resolveMove(puzzle, move, boardSeed);
+      applyMoveMultiplier(puzzle, largestMatch, 0);
+      puzzle.registerMove();
+      const submission = parseEvidenceMoveSubmission({
+        nodeIndex: 0, moveNumber: 1,
+        move: { rowOrCol: move.rowOrCol, index: move.index, amount: move.amount },
+        boardCheckpoint: puzzle.exportCheckpoint(),
+      });
+      assert.ok(submission);
+      const result = verifyEvidenceMoveDetailed(submission, {
+        boardSeed, selectedFamilies: [], obstacleSeeds: savedSeeds,
+      });
+      assert.equal(result.ok, obstacleSeeds === savedSeeds);
+    }
+  });
+
+  test('replays six consecutive moves from persisted checkpoints', () => {
+    for (const boardSeed of [91, 3407071292, 667418182, ...Array.from({ length: 100 }, (_, index) => index + 1)]) {
+      const obstacleSeeds = buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: ['limited_signal', 'unknown_terrain'], nodeIndex: 0 }).obstacleSeeds;
+      const puzzle = initialPuzzle(boardSeed, obstacleSeeds);
+      let previousCheckpoint: BoardCheckpointV1 | undefined;
+      for (let moveNumber = 1; moveNumber <= 6; moveNumber += 1) {
+        const move = findValidMove(puzzle);
+        const scoreBefore = puzzle.getScore();
+        const largestMatch = resolveMove(puzzle, move, boardSeed);
+        applyMoveMultiplier(puzzle, largestMatch, scoreBefore);
+        puzzle.registerMove();
+        const submission = parseEvidenceMoveSubmission({
+          nodeIndex: 0, moveNumber,
+          move: { rowOrCol: move.rowOrCol, index: move.index, amount: move.amount },
+          boardCheckpoint: puzzle.exportCheckpoint(),
+        });
+        assert.ok(submission);
+        const result = verifyEvidenceMoveDetailed(submission, {
+          boardSeed, previousCheckpoint, selectedFamilies: [], obstacleSeeds,
+        });
+        assert.equal(result.ok, true, `seed ${boardSeed}, move ${moveNumber}: ${JSON.stringify(result)}`);
+        if (result.ok) previousCheckpoint = JSON.parse(JSON.stringify(result.input.boardCheckpoint));
+      }
+    }
   });
 
   test('replays every valid first move on a seeded obstacle board', () => {
-    const boardSeed = 3407071292;
+    const boardSeed = 667418182;
     const obstacleSeeds = buildNodeBoardContext({
       width: GRID_COLS,
       height: GRID_ROWS,
@@ -86,7 +149,7 @@ function initialPuzzle(seed: number, obstacleSeeds: CellStateSeed[] = []): Backe
 function findValidMove(puzzle: BackendPuzzle): MoveAction {
   for (const rowOrCol of ['row', 'col'] as const) {
     for (let index = 0; index < GRID_COLS; index += 1) {
-      for (const amount of [-1, 1]) {
+      for (const amount of [-1, 1, -2, 2, -3, 3, -4, 4, -5, 5]) {
         const move = new MoveAction(rowOrCol, index, amount);
         if (puzzle.getMatchesFromHypotheticalMove(move).length > 0) return move;
       }
@@ -118,8 +181,8 @@ function resolveMove(puzzle: BackendPuzzle, move: MoveAction, boardSeed: number)
     phase = puzzle.getNextExplodeAndReplacePhase([]);
     if (!phase.isNothingToDo()) cascades += 1;
   }
-  if (cascades > 0) {
-    const seed = buildFieldSignalSeed(puzzle.getGridState(), boardSeed, 0, 1);
+  if (cascades > 0 && !puzzle.hasFieldSignalSpawned()) {
+    const seed = buildFieldSignalSeed(puzzle.getGridState(), boardSeed, 0, puzzle.getMovesUsed() + 1);
     if (seed) {
       puzzle.applyCellStateSeeds([seed]);
       puzzle.markFieldSignalSpawned();

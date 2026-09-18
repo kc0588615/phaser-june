@@ -23,7 +23,7 @@ decisions. These rules govern how you execute it.
    `GemCategory` strings, extend them minimally.
 6. **DB constraint (verified live)**: `eco_run_nodes.node_type` CHECK allows only
    `riverbank_sweep, dense_canopy, urban_fringe, elevation_ridge, storm_window,
-   crisis, analysis, custom`. Single-node writes use `'custom'`. Never invent a new
+   analysis, custom` (migration 023 applied 2026-09-13; `crisis` retired). Single-node writes use `'custom'`. Never invent a new
    value. No SQL migrations needed anywhere in this plan.
 7. **Constraints**: no npm installs, no destructive git commands, do not touch the
    items in `docs/POST_REVERT_HYGIENE_BACKLOG.md` (separate track). TypeScript

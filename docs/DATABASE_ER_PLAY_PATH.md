@@ -5,7 +5,7 @@
 > Focus: tables and fields **utilized by the v3 expedition loop** (map → three evidence-family boards → guess).
 > Source of truth for app types: `src/db/schema/*`. Re-verify with `postgres-tunnel` skill after migrations.
 
-Related: [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [SHAPEFILE_BEST_PRACTICES.md](./SHAPEFILE_BEST_PRACTICES.md).
+Related: [DATABASE_ACCESS.md](./DATABASE_ACCESS.md), [DATABASE_USER_GUIDE.md](./DATABASE_USER_GUIDE.md), [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [SHAPEFILE_BEST_PRACTICES.md](./SHAPEFILE_BEST_PRACTICES.md).
 
 ---
 
@@ -267,6 +267,18 @@ Older rows still carry `correctSpeciesId`, wallets, issued observations, and rea
 
 #### `eco_run_nodes` — evidence-family sites (3 per v3 run)
 
+`node_type` is text constrained by `ck_eco_run_nodes_type`, not a PostgreSQL enum.
+Allowed values: `riverbank_sweep`, `dense_canopy`, `urban_fringe`,
+`elevation_ridge`, `storm_window`, `analysis`, `custom`.
+
+Migration [023](../src/db/migrations/023_remove_crisis_run_nodes.sql) was applied
+and verified on 2026-09-13. It converted 48 legacy `crisis` rows to `custom`
+before replacing the CHECK in one transaction. Post-migration: zero `crisis`,
+339 `custom`, 1,081 total nodes; constraint validated. These counts are a
+migration-time snapshot, not ongoing totals. Other live counts in this document
+remain dated to the original audit. Historical rows were retained; this does
+not make retired expedition snapshots resumable.
+
 | Column | Type | Play use |
 |---|---|---|
 | `id` | uuid PK | Node id |
@@ -474,7 +486,7 @@ This predates the v3 evidence-family corpus; re-query before using it for capaci
 
 ## 8. Conventions
 
-1. **One database** `phaser_june`; use `DATABASE_URL` + tunnel port **55432** for agents (not Windows 5433).
+1. **One database** `phaser_june`; agents use `DATABASE_URL` credentials through the WSL raw-Postgres tunnel on **55432** (not Windows 5433).
 2. **IUCN ownership:** raw ranges stay on `iucn`; game FKs use `species.id`.
 3. **Answer secrecy:** private case lives in `eco_run_sessions.metadata.casePrivate`; client projection must not spread metadata blindly.
 4. **Do not** treat empty attempt/gis_sample tables as active telemetry without new writers.

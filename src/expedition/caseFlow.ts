@@ -20,15 +20,19 @@ export interface FlowNode {
 export interface CaseFlowState {
   /** Exactly three route nodes, index = client nodeIndex (DB node_order - 1). */
   nodes: FlowNode[];
+  /** Durable after POST /incident; board progress still infers it on older runs. */
+  incidentAcknowledged: boolean;
 }
 
 export type FlowStep =
+  | { kind: 'incident' }
   | { kind: 'choose_evidence'; nodeIndex: number }
   | { kind: 'board'; nodeIndex: number }
   | { kind: 'guess' };
 
 export function createFlowState(): CaseFlowState {
   return {
+    incidentAcknowledged: false,
     nodes: [
       { completed: false, chosenFamily: null, segmentMovesUsed: 0 },
       { completed: false, chosenFamily: null, segmentMovesUsed: 0 },
@@ -38,6 +42,10 @@ export function createFlowState(): CaseFlowState {
 }
 
 export function nextFlowStep(state: CaseFlowState): FlowStep {
+  const first = state.nodes[0];
+  if (!state.incidentAcknowledged && first && !first.completed && first.segmentMovesUsed === 0) {
+    return { kind: 'incident' };
+  }
   for (let nodeIndex = 0; nodeIndex < 3; nodeIndex += 1) {
     const node = state.nodes[nodeIndex];
     if (!node?.completed) {
@@ -50,6 +58,7 @@ export function nextFlowStep(state: CaseFlowState): FlowStep {
 }
 
 export function stageForStep(step: FlowStep): CaseStage {
+  if (step.kind === 'incident') return 'incident';
   if (step.kind === 'choose_evidence') return 'choose_evidence';
   if (step.kind === 'board') return 'board';
   return 'guess';
@@ -57,6 +66,7 @@ export function stageForStep(step: FlowStep): CaseStage {
 
 /** Which node the HUD should call current while a step is active. */
 export function currentNodeIndexForStep(step: FlowStep): number {
+  if (step.kind === 'incident') return 0;
   return step.kind === 'guess' ? 2 : step.nodeIndex;
 }
 
@@ -81,7 +91,11 @@ export function reconcileProjection(projection: ClientRunProjection): ResumeDeci
     };
   }
   const sortedNodes = [...projection.nodes].sort((a, b) => a.nodeOrder - b.nodeOrder);
+  const incidentAcknowledged = projection.checkpoint.incidentAcknowledged === true
+    || sortedNodes.some(node =>
+      (node?.movesUsed ?? 0) > 0 || node?.nodeStatus === 'completed' || Boolean(node?.selectedFamily));
   const flow: CaseFlowState = {
+    incidentAcknowledged,
     nodes: [0, 1, 2].map(nodeIndex => {
       const node = sortedNodes[nodeIndex];
       return {

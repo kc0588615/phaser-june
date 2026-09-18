@@ -43,7 +43,12 @@ export type EvidenceMoveVerificationFailure =
 
 export type EvidenceMoveVerificationResult =
   | { ok: true; input: EvidenceProgressInput }
-  | { ok: false; reason: EvidenceMoveVerificationFailure };
+  | { ok: false; reason: EvidenceMoveVerificationFailure; gridDifference?: {
+    x: number;
+    y: number;
+    expected: PuzzleGrid[number][number];
+    actual: PuzzleGrid[number][number];
+  } };
 
 export function parseEvidenceMoveSubmission(value: unknown): EvidenceMoveSubmission | null {
   const source = getRecord(value);
@@ -127,7 +132,20 @@ export function verifyEvidenceMoveDetailed(
   puzzle.registerMove();
   const verifiedCheckpoint = puzzle.exportCheckpoint();
   const checkpointFailure = getCheckpointFailure(verifiedCheckpoint, submission.boardCheckpoint);
-  if (checkpointFailure) return { ok: false, reason: checkpointFailure };
+  if (checkpointFailure) {
+    if (checkpointFailure === 'checkpoint_grid') {
+      for (let x = 0; x < verifiedCheckpoint.width; x += 1) {
+        for (let y = 0; y < verifiedCheckpoint.height; y += 1) {
+          const expected = verifiedCheckpoint.grid[x][y];
+          const actual = submission.boardCheckpoint.grid[x][y];
+          if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+            return { ok: false, reason: checkpointFailure, gridDifference: { x, y, expected, actual } };
+          }
+        }
+      }
+    }
+    return { ok: false, reason: checkpointFailure };
+  }
 
   const directClears = createEmptyEvidenceCharges();
   for (const family of summary.directEvidenceCells.values()) directClears[family] += 1;

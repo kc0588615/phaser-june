@@ -92,6 +92,16 @@ describe('v4 run projection', () => {
     }
   });
 
+  test('projects incidentAcknowledged as an explicit boolean', () => {
+    assert.equal(projectRunForClient({ metadata: { casePublic: CASE_PUBLIC } }).checkpoint.incidentAcknowledged, false);
+    assert.equal(projectRunForClient({
+      metadata: { casePublic: CASE_PUBLIC, incidentAcknowledged: true },
+    }).checkpoint.incidentAcknowledged, true);
+    assert.equal(projectRunForClient({
+      metadata: { casePublic: CASE_PUBLIC, incidentAcknowledged: 'yes' },
+    }).checkpoint.incidentAcknowledged, false);
+  });
+
   test('allowlists session, checkpoint, node, and memory fields', () => {
     const projection = projectRunForClient({
       id: 'run-1', runStatus: 'active', playerId: 'PRIVATE_PLAYER',

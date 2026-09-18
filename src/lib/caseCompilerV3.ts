@@ -6,6 +6,7 @@ import {
   buildPrivateMysteryCase,
   buildPublicMysteryCase,
   validateAuthoredMysteryCase,
+  validatePublicMysteryCase,
   type AuthoredMysteryCase,
   type PrivateMysteryCase,
   type PublicMysteryCase,
@@ -155,7 +156,11 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
   const mystery = input.mysteryCasesBySpeciesId.get(answerId);
   const familyCardIds = cardIdsBySpecies.get(answerId);
   const familyHintIds = hintIdsBySpecies.get(answerId);
-  if (!mystery || !familyCardIds || !familyHintIds) return fail('invalid_case_data', 'Answer case data is incomplete.');
+  const answerTerms = input.answerTermsBySpeciesId.get(answerId);
+  if (!mystery || !familyCardIds || !familyHintIds || !answerTerms) return fail('invalid_case_data', 'Answer case data is incomplete.');
+  const publicMystery = buildPublicMysteryCase(mystery, mapView, answerTerms);
+  const publicErrors = validatePublicMysteryCase(publicMystery, answerTerms);
+  if (publicErrors.length > 0) return fail('invalid_mystery_cases', `${answerId}: ${publicErrors.join('; ')}`);
   return {
     version: 4,
     public: {
@@ -163,7 +168,7 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
       candidateIds: shuffle(ids, createSeededStream(input.caseSeed, 'candidate-shuffle-v4')),
       boardSeeds: [...input.boardSeeds] as [number, number, number],
       mapView,
-      mystery: buildPublicMysteryCase(mystery, mapView),
+      mystery: publicMystery,
     },
     private: {
       version: 4,

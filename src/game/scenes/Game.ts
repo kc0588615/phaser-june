@@ -237,7 +237,10 @@ export class Game extends Phaser.Scene {
     private handleEvidenceProgressCommitted(data: EventPayloads['evidence-progress-committed']): void {
         if (data.nodeIndex !== this.currentNodeIndex || !this.backendPuzzle
             || data.moveNumber !== this.backendPuzzle.getMovesUsed()) return;
-        if (data.moveNumber < 6 && !this.isPaused && !this.isResolvingMove) this.canMove = true;
+        if (data.moveNumber >= 6 || this.isResolvingMove) return;
+        // Commit can land while paused; remember to re-enable on unpause.
+        if (this.isPaused) this.canMoveBeforePause = true;
+        else this.canMove = true;
     }
 
     private handleRestart(): void {
@@ -1444,6 +1447,7 @@ export class Game extends Phaser.Scene {
         this.lastAppliedMoveMultiplier = 1;
         this.updateMultiplierText(1);
         this.isResolvingMove = false;
+        this.canMoveBeforePause = false;
         this.backendPuzzle?.resetMoves();
 
         // Reset HUD text to avoid stale display between nodes

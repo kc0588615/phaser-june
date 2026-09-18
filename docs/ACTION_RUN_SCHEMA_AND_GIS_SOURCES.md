@@ -4,6 +4,7 @@ Current schema + GIS reference for expedition generation. The database and signa
 
 Related migration: `src/db/migrations/007_action_run_loop_schema.sql`
 Related migration: `src/db/migrations/008_protected_planet_parcels.sql`
+Related migration: `src/db/migrations/023_remove_crisis_run_nodes.sql` (applied 2026-09-13; retires `crisis`, retypes historical rows to `custom`).
 
 ## Core Data Flow
 
@@ -52,7 +53,7 @@ These are practical, globally available options to represent the signal keys abo
 
 ## Layer-to-Node Taxonomy
 
-4 node families scored per click. Families are a **selection layer** — they map to the persisted `node_type` enum.
+4 node families scored per click. Families are a **selection layer** — they map to the persisted `node_type` text column, enforced by a CHECK constraint.
 
 | Layer group | Source | Node family | Variant keys |
 |---|---|---|---|
@@ -63,7 +64,10 @@ These are practical, globally available options to represent the signal keys abo
 
 ### Node Family → node_type Mapping
 
-Families don't go in the DB `node_type` column. They resolve to existing enum values:
+Families don't go in the DB `node_type` column. Allowed values are
+`riverbank_sweep`, `dense_canopy`, `urban_fringe`, `elevation_ridge`,
+`storm_window`, `analysis`, and `custom`. `crisis` is retired. Families resolve
+to these CHECK-constrained values:
 
 - `water_node:river` → `riverbank_sweep`
 - `bioregion_node:tropical_forest` → `dense_canopy`

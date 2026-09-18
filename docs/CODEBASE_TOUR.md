@@ -117,7 +117,7 @@ are characterization tests, so a failure means observable behavior changed.
 |---|---|
 | Change scoring/multipliers | `src/game/constants.ts` (+ `applyMoveBonuses` in `scenes/Game.ts`) |
 | Change what a gem means | `src/expedition/domain.ts` (GEM_REGISTRY) |
-| Add/adjust a node type | `src/lib/nodeScoring.ts` (NODE_TEMPLATES) + `domain.ts` (board meta) |
+| Add/adjust a node type | `src/lib/nodeScoring.ts` (NODE_TEMPLATES) + `domain.ts` (board meta); new persisted values also require a forward migration for `ck_eco_run_nodes_type` (current definition: migration 023) |
 | Change board size | `GRID_COLS/GRID_ROWS` in `src/game/constants.ts` |
 | Author species, evidence, or cases | `db/seeds/species/`, `db/seeds/pools/<slug>/`; see `docs/CONTENT_AUTHORING.md` |
 | Change run phases/persistence | `src/contexts/ExpeditionContext.tsx`, `/api/runs/*` |

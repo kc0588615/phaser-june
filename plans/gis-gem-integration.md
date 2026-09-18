@@ -80,7 +80,7 @@ mystery entry point.
    Track played anchors this session (in-memory set in ExpeditionContext keyed by
    waypoint id/slot); played pins render dimmed with a check.
 3. **node_type from anchor type** (CHECK constraint: riverbank_sweep, dense_canopy,
-   urban_fringe, elevation_ridge, storm_window, crisis, analysis, custom):
+   urban_fringe, elevation_ridge, storm_window, analysis, custom; migration 023 applied 2026-09-13, crisis retired):
    river/lake/wetland→riverbank_sweep, basecamp/city→urban_fringe,
    protected_area→dense_canopy, bioregion_edge→custom. Wire through the single-node
    generator (src/lib/nodeScoring.ts generateRunNodes) — pass the anchor type in,

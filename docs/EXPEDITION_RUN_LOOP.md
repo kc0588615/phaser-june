@@ -35,6 +35,6 @@ The three playable waypoints prefer 150–800 km pairwise spacing inside the bas
 - `POST /api/runs/[runId]/guess`: server-authoritative species and explanation verdict.
 - `GET /api/runs/[runId]/range`: simplified answer-range GeoJSON, owner-only and locked until a correct completed verdict.
 
-Old case metadata remains in PostgreSQL for history but is not parsed as a playable expedition. No schema migration is required.
+Old case metadata remains in PostgreSQL for history but is not parsed as a playable expedition. The v4 snapshot-format change requires no schema migration. Separately, migration 023 was applied on 2026-09-13 to convert legacy `crisis` node types to `custom` and remove `crisis` from the database CHECK constraint; this does not restore old snapshot support.
 
 Deferred: durable move logs and album/foil quality surfacing.

@@ -12,6 +12,7 @@ import { mergeHintFeed } from '@/expedition/hintFeed';
 import type { AffinityType } from '@/expedition/affinities';
 import { createFlowState, currentNodeIndexForStep, nextFlowStep, reconcileProjection, stageForStep, type CaseFlowState, type FlowStep } from '@/expedition/caseFlow';
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
+import { createClientUuid } from '@/lib/clientUuid';
 import type { Species } from '@/types/database';
 import type { DiagnosisFeedback, MysteryResolution } from '@/lib/mysteryCase';
 
@@ -94,6 +95,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     advancingRef.current = true;
     try {
       const step: FlowStep = nextFlowStep(flowRef.current);
+      if (step.kind === 'incident') {
+        setRunState(previous => previous.caseState ? {
+          ...previous,
+          currentNodeIndex: 0,
+          caseState: { ...previous.caseState, stage: 'incident' },
+        } : previous);
+        return;
+      }
       if (step.kind === 'choose_evidence') {
         setRunState(previous => previous.caseState ? {
           ...previous,
@@ -145,7 +154,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       void abandonPendingRun(pendingRunId);
     }
     payloadRef.current = data;
-    createRequestIdRef.current = crypto.randomUUID();
+    createRequestIdRef.current = createClientUuid();
     plannedRouteRef.current = data.expedition.routePolyline?.length ? data.expedition.routePolyline : computeExpeditionRoutePolyline(data.lon, data.lat, 3);
     routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
     setRunState({ ...INITIAL_RUN_STATE, phase: 'briefing', expedition: data.expedition });
@@ -159,7 +168,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     try {
       let created = pendingCreatedRunRef.current;
       if (!created) {
-        createRequestIdRef.current ??= crypto.randomUUID();
+        createRequestIdRef.current ??= createClientUuid();
         const response = await fetch('/api/runs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildCreateBody(payload, plannedRouteRef.current, createRequestIdRef.current)) });
         if (!response.ok) {
           const failure = await response.json().catch(() => ({})) as { error?: string };
@@ -175,10 +184,20 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       // All six symmetric profiles must be in hand before the run leaves briefing.
       const profiles = await fetchProfiles(created.casePublic.candidateIds);
       candidateSpeciesRef.current = await fetchCandidateSpecies(created.casePublic.candidateIds);
+      // Run creation can repair waypoints and replace obstacle templates. Start
+      // from the saved nodes so browser moves replay against the same board.
+      const savedResponse = await fetch(`/api/runs/${created.runId}`);
+      if (!savedResponse.ok) throw new Error(`Created run fetch failed (${savedResponse.status})`);
+      const saved = await savedResponse.json() as ClientRunProjection;
+      const expedition = expeditionFromProjection(saved);
+      if (expedition.nodes.length !== 3) throw new Error('Created run lacks three saved nodes');
+      payloadRef.current = payloadFromProjection(saved, expedition, profiles);
+      plannedRouteRef.current = saved.checkpoint.routePolyline;
+      routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
       pendingCreatedRunRef.current = null;
       flowRef.current = createFlowState();
       const caseState = { ...createCaseState(created.casePublic, profiles), stage: 'incident' as const };
-      setRunState(previous => ({ ...previous, runId: created.runId, phase: 'mystery', caseState, currentNodeIndex: 0 }));
+      setRunState(previous => ({ ...previous, runId: created.runId, expedition, phase: 'mystery', caseState, currentNodeIndex: 0 }));
     } catch (error) {
       console.error('[ExpeditionContext] Failed to start expedition:', error);
       toast.error('Could not start the expedition case.');
@@ -186,8 +205,18 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const handleAcknowledgeIncident = useCallback(async () => {
-    if (stateRef.current.caseState?.stage !== 'incident') return;
-    await runFlow();
+    const runId = runIdRef.current;
+    if (!runId || stateRef.current.caseState?.stage !== 'incident') return;
+    try {
+      const response = await fetch(`/api/runs/${runId}/incident`, { method: 'POST' });
+      if (!response.ok) throw new Error(`Incident acknowledgement failed (${response.status})`);
+      if (stateRef.current.caseState?.stage !== 'incident') return;
+      flowRef.current = { ...flowRef.current, incidentAcknowledged: true };
+      await runFlow();
+    } catch (error) {
+      console.error('[ExpeditionContext] Incident acknowledgement failed:', error);
+      toast.error('Could not start fieldwork — try again.');
+    }
   }, [runFlow]);
 
   const handleChooseEvidenceFamily = useCallback(async (family: EvidenceFamily) => {
@@ -253,14 +282,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const handleDiagnosis = useCallback(async (speciesId: number, explanationId: string) => {
     const runId = runIdRef.current;
     const activeCase = stateRef.current.caseState;
-    if (!runId || activeCase?.stage !== 'guess') return false;
+    if (!runId || activeCase?.stage !== 'guess') return null;
     try {
       const response = await fetch(`/api/runs/${runId}/guess`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ speciesId, explanationId }),
       });
-      if (!response.ok) { toast.error('Diagnosis could not be checked.'); return null; }
+      if (!response.ok) return null;
       const result = await response.json() as {
         correct: boolean;
         contrastiveFeedback: ComparisonResult[];
@@ -298,7 +327,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       return result.correct;
     } catch (error) {
       console.error('[ExpeditionContext] Diagnosis failed:', error);
-      toast.error('Diagnosis could not be checked.');
       return null;
     }
   }, []);

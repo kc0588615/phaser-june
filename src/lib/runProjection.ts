@@ -176,6 +176,7 @@ export interface PublicRunCheckpoint {
   currentNodeIndex?: number;
   bankedScore?: number;
   objectiveProgress?: number;
+  incidentAcknowledged: boolean;
   activeAffinities: string[];
   habitats: string[];
   rasterHabitats: Array<{ habitat_type: string; percentage: number }>;
@@ -521,6 +522,7 @@ function projectSingleWaypoint(
 function projectCheckpoint(metadata: UnknownRecord): PublicRunCheckpoint {
   const snapshot = getRecord(metadata.expeditionSnapshot);
   const checkpoint: PublicRunCheckpoint = {
+    incidentAcknowledged: metadata.incidentAcknowledged === true,
     activeAffinities: getStringArray(metadata.activeAffinities),
     habitats: getStringArray(metadata.habitats),
     rasterHabitats: projectRasterHabitats(metadata.rasterHabitats),

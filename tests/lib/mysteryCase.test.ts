@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPublicMysteryCase, parsePublicMysteryCase, validateAuthoredMysteryCase } from '@/lib/mysteryCase';
+import { buildPublicMysteryCase, parsePublicMysteryCase, validateAuthoredMysteryCase, validatePublicMysteryCase } from '@/lib/mysteryCase';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseMysteryCaseSeed } from '@/lib/mysteryCase';
@@ -18,6 +18,19 @@ const SPECIES = [
   { iucnId: 15_955, terms: ['Tiger', 'Panthera tigris'] },
   { iucnId: 18_732, terms: ["Livingstone's Flying Fox", 'Pteropus livingstonii'] },
 ];
+
+function mapViewWith(nearestFeature: string, biome = 'Test forest') {
+  return {
+    bounds: [-2, -2, 2, 2] as [number, number, number, number],
+    route: [0, 1, 2].map(nodeIndex => ({
+      nodeIndex,
+      lon: nodeIndex - 1,
+      lat: nodeIndex - 1,
+      biome: nodeIndex === 0 ? biome : 'Test forest',
+      nearestFeature: nodeIndex === 0 ? nearestFeature : `Site ${nodeIndex + 1}`,
+    })) as import('@/expedition/mapView').ExpeditionMapView['route'],
+  };
+}
 
 const MAP_VIEW = {
   bounds: [-2, -2, 2, 2] as [number, number, number, number],
@@ -43,6 +56,33 @@ describe('authored ecological mysteries', () => {
       assert.equal(publicCase.location.label, 'Research corridor');
       assert.ok(publicCase.explanationChoices.length >= 3);
     }
+  });
+
+  test('omits GIS location labels that contain answer terms', () => {
+    const tiger = getMysteryCaseForIucnId(15_955);
+    const addax = getMysteryCaseForIucnId(512);
+    assert.ok(tiger);
+    assert.ok(addax);
+    const tigerTerms = ['Tiger', 'Panthera tigris', 'Panthera'];
+    const addaxTerms = ['Addax', 'Addax nasomaculatus'];
+
+    const tigerPublic = buildPublicMysteryCase(tiger, mapViewWith('Tiger Reserve'), tigerTerms);
+    assert.equal(tigerPublic.location.label, 'Test forest');
+    assert.equal(JSON.stringify(tigerPublic).toLowerCase().includes('tiger'), false);
+    assert.deepEqual(validatePublicMysteryCase(tigerPublic, tigerTerms), []);
+
+    const addaxPublic = buildPublicMysteryCase(addax, mapViewWith('Addax watering hole', 'Addax range'), addaxTerms);
+    assert.equal(addaxPublic.location.label, 'Selected survey region');
+    assert.equal(JSON.stringify(addaxPublic).toLowerCase().includes('addax'), false);
+    assert.deepEqual(validatePublicMysteryCase(addaxPublic, addaxTerms), []);
+  });
+
+  test('rejects a built public case whose location still names the answer', () => {
+    const tiger = getMysteryCaseForIucnId(15_955);
+    assert.ok(tiger);
+    const leaking = buildPublicMysteryCase(tiger, mapViewWith('Tiger Reserve'));
+    assert.equal(leaking.location.label, 'Tiger Reserve');
+    assert.ok(validatePublicMysteryCase(leaking, ['Tiger']).some(error => error.includes('tiger')));
   });
 
   test('public parser allowlists incident fields and drops answer-bearing extras', () => {

@@ -63,8 +63,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           console.warn('[evidence-progress] Move replay rejected', {
             runId, nodeIndex: submission.nodeIndex, moveNumber: submission.moveNumber,
             move: submission.move, detail: verification.reason,
+            boardSeed: node.boardSeed, gridDifference: verification.gridDifference,
           });
-          return response(409, { reason: 'unverified_move', detail: verification.reason });
+          const detail = process.env.NODE_ENV === 'development' && verification.gridDifference
+            ? `${verification.reason} ${JSON.stringify({
+              boardSeed: node.boardSeed,
+              move: submission.move,
+              moveNumber: submission.moveNumber,
+              ...verification.gridDifference,
+            })}`
+            : verification.reason;
+          return response(409, { reason: 'unverified_move', detail });
         }
         input = verification.input;
         const applied = applyEvidenceProgress(state, input);

@@ -58,14 +58,17 @@ export interface DiagnosisFeedback {
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 const MAX_COPY_LENGTH = 1_000;
 
+const FALLBACK_LOCATION_LABEL = 'Selected survey region';
+
 export function buildPublicMysteryCase(
   authored: AuthoredMysteryCase,
   mapView: ExpeditionMapView,
+  forbiddenTerms: readonly string[] = [],
 ): PublicMysteryCase {
   const firstSite = mapView.route[0];
-  const label = firstSite.nearestFeature?.trim()
-    || firstSite.biome?.trim()
-    || 'Selected survey region';
+  const label = [firstSite.nearestFeature?.trim(), firstSite.biome?.trim(), FALLBACK_LOCATION_LABEL]
+    .find((candidate): candidate is string => typeof candidate === 'string' && candidate.length > 0 && !copyLeaksTerms(candidate, forbiddenTerms))
+    ?? FALLBACK_LOCATION_LABEL;
   return {
     ...authored.public,
     explanationChoices: authored.public.explanationChoices.map(choice => ({ ...choice })),
@@ -119,10 +122,20 @@ export function validateAuthoredMysteryCase(
     || resolution.sources.length < 1 || resolution.sources.some(source => !validCopy(source.label) || !validCopy(source.url))) {
     errors.push('resolution content is incomplete');
   }
-  const publicCopy = JSON.stringify(publicCase).toLowerCase();
-  for (const term of forbiddenTerms.map(value => value.trim().toLowerCase()).filter(value => value.length >= 4)) {
-    if (publicCopy.includes(term)) errors.push(`public copy leaks answer term: ${term}`);
+  errors.push(...leakedAnswerTerms(JSON.stringify(publicCase), forbiddenTerms).map(term => `public copy leaks answer term: ${term}`));
+  return errors;
+}
+
+/** Scans the fully built public payload, including GIS-injected location copy. */
+export function validatePublicMysteryCase(
+  publicCase: PublicMysteryCase,
+  forbiddenTerms: readonly string[],
+): string[] {
+  const errors: string[] = [];
+  if (!validCopy(publicCase.location.label) || !validCopy(publicCase.location.basis) || publicCase.location.confidence !== 'contextual') {
+    errors.push('location is invalid');
   }
+  errors.push(...leakedAnswerTerms(JSON.stringify(publicCase), forbiddenTerms).map(term => `public copy leaks answer term: ${term}`));
   return errors;
 }
 
@@ -203,6 +216,20 @@ function cloneResolution(resolution: MysteryResolution): MysteryResolution {
     rejectedAlternatives: [...resolution.rejectedAlternatives],
     sources: resolution.sources.map(source => ({ ...source })),
   };
+}
+
+function leakedAnswerTerms(copy: string, forbiddenTerms: readonly string[]): string[] {
+  const haystack = copy.toLowerCase();
+  const leaked = new Set<string>();
+  for (const value of forbiddenTerms) {
+    const term = value.trim().toLowerCase();
+    if (term.length >= 4 && haystack.includes(term)) leaked.add(term);
+  }
+  return [...leaked];
+}
+
+function copyLeaksTerms(copy: string, forbiddenTerms: readonly string[]): boolean {
+  return leakedAnswerTerms(copy, forbiddenTerms).length > 0;
 }
 
 function validCopy(value: unknown): value is string {
