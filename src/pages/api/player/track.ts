@@ -27,14 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const pt = await import('@/lib/playerTracking');
 
     switch (action) {
-      case 'trackClueUnlock': {
-        const { speciesId, clueCategory, clueField, clueValue } = params;
-        const wasNew = await pt.trackClueUnlock(
-          profile.userId, speciesId, clueCategory, clueField, clueValue ?? null
-        );
-        return res.json({ wasNew });
-      }
-
       case 'updateSessionProgress': {
         const { sessionId, moves, score, speciesDiscovered, cluesUnlocked } = params;
         const updated = await pt.updateSessionProgress(profile.userId, sessionId, moves, score, speciesDiscovered, cluesUnlocked);

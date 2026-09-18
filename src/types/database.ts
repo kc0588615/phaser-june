@@ -40,19 +40,8 @@ export interface PlayerSpeciesDiscovery {
   found_lon?: number;
   found_lat?: number;
   found_ecoregion_id?: number;
-  // Note: clues_revealed removed - use player_clue_unlocks as single source of truth
 }
 
-export interface PlayerClueUnlock {
-  id: string;
-  player_id: string; // Required FK to profiles
-  species_id: number; // Required FK to species
-  discovery_id?: string; // Optional FK to player_species_discoveries (linked after guess)
-  clue_category: string;
-  clue_field: string;
-  clue_value?: string;
-  unlocked_at: string;
-}
 
 export interface PlayerStats {
   player_id: string; // Primary key (no separate id field)
@@ -237,11 +226,6 @@ export interface Database {
         Row: PlayerSpeciesDiscovery;
         Insert: Omit<PlayerSpeciesDiscovery, 'id' | 'discovered_at'>;
         Update: Partial<Omit<PlayerSpeciesDiscovery, 'id' | 'player_id' | 'species_id' | 'discovered_at'>>;
-      };
-      player_clue_unlocks: {
-        Row: PlayerClueUnlock;
-        Insert: Omit<PlayerClueUnlock, 'id' | 'unlocked_at'>;
-        Update: Partial<Omit<PlayerClueUnlock, 'id' | 'player_id' | 'unlocked_at'>>;
       };
       player_stats: {
         Row: PlayerStats;

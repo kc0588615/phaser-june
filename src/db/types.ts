@@ -4,7 +4,6 @@ import {
   highScores,
   iucn,
   oneearthBioregion,
-  playerClueUnlocks,
   playerGameSessions,
   playerSpeciesDiscoveries,
   playerStats,
@@ -18,7 +17,6 @@ import {
 export type Profile = InferSelectModel<typeof profiles>;
 export type PlayerGameSession = InferSelectModel<typeof playerGameSessions>;
 export type PlayerSpeciesDiscovery = InferSelectModel<typeof playerSpeciesDiscoveries>;
-export type PlayerClueUnlock = InferSelectModel<typeof playerClueUnlocks>;
 export type PlayerStats = InferSelectModel<typeof playerStats>;
 export type HighScore = InferSelectModel<typeof highScores>;
 export type HabitatColormap = InferSelectModel<typeof habitatColormap>;
@@ -36,4 +34,3 @@ export type SpeciesFact = InferSelectModel<typeof speciesFacts>;
 export type NewHighScore = InferInsertModel<typeof highScores>;
 export type NewPlayerGameSession = InferInsertModel<typeof playerGameSessions>;
 export type NewPlayerSpeciesDiscovery = InferInsertModel<typeof playerSpeciesDiscoveries>;
-export type NewPlayerClueUnlock = InferInsertModel<typeof playerClueUnlocks>;

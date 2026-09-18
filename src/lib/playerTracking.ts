@@ -11,7 +11,6 @@ const isServer = typeof window === 'undefined';
 // Lazy-load server dependencies only when needed
 let db: any;
 let playerGameSessions: any;
-let playerClueUnlocks: any;
 let playerSpeciesDiscoveries: any;
 let playerStats: any;
 let speciesTable: any;
@@ -37,7 +36,6 @@ async function ensureServerDeps() {
     }
     db = dbModule.db;
     playerGameSessions = dbModule.playerGameSessions;
-    playerClueUnlocks = dbModule.playerClueUnlocks;
     playerSpeciesDiscoveries = dbModule.playerSpeciesDiscoveries;
     playerStats = dbModule.playerStats;
     speciesTable = dbModule.speciesTable;
@@ -184,79 +182,7 @@ export async function forceSessionUpdate(
 }
 
 /**
- * Track a clue unlock event
- * Returns: true if newly unlocked, false if duplicate, null if error
- */
-export async function trackClueUnlock(
-  playerId: string,
-  speciesId: number,
-  clueCategory: string,
-  clueField: string,
-  clueValue: string | null = null
-): Promise<boolean | null> {
-  if (!(await ensureServerDeps())) return null; // Client-side no-op
-
-  try {
-    let clue: { id: string; unlockedAt: Date | null };
-
-    const result = await db
-      .insert(playerClueUnlocks)
-      .values({
-        playerId,
-        speciesId,
-        clueCategory,
-        clueField,
-        clueValue,
-      })
-      .onConflictDoNothing({
-        target: [
-          playerClueUnlocks.playerId,
-          playerClueUnlocks.speciesId,
-          playerClueUnlocks.clueCategory,
-          playerClueUnlocks.clueField,
-        ],
-      })
-      .returning({
-        id: playerClueUnlocks.id,
-        unlockedAt: playerClueUnlocks.unlockedAt,
-      });
-
-    if (result.length > 0) {
-      clue = result[0];
-    } else {
-      const existing = await db
-        .select({
-          id: playerClueUnlocks.id,
-          unlockedAt: playerClueUnlocks.unlockedAt,
-        })
-        .from(playerClueUnlocks)
-        .where(
-          and(
-            eq(playerClueUnlocks.playerId, playerId),
-            eq(playerClueUnlocks.speciesId, speciesId),
-            eq(playerClueUnlocks.clueCategory, clueCategory),
-            eq(playerClueUnlocks.clueField, clueField)
-          )
-        )
-        .limit(1);
-      clue = existing[0];
-    }
-
-    // Check if this was a create (new) or update (existing)
-    // If unlocked_at matches within 1 second, it's likely new
-    const isNew = clue.unlockedAt
-      ? Date.now() - new Date(clue.unlockedAt).getTime() < 1000
-      : true;
-    return isNew;
-  } catch (err) {
-    console.error('Failed to track clue unlock:', err);
-    return null;
-  }
-}
-
-/**
  * Track a species discovery
- * Links unlocked clues for this player and species to this discovery
  */
 export async function trackSpeciesDiscovery(
   playerId: string,
@@ -324,17 +250,6 @@ export async function trackSpeciesDiscovery(
 
       const discovery = discoveryResult[0];
 
-      await tx
-        .update(playerClueUnlocks)
-        .set({ discoveryId: discovery.id })
-        .where(
-          and(
-            eq(playerClueUnlocks.playerId, playerId),
-            eq(playerClueUnlocks.speciesId, speciesId),
-            isNull(playerClueUnlocks.discoveryId),
-          )
-        );
-
       return discovery;
     });
 
@@ -381,32 +296,6 @@ function updateLocalStorageDiscovery(speciesId: number): void {
   }
 }
 
-/**
- * Get count of clues unlocked for a specific species
- */
-export async function getClueCountForSpecies(
-  playerId: string,
-  speciesId: number
-): Promise<number> {
-  if (!(await ensureServerDeps())) return 0; // Client-side no-op
-
-  try {
-    const result = await db
-      .select({ count: count() })
-      .from(playerClueUnlocks)
-      .where(
-        and(
-          eq(playerClueUnlocks.playerId, playerId),
-          eq(playerClueUnlocks.speciesId, speciesId)
-        )
-      );
-    return result[0]?.count ?? 0;
-  } catch (err) {
-    console.error('Failed to get clue count:', err);
-    return 0;
-  }
-}
-
 // =============================================================================
 // PLAYER STATS REFRESH
 // =============================================================================
@@ -415,7 +304,6 @@ export async function getClueCountForSpecies(
 // =============================================================================
 
 /**
- * Refresh player_stats from source tables (player_species_discoveries, player_clue_unlocks)
  * Uses upsert to create or update the stats row.
  */
 export async function refreshPlayerStats(playerId: string): Promise<boolean> {
@@ -446,14 +334,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
       .leftJoin(speciesTable, eq(playerSpeciesDiscoveries.speciesId, speciesTable.id))
       .where(eq(playerSpeciesDiscoveries.playerId, playerId));
 
-    // Get clue stats
-    const clues = await db
-      .select({
-        clueCategory: playerClueUnlocks.clueCategory,
-      })
-      .from(playerClueUnlocks)
-      .where(eq(playerClueUnlocks.playerId, playerId));
-
     // Get session stats
     const sessions = await db
       .select({
@@ -466,7 +346,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
 
     // Calculate aggregates
     const totalSpeciesDiscovered = discoveries.length;
-    const totalCluesUnlocked = clues.length;
     const totalScore = discoveries.reduce((sum: number, d: any) => sum + (d.scoreEarned || 0), 0);
     const totalMovesMade = sessions.reduce((sum: number, s: any) => sum + (s.totalMoves || 0), 0);
     const totalGamesPlayed = sessions.length;
@@ -543,17 +422,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
       if (d.freshwater) freshwaterSpeciesCount++;
     }
 
-    // Build clue category breakdown
-    const cluesByCategory: Record<string, number> = {};
-    for (const c of clues) {
-      cluesByCategory[c.clueCategory] = (cluesByCategory[c.clueCategory] || 0) + 1;
-    }
-
-    // Determine favorite clue category
-    const favoriteClueCategory = Object.entries(cluesByCategory).length > 0
-      ? Object.entries(cluesByCategory).sort((a, b) => b[1] - a[1])[0][0]
-      : null;
-
     // Get first/last discovery timestamps
     const discoveryDates = discoveries
       .map((d: any) => d.discoveredAt)
@@ -568,7 +436,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
       .values({
         playerId,
         totalSpeciesDiscovered,
-        totalCluesUnlocked,
         totalScore,
         totalMovesMade,
         totalGamesPlayed,
@@ -588,8 +455,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         freshwaterSpeciesCount,
         aquaticSpeciesCount,
         speciesByIucnStatus,
-        cluesByCategory,
-        favoriteClueCategory,
         firstDiscoveryAt,
         lastDiscoveryAt,
         updatedAt: new Date(),
@@ -598,7 +463,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         target: playerStats.playerId,
         set: {
           totalSpeciesDiscovered,
-          totalCluesUnlocked,
           totalScore,
           totalMovesMade,
           totalGamesPlayed,
@@ -618,8 +482,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
           freshwaterSpeciesCount,
           aquaticSpeciesCount,
           speciesByIucnStatus,
-          cluesByCategory,
-          favoriteClueCategory,
           firstDiscoveryAt,
           lastDiscoveryAt,
           updatedAt: new Date(),

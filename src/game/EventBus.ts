@@ -15,7 +15,6 @@
 import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
-import type { CluePayload } from './clueConfig';
 import type { ExpeditionData } from '@/types/expedition';
 import type { AffinityType } from '@/expedition/affinities';
 import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
@@ -52,7 +51,6 @@ export interface EventPayloads {
     candidateSpecies?: Species[];
     boardCheckpoint?: BoardCheckpointV1;
   };
-  'clue-revealed': CluePayload;
   'new-game-started': {
     speciesName: string;
     speciesId: number;
@@ -61,9 +59,6 @@ export interface EventPayloads {
   };
   'game-reset': undefined;
   'no-species-found': {};
-  'all-clues-revealed': {
-    speciesId: number;
-  };
   'all-species-completed': {
     totalSpecies: number;
   };

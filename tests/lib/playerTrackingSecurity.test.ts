@@ -25,8 +25,4 @@ test('player tracking security scopes mutations to authenticated player', () => 
   assert.match(routeSource, /endGameSession\(profile\.userId/);
   assert.match(trackingSource, /eq\(playerGameSessions\.playerId, playerId\)/);
   assert.match(trackingSource, /sessionId = ownedSession\[0\] \? requestedSessionId : null/);
-  assert.match(
-    trackingSource,
-    /eq\(playerClueUnlocks\.playerId, playerId\),\s*eq\(playerClueUnlocks\.speciesId, speciesId\),\s*isNull\(playerClueUnlocks\.discoveryId\)/,
-  );
 });

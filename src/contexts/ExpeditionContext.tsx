@@ -49,7 +49,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const nodeIdsRef = useRef<string[]>([]);
   const casePublicRef = useRef<PublicCaseSnapshot | null>(null);
   // Full species rows for the six case candidates — the field-note drip pool.
-  // Held per run so object refs stay stable (clueConfig progress is WeakMap-keyed).
+  // Held per run so species object references stay stable.
   const candidateSpeciesRef = useRef<Species[]>([]);
   const [initialFlow] = useState(createFlowState);
   const flowRef = useRef<CaseFlowState>(initialFlow);

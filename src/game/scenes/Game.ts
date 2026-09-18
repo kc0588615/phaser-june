@@ -30,81 +30,14 @@ import {
 import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
-import { getClueCategoryForGemType } from '../gemSemantics';
 import {
   buildNodeBoardContext,
 } from '../nodeObstacles';
-import type { DeductionClueCategory } from '@/db/schema/species';
-import { 
-  GemCategory, 
-  CLUE_CONFIG, 
-  CluePayload, 
-  isClassificationComplete, 
-  isKeyFactsComplete,
-  isBehaviorComplete,
-  isLifeCycleComplete,
-  isConservationComplete,
-  isGeographicComplete,
-  isMorphologyComplete,
-  resetAllProgressiveClues
-} from '../clueConfig';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import { GEM_EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { getExpeditionBoardSafeArea } from '../expeditionHudLayout';
 import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '../fieldSignal';
-
-const TOTAL_CLUE_CATEGORIES = Object.keys(CLUE_CONFIG).length;
-
-function slugify(value: string): string {
-    return value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_+|_+$/g, '') || 'unknown';
-}
-
-function getCategoryKey(category: GemCategory): string {
-    const config = CLUE_CONFIG[category];
-    if (config?.categoryName) {
-        return slugify(config.categoryName);
-    }
-    return `category_${category}`;
-}
-
-function getDeductionCategoryForGemCategory(category: GemCategory): DeductionClueCategory | null {
-    switch (category) {
-        case GemCategory.CLASSIFICATION: return 'taxonomy';
-        case GemCategory.HABITAT: return 'habitat';
-        case GemCategory.GEOGRAPHIC: return 'geography';
-        case GemCategory.MORPHOLOGY: return 'morphology';
-        case GemCategory.BEHAVIOR: return 'behavior';
-        case GemCategory.LIFE_CYCLE: return 'reproduction';
-        case GemCategory.CONSERVATION: return 'conservation';
-        case GemCategory.KEY_FACTS: return 'key_fact';
-        default: return null;
-    }
-}
-
-function deriveClueFieldAndValue(payload: CluePayload): { field: string; value: string | null } {
-    const rawField = (payload as any).field as string | undefined;
-    const rawValue = (payload as any).value as string | undefined;
-
-    if (rawField) {
-        return { field: slugify(rawField), value: rawValue ?? payload.clue ?? null };
-    }
-
-    const clueText = payload.clue ?? '';
-    const colonIndex = clueText.indexOf(':');
-    if (colonIndex > -1) {
-        const field = slugify(clueText.slice(0, colonIndex));
-        const value = clueText.slice(colonIndex + 1).trim() || null;
-        return { field: field || 'detail', value };
-    }
-
-    const fallbackField = payload.name ? slugify(payload.name) : 'detail';
-    return { field: fallbackField, value: clueText || null };
-}
 
 interface BoardOffset {
     x: number;
@@ -170,10 +103,7 @@ export class Game extends Phaser.Scene {
     // --- Species Integration ---
     private currentSpecies: Species[] = [];
     private selectedSpecies: Species | null = null;
-    private revealedClues: Set<GemCategory> = new Set();
-    private completedClueCategories: Set<GemCategory> = new Set();
     private currentSpeciesIndex: number = 0;
-    private allCluesRevealed: boolean = false;
     // --- Raster Habitat Integration ---
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
@@ -183,13 +113,11 @@ export class Game extends Phaser.Scene {
     // --- Player Tracking ---
     private currentUserId: string | null = null; // Cache user ID
     private currentSessionId: string | null = null; // Active session
-    private clueCountThisSpecies: number = 0; // Track clues for current species
     private incorrectGuessesThisSpecies: number = 0; // Track wrong guesses
     private speciesStartTime: number = 0; // Time when species started
     
     // --- Streak and Scoring ---
     private streak: number = 0;
-    private seenClueCategories: Set<GemCategory> = new Set();
     private turnBaseTotalScore: number = 0; // Accumulator for the current turn
     private anyMatchThisTurn: boolean = false; // Track if any match occurred this turn
     private currentMoveSummary: MoveSummary | null = null;
@@ -240,7 +168,6 @@ export class Game extends Phaser.Scene {
     }
 
     private resetSpeciesTrackingCounters(): void {
-        this.clueCountThisSpecies = 0;
         this.incorrectGuessesThisSpecies = 0;
         this.speciesStartTime = Date.now();
     }
@@ -377,41 +304,11 @@ export class Game extends Phaser.Scene {
         this.streak += 1;
         
         const total = totalClueSlotsForSpecies ?? DEFAULT_TOTAL_CLUE_SLOTS;
-        const revealed = Math.min(this.seenClueCategories.size, total);
+        const revealed = 0;
         const earlyBase = Math.max(0, total - revealed) * EARLY_BONUS_PER_SLOT;
         const earlyWithStreak = Math.floor(earlyBase * this.currentMultiplier());
         this.backendPuzzle.addBonusScore(earlyWithStreak);
-        this.seenClueCategories.clear();
         this.emitHud();
-    }
-
-    // Helper function to check if a progressive category is complete
-    private isProgressiveCategoryComplete(category: GemCategory): boolean {
-        if (!this.selectedSpecies) return false;
-        
-        switch (category) {
-            case GemCategory.CLASSIFICATION: return isClassificationComplete(this.selectedSpecies);
-            case GemCategory.GEOGRAPHIC: return isGeographicComplete(this.selectedSpecies);
-            case GemCategory.MORPHOLOGY: return isMorphologyComplete(this.selectedSpecies);
-            case GemCategory.KEY_FACTS: return isKeyFactsComplete(this.selectedSpecies);
-            case GemCategory.BEHAVIOR: return isBehaviorComplete(this.selectedSpecies);
-            case GemCategory.LIFE_CYCLE: return isLifeCycleComplete(this.selectedSpecies);
-            case GemCategory.CONSERVATION: return isConservationComplete(this.selectedSpecies);
-            default: return false; // Not a progressive category
-        }
-    }
-
-    // Helper function to check if a category uses progressive clues
-    private isProgressiveCategory(category: GemCategory): boolean {
-        return [
-            GemCategory.CLASSIFICATION,
-            GemCategory.GEOGRAPHIC,
-            GemCategory.MORPHOLOGY,
-            GemCategory.KEY_FACTS,
-            GemCategory.BEHAVIOR,
-            GemCategory.LIFE_CYCLE,
-            GemCategory.CONSERVATION
-        ].includes(category);
     }
 
     create(): void {
@@ -472,7 +369,6 @@ export class Game extends Phaser.Scene {
         
         // Initialize streak and scoring state
         this.streak = 0;
-        this.seenClueCategories = new Set();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
         this.boardView = new BoardView(this, {
@@ -742,48 +638,6 @@ export class Game extends Phaser.Scene {
 
     // --- Player Tracking Event Handlers ---
 
-    private handleClueRevealed = async (payload: CluePayload): Promise<void> => {
-        console.log('🔔 handleClueRevealed called:', {
-            hasCurrentUserId: !!this.currentUserId,
-            currentUserId: this.currentUserId,
-            hasSelectedSpecies: !!this.selectedSpecies,
-            speciesId: this.selectedSpecies?.id,
-            category: payload.category,
-            clue: payload.clue
-        });
-
-        if (!this.currentUserId || !this.selectedSpecies) {
-            console.warn('⚠️ Skipping clue tracking:', {
-                reason: !this.currentUserId ? 'No currentUserId' : 'No selectedSpecies',
-                currentUserId: this.currentUserId,
-                selectedSpecies: this.selectedSpecies?.id
-            });
-            return;
-        }
-
-        try {
-            const clueCategory = getCategoryKey(payload.category);
-            const { field, value } = deriveClueFieldAndValue(payload);
-
-            const res = await fetch('/api/player/track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'trackClueUnlock',
-                    speciesId: this.selectedSpecies.id,
-                    clueCategory, clueField: field, clueValue: value,
-                }),
-            });
-            const data = await res.json();
-
-            if (data.wasNew) {
-                this.clueCountThisSpecies++;
-            }
-        } catch (error) {
-            console.error('Failed to track clue unlock:', error);
-        }
-    };
-
     private sessionUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 
     private handleHudUpdate = (data: EventPayloads['game-hud-updated']): void => {
@@ -801,7 +655,7 @@ export class Game extends Phaser.Scene {
                     moves: data.movesUsed,
                     score: data.score,
                     speciesDiscovered: this.currentSpeciesIndex,
-                    cluesUnlocked: this.revealedClues.size,
+                    cluesUnlocked: 0,
                 }),
             }).catch(err => console.error('Failed to update session progress:', err));
         }, 10000);
@@ -823,7 +677,7 @@ export class Game extends Phaser.Scene {
                 moves: this.backendPuzzle.getMovesUsed(),
                 score: this.backendPuzzle.getScore(),
                 speciesDiscovered: this.currentSpeciesIndex,
-                cluesUnlocked: this.revealedClues.size,
+                cluesUnlocked: 0,
             })], { type: 'application/json' });
             navigator.sendBeacon('/api/player/track', blob);
         } catch (error) {
@@ -923,172 +777,6 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private revealAllCluesForCategory(category: GemCategory): void {
-        if (!this.selectedSpecies || this.completedClueCategories.has(category)) return;
-
-        if (category === GemCategory.HABITAT) {
-            let clue: CluePayload | null;
-            let emitted = 0;
-            let guard = 0;
-            while ((clue = this.generateRasterHabitatClue()) && guard < 20) {
-                EventBus.emit('clue-revealed', clue);
-                emitted++;
-                guard++;
-            }
-            if (emitted > 0) {
-                this.revealedClues.add(category);
-                this.seenClueCategories.add(category);
-            }
-            this.completedClueCategories.add(category);
-            this.checkAllCluesRevealed();
-            return;
-        }
-
-        const config = CLUE_CONFIG[category];
-        if (!config) return;
-
-        let emitted = 0;
-        let guard = 0;
-        let lastClue: string | null = null;
-        let clueText = config.getClue(this.selectedSpecies);
-        while (clueText && guard < 20) {
-            if (clueText === lastClue) {
-                break;
-            }
-            const clueData: CluePayload = {
-                category,
-                heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
-                clue: clueText,
-                speciesId: this.selectedSpecies.id,
-                name: config.categoryName,
-                icon: config.icon,
-                color: config.color
-            };
-            EventBus.emit('clue-revealed', clueData);
-            emitted++;
-            guard++;
-            lastClue = clueText;
-            clueText = config.getClue(this.selectedSpecies);
-            if (this.isProgressiveCategory(category) && this.isProgressiveCategoryComplete(category)) {
-                break;
-            }
-        }
-
-        if (emitted > 0) {
-            this.revealedClues.add(category);
-            this.seenClueCategories.add(category);
-        }
-        this.completedClueCategories.add(category);
-        this.checkAllCluesRevealed();
-    }
-
-    private revealCluesForCategory(category: GemCategory, desiredCount: number): void {
-        if (!this.selectedSpecies || desiredCount <= 0 || this.completedClueCategories.has(category)) return;
-
-        let emitted = 0;
-
-        if (category === GemCategory.HABITAT) {
-            for (let i = 0; i < desiredCount; i++) {
-                const clue = this.generateRasterHabitatClue();
-                if (!clue) {
-                    this.completedClueCategories.add(category);
-                    break;
-                }
-                EventBus.emit('clue-revealed', clue);
-                emitted++;
-            }
-            if (emitted > 0) {
-                this.revealedClues.add(category);
-                this.seenClueCategories.add(category);
-            }
-            this.checkAllCluesRevealed();
-            return;
-        }
-
-        const config = CLUE_CONFIG[category];
-        if (!config) return;
-
-        if (this.isProgressiveCategory(category)) {
-            for (let i = 0; i < desiredCount; i++) {
-                const clueText = config.getClue(this.selectedSpecies);
-                if (!clueText) {
-                    this.completedClueCategories.add(category);
-                    break;
-                }
-                const clueData: CluePayload = {
-                    category,
-                    heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
-                    clue: clueText,
-                    speciesId: this.selectedSpecies.id,
-                    name: config.categoryName,
-                    icon: config.icon,
-                    color: config.color
-                };
-                EventBus.emit('clue-revealed', clueData);
-                emitted++;
-                if (this.isProgressiveCategoryComplete(category)) {
-                    this.completedClueCategories.add(category);
-                    break;
-                }
-            }
-            if (emitted > 0) {
-                this.revealedClues.add(category);
-                this.seenClueCategories.add(category);
-            }
-            this.checkAllCluesRevealed();
-            return;
-        }
-
-        for (let i = 0; i < desiredCount; i++) {
-            const clueText = config.getClue(this.selectedSpecies);
-            if (!clueText) {
-                this.completedClueCategories.add(category);
-                break;
-            }
-            const clueData: CluePayload = {
-                category,
-                heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
-                clue: clueText,
-                speciesId: this.selectedSpecies.id,
-                name: config.categoryName,
-                icon: config.icon,
-                color: config.color
-            };
-            EventBus.emit('clue-revealed', clueData);
-            emitted++;
-        }
-
-        if (emitted > 0) {
-            this.revealedClues.add(category);
-            this.seenClueCategories.add(category);
-        }
-        if (emitted < desiredCount) {
-            this.completedClueCategories.add(category);
-        }
-        this.checkAllCluesRevealed();
-    }
-
-    private checkAllCluesRevealed(): void {
-        if (!this.selectedSpecies || this.allCluesRevealed) return;
-        if (this.revealedClues.size < TOTAL_CLUE_CATEGORIES) return;
-
-        this.allCluesRevealed = true;
-        console.log("Game Scene: All clues revealed for species:", this.selectedSpecies.id);
-
-        EventBus.emit('all-clues-revealed', {
-            speciesId: this.selectedSpecies.id
-        });
-
-        if (this.statusText && this.statusText.active) {
-            this.statusText.setText('All clues revealed! Can you guess the species?');
-
-            this.time.delayedCall(3000, () => {
-                if (this.statusText && this.statusText.active) {
-                    this.statusText.setText('');
-                }
-            });
-        }
-    }
 
     private initializeBoardFromMap(data: EventPayloads['map-location-selected']): void {
         console.log("Game Scene: Received 'map-location-selected' data:", data);
@@ -1116,13 +804,9 @@ export class Game extends Phaser.Scene {
             };
             this.currentSpecies = [...data.species].sort((a, b) => a.id - b.id);
             this.currentSpeciesIndex = 0;
-            this.revealedClues.clear(); // Reset clues for new game
-            this.completedClueCategories.clear();
-            this.allCluesRevealed = false;
             
             // Reset streak and scoring state for new location
             this.streak = 0;
-            this.seenClueCategories.clear();
             this.turnBaseTotalScore = 0;
             this.anyMatchThisTurn = false;
             this.currentMoveSummary = null;
@@ -1130,7 +814,6 @@ export class Game extends Phaser.Scene {
             this.updateMultiplierText(1);
 
             // Reset species tracking counters
-            this.clueCountThisSpecies = 0;
             this.incorrectGuessesThisSpecies = 0;
             this.speciesStartTime = Date.now();
             
@@ -1159,8 +842,6 @@ export class Game extends Phaser.Scene {
                 this.selectedSpecies = this.currentSpecies[0];
                 console.log("Game Scene: Selected species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "id:", this.selectedSpecies.id);
                 
-                // Reset all progressive clues for new species
-                resetAllProgressiveClues(this.selectedSpecies);
                 
                 // Emit event to inform React components about the new game
                 // Hide the species name - player needs to guess it
@@ -1608,7 +1289,7 @@ export class Game extends Phaser.Scene {
     private async animatePhaseWithOriginalGems(phaseResult: ExplodeAndReplacePhase, isCascade: boolean): Promise<void> {
         if (!this.boardView || !this.backendPuzzle) return;
         try {
-            // Process clues using original gem types
+            // Record matches using original gem types
             this.processMatchedGemsWithOriginalTypes(phaseResult.matches, phaseResult.matchGridState, isCascade);
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
@@ -1624,8 +1305,8 @@ export class Game extends Phaser.Scene {
     private async animatePhase(phaseResult: ExplodeAndReplacePhase, isCascade: boolean): Promise<void> {
         if (!this.boardView || !this.backendPuzzle) return;
         try {
-            // Process clues using current grid state (fallback method)
-            this.processMatchedGemsForClues(phaseResult.matches, isCascade, phaseResult.matchGridState);
+            // Record matches using current grid state (fallback method)
+            this.recordMatchedGems(phaseResult.matches, isCascade, phaseResult.matchGridState);
             
             await this.boardView.animateExplosions(phaseResult.matches.flat());
             await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
@@ -1641,7 +1322,7 @@ export class Game extends Phaser.Scene {
         this.recordMatchesForSummary(matches, originalGridState, isCascade);
     }
 
-    private processMatchedGemsForClues(matches: Coordinate[][], isCascade: boolean, gridStateOverride?: any): void {
+    private recordMatchedGems(matches: Coordinate[][], isCascade: boolean, gridStateOverride?: any): void {
         const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
         this.recordMatchesForSummary(matches, gridState, isCascade);
     }
@@ -1668,7 +1349,7 @@ export class Game extends Phaser.Scene {
                     speciesId,
                     sessionId: this.currentSessionId || undefined,
                     timeToDiscoverSeconds: timeToDiscover,
-                    cluesUnlockedBeforeGuess: this.clueCountThisSpecies,
+                    cluesUnlockedBeforeGuess: 0,
                     incorrectGuessesCount: this.incorrectGuessesThisSpecies,
                     scoreEarned: this.backendPuzzle!.getScore(),
                     foundLon: this.currentMapLocation?.lon,
@@ -1708,7 +1389,7 @@ export class Game extends Phaser.Scene {
                             moves: this.backendPuzzle!.getMovesUsed(),
                             score: this.backendPuzzle!.getScore(),
                             speciesDiscovered: this.currentSpeciesIndex + 1,
-                            cluesUnlocked: this.revealedClues.size,
+                            cluesUnlocked: 0,
                         }),
                     });
                 }
@@ -1756,7 +1437,6 @@ export class Game extends Phaser.Scene {
 
         // Reset scoring for new node (keep species + raster data intact)
         this.streak = 0;
-        this.seenClueCategories.clear();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
         this.currentMoveSummary = null;
@@ -1775,10 +1455,6 @@ export class Game extends Phaser.Scene {
         this.nodeObjectiveProgress = 0;
         this.nodeObjectiveCompleted = false;
 
-        // Clear clue state for fresh node
-        this.revealedClues.clear();
-        this.completedClueCategories.clear();
-        this.allCluesRevealed = false;
         this.usedRasterHabitats.clear();
     }
 
@@ -1859,42 +1535,6 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    /**
-     * Generate a raster habitat clue from the stored habitat distribution data
-     */
-    private generateRasterHabitatClue(): CluePayload | null {
-        if (!this.selectedSpecies) return null;
-        
-        // Find the next unused habitat type from raster data
-        const availableHabitats = this.rasterHabitats.filter(
-            habitat => !this.usedRasterHabitats.has(habitat.habitat_type)
-        );
-        
-        if (availableHabitats.length === 0) {
-            console.log("Game Scene: No more raster habitat types available for clues");
-            return null;
-        }
-        
-        // Get the habitat with highest percentage (first one since they're sorted DESC)
-        const nextHabitat = availableHabitats[0];
-        this.usedRasterHabitats.add(nextHabitat.habitat_type);
-        
-        const clue = `Search Area is ${nextHabitat.percentage}% ${nextHabitat.habitat_type}`;
-        
-        console.log("Game Scene: Generated raster habitat clue:", clue);
-        
-        const habitatConfig = CLUE_CONFIG[GemCategory.HABITAT];
-        return {
-            category: GemCategory.HABITAT,
-            heading: this.selectedSpecies.common_name || this.selectedSpecies.scientific_name || 'Unknown Species',
-            clue: clue,
-            speciesId: this.selectedSpecies.id,
-            name: habitatConfig.categoryName,
-            icon: habitatConfig.icon,
-            color: habitatConfig.color
-        };
-    }
-
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
 
@@ -1920,7 +1560,6 @@ export class Game extends Phaser.Scene {
 
         // Remove player tracking listeners if they exist
         if (this.currentUserId) {
-            EventBus.off('clue-revealed', this.handleClueRevealed, this);
             EventBus.off(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
 
             // Remove beforeunload handler
@@ -1984,10 +1623,7 @@ export class Game extends Phaser.Scene {
         // Reset species data
         this.currentSpecies = [];
         this.selectedSpecies = null;
-        this.revealedClues.clear();
-        this.completedClueCategories.clear();
         this.currentSpeciesIndex = 0;
-        this.allCluesRevealed = false;
         
         // Reset raster habitat data
         this.rasterHabitats = [];
@@ -1995,14 +1631,12 @@ export class Game extends Phaser.Scene {
         
         // Reset streak and scoring state
         this.streak = 0;
-        this.seenClueCategories.clear();
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
 
         // Clear tracking state
         this.currentUserId = null;
         this.currentSessionId = null;
-        this.clueCountThisSpecies = 0;
         this.incorrectGuessesThisSpecies = 0;
         this.speciesStartTime = 0;
 

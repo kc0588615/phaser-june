@@ -84,32 +84,6 @@ export const playerSpeciesDiscoveries = pgTable(
   })
 );
 
-export const playerClueUnlocks = pgTable(
-  'player_clue_unlocks',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    playerId: uuid('player_id').notNull().references(() => profiles.userId),
-    speciesId: integer('species_id').notNull().references(() => speciesTable.id),
-    discoveryId: uuid('discovery_id').references(() => playerSpeciesDiscoveries.id),
-    clueCategory: text('clue_category').notNull(),
-    clueField: text('clue_field').notNull(),
-    clueValue: text('clue_value'),
-    unlockedAt: timestamp('unlocked_at', { withTimezone: true }).notNull().defaultNow(),
-    runNodeId: uuid('run_node_id'),
-  },
-  (table) => ({
-    uqPlayerClueUnlocksPlayerSpeciesCategoryField: uniqueIndex(
-      'uq_player_clue_unlocks_player_species_category_field'
-    ).on(table.playerId, table.speciesId, table.clueCategory, table.clueField),
-    ixPlayerClueUnlocksDiscoveryId: index(
-      'ix_player_clue_unlocks_discovery_id'
-    ).on(table.discoveryId),
-    ixPlayerClueUnlocksRunNodeId: index(
-      'ix_player_clue_unlocks_run_node_id'
-    ).on(table.runNodeId),
-  })
-);
-
 export const playerStats = pgTable('player_stats', {
   playerId: uuid('player_id').primaryKey().references(() => profiles.userId),
   totalSpeciesDiscovered: integer('total_species_discovered').notNull().default(0),

@@ -1,9 +1,7 @@
+import { useGameBridge } from '@/contexts/GameBridgeContext';
 import React from 'react';
 import { EventBus, EVT_GAME_RESTART } from '../game/EventBus';
 import { SpeciesHeaderCard } from './SpeciesHeaderCard';
-import { DenseClueGrid } from './DenseClueGrid';
-import { ClueSheetWrapper } from './ClueSheetWrapper';
-import { useSpeciesPanelState } from '@/hooks/useSpeciesPanelState';
 
 
 interface SpeciesPanelProps {
@@ -11,20 +9,8 @@ interface SpeciesPanelProps {
   toastsEnabled?: boolean;
 }
 
-export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled = true }) => {
-  const {
-    clues,
-    selectedSpeciesName,
-    selectedSpeciesId,
-    totalSpecies,
-    currentSpeciesIndex,
-    allSpeciesCompleted,
-    discoveredClues,
-    isSpeciesDiscovered,
-    discoveredSpeciesName,
-    hud,
-    hasSelectedSpecies,
-  } = useSpeciesPanelState(toastsEnabled);
+export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style }) => {
+  const { hud, speciesInfo, allSpeciesCompleted } = useGameBridge();
 
   const onRestart = () => EventBus.emit(EVT_GAME_RESTART, {});
 
@@ -51,30 +37,13 @@ export const SpeciesPanel: React.FC<SpeciesPanelProps> = ({ style, toastsEnabled
         )}
       </div>
 
-      {/* Species Header with Horizontal Clue Indicators */}
       <SpeciesHeaderCard
-        speciesName={allSpeciesCompleted ? 'All Species Discovered!' : (isSpeciesDiscovered ? discoveredSpeciesName : selectedSpeciesName)}
-        speciesId={selectedSpeciesId}
-        currentSpeciesIndex={currentSpeciesIndex}
-        totalSpecies={totalSpecies}
-        revealedClueCount={clues.length}
-        discoveredClues={discoveredClues}
+        speciesName={allSpeciesCompleted ? 'All Species Discovered!' : speciesInfo?.name ?? ''}
+        speciesId={speciesInfo?.id ?? 0}
+        currentSpeciesIndex={speciesInfo?.index ?? 0}
+        totalSpecies={speciesInfo?.total ?? 0}
       />
-
-      {/* Compact Field Notes List - Quick Reference */}
-      <DenseClueGrid
-        clues={clues}
-        hasSelectedSpecies={hasSelectedSpecies}
-      />
-
-      {/* Sheet Button for Detailed View */}
-      <div className="flex-shrink-0">
-        <ClueSheetWrapper
-          clues={clues}
-          speciesName={selectedSpeciesName}
-          hasSelectedSpecies={hasSelectedSpecies}
-        />
-      </div>
+      <p className="text-sm text-ds-text-secondary p-3">Match gems to score points. Start an expedition to investigate a mystery.</p>
     </div>
   );
 };

@@ -27,11 +27,6 @@ describe('gem registry', () => {
     assert.deepEqual(GEM_TYPES, LOOT_GEM_TYPES);
   });
 
-  test('all 8 registered gems map to distinct clue categories', () => {
-    const categories = LOOT_GEM_TYPES.map((gemType) => GEM_REGISTRY[gemType].clueCategory);
-    assert.ok(categories.every((category) => category !== null));
-    assert.equal(new Set(categories).size, LOOT_GEM_TYPES.length);
-  });
 
 });
 

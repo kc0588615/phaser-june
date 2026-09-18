@@ -7,7 +7,6 @@
 // createBoardSpawnConfig / buildBoardSpawnConfigForNode compute the weighted
 // spawn odds the board uses for a given node type. Behavior is pinned by
 // tests/expedition/domain.test.ts.
-import { GemCategory } from '@/game/clueConfig';
 
 export const LOOT_GEM_TYPES = [
   'black',
@@ -34,7 +33,6 @@ export interface GemDefinition {
   family: GemFamily;
   label: string;
   color: string;
-  clueCategory: GemCategory | null;
   assetBacked: boolean;
   isCrate?: boolean;
   isMultiplier?: boolean;
@@ -46,7 +44,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Life Cycle Loot',
     color: '#1e293b',
-    clueCategory: GemCategory.LIFE_CYCLE,
     assetBacked: true,
   },
   blue: {
@@ -54,7 +51,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Geography & Habitat',
     color: '#3b82f6',
-    clueCategory: GemCategory.GEOGRAPHIC,
     assetBacked: true,
   },
   green: {
@@ -62,7 +58,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Habitat Survey',
     color: '#22c55e',
-    clueCategory: GemCategory.HABITAT,
     assetBacked: true,
   },
   orange: {
@@ -70,7 +65,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Morphology Loot',
     color: '#f97316',
-    clueCategory: GemCategory.MORPHOLOGY,
     assetBacked: true,
   },
   red: {
@@ -78,7 +72,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Classification Loot',
     color: '#ef4444',
-    clueCategory: GemCategory.CLASSIFICATION,
     assetBacked: true,
   },
   white: {
@@ -86,7 +79,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Conservation Loot',
     color: '#e2e8f0',
-    clueCategory: GemCategory.CONSERVATION,
     assetBacked: true,
   },
   yellow: {
@@ -94,7 +86,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Behavior Loot',
     color: '#eab308',
-    clueCategory: GemCategory.BEHAVIOR,
     assetBacked: true,
   },
   purple: {
@@ -102,7 +93,6 @@ const LOOT_GEM_DEFINITIONS: Record<LootGemType, GemDefinition> = {
     family: 'loot',
     label: 'Key Facts Loot',
     color: '#a855f7',
-    clueCategory: GemCategory.KEY_FACTS,
     assetBacked: true,
   },
 };
@@ -125,9 +115,6 @@ export function getGemFamily(gemType: GemType): GemFamily {
   return GEM_REGISTRY[gemType].family;
 }
 
-export function getClueCategoryForGemType(gemType: GemType): GemCategory | null {
-  return GEM_REGISTRY[gemType].clueCategory;
-}
 
 export function isLootGem(gemType: GemType): gemType is LootGemType {
   return LOOT_GEM_TYPES.includes(gemType);
