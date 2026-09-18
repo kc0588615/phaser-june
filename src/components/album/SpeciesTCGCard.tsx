@@ -98,11 +98,8 @@ export default function SpeciesTCGCard({
   const tone = CARD_TONES[code] ?? CARD_TONES.LC;
   const classMeta = CLASS_META[species.class || ''] ?? { emoji: '🐾', label: 'Animal' };
   const completion = clampPercent(completionPct);
-  const facts = [
-    { key: 'key_fact_1', text: species.key_fact_1 },
-    { key: 'key_fact_2', text: species.key_fact_2 },
-    { key: 'key_fact_3', text: species.key_fact_3 },
-  ];
+  const facts = (species.notes ?? []).filter(note => note.topic === 'key_fact')
+    .map(note => ({ key: `key_fact_${note.sort_order}`, text: note.note_text }));
   const unlockedFacts = new Set(factsUnlocked);
   const coreFactValues = new Set(facts.flatMap(fact => [fact.key, fact.text].filter((value): value is string => Boolean(value))));
   const expeditionFacts = factsUnlocked.filter(value => !coreFactValues.has(value) && value.includes(' ')).slice(-3);

@@ -40,20 +40,13 @@ const speciesColumns = {
   diet_type: speciesTable.dietType,
   diet_prey: speciesTable.dietPrey,
   diet_flora: speciesTable.dietFlora,
-  behavior_1: speciesTable.behavior1,
-  behavior_2: speciesTable.behavior2,
-  life_description_1: speciesTable.lifeDescription1,
-  life_description_2: speciesTable.lifeDescription2,
-  key_fact_1: speciesTable.keyFact1,
-  key_fact_2: speciesTable.keyFact2,
-  key_fact_3: speciesTable.keyFact3,
+  notes: sql<NonNullable<Species['notes']>>`COALESCE((
+    SELECT jsonb_agg(jsonb_build_object('topic', n.topic, 'sort_order', n.sort_order,
+      'note_text', n.note_text, 'source_url', n.source_url) ORDER BY n.topic, n.sort_order)
+    FROM public.species_notes n WHERE n.species_id = ${speciesTable.id}
+  ), '[]'::jsonb)`,
   threats: speciesTable.threats,
-  taxonomic_comment: speciesTable.taxonomicComment,
   distribution_comment: speciesTable.distributionComment,
-  lifespan: speciesTable.lifespan,
-  maturity: speciesTable.maturity,
-  reproduction_type: speciesTable.reproductionType,
-  clutch_size: speciesTable.clutchSize,
 };
 
 // Minimal columns for catalog listing

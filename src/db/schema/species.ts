@@ -110,39 +110,12 @@ export const speciesTable = pgTable('species', {
   dietType: text('diet_type'),
   dietPrey: text('diet_prey'),
   dietFlora: text('diet_flora'),
-  behavior1: text('behavior_1'),
-  behavior2: text('behavior_2'),
-  lifeDescription1: text('life_description_1'),
-  lifeDescription2: text('life_description_2'),
-  keyFact1: text('key_fact_1'),
-  keyFact2: text('key_fact_2'),
-  keyFact3: text('key_fact_3'),
   threats: text(),
-  taxonomicComment: text('taxonomic_comment'),
   distributionComment: text('distribution_comment'),
-  lifespan: numeric(),
-  maturity: text(),
-  reproductionType: text('reproduction_type'),
-  clutchSize: text('clutch_size'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const speciesFacts = pgTable(
-  'species_facts',
-  {
-    id: serial('id').primaryKey(),
-    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
-    category: text('category').notNull(),
-    factText: text('fact_text').notNull(),
-    sortOrder: smallint('sort_order').notNull().default(1),
-  },
-  (table) => [
-    uniqueIndex('uq_species_facts_species_cat_order').on(table.speciesId, table.category, table.sortOrder),
-    index('ix_species_facts_species').on(table.speciesId),
-    index('ix_species_facts_category').on(table.speciesId, table.category),
-  ]
-);
 
 // ---------------------------------------------------------------------------
 // Comparative deduction tables
@@ -279,29 +252,6 @@ export const cascadeHints = pgTable(
   ],
 );
 
-export const speciesDeductionClues = pgTable(
-  'species_deduction_clues',
-  {
-    id: serial('id').primaryKey(),
-    speciesId: integer('species_id')
-      .notNull()
-      .references(() => speciesTable.id, { onDelete: 'cascade' }),
-    category: text('category').notNull().$type<DeductionClueCategory>(),
-    label: text('label').notNull(),
-    compareTags: text('compare_tags').array(),
-    revealOrder: smallint('reveal_order').notNull().default(1),
-    unlockMode: text('unlock_mode').notNull().default('fragment').$type<DeductionUnlockMode>(),
-    baseCost: smallint('base_cost').notNull().default(2),
-    isFiltering: boolean('is_filtering').notNull().default(true),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    uniqueIndex('uq_deduction_clues_species_cat_order').on(table.speciesId, table.category, table.revealOrder),
-    index('ix_deduction_clues_species').on(table.speciesId),
-    index('ix_deduction_clues_category').on(table.speciesId, table.category),
-    index('ix_deduction_clues_compare').using('gin', table.compareTags),
-  ]
-);
 
 export const oneearthBioregion = oneearthSchema.table(
   'oneearth_bioregion',
@@ -428,3 +378,16 @@ export const mysteryCasesPublic = pgView('mystery_cases_public', {
   e.slug AS explanation_slug, e.label, e.description, e.sort_order
   FROM mystery_cases c JOIN mystery_explanations e ON e.case_id = c.id
   WHERE c.review_status = 'reviewed'`);
+
+export const speciesNotes = pgTable('species_notes', {
+  speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+  topic: text('topic').notNull().$type<'behavior' | 'life_cycle' | 'key_fact' | 'taxonomy' | 'distribution' | 'reproduction' | 'threats'>(),
+  sortOrder: smallint('sort_order').notNull(),
+  noteText: text('note_text').notNull(),
+  sourceUrl: text('source_url'),
+}, table => [
+  primaryKey({ columns: [table.speciesId, table.topic, table.sortOrder] }),
+  check('species_notes_topic_check', sql`${table.topic} IN ('behavior','life_cycle','key_fact','taxonomy','distribution','reproduction','threats')`),
+  check('species_notes_sort_order_check', sql`${table.sortOrder} BETWEEN 1 AND 9`),
+  check('species_notes_source_url_check', sql`${table.sourceUrl} IS NULL OR ${table.sourceUrl} LIKE 'https://%'`),
+]);

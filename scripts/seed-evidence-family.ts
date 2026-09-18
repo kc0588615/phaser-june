@@ -26,7 +26,7 @@ async function loadCorpus() {
   const seeds = await Promise.all(files.map(async file => parseEvidenceFamilySeed(JSON.parse(await readFile(path.join(seedRoot, file), 'utf8')) as unknown, file)));
   const cascadeHints = parseCascadeHintSeed(JSON.parse(await readFile(path.join(seedRoot, 'cascade_hints.json'), 'utf8')) as unknown);
   const selected = new Set<number>(pool.species_iucn_ids);
-  const dossiers = (await loadFiles(path.join(root, 'db/seeds/deduction'), parseEvidenceProfileDossier))
+  const dossiers = (await loadFiles(path.join(root, 'db/seeds/species'), parseEvidenceProfileDossier))
     .filter(dossier => selected.has(dossier.iucnId));
   return { seeds, dossiers, cascadeHints };
 }

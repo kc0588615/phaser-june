@@ -24,6 +24,7 @@ interface SpeciesCardProps {
 
 
 export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt, speciesPositionLabel }: SpeciesCardProps) {
+  const note = (topic: string, order: number) => species.notes?.find(item => item.topic === topic && item.sort_order === order)?.note_text;
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
   // Category header classes with colors and emojis
@@ -448,7 +449,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       )}
 
       {/* Behavior & Diet */}
-      {(hasValue(species.diet_type) || hasValue(species.diet_prey) || hasValue(species.diet_flora) || hasValue(species.behavior_1) || hasValue(species.behavior_2)) && (
+      {(hasValue(species.diet_type) || hasValue(species.diet_prey) || hasValue(species.diet_flora) || hasValue(note('behavior', 1)) || hasValue(note('behavior', 2))) && (
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
@@ -485,7 +486,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   </div>
                 </div>
               )}
-              {hasValue(species.behavior_1) && (
+              {hasValue(note('behavior', 1)) && (
                 <div className="mb-2 w-full">
                   <span 
                     className="text-muted-foreground block mb-1"
@@ -506,11 +507,11 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                       hyphens: 'auto'
                     }}
                   >
-                    {species.behavior_1}
+                    {note('behavior', 1)}
                   </p>
                 </div>
               )}
-              {hasValue(species.behavior_2) && (
+              {hasValue(note('behavior', 2)) && (
                 <div className="w-full">
                   <span 
                     className="text-muted-foreground block mb-1"
@@ -531,7 +532,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                       hyphens: 'auto'
                     }}
                   >
-                    {species.behavior_2}
+                    {note('behavior', 2)}
                   </p>
                 </div>
               )}
@@ -541,38 +542,38 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       )}
 
       {/* Life Cycle */}
-      {(hasValue(species.lifespan) || hasValue(species.maturity) || hasValue(species.reproduction_type) || hasValue(species.clutch_size) || hasValue(species.life_description_1) || hasValue(species.life_description_2)) && (
+      {(hasValue(note('life_cycle', 3)) || hasValue(note('life_cycle', 4)) || hasValue(note('reproduction', 1)) || hasValue(note('reproduction', 2)) || hasValue(note('life_cycle', 1)) || hasValue(note('life_cycle', 2))) && (
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
             {getCategoryHeader('⏳', 'black', 'Life Cycle')}
             <div className="grid grid-cols-[minmax(0,auto)_1fr] gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm mb-3 items-start break-words">
-              {hasValue(species.lifespan) && (
+              {hasValue(note('life_cycle', 3)) && (
                 <>
                   <span className="text-muted-foreground">Lifespan:</span>
-                  <span className="text-foreground">{species.lifespan} years</span>
+                  <span className="text-foreground">{note('life_cycle', 3)} years</span>
                 </>
               )}
-              {hasValue(species.maturity) && (
+              {hasValue(note('life_cycle', 4)) && (
                 <>
                   <span className="text-muted-foreground">Sexual Maturity:</span>
-                  <span className="text-foreground">{species.maturity}</span>
+                  <span className="text-foreground">{note('life_cycle', 4)}</span>
                 </>
               )}
-              {hasValue(species.reproduction_type) && (
+              {hasValue(note('reproduction', 1)) && (
                 <>
                   <span className="text-muted-foreground">Reproduction:</span>
-                  <span className="text-foreground">{species.reproduction_type}</span>
+                  <span className="text-foreground">{note('reproduction', 1)}</span>
                 </>
               )}
-              {hasValue(species.clutch_size) && (
+              {hasValue(note('reproduction', 2)) && (
                 <>
                   <span className="text-muted-foreground">Clutch Size:</span>
-                  <span className="text-foreground">{species.clutch_size}</span>
+                  <span className="text-foreground">{note('reproduction', 2)}</span>
                 </>
               )}
             </div>
-            {hasValue(species.life_description_1) && (
+            {hasValue(note('life_cycle', 1)) && (
               <p 
                 className="text-muted-foreground mb-2"
                 style={{ 
@@ -586,10 +587,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   hyphens: 'auto'
                 }}
               >
-                {species.life_description_1}
+                {note('life_cycle', 1)}
               </p>
             )}
-            {hasValue(species.life_description_2) && (
+            {hasValue(note('life_cycle', 2)) && (
               <p 
                 className="text-muted-foreground"
                 style={{ 
@@ -603,7 +604,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                   hyphens: 'auto'
                 }}
               >
-                {species.life_description_2}
+                {note('life_cycle', 2)}
               </p>
             )}
           </div>
@@ -611,13 +612,13 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
       )}
 
       {/* Key Facts */}
-      {(hasValue(species.key_fact_1) || hasValue(species.key_fact_2) || hasValue(species.key_fact_3)) && (
+      {(hasValue(note('key_fact', 1)) || hasValue(note('key_fact', 2)) || hasValue(note('key_fact', 3))) && (
         <>
           <div className="h-px bg-border my-4 sm:my-6" />
           <div className="mb-4 sm:mb-6">
             {getCategoryHeader('🔮', 'purple', 'Key Facts')}
             <div>
-              {hasValue(species.key_fact_1) && (
+              {hasValue(note('key_fact', 1)) && (
                 <p 
                   className="text-muted-foreground mb-2"
                   style={{ 
@@ -631,10 +632,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     hyphens: 'auto'
                   }}
                 >
-                  • {species.key_fact_1}
+                  • {note('key_fact', 1)}
                 </p>
               )}
-              {hasValue(species.key_fact_2) && (
+              {hasValue(note('key_fact', 2)) && (
                 <p 
                   className="text-muted-foreground mb-2"
                   style={{ 
@@ -648,10 +649,10 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     hyphens: 'auto'
                   }}
                 >
-                  • {species.key_fact_2}
+                  • {note('key_fact', 2)}
                 </p>
               )}
-              {hasValue(species.key_fact_3) && (
+              {hasValue(note('key_fact', 3)) && (
                 <p 
                   className="text-muted-foreground"
                   style={{ 
@@ -665,7 +666,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                     hyphens: 'auto'
                   }}
                 >
-                  • {species.key_fact_3}
+                  • {note('key_fact', 3)}
                 </p>
               )}
             </div>

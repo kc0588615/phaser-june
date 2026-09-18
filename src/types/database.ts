@@ -125,7 +125,15 @@ export interface EcoregionCollectionSummary {
   }>;
 }
 
+export interface SpeciesNote {
+  topic: 'behavior' | 'life_cycle' | 'key_fact' | 'taxonomy' | 'distribution' | 'reproduction' | 'threats';
+  sort_order: number;
+  note_text: string;
+  source_url: string | null;
+}
+
 export interface Species {
+  notes?: SpeciesNote[];
   id: number;
   iucn_id?: number;
   common_name?: string;
@@ -139,7 +147,6 @@ export interface Species {
   class?: string;
   phylum?: string;
   kingdom?: string;
-  taxonomic_comment?: string;
 
   // Habitat fields
   habitat_description?: string;
@@ -173,16 +180,8 @@ export interface Species {
   diet_flora?: string;
 
   // Behavior fields
-  behavior_1?: string;
-  behavior_2?: string;
 
   // Life cycle fields
-  life_description_1?: string;
-  life_description_2?: string;
-  lifespan?: string;
-  maturity?: string;
-  reproduction_type?: string;
-  clutch_size?: string;
 
   // Conservation fields
   conservation_text?: string;
@@ -191,9 +190,6 @@ export interface Species {
   threats?: string;
 
   // Key facts fields
-  key_fact_1?: string;
-  key_fact_2?: string;
-  key_fact_3?: string;
 
   // Spatial geometry field (PostGIS)
   wkb_geometry?: any;

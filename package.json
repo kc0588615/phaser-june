@@ -43,7 +43,7 @@
         "clean": "rm -rf .next dist",
         "db:introspect": "drizzle-kit introspect",
         "seed:mystery-cases": "node scripts/run-typescript.mjs scripts/seed-mystery-cases.ts",
-        "seed:deduction": "node scripts/run-typescript.mjs scripts/seed-deduction.ts",
+        "seed:species": "node scripts/run-typescript.mjs scripts/seed-species.ts",
         "seed:evidence-family": "node scripts/run-typescript.mjs scripts/seed-evidence-family.ts"
     },
     "dependencies": {

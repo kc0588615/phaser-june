@@ -10,7 +10,7 @@ import {
   profiles,
   speciesEcoregions,
   speciesTable,
-  speciesFacts,
+  speciesNotes,
 } from './schema';
 
 // Select types (for reading)
@@ -28,9 +28,10 @@ export type SpeciesEcoregion = InferSelectModel<typeof speciesEcoregions>;
 
 // Curated game species
 export type Species = InferSelectModel<typeof speciesTable>;
-export type SpeciesFact = InferSelectModel<typeof speciesFacts>;
 
 // Insert types (for writing)
 export type NewHighScore = InferInsertModel<typeof highScores>;
 export type NewPlayerGameSession = InferInsertModel<typeof playerGameSessions>;
 export type NewPlayerSpeciesDiscovery = InferInsertModel<typeof playerSpeciesDiscoveries>;
+
+export type SpeciesNote = InferSelectModel<typeof speciesNotes>;

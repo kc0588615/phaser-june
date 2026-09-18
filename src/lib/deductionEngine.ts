@@ -7,7 +7,7 @@
  */
 
 import type { DeductionClueCategory } from '@/db/schema/species';
-import type { ClueCategoryKey, ConfirmedClue } from '@/types/expedition';
+import type { ConfirmedClue } from '@/types/expedition';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,18 +30,6 @@ export interface DeductionProfile {
   signatureTag: string | null;
 }
 
-/** A clue row from species_deduction_clues */
-export interface DeductionClue {
-  id: number;
-  speciesId: number;
-  category: DeductionClueCategory;
-  label: string;
-  compareTags: string[] | null;
-  revealOrder: number;
-  unlockMode: 'fragment' | 'score';
-  baseCost: number;
-  isFiltering: boolean;
-}
 
 /** Result of comparing one category between mystery and reference */
 export interface ComparisonResult {
@@ -198,54 +186,6 @@ export function filterCandidates(
 // Clue helpers
 // ---------------------------------------------------------------------------
 
-/** Get the next unprocessed clue for a category, respecting reveal_order */
-export function getNextClue(
-  clues: DeductionClue[],
-  category: DeductionClueCategory,
-  processedClueIds: Set<number>,
-): DeductionClue | null {
-  return clues
-    .filter(c => c.category === category && !processedClueIds.has(c.id))
-    .sort((a, b) => a.revealOrder - b.revealOrder)[0] ?? null;
-}
-
-const WALLET_KEY_TO_DEDUCTION_CATEGORIES: Record<ClueCategoryKey, DeductionClueCategory[]> = {
-  classification: ['taxonomy'],
-  habitat: [],
-  geographic: ['geography', 'habitat'],
-  morphology: ['morphology'],
-  behavior: ['behavior', 'diet'],
-  life_cycle: ['reproduction'],
-  conservation: ['conservation'],
-  key_facts: ['key_fact'],
-};
-
-/** Get the next unprocessed deduction clue for a matched board category. */
-export function getNextClueForWalletKey(
-  clues: DeductionClue[],
-  category: ClueCategoryKey,
-  processedClueIds: Set<number>,
-): DeductionClue | null {
-  const categories = WALLET_KEY_TO_DEDUCTION_CATEGORIES[category] ?? [];
-  return clues
-    .filter(c => categories.includes(c.category) && !processedClueIds.has(c.id))
-    .sort((a, b) => a.revealOrder - b.revealOrder)[0] ?? null;
-}
-
-/** Get all clues for a species grouped by category */
-export function groupCluesByCategory(
-  clues: DeductionClue[],
-): Map<DeductionClueCategory, DeductionClue[]> {
-  const map = new Map<DeductionClueCategory, DeductionClue[]>();
-  for (const c of clues) {
-    const arr = map.get(c.category) ?? [];
-    arr.push(c);
-    map.set(c.category, arr);
-  }
-  return map;
-}
-
-/** Check if a category is a filtering (comparative) category */
 export function isFilteringCategory(cat: DeductionClueCategory): boolean {
   return FILTERING_CATEGORIES.includes(cat);
 }
