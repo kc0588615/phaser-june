@@ -1,7 +1,7 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { casePools, casePoolMembers, cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles, speciesTable } from '@/db';
+import { mysteryCases, mysteryExplanations, mysteryResolutions, mysteryEvidenceSteps, mysteryRejectedAlternatives, mysterySources, casePools, casePoolMembers, cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles, speciesTable } from '@/db';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
@@ -16,7 +16,7 @@ import { resolveRunCreationIdentifiers } from '@/lib/runCaseState';
 import { deriveExpeditionMapView } from '@/expedition/mapView';
 import { RELAXED_RESEARCH_SITE_SPACING_KM, satisfiesResearchSiteSpacing } from '@/expedition/siteSpacing';
 import { harvestExpeditionWaypoints } from '@/lib/waypointHarvesting';
-import { getMysteryCaseForIucnId } from '@/lib/mysteryCaseCatalog.server';
+import { assembleMysteryCases } from '@/lib/mysteryCase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -108,6 +108,22 @@ export async function POST(request: NextRequest) {
     ]);
     const profiles = profileRows as CompilerSpeciesProfile[];
 
+    const cases = await db.select().from(mysteryCases).where(and(eq(mysteryCases.poolId, pool.id), eq(mysteryCases.reviewStatus, 'reviewed')));
+    const caseIds = cases.map(row => row.id);
+    const [explanations, resolutions, steps, alternatives, sources] = await Promise.all([
+      db.select().from(mysteryExplanations).where(inArray(mysteryExplanations.caseId, caseIds)),
+      db.select().from(mysteryResolutions).where(inArray(mysteryResolutions.caseId, caseIds)),
+      db.select().from(mysteryEvidenceSteps).where(inArray(mysteryEvidenceSteps.caseId, caseIds)),
+      db.select().from(mysteryRejectedAlternatives).where(inArray(mysteryRejectedAlternatives.caseId, caseIds)),
+      db.select().from(mysterySources).where(inArray(mysterySources.caseId, caseIds)),
+    ]);
+    let mysteryCasesBySpeciesId: ReturnType<typeof assembleMysteryCases>;
+    try {
+      mysteryCasesBySpeciesId = assembleMysteryCases({ cases, explanations, resolutions, steps, alternatives, sources });
+    } catch (error) {
+      console.error('[API POST /api/runs] Invalid mystery content:', error);
+      return NextResponse.json({ error: 'Case compilation unavailable' }, { status: 503 });
+    }
     const gisPrior = buildAnswerPrior(speciesRows.map(row => ({ speciesId: row.id, ...row })), getWaypointAnchors(metadataInput.expeditionSnapshot));
     const compiled = compileCaseV4({
       caseSeed,
@@ -129,10 +145,7 @@ export async function POST(request: NextRequest) {
       gisPrior,
       boardSeeds: preparedNodes.map(node => node.boardSeed!),
       mapView: deriveExpeditionMapView(preparedNodes, { lon, lat }, stringOrNull(body.biome)),
-      mysteryCasesBySpeciesId: new Map(speciesRows.flatMap(row => {
-        const mystery = getMysteryCaseForIucnId(Number(row.iucnId));
-        return mystery ? [[row.id, mystery] as const] : [];
-      })),
+      mysteryCasesBySpeciesId,
       answerTermsBySpeciesId: new Map(speciesRows.map(row => [row.id, answerTerms(row.commonName, row.scientificName)])),
     });
     if ('error' in compiled) {

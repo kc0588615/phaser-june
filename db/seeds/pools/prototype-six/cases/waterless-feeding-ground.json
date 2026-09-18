@@ -1,0 +1,67 @@
+{
+  "species_iucn_id": 512,
+  "public": {
+    "id": "waterless-feeding-ground",
+    "title": "The Waterless Feeding Ground",
+    "incident": "Fresh grazing and browsing traces keep appearing across a dry survey plot, even though the nearest dependable surface water is far away.",
+    "atmosphere": "The feeding trail is recent, repeated, and concentrated during the coolest hours.",
+    "question": "Which species made the traces, and what best explains its continued use of this arid site?",
+    "explanationChoices": [
+      {
+        "id": "plant-moisture",
+        "label": "Moisture from plants",
+        "description": "A desert-adapted herbivore can meet much of its water need through food."
+      },
+      {
+        "id": "hidden-water",
+        "label": "An unmapped water source",
+        "description": "The animals are returning to a spring or pool missed by the survey."
+      },
+      {
+        "id": "population-surge",
+        "label": "Population surge",
+        "description": "Unusually high numbers are forcing animals into marginal feeding ground."
+      },
+      {
+        "id": "drought-only",
+        "label": "Drought damage only",
+        "description": "The feeding marks are incidental; plant stress produced the visible pattern."
+      }
+    ]
+  },
+  "private": {
+    "answerExplanationId": "plant-moisture",
+    "explanationFeedback": {
+      "plant-moisture": "This explanation fits the repeated feeding evidence and the dry-site context.",
+      "hidden-water": "No water-dependent travel pattern was documented; account for how the animal can persist between water points.",
+      "population-surge": "The observations show recurring use, not the crowding or broad overuse expected from a population surge.",
+      "drought-only": "Drought may shape the site, but it does not explain the fresh, repeated grazing and browsing marks."
+    },
+    "resolution": {
+      "headline": "A dryland specialist at work",
+      "diagnosis": "Addax feeding activity produced the traces. Moisture-rich grasses, shrubs, succulents, shoots, seeds, and melons can reduce its need for free water.",
+      "evidenceChain": [
+        "Broad hoof traces and browsing signs indicate a large ground herbivore.",
+        "Cool-hour activity and open arid ground fit a heat-avoiding desert forager.",
+        "The diet and range evidence support plant-derived moisture rather than a hidden pool."
+      ],
+      "ecologicalRole": "Selective grazing and browsing move nutrients and shape sparse desert vegetation, but the ecological signal should not be mistaken for evidence of a population boom.",
+      "taxonomy": "Addax nasomaculatus is a bovid: the sole living species in the genus Addax.",
+      "misconception": "Finding fresh herbivore signs far from water does not prove that an unmapped waterhole exists.",
+      "rejectedAlternatives": [
+        "A population surge lacks supporting density or overuse evidence.",
+        "Drought alone cannot create fresh hoof and feeding traces."
+      ],
+      "sources": [
+        {
+          "label": "Smithsonian’s National Zoo — Addax",
+          "url": "https://nationalzoo.si.edu/animals/addax"
+        },
+        {
+          "label": "Sahara Conservation — Addax",
+          "url": "https://saharaconservation.org/sahel-and-sahara-fauna/addax/"
+        }
+      ]
+    }
+  }
+}

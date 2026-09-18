@@ -1,7 +1,14 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildPublicMysteryCase, parsePublicMysteryCase, validateAuthoredMysteryCase } from '@/lib/mysteryCase';
-import { getMysteryCaseForIucnId } from '@/lib/mysteryCaseCatalog.server';
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { parseMysteryCaseSeed } from '@/lib/mysteryCase';
+
+const seedDirectory = path.join(process.cwd(), 'db/seeds/pools/prototype-six/cases');
+const seededCases = readdirSync(seedDirectory).filter(file => file.endsWith('.json'))
+  .map(file => parseMysteryCaseSeed(JSON.parse(readFileSync(path.join(seedDirectory, file), 'utf8'))));
+const getMysteryCaseForIucnId = (id: number) => seededCases.find(seed => seed.species_iucn_id === id) ?? null;
 
 const SPECIES = [
   { iucnId: 512, terms: ['Addax', 'Addax nasomaculatus'] },

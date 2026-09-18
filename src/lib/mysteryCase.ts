@@ -92,7 +92,6 @@ export function validateAuthoredMysteryCase(
   const errors: string[] = [];
   const publicCase = authored.public;
   const choices = publicCase.explanationChoices;
-  if (!ID_PATTERN.test(publicCase.id)) errors.push('case id is invalid');
   for (const [field, value] of Object.entries({
     title: publicCase.title,
     incident: publicCase.incident,
@@ -102,9 +101,8 @@ export function validateAuthoredMysteryCase(
     if (!validCopy(value)) errors.push(`${field} is invalid`);
   }
   if (choices.length < 3 || choices.length > 5) errors.push('case must expose three to five explanations');
-  if (new Set(choices.map(choice => choice.id)).size !== choices.length) errors.push('explanation ids must be unique');
   for (const choice of choices) {
-    if (!ID_PATTERN.test(choice.id) || !validCopy(choice.label) || !validCopy(choice.description)) {
+    if (!validCopy(choice.label) || !validCopy(choice.description)) {
       errors.push(`explanation ${choice.id || '(missing)'} is invalid`);
     }
   }
@@ -118,7 +116,7 @@ export function validateAuthoredMysteryCase(
   if (![resolution.headline, resolution.diagnosis, resolution.ecologicalRole, resolution.taxonomy, resolution.misconception].every(validCopy)
     || resolution.evidenceChain.length < 2 || resolution.evidenceChain.some(item => !validCopy(item))
     || resolution.rejectedAlternatives.length < 2 || resolution.rejectedAlternatives.some(item => !validCopy(item))
-    || resolution.sources.length < 1 || resolution.sources.some(source => !validCopy(source.label) || !validSourceUrl(source.url))) {
+    || resolution.sources.length < 1 || resolution.sources.some(source => !validCopy(source.label) || !validCopy(source.url))) {
     errors.push('resolution content is incomplete');
   }
   const publicCopy = JSON.stringify(publicCase).toLowerCase();
@@ -226,4 +224,62 @@ function record(value: unknown): Record<string, unknown> {
 
 function string(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+/** Assemble ordered content rows without exposing private fields in the public case. */
+export function assembleMysteryCases(rows: {
+  cases: Array<typeof import('@/db/schema').mysteryCases.$inferSelect>;
+  explanations: Array<typeof import('@/db/schema').mysteryExplanations.$inferSelect>;
+  resolutions: Array<typeof import('@/db/schema').mysteryResolutions.$inferSelect>;
+  steps: Array<typeof import('@/db/schema').mysteryEvidenceSteps.$inferSelect>;
+  alternatives: Array<typeof import('@/db/schema').mysteryRejectedAlternatives.$inferSelect>;
+  sources: Array<typeof import('@/db/schema').mysterySources.$inferSelect>;
+}): Map<number, AuthoredMysteryCase> {
+  return new Map(rows.cases.map(item => {
+    const explanations = rows.explanations.filter(row => row.caseId === item.id).sort((a, b) => a.sortOrder - b.sortOrder);
+    const answer = explanations.find(row => row.isAnswer);
+    const resolution = rows.resolutions.find(row => row.caseId === item.id);
+    // The partial unique index prevents two answers, but cannot require one.
+    if (!answer || !resolution) throw new Error(`Case ${item.slug} is missing its answer or resolution.`);
+    return [item.speciesId, {
+      public: {
+        id: item.slug, title: item.title, incident: item.incident, atmosphere: item.atmosphere, question: item.question,
+        explanationChoices: explanations.map(row => ({ id: row.slug, label: row.label, description: row.description })),
+      },
+      private: {
+        answerExplanationId: answer.slug,
+        explanationFeedback: Object.fromEntries(explanations.map(row => [row.slug, row.feedback])),
+        resolution: {
+          headline: resolution.headline, diagnosis: resolution.diagnosis, ecologicalRole: resolution.ecologicalRole,
+          taxonomy: resolution.taxonomy, misconception: resolution.misconception,
+          evidenceChain: rows.steps.filter(row => row.caseId === item.id).sort((a, b) => a.sequenceIndex - b.sequenceIndex).map(row => row.stepText),
+          rejectedAlternatives: rows.alternatives.filter(row => row.caseId === item.id).sort((a, b) => a.sequenceIndex - b.sequenceIndex).map(row => row.alternativeText),
+          sources: rows.sources.filter(row => row.caseId === item.id).sort((a, b) => a.id - b.id).map(row => ({ label: row.label, url: row.url })),
+        },
+      },
+    }];
+  }));
+}
+
+export interface MysteryCaseSeed extends AuthoredMysteryCase { species_iucn_id: number }
+
+export function parseMysteryCaseSeed(value: unknown): MysteryCaseSeed {
+  const source = record(value);
+  const publicSource = record(source.public);
+  const publicCase = parsePublicMysteryCase({ ...publicSource, location: { label: 'Selected survey region', basis: 'Seed validation', confidence: 'contextual' } });
+  const privateCase = publicCase ? parsePrivateMysteryCase(source.private, publicCase) : null;
+  if (!Number.isSafeInteger(source.species_iucn_id) || Number(source.species_iucn_id) <= 0 || !publicCase || !privateCase) {
+    throw new Error('Invalid mystery case seed.');
+  }
+  // Do not silently discard malformed choices, feedback, or resolution entries.
+  const { location: _location, ...publicFields } = publicCase;
+  const seed = { species_iucn_id: Number(source.species_iucn_id), public: publicFields, private: privateCase };
+  const canonical = (v: unknown): string => JSON.stringify(v, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
+    ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item);
+  if (canonical(source.public) !== canonical(seed.public) || canonical(source.private) !== canonical(seed.private)) {
+    throw new Error('Malformed mystery case content.');
+  }
+  const errors = validateAuthoredMysteryCase(seed, []);
+  if (errors.length) throw new Error(errors.join('; '));
+  return seed;
 }

@@ -26,7 +26,9 @@ UPDATE evidence_family_cards SET pool_id = (SELECT id FROM case_pools WHERE slug
 UPDATE evidence_family_hints SET pool_id = (SELECT id FROM case_pools WHERE slug = 'prototype-six') WHERE pool_id IS NULL;
 ALTER TABLE evidence_family_cards ALTER COLUMN pool_id SET NOT NULL;
 ALTER TABLE evidence_family_hints ALTER COLUMN pool_id SET NOT NULL;
+ALTER TABLE evidence_family_cards DROP CONSTRAINT IF EXISTS uq_evidence_family_cards_species_family;
 DROP INDEX IF EXISTS uq_evidence_family_cards_species_family;
+ALTER TABLE evidence_family_hints DROP CONSTRAINT IF EXISTS uq_evidence_family_hints_species_family_sequence;
 DROP INDEX IF EXISTS uq_evidence_family_hints_species_family_sequence;
 CREATE UNIQUE INDEX IF NOT EXISTS uq_evidence_family_cards_pool_species_family ON evidence_family_cards (pool_id, species_id, family);
 CREATE UNIQUE INDEX IF NOT EXISTS uq_evidence_family_hints_pool_species_family_sequence ON evidence_family_hints (pool_id, species_id, family, sequence_index);

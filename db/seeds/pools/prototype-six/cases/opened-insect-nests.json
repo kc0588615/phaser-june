@@ -1,0 +1,67 @@
+{
+  "species_iucn_id": 12763,
+  "public": {
+    "id": "opened-insect-nests",
+    "title": "The Opened Insect Nests",
+    "incident": "Several social-insect nests have been opened overnight, but the survey records little blood, fur, or prolonged digging at any one site.",
+    "atmosphere": "The visits are quiet, selective, and repeated beneath forest cover.",
+    "question": "Which species made these feeding marks, and what best explains the narrow target?",
+    "explanationChoices": [
+      {
+        "id": "specialist-foraging",
+        "label": "Specialist foraging",
+        "description": "A nocturnal feeder is opening nests to collect ants or termites."
+      },
+      {
+        "id": "generalist-digging",
+        "label": "Generalist digging",
+        "description": "A soil forager encountered the colonies while searching for varied prey."
+      },
+      {
+        "id": "nest-disease",
+        "label": "Colony disease",
+        "description": "The insects abandoned damaged nests before any vertebrate arrived."
+      },
+      {
+        "id": "human-disturbance",
+        "label": "Human disturbance",
+        "description": "People opened the nests and an animal was blamed because it was nearby."
+      }
+    ]
+  },
+  "private": {
+    "answerExplanationId": "specialist-foraging",
+    "explanationFeedback": {
+      "specialist-foraging": "The focused openings and repeated nocturnal visits fit a narrow social-insect diet.",
+      "generalist-digging": "The evidence clusters at organized colonies rather than showing a broad search through soil.",
+      "nest-disease": "Disease might empty a colony, but it does not explain the external opening marks and recurring visits.",
+      "human-disturbance": "No tool pattern or daytime access record supports human opening at the sampled nests."
+    },
+    "resolution": {
+      "headline": "A precise insect specialist",
+      "diagnosis": "Sunda pangolin feeding opened the nests. Strong claws expose chambers and a long sticky tongue collects ants and termites.",
+      "evidenceChain": [
+        "The target is an organized insect colony rather than general soil prey.",
+        "The visitor moves alone and under cover at night.",
+        "Limb and diet evidence support climbing, digging, and concentrated insect feeding."
+      ],
+      "ecologicalRole": "By disturbing nests and consuming social insects, specialized myrmecophages connect forest soils, insect colonies, and vertebrate predation.",
+      "taxonomy": "Manis javanica belongs to Pholidota, a distinct mammal order more closely related to carnivorans than to armadillos.",
+      "misconception": "Protective scales do not make pangolins reptiles; they are placental mammals.",
+      "rejectedAlternatives": [
+        "A generalist soil hunter would leave a broader search pattern.",
+        "Colony disease does not account for the repeated external opening marks."
+      ],
+      "sources": [
+        {
+          "label": "World Wildlife Fund — Sunda pangolin",
+          "url": "https://www.worldwildlife.org/species/sunda-pangolin"
+        },
+        {
+          "label": "Mammal Diversity Database — Manis javanica",
+          "url": "https://www.mammaldiversity.org/taxon/1000665/"
+        }
+      ]
+    }
+  }
+}

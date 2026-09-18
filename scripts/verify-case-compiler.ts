@@ -6,7 +6,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import * as schema from '../src/db/schema';
 import { POOL_SIZE, type CompilerSpeciesProfile } from '../src/lib/caseTraits';
 import { compileCaseV4, verifyCaseCorpusV3, type CompilerEvidenceFamilyCard, type CompilerEvidenceFamilyHint } from '../src/lib/caseCompilerV3';
-import { getMysteryCaseForIucnId } from '../src/lib/mysteryCaseCatalog.server';
+import { assembleMysteryCases } from '../src/lib/mysteryCase';
 
 const reportOnly = process.argv.includes('--report');
 
@@ -45,10 +45,16 @@ async function main() {
       const errors = [
         ...verification.errors,
       ];
-      const mysteryCasesBySpeciesId = new Map(speciesRows.flatMap(row => {
-        const mystery = getMysteryCaseForIucnId(Number(row.iucnId));
-        return mystery ? [[row.id, mystery] as const] : [];
-      }));
+      const cases = await db.select().from(schema.mysteryCases).where(and(eq(schema.mysteryCases.poolId, pool.id), eq(schema.mysteryCases.reviewStatus, 'reviewed')));
+      const caseIds = cases.map(row => row.id);
+      const [explanations, resolutions, steps, alternatives, sources] = await Promise.all([
+        db.select().from(schema.mysteryExplanations).where(inArray(schema.mysteryExplanations.caseId, caseIds)),
+        db.select().from(schema.mysteryResolutions).where(inArray(schema.mysteryResolutions.caseId, caseIds)),
+        db.select().from(schema.mysteryEvidenceSteps).where(inArray(schema.mysteryEvidenceSteps.caseId, caseIds)),
+        db.select().from(schema.mysteryRejectedAlternatives).where(inArray(schema.mysteryRejectedAlternatives.caseId, caseIds)),
+        db.select().from(schema.mysterySources).where(inArray(schema.mysterySources.caseId, caseIds)),
+      ]);
+      const mysteryCasesBySpeciesId = assembleMysteryCases({ cases, explanations, resolutions, steps, alternatives, sources });
       const answerTermsBySpeciesId = new Map(speciesRows.map(row => [row.id, [
         row.commonName ?? '', row.scientificName ?? '',
         row.scientificName?.split(/\s+/u)[0] ?? '', ...(row.commonName?.split(/\s+/u) ?? []),

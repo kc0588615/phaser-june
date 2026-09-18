@@ -16,6 +16,8 @@ import {
   numeric,
   primaryKey,
   pgTable,
+  pgView,
+  unique,
   pgSchema,
   serial,
   smallint,
@@ -347,3 +349,82 @@ export const speciesEcoregions = pgTable(
     index('ix_species_ecoregions_primary').on(table.speciesId).where(sql`${table.isPrimary} = true`),
   ]
 );
+
+export const mysteryCases = pgTable('mystery_cases', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  poolId: bigint('pool_id', { mode: 'number' }).notNull().references(() => casePools.id, { onDelete: 'cascade' }),
+  speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  incident: text('incident').notNull(),
+  atmosphere: text('atmosphere').notNull(),
+  question: text('question').notNull(),
+  reviewStatus: text('review_status').notNull().default('draft'),
+}, table => [
+  unique().on(table.poolId, table.speciesId),
+  check('mystery_cases_slug_check', sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+  check('mystery_cases_review_status_check', sql`${table.reviewStatus} IN ('draft', 'reviewed')`),
+]);
+
+export const mysteryExplanations = pgTable('mystery_explanations', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  caseId: bigint('case_id', { mode: 'number' }).notNull().references(() => mysteryCases.id, { onDelete: 'cascade' }),
+  slug: text('slug').notNull(),
+  label: text('label').notNull(),
+  description: text('description').notNull(),
+  feedback: text('feedback').notNull(),
+  isAnswer: boolean('is_answer').notNull().default(false),
+  sortOrder: smallint('sort_order').notNull(),
+}, table => [
+  unique().on(table.caseId, table.slug),
+  unique().on(table.caseId, table.sortOrder),
+  check('mystery_explanations_slug_check', sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+  uniqueIndex('uq_mystery_one_answer').on(table.caseId).where(sql`${table.isAnswer}`),
+]);
+
+export const mysteryResolutions = pgTable('mystery_resolutions', {
+  caseId: bigint('case_id', { mode: 'number' }).primaryKey().references(() => mysteryCases.id, { onDelete: 'cascade' }),
+  headline: text('headline').notNull(),
+  diagnosis: text('diagnosis').notNull(),
+  ecologicalRole: text('ecological_role').notNull(),
+  taxonomy: text('taxonomy').notNull(),
+  misconception: text('misconception').notNull(),
+});
+
+export const mysteryEvidenceSteps = pgTable('mystery_evidence_steps', {
+  caseId: bigint('case_id', { mode: 'number' }).notNull().references(() => mysteryCases.id, { onDelete: 'cascade' }),
+  sequenceIndex: smallint('sequence_index').notNull(),
+  stepText: text('step_text').notNull(),
+}, table => [
+  primaryKey({ columns: [table.caseId, table.sequenceIndex] }),
+  check('mystery_evidence_steps_sequence_index_check', sql`${table.sequenceIndex} BETWEEN 0 AND 9`),
+]);
+
+export const mysteryRejectedAlternatives = pgTable('mystery_rejected_alternatives', {
+  caseId: bigint('case_id', { mode: 'number' }).notNull().references(() => mysteryCases.id, { onDelete: 'cascade' }),
+  sequenceIndex: smallint('sequence_index').notNull(),
+  alternativeText: text('alternative_text').notNull(),
+}, table => [
+  primaryKey({ columns: [table.caseId, table.sequenceIndex] }),
+  check('mystery_rejected_alternatives_sequence_index_check', sql`${table.sequenceIndex} BETWEEN 0 AND 9`),
+]);
+
+export const mysterySources = pgTable('mystery_sources', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  caseId: bigint('case_id', { mode: 'number' }).notNull().references(() => mysteryCases.id, { onDelete: 'cascade' }),
+  label: text('label').notNull(),
+  url: text('url').notNull(),
+}, table => [check('mystery_sources_url_check', sql`${table.url} LIKE 'https://%'`)]);
+
+export const mysteryCasesPublic = pgView('mystery_cases_public', {
+  caseId: bigint('case_id', { mode: 'number' }),
+  poolId: bigint('pool_id', { mode: 'number' }),
+  speciesId: integer('species_id'),
+  slug: text('slug'), title: text('title'), incident: text('incident'),
+  atmosphere: text('atmosphere'), question: text('question'),
+  explanationSlug: text('explanation_slug'), label: text('label'), description: text('description'),
+  sortOrder: smallint('sort_order'),
+}).as(sql`SELECT c.id AS case_id, c.pool_id, c.species_id, c.slug, c.title, c.incident, c.atmosphere, c.question,
+  e.slug AS explanation_slug, e.label, e.description, e.sort_order
+  FROM mystery_cases c JOIN mystery_explanations e ON e.case_id = c.id
+  WHERE c.review_status = 'reviewed'`);

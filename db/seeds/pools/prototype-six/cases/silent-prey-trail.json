@@ -1,0 +1,67 @@
+{
+  "species_iucn_id": 15955,
+  "public": {
+    "id": "silent-prey-trail",
+    "title": "The Silent Prey Trail",
+    "incident": "A once-busy animal trail has become quiet while scrapes, scent marks, and short bursts of alarm activity appear nearby.",
+    "atmosphere": "The change is strongest around cover and fades with distance from the marked route.",
+    "question": "Which species is involved, and what best explains the change in trail use?",
+    "explanationChoices": [
+      {
+        "id": "predator-avoidance",
+        "label": "Predator avoidance",
+        "description": "Prey are changing where and when they move after detecting a solitary hunter."
+      },
+      {
+        "id": "prey-collapse",
+        "label": "Prey population collapse",
+        "description": "The trail is quiet because local prey numbers have sharply fallen."
+      },
+      {
+        "id": "seasonal-migration",
+        "label": "Seasonal movement",
+        "description": "Animals left the corridor as part of a normal annual shift."
+      },
+      {
+        "id": "observer-effect",
+        "label": "Survey disturbance",
+        "description": "Cameras and field crews displaced animals from the monitored trail."
+      }
+    ]
+  },
+  "private": {
+    "answerExplanationId": "predator-avoidance",
+    "explanationFeedback": {
+      "predator-avoidance": "This explains the spatial link among cover, territorial signs, alarms, and reduced trail use.",
+      "prey-collapse": "Lower trail activity alone cannot establish a population decline; the localized avoidance pattern needs explanation.",
+      "seasonal-migration": "The shift is concentrated around fresh territorial signs rather than occurring evenly across the route.",
+      "observer-effect": "Survey effort is similar across sites, while the response tracks cover and scent-mark locations."
+    },
+    "resolution": {
+      "headline": "A landscape of avoidance",
+      "diagnosis": "Tiger presence changed prey behavior around a marked hunting route. The evidence supports localized avoidance, not an immediate conclusion that prey disappeared.",
+      "evidenceChain": [
+        "Padded ground tracks and exposed travel rule out aerial or subsurface movement.",
+        "Scrapes and scent marks fit a solitary territorial mammal.",
+        "Alarm activity and quiet trail segments cluster around stalking cover."
+      ],
+      "ecologicalRole": "Large predators affect ecosystems through predation and through the places and times prey choose to feed and travel.",
+      "taxonomy": "Panthera tigris is a felid in the big-cat genus Panthera.",
+      "misconception": "Fewer camera detections do not automatically mean fewer animals; behavior and detectability can change first.",
+      "rejectedAlternatives": [
+        "A population collapse needs abundance evidence beyond one quiet trail.",
+        "Seasonal migration should produce a broader, time-linked shift rather than a localized response to fresh signs."
+      ],
+      "sources": [
+        {
+          "label": "Smithsonian’s National Zoo — Tiger",
+          "url": "https://nationalzoo.si.edu/animals/tiger"
+        },
+        {
+          "label": "World Wildlife Fund — Tiger",
+          "url": "https://www.worldwildlife.org/species/tiger"
+        }
+      ]
+    }
+  }
+}

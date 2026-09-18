@@ -1,0 +1,67 @@
+{
+  "species_iucn_id": 7140,
+  "public": {
+    "id": "broken-sapling-corridor",
+    "title": "The Broken Sapling Corridor",
+    "incident": "Young trees are snapped, bark is stripped, and a broad route through the vegetation keeps reopening after field crews mark it.",
+    "atmosphere": "Damage is concentrated along a repeat travel corridor rather than spread evenly through the habitat.",
+    "question": "Which species is involved, and what best explains this concentrated disturbance?",
+    "explanationChoices": [
+      {
+        "id": "megaherbivore-route",
+        "label": "Routine feeding and travel",
+        "description": "A wide-ranging herbivore is browsing while reusing a movement corridor."
+      },
+      {
+        "id": "overpopulation",
+        "label": "Local overpopulation",
+        "description": "Too many herbivores are exhausting vegetation across the region."
+      },
+      {
+        "id": "invasive-borer",
+        "label": "Wood-boring invader",
+        "description": "Hidden insects weakened the stems before they broke."
+      },
+      {
+        "id": "storm-damage",
+        "label": "Storm damage",
+        "description": "Wind and water snapped the young trees along an exposed line."
+      }
+    ]
+  },
+  "private": {
+    "answerExplanationId": "megaherbivore-route",
+    "explanationFeedback": {
+      "megaherbivore-route": "This explanation fits both the plant damage and the repeatedly opened ground route.",
+      "overpopulation": "Concentrated corridor damage does not establish unusually high abundance across the wider habitat.",
+      "invasive-borer": "The field evidence points to external browsing and breakage rather than galleries inside the wood.",
+      "storm-damage": "Storm damage would not usually combine selective bark removal with repeated ground travel."
+    },
+    "resolution": {
+      "headline": "Disturbance that engineers habitat",
+      "diagnosis": "Asian elephant browsing and repeated movement produced the broken saplings, stripped bark, and reopened corridor.",
+      "evidenceChain": [
+        "Heavy ground impressions indicate a very large terrestrial animal.",
+        "Bark, roots, shoots, and leafy growth show bulk plant feeding.",
+        "Repeated group travel explains why the same broad corridor reopens."
+      ],
+      "ecologicalRole": "Large herbivores can open vegetation, disperse seeds, and create routes used by other organisms. Local damage can therefore be natural ecosystem engineering rather than proof of ecological collapse.",
+      "taxonomy": "Elephas maximus is an elephantid in the order Proboscidea and the broader afrotherian lineage.",
+      "misconception": "Visible tree damage alone does not demonstrate overpopulation; scale and distribution matter.",
+      "rejectedAlternatives": [
+        "Wood-boring insects leave internal galleries, not this combined browse-and-travel pattern.",
+        "A storm does not explain selective feeding signs or repeated corridor use."
+      ],
+      "sources": [
+        {
+          "label": "Smithsonian’s National Zoo — Asian elephant",
+          "url": "https://nationalzoo.si.edu/animals/asian-elephant"
+        },
+        {
+          "label": "IUCN — Shrinking spaces for Asian elephants",
+          "url": "https://iucn.org/news/species-survival-commission/202108/shrinking-spaces-worlds-largest-land-animal"
+        }
+      ]
+    }
+  }
+}

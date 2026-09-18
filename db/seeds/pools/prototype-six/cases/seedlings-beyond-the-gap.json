@@ -1,0 +1,67 @@
+{
+  "species_iucn_id": 18732,
+  "public": {
+    "id": "seedlings-beyond-the-gap",
+    "title": "Seedlings Beyond the Gap",
+    "incident": "Fruit fragments and new seedlings appear beyond a broken stretch of canopy, far from the nearest fruiting parent trees.",
+    "atmosphere": "The pattern forms overnight and links high feeding sites to open regeneration plots.",
+    "question": "Which species is involved, and what process best explains plants crossing the canopy gap?",
+    "explanationChoices": [
+      {
+        "id": "mobile-seed-dispersal",
+        "label": "Mobile seed dispersal",
+        "description": "A fruit-feeding animal carries or passes seeds between separated forest patches."
+      },
+      {
+        "id": "wind-dispersal",
+        "label": "Wind dispersal",
+        "description": "Air currents carried the seeds across the opening."
+      },
+      {
+        "id": "human-planting",
+        "label": "Unrecorded planting",
+        "description": "People established seedlings outside the documented restoration plots."
+      },
+      {
+        "id": "parent-trees-missed",
+        "label": "Hidden parent trees",
+        "description": "The survey overlooked nearby fruiting trees beneath dense cover."
+      }
+    ]
+  },
+  "private": {
+    "answerExplanationId": "mobile-seed-dispersal",
+    "explanationFeedback": {
+      "mobile-seed-dispersal": "This mechanism connects elevated fruit feeding, overnight movement, and seedlings beyond a canopy break.",
+      "wind-dispersal": "Wind can move some seeds, but the fruit remains and concentrated feeding sites point to an animal vector.",
+      "human-planting": "No planting record or regular spacing supports deliberate restoration at these points.",
+      "parent-trees-missed": "The mapped fruiting trees and genetic sampling place the parent source across the canopy gap."
+    },
+    "resolution": {
+      "headline": "A forest connection made on the wing",
+      "diagnosis": "Livingstone’s flying fox moved fruit material and seeds between separated canopy patches, supporting regeneration beyond the gap.",
+      "evidenceChain": [
+        "Fruit and flower remains identify an above-ground plant food source.",
+        "Roost-centered group movement and wide forelimbs support aerial travel.",
+        "The island range and overnight route connect feeding trees to distant seedling plots."
+      ],
+      "ecologicalRole": "Fruit bats can move seeds and pollen through island forests, helping connect plant populations across fragmented canopy.",
+      "taxonomy": "Pteropus livingstonii is a pteropodid fruit bat in the mammal order Chiroptera.",
+      "misconception": "Bats are not ecological bystanders at fruiting trees; feeding can transport seeds and pollen beyond the parent plant.",
+      "rejectedAlternatives": [
+        "Wind does not explain the associated fruit pulp and elevated feeding sites.",
+        "Unrecorded planting is unsupported by site records and the irregular seedling pattern."
+      ],
+      "sources": [
+        {
+          "label": "Bat Conservation International — Livingstone’s fruit bat",
+          "url": "https://www.batcon.org/bat/livingstones-fruit-bat/"
+        },
+        {
+          "label": "Durrell Wildlife Conservation Trust — Livingstone’s fruit bat",
+          "url": "https://www.durrell.org/wildlife/species-index/livingstones-fruit-bat/"
+        }
+      ]
+    }
+  }
+}
