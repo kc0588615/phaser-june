@@ -24,7 +24,7 @@ Generated 2026-07-09; reconciled August 18, 2026. Execute numbered advisor plans
 | 029 | August 18, 2026 — Identify the Package as Critter Connect | P3 | XS | 028 | DONE — merged as `4257421d` |
 | 030 | August 29, 2026 — Ecological Mystery Cases | P1 product | L | 018 | IMPLEMENTED — run snapshot v4, merged as `a999c61c`; phases 5–6 await playtest |
 | 031 | September 17, 2026 — Content Database Clarity | P1 data | L | 030 + DB migrations 027–031 | DONE 2026-09-17 — commits aa74e8e0…860c345a; migrations 027–031 on production; see `docs/CONTENT_AUTHORING.md` |
-| 032 | September 18, 2026 — Land the Open Increment and Reset Player Tracking | P1 cleanup | M | 031 | TODO — commit open increment, write evidence copy, drop clue-era columns, truncate player progress |
+| 032 | September 18, 2026 — Land the Open Increment and Reset Player Tracking | P1 cleanup | M | 031 | DONE 2026-09-18 — commits 7aec22dc…68b60805; migrations 032–033 on production; player progress reset |
 
 ## Dependency notes
 
