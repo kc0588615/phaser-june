@@ -1,4 +1,32 @@
 -- Apply atomically with ./scripts/db -1 -f <file>.
+SET LOCAL search_path = public;
+
+-- Earlier runs inherited the role search path; preserve those rows on replay.
+DO $$
+BEGIN
+  IF to_regclass('public.mystery_cases') IS NULL AND to_regclass('postgres.mystery_cases') IS NOT NULL THEN
+    ALTER TABLE postgres.mystery_cases SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.mystery_explanations') IS NULL AND to_regclass('postgres.mystery_explanations') IS NOT NULL THEN
+    ALTER TABLE postgres.mystery_explanations SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.mystery_resolutions') IS NULL AND to_regclass('postgres.mystery_resolutions') IS NOT NULL THEN
+    ALTER TABLE postgres.mystery_resolutions SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.mystery_evidence_steps') IS NULL AND to_regclass('postgres.mystery_evidence_steps') IS NOT NULL THEN
+    ALTER TABLE postgres.mystery_evidence_steps SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.mystery_rejected_alternatives') IS NULL AND to_regclass('postgres.mystery_rejected_alternatives') IS NOT NULL THEN
+    ALTER TABLE postgres.mystery_rejected_alternatives SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.mystery_sources') IS NULL AND to_regclass('postgres.mystery_sources') IS NOT NULL THEN
+    ALTER TABLE postgres.mystery_sources SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.mystery_cases_public') IS NULL AND to_regclass('postgres.mystery_cases_public') IS NOT NULL THEN
+    ALTER VIEW postgres.mystery_cases_public SET SCHEMA public;
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS mystery_cases (
   id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   pool_id       bigint  NOT NULL REFERENCES case_pools(id) ON DELETE CASCADE,

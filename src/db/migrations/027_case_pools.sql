@@ -1,4 +1,17 @@
 -- Apply atomically with ./scripts/db -1 -f <file>.
+SET LOCAL search_path = public;
+
+-- Earlier runs inherited the role search path; preserve those rows on replay.
+DO $$
+BEGIN
+  IF to_regclass('public.case_pools') IS NULL AND to_regclass('postgres.case_pools') IS NOT NULL THEN
+    ALTER TABLE postgres.case_pools SET SCHEMA public;
+  END IF;
+  IF to_regclass('public.case_pool_members') IS NULL AND to_regclass('postgres.case_pool_members') IS NOT NULL THEN
+    ALTER TABLE postgres.case_pool_members SET SCHEMA public;
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS case_pools (
   id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   slug          text NOT NULL UNIQUE CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
