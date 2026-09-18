@@ -1,6 +1,5 @@
 import type { FeatureClass } from '@/types/gis';
 
-const CLUE_CATEGORY_COUNT = 8;
 const MAX_FACT_SLOTS = 3;
 const REPEAT_ENCOUNTER_TARGET = 3;
 const GIS_STAMP_CLASSES: FeatureClass[] = ['river', 'lake', 'protected_area', 'bioregion', 'ramsar_site'];
@@ -12,7 +11,6 @@ export interface SpeciesCardProgressInput {
   discovered: boolean;
   timesEncountered: number;
   factsUnlocked: unknown;
-  clueCategoriesUnlocked: unknown;
   gisStamps: unknown;
 }
 
@@ -33,11 +31,10 @@ export function getSpeciesCardRarityTier(conservationCode: string | null | undef
 
 export function calculateSpeciesCardCompletion(input: SpeciesCardProgressInput): number {
   const encounterPoints = getEncounterPoints(input);
-  const factPoints = ratioPoints(getStringValues(input.factsUnlocked).length, MAX_FACT_SLOTS, 30);
-  const cluePoints = ratioPoints(getStringValues(input.clueCategoriesUnlocked).length, CLUE_CATEGORY_COUNT, 25);
-  const stampPoints = ratioPoints(getKnownStampCount(input.gisStamps), GIS_STAMP_CLASSES.length, 20);
+  const factPoints = ratioPoints(getStringValues(input.factsUnlocked).length, MAX_FACT_SLOTS, 45);
+  const stampPoints = ratioPoints(getKnownStampCount(input.gisStamps), GIS_STAMP_CLASSES.length, 30);
 
-  return Math.min(100, Math.round(encounterPoints + factPoints + cluePoints + stampPoints));
+  return Math.min(100, Math.round(encounterPoints + factPoints + stampPoints));
 }
 
 export function getSpeciesCardVariant(completionPct: number): SpeciesCardVariant | null {

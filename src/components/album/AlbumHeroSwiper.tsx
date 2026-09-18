@@ -12,7 +12,6 @@ import 'swiper/css/effect-cards';
 type CardData = {
   gisStamps?: FeatureClass[];
   factsUnlocked?: string[];
-  clueCategoriesUnlocked?: string[];
   completionPct?: number;
   rarityTier?: string;
   bestRunScore?: number | null;
@@ -63,7 +62,6 @@ export default function AlbumHeroSwiper({
               [sid]: {
                 gisStamps: Array.isArray(data.card.gisStamps) ? data.card.gisStamps as FeatureClass[] : undefined,
                 factsUnlocked: Array.isArray(data.card.factsUnlocked) ? data.card.factsUnlocked as string[] : undefined,
-                clueCategoriesUnlocked: Array.isArray(data.card.clueCategoriesUnlocked) ? data.card.clueCategoriesUnlocked as string[] : undefined,
                 completionPct: typeof data.card.completionPct === 'number' ? data.card.completionPct : undefined,
                 rarityTier: typeof data.card.rarityTier === 'string' ? data.card.rarityTier : undefined,
                 bestRunScore: typeof data.card.bestRunScore === 'number' ? data.card.bestRunScore : null,
@@ -158,7 +156,6 @@ export default function AlbumHeroSwiper({
                   runMemory={memory}
                   gisStamps={gisStamps}
                   factsUnlocked={cardData?.factsUnlocked}
-                  clueCategoriesUnlocked={cardData?.clueCategoriesUnlocked}
                   completionPct={cardData?.completionPct}
                   rarityTier={cardData?.rarityTier}
                   bestRunScore={cardData?.bestRunScore}

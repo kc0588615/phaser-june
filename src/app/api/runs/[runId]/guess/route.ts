@@ -171,7 +171,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       });
 
       if (session.playerId) {
-        await awardDiscovery(tx, session.playerId, privateCase.answerId, session.gameSessionId, runId, finalScore, evidenceCount, wrongGuessCount, now);
+        await awardDiscovery(tx, session.playerId, privateCase.answerId, session.gameSessionId, runId, finalScore, wrongGuessCount, now);
         {
           const unlockedFacts = fieldFacts.map(fact => fact.text);
           if (unlockedFacts.length > 0) {
@@ -312,9 +312,9 @@ async function buildV3Feedback(
   });
 }
 
-async function awardDiscovery(tx: RunTransaction, playerId: string, speciesId: number, sessionId: string | null, runId: string, finalScore: number, issuedCount: number, wrongGuessCount: number, now: Date) {
+async function awardDiscovery(tx: RunTransaction, playerId: string, speciesId: number, sessionId: string | null, runId: string, finalScore: number, wrongGuessCount: number, now: Date) {
   const [species] = await tx.select({ conservationCode: speciesTable.conservationCode }).from(speciesTable).where(eq(speciesTable.id, speciesId)).limit(1);
-  await tx.insert(playerSpeciesDiscoveries).values({ playerId, speciesId, sessionId, runId, cluesUnlockedBeforeGuess: issuedCount, incorrectGuessesCount: wrongGuessCount, scoreEarned: finalScore })
+  await tx.insert(playerSpeciesDiscoveries).values({ playerId, speciesId, sessionId, runId, incorrectGuessesCount: wrongGuessCount, scoreEarned: finalScore })
     .onConflictDoNothing({ target: [playerSpeciesDiscoveries.playerId, playerSpeciesDiscoveries.speciesId] });
   await tx.insert(speciesCards).values({
     playerId, speciesId, discovered: true, firstDiscoveredAt: now, lastEncounteredAt: now, timesEncountered: 1,

@@ -38,7 +38,6 @@ export async function POST(
     const isEncounter = unlockType === 'discover' || unlockType === 'encounter';
     const facts = getStringArray(payload?.facts);
     const stamps = getStringArray(payload?.stamps);
-    const categories = getStringArray(payload?.categories);
     const [speciesMeta] = await db
       .select({ conservationCode: speciesTable.conservationCode })
       .from(speciesTable)
@@ -50,7 +49,6 @@ export async function POST(
     const conservationCode = speciesMeta?.conservationCode ?? null;
     const shouldUnlockFacts = unlockType === 'fact' || unlockType === 'clue';
     const shouldUnlockStamps = unlockType === 'stamp';
-    const shouldUnlockCategories = unlockType === 'clue_category' || unlockType === 'clue';
 
     // Upsert species_cards row
     await db
@@ -67,7 +65,6 @@ export async function POST(
         rarityTier: getSpeciesCardRarityTier(conservationCode),
         factsUnlocked: shouldUnlockFacts && facts.length > 0 ? facts : undefined,
         gisStamps: shouldUnlockStamps && stamps.length > 0 ? stamps : undefined,
-        clueCategoriesUnlocked: shouldUnlockCategories && categories.length > 0 ? categories : undefined,
       })
       .onConflictDoUpdate({
         target: [speciesCards.playerId, speciesCards.speciesId],
@@ -92,12 +89,6 @@ export async function POST(
             gisStamps: sql`(
               SELECT jsonb_agg(DISTINCT val)
               FROM jsonb_array_elements(${speciesCards.gisStamps} || ${JSON.stringify(stamps)}::jsonb) AS val
-            )`,
-          } : {}),
-          ...(shouldUnlockCategories && categories.length > 0 ? {
-            clueCategoriesUnlocked: sql`(
-              SELECT jsonb_agg(DISTINCT val)
-              FROM jsonb_array_elements(${speciesCards.clueCategoriesUnlocked} || ${JSON.stringify(categories)}::jsonb) AS val
             )`,
           } : {}),
           updatedAt: new Date(),

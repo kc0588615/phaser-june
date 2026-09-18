@@ -19,16 +19,10 @@ function transformToPlayerStats(data: PlayerStatsRow): PlayerStats {
   return {
     playerId: data.playerId,
     totalSpeciesDiscovered: data.totalSpeciesDiscovered || 0,
-    totalCluesUnlocked: data.totalCluesUnlocked || 0,
     totalScore: data.totalScore || 0,
     totalMovesMade: data.totalMovesMade || 0,
     totalGamesPlayed: data.totalGamesPlayed || 0,
     totalPlayTimeSeconds: data.totalPlayTimeSeconds || 0,
-    averageCluesPerDiscovery: data.averageCluesPerDiscovery
-      ? Number(data.averageCluesPerDiscovery)
-      : 0,
-    fastestDiscoveryClues: data.fastestDiscoveryClues ?? undefined,
-    slowestDiscoveryClues: data.slowestDiscoveryClues ?? undefined,
     averageTimePerDiscoverySeconds: data.averageTimePerDiscoverySeconds
       ? Number(data.averageTimePerDiscoverySeconds)
       : undefined,
@@ -43,8 +37,6 @@ function transformToPlayerStats(data: PlayerStatsRow): PlayerStats {
     freshwaterSpeciesCount: data.freshwaterSpeciesCount || 0,
     aquaticSpeciesCount: data.aquaticSpeciesCount || 0,
     speciesByIucnStatus: (data.speciesByIucnStatus as Record<string, number>) || {},
-    cluesByCategory: (data.cluesByCategory as Record<string, number>) || {},
-    favoriteClueCategory: data.favoriteClueCategory ?? undefined,
     firstDiscoveryAt: data.firstDiscoveryAt?.toISOString() ?? undefined,
     lastDiscoveryAt: data.lastDiscoveryAt?.toISOString() ?? undefined,
     createdAt: data.createdAt?.toISOString() ?? new Date().toISOString(),

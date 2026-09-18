@@ -38,17 +38,6 @@ const FEATURE_CLASS_BADGES: Record<FeatureClass, { icon: string; label: string }
   ramsar_site: { icon: '🏞', label: 'Ramsar' },
 };
 
-const CLUE_LABELS: Record<string, string> = {
-  classification: 'Class',
-  habitat: 'Habitat',
-  geographic: 'Range',
-  morphology: 'Form',
-  behavior: 'Behavior',
-  life_cycle: 'Life',
-  conservation: 'Status',
-  key_facts: 'Facts',
-};
-
 export type SpeciesCardRunMemory = Partial<Omit<PublicRunMemory, 'nodes' | 'routePolyline'>> & {
   nodes?: PublicRunMemory['nodes'];
   routePolyline?: RoutePoint[];
@@ -65,7 +54,6 @@ export interface SpeciesTCGCardProps {
   runMemory?: SpeciesCardRunMemory | null;
   gisStamps?: FeatureClass[];
   factsUnlocked?: string[];
-  clueCategoriesUnlocked?: string[];
   completionPct?: number;
   rarityTier?: string;
   bestRunScore?: number | null;
@@ -83,7 +71,6 @@ export default function SpeciesTCGCard({
   runMemory,
   gisStamps = [],
   factsUnlocked = [],
-  clueCategoriesUnlocked = [],
   completionPct,
   rarityTier,
   bestRunScore,
@@ -103,7 +90,6 @@ export default function SpeciesTCGCard({
   const unlockedFacts = new Set(factsUnlocked);
   const coreFactValues = new Set(facts.flatMap(fact => [fact.key, fact.text].filter((value): value is string => Boolean(value))));
   const expeditionFacts = factsUnlocked.filter(value => !coreFactValues.has(value) && value.includes(' ')).slice(-3);
-  const unlockedClueCategories = new Set(clueCategoriesUnlocked);
   const knownAffinities = getKnownAffinityTags(affinityTags).slice(0, 3);
   const memoryWaypoints = getMemoryWaypoints(runMemory);
   const visitedSlot = getVisitedWaypointSlot(runMemory, memoryWaypoints);
@@ -320,23 +306,7 @@ export default function SpeciesTCGCard({
           </div>
 
           <div className="relative z-[2] mt-auto border-t border-slate-700/40 pt-2">
-            <div className="flex flex-wrap gap-1">
-              {Object.entries(CLUE_LABELS).map(([key, label]) => {
-                const unlocked = unlockedClueCategories.has(key);
-                return (
-                  <span
-                    key={key}
-                    className="rounded border px-1 py-0.5 font-mono text-[6.5px] uppercase tracking-wide"
-                    style={unlocked
-                      ? { color: tone.accent, borderColor: `${tone.accent}66` }
-                      : { color: '#475569', borderColor: 'rgba(71,85,105,0.35)' }}
-                  >
-                    {label}
-                  </span>
-                );
-              })}
-            </div>
-            <div className="mt-1.5 flex items-center justify-between font-mono text-[7px] text-slate-600">
+            <div className="flex items-center justify-between font-mono text-[7px] text-slate-600">
               <div className="flex gap-2">
                 {knownAffinities.map(affinity => {
                   const definition = getAffinityDefinition(affinity);

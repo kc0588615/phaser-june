@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SignInButton, useUser } from '@clerk/nextjs';
 import {
-  Globe, Leaf, Droplets, Waves, TreePine, Star, MapPin, Clock, Zap, Layers, BookOpen, LogIn,
+  Globe, Leaf, Droplets, Waves, TreePine, Star, MapPin, Clock, Zap, Layers, LogIn,
 } from 'lucide-react';
 
 // ---- types ------------------------------------------------------------------
@@ -29,8 +29,6 @@ interface ProfileData {
     speciesByRealm: Record<string, number>;
     speciesByBioregion: Record<string, number>;
     speciesByIucnStatus: Record<string, number>;
-    cluesByCategory: Record<string, number>;
-    favoriteClueCategory: string | null;
     firstDiscoveryAt: string | null;
     lastDiscoveryAt: string | null;
   } | null;
@@ -220,7 +218,6 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
   const topGenera = sortedEntries(stats?.speciesByGenus).slice(0, 8);
   const topOrders = sortedEntries(stats?.speciesByOrder).slice(0, 8);
   const topBioregions = sortedEntries(stats?.speciesByBioregion).slice(0, 8);
-  const clueCategories = sortedEntries(stats?.cluesByCategory);
 
   if (!isLoaded) return null;
 
@@ -400,19 +397,6 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
                 {topBioregions.map(([region, count]) => (
                   <span key={region} className="glass-bg border border-ds-subtle rounded-full px-2.5 py-0.5 text-ds-caption">
                     {region} <span className="text-ds-text-muted">({count})</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {clueCategories.length > 0 && (
-            <div>
-              <SectionHeader><BookOpen className="size-4 text-ds-cyan" /> Clue Categories</SectionHeader>
-              <div className="flex flex-wrap gap-1.5">
-                {clueCategories.map(([cat, count]) => (
-                  <span key={cat} className="glass-bg border border-ds-subtle rounded-full px-2.5 py-0.5 text-ds-caption">
-                    {cat} <span className="text-ds-text-muted">({count})</span>
                   </span>
                 ))}
               </div>

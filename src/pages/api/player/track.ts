@@ -28,15 +28,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (action) {
       case 'updateSessionProgress': {
-        const { sessionId, moves, score, speciesDiscovered, cluesUnlocked } = params;
-        const updated = await pt.updateSessionProgress(profile.userId, sessionId, moves, score, speciesDiscovered, cluesUnlocked);
+        const { sessionId, moves, score, speciesDiscovered } = params;
+        const updated = await pt.updateSessionProgress(profile.userId, sessionId, moves, score, speciesDiscovered);
         if (!updated) return res.status(404).json({ error: 'Session not found' });
         return res.json({ ok: true });
       }
 
       case 'forceSessionUpdate': {
-        const { sessionId, moves, score, speciesDiscovered, cluesUnlocked } = params;
-        const updated = await pt.forceSessionUpdate(profile.userId, sessionId, moves, score, speciesDiscovered, cluesUnlocked);
+        const { sessionId, moves, score, speciesDiscovered } = params;
+        const updated = await pt.forceSessionUpdate(profile.userId, sessionId, moves, score, speciesDiscovered);
         if (!updated) return res.status(404).json({ error: 'Session not found' });
         return res.json({ ok: true });
       }
@@ -46,7 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           speciesId,
           sessionId,
           timeToDiscoverSeconds,
-          cluesUnlockedBeforeGuess,
           incorrectGuessesCount,
           scoreEarned,
           foundLon,
@@ -56,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const discoveryId = await pt.trackSpeciesDiscovery(profile.userId, speciesId, {
           sessionId,
           timeToDiscoverSeconds,
-          cluesUnlockedBeforeGuess,
           incorrectGuessesCount,
           scoreEarned,
           foundLon,

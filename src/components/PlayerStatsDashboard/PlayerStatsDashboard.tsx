@@ -12,7 +12,6 @@ import {
   Globe,
   Leaf,
   Shield,
-  TrendingUp,
   Award,
   MapPin,
   Dna,
@@ -96,13 +95,6 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
     const topRealms = getTopThree(stats.speciesByRealm)
     const topBiomes = getTopThree(stats.speciesByBiome)
 
-    // Top 5 clue categories sorted
-    const topClueCategories = stats.cluesByCategory
-      ? Object.entries(stats.cluesByCategory)
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 5)
-      : []
-
     // IUCN status sorted
     const iucnStatusSorted = stats.speciesByIucnStatus
       ? Object.entries(stats.speciesByIucnStatus)
@@ -125,7 +117,6 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
       topFamilies,
       topRealms,
       topBiomes,
-      topClueCategories,
       iucnStatusSorted,
       orderCount,
       familyCount,
@@ -199,7 +190,7 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
             <Target className="w-16 h-16 text-slate-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-300 mb-2">No Discoveries Yet</h3>
             <p className="text-sm text-slate-400 mb-4">
-              Start playing to discover species, unlock clues, and climb the leaderboard!
+              Start playing to discover species, gather evidence, and climb the leaderboard!
             </p>
             <Button
               onClick={onBack}
@@ -241,14 +232,6 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-400">Avg Clues per Discovery</span>
-                    <span className="text-sm font-bold text-yellow-400">
-                      {Number.isFinite(stats.averageCluesPerDiscovery)
-                        ? stats.averageCluesPerDiscovery.toFixed(1)
-                        : "0.0"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-400">Discovery Rate</span>
                     <span className="text-sm font-bold text-green-400">{computedStats.discoveryRate} /hour</span>
                   </div>
@@ -256,22 +239,6 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
                     <span className="text-xs text-slate-400">Avg Score per Species</span>
                     <span className="text-sm font-bold text-purple-400">{computedStats.avgScorePerSpecies}</span>
                   </div>
-                  {stats.fastestDiscoveryClues != null && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-400">Fastest Discovery</span>
-                      <Badge className="bg-green-900/30 text-green-300 border-green-700/30 text-xs">
-                        {stats.fastestDiscoveryClues} clues
-                      </Badge>
-                    </div>
-                  )}
-                  {stats.slowestDiscoveryClues != null && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-slate-400">Most Challenging</span>
-                      <Badge className="bg-orange-900/30 text-orange-300 border-orange-700/30 text-xs">
-                        {stats.slowestDiscoveryClues} clues
-                      </Badge>
-                    </div>
-                  )}
                 </div>
               </Card>
 
@@ -304,58 +271,6 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
                 </div>
               </Card>
 
-              {/* Clue Stats */}
-              <Card className="bg-slate-800/40 border-slate-700/50 p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center">
-                      <Target className="w-4 h-4 text-purple-400" />
-                    </div>
-                    <h3 className="text-sm font-semibold">Clue Collection</h3>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-slate-400">Total Clues Unlocked</span>
-                      <span className="text-lg font-bold text-purple-400">{stats.totalCluesUnlocked}</span>
-                    </div>
-
-                    {computedStats.topClueCategories.length > 0 ? (
-                      <>
-                        <div className="space-y-1.5">
-                          {computedStats.topClueCategories.map(([category, count]) => (
-                            <div key={category}>
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs text-slate-300 capitalize">{category}</span>
-                                <span className="text-xs text-slate-400">{count}</span>
-                              </div>
-                              <Progress
-                                value={Math.min(100, (count / Math.max(1, stats.totalCluesUnlocked || 0)) * 100)}
-                                className="h-1.5"
-                              />
-                            </div>
-                          ))}
-                        </div>
-
-                        {stats.favoriteClueCategory && (
-                          <div className="mt-3 pt-2 border-t border-slate-700">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-slate-400">Favorite Category</span>
-                              <Badge className="bg-purple-900/30 text-purple-300 border-purple-700/30 capitalize text-xs">
-                                {stats.favoriteClueCategory}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="text-center py-3">
-                        <p className="text-xs text-slate-400">
-                          No clue category data available yet
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
             </TabsContent>
 
             {/* ===== MASTERY TAB ===== */}
@@ -691,19 +606,11 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
                     </div>
                   )}
 
-                  {stats.averageCluesPerDiscovery < 5 && (
-                    <div className="bg-gradient-to-br from-yellow-900/30 to-amber-900/30 border border-yellow-700/30 rounded-lg p-2">
-                      <Zap className="w-4 h-4 text-yellow-400 mb-1" />
-                      <div className="text-xs font-semibold text-yellow-300">Speed Demon</div>
-                      <div className="text-[10px] text-yellow-400">{"< 5 avg clues"}</div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Empty state if no achievements */}
                 {stats.totalSpeciesDiscovered < 10 &&
                   computedStats.realmCount < 5 &&
-                  stats.averageCluesPerDiscovery >= 5 &&
                   computedStats.iucnStatusSorted.filter(([status]) => ["CR", "EN", "VU"].includes(status)).reduce((sum, [, count]) => sum + count, 0) < 5 && (
                   <div className="text-center py-4">
                     <p className="text-sm text-slate-400">
@@ -713,42 +620,6 @@ export function PlayerStatsDashboard({ stats, playerName, onBack }: PlayerStatsD
                 )}
               </Card>
 
-              {/* Personal Records */}
-              <Card className="bg-slate-800/40 border-slate-700/50 p-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-green-500/20 rounded flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-green-400" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-green-300">Personal Records</h3>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  {stats.fastestDiscoveryClues != null && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Best Discovery Speed</span>
-                      <Badge className="bg-green-900/30 text-green-300 border-green-700/30">
-                        {stats.fastestDiscoveryClues} clues
-                      </Badge>
-                    </div>
-                  )}
-                  {stats.slowestDiscoveryClues != null && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Most Challenging</span>
-                      <Badge className="bg-orange-900/30 text-orange-300 border-orange-700/30">
-                        {stats.slowestDiscoveryClues} clues
-                      </Badge>
-                    </div>
-                  )}
-                  {stats.favoriteClueCategory && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Favorite Clue Type</span>
-                      <Badge className="bg-purple-900/30 text-purple-300 border-purple-700/30 capitalize">
-                        {stats.favoriteClueCategory}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              </Card>
             </TabsContent>
           </Tabs>
         )}

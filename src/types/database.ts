@@ -23,7 +23,6 @@ export interface PlayerGameSession {
   total_moves: number;
   total_score: number;
   species_discovered_in_session: number;
-  clues_unlocked_in_session: number;
   created_at: string;
 }
 
@@ -34,7 +33,6 @@ export interface PlayerSpeciesDiscovery {
   session_id?: string; // Optional FK to player_game_sessions
   discovered_at: string;
   time_to_discover_seconds?: number;
-  clues_unlocked_before_guess: number;
   incorrect_guesses_count: number;
   score_earned: number;
   found_lon?: number;
@@ -46,14 +44,10 @@ export interface PlayerSpeciesDiscovery {
 export interface PlayerStats {
   player_id: string; // Primary key (no separate id field)
   total_species_discovered: number;
-  total_clues_unlocked: number;
   total_score: number;
   total_moves_made: number;
   total_games_played: number;
   total_play_time_seconds: number;
-  average_clues_per_discovery: number | null;
-  fastest_discovery_clues?: number;
-  slowest_discovery_clues?: number;
   average_time_per_discovery_seconds?: number;
   species_by_order: Record<string, number>;
   species_by_family: Record<string, number>;
@@ -66,8 +60,6 @@ export interface PlayerStats {
   freshwater_species_count: number;
   aquatic_species_count: number;
   species_by_iucn_status: Record<string, number>;
-  clues_by_category: Record<string, number>;
-  favorite_clue_category?: string;
   first_discovery_at?: string;
   last_discovery_at?: string;
   created_at: string;
@@ -79,7 +71,6 @@ export interface PlayerLeaderboard {
   username?: string;
   total_species_discovered: number;
   total_score: number;
-  average_clues_per_discovery: number;
   total_play_time_seconds: number;
   rank_by_discoveries: number;
   rank_by_score: number;

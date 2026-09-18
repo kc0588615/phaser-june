@@ -79,7 +79,6 @@ export async function startGameSession(playerId: string): Promise<string | null>
         totalMoves: 0,
         totalScore: 0,
         speciesDiscoveredInSession: 0,
-        cluesUnlockedInSession: 0,
       })
       .returning({ id: playerGameSessions.id });
 
@@ -137,8 +136,7 @@ export async function updateSessionProgress(
   sessionId: string,
   moves: number,
   score: number,
-  speciesDiscovered: number,
-  cluesUnlocked: number
+  speciesDiscovered: number
 ): Promise<boolean> {
   if (!(await ensureServerDeps())) return false; // Client-side no-op
 
@@ -149,7 +147,6 @@ export async function updateSessionProgress(
         totalMoves: moves,
         totalScore: score,
         speciesDiscoveredInSession: speciesDiscovered,
-        cluesUnlockedInSession: cluesUnlocked,
       })
       .where(
         and(
@@ -173,11 +170,10 @@ export async function forceSessionUpdate(
   sessionId: string,
   moves: number,
   score: number,
-  speciesDiscovered: number,
-  cluesUnlocked: number
+  speciesDiscovered: number
 ): Promise<boolean> {
   return updateSessionProgress(
-    playerId, sessionId, moves, score, speciesDiscovered, cluesUnlocked
+    playerId, sessionId, moves, score, speciesDiscovered
   );
 }
 
@@ -190,7 +186,6 @@ export async function trackSpeciesDiscovery(
   options: {
     sessionId?: string;
     timeToDiscoverSeconds?: number;
-    cluesUnlockedBeforeGuess: number;
     incorrectGuessesCount: number;
     scoreEarned: number;
     foundLon?: number;
@@ -229,7 +224,6 @@ export async function trackSpeciesDiscovery(
           speciesId,
           sessionId,
           timeToDiscoverSeconds: options.timeToDiscoverSeconds,
-          cluesUnlockedBeforeGuess: options.cluesUnlockedBeforeGuess,
           incorrectGuessesCount: options.incorrectGuessesCount,
           scoreEarned: options.scoreEarned,
           foundLon: options.foundLon,
@@ -316,7 +310,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         speciesId: playerSpeciesDiscoveries.speciesId,
         scoreEarned: playerSpeciesDiscoveries.scoreEarned,
         timeToDiscoverSeconds: playerSpeciesDiscoveries.timeToDiscoverSeconds,
-        cluesUnlockedBeforeGuess: playerSpeciesDiscoveries.cluesUnlockedBeforeGuess,
         discoveredAt: playerSpeciesDiscoveries.discoveredAt,
         // Join species data
         taxonOrder: speciesTable.taxonOrder,
@@ -357,14 +350,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
       }
       return sum;
     }, 0);
-
-    // Calculate clue efficiency
-    const cluesPerDiscovery = discoveries.map((d: any) => d.cluesUnlockedBeforeGuess || 0);
-    const averageCluesPerDiscovery = totalSpeciesDiscovered > 0
-      ? cluesPerDiscovery.reduce((a: number, b: number) => a + b, 0) / totalSpeciesDiscovered
-      : null;
-    const fastestDiscoveryClues = cluesPerDiscovery.length > 0 ? Math.min(...cluesPerDiscovery) : null;
-    const slowestDiscoveryClues = cluesPerDiscovery.length > 0 ? Math.max(...cluesPerDiscovery) : null;
 
     // Calculate time stats
     const discoverTimes = discoveries
@@ -440,9 +425,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         totalMovesMade,
         totalGamesPlayed,
         totalPlayTimeSeconds,
-        averageCluesPerDiscovery: averageCluesPerDiscovery !== null ? averageCluesPerDiscovery.toString() : null,
-        fastestDiscoveryClues,
-        slowestDiscoveryClues,
         averageTimePerDiscoverySeconds,
         speciesByOrder,
         speciesByFamily,
@@ -467,9 +449,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
           totalMovesMade,
           totalGamesPlayed,
           totalPlayTimeSeconds,
-          averageCluesPerDiscovery: averageCluesPerDiscovery !== null ? averageCluesPerDiscovery.toString() : null,
-          fastestDiscoveryClues,
-          slowestDiscoveryClues,
           averageTimePerDiscoverySeconds,
           speciesByOrder,
           speciesByFamily,

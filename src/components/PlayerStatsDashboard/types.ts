@@ -7,16 +7,12 @@ export interface PlayerStats {
 
   // Overview metrics
   totalSpeciesDiscovered: number;
-  totalCluesUnlocked: number;
   totalScore: number;
   totalMovesMade: number;
   totalGamesPlayed: number;
   totalPlayTimeSeconds: number;
 
   // Efficiency metrics
-  averageCluesPerDiscovery: number;
-  fastestDiscoveryClues?: number;
-  slowestDiscoveryClues?: number;
   averageTimePerDiscoverySeconds?: number;
 
   // Taxonomic coverage (JSONB)
@@ -37,10 +33,6 @@ export interface PlayerStats {
 
   // Conservation awareness (JSONB)
   speciesByIucnStatus: Record<string, number>;
-
-  // Clue mastery (JSONB)
-  cluesByCategory: Record<string, number>;
-  favoriteClueCategory?: string;
 
   // Timestamps
   firstDiscoveryAt?: string;

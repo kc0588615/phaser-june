@@ -658,7 +658,6 @@ export class Game extends Phaser.Scene {
                     moves: data.movesUsed,
                     score: data.score,
                     speciesDiscovered: this.currentSpeciesIndex,
-                    cluesUnlocked: 0,
                 }),
             }).catch(err => console.error('Failed to update session progress:', err));
         }, 10000);
@@ -680,7 +679,6 @@ export class Game extends Phaser.Scene {
                 moves: this.backendPuzzle.getMovesUsed(),
                 score: this.backendPuzzle.getScore(),
                 speciesDiscovered: this.currentSpeciesIndex,
-                cluesUnlocked: 0,
             })], { type: 'application/json' });
             navigator.sendBeacon('/api/player/track', blob);
         } catch (error) {
@@ -1352,7 +1350,6 @@ export class Game extends Phaser.Scene {
                     speciesId,
                     sessionId: this.currentSessionId || undefined,
                     timeToDiscoverSeconds: timeToDiscover,
-                    cluesUnlockedBeforeGuess: 0,
                     incorrectGuessesCount: this.incorrectGuessesThisSpecies,
                     scoreEarned: this.backendPuzzle!.getScore(),
                     foundLon: this.currentMapLocation?.lon,
@@ -1392,7 +1389,6 @@ export class Game extends Phaser.Scene {
                             moves: this.backendPuzzle!.getMovesUsed(),
                             score: this.backendPuzzle!.getScore(),
                             speciesDiscovered: this.currentSpeciesIndex + 1,
-                            cluesUnlocked: 0,
                         }),
                     });
                 }

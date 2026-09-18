@@ -55,7 +55,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const stats = raw
       ? {
           totalSpeciesDiscovered: raw.totalSpeciesDiscovered,
-          totalCluesUnlocked: raw.totalCluesUnlocked,
           totalScore: raw.totalScore,
           totalMovesMade: raw.totalMovesMade,
           totalGamesPlayed: raw.totalGamesPlayed,
@@ -64,7 +63,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           terrestrialSpeciesCount: raw.terrestrialSpeciesCount,
           freshwaterSpeciesCount: raw.freshwaterSpeciesCount,
           aquaticSpeciesCount: raw.aquaticSpeciesCount,
-          favoriteClueCategory: raw.favoriteClueCategory,
           firstDiscoveryAt: raw.firstDiscoveryAt,
           lastDiscoveryAt: raw.lastDiscoveryAt,
           speciesByBiome: asJsonMap(raw.speciesByBiome),
@@ -74,7 +72,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           speciesByRealm: asJsonMap(raw.speciesByRealm),
           speciesByBioregion: asJsonMap(raw.speciesByBioregion),
           speciesByIucnStatus: asJsonMap(raw.speciesByIucnStatus),
-          cluesByCategory: asJsonMap(raw.cluesByCategory),
         }
       : null;
 

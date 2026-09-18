@@ -63,14 +63,13 @@ export async function POST(request: NextRequest) {
           playerId: userId,
           speciesId: rawId,
           discoveredAt: d.discoveredAt ? new Date(d.discoveredAt) : new Date(),
-          cluesUnlockedBeforeGuess: 0,
           incorrectGuessesCount: 0,
           scoreEarned: 0,
         };
       })
       .filter(Boolean) as Array<{
         playerId: string; speciesId: number; discoveredAt: Date;
-        cluesUnlockedBeforeGuess: number; incorrectGuessesCount: number; scoreEarned: number;
+        incorrectGuessesCount: number; scoreEarned: number;
       }>;
 
     if (validDiscoveries.length === 0) {

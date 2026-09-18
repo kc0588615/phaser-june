@@ -16,7 +16,6 @@ type CardProgress = Pick<
   SpeciesTCGCardProps,
   | 'gisStamps'
   | 'factsUnlocked'
-  | 'clueCategoriesUnlocked'
   | 'completionPct'
   | 'rarityTier'
   | 'bestRunScore'
@@ -200,7 +199,6 @@ function toCardProgress(value: unknown): CardProgress {
   return {
     gisStamps: Array.isArray(card.gisStamps) ? card.gisStamps as FeatureClass[] : undefined,
     factsUnlocked: Array.isArray(card.factsUnlocked) ? card.factsUnlocked as string[] : undefined,
-    clueCategoriesUnlocked: Array.isArray(card.clueCategoriesUnlocked) ? card.clueCategoriesUnlocked as string[] : undefined,
     completionPct: typeof card.completionPct === 'number' ? card.completionPct : undefined,
     rarityTier: typeof card.rarityTier === 'string' ? card.rarityTier : undefined,
     bestRunScore: typeof card.bestRunScore === 'number' ? card.bestRunScore : null,

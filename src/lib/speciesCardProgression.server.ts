@@ -9,7 +9,6 @@ export async function refreshSpeciesCardProgress(playerId: string, speciesId: nu
       timesEncountered: speciesCards.timesEncountered,
       conservationCode: speciesCards.conservationCode,
       factsUnlocked: speciesCards.factsUnlocked,
-      clueCategoriesUnlocked: speciesCards.clueCategoriesUnlocked,
       gisStamps: speciesCards.gisStamps,
     })
     .from(speciesCards)
