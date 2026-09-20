@@ -56,6 +56,7 @@ function projection(overrides: Omit<Partial<ClientRunProjection>, 'checkpoint'> 
         modifierNodes: [], signals: {}, waypoints: [], waypointRadiusKm: null, nearestRiverDistM: null,
       },
     },
+    factLedger: [],
     observations: [],
     nodes: [],
     memory: null,

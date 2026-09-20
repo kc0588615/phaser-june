@@ -3,7 +3,18 @@ import assert from 'node:assert/strict';
 import { BackendPuzzle } from '@/game/BackendPuzzle';
 import { EVIDENCE_FAMILIES, createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
 import { buildFieldSignalSeed, getFieldSignalFamily } from '@/game/fieldSignal';
-import { applyEvidenceProgress, deriveCascadeHintId, deriveEvidenceHintIds, getEvidenceHintFamilies, parseEvidenceProgressInput, shouldIssueCascadeHint, type V3NodeEvidenceState } from '@/lib/evidenceRunState';
+import { applyEvidenceProgress, deriveCascadeHintId, parseEvidenceProgressInput, shouldIssueCascadeHint, type EvidenceProgressInput, type V3NodeEvidenceState } from '@/lib/evidenceRunState';
+import { selectLadderIssues } from '@/lib/evidenceLadder';
+
+/** Five-rung ladders per family; the route derives issued families the same way. */
+const LADDER_IDS = {
+  relatives: [10, 11, 12, 13, 14], body: [20, 21, 22, 23, 24], behavior: [30, 31, 32, 33, 34],
+  habits: [40, 41, 42, 43, 44], place: [50, 51, 52, 53, 54],
+};
+const climb = (input: EvidenceProgressInput, cursors: V3NodeEvidenceState['hintCounts']) =>
+  selectLadderIssues(input, cursors, LADDER_IDS).issues.map(issue => issue.family);
+const apply = (current: V3NodeEvidenceState, input: EvidenceProgressInput) =>
+  applyEvidenceProgress(current, input, climb(input, current.hintCounts));
 
 function checkpoint(moveNumber: number) {
   const puzzle = new BackendPuzzle(6, 6);
@@ -49,7 +60,7 @@ describe('v3 evidence progress', () => {
         boardCheckpoint: checkpoint(moveNumber),
       });
       assert.ok(input);
-      const result = applyEvidenceProgress(current, input);
+      const result = apply(current, input);
       assert.ok(!('error' in result));
       current = result.state;
     }
@@ -64,12 +75,12 @@ describe('v3 evidence progress', () => {
       directMatchFamilies: ['relatives'], cascadeCount: 0,
       boardCheckpoint: checkpoint(1),
     })!;
-    const first = applyEvidenceProgress(state(), input);
+    const first = apply(state(), input);
     assert.ok(!('error' in first));
-    const retry = applyEvidenceProgress(first.state, input);
+    const retry = apply(first.state, input);
     assert.ok(!('error' in retry));
     assert.deepEqual(retry.state.evidenceCharges, first.state.evidenceCharges);
-    const conflict = applyEvidenceProgress(first.state, { ...input, directClears: { ...input.directClears, relatives: 4 } });
+    const conflict = apply(first.state, { ...input, directClears: { ...input.directClears, relatives: 4 } });
     assert.deepEqual(conflict, { error: 'move_locked' });
   });
 
@@ -80,18 +91,29 @@ describe('v3 evidence progress', () => {
       directMatchFamilies: ['relatives'], cascadeCount: 0,
       boardCheckpoint: checkpoint(2),
     })!;
-    assert.deepEqual(applyEvidenceProgress(state(), input), { error: 'move_out_of_order' });
+    assert.deepEqual(apply(state(), input), { error: 'move_out_of_order' });
     const lockedState = { ...state(), selectedFamilies: ['relatives' as const] };
-    assert.deepEqual(applyEvidenceProgress(lockedState, { ...input, moveNumber: 1, boardCheckpoint: checkpoint(1) }), { error: 'invalid_family' });
+    assert.deepEqual(apply(lockedState, { ...input, moveNumber: 1, boardCheckpoint: checkpoint(1) }), { error: 'invalid_family' });
   });
 
-  it('derives deterministic per-family and cascade hint sequences', () => {
-    const ids = {
-      relatives: [10, 11, 12], body: [20, 21, 22], behavior: [30, 31, 32],
-      habits: [40, 41, 42], place: [50, 51, 52],
-    };
+  it('climbs one ladder rung per swap on the largest direct match and cycles cascade flavor', () => {
     const counts = { ...createEmptyEvidenceCharges(), relatives: 2, body: 1 };
-    assert.deepEqual(deriveEvidenceHintIds(counts, ['relatives', 'body', 'relatives'], ids), [12, 21, 10]);
+    const input = parseEvidenceProgressInput({
+      nodeIndex: 0, moveNumber: 1,
+      directClears: { relatives: 3, body: 4, behavior: 0, habits: 0, place: 0 },
+      directMatchFamilies: ['relatives', 'body'], cascadeCount: 0,
+      boardCheckpoint: checkpoint(1),
+    })!;
+    // Body cleared more cells, so body speaks; relatives waits for another swap.
+    assert.deepEqual(selectLadderIssues(input, counts, LADDER_IDS), {
+      issues: [{ family: 'body', hintId: 21, rung: 1 }], reinforcedFamilies: [],
+    });
+    // A completed ladder yields to the next family; nothing left → reinforce only.
+    const topped = { ...counts, body: 5 };
+    assert.deepEqual(selectLadderIssues(input, topped, LADDER_IDS).issues, [{ family: 'relatives', hintId: 12, rung: 2 }]);
+    assert.deepEqual(selectLadderIssues(input, { ...topped, relatives: 5 }, LADDER_IDS), {
+      issues: [], reinforcedFamilies: ['body', 'relatives'],
+    });
     assert.equal(deriveCascadeHintId(16, [100, 101, 102]), 101);
   });
 
@@ -104,7 +126,7 @@ describe('v3 evidence progress', () => {
       boardCheckpoint: live.checkpoint,
     });
     assert.ok(spawned);
-    const first = applyEvidenceProgress(state(), spawned);
+    const first = apply(state(), spawned);
     assert.ok(!('error' in first));
 
     const cleared = signalCheckpoint(2, true);
@@ -119,13 +141,13 @@ describe('v3 evidence progress', () => {
       boardCheckpoint: cleared.checkpoint,
     });
     assert.ok(clearInput);
-    const second = applyEvidenceProgress(first.state, clearInput);
+    const second = apply(first.state, clearInput);
     assert.ok(!('error' in second));
     assert.equal(second.state.evidenceCharges[live.family], first.state.evidenceCharges[live.family]);
     assert.equal(second.state.hintCounts[directFamily], first.state.hintCounts[directFamily] + 2);
-    assert.deepEqual(getEvidenceHintFamilies(clearInput), [directFamily, directFamily]);
+    assert.deepEqual(climb(clearInput, first.state.hintCounts), [directFamily, directFamily]);
     assert.equal(shouldIssueCascadeHint(clearInput), false);
-    const retry = applyEvidenceProgress(second.state, clearInput);
+    const retry = apply(second.state, clearInput);
     assert.ok(!('error' in retry));
     assert.equal(retry.digest, second.digest);
   });
@@ -138,7 +160,7 @@ describe('v3 evidence progress', () => {
       directMatchFamilies: ['relatives'], cascadeCount: 1, signalCleared: false,
       boardCheckpoint: live.checkpoint,
     })!;
-    const first = applyEvidenceProgress(state(), spawned);
+    const first = apply(state(), spawned);
     assert.ok(!('error' in first));
 
     // Payout family deliberately differs from the family of the gem under the tile.
@@ -153,9 +175,9 @@ describe('v3 evidence progress', () => {
       boardCheckpoint: cleared.checkpoint,
     });
     assert.ok(clearInput);
-    assert.deepEqual(getEvidenceHintFamilies(clearInput), [payoutFamily, payoutFamily, payoutFamily]);
+    assert.deepEqual(climb(clearInput, first.state.hintCounts), [payoutFamily, payoutFamily, payoutFamily]);
 
-    const second = applyEvidenceProgress(first.state, clearInput);
+    const second = apply(first.state, clearInput);
     assert.ok(!('error' in second));
     // one direct match + two signal hints
     assert.equal(second.state.hintCounts[payoutFamily], first.state.hintCounts[payoutFamily] + 3);
@@ -163,21 +185,17 @@ describe('v3 evidence progress', () => {
     assert.deepEqual(second.state.offeredFamilies, []);
 
     // Two hints walk the cursor twice and wrap the four-entry pool.
-    const ids = {
-      relatives: [10, 11, 12, 13], body: [20, 21, 22, 23], behavior: [30, 31, 32, 33],
-      habits: [40, 41, 42, 43], place: [50, 51, 52, 53],
-    };
-    const counts = { ...createEmptyEvidenceCharges(), [payoutFamily]: 3 };
-    const drawn = deriveEvidenceHintIds(counts, [payoutFamily, payoutFamily], ids);
-    assert.equal(drawn.length, 2);
-    assert.equal(drawn[0], ids[payoutFamily][3]);
-    assert.equal(drawn[1], ids[payoutFamily][0]);
+    // Ladders clamp at the top: a payout near the end reveals only what remains, never wraps.
+    const nearTop = { ...createEmptyEvidenceCharges(), [payoutFamily]: 4 };
+    const clamped = selectLadderIssues(clearInput, nearTop, LADDER_IDS);
+    assert.deepEqual(clamped.issues.map(issue => issue.hintId), [LADDER_IDS[payoutFamily][4]]);
+    assert.deepEqual(clamped.reinforcedFamilies, []);
 
     // A retry that recomputes a different count must not be mistaken for the same move.
-    const retry = applyEvidenceProgress(second.state, clearInput);
+    const retry = apply(second.state, clearInput);
     assert.ok(!('error' in retry));
     assert.equal(retry.digest, second.digest);
-    assert.deepEqual(applyEvidenceProgress(second.state, { ...clearInput, signalHintCount: 1 }), { error: 'move_locked' });
+    assert.deepEqual(apply(second.state, { ...clearInput, signalHintCount: 1 }), { error: 'move_locked' });
   });
 
   it('requires a valid hint count alongside a signal clear', () => {
@@ -215,11 +233,11 @@ describe('v3 evidence progress', () => {
       signalCleared: true, signalClearedFamily: 'relatives', signalHintCount: 1,
       boardCheckpoint: clearedNext.checkpoint,
     })!;
-    assert.ok(!('error' in applyEvidenceProgress(prior, clearInput)));
+    assert.ok(!('error' in apply(prior, clearInput)));
     // A clear claimed while the tile is still on the board is still rejected.
     const stillLive = signalCheckpoint(2, false);
-    assert.deepEqual(applyEvidenceProgress(prior, { ...clearInput, boardCheckpoint: stillLive.checkpoint }), { error: 'checkpoint_mismatch' });
-    assert.deepEqual(applyEvidenceProgress(prior, { ...clearInput, signalCleared: false, signalClearedFamily: undefined, signalHintCount: undefined }), { error: 'checkpoint_mismatch' });
+    assert.deepEqual(apply(prior, { ...clearInput, boardCheckpoint: stillLive.checkpoint }), { error: 'checkpoint_mismatch' });
+    assert.deepEqual(apply(prior, { ...clearInput, signalCleared: false, signalClearedFamily: undefined, signalHintCount: undefined }), { error: 'checkpoint_mismatch' });
 
     const clearedPrior = signalCheckpoint(1, true);
     const respawnState = { ...state(), segmentMovesUsed: 1, boardCheckpoint: clearedPrior.checkpoint };
@@ -230,7 +248,7 @@ describe('v3 evidence progress', () => {
       directMatchFamilies: ['relatives'], cascadeCount: 1, signalCleared: false,
       boardCheckpoint: respawn.checkpoint,
     })!;
-    assert.deepEqual(applyEvidenceProgress(respawnState, respawnInput), { error: 'checkpoint_mismatch' });
+    assert.deepEqual(apply(respawnState, respawnInput), { error: 'checkpoint_mismatch' });
   });
 
   it('allows a cascade to destroy the signal without a payout', () => {
@@ -250,9 +268,9 @@ describe('v3 evidence progress', () => {
       boardCheckpoint: cleared.checkpoint,
     });
     assert.ok(input);
-    const result = applyEvidenceProgress(prior, input);
+    const result = apply(prior, input);
     assert.ok(!('error' in result));
-    assert.deepEqual(getEvidenceHintFamilies(input), [directFamily]);
+    assert.deepEqual(climb(input, prior.hintCounts), [directFamily]);
     assert.equal(shouldIssueCascadeHint(input), true);
     assert.equal(result.state.hintCounts[live.family], prior.hintCounts[live.family]);
   });

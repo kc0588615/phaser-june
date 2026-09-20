@@ -4,6 +4,7 @@ import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, speciesDeductionP
 import { createEmptyEvidenceCharges, deriveEvidenceFamilyOffer } from '@/expedition/evidenceFamilies';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { parseEvidenceChoiceInput, parseV3NodeEvidenceState } from '@/lib/evidenceRunState';
+import { ledgerEliminatedIds, parseFactLedger } from '@/lib/evidenceLadder';
 import {
   computeActualEliminatedIds, getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard,
   parsePrivateCase, parseV3EvidenceApplications, type V3EvidenceApplicationRecord,
@@ -66,14 +67,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
       const profiles = await tx.select().from(speciesDeductionProfiles).where(inArray(speciesDeductionProfiles.speciesId, publicCase.candidateIds));
       if (profiles.length !== publicCase.candidateIds.length) return response(409, { reason: 'corpus_invariant_failed' });
-      const alreadyEliminated = applications.flatMap(application => application.actualEliminatedIds);
+      // Ladder rungs already ruled candidates out between sites; the hard card only adds what is left.
+      const alreadyEliminated = [...new Set([
+        ...applications.flatMap(application => application.actualEliminatedIds),
+        ...ledgerEliminatedIds(parseFactLedger(metadata.factLedger)),
+      ])];
       const alreadyEliminatedSet = new Set(alreadyEliminated);
       const liveBefore = publicCase.candidateIds.filter(id => !alreadyEliminatedSet.has(id));
       const actualEliminatedIds = computeActualEliminatedIds(profiles, alreadyEliminated, card.traitCategory, card.compareTag);
       if (actualEliminatedIds.includes(privateCase.answerId)) return response(409, { reason: 'answer_eliminated' });
       const liveAfterCount = liveBefore.length - actualEliminatedIds.length;
-      if (liveAfterCount < 2 || (input.nodeIndex === 2 && liveBefore.length >= 2 && actualEliminatedIds.length === 0)
-        || (input.nodeIndex === 2 && liveAfterCount > 3)) return response(409, { reason: 'corpus_invariant_failed' });
+      if (liveAfterCount < 1 || (input.nodeIndex === 2 && liveAfterCount > 3)) return response(409, { reason: 'corpus_invariant_failed' });
       const eliminationReasons = Object.fromEntries(actualEliminatedIds.map(id => [String(id), eliminationReason(input.family)]));
       const application: V3EvidenceApplicationRecord = {
         nodeIndex: input.nodeIndex,
@@ -103,7 +107,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           nodeStatus: 'active', startedAt: new Date(), updatedAt: new Date(),
           boardContext: {
             ...getRecord(nextNode.boardContext), caseVersion: 4, evidenceCharges: nextCharges,
-            carriedCharges: nextCharges, hintCounts: createEmptyEvidenceCharges(), cascadeHintCount: 0,
+            // Ladder cursors are run-wide: the next site keeps climbing where this one stopped.
+            carriedCharges: nextCharges, hintCounts: state.hintCounts, cascadeHintCount: 0,
             selectedFamilies, segmentMovesUsed: 0, offeredFamilies: [], lastHintIds: [], travelEntry,
           },
         }).where(eq(ecoRunNodes.id, nextNode.id));

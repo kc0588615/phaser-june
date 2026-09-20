@@ -4,6 +4,7 @@ import { parseTerrainSnapshot, type TerrainSnapshotV1 } from '@/terrain/terrain'
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution, type PublicMysteryCase } from '@/lib/mysteryCase';
+import type { PublicLedgerFact } from '@/lib/evidenceLadder';
 
 const UINT32_MAX = 0xffff_ffff;
 const NODE_OBSTACLES = new Set([
@@ -247,6 +248,8 @@ export interface ClientRunProjection {
   casePublic: PublicCaseSnapshot | null;
   checkpoint: PublicRunCheckpoint;
   observations: PublicIssuedObservation[];
+  /** Ladder facts already revealed by matches, hydrated from reviewed hint text. Never hint ids or tags. */
+  factLedger: PublicLedgerFact[];
   nodes: PublicRunNode[];
   memory: PublicRunMemory | null;
   legacy: boolean;
@@ -261,6 +264,8 @@ export interface ClientRunProjection {
 export interface RunProjectionInput {
   /** Hydrated, already-issued card content. Stored issuance rows are never read. */
   publicObservations?: readonly unknown[];
+  /** Hydrated ladder facts (see evidenceLadder.hydrateLedgerFact). */
+  publicFacts?: readonly unknown[];
   nodes?: readonly unknown[];
   memory?: unknown;
   verdict?: unknown;
@@ -291,12 +296,19 @@ export function projectRunForClient(
       })
     : [];
   const nodes = projectRunNodes(input.nodes);
+  const factLedger = Array.isArray(input.publicFacts)
+    ? input.publicFacts.flatMap(value => {
+        const fact = projectLedgerFact(value);
+        return fact ? [fact] : [];
+      })
+    : [];
 
   return {
     run: projectRunSummary(session),
     casePublic,
     checkpoint: projectCheckpoint(metadata),
     observations,
+    factLedger,
     nodes: projectNodeCaseStates(nodes, observations),
     memory: projectRunMemory(input.memory),
     legacy: casePublic === null,
@@ -767,6 +779,32 @@ function getEvidenceFamilies(value: unknown): EvidenceFamily[] {
 function getUint32(value: unknown): number | undefined {
   const integer = getInteger(value);
   return integer !== undefined && integer >= 0 && integer <= UINT32_MAX ? integer : undefined;
+}
+
+function projectLedgerFact(value: unknown): PublicLedgerFact | null {
+  const source = getRecord(value);
+  const nodeIndex = getInteger(source.nodeIndex);
+  const moveNumber = getInteger(source.moveNumber);
+  const rung = getInteger(source.rung);
+  const rungTotal = getInteger(source.rungTotal);
+  const factText = getString(source.factText);
+  const traitCategory = getString(source.traitCategory);
+  if (nodeIndex === undefined || nodeIndex < 0 || nodeIndex > 2 || moveNumber === undefined || moveNumber < 1 || moveNumber > 6
+    || !isEvidenceFamily(source.family) || rung === undefined || rung < 0 || rungTotal === undefined || rungTotal < 1
+    || !factText || !traitCategory || !TRAIT_CATEGORIES.has(traitCategory)) return null;
+  const eliminatedIds = Array.isArray(source.eliminatedIds)
+    ? source.eliminatedIds.flatMap(id => { const n = getInteger(id); return n !== undefined && n > 0 ? [n] : []; })
+    : [];
+  const reasons: Record<string, string> = {};
+  for (const [key, item] of Object.entries(getRecord(source.eliminationReasons))) {
+    const reason = getString(item);
+    if (/^\d+$/.test(key) && reason && eliminatedIds.includes(Number(key))) reasons[key] = reason;
+  }
+  return {
+    nodeIndex, moveNumber, family: source.family,
+    traitCategory: traitCategory as PublicLedgerFact['traitCategory'],
+    rung, rungTotal, factText, eliminatedIds, eliminationReasons: reasons,
+  };
 }
 
 function getObservationRef(value: unknown): string | undefined {

@@ -154,9 +154,14 @@ export function evidenceMoveDigest(input: EvidenceProgressInput): string {
   return createHash('sha256').update(JSON.stringify(normalized)).digest('hex');
 }
 
+/**
+ * `issuedFamilies` lists one entry per ladder rung the move reveals (see
+ * evidenceLadder.selectLadderIssues); hintCounts are the run-wide rung cursors.
+ */
 export function applyEvidenceProgress(
   state: V3NodeEvidenceState,
   input: EvidenceProgressInput,
+  issuedFamilies: readonly EvidenceFamily[],
 ): { state: V3NodeEvidenceState; digest: string } | { error: 'move_locked' | 'move_out_of_order' | 'invalid_family' | 'charge_overflow' | 'checkpoint_mismatch' } {
   const digest = evidenceMoveDigest(input);
   if (input.moveNumber === state.segmentMovesUsed) {
@@ -176,8 +181,7 @@ export function applyEvidenceProgress(
     if (next > MAX_EVIDENCE_CHARGE) return { error: 'charge_overflow' };
     evidenceCharges[family] = next;
   }
-  for (const family of input.directMatchFamilies) hintCounts[family] += 1;
-  if (input.signalClearedFamily) hintCounts[input.signalClearedFamily] += input.signalHintCount ?? 1;
+  for (const family of issuedFamilies) hintCounts[family] += 1;
   const segmentMovesUsed = input.moveNumber;
   return {
     digest,
@@ -252,27 +256,6 @@ export function parseEvidenceChoiceInput(value: unknown): { nodeIndex: number; f
     && isEvidenceFamily(source.family)
     ? { nodeIndex: source.nodeIndex as number, family: source.family }
     : null;
-}
-
-export function deriveEvidenceHintIds(
-  counts: EvidenceChargeState,
-  matchedFamilies: readonly EvidenceFamily[],
-  idsByFamily: Record<EvidenceFamily, number[]>,
-): number[] {
-  const cursors = { ...counts };
-  return matchedFamilies.map(family => {
-    const ids = idsByFamily[family];
-    const id = ids[cursors[family] % ids.length];
-    cursors[family] += 1;
-    return id;
-  });
-}
-
-/** Direct-match families in order, then the signal payout family repeated once per hint. */
-export function getEvidenceHintFamilies(input: EvidenceProgressInput): EvidenceFamily[] {
-  if (!input.signalClearedFamily) return [...input.directMatchFamilies];
-  const payout = Array<EvidenceFamily>(input.signalHintCount ?? 1).fill(input.signalClearedFamily);
-  return [...input.directMatchFamilies, ...payout];
 }
 
 export function shouldIssueCascadeHint(input: EvidenceProgressInput): boolean {

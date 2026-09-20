@@ -60,6 +60,12 @@ describe('v4 run projection', () => {
         cardId: 900,
         bonusFactText: 'PRIVATE_FACT',
       }],
+      publicFacts: [{
+        nodeIndex: 0, moveNumber: 2, family: 'habits', traitCategory: 'diet', rung: 0, rungTotal: 3,
+        factText: 'Its food comes from plants.', eliminatedIds: [4, 6],
+        eliminationReasons: { 4: 'Habits fact 1 rules it out', 6: 'Habits fact 1 rules it out', 9: 'dropped' },
+        hintId: 700, weakTag: 'PRIVATE_TAG',
+      }, { nodeIndex: 9, family: 'habits' }],
       nodes: [{
         id: 'node-v3', nodeOrder: 1, nodeType: 'custom', nodeStatus: 'active',
         objectiveTarget: 6, objectiveProgress: 2, movesUsed: 2,
@@ -81,9 +87,14 @@ describe('v4 run projection', () => {
       5: 'flight wings',
     });
     assert.deepEqual(projection.nodes[0].evidenceCharges, { relatives: 1, body: 4, behavior: 0, habits: 1, place: 0 });
+    assert.deepEqual(projection.factLedger, [{
+      nodeIndex: 0, moveNumber: 2, family: 'habits', traitCategory: 'diet', rung: 0, rungTotal: 3,
+      factText: 'Its food comes from plants.', eliminatedIds: [4, 6],
+      eliminationReasons: { 4: 'Habits fact 1 rules it out', 6: 'Habits fact 1 rules it out' },
+    }]);
     const serialized = JSON.stringify(projection);
     for (const privateValue of [
-      'PRIVATE_RANGE', 'PRIVATE_SEED', 'PRIVATE_FACT', 'PRIVATE_HINT',
+      'PRIVATE_RANGE', 'PRIVATE_SEED', 'PRIVATE_FACT', 'PRIVATE_HINT', 'PRIVATE_TAG', '700',
       'familyCardIds', 'familyHintIds', 'cascadeHintIds', '900',
       'large-framed', 'gameplay_size:large', 'striped coat', 'grasping trunk',
       'keratin scales', 'digging claws',

@@ -1,5 +1,6 @@
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { CASE_TRAIT_CATEGORIES, POOL_SIZE, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { validateFamilyLadder } from '@/lib/evidenceLadder';
 import { createSeededStream } from '@/lib/seededRng';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 import {
@@ -133,11 +134,10 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
       const card = byFamily.get(family);
       if (!card) return fail('invalid_cards', 'Every family must occur exactly once.');
       const familyHints = hints.filter(hint => hint.family === family).sort((a, b) => a.sequenceIndex - b.sequenceIndex);
-      if (familyHints.length < 3 || familyHints.length > 5
-        || familyHints.some((hint, index) => !Number.isSafeInteger(hint.id) || hint.id <= 0
-          || hint.speciesId !== speciesId || hint.sequenceIndex !== index || !hint.hintText
-          || !hintWeakensCard(card, hint, profiles))) {
-        return fail('invalid_hints', 'Every family needs 3-5 ordered, non-unique hints bounded by its hard clue.');
+      if (familyHints.some(hint => !Number.isSafeInteger(hint.id) || hint.id <= 0 || hint.speciesId !== speciesId || !hint.hintText)
+        // Safety only at run creation: answer-safe, 2-5 survivors, never widening. Strict narrowing is a corpus check.
+        || validateFamilyLadder(speciesId, card, familyHints, profiles, { strict: false }).length > 0) {
+        return fail('invalid_hints', 'Every family needs a 3-5 rung answer-safe ladder that never widens the candidate pool.');
       }
       idsByFamily[family] = familyHints.map(hint => hint.id);
     }
@@ -220,26 +220,12 @@ export function verifyCaseCorpusV3(
         }
       }
       const familyHints = hints.filter(hint => hint.family === card.family);
-      if (familyHints.length < 3 || familyHints.length > 5) errors.push(`${answer.speciesId}/${card.family}: invalid hint count`);
-      for (const hint of familyHints) {
-        if (!hintWeakensCard(card, hint, profiles)) errors.push(`${answer.speciesId}/${card.family}/${hint.sequenceIndex}: unsafe weak tag`);
+      for (const error of validateFamilyLadder(answer.speciesId, card, familyHints, profiles, { strict: true })) {
+        errors.push(`${answer.speciesId}/${error}`);
       }
     }
   }
   return { pathCount, residualCounts, errors, warnings };
-}
-
-function hintWeakensCard(
-  card: CompilerEvidenceFamilyCard,
-  hint: CompilerEvidenceFamilyHint,
-  profiles: readonly CompilerSpeciesProfile[],
-): boolean {
-  const key = PROFILE_KEY[card.traitCategory];
-  const hardSurvivors = profiles.filter(profile => (profile[key] as readonly string[]).includes(card.compareTag));
-  const weakSurvivors = profiles.filter(profile => (profile[key] as readonly string[]).includes(hint.weakTag));
-  const weakIds = new Set(weakSurvivors.map(profile => profile.speciesId));
-  return hint.family === card.family && weakSurvivors.length >= 2 && weakSurvivors.length <= 5
-    && hardSurvivors.every(profile => weakIds.has(profile.speciesId));
 }
 
 export function orderedFamilyPaths(): [EvidenceFamily, EvidenceFamily, EvidenceFamily][] {

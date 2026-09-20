@@ -59,8 +59,8 @@ export function FieldHintTicker({ feed, className = '' }: { feed: Hint[]; classN
       </span>
       <div className="h-full min-w-0 flex-1 pr-2" aria-live="polite" aria-atomic="true">
         {visibleCurrent ? (
-          <p key={visibleCurrent.id} className="field-hint-arrive m-0 flex h-full items-center truncate font-mono text-[10px] italic text-cyan-50/85">
-            {visibleCurrent.kind === 'cascade' ? 'MULTIPLE SIGNALS · ' : 'FIELD TEAM · '}{visibleCurrent.text}
+          <p key={visibleCurrent.id} className={`field-hint-arrive m-0 flex h-full items-center truncate font-mono text-[10px] italic ${visibleCurrent.kind === 'reinforce' ? 'text-white/45' : 'text-cyan-50/85'}`}>
+            {visibleCurrent.kind === 'cascade' ? 'MULTIPLE SIGNALS · ' : visibleCurrent.kind === 'reinforce' ? 'NO NEW FACT · ' : 'FIELD TEAM · '}{visibleCurrent.text}
           </p>
         ) : (
           <p className="m-0 flex h-full items-center truncate font-mono text-[10px] italic text-white/38">Listening for field signals…</p>

@@ -15,9 +15,14 @@
       "review_status": "reviewed",
       "hints": [
         "The family tree avoids the branch of scale-armored mammals.",
-        "This lineage does not converge on the specialist ant eaters.",
-        "Genetic markers point away from toothless, keratin-plated forms.",
-        "Field team: the sample belongs elsewhere in the mammal tree."
+        {
+          "text": "This family tree does not run through the cattle and antelope group.",
+          "weak_tag": "comparison_lineage:not_bovid"
+        },
+        {
+          "text": "Its genes sit with an ancient African branch of mammals, far from cats, bats, and hoofed grazers.",
+          "weak_tag": "superorder:afrotheria"
+        }
       ]
     },
     {
@@ -32,9 +37,14 @@
       "review_status": "reviewed",
       "hints": [
         "The silhouette is broad and upright, not low and feline.",
-        "No banded coat pattern appears in the sample.",
-        "The feet support weight rather than a stalking stride.",
-        "Field team: this is not a striped four-pawed hunter."
+        {
+          "text": "No sign of the tiny sand-burrowing body plan.",
+          "weak_tag": "comparison_form:not_sand_digger"
+        },
+        {
+          "text": "Size estimate: a heavy animal, well over the weight of an adult person.",
+          "weak_tag": "gameplay_size:large"
+        }
       ]
     },
     {
@@ -49,9 +59,14 @@
       "review_status": "reviewed",
       "hints": [
         "The social group gathers on the ground.",
-        "Resting sites leave heavy traces below the trees.",
-        "No hanging roost or aerial departure appears in the log.",
-        "Field team: the group travels together at ground level."
+        {
+          "text": "It does not roll into an armored ball when threatened.",
+          "weak_tag": "comparison_behavior:not_defensive_curler"
+        },
+        {
+          "text": "It is usually recorded with others of its kind, not alone.",
+          "weak_tag": "social_pattern:group"
+        }
       ]
     },
     {
@@ -66,9 +81,14 @@
       "review_status": "reviewed",
       "hints": [
         "This feeder needs a great volume of vegetation.",
-        "The meal site is too abundant for a sparse-desert specialist.",
-        "Bark, roots, and leafy growth all show disturbance.",
-        "Field team: think bulk feeding, not moisture-saving bites."
+        {
+          "text": "Diet notes rule out an ant-and-termite specialist.",
+          "weak_tag": "comparison_diet:not_ant_specialist"
+        },
+        {
+          "text": "Its food comes from plants, not from other animals.",
+          "weak_tag": "food_source:plants"
+        }
       ]
     },
     {
@@ -83,9 +103,14 @@
       "review_status": "reviewed",
       "hints": [
         "The map footprint spans far more than one coastal dune belt.",
-        "This range crosses forests and grasslands on a continental scale.",
-        "The location signal points east of southern Africa.",
-        "Field team: widen the search across tropical Asia."
+        {
+          "text": "Climate reading: warm tropical conditions all year.",
+          "weak_tag": "climate_zone:tropical"
+        },
+        {
+          "text": "Range records come from Asia.",
+          "weak_tag": "continent:asia"
+        }
       ]
     }
   ]

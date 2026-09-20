@@ -11,6 +11,7 @@ The runtime supports v4 expeditions only. New runs wrap the six-move evidence-fa
 5. Red DNA = Relatives, orange Paw = Body, yellow Eye = Behavior, green Leaf/Fang = Habits, and blue Pin = Place.
 6. After move six, all unused families tied at or above second place are offered. The selected family resets, locks, and stops spawning; other totals carry forward.
 7. The server applies one fixed-strength reviewed clue and automatically eliminates incompatible candidates. There is no evidence tier, signature, interpretation prediction, or citation step.
+7a. Between hard clues, deduction is continuous. Every accepted move climbs one **evidence ladder** rung: the direct-match family with the most cleared cells speaks its next reviewed fact, and every live candidate lacking that fact's trait tag is ruled out immediately (roster dims, fact ledger files the fact under its family and trait category). Ladders are authored broad → narrow, three to five rungs, answer-safe, and never identify the animal alone (final rung keeps two or more survivors). A Field Signal payout adds one or two rungs on the clearing family; cascades never climb. Rung cursors persist across sites; a finished ladder yields to the next matched family, and a move that reveals nothing shows a muted "no new fact" line. Rules and validation live in `src/lib/evidenceLadder.ts`; see [plan 035](../plans/035-evidence-ladder-continuous-deduction.md).
 8. After three distinct clues, the player submits a species and ecological explanation. Each component receives supported/revise feedback. Both must be correct to resolve the case.
 9. Resolution presents the evidence chain, ecology, taxonomy, misconception correction, rejected alternatives, and reviewed sources. It also unlocks the three selected-family facts on the species card.
 
@@ -34,8 +35,8 @@ Start/resume uses the saved node projection. Terrain-backed map/board selection 
 
 - `POST /api/runs`: idempotent v4 creation by `createRequestId`.
 - `GET /api/runs/[runId]`: owner-only client projection and resume state.
-- `POST /api/runs/[runId]/evidence-progress`: server-replayed move, exact board checkpoint, deterministic soft hints, Field Signal payout, and cascade flavor.
-- `POST /api/runs/[runId]/evidence-choice`: family lock, evidence application, eliminated-candidate phrases, elimination reasons, and next-site activation.
+- `POST /api/runs/[runId]/evidence-progress`: server-replayed move, exact board checkpoint, one ladder rung per move (plus Field Signal rungs), live rung eliminations appended to `metadata.factLedger`, hydrated `facts` for the client, and cascade flavor.
+- `POST /api/runs/[runId]/evidence-choice`: family lock, evidence application on top of ladder eliminations (pool may already be down to one), eliminated-candidate phrases, elimination reasons, carried ladder cursors, and next-site activation.
 - `POST /api/runs/[runId]/guess`: server-authoritative species and explanation verdict.
 - `GET /api/runs/[runId]/range`: simplified answer-range GeoJSON, owner-only and locked until a correct completed verdict.
 

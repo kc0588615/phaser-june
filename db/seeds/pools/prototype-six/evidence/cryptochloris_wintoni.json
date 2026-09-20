@@ -15,9 +15,14 @@
       "review_status": "reviewed",
       "hints": [
         "The family tree shares old roots with giants but takes another branch.",
-        "The genetic trail turns away from trunk-bearing mammals.",
-        "Ancient African ancestry is present without the heaviest body plan.",
-        "Field team: follow the smaller offshoot of this deep lineage."
+        {
+          "text": "This family tree does not run through the cattle and antelope group.",
+          "weak_tag": "comparison_lineage:not_bovid"
+        },
+        {
+          "text": "The lineage keeps its distance from the scale-covered anteater branch.",
+          "weak_tag": "comparison_lineage:not_pangolin"
+        }
       ]
     },
     {
@@ -32,9 +37,14 @@
       "review_status": "reviewed",
       "hints": [
         "The surface sample feels soft rather than plated.",
-        "No shingle-like armor appears along the back.",
-        "The protective covering bends continuously instead of overlapping.",
-        "Field team: the body scan found no keratin shield."
+        {
+          "text": "The body plan is not a horned, hoofed grazer.",
+          "weak_tag": "comparison_form:not_horned_antelope"
+        },
+        {
+          "text": "Size estimate: small to medium, light enough for one person to lift.",
+          "weak_tag": "gameplay_size:small_medium"
+        }
       ]
     },
     {
@@ -49,9 +59,14 @@
       "review_status": "reviewed",
       "hints": [
         "The trail is continuous and close to the ground, not a patient stalk.",
-        "No waiting point overlooks a prey path.",
-        "Movement notes show searching rather than a sudden pounce.",
-        "Field team: this subject is not shadowing a large target."
+        {
+          "text": "Behavior notes rule out a desert herd drifting between rare rains.",
+          "weak_tag": "comparison_behavior:not_desert_herd"
+        },
+        {
+          "text": "Records nearly always show a single animal on its own.",
+          "weak_tag": "social_pattern:solitary"
+        }
       ]
     },
     {
@@ -66,9 +81,14 @@
       "review_status": "reviewed",
       "hints": [
         "The meal trace lies below the branches.",
-        "No fruit pulp or flower fragments appear at the feeding site.",
-        "The foraging path runs through substrate rather than foliage.",
-        "Field team: search low for very small animal prey."
+        {
+          "text": "It eats other animals, not plants.",
+          "weak_tag": "food_source:animals"
+        },
+        {
+          "text": "Feeding notes: insects and other small invertebrates make up the diet.",
+          "weak_tag": "diet_type:insectivore"
+        }
       ]
     },
     {
@@ -83,9 +103,14 @@
       "review_status": "reviewed",
       "hints": [
         "These dunes meet cool coastal air rather than an inland desert belt.",
-        "The map point sits well south of the great northern desert.",
-        "Ocean influence reaches this sandy habitat.",
-        "Field team: shift the map toward Africa's southwestern coast."
+        {
+          "text": "Range notes rule out the South Asian mainland.",
+          "weak_tag": "comparison_range:not_south_asian_mainland"
+        },
+        {
+          "text": "Range records come from Africa.",
+          "weak_tag": "continent:africa"
+        }
       ]
     }
   ]

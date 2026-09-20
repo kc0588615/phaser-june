@@ -115,14 +115,14 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
               source = EXCLUDED.source, review_status = EXCLUDED.review_status
             `;
           }
-          for (const [sequenceIndex, hintText] of card.hints.entries()) {
-            const existingHint = existingHints.find(hint => hint.family === card.family && hint.sequence_index === sequenceIndex);
-            if (!existingHint || existingHint.hint_text !== hintText || existingHint.weak_tag !== card.compare_tag) {
+          for (const [sequenceIndex, hint] of card.hints.entries()) {
+            const existingHint = existingHints.find(candidate => candidate.family === card.family && candidate.sequence_index === sequenceIndex);
+            if (!existingHint || existingHint.hint_text !== hint.text || existingHint.weak_tag !== hint.weak_tag) {
               hintUpserted += 1;
               if (!dryRun) await tx`
               INSERT INTO evidence_family_hints
                 (pool_id, species_id, family, sequence_index, hint_text, weak_tag, review_status)
-              VALUES (${poolId}, ${speciesId}, ${card.family}, ${sequenceIndex}, ${hintText}, ${card.compare_tag}, 'reviewed')
+              VALUES (${poolId}, ${speciesId}, ${card.family}, ${sequenceIndex}, ${hint.text}, ${hint.weak_tag}, 'reviewed')
               ON CONFLICT (pool_id, species_id, family, sequence_index) DO UPDATE SET
                 hint_text = EXCLUDED.hint_text, weak_tag = EXCLUDED.weak_tag, review_status = EXCLUDED.review_status
               `;

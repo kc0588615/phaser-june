@@ -15,9 +15,14 @@
       "review_status": "reviewed",
       "hints": [
         "The family tree passes near predators but leaves the cat branch behind.",
-        "The genetic sample is not from a true feline.",
-        "Shared ancestry does not mean a shared hunting lineage here.",
-        "Field team: look beyond the familiar big-paw branch."
+        {
+          "text": "The lineage report places it in the big northern mammal branch: hoofed animals, cats, bats, and scaly anteaters.",
+          "weak_tag": "superorder:laurasiatheria"
+        },
+        {
+          "text": "This family tree does not run through the cattle and antelope group.",
+          "weak_tag": "comparison_lineage:not_bovid"
+        }
       ]
     },
     {
@@ -32,9 +37,14 @@
       "review_status": "reviewed",
       "hints": [
         "The forelimbs meet the ground instead of stretching into airfoils.",
-        "No flight membrane appears between the digits.",
-        "The body plan is built for climbing and digging, not lift.",
-        "Field team: keep this subject on a solid surface."
+        {
+          "text": "The body plan is not a horned, hoofed grazer.",
+          "weak_tag": "comparison_form:not_horned_antelope"
+        },
+        {
+          "text": "Size estimate: small to medium, light enough for one person to lift.",
+          "weak_tag": "gameplay_size:small_medium"
+        }
       ]
     },
     {
@@ -49,9 +59,14 @@
       "review_status": "reviewed",
       "hints": [
         "The tracks belong to one quiet traveler.",
-        "No broad line of hoofprints crosses the open ground.",
-        "Movement stays close to cover rather than roaming with a herd.",
-        "Field team: this route was made alone."
+        {
+          "text": "Records nearly always show a single animal on its own.",
+          "weak_tag": "social_pattern:solitary"
+        },
+        {
+          "text": "Most of its activity happens after dark.",
+          "weak_tag": "activity_pattern:nocturnal"
+        }
       ]
     },
     {
@@ -66,9 +81,14 @@
       "review_status": "reviewed",
       "hints": [
         "The feeding marks focus on organized insect nests.",
-        "This diner does not sift broadly through beach sand.",
-        "Opened chambers suggest a narrow prey search.",
-        "Field team: follow the trail toward ants and termites."
+        {
+          "text": "It is not a bulk feeder stripping whole branches of leaves.",
+          "weak_tag": "comparison_diet:not_bulk_browser"
+        },
+        {
+          "text": "It eats other animals, not plants.",
+          "weak_tag": "food_source:animals"
+        }
       ]
     },
     {
@@ -83,9 +103,14 @@
       "review_status": "reviewed",
       "hints": [
         "The range tightens toward humid Southeast Asia.",
-        "The western edge stops short of a wider subcontinental sweep.",
-        "Island and peninsula forests matter more than open mainland breadth.",
-        "Field team: narrow the map toward the southeast."
+        {
+          "text": "Climate reading: warm tropical conditions all year.",
+          "weak_tag": "climate_zone:tropical"
+        },
+        {
+          "text": "Range records come from Asia.",
+          "weak_tag": "continent:asia"
+        }
       ]
     }
   ]

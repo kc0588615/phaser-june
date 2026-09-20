@@ -15,9 +15,14 @@
       "review_status": "reviewed",
       "hints": [
         "The family tree stays with ground mammals rather than taking flight.",
-        "No bat-line marker appears in the sample.",
-        "The genetic branch does not lead toward winged fruit foragers.",
-        "Field team: keep this lineage out of the roost."
+        {
+          "text": "The lineage report places it in the big northern mammal branch: hoofed animals, cats, bats, and scaly anteaters.",
+          "weak_tag": "superorder:laurasiatheria"
+        },
+        {
+          "text": "This family tree does not run through the cattle and antelope group.",
+          "weak_tag": "comparison_lineage:not_bovid"
+        }
       ]
     },
     {
@@ -32,9 +37,14 @@
       "review_status": "reviewed",
       "hints": [
         "The head profile has no permanent horn core.",
-        "Padded feet replace a divided hoofprint.",
-        "The stride is flexible rather than stiff-legged and ungulate.",
-        "Field team: no horned grazer made these marks."
+        {
+          "text": "No sign of the tiny sand-burrowing body plan.",
+          "weak_tag": "comparison_form:not_sand_digger"
+        },
+        {
+          "text": "Size estimate: a heavy animal, well over the weight of an adult person.",
+          "weak_tag": "gameplay_size:large"
+        }
       ]
     },
     {
@@ -49,9 +59,14 @@
       "review_status": "reviewed",
       "hints": [
         "The trail remains fully above ground.",
-        "No subsurface ridge follows the travel line.",
-        "Movement crosses soil instead of flowing through it.",
-        "Field team: this subject leaves exposed tracks."
+        {
+          "text": "Behavior notes rule out a desert herd drifting between rare rains.",
+          "weak_tag": "comparison_behavior:not_desert_herd"
+        },
+        {
+          "text": "Records nearly always show a single animal on its own.",
+          "weak_tag": "social_pattern:solitary"
+        }
       ]
     },
     {
@@ -66,9 +81,14 @@
       "review_status": "reviewed",
       "hints": [
         "Vegetation is cover here, not the meal.",
-        "The feeding site holds protein-rich remains.",
-        "No mass stripping of bark or branches appears nearby.",
-        "Field team: this diner follows moving food."
+        {
+          "text": "Diet notes rule out an ant-and-termite specialist.",
+          "weak_tag": "comparison_diet:not_ant_specialist"
+        },
+        {
+          "text": "It eats other animals, not plants.",
+          "weak_tag": "food_source:animals"
+        }
       ]
     },
     {
@@ -83,9 +103,14 @@
       "review_status": "reviewed",
       "hints": [
         "The map reaches both colder forests and tropical cover.",
-        "This range is broader than one humid forest belt.",
-        "Northern latitude signals appear beside southern ones.",
-        "Field team: stretch the search across much of Asia."
+        {
+          "text": "Climate reading: warm tropical conditions all year.",
+          "weak_tag": "climate_zone:tropical"
+        },
+        {
+          "text": "Range records come from Asia.",
+          "weak_tag": "continent:asia"
+        }
       ]
     }
   ]

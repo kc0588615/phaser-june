@@ -33,7 +33,7 @@ mystery_cases_public ── reviewed case/choice view, excludes private answers
   Key constraint: `(pool_id, species_id)` is the primary key, and a member species cannot be deleted while referenced.
 - **evidence_family_cards**: observations, inference, comparison tag, trait phrase, and bonus fact for each pool/species/family. Exclusions only make sense within that pool.
   Key constraint: `(pool_id, species_id, family)` is unique; family is relatives/body/behavior/habits/place.
-- **evidence_family_hints**: ordered soft hints scoped to a pool/species/family. Their weak tag must not exclude the answer.
+- **evidence_family_hints**: the family's ordered **evidence ladder** (3–5 rungs) for that pool/species. Each rung's `weak_tag` is a canonical tag in the card's `trait_category` that the answer profile holds; at runtime the rung rules out every live candidate lacking it. Author broad → narrow: each rung leaves 2–5 survivors on its own, the cumulative survivor set must shrink at every rung (strict check in seed validation and `verify:case-compiler`; run creation only requires it never widens), and the final rung must keep ≥2 so one family never identifies the animal.
   Key constraint: `(pool_id, species_id, family, sequence_index)` is unique; indices are 0–9.
 - **cascade_hints**: shared copy for cascades, independent of a species or pool. Every pool uses the same rows.
   Key constraint: `sequence_index` is unique and between 0 and 99.
@@ -74,7 +74,8 @@ db/seeds/species/<scientific_name>.json
 db/seeds/pools/<slug>/pool.json
   slug, title, review_status, species_iucn_ids[6], evidence_directory: "evidence"
 db/seeds/pools/<slug>/evidence/<scientific_name>.json
-  iucn_id, scientific_name, common_name, cards[5] (each with hints)
+  iucn_id, scientific_name, common_name, cards[5]
+    hints[3-5]: "text" (flat rung, weak_tag = compare_tag) | { "text", "weak_tag" }
 db/seeds/pools/<slug>/evidence/cascade_hints.json
   lines (shared global ticker content)
 db/seeds/pools/<slug>/cases/<case-slug>.json
@@ -100,6 +101,7 @@ The six existing dossiers are complete examples. Prose remains under the dossier
 ## Workflow 2: build a pool
 
 1. Create `db/seeds/pools/<slug>/pool.json` with exactly six existing species IDs and `review_status: "draft"`. Add thirty evidence cards, their hints, and six cases under the layout above. Case slugs must be unique across pools. Copy the shared cascade JSON unchanged unless deliberately editing global ticker copy.
+   Pick rung tags from the answer's profile arrays in the card's category; `db/seeds/species/*.json` lists them. A bare string hint reuses the card's `compare_tag` (usually the broad "not X" comparison, good for rung 0). Rung copy follows the same leak/length rules as cards (≤140 chars, complete sentence, no candidate name terms).
 2. Create/upsert the pool row and six member rows. The prototype commands below are executable examples; substitute your directory slug when authoring another pool:
    ```bash
    ./scripts/db --rehearsal --exec npm run seed:pools -- --pool=prototype-six --check

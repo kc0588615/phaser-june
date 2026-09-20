@@ -27,6 +27,7 @@ import { speciesService, type RasterHabitatResult } from '@/lib/speciesService';
 import { EvidenceLog } from './EvidenceLog';
 import { FieldPlate } from './FieldPlate';
 import { FieldHintTicker } from './FieldHintTicker';
+import { FactLedger } from './FactLedger';
 
 // Zoom clamps approximate the plan's scales: ~1:6M regional context up to
 // ~1:500k single-site detail in the panel; fullscreen unlocks a wider range.
@@ -666,6 +667,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         <div className="flex items-start gap-2">
           {runState.runId && <FieldPlate runId={runState.runId} selectedFamilies={caseState.selectedFamilies} />}
           <div className="min-w-0 flex-1">
+            <FactLedger caseState={caseState} variant="compact" className="mb-1" />
             <EvidenceLog
               caseState={caseState}
               focusNodeIndex={focusNodeIndex}
@@ -699,6 +701,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
                 {caseState.travelEntry && (
                   <p className="m-0 mb-2 rounded-lg bg-white/[.04] px-2 py-1.5 text-[10px] italic text-amber-100/75">{caseState.travelEntry}</p>
                 )}
+                <FactLedger caseState={caseState} variant="detail" className="mb-3" />
                 <EvidenceLog caseState={caseState} focusNodeIndex={focusNodeIndex} variant="detail" />
               </aside>
             )}

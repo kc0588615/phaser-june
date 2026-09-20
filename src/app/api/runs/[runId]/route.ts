@@ -1,6 +1,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, runMemories } from '@/db';
+import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, runMemories } from '@/db';
+import { hydrateLedgerFact, parseFactLedger, type PublicLedgerFact } from '@/lib/evidenceLadder';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications, resolveFieldFacts } from '@/lib/runCaseState';
 import { projectRunForClient } from '@/lib/runProjection';
@@ -21,8 +22,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       db.select().from(runMemories).where(eq(runMemories.runId, runId)).limit(1),
     ]);
     const metadata = getRecord(session.metadata);
-    const evidence = await hydrateEvidence(metadata.evidenceApplications);
     const privateCase = parsePrivateCase(metadata.casePrivate);
+    const [evidence, publicFacts] = await Promise.all([
+      hydrateEvidence(metadata.evidenceApplications),
+      hydrateLedger(metadata.factLedger, privateCase),
+    ]);
     const verdict = session.runStatus === 'completed' && privateCase ? {
       resolvedSpeciesId: privateCase.answerId,
       resolvedExplanationId: privateCase.mystery.answerExplanationId,
@@ -33,6 +37,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       nodes,
       memory: memories[0] ?? null,
       publicObservations: evidence.observations,
+      publicFacts,
       verdict,
     }));
   } catch (error) {
@@ -55,4 +60,23 @@ async function hydrateEvidence(value: unknown) {
     return card ? [hydrateFamilyObservation(card, application)] : [];
   });
   return { observations, fieldFacts: resolveFieldFacts(applications, parsedCards) };
+}
+
+/** Resume path: rebuild revealed ladder facts from reviewed hint text; ids and tags stay server-side. */
+async function hydrateLedger(value: unknown, privateCase: ReturnType<typeof parsePrivateCase>): Promise<PublicLedgerFact[]> {
+  const ledger = parseFactLedger(value);
+  if (ledger.length === 0 || !privateCase) return [];
+  const families = [...new Set(ledger.map(entry => entry.family))];
+  const [hints, cards] = await Promise.all([
+    db.select({ id: evidenceFamilyHints.id, hintText: evidenceFamilyHints.hintText }).from(evidenceFamilyHints)
+      .where(inArray(evidenceFamilyHints.id, ledger.map(entry => entry.hintId))),
+    db.select().from(evidenceFamilyCards).where(inArray(evidenceFamilyCards.id, families.map(family => privateCase.familyCardIds[family]))),
+  ]);
+  const hintById = new Map(hints.map(row => [row.id, row]));
+  const cardByFamily = new Map(cards.flatMap(row => { const card = parseEvidenceFamilyCard(row); return card ? [[card.family, card] as const] : []; }));
+  return ledger.flatMap(entry => {
+    const hint = hintById.get(entry.hintId);
+    const card = cardByFamily.get(entry.family);
+    return hint && card ? [hydrateLedgerFact(entry, hint, card, privateCase.familyHintIds[entry.family].length)] : [];
+  });
 }

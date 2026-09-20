@@ -1,7 +1,11 @@
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { isCanonicalDeductionTag } from '@/lib/deductionTags';
+import { validateFamilyLadder } from '@/lib/evidenceLadder';
 import type { EvidenceProfileDossier } from '@/lib/evidenceSeedValidation';
+
+/** One ladder rung. A bare string in JSON means `weak_tag` = the card's `compare_tag` (flat rung). */
+export interface EvidenceFamilySeedHint { text: string; weak_tag: string }
 
 export interface EvidenceFamilySeedCard {
   family: EvidenceFamily;
@@ -13,7 +17,7 @@ export interface EvidenceFamilySeedCard {
   bonus_fact_text: string;
   source: string;
   review_status: 'reviewed';
-  hints: string[];
+  hints: EvidenceFamilySeedHint[];
 }
 
 export interface EvidenceFamilySeed {
@@ -63,8 +67,15 @@ export function parseEvidenceFamilySeed(raw: unknown, fileName = 'family evidenc
         source: text(card.source, `${context}.source`),
         review_status: 'reviewed',
         hints: (() => {
-          assertValue(Array.isArray(card.hints) && card.hints.length >= 3 && card.hints.length <= 5, `${context}.hints must contain 3-5 lines`);
-          return card.hints.map((hint, hintIndex) => text(hint, `${context}.hints[${hintIndex}]`));
+          assertValue(Array.isArray(card.hints) && card.hints.length >= 3 && card.hints.length <= 5, `${context}.hints must contain 3-5 rungs`);
+          const compareTag = text(card.compare_tag, `${context}.compare_tag`);
+          return card.hints.map((hint, hintIndex) => {
+            const hintContext = `${context}.hints[${hintIndex}]`;
+            if (typeof hint === 'string') return { text: text(hint, hintContext), weak_tag: compareTag };
+            const rung = record(hint);
+            assertValue(rung, `${hintContext} must be a string or {text, weak_tag}`);
+            return { text: text(rung.text, `${hintContext}.text`), weak_tag: text(rung.weak_tag, `${hintContext}.weak_tag`) };
+          });
         })(),
       };
     }),
@@ -122,10 +133,19 @@ export function validateEvidenceFamilyCorpus(
         if (leaks.length > 0) errors.push(`${context}/${card.family}: ${field} leaks name terms ${leaks.join(', ')}`);
       }
       for (const [hintIndex, hint] of card.hints.entries()) {
-        if (hint.length > 140 || !/[.!?]$/u.test(hint)) errors.push(`${context}/${card.family}/hint-${hintIndex}: invalid ticker copy`);
-        const hintLeaks = leakedName(hint, seeds);
+        if (hint.text.length > 140 || !/[.!?]$/u.test(hint.text)) errors.push(`${context}/${card.family}/hint-${hintIndex}: invalid ticker copy`);
+        const hintLeaks = leakedName(hint.text, seeds);
         if (hintLeaks.length > 0) errors.push(`${context}/${card.family}/hint-${hintIndex}: leaks name terms ${hintLeaks.join(', ')}`);
       }
+      // Authored ladders must actually narrow: strict rule at seed time.
+      const ladderErrors = validateFamilyLadder(
+        seed.iucn_id,
+        { family: card.family, traitCategory: card.trait_category, compareTag: card.compare_tag },
+        card.hints.map((hint, sequenceIndex) => ({ family: card.family, sequenceIndex, weakTag: hint.weak_tag })),
+        familySeedToCompilerProfiles(dossiers),
+        { strict: true },
+      );
+      for (const error of ladderErrors) errors.push(`${context}/${error}`);
     }
   }
   return errors;

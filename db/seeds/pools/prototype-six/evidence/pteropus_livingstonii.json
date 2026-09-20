@@ -15,9 +15,14 @@
       "review_status": "reviewed",
       "hints": [
         "The family tree turns away from horn-bearing hoofed mammals.",
-        "No ruminant-line marker appears in the sample.",
-        "This branch does not lead toward cattle and antelopes.",
-        "Field team: move past the even-toed grazers."
+        {
+          "text": "The lineage report places it in the big northern mammal branch: hoofed animals, cats, bats, and scaly anteaters.",
+          "weak_tag": "superorder:laurasiatheria"
+        },
+        {
+          "text": "The lineage keeps its distance from the scale-covered anteater branch.",
+          "weak_tag": "comparison_lineage:not_pangolin"
+        }
       ]
     },
     {
@@ -32,9 +37,14 @@
       "review_status": "reviewed",
       "hints": [
         "The front limbs spread wide instead of shoveling forward.",
-        "No wedge-shaped digging hand appears in the scan.",
-        "The body favors reach and lift over pushing through sand.",
-        "Field team: these forelimbs were not built as spades."
+        {
+          "text": "The body plan is not a horned, hoofed grazer.",
+          "weak_tag": "comparison_form:not_horned_antelope"
+        },
+        {
+          "text": "Size estimate: small to medium, light enough for one person to lift.",
+          "weak_tag": "gameplay_size:small_medium"
+        }
       ]
     },
     {
@@ -49,9 +59,14 @@
       "review_status": "reviewed",
       "hints": [
         "The group gathers above the ground rather than marching across it.",
-        "Social ties center on a shared roost, not a walking herd.",
-        "No heavy family trail connects the resting sites.",
-        "Field team: look upward for the gathering place."
+        {
+          "text": "It does not roll into an armored ball when threatened.",
+          "weak_tag": "comparison_behavior:not_defensive_curler"
+        },
+        {
+          "text": "It is usually recorded with others of its kind, not alone.",
+          "weak_tag": "social_pattern:group"
+        }
       ]
     },
     {
@@ -66,9 +81,14 @@
       "review_status": "reviewed",
       "hints": [
         "The meal trace comes from plants above ground.",
-        "No opened insect nest marks the feeding site.",
-        "Sweet pulp and flower fragments outweigh chitin.",
-        "Field team: follow the canopy's seasonal food."
+        {
+          "text": "It does not hunt large hoofed prey.",
+          "weak_tag": "comparison_diet:not_large_prey_hunter"
+        },
+        {
+          "text": "Its food comes from plants, not from other animals.",
+          "weak_tag": "food_source:plants"
+        }
       ]
     },
     {
@@ -83,9 +103,14 @@
       "review_status": "reviewed",
       "hints": [
         "The map pin sits across an ocean from continental Asia.",
-        "This range is island-bound and very small.",
-        "Volcanic slopes replace a vast mainland habitat sweep.",
-        "Field team: narrow the map to western Indian Ocean islands."
+        {
+          "text": "Climate reading: warm tropical conditions all year.",
+          "weak_tag": "climate_zone:tropical"
+        },
+        {
+          "text": "Range notes rule out the South Asian mainland.",
+          "weak_tag": "comparison_range:not_south_asian_mainland"
+        }
       ]
     }
   ]

@@ -26,6 +26,9 @@ export interface FieldFact {
   text: string;
 }
 
+/** A revealed ladder rung: which family/category spoke, what it said, who it ruled out. */
+export type LedgerFact = import('@/lib/evidenceLadder').PublicLedgerFact;
+
 export interface CaseState {
   version: 4;
   mapView: import('@/expedition/mapView').ExpeditionMapView | null;
@@ -50,10 +53,12 @@ export interface CaseState {
   hintFeed: Array<{
     id: string;
     text: string;
-    kind: 'evidence' | 'cascade';
+    kind: 'evidence' | 'cascade' | 'reinforce';
     family?: import('@/expedition/evidenceFamilies').EvidenceFamily;
   }>;
   eliminationReasons: Record<string, string>;
+  /** Live deduction between hard clues, in reveal order. */
+  factLedger: LedgerFact[];
 }
 
 export interface ExpeditionData {

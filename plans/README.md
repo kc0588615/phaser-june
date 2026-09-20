@@ -2,7 +2,7 @@
 
 Generated 2026-07-09; reconciled August 18, 2026. Execute numbered advisor plans in order unless their dependency notes say otherwise.
 
-COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md); direction in [the handoff](COG_BOARD_HANDOFF.md) and [033](033-cog-board-integration-review.md). C deferred.
+COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md); direction in [the handoff](COG_BOARD_HANDOFF.md) and [033](033-cog-board-integration-review.md). C deferred. Continuous deduction: [035 — evidence ladder](035-evidence-ladder-continuous-deduction.md).
 
 ## Execution order & status
 
@@ -29,10 +29,12 @@ COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md); direction 
 | 032 | September 18, 2026 — Land the Open Increment and Reset Player Tracking | P1 cleanup | M | 031 | DONE 2026-09-18 — commits 7aec22dc…68b60805; migrations 032–033 on production; player progress reset |
 | 033 | September 19, 2026 — COG Board Integration Review | P1 product | L staged | Current v4 runtime | DESIGN REVIEW — [A prerequisites and prototype sequence](033-cog-board-integration-review.md); A only next, B/C deferred |
 | 034 | September 19, 2026 — COG Terrain in Normal Expeditions | P1 product | L | 033, current v4 runtime | IMPLEMENTED in working tree — automated and fixture-browser checks pass; authenticated live-run acceptance pending |
+| 035 | September 19, 2026 — Evidence Ladder: Continuous Deduction | P1 product | M | v4 runtime, 034 tree; content reload | IMPLEMENTED in working tree — prototype-six ladders written; 360 compiler paths pass; authenticated live playtest pending |
 
 ## Dependency notes
 
 - 034: [COG terrain in normal expeditions](034-cog-terrain-phase-a.md) requires verified terrain for new runs; legacy v4 runs remain playable without it.
+- 035: [evidence ladder](035-evidence-ladder-continuous-deduction.md) makes every direct match rule candidates out live. No schema change (`weak_tag` column already exists); the seeded prototype ladders must be reloaded with `seed:evidence-family --write` before `verify:case-compiler` passes its new strict rule. Until reload, runs keep working on flat ladders (rung 0 eliminates, later rungs reinforce). Phase C should route presence-record facts through this ladder rather than a second evidence path.
 - Database migration `023_remove_crisis_run_nodes.sql` is separate from implementation Plan 023 (Field Signal). Applied to `phaser_june` on 2026-09-13: 48 legacy `crisis` nodes became `custom`; the validated node-type CHECK now rejects `crisis`. All 1,081 node rows were retained. See [live constraint details](../docs/DATABASE_ER_PLAY_PATH.md#eco_run_nodes--evidence-family-sites-3-per-v3-run).
 - Plan 012 argued measure-before-replace; the 2026-07-10 cross-agent design review (Claude ⇄ codex) accepted the replacement direction instead. 012's content-quality findings (genus-tag identity leak, GIS-tag vocabulary mismatch, AND/OR clue semantics) remain valid inputs to 013 Phase 6; do not execute 012's board-measurement phases.
 - Plan 013 records the historical v0 design: method tiles, three positive eliminations, and an optional signature fallback. Plans 018/020/030 superseded that runtime. Current v4 uses five evidence families, six counted moves per site, and family-choice observations. Its old rollout and approval gates are historical, not current execution instructions.

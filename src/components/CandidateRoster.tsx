@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check, X } from 'lucide-react';
-import { EVIDENCE_FAMILIES, EVIDENCE_FAMILY_LABELS } from '@/expedition/evidenceFamilies';
+import { EVIDENCE_FAMILIES, EVIDENCE_FAMILY_LABELS, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { eliminatedCandidateTraitPhrase } from '@/expedition/candidateTraits';
 import type { RunState } from '@/types/expedition';
 import { EvidenceFamilyIcon } from './EvidenceFamilyIcon';
@@ -11,6 +11,10 @@ export function CandidateRoster({ runState }: { runState: RunState }) {
   if (!caseState) return null;
   const eliminated = new Set(caseState.eliminatedIds);
   const selectedFamilySet = new Set(caseState.selectedFamilies);
+  // A family "spoke" once any ladder fact or its hard card is on record.
+  const spokenFamilies = new Set([...caseState.selectedFamilies, ...caseState.factLedger.map(fact => fact.family)]);
+  const ledgerHit = (speciesId: number, family: EvidenceFamily) =>
+    caseState.factLedger.find(fact => fact.family === family && fact.eliminatedIds.includes(speciesId)) ?? null;
 
   return (
     <section
@@ -59,15 +63,19 @@ export function CandidateRoster({ runState }: { runState: RunState }) {
                   <span className={`block truncate text-[9px] font-semibold leading-tight text-white ${isOut ? 'line-through opacity-45' : ''}`}>{profile.commonName}</span>
                   <span className="mt-0.5 flex gap-0.5">
                     {EVIDENCE_FAMILIES.map(family => {
-                      const revealed = selectedFamilySet.has(family);
-                      const ownPhrase = revealed && isOut
+                      const revealed = spokenFamilies.has(family);
+                      const hit = ledgerHit(profile.speciesId, family);
+                      const ownPhrase = selectedFamilySet.has(family) && isOut
                         ? eliminatedCandidateTraitPhrase(caseState.observations, profile.speciesId, family)
                         : null;
+                      const struckHere = Boolean(hit) || Boolean(ownPhrase);
                       const dotStyle = !revealed ? 'bg-white/10 text-transparent'
-                        : isOut ? 'bg-red-300/35 text-red-950/80'
+                        : struckHere ? 'bg-red-300/70 text-red-950'
+                        : isOut ? 'bg-white/25 text-slate-900'
                         : 'bg-cyan-200 text-slate-950';
+                      const detail = ownPhrase ?? (hit ? `fact ${hit.rung + 1} rules it out` : isOut ? 'not this family' : 'still fits');
                       return (
-                        <span key={family} className={`grid h-2.5 w-2.5 place-items-center rounded-full ${dotStyle}`} title={revealed ? `${EVIDENCE_FAMILY_LABELS[family]}: ${ownPhrase ?? 'no mismatch found'}` : EVIDENCE_FAMILY_LABELS[family]}>
+                        <span key={family} className={`grid h-2.5 w-2.5 place-items-center rounded-full ${dotStyle}`} title={revealed ? `${EVIDENCE_FAMILY_LABELS[family]}: ${detail}` : EVIDENCE_FAMILY_LABELS[family]}>
                           <EvidenceFamilyIcon family={family} className="h-2 w-2" strokeWidth={3} />
                         </span>
                       );
@@ -83,7 +91,13 @@ export function CandidateRoster({ runState }: { runState: RunState }) {
                       {caseState.eliminationReasons[String(profile.speciesId)] ?? 'Evidence mismatch'}
                     </span>
                   )}
-                  {caseState.selectedFamilies.length === 0 && <span className="mt-1 block">No hard clues yet.</span>}
+                  {caseState.factLedger.filter(fact => fact.eliminatedIds.includes(profile.speciesId)).map(fact => (
+                    <span key={`${fact.family}-${fact.rung}`} className="mt-1 block rounded bg-red-500/[.08] px-1.5 py-1">
+                      <b className="text-red-100/80">{EVIDENCE_FAMILY_LABELS[fact.family]} {fact.rung + 1}:</b>{' '}
+                      {fact.factText}
+                    </span>
+                  ))}
+                  {caseState.selectedFamilies.length === 0 && caseState.factLedger.length === 0 && <span className="mt-1 block">Nothing spoken yet.</span>}
                   {isOut
                     ? caseState.selectedFamilies.map(family => {
                         const phrase = eliminatedCandidateTraitPhrase(caseState.observations, profile.speciesId, family);
@@ -94,7 +108,7 @@ export function CandidateRoster({ runState }: { runState: RunState }) {
                           </span>
                         ) : null;
                       })
-                    : caseState.selectedFamilies.length > 0 && <span className="mt-1 block">Still consistent with issued evidence.</span>}
+                    : (caseState.selectedFamilies.length > 0 || caseState.factLedger.length > 0) && <span className="mt-1 block">Still consistent with every fact so far.</span>}
                 </span>
               )}
             </button>

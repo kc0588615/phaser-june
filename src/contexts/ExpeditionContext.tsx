@@ -1,13 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
-import type { CaseState, EarnedObservation, ExpeditionData, FieldFact, RunState } from '@/types/expedition';
+import type { CaseState, EarnedObservation, ExpeditionData, FieldFact, LedgerFact, RunState } from '@/types/expedition';
 import type { DeductionProfile, ComparisonResult } from '@/lib/deductionEngine';
 import type { PublicCaseSnapshot, ClientRunProjection } from '@/lib/runProjection';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
 import { buildBoardSpawnConfigForNode } from '@/expedition/domain';
-import { createEmptyEvidenceCharges, getAllowedEvidenceGemTypes, type EvidenceFamily } from '@/expedition/evidenceFamilies';
+import { EVIDENCE_FAMILY_LABELS, createEmptyEvidenceCharges, getAllowedEvidenceGemTypes, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { mergeHintFeed } from '@/expedition/hintFeed';
 import type { AffinityType } from '@/expedition/affinities';
 import { createFlowState, currentNodeIndexForStep, nextFlowStep, reconcileProjection, stageForStep, type CaseFlowState, type FlowStep } from '@/expedition/caseFlow';
@@ -375,7 +375,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         hintLines?: string[];
         hintFamilies?: EvidenceFamily[];
         cascadeHintLine?: string | null;
+        facts?: LedgerFact[];
+        reinforcedFamilies?: EvidenceFamily[];
       };
+      const facts = result.facts ?? [];
       flowRef.current = {
         ...flowRef.current,
         nodes: flowRef.current.nodes.map((node, index) => index === event.nodeIndex
@@ -390,12 +393,25 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           objectiveTarget: 6,
           evidenceCharges: result.evidenceCharges,
           offeredFamilies: result.offeredFamilies,
+          // Ladder facts rule candidates out live; the roster and ledger read these three fields.
+          factLedger: [
+            ...previous.caseState.factLedger,
+            ...facts.filter(fact => !previous.caseState!.factLedger.some(known => known.family === fact.family && known.rung === fact.rung)),
+          ],
+          eliminatedIds: [...new Set([...previous.caseState.eliminatedIds, ...facts.flatMap(fact => fact.eliminatedIds)])],
+          eliminationReasons: Object.assign({}, ...facts.map(fact => fact.eliminationReasons), previous.caseState.eliminationReasons),
           hintFeed: mergeHintFeed(previous.caseState.hintFeed, [
             ...(result.hintLines ?? []).map((text, index) => ({
               id: `${event.nodeIndex}-${event.moveNumber}-e-${index}`,
               text,
               kind: 'evidence' as const,
               family: result.hintFamilies?.[index],
+            })),
+            ...(result.reinforcedFamilies ?? []).map(family => ({
+              id: `${event.nodeIndex}-${event.moveNumber}-r-${family}`,
+              text: `${EVIDENCE_FAMILY_LABELS[family]} ladder already complete.`,
+              kind: 'reinforce' as const,
+              family,
             })),
             ...(result.cascadeHintLine ? [{ id: `${event.nodeIndex}-${event.moveNumber}-c`, text: result.cascadeHintLine, kind: 'cascade' as const }] : []),
           ]),
@@ -427,16 +443,21 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const observations = projection.observations.map(item => ({ ...item, traitCategory: item.traitCategory as EarnedObservation['traitCategory'], issuedAtMs: Date.now() }));
       const projectedNodeIndex = Math.max(0, Math.min(2, (projection.run.nodeIndexCurrent ?? 1) - 1));
       const projectedNode = projection.nodes.find(node => node.nodeOrder === projectedNodeIndex + 1);
+      const factLedger = projection.factLedger ?? [];
       const baseCase: CaseState = {
         ...createCaseState(projection.casePublic!, profiles),
         observations,
-        eliminatedIds: [...new Set(observations.flatMap(item => item.actualEliminatedIds ?? []))],
+        factLedger,
+        eliminatedIds: [...new Set([
+          ...observations.flatMap(item => item.actualEliminatedIds ?? []),
+          ...factLedger.flatMap(fact => fact.eliminatedIds),
+        ])],
         evidenceCharges: projectedNode?.evidenceCharges ?? createEmptyEvidenceCharges(),
         carriedCharges: projectedNode?.carriedCharges ?? createEmptyEvidenceCharges(),
         offeredFamilies: projectedNode?.offeredFamilies ?? [],
         selectedFamilies: projectedNode?.selectedFamilies ?? observations.flatMap(item => item.family ? [item.family] : []),
         travelEntry: projectedNode?.travelEntry ?? null,
-        eliminationReasons: Object.assign({}, ...observations.map(item => item.eliminationReasons ?? {})),
+        eliminationReasons: Object.assign({}, ...factLedger.map(fact => fact.eliminationReasons), ...observations.map(item => item.eliminationReasons ?? {})),
         hintFeed: [],
       };
       runIdRef.current = runId; nodeIdsRef.current = projection.nodes.map(node => node.id); casePublicRef.current = projection.casePublic; payloadRef.current = payload;
@@ -533,6 +554,7 @@ function createCaseState(publicCase: PublicCaseSnapshot, profiles: DeductionProf
   travelEntry: null,
   hintFeed: [],
   eliminationReasons: {},
+  factLedger: [],
 }; }
 /** Full rows for the six candidates. Non-fatal: on failure the UI falls back to location species. */
 async function fetchCandidateSpecies(ids: number[]): Promise<Species[]> {
