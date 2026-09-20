@@ -36,6 +36,12 @@ describe('server evidence move verification', () => {
     assert.equal(verified.moveNumber, 1);
     assert.ok(Object.values(verified.directClears).reduce((sum, value) => sum + value, 0) >= 3);
     assert.ok(verified.directMatchFamilies.length >= 1);
+    const detailed = verifyEvidenceMoveDetailed(submission, { boardSeed, selectedFamilies: [], obstacleSeeds: [] });
+    assert.equal(detailed.ok, true);
+    if (detailed.ok) {
+      assert.ok(detailed.spatial.directCells.length >= 3);
+      assert.equal(typeof detailed.spatial.directFourPlus, 'boolean');
+    }
 
     const forged = structuredClone(submission);
     forged.boardCheckpoint.score += 100;

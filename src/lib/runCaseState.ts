@@ -218,8 +218,8 @@ export function filterEliminatedCandidates<T extends { speciesId: number }>(
   return candidates.filter(candidate => !eliminated.has(candidate.speciesId));
 }
 
-export function isUuid(value: string): boolean {
-  return UUID_PATTERN.test(value);
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_PATTERN.test(value);
 }
 
 export function resolveRunCreationIdentifiers(

@@ -16,6 +16,7 @@ import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
 import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
 import { selectedTerrainCell, type TerrainSnapshotV1, type TerrainSelection } from '@/terrain/terrain';
+import type { PublicRoutingView } from '@/terrain/routing';
 
 interface BoardConfig {
     cols: number;
@@ -48,7 +49,9 @@ export class BoardView {
     private evidenceFamilyMode = false;
     private terrain?: TerrainSnapshotV1;
     private terrainGraphics: Phaser.GameObjects.Graphics | null = null;
+    private routingGraphics: Phaser.GameObjects.Graphics | null = null;
     private terrainSelection: TerrainSelection | null = null;
+    private routing: PublicRoutingView | null = null;
 
     constructor(scene: Phaser.Scene, config: BoardConfig) {
         if (!scene || !(scene instanceof Phaser.Scene)) {
@@ -78,6 +81,7 @@ export class BoardView {
 
         this.destroyBoard(); // Clear any previous board
         this.drawTerrain();
+        this.drawRouting();
         this.gemsSprites = [];
 
         if (!initialPuzzleState || !Array.isArray(initialPuzzleState) || initialPuzzleState.length !== this.gridCols) { // <<< MODIFIED CHECK: More robust
@@ -116,6 +120,7 @@ export class BoardView {
         this.boardOffset = newBoardOffset;
         this.drawSurveyZones();
         this.drawTerrain();
+        this.drawRouting();
 
         this.iterateSprites((sprite, x, y) => {
             const targetPos = this.getSpritePosition(x, y);
@@ -140,15 +145,21 @@ export class BoardView {
         this.boardOffset = newBoardOffset;
         this.drawSurveyZones();
         this.drawTerrain();
+        this.drawRouting();
     }
 
     setTerrain(terrain: TerrainSnapshotV1 | undefined): void {
         this.terrain = terrain;
         this.terrainSelection = null;
         this.drawTerrain();
+        this.drawRouting();
         this.iterateSprites(sprite => sprite.setScale(this.calculateSpriteScale(sprite)));
     }
 
+    setRouting(view: PublicRoutingView | null): void {
+        this.routing = view;
+        this.drawRouting();
+    }
 
     selectTerrain(selection: TerrainSelection): void {
         if (!selectedTerrainCell(this.terrain, selection)) return;
@@ -181,6 +192,49 @@ export class BoardView {
             if (this.terrainSelection?.cellId === cell.id) {
                 gfx.lineStyle(3, 0xffffff, 1);
                 gfx.strokeRect(left + 2, top + 2, this.gemSize - 4, this.gemSize - 4);
+            }
+        }));
+    }
+
+    private drawRouting(): void {
+        this.routingGraphics?.destroy();
+        this.routingGraphics = null;
+        if (!this.terrain || !this.routing) return;
+        const gfx = this.scene.add.graphics().setDepth(-0.5);
+        this.routingGraphics = gfx;
+        const inked = new Set(this.routing.inkedIds);
+        const reachable = new Set(this.routing.reachableIds);
+        const frontier = new Set(this.routing.frontierIds);
+        const barriers = new Set(this.routing.barrierIds);
+        this.terrain.cells.forEach((column, x) => column.forEach((cell, y) => {
+            const left = this.boardOffset.x + x * this.gemSize;
+            const top = this.boardOffset.y + y * this.gemSize;
+            const cx = left + this.gemSize / 2;
+            const cy = top + this.gemSize / 2;
+            if (barriers.has(cell.id)) {
+                gfx.lineStyle(2, 0x0f172a, 0.55);
+                gfx.lineBetween(left + 4, top + 4, left + this.gemSize - 4, top + this.gemSize - 4);
+                gfx.lineBetween(left + this.gemSize - 4, top + 4, left + 4, top + this.gemSize - 4);
+            }
+            if (inked.has(cell.id)) {
+                gfx.fillStyle(reachable.has(cell.id) ? 0xf8fafc : 0x64748b, reachable.has(cell.id) ? 0.28 : 0.18);
+                gfx.fillRect(left + 3, top + 3, this.gemSize - 6, this.gemSize - 6);
+            }
+            if (this.routing?.pendingExtension && frontier.has(cell.id)) {
+                gfx.lineStyle(3, 0xfbbf24, 1);
+                gfx.strokeRect(left + 4, top + 4, this.gemSize - 8, this.gemSize - 8);
+            }
+            if (cell.id === this.routing!.campId) {
+                gfx.fillStyle(0xf59e0b, 0.95);
+                gfx.fillTriangle(cx, top + 8, left + 8, top + this.gemSize - 8, left + this.gemSize - 8, top + this.gemSize - 8);
+            }
+            if (cell.id === this.routing!.surveyId) {
+                gfx.fillStyle(0x38bdf8, 0.95);
+                gfx.fillCircle(cx, cy, Math.max(4, this.gemSize * 0.14));
+            }
+            if (cell.id === this.routing!.partyId) {
+                gfx.lineStyle(3, 0xffffff, 1);
+                gfx.strokeCircle(cx, cy, Math.max(6, this.gemSize * 0.22));
             }
         }));
     }
@@ -647,6 +701,8 @@ export class BoardView {
     destroyBoard(): void {
         this.terrainGraphics?.destroy();
         this.terrainGraphics = null;
+        this.routingGraphics?.destroy();
+        this.routingGraphics = null;
         console.log("BoardView: Destroying board visuals...");
 
         // Destroy all sprites referenced in the grid cache

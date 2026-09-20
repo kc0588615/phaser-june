@@ -41,8 +41,15 @@ export type EvidenceMoveVerificationFailure =
   | 'checkpoint_grid'
   | 'checkpoint_metadata';
 
+export interface SpatialMatchDelta {
+  readonly directCells: ReadonlyArray<readonly [number, number]>;
+  readonly cascadeCells: ReadonlyArray<readonly [number, number]>;
+  readonly directThreePlusCells: ReadonlyArray<readonly [number, number]>;
+  readonly directFourPlus: boolean;
+}
+
 export type EvidenceMoveVerificationResult =
-  | { ok: true; input: EvidenceProgressInput }
+  | { ok: true; input: EvidenceProgressInput; spatial: SpatialMatchDelta }
   | { ok: false; reason: EvidenceMoveVerificationFailure; gridDifference?: {
     x: number;
     y: number;
@@ -102,6 +109,10 @@ export function verifyEvidenceMoveDetailed(
     cascades: 0,
     directEvidenceCells: new Map(),
     directMatchFamilies: [],
+    directSlots: [],
+    cascadeSlots: [],
+    threePlusSlots: [],
+    directFourPlus: false,
   };
   const scoreBefore = puzzle.getScore();
   const directPhase = puzzle.getNextExplodeAndReplacePhase([move]);
@@ -149,7 +160,12 @@ export function verifyEvidenceMoveDetailed(
 
   const directClears = createEmptyEvidenceCharges();
   for (const family of summary.directEvidenceCells.values()) directClears[family] += 1;
-  return { ok: true, input: {
+  return { ok: true, spatial: {
+    directCells: uniqueSlots(summary.directSlots),
+    cascadeCells: uniqueSlots(summary.cascadeSlots),
+    directThreePlusCells: uniqueSlots(summary.threePlusSlots),
+    directFourPlus: summary.directFourPlus,
+  }, input: {
     nodeIndex: submission.nodeIndex,
     moveNumber: submission.moveNumber,
     directClears,
@@ -183,8 +199,22 @@ interface ReplaySummary {
   cascades: number;
   directEvidenceCells: Map<string, EvidenceFamily>;
   directMatchFamilies: EvidenceFamily[];
+  directSlots: Array<[number, number]>;
+  cascadeSlots: Array<[number, number]>;
+  threePlusSlots: Array<[number, number]>;
+  directFourPlus: boolean;
   signalClearedFamily?: EvidenceFamily;
   signalClearMatchLength?: number;
+}
+
+function uniqueSlots(slots: Array<[number, number]>): Array<readonly [number, number]> {
+  const seen = new Set<string>();
+  return slots.filter(([x, y]) => {
+    const key = `${x},${y}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function createPuzzle(context: EvidenceMoveVerificationContext, nodeIndex: number): BackendPuzzle {
@@ -215,6 +245,12 @@ function processPhase(
     summary.largestMatch = Math.max(summary.largestMatch, match.length);
     const matchGemType = match.flatMap(([x, y]) => state[x]?.[y]?.gemType ? [state[x][y]!.gemType] : [])[0] ?? null;
     const family = matchGemType ? GEM_EVIDENCE_FAMILIES[matchGemType] : undefined;
+    const slots = isCascade ? summary.cascadeSlots : summary.directSlots;
+    for (const [x, y] of match) if (state[x]?.[y]) slots.push([x, y]);
+    if (!isCascade && match.length >= 4) summary.directFourPlus = true;
+    if (!isCascade && match.length >= 3) {
+      for (const [x, y] of match) if (state[x]?.[y]) summary.threePlusSlots.push([x, y]);
+    }
     if (!isCascade && family) {
       summary.directMatchFamilies.push(family);
       for (const [x, y] of match) {

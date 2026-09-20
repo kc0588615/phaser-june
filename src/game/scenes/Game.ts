@@ -396,6 +396,7 @@ export class Game extends Phaser.Scene {
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
         EventBus.on('evidence-progress-committed', this.handleEvidenceProgressCommitted, this);
+        EventBus.on('routing-state-updated', this.handleRoutingState, this);
         
 
         this.resetDragState(); // Resets isDragging etc.
@@ -1030,6 +1031,9 @@ export class Game extends Phaser.Scene {
         this.boardView?.selectTerrain(selection);
     }
 
+    private handleRoutingState(view: EventPayloads['routing-state-updated']): void {
+        this.boardView?.setRouting(view);
+    }
 
     private handlePointerDown(pointer: Phaser.Input.Pointer): void {
         if (this.isPaused) return;
@@ -1570,6 +1574,7 @@ export class Game extends Phaser.Scene {
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
         EventBus.off('evidence-progress-committed', this.handleEvidenceProgressCommitted, this);
+        EventBus.off('routing-state-updated', this.handleRoutingState, this);
         EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
 
         // Remove player tracking listeners if they exist

@@ -22,6 +22,7 @@ import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { BoardCheckpointV1 } from './boardTypes';
 import type { TerrainSnapshotV1, TerrainSelection } from '@/terrain/terrain';
+import type { PublicRoutingView } from '@/terrain/routing';
 
 // Define all event types and their payloads
 export interface EventPayloads {
@@ -104,6 +105,7 @@ export interface EventPayloads {
     nodeIndex: number;
     moveNumber: number;
   };
+  'routing-state-updated': PublicRoutingView | null;
   'auth-user-ready': { playerId: string; sessionId?: string };
 }
 
