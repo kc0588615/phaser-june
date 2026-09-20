@@ -105,11 +105,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         : [];
       const familiesTouched = [...new Set((duplicate ? moveEntries.map(entry => entry.family) : issues.issues.map(issue => issue.family)))];
       const [hintRows, cascadeRows, cardRows, profileRows] = await Promise.all([
-        hintIds.length ? tx.select({ id: evidenceFamilyHints.id, family: evidenceFamilyHints.family, hintText: evidenceFamilyHints.hintText, weakTag: evidenceFamilyHints.weakTag })
+        privateCase.familyHints ? Promise.resolve(privateCase.familyHints.filter(hint => hintIds.includes(hint.id))) : hintIds.length ? tx.select({ id: evidenceFamilyHints.id, family: evidenceFamilyHints.family, hintText: evidenceFamilyHints.hintText, weakTag: evidenceFamilyHints.weakTag })
           .from(evidenceFamilyHints).where(inArray(evidenceFamilyHints.id, hintIds)) : Promise.resolve([]),
         cascadeHintId ? tx.select({ id: cascadeHints.id, hintText: cascadeHints.hintText })
           .from(cascadeHints).where(eq(cascadeHints.id, cascadeHintId)).limit(1) : Promise.resolve([]),
-        familiesTouched.length ? tx.select().from(evidenceFamilyCards)
+        !privateCase.familyHints && familiesTouched.length ? tx.select().from(evidenceFamilyCards)
           .where(inArray(evidenceFamilyCards.id, familiesTouched.map(family => privateCase.familyCardIds[family]))) : Promise.resolve([]),
         familiesTouched.length && !duplicate ? tx.select().from(speciesDeductionProfiles)
           .where(inArray(speciesDeductionProfiles.speciesId, publicCase.candidateIds)) : Promise.resolve([]),
@@ -119,6 +119,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
       const hintById = new Map(hintRows.map(row => [row.id, row]));
       const cardByFamily = new Map<EvidenceFamily, { traitCategory: CaseTraitCategory }>();
+      for (const hint of privateCase.familyHints ?? []) cardByFamily.set(hint.family, hint);
       for (const row of cardRows) {
         const card = parseEvidenceFamilyCard(row);
         if (card) cardByFamily.set(card.family, card);

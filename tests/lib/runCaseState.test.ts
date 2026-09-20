@@ -1,3 +1,7 @@
+import { EVIDENCE_FAMILIES, createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
+import { preserveRunEvidenceHints } from '@/lib/preserveRunEvidenceHints';
+import { snapshotEvidenceHints, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
+import { hydrateLedgerFact, parseFactLedger, selectLadderIssues } from '@/lib/evidenceLadder';
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -173,5 +177,65 @@ describe('v3 run case metadata', () => {
     assert.equal(isUuid(requestId), true);
     assert.deepEqual(resolveRunCreationIdentifiers(requestId, () => runId), { runId, createRequestId: requestId });
     assert.equal(resolveRunCreationIdentifiers('old-client-value', () => runId), null);
+  });
+});
+
+
+describe('saved ladder compatibility across a corpus reload', () => {
+  const oldCase = {
+    ...PRIVATE_CASE,
+    familyHintIds: { ...PRIVATE_CASE.familyHintIds, habits: [40, 41, 42, 43] },
+  };
+  const corpus = (): EvidenceHintSnapshot[] => EVIDENCE_FAMILIES.flatMap(family =>
+    oldCase.familyHintIds[family].map(id => ({
+      id, family, hintText: `Original fact ${id}`, weakTag: 'comparison_diet:not_large_prey_hunter', traitCategory: 'diet',
+    })));
+
+  test('seed preservation retains a deleted fourth rung and does not alter run state', () => {
+    const rows = corpus();
+    const metadata = { casePrivate: oldCase, factLedger: [], evidenceApplications: [{ ref: 'keep' }], unrelated: { keep: true } };
+    const saved = preserveRunEvidenceHints(metadata, rows);
+    rows.splice(rows.findIndex(row => row.id === 43), 1);
+    rows.find(row => row.id === 41)!.hintText = 'Changed after seed';
+    const resumed = parsePrivateCase(JSON.parse(JSON.stringify(saved)).casePrivate)!;
+    assert.deepEqual(resumed.familyHintIds, oldCase.familyHintIds);
+    const selected = selectLadderIssues({ directClears: { ...createEmptyEvidenceCharges(), habits: 3 }, directMatchFamilies: ['habits'] },
+      { ...createEmptyEvidenceCharges(), habits: 3 }, resumed.familyHintIds);
+    assert.deepEqual(selected.issues, [{ family: 'habits', hintId: 43, rung: 3 }]);
+    assert.equal(resumed.familyHints!.find(row => row.id === selected.issues[0].hintId)!.hintText, 'Original fact 43');
+    assert.equal(saved.unrelated, metadata.unrelated);
+    assert.equal(saved.evidenceApplications, metadata.evidenceApplications);
+    assert.equal(saved.factLedger, metadata.factLedger);
+    assert.equal('familyHints' in metadata.casePrivate, false);
+    // Subsequent seeds must not replace the preserved corpus.
+    assert.equal(preserveRunEvidenceHints(saved, rows), saved);
+  });
+
+  test('resume and duplicate-move facts retain original text, category and eliminations', () => {
+    const rows = corpus();
+    const entry = { nodeIndex: 0, moveNumber: 2, family: 'habits', hintId: 41, rung: 1, actualEliminatedIds: [], issuedAt: '2026-09-19' };
+    const saved = preserveRunEvidenceHints({ casePrivate: oldCase, factLedger: [entry] }, rows);
+    const expected = hydrateLedgerFact(parseFactLedger(saved.factLedger)[0], rows.find(row => row.id === 41)!, { traitCategory: 'diet' }, 4);
+    Object.assign(rows.find(row => row.id === 41)!, { hintText: 'Its food comes from plants.', weakTag: 'food_source:plants', traitCategory: 'behavior' });
+    const resumed = parsePrivateCase(JSON.parse(JSON.stringify(saved)).casePrivate)!;
+    const ledger = parseFactLedger(saved.factLedger);
+    const hint = resumed.familyHints!.find(row => row.id === 41)!;
+    const resumeFact = hydrateLedgerFact(ledger[0], hint, hint, resumed.familyHintIds.habits.length);
+    const retryEntry = ledger.find(row => row.nodeIndex === 0 && row.moveNumber === 2)!;
+    assert.deepEqual(resumeFact, expected);
+    assert.deepEqual(hydrateLedgerFact(retryEntry, hint, hint, resumed.familyHintIds.habits.length), expected);
+    assert.equal(hint.weakTag, 'comparison_diet:not_large_prey_hunter');
+  });
+
+  test('new-run snapshots survive authoring mutations and malformed snapshots fail closed', () => {
+    const rows = corpus();
+    const familyHints = snapshotEvidenceHints(oldCase.familyHintIds, rows);
+    const saved = { ...oldCase, familyHints };
+    rows[0].hintText = 'Edited';
+    assert.notEqual(parsePrivateCase(saved)!.familyHints![0].hintText, 'Edited');
+    assert.equal(parsePrivateCase({ ...saved, familyHints: familyHints.slice(1) }), null);
+    assert.equal(parsePrivateCase({ ...saved, familyHints: familyHints.map((hint, i) => i ? hint : { ...hint, family: 'wrong' }) }), null);
+    assert.equal(parsePrivateCase({ ...saved, familyHints: null }), null);
+    assert.throws(() => preserveRunEvidenceHints({ casePrivate: oldCase }, rows.slice(1)), /Cannot preserve compiled evidence hint/);
   });
 });

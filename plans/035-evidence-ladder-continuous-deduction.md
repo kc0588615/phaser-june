@@ -69,3 +69,12 @@ Every ladder ends at exactly two survivors, so no family solves the case alone; 
 ## Relationship to 034 B/C
 
 Phase C's presence-record analysis should feed this ladder (a survey site could unlock rungs or gate Body/Habits speaking on a presence record) rather than add a second evidence path. Nothing here touches terrain, trails, or the six-move budget.
+
+
+## Review fixes: immutable per-run ladder content
+
+- New cases snapshot all family hint text, tags and trait categories in private `casePrivate.familyHints`. Progress, retries and resume use these snapshots; private content remains excluded from the public projection.
+- Before changing authoring rows, the seed transaction locks existing v4 sessions and snapshots their complete old ladders, including fourth rungs. It preserves ledger eliminations, cursors and other metadata. Missing old content aborts the transaction; existing snapshots are never overwritten.
+- Deploy the updated runtime before the seed reload. Run the seed dry run first; it validates preservation without writes. Then the normal seed write preserves sessions and replaces the corpus atomically. No schema migration or case-version change.
+- `seed --write` locks v4 `eco_run_sessions` `FOR UPDATE` then writes snapshots into player session metadata. Do not run it while runs are mid-move (lock wait). A malformed `familyHints` snapshot makes `parsePrivateCase` return null; that run is unplayable by design.
+- Regression coverage: fourth-rung progress after row deletion, unchanged retry/resume facts, metadata preservation, repeat reloads and malformed snapshots. Source changes do not repair already-lost content from an earlier destructive reload.

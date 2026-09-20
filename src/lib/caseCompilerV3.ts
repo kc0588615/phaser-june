@@ -1,3 +1,4 @@
+import { snapshotEvidenceHints, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { CASE_TRAIT_CATEGORIES, POOL_SIZE, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { validateFamilyLadder } from '@/lib/evidenceLadder';
@@ -55,6 +56,7 @@ export interface CompiledCaseV4 {
     caseSeed: string;
     familyCardIds: Record<EvidenceFamily, number>;
     familyHintIds: Record<EvidenceFamily, number[]>;
+    familyHints: EvidenceHintSnapshot[];
     cascadeHintIds: number[];
     mystery: PrivateMysteryCase;
   };
@@ -176,6 +178,10 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
       caseSeed: input.caseSeed,
       familyCardIds,
       familyHintIds,
+      familyHints: snapshotEvidenceHints(familyHintIds, (input.hintsBySpecies.get(answerId) ?? []).map(hint => ({
+        ...hint,
+        traitCategory: input.cardsBySpecies.get(answerId)!.find(card => card.family === hint.family)!.traitCategory,
+      }))),
       cascadeHintIds: shuffle(cascadeHintIds.map(hint => hint.id), createSeededStream(input.caseSeed, 'cascade-hints-v3')),
       mystery: buildPrivateMysteryCase(mystery),
     },

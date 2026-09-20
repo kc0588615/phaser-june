@@ -1,3 +1,4 @@
+import { parseEvidenceHintSnapshot, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
 import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseTraits';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import type { FieldFact } from '@/types/expedition';
@@ -33,6 +34,7 @@ export interface PrivateCaseV3 {
   caseSeed: string;
   familyCardIds: Record<EvidenceFamily, number>;
   familyHintIds: Record<EvidenceFamily, number[]>;
+  familyHints?: EvidenceHintSnapshot[];
   cascadeHintIds: number[];
   mystery: PrivateMysteryCase;
 }
@@ -102,6 +104,8 @@ export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
     if (hintIds.length < 3) return null;
     familyHintIds[family] = hintIds;
   }
+  const familyHints = source.familyHints === undefined ? undefined : parseEvidenceHintSnapshot(source.familyHints, familyHintIds);
+  if (familyHints === null) return null;
   const cascadeHintIds = parsePositiveIntegerArray(source.cascadeHintIds, 30);
   const mystery = parsePrivateMysteryCase(source.mystery);
   const allFamilyHintIds = EVIDENCE_FAMILIES.flatMap(family => familyHintIds[family]);
@@ -112,7 +116,7 @@ export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
     && new Set(Object.values(familyCardIds)).size === EVIDENCE_FAMILIES.length
     && new Set(allFamilyHintIds).size === allFamilyHintIds.length
     && mystery
-    ? { version: 4, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, cascadeHintIds, mystery }
+    ? { version: 4, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, ...(familyHints ? { familyHints } : {}), cascadeHintIds, mystery }
     : null;
 }
 

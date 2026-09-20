@@ -66,6 +66,14 @@ async function hydrateEvidence(value: unknown) {
 async function hydrateLedger(value: unknown, privateCase: ReturnType<typeof parsePrivateCase>): Promise<PublicLedgerFact[]> {
   const ledger = parseFactLedger(value);
   if (ledger.length === 0 || !privateCase) return [];
+  if (privateCase.familyHints) {
+    const byId = new Map(privateCase.familyHints.map(hint => [hint.id, hint]));
+    return ledger.map(entry => {
+      const hint = byId.get(entry.hintId);
+      if (!hint || hint.family !== entry.family) throw new Error('Saved ledger hint missing from run snapshot');
+      return hydrateLedgerFact(entry, hint, hint, privateCase.familyHintIds[entry.family].length);
+    });
+  }
   const families = [...new Set(ledger.map(entry => entry.family))];
   const [hints, cards] = await Promise.all([
     db.select({ id: evidenceFamilyHints.id, hintText: evidenceFamilyHints.hintText }).from(evidenceFamilyHints)

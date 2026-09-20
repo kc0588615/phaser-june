@@ -1,3 +1,5 @@
+import { preserveRunEvidenceHints } from '../src/lib/preserveRunEvidenceHints';
+import type { EvidenceHintSnapshot } from '../src/lib/evidenceHintSnapshot';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
@@ -84,6 +86,28 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
     }
     await sql.begin(async txValue => {
       const tx = txValue as unknown as typeof sql;
+      // Deploy snapshot readers/writers before running this seed. Lock sessions first,
+      // as move/choice handlers do, and freeze their old corpus in this same transaction.
+      const savedRuns = await tx<{ id: string; metadata: unknown }[]>`
+        SELECT id, metadata FROM eco_run_sessions
+        WHERE metadata #>> '{casePrivate,version}' = '4'
+          AND metadata #>> '{casePrivate,answerId}' = ANY(${sql.array(speciesRows.map(row => String(row.id)))}::text[])
+        ORDER BY id FOR UPDATE
+      `;
+      const oldHints = await tx<EvidenceHintSnapshot[]>`
+        SELECT h.id::integer, h.family, h.hint_text AS "hintText", h.weak_tag AS "weakTag",
+          c.trait_category AS "traitCategory"
+        FROM evidence_family_hints h
+        JOIN evidence_family_cards c ON c.pool_id = h.pool_id AND c.species_id = h.species_id AND c.family = h.family
+      `;
+      let preservedRuns = 0;
+      for (const run of savedRuns) {
+        const metadata = preserveRunEvidenceHints(run.metadata, oldHints);
+        if (metadata === run.metadata) continue;
+        preservedRuns += 1;
+        if (!dryRun) await tx`UPDATE eco_run_sessions SET metadata = ${sql.json(metadata as postgres.JSONValue)} WHERE id = ${run.id}::uuid`;
+      }
+      console.log(`Preserved ${preservedRuns} saved run ladders${dryRun ? ' (dry run)' : ''}.`);
       for (const seed of seeds) {
         const speciesId = speciesByIucn.get(seed.iucn_id)!.id;
         const existing = await tx<ExistingRow[]>`
