@@ -319,7 +319,7 @@ export class Game extends Phaser.Scene {
         const { width, height } = this.scale;
 
         if (this.textures.exists(AssetKeys.BACKGROUND)) {
-            this.add.image(width / 2, height / 2, AssetKeys.BACKGROUND).setOrigin(0.5).setAlpha(0.5);
+            this.add.image(width / 2, height / 2, AssetKeys.BACKGROUND).setOrigin(0.5).setAlpha(0.5).setDepth(-2);
         } else {
             this.cameras.main.setBackgroundColor('#1a1a2e');
         }
@@ -390,6 +390,7 @@ export class Game extends Phaser.Scene {
         this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.handlePointerUp, this);
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('map-location-selected', this.initializeBoardFromMap, this);
+        EventBus.on('terrain-cell-selected', this.handleTerrainSelection, this);
         EventBus.on(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
@@ -904,6 +905,7 @@ export class Game extends Phaser.Scene {
                 this.boardView.updateDimensions(this.gemSize, this.boardOffset);
             }
             this.boardView.setEvidenceFamilyMode(true);
+            this.boardView.setTerrain(data.terrain);
 
             // Destroy old board sprites and create new ones based on the (potentially new) backendPuzzle state
             if (this.boardView.destroyBoard) this.boardView.destroyBoard();
@@ -1024,9 +1026,14 @@ export class Game extends Phaser.Scene {
         }
     }
 
+    private handleTerrainSelection(selection: EventPayloads['terrain-cell-selected']): void {
+        this.boardView?.selectTerrain(selection);
+    }
+
+
     private handlePointerDown(pointer: Phaser.Input.Pointer): void {
         if (this.isPaused) return;
-        if (!this.canMove || !this.isBoardInitialized || !this.boardView || !this.backendPuzzle) return;
+        if (!this.isBoardInitialized || !this.boardView || !this.backendPuzzle) return;
         if (this.isDragging) { // Should not happen if logic is correct, but as a safeguard
             console.warn("PointerDown while already dragging. Resetting drag state.");
             this.resetDragState(); // Reset internal flags
@@ -1140,6 +1147,12 @@ export class Game extends Phaser.Scene {
         const worldY = pointer.y;
         const deltaX = worldX - sPointerX;
         const deltaY = worldY - sPointerY;
+
+        if (!currentDragDirection && Math.abs(deltaX) <= DRAG_THRESHOLD && Math.abs(deltaY) <= DRAG_THRESHOLD) {
+            const selection = this.boardView?.terrainSelectionAt(sGridX, sGridY);
+            if (selection) EventBus.emit('terrain-cell-selected', selection);
+            return;
+        }
 
         if (!this.canMove || !this.isBoardInitialized || !this.boardView || !this.backendPuzzle) {
             console.warn("PointerUp: Conditions not met (canMove, board not ready, etc.).");
@@ -1551,6 +1564,7 @@ export class Game extends Phaser.Scene {
 
         // Remove EventBus listeners
         EventBus.off('map-location-selected', this.initializeBoardFromMap, this);
+        EventBus.off('terrain-cell-selected', this.handleTerrainSelection, this);
         EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);

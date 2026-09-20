@@ -1,3 +1,5 @@
+import type { TerrainCell, TerrainSnapshotV1 } from '@/terrain/terrain';
+import { useTerrainMap } from '@/hooks/useTerrainMap';
 // ExpeditionMapHud — in-run 2D map panel for v3 expeditions (Plan 018).
 //
 // Upper region is a MapLibre map sharing the exploration globe's habitat cartography, with the dashed route and
@@ -11,14 +13,14 @@
 //
 // NEXT_PUBLIC_MAP_STYLE_URL may supply a hosted/self-hosted basemap. App GIS
 // APIs and the shared habitat raster provide ecological context.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Leaf, Maximize2, NotebookPen, X } from 'lucide-react';
 import type { RunState } from '@/types/expedition';
 import { getWaypointTypeLabel } from '@/types/waypoints';
-import { addHabitatRasterLayer, addLandscapeLayers } from '@/lib/maplibreLayers';
+import { addHabitatRasterLayer, addLandscapeLayers, removeMapLayersAndSource } from '@/lib/maplibreLayers';
 import { applyMapProjection, resolveMapStyle, restoreCustomLayerOrder } from '@/lib/maplibreStyle';
 import { buildRouteFeature, getMapSiteStatus, type MapSiteStatus } from '@/lib/maplibreGeoJSON';
 import { speciesService, type RasterHabitatResult } from '@/lib/speciesService';
@@ -30,8 +32,6 @@ import { FieldHintTicker } from './FieldHintTicker';
 // ~1:500k single-site detail in the panel; fullscreen unlocks a wider range.
 const PANEL_MIN_ZOOM = 5;
 const PANEL_MAX_ZOOM = 10;
-const FULL_MIN_ZOOM = 2;
-const FULL_MAX_ZOOM = 13;
 const FIT_PADDING = 48;
 /** Give style + WebGL first frame a bounded window before showing Retry. */
 const MAP_LOAD_TIMEOUT_MS = 8000;
@@ -65,6 +65,27 @@ function buildMarkerElement(site: SiteDatum): HTMLButtonElement {
   return element;
 }
 
+function attachSiteMarker(map: maplibregl.Map, site: SiteDatum, onClick: (index: number) => void) {
+  const element = buildMarkerElement(site);
+  const click = (event: MouseEvent) => { event.stopPropagation(); onClick(site.nodeIndex); };
+  element.addEventListener('click', click);
+  const marker = new maplibregl.Marker({ element, anchor: 'center' }).setLngLat([site.lon, site.lat]).addTo(map);
+  return { marker, destroy: () => { element.removeEventListener('click', click); marker.remove(); } };
+}
+
+function MapHabitatReadout({ terrain, selected, siteIndex, habitat, loading }: {
+  terrain?: TerrainSnapshotV1; selected?: TerrainCell; siteIndex: number;
+  habitat: RasterHabitatResult | null; loading: boolean;
+}) {
+  if (!terrain) return <HabitatReadout habitat={habitat} loading={loading} />;
+  return (
+    <div className="terrain-readout" role="status">
+      <span className="terrain-readout-kicker">Site {siteIndex + 1} · Habitat</span>
+      <span>{selected?.label ?? 'Select a ground cell'}</span>
+    </div>
+  );
+}
+
 function HabitatReadout({ habitat, loading }: {
   habitat: RasterHabitatResult | null;
   loading: boolean;
@@ -93,6 +114,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
 }) {
   const expedition = runState.expedition;
   const caseState = runState.caseState;
+  const terrain = expedition?.nodes[runState.currentNodeIndex]?.terrain;
   const guessing = caseState?.stage === 'guess';
 
   // Site positions come from the persisted snapshot mapView when present;
@@ -265,6 +287,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
           attributionControl: { compact: true },
           dragRotate: false,
           pitchWithRotate: false,
+          touchPitch: false,
         });
       } catch (error) {
         markError(error instanceof Error ? error.message : 'Map failed to start');
@@ -347,43 +370,34 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-    const routeData = buildRouteFeature(routeCoords);
-    const source = map.getSource('expedition-route') as maplibregl.GeoJSONSource | undefined;
-    if (source) {
-      source.setData(routeData);
-    } else {
-      map.addSource('expedition-route', { type: 'geojson', data: routeData });
-      map.addLayer({
-        id: 'expedition-route-casing', type: 'line', source: 'expedition-route',
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': 'rgba(3,12,20,.78)', 'line-width': 6 },
-      });
-      map.addLayer({
-        id: 'expedition-route-line', type: 'line', source: 'expedition-route',
-        layout: { 'line-join': 'round' },
-        paint: { 'line-color': '#67e8f9', 'line-width': 2.25, 'line-dasharray': [1.8, 2.4] },
-      });
-      restoreCustomLayerOrder(map);
-    }
+    const restoreRoute = () => {
+      const routeData = buildRouteFeature(routeCoords);
+      const source = map.getSource('expedition-route') as maplibregl.GeoJSONSource | undefined;
+      if (source) {
+        source.setData(routeData);
+      } else {
+        map.addSource('expedition-route', { type: 'geojson', data: routeData });
+        map.addLayer({
+          id: 'expedition-route-casing', type: 'line', source: 'expedition-route',
+          layout: { 'line-cap': 'round', 'line-join': 'round' },
+          paint: { 'line-color': 'rgba(3,12,20,.78)', 'line-width': 6 },
+        });
+        map.addLayer({
+          id: 'expedition-route-line', type: 'line', source: 'expedition-route',
+          layout: { 'line-join': 'round' },
+          paint: { 'line-color': '#67e8f9', 'line-width': 2.25, 'line-dasharray': [1.8, 2.4] },
+        });
+        restoreCustomLayerOrder(map);
+      }
+    };
+    restoreRoute();
+    map.on('style.load', restoreRoute);
     markersRef.current.forEach(marker => marker.remove());
-    const markerEntries = sites.map(site => {
-      const element = buildMarkerElement(site);
-      const handleClick = (event: MouseEvent) => {
-        event.stopPropagation();
-        handleSiteClick(site.nodeIndex);
-      };
-      element.addEventListener('click', handleClick);
-      const marker = new maplibregl.Marker({ element, anchor: 'center' })
-        .setLngLat([site.lon, site.lat])
-        .addTo(map);
-      return { element, handleClick, marker };
-    });
+    const markerEntries = sites.map(site => attachSiteMarker(map, site, handleSiteClick));
     markersRef.current = markerEntries.map(entry => entry.marker);
     return () => {
-      markerEntries.forEach(({ element, handleClick, marker }) => {
-        element.removeEventListener('click', handleClick);
-        marker.remove();
-      });
+      map.off('style.load', restoreRoute);
+      markerEntries.forEach(entry => entry.destroy());
       if (markersRef.current.every(marker => markerEntries.some(entry => entry.marker === marker))) {
         markersRef.current = [];
       }
@@ -409,6 +423,8 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
     map.fitBounds(bounds, { padding: FIT_PADDING, duration: 0, maxZoom: PANEL_MAX_ZOOM });
   }, [mapReady, mapView, sites]);
 
+  const terrainView = useTerrainMap(mapRef, mapReady, terrain, isFullscreen, sites);
+
   // Answer range reveal flourish: fetched only after a server-confirmed
   // correct guess (the endpoint 409s until the run is completed).
   const showRange = caseState?.guessResult === 'correct';
@@ -416,18 +432,23 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   const layerOriginLat = sites[0]?.lat;
   const habitatSite = sites[runState.currentNodeIndex] ?? sites[0];
 
-  // The same classified habitat raster used by the exploration globe.
+  // Legacy runs retain their regional raster. Terrain-backed runs use only
+  // saved cells, so resume and moves never request the live habitat raster.
   useEffect(() => {
     const map = mapRef.current;
     if (!mapReady || !map) return;
+    if (terrain) {
+      removeMapLayersAndSource(map, 'habitat-raster-source', ['habitat-raster']);
+      return;
+    }
     const controller = new AbortController();
     void addHabitatRasterLayer(map, controller.signal);
     return () => controller.abort();
-  }, [mapReady]);
+  }, [mapReady, terrain]);
 
   // Name the dominant classified habitat around the current research site.
   useEffect(() => {
-    if (!habitatSite) return;
+    if (!habitatSite || terrain) return;
     const controller = new AbortController();
     setHabitatLoading(true);
     void speciesService.getRasterHabitatDistribution(habitatSite.lon, habitatSite.lat, controller.signal)
@@ -438,7 +459,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         if (!controller.signal.aborted) setHabitatLoading(false);
       });
     return () => controller.abort();
-  }, [habitatSite]);
+  }, [habitatSite, terrain]);
 
   // Public landscape context only: water, protected areas, and the active
   // One Earth boundary. Species geometry is fetched through the locked range
@@ -555,8 +576,6 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
     target.appendChild(host);
     const map = mapRef.current;
     if (map) {
-      map.setMinZoom(isFullscreen ? FULL_MIN_ZOOM : PANEL_MIN_ZOOM);
-      map.setMaxZoom(isFullscreen ? FULL_MAX_ZOOM : PANEL_MAX_ZOOM);
       map.resize();
       map.triggerRepaint();
     }
@@ -586,7 +605,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   return (
     <div className="relative flex h-full w-full min-h-0 flex-col" aria-label="Expedition map">
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div ref={panelSlotRef} className="absolute inset-0" />
+        <div ref={panelSlotRef} className="absolute inset-0" style={{ top: terrain ? 64 : 0 }} />
         {mapStatus !== 'ready' && (
           <div className="absolute inset-0 z-[1] grid place-items-center bg-[#0b1a1d] px-4 text-center">
             {mapStatus === 'error' ? (
@@ -621,9 +640,10 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         >
           <Maximize2 className="h-4 w-4" />
         </button>
-        <div className="pointer-events-none absolute left-2 top-2 z-10">
-          <HabitatReadout habitat={dominantHabitat} loading={habitatLoading} />
+        <div className="pointer-events-none absolute left-2 top-2 z-10" style={{ maxWidth: terrain ? 'calc(100% - 176px)' : undefined }}>
+          <MapHabitatReadout terrain={terrain} selected={terrainView.selectedCell} siteIndex={runState.currentNodeIndex} habitat={dominantHabitat} loading={habitatLoading} />
         </div>
+        <TerrainMapControls terrain={terrain} hidden={isFullscreen} mode={terrainView.mode} onChange={terrainView.setMode} />
         {!isFullscreen && (
           <div className="pointer-events-none absolute bottom-2 left-2 right-12 z-10 flex flex-col gap-1.5">
             {focusedSite && (
@@ -659,19 +679,21 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       {isFullscreen && createPortal(
         <div className="map-hud-fullscreen" role="dialog" aria-modal="true" aria-label="Expedition map, fullscreen">
           <div className="map-hud-fullscreen-panel">
-            <div ref={overlaySlotRef} className="absolute inset-0" />
-            <div className="pointer-events-none absolute left-3 top-3 z-10">
-              <HabitatReadout habitat={dominantHabitat} loading={habitatLoading} />
+            <div ref={overlaySlotRef} className="absolute inset-0" style={{ top: terrain ? 64 : 0 }} />
+            <div className="pointer-events-none absolute left-3 top-3 z-10" style={{ maxWidth: terrain ? 'calc(100% - 176px)' : undefined }}>
+              <MapHabitatReadout terrain={terrain} selected={terrainView.selectedCell} siteIndex={runState.currentNodeIndex} habitat={dominantHabitat} loading={habitatLoading} />
             </div>
             <button
               type="button"
               onClick={() => setShowEvidenceDetail(value => !value)}
+              style={terrain ? { top: 'auto', bottom: 12 } : undefined}
               aria-expanded={showEvidenceDetail}
               className="absolute right-14 top-3 z-20 flex h-9 items-center gap-1.5 rounded-lg border border-white/20 bg-[rgba(7,17,20,.85)] px-2.5 text-[9px] font-bold uppercase tracking-[.12em] text-cyan-100 shadow-lg backdrop-blur-sm transition-colors hover:bg-[rgba(14,32,36,.95)]"
             >
               <NotebookPen className="h-3.5 w-3.5" />
               Evidence {caseState.observations.filter(observation => observation.family).length}/3
             </button>
+            <TerrainMapControls terrain={terrain} mode={terrainView.mode} onChange={terrainView.setMode} />
             {showEvidenceDetail && (
               <aside className="absolute bottom-12 left-3 right-3 z-20 max-h-[58%] overflow-y-auto rounded-xl border border-cyan-100/20 bg-[rgba(5,17,21,.95)] p-3 shadow-2xl backdrop-blur-md md:bottom-3 md:left-auto md:right-3 md:top-14 md:max-h-none md:w-[360px]" aria-label="Full evidence details">
                 {caseState.travelEntry && (
@@ -697,5 +719,24 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
         document.body,
       )}
     </div>
+  );
+}
+
+function TerrainMapControls({ terrain, hidden, mode, onChange }: {
+  terrain?: TerrainSnapshotV1; hidden?: boolean;
+  mode: 'local' | 'region'; onChange: (mode: 'local' | 'region') => void;
+}) {
+  const groupId = useId();
+  if (!terrain || hidden) return null;
+  return (
+    <fieldset className="terrain-map-controls" aria-label="Map scale">
+      <legend className="sr-only">Map scale</legend>
+      {(['local', 'region'] as const).map(value => (
+        <label key={value}>
+          <input type="radio" name={groupId} value={value} checked={mode === value} onChange={() => onChange(value)} />
+          <span>{value === 'local' ? 'Local' : 'Region'}</span>
+        </label>
+      ))}
+    </fieldset>
   );
 }

@@ -42,6 +42,11 @@ export const CUSTOM_LAYER_ORDER = [
   'expedition-route-line',
   'discovered-species-points',
   'region-waypoints',
+  'site-terrain-fill',
+  'site-terrain-missing',
+  'site-terrain-lines',
+  'site-terrain-selected',
+  'site-terrain-locator',
 ] as const;
 
 const EXPLORE_SKY: NonNullable<StyleSpecification['sky']> = {

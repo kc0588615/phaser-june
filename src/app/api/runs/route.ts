@@ -17,6 +17,8 @@ import { deriveExpeditionMapView } from '@/expedition/mapView';
 import { RELAXED_RESEARCH_SITE_SPACING_KM, satisfiesResearchSiteSpacing } from '@/expedition/siteSpacing';
 import { harvestExpeditionWaypoints } from '@/lib/waypointHarvesting';
 import { assembleMysteryCases } from '@/lib/mysteryCase';
+import { habitatColormap } from '@/db';
+import { extractSiteTerrains, TerrainExtractionError } from '@/terrain/extract.server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -153,6 +155,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Case compilation unavailable' }, { status: 503 });
     }
 
+    let terrainLabels: Record<number, string> = {};
+    try {
+      const rows = await db.select({ value: habitatColormap.value, label: habitatColormap.label }).from(habitatColormap);
+      terrainLabels = Object.fromEntries(rows.filter(row => row.value !== 0 && row.label).map(row => [row.value, row.label!]));
+    } catch { /* Shared static labels remain the fallback. */ }
+    const terrains = await extractSiteTerrains(preparedNodes.map(node => {
+      if (!node.waypoint) throw new TerrainExtractionError('Research-site terrain requires a saved waypoint. Choose another location.', 422);
+      return node.waypoint;
+    }), terrainLabels);
+
     const created = await db.transaction(async tx => {
       const insertedSession = await tx.insert(ecoRunSessions).values({
         id: runId,
@@ -201,6 +213,7 @@ export async function POST(request: NextRequest) {
         hazardProfile: { obstacles: node.obstacles, events: node.events, obstacleFamily: node.obstacleFamily ?? null },
         toolProfile: { activeAffinities: metadataInput.activeAffinities },
         boardContext: {
+          terrain: terrains[index],
           rationale: node.rationale,
           difficulty: node.difficulty,
           caseVersion: 4,
@@ -228,6 +241,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(projectRunCreateResponse(created));
   } catch (error) {
+    if (error instanceof TerrainExtractionError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error('[API POST /api/runs] Error:', error);
     return NextResponse.json({ error: 'Failed to create run session' }, { status: 500 });
   }

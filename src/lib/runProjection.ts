@@ -1,5 +1,6 @@
 import { EVIDENCE_FAMILIES, isEvidenceFamily, parseEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
+import { parseTerrainSnapshot, type TerrainSnapshotV1 } from '@/terrain/terrain';
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution, type PublicMysteryCase } from '@/lib/mysteryCase';
@@ -92,6 +93,7 @@ export type ProjectedNodeCaseState =
   | 'choice_ready';
 
 export interface PublicRunNode {
+  terrain?: TerrainSnapshotV1;
   id: string;
   nodeOrder: number;
   nodeType: string;
@@ -409,6 +411,7 @@ export function projectRunNodes(value: unknown): PublicRunNode[] {
       obstacles: getAllowedStringArray(hazardProfile.obstacles, NODE_OBSTACLES),
       events: getAllowedStringArray(hazardProfile.events, NODE_EVENTS),
     };
+    if (Object.hasOwn(boardContext, 'terrain')) node.terrain = parseTerrainSnapshot(boardContext.terrain);
 
     assignString(node, 'objectiveType', source.objectiveType);
     assignNonnegativeInteger(node, 'objectiveTarget', source.objectiveTarget);

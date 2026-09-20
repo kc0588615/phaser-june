@@ -4,6 +4,7 @@ import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, runMemories } fro
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications, resolveFieldFacts } from '@/lib/runCaseState';
 import { projectRunForClient } from '@/lib/runProjection';
+import { StoredTerrainError } from '@/terrain/terrain';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
   try {
@@ -35,6 +36,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       verdict,
     }));
   } catch (error) {
+    if (error instanceof StoredTerrainError) return NextResponse.json({ error: error.message }, { status: 500 });
     console.error('[API GET /api/runs/[runId]] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch run' }, { status: 500 });
   }

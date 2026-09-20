@@ -15,6 +15,7 @@ import {
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
 import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
+import { selectedTerrainCell, type TerrainSnapshotV1, type TerrainSelection } from '@/terrain/terrain';
 
 interface BoardConfig {
     cols: number;
@@ -45,6 +46,9 @@ export class BoardView {
     private surveyZones: ReadonlyArray<{ x: number; y: number; width: number; height: number }> = [];
     private surveyZoneGraphics: Phaser.GameObjects.Graphics | null = null; // Survey verb plot highlights
     private evidenceFamilyMode = false;
+    private terrain?: TerrainSnapshotV1;
+    private terrainGraphics: Phaser.GameObjects.Graphics | null = null;
+    private terrainSelection: TerrainSelection | null = null;
 
     constructor(scene: Phaser.Scene, config: BoardConfig) {
         if (!scene || !(scene instanceof Phaser.Scene)) {
@@ -73,6 +77,7 @@ export class BoardView {
          );
 
         this.destroyBoard(); // Clear any previous board
+        this.drawTerrain();
         this.gemsSprites = [];
 
         if (!initialPuzzleState || !Array.isArray(initialPuzzleState) || initialPuzzleState.length !== this.gridCols) { // <<< MODIFIED CHECK: More robust
@@ -110,6 +115,7 @@ export class BoardView {
         this.gemSize = newGemSize;
         this.boardOffset = newBoardOffset;
         this.drawSurveyZones();
+        this.drawTerrain();
 
         this.iterateSprites((sprite, x, y) => {
             const targetPos = this.getSpritePosition(x, y);
@@ -133,6 +139,50 @@ export class BoardView {
         this.gemSize = newGemSize;
         this.boardOffset = newBoardOffset;
         this.drawSurveyZones();
+        this.drawTerrain();
+    }
+
+    setTerrain(terrain: TerrainSnapshotV1 | undefined): void {
+        this.terrain = terrain;
+        this.terrainSelection = null;
+        this.drawTerrain();
+        this.iterateSprites(sprite => sprite.setScale(this.calculateSpriteScale(sprite)));
+    }
+
+
+    selectTerrain(selection: TerrainSelection): void {
+        if (!selectedTerrainCell(this.terrain, selection)) return;
+        this.terrainSelection = selection;
+        this.drawTerrain();
+    }
+
+    terrainSelectionAt(x: number, y: number): TerrainSelection | null {
+        const cell = this.terrain?.cells[x]?.[y];
+        return cell && this.terrain ? { snapshotId: this.terrain.id, cellId: cell.id } : null;
+    }
+
+    private drawTerrain(): void {
+        this.terrainGraphics?.destroy();
+        this.terrainGraphics = null;
+        if (!this.terrain) return;
+        const gfx = this.scene.add.graphics().setDepth(-1);
+        this.terrainGraphics = gfx;
+        this.terrain.cells.forEach((column, x) => column.forEach((cell, y) => {
+            const left = this.boardOffset.x + x * this.gemSize;
+            const top = this.boardOffset.y + y * this.gemSize;
+            gfx.fillStyle(Number.parseInt(cell.color.slice(1), 16), 1);
+            gfx.fillRect(left, top, this.gemSize, this.gemSize);
+            gfx.lineStyle(1, 0x142a2b, 0.55);
+            gfx.strokeRect(left, top, this.gemSize, this.gemSize);
+            if (!cell.valid) {
+                gfx.lineStyle(2, 0xe2e8f0, 0.5);
+                gfx.lineBetween(left + 3, top + 3, left + this.gemSize - 3, top + this.gemSize - 3);
+            }
+            if (this.terrainSelection?.cellId === cell.id) {
+                gfx.lineStyle(3, 0xffffff, 1);
+                gfx.strokeRect(left + 2, top + 2, this.gemSize - 4, this.gemSize - 4);
+            }
+        }));
     }
 
     /** Sets the survey-verb plot highlights (empty array clears them). */
@@ -595,6 +645,8 @@ export class BoardView {
 
     /** Destroys all sprites and clears the board representation. */
     destroyBoard(): void {
+        this.terrainGraphics?.destroy();
+        this.terrainGraphics = null;
         console.log("BoardView: Destroying board visuals...");
 
         // Destroy all sprites referenced in the grid cache
@@ -841,7 +893,7 @@ export class BoardView {
     /** Calculates the appropriate scale based on gemSize and texture width. */
     private calculateSpriteScale(sprite: Phaser.GameObjects.Sprite): number {
         if (!sprite || !sprite.width || sprite.width === 0) return 1;
-        return this.gemSize / sprite.width;
+        return this.gemSize * (this.terrain ? 0.8 : 1) / sprite.width;
     }
 
     /** Helper to iterate over all active sprites in the grid. */

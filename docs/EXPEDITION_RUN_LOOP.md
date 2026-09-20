@@ -28,6 +28,10 @@ The three playable waypoints prefer 150–800 km pairwise spacing inside the bas
 
 ## Persistence
 
+New runs require a saved 6×6 habitat terrain snapshot for each final waypoint before the creation transaction begins. `boardContext.terrain` is immutable ground, separate from the movable board/checkpoint. The server checks the versioned source ETag before/after bounded extraction; failure creates no run (503 for extraction/configuration failures, 422 for unsupported or wholly missing habitat). Database labels override shared nonzero static labels; NoData zero never means Water.
+
+Start/resume uses the saved node projection. Terrain-backed map/board selection shares source-pixel ids, spends no move, and resets on site changes. Local map zoom is 12–20; Region restores its camera. Terrain-backed play does not fetch the live habitat raster. Existing v4 runs without terrain retain their original board and regional map; malformed stored terrain fails explicitly. Source changes never backfill saved runs. See [Phase A plan and verification](../plans/034-cog-terrain-phase-a.md); traversal/presence mechanics remain deferred.
+
 - `POST /api/runs`: idempotent v4 creation by `createRequestId`.
 - `GET /api/runs/[runId]`: owner-only client projection and resume state.
 - `POST /api/runs/[runId]/evidence-progress`: server-replayed move, exact board checkpoint, deterministic soft hints, Field Signal payout, and cascade flavor.

@@ -28,6 +28,8 @@ describe('MapLibre map helpers', () => {
     assert.ok(CUSTOM_LAYER_ORDER.indexOf('habitat-raster') < CUSTOM_LAYER_ORDER.indexOf('ecoregion-fill'));
     assert.ok(CUSTOM_LAYER_ORDER.indexOf('species-highlight-fill') < CUSTOM_LAYER_ORDER.indexOf('expedition-route-line'));
     assert.ok(CUSTOM_LAYER_ORDER.indexOf('expedition-route-line') < CUSTOM_LAYER_ORDER.indexOf('region-waypoints'));
+    assert.ok(CUSTOM_LAYER_ORDER.indexOf('habitat-raster') < CUSTOM_LAYER_ORDER.indexOf('site-terrain-fill'));
+    assert.ok(CUSTOM_LAYER_ORDER.indexOf('expedition-route-line') < CUSTOM_LAYER_ORDER.indexOf('site-terrain-selected'));
     assert.ok(CUSTOM_LAYER_ORDER.indexOf('map-rivers-line') < CUSTOM_LAYER_ORDER.indexOf('map-rivers-label'));
     assert.ok(CUSTOM_LAYER_ORDER.indexOf('map-cities-points') < CUSTOM_LAYER_ORDER.indexOf('map-cities-label'));
   });

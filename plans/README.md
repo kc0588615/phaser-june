@@ -2,12 +2,14 @@
 
 Generated 2026-07-09; reconciled August 18, 2026. Execute numbered advisor plans in order unless their dependency notes say otherwise.
 
+COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md); direction in [the handoff](COG_BOARD_HANDOFF.md) and [033](033-cog-board-integration-review.md). C deferred.
+
 ## Execution order & status
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---|---|---|---|
 | 012 | July 9, 2026 — Make Match-3 the Expedition Evidence Engine Before Replacing It | P1 | XL | — | SUPERSEDED by 013 |
-| 013 | Investigation-Method Tiles + Server-Side Deterministic Case Compiler | P1 | XL | 2026-07-10 review decision | IN PROGRESS |
+| 013 | Investigation-Method Tiles + Server-Side Deterministic Case Compiler | P1 | XL | 2026-07-10 review decision | HISTORICAL — runtime superseded by 018/020/030; not a current execution contract |
 | 014 | July 11, 2026 — Mystery-Loop Integration Fixes (post-review) | P0 | M–L | — (repairs 013's landed Phase 4/5 slice) | ABSORBED into 013 (2026-07-11) — do not execute as written |
 | 015 | July 11, 2026 — Plan 013 Runtime Readiness Review | P1 | S–M | 013 implementation | IMPLEMENTED — AUTH BROWSER + PROD ENV GATES PENDING |
 | 016 | Species Content System — Dossier → Tags → Evidence → Agent Workflow | P0 product | L | 013 engine stable; 015 browser gate preferred | TODO |
@@ -17,7 +19,7 @@ Generated 2026-07-09; reconciled August 18, 2026. Execute numbered advisor plans
 | 021 | Player-Marked Deduction | P1 product | L | v3 loop | SUPERSEDED by 022 (then narrowed by 023) |
 | 022 | Field Discovery Co-Pilot | P1 product | L | 020 | SUPERSEDED by 023 — modal Field Event dropped |
 | 023 | Board-Side Signal Tile + Compare Trail | P1 product | S–M | v3 loop | IMPLEMENTED / in tree — cascade signal + compare trail |
-| 024 | Lens Payout — Match-Adjacent Soft Clues | P1 product | S | 023 Field Signal | TODO — clear-family from match; 3→1 / 4+→2 FIELD TEAM hints |
+| 024 | Lens Payout — Match-Adjacent Soft Clues | P1 product | S | 023 Field Signal | IMPLEMENTED / in tree — clearing-match family; direct 3→1 / 4+→2 hints; verified 2026-09-19 |
 | 026 | August 18, 2026 — Make Player Tracking Stateless and Owner-Scoped | P0 | M | — | DONE — merged as `c98a5c39` |
 | 027 | August 18, 2026 — Patch Vulnerable Production Dependencies | P0 | S–M | — | DONE — merged as `2ac7de7d`; production audit clean |
 | 028 | August 18, 2026 — Remove Only Confirmed Dead Code | P2 | S | 027 | DONE — merged as `7c64b142` |
@@ -25,12 +27,15 @@ Generated 2026-07-09; reconciled August 18, 2026. Execute numbered advisor plans
 | 030 | August 29, 2026 — Ecological Mystery Cases | P1 product | L | 018 | IMPLEMENTED — run snapshot v4, merged as `a999c61c`; phases 5–6 await playtest |
 | 031 | September 17, 2026 — Content Database Clarity | P1 data | L | 030 + DB migrations 027–031 | DONE 2026-09-17 — commits aa74e8e0…860c345a; migrations 027–031 on production; see `docs/CONTENT_AUTHORING.md` |
 | 032 | September 18, 2026 — Land the Open Increment and Reset Player Tracking | P1 cleanup | M | 031 | DONE 2026-09-18 — commits 7aec22dc…68b60805; migrations 032–033 on production; player progress reset |
+| 033 | September 19, 2026 — COG Board Integration Review | P1 product | L staged | Current v4 runtime | DESIGN REVIEW — [A prerequisites and prototype sequence](033-cog-board-integration-review.md); A only next, B/C deferred |
+| 034 | September 19, 2026 — COG Terrain in Normal Expeditions | P1 product | L | 033, current v4 runtime | IMPLEMENTED in working tree — automated and fixture-browser checks pass; authenticated live-run acceptance pending |
 
 ## Dependency notes
 
+- 034: [COG terrain in normal expeditions](034-cog-terrain-phase-a.md) requires verified terrain for new runs; legacy v4 runs remain playable without it.
 - Database migration `023_remove_crisis_run_nodes.sql` is separate from implementation Plan 023 (Field Signal). Applied to `phaser_june` on 2026-09-13: 48 legacy `crisis` nodes became `custom`; the validated node-type CHECK now rejects `crisis`. All 1,081 node rows were retained. See [live constraint details](../docs/DATABASE_ER_PLAY_PATH.md#eco_run_nodes--evidence-family-sites-3-per-v3-run).
 - Plan 012 argued measure-before-replace; the 2026-07-10 cross-agent design review (Claude ⇄ codex) accepted the replacement direction instead. 012's content-quality findings (genus-tag identity leak, GIS-tag vocabulary mismatch, AND/OR clue semantics) remain valid inputs to 013 Phase 6; do not execute 012's board-measurement phases.
-- Plan 013 is self-contained: verified code facts, final design contract, phases 0–8 (incl. 0.5 content prerequisite and 3.0 three-node route expansion) with gates and STOP points, deletion list, metrics. Revision 4 fixes v0 to exactly six evidence-backed mammals, preserves De Winton's unknown reproduction data, separates public board seeds from the private case seed, and requires three positive regular eliminations plus a singleton signature fallback. Local six-profile validation passed read-only; production DB application remains approval-gated.
+- Plan 013 records the historical v0 design: method tiles, three positive eliminations, and an optional signature fallback. Plans 018/020/030 superseded that runtime. Current v4 uses five evidence families, six counted moves per site, and family-choice observations. Its old rollout and approval gates are historical, not current execution instructions.
 - Plan 014 was written against the mid-013 client (stale line anchors, pre-rewrite state model). Its durable items (method requiredGems, 3-board advance, boardSeed emit, loud empty-map toast, pure updaters, server finalize) landed via the 013 client rewrite + 2026-07-11 correction pass; its interim items (client guess finalizer, 9-category wallet remap) were deliberately rejected — they contradict 013's server-authoritative case. Do not run 014's phases against the current tree.
 - Plan 015 records the post-implementation readiness review: the playable loop, automated gate, and API/database gate pass; Plan 013 Phases 7–8, browser acceptance, partial-start cleanup, guest-run policy, wrong-guess rewards, and the production Vercel secret remain. Treat 015 as a short gate checklist, not the long-term product plan.
 - Plan 016 is the product plan of record after the loop is playable: single-package species authoring, claim→tag→card agent workflow, corpus frequency tooling, and templated PlaceNote unlocks per successful node. Does not expand the six-mammal prototype pool or write production DB without owner approval. Locked 2026-07-11: single package JSON; place notes from existing GIS/node fields.

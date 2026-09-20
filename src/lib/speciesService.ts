@@ -1,3 +1,4 @@
+import { STATIC_HABITAT_CODE_TO_LABEL } from '@/lib/habitatLabels';
 import type { Species } from '@/types/database';
 import { getAppConfig } from '@/utils/config';
 
@@ -10,51 +11,6 @@ export interface RasterHabitatResult {
   habitat_type: string;
   percentage: number;
 }
-
-// Static habitat code → label map (baseline)
-const STATIC_HABITAT_CODE_TO_LABEL: Record<number, string> = {
-  0: "Water",
-  100: "Forest", 101: "Forest - Boreal", 102: "Forest - Subarctic", 103: "Forest - Subantarctic",
-  104: "Forest - Temperate", 105: "Forest - Subtropical-tropical dry",
-  106: "Forest - Subtropical-tropical moist lowland", 107: "Forest - Subtropical-tropical mangrove vegetation",
-  108: "Forest - Subtropical-tropical swamp", 109: "Forest - Subtropical-tropical moist montane",
-  200: "Savanna", 201: "Savanna - Dry", 202: "Savanna - Moist",
-  300: "Shrubland", 301: "Shrubland - Subarctic", 302: "Shrubland - Subantarctic", 303: "Shrubland - Boreal",
-  304: "Shrubland - Temperate", 305: "Shrubland - Subtropical-tropical dry",
-  306: "Shrubland - Subtropical-tropical moist", 307: "Shrubland - Subtropical-tropical high altitude",
-  308: "Shrubland - Mediterranean-type",
-  400: "Grassland", 401: "Grassland - Tundra", 402: "Grassland - Subarctic", 403: "Grassland - Subantarctic",
-  404: "Grassland - Temperate", 405: "Grassland - Subtropical-tropical dry",
-  406: "Grassland - Subtropical-tropical seasonally wet or flooded", 407: "Grassland - Subtropical-tropical high altitude",
-  500: "Wetlands (inland)", 501: "Wetlands (inland) - Permanent rivers streams creeks",
-  502: "Wetlands (inland) - Seasonal/intermittent/irregular rivers/streams/creeks",
-  503: "Wetlands (inland) - Shrub dominated wetlands", 504: "Wetlands (inland) - Bogs/marshes/swamps/fens/peatlands",
-  505: "Wetlands (inland) - Permanent freshwater lakes",
-  506: "Wetlands (inland) - Seasonal/intermittent freshwater lakes (over 8 ha)",
-  507: "Wetlands (inland) - Permanent freshwater marshes/pools (under 8 ha)",
-  508: "Wetlands (inland) - Seasonal/intermittent freshwater marshes/pools (under 8 ha)",
-  509: "Wetlands (inland) - Freshwater springs and oases", 510: "Wetlands (inland) - Tundra wetlands",
-  511: "Wetlands (inland) - Alpine wetlands", 512: "Wetlands (inland) - Geothermal wetlands",
-  513: "Wetlands (inland) - Permanent inland deltas",
-  514: "Wetlands (inland) - Permanent saline brackish or alkaline lakes",
-  515: "Wetlands (inland) - Seasonal/intermittent saline brackish or alkaline lakes and flats",
-  516: "Wetlands (inland) - Permanent /saline / brackish or alkaline marshes/pools",
-  517: "Wetlands (inland) - Seasonal/intermittent /saline / brackish or alkaline marshes/pools",
-  518: "Wetlands (inland) / Karst and other subterranean hydrological systems",
-  600: "Rocky Areas",
-  800: "Desert", 801: "Desert - Hot", 802: "Desert - Temperate", 803: "Desert - Cold",
-  900: "Marine - Neritic", 901: "Marine - Neritic Pelagic", 908: "Marine - Coral Reefs",
-  909: "Marine - Seagrass (submerged)",
-  1000: "Marine - Oceanic", 1001: "Marine - Epipelagic", 1002: "Marine - Mesopelagic",
-  1003: "Marine - Bathypelagic", 1004: "Marine - Abyssopelagic",
-  1100: "Marine - Deep Ocean Floor", 1101: "Marine - Continental Slope/Bathyl zone",
-  1102: "Marine - Abyssal Plain", 1103: "Marine - Abyssal Mountains/Hills",
-  1104: "Marine - Hadal/Deep Sea Trench", 1105: "Marine - Seamounts", 1106: "Marine - Deep Sea Vent",
-  1200: "Marine - Intertidal", 1206: "Marine - Tidepools", 1207: "Marine - Mangroves submerged Roots",
-  1400: "Artificial - Terrestrial", 1401: "Arable land", 1402: "Pastureland", 1403: "Plantations",
-  1404: "Rural Gardens", 1405: "Urban Areas", 1406: "Subtropical/Tropical Heavily Degraded Former Forest",
-  1700: "Unknown"
-};
 
 // Track unknown codes once per session to avoid log spam
 const loggedUnknownCodes = new Set<number>();
@@ -333,7 +289,7 @@ export const speciesService = {
           console.warn(`[Habitat] Unknown code ${habitatCode} - add to habitat_colormap`);
         }
         resolved.push({
-          habitat_type: habitatLabel || `Unknown (${habitatCode})`,
+          habitat_type: habitatLabel || `Habitat code ${habitatCode}`,
           percentage: Math.round(r.percentage * 100) / 100
         });
       }

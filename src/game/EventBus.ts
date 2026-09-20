@@ -21,9 +21,11 @@ import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObsta
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { BoardCheckpointV1 } from './boardTypes';
+import type { TerrainSnapshotV1, TerrainSelection } from '@/terrain/terrain';
 
 // Define all event types and their payloads
 export interface EventPayloads {
+  'terrain-cell-selected': TerrainSelection;
   'current-scene-ready': Phaser.Scene;
   'map-location-selected': {
     lon: number;
@@ -50,6 +52,7 @@ export interface EventPayloads {
     /** Full rows for those candidates. */
     candidateSpecies?: Species[];
     boardCheckpoint?: BoardCheckpointV1;
+    terrain?: TerrainSnapshotV1;
   };
   'new-game-started': {
     speciesName: string;

@@ -187,7 +187,10 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       // Run creation can repair waypoints and replace obstacle templates. Start
       // from the saved nodes so browser moves replay against the same board.
       const savedResponse = await fetch(`/api/runs/${created.runId}`);
-      if (!savedResponse.ok) throw new Error(`Created run fetch failed (${savedResponse.status})`);
+      if (!savedResponse.ok) {
+        const failure = await savedResponse.json().catch(() => ({}));
+        throw new Error(failure.error ?? `Created run fetch failed (${savedResponse.status})`);
+      }
       const saved = await savedResponse.json() as ClientRunProjection;
       const expedition = expeditionFromProjection(saved);
       if (expedition.nodes.length !== 3) throw new Error('Created run lacks three saved nodes');
@@ -200,7 +203,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       setRunState(previous => ({ ...previous, runId: created.runId, expedition, phase: 'mystery', caseState, currentNodeIndex: 0 }));
     } catch (error) {
       console.error('[ExpeditionContext] Failed to start expedition:', error);
-      toast.error('Could not start the expedition case.');
+      toast.error(error instanceof Error ? error.message : 'Could not start the expedition case.');
     } finally { startingRef.current = false; }
   }, []);
 
@@ -408,7 +411,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const handleRunResume = useCallback(async (runId: string) => {
     try {
-      const response = await fetch(`/api/runs/${runId}`); if (!response.ok) throw new Error(`Run fetch failed (${response.status})`);
+      const response = await fetch(`/api/runs/${runId}`);
+      if (!response.ok) {
+        const failure = await response.json().catch(() => ({}));
+        throw new Error(failure.error ?? `Run fetch failed (${response.status})`);
+      }
       const projection = await response.json() as ClientRunProjection;
       const decision = reconcileProjection(projection);
       if (decision.kind === 'legacy') { toast.error('Expedition format updated — start a new run.'); resetLocal(); return false; }
@@ -479,7 +486,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         window.setTimeout(() => emitBoardTracked(payload, projection.casePublic!, step.nodeIndex, objectiveProgress, checkpoint), 100);
       }
       toast('Expedition case resumed', { duration: 1800 }); return true;
-    } catch (error) { console.error('[ExpeditionContext] Resume failed:', error); toast.error('Could not resume that expedition'); return false; }
+    } catch (error) { console.error('[ExpeditionContext] Resume failed:', error); toast.error(error instanceof Error ? error.message : 'Could not resume that expedition'); return false; }
   }, [emitBoardTracked, resetLocal]);
 
   useEffect(() => {
@@ -553,7 +560,7 @@ function emitBoard(payload: EventPayloads['expedition-data-ready'], publicCase: 
   const node = payload.expedition.nodes[nodeIndex]; if (!node) throw new Error(`Missing generated node ${nodeIndex}`);
   const boardConfig = buildBoardSpawnConfigForNode(node.node_type, undefined, getAllowedEvidenceGemTypes(selectedFamilies));
   const location = node.waypoint ?? { lon: payload.lon, lat: payload.lat };
-  EventBus.emit('map-location-selected', { lon: location.lon, lat: location.lat, ecoregionId: payload.ecoregionId ?? null, species: payload.species, rasterHabitats: payload.rasterHabitats, habitats: payload.habitats, difficulty: node.difficulty, moveBudget: 6, obstacles: node.obstacles, obstacleFamily: node.obstacleFamily, activeAffinities: payload.expedition.activeAffinities, objectiveTarget: 6, objectiveProgress, nodeIndex, nodeType: node.node_type, events: node.events, boardSeed: publicCase.boardSeeds[nodeIndex], boardContext: buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: node.obstacles, nodeIndex }), boardConfig, candidateIds: publicCase.candidateIds, candidateSpecies, boardCheckpoint });
+  EventBus.emit('map-location-selected', { lon: location.lon, lat: location.lat, ecoregionId: payload.ecoregionId ?? null, species: payload.species, rasterHabitats: payload.rasterHabitats, habitats: payload.habitats, difficulty: node.difficulty, moveBudget: 6, obstacles: node.obstacles, obstacleFamily: node.obstacleFamily, activeAffinities: payload.expedition.activeAffinities, objectiveTarget: 6, objectiveProgress, nodeIndex, nodeType: node.node_type, events: node.events, boardSeed: publicCase.boardSeeds[nodeIndex], boardContext: buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: node.obstacles, nodeIndex }), boardConfig, candidateIds: publicCase.candidateIds, candidateSpecies, boardCheckpoint, terrain: node.terrain });
 }
 
 function buildCreateBody(payload: EventPayloads['expedition-data-ready'], routePolyline: RoutePoint[], createRequestId: string) { return { createRequestId, lon: payload.lon, lat: payload.lat, locationKey: `${payload.lon.toFixed(4)},${payload.lat.toFixed(4)}`, nodes: payload.expedition.nodes, activeAffinities: payload.expedition.activeAffinities, bioregion: payload.expedition.bioregion?.bioregion ?? undefined, realm: payload.expedition.bioregion?.realm ?? undefined, biome: payload.expedition.bioregion?.biome ?? undefined, speciesIds: payload.species.map(species => species.id), habitats: payload.habitats, rasterHabitats: payload.rasterHabitats, featureFingerprints: payload.featureFingerprints ?? [], routePolyline, expeditionSnapshot: { protectedAreas: payload.expedition.protectedAreas, availableAffinities: payload.expedition.availableAffinities, primaryNodeFamily: payload.expedition.primaryNodeFamily, primaryVariant: payload.expedition.primaryVariant, modifierNodes: payload.expedition.modifierNodes, signals: payload.expedition.signals, waypoints: payload.expedition.waypoints ?? [], waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null, nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null } }; }
@@ -571,6 +578,7 @@ function expeditionFromProjection(data: ClientRunProjection): ExpeditionData {
       obstacleFamily: null,
       boardSeed: node.boardSeed,
       waypoint: node.waypoint as ExpeditionData['nodes'][number]['waypoint'],
+      terrain: node.terrain,
     })),
     bioregion: { bioregion: data.run.bioregion ?? null, realm: data.run.realm ?? null, biome: data.run.biome ?? null },
     protectedAreas: snapshot.protectedAreas,
