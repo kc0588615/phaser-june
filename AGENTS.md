@@ -14,7 +14,7 @@ Do not use for: refactoring, writing scripts from scratch, debugging business lo
 In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
 
 # AGENTS.md
-Guidance for Codex in this repo. Keep instructions short; prefer facts over prose.
+Guidance for coding agents in this repo. Keep instructions short; prefer facts over prose.
 
 ## Project Stack
 - Runtime: TypeScript (Next.js)
@@ -31,7 +31,7 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 This project has been through multiple migrations: Supabase -> Prisma/Hetzner -> Drizzle/Hetzner. There should be zero remaining Supabase and Prisma references in the codebase. If you encounter any Supabase or Prisma imports, env vars, or references, flag them for removal. Do not suggest Supabase or Prisma-based solutions.
 
 ## Database Access
-- Codex/WSL database work uses the installed `postgres-tunnel` skill.
+- Codex and Claude Code use the installed `postgres-tunnel` skill for WSL database work.
 - App/runtime traffic uses `DATABASE_URL` through TLS PgBouncer on port 6432.
 - WSL agents inspect/query raw Postgres through `127.0.0.1:55432` via the SSH tunnel.
 - Windows/QGIS uses a separate Windows-local tunnel on port 5433; agents do not use it.
