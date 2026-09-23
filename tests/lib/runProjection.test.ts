@@ -39,7 +39,7 @@ describe('v4 run projection', () => {
       runStatus: 'active',
       metadata: {
         casePublic: { ...CASE_PUBLIC, speciesRange: 'PRIVATE_RANGE' },
-        casePrivate: { version: 4, answerId: 4, caseSeed: 'PRIVATE_SEED', familyCardIds: { body: 900 }, familyCardEffects: { 900: { supports: ['PRIVATE_EFFECT'], contradicts: [] } } },
+        casePrivate: { version: 4, answerId: 4, caseSeed: 'PRIVATE_SEED', familyCardIds: { body: 900 }, familyCardEffects: { 900: { supports: ['choice-b'], contradicts: [] } } },
         evidenceApplications: [{ cardId: 900, bonusFactText: 'PRIVATE_FACT' }],
       },
     }, {
