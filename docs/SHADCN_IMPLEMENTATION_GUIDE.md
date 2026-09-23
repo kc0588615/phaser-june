@@ -1,6 +1,6 @@
 # shadcn/ui Implementation Guide for Phaser-React Integration
 
-> **2026-09-22 (plan 039):** the unused `ui/` components `menubar`, `sheet`, `card`, `popover`, `modal-overlay`, `separator` and `stat-pill` were deleted. Re-add one with `npx shadcn@latest add <name>` if needed. `@radix-ui/react-menubar`, `react-popover` and `react-separator` are still in `package.json`, pending removal.
+> **2026-09-22 (plan 039):** the unused `ui/` components `menubar`, `sheet`, `card`, `popover`, `modal-overlay`, `separator` and `stat-pill` were deleted. Re-add one with `npx shadcn@latest add <name>` if needed. Their `@radix-ui/react-menubar`, `react-popover` and `react-separator` packages were removed too.
 
 ## Overview
 
