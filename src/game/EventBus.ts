@@ -55,20 +55,7 @@ export interface EventPayloads {
     boardCheckpoint?: BoardCheckpointV1;
     terrain?: TerrainSnapshot;
   };
-  'new-game-started': {
-    speciesName: string;
-    speciesId: number;
-    totalSpecies: number;
-    currentIndex: number;
-  };
   'game-reset': undefined;
-  'no-species-found': {};
-  'all-species-completed': {
-    totalSpecies: number;
-  };
-  'show-species-list': {
-    speciesId: number;
-  };
   'game-hud-updated': {
     score: number;
     movesRemaining: number;
@@ -78,7 +65,6 @@ export interface EventPayloads {
     multiplier: number;
     moveMultiplier?: number;
   };
-  'game-restart': Record<string, never>;
   'expedition-data-ready': {
     lon: number; lat: number;
     ecoregionId?: number | null;
@@ -154,8 +140,6 @@ export const EventBus = new TypedEventBus();
 
 // Export event names as constants for consistency
 export const EVT_GAME_HUD_UPDATED = 'game-hud-updated' as const;
-export const EVT_GAME_RESTART = 'game-restart' as const;
 
 // Re-export event types for convenience
 export type GameHudUpdatedEvent = EventPayloads['game-hud-updated'];
-export type GameRestartEvent = EventPayloads['game-restart'];

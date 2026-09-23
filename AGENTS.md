@@ -58,7 +58,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Move pipeline: `src/game/MoveAction.ts`, `src/game/ExplodeAndReplacePhase.ts` (swap/cascade).
 - View: `src/game/BoardView.ts` (sprite layout/animation, resize tweens).
 - Map ingress: `src/components/MapLibreExploreMap.tsx` (click -> expedition data, highlights habitats/species polygons).
-- HUD/clues: `src/components/SpeciesPanel.tsx` (listens to clue + HUD events; emits `show-species-list`).
+- HUD bridge: `src/contexts/GameBridgeContext.tsx` (mirrors `game-hud-updated` into React for `RunCompleteSummary`).
 - Species catalog: `src/components/SpeciesList.tsx` (React Query, filters, localStorage discoveries).
 - Expedition run: `src/types/expedition.ts` (RunState, clue fragments, deduction state), `src/contexts/ExpeditionContext.tsx` (run state/persistence), `src/expedition/` (affinities.ts, domain.ts), `src/lib/nodeScoring.ts` (node generation from GIS), `src/components/ExpeditionBriefing.tsx`, `src/components/FieldNotebook.tsx`, `src/components/ExpeditionRouteRecap.tsx`.
 - Data layer: `src/db/schema/*` (schema), `src/db/index.ts` (singleton), `src/lib/speciesQueries.ts` (Drizzle queries), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (sessions, clue/discovery writes).

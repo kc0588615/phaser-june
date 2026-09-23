@@ -56,7 +56,7 @@ npm run start    # http://localhost:3000
 - React ↔ Phaser bridge: `src/PhaserGame.tsx` boots `src/game/main.ts`, which registers scenes (Boot → Preloader → MainMenu → Game → GameOver).
 - Event bus: `src/game/EventBus.ts` carries typed events between React and Phaser (e.g., `map-location-selected`, `game-hud-updated`).
 - Game MVC: `BackendPuzzle.ts` (model) ↔ `Game.ts` (controller) ↔ `BoardView.ts` (view/animation); `boardTypes.ts` defines extensible cell schema, `gemSemantics.ts` defines shared gem meaning, `nodeObstacles.ts` defines typed obstacle contracts + seeded cell state, and `MoveAction.ts` / `ExplodeAndReplacePhase.ts` handle swaps/cascades.
-- UI layer: `src/components/MapLibreExploreMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
+- UI layer: `src/components/MapLibreExploreMap.tsx`, `ExpeditionMapHud.tsx`, `SpeciesList.tsx`, shadcn UI under `src/components/ui`.
 - Expedition run loop: `src/types/expedition.ts` (RunState), `src/contexts/ExpeditionContext.tsx` (phase state + persistence), `src/lib/nodeScoring.ts` (GIS node generation), `src/MainAppLayout.tsx` (layout). A v3 run plays three six-move evidence-family boards, chooses one family after each board, then guesses. Components: `ExpeditionBriefing`, `ExpeditionMapHud`, `EvidenceFamilyRail`, `CandidateRoster`, `FieldNotebook`, `ExpeditionRouteRecap`. Data/auth: Drizzle client in `src/db/index.ts`, schema in `src/db/schema/*`, API routes in `src/app/api/*`, species queries in `speciesQueries.ts`, player tracking in `playerTracking.ts`. Run persistence in `eco_run_sessions` + `eco_run_nodes`.
 
 ## 3) Recommended Reading Path
@@ -140,8 +140,8 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 
 ## 5) Quick Code Navigation
 - **Map click → briefing → board init:** `src/components/MapLibreExploreMap.tsx` emits `expedition-data-ready` → `MainAppLayout` shows briefing overlay (dismissible; map stays interactive). Player clicks Start → `expedition-start` → `map-location-selected` → `Game.ts.initializeBoardFromMap`. MapLibreExploreMap only blocks clicks during `in-run` and `deduction` phases.
-- **HUD updates:** `Game.ts.emitHud` → `EventBus 'game-hud-updated'` → `src/components/SpeciesPanel.tsx`.
-- **Species list sync:** `SpeciesPanel` emits `show-species-list` → `src/MainAppLayout.tsx` toggles view and scrolls `SpeciesList`.
+- **HUD updates:** `Game.ts.emitHud` → `EventBus 'game-hud-updated'` → `src/contexts/GameBridgeContext.tsx` (`useGameBridge().hud`).
+- **Species list sync:** `ExpeditionContext.showSpeciesList` calls the `onShowSpeciesList` ref → `src/MainAppLayout.tsx` toggles view and scrolls `SpeciesList`.
 - **Data access:** `src/lib/speciesService.ts` (RPCs), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (session + telemetry).
 
 ## 6) Gem Assets & Clue Mapping (current build)

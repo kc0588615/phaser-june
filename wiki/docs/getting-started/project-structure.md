@@ -30,7 +30,6 @@ phaser-june/
 │   ├── components/         # React components
 │   │   ├── ui/             # shadcn/ui components
 │   │   ├── MapLibreExploreMap.tsx   # 3D globe
-│   │   ├── SpeciesPanel.tsx  # Clue display
 │   │   └── SpeciesList.tsx   # Species catalog
 │   │
 │   ├── db/                # Drizzle client + schema

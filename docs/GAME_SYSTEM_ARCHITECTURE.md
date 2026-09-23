@@ -33,10 +33,11 @@ Stored v1/v2 cases are not playable and are rejected on resume.
 - `node-objective-updated`
 - `node-complete`
 - `route-progress-updated`
-- `clue-revealed`
-- `show-species-list`
 - `game-reset`
 - `auth-user-ready`
+- `terrain-cell-selected`
+- `routing-state-updated`
+- `current-scene-ready`
 
 Keep the event catalog small. Add new run events only when current UI or persistence needs them.
 

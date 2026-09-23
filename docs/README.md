@@ -46,7 +46,7 @@ Required environment variables (set in `.env.local`):
 - `src/pages/` — Next.js routes (`_app.tsx`, `_document.tsx`, `index.tsx`)
 - `src/PhaserGame.tsx` — React ↔ Phaser bridge component
 - `src/game/` — Game core: `BackendPuzzle.ts`, `BoardView.ts`, `MoveAction.ts`, scenes in `scenes/`, `EventBus.ts`
-- `src/components/` — UI components: `MapLibreExploreMap.tsx`, `SpeciesPanel.tsx`, `SpeciesList.tsx`, etc., plus `components/ui/*` from shadcn
+- `src/components/` — UI components: `MapLibreExploreMap.tsx`, `ExpeditionMapHud.tsx`, `SpeciesList.tsx`, etc., plus `components/ui/*` from shadcn
 - `src/db/` — Drizzle client + schema + types
 - `src/lib/` — Services: `speciesQueries.ts`, `playerTracking.ts`
 - `src/types/` — Shared types including `database.ts`

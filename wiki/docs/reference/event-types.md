@@ -15,15 +15,8 @@ Source of truth: `src/game/EventBus.ts`.
 |-------|-----------|---------|
 | `current-scene-ready` | Phaser to React | Game scene is initialized. |
 | `map-location-selected` | React to Phaser | Start or refresh board from selected map/node data. |
-| `clue-revealed` | Phaser to React | Species clue is revealed from board play. |
-| `new-game-started` | Phaser to React | Mystery species context is ready. |
 | `game-reset` | Phaser/React | Reset run/game UI. |
-| `no-species-found` | Phaser to React | Selected map point has no playable species. |
-| `all-clues-revealed` | Phaser to React | Current species has all clues. |
-| `all-species-completed` | Phaser to React | Location species queue is complete. |
-| `show-species-list` | React to React | Switch layout to species list. |
 | `game-hud-updated` | Phaser to React | Current score, moves, streak, multiplier. |
-| `game-restart` | React to Phaser | Restart current board flow. |
 | `expedition-data-ready` | React to React | Map click produced expedition data and briefing inputs. |
 | `expedition-start` | React to React | Player started the staged expedition. |
 | `node-complete` | React to Phaser/UI | Evidence choice completed; advance to the next v3 board. |

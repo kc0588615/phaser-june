@@ -74,7 +74,7 @@ src/
   contexts/
     ExpeditionContext.tsx  run state machine (phases, banking, persistence)
     GameBridgeContext.tsx  HUD score snapshots from the board
-  components/           React UI (MapLibreExploreMap, SpeciesPanel, FieldNotebook, ...)
+  components/           React UI (MapLibreExploreMap, ExpeditionMapHud, FieldNotebook, ...)
   lib/                  server + shared logic (nodeScoring, caseCompilerV3,
                         speciesQueries, playerTracking, ...)
   app/api/              Next.js API routes (runs, species, layers, ...)

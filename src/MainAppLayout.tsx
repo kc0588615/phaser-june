@@ -11,7 +11,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { PhaserGame, IRefPhaserGame } from './PhaserGame';
 import MapLibreExploreMap from './components/MapLibreExploreMap';
-import { SpeciesPanel } from './components/SpeciesPanel';
 import SpeciesList from './components/SpeciesList';
 import { useAuthBridge } from './hooks/useAuthBridge';
 import { useExpedition } from './contexts/ExpeditionContext';
@@ -197,9 +196,6 @@ function MainAppLayoutInner() {
                                 onReset={handleRunReset}
                             />
                         )}
-
-                        {/* SpeciesPanel always mounted but hidden */}
-                        <SpeciesPanel toastsEnabled={viewMode === 'map'} style={{ display: 'none' }} />
 
                     </div>
 

@@ -27,14 +27,12 @@ import {
     MULTIPLIER_HUGE_MATCH,
     DEFAULT_BOARD_SPAWN_CONFIG,
 } from '../constants';
-import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED, EVT_GAME_RESTART } from '../EventBus';
+import { EventBus, EventPayloads, EVT_GAME_HUD_UPDATED } from '../EventBus';
 import { ExplodeAndReplacePhase, Coordinate } from '../ExplodeAndReplacePhase';
 import { GemType } from '../constants';
 import {
   buildNodeBoardContext,
 } from '../nodeObstacles';
-import type { Species } from '@/types/database';
-import type { RasterHabitatResult } from '@/lib/speciesService';
 import { GEM_EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { getExpeditionBoardSafeArea } from '../expeditionHudLayout';
 import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '../fieldSignal';
@@ -98,14 +96,6 @@ export class Game extends Phaser.Scene {
     private isPaused: boolean = false;
     private canMoveBeforePause: boolean = false;
     
-    // --- Species Integration ---
-    private currentSpecies: Species[] = [];
-    private selectedSpecies: Species | null = null;
-    private currentSpeciesIndex: number = 0;
-    // --- Raster Habitat Integration ---
-    private rasterHabitats: RasterHabitatResult[] = [];
-    private usedRasterHabitats: Set<string> = new Set();
-
     // --- Player Tracking ---
     private currentUserId: string | null = null; // Cache user ID
     private currentSessionId: string | null = null; // Active session
@@ -204,11 +194,6 @@ export class Game extends Phaser.Scene {
         // Commit can land while paused; remember to re-enable on unpause.
         if (this.isPaused) this.canMoveBeforePause = true;
         else this.canMove = true;
-    }
-
-    private handleRestart(): void {
-        this.disableInputs();
-        this.scene.restart();
     }
 
     private onMoveResolved(
@@ -335,7 +320,6 @@ export class Game extends Phaser.Scene {
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('map-location-selected', this.initializeBoardFromMap, this);
         EventBus.on('terrain-cell-selected', this.handleTerrainSelection, this);
-        EventBus.on(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.on('node-complete', this.handleNodeComplete, this);
         EventBus.on('expedition-start', this.onExpeditionStart, this);
         EventBus.on('game-reset', this.onGameReset, this);
@@ -690,10 +674,6 @@ export class Game extends Phaser.Scene {
         }
 
         try {
-            // Sort species by id (lowest first)
-            this.currentSpecies = [...data.species].sort((a, b) => a.id - b.id);
-            this.currentSpeciesIndex = 0;
-            
             // Reset streak and scoring state for new location
             this.streak = 0;
             this.turnBaseTotalScore = 0;
@@ -716,31 +696,6 @@ export class Game extends Phaser.Scene {
             // do. Deriving from the payload also covers run resume, which
             // re-emits the board without an 'expedition-start' event.
             if (data.nodeIndex !== undefined) this.inExpeditionRun = true;
-
-            // Store raster habitat data for green gem clues
-            this.rasterHabitats = [...data.rasterHabitats];
-            this.usedRasterHabitats.clear(); // Reset used raster habitats for new game
-            console.log("Game Scene: Stored raster habitats:", this.rasterHabitats);
-            
-            if (this.currentSpecies.length > 0) {
-                // Select the species with lowest id
-                this.selectedSpecies = this.currentSpecies[0];
-                console.log("Game Scene: Selected species:", this.selectedSpecies.common_name || this.selectedSpecies.scientific_name, "id:", this.selectedSpecies.id);
-                
-                
-                // Emit event to inform React components about the new game
-                // Hide the species name - player needs to guess it
-                EventBus.emit('new-game-started', {
-                    speciesName: 'Mystery Species',  // Hidden name for guessing game
-                    speciesId: this.selectedSpecies.id,
-                    totalSpecies: this.currentSpecies.length,
-                    currentIndex: this.currentSpeciesIndex + 1,
-                });
-            } else {
-                this.selectedSpecies = null;
-                console.log("Game Scene: No species available for this location");
-                EventBus.emit('no-species-found', {});
-            }
 
             if (!this.backendPuzzle) { // Should exist from create()
                 this.backendPuzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
@@ -1210,10 +1165,6 @@ export class Game extends Phaser.Scene {
     private onGameReset(): void {
         this.inExpeditionRun = false;
         // Full cleanup when React signals run ended
-        this.currentSpecies = [];
-        this.selectedSpecies = null;
-        this.currentSpeciesIndex = 0;
-        this.rasterHabitats = [];
         this.prepareForNextNode();
         if (this.statusText && this.statusText.active) {
             this.statusText.setText("Click on the globe to find a habitat area\nfor a mystery species.");
@@ -1221,11 +1172,11 @@ export class Game extends Phaser.Scene {
     }
 
     private handleNodeComplete(): void {
-        // Light reset: clear board between expedition nodes (same species pool)
+        // Light reset: clear board between expedition nodes
         this.prepareForNextNode();
     }
 
-    /** Clears board + scoring for next node without clearing species data or showing end-game text. */
+    /** Clears board + scoring for next node without showing end-game text. */
     private prepareForNextNode(): void {
         console.log("Game Scene: Preparing for next node");
 
@@ -1240,7 +1191,7 @@ export class Game extends Phaser.Scene {
         this.pauseButtonContainer?.setVisible(false);
         this.shuffleButtonContainer?.setVisible(false);
 
-        // Reset scoring for new node (keep species + raster data intact)
+        // Reset scoring for new node
         this.streak = 0;
         this.turnBaseTotalScore = 0;
         this.anyMatchThisTurn = false;
@@ -1260,8 +1211,6 @@ export class Game extends Phaser.Scene {
         this.nodeObjectiveTarget = 0;
         this.nodeObjectiveProgress = 0;
         this.nodeObjectiveCompleted = false;
-
-        this.usedRasterHabitats.clear();
     }
 
     private resetDragState(): void {
@@ -1332,7 +1281,6 @@ export class Game extends Phaser.Scene {
         // Remove EventBus listeners
         EventBus.off('map-location-selected', this.initializeBoardFromMap, this);
         EventBus.off('terrain-cell-selected', this.handleTerrainSelection, this);
-        EventBus.off(EVT_GAME_RESTART, this.handleRestart, this);
         EventBus.off('node-complete', this.handleNodeComplete, this);
         EventBus.off('expedition-start', this.onExpeditionStart, this);
         EventBus.off('game-reset', this.onGameReset, this);
@@ -1389,15 +1337,6 @@ export class Game extends Phaser.Scene {
         this.resetDragState(); // Clear drag state variables
         this.canMove = false;
         this.isBoardInitialized = false;
-        
-        // Reset species data
-        this.currentSpecies = [];
-        this.selectedSpecies = null;
-        this.currentSpeciesIndex = 0;
-        
-        // Reset raster habitat data
-        this.rasterHabitats = [];
-        this.usedRasterHabitats.clear();
         
         // Reset streak and scoring state
         this.streak = 0;
