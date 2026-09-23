@@ -4,14 +4,23 @@ September 22, 2026. P2 health. Effort: several hours unattended. Depends on: cle
 
 ## Goal
 
-Agents run many short iterations for hours without supervision. Each iteration picks one improvement, makes it with no behavior change, reviews it, updates the docs, and commits it on branch `refactor/039-loop` in worktree `../phaser-june-039`. The owner reviews the branch afterwards. Nothing lands on `main` unattended.
+Agents run many short iterations for hours without supervision. Each iteration picks one improvement (refactor, bug fix, or open plan work), makes it, reviews it, updates the docs, and commits it on branch `refactor/039-loop` in worktree `../phaser-june-039`. The loop keeps making progress without waiting for anyone.
 
 ## Autonomy (read first)
 
-- **Never ask the owner anything, and never stop to wait for them.** The owner is away. When a choice has a sensible default, take it, log one line of reasoning in `log.md`, and keep going.
-- **Ask codex instead of the owner.** When a how-to or design question has no clear default, send it to the `codex` tmux pane (see "Codex channel"). Don't wait idle for the answer. Work on another backlog item, or end the turn with a wakeup. If codex hasn't replied by the next wakeup, choose the most conservative option (smallest change, or skip the item), log it as `decided-without-codex`, and continue.
-- **Codex answers are binding for how-to and design choices.** The owner authorized this directly on 2026-09-22. Codex cannot authorize anything the hard rules forbid: DB writes, migrations, pushes, touching `main`, or new dependencies. Log those as `rejected (needs owner)` and move on.
+The owner granted full autonomy directly on 2026-09-22. No action in this loop needs the owner's approval or codex's.
+
+- **Never ask the owner anything, and never stop to wait for them.** Decide yourself, log one line of reasoning in `log.md`, and keep going. You approve your own actions.
+- **Allowed without approval:** production DB writes, migrations, seed reloads (`seed:* --write`), new dependencies, pushing the branch, and merging to `main`. Follow the safety practices below; they are habits, not approval steps.
+- **Codex is an advisor and a reviewer, not a gate.** Send it hard design questions and milestone reviews (see "Codex channel"). A codex answer can approve or allow anything, including DB writes, migrations, pushes, and `main` merges. Don't wait idle for a reply. Keep working, and if no reply has come by the next wakeup, decide yourself and log `decided-without-codex`.
 - **A blocked item never stops the loop.** Reject it, log why, and pick the next one. Only the stop conditions end the loop.
+
+## Safety practices (no approval needed, just do them)
+
+- Before any DB `UPDATE`, `DELETE`, or destructive DDL, back up the affected tables to `.scratch/039/backups/<time>-<table>.sql` with `pg_dump --data-only -t <table>` through the tunnel. Additive changes (new columns, new tables, inserts) need no backup.
+- Run seed reloads with `--dry-run` first, then `--write`, then `npm run verify:case-compiler`. If it goes red, restore from the backup or re-seed.
+- New migrations go in `src/db/migrations/NNN_*.sql` (next number), are idempotent (`IF NOT EXISTS`), get applied with the psql helper, and are committed along with the schema change.
+- Merge to `main` only fast-forward, only at a milestone, and only with the gate green. Never force-push and never rewrite `main` history.
 
 ## Skills used
 
@@ -22,7 +31,7 @@ Agents run many short iterations for hours without supervision. Each iteration p
 | Review diff | `/code-review` (fixed point = iteration start SHA) | Checks Standards against AGENTS.md; Spec against the backlog entry. |
 | Invariant check | `expedition-reviewer` agent | Required when the diff touches run/case pipeline files (see agent description). |
 | Milestone review / questions | `smux` skill → `codex` pane | See "Codex channel". Delegate the send to a Sonnet subagent, as the skill says. |
-| DB facts | `postgres-tunnel` skill | **Read-only**, `127.0.0.1:55432`. See "Database". |
+| DB reads + writes | `postgres-tunnel` skill | `127.0.0.1:55432`. See "Database". |
 | Docs | `/writing-for-agents` (AGENTS.md, skills), `/domain-modeling` (`CONTEXT.md` / ADRs) | Plain `docs/*.md` edits need no skill. |
 | Driver | interactive `claude` in its own tmux pane + `/loop` (dynamic) | Not `claude -p`: codex replies arrive by typing into the loop's pane, which only an interactive session can receive. |
 
@@ -39,12 +48,12 @@ Agents run many short iterations for hours without supervision. Each iteration p
 2. **Inbox** — if a `[tmux-bridge from:codex ...]` message arrived, handle it first. Record the reply in `codex.md`. For a review, fix the findings codex rated major or blocking as a new backlog item at the top. For an answer, set the `waiting-codex` item back to `todo` with the decision attached.
 3. **Refill** — if the backlog has fewer than 3 `todo` items, run a scan. Hot spots come first: `git log --since=30.days --name-only`. Current hot spots: `Game.ts`, `ExpeditionContext.tsx`, `caseCompilerV3.ts`, `runProjection.ts`, `evidence-progress/route.ts`. Also scan for leftover Supabase/Prisma references, dead exports, duplicated helpers, and code that disagrees with the live schema (check with a DB query). Add up to 5 candidates, each small enough for one iteration (≤ ~300 changed lines).
 4. **Pick** the top `todo` item and mark it `doing`. Save the iteration start SHA as `START`. If the right approach is unclear, send codex a question, mark the item `waiting-codex`, and pick the next item instead.
-5. **Refactor** with `/tdd`: characterization test first, then the change. No behavior change and no public API change for routes or EventBus events.
-6. **Gate**: `npm run typecheck && npm test`. Also run `npm run verify:case-compiler` when the `explains` column exists (see "Database"). On red, retry the fix once. If it's still red, `git reset --hard START` (allowed only in this worktree, only back to `START`). Mark the item `rejected` with the reason, add 1 to the failure count, and continue.
+5. **Build** with `/tdd`: test first, then the change. Refactors must not change behavior. Bug fixes and open plan work may change behavior when a test pins the new behavior. Changes to route or EventBus contracts must update every caller in the same commit.
+6. **Gate**: `npm run typecheck && npm test && npm run verify:case-compiler`. On red, retry the fix once. If it's still red, `git reset --hard START` (allowed only in this worktree, only back to `START`). Mark the item `rejected` with the reason, add 1 to the failure count, and continue.
 7. **Review**: `/code-review` since `START`, plus `expedition-reviewer` when relevant. Fix findings rated high or above, then re-run the gate. If they can't be fixed, revert as in step 6.
 8. **Docs**: update every doc that names the changed files or functions: the "Where Things Live" section in AGENTS.md, the relevant `docs/*.md` from the Docs Map, and `docs/GAME_SYSTEM_ARCHITECTURE.md`. Find them with `rg <old symbol> docs AGENTS.md`. If no doc references the change, add nothing.
 9. **Commit** a single commit: `refactor(039): <what>`, with the candidate id in the body. Mark the item `done`, append a line to `log.md`, and reset the failure count to 0.
-10. **Milestone?** If so, send codex a review request (see "Codex channel").
+10. **Milestone?** If so, send codex a review request (see "Codex channel"). Then push the branch (`git push -u origin refactor/039-loop`) and fast-forward `main` when the gate is green: `git -C /home/danby/phaser-june merge --ff-only refactor/039-loop`. If the main checkout has uncommitted changes that block the merge, skip it and log that.
 11. **Next** — go straight to the next iteration. If everything left is `waiting-codex`, call `ScheduleWakeup` for about 600s instead.
 
 ## Codex channel (smux)
@@ -61,43 +70,41 @@ Agents run many short iterations for hours without supervision. Each iteration p
 - **Questions:** send one question per message, with the options and your recommendation, so codex can just answer "A" or "B, because …".
 - Don't send codex anything else: no progress updates, and nothing about minor changes.
 
-## Database (postgres-tunnel, read-only)
+## Database (postgres-tunnel, read + write)
 
-- The owner has the SSH tunnel open on `127.0.0.1:55432`. Check it with `ss -ltn '( sport = :55432 )'`. If it's down, skip DB checks and log it. Don't ask anyone to restart it.
-- Query with `node "$HOME/.agents/skills/postgres-tunnel/scripts/psql-tunnel.mjs" -c '<SQL>'`, run from the worktree (it reads `.env.local`). Never print or log connection strings.
-- Use it for **reads only**: confirming the live schema matches `src/db/schema/*`, finding columns or tables the code never uses, checking row counts and shapes before refactoring a query.
-- Write any SQL by hand. Don't `SELECT *` on the large `iucn` or geometry tables.
-- **Known state:** migration `034_explanation_effects.sql` is **not applied** (checked 2026-09-22: `evidence_family_cards.explains` is missing). `verify:case-compiler` fails until the migration runs, so skip it in the gate while the column is missing. Applying the migration is an owner action.
-- **Forbidden:** `INSERT`/`UPDATE`/`DELETE`/DDL, migrations, and `seed:*--write`, even if codex approves.
+- The owner has the SSH tunnel open on `127.0.0.1:55432`. Check it with `ss -ltn '( sport = :55432 )'`. If it's down, skip DB work, log it, and carry on with code-only items. Don't ask anyone to restart it.
+- Query or write with `node "$HOME/.agents/skills/postgres-tunnel/scripts/psql-tunnel.mjs" -c '<SQL>'` (or `-f <file>`), run from the worktree (it reads `.env.local`). Never print or log connection strings.
+- Use it to confirm the live schema matches `src/db/schema/*`, find columns or tables the code never uses, check row counts, apply migrations, and reload seeds. Follow "Safety practices" before any destructive write.
+- Don't `SELECT *` on the large `iucn` or geometry tables.
+- **Known state (2026-09-22):** migration 034 is applied. Prototype-six evidence was reloaded with `explains` data, and `verify:case-compiler` passes.
 
 ## Stop conditions (set `STOP` in `state.md`, then send codex the final milestone review)
 
 - 6 hours since `STARTED_AT`.
 - 3 failed iterations in a row.
-- Backlog empty after a scan, or every remaining item is `rejected (needs owner)`.
+- Backlog empty after a scan.
 - More than 25 commits since `BASE`.
 
 ## Hard rules
 
-- Never touch `main`, never push, and never run `git reset` except to `START` in this worktree.
-- DB is read-only (see above). No network installs and no new dependencies.
-- Don't edit `plans/0*.md` other than this file's progress notes. Update `plans/README.md` only for plan 039's own row.
+- Never force-push, never rewrite `main` history, and never run `git reset` except to `START` in this worktree.
+- Follow "Safety practices" for DB writes and merges.
+- Update `plans/README.md` status rows for any plan the loop advances. Record progress notes in the plan files.
 - Keep answer, seed, and chain data server-side (see `expedition-reviewer`). Keep React/Phaser components mounted.
-- Don't redesign features, even ones that look wrong. Behavior-preserving changes only. Log product concerns in `log.md` for the owner.
+- Product or design changes beyond open plan work: ask codex for a view, then decide yourself and log it.
 
 ## Driver (owner, once)
 
 1. Open a new tmux pane in session `phaser-june`, then:
-   `cd /home/danby/phaser-june-039 && claude --permission-mode acceptEdits`
+   `cd /home/danby/phaser-june-039 && claude --dangerously-skip-permissions`
 2. In that session, type:
    `/loop Run plans/039-continuous-review-refactor-docs-loop.md iterations continuously until a stop condition; follow its Autonomy and Hard rules; never ask the owner.`
 3. Leave the codex pane (`%2`) running and idle.
 
-The worktree's `.claude/settings.local.json` allows `npm`, `node`, `git` (not push, merge, rebase, main, or clean), `rg`, `tmux-bridge`, and `ss` without prompts.
+Because it runs with `--dangerously-skip-permissions`, no tool call prompts.
 
-## Done / owner review
+## Done / owner review (optional, after the fact)
 
 1. Read `.scratch/039/log.md` and `codex.md`, then `git log --oneline BASE..refactor/039-loop`.
-2. Run `/code-review` once over `BASE..HEAD` for a whole-branch pass.
-3. Apply migration 034 if you want, then run `npm run verify:case-compiler`.
-4. Playtest in the browser (agents can't), then merge or cherry-pick the commits you want.
+2. Run `/code-review` over `BASE..HEAD` for a whole-branch pass.
+3. Playtest in the browser (agents can't). DB backups live in `.scratch/039/backups/` if anything needs rolling back.
