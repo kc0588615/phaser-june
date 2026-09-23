@@ -106,4 +106,4 @@ Note: `drizzle.config.ts` already strips `pgbouncer=true` for compatibility.
 
 - `docs/DATABASE_USER_GUIDE.md`
 - `docs/SPECIES_DATABASE_IMPLEMENTATION.md`
-- `database_redesign_analysis.md`
+- `docs/archive/supabase/database_redesign_analysis.md`

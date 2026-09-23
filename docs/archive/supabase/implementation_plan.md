@@ -1,6 +1,6 @@
 # Migration Plan: Supabase to Hetzner VPS + Clerk
 
-> Legacy note: this plan was written during the Prisma era and is kept for historical context. Use `docs/DRIZZLE_MIGRATION_PLAN.md` for the current Drizzle-based workflow.
+> Legacy note: this plan was written during the Prisma era and is kept for historical context. Use `docs/archive/DRIZZLE_MIGRATION_PLAN.md` for the current Drizzle-based workflow.
 
 ## Current Status (Updated: 2025-12-31)
 
