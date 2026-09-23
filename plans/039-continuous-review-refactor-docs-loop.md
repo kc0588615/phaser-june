@@ -22,7 +22,7 @@ Agents run many short iterations for hours without supervision. Each iteration p
 
 1. Land or stash the current 117-file working tree (plans 034–038). The loop must not refactor code that hasn't been committed.
 2. `git worktree add ../phaser-june-039 -b refactor/039-loop main` and run everything from there.
-3. `npm install` in the worktree (offline cache ok). Confirm the baseline is green: `npm run typecheck && npm test && npm run verify:case-compiler`. Record the SHA as `BASE` in `.scratch/039/state.md`.
+3. `npm install` in the worktree (offline cache ok). Confirm the baseline is green: `npm run typecheck && npm test` (no `verify:case-compiler`: it reads the live DB). Record the SHA as `BASE` in `.scratch/039/state.md`.
 
 ## State files (`.scratch/039/`, gitignored)
 
@@ -36,7 +36,7 @@ Agents run many short iterations for hours without supervision. Each iteration p
 2. **Refill** — if the backlog has fewer than 3 `todo` items, run a scan. Hot spots come first: `git log --since=30.days --name-only`. Current hot spots: `Game.ts`, `ExpeditionContext.tsx`, `caseCompilerV3.ts`, `runProjection.ts`, `evidence-progress/route.ts`. Also scan for leftover Supabase/Prisma references, dead exports, and duplicated helpers. Add up to 5 candidates, each small enough for one iteration (≤ ~300 changed lines).
 3. **Pick** the top `todo` item and mark it `doing`. Save the iteration start SHA as `START`.
 4. **Refactor** with `/tdd`: characterization test first, then the change. No behavior change and no public API change for routes or EventBus events.
-5. **Gate**: `npm run typecheck && npm test && npm run verify:case-compiler`. On red, retry the fix once. If it's still red, `git reset --hard START` (allowed only inside this worktree, only back to `START`). Mark the item `rejected` with the reason, add 1 to the failure count, and end the iteration.
+5. **Gate**: `npm run typecheck && npm test` (no `verify:case-compiler`: it reads the live DB). On red, retry the fix once. If it's still red, `git reset --hard START` (allowed only inside this worktree, only back to `START`). Mark the item `rejected` with the reason, add 1 to the failure count, and end the iteration.
 6. **Review**: `/code-review` since `START`, plus `expedition-reviewer` when relevant. Fix findings rated high or above, then re-run the gate. If they can't be fixed, revert as in step 5.
 7. **Docs**: update every doc that names the changed files or functions: the "Where Things Live" section in AGENTS.md, the relevant `docs/*.md` from the Docs Map, and `docs/GAME_SYSTEM_ARCHITECTURE.md`. Find them with `rg <old symbol> docs AGENTS.md`. If no doc references the change, add nothing.
 8. **Commit** a single commit: `refactor(039): <what>`, with the candidate id in the body. Mark the item `done`, append a line to `log.md`, and reset the failure count to 0.
