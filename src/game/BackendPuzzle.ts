@@ -371,10 +371,6 @@ export class BackendPuzzle {
         } while (!this.hasAnyValidMove() && attempts < 50);
     }
 
-    addNextGemToSpawn(gemType: GemType): void {
-        this.nextGemsToSpawn.push(gemType);
-    }
-
     addNextGemsToSpawn(gemTypes: GemType[]): void {
         this.nextGemsToSpawn.push(...gemTypes);
     }
