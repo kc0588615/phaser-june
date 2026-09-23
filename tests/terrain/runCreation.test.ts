@@ -65,6 +65,7 @@ function harness({ failure, duplicate = false, conflict = false, failNodeInsert 
     '@/lib/seededRng': { createSeededStream: () => () => 0 },
     '@/lib/nodeScoring': { MYSTERY_NODE_COUNT: 3, applyWaypointsToRunNodes: (nodes: unknown) => nodes },
     '@/lib/runProjection': { parsePublicCaseSnapshot: (value: unknown) => value, projectRunCreateResponse: (value: unknown) => value },
+    '@/lib/record': { getRecord: (value: unknown) => value && typeof value === 'object' && !Array.isArray(value) ? value : {} },
     '@/lib/runCaseState': { resolveRunCreationIdentifiers: () => ({ runId: 'new-run', createRequestId: 'request' }) },
     '@/expedition/mapView': { deriveExpeditionMapView: () => ({}) },
     '@/expedition/siteSpacing': { satisfiesResearchSiteSpacing: () => true },

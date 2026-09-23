@@ -1,4 +1,5 @@
 import type { ExpeditionMapView } from '@/expedition/mapView';
+import { getRecord } from '@/lib/record';
 
 export interface MysteryExplanationChoice {
   id: string;
@@ -140,11 +141,11 @@ export function validatePublicMysteryCase(
 }
 
 export function parsePublicMysteryCase(value: unknown): PublicMysteryCase | null {
-  const source = record(value);
-  const location = record(source.location);
+  const source = getRecord(value);
+  const location = getRecord(source.location);
   const choices = Array.isArray(source.explanationChoices)
     ? source.explanationChoices.flatMap(item => {
-        const choice = record(item);
+        const choice = getRecord(item);
         return ID_PATTERN.test(string(choice.id)) && validCopy(choice.label) && validCopy(choice.description)
           ? [{ id: choice.id as string, label: choice.label as string, description: choice.description as string }]
           : [];
@@ -170,9 +171,9 @@ export function parsePublicMysteryCase(value: unknown): PublicMysteryCase | null
 }
 
 export function parsePrivateMysteryCase(value: unknown, publicCase?: PublicMysteryCase): PrivateMysteryCase | null {
-  const source = record(value);
+  const source = getRecord(value);
   const answerExplanationId = string(source.answerExplanationId);
-  const feedbackSource = record(source.explanationFeedback);
+  const feedbackSource = getRecord(source.explanationFeedback);
   const resolution = parseMysteryResolution(source.resolution);
   const choiceIds = publicCase?.explanationChoices.map(choice => choice.id) ?? Object.keys(feedbackSource);
   if (!ID_PATTERN.test(answerExplanationId) || !choiceIds.includes(answerExplanationId) || !resolution) return null;
@@ -186,11 +187,11 @@ export function parsePrivateMysteryCase(value: unknown, publicCase?: PublicMyste
 }
 
 export function parseMysteryResolution(value: unknown): MysteryResolution | null {
-  const source = record(value);
+  const source = getRecord(value);
   const evidenceChain = stringArray(source.evidenceChain, 6);
   const rejectedAlternatives = stringArray(source.rejectedAlternatives, 6);
   const sources = Array.isArray(source.sources) ? source.sources.flatMap(item => {
-    const candidate = record(item);
+    const candidate = getRecord(item);
     return validCopy(candidate.label) && validSourceUrl(candidate.url)
       ? [{ label: candidate.label as string, url: candidate.url as string }]
       : [];
@@ -245,10 +246,6 @@ function stringArray(value: unknown, max: number): string[] {
   return Array.isArray(value) && value.length <= max && value.every(validCopy) ? [...value] : [];
 }
 
-function record(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
-}
-
 function string(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
@@ -291,8 +288,8 @@ export function assembleMysteryCases(rows: {
 export interface MysteryCaseSeed extends AuthoredMysteryCase { species_iucn_id: number }
 
 export function parseMysteryCaseSeed(value: unknown): MysteryCaseSeed {
-  const source = record(value);
-  const publicSource = record(source.public);
+  const source = getRecord(value);
+  const publicSource = getRecord(source.public);
   const publicCase = parsePublicMysteryCase({ ...publicSource, location: { label: 'Selected survey region', basis: 'Seed validation', confidence: 'contextual' } });
   const privateCase = publicCase ? parsePrivateMysteryCase(source.private, publicCase) : null;
   if (!Number.isSafeInteger(source.species_iucn_id) || Number(source.species_iucn_id) <= 0 || !publicCase || !privateCase) {

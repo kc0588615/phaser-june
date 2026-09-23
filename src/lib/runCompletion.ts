@@ -3,6 +3,7 @@ import { buildRunEvidenceBundle } from '@/lib/featureFingerprint';
 import { createEmptyFeatureMastery, updateFeatureMastery, type FeatureMasteryData } from '@/lib/featureMastery';
 import { getGisStampClasses } from '@/lib/gisFeatureHelpers';
 import type { FeatureClass, FeatureFingerprint } from '@/types/gis';
+import { getRecord } from '@/lib/record';
 
 interface CompletionNode {
   nodeStatus: string;
@@ -15,15 +16,9 @@ interface CompletionVisit {
   completedAt: Date;
 }
 
-function record(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {};
-}
-
 function validFeatureMastery(value: unknown): FeatureMasteryData {
-  const source = record(value);
-  const featureCounts = record(source.featureCounts);
+  const source = getRecord(value);
+  const featureCounts = getRecord(source.featureCounts);
   const normalizedCounts: FeatureMasteryData['featureCounts'] = {};
   for (const [key, count] of Object.entries(featureCounts)) {
     if (typeof count === 'number' && Number.isFinite(count) && count >= 0) {
@@ -49,7 +44,7 @@ export function resolveCompletedRunRoute(
   const route: RoutePoint[] = [{ lon: startLon, lat: startLat, waypointSlot: 0 }];
   for (const node of nodes) {
     if (node.nodeStatus !== 'completed') continue;
-    const waypoint = record(record(node.boardContext).waypoint);
+    const waypoint = getRecord(getRecord(node.boardContext).waypoint);
     const slot = Number(waypoint.slot ?? waypoint.waypointSlot);
     const point = normalizeRoutePolyline([{
       ...waypoint,
@@ -93,7 +88,7 @@ export function getExpeditionRegionKeys(region: {
 }
 
 export function getRunAffinityTags(metadata: unknown): string[] {
-  const activeAffinities = record(metadata).activeAffinities;
+  const activeAffinities = getRecord(metadata).activeAffinities;
   return Array.isArray(activeAffinities)
     ? [...new Set(activeAffinities.filter((tag): tag is string => typeof tag === 'string' && tag.length > 0))]
     : [];
@@ -104,7 +99,7 @@ export function buildLocationMasteryMetadata(
   fingerprints: FeatureFingerprint[],
   visit: CompletionVisit,
 ): Record<string, unknown> {
-  const existing = record(existingMetadata);
+  const existing = getRecord(existingMetadata);
   const currentMastery = existing.featureMastery
     ? validFeatureMastery(existing.featureMastery)
     : createEmptyFeatureMastery();

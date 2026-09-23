@@ -1,15 +1,12 @@
 import { config as loadEnv } from 'dotenv';
 import postgres from 'postgres';
+import { getRecord } from '../src/lib/record';
 
 loadEnv({ path: '.env.local', quiet: true });
 
 type FamilyApplication = { family?: string; actualEliminatedIds?: number[] };
 type RunRow = { id: string; metadata: Record<string, unknown> };
 type NodeRow = { run_id: string; moves_used: number };
-
-function record(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
-}
 
 function median(values: number[]): number | null {
   if (values.length === 0) return null;
@@ -58,10 +55,10 @@ async function main() {
     let applications = 0;
     let corroborations = 0;
     for (const run of runs) {
-      const metadata = record(run.metadata);
+      const metadata = getRecord(run.metadata);
       if (typeof metadata.firstGuessCorrect === 'boolean') firstGuessResults.push(metadata.firstGuessCorrect);
       const applied = Array.isArray(metadata.evidenceApplications)
-        ? metadata.evidenceApplications.map(value => record(value) as FamilyApplication)
+        ? metadata.evidenceApplications.map(value => getRecord(value) as FamilyApplication)
         : [];
       for (const application of applied) {
         if (typeof application.family === 'string') {

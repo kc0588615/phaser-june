@@ -1,4 +1,5 @@
 /** Shared evidence effects and claim rules. Hidden answer/effect tables stay server-side. */
+import { getRecord } from '@/lib/record';
 export interface ExplanationEffects { supports: string[]; contradicts: string[] }
 export type HypothesisState = 'open' | 'supported' | 'contradicted';
 export type Hypotheses = Record<string, HypothesisState>;
@@ -8,11 +9,10 @@ export interface ClaimState {
 }
 export type ClaimInput = { claim: 'species'; speciesId: number } | { claim: 'explanation'; explanationId: string };
 export const EMPTY_CLAIMS: ClaimState = { species: 'open', explanation: 'open', wrongClaims: 0 };
-const record = (v: unknown): Record<string, unknown> => v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {};
 
 export function parseExplanationEffects(value: unknown): ExplanationEffects | null {
   if (value == null) return null;
-  const v = record(value);
+  const v = getRecord(value);
   const valid = (a: unknown): a is string[] => Array.isArray(a) && a.length <= 4 && new Set(a).size === a.length
     && a.every(x => typeof x === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(x) && x.length <= 80);
   if (!valid(v.supports) || !valid(v.contradicts) || v.supports.some(id => (v.contradicts as string[]).includes(id))) {
@@ -53,7 +53,7 @@ export function foldHypotheses(choices: readonly string[], effects: readonly unk
 }
 
 export function claimsFromMetadata(metadata: unknown): ClaimState {
-  const m = record(metadata); const c = record(m.claims);
+  const m = getRecord(metadata); const c = getRecord(m.claims);
   const wrong = c.wrongClaims ?? m.wrongGuessCount ?? 0;
   const speciesLocked = c.species === 'locked' && Number.isSafeInteger(c.lockedSpeciesId) && Number(c.lockedSpeciesId) > 0;
   const explanationLocked = c.explanation === 'locked' && typeof c.lockedExplanationId === 'string';
@@ -83,13 +83,13 @@ export function decideClaim(claims: ClaimState, input: ClaimInput, answerId: num
 
 /** Only already-revealed IDs select effects; legacy saves never acquire new authoring effects. */
 export function hypothesesFromMetadata(metadata: unknown): Hypotheses {
-  const m = record(metadata); const priv = record(m.casePrivate); const mystery = record(priv.mystery);
-  const publicMystery = record(record(m.casePublic).mystery);
-  const choices = Array.isArray(publicMystery.explanationChoices) ? publicMystery.explanationChoices.map(x => record(x).id).filter((x): x is string => typeof x === 'string') : [];
-  const hints = Array.isArray(priv.familyHints) ? priv.familyHints.map(record) : [];
-  const cards = record(priv.familyCardEffects);
-  const ledger = Array.isArray(m.factLedger) ? m.factLedger.map(record) : [];
-  const applications = Array.isArray(m.evidenceApplications) ? m.evidenceApplications.map(record) : [];
+  const m = getRecord(metadata); const priv = getRecord(m.casePrivate); const mystery = getRecord(priv.mystery);
+  const publicMystery = getRecord(getRecord(m.casePublic).mystery);
+  const choices = Array.isArray(publicMystery.explanationChoices) ? publicMystery.explanationChoices.map(x => getRecord(x).id).filter((x): x is string => typeof x === 'string') : [];
+  const hints = Array.isArray(priv.familyHints) ? priv.familyHints.map(getRecord) : [];
+  const cards = getRecord(priv.familyCardEffects);
+  const ledger = Array.isArray(m.factLedger) ? m.factLedger.map(getRecord) : [];
+  const applications = Array.isArray(m.evidenceApplications) ? m.evidenceApplications.map(getRecord) : [];
   return foldHypotheses(choices, [
     ...ledger.map(entry => hints.find(h => h.id === entry.hintId)?.explains),
     ...applications.map(entry => cards[String(entry.cardId)]),
@@ -97,20 +97,20 @@ export function hypothesesFromMetadata(metadata: unknown): Hypotheses {
 }
 
 export function revealedExplanationFeedback(metadata: unknown): Record<string, string> {
-  const entries = record(record(metadata).explanationFeedback);
+  const entries = getRecord(getRecord(metadata).explanationFeedback);
   return Object.fromEntries(Object.entries(entries).filter((pair): pair is [string, string] => typeof pair[1] === 'string'));
 }
 
 /** Public prose about a revealed fact, never the hidden effects table. */
 export function revealedEffectNote(metadata: unknown, family: string, rung: number): string | undefined {
-  const m = record(metadata); const priv = record(m.casePrivate);
-  const ids = record(priv.familyHintIds)[family];
+  const m = getRecord(metadata); const priv = getRecord(m.casePrivate);
+  const ids = getRecord(priv.familyHintIds)[family];
   const id = Array.isArray(ids) ? ids[rung] : undefined;
-  const hint = Array.isArray(priv.familyHints) ? priv.familyHints.map(record).find(h => h.id === id) : undefined;
+  const hint = Array.isArray(priv.familyHints) ? priv.familyHints.map(getRecord).find(h => h.id === id) : undefined;
   const effect = parseExplanationEffects(hint?.explains);
   if (!effect) return undefined;
-  const choices = record(record(m.casePublic).mystery).explanationChoices;
-  const label = (id: string) => Array.isArray(choices) ? choices.map(record).find(c => c.id === id)?.label : undefined;
+  const choices = getRecord(getRecord(m.casePublic).mystery).explanationChoices;
+  const label = (id: string) => Array.isArray(choices) ? choices.map(getRecord).find(c => c.id === id)?.label : undefined;
   const notes = [
     ...effect.supports.map(id => label(id) ? `Supports ${label(id)}` : ''),
     ...effect.contradicts.map(id => label(id) ? `Weakens ${label(id)}` : ''),

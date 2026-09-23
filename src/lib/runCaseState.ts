@@ -4,6 +4,9 @@ import { PROFILE_KEY_BY_CATEGORY, isCaseTraitCategory, type CaseTraitCategory } 
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import type { FieldFact } from '@/types/expedition';
 import { parsePrivateMysteryCase, type PrivateMysteryCase } from '@/lib/mysteryCase';
+import { getRecord } from '@/lib/record';
+
+export { getRecord };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -70,12 +73,6 @@ export function computeActualEliminatedIds(
     }
   }
   return eliminatedIds.sort((a, b) => a - b);
-}
-
-export function getRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {};
 }
 
 /** v4 only — earlier private cases parse to null (legacy runs). */

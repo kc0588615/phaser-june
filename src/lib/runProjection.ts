@@ -7,6 +7,7 @@ import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/map
 import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution, type PublicMysteryCase } from '@/lib/mysteryCase';
 import type { PublicLedgerFact } from '@/lib/evidenceLadder';
 import { isCaseTraitCategory } from '@/lib/caseTraits';
+import { getRecord } from '@/lib/record';
 
 const UINT32_MAX = 0xffff_ffff;
 const NODE_OBSTACLES = new Set([
@@ -717,12 +718,6 @@ function projectWaypoints(value: unknown): PublicRunCheckpoint['expeditionSnapsh
     if (designationCategory !== undefined) waypoint.designationCategory = designationCategory;
     return [waypoint];
   });
-}
-
-function getRecord(value: unknown): UnknownRecord {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value as UnknownRecord
-    : {};
 }
 
 function getString(value: unknown): string | undefined {

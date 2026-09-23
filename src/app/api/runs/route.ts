@@ -19,6 +19,7 @@ import { harvestExpeditionWaypoints } from '@/lib/waypointHarvesting';
 import { assembleMysteryCases } from '@/lib/mysteryCase';
 import { habitatColormap } from '@/db';
 import { extractSiteTerrains, TerrainExtractionError } from '@/terrain/extract.server';
+import { getRecord } from '@/lib/record';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       eq(ecoRunSessions.createRequestId, createRequestId),
     )).limit(1);
     if (existing) {
-      const casePublic = parsePublicCaseSnapshot(record(existing.metadata).casePublic);
+      const casePublic = parsePublicCaseSnapshot(getRecord(existing.metadata).casePublic);
       if (!casePublic) return NextResponse.json({ error: 'Existing run creation is not reusable' }, { status: 409 });
       const existingNodes = await db.select({ id: ecoRunNodes.id, nodeOrder: ecoRunNodes.nodeOrder })
         .from(ecoRunNodes).where(eq(ecoRunNodes.runId, existing.id)).orderBy(ecoRunNodes.nodeOrder);
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
           eq(ecoRunSessions.playerId, playerId),
           eq(ecoRunSessions.createRequestId, createRequestId),
         )).limit(1);
-        const replayedCase = parsePublicCaseSnapshot(record(replayed?.metadata).casePublic);
+        const replayedCase = parsePublicCaseSnapshot(getRecord(replayed?.metadata).casePublic);
         if (!replayed || !replayedCase) {
           throw new Error('Run creation conflict is not reusable');
         }
@@ -258,15 +259,14 @@ function nodesMeetResearchSpacing(nodes: readonly RunNode[]): boolean {
 }
 
 function getWaypointAnchors(snapshotValue: unknown): Array<{ waypointType: string }> {
-  const snapshot = record(snapshotValue);
+  const snapshot = getRecord(snapshotValue);
   const waypoints = Array.isArray(snapshot.waypoints) ? snapshot.waypoints : [];
   return waypoints.flatMap(value => {
-    const waypoint = record(value);
+    const waypoint = getRecord(value);
     return typeof waypoint.waypointType === 'string' ? [{ waypointType: waypoint.waypointType }] : [];
   });
 }
 
-function record(value: unknown): Record<string, unknown> { return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}; }
 function stringArray(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []; }
 function stringOrNull(value: unknown): string | null { return typeof value === 'string' && value ? value : null; }
 
@@ -285,7 +285,7 @@ function validateMetadataInput(body: Record<string, unknown>) {
   const rasterHabitats = boundedJsonArray(body.rasterHabitats, 50, 16_384);
   const featureFingerprints = boundedJsonArray(body.featureFingerprints, 100, 32_768);
   const routePolyline = boundedJsonArray(body.routePolyline, 512, 32_768);
-  const expeditionSnapshot = record(body.expeditionSnapshot);
+  const expeditionSnapshot = getRecord(body.expeditionSnapshot);
   if (!activeAffinities || !habitats || !rasterHabitats || !featureFingerprints || !routePolyline
     || jsonSize(expeditionSnapshot) > 32_768) return null;
   return { activeAffinities, habitats, rasterHabitats, featureFingerprints, routePolyline, expeditionSnapshot };
