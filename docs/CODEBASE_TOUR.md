@@ -76,7 +76,7 @@ src/
     GameBridgeContext.tsx  HUD score snapshots from the board
   components/           React UI (MapLibreExploreMap, ExpeditionMapHud, FieldNotebook, ...)
   lib/                  server + shared logic (nodeScoring, caseCompilerV3,
-                        speciesQueries, playerTracking, ...)
+                        speciesService, playerTracking, ...)
   app/api/              Next.js API routes (runs, species, layers, ...)
   db/schema/            Drizzle schema; db/migrations/ = SQL history
   types/                shared TS types (expedition RunState, waypoints, gis)

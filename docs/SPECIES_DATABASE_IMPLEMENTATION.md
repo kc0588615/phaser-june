@@ -35,7 +35,7 @@ This document describes the implementation of the species database feature, whic
 
 **Data Fetching**:
 ```typescript
-// Using Drizzle (src/lib/speciesQueries.ts)
+// Using Drizzle (see src/app/api/species/catalog/route.ts)
 // icaaView and ensureIcaaViewReady have been removed; query speciesTable directly.
 import { asc } from 'drizzle-orm';
 import { db } from '@/db';

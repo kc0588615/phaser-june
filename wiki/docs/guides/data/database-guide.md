@@ -36,7 +36,7 @@ import { db } from '@/db';
 ### By Location (Raw SQL for PostGIS)
 
 ```typescript
-// src/lib/speciesQueries.ts
+// e.g. src/app/api/species/in-radius/route.ts
 import { sql } from 'drizzle-orm';
 import { db, ensureIcaaViewReady } from '@/db';
 

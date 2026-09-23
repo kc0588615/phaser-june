@@ -48,7 +48,7 @@ Required environment variables (set in `.env.local`):
 - `src/game/` — Game core: `BackendPuzzle.ts`, `BoardView.ts`, `MoveAction.ts`, scenes in `scenes/`, `EventBus.ts`
 - `src/components/` — UI components: `MapLibreExploreMap.tsx`, `ExpeditionMapHud.tsx`, `SpeciesList.tsx`, etc., plus `components/ui/*` from shadcn
 - `src/db/` — Drizzle client + schema + types
-- `src/lib/` — Services: `speciesQueries.ts`, `playerTracking.ts`
+- `src/lib/` — Services: `speciesService.ts`, `playerTracking.ts`
 - `src/types/` — Shared types including `database.ts`
 - `public/` — Static assets (sprites, icons, local GeoJSON)
 
@@ -56,7 +56,7 @@ Required environment variables (set in `.env.local`):
 
 - React–Phaser bridge via `PhaserGame.tsx` and `EventBus.ts`
 - MapLibre integration in `src/components/MapLibreExploreMap.tsx`
-- Drizzle data layer in `src/db/*` and `src/lib/speciesQueries.ts`
+- Drizzle data layer in `src/db/*` and the `src/app/api/species/*` routes
 - Match-3 MVC-like flow: BackendPuzzle ↔ Scene ↔ BoardView
 
 ## Scripts

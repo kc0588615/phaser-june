@@ -38,7 +38,6 @@ phaser-june/
 │   │   └── schema/        # Table definitions
 │   │
 │   ├── lib/                # Services & utilities
-│   │   ├── speciesQueries.ts   # Drizzle + SQL queries
 │   │   ├── speciesService.ts   # API-backed species queries
 │   │   └── playerTracking.ts   # Session telemetry
 │   │
