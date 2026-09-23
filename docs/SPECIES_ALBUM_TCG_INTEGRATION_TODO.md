@@ -9,12 +9,12 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 - [x] Phase 0: Spoiler-hide undiscovered species in SpeciesCard
 - [x] Phase 1: Album/Cases/Runs/Taxonomy tab shell, TCG card front, card grid
 - [x] DB schema: `species_cards`, `run_memories`, `species_card_unlocks` tables
-- [x] API routes: species cards CRUD, unlock endpoint, runs list, run memory
+- [x] API routes: species cards CRUD, runs list, run memory (the client-callable unlock endpoint was removed in plan 039: it had no live caller and trusted the body)
 - [x] TCG card with CSS 3D flip, conservation-themed frames
 - [x] AlbumHeroSwiper with lazy run-memory fetch + cache
 - [x] SpeciesAlbumContext (tab/focus/flip state) — never mounted; deleted 2026-09-22 (plan 039)
 - [x] Auth fix: all new APIs derive playerId from Clerk (no client-supplied IDs)
-- [x] Discovery sync: single fire-and-forget `/api/species/cards/[id]/unlock` write from gameplay tracking
+- [x] Discovery sync: a correct expedition guess (`/api/runs/[runId]/guess`) writes `species_cards` and `species_card_unlocks` server-side
 - [x] Album hydration: `SpeciesList` loads discovered state from authenticated `species_cards` and merges localStorage as fallback
 - [x] run_memories persistence on run completion (PATCH `/api/runs/[runId]`)
 - [x] run_memories linkage: completion PATCH now includes `speciesId`, so card-back memory resolves per species
@@ -70,7 +70,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 
 - [ ] **Backfill playerId on old runs**: existing eco_run_sessions have NULL playerId (pre-auth fix)
 - [ ] **Anonymous → authenticated backfill hardening**: current album merges localStorage + server cards for display, but there is still no explicit one-shot claim/backfill job for older anonymous discoveries beyond live discovery sync
-- [ ] **Rate limiting on unlock endpoint**: prevent spam/abuse of POST unlock
+- [x] ~~**Rate limiting on unlock endpoint**~~: endpoint removed (plan 039 C42)
 - [ ] **Card image generation**: generate or source species artwork for card fronts (currently emoji placeholders)
 - [ ] **Offline support**: cache card data in IndexedDB for offline album browsing
 
@@ -154,7 +154,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 
 2. **Node GIS sampling**: During node generation in `POST /api/runs`, query spatial tables at node coords → store in `eco_node_gis_samples` → flow into `run_memories.gis_features_nearby`.
 
-3. **Discovery → card creation**: gameplay discovery tracking now owns the `/unlock` write, avoiding duplicate encounter increments. `SpeciesList` reads authenticated `species_cards` for album hydration and merges localStorage as fallback. Next: include richer unlock payloads (biome, realm, clue categories revealed).
+3. **Discovery → card creation**: the guess route owns the card write, avoiding duplicate encounter increments. `SpeciesList` reads authenticated `species_cards` for album hydration and merges localStorage as fallback. Next: include richer unlock payloads (biome, realm, clue categories revealed).
 
 4. **Clue reveal → fact unlock**: EventBus `clue-revealed` events should trigger `/api/species/cards/[id]/unlock` with `unlockType: 'fact'` and the clue content.
 

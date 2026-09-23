@@ -245,46 +245,12 @@ export async function trackSpeciesDiscovery(
       return discovery;
     });
 
-    // Update localStorage for offline support
-    if (typeof window !== 'undefined') {
-      updateLocalStorageDiscovery(speciesId);
-    }
-
     await refreshPlayerStats(playerId);
 
     return result.id;
   } catch (err) {
     console.error('Failed to track species discovery:', err);
     throw err;
-  }
-}
-
-/**
- * Update localStorage with discovered species
- */
-function updateLocalStorageDiscovery(speciesId: number): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
-
-    if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
-      discovered.push({
-        id: speciesId,
-        idSource: 'species.id',
-        discoveredAt: new Date().toISOString(),
-      });
-      localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
-      window.dispatchEvent(new Event('species-discovered'));
-    }
-    // Sync to DB-backed species cards (fire-and-forget)
-    fetch(`/api/species/cards/${speciesId}/unlock`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ unlockType: 'discover' }),
-    }).catch(() => {});
-  } catch (err) {
-    console.error('Failed to update localStorage:', err);
   }
 }
 

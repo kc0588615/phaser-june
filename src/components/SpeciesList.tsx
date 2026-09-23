@@ -114,24 +114,17 @@ export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
       void loadDiscoveredSpecies();
     };
 
-    // Listen for custom species discovered event
-    const handleSpeciesDiscovered = () => {
-      void loadDiscoveredSpecies();
-    };
-
     const handleCardProgressUpdated = () => {
       void loadDiscoveredSpecies();
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
-    window.addEventListener('species-discovered', handleSpeciesDiscovered);
     window.addEventListener('species-card-progress-updated', handleCardProgressUpdated);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('species-discovered', handleSpeciesDiscovered);
       window.removeEventListener('species-card-progress-updated', handleCardProgressUpdated);
     };
   }, [loadDiscoveredSpecies]);
