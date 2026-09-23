@@ -107,14 +107,10 @@ export class Game extends Phaser.Scene {
     // --- Raster Habitat Integration ---
     private rasterHabitats: RasterHabitatResult[] = [];
     private usedRasterHabitats: Set<string> = new Set();
-    private discoveredSpeciesIds: Set<number> = new Set();
-    private currentMapLocation: { lon: number; lat: number; ecoregionId: number | null } | null = null;
 
     // --- Player Tracking ---
     private currentUserId: string | null = null; // Cache user ID
     private currentSessionId: string | null = null; // Active session
-    private incorrectGuessesThisSpecies: number = 0; // Track wrong guesses
-    private speciesStartTime: number = 0; // Time when species started
     
     // --- Streak and Scoring ---
     private streak: number = 0;
@@ -139,37 +135,6 @@ export class Game extends Phaser.Scene {
 
     constructor() {
         super('Game');
-    }
-
-    private loadDiscoveredSpeciesFromCache(): void {
-        if (typeof window === 'undefined') return;
-
-        try {
-            const raw = window.localStorage.getItem('discoveredSpecies');
-            if (!raw) return;
-
-            const parsed = JSON.parse(raw);
-            if (!Array.isArray(parsed)) return;
-
-            for (const entry of parsed) {
-                const id = Number((entry as any)?.id ?? entry);
-                if (Number.isFinite(id)) {
-                    this.discoveredSpeciesIds.add(id);
-                }
-            }
-        } catch (error) {
-            console.warn('Game Scene: Failed to load discovered species from storage:', error);
-        }
-    }
-
-    private async hydrateDiscoveredSpeciesFromBackend(_userId: string): Promise<void> {
-        // Auth is not configured yet; backend hydration is disabled.
-        return;
-    }
-
-    private resetSpeciesTrackingCounters(): void {
-        this.incorrectGuessesThisSpecies = 0;
-        this.speciesStartTime = Date.now();
     }
 
     private hasActiveDisplayList(): boolean {
@@ -405,8 +370,6 @@ export class Game extends Phaser.Scene {
 
         EventBus.emit('current-scene-ready', this);
 
-        this.loadDiscoveredSpeciesFromCache();
-
         // Initialize player tracking
         this.initializePlayerTracking();
 
@@ -641,53 +604,6 @@ export class Game extends Phaser.Scene {
         };
     }
 
-    // --- Player Tracking Event Handlers ---
-
-    private sessionUpdateTimer: ReturnType<typeof setTimeout> | null = null;
-
-    private handleHudUpdate = (data: EventPayloads['game-hud-updated']): void => {
-        if (!this.currentSessionId || !this.backendPuzzle) return;
-
-        // Client-side debounce (10s)
-        if (this.sessionUpdateTimer) clearTimeout(this.sessionUpdateTimer);
-        this.sessionUpdateTimer = setTimeout(() => {
-            fetch('/api/player/track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'updateSessionProgress',
-                    sessionId: this.currentSessionId,
-                    moves: data.movesUsed,
-                    score: data.score,
-                    speciesDiscovered: this.currentSpeciesIndex,
-                }),
-            }).catch(err => console.error('Failed to update session progress:', err));
-        }, 10000);
-    };
-
-    private handleBeforeUnload = async (): Promise<void> => {
-        if (!this.currentSessionId || !this.backendPuzzle) return;
-
-        if (this.sessionUpdateTimer) {
-            clearTimeout(this.sessionUpdateTimer);
-            this.sessionUpdateTimer = null;
-        }
-
-        try {
-            // Use sendBeacon for reliable delivery on page unload
-            const blob = new Blob([JSON.stringify({
-                action: 'forceSessionUpdate',
-                sessionId: this.currentSessionId,
-                moves: this.backendPuzzle.getMovesUsed(),
-                score: this.backendPuzzle.getScore(),
-                speciesDiscovered: this.currentSpeciesIndex,
-            })], { type: 'application/json' });
-            navigator.sendBeacon('/api/player/track', blob);
-        } catch (error) {
-            console.error('Failed to flush session on unload:', error);
-        }
-    };
-
     private recordMatchesForSummary(matches: Coordinate[][], gridState: any, isCascade: boolean): void {
         if (!matches || matches.length === 0) return;
 
@@ -800,11 +716,6 @@ export class Game extends Phaser.Scene {
 
         try {
             // Sort species by id (lowest first)
-            this.currentMapLocation = {
-                lon: data.lon,
-                lat: data.lat,
-                ecoregionId: data.ecoregionId ?? null,
-            };
             this.currentSpecies = [...data.species].sort((a, b) => a.id - b.id);
             this.currentSpeciesIndex = 0;
             
@@ -815,10 +726,6 @@ export class Game extends Phaser.Scene {
             this.currentMoveSummary = null;
             this.lastAppliedMoveMultiplier = 1;
             this.updateMultiplierText(1);
-
-            // Reset species tracking counters
-            this.incorrectGuessesThisSpecies = 0;
-            this.speciesStartTime = Date.now();
             
             // Initialize node objective from expedition data
             this.scoreText?.setVisible(false);
@@ -1345,78 +1252,6 @@ export class Game extends Phaser.Scene {
         this.recordMatchesForSummary(matches, gridState, isCascade);
     }
 
-    private async trackDiscovery(speciesId: number): Promise<void> {
-        if (this.discoveredSpeciesIds.has(speciesId)) {
-            console.log('Game Scene: Species discovery already tracked locally. Skipping duplicate persistence.', { speciesId });
-            this.resetSpeciesTrackingCounters();
-            return;
-        }
-
-        this.discoveredSpeciesIds.add(speciesId);
-
-        try {
-            const timeToDiscover = this.speciesStartTime > 0
-                ? Math.floor((Date.now() - this.speciesStartTime) / 1000)
-                : undefined;
-
-            const res = await fetch('/api/player/track', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'trackSpeciesDiscovery',
-                    speciesId,
-                    sessionId: this.currentSessionId || undefined,
-                    timeToDiscoverSeconds: timeToDiscover,
-                    incorrectGuessesCount: this.incorrectGuessesThisSpecies,
-                    scoreEarned: this.backendPuzzle!.getScore(),
-                    foundLon: this.currentMapLocation?.lon,
-                    foundLat: this.currentMapLocation?.lat,
-                    foundEcoregionId: this.currentMapLocation?.ecoregionId ?? null,
-                }),
-            });
-            const data = await res.json();
-
-            if (data.discoveryId) {
-                // Update localStorage for offline support
-                try {
-                    const discovered = JSON.parse(localStorage.getItem('discoveredSpecies') || '[]');
-                    if (!discovered.find((d: { id: number }) => d.id === speciesId)) {
-                        discovered.push({ id: speciesId, idSource: 'species.id', discoveredAt: new Date().toISOString() });
-                        localStorage.setItem('discoveredSpecies', JSON.stringify(discovered));
-                        window.dispatchEvent(new Event('species-discovered'));
-                    }
-                } catch { /* localStorage may be unavailable */ }
-
-                // Sync to DB-backed species cards (fire-and-forget)
-                fetch(`/api/species/cards/${speciesId}/unlock`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ unlockType: 'discover' }),
-                }).catch(() => {});
-
-                // Force immediate session update (critical event)
-                if (this.currentSessionId) {
-                    if (this.sessionUpdateTimer) { clearTimeout(this.sessionUpdateTimer); this.sessionUpdateTimer = null; }
-                    await fetch('/api/player/track', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: 'forceSessionUpdate',
-                            sessionId: this.currentSessionId,
-                            moves: this.backendPuzzle!.getMovesUsed(),
-                            score: this.backendPuzzle!.getScore(),
-                            speciesDiscovered: this.currentSpeciesIndex + 1,
-                        }),
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Failed to track species discovery:', error);
-        } finally {
-            this.resetSpeciesTrackingCounters();
-        }
-    }
-
     private onExpeditionStart(): void { this.inExpeditionRun = true; }
     private onGameReset(): void {
         this.inExpeditionRun = false;
@@ -1555,12 +1390,6 @@ export class Game extends Phaser.Scene {
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
 
-        // Clear debounce timer
-        if (this.sessionUpdateTimer) {
-            clearTimeout(this.sessionUpdateTimer);
-            this.sessionUpdateTimer = null;
-        }
-
         // End session if active
         if (this.currentSessionId && this.backendPuzzle) {
             this.endSessionSync();
@@ -1576,16 +1405,6 @@ export class Game extends Phaser.Scene {
         EventBus.off('evidence-progress-committed', this.handleEvidenceProgressCommitted, this);
         EventBus.off('routing-state-updated', this.handleRoutingState, this);
         EventBus.off('auth-user-ready', this.handleAuthUserReady, this);
-
-        // Remove player tracking listeners if they exist
-        if (this.currentUserId) {
-            EventBus.off(EVT_GAME_HUD_UPDATED, this.handleHudUpdate, this);
-
-            // Remove beforeunload handler
-            if (typeof window !== 'undefined') {
-                window.removeEventListener('beforeunload', this.handleBeforeUnload);
-            }
-        }
 
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.input.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
@@ -1656,8 +1475,6 @@ export class Game extends Phaser.Scene {
         // Clear tracking state
         this.currentUserId = null;
         this.currentSessionId = null;
-        this.incorrectGuessesThisSpecies = 0;
-        this.speciesStartTime = 0;
 
         // Emit game reset event
         EventBus.emit('game-reset', undefined);
