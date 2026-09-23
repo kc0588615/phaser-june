@@ -2,7 +2,7 @@
 
 > **searchFamiliesByCommonName**(`searchTerm`): `string`[]
 
-Defined in: [config/familyCommonNames.ts:223](https://github.com/kc0588615/phaser-june/blob/main/src/config/familyCommonNames.ts#L223)
+Defined in: [config/familyCommonNames.ts:109](https://github.com/kc0588615/phaser-june/blob/main/src/config/familyCommonNames.ts#L109)
 
 Search for families by common name (case-insensitive)
 

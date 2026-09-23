@@ -3,7 +3,6 @@
 ## Functions
 
 - [getBiomes](functions/getBiomes.md)
-- [getCategoryOrderMapping](functions/getCategoryOrderMapping.md)
 - [getEcoregions](functions/getEcoregions.md)
 - [getFamilyDisplayNameFromSpecies](functions/getFamilyDisplayNameFromSpecies.md)
 - [getRealms](functions/getRealms.md)

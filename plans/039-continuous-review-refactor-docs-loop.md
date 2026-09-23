@@ -108,3 +108,14 @@ Because it runs with `--dangerously-skip-permissions`, no tool call prompts.
 1. Read `.scratch/039/log.md` and `codex.md`, then `git log --oneline BASE..refactor/039-loop`.
 2. Run `/code-review` over `BASE..HEAD` for a whole-branch pass.
 3. Playtest in the browser (agents can't). DB backups live in `.scratch/039/backups/` if anything needs rolling back.
+
+## Progress (2026-09-23, loop stopped)
+
+Stopped on the commit cap (26 commits since `BASE` b04d8a04). 0 failed iterations. Codex milestone reviews M1–M3: 0 blocking, 0 major; minors fixed.
+
+- Dead code removed: deductionEngine runtime, never-mounted stats dashboard / album context / card unlocks, Game.ts half-wired tracking (codex Q1=A) and unused privates, 9 unused shadcn ui files + 5 radix packages, ecoregions/preview route, species/by-ids POST, assorted unused helpers; Supabase-era root files archived; Phaser template telemetry (`log.js`) removed.
+- Dedupe: `PROFILE_KEY_BY_CATEGORY` + `isCaseTraitCategory` (caseTraits), `getRecord` (src/lib/record.ts), `withExplanationNote`, `EvidenceProgressResponse`, `readFailure`/`fetchRunProjection`, NODE_OBSTACLES reuse.
+- Fixes: `/api/discoveries/migrate` now writes only for the Clerk session player (was trusting body `userId`); auth bridge checks HTTP status; SpeciesCarousel destroyed-Swiper guard; wiki builds again on locked Docusaurus 3.9.2 with stable TypeDoc output.
+- Rejected: shared run-route auth guard (C19), dropping empty `eco_node_attempts` / `eco_node_gis_samples` (C25, owner call).
+- Owner follow-ups: browser playtest (auth bridge, discoveries migrate, SpeciesCarousel, ExpeditionContext start/resume); main checkout `npm install` (prune radix) and `cd wiki && npm ci` (node_modules drifted to 3.10.1).
+- Loop state: `../phaser-june-039/.scratch/039/{log,backlog,codex}.md`.

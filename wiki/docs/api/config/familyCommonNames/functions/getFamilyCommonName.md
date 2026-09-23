@@ -2,7 +2,7 @@
 
 > **getFamilyCommonName**(`scientificFamily`): `string` \| `null`
 
-Defined in: [config/familyCommonNames.ts:177](https://github.com/kc0588615/phaser-june/blob/main/src/config/familyCommonNames.ts#L177)
+Defined in: [config/familyCommonNames.ts:75](https://github.com/kc0588615/phaser-june/blob/main/src/config/familyCommonNames.ts#L75)
 
 Get the common name for a scientific family name
 

@@ -2,7 +2,7 @@
 
 > **updateFeatureMastery**(`current`, `bundle`): [`FeatureMasteryData`](../interfaces/FeatureMasteryData.md)
 
-Defined in: [lib/featureMastery.ts:27](https://github.com/kc0588615/phaser-june/blob/main/src/lib/featureMastery.ts#L27)
+Defined in: [lib/featureMastery.ts:18](https://github.com/kc0588615/phaser-june/blob/main/src/lib/featureMastery.ts#L18)
 
 Merge a run's evidence bundle into cumulative mastery data.
 

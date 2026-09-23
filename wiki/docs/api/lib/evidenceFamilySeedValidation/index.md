@@ -12,5 +12,4 @@
 - [familySeedToCompilerProfiles](functions/familySeedToCompilerProfiles.md)
 - [parseCascadeHintSeed](functions/parseCascadeHintSeed.md)
 - [parseEvidenceFamilySeed](functions/parseEvidenceFamilySeed.md)
-- [profileHasFamilyCardTag](functions/profileHasFamilyCardTag.md)
 - [validateEvidenceFamilyCorpus](functions/validateEvidenceFamilyCorpus.md)
