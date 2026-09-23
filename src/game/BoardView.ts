@@ -15,7 +15,7 @@ import {
 import { MoveAction, MoveDirection } from './MoveAction';
 import { Coordinate } from './ExplodeAndReplacePhase';
 import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
-import { selectedTerrainCell, type TerrainSnapshotV1, type TerrainSelection } from '@/terrain/terrain';
+import { selectedTerrainCell, type TerrainSnapshot, type TerrainSelection } from '@/terrain/terrain';
 import type { PublicRoutingView } from '@/terrain/routing';
 
 interface BoardConfig {
@@ -47,7 +47,7 @@ export class BoardView {
     private surveyZones: ReadonlyArray<{ x: number; y: number; width: number; height: number }> = [];
     private surveyZoneGraphics: Phaser.GameObjects.Graphics | null = null; // Survey verb plot highlights
     private evidenceFamilyMode = false;
-    private terrain?: TerrainSnapshotV1;
+    private terrain?: TerrainSnapshot;
     private terrainGraphics: Phaser.GameObjects.Graphics | null = null;
     private routingGraphics: Phaser.GameObjects.Graphics | null = null;
     private terrainSelection: TerrainSelection | null = null;
@@ -148,7 +148,7 @@ export class BoardView {
         this.drawRouting();
     }
 
-    setTerrain(terrain: TerrainSnapshotV1 | undefined): void {
+    setTerrain(terrain: TerrainSnapshot | undefined): void {
         this.terrain = terrain;
         this.terrainSelection = null;
         this.drawTerrain();

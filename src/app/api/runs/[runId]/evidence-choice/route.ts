@@ -1,3 +1,4 @@
+import { hypothesesFromMetadata } from '@/lib/liveClaims';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, speciesDeductionProfiles } from '@/db';
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return card ? response(200, choiceBody(
           existing, card, true, nextState ? buildTravelEntry(getRecord(nextNode?.boardContext).waypoint) : null,
           nodeOrder >= 3, nextState?.evidenceCharges ?? createEmptyEvidenceCharges(),
-          nextState?.selectedFamilies ?? applications.map(application => application.family), node.scoreEarned,
+          nextState?.selectedFamilies ?? applications.map(application => application.family), node.scoreEarned, hypothesesFromMetadata(metadata),
         )) : response(409, { reason: 'invalid_card' });
       }
       if (session.runStatus !== 'active' || node.nodeStatus !== 'active' || session.nodeIndexCurrent !== nodeOrder) return response(409, { reason: 'node_not_active' });
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         }).where(eq(ecoRunNodes.id, nextNode.id));
       }
       const travelJournal = Array.isArray(metadata.travelJournal) ? metadata.travelJournal : [];
+      const hypotheses = hypothesesFromMetadata({ ...metadata, evidenceApplications: [...applications, application] });
       await tx.update(ecoRunSessions).set({
         metadata: {
           ...metadata,
@@ -124,9 +126,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         scoreTotal: sql`${ecoRunSessions.scoreTotal} + ${scoreEarned}`,
         movesUsed: sql`${ecoRunSessions.movesUsed} + 6`,
         nodeIndexCurrent: isLastNode ? 3 : nodeOrder + 1,
-        ...(isLastNode ? { runStatus: 'deduction' } : {}),
+
       }).where(eq(ecoRunSessions.id, runId));
-      return response(200, choiceBody(application, card, false, travelEntry, isLastNode, nextCharges, selectedFamilies, scoreEarned));
+      return response(200, choiceBody(application, card, false, travelEntry, isLastNode, nextCharges, selectedFamilies, scoreEarned, hypotheses));
     });
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {
@@ -144,9 +146,10 @@ function choiceBody(
   evidenceCharges = createEmptyEvidenceCharges(),
   selectedFamilies = [application.family],
   scoreEarned = 0,
+  hypotheses: import('@/lib/liveClaims').Hypotheses = {},
 ) {
   return {
-    ok: true, duplicate, observation: hydrateFamilyObservation(card, application),
+    ok: true, duplicate, hypotheses, observation: hydrateFamilyObservation(card, application),
     evidenceCharges, selectedFamilies, travelEntry, isLastNode, scoreEarned,
     eliminationReasons: application.eliminationReasons,
   };

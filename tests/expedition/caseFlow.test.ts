@@ -21,6 +21,8 @@ function projection(overrides: Omit<Partial<ClientRunProjection>, 'checkpoint'> 
   checkpoint?: Partial<ClientRunProjection['checkpoint']>;
 } = {}): ClientRunProjection {
   const base: ClientRunProjection = {
+    claims: { species: 'open', explanation: 'open', wrongClaims: 0 },
+    hypotheses: {}, explanationFeedback: {}, completionReason: null,
     run: { id: 'run-v3', status: 'active', scoreTotal: 100 },
     casePublic: {
       version: 4,
@@ -97,17 +99,17 @@ describe('v3 case flow', () => {
 
   it('advances after applying evidence and guesses after all three sites', () => {
     assert.deepEqual(nextFlowStep(flow([DONE, OPEN, OPEN])), { kind: 'board', nodeIndex: 1 });
-    assert.deepEqual(nextFlowStep(flow([DONE, DONE, DONE])), { kind: 'guess' });
+    assert.deepEqual(nextFlowStep(flow([DONE, DONE, DONE])), { kind: 'claims_only' });
   });
 
   it('maps steps to UI stages and current sites', () => {
     assert.equal(stageForStep({ kind: 'incident' }), 'incident');
     assert.equal(stageForStep({ kind: 'board', nodeIndex: 1 }), 'board');
     assert.equal(stageForStep({ kind: 'choose_evidence', nodeIndex: 2 }), 'choose_evidence');
-    assert.equal(stageForStep({ kind: 'guess' }), 'guess');
+    assert.equal(stageForStep({ kind: 'claims_only' }), 'claims_only');
     assert.equal(currentNodeIndexForStep({ kind: 'incident' }), 0);
     assert.equal(currentNodeIndexForStep({ kind: 'board', nodeIndex: 1 }), 1);
-    assert.equal(currentNodeIndexForStep({ kind: 'guess' }), 2);
+    assert.equal(currentNodeIndexForStep({ kind: 'claims_only' }), 2);
   });
 });
 

@@ -1,5 +1,5 @@
 import type { Map, GeoJSONSource, CameraOptions, MapMouseEvent } from 'maplibre-gl';
-import { selectedTerrainCell, terrainBounds, terrainGeoJSON, type TerrainSelection, type TerrainSnapshotV1 } from './terrain';
+import { localMinZoom, selectedTerrainCell, terrainBounds, terrainGeoJSON, type TerrainSelection, type TerrainSnapshot } from './terrain';
 
 export type TerrainMapMode = 'local' | 'region';
 const SOURCE_ID = 'site-terrain';
@@ -7,7 +7,7 @@ const LAYERS = ['site-terrain-fill', 'site-terrain-missing', 'site-terrain-lines
 
 /** Camera and layers are presentation-only; this controller never fetches or moves gems. */
 export class TerrainMapController {
-  private terrain?: TerrainSnapshotV1;
+  private terrain?: TerrainSnapshot;
   private mode: TerrainMapMode = 'region';
   private selection: TerrainSelection | null = null;
   private regionCamera?: CameraOptions;
@@ -18,7 +18,7 @@ export class TerrainMapController {
     map.on('resize', this.fitLocal);
   }
 
-  update(terrain: TerrainSnapshotV1 | undefined, mode: TerrainMapMode, fullscreen: boolean): void {
+  update(terrain: TerrainSnapshot | undefined, mode: TerrainMapMode, fullscreen: boolean): void {
     const changedSite = this.terrain?.id !== terrain?.id;
     const nextMode = terrain ? mode : 'region';
     const enteringLocal = nextMode === 'local' && this.mode !== 'local';
@@ -33,7 +33,8 @@ export class TerrainMapController {
     // Lower minimum first when leaving Local; raise maximum first when entering.
     this.map.setMinZoom(nextMode === 'local' ? 2 : fullscreen ? 2 : 5);
     this.map.setMaxZoom(nextMode === 'local' ? 20 : fullscreen ? 13 : 10);
-    if (nextMode === 'local') this.map.setMinZoom(12);
+    if (nextMode === 'local' && terrain) this.map.setMinZoom(localMinZoom(terrain));
+    else if (nextMode === 'local') this.map.setMinZoom(12);
     if (nextMode === 'local' && terrain && (changedSite || enteringLocal)) {
       this.fitLocal();
     } else if (leavingLocal && this.regionCamera) this.map.jumpTo(this.regionCamera);

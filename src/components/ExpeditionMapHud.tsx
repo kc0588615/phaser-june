@@ -1,4 +1,4 @@
-import type { TerrainCell, TerrainSnapshotV1 } from '@/terrain/terrain';
+import type { TerrainCell, TerrainSnapshot } from '@/terrain/terrain';
 import { useTerrainMap } from '@/hooks/useTerrainMap';
 // ExpeditionMapHud — in-run 2D map panel for v3 expeditions (Plan 018).
 //
@@ -75,7 +75,7 @@ function attachSiteMarker(map: maplibregl.Map, site: SiteDatum, onClick: (index:
 }
 
 function MapHabitatReadout({ terrain, selected, siteIndex, habitat, loading }: {
-  terrain?: TerrainSnapshotV1; selected?: TerrainCell; siteIndex: number;
+  terrain?: TerrainSnapshot; selected?: TerrainCell; siteIndex: number;
   habitat: RasterHabitatResult | null; loading: boolean;
 }) {
   if (!terrain) return <HabitatReadout habitat={habitat} loading={loading} />;
@@ -116,7 +116,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   const expedition = runState.expedition;
   const caseState = runState.caseState;
   const terrain = expedition?.nodes[runState.currentNodeIndex]?.terrain;
-  const guessing = caseState?.stage === 'guess';
+  const guessing = caseState?.stage === 'claims_only';
 
   // Site positions come from the persisted snapshot mapView when present;
   // waypoint data fills in the label/type/distance detail it doesn't carry.
@@ -726,7 +726,7 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
 }
 
 function TerrainMapControls({ terrain, hidden, mode, onChange }: {
-  terrain?: TerrainSnapshotV1; hidden?: boolean;
+  terrain?: TerrainSnapshot; hidden?: boolean;
   mode: 'local' | 'region'; onChange: (mode: 'local' | 'region') => void;
 }) {
   const groupId = useId();

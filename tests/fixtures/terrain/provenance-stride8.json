@@ -1,0 +1,406 @@
+{
+  "recordedAt": "2026-09-20T05:22:43.274Z",
+  "point": {
+    "lon": -84.1,
+    "lat": 10.4
+  },
+  "source": {
+    "revision": "habitat-975827817c839f73a5ee49d2791393a4-212",
+    "etag": "\"975827817c839f73a5ee49d2791393a4-212\"",
+    "mappingVersion": "habitat-custom-v1",
+    "crs": "EPSG:3857",
+    "width": 388996,
+    "height": 388996,
+    "transform": [
+      -20037508.342789244,
+      103.02166779498629,
+      0,
+      20037508.342789248,
+      0,
+      -103.02166779498631
+    ]
+  },
+  "sourceWindow": {
+    "col": 103600,
+    "row": 183168,
+    "stride": 8
+  },
+  "stride": 8,
+  "histogram": [
+    {
+      "code": 106,
+      "share": 0.40006666984142103
+    },
+    {
+      "code": 1401,
+      "share": 0.22664571328793434
+    },
+    {
+      "code": 109,
+      "share": 0.17494483864311
+    },
+    {
+      "code": 306,
+      "share": 0.08501992158356747
+    },
+    {
+      "code": 1403,
+      "share": 0.08335317554804197
+    },
+    {
+      "code": 307,
+      "share": 0.023842405193898124
+    },
+    {
+      "code": 1405,
+      "share": 0.0025398034827055255
+    },
+    {
+      "code": 108,
+      "share": 0.0014603870025556773
+    },
+    {
+      "code": 1402,
+      "share": 0.0011111640236836674
+    },
+    {
+      "code": 500,
+      "share": 0.0010159213930822104
+    }
+  ],
+  "strideChoice": {
+    "stride": 8,
+    "dominantShare": 0.40006666984142103
+  },
+  "honorsModeResampling": false,
+  "localMode": [
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ]
+  ],
+  "titilerMode": [
+    [
+      {
+        "code": 1401,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 1403,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 1403,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 1403,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ],
+    [
+      {
+        "code": 106,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 306,
+        "valid": true
+      },
+      {
+        "code": 1403,
+        "valid": true
+      },
+      {
+        "code": 106,
+        "valid": true
+      }
+    ]
+  ],
+  "files": [
+    {
+      "name": "costa-rica-stride8-block.npy",
+      "sha256": "1f6e490fe8f470980a14f61529b42937a7cb7ecbc51ec6981b67930263a48e6c"
+    },
+    {
+      "name": "costa-rica-stride8-block-rgba.npy",
+      "sha256": "091d5645d1e8f5e2146180a5e6c463a7cbb136ff1dc1404027150491d49120fe"
+    },
+    {
+      "name": "costa-rica-stride8-mode.npy",
+      "sha256": "0176af153e226f58e400b684ffcfdc6b7eb40b03afcff0c598f076f50e47060e"
+    }
+  ]
+}

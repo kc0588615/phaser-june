@@ -31,7 +31,9 @@ async function loadCorpus() {
   const selected = new Set<number>(pool.species_iucn_ids);
   const dossiers = (await loadFiles(path.join(root, 'db/seeds/species'), parseEvidenceProfileDossier))
     .filter(dossier => selected.has(dossier.iucnId));
-  return { seeds, dossiers, cascadeHints };
+  const cases = new Map((await loadFiles(path.join(poolDirectory, 'cases'), value => value as import('../src/lib/mysteryCase').AuthoredMysteryCase & { species_iucn_id: number }))
+    .map(authored => [authored.species_iucn_id, authored]));
+  return { seeds, dossiers, cascadeHints, cases };
 }
 
 function databaseUrl(): string {
@@ -49,12 +51,12 @@ function databaseUrl(): string {
 
 type ExistingRow = {
   id: number; family: string; observation_text: string; inference_text: string; trait_category: string; compare_tag: string;
-  trait_phrase: string; bonus_fact_text: string; source: string; review_status: string;
+  trait_phrase: string; bonus_fact_text: string; source: string; review_status: string; explains: import('../src/lib/liveClaims').ExplanationEffects | null;
 };
-type ExistingHintRow = { family: string; sequence_index: number; hint_text: string; weak_tag: string };
+type ExistingHintRow = { explains: import('../src/lib/liveClaims').ExplanationEffects | null; family: string; sequence_index: number; hint_text: string; weak_tag: string };
 
 function same(row: ExistingRow, card: EvidenceFamilySeed['cards'][number]): boolean {
-  return row.family === card.family && row.observation_text === card.observation_text
+  return JSON.stringify(row.explains ?? null) === JSON.stringify(card.explains ?? null) && row.family === card.family && row.observation_text === card.observation_text
     && row.inference_text === card.inference_text
     && row.trait_category === card.trait_category && row.compare_tag === card.compare_tag
     && row.trait_phrase === card.trait_phrase
@@ -96,7 +98,7 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
       `;
       const oldHints = await tx<EvidenceHintSnapshot[]>`
         SELECT h.id::integer, h.family, h.hint_text AS "hintText", h.weak_tag AS "weakTag",
-          c.trait_category AS "traitCategory"
+          c.trait_category AS "traitCategory", h.explains
         FROM evidence_family_hints h
         JOIN evidence_family_cards c ON c.pool_id = h.pool_id AND c.species_id = h.species_id AND c.family = h.family
       `;
@@ -111,11 +113,11 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
       for (const seed of seeds) {
         const speciesId = speciesByIucn.get(seed.iucn_id)!.id;
         const existing = await tx<ExistingRow[]>`
-          SELECT id::integer, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status
+          SELECT id::integer, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status, explains
           FROM evidence_family_cards WHERE pool_id = ${poolId} AND species_id = ${speciesId} ORDER BY family
         `;
         const existingHints = await tx<ExistingHintRow[]>`
-          SELECT family, sequence_index::integer, hint_text, weak_tag
+          SELECT family, sequence_index::integer, hint_text, weak_tag, explains
           FROM evidence_family_hints WHERE pool_id = ${poolId} AND species_id = ${speciesId} ORDER BY family, sequence_index
         `;
         let unchanged = 0;
@@ -128,27 +130,27 @@ async function sync(seeds: readonly EvidenceFamilySeed[], cascadeHints: readonly
             upserted += 1;
             if (!dryRun) await tx`
             INSERT INTO evidence_family_cards
-              (pool_id, species_id, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status)
+              (pool_id, species_id, family, observation_text, inference_text, trait_category, compare_tag, trait_phrase, bonus_fact_text, source, review_status, explains)
             VALUES (${poolId}, ${speciesId}, ${card.family}, ${card.observation_text}, ${card.inference_text}, ${card.trait_category}, ${card.compare_tag},
-                    ${card.trait_phrase}, ${card.bonus_fact_text}, ${card.source}, ${card.review_status})
+                    ${card.trait_phrase}, ${card.bonus_fact_text}, ${card.source}, ${card.review_status}, ${card.explains ? sql.json({ ...card.explains }) : null})
             ON CONFLICT (pool_id, species_id, family) DO UPDATE SET
               observation_text = EXCLUDED.observation_text, inference_text = EXCLUDED.inference_text,
               trait_category = EXCLUDED.trait_category,
               compare_tag = EXCLUDED.compare_tag, bonus_fact_text = EXCLUDED.bonus_fact_text,
               trait_phrase = EXCLUDED.trait_phrase,
-              source = EXCLUDED.source, review_status = EXCLUDED.review_status
+              source = EXCLUDED.source, review_status = EXCLUDED.review_status, explains = EXCLUDED.explains
             `;
           }
           for (const [sequenceIndex, hint] of card.hints.entries()) {
             const existingHint = existingHints.find(candidate => candidate.family === card.family && candidate.sequence_index === sequenceIndex);
-            if (!existingHint || existingHint.hint_text !== hint.text || existingHint.weak_tag !== hint.weak_tag) {
+            if (!existingHint || existingHint.hint_text !== hint.text || existingHint.weak_tag !== hint.weak_tag || JSON.stringify(existingHint.explains ?? null) !== JSON.stringify(hint.explains ?? null)) {
               hintUpserted += 1;
               if (!dryRun) await tx`
               INSERT INTO evidence_family_hints
-                (pool_id, species_id, family, sequence_index, hint_text, weak_tag, review_status)
-              VALUES (${poolId}, ${speciesId}, ${card.family}, ${sequenceIndex}, ${hint.text}, ${hint.weak_tag}, 'reviewed')
+                (pool_id, species_id, family, sequence_index, hint_text, weak_tag, review_status, explains)
+              VALUES (${poolId}, ${speciesId}, ${card.family}, ${sequenceIndex}, ${hint.text}, ${hint.weak_tag}, 'reviewed', ${hint.explains ? sql.json({ ...hint.explains }) : null})
               ON CONFLICT (pool_id, species_id, family, sequence_index) DO UPDATE SET
-                hint_text = EXCLUDED.hint_text, weak_tag = EXCLUDED.weak_tag, review_status = EXCLUDED.review_status
+                hint_text = EXCLUDED.hint_text, weak_tag = EXCLUDED.weak_tag, review_status = EXCLUDED.review_status, explains = EXCLUDED.explains
               `;
             }
           }
@@ -200,8 +202,8 @@ async function main(): Promise<void> {
   if (!['--check', '--dry-run', '--write'].includes(mode) || args.length !== 1) {
     throw new Error('Choose exactly one mode: --check, --dry-run, or --write.');
   }
-  const { seeds, dossiers, cascadeHints } = await loadCorpus();
-  const errors = validateEvidenceFamilyCorpus(seeds, dossiers);
+  const { seeds, dossiers, cascadeHints, cases } = await loadCorpus();
+  const errors = validateEvidenceFamilyCorpus(seeds, dossiers, cases);
   if (errors.length > 0) throw new Error(`Family evidence corpus invalid:\n- ${errors.join('\n- ')}`);
   const hintCount = seeds.reduce((total, seed) => total + seed.cards.reduce((sum, card) => sum + card.hints.length, 0), 0);
   console.log(`Validated ${seeds.reduce((total, seed) => total + seed.cards.length, 0)} family cards, ${hintCount} family hints, and ${cascadeHints.length} cascade hints across ${seeds.length} species.`);

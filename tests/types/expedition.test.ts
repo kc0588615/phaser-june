@@ -10,9 +10,9 @@ describe('guess bonuses', () => {
 
   test('efficiency bonus tiers by paid clue count', () => {
     assert.deepEqual(getGuessBonuses(0, true), { guessBonus: 250, efficiencyBonus: 200 });
-    assert.deepEqual(getGuessBonuses(2, true), { guessBonus: 250, efficiencyBonus: 200 });
-    assert.deepEqual(getGuessBonuses(3, true), { guessBonus: 250, efficiencyBonus: 100 });
-    assert.deepEqual(getGuessBonuses(5, true), { guessBonus: 250, efficiencyBonus: 100 });
+    assert.deepEqual(getGuessBonuses(1, true), { guessBonus: 250, efficiencyBonus: 150 });
+    assert.deepEqual(getGuessBonuses(2, true), { guessBonus: 250, efficiencyBonus: 100 });
+    assert.deepEqual(getGuessBonuses(3, true), { guessBonus: 250, efficiencyBonus: 25 });
     assert.deepEqual(getGuessBonuses(6, true), { guessBonus: 250, efficiencyBonus: 25 });
   });
 });

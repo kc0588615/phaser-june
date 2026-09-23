@@ -8,8 +8,8 @@
 import type { ClientRunProjection } from '@/lib/runProjection';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
 
-/** Sub-state of run phase 'mystery'. Only a correct server diagnosis leaves 'guess'. */
-export type CaseStage = 'incident' | 'choose_evidence' | 'board' | 'interpreting' | 'guess';
+/** Sub-state of run phase 'mystery'. Only a correct server diagnosis leaves 'claims_only'. */
+export type CaseStage = 'incident' | 'choose_evidence' | 'board' | 'interpreting' | 'claims_only';
 
 export interface FlowNode {
   completed: boolean;
@@ -28,7 +28,7 @@ export type FlowStep =
   | { kind: 'incident' }
   | { kind: 'choose_evidence'; nodeIndex: number }
   | { kind: 'board'; nodeIndex: number }
-  | { kind: 'guess' };
+  | { kind: 'claims_only' };
 
 export function createFlowState(): CaseFlowState {
   return {
@@ -54,20 +54,20 @@ export function nextFlowStep(state: CaseFlowState): FlowStep {
         : { kind: 'board', nodeIndex };
     }
   }
-  return { kind: 'guess' };
+  return { kind: 'claims_only' };
 }
 
 export function stageForStep(step: FlowStep): CaseStage {
   if (step.kind === 'incident') return 'incident';
   if (step.kind === 'choose_evidence') return 'choose_evidence';
   if (step.kind === 'board') return 'board';
-  return 'guess';
+  return 'claims_only';
 }
 
 /** Which node the HUD should call current while a step is active. */
 export function currentNodeIndexForStep(step: FlowStep): number {
   if (step.kind === 'incident') return 0;
-  return step.kind === 'guess' ? 2 : step.nodeIndex;
+  return step.kind === 'claims_only' ? 2 : step.nodeIndex;
 }
 
 export type ResumeDecision =

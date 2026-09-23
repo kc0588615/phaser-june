@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { decodeTerrainNumpy } from '@/terrain/numpy.server';
 import { extractSiteTerrains, extractionUrl, readBoundedTerrainResponse, snapshotFromArrays, sourceWindowAt, TerrainExtractionError } from '@/terrain/extract.server';
+import { encodeTerrainNumpy, TERRAIN_RESPONSE_LIMIT } from '@/terrain/numpy.server';
 import { HABITAT_SOURCE_V1 as SOURCE } from '@/terrain/source';
 import { parseTerrainSnapshot, selectedTerrainCell, terrainBounds, terrainCorner, terrainGeoJSON, TERRAIN_NEUTRAL_COLOR } from '@/terrain/terrain';
 import { projectRunNodes } from '@/lib/runProjection';
@@ -14,6 +15,17 @@ const raw = decodeTerrainNumpy(rawFile, 'raw');
 const rgba = decodeTerrainNumpy(rgbaFile, 'rgba');
 const window = sourceWindowAt(-84.1, 10.4);
 const fixture = () => snapshotFromArrays(raw, rgba, window, {}, 'fixture');
+
+test('recorded stride-8 Costa Rica uses the raw-block majority and still parses as v2', () => {
+  const block = decodeTerrainNumpy(readFileSync('tests/fixtures/terrain/costa-rica-stride8-block.npy'), 'raw', 48);
+  const rgba = decodeTerrainNumpy(readFileSync('tests/fixtures/terrain/costa-rica-stride8-block-rgba.npy'), 'rgba', 48);
+  const saved = parseTerrainSnapshot(JSON.parse(readFileSync('tests/fixtures/terrain/costa-rica-stride8.json', 'utf8')));
+  const rebuilt = snapshotFromArrays(block, rgba, sourceWindowAt(-84.1, 10.4, 8), {}, saved.id, saved.extractedAt, saved.version === 2 ? saved.strideReason : { dominantShare: null, chosen: 8 });
+  assert.equal(saved.version, 2);
+  assert.equal(saved.sourceWindow.stride, 8);
+  assert.deepEqual(rebuilt.cells.map(col => col.map(cell => cell.code)), saved.cells.map(col => col.map(cell => cell.code)));
+  assert.equal(new Set(saved.cells.flat().filter(cell => cell.valid).map(cell => cell.code)).size, 2);
+});
 
 test('recorded COG clip: exact values, masks, alignment, colors and column-major orientation', () => {
   assert.deepEqual(window, { col: 103621, row: 183195, stride: 1 });
@@ -68,9 +80,10 @@ test('NumPy decoder rejects malformed/truncated/unsupported responses', () => {
 });
 
 test('response limit applies to content-length and chunked streams', async () => {
-  await assert.rejects(readBoundedTerrainResponse(new Response(new Uint8Array(65537))));
-  await assert.rejects(readBoundedTerrainResponse(new Response('x', { headers: { 'content-length': '65537' } })));
+  await assert.rejects(readBoundedTerrainResponse(new Response(new Uint8Array(TERRAIN_RESPONSE_LIMIT + 1))));
+  await assert.rejects(readBoundedTerrainResponse(new Response('x', { headers: { 'content-length': String(TERRAIN_RESPONSE_LIMIT + 1) } })));
   await assert.rejects(readBoundedTerrainResponse(new Response('error', { status: 503 })));
+  assert.equal((await readBoundedTerrainResponse(new Response(encodeTerrainNumpy(Array(72).fill(1), 'raw')))).length > 0, true);
 });
 
 test('three concurrent clips guarded by before/after ETags; mismatch and timeout fail closed', async () => {
@@ -80,12 +93,14 @@ test('three concurrent clips guarded by before/after ETags; mismatch and timeout
     return init?.method === 'HEAD' ? new Response(null, { headers: { etag: SOURCE.etag } })
       : new Response(new Uint8Array(String(input).includes('colormap_name') ? rgbaFile : rawFile));
   };
-  const options = { baseUrl: 'https://terrain.test', cogUrl: 'https://source.test', fetch: fetcher };
+  const options = { baseUrl: 'https://terrain.test', cogUrl: 'https://source.test', fetch: fetcher, modeResampling: true };
   const sites = [{ lon: -84.1, lat: 10.4 }, { lon: -84, lat: 10 }, { lon: -83, lat: 11 }];
   const snapshots = await extractSiteTerrains(sites, {}, options);
   assert.equal(snapshots.length, 3); assert.equal(new Set(snapshots.map(t => t.id)).size, 3);
   assert.equal(new Set(snapshots.map(t => t.cells[0][0].id)).size, 3);
-  assert.deepEqual(calls, ['HEAD', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'HEAD']);
+  assert.equal(calls.filter(method => method === 'HEAD').length, 2);
+  assert.equal(calls.filter(method => method === 'POST').length, 3);
+  assert.equal(calls.filter(method => method === 'GET').length, 6);
   let heads = 0;
   await assert.rejects(extractSiteTerrains(sites, {}, { ...options, fetch: async (url, init) => {
     if (init?.method === 'HEAD' && ++heads === 2) return new Response(null, { headers: { etag: 'new-revision' } });

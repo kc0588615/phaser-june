@@ -31,6 +31,9 @@ export type LedgerFact = import('@/lib/evidenceLadder').PublicLedgerFact;
 
 export interface CaseState {
   version: 4;
+  claims: import('@/lib/liveClaims').ClaimState;
+  hypotheses: import('@/lib/liveClaims').Hypotheses;
+  explanationFeedback: Record<string, string>;
   mapView: import('@/expedition/mapView').ExpeditionMapView | null;
   mystery: import('@/lib/mysteryCase').PublicMysteryCase;
   /** Sub-state of phase 'mystery': incident, board play, evidence choice/reveal, or final diagnosis. */
@@ -105,12 +108,13 @@ export interface ConfirmedClue {
   compareTags: string[];
 }
 
-/** Guess bonus based on paid clue count */
-export function getGuessBonuses(totalPaidClues: number, isCorrect: boolean): { guessBonus: number; efficiencyBonus: number } {
+/** Early-resolution bonus based on completed research sites (0–3). */
+export function getGuessBonuses(sitesCompleted: number, isCorrect: boolean): { guessBonus: number; efficiencyBonus: number } {
   if (!isCorrect) return { guessBonus: 0, efficiencyBonus: 0 };
   const guessBonus = 250;
   let efficiencyBonus = 25;
-  if (totalPaidClues <= 2) efficiencyBonus = 200;
-  else if (totalPaidClues <= 5) efficiencyBonus = 100;
+  if (sitesCompleted === 0) efficiencyBonus = 200;
+  else if (sitesCompleted === 1) efficiencyBonus = 150;
+  else if (sitesCompleted === 2) efficiencyBonus = 100;
   return { guessBonus, efficiencyBonus };
 }

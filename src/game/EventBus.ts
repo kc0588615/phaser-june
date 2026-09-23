@@ -21,7 +21,7 @@ import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObsta
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { BoardCheckpointV1 } from './boardTypes';
-import type { TerrainSnapshotV1, TerrainSelection } from '@/terrain/terrain';
+import type { TerrainSnapshot, TerrainSelection } from '@/terrain/terrain';
 import type { PublicRoutingView } from '@/terrain/routing';
 
 // Define all event types and their payloads
@@ -53,7 +53,7 @@ export interface EventPayloads {
     /** Full rows for those candidates. */
     candidateSpecies?: Species[];
     boardCheckpoint?: BoardCheckpointV1;
-    terrain?: TerrainSnapshotV1;
+    terrain?: TerrainSnapshot;
   };
   'new-game-started': {
     speciesName: string;

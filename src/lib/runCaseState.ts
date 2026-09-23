@@ -1,3 +1,4 @@
+import { parseExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import { parseEvidenceHintSnapshot, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
 import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseTraits';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
@@ -35,6 +36,7 @@ export interface PrivateCaseV3 {
   familyCardIds: Record<EvidenceFamily, number>;
   familyHintIds: Record<EvidenceFamily, number[]>;
   familyHints?: EvidenceHintSnapshot[];
+  familyCardEffects?: Record<string, ExplanationEffects | null>;
   cascadeHintIds: number[];
   mystery: PrivateMysteryCase;
 }
@@ -106,6 +108,14 @@ export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
   }
   const familyHints = source.familyHints === undefined ? undefined : parseEvidenceHintSnapshot(source.familyHints, familyHintIds);
   if (familyHints === null) return null;
+  let familyCardEffects: Record<string, ExplanationEffects | null> | undefined;
+  if (source.familyCardEffects !== undefined) {
+    if (!source.familyCardEffects || typeof source.familyCardEffects !== 'object' || Array.isArray(source.familyCardEffects)
+      || Object.values(familyCardIds).some(id => !Object.hasOwn(source.familyCardEffects as object, String(id)))) return null;
+    try {
+      familyCardEffects = Object.fromEntries(Object.values(familyCardIds).map(id => [String(id), parseExplanationEffects(getRecord(source.familyCardEffects)[String(id)])]));
+    } catch { return null; }
+  }
   const cascadeHintIds = parsePositiveIntegerArray(source.cascadeHintIds, 30);
   const mystery = parsePrivateMysteryCase(source.mystery);
   const allFamilyHintIds = EVIDENCE_FAMILIES.flatMap(family => familyHintIds[family]);
@@ -116,7 +126,7 @@ export function parsePrivateCase(value: unknown): PrivateCaseSnapshot | null {
     && new Set(Object.values(familyCardIds)).size === EVIDENCE_FAMILIES.length
     && new Set(allFamilyHintIds).size === allFamilyHintIds.length
     && mystery
-    ? { version: 4, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, ...(familyHints ? { familyHints } : {}), cascadeHintIds, mystery }
+    ? { version: 4, answerId: source.answerId, caseSeed: source.caseSeed, familyCardIds, familyHintIds, ...(familyHints ? { familyHints } : {}), ...(familyCardEffects ? { familyCardEffects } : {}), cascadeHintIds, mystery }
     : null;
 }
 

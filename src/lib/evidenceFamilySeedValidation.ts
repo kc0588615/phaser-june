@@ -1,3 +1,5 @@
+import { parseExplanationEffects, validateExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
+import type { AuthoredMysteryCase } from '@/lib/mysteryCase';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { isCanonicalDeductionTag } from '@/lib/deductionTags';
@@ -5,7 +7,7 @@ import { validateFamilyLadder } from '@/lib/evidenceLadder';
 import type { EvidenceProfileDossier } from '@/lib/evidenceSeedValidation';
 
 /** One ladder rung. A bare string in JSON means `weak_tag` = the card's `compare_tag` (flat rung). */
-export interface EvidenceFamilySeedHint { text: string; weak_tag: string }
+export interface EvidenceFamilySeedHint { text: string; weak_tag: string; explains?: ExplanationEffects | null }
 
 export interface EvidenceFamilySeedCard {
   family: EvidenceFamily;
@@ -18,6 +20,7 @@ export interface EvidenceFamilySeedCard {
   source: string;
   review_status: 'reviewed';
   hints: EvidenceFamilySeedHint[];
+  explains?: ExplanationEffects | null;
 }
 
 export interface EvidenceFamilySeed {
@@ -58,6 +61,7 @@ export function parseEvidenceFamilySeed(raw: unknown, fileName = 'family evidenc
       assertValue(card.review_status === 'reviewed', `${context}.review_status must be reviewed`);
       return {
         family: card.family,
+        explains: parseExplanationEffects(card.explains),
         observation_text: text(card.observation_text, `${context}.observation_text`),
         inference_text: text(card.inference_text, `${context}.inference_text`),
         trait_category: card.trait_category as CaseTraitCategory,
@@ -74,7 +78,7 @@ export function parseEvidenceFamilySeed(raw: unknown, fileName = 'family evidenc
             if (typeof hint === 'string') return { text: text(hint, hintContext), weak_tag: compareTag };
             const rung = record(hint);
             assertValue(rung, `${hintContext} must be a string or {text, weak_tag}`);
-            return { text: text(rung.text, `${hintContext}.text`), weak_tag: text(rung.weak_tag, `${hintContext}.weak_tag`) };
+            return { explains: parseExplanationEffects(rung.explains), text: text(rung.text, `${hintContext}.text`), weak_tag: text(rung.weak_tag, `${hintContext}.weak_tag`) };
           });
         })(),
       };
@@ -104,6 +108,7 @@ function leakedName(textValue: string, seeds: readonly EvidenceFamilySeed[]): st
 export function validateEvidenceFamilyCorpus(
   seeds: readonly EvidenceFamilySeed[],
   dossiers: readonly EvidenceProfileDossier[],
+  cases?: ReadonlyMap<number, AuthoredMysteryCase>,
 ): string[] {
   const errors: string[] = [];
   const dossierById = new Map(dossiers.map(dossier => [dossier.iucnId, dossier]));
@@ -120,6 +125,12 @@ export function validateEvidenceFamilyCorpus(
     if (seed.cards.length !== EVIDENCE_FAMILIES.length
       || new Set(seed.cards.map(card => card.family)).size !== EVIDENCE_FAMILIES.length) errors.push(`${context}: requires one card per family`);
     for (const family of EVIDENCE_FAMILIES) if (!seed.cards.some(card => card.family === family)) errors.push(`${context}: missing ${family}`);
+    if (cases) {
+      const authored = cases.get(seed.iucn_id);
+      if (!authored) errors.push(`${context}: missing explanation case`);
+      else errors.push(...validateExplanationEffects(seed.cards.flatMap(card => [card.explains, ...card.hints.map(h => h.explains)]),
+        authored.public.explanationChoices.map(c => c.id), authored.private.answerExplanationId, true).map(e => `${context}: ${e}`));
+    }
     for (const card of seed.cards) {
       if (!isCanonicalDeductionTag(card.compare_tag, card.trait_category)) errors.push(`${context}/${card.family}: invalid tag ${card.compare_tag}`);
       if (!dossier.profile[card.trait_category].includes(card.compare_tag)) errors.push(`${context}/${card.family}: answer profile lacks ${card.compare_tag}`);

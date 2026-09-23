@@ -147,13 +147,14 @@ export function useMapLibreEcoregions(
           });
           map.addLayer({
             id: 'ecoregion-label', type: 'symbol', source: 'ecoregions',
-            minzoom: 2.5,
+            minzoom: 6,
             layout: {
               visibility: enabledRef.current ? 'visible' : 'none',
               'text-field': ['get', 'ECO_NAME'],
               'text-font': ['Open Sans Regular'],
-              'text-size': ['interpolate', ['linear'], ['zoom'], 2.5, 9, 7, 13],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 6, 10, 9, 14],
               'text-max-width': 12,
+              'text-padding': 24,
               'text-variable-anchor': ['center', 'top', 'bottom'],
               'text-radial-offset': 0.35,
               'text-justify': 'auto',

@@ -121,12 +121,14 @@ export function addLandscapeLayers(
       },
     });
     if (labels && !map.getLayer('map-biome-label')) map.addLayer({
-      id: 'map-biome-label', type: 'symbol', source: 'map-biome', minzoom: 4,
+      // Labels only at large scale; low zooms were a wall of overlapping names.
+      id: 'map-biome-label', type: 'symbol', source: 'map-biome', minzoom: 7,
       layout: {
         'text-field': ['coalesce', ['get', 'bioregion'], ['get', 'biome']],
         'text-font': ['Open Sans Regular'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 4, 10, 8, 14],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 7, 11, 10, 15],
         'text-max-width': 12,
+        'text-padding': 24,
       },
       paint: {
         'text-color': '#ecfeff',

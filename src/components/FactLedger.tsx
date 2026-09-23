@@ -86,6 +86,7 @@ export function FactLedger({
                     <span className="mt-px font-mono text-emerald-200/80">{fact.rung + 1}.</span>
                     <span className="min-w-0">
                       <span className="block text-white/85">{fact.factText}</span>
+                      {fact.explanationNote && <span className="block text-amber-100/80">{fact.explanationNote}</span>}
                       <span className={`block ${fact.eliminatedIds.length ? 'text-red-200/75' : 'text-white/40'}`}>
                         {fact.eliminatedIds.length
                           ? `Ruled out: ${fact.eliminatedIds.map(id => nameById.get(id) ?? `#${id}`).join(', ')}`

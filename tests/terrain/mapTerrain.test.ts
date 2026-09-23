@@ -54,7 +54,7 @@ test('Local/Region, fullscreen, site changes, style reload and matching cell sel
   assert.equal(m.marker.style.display, '');
   assert.equal(m.layers.get('site-terrain-locator')?.visibility, 'visible');
   assert.equal(m.layers.get('site-terrain-fill')?.visibility, 'none');
-  const next = { ...terrain, id: 'site-two', sourceWindow: { ...terrain.sourceWindow, col: terrain.sourceWindow.col + 20 } };
+  const next = { ...terrain, id: 'site-two', sourceWindow: { col: terrain.sourceWindow.col + 20, row: terrain.sourceWindow.row, stride: 1 as const } };
   controller.update(next, 'local', false);
   assert.equal(m.getFits(), 2); assert.deepEqual(m.layers.get('site-terrain-selected')?.filter, ['==', 'id', '']);
   m.sources.clear(); m.layers.clear();

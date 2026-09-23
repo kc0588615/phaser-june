@@ -1,3 +1,4 @@
+import { EMPTY_CLAIMS, type ClaimInput, type ClaimState, type Hypotheses } from '@/lib/liveClaims';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
@@ -29,7 +30,7 @@ interface ExpeditionContextValue {
   handleRunReset: () => void;
   handleChooseEvidenceFamily: (family: EvidenceFamily) => Promise<boolean>;
   handleAcknowledgeIncident: () => Promise<void>;
-  handleDiagnosis: (speciesId: number, explanationId: string) => Promise<boolean | null>;
+  handleClaim: (input: ClaimInput) => Promise<boolean | null>;
   showSpeciesList: (speciesId: number) => void;
   onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
 }
@@ -91,7 +92,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
    * interpretation, or guess), performing the durable calls in between.
    */
   const runFlow = useCallback(async () => {
-    if (advancingRef.current) return;
+    if (advancingRef.current || stateRef.current.phase === 'complete') return;
     advancingRef.current = true;
     try {
       const step: FlowStep = nextFlowStep(flowRef.current);
@@ -131,7 +132,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         emitBoardTracked(payload, publicCase, step.nodeIndex, resumedMoves);
         return;
       }
-      setRunState(previous => previous.caseState ? { ...previous, currentNodeIndex: 2, caseState: { ...previous.caseState, stage: 'guess' } } : previous);
+      setRunState(previous => previous.caseState ? { ...previous, currentNodeIndex: 2, caseState: { ...previous.caseState, stage: 'claims_only' } } : previous);
     } catch (error) {
       console.error('[ExpeditionContext] Flow advance failed:', error);
       toast.error('Could not advance the expedition — resume the run to retry.');
@@ -235,6 +236,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       });
       if (!response.ok) throw new Error(`Evidence choice failed (${response.status})`);
       const result = await response.json() as {
+        hypotheses: Hypotheses;
         observation: Omit<EarnedObservation, 'issuedAtMs'>;
         evidenceCharges: CaseState['evidenceCharges'];
         eliminationReasons?: Record<string, string>;
@@ -243,6 +245,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         isLastNode: boolean;
         scoreEarned?: number;
       };
+      if (stateRef.current.phase !== 'mystery' || runIdRef.current !== runId) return false;
       const observation: EarnedObservation = { ...result.observation, issuedAtMs: Date.now() };
       flowRef.current = {
         ...flowRef.current,
@@ -258,6 +261,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         caseState: {
           ...previous.caseState,
           stage: 'interpreting',
+          hypotheses: result.hypotheses,
           observations: previous.caseState.observations.some(item => item.ref === observation.ref)
             ? previous.caseState.observations
             : [...previous.caseState.observations, observation],
@@ -273,7 +277,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       } : previous);
       toast(result.travelEntry ?? 'Evidence applied. Candidates updated.', { duration: 1800 });
       await new Promise(resolve => window.setTimeout(resolve, result.travelEntry ? 900 : 650));
-      await runFlow();
+      if (stateRef.current.phase === 'mystery') await runFlow();
       return true;
     } catch (error) {
       console.error('[ExpeditionContext] Evidence choice failed:', error);
@@ -282,57 +286,55 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     }
   }, [emitNodeCompleteIfLive, runFlow]);
 
-  const handleDiagnosis = useCallback(async (speciesId: number, explanationId: string) => {
+  const claimRequestRef = useRef<{ key: string; id: string } | null>(null);
+  const claimingRef = useRef(false);
+  const handleClaim = useCallback(async (input: ClaimInput) => {
     const runId = runIdRef.current;
-    const activeCase = stateRef.current.caseState;
-    if (!runId || activeCase?.stage !== 'guess') return null;
+    if (!runId || stateRef.current.phase !== 'mystery' || claimingRef.current) return null;
+    const key = `${runId}:${JSON.stringify(input)}`;
+    if (claimRequestRef.current?.key !== key) claimRequestRef.current = { key, id: createClientUuid() };
+    claimingRef.current = true;
     try {
       const response = await fetch(`/api/runs/${runId}/guess`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ speciesId, explanationId }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...input, requestId: claimRequestRef.current.id }),
       });
-      if (!response.ok) return null;
-      const result = await response.json() as {
-        correct: boolean;
-        contrastiveFeedback: ComparisonResult[];
-        diagnosisFeedback: DiagnosisFeedback;
-        finalScore?: number;
-        fieldFacts?: FieldFact[];
-        resolution?: MysteryResolution;
-        selectedExplanationId?: string;
-      };
-      if (result.correct) {
-        // speciesId is the public candidate the player just selected — safe to keep client-side.
-        setRunState(previous => previous.caseState ? {
-          ...previous,
-          phase: 'complete',
-          finalScore: result.finalScore ?? null,
-          completionReason: 'captured',
-          resolvedSpeciesId: speciesId,
-          resolvedExplanationId: result.selectedExplanationId ?? explanationId,
-          fieldFacts: result.fieldFacts ?? [],
-          caseResolution: result.resolution ?? null,
-          caseState: { ...previous.caseState, guessResult: 'correct', lastFeedback: null, diagnosisFeedback: result.diagnosisFeedback },
-        } : previous);
-        window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId } }));
-      } else {
-        setRunState(previous => previous.caseState ? {
-          ...previous,
-          caseState: {
-            ...previous.caseState,
-            guessResult: 'wrong',
-            lastFeedback: result.contrastiveFeedback,
-            diagnosisFeedback: result.diagnosisFeedback,
-          },
-        } : previous);
+      if (!response.ok) {
+        const failure = await response.json().catch(() => ({}));
+        toast.error(failure.reason === 'candidate_eliminated' || failure.reason === 'hypothesis_contradicted'
+          ? 'New evidence rules out that choice. Choose another.' : 'Claim not saved. Retry the same choice.');
+        return null;
       }
-      return result.correct;
+      const result = await response.json() as {
+        claims: ClaimState; hypotheses: Hypotheses; explanationFeedback: Record<string, string>;
+        verdict: 'supported' | 'revise'; resolved: boolean; slipped: boolean; finalScore?: number;
+        resolvedSpeciesId?: number; resolvedExplanationId?: string; fieldFacts?: FieldFact[]; resolution?: MysteryResolution;
+      };
+      claimRequestRef.current = null;
+      const current = stateRef.current;
+      if (!current.caseState || runIdRef.current !== runId) return null;
+      const complete = result.resolved || result.slipped;
+      const next: RunState = { ...current,
+        ...(complete ? { phase: 'complete' as const, finalScore: result.finalScore ?? current.bankedScore,
+          completionReason: result.slipped ? 'slipped' as const : 'captured' as const,
+          resolvedSpeciesId: result.resolvedSpeciesId ?? null, resolvedExplanationId: result.resolvedExplanationId ?? null,
+          fieldFacts: result.fieldFacts ?? [], caseResolution: result.resolution ?? null,
+        } : {}),
+        caseState: { ...current.caseState, claims: result.claims, hypotheses: result.hypotheses,
+          explanationFeedback: result.explanationFeedback,
+          guessResult: result.resolved ? 'correct' : result.verdict === 'revise' ? 'wrong' : null },
+      };
+      stateRef.current = next;
+      setRunState(next);
+      if (complete) emitNodeCompleteIfLive(current.currentNodeIndex);
+      if (result.resolved) window.dispatchEvent(new CustomEvent('species-card-progress-updated', { detail: { speciesId: result.resolvedSpeciesId } }));
+      toast(result.slipped ? 'Case slipped. No discovery awarded.' : result.verdict === 'supported' ? 'Claim confirmed.' : 'Claim needs revision. Keep investigating.');
+      return result.verdict === 'supported';
     } catch (error) {
-      console.error('[ExpeditionContext] Diagnosis failed:', error);
+      console.error('[ExpeditionContext] Claim failed:', error);
       return null;
-    }
-  }, []);
+    } finally { claimingRef.current = false; }
+  }, [emitNodeCompleteIfLive]);
 
   const handleObjective = useCallback((event: EventPayloads['node-objective-updated']) => {
     objectiveProgressRef.current = event.progress;
@@ -377,8 +379,13 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         cascadeHintLine?: string | null;
         facts?: LedgerFact[];
         reinforcedFamilies?: EvidenceFamily[];
+        hypotheses?: Hypotheses;
       };
+      if (stateRef.current.phase !== 'mystery' || runIdRef.current !== runId) return;
       const facts = result.facts ?? [];
+      const hypothesisLines = Object.entries(result.hypotheses ?? {}).filter(([id, status]) => status !== (stateRef.current.caseState?.hypotheses[id] ?? 'open'))
+        .map(([id, status]) => ({ id: `${event.nodeIndex}-${event.moveNumber}-h-${id}`, kind: 'evidence' as const,
+          text: `New evidence — ${current.caseState!.mystery.explanationChoices.find(choice => choice.id === id)?.label ?? 'Explanation'} ${status === 'contradicted' ? 'weakened' : 'supported'}.` }));
       flowRef.current = {
         ...flowRef.current,
         nodes: flowRef.current.nodes.map((node, index) => index === event.nodeIndex
@@ -389,6 +396,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         ...previous,
         caseState: {
           ...previous.caseState,
+          hypotheses: result.hypotheses ?? previous.caseState.hypotheses,
           objectiveProgress: result.segmentMovesUsed,
           objectiveTarget: 6,
           evidenceCharges: result.evidenceCharges,
@@ -401,6 +409,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           eliminatedIds: [...new Set([...previous.caseState.eliminatedIds, ...facts.flatMap(fact => fact.eliminatedIds)])],
           eliminationReasons: Object.assign({}, ...facts.map(fact => fact.eliminationReasons), previous.caseState.eliminationReasons),
           hintFeed: mergeHintFeed(previous.caseState.hintFeed, [
+            ...hypothesisLines,
             ...(result.hintLines ?? []).map((text, index) => ({
               id: `${event.nodeIndex}-${event.moveNumber}-e-${index}`,
               text,
@@ -448,6 +457,9 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         ...createCaseState(projection.casePublic!, profiles),
         observations,
         factLedger,
+        claims: projection.claims ?? { ...EMPTY_CLAIMS },
+        hypotheses: projection.hypotheses ?? {},
+        explanationFeedback: projection.explanationFeedback ?? {},
         eliminatedIds: [...new Set([
           ...observations.flatMap(item => item.actualEliminatedIds ?? []),
           ...factLedger.flatMap(fact => fact.eliminatedIds),
@@ -470,12 +482,12 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         setRunState({
           ...INITIAL_RUN_STATE, runId, phase: 'complete', expedition, currentNodeIndex: 2,
           bankedScore: projection.run.scoreTotal ?? 0,
-          finalScore: decision.finalScore, completionReason: 'captured',
+          finalScore: decision.finalScore, completionReason: projection.completionReason ?? 'captured',
           resolvedSpeciesId: projection.verdict?.resolvedSpeciesId ?? null,
           resolvedExplanationId: projection.verdict?.resolvedExplanationId ?? null,
           fieldFacts: projection.verdict?.fieldFacts ?? [],
           caseResolution: projection.verdict?.resolution ?? null,
-          caseState: { ...baseCase, stage: 'guess', guessResult: 'correct' },
+          caseState: { ...baseCase, stage: 'claims_only', guessResult: projection.completionReason === 'slipped' ? 'wrong' : 'correct' },
         });
         toast('Expedition already resolved', { duration: 1800 });
         return true;
@@ -525,15 +537,18 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     handleRunReset,
     handleChooseEvidenceFamily,
     handleAcknowledgeIncident,
-    handleDiagnosis,
+    handleClaim,
     showSpeciesList,
     onShowSpeciesList,
-  }), [runState, boardOpacity, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleDiagnosis, showSpeciesList]);
+  }), [runState, boardOpacity, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim, showSpeciesList]);
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
 
 function createCaseState(publicCase: PublicCaseSnapshot, profiles: DeductionProfile[]): CaseState { return {
   version: 4,
+  claims: { ...EMPTY_CLAIMS },
+  hypotheses: Object.fromEntries(publicCase.mystery.explanationChoices.map(choice => [choice.id, 'open'])),
+  explanationFeedback: {},
   mapView: publicCase.mapView,
   mystery: publicCase.mystery,
   stage: 'board',

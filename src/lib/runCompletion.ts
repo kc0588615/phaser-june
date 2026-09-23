@@ -44,6 +44,7 @@ export function resolveCompletedRunRoute(
   startLat: number,
   nodes: readonly CompletionNode[],
   fallbackRoute: unknown,
+  allowPlannedFallback = true,
 ): RoutePoint[] {
   const route: RoutePoint[] = [{ lon: startLon, lat: startLat, waypointSlot: 0 }];
   for (const node of nodes) {
@@ -62,6 +63,7 @@ export function resolveCompletedRunRoute(
     || point.lat !== route[index - 1].lat);
   if (unique.length > 1) return unique;
 
+  if (!allowPlannedFallback) return unique;
   const fallback = normalizeRoutePolyline(fallbackRoute);
   return fallback.length > 0 ? fallback : unique;
 }

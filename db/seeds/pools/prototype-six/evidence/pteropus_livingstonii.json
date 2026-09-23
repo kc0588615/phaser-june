@@ -64,8 +64,14 @@
           "weak_tag": "comparison_behavior:not_defensive_curler"
         },
         {
-          "text": "It is usually recorded with others of its kind, not alone.",
-          "weak_tag": "social_pattern:group"
+          "text": "Group feeding points lack regular planting spacing, and the case has no planting record.",
+          "weak_tag": "social_pattern:group",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "human-planting"
+            ]
+          }
         }
       ]
     },
@@ -86,10 +92,24 @@
           "weak_tag": "comparison_diet:not_large_prey_hunter"
         },
         {
-          "text": "Its food comes from plants, not from other animals.",
-          "weak_tag": "food_source:plants"
+          "text": "Plant food remains cluster at elevated feeding points, supporting an animal seed carrier over wind alone.",
+          "weak_tag": "food_source:plants",
+          "explains": {
+            "supports": [
+              "mobile-seed-dispersal"
+            ],
+            "contradicts": [
+              "wind-dispersal"
+            ]
+          }
         }
-      ]
+      ],
+      "explains": {
+        "supports": [
+          "mobile-seed-dispersal"
+        ],
+        "contradicts": []
+      }
     },
     {
       "family": "place",
@@ -108,8 +128,14 @@
           "weak_tag": "climate_zone:tropical"
         },
         {
-          "text": "Range notes rule out the South Asian mainland.",
-          "weak_tag": "comparison_range:not_south_asian_mainland"
+          "text": "Island range records frame a mapped canopy gap; sampled seedlings trace to parents across that gap.",
+          "weak_tag": "comparison_range:not_south_asian_mainland",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "parent-trees-missed"
+            ]
+          }
         }
       ]
     }

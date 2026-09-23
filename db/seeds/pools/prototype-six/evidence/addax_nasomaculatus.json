@@ -42,8 +42,14 @@
           "weak_tag": "comparison_form:not_scaled_digger"
         },
         {
-          "text": "Size estimate: a heavy animal, well over the weight of an adult person.",
-          "weak_tag": "gameplay_size:large"
+          "text": "Heavy hoof traces accompany fresh feeding marks; plant stress cannot make those tracks.",
+          "weak_tag": "gameplay_size:large",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "drought-only"
+            ]
+          }
         }
       ]
     },
@@ -64,8 +70,14 @@
           "weak_tag": "social_pattern:group"
         },
         {
-          "text": "Field notes describe herds moving together across open ground.",
-          "weak_tag": "sociality:herd"
+          "text": "Herd visits recur in cool hours, without the broad overuse expected from crowding.",
+          "weak_tag": "sociality:herd",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "population-surge"
+            ]
+          }
         }
       ]
     },
@@ -86,10 +98,24 @@
           "weak_tag": "food_source:plants"
         },
         {
-          "text": "Feeding notes: a strict plant eater that grazes and browses.",
-          "weak_tag": "diet_type:herbivore"
+          "text": "Plant feeding recurs far from water; no water-dependent travel pattern was recorded.",
+          "weak_tag": "diet_type:herbivore",
+          "explains": {
+            "supports": [
+              "plant-moisture"
+            ],
+            "contradicts": [
+              "hidden-water"
+            ]
+          }
         }
-      ]
+      ],
+      "explains": {
+        "supports": [
+          "plant-moisture"
+        ],
+        "contradicts": []
+      }
     },
     {
       "family": "place",

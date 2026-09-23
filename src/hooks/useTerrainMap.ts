@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { Map } from 'maplibre-gl';
 import { EventBus } from '@/game/EventBus';
 import { TerrainMapController, type TerrainMapMode } from '@/terrain/mapTerrain';
-import { selectedTerrainCell, type TerrainSelection, type TerrainSnapshotV1 } from '@/terrain/terrain';
+import { selectedTerrainCell, type TerrainSelection, type TerrainSnapshot } from '@/terrain/terrain';
 
-export function useTerrainMap(mapRef: RefObject<Map | null>, ready: boolean, terrain: TerrainSnapshotV1 | undefined, fullscreen: boolean, siteMarkers: readonly unknown[]) {
+export function useTerrainMap(mapRef: RefObject<Map | null>, ready: boolean, terrain: TerrainSnapshot | undefined, fullscreen: boolean, siteMarkers: readonly unknown[]) {
   const controller = useRef<TerrainMapController | null>(null);
   const [view, setView] = useState<{ snapshotId?: string; mode: TerrainMapMode; selection: TerrainSelection | null }>({
     snapshotId: terrain?.id, mode: terrain ? 'local' : 'region', selection: null,

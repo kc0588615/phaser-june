@@ -42,8 +42,16 @@
           "weak_tag": "comparison_form:not_horned_antelope"
         },
         {
-          "text": "Size estimate: small to medium, light enough for one person to lift.",
-          "weak_tag": "gameplay_size:small_medium"
+          "text": "The small visitor leaves connected shallow ridges; wind later erases rather than creates their route.",
+          "weak_tag": "gameplay_size:small_medium",
+          "explains": {
+            "supports": [
+              "subsurface-foraging"
+            ],
+            "contradicts": [
+              "wind-pattern"
+            ]
+          }
         }
       ]
     },
@@ -64,8 +72,14 @@
           "weak_tag": "comparison_behavior:not_desert_herd"
         },
         {
-          "text": "Records nearly always show a single animal on its own.",
-          "weak_tag": "social_pattern:solitary"
+          "text": "A solitary visitor moves beneath sand without the surface impressions expected from a large traveler.",
+          "weak_tag": "social_pattern:solitary",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "large-animal"
+            ]
+          }
         }
       ]
     },
@@ -86,10 +100,22 @@
           "weak_tag": "food_source:animals"
         },
         {
-          "text": "Feeding notes: insects and other small invertebrates make up the diet.",
-          "weak_tag": "diet_type:insectivore"
+          "text": "Insect-rich vegetation guides the feeding route, rather than slope or drainage.",
+          "weak_tag": "diet_type:insectivore",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "buried-runoff"
+            ]
+          }
         }
-      ]
+      ],
+      "explains": {
+        "supports": [
+          "subsurface-foraging"
+        ],
+        "contradicts": []
+      }
     },
     {
       "family": "place",

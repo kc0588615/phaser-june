@@ -1,3 +1,4 @@
+import { parseExplanationEffects, validateExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import { snapshotEvidenceHints, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { CASE_TRAIT_CATEGORIES, POOL_SIZE, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
@@ -30,6 +31,7 @@ export interface CompilerEvidenceFamilyCard {
   bonusFactText: string;
   traitCategory: CaseTraitCategory;
   compareTag: string;
+  explains?: ExplanationEffects | null;
 }
 
 export interface CompilerEvidenceFamilyHint {
@@ -39,6 +41,7 @@ export interface CompilerEvidenceFamilyHint {
   sequenceIndex: number;
   hintText: string;
   weakTag: string;
+  explains?: ExplanationEffects | null;
 }
 
 export interface CompilerCascadeHint {
@@ -57,6 +60,7 @@ export interface CompiledCaseV4 {
     familyCardIds: Record<EvidenceFamily, number>;
     familyHintIds: Record<EvidenceFamily, number[]>;
     familyHints: EvidenceHintSnapshot[];
+    familyCardEffects: Record<string, ExplanationEffects | null>;
     cascadeHintIds: number[];
     mystery: PrivateMysteryCase;
   };
@@ -76,6 +80,7 @@ export interface CompileCaseV4Input {
   mapView: ExpeditionMapView;
   mysteryCasesBySpeciesId: ReadonlyMap<number, AuthoredMysteryCase>;
   answerTermsBySpeciesId: ReadonlyMap<number, readonly string[]>;
+  strictExplanationEffects?: boolean;
   forcedAnswerId?: number;
 }
 
@@ -100,6 +105,10 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
     const terms = input.answerTermsBySpeciesId.get(speciesId);
     if (!mystery || !terms) return fail('invalid_mystery_cases', 'Every prototype species needs one authored mystery case.');
     const errors = validateAuthoredMysteryCase(mystery, terms);
+    errors.push(...validateExplanationEffects([
+      ...(input.cardsBySpecies.get(speciesId) ?? []).map(card => card.explains),
+      ...(input.hintsBySpecies.get(speciesId) ?? []).map(hint => hint.explains),
+    ], mystery.public.explanationChoices.map(choice => choice.id), mystery.private.answerExplanationId, input.strictExplanationEffects ?? false));
     if (errors.length > 0) return fail('invalid_mystery_cases', `${speciesId}: ${errors.join('; ')}`);
   }
   const cardIdsBySpecies = new Map<number, Record<EvidenceFamily, number>>();
@@ -178,6 +187,7 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
       caseSeed: input.caseSeed,
       familyCardIds,
       familyHintIds,
+      familyCardEffects: Object.fromEntries((input.cardsBySpecies.get(answerId) ?? []).map(card => [String(card.id), parseExplanationEffects(card.explains)])),
       familyHints: snapshotEvidenceHints(familyHintIds, (input.hintsBySpecies.get(answerId) ?? []).map(hint => ({
         ...hint,
         traitCategory: input.cardsBySpecies.get(answerId)!.find(card => card.family === hint.family)!.traitCategory,

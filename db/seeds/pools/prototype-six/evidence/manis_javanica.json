@@ -42,8 +42,14 @@
           "weak_tag": "comparison_form:not_horned_antelope"
         },
         {
-          "text": "Size estimate: small to medium, light enough for one person to lift.",
-          "weak_tag": "gameplay_size:small_medium"
+          "text": "Small-to-medium visitor signs accompany repeated external nest openings, not just empty diseased chambers.",
+          "weak_tag": "gameplay_size:small_medium",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "nest-disease"
+            ]
+          }
         }
       ]
     },
@@ -64,8 +70,14 @@
           "weak_tag": "social_pattern:solitary"
         },
         {
-          "text": "Most of its activity happens after dark.",
-          "weak_tag": "activity_pattern:nocturnal"
+          "text": "Visits occur after dark; sampled nests show no tool pattern or daytime human access.",
+          "weak_tag": "activity_pattern:nocturnal",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "human-disturbance"
+            ]
+          }
         }
       ]
     },
@@ -86,10 +98,24 @@
           "weak_tag": "comparison_diet:not_bulk_browser"
         },
         {
-          "text": "It eats other animals, not plants.",
-          "weak_tag": "food_source:animals"
+          "text": "Animal prey is taken at organized insect colonies, rather than across a broad soil search.",
+          "weak_tag": "food_source:animals",
+          "explains": {
+            "supports": [
+              "specialist-foraging"
+            ],
+            "contradicts": [
+              "generalist-digging"
+            ]
+          }
         }
-      ]
+      ],
+      "explains": {
+        "supports": [
+          "specialist-foraging"
+        ],
+        "contradicts": []
+      }
     },
     {
       "family": "place",

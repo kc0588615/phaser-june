@@ -114,6 +114,7 @@ export interface PublicLedgerFact {
   rung: number;
   rungTotal: number;
   factText: string;
+  explanationNote?: string;
   eliminatedIds: number[];
   eliminationReasons: Record<string, string>;
 }

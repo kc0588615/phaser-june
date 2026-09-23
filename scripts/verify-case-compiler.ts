@@ -72,6 +72,7 @@ async function main() {
       ]]));
       const forcedCases = profiles.map(profile => compileCaseV4({
         caseSeed: 'c'.repeat(64),
+        strictExplanationEffects: true,
         prototypeSpeciesIds: profiles.map(item => item.speciesId),
         speciesPool: profiles,
         cardsBySpecies: familyCards,

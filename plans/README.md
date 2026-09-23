@@ -2,7 +2,7 @@
 
 Generated 2026-07-09; reconciled August 18, 2026. Execute numbered advisor plans in order unless their dependency notes say otherwise.
 
-COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md), [036 — isolated Phase B routing prototype](036-cog-terrain-phase-b-routing.md); direction in [the handoff](COG_BOARD_HANDOFF.md) and [033](033-cog-board-integration-review.md). C deferred. Continuous deduction: [035 — evidence ladder](035-evidence-ladder-continuous-deduction.md).
+COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md), [037 — variable-stride majority cells](037-terrain-variable-stride-majority-cells.md), [036 — isolated Phase B routing prototype](036-cog-terrain-phase-b-routing.md); direction in [the handoff](COG_BOARD_HANDOFF.md) and [033](033-cog-board-integration-review.md). C deferred. Continuous deduction: [035 — evidence ladder](035-evidence-ladder-continuous-deduction.md).
 
 ## Execution order & status
 
@@ -31,10 +31,14 @@ COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md), [036 — i
 | 034 | September 19, 2026 — COG Terrain in Normal Expeditions | P1 product | L | 033, current v4 runtime | IMPLEMENTED in working tree — automated and fixture-browser checks pass; authenticated live-run acceptance pending |
 | 035 | September 19, 2026 — Evidence Ladder: Continuous Deduction | P1 product | M | v4 runtime, 034 tree; content reload | IMPLEMENTED in working tree — prototype-six ladders written; 360 compiler paths pass; authenticated live playtest pending |
 | 036 | September 19, 2026 — Isolated Phase B Routing Prototype | P1 product | M | 034 terrain, current v4 runtime | IN TREE — isolated trail-adjacent direct 3+; production evidence unchanged; C deferred |
+| 037 | September 20, 2026 — Terrain Variety: Variable Stride, Majority Cells | P1 product | M | 034 | IN TREE — stride 8/16 majority cells; TiTiler mode fallback; variety 9/20 and 10/20 ≥3 classes; no commit |
+| 038 | September 20, 2026 — Live Claims: Solve the Case During Play | P1 product | L | 035 (ladder), additive migration | PLAN — [038](038-live-claims-continuous-case.md); two independent claims, explanation evidence effects, three-wrong-claims slip, sites optional |
+| 039 | September 22, 2026 — Continuous Review → Refactor → Docs Loop | P2 health | unattended hours | clean tree (land 034–038) | PLAN — [039](039-continuous-review-refactor-docs-loop.md); worktree branch, fresh-context iterations, no main/DB |
 
 ## Dependency notes
 
 - 034: [COG terrain in normal expeditions](034-cog-terrain-phase-a.md) requires verified terrain for new runs; legacy v4 runs remain playable without it.
+- 037: [variable-stride majority cells](037-terrain-variable-stride-majority-cells.md) keeps 6×6 boards but each cell is a stride×stride mode block (8, or 16 when a 10 km histogram is ≥70% one class). v1 snapshots stay stride 1. Deployed TiTiler `resampling=mode` is not trusted; extraction uses the raw block.
 - 035: [evidence ladder](035-evidence-ladder-continuous-deduction.md) makes every direct match rule candidates out live. No schema change (`weak_tag` column already exists); the seeded prototype ladders must be reloaded with `seed:evidence-family --write` before `verify:case-compiler` passes its new strict rule. Until reload, runs keep working on flat ladders (rung 0 eliminates, later rungs reinforce). Phase C should route presence-record facts through this ladder rather than a second evidence path.
 - 036: [isolated Phase B routing prototype](036-cog-terrain-phase-b-routing.md) inks trails and party travel on the recorded clip. Isolated rule is pre-move trail-adjacent direct 3+ (not spawn bias, not 4+). Production evidence and the six-move family-choice gate stay. C remains deferred.
 

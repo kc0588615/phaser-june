@@ -1,6 +1,7 @@
+import { claimsFromMetadata, hypothesesFromMetadata, revealedExplanationFeedback, type ClaimState, type Hypotheses } from '@/lib/liveClaims';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, parseEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
-import { parseTerrainSnapshot, type TerrainSnapshotV1 } from '@/terrain/terrain';
+import { parseTerrainSnapshot, type TerrainSnapshot } from '@/terrain/terrain';
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution, type PublicMysteryCase } from '@/lib/mysteryCase';
@@ -94,7 +95,7 @@ export type ProjectedNodeCaseState =
   | 'choice_ready';
 
 export interface PublicRunNode {
-  terrain?: TerrainSnapshotV1;
+  terrain?: TerrainSnapshot;
   id: string;
   nodeOrder: number;
   nodeType: string;
@@ -156,6 +157,7 @@ export interface PublicRunMemory {
     efficiencyBonus?: number;
     wrongGuessCount?: number;
     firstGuessCorrect?: boolean;
+    slipped?: boolean;
   } | null;
   finalScore?: number | null;
   realm?: string | null;
@@ -244,6 +246,10 @@ export interface PublicRunSummary {
 }
 
 export interface ClientRunProjection {
+  claims: ClaimState;
+  hypotheses: Hypotheses;
+  explanationFeedback: Record<string, string>;
+  completionReason: 'captured' | 'slipped' | null;
   run: PublicRunSummary;
   casePublic: PublicCaseSnapshot | null;
   checkpoint: PublicRunCheckpoint;
@@ -304,6 +310,10 @@ export function projectRunForClient(
     : [];
 
   return {
+    claims: claimsFromMetadata(metadata),
+    hypotheses: hypothesesFromMetadata(metadata),
+    explanationFeedback: revealedExplanationFeedback(metadata),
+    completionReason: session.runStatus === 'completed' ? metadata.completionReason === 'slipped' ? 'slipped' : 'captured' : null,
     run: projectRunSummary(session),
     casePublic,
     checkpoint: projectCheckpoint(metadata),
@@ -524,6 +534,7 @@ export function projectDeductionSummary(value: unknown): PublicRunMemory['deduct
   assignNumber(summary, 'guessBonus', source.guessBonus);
   assignNumber(summary, 'efficiencyBonus', source.efficiencyBonus);
   assignNonnegativeInteger(summary, 'wrongGuessCount', source.wrongGuessCount);
+  if (typeof source.slipped === 'boolean') summary.slipped = source.slipped;
   if (typeof source.firstGuessCorrect === 'boolean') summary.firstGuessCorrect = source.firstGuessCorrect;
   return summary;
 }
@@ -804,6 +815,7 @@ function projectLedgerFact(value: unknown): PublicLedgerFact | null {
     nodeIndex, moveNumber, family: source.family,
     traitCategory: traitCategory as PublicLedgerFact['traitCategory'],
     rung, rungTotal, factText, eliminatedIds, eliminationReasons: reasons,
+    ...(typeof source.explanationNote === 'string' ? { explanationNote: source.explanationNote.slice(0, 500) } : {}),
   };
 }
 

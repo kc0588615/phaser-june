@@ -1,3 +1,4 @@
+import { parseExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseTraits';
 
@@ -8,6 +9,7 @@ export interface EvidenceHintSnapshot {
   hintText: string;
   weakTag: string;
   traitCategory: CaseTraitCategory;
+  explains?: ExplanationEffects | null;
 }
 
 export function snapshotEvidenceHints(
@@ -21,7 +23,7 @@ export function snapshotEvidenceHints(
       || !CASE_TRAIT_CATEGORIES.includes(row.traitCategory)) {
       throw new Error(`Cannot preserve compiled evidence hint ${id}`);
     }
-    return { id, family, hintText: row.hintText, weakTag: row.weakTag, traitCategory: row.traitCategory };
+    return { id, family, hintText: row.hintText, weakTag: row.weakTag, traitCategory: row.traitCategory, ...(row.explains !== undefined ? { explains: parseExplanationEffects(row.explains) } : {}) };
   }));
 }
 

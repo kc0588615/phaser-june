@@ -42,8 +42,16 @@
           "weak_tag": "comparison_form:not_sand_digger"
         },
         {
-          "text": "Size estimate: a heavy animal, well over the weight of an adult person.",
-          "weak_tag": "gameplay_size:large"
+          "text": "Heavy-animal tracks occur where trail activity shifts locally; this is not a region-wide loss of prey.",
+          "weak_tag": "gameplay_size:large",
+          "explains": {
+            "supports": [
+              "predator-avoidance"
+            ],
+            "contradicts": [
+              "prey-collapse"
+            ]
+          }
         }
       ]
     },
@@ -64,8 +72,14 @@
           "weak_tag": "comparison_behavior:not_desert_herd"
         },
         {
-          "text": "Records nearly always show a single animal on its own.",
-          "weak_tag": "social_pattern:solitary"
+          "text": "Solitary territorial marks coincide with localized changes, rather than a broad seasonal movement.",
+          "weak_tag": "social_pattern:solitary",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "seasonal-migration"
+            ]
+          }
         }
       ]
     },
@@ -86,10 +100,22 @@
           "weak_tag": "comparison_diet:not_ant_specialist"
         },
         {
-          "text": "It eats other animals, not plants.",
-          "weak_tag": "food_source:animals"
+          "text": "Animal-prey alarms cluster around hunting cover; survey effort is similar at comparison sites.",
+          "weak_tag": "food_source:animals",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "observer-effect"
+            ]
+          }
         }
-      ]
+      ],
+      "explains": {
+        "supports": [
+          "predator-avoidance"
+        ],
+        "contradicts": []
+      }
     },
     {
       "family": "place",

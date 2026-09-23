@@ -14,7 +14,7 @@
  */
 
 import type { ExpeditionWaypoint, WaypointType } from '@/types/waypoints';
-import type { TerrainSnapshotV1 } from '@/terrain/terrain';
+import type { TerrainSnapshot } from '@/terrain/terrain';
 import type { NodeObstacle, ObstacleFamily } from '@/game/nodeObstacles';
 
 export type NodeFamily = 'bioregion_node' | 'protected_node' | 'community_node' | 'water_node';
@@ -45,7 +45,7 @@ export interface RunNode {
   obstacleFamily: ObstacleFamily | null;
   boardSeed?: number;
   waypoint?: ExpeditionWaypoint;
-  terrain?: TerrainSnapshotV1;
+  terrain?: TerrainSnapshot;
 }
 
 export interface HabitatSignals {

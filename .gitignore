@@ -67,3 +67,5 @@ repomix-output-*.xml
 
 # Raw agent transcript
 /plans/012-july9-improved deducation game system
+
+.scratch/

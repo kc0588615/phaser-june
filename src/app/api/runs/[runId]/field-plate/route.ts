@@ -25,6 +25,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const privateCase = parsePrivateCase(metadata.casePrivate);
     if (!privateCase) return NextResponse.json({ reason: 'legacy_run' }, { status: 409 });
 
+    if (metadata.completionReason === 'slipped') return NextResponse.json({ reason: 'case_slipped' }, { status: 409 });
     if (session.runStatus === 'completed') {
       const [species] = await db.select({ iucnId: speciesTable.iucnId })
         .from(speciesTable).where(eq(speciesTable.id, privateCase.answerId)).limit(1);

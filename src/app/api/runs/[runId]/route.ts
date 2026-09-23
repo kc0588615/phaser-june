@@ -1,3 +1,4 @@
+import { revealedEffectNote } from '@/lib/liveClaims';
 import { eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, runMemories } from '@/db';
@@ -27,7 +28,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       hydrateEvidence(metadata.evidenceApplications),
       hydrateLedger(metadata.factLedger, privateCase),
     ]);
-    const verdict = session.runStatus === 'completed' && privateCase ? {
+    const verdict = session.runStatus === 'completed' && metadata.completionReason !== 'slipped' && privateCase ? {
       resolvedSpeciesId: privateCase.answerId,
       resolvedExplanationId: privateCase.mystery.answerExplanationId,
       fieldFacts: evidence.fieldFacts,
@@ -37,7 +38,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       nodes,
       memory: memories[0] ?? null,
       publicObservations: evidence.observations,
-      publicFacts,
+      publicFacts: publicFacts.map(fact => ({ ...fact, ...(revealedEffectNote(metadata, fact.family, fact.rung) ? { explanationNote: revealedEffectNote(metadata, fact.family, fact.rung) } : {}) })),
       verdict,
     }));
   } catch (error) {

@@ -42,8 +42,14 @@
           "weak_tag": "comparison_form:not_sand_digger"
         },
         {
-          "text": "Size estimate: a heavy animal, well over the weight of an adult person.",
-          "weak_tag": "gameplay_size:large"
+          "text": "Heavy ground impressions repeat beside selective bark removal; storm breakage cannot explain both.",
+          "weak_tag": "gameplay_size:large",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "storm-damage"
+            ]
+          }
         }
       ]
     },
@@ -64,8 +70,16 @@
           "weak_tag": "comparison_behavior:not_defensive_curler"
         },
         {
-          "text": "It is usually recorded with others of its kind, not alone.",
-          "weak_tag": "social_pattern:group"
+          "text": "Repeated group travel reopens one corridor; the damage is concentrated rather than region-wide.",
+          "weak_tag": "social_pattern:group",
+          "explains": {
+            "supports": [
+              "megaherbivore-route"
+            ],
+            "contradicts": [
+              "overpopulation"
+            ]
+          }
         }
       ]
     },
@@ -86,10 +100,22 @@
           "weak_tag": "comparison_diet:not_ant_specialist"
         },
         {
-          "text": "Its food comes from plants, not from other animals.",
-          "weak_tag": "food_source:plants"
+          "text": "Plant feeding leaves external browse marks, not the internal galleries of wood-boring insects.",
+          "weak_tag": "food_source:plants",
+          "explains": {
+            "supports": [],
+            "contradicts": [
+              "invasive-borer"
+            ]
+          }
         }
-      ]
+      ],
+      "explains": {
+        "supports": [
+          "megaherbivore-route"
+        ],
+        "contradicts": []
+      }
     },
     {
       "family": "place",

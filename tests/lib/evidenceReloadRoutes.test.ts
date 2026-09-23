@@ -1,3 +1,4 @@
+import * as liveClaims from '@/lib/liveClaims';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -48,6 +49,7 @@ function harness() {
     '@/db': { ...tables, db: { ...tx, transaction: async (callback: any) => callback(tx) } },
     '@/lib/authHelpers': { getPlayerIdFromClerk: async () => 'player' },
     '@/lib/evidenceLadder': ladder,
+    '@/lib/liveClaims': liveClaims,
     '@/lib/runCaseState': { getRecord, isUuid: () => true, parsePrivateCase: (v: unknown) => v, parseV3EvidenceApplications: () => [], resolveFieldFacts: () => [] },
     '@/lib/runProjection': { parsePublicCaseSnapshot: (v: unknown) => v, projectRunForClient: (_session: unknown, data: unknown) => data },
     '@/lib/evidenceRunState': {

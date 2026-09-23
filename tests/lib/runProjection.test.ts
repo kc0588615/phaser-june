@@ -39,7 +39,7 @@ describe('v4 run projection', () => {
       runStatus: 'active',
       metadata: {
         casePublic: { ...CASE_PUBLIC, speciesRange: 'PRIVATE_RANGE' },
-        casePrivate: { version: 4, answerId: 4, caseSeed: 'PRIVATE_SEED', familyCardIds: { body: 900 } },
+        casePrivate: { version: 4, answerId: 4, caseSeed: 'PRIVATE_SEED', familyCardIds: { body: 900 }, familyCardEffects: { 900: { supports: ['PRIVATE_EFFECT'], contradicts: [] } } },
         evidenceApplications: [{ cardId: 900, bonusFactText: 'PRIVATE_FACT' }],
       },
     }, {
@@ -95,7 +95,7 @@ describe('v4 run projection', () => {
     const serialized = JSON.stringify(projection);
     for (const privateValue of [
       'PRIVATE_RANGE', 'PRIVATE_SEED', 'PRIVATE_FACT', 'PRIVATE_HINT', 'PRIVATE_TAG', '700',
-      'familyCardIds', 'familyHintIds', 'cascadeHintIds', '900',
+      'PRIVATE_EFFECT', 'familyCardEffects', 'familyCardIds', 'familyHintIds', 'cascadeHintIds', '900',
       'large-framed', 'gameplay_size:large', 'striped coat', 'grasping trunk',
       'keratin scales', 'digging claws',
     ]) {

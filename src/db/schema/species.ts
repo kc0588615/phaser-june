@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
 import {
   bigint,
+  jsonb,
   boolean,
   check,
   doublePrecision,
@@ -192,6 +193,7 @@ export const evidenceFamilyCards = pgTable(
     inferenceText: text('inference_text').notNull(),
     traitCategory: text('trait_category').notNull().$type<DeductionClueCategory>(),
     compareTag: text('compare_tag').notNull(),
+    explains: jsonb('explains').$type<import('@/lib/liveClaims').ExplanationEffects>(),
     traitPhrase: text('trait_phrase').notNull(),
     bonusFactText: text('bonus_fact_text').notNull(),
     source: text('source').notNull(),
@@ -225,6 +227,7 @@ export const evidenceFamilyHints = pgTable(
     sequenceIndex: smallint('sequence_index').notNull(),
     hintText: text('hint_text').notNull(),
     weakTag: text('weak_tag').notNull(),
+    explains: jsonb('explains').$type<import('@/lib/liveClaims').ExplanationEffects>(),
     reviewStatus: text('review_status').notNull().default('reviewed'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

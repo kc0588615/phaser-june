@@ -32,7 +32,7 @@ import { ProfileContent } from './components/ProfileContent';
 import { RunCompleteSummary } from './components/RunCompleteSummary';
 import { GlassPanel } from '@/components/ui/glass-panel';
 import { CaseIncidentIntro } from '@/components/CaseIncidentIntro';
-import { CaseDiagnosisPanel } from '@/components/CaseDiagnosisPanel';
+import { CaseClaimsPanel } from '@/components/CaseClaimsPanel';
 
 function ProfileTabContent() {
     return (
@@ -61,7 +61,7 @@ function MainAppLayoutInner() {
     const {
         runState, boardOpacity,
         handleRunResume, handleRunReset,
-        handleChooseEvidenceFamily, handleAcknowledgeIncident, handleDiagnosis,
+        handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim,
         onShowSpeciesList,
     } = useExpedition();
 
@@ -217,7 +217,7 @@ function MainAppLayoutInner() {
                             />
                         )}
 
-                        {inRun && runState.caseState && !['incident', 'guess'].includes(runState.caseState.stage) && (
+                        {inRun && runState.caseState && !['incident', 'claims_only'].includes(runState.caseState.stage) && (
                             <>
                                 <EvidenceFamilyRail caseState={runState.caseState} onChoose={handleChooseEvidenceFamily} />
                                 <CandidateRoster runState={runState} />
@@ -231,8 +231,8 @@ function MainAppLayoutInner() {
                         <CaseIncidentIntro mystery={runState.caseState.mystery} onContinue={() => void handleAcknowledgeIncident()} />
                     )}
 
-                    {inRun && runState.caseState?.stage === 'guess' && (
-                        <CaseDiagnosisPanel runState={runState} onSubmit={handleDiagnosis} />
+                    {inRun && runState.caseState && runState.caseState.stage !== 'incident' && (
+                        <CaseClaimsPanel key={runState.runId} runState={runState} onSubmit={handleClaim} />
                     )}
                 </div>
             </div>
