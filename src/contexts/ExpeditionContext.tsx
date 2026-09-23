@@ -172,7 +172,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         createRequestIdRef.current ??= createClientUuid();
         const response = await fetch('/api/runs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(buildCreateBody(payload, plannedRouteRef.current, createRequestIdRef.current)) });
         if (!response.ok) {
-          const failure = await response.json().catch(() => ({})) as { error?: string };
+          const failure = await readFailure(response);
           toast.error(failure.error ?? `Run creation failed (${response.status})`);
           return;
         }
@@ -187,12 +187,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       candidateSpeciesRef.current = await fetchCandidateSpecies(created.casePublic.candidateIds);
       // Run creation can repair waypoints and replace obstacle templates. Start
       // from the saved nodes so browser moves replay against the same board.
-      const savedResponse = await fetch(`/api/runs/${created.runId}`);
-      if (!savedResponse.ok) {
-        const failure = await savedResponse.json().catch(() => ({}));
-        throw new Error(failure.error ?? `Created run fetch failed (${savedResponse.status})`);
-      }
-      const saved = await savedResponse.json() as ClientRunProjection;
+      const saved = await fetchRunProjection(created.runId, 'Created run fetch');
       const expedition = expeditionFromProjection(saved);
       if (expedition.nodes.length !== 3) throw new Error('Created run lacks three saved nodes');
       payloadRef.current = payloadFromProjection(saved, expedition, profiles);
@@ -300,7 +295,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         body: JSON.stringify({ ...input, requestId: claimRequestRef.current.id }),
       });
       if (!response.ok) {
-        const failure = await response.json().catch(() => ({}));
+        const failure = await readFailure(response);
         toast.error(failure.reason === 'candidate_eliminated' || failure.reason === 'hypothesis_contradicted'
           ? 'New evidence rules out that choice. Choose another.' : 'Claim not saved. Retry the same choice.');
         return null;
@@ -365,7 +360,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         body: JSON.stringify(event),
       });
       if (!response.ok) {
-        const failure = await response.json().catch(() => ({})) as { error?: string; reason?: string; detail?: string };
+        const failure = await readFailure(response);
         const cause = [failure.reason, failure.detail].filter(Boolean).join('/');
         throw new Error(`Evidence progress failed (${response.status}${cause ? `: ${cause}` : ''})`);
       }
@@ -425,12 +420,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const handleRunResume = useCallback(async (runId: string) => {
     try {
-      const response = await fetch(`/api/runs/${runId}`);
-      if (!response.ok) {
-        const failure = await response.json().catch(() => ({}));
-        throw new Error(failure.error ?? `Run fetch failed (${response.status})`);
-      }
-      const projection = await response.json() as ClientRunProjection;
+      const projection = await fetchRunProjection(runId, 'Run fetch');
       const decision = reconcileProjection(projection);
       if (decision.kind === 'legacy') { toast.error('Expedition format updated — start a new run.'); resetLocal(); return false; }
       const profiles = await fetchProfiles(projection.casePublic!.candidateIds);
@@ -573,7 +563,27 @@ async function fetchCandidateSpecies(ids: number[]): Promise<Species[]> {
   }
 }
 
-async function fetchProfiles(ids: number[]): Promise<DeductionProfile[]> { const response = await fetch(`/api/species/profiles?ids=${ids.join(',')}`); if (!response.ok) throw new Error(`Profile fetch failed (${response.status})`); const body = await response.json() as { profiles?: DeductionProfile[] }; if (body.profiles?.length !== 6) throw new Error('Case profiles are incomplete'); return body.profiles; }
+async function fetchProfiles(ids: number[]): Promise<DeductionProfile[]> {
+  const response = await fetch(`/api/species/profiles?ids=${ids.join(',')}`);
+  if (!response.ok) throw new Error(`Profile fetch failed (${response.status})`);
+  const body = await response.json() as { profiles?: DeductionProfile[] };
+  if (body.profiles?.length !== 6) throw new Error('Case profiles are incomplete');
+  return body.profiles;
+}
+
+/** Error body shared by the run API routes; empty when the body is not JSON. */
+async function readFailure(response: Response): Promise<{ error?: string; reason?: string; detail?: string }> {
+  return response.json().catch(() => ({}));
+}
+
+async function fetchRunProjection(runId: string, label: string): Promise<ClientRunProjection> {
+  const response = await fetch(`/api/runs/${runId}`);
+  if (!response.ok) {
+    const failure = await readFailure(response);
+    throw new Error(failure.error ?? `${label} failed (${response.status})`);
+  }
+  return response.json() as Promise<ClientRunProjection>;
+}
 async function abandonPendingRun(runId: string): Promise<void> {
   try {
     const response = await fetch(`/api/runs/${runId}/abandon`, { method: 'POST' });
