@@ -5,7 +5,6 @@ import { drizzleToSnake } from '@/lib/drizzleToSnake';
 
 /**
  * GET /api/species/by-ids?ids=1,2,3
- * POST /api/species/by-ids { ids: [1, 2, 3] }
  *
  * Batch fetch species by their species.id values
  */
@@ -22,31 +21,6 @@ export async function GET(request: NextRequest) {
     }
 
     const ids = idsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
-
-    if (ids.length === 0) {
-      return NextResponse.json({ species: [] });
-    }
-
-    const species = await db
-      .select()
-      .from(speciesTable)
-      .where(inArray(speciesTable.id, ids))
-      .orderBy(asc(speciesTable.id));
-
-    return NextResponse.json({ species: species.map(drizzleToSnake) });
-  } catch (error) {
-    console.error('[API /species/by-ids] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch species' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const ids: number[] = body.ids || [];
 
     if (ids.length === 0) {
       return NextResponse.json({ species: [] });
