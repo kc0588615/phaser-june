@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import { EMPTY_CLAIMS, decideClaim, foldHypotheses, hypothesesFromMetadata, validateExplanationEffects, claimsFromMetadata } from '@/lib/liveClaims';
+import { EMPTY_CLAIMS, decideClaim, foldHypotheses, hypothesesFromMetadata, validateExplanationEffects, claimsFromMetadata, withExplanationNote } from '@/lib/liveClaims';
 import { snapshotEvidenceHints } from '@/lib/evidenceHintSnapshot';
 import { resolveCompletedRunRoute } from '@/lib/runCompletion';
 const choices = ['answer', 'wind', 'water', 'crowding'];
@@ -66,4 +66,16 @@ test('only revealed saved effects fold, with no retroactive effects on legacy ru
 test('early completion route excludes unvisited planned sites', () => {
   const route = resolveCompletedRunRoute(1, 2, [], [{ lon: 99, lat: 40 }], false);
   assert.deepEqual(route, [{ lon: 1, lat: 2, waypointSlot: 0 }]);
+});
+
+test('withExplanationNote adds public prose only for rungs with explanation effects', () => {
+  const metadata = {
+    casePrivate: {
+      familyHintIds: { body: [11, 12] },
+      familyHints: [{ id: 11, explains: { supports: ['wind'], contradicts: ['water'] } }, { id: 12 }],
+    },
+    casePublic: { mystery: { explanationChoices: [{ id: 'wind', label: 'Wind' }, { id: 'water', label: 'Water' }] } },
+  };
+  assert.deepEqual(withExplanationNote({ family: 'body', rung: 0 }, metadata), { family: 'body', rung: 0, explanationNote: 'Supports Wind · Weakens Water' });
+  assert.deepEqual(withExplanationNote({ family: 'body', rung: 1 }, metadata), { family: 'body', rung: 1 });
 });

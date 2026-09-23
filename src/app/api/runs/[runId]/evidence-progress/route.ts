@@ -1,4 +1,4 @@
-import { hypothesesFromMetadata, revealedEffectNote } from '@/lib/liveClaims';
+import { hypothesesFromMetadata, withExplanationNote } from '@/lib/liveClaims';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, speciesDeductionProfiles } from '@/db';
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const facts: PublicLedgerFact[] = revealed.flatMap(entry => {
         const hint = hintById.get(entry.hintId);
         const card = cardByFamily.get(entry.family);
-        return hint && card ? [{ ...hydrateLedgerFact(entry, hint, card, privateCase.familyHintIds[entry.family].length), ...(revealedEffectNote(metadata, entry.family, entry.rung) ? { explanationNote: revealedEffectNote(metadata, entry.family, entry.rung) } : {}) }] : [];
+        return hint && card ? [withExplanationNote(hydrateLedgerFact(entry, hint, card, privateCase.familyHintIds[entry.family].length), metadata)] : [];
       });
 
       const hypotheses = hypothesesFromMetadata({ ...metadata, factLedger: [...ledger, ...newEntries] });

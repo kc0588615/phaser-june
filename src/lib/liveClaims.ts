@@ -117,3 +117,9 @@ export function revealedEffectNote(metadata: unknown, family: string, rung: numb
   ].filter(Boolean);
   return notes.length ? notes.join(' · ') : undefined;
 }
+
+/** Attach the public explanation note to a revealed fact when its rung has one. */
+export function withExplanationNote<T extends { family: string; rung: number }>(fact: T, metadata: unknown): T & { explanationNote?: string } {
+  const explanationNote = revealedEffectNote(metadata, fact.family, fact.rung);
+  return explanationNote ? { ...fact, explanationNote } : fact;
+}

@@ -1,4 +1,4 @@
-import { revealedEffectNote } from '@/lib/liveClaims';
+import { withExplanationNote } from '@/lib/liveClaims';
 import { eq, inArray } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evidenceFamilyHints, runMemories } from '@/db';
@@ -38,7 +38,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       nodes,
       memory: memories[0] ?? null,
       publicObservations: evidence.observations,
-      publicFacts: publicFacts.map(fact => ({ ...fact, ...(revealedEffectNote(metadata, fact.family, fact.rung) ? { explanationNote: revealedEffectNote(metadata, fact.family, fact.rung) } : {}) })),
+      publicFacts: publicFacts.map(fact => withExplanationNote(fact, metadata)),
       verdict,
     }));
   } catch (error) {
