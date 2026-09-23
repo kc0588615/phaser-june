@@ -70,7 +70,7 @@ export function CasesTab({
         ) : (
           <div className="text-center py-16">
             <p className="text-ds-emerald text-lg mb-2">All species discovered!</p>
-            <p className="text-muted-foreground text-sm">You've solved every case</p>
+            <p className="text-muted-foreground text-sm">You&apos;ve solved every case</p>
           </div>
         )}
       </div>

@@ -128,10 +128,12 @@ export default function SpeciesCarousel({
             prevSlideMessage: 'Previous species',
             nextSlideMessage: 'Next species',
           }}
+          /* eslint-disable react-hooks/refs -- Swiper custom-nav pattern; onBeforeInit re-reads the refs once mounted */
           navigation={{
             prevEl: prevRef.current,
             nextEl: nextRef.current,
           }}
+          /* eslint-enable react-hooks/refs */
           onBeforeInit={(swiper) => {
             // @ts-expect-error - Swiper types don't include this pattern
             swiper.params.navigation.prevEl = prevRef.current;
