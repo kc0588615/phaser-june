@@ -8,21 +8,29 @@ export function useAuthBridge() {
 
   useEffect(() => {
     if (!isSignedIn || resolvedRef.current) return;
+    let cancelled = false;
 
     fetch('/api/player/ensure-profile', { method: 'POST' })
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) throw new Error(`ensure-profile failed (${r.status})`);
+        return r.json() as Promise<{ playerId?: unknown; isNew?: boolean }>;
+      })
       .then(async ({ playerId, isNew }) => {
-        resolvedRef.current = true;
+        // resolvedRef stays unset on a bad or cancelled response so a later sign-in retries.
+        if (cancelled || typeof playerId !== 'string') return;
 
         // Start game session server-side
         let sessionId: string | undefined;
         try {
           const sessRes = await fetch('/api/player/start-session', { method: 'POST' });
+          if (!sessRes.ok) throw new Error(`start-session failed (${sessRes.status})`);
           const sessData = await sessRes.json();
-          sessionId = sessData.sessionId;
+          if (typeof sessData.sessionId === 'string') sessionId = sessData.sessionId;
         } catch (err) {
           console.error('Failed to start session:', err);
         }
+        if (cancelled) return;
+        resolvedRef.current = true;
 
         EventBus.emit('auth-user-ready', { playerId, sessionId });
 
@@ -39,5 +47,6 @@ export function useAuthBridge() {
         }
       })
       .catch(console.error);
+    return () => { cancelled = true; };
   }, [isSignedIn]);
 }
