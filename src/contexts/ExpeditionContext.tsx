@@ -50,9 +50,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const createRequestIdRef = useRef<string | null>(null);
   const nodeIdsRef = useRef<string[]>([]);
   const casePublicRef = useRef<PublicCaseSnapshot | null>(null);
-  // Full species rows for the six case candidates — the field-note drip pool.
-  // Held per run so species object references stay stable.
-  const candidateSpeciesRef = useRef<Species[]>([]);
   const [initialFlow] = useState(createFlowState);
   const flowRef = useRef<CaseFlowState>(initialFlow);
   /** nodeIndex of the board currently mounted in the Phaser scene, null when torn down. */
@@ -66,7 +63,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => { stateRef.current = runState; }, [runState]);
 
   const resetLocal = useCallback(() => {
-    payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; createRequestIdRef.current = null; nodeIdsRef.current = []; casePublicRef.current = null; candidateSpeciesRef.current = [];
+    payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; createRequestIdRef.current = null; nodeIdsRef.current = []; casePublicRef.current = null;
     flowRef.current = createFlowState(); liveBoardRef.current = null; startingRef.current = false; advancingRef.current = false;
     objectiveProgressRef.current = 0;
     plannedRouteRef.current = []; routeRef.current = []; setBoardOpacity(1); setRunState(INITIAL_RUN_STATE);
@@ -76,7 +73,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
 
   const emitBoardTracked = useCallback((payload: EventPayloads['expedition-data-ready'], publicCase: PublicCaseSnapshot, nodeIndex: number, objectiveProgress: number, boardCheckpoint?: EventPayloads['map-location-selected']['boardCheckpoint']) => {
     liveBoardRef.current = nodeIndex;
-    emitBoard(payload, publicCase, nodeIndex, objectiveProgress, candidateSpeciesRef.current,
+    emitBoard(payload, publicCase, nodeIndex, objectiveProgress,
       stateRef.current.caseState?.selectedFamilies ?? [], boardCheckpoint);
   }, []);
 
@@ -184,7 +181,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       }
       // All six symmetric profiles must be in hand before the run leaves briefing.
       const profiles = await fetchProfiles(created.casePublic.candidateIds);
-      candidateSpeciesRef.current = await fetchCandidateSpecies(created.casePublic.candidateIds);
       // Run creation can repair waypoints and replace obstacle templates. Start
       // from the saved nodes so browser moves replay against the same board.
       const saved = await fetchRunProjection(created.runId, 'Created run fetch');
@@ -424,7 +420,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const decision = reconcileProjection(projection);
       if (decision.kind === 'legacy') { toast.error('Expedition format updated — start a new run.'); resetLocal(); return false; }
       const profiles = await fetchProfiles(projection.casePublic!.candidateIds);
-      candidateSpeciesRef.current = await fetchCandidateSpecies(projection.casePublic!.candidateIds);
       const expedition = expeditionFromProjection(projection);
       if (expedition.nodes.length !== 3) throw new Error('Resume payload lacks three generated nodes');
       const payload = payloadFromProjection(projection, expedition, profiles);
@@ -550,18 +545,6 @@ function createCaseState(publicCase: PublicCaseSnapshot, profiles: DeductionProf
   eliminationReasons: {},
   factLedger: [],
 }; }
-/** Full rows for the six candidates. Non-fatal: on failure the UI falls back to location species. */
-async function fetchCandidateSpecies(ids: number[]): Promise<Species[]> {
-  try {
-    const response = await fetch(`/api/species/by-ids?ids=${ids.join(',')}`);
-    if (!response.ok) return [];
-    const body = await response.json() as { species?: Species[] };
-    return body.species ?? [];
-  } catch (error) {
-    console.warn('[ExpeditionContext] Candidate species fetch failed:', error);
-    return [];
-  }
-}
 
 async function fetchProfiles(ids: number[]): Promise<DeductionProfile[]> {
   const response = await fetch(`/api/species/profiles?ids=${ids.join(',')}`);
@@ -592,11 +575,10 @@ async function abandonPendingRun(runId: string): Promise<void> {
     console.error('[ExpeditionContext] Pending run abandon failed:', error);
   }
 }
-function emitBoard(payload: EventPayloads['expedition-data-ready'], publicCase: PublicCaseSnapshot, nodeIndex: number, objectiveProgress: number, candidateSpecies: Species[] = [], selectedFamilies: EvidenceFamily[] = [], boardCheckpoint?: EventPayloads['map-location-selected']['boardCheckpoint']) {
+function emitBoard(payload: EventPayloads['expedition-data-ready'], publicCase: PublicCaseSnapshot, nodeIndex: number, objectiveProgress: number, selectedFamilies: EvidenceFamily[] = [], boardCheckpoint?: EventPayloads['map-location-selected']['boardCheckpoint']) {
   const node = payload.expedition.nodes[nodeIndex]; if (!node) throw new Error(`Missing generated node ${nodeIndex}`);
   const boardConfig = buildBoardSpawnConfigForNode(node.node_type, undefined, getAllowedEvidenceGemTypes(selectedFamilies));
-  const location = node.waypoint ?? { lon: payload.lon, lat: payload.lat };
-  EventBus.emit('map-location-selected', { lon: location.lon, lat: location.lat, ecoregionId: payload.ecoregionId ?? null, species: payload.species, rasterHabitats: payload.rasterHabitats, habitats: payload.habitats, difficulty: node.difficulty, moveBudget: 6, obstacles: node.obstacles, obstacleFamily: node.obstacleFamily, activeAffinities: payload.expedition.activeAffinities, objectiveTarget: 6, objectiveProgress, nodeIndex, nodeType: node.node_type, events: node.events, boardSeed: publicCase.boardSeeds[nodeIndex], boardContext: buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: node.obstacles, nodeIndex }), boardConfig, candidateIds: publicCase.candidateIds, candidateSpecies, boardCheckpoint, terrain: node.terrain });
+  EventBus.emit('map-location-selected', { difficulty: node.difficulty, moveBudget: 6, obstacles: node.obstacles, objectiveProgress, nodeIndex, boardSeed: publicCase.boardSeeds[nodeIndex], boardContext: buildNodeBoardContext({ width: GRID_COLS, height: GRID_ROWS, obstacles: node.obstacles, nodeIndex }), boardConfig, boardCheckpoint, terrain: node.terrain });
 }
 
 function buildCreateBody(payload: EventPayloads['expedition-data-ready'], routePolyline: RoutePoint[], createRequestId: string) { return { createRequestId, lon: payload.lon, lat: payload.lat, locationKey: `${payload.lon.toFixed(4)},${payload.lat.toFixed(4)}`, nodes: payload.expedition.nodes, activeAffinities: payload.expedition.activeAffinities, bioregion: payload.expedition.bioregion?.bioregion ?? undefined, realm: payload.expedition.bioregion?.realm ?? undefined, biome: payload.expedition.bioregion?.biome ?? undefined, speciesIds: payload.species.map(species => species.id), habitats: payload.habitats, rasterHabitats: payload.rasterHabitats, featureFingerprints: payload.featureFingerprints ?? [], routePolyline, expeditionSnapshot: { protectedAreas: payload.expedition.protectedAreas, availableAffinities: payload.expedition.availableAffinities, primaryNodeFamily: payload.expedition.primaryNodeFamily, primaryVariant: payload.expedition.primaryVariant, modifierNodes: payload.expedition.modifierNodes, signals: payload.expedition.signals, waypoints: payload.expedition.waypoints ?? [], waypointRadiusKm: payload.expedition.waypointRadiusKm ?? null, nearestRiverDistM: payload.expedition.nearestRiverDistM ?? null } }; }

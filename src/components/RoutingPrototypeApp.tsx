@@ -37,8 +37,7 @@ export function RoutingPrototypeApp() {
     EventBus.emit('routing-state-updated', next.view);
     if (!emitBoard) return;
     EventBus.emit('map-location-selected', {
-      lon: -84.1, lat: 10.4, habitats: [], species: [], rasterHabitats: [],
-      nodeIndex: 0, moveBudget: 6, boardSeed: next.boardSeed, obstacles: [], events: [],
+      nodeIndex: 0, moveBudget: 6, boardSeed: next.boardSeed, obstacles: [],
       terrain: next.terrain,
       ...(next.checkpoint ? { boardCheckpoint: next.checkpoint } : {}),
     });

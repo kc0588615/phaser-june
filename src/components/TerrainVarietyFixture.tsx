@@ -58,8 +58,7 @@ export function TerrainVarietyFixture() {
   useEffect(() => {
     if (!ready) return;
     EventBus.emit('map-location-selected', {
-      lon: -76, lat: -10, habitats: [], species: [], rasterHabitats: [],
-      nodeIndex: 0, moveBudget: 6, boardSeed: 91, obstacles: [], events: [], terrain,
+      nodeIndex: 0, moveBudget: 6, boardSeed: 91, obstacles: [], terrain,
     });
   }, [ready]);
   return (

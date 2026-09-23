@@ -5,7 +5,8 @@
 // emitting and listening to the events declared in `EventPayloads` below.
 // A typical run flows through it like this:
 //
-//   Explore map --'map-location-selected'---->  ExpeditionContext / Game scene
+//   Explore map --'expedition-data-ready'----> ExpeditionContext (briefing)
+//   Context    --'map-location-selected'----> Game scene (board setup)
 //   Context    --'expedition-start'---------->  Game scene (board begins)
 //   Game scene --'evidence-move-resolved'----> Context (server-replayed checkpoint)
 //   Context    --'node-complete'-------------> Game scene (next board begins)
@@ -16,8 +17,7 @@ import Phaser from 'phaser';
 import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { ExpeditionData } from '@/types/expedition';
-import type { AffinityType } from '@/expedition/affinities';
-import type { NodeBoardContext, NodeObstacle, ObstacleFamily } from './nodeObstacles';
+import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
 import type { BoardSpawnConfig } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { BoardCheckpointV1 } from './boardTypes';
@@ -28,30 +28,16 @@ import type { PublicRoutingView } from '@/terrain/routing';
 export interface EventPayloads {
   'terrain-cell-selected': TerrainSelection;
   'current-scene-ready': Phaser.Scene;
+  /** Board setup for one node; Game.ts reads only these fields. */
   'map-location-selected': {
-    lon: number;
-    lat: number;
-    ecoregionId?: number | null;
-    habitats: string[];
-    species: Species[];
-    rasterHabitats: RasterHabitatResult[];
     difficulty?: number;
     moveBudget?: number;
     obstacles?: NodeObstacle[];
-    obstacleFamily?: ObstacleFamily | null;
-    activeAffinities?: AffinityType[];
-    objectiveTarget?: number;
     objectiveProgress?: number;
     nodeIndex?: number;
-    nodeType?: string;
-    events?: string[];
     boardSeed?: number;
     boardContext?: NodeBoardContext;
     boardConfig?: BoardSpawnConfig;
-    /** Public case candidates. */
-    candidateIds?: number[];
-    /** Full rows for those candidates. */
-    candidateSpecies?: Species[];
     boardCheckpoint?: BoardCheckpointV1;
     terrain?: TerrainSnapshot;
   };

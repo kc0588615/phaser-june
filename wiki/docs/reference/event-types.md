@@ -32,28 +32,16 @@ Source of truth: `src/game/EventBus.ts`.
 
 ```ts
 {
-  lon: number;
-  lat: number;
-  ecoregionId?: number | null;
-  habitats: string[];
-  species: Species[];
-  rasterHabitats: RasterHabitatResult[];
   difficulty?: number;
   moveBudget?: number;
   obstacles?: NodeObstacle[];
-  obstacleFamily?: ObstacleFamily | null;
-  activeAffinities?: AffinityType[];
-  objectiveTarget?: number;
   objectiveProgress?: number;
   nodeIndex?: number;
-  nodeType?: string;
-  events?: string[];
   boardSeed?: number;
   boardContext?: NodeBoardContext;
   boardConfig?: BoardSpawnConfig;
-  candidateIds?: number[];
-  candidateSpecies?: Species[];
   boardCheckpoint?: BoardCheckpointV1;
+  terrain?: TerrainSnapshot;
 }
 ```
 
