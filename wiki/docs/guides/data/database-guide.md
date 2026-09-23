@@ -36,18 +36,17 @@ import { db } from '@/db';
 ### By Location (Raw SQL for PostGIS)
 
 ```typescript
-// e.g. src/app/api/species/in-radius/route.ts
+// src/app/api/species/in-radius/route.ts
 import { sql } from 'drizzle-orm';
-import { db, ensureIcaaViewReady } from '@/db';
-
-await ensureIcaaViewReady();
+import { db } from '@/db';
 
 const species = await db.execute(sql`
-  SELECT ogc_fid, common_name, scientific_name
-  FROM icaa_view
-  WHERE wkb_geometry IS NOT NULL
+  SELECT DISTINCT ON (s.id) s.*
+  FROM species s
+  JOIN iucn i ON i.id_no = s.iucn_id::numeric
+  WHERE i.wkb_geometry IS NOT NULL
     AND ST_DWithin(
-      wkb_geometry::geography,
+      i.wkb_geometry::geography,
       ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
       ${radiusMeters}
     )

@@ -1,5 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
+import { isUuid } from '@/lib/runCaseState';
+
+const isCount = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 
 /**
  * POST /api/player/track
@@ -29,6 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     switch (action) {
       case 'endGameSession': {
         const { sessionId, finalMoves, finalScore } = params;
+        if (!isUuid(sessionId) || !isCount(finalMoves) || !isCount(finalScore)) {
+          return res.status(400).json({ error: 'Invalid session totals' });
+        }
         const ended = await pt.endGameSession(profile.userId, sessionId, finalMoves, finalScore);
         if (!ended) return res.status(404).json({ error: 'Session not found' });
         return res.json({ ok: true });

@@ -89,7 +89,8 @@ export async function startGameSession(playerId: string): Promise<string | null>
 }
 
 /**
- * End an owned game session
+ * End an owned, still-open game session. Totals are client-reported (free
+ * play has no server-side move record), so a session can only be closed once.
  */
 export async function endGameSession(
   playerId: string,
@@ -111,6 +112,7 @@ export async function endGameSession(
         and(
           eq(playerGameSessions.id, sessionId),
           eq(playerGameSessions.playerId, playerId),
+          isNull(playerGameSessions.endedAt),
         )
       )
       .returning({ id: playerGameSessions.id });
@@ -129,7 +131,7 @@ export async function endGameSession(
 // PLAYER STATS REFRESH
 // =============================================================================
 // Refreshes aggregated player_stats from source tables.
-// Called after discoveries to keep stats in sync.
+// Called when a session ends and by scripts/backfill-player-stats.ts.
 // =============================================================================
 
 /**

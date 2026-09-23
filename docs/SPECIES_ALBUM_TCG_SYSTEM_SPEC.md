@@ -1032,9 +1032,9 @@ Returns one card with front/back progression and linked run memories.
 
 Returns normalized run memory for route display, events, GIS features, and card-back composition.
 
-### `POST /api/species/cards/[speciesId]/unlock`
+### ~~`POST /api/species/cards/[speciesId]/unlock`~~
 
-Optional command endpoint if unlock writes are not folded into run completion.
+Removed in plan 039: unlock writes are folded into run completion (the guess route).
 
 ## 17.2 Existing Endpoints to Extend
 

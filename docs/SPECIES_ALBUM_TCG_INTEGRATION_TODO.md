@@ -156,7 +156,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 
 3. **Discovery → card creation**: the guess route owns the card write, avoiding duplicate encounter increments. `SpeciesList` reads authenticated `species_cards` for album hydration and merges localStorage as fallback. Next: include richer unlock payloads (biome, realm, clue categories revealed).
 
-4. **Clue reveal → fact unlock**: EventBus `clue-revealed` events should trigger `/api/species/cards/[id]/unlock` with `unlockType: 'fact'` and the clue content.
+4. **Fact unlock**: done server-side; the guess route unlocks the selected-family facts on a correct claim (the client unlock endpoint was removed in plan 039).
 
 5. **Key facts → card slots**: Read `species.key_fact_1/2/3` (and any `species_facts` rows) for a species; show as locked/unlocked slots on card front based on `species_cards.facts_unlocked`. (`taxon_key_facts` removed)
 

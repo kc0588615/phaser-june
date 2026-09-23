@@ -414,7 +414,6 @@ For TypeDoc API generation, these files need comprehensive TSDoc:
 | P1 | `playerTracking.ts` | 13KB | Minimal |
 | P1 | `clueConfig.ts` | 13KB | Minimal |
 | P2 | `constants.ts` | 5KB | None |
-| P2 | `speciesQueries.ts` | 9KB | Minimal |
 
 ---
 
