@@ -478,7 +478,7 @@ This predates the v3 evidence-family corpus; re-query before using it for capaci
 | Projection (no private leak) | `src/lib/runProjection.ts` |
 | Case state helpers | `src/lib/runCaseState.ts` |
 | Evidence / guess | `src/app/api/runs/[runId]/evidence-progress`, `.../evidence-choice`, `.../guess` |
-| Map at-point | `src/app/api/protected-areas/at-point`, `src/app/api/species/at-point` |
+| Map at-point | `src/app/api/protected-areas/at-point`, `src/app/api/species/in-radius` |
 | Node generation | `src/lib/nodeScoring.ts` |
 | Client run loop | `src/contexts/ExpeditionContext.tsx` |
 

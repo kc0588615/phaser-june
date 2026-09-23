@@ -114,8 +114,8 @@ LIMIT 1;
 ## Frontend Integration
 
 ### API Integration
-`/api/species/bioregions` reads `bioregion`, `realm`, `subrealm`, `biome` from the `species`
-table directly (populated by the SQL above).
+Species rows returned by `/api/species/catalog` and `/api/species/by-ids` carry `bioregion`,
+`realm`, `subrealm`, `biome` straight from the `species` table (populated by the SQL above).
 
 ### Species Card Component
 Displays bioregion information in the "Ecoregion" section:

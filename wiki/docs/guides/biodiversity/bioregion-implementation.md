@@ -17,6 +17,7 @@ Reference polygons live in `oneearth_bioregion` for offline processing or reclas
 ## Querying
 
 ```typescript
-const response = await fetch(`/api/species/bioregions?ids=${ids.join(',')}`);
-const data = await response.json();
+// Species rows from /api/species/by-ids include bioregion, realm, subrealm, biome.
+const response = await fetch(`/api/species/by-ids?ids=${ids.join(',')}`);
+const { species } = await response.json();
 ```

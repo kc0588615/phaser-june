@@ -96,7 +96,7 @@ Benefit: Faster nearest-neighbor queries
 
 ### Event Flow:
 1. User clicks map → `handleMapClick` (line 150)
-2. Query species → `speciesService.getSpeciesAtPoint` (line 170)
+2. Query species → `speciesService.getSpeciesInRadius`
 3. If no species → `speciesService.getClosestHabitat` (line 278)
 4. Render highlight → `GeoJsonDataSource` processing (lines 288-303)
 5. Auto-remove → `setTimeout` cleanup (lines 306-313)
