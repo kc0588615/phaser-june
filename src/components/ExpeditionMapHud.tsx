@@ -154,9 +154,9 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   const [focusNodeIndex, setFocusNodeIndex] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showEvidenceDetail, setShowEvidenceDetail] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
   /** Cover state: loading placeholder, ready (hidden), or error/retry (replaces placeholder). */
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const mapReady = mapStatus === 'ready';
   const [mapError, setMapError] = useState<string | null>(null);
   const [dominantHabitat, setDominantHabitat] = useState<RasterHabitatResult | null>(null);
   const [habitatLoading, setHabitatLoading] = useState(false);
@@ -197,7 +197,6 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
   }, []);
 
   const retryMap = useCallback(() => {
-    setMapReady(false);
     setMapError(null);
     setMapStatus('loading');
     didFitRef.current = false;
@@ -254,13 +253,11 @@ export function ExpeditionMapHud({ runState, onSiteClick }: {
       } catch { /* ignore resize races during teardown */ }
       setMapError(null);
       setMapStatus('ready');
-      setMapReady(true);
     };
 
     const markError = (message: string) => {
       if (cancelled) return;
       clearLoadTimer();
-      setMapReady(false);
       setMapError(message);
       setMapStatus('error');
     };

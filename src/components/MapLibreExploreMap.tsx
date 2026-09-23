@@ -204,8 +204,8 @@ export default function MapLibreExploreMap({
   const habitatTimerRef = useRef<number | null>(null);
   const pointMarkersRef = useRef<maplibregl.Marker[]>([]);
   const waypointMarkersRef = useRef<maplibregl.Marker[]>([]);
-  const [mapReady, setMapReady] = useState(false);
   const [mapStatus, setMapStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const mapReady = mapStatus === 'ready';
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapGeneration, setMapGeneration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -240,7 +240,6 @@ export default function MapLibreExploreMap({
     let loaded = false;
     let cancelled = false;
 
-    setMapReady(false);
     setMapStatus('loading');
     setMapError(null);
     try {
@@ -268,7 +267,6 @@ export default function MapLibreExploreMap({
       applyMapProjection(map, 'explore');
       map.resize();
       map.triggerRepaint();
-      setMapReady(true);
       setMapStatus('ready');
     };
     const onStyleLoad = () => {
@@ -283,15 +281,14 @@ export default function MapLibreExploreMap({
     };
     const onContextLost = (event: { originalEvent?: Event }) => {
       event.originalEvent?.preventDefault?.();
-      setMapReady(false);
       setMapStatus('error');
       setMapError('Map graphics context lost');
     };
     const onContextRestored = () => {
-      if (!map) return;
+      // Before first load, 'load' (or the timeout) decides readiness.
+      if (!map || !loaded) return;
       map.resize();
       map.triggerRepaint();
-      setMapReady(true);
       setMapStatus('ready');
     };
     map.on('style.load', onStyleLoad);
