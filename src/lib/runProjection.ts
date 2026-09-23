@@ -1,5 +1,5 @@
 import { claimsFromMetadata, hypothesesFromMetadata, revealedExplanationFeedback, type ClaimState, type Hypotheses } from '@/lib/liveClaims';
-import { EVIDENCE_FAMILIES, isEvidenceFamily, parseEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
+import { isEvidenceFamily, parseEvidenceCharges, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
 import { parseTerrainSnapshot, type TerrainSnapshot } from '@/terrain/terrain';
 import type { BoardCheckpointV1 } from '@/game/boardTypes';
@@ -8,10 +8,9 @@ import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution,
 import type { PublicLedgerFact } from '@/lib/evidenceLadder';
 import { isCaseTraitCategory } from '@/lib/caseTraits';
 import { getRecord } from '@/lib/record';
-import { NODE_OBSTACLES } from '@/game/nodeObstacles';
+import { parseNodeObstacles, type NodeObstacle } from '@/game/nodeObstacles';
 
 const UINT32_MAX = 0xffff_ffff;
-const NODE_OBSTACLE_SET: ReadonlySet<string> = new Set(NODE_OBSTACLES);
 const NODE_EVENTS = new Set([
   'amphibian_signal',
   'river_crossing',
@@ -97,7 +96,7 @@ export interface PublicRunNode {
   caseState?: ProjectedNodeCaseState;
   rationale?: string;
   difficulty?: number;
-  obstacles: string[];
+  obstacles: NodeObstacle[];
   events: string[];
   waypoint?: PublicRunCheckpoint['expeditionSnapshot']['waypoints'][number];
   rewardClaimed?: boolean;
@@ -410,7 +409,7 @@ export function projectRunNodes(value: unknown): PublicRunNode[] {
       nodeOrder,
       nodeType,
       nodeStatus,
-      obstacles: getAllowedStringArray(hazardProfile.obstacles, NODE_OBSTACLE_SET),
+      obstacles: parseNodeObstacles(hazardProfile),
       events: getAllowedStringArray(hazardProfile.events, NODE_EVENTS),
     };
     if (Object.hasOwn(boardContext, 'terrain')) node.terrain = parseTerrainSnapshot(boardContext.terrain);
@@ -758,7 +757,7 @@ function getAllowedStringArray(value: unknown, allowed: ReadonlySet<string>): st
 function getEvidenceFamilies(value: unknown): EvidenceFamily[] {
   if (!Array.isArray(value)) return [];
   const result = value.filter(isEvidenceFamily);
-  return [...new Set(result)].filter(family => EVIDENCE_FAMILIES.includes(family));
+  return [...new Set(result)];
 }
 
 function getUint32(value: unknown): number | undefined {

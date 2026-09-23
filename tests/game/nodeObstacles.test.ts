@@ -7,6 +7,7 @@ import {
   getObstacleFamily,
   formatNodeObstacleLabel,
   isStaticSeededObstacle,
+  parseNodeObstacles,
 } from '@/game/nodeObstacles';
 
 const BASE = { width: 6, height: 6, obstacles: ['mud_tiles', 'overgrowth'] as any, nodeIndex: 1 };
@@ -66,5 +67,17 @@ describe('obstacle metadata', () => {
     assert.equal(formatNodeObstacleLabel('flow_shift'), 'Flow Shift');
     assert.equal(isStaticSeededObstacle('mud_tiles'), true);
     assert.equal(isStaticSeededObstacle('time_pressure'), false);
+  });
+});
+
+describe('parseNodeObstacles', () => {
+  test('keeps known obstacle ids from a stored hazard profile, in order', () => {
+    assert.deepEqual(parseNodeObstacles({ obstacles: ['mud_tiles', 'lava', 7, 'overgrowth'] }), ['mud_tiles', 'overgrowth']);
+  });
+
+  test('returns [] for missing or malformed profiles', () => {
+    assert.deepEqual(parseNodeObstacles(null), []);
+    assert.deepEqual(parseNodeObstacles({ obstacles: 'mud_tiles' }), []);
+    assert.deepEqual(parseNodeObstacles([]), []);
   });
 });

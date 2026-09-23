@@ -11,7 +11,7 @@ import {
 import { getRecord, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications } from '@/lib/runCaseState';
 import { parsePublicCaseSnapshot } from '@/lib/runProjection';
 import { evidenceMoveSubmissionDigest, parseEvidenceMoveSubmission, verifyEvidenceMoveDetailed } from '@/lib/evidenceMoveVerification';
-import { buildNodeBoardContext, NODE_OBSTACLES, type NodeObstacle } from '@/game/nodeObstacles';
+import { buildNodeBoardContext, parseNodeObstacles } from '@/game/nodeObstacles';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import type { CaseTraitCategory } from '@/lib/caseTraits';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         if (submission.moveNumber !== node.movesUsed + 1 || !Number.isInteger(node.boardSeed)) {
           return response(409, { reason: 'move_out_of_order' });
         }
-        const obstacles = getNodeObstacles(node.hazardProfile);
+        const obstacles = parseNodeObstacles(node.hazardProfile);
         const verification = verifyEvidenceMoveDetailed(submission, {
           previousCheckpoint: state.boardCheckpoint,
           boardSeed: node.boardSeed!,
@@ -198,10 +198,3 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 }
 
 function response(status: number, body: Record<string, unknown>) { return { status, body }; }
-
-function getNodeObstacles(value: unknown): NodeObstacle[] {
-  const source = getRecord(value);
-  return Array.isArray(source.obstacles)
-    ? source.obstacles.filter((item): item is NodeObstacle => typeof item === 'string' && NODE_OBSTACLES.includes(item as NodeObstacle))
-    : [];
-}

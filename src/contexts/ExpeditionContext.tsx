@@ -570,7 +570,7 @@ function expeditionFromProjection(data: ClientRunProjection): ExpeditionData {
       node_type: node.nodeType,
       difficulty: (node.difficulty ?? 3) as 1 | 2 | 3 | 4 | 5,
       moveBudget: node.moveBudget,
-      obstacles: node.obstacles as ExpeditionData['nodes'][number]['obstacles'],
+      obstacles: node.obstacles,
       events: node.events as ExpeditionData['nodes'][number]['events'],
       rationale: node.rationale ?? '',
       obstacleFamily: null,

@@ -5,6 +5,7 @@
 // placement is a pure function of (nodeIndex, obstacles, board size), so the
 // same node always produces the same layout — no stored state needed.
 import type { BoardCellState } from './boardTypes';
+import { getRecord } from '@/lib/record';
 
 export const NODE_OBSTACLES = [
     'flow_shift',
@@ -21,6 +22,17 @@ export const NODE_OBSTACLES = [
 ] as const;
 
 export type NodeObstacle = typeof NODE_OBSTACLES[number];
+
+const NODE_OBSTACLE_SET: ReadonlySet<string> = new Set(NODE_OBSTACLES);
+
+/** Known obstacle ids from a stored node hazard profile. Server replay and the
+ *  client projection both use this, so the replayed board matches the played one. */
+export function parseNodeObstacles(hazardProfile: unknown): NodeObstacle[] {
+    const obstacles = getRecord(hazardProfile).obstacles;
+    return Array.isArray(obstacles)
+        ? obstacles.filter((item): item is NodeObstacle => typeof item === 'string' && NODE_OBSTACLE_SET.has(item))
+        : [];
+}
 export type ObstacleFamily = 'visibility' | 'alert' | 'terrain' | 'sighting' | 'panic';
 
 export interface CellStateSeed {

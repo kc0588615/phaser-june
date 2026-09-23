@@ -60,7 +60,7 @@ function harness() {
       } }),
     },
     '@/lib/evidenceMoveVerification': { parseEvidenceMoveSubmission: (v: unknown) => v, evidenceMoveSubmissionDigest: () => 'digest', verifyEvidenceMoveDetailed: () => ({ ok: true, input }) },
-    '@/game/nodeObstacles': { NODE_OBSTACLES: [], buildNodeBoardContext: () => ({ obstacleSeeds: [] }) },
+    '@/game/nodeObstacles': { parseNodeObstacles: () => [], buildNodeBoardContext: () => ({ obstacleSeeds: [] }) },
     '@/game/constants': { GRID_COLS: 6, GRID_ROWS: 6 },
     '@/terrain/terrain': { StoredTerrainError: class extends Error {} },
   };
