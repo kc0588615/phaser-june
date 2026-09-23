@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { desc } from 'drizzle-orm';
 import { db, highScores } from '@/db';
-
-// Transform camelCase keys to snake_case for API response
-function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const key of Object.keys(obj)) {
-    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-    result[snakeKey] = obj[key];
-  }
-  return result;
-}
+import { drizzleToSnake } from '@/lib/drizzleToSnake';
 
 /**
  * GET /api/highscores
@@ -24,7 +15,7 @@ export async function GET() {
       .orderBy(desc(highScores.score))
       .limit(50);
 
-    const scoresSnake = scores.map(s => toSnakeCase(s as Record<string, unknown>));
+    const scoresSnake = scores.map(drizzleToSnake);
     return NextResponse.json({ scores: scoresSnake });
   } catch (error) {
     console.error('[API /highscores GET] Error:', error);
@@ -41,11 +32,12 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { username, score } = body;
+    const body = await request.json().catch(() => null);
+    const username: unknown = body?.username;
+    const score: unknown = body?.score;
 
     // Validate
-    const trimmedUsername = (username || '').trim();
+    const trimmedUsername = typeof username === 'string' ? username.trim() : '';
     if (trimmedUsername.length < 2 || trimmedUsername.length > 25) {
       return NextResponse.json(
         { error: 'Username must be between 2 and 25 characters' },
@@ -53,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (typeof score !== 'number' || score < 0) {
+    if (!Number.isSafeInteger(score) || (score as number) < 0) {
       return NextResponse.json(
         { error: 'Invalid score' },
         { status: 400 }
@@ -62,10 +54,10 @@ export async function POST(request: NextRequest) {
 
     const [newScore] = await db
       .insert(highScores)
-      .values({ username: trimmedUsername, score })
+      .values({ username: trimmedUsername, score: score as number })
       .returning();
 
-    return NextResponse.json({ score: toSnakeCase(newScore as Record<string, unknown>) });
+    return NextResponse.json({ score: drizzleToSnake(newScore) });
   } catch (error) {
     console.error('[API /highscores POST] Error:', error);
     return NextResponse.json(
