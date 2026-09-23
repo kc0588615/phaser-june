@@ -79,24 +79,24 @@ export default function SpeciesCarousel({
           modules={[Navigation, A11y, Keyboard]}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
-            const timer = setTimeout(() => {
+            setTimeout(() => {
+              // The Swiper may have been destroyed by a remount (keyed by taxonomy) before this fires.
+              if (swiper.destroyed) return;
               if (swiper.activeIndex !== 0) {
                 swiper.slideTo(0, 0);
               }
               handleSlideChange(swiper);
               // Force recalculate after layout settles
-              if (!swiper.destroyed) {
-                swiper.update();
-                if (typeof swiper.updateAutoHeight === 'function') {
-                  swiper.updateAutoHeight.call(swiper, 0);
-                }
+              swiper.update();
+              if (typeof swiper.updateAutoHeight === 'function') {
+                swiper.updateAutoHeight.call(swiper, 0);
               }
             }, 100);
           }}
           onSlideChange={(swiper) => {
             handleSlideChange(swiper);
             // Force height recalculation on each slide change
-            const timer = setTimeout(() => {
+            setTimeout(() => {
               // Avoid re-entrant slideChange loops; only adjust height
               if (!swiper.destroyed && typeof swiper.updateAutoHeight === 'function') {
                 swiper.updateAutoHeight.call(swiper, 0);
