@@ -58,7 +58,7 @@ function MainAppLayoutInner() {
     const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     const {
-        runState, boardOpacity,
+        runState,
         handleRunResume, handleRunReset,
         handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim,
         onShowSpeciesList,
@@ -199,7 +199,7 @@ function MainAppLayoutInner() {
 
                     </div>
 
-                    <div id="phaser-game-wrapper" style={{ ...phaserGameWrapperStyle, opacity: inRun ? boardOpacity : 1, transition: 'opacity 0.8s ease' }}>
+                    <div id="phaser-game-wrapper" style={phaserGameWrapperStyle}>
                         {inRun && (
                             <div className="absolute inset-0 z-base glass-bg" style={{ borderRadius: useSplitLayout ? 0 : '16px' }} />
                         )}

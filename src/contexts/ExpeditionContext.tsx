@@ -12,7 +12,7 @@ import { EVIDENCE_FAMILY_LABELS, createEmptyEvidenceCharges, getAllowedEvidenceG
 import { mergeHintFeed } from '@/expedition/hintFeed';
 import type { AffinityType } from '@/expedition/affinities';
 import { createFlowState, currentNodeIndexForStep, nextFlowStep, reconcileProjection, stageForStep, type CaseFlowState, type FlowStep } from '@/expedition/caseFlow';
-import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
+import { computeExpeditionRoutePolyline, type RoutePoint } from '@/lib/expeditionRoute';
 import { createClientUuid } from '@/lib/clientUuid';
 import type { Species } from '@/types/database';
 import type { MysteryResolution } from '@/lib/mysteryCase';
@@ -25,7 +25,6 @@ const INITIAL_RUN_STATE: RunState = {
 
 interface ExpeditionContextValue {
   runState: RunState;
-  boardOpacity: number;
   handleRunResume: (runId: string) => Promise<boolean>;
   handleRunReset: () => void;
   handleChooseEvidenceFamily: (family: EvidenceFamily) => Promise<boolean>;
@@ -42,13 +41,11 @@ type CreatedRun = { runId: string; nodeIds: string[]; casePublic: PublicCaseSnap
 
 export function ExpeditionProvider({ children }: { children: React.ReactNode }) {
   const [runState, setRunState] = useState(INITIAL_RUN_STATE);
-  const [boardOpacity, setBoardOpacity] = useState(1);
   const stateRef = useRef(runState);
   const payloadRef = useRef<EventPayloads['expedition-data-ready'] | null>(null);
   const runIdRef = useRef<string | null>(null);
   const pendingCreatedRunRef = useRef<CreatedRun | null>(null);
   const createRequestIdRef = useRef<string | null>(null);
-  const nodeIdsRef = useRef<string[]>([]);
   const casePublicRef = useRef<PublicCaseSnapshot | null>(null);
   const [initialFlow] = useState(createFlowState);
   const flowRef = useRef<CaseFlowState>(initialFlow);
@@ -56,17 +53,14 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const liveBoardRef = useRef<number | null>(null);
   const startingRef = useRef(false);
   const advancingRef = useRef(false);
-  const objectiveProgressRef = useRef(0);
   const plannedRouteRef = useRef<RoutePoint[]>([]);
-  const routeRef = useRef<RoutePoint[]>([]);
   const onShowSpeciesList = useRef<((speciesId: number) => void) | null>(null);
   useEffect(() => { stateRef.current = runState; }, [runState]);
 
   const resetLocal = useCallback(() => {
-    payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; createRequestIdRef.current = null; nodeIdsRef.current = []; casePublicRef.current = null;
+    payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; createRequestIdRef.current = null; casePublicRef.current = null;
     flowRef.current = createFlowState(); liveBoardRef.current = null; startingRef.current = false; advancingRef.current = false;
-    objectiveProgressRef.current = 0;
-    plannedRouteRef.current = []; routeRef.current = []; setBoardOpacity(1); setRunState(INITIAL_RUN_STATE);
+    plannedRouteRef.current = []; setRunState(INITIAL_RUN_STATE);
   }, []);
 
   const handleRunReset = useCallback(() => { resetLocal(); EventBus.emit('game-reset', undefined); }, [resetLocal]);
@@ -119,7 +113,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const payload = payloadRef.current; const publicCase = casePublicRef.current;
         if (!payload || !publicCase) throw new Error('Missing case data while advancing expedition');
         const resumedMoves = flowRef.current.nodes[step.nodeIndex]?.segmentMovesUsed ?? 0;
-        objectiveProgressRef.current = resumedMoves;
         setRunState(previous => previous.caseState ? { ...previous, currentNodeIndex: step.nodeIndex, caseState: {
           ...previous.caseState,
           stage: 'board',
@@ -147,14 +140,12 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       pendingCreatedRunRef.current = null;
       createRequestIdRef.current = null;
       runIdRef.current = null;
-      nodeIdsRef.current = [];
       casePublicRef.current = null;
       void abandonPendingRun(pendingRunId);
     }
     payloadRef.current = data;
     createRequestIdRef.current = createClientUuid();
     plannedRouteRef.current = data.expedition.routePolyline?.length ? data.expedition.routePolyline : computeExpeditionRoutePolyline(data.lon, data.lat, 3);
-    routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
     setRunState({ ...INITIAL_RUN_STATE, phase: 'briefing', expedition: data.expedition });
   }, []);
 
@@ -176,7 +167,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         created = await response.json() as CreatedRun;
         pendingCreatedRunRef.current = created;
         runIdRef.current = created.runId;
-        nodeIdsRef.current = created.nodeIds;
         casePublicRef.current = created.casePublic;
       }
       // All six symmetric profiles must be in hand before the run leaves briefing.
@@ -187,8 +177,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       const expedition = expeditionFromProjection(saved);
       if (expedition.nodes.length !== 3) throw new Error('Created run lacks three saved nodes');
       payloadRef.current = payloadFromProjection(saved, expedition, profiles);
-      plannedRouteRef.current = saved.checkpoint.routePolyline;
-      routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 0);
       pendingCreatedRunRef.current = null;
       flowRef.current = createFlowState();
       const caseState = { ...createCaseState(created.casePublic, profiles), stage: 'incident' as const };
@@ -245,7 +233,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
           : node),
       };
       emitNodeCompleteIfLive(nodeIndex);
-      routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, nodeIndex);
       setRunState(previous => previous.caseState ? {
         ...previous,
         bankedScore: previous.bankedScore + (result.scoreEarned ?? 0),
@@ -328,8 +315,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   }, [emitNodeCompleteIfLive]);
 
   const handleObjective = useCallback((event: EventPayloads['node-objective-updated']) => {
-    objectiveProgressRef.current = event.progress;
-
     const current = stateRef.current;
     const runId = runIdRef.current;
     if (!runId || current.phase !== 'mystery' || current.caseState?.stage !== 'board'
@@ -446,13 +431,11 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         eliminationReasons: Object.assign({}, ...factLedger.map(fact => fact.eliminationReasons), ...observations.map(item => item.eliminationReasons ?? {})),
         hintFeed: [],
       };
-      runIdRef.current = runId; nodeIdsRef.current = projection.nodes.map(node => node.id); casePublicRef.current = projection.casePublic; payloadRef.current = payload;
-      plannedRouteRef.current = projection.checkpoint.routePolyline;
+      runIdRef.current = runId; casePublicRef.current = projection.casePublic; payloadRef.current = payload;
 
       if (decision.kind === 'completed') {
         // Never re-emit a board for a completed run. No safe resolved id is
         // projected, so the summary stays generic ('Case resolved').
-        routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, 2);
         setRunState({
           ...INITIAL_RUN_STATE, runId, phase: 'complete', expedition, currentNodeIndex: 2,
           bankedScore: projection.run.scoreTotal ?? 0,
@@ -470,26 +453,24 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
       flowRef.current = decision.flow;
       const step = decision.step;
       const nodeIndex = currentNodeIndexForStep(step);
-      routeRef.current = getRoutePolylineThroughWaypointSlot(plannedRouteRef.current, nodeIndex);
+      const resumedNode = projection.nodes.find(node => node.nodeOrder === nodeIndex + 1);
       const caseState: CaseState = {
         ...baseCase,
         stage: stageForStep(step),
-        objectiveProgress: projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.objectiveProgress ?? 0,
-        objectiveTarget: projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.objectiveTarget ?? 0,
+        objectiveProgress: resumedNode?.objectiveProgress ?? 0,
+        objectiveTarget: resumedNode?.objectiveTarget ?? 0,
         nodeOutcomes: decision.flow.nodes.map(node => node.completed ? 'met' : null),
-        evidenceCharges: projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.evidenceCharges ?? baseCase.evidenceCharges,
-        carriedCharges: projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.carriedCharges ?? baseCase.carriedCharges,
-        offeredFamilies: step.kind === 'choose_evidence'
-          ? projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.offeredFamilies ?? []
-          : [],
-        selectedFamilies: projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.selectedFamilies ?? baseCase.selectedFamilies,
-        travelEntry: projection.nodes.find(node => node.nodeOrder === nodeIndex + 1)?.travelEntry ?? null,
+        evidenceCharges: resumedNode?.evidenceCharges ?? baseCase.evidenceCharges,
+        carriedCharges: resumedNode?.carriedCharges ?? baseCase.carriedCharges,
+        offeredFamilies: step.kind === 'choose_evidence' ? resumedNode?.offeredFamilies ?? [] : [],
+        selectedFamilies: resumedNode?.selectedFamilies ?? baseCase.selectedFamilies,
+        travelEntry: resumedNode?.travelEntry ?? null,
       };
       setRunState({ ...INITIAL_RUN_STATE, runId, phase: 'mystery', expedition, currentNodeIndex: nodeIndex, bankedScore: projection.run.scoreTotal ?? 0, caseState });
       if (step.kind === 'board') {
-        const objectiveProgress = projection.nodes.find(node => node.nodeOrder === step.nodeIndex + 1)?.objectiveProgress ?? 0;
-        objectiveProgressRef.current = objectiveProgress;
-        const checkpoint = projection.nodes.find(node => node.nodeOrder === step.nodeIndex + 1)?.boardCheckpoint;
+        // Board steps are current-node steps, so resumedNode is step.nodeIndex's node.
+        const objectiveProgress = resumedNode?.objectiveProgress ?? 0;
+        const checkpoint = resumedNode?.boardCheckpoint;
         window.setTimeout(() => emitBoardTracked(payload, projection.casePublic!, step.nodeIndex, objectiveProgress, checkpoint), 100);
       }
       toast('Expedition case resumed', { duration: 1800 }); return true;
@@ -506,7 +487,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const showSpeciesList = useCallback((speciesId: number) => onShowSpeciesList.current?.(speciesId), []);
   const value = useMemo(() => ({
     runState,
-    boardOpacity,
     handleRunResume,
     handleRunReset,
     handleChooseEvidenceFamily,
@@ -514,7 +494,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     handleClaim,
     showSpeciesList,
     onShowSpeciesList,
-  }), [runState, boardOpacity, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim, showSpeciesList]);
+  }), [runState, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim, showSpeciesList]);
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
 
