@@ -1,24 +1,11 @@
 import { parseExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import { parseEvidenceHintSnapshot, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
-import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory } from '@/lib/caseTraits';
+import { PROFILE_KEY_BY_CATEGORY, isCaseTraitCategory, type CaseTraitCategory } from '@/lib/caseTraits';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import type { FieldFact } from '@/types/expedition';
 import { parsePrivateMysteryCase, type PrivateMysteryCase } from '@/lib/mysteryCase';
 
-const CATEGORY_SET = new Set<string>(CASE_TRAIT_CATEGORIES);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-const CATEGORY_TO_PROFILE_KEY = {
-  habitat: 'habitatTags',
-  morphology: 'morphologyTags',
-  diet: 'dietTags',
-  behavior: 'behaviorTags',
-  reproduction: 'reproductionTags',
-  taxonomy: 'taxonomyTags',
-  key_fact: 'keyFactTags',
-  geography: 'geographyTags',
-  conservation: 'conservationTags',
-} as const satisfies Record<CaseTraitCategory, string>;
 
 export const RUN_CHECKPOINT_LIMITS = {
   currentNodeIndex: 2,
@@ -74,7 +61,7 @@ export function computeActualEliminatedIds(
   traitCategory: CaseTraitCategory,
   compareTag: string,
 ): number[] {
-  const key = CATEGORY_TO_PROFILE_KEY[traitCategory];
+  const key = PROFILE_KEY_BY_CATEGORY[traitCategory];
   const alreadyEliminated = new Set(alreadyEliminatedIds);
   const eliminatedIds: number[] = [];
   for (const profile of profiles) {
@@ -163,7 +150,7 @@ export function parseEvidenceFamilyCard(value: unknown): EvidenceFamilyCardConte
     && typeof source.inferenceText === 'string' && source.inferenceText.length > 0
     && typeof source.traitPhrase === 'string' && source.traitPhrase.length > 0
     && typeof source.bonusFactText === 'string' && source.bonusFactText.length > 0
-    && typeof source.traitCategory === 'string' && CATEGORY_SET.has(source.traitCategory)
+    && isCaseTraitCategory(source.traitCategory)
     && typeof source.compareTag === 'string' && source.compareTag.length > 0
     ? {
         id: source.id as number,

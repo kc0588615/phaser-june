@@ -6,6 +6,7 @@ import type { BoardCheckpointV1 } from '@/game/boardTypes';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
 import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution, type PublicMysteryCase } from '@/lib/mysteryCase';
 import type { PublicLedgerFact } from '@/lib/evidenceLadder';
+import { isCaseTraitCategory } from '@/lib/caseTraits';
 
 const UINT32_MAX = 0xffff_ffff;
 const NODE_OBSTACLES = new Set([
@@ -33,17 +34,6 @@ const NODE_EVENTS = new Set([
   'migration_shift',
   'discovery_event',
   'wager_guess',
-]);
-const TRAIT_CATEGORIES = new Set([
-  'habitat',
-  'morphology',
-  'diet',
-  'behavior',
-  'reproduction',
-  'taxonomy',
-  'geography',
-  'conservation',
-  'key_fact',
 ]);
 const SENSITIVE_KEYS = new Set([
   'answerid',
@@ -587,7 +577,7 @@ function projectObservation(value: unknown): PublicIssuedObservation | null {
   const inferenceText = getString(source.inferenceText);
   const traitCategory = getString(source.traitCategory);
   if (inferenceText !== undefined) observation.inferenceText = inferenceText;
-  if (traitCategory && TRAIT_CATEGORIES.has(traitCategory)) observation.traitCategory = traitCategory;
+  if (isCaseTraitCategory(traitCategory)) observation.traitCategory = traitCategory;
   const actualEliminatedIds = getIntegerArray(source.actualEliminatedIds);
   if (actualEliminatedIds.length > 0) observation.actualEliminatedIds = actualEliminatedIds;
   const eliminationReasonsSource = getRecord(source.eliminationReasons);
@@ -802,7 +792,7 @@ function projectLedgerFact(value: unknown): PublicLedgerFact | null {
   const traitCategory = getString(source.traitCategory);
   if (nodeIndex === undefined || nodeIndex < 0 || nodeIndex > 2 || moveNumber === undefined || moveNumber < 1 || moveNumber > 6
     || !isEvidenceFamily(source.family) || rung === undefined || rung < 0 || rungTotal === undefined || rungTotal < 1
-    || !factText || !traitCategory || !TRAIT_CATEGORIES.has(traitCategory)) return null;
+    || !factText || !isCaseTraitCategory(traitCategory)) return null;
   const eliminatedIds = Array.isArray(source.eliminatedIds)
     ? source.eliminatedIds.flatMap(id => { const n = getInteger(id); return n !== undefined && n > 0 ? [n] : []; })
     : [];

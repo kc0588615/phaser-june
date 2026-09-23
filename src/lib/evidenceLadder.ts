@@ -9,16 +9,10 @@
 // survivors); families must be combined. The six-move hard card stays the
 // decisive site clue and closes its family.
 import { EVIDENCE_FAMILY_LABELS, isEvidenceFamily, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { CASE_TRAIT_CATEGORIES, PROFILE_KEY_BY_CATEGORY, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { isCanonicalDeductionTag } from '@/lib/deductionTags';
 import type { EvidenceProgressInput } from '@/lib/evidenceRunState';
 import { getRecord } from '@/lib/runCaseState';
-
-export const PROFILE_KEY_BY_CATEGORY = {
-  habitat: 'habitatTags', morphology: 'morphologyTags', diet: 'dietTags', behavior: 'behaviorTags',
-  reproduction: 'reproductionTags', taxonomy: 'taxonomyTags', key_fact: 'keyFactTags',
-  geography: 'geographyTags', conservation: 'conservationTags',
-} as const satisfies Record<CaseTraitCategory, keyof CompilerSpeciesProfile>;
 
 /** Rung survivor bounds: never zero information, never a single-family identification. */
 export const LADDER_MIN_SURVIVORS = 2;

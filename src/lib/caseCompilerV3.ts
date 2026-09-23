@@ -1,7 +1,7 @@
 import { parseExplanationEffects, validateExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import { snapshotEvidenceHints, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
 import { EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, POOL_SIZE, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { CASE_TRAIT_CATEGORIES, PROFILE_KEY_BY_CATEGORY, POOL_SIZE, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { validateFamilyLadder } from '@/lib/evidenceLadder';
 import { createSeededStream } from '@/lib/seededRng';
 import { parseExpeditionMapView, type ExpeditionMapView } from '@/expedition/mapView';
@@ -14,12 +14,6 @@ import {
   type PrivateMysteryCase,
   type PublicMysteryCase,
 } from '@/lib/mysteryCase';
-
-const PROFILE_KEY = {
-  habitat: 'habitatTags', morphology: 'morphologyTags', diet: 'dietTags', behavior: 'behaviorTags',
-  reproduction: 'reproductionTags', taxonomy: 'taxonomyTags', key_fact: 'keyFactTags',
-  geography: 'geographyTags', conservation: 'conservationTags',
-} as const satisfies Record<CaseTraitCategory, keyof CompilerSpeciesProfile>;
 
 export interface CompilerEvidenceFamilyCard {
   id: number;
@@ -123,10 +117,10 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
       if (!Number.isSafeInteger(card.id) || card.id <= 0 || card.speciesId !== speciesId
         || !EVIDENCE_FAMILIES.includes(card.family) || !CASE_TRAIT_CATEGORIES.includes(card.traitCategory)
         || !card.observationText || !card.inferenceText || !card.traitPhrase || !card.bonusFactText || !card.compareTag || seenCardIds.has(card.id)
-        || !(profile[PROFILE_KEY[card.traitCategory]] as readonly string[]).includes(card.compareTag)
+        || !(profile[PROFILE_KEY_BY_CATEGORY[card.traitCategory]] as readonly string[]).includes(card.compareTag)
         || byFamily.has(card.family)) return fail('invalid_cards', 'Family cards are missing, duplicated, or do not match their answer profile.');
       const frequency = profiles.filter(candidate =>
-        (candidate[PROFILE_KEY[card.traitCategory]] as readonly string[]).includes(card.compareTag)).length;
+        (candidate[PROFILE_KEY_BY_CATEGORY[card.traitCategory]] as readonly string[]).includes(card.compareTag)).length;
       if (frequency < 2 || frequency > 5) return fail('invalid_cards', 'Each family tag must occur in two to five profiles.');
       seenCardIds.add(card.id);
       byFamily.set(card.family, card);
@@ -215,7 +209,7 @@ export function verifyCaseCorpusV3(
       for (const family of path) {
         const card = cards.find(candidate => candidate.family === family);
         if (!card) { errors.push(`${answer.speciesId}/${family}: missing card`); break; }
-        const next = live.filter(profile => (profile[PROFILE_KEY[card.traitCategory]] as readonly string[]).includes(card.compareTag));
+        const next = live.filter(profile => (profile[PROFILE_KEY_BY_CATEGORY[card.traitCategory]] as readonly string[]).includes(card.compareTag));
         if (!next.some(profile => profile.speciesId === answer.speciesId)) errors.push(`${answer.speciesId}/${path.join('-')}: answer eliminated`);
         if (next.length === 0 || next.length > live.length) errors.push(`${answer.speciesId}/${path.join('-')}: invalid candidate transition`);
         if (next.length < 2) errors.push(`${answer.speciesId}/${path.join('-')}/${family}: hard tag unique among live candidates`);

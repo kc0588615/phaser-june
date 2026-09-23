@@ -15,6 +15,12 @@ export const CASE_TRAIT_CATEGORIES = [
 
 export type CaseTraitCategory = typeof CASE_TRAIT_CATEGORIES[number];
 
+const CASE_TRAIT_CATEGORY_SET: ReadonlySet<string> = new Set(CASE_TRAIT_CATEGORIES);
+
+export function isCaseTraitCategory(value: unknown): value is CaseTraitCategory {
+  return typeof value === 'string' && CASE_TRAIT_CATEGORY_SET.has(value);
+}
+
 export interface CompilerSpeciesProfile {
   speciesId: number;
   habitatTags: readonly string[];
@@ -28,3 +34,9 @@ export interface CompilerSpeciesProfile {
   keyFactTags: readonly string[];
   signatureTag: string | null;
 }
+
+export const PROFILE_KEY_BY_CATEGORY = {
+  habitat: 'habitatTags', morphology: 'morphologyTags', diet: 'dietTags', behavior: 'behaviorTags',
+  reproduction: 'reproductionTags', taxonomy: 'taxonomyTags', key_fact: 'keyFactTags',
+  geography: 'geographyTags', conservation: 'conservationTags',
+} as const satisfies Record<CaseTraitCategory, keyof CompilerSpeciesProfile>;

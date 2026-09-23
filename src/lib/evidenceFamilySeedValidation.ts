@@ -1,7 +1,7 @@
 import { parseExplanationEffects, validateExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import type { AuthoredMysteryCase } from '@/lib/mysteryCase';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { CASE_TRAIT_CATEGORIES, PROFILE_KEY_BY_CATEGORY, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { isCanonicalDeductionTag } from '@/lib/deductionTags';
 import { validateFamilyLadder } from '@/lib/evidenceLadder';
 import type { EvidenceProfileDossier } from '@/lib/evidenceSeedValidation';
@@ -85,12 +85,6 @@ export function parseEvidenceFamilySeed(raw: unknown, fileName = 'family evidenc
     }),
   };
 }
-
-const PROFILE_KEY = {
-  habitat: 'habitatTags', morphology: 'morphologyTags', diet: 'dietTags', behavior: 'behaviorTags',
-  reproduction: 'reproductionTags', taxonomy: 'taxonomyTags', key_fact: 'keyFactTags',
-  geography: 'geographyTags', conservation: 'conservationTags',
-} as const satisfies Record<CaseTraitCategory, keyof CompilerSpeciesProfile>;
 
 function leakedName(textValue: string, seeds: readonly EvidenceFamilySeed[]): string[] {
   const terms = new Set<string>();
@@ -188,5 +182,5 @@ export function familySeedToCompilerProfiles(dossiers: readonly EvidenceProfileD
 }
 
 export function profileHasFamilyCardTag(profile: CompilerSpeciesProfile, card: EvidenceFamilySeedCard): boolean {
-  return (profile[PROFILE_KEY[card.trait_category]] as readonly string[]).includes(card.compare_tag);
+  return (profile[PROFILE_KEY_BY_CATEGORY[card.trait_category]] as readonly string[]).includes(card.compare_tag);
 }
