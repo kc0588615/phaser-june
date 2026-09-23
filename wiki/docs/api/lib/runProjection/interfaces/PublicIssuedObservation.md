@@ -1,6 +1,6 @@
 # Interface: PublicIssuedObservation
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:160](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L160)
+Defined in: [lib/runProjection.ts:149](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L149)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:160](https://github.com/kc
 
 > `optional` **actualEliminatedIds**: `number`[]
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:166](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L166)
+Defined in: [lib/runProjection.ts:155](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L155)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:166](https://github.com/kc
 
 > `optional` **candidateTraitPhrases**: `Record`\<`string`, `string`\>
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:168](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L168)
+Defined in: [lib/runProjection.ts:157](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L157)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:168](https://github.com/kc
 
 > `optional` **eliminationReasons**: `Record`\<`string`, `string`\>
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:167](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L167)
+Defined in: [lib/runProjection.ts:156](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L156)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:167](https://github.com/kc
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:162](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L162)
+Defined in: [lib/runProjection.ts:151](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L151)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:162](https://github.com/kc
 
 > `optional` **inferenceText**: `string`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:164](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L164)
+Defined in: [lib/runProjection.ts:153](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L153)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:164](https://github.com/kc
 
 > **observationText**: `string`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:163](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L163)
+Defined in: [lib/runProjection.ts:152](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L152)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:163](https://github.com/kc
 
 > **ref**: `string`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:161](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L161)
+Defined in: [lib/runProjection.ts:150](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L150)
 
 ***
 
@@ -64,4 +64,4 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:161](https://github.com/kc
 
 > `optional` **traitCategory**: `string`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:165](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L165)
+Defined in: [lib/runProjection.ts:154](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L154)

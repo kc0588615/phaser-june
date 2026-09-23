@@ -1,6 +1,6 @@
 # Interface: RunSummary
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:5](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L5)
+Defined in: [types/runSummary.ts:5](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L5)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:5](https://github.com/kc058
 
 > **affinities**: `string`[]
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L17)
+Defined in: [types/runSummary.ts:17](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L17)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:17](https://github.com/kc05
 
 > **biome**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:10](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L10)
+Defined in: [types/runSummary.ts:10](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L10)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:10](https://github.com/kc05
 
 > **bioregion**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L11)
+Defined in: [types/runSummary.ts:11](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L11)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:11](https://github.com/kc05
 
 > **discoveredSpecies**: \{ `id`: `number`; `name`: `string`; \} \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L19)
+Defined in: [types/runSummary.ts:19](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L19)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:19](https://github.com/kc05
 
 > **endedAt**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:16](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L16)
+Defined in: [types/runSummary.ts:16](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L16)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:16](https://github.com/kc05
 
 > **finalScore**: `number` \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L13)
+Defined in: [types/runSummary.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L13)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:13](https://github.com/kc05
 
 > **gisFeaturesNearby**: `object`[]
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L22)
+Defined in: [types/runSummary.ts:22](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L22)
 
 #### featureClass
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:22](https://github.com/kc05
 
 > `optional` **hasResumeSnapshot**: `boolean`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L18)
+Defined in: [types/runSummary.ts:18](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L18)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:18](https://github.com/kc05
 
 > **id**: `string`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L6)
+Defined in: [types/runSummary.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L6)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:6](https://github.com/kc058
 
 > **locationKey**: `string`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L8)
+Defined in: [types/runSummary.ts:8](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L8)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:8](https://github.com/kc058
 
 > **nodeCount**: `number`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L14)
+Defined in: [types/runSummary.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L14)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:14](https://github.com/kc05
 
 > **nodes**: `object`[]
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L23)
+Defined in: [types/runSummary.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L23)
 
 #### movesUsed
 
@@ -140,7 +140,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:23](https://github.com/kc05
 
 > **realm**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:9](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L9)
+Defined in: [types/runSummary.ts:9](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L9)
 
 ***
 
@@ -148,7 +148,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:9](https://github.com/kc058
 
 > **routeBounds**: \{ `maxLat`: `number`; `maxLon`: `number`; `minLat`: `number`; `minLon`: `number`; \} \| `null`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L21)
+Defined in: [types/runSummary.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L21)
 
 ***
 
@@ -156,7 +156,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:21](https://github.com/kc05
 
 > **routePolyline**: [`RoutePoint`](../../../lib/expeditionRoute/interfaces/RoutePoint.md)[]
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L20)
+Defined in: [types/runSummary.ts:20](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L20)
 
 ***
 
@@ -164,7 +164,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:20](https://github.com/kc05
 
 > **scoreTotal**: `number`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L12)
+Defined in: [types/runSummary.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L12)
 
 ***
 
@@ -172,7 +172,7 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:12](https://github.com/kc05
 
 > **startedAt**: `string`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L15)
+Defined in: [types/runSummary.ts:15](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L15)
 
 ***
 
@@ -180,4 +180,4 @@ Defined in: [phaser-june-039/src/types/runSummary.ts:15](https://github.com/kc05
 
 > **status**: `string`
 
-Defined in: [phaser-june-039/src/types/runSummary.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/runSummary.ts#L7)
+Defined in: [types/runSummary.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/types/runSummary.ts#L7)

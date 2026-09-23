@@ -1,6 +1,6 @@
 # Interface: PublicLedgerFact
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:103](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L103)
+Defined in: [lib/evidenceLadder.ts:103](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L103)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:103](https://github.com/k
 
 > **eliminatedIds**: `number`[]
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:112](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L112)
+Defined in: [lib/evidenceLadder.ts:112](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L112)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:112](https://github.com/k
 
 > **eliminationReasons**: `Record`\<`string`, `string`\>
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:113](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L113)
+Defined in: [lib/evidenceLadder.ts:113](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L113)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:113](https://github.com/k
 
 > `optional` **explanationNote**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:111](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L111)
+Defined in: [lib/evidenceLadder.ts:111](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L111)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:111](https://github.com/k
 
 > **factText**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:110](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L110)
+Defined in: [lib/evidenceLadder.ts:110](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L110)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:110](https://github.com/k
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:106](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L106)
+Defined in: [lib/evidenceLadder.ts:106](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L106)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:106](https://github.com/k
 
 > **moveNumber**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:105](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L105)
+Defined in: [lib/evidenceLadder.ts:105](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L105)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:105](https://github.com/k
 
 > **nodeIndex**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:104](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L104)
+Defined in: [lib/evidenceLadder.ts:104](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L104)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:104](https://github.com/k
 
 > **rung**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:108](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L108)
+Defined in: [lib/evidenceLadder.ts:108](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L108)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:108](https://github.com/k
 
 > **rungTotal**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:109](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L109)
+Defined in: [lib/evidenceLadder.ts:109](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L109)
 
 ***
 
@@ -80,4 +80,4 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:109](https://github.com/k
 
 > **traitCategory**: `"behavior"` \| `"habitat"` \| `"morphology"` \| `"diet"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"geography"` \| `"conservation"`
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:107](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L107)
+Defined in: [lib/evidenceLadder.ts:107](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L107)

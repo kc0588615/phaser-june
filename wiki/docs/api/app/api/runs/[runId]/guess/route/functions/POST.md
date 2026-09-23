@@ -2,7 +2,7 @@
 
 > **POST**(`request`, `__namedParameters`): `Promise`\<`NextResponse`\<`Record`\<`string`, `unknown`\>\> \| `NextResponse`\<\{ `error`: `string`; \}\>\>
 
-Defined in: [phaser-june-039/src/app/api/runs/\[runId\]/guess/route.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/app/api/runs/[runId]/guess/route.ts#L14)
+Defined in: [app/api/runs/\[runId\]/guess/route.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/app/api/runs/[runId]/guess/route.ts#L14)
 
 ## Parameters
 

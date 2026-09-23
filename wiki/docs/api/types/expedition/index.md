@@ -5,6 +5,7 @@
 - [CaseState](interfaces/CaseState.md)
 - [ConfirmedClue](interfaces/ConfirmedClue.md)
 - [EarnedObservation](interfaces/EarnedObservation.md)
+- [EvidenceProgressResponse](interfaces/EvidenceProgressResponse.md)
 - [ExpeditionData](interfaces/ExpeditionData.md)
 - [FieldFact](interfaces/FieldFact.md)
 - [RunState](interfaces/RunState.md)

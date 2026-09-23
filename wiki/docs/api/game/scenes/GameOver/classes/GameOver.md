@@ -1,6 +1,6 @@
 # Class: GameOver
 
-Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:4](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/GameOver.ts#L4)
+Defined in: [game/scenes/GameOver.ts:4](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/GameOver.ts#L4)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:4](https://github.com/k
 
 > **new GameOver**(): `GameOver`
 
-Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/GameOver.ts#L7)
+Defined in: [game/scenes/GameOver.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/GameOver.ts#L7)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:7](https://github.com/k
 
 > **create**(): `void`
 
-Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:46](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/GameOver.ts#L46)
+Defined in: [game/scenes/GameOver.ts:46](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/GameOver.ts#L46)
 
 #### Returns
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:46](https://github.com/
 
 > **init**(`data`): `void`
 
-Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/GameOver.ts#L11)
+Defined in: [game/scenes/GameOver.ts:11](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/GameOver.ts#L11)
 
 #### Parameters
 
@@ -60,7 +60,7 @@ Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:11](https://github.com/
 
 > **saveScore**(`username`, `score`): `Promise`\<`boolean`\>
 
-Defined in: [phaser-june-039/src/game/scenes/GameOver.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/GameOver.ts#L15)
+Defined in: [game/scenes/GameOver.ts:15](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/GameOver.ts#L15)
 
 #### Parameters
 

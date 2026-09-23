@@ -1,6 +1,6 @@
 # Interface: AnswerPriorSpecies
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:1](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L1)
+Defined in: [lib/answerPrior.ts:1](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L1)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:1](https://github.com/kc0588
 
 > `optional` **commonName**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:3](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L3)
+Defined in: [lib/answerPrior.ts:3](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L3)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:3](https://github.com/kc0588
 
 > `optional` **conservationCode**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:10](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L10)
+Defined in: [lib/answerPrior.ts:10](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L10)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:10](https://github.com/kc058
 
 > `optional` **conservationText**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:9](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L9)
+Defined in: [lib/answerPrior.ts:9](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L9)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:9](https://github.com/kc0588
 
 > `optional` **distributionComment**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L8)
+Defined in: [lib/answerPrior.ts:8](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L8)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:8](https://github.com/kc0588
 
 > `optional` **freshwater**: `boolean` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L13)
+Defined in: [lib/answerPrior.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L13)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:13](https://github.com/kc058
 
 > `optional` **geographicDescription**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L7)
+Defined in: [lib/answerPrior.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L7)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:7](https://github.com/kc0588
 
 > `optional` **habitatDescription**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:5](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L5)
+Defined in: [lib/answerPrior.ts:5](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L5)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:5](https://github.com/kc0588
 
 > `optional` **habitatTags**: readonly `string`[] \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L6)
+Defined in: [lib/answerPrior.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L6)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:6](https://github.com/kc0588
 
 > `optional` **marine**: `boolean` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L12)
+Defined in: [lib/answerPrior.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L12)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:12](https://github.com/kc058
 
 > `optional` **scientificName**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:4](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L4)
+Defined in: [lib/answerPrior.ts:4](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L4)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:4](https://github.com/kc0588
 
 > **speciesId**: `number`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:2](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L2)
+Defined in: [lib/answerPrior.ts:2](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L2)
 
 ***
 
@@ -96,4 +96,4 @@ Defined in: [phaser-june-039/src/lib/answerPrior.ts:2](https://github.com/kc0588
 
 > `optional` **threats**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/answerPrior.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/answerPrior.ts#L11)
+Defined in: [lib/answerPrior.ts:11](https://github.com/kc0588615/phaser-june/blob/main/src/lib/answerPrior.ts#L11)

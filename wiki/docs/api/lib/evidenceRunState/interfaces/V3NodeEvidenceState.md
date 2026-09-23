@@ -1,6 +1,6 @@
 # Interface: V3NodeEvidenceState
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L31)
+Defined in: [lib/evidenceRunState.ts:31](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L31)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:31](https://github.com/
 
 > `optional` **boardCheckpoint**: [`BoardCheckpointV1`](../../../game/boardTypes/interfaces/BoardCheckpointV1.md)
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:40](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L40)
+Defined in: [lib/evidenceRunState.ts:40](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L40)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:40](https://github.com/
 
 > **carriedCharges**: [`EvidenceChargeState`](../../../expedition/evidenceFamilies/type-aliases/EvidenceChargeState.md)
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L33)
+Defined in: [lib/evidenceRunState.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L33)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:33](https://github.com/
 
 > **cascadeHintCount**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L35)
+Defined in: [lib/evidenceRunState.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L35)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:35](https://github.com/
 
 > **evidenceCharges**: [`EvidenceChargeState`](../../../expedition/evidenceFamilies/type-aliases/EvidenceChargeState.md)
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L32)
+Defined in: [lib/evidenceRunState.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L32)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:32](https://github.com/
 
 > **hintCounts**: [`EvidenceChargeState`](../../../expedition/evidenceFamilies/type-aliases/EvidenceChargeState.md)
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L34)
+Defined in: [lib/evidenceRunState.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L34)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:34](https://github.com/
 
 > `optional` **lastCascadeHintId**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:44](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L44)
+Defined in: [lib/evidenceRunState.ts:44](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L44)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:44](https://github.com/
 
 > **lastHintIds**: `number`[]
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:43](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L43)
+Defined in: [lib/evidenceRunState.ts:43](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L43)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:43](https://github.com/
 
 > `optional` **lastMoveDigest**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:41](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L41)
+Defined in: [lib/evidenceRunState.ts:41](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L41)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:41](https://github.com/
 
 > `optional` **lastSubmissionDigest**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:42](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L42)
+Defined in: [lib/evidenceRunState.ts:42](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L42)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:42](https://github.com/
 
 > **offeredFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:38](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L38)
+Defined in: [lib/evidenceRunState.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L38)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:38](https://github.com/
 
 > **segmentMovesUsed**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:39](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L39)
+Defined in: [lib/evidenceRunState.ts:39](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L39)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:39](https://github.com/
 
 > **selectedFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:36](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L36)
+Defined in: [lib/evidenceRunState.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L36)
 
 ***
 
@@ -104,4 +104,4 @@ Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:36](https://github.com/
 
 > `optional` **selectedFamily**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:37](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L37)
+Defined in: [lib/evidenceRunState.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceRunState.ts#L37)

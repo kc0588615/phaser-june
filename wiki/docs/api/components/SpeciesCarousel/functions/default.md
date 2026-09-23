@@ -2,7 +2,7 @@
 
 > **default**(`__namedParameters`): `Element`
 
-Defined in: [phaser-june-039/src/components/SpeciesCarousel.tsx:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/SpeciesCarousel.tsx#L23)
+Defined in: [components/SpeciesCarousel.tsx:23](https://github.com/kc0588615/phaser-june/blob/main/src/components/SpeciesCarousel.tsx#L23)
 
 ## Parameters
 

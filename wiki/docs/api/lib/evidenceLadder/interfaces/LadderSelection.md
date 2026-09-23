@@ -1,6 +1,6 @@
 # Interface: LadderSelection
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:29](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L29)
+Defined in: [lib/evidenceLadder.ts:29](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L29)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:29](https://github.com/kc
 
 > **issues**: [`LadderIssue`](LadderIssue.md)[]
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L30)
+Defined in: [lib/evidenceLadder.ts:30](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L30)
 
 ***
 
@@ -16,6 +16,6 @@ Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:30](https://github.com/kc
 
 > **reinforcedFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L32)
+Defined in: [lib/evidenceLadder.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L32)
 
 Families matched this move whose ladder is already complete. No fact, no reward.

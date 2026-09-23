@@ -2,7 +2,7 @@
 
 > **useAuthBridge**(): `void`
 
-Defined in: [phaser-june-039/src/hooks/useAuthBridge.ts:5](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/hooks/useAuthBridge.ts#L5)
+Defined in: [hooks/useAuthBridge.ts:5](https://github.com/kc0588615/phaser-june/blob/main/src/hooks/useAuthBridge.ts#L5)
 
 ## Returns
 

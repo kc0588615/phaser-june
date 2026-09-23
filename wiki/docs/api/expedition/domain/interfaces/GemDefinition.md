@@ -1,6 +1,6 @@
 # Interface: GemDefinition
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L31)
+Defined in: [expedition/domain.ts:31](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L31)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:31](https://github.com/kc0
 
 > **assetBacked**: `boolean`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:36](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L36)
+Defined in: [expedition/domain.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L36)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:36](https://github.com/kc0
 
 > **color**: `string`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L35)
+Defined in: [expedition/domain.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L35)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:35](https://github.com/kc0
 
 > **family**: `"loot"`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L33)
+Defined in: [expedition/domain.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L33)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:33](https://github.com/kc0
 
 > **gemType**: `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L32)
+Defined in: [expedition/domain.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L32)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:32](https://github.com/kc0
 
 > `optional` **isCrate**: `boolean`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:37](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L37)
+Defined in: [expedition/domain.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L37)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:37](https://github.com/kc0
 
 > `optional` **isMultiplier**: `boolean`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:38](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L38)
+Defined in: [expedition/domain.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L38)
 
 ***
 
@@ -56,4 +56,4 @@ Defined in: [phaser-june-039/src/expedition/domain.ts:38](https://github.com/kc0
 
 > **label**: `string`
 
-Defined in: [phaser-june-039/src/expedition/domain.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L34)
+Defined in: [expedition/domain.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/domain.ts#L34)

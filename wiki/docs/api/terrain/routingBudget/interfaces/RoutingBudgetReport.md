@@ -1,6 +1,6 @@
 # Interface: RoutingBudgetReport
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L13)
+Defined in: [terrain/routingBudget.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L13)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:13](https://github.com
 
 > **fourPlusMoves**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:16](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L16)
+Defined in: [terrain/routingBudget.ts:16](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L16)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:16](https://github.com
 
 > **fourPlusRate**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L17)
+Defined in: [terrain/routingBudget.ts:17](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L17)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:17](https://github.com
 
 > **moves**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L15)
+Defined in: [terrain/routingBudget.ts:15](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L15)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:15](https://github.com
 
 > **reached**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L20)
+Defined in: [terrain/routingBudget.ts:20](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L20)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:20](https://github.com
 
 > **reachRate**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L21)
+Defined in: [terrain/routingBudget.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L21)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:21](https://github.com
 
 > **seeds**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L14)
+Defined in: [terrain/routingBudget.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L14)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:14](https://github.com
 
 > **trailTouchMoves**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L18)
+Defined in: [terrain/routingBudget.ts:18](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L18)
 
 ***
 
@@ -64,4 +64,4 @@ Defined in: [phaser-june-039/src/terrain/routingBudget.ts:18](https://github.com
 
 > **trailTouchRate**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routingBudget.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingBudget.ts#L19)
+Defined in: [terrain/routingBudget.ts:19](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingBudget.ts#L19)

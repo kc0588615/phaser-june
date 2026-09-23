@@ -2,7 +2,7 @@
 
 > **applyRoutingCommand**(`session`, `command`): [`RoutingCommandResult`](../type-aliases/RoutingCommandResult.md)
 
-Defined in: [phaser-june-039/src/terrain/routingSession.ts:49](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routingSession.ts#L49)
+Defined in: [terrain/routingSession.ts:49](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routingSession.ts#L49)
 
 ## Parameters
 

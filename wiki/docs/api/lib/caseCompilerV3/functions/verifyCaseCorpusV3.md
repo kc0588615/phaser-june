@@ -2,7 +2,7 @@
 
 > **verifyCaseCorpusV3**(`profiles`, `cardsBySpecies`, `hintsBySpecies`): `object`
 
-Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:195](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L195)
+Defined in: [lib/caseCompilerV3.ts:191](https://github.com/kc0588615/phaser-june/blob/main/src/lib/caseCompilerV3.ts#L191)
 
 ## Parameters
 

@@ -2,7 +2,7 @@
 
 > `const` **HABITAT\_SOURCE\_V1**: `object`
 
-Defined in: [phaser-june-039/src/terrain/source.ts:2](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/source.ts#L2)
+Defined in: [terrain/source.ts:2](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/source.ts#L2)
 
 Verified 2026-09-19. Geometry changes require a new revision and fixtures.
 

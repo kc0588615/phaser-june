@@ -2,7 +2,7 @@
 
 > **countDeductionTagOverlaps**(`profiles`): `Record`\<[`DeductionProfileCategory`](../type-aliases/DeductionProfileCategory.md), `object`[]\>
 
-Defined in: [phaser-june-039/src/lib/deductionTags.ts:273](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionTags.ts#L273)
+Defined in: [lib/deductionTags.ts:273](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionTags.ts#L273)
 
 ## Parameters
 

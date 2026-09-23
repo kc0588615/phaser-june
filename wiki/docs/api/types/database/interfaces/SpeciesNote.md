@@ -1,6 +1,6 @@
 # Interface: SpeciesNote
 
-Defined in: [phaser-june-039/src/types/database.ts:119](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L119)
+Defined in: [types/database.ts:119](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L119)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/types/database.ts:119](https://github.com/kc058
 
 > **note\_text**: `string`
 
-Defined in: [phaser-june-039/src/types/database.ts:122](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L122)
+Defined in: [types/database.ts:122](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L122)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/types/database.ts:122](https://github.com/kc058
 
 > **sort\_order**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:121](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L121)
+Defined in: [types/database.ts:121](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L121)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/types/database.ts:121](https://github.com/kc058
 
 > **source\_url**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/types/database.ts:123](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L123)
+Defined in: [types/database.ts:123](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L123)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [phaser-june-039/src/types/database.ts:123](https://github.com/kc058
 
 > **topic**: `"threats"` \| `"behavior"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"life_cycle"` \| `"distribution"`
 
-Defined in: [phaser-june-039/src/types/database.ts:120](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L120)
+Defined in: [types/database.ts:120](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L120)

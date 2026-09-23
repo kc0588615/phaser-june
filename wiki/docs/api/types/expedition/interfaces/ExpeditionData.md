@@ -1,6 +1,6 @@
 # Interface: ExpeditionData
 
-Defined in: [phaser-june-039/src/types/expedition.ts:67](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L67)
+Defined in: [types/expedition.ts:83](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L83)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:67](https://github.com/kc05
 
 > **activeAffinities**: (`"avian"` \| `"feline"` \| `"amphibian"` \| `"primate"` \| `"insect"` \| `"ungulate"` \| `"reptile"` \| `"fish"` \| `"arachnid"` \| `"burrower"`)[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:71](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L71)
+Defined in: [types/expedition.ts:87](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L87)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:71](https://github.com/kc05
 
 > **availableAffinities**: (`"avian"` \| `"feline"` \| `"amphibian"` \| `"primate"` \| `"insect"` \| `"ungulate"` \| `"reptile"` \| `"fish"` \| `"arachnid"` \| `"burrower"`)[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:72](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L72)
+Defined in: [types/expedition.ts:88](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L88)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:72](https://github.com/kc05
 
 > **bioregion**: \{ `biome`: `string` \| `null`; `bioregion`: `string` \| `null`; `realm`: `string` \| `null`; \} \| `null`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:69](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L69)
+Defined in: [types/expedition.ts:85](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L85)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:69](https://github.com/kc05
 
 > **modifierNodes**: `string`[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:75](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L75)
+Defined in: [types/expedition.ts:91](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L91)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:75](https://github.com/kc05
 
 > `optional` **nearestRiverDistM**: `number` \| `null`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:80](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L80)
+Defined in: [types/expedition.ts:96](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L96)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:80](https://github.com/kc05
 
 > **nodes**: [`RunNode`](../../../lib/nodeScoring/interfaces/RunNode.md)[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:68](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L68)
+Defined in: [types/expedition.ts:84](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L84)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:68](https://github.com/kc05
 
 > **primaryNodeFamily**: `string`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:73](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L73)
+Defined in: [types/expedition.ts:89](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L89)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:73](https://github.com/kc05
 
 > **primaryVariant**: `string`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:74](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L74)
+Defined in: [types/expedition.ts:90](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L90)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:74](https://github.com/kc05
 
 > **protectedAreas**: `object`[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:70](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L70)
+Defined in: [types/expedition.ts:86](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L86)
 
 #### designation
 
@@ -92,7 +92,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:70](https://github.com/kc05
 
 > `optional` **routePolyline**: [`RoutePoint`](../../../lib/expeditionRoute/interfaces/RoutePoint.md)[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:77](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L77)
+Defined in: [types/expedition.ts:93](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L93)
 
 ***
 
@@ -100,7 +100,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:77](https://github.com/kc05
 
 > **signals**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/expedition.ts:76](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L76)
+Defined in: [types/expedition.ts:92](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L92)
 
 ***
 
@@ -108,7 +108,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:76](https://github.com/kc05
 
 > `optional` **waypointRadiusKm**: `number` \| `null`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:79](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L79)
+Defined in: [types/expedition.ts:95](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L95)
 
 ***
 
@@ -116,4 +116,4 @@ Defined in: [phaser-june-039/src/types/expedition.ts:79](https://github.com/kc05
 
 > `optional` **waypoints**: [`ExpeditionWaypoint`](../../waypoints/interfaces/ExpeditionWaypoint.md)[]
 
-Defined in: [phaser-june-039/src/types/expedition.ts:78](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L78)
+Defined in: [types/expedition.ts:94](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L94)

@@ -1,6 +1,6 @@
 # Interface: EvidenceFamilySeed
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L26)
+Defined in: [lib/evidenceFamilySeedValidation.ts:26](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L26)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:26](https:/
 
 > **cards**: [`EvidenceFamilySeedCard`](EvidenceFamilySeedCard.md)[]
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L30)
+Defined in: [lib/evidenceFamilySeedValidation.ts:30](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L30)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:30](https:/
 
 > **common\_name**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:29](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L29)
+Defined in: [lib/evidenceFamilySeedValidation.ts:29](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L29)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:29](https:/
 
 > **iucn\_id**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L27)
+Defined in: [lib/evidenceFamilySeedValidation.ts:27](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L27)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:27](https:/
 
 > **scientific\_name**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L28)
+Defined in: [lib/evidenceFamilySeedValidation.ts:28](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L28)

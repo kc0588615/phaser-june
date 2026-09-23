@@ -7,12 +7,6 @@ const config: Config = {
   tagline: 'A biodiversity discovery game built with Phaser, React, MapLibre, and Drizzle',
   favicon: 'img/favicon.ico',
 
-  future: {
-    v4: {
-      fasterByDefault: false,
-    },
-  },
-
   markdown: {
     mermaid: true,
   },
@@ -54,6 +48,9 @@ const config: Config = {
         entryPoints: ['../src'],
         entryPointStrategy: 'expand',
         tsconfig: '../tsconfig.json',
+        // Stable output: repo-relative paths and branch links (not per-commit SHAs).
+        displayBasePath: '../src',
+        gitRevision: 'main',
         out: 'docs/api',
         readme: 'none',
         excludePrivate: true,

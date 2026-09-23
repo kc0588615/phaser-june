@@ -2,7 +2,7 @@
 
 > **useTerrainMap**(`mapRef`, `ready`, `terrain`, `fullscreen`, `siteMarkers`): `object`
 
-Defined in: [phaser-june-039/src/hooks/useTerrainMap.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/hooks/useTerrainMap.ts#L7)
+Defined in: [hooks/useTerrainMap.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/hooks/useTerrainMap.ts#L7)
 
 ## Parameters
 

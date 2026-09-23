@@ -2,7 +2,7 @@
 
 > **buildEvidenceLogSlots**(`caseState`): `object`[]
 
-Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/evidenceLog.ts#L17)
+Defined in: [expedition/evidenceLog.ts:17](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/evidenceLog.ts#L17)
 
 ## Parameters
 

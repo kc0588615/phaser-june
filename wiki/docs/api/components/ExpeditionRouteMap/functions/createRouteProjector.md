@@ -2,7 +2,7 @@
 
 > **createRouteProjector**(`points`): (`lon`, `lat`) => `ProjectedPoint`
 
-Defined in: [phaser-june-039/src/components/ExpeditionRouteMap.tsx:201](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/ExpeditionRouteMap.tsx#L201)
+Defined in: [components/ExpeditionRouteMap.tsx:201](https://github.com/kc0588615/phaser-june/blob/main/src/components/ExpeditionRouteMap.tsx#L201)
 
 ## Parameters
 

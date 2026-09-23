@@ -1,6 +1,6 @@
 # Interface: DiagnosisFeedback
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:53](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L53)
+Defined in: [lib/mysteryCase.ts:53](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L53)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:53](https://github.com/kc058
 
 > **explanationText**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:56](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L56)
+Defined in: [lib/mysteryCase.ts:56](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L56)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:56](https://github.com/kc058
 
 > **explanationVerdict**: `"supported"` \| `"revise"`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:55](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L55)
+Defined in: [lib/mysteryCase.ts:55](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L55)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:55](https://github.com/kc058
 
 > **speciesVerdict**: `"supported"` \| `"revise"`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:54](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L54)
+Defined in: [lib/mysteryCase.ts:54](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L54)

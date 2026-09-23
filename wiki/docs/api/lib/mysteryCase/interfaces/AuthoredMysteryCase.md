@@ -1,6 +1,6 @@
 # Interface: AuthoredMysteryCase
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:48](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L48)
+Defined in: [lib/mysteryCase.ts:48](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L48)
 
 ## Extended by
 
@@ -12,7 +12,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:48](https://github.com/kc058
 
 > **private**: [`PrivateMysteryCase`](PrivateMysteryCase.md)
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:50](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L50)
+Defined in: [lib/mysteryCase.ts:50](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L50)
 
 ***
 
@@ -20,4 +20,4 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:50](https://github.com/kc058
 
 > **public**: `Omit`\<[`PublicMysteryCase`](PublicMysteryCase.md), `"location"`\>
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:49](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L49)
+Defined in: [lib/mysteryCase.ts:49](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L49)

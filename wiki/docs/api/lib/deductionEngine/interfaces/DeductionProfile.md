@@ -1,6 +1,6 @@
 # Interface: DeductionProfile
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L11)
+Defined in: [lib/deductionEngine.ts:11](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L11)
 
 Subset of species_deduction_profiles needed at runtime
 
@@ -10,7 +10,7 @@ Subset of species_deduction_profiles needed at runtime
 
 > **behaviorTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L18)
+Defined in: [lib/deductionEngine.ts:18](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L18)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:18](https://github.com/k
 
 > **commonName**: `string`
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L13)
+Defined in: [lib/deductionEngine.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L13)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:13](https://github.com/k
 
 > **conservationTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L22)
+Defined in: [lib/deductionEngine.ts:22](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L22)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:22](https://github.com/k
 
 > **dietTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L17)
+Defined in: [lib/deductionEngine.ts:17](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L17)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:17](https://github.com/k
 
 > **geographyTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L21)
+Defined in: [lib/deductionEngine.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L21)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:21](https://github.com/k
 
 > **habitatTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L15)
+Defined in: [lib/deductionEngine.ts:15](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L15)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:15](https://github.com/k
 
 > **keyFactTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L23)
+Defined in: [lib/deductionEngine.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L23)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:23](https://github.com/k
 
 > **morphologyTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:16](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L16)
+Defined in: [lib/deductionEngine.ts:16](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L16)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:16](https://github.com/k
 
 > **reproductionTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L19)
+Defined in: [lib/deductionEngine.ts:19](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L19)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:19](https://github.com/k
 
 > **scientificName**: `string`
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L14)
+Defined in: [lib/deductionEngine.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L14)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:14](https://github.com/k
 
 > **signatureTag**: `string` \| `null`
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L24)
+Defined in: [lib/deductionEngine.ts:24](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L24)
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:24](https://github.com/k
 
 > **speciesId**: `number`
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L12)
+Defined in: [lib/deductionEngine.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L12)
 
 ***
 
@@ -106,4 +106,4 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:12](https://github.com/k
 
 > **taxonomyTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L20)
+Defined in: [lib/deductionEngine.ts:20](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L20)

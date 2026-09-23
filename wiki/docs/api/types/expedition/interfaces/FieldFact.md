@@ -1,6 +1,6 @@
 # Interface: FieldFact
 
-Defined in: [phaser-june-039/src/types/expedition.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L23)
+Defined in: [types/expedition.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L23)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:23](https://github.com/kc05
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L25)
+Defined in: [types/expedition.ts:25](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L25)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/types/expedition.ts:25](https://github.com/kc05
 
 > **nodeIndex**: `number`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L24)
+Defined in: [types/expedition.ts:24](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L24)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [phaser-june-039/src/types/expedition.ts:24](https://github.com/kc05
 
 > **text**: `string`
 
-Defined in: [phaser-june-039/src/types/expedition.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/expedition.ts#L26)
+Defined in: [types/expedition.ts:26](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L26)

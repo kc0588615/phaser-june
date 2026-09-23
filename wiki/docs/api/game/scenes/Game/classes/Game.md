@@ -1,6 +1,6 @@
 # Class: Game
 
-Defined in: [phaser-june-039/src/game/scenes/Game.ts:66](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L66)
+Defined in: [game/scenes/Game.ts:66](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L66)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [phaser-june-039/src/game/scenes/Game.ts:66](https://github.com/kc05
 
 > **new Game**(): `Game`
 
-Defined in: [phaser-june-039/src/game/scenes/Game.ts:134](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L134)
+Defined in: [game/scenes/Game.ts:134](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L134)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [phaser-june-039/src/game/scenes/Game.ts:134](https://github.com/kc0
 
 > **create**(): `void`
 
-Defined in: [phaser-june-039/src/game/scenes/Game.ts:261](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L261)
+Defined in: [game/scenes/Game.ts:261](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L261)
 
 #### Returns
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/game/scenes/Game.ts:261](https://github.com/kc0
 
 > **shutdown**(): `void`
 
-Defined in: [phaser-june-039/src/game/scenes/Game.ts:1324](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L1324)
+Defined in: [game/scenes/Game.ts:1324](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L1324)
 
 #### Returns
 
@@ -52,7 +52,7 @@ Defined in: [phaser-june-039/src/game/scenes/Game.ts:1324](https://github.com/kc
 
 > **update**(): `void`
 
-Defined in: [phaser-june-039/src/game/scenes/Game.ts:153](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L153)
+Defined in: [game/scenes/Game.ts:153](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L153)
 
 This method should be overridden by your own Scenes.
 

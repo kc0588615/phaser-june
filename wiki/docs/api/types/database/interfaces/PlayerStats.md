@@ -1,6 +1,6 @@
 # Interface: PlayerStats
 
-Defined in: [phaser-june-039/src/types/database.ts:44](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L44)
+Defined in: [types/database.ts:44](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L44)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/types/database.ts:44](https://github.com/kc0588
 
 > **aquatic\_species\_count**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:61](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L61)
+Defined in: [types/database.ts:61](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L61)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/types/database.ts:61](https://github.com/kc0588
 
 > `optional` **average\_time\_per\_discovery\_seconds**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:51](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L51)
+Defined in: [types/database.ts:51](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L51)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/types/database.ts:51](https://github.com/kc0588
 
 > **created\_at**: `string`
 
-Defined in: [phaser-june-039/src/types/database.ts:65](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L65)
+Defined in: [types/database.ts:65](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L65)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/types/database.ts:65](https://github.com/kc0588
 
 > `optional` **first\_discovery\_at**: `string`
 
-Defined in: [phaser-june-039/src/types/database.ts:63](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L63)
+Defined in: [types/database.ts:63](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L63)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/types/database.ts:63](https://github.com/kc0588
 
 > **freshwater\_species\_count**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:60](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L60)
+Defined in: [types/database.ts:60](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L60)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/types/database.ts:60](https://github.com/kc0588
 
 > `optional` **last\_discovery\_at**: `string`
 
-Defined in: [phaser-june-039/src/types/database.ts:64](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L64)
+Defined in: [types/database.ts:64](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L64)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/types/database.ts:64](https://github.com/kc0588
 
 > **marine\_species\_count**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:58](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L58)
+Defined in: [types/database.ts:58](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L58)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/types/database.ts:58](https://github.com/kc0588
 
 > **player\_id**: `string`
 
-Defined in: [phaser-june-039/src/types/database.ts:45](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L45)
+Defined in: [types/database.ts:45](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L45)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/types/database.ts:45](https://github.com/kc0588
 
 > **species\_by\_biome**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:56](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L56)
+Defined in: [types/database.ts:56](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L56)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [phaser-june-039/src/types/database.ts:56](https://github.com/kc0588
 
 > **species\_by\_bioregion**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:57](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L57)
+Defined in: [types/database.ts:57](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L57)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [phaser-june-039/src/types/database.ts:57](https://github.com/kc0588
 
 > **species\_by\_family**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:53](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L53)
+Defined in: [types/database.ts:53](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L53)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [phaser-june-039/src/types/database.ts:53](https://github.com/kc0588
 
 > **species\_by\_genus**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:54](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L54)
+Defined in: [types/database.ts:54](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L54)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [phaser-june-039/src/types/database.ts:54](https://github.com/kc0588
 
 > **species\_by\_iucn\_status**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:62](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L62)
+Defined in: [types/database.ts:62](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L62)
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [phaser-june-039/src/types/database.ts:62](https://github.com/kc0588
 
 > **species\_by\_order**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:52](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L52)
+Defined in: [types/database.ts:52](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L52)
 
 ***
 
@@ -120,7 +120,7 @@ Defined in: [phaser-june-039/src/types/database.ts:52](https://github.com/kc0588
 
 > **species\_by\_realm**: `Record`\<`string`, `number`\>
 
-Defined in: [phaser-june-039/src/types/database.ts:55](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L55)
+Defined in: [types/database.ts:55](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L55)
 
 ***
 
@@ -128,7 +128,7 @@ Defined in: [phaser-june-039/src/types/database.ts:55](https://github.com/kc0588
 
 > **terrestrial\_species\_count**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:59](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L59)
+Defined in: [types/database.ts:59](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L59)
 
 ***
 
@@ -136,7 +136,7 @@ Defined in: [phaser-june-039/src/types/database.ts:59](https://github.com/kc0588
 
 > **total\_games\_played**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:49](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L49)
+Defined in: [types/database.ts:49](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L49)
 
 ***
 
@@ -144,7 +144,7 @@ Defined in: [phaser-june-039/src/types/database.ts:49](https://github.com/kc0588
 
 > **total\_moves\_made**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:48](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L48)
+Defined in: [types/database.ts:48](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L48)
 
 ***
 
@@ -152,7 +152,7 @@ Defined in: [phaser-june-039/src/types/database.ts:48](https://github.com/kc0588
 
 > **total\_play\_time\_seconds**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:50](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L50)
+Defined in: [types/database.ts:50](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L50)
 
 ***
 
@@ -160,7 +160,7 @@ Defined in: [phaser-june-039/src/types/database.ts:50](https://github.com/kc0588
 
 > **total\_score**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:47](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L47)
+Defined in: [types/database.ts:47](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L47)
 
 ***
 
@@ -168,7 +168,7 @@ Defined in: [phaser-june-039/src/types/database.ts:47](https://github.com/kc0588
 
 > **total\_species\_discovered**: `number`
 
-Defined in: [phaser-june-039/src/types/database.ts:46](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L46)
+Defined in: [types/database.ts:46](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L46)
 
 ***
 
@@ -176,4 +176,4 @@ Defined in: [phaser-june-039/src/types/database.ts:46](https://github.com/kc0588
 
 > **updated\_at**: `string`
 
-Defined in: [phaser-june-039/src/types/database.ts:66](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L66)
+Defined in: [types/database.ts:66](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L66)

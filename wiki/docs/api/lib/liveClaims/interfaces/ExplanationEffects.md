@@ -1,6 +1,6 @@
 # Interface: ExplanationEffects
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:3](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L3)
+Defined in: [lib/liveClaims.ts:3](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L3)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:3](https://github.com/kc05886
 
 > **contradicts**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:3](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L3)
+Defined in: [lib/liveClaims.ts:3](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L3)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:3](https://github.com/kc05886
 
 > **supports**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:3](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L3)
+Defined in: [lib/liveClaims.ts:3](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L3)

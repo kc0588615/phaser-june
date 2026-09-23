@@ -1,6 +1,6 @@
 # Interface: PublicRoutingView
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L32)
+Defined in: [terrain/routing.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L32)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:32](https://github.com/kc058
 
 > `readonly` **arrived**: `boolean`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:37](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L37)
+Defined in: [terrain/routing.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L37)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:37](https://github.com/kc058
 
 > `readonly` **barrierIds**: readonly `string`[]
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:45](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L45)
+Defined in: [terrain/routing.ts:45](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L45)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:45](https://github.com/kc058
 
 > `readonly` **campId**: `string`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:40](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L40)
+Defined in: [terrain/routing.ts:40](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L40)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:40](https://github.com/kc058
 
 > `readonly` **crossingFromId**: `string`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:42](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L42)
+Defined in: [terrain/routing.ts:42](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L42)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:42](https://github.com/kc058
 
 > `readonly` **crossingOpen**: `boolean`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:38](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L38)
+Defined in: [terrain/routing.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L38)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:38](https://github.com/kc058
 
 > `readonly` **crossingToId**: `string`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:43](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L43)
+Defined in: [terrain/routing.ts:43](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L43)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:43](https://github.com/kc058
 
 > `readonly` **fourPlusCount**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:48](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L48)
+Defined in: [terrain/routing.ts:48](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L48)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:48](https://github.com/kc058
 
 > `readonly` **frontierIds**: readonly `string`[]
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:47](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L47)
+Defined in: [terrain/routing.ts:47](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L47)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:47](https://github.com/kc058
 
 > `readonly` **inkedIds**: readonly `string`[]
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:44](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L44)
+Defined in: [terrain/routing.ts:44](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L44)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:44](https://github.com/kc058
 
 > `readonly` **maxMoves**: `6`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L35)
+Defined in: [terrain/routing.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L35)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:35](https://github.com/kc058
 
 > `readonly` **movesUsed**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L34)
+Defined in: [terrain/routing.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L34)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:34](https://github.com/kc058
 
 > `readonly` **partyId**: `string`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:39](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L39)
+Defined in: [terrain/routing.ts:39](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L39)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:39](https://github.com/kc058
 
 > `readonly` **pendingExtension**: `boolean`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:36](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L36)
+Defined in: [terrain/routing.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L36)
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:36](https://github.com/kc058
 
 > `readonly` **reachableIds**: readonly `string`[]
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:46](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L46)
+Defined in: [terrain/routing.ts:46](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L46)
 
 ***
 
@@ -120,7 +120,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:46](https://github.com/kc058
 
 > `readonly` **revision**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L33)
+Defined in: [terrain/routing.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L33)
 
 ***
 
@@ -128,7 +128,7 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:33](https://github.com/kc058
 
 > `readonly` **surveyId**: `string`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:41](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L41)
+Defined in: [terrain/routing.ts:41](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L41)
 
 ***
 
@@ -136,4 +136,4 @@ Defined in: [phaser-june-039/src/terrain/routing.ts:41](https://github.com/kc058
 
 > `readonly` **trailTouchCount**: `number`
 
-Defined in: [phaser-june-039/src/terrain/routing.ts:49](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/routing.ts#L49)
+Defined in: [terrain/routing.ts:49](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/routing.ts#L49)

@@ -15,5 +15,4 @@
 ## Functions
 
 - [compileCaseV4](functions/compileCaseV4.md)
-- [orderedFamilyPaths](functions/orderedFamilyPaths.md)
 - [verifyCaseCorpusV3](functions/verifyCaseCorpusV3.md)

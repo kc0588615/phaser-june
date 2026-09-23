@@ -1,6 +1,6 @@
 # Interface: V3EvidenceApplicationRecord
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L27)
+Defined in: [lib/runCaseState.ts:27](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L27)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:27](https://github.com/kc05
 
 > **actualEliminatedIds**: `number`[]
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L32)
+Defined in: [lib/runCaseState.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L32)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:32](https://github.com/kc05
 
 > **candidateTraitPhrases**: `Record`\<`string`, `string`\>
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L34)
+Defined in: [lib/runCaseState.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L34)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:34](https://github.com/kc05
 
 > **cardId**: `number`
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L30)
+Defined in: [lib/runCaseState.ts:30](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L30)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:30](https://github.com/kc05
 
 > **eliminationReasons**: `Record`\<`string`, `string`\>
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L33)
+Defined in: [lib/runCaseState.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L33)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:33](https://github.com/kc05
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L31)
+Defined in: [lib/runCaseState.ts:31](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L31)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:31](https://github.com/kc05
 
 > **issuedAt**: `string`
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L35)
+Defined in: [lib/runCaseState.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L35)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:35](https://github.com/kc05
 
 > **nodeIndex**: `number`
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L28)
+Defined in: [lib/runCaseState.ts:28](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L28)
 
 ***
 
@@ -64,4 +64,4 @@ Defined in: [phaser-june-039/src/lib/runCaseState.ts:28](https://github.com/kc05
 
 > **ref**: `string`
 
-Defined in: [phaser-june-039/src/lib/runCaseState.ts:29](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L29)
+Defined in: [lib/runCaseState.ts:29](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L29)

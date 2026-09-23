@@ -1,6 +1,6 @@
 # Interface: EvidenceFamilySeedCard
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L12)
+Defined in: [lib/evidenceFamilySeedValidation.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L12)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:12](https:/
 
 > **bonus\_fact\_text**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L19)
+Defined in: [lib/evidenceFamilySeedValidation.ts:19](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L19)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:19](https:/
 
 > **compare\_tag**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L17)
+Defined in: [lib/evidenceFamilySeedValidation.ts:17](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L17)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:17](https:/
 
 > `optional` **explains**: [`ExplanationEffects`](../../liveClaims/interfaces/ExplanationEffects.md) \| `null`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L23)
+Defined in: [lib/evidenceFamilySeedValidation.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L23)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:23](https:/
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L13)
+Defined in: [lib/evidenceFamilySeedValidation.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L13)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:13](https:/
 
 > **hints**: [`EvidenceFamilySeedHint`](EvidenceFamilySeedHint.md)[]
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L22)
+Defined in: [lib/evidenceFamilySeedValidation.ts:22](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L22)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:22](https:/
 
 > **inference\_text**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L15)
+Defined in: [lib/evidenceFamilySeedValidation.ts:15](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L15)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:15](https:/
 
 > **observation\_text**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L14)
+Defined in: [lib/evidenceFamilySeedValidation.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L14)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:14](https:/
 
 > **review\_status**: `"reviewed"`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L21)
+Defined in: [lib/evidenceFamilySeedValidation.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L21)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:21](https:/
 
 > **source**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L20)
+Defined in: [lib/evidenceFamilySeedValidation.ts:20](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L20)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:20](https:/
 
 > **trait\_category**: `"behavior"` \| `"habitat"` \| `"morphology"` \| `"diet"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"geography"` \| `"conservation"`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:16](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L16)
+Defined in: [lib/evidenceFamilySeedValidation.ts:16](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L16)
 
 ***
 
@@ -88,4 +88,4 @@ Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:16](https:/
 
 > **trait\_phrase**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceFamilySeedValidation.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceFamilySeedValidation.ts#L18)
+Defined in: [lib/evidenceFamilySeedValidation.ts:18](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceFamilySeedValidation.ts#L18)

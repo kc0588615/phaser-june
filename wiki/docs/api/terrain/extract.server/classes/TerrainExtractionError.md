@@ -1,6 +1,6 @@
 # Class: TerrainExtractionError
 
-Defined in: [phaser-june-039/src/terrain/extract.server.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/extract.server.ts#L13)
+Defined in: [terrain/extract.server.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/extract.server.ts#L13)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [phaser-june-039/src/terrain/extract.server.ts:13](https://github.co
 
 > **new TerrainExtractionError**(`message`, `status`): `TerrainExtractionError`
 
-Defined in: [phaser-june-039/src/terrain/extract.server.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/extract.server.ts#L14)
+Defined in: [terrain/extract.server.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/extract.server.ts#L14)
 
 #### Parameters
 
@@ -38,4 +38,4 @@ Defined in: [phaser-june-039/src/terrain/extract.server.ts:14](https://github.co
 
 > `readonly` **status**: `422` \| `503` = `503`
 
-Defined in: [phaser-june-039/src/terrain/extract.server.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/terrain/extract.server.ts#L14)
+Defined in: [terrain/extract.server.ts:14](https://github.com/kc0588615/phaser-june/blob/main/src/terrain/extract.server.ts#L14)

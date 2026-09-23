@@ -1,6 +1,6 @@
 # Interface: MysteryResolution
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L31)
+Defined in: [lib/mysteryCase.ts:31](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L31)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:31](https://github.com/kc058
 
 > **diagnosis**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L33)
+Defined in: [lib/mysteryCase.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L33)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:33](https://github.com/kc058
 
 > **ecologicalRole**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L35)
+Defined in: [lib/mysteryCase.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L35)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:35](https://github.com/kc058
 
 > **evidenceChain**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L34)
+Defined in: [lib/mysteryCase.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L34)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:34](https://github.com/kc058
 
 > **headline**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L32)
+Defined in: [lib/mysteryCase.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L32)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:32](https://github.com/kc058
 
 > **misconception**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:37](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L37)
+Defined in: [lib/mysteryCase.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L37)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:37](https://github.com/kc058
 
 > **rejectedAlternatives**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:38](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L38)
+Defined in: [lib/mysteryCase.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L38)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:38](https://github.com/kc058
 
 > **sources**: [`MysterySource`](MysterySource.md)[]
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:39](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L39)
+Defined in: [lib/mysteryCase.ts:39](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L39)
 
 ***
 
@@ -64,4 +64,4 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:39](https://github.com/kc058
 
 > **taxonomy**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:36](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L36)
+Defined in: [lib/mysteryCase.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L36)

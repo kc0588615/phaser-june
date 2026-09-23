@@ -2,4 +2,4 @@
 
 > `const` **speciesDeductionProfiles**: `PgTableWithColumns`\<\{ \}\>
 
-Defined in: [phaser-june-039/src/db/schema/species.ts:125](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/db/schema/species.ts#L125)
+Defined in: [db/schema/species.ts:125](https://github.com/kc0588615/phaser-june/blob/main/src/db/schema/species.ts#L125)

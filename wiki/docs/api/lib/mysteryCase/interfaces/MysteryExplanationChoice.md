@@ -1,6 +1,6 @@
 # Interface: MysteryExplanationChoice
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:4](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L4)
+Defined in: [lib/mysteryCase.ts:4](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L4)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:4](https://github.com/kc0588
 
 > **description**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L7)
+Defined in: [lib/mysteryCase.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L7)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:7](https://github.com/kc0588
 
 > **id**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:5](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L5)
+Defined in: [lib/mysteryCase.ts:5](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L5)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [phaser-june-039/src/lib/mysteryCase.ts:5](https://github.com/kc0588
 
 > **label**: `string`
 
-Defined in: [phaser-june-039/src/lib/mysteryCase.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/mysteryCase.ts#L6)
+Defined in: [lib/mysteryCase.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/lib/mysteryCase.ts#L6)

@@ -2,7 +2,7 @@
 
 > **habitatHistogramBbox**(`longitude`, `latitude`, `radiusMeters`): `object`
 
-Defined in: [phaser-june-039/src/lib/habitatHistogram.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/habitatHistogram.ts#L20)
+Defined in: [lib/habitatHistogram.ts:20](https://github.com/kc0588615/phaser-june/blob/main/src/lib/habitatHistogram.ts#L20)
 
 Same 10 km square used by speciesService.getRasterHabitatDistribution.
 

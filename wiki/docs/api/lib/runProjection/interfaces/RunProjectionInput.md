@@ -1,6 +1,6 @@
 # Interface: RunProjectionInput
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:261](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L261)
+Defined in: [lib/runProjection.ts:250](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L250)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:261](https://github.com/kc
 
 > `optional` **memory**: `unknown`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:267](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L267)
+Defined in: [lib/runProjection.ts:256](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L256)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:267](https://github.com/kc
 
 > `optional` **nodes**: readonly `unknown`[]
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:266](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L266)
+Defined in: [lib/runProjection.ts:255](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L255)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/runProjection.ts:266](https://github.com/kc
 
 > `optional` **publicFacts**: readonly `unknown`[]
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:265](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L265)
+Defined in: [lib/runProjection.ts:254](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L254)
 
 Hydrated ladder facts (see evidenceLadder.hydrateLedgerFact).
 
@@ -34,7 +34,7 @@ Hydrated ladder facts (see evidenceLadder.hydrateLedgerFact).
 
 > `optional` **publicObservations**: readonly `unknown`[]
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:263](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L263)
+Defined in: [lib/runProjection.ts:252](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L252)
 
 Hydrated, already-issued card content. Stored issuance rows are never read.
 
@@ -44,4 +44,4 @@ Hydrated, already-issued card content. Stored issuance rows are never read.
 
 > `optional` **verdict**: `unknown`
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:268](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L268)
+Defined in: [lib/runProjection.ts:257](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L257)

@@ -2,7 +2,7 @@
 
 > **default**(`__namedParameters`): `Element`
 
-Defined in: [phaser-june-039/src/components/album/SpeciesTCGCard.tsx:67](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/album/SpeciesTCGCard.tsx#L67)
+Defined in: [components/album/SpeciesTCGCard.tsx:67](https://github.com/kc0588615/phaser-june/blob/main/src/components/album/SpeciesTCGCard.tsx#L67)
 
 ## Parameters
 

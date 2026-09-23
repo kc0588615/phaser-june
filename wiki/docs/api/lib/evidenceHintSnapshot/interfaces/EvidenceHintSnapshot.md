@@ -1,6 +1,6 @@
 # Interface: EvidenceHintSnapshot
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L6)
+Defined in: [lib/evidenceHintSnapshot.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L6)
 
 Private run content: independent of mutable authoring rows, including deleted rungs.
 
@@ -10,7 +10,7 @@ Private run content: independent of mutable authoring rows, including deleted ru
 
 > `optional` **explains**: [`ExplanationEffects`](../../liveClaims/interfaces/ExplanationEffects.md) \| `null`
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L12)
+Defined in: [lib/evidenceHintSnapshot.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L12)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:12](https://github.
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L8)
+Defined in: [lib/evidenceHintSnapshot.ts:8](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L8)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:8](https://github.c
 
 > **hintText**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:9](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L9)
+Defined in: [lib/evidenceHintSnapshot.ts:9](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L9)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:9](https://github.c
 
 > **id**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L7)
+Defined in: [lib/evidenceHintSnapshot.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L7)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:7](https://github.c
 
 > **traitCategory**: `"behavior"` \| `"habitat"` \| `"morphology"` \| `"diet"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"geography"` \| `"conservation"`
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L11)
+Defined in: [lib/evidenceHintSnapshot.ts:11](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L11)
 
 ***
 
@@ -50,4 +50,4 @@ Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:11](https://github.
 
 > **weakTag**: `string`
 
-Defined in: [phaser-june-039/src/lib/evidenceHintSnapshot.ts:10](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceHintSnapshot.ts#L10)
+Defined in: [lib/evidenceHintSnapshot.ts:10](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceHintSnapshot.ts#L10)

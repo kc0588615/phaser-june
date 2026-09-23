@@ -1,6 +1,6 @@
 # Interface: ComparisonResult
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L28)
+Defined in: [lib/deductionEngine.ts:28](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L28)
 
 Result of comparing one category between mystery and reference
 
@@ -10,7 +10,7 @@ Result of comparing one category between mystery and reference
 
 > **category**: [`DeductionClueCategory`](../../../db/schema/species/type-aliases/DeductionClueCategory.md)
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:29](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L29)
+Defined in: [lib/deductionEngine.ts:29](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L29)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:29](https://github.com/k
 
 > **matched**: `boolean`
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L30)
+Defined in: [lib/deductionEngine.ts:30](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L30)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:30](https://github.com/k
 
 > **matchedTags**: `string`[]
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L31)
+Defined in: [lib/deductionEngine.ts:31](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L31)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: [phaser-june-039/src/lib/deductionEngine.ts:31](https://github.com/k
 
 > **message**: `string`
 
-Defined in: [phaser-june-039/src/lib/deductionEngine.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L32)
+Defined in: [lib/deductionEngine.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/lib/deductionEngine.ts#L32)

@@ -1,6 +1,6 @@
 # Interface: BioregionPoly
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:59](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L59)
+Defined in: [lib/bioregionStyles.ts:59](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L59)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:59](https://github.com/k
 
 > **biome**: `string`
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:62](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L62)
+Defined in: [lib/bioregionStyles.ts:62](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L62)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:62](https://github.com/k
 
 > **degrees**: `number`[]
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:65](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L65)
+Defined in: [lib/bioregionStyles.ts:65](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L65)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:65](https://github.com/k
 
 > **fill**: `string`
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:64](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L64)
+Defined in: [lib/bioregionStyles.ts:64](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L64)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:64](https://github.com/k
 
 > **id**: `string`
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:60](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L60)
+Defined in: [lib/bioregionStyles.ts:60](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L60)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:60](https://github.com/k
 
 > **name**: `string`
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:61](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L61)
+Defined in: [lib/bioregionStyles.ts:61](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L61)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:61](https://github.com/k
 
 > **realm**: `string`
 
-Defined in: [phaser-june-039/src/lib/bioregionStyles.ts:63](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/bioregionStyles.ts#L63)
+Defined in: [lib/bioregionStyles.ts:63](https://github.com/kc0588615/phaser-june/blob/main/src/lib/bioregionStyles.ts#L63)

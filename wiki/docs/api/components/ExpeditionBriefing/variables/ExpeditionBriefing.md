@@ -2,4 +2,4 @@
 
 > `const` **ExpeditionBriefing**: `React.FC`\<`Props`\>
 
-Defined in: [phaser-june-039/src/components/ExpeditionBriefing.tsx:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/ExpeditionBriefing.tsx#L18)
+Defined in: [components/ExpeditionBriefing.tsx:18](https://github.com/kc0588615/phaser-june/blob/main/src/components/ExpeditionBriefing.tsx#L18)

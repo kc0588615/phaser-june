@@ -2,4 +2,4 @@
 
 > **PublicCaseSnapshot** = [`PublicCaseV4`](../interfaces/PublicCaseV4.md)
 
-Defined in: [phaser-june-039/src/lib/runProjection.ts:79](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L79)
+Defined in: [lib/runProjection.ts:68](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L68)

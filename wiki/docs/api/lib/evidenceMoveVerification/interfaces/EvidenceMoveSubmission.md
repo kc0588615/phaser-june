@@ -1,6 +1,6 @@
 # Interface: EvidenceMoveSubmission
 
-Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceMoveVerification.ts#L21)
+Defined in: [lib/evidenceMoveVerification.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceMoveVerification.ts#L21)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:21](https://git
 
 > **boardCheckpoint**: [`BoardCheckpointV1`](../../../game/boardTypes/interfaces/BoardCheckpointV1.md)
 
-Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceMoveVerification.ts#L25)
+Defined in: [lib/evidenceMoveVerification.ts:25](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceMoveVerification.ts#L25)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:25](https://git
 
 > **move**: `object`
 
-Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceMoveVerification.ts#L24)
+Defined in: [lib/evidenceMoveVerification.ts:24](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceMoveVerification.ts#L24)
 
 #### amount
 
@@ -36,7 +36,7 @@ Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:24](https://git
 
 > **moveNumber**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceMoveVerification.ts#L23)
+Defined in: [lib/evidenceMoveVerification.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceMoveVerification.ts#L23)
 
 ***
 
@@ -44,4 +44,4 @@ Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:23](https://git
 
 > **nodeIndex**: `number`
 
-Defined in: [phaser-june-039/src/lib/evidenceMoveVerification.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceMoveVerification.ts#L22)
+Defined in: [lib/evidenceMoveVerification.ts:22](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceMoveVerification.ts#L22)

@@ -1,6 +1,6 @@
 # Interface: BoardCell
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:10](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L10)
+Defined in: [game/boardTypes.ts:10](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L10)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:10](https://github.com/kc058
 
 > **family**: `"loot"`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L11)
+Defined in: [game/boardTypes.ts:11](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L11)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:11](https://github.com/kc058
 
 > **gemType**: `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L12)
+Defined in: [game/boardTypes.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L12)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:12](https://github.com/kc058
 
 > `optional` **state**: [`BoardCellState`](BoardCellState.md)
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L13)
+Defined in: [game/boardTypes.ts:13](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L13)

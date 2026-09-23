@@ -1,6 +1,6 @@
 # Interface: BoardCheckpointV1
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L18)
+Defined in: [game/boardTypes.ts:18](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L18)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:18](https://github.com/kc058
 
 > **allowedGemTypes**: (`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`)[]
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L27)
+Defined in: [game/boardTypes.ts:27](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L27)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:27](https://github.com/kc058
 
 > `optional` **fieldSignalSpawned**: `boolean`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L30)
+Defined in: [game/boardTypes.ts:30](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L30)
 
 Durable one-per-site lifecycle marker; remains true after the tile clears.
 
@@ -26,7 +26,7 @@ Durable one-per-site lifecycle marker; remains true after the tile clears.
 
 > **grid**: [`PuzzleGrid`](../type-aliases/PuzzleGrid.md)
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L22)
+Defined in: [game/boardTypes.ts:22](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L22)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:22](https://github.com/kc058
 
 > **height**: `number`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L21)
+Defined in: [game/boardTypes.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L21)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:21](https://github.com/kc058
 
 > **maxMoves**: `number`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L25)
+Defined in: [game/boardTypes.ts:25](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L25)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:25](https://github.com/kc058
 
 > **movesUsed**: `number`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L24)
+Defined in: [game/boardTypes.ts:24](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L24)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:24](https://github.com/kc058
 
 > **nextGemsToSpawn**: (`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`)[]
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L26)
+Defined in: [game/boardTypes.ts:26](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L26)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:26](https://github.com/kc058
 
 > **rngState**: `number`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L28)
+Defined in: [game/boardTypes.ts:28](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L28)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:28](https://github.com/kc058
 
 > **score**: `number`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L23)
+Defined in: [game/boardTypes.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L23)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:23](https://github.com/kc058
 
 > **version**: `1`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L19)
+Defined in: [game/boardTypes.ts:19](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L19)
 
 ***
 
@@ -90,4 +90,4 @@ Defined in: [phaser-june-039/src/game/boardTypes.ts:19](https://github.com/kc058
 
 > **width**: `number`
 
-Defined in: [phaser-june-039/src/game/boardTypes.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/boardTypes.ts#L20)
+Defined in: [game/boardTypes.ts:20](https://github.com/kc0588615/phaser-june/blob/main/src/game/boardTypes.ts#L20)

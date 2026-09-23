@@ -1,6 +1,6 @@
 # Interface: ClaimState
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L6)
+Defined in: [lib/liveClaims.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L6)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:6](https://github.com/kc05886
 
 > **explanation**: `"locked"` \| `"open"`
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L7)
+Defined in: [lib/liveClaims.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L7)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:7](https://github.com/kc05886
 
 > `optional` **lockedExplanationId**: `string`
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L8)
+Defined in: [lib/liveClaims.ts:8](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L8)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:8](https://github.com/kc05886
 
 > `optional` **lockedSpeciesId**: `number`
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L8)
+Defined in: [lib/liveClaims.ts:8](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L8)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:8](https://github.com/kc05886
 
 > **species**: `"locked"` \| `"open"`
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L7)
+Defined in: [lib/liveClaims.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L7)
 
 ***
 
@@ -40,4 +40,4 @@ Defined in: [phaser-june-039/src/lib/liveClaims.ts:7](https://github.com/kc05886
 
 > **wrongClaims**: `number`
 
-Defined in: [phaser-june-039/src/lib/liveClaims.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/liveClaims.ts#L7)
+Defined in: [lib/liveClaims.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/lib/liveClaims.ts#L7)

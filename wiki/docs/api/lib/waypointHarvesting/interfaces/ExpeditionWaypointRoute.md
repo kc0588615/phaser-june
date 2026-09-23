@@ -1,6 +1,6 @@
 # Interface: ExpeditionWaypointRoute
 
-Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/waypointHarvesting.ts#L21)
+Defined in: [lib/waypointHarvesting.ts:21](https://github.com/kc0588615/phaser-june/blob/main/src/lib/waypointHarvesting.ts#L21)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:21](https://github.co
 
 > **debug**: `object`
 
-Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/waypointHarvesting.ts#L26)
+Defined in: [lib/waypointHarvesting.ts:26](https://github.com/kc0588615/phaser-june/blob/main/src/lib/waypointHarvesting.ts#L26)
 
 #### candidateCounts
 
@@ -28,7 +28,7 @@ Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:26](https://github.co
 
 > **origin**: `object`
 
-Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/waypointHarvesting.ts#L22)
+Defined in: [lib/waypointHarvesting.ts:22](https://github.com/kc0588615/phaser-june/blob/main/src/lib/waypointHarvesting.ts#L22)
 
 #### lat
 
@@ -44,7 +44,7 @@ Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:22](https://github.co
 
 > **radiusKm**: `number`
 
-Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/waypointHarvesting.ts#L23)
+Defined in: [lib/waypointHarvesting.ts:23](https://github.com/kc0588615/phaser-june/blob/main/src/lib/waypointHarvesting.ts#L23)
 
 ***
 
@@ -52,7 +52,7 @@ Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:23](https://github.co
 
 > **routePolyline**: `object`[]
 
-Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/waypointHarvesting.ts#L25)
+Defined in: [lib/waypointHarvesting.ts:25](https://github.com/kc0588615/phaser-june/blob/main/src/lib/waypointHarvesting.ts#L25)
 
 #### lat
 
@@ -72,4 +72,4 @@ Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:25](https://github.co
 
 > **waypoints**: [`ExpeditionWaypoint`](../../../types/waypoints/interfaces/ExpeditionWaypoint.md)[]
 
-Defined in: [phaser-june-039/src/lib/waypointHarvesting.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/waypointHarvesting.ts#L24)
+Defined in: [lib/waypointHarvesting.ts:24](https://github.com/kc0588615/phaser-june/blob/main/src/lib/waypointHarvesting.ts#L24)

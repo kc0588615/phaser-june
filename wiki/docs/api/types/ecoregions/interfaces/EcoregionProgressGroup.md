@@ -1,6 +1,6 @@
 # Interface: EcoregionProgressGroup
 
-Defined in: [phaser-june-039/src/types/ecoregions.ts:51](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L51)
+Defined in: [types/ecoregions.ts:51](https://github.com/kc0588615/phaser-june/blob/main/src/types/ecoregions.ts#L51)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/types/ecoregions.ts:51](https://github.com/kc05
 
 > **animal\_icon**: `string`
 
-Defined in: [phaser-june-039/src/types/ecoregions.ts:53](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L53)
+Defined in: [types/ecoregions.ts:53](https://github.com/kc0588615/phaser-june/blob/main/src/types/ecoregions.ts#L53)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/types/ecoregions.ts:53](https://github.com/kc05
 
 > **animal\_type**: `string`
 
-Defined in: [phaser-june-039/src/types/ecoregions.ts:52](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L52)
+Defined in: [types/ecoregions.ts:52](https://github.com/kc0588615/phaser-june/blob/main/src/types/ecoregions.ts#L52)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/types/ecoregions.ts:52](https://github.com/kc05
 
 > **found\_species**: `number`
 
-Defined in: [phaser-june-039/src/types/ecoregions.ts:55](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L55)
+Defined in: [types/ecoregions.ts:55](https://github.com/kc0588615/phaser-june/blob/main/src/types/ecoregions.ts#L55)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [phaser-june-039/src/types/ecoregions.ts:55](https://github.com/kc05
 
 > **total\_species**: `number`
 
-Defined in: [phaser-june-039/src/types/ecoregions.ts:54](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L54)
+Defined in: [types/ecoregions.ts:54](https://github.com/kc0588615/phaser-june/blob/main/src/types/ecoregions.ts#L54)

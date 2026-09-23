@@ -1,6 +1,6 @@
 # Interface: EvidenceContrastOption
 
-Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:3](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/evidenceLog.ts#L3)
+Defined in: [expedition/evidenceLog.ts:3](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/evidenceLog.ts#L3)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:3](https://github.com
 
 > **candidateTrait**: `string`
 
-Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/evidenceLog.ts#L6)
+Defined in: [expedition/evidenceLog.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/evidenceLog.ts#L6)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:6](https://github.com
 
 > **commonName**: `string`
 
-Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:5](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/evidenceLog.ts#L5)
+Defined in: [expedition/evidenceLog.ts:5](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/evidenceLog.ts#L5)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:5](https://github.com
 
 > **eliminationReason**: `string`
 
-Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/evidenceLog.ts#L7)
+Defined in: [expedition/evidenceLog.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/evidenceLog.ts#L7)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:7](https://github.com
 
 > **speciesId**: `number`
 
-Defined in: [phaser-june-039/src/expedition/evidenceLog.ts:4](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/evidenceLog.ts#L4)
+Defined in: [expedition/evidenceLog.ts:4](https://github.com/kc0588615/phaser-june/blob/main/src/expedition/evidenceLog.ts#L4)

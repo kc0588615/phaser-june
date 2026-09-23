@@ -2,7 +2,7 @@
 
 > **validateFamilyLadder**(`answerId`, `card`, `rungs`, `profiles`, `options`): `string`[]
 
-Defined in: [phaser-june-039/src/lib/evidenceLadder.ts:183](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceLadder.ts#L183)
+Defined in: [lib/evidenceLadder.ts:183](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L183)
 
 Safety (always): every rung tag is canonical for the card's category, present
 in the answer profile (answer never eliminated), leaves 2–5 survivors on its

@@ -1,6 +1,6 @@
 # Interface: GemSemanticDef
 
-Defined in: [phaser-june-039/src/game/gemSemantics.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/gemSemantics.ts#L6)
+Defined in: [game/gemSemantics.ts:6](https://github.com/kc0588615/phaser-june/blob/main/src/game/gemSemantics.ts#L6)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/game/gemSemantics.ts:6](https://github.com/kc05
 
 > **family**: `"loot"`
 
-Defined in: [phaser-june-039/src/game/gemSemantics.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/gemSemantics.ts#L8)
+Defined in: [game/gemSemantics.ts:8](https://github.com/kc0588615/phaser-june/blob/main/src/game/gemSemantics.ts#L8)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [phaser-june-039/src/game/gemSemantics.ts:8](https://github.com/kc05
 
 > **gemType**: `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`
 
-Defined in: [phaser-june-039/src/game/gemSemantics.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/gemSemantics.ts#L7)
+Defined in: [game/gemSemantics.ts:7](https://github.com/kc0588615/phaser-june/blob/main/src/game/gemSemantics.ts#L7)

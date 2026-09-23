@@ -1,6 +1,6 @@
 # Interface: CompiledCaseV4
 
-Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:47](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L47)
+Defined in: [lib/caseCompilerV3.ts:47](https://github.com/kc0588615/phaser-june/blob/main/src/lib/caseCompilerV3.ts#L47)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:47](https://github.com/kc
 
 > **private**: `object`
 
-Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:50](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L50)
+Defined in: [lib/caseCompilerV3.ts:50](https://github.com/kc0588615/phaser-june/blob/main/src/lib/caseCompilerV3.ts#L50)
 
 #### answerId
 
@@ -52,7 +52,7 @@ Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:50](https://github.com/kc
 
 > **public**: `object`
 
-Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:49](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L49)
+Defined in: [lib/caseCompilerV3.ts:49](https://github.com/kc0588615/phaser-june/blob/main/src/lib/caseCompilerV3.ts#L49)
 
 #### boardSeeds
 
@@ -80,4 +80,4 @@ Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:49](https://github.com/kc
 
 > **version**: `4`
 
-Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:48](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L48)
+Defined in: [lib/caseCompilerV3.ts:48](https://github.com/kc0588615/phaser-june/blob/main/src/lib/caseCompilerV3.ts#L48)

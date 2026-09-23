@@ -2,7 +2,7 @@
 
 > **normalizeRoutePoint**(`point`): [`RoutePoint`](../interfaces/RoutePoint.md) \| `null`
 
-Defined in: [phaser-june-039/src/lib/expeditionRoute.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/expeditionRoute.ts#L15)
+Defined in: [lib/expeditionRoute.ts:15](https://github.com/kc0588615/phaser-june/blob/main/src/lib/expeditionRoute.ts#L15)
 
 ## Parameters
 

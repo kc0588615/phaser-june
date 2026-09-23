@@ -2,4 +2,4 @@
 
 > `const` **MYSTERY\_NODE\_COUNT**: `3` = `3`
 
-Defined in: [phaser-june-039/src/lib/nodeScoring.ts:57](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L57)
+Defined in: [lib/nodeScoring.ts:57](https://github.com/kc0588615/phaser-june/blob/main/src/lib/nodeScoring.ts#L57)
