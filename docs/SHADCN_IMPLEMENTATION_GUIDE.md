@@ -1,5 +1,7 @@
 # shadcn/ui Implementation Guide for Phaser-React Integration
 
+> **2026-09-22 (plan 039):** the unused `ui/` components `menubar`, `sheet`, `card`, `popover`, `modal-overlay`, `separator` and `stat-pill` were deleted. Re-add one with `npx shadcn@latest add <name>` if needed. `@radix-ui/react-menubar`, `react-popover` and `react-separator` are still in `package.json`, pending removal.
+
 ## Overview
 
 This guide documents the successful implementation of shadcn/ui components in a Phaser 3 + Next.js game project, with specific focus on creating UI overlays that properly render above the game canvas and integrate with game business logic via EventBus.
