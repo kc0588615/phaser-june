@@ -19,7 +19,7 @@ import { BoardView } from '../BoardView';
 import {
     GRID_COLS, GRID_ROWS, AssetKeys,
     DRAG_THRESHOLD, MOVE_THRESHOLD,
-    STREAK_STEP, STREAK_CAP, EARLY_BONUS_PER_SLOT, DEFAULT_TOTAL_CLUE_SLOTS,
+    STREAK_STEP, STREAK_CAP,
     MAX_MOVES,
     MOVE_LARGE_MATCH_THRESHOLD,
     MOVE_HUGE_MATCH_THRESHOLD,
@@ -90,8 +90,6 @@ export class Game extends Phaser.Scene {
     private movesText: Phaser.GameObjects.Text | null = null;
     private multiplierText: Phaser.GameObjects.Text | null = null;
     private pauseButtonContainer: Phaser.GameObjects.Container | null = null;
-    private pauseButton: Phaser.GameObjects.Rectangle | null = null;
-    private pauseButtonLabel: Phaser.GameObjects.Text | null = null;
     private shuffleButtonContainer: Phaser.GameObjects.Container | null = null;
     private pauseOverlay: Phaser.GameObjects.Container | null = null;
     private pauseOverlayBackground: Phaser.GameObjects.Rectangle | null = null;
@@ -260,25 +258,6 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private onWrongGuess(): void {
-        this.streak = 0;
-        this.emitHud();
-    }
-
-    private onCorrectGuess(totalClueSlotsForSpecies?: number): void {
-        if (!this.backendPuzzle) return;
-        
-        // Increment streak on correct guess
-        this.streak += 1;
-        
-        const total = totalClueSlotsForSpecies ?? DEFAULT_TOTAL_CLUE_SLOTS;
-        const revealed = 0;
-        const earlyBase = Math.max(0, total - revealed) * EARLY_BONUS_PER_SLOT;
-        const earlyWithStreak = Math.floor(earlyBase * this.currentMultiplier());
-        this.backendPuzzle.addBonusScore(earlyWithStreak);
-        this.emitHud();
-    }
-
     create(): void {
         console.log("Game Scene: create");
         const { width, height } = this.scale;
@@ -394,8 +373,6 @@ export class Game extends Phaser.Scene {
         if (this.pauseButtonContainer) {
             this.pauseButtonContainer.destroy(true);
             this.pauseButtonContainer = null;
-            this.pauseButton = null;
-            this.pauseButtonLabel = null;
         }
 
         const buttonSize = 36;
@@ -422,8 +399,6 @@ export class Game extends Phaser.Scene {
         container.setVisible(this.isBoardInitialized);
 
         this.pauseButtonContainer = container;
-        this.pauseButton = buttonBg;
-        this.pauseButtonLabel = label;
 
         this.ensurePauseOverlay();
         this.createShuffleButton();
@@ -1227,29 +1202,8 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    private async animatePhase(phaseResult: ExplodeAndReplacePhase, isCascade: boolean): Promise<void> {
-        if (!this.boardView || !this.backendPuzzle) return;
-        try {
-            // Record matches using current grid state (fallback method)
-            this.recordMatchedGems(phaseResult.matches, isCascade, phaseResult.matchGridState);
-            
-            await this.boardView.animateExplosions(phaseResult.matches.flat());
-            await this.boardView.animateFalls(phaseResult.replacements, this.backendPuzzle.getGridState());
-        } catch (error) {
-            console.error("Error during phase animation:", error);
-            if (this.boardView && this.backendPuzzle) {
-                this.boardView.syncSpritesToGridPositions();
-            }
-        }
-    }
-
     private processMatchedGemsWithOriginalTypes(matches: Coordinate[][], originalGridState: any, isCascade: boolean): void {
         this.recordMatchesForSummary(matches, originalGridState, isCascade);
-    }
-
-    private recordMatchedGems(matches: Coordinate[][], isCascade: boolean, gridStateOverride?: any): void {
-        const gridState = gridStateOverride ?? this.backendPuzzle?.getGridState();
-        this.recordMatchesForSummary(matches, gridState, isCascade);
     }
 
     private onExpeditionStart(): void { this.inExpeditionRun = true; }
@@ -1308,26 +1262,6 @@ export class Game extends Phaser.Scene {
         this.nodeObjectiveCompleted = false;
 
         this.usedRasterHabitats.clear();
-    }
-
-    private resetForNewLocation(): void {
-        console.log("Game Scene: Resetting for new location selection");
-
-        // Full clear: species, habitats, everything
-        this.currentSpecies = [];
-        this.selectedSpecies = null;
-        this.currentSpeciesIndex = 0;
-        this.rasterHabitats = [];
-
-        // Reset board via shared helper
-        this.prepareForNextNode();
-
-        // Show waiting-for-click text
-        if (this.statusText && this.statusText.active) {
-            this.statusText.setText("Great job!\n\nClick on the globe to find a new habitat area\nfor another mystery species.");
-        }
-        // Emit reset event for React components
-        EventBus.emit('game-reset', undefined);
     }
 
     private resetDragState(): void {
@@ -1442,8 +1376,6 @@ export class Game extends Phaser.Scene {
             this.shuffleButtonContainer.destroy(true);
             this.shuffleButtonContainer = null;
         }
-        this.pauseButton = null;
-        this.pauseButtonLabel = null;
         if (this.pauseOverlay) {
             this.pauseOverlay.destroy(true);
             this.pauseOverlay = null;
@@ -1494,34 +1426,4 @@ export class Game extends Phaser.Scene {
         navigator.sendBeacon('/api/player/track', blob);
     }
 
-    private verifyBoardState(): void {
-        if (!this.backendPuzzle || !this.boardView) return;
-        const modelState = this.backendPuzzle.getGridState();
-        const viewSprites = this.boardView.getGemsSprites();
-        let mismatches = 0;
-        for (let x = 0; x < GRID_COLS; x++) {
-            for (let y = 0; y < GRID_ROWS; y++) {
-                const modelGem = modelState[x]?.[y];
-                const viewSprite = viewSprites[x]?.[y];
-                if (!modelGem && viewSprite && viewSprite.active) {
-                    console.warn(`Verify Mismatch: View sprite at [${x},${y}], Model empty.`);
-                    mismatches++;
-                } else if (modelGem && (!viewSprite || !viewSprite.active)) {
-                    console.warn(`Verify Mismatch: Model gem '${modelGem.gemType}' at [${x},${y}], View no active sprite.`);
-                    mismatches++;
-                } else if (modelGem && viewSprite && viewSprite.active) {
-                    if (viewSprite.getData('gemType') !== modelGem.gemType) {
-                        console.warn(`Verify Mismatch: Type diff at [${x},${y}]. M: ${modelGem.gemType}, V: ${viewSprite.getData('gemType')}`);
-                        mismatches++;
-                    }
-                    if (viewSprite.getData('gridX') !== x || viewSprite.getData('gridY') !== y) {
-                        console.warn(`Verify Mismatch: Sprite at [${x},${y}] thinks its pos is [${viewSprite.getData('gridX')},${viewSprite.getData('gridY')}]`);
-                        mismatches++;
-                    }
-                }
-            }
-        }
-        if (mismatches === 0) console.log("Verify Board State: OK.");
-        else console.error(`Verify Board State: Found ${mismatches} Mismatches!`);
-    }
 }

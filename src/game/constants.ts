@@ -103,8 +103,6 @@ export const HABITAT_GEM_MAP: Partial<Record<number, GemType>> = {
 export const MAX_MOVES = 50;
 export const STREAK_STEP = 0.25;           // +25% per streak level
 export const STREAK_CAP = 3.0;             // optional cap (x3.0)
-export const EARLY_BONUS_PER_SLOT = 100;
-export const DEFAULT_TOTAL_CLUE_SLOTS = 8; // fallback if species-specific not provided
 
 export const MOVE_LARGE_MATCH_THRESHOLD = 4;
 export const MOVE_HUGE_MATCH_THRESHOLD = 5;

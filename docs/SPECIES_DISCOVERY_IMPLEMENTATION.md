@@ -55,7 +55,7 @@ Modified to hide species names and implement multi-species progression.
 - **New Game Loop Features:**
   - Added `handleSpeciesGuess()` method to process guess validation
   - Modified `advanceToNextSpecies()` to progress through species queue
-  - Added `resetForNewLocation()` to clear state when all species discovered
+  - Added `resetForNewLocation()` to clear state when all species discovered (never called; removed in plan 039)
   - Removed auto-advance on all clues revealed (waits for player guess)
   - Tracks species progression with `currentSpeciesIndex`
 
