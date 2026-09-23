@@ -2,9 +2,9 @@
 
 > **parsePrivateCase**(`value`): [`PrivateCaseV3`](../interfaces/PrivateCaseV3.md) \| `null`
 
-Defined in: [src/lib/runCaseState.ts:88](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L88)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:70](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L70)
 
-v3 only — stored v1/v2 private cases parse to null (legacy runs).
+v4 only — earlier private cases parse to null (legacy runs).
 
 ## Parameters
 

@@ -1,8 +1,8 @@
 # Function: projectDeductionSummary()
 
-> **projectDeductionSummary**(`value`): \{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `wrongGuessCount?`: `number`; \} \| `null`
+> **projectDeductionSummary**(`value`): \{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `slipped?`: `boolean`; `wrongGuessCount?`: `number`; \} \| `null`
 
-Defined in: [src/lib/runProjection.ts:474](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L474)
+Defined in: [phaser-june-039/src/lib/runProjection.ts:520](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L520)
 
 ## Parameters
 
@@ -12,4 +12,4 @@ Defined in: [src/lib/runProjection.ts:474](https://github.com/kc0588615/phaser-j
 
 ## Returns
 
-\{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `wrongGuessCount?`: `number`; \} \| `null`
+\{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `slipped?`: `boolean`; `wrongGuessCount?`: `number`; \} \| `null`

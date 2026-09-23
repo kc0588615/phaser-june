@@ -1,6 +1,6 @@
 # Interface: RunProjectionSource
 
-Defined in: [src/lib/runProjection.ts:72](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L72)
+Defined in: [phaser-june-039/src/lib/runProjection.ts:67](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L67)
 
 ## Extends
 
@@ -16,4 +16,4 @@ Defined in: [src/lib/runProjection.ts:72](https://github.com/kc0588615/phaser-ju
 
 > `optional` **metadata**: `unknown`
 
-Defined in: [src/lib/runProjection.ts:73](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L73)
+Defined in: [phaser-june-039/src/lib/runProjection.ts:68](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L68)

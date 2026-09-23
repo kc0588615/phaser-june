@@ -11,4 +11,9 @@
 ## Variables
 
 - [CASE\_TRAIT\_CATEGORIES](variables/CASE_TRAIT_CATEGORIES.md)
-- [PROTOTYPE\_SPECIES\_COUNT](variables/PROTOTYPE_SPECIES_COUNT.md)
+- [POOL\_SIZE](variables/POOL_SIZE.md)
+- [PROFILE\_KEY\_BY\_CATEGORY](variables/PROFILE_KEY_BY_CATEGORY.md)
+
+## Functions
+
+- [isCaseTraitCategory](functions/isCaseTraitCategory.md)

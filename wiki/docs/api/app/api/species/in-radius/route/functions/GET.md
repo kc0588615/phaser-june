@@ -2,7 +2,7 @@
 
 > **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `count`: `number`; `species`: `object`[]; \}\>\>
 
-Defined in: [src/app/api/species/in-radius/route.ts:28](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/app/api/species/in-radius/route.ts#L28)
+Defined in: [phaser-june-039/src/app/api/species/in-radius/route.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/app/api/species/in-radius/route.ts#L28)
 
 GET /api/species/in-radius?lon=-122.4&lat=37.7&radius=10000
 

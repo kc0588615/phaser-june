@@ -1,12 +1,16 @@
 # Function: endGameSession()
 
-> **endGameSession**(`sessionId`, `finalMoves`, `finalScore`): `Promise`\<`void`\>
+> **endGameSession**(`playerId`, `sessionId`, `finalMoves`, `finalScore`): `Promise`\<`boolean`\>
 
-Defined in: [src/lib/playerTracking.ts:134](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/playerTracking.ts#L134)
+Defined in: [phaser-june-039/src/lib/playerTracking.ts:97](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/playerTracking.ts#L97)
 
-End the current game session
+End an owned game session
 
 ## Parameters
+
+### playerId
+
+`string`
 
 ### sessionId
 
@@ -22,4 +26,4 @@ End the current game session
 
 ## Returns
 
-`Promise`\<`void`\>
+`Promise`\<`boolean`\>

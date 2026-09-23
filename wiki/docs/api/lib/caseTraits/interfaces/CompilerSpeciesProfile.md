@@ -1,6 +1,6 @@
 # Interface: CompilerSpeciesProfile
 
-Defined in: src/lib/caseTraits.ts:18
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L24)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: src/lib/caseTraits.ts:18
 
 > **behaviorTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:23
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:29](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L29)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: src/lib/caseTraits.ts:23
 
 > **conservationTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:27
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L33)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: src/lib/caseTraits.ts:27
 
 > **dietTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:22
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L28)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: src/lib/caseTraits.ts:22
 
 > **geographyTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:26
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L32)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: src/lib/caseTraits.ts:26
 
 > **habitatTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:20
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L26)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: src/lib/caseTraits.ts:20
 
 > **keyFactTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:28
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L34)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: src/lib/caseTraits.ts:28
 
 > **morphologyTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:21
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L27)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: src/lib/caseTraits.ts:21
 
 > **reproductionTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:24
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L30)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: src/lib/caseTraits.ts:24
 
 > **signatureTag**: `string` \| `null`
 
-Defined in: src/lib/caseTraits.ts:29
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L35)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: src/lib/caseTraits.ts:29
 
 > **speciesId**: `number`
 
-Defined in: src/lib/caseTraits.ts:19
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L25)
 
 ***
 
@@ -88,4 +88,4 @@ Defined in: src/lib/caseTraits.ts:19
 
 > **taxonomyTags**: readonly `string`[]
 
-Defined in: src/lib/caseTraits.ts:25
+Defined in: [phaser-june-039/src/lib/caseTraits.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseTraits.ts#L31)

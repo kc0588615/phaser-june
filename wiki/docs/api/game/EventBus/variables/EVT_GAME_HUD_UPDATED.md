@@ -2,4 +2,4 @@
 
 > `const` **EVT\_GAME\_HUD\_UPDATED**: `"game-hud-updated"`
 
-Defined in: [src/game/EventBus.ts:159](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/EventBus.ts#L159)
+Defined in: [phaser-june-039/src/game/EventBus.ts:156](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/EventBus.ts#L156)

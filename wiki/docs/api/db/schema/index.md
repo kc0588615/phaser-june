@@ -8,9 +8,27 @@ Re-exports [cascadeHints](species/variables/cascadeHints.md)
 
 ***
 
+### casePoolMembers
+
+Re-exports [casePoolMembers](species/variables/casePoolMembers.md)
+
+***
+
+### casePools
+
+Re-exports [casePools](species/variables/casePools.md)
+
+***
+
 ### DeductionClueCategory
 
 Re-exports [DeductionClueCategory](species/type-aliases/DeductionClueCategory.md)
+
+***
+
+### deductionProfileUnknownTags
+
+Re-exports [deductionProfileUnknownTags](species/variables/deductionProfileUnknownTags.md)
 
 ***
 
@@ -92,6 +110,48 @@ Re-exports [iucn](species/variables/iucn.md)
 
 ***
 
+### mysteryCases
+
+Re-exports [mysteryCases](species/variables/mysteryCases.md)
+
+***
+
+### mysteryCasesPublic
+
+Re-exports [mysteryCasesPublic](species/variables/mysteryCasesPublic.md)
+
+***
+
+### mysteryEvidenceSteps
+
+Re-exports [mysteryEvidenceSteps](species/variables/mysteryEvidenceSteps.md)
+
+***
+
+### mysteryExplanations
+
+Re-exports [mysteryExplanations](species/variables/mysteryExplanations.md)
+
+***
+
+### mysteryRejectedAlternatives
+
+Re-exports [mysteryRejectedAlternatives](species/variables/mysteryRejectedAlternatives.md)
+
+***
+
+### mysteryResolutions
+
+Re-exports [mysteryResolutions](species/variables/mysteryResolutions.md)
+
+***
+
+### mysterySources
+
+Re-exports [mysterySources](species/variables/mysterySources.md)
+
+***
+
 ### naturalEarthCountries
 
 Re-exports [naturalEarthCountries](gis/variables/naturalEarthCountries.md)
@@ -107,12 +167,6 @@ Re-exports [naturalEarthPopulatedPlaces](gis/variables/naturalEarthPopulatedPlac
 ### oneearthBioregion
 
 Re-exports [oneearthBioregion](species/variables/oneearthBioregion.md)
-
-***
-
-### playerClueUnlocks
-
-Re-exports [playerClueUnlocks](player/variables/playerClueUnlocks.md)
 
 ***
 
@@ -164,12 +218,6 @@ Re-exports [speciesCardUnlocks](game/variables/speciesCardUnlocks.md)
 
 ***
 
-### speciesDeductionClues
-
-Re-exports [speciesDeductionClues](species/variables/speciesDeductionClues.md)
-
-***
-
 ### speciesDeductionProfiles
 
 Re-exports [speciesDeductionProfiles](species/variables/speciesDeductionProfiles.md)
@@ -182,15 +230,21 @@ Re-exports [speciesEcoregions](species/variables/speciesEcoregions.md)
 
 ***
 
-### speciesFacts
+### speciesNotes
 
-Re-exports [speciesFacts](species/variables/speciesFacts.md)
+Re-exports [speciesNotes](species/variables/speciesNotes.md)
 
 ***
 
 ### speciesTable
 
 Re-exports [speciesTable](species/variables/speciesTable.md)
+
+***
+
+### traitTags
+
+Re-exports [traitTags](species/variables/traitTags.md)
 
 ***
 

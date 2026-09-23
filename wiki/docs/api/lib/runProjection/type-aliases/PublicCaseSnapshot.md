@@ -1,5 +1,5 @@
 # Type Alias: PublicCaseSnapshot
 
-> **PublicCaseSnapshot** = [`PublicCaseV3`](../interfaces/PublicCaseV3.md)
+> **PublicCaseSnapshot** = [`PublicCaseV4`](../interfaces/PublicCaseV4.md)
 
-Defined in: [src/lib/runProjection.ts:83](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L83)
+Defined in: [phaser-june-039/src/lib/runProjection.ts:79](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L79)

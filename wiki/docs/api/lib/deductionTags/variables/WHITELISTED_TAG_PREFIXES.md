@@ -2,4 +2,4 @@
 
 > `const` **WHITELISTED\_TAG\_PREFIXES**: readonly \[`"family:"`, `"genus:"`, `"iucn:"`, `"continent:"`, `"signature:"`, `"bioregion:"`, `"misc:"`\]
 
-Defined in: [src/lib/deductionTags.ts:118](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionTags.ts#L118)
+Defined in: [phaser-june-039/src/lib/deductionTags.ts:118](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionTags.ts#L118)

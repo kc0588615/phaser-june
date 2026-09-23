@@ -1,6 +1,6 @@
 # Class: BackendPuzzle
 
-Defined in: [src/game/BackendPuzzle.ts:28](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L28)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L28)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [src/game/BackendPuzzle.ts:28](https://github.com/kc0588615/phaser-j
 
 > **new BackendPuzzle**(`width`, `height`): `BackendPuzzle`
 
-Defined in: [src/game/BackendPuzzle.ts:38](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L38)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:39](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L39)
 
 #### Parameters
 
@@ -30,7 +30,7 @@ Defined in: [src/game/BackendPuzzle.ts:38](https://github.com/kc0588615/phaser-j
 
 > `readonly` **height**: `number`
 
-Defined in: [src/game/BackendPuzzle.ts:40](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L40)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:41](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L41)
 
 ***
 
@@ -38,7 +38,7 @@ Defined in: [src/game/BackendPuzzle.ts:40](https://github.com/kc0588615/phaser-j
 
 > `readonly` **width**: `number`
 
-Defined in: [src/game/BackendPuzzle.ts:39](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L39)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:40](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L40)
 
 ## Methods
 
@@ -46,7 +46,7 @@ Defined in: [src/game/BackendPuzzle.ts:39](https://github.com/kc0588615/phaser-j
 
 > **addBonusScore**(`points`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:137](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L137)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:141](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L141)
 
 #### Parameters
 
@@ -64,7 +64,7 @@ Defined in: [src/game/BackendPuzzle.ts:137](https://github.com/kc0588615/phaser-
 
 > **addNextGemsToSpawn**(`gemTypes`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:366](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L366)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:378](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L378)
 
 #### Parameters
 
@@ -82,7 +82,7 @@ Defined in: [src/game/BackendPuzzle.ts:366](https://github.com/kc0588615/phaser-
 
 > **addNextGemToSpawn**(`gemType`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:362](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L362)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:374](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L374)
 
 #### Parameters
 
@@ -100,7 +100,7 @@ Defined in: [src/game/BackendPuzzle.ts:362](https://github.com/kc0588615/phaser-
 
 > **applyCellStateSeeds**(`seeds`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:154](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L154)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:166](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L166)
 
 #### Parameters
 
@@ -118,7 +118,7 @@ Defined in: [src/game/BackendPuzzle.ts:154](https://github.com/kc0588615/phaser-
 
 > **calculatePhaseBaseScore**(`phase`): `number`
 
-Defined in: [src/game/BackendPuzzle.ts:165](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L165)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:177](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L177)
 
 #### Parameters
 
@@ -136,7 +136,7 @@ Defined in: [src/game/BackendPuzzle.ts:165](https://github.com/kc0588615/phaser-
 
 > **damageBlocker**(`x`, `y`): `boolean`
 
-Defined in: [src/game/BackendPuzzle.ts:420](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L420)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:433](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L433)
 
 Damage a blocker at (x,y). Returns true if the blocker was destroyed.
 
@@ -160,7 +160,7 @@ Damage a blocker at (x,y). Returns true if the blocker was destroyed.
 
 > **exportCheckpoint**(): [`BoardCheckpointV1`](../../boardTypes/interfaces/BoardCheckpointV1.md)
 
-Defined in: [src/game/BackendPuzzle.ts:104](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L104)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:106](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L106)
 
 #### Returns
 
@@ -172,7 +172,7 @@ Defined in: [src/game/BackendPuzzle.ts:104](https://github.com/kc0588615/phaser-
 
 > **getGridState**(): [`PuzzleGrid`](../../boardTypes/type-aliases/PuzzleGrid.md)
 
-Defined in: [src/game/BackendPuzzle.ts:100](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L100)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:102](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L102)
 
 #### Returns
 
@@ -184,7 +184,7 @@ Defined in: [src/game/BackendPuzzle.ts:100](https://github.com/kc0588615/phaser-
 
 > **getMatchesFromHypotheticalMove**(`moveAction`): [`Match`](../../ExplodeAndReplacePhase/type-aliases/Match.md)[]
 
-Defined in: [src/game/BackendPuzzle.ts:276](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L276)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:288](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L288)
 
 #### Parameters
 
@@ -202,7 +202,7 @@ Defined in: [src/game/BackendPuzzle.ts:276](https://github.com/kc0588615/phaser-
 
 > **getMaxMoves**(): `number`
 
-Defined in: [src/game/BackendPuzzle.ts:92](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L92)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:94](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L94)
 
 #### Returns
 
@@ -214,7 +214,7 @@ Defined in: [src/game/BackendPuzzle.ts:92](https://github.com/kc0588615/phaser-j
 
 > **getMovesRemaining**(): `number`
 
-Defined in: [src/game/BackendPuzzle.ts:84](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L84)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:86](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L86)
 
 #### Returns
 
@@ -226,7 +226,7 @@ Defined in: [src/game/BackendPuzzle.ts:84](https://github.com/kc0588615/phaser-j
 
 > **getMovesUsed**(): `number`
 
-Defined in: [src/game/BackendPuzzle.ts:88](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L88)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:90](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L90)
 
 #### Returns
 
@@ -238,7 +238,7 @@ Defined in: [src/game/BackendPuzzle.ts:88](https://github.com/kc0588615/phaser-j
 
 > **getNextExplodeAndReplacePhase**(`actions`): [`ExplodeAndReplacePhase`](../../ExplodeAndReplacePhase/classes/ExplodeAndReplacePhase.md)
 
-Defined in: [src/game/BackendPuzzle.ts:238](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L238)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:250](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L250)
 
 #### Parameters
 
@@ -256,7 +256,7 @@ Defined in: [src/game/BackendPuzzle.ts:238](https://github.com/kc0588615/phaser-
 
 > **getScore**(): `number`
 
-Defined in: [src/game/BackendPuzzle.ts:80](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L80)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:82](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L82)
 
 #### Returns
 
@@ -268,9 +268,21 @@ Defined in: [src/game/BackendPuzzle.ts:80](https://github.com/kc0588615/phaser-j
 
 > **hasAnyValidMove**(): `boolean`
 
-Defined in: [src/game/BackendPuzzle.ts:321](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L321)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:333](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L333)
 
 Check if any single-cell row/col shift produces a match.
+
+#### Returns
+
+`boolean`
+
+***
+
+### hasFieldSignalSpawned()
+
+> **hasFieldSignalSpawned**(): `boolean`
+
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:158](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L158)
 
 #### Returns
 
@@ -282,7 +294,7 @@ Check if any single-cell row/col shift produces a match.
 
 > **importCheckpoint**(`value`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:120](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L120)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:123](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L123)
 
 #### Parameters
 
@@ -300,7 +312,7 @@ Defined in: [src/game/BackendPuzzle.ts:120](https://github.com/kc0588615/phaser-
 
 > **isGameOver**(): `boolean`
 
-Defined in: [src/game/BackendPuzzle.ts:96](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L96)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:98](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L98)
 
 #### Returns
 
@@ -308,11 +320,23 @@ Defined in: [src/game/BackendPuzzle.ts:96](https://github.com/kc0588615/phaser-j
 
 ***
 
+### markFieldSignalSpawned()
+
+> **markFieldSignalSpawned**(): `void`
+
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:162](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L162)
+
+#### Returns
+
+`void`
+
+***
+
 ### regenerateBoard()
 
 > **regenerateBoard**(): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:71](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L71)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:72](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L72)
 
 Regenerates the puzzle board with new random gems.
 Called when user clicks on the map to start a new game.
@@ -327,7 +351,7 @@ Called when user clicks on the map to start a new game.
 
 > **registerMove**(): `number`
 
-Defined in: [src/game/BackendPuzzle.ts:141](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L141)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:145](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L145)
 
 #### Returns
 
@@ -339,7 +363,7 @@ Defined in: [src/game/BackendPuzzle.ts:141](https://github.com/kc0588615/phaser-
 
 > **reset**(): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:370](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L370)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:382](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L382)
 
 #### Returns
 
@@ -351,7 +375,7 @@ Defined in: [src/game/BackendPuzzle.ts:370](https://github.com/kc0588615/phaser-
 
 > **resetMoves**(): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:146](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L146)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:150](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L150)
 
 #### Returns
 
@@ -363,7 +387,7 @@ Defined in: [src/game/BackendPuzzle.ts:146](https://github.com/kc0588615/phaser-
 
 > **setGemPool**(`config`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:48](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L48)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:49](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L49)
 
 #### Parameters
 
@@ -381,7 +405,7 @@ Defined in: [src/game/BackendPuzzle.ts:48](https://github.com/kc0588615/phaser-j
 
 > **setMaxMoves**(`max`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:150](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L150)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:154](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L154)
 
 #### Parameters
 
@@ -399,7 +423,7 @@ Defined in: [src/game/BackendPuzzle.ts:150](https://github.com/kc0588615/phaser-
 
 > **setSeed**(`seed`): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:59](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L59)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:60](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L60)
 
 #### Parameters
 
@@ -417,7 +441,7 @@ Defined in: [src/game/BackendPuzzle.ts:59](https://github.com/kc0588615/phaser-j
 
 > **shuffle**(): `void`
 
-Defined in: [src/game/BackendPuzzle.ts:338](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/BackendPuzzle.ts#L338)
+Defined in: [phaser-june-039/src/game/BackendPuzzle.ts:350](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/BackendPuzzle.ts#L350)
 
 Shuffle all gem types in place (Fisher-Yates), preserving cell states. Repeats until at least one valid move exists.
 

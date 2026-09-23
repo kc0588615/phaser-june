@@ -2,7 +2,7 @@
 
 > `const` **speciesService**: `object`
 
-Defined in: [src/lib/speciesService.ts:127](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesService.ts#L127)
+Defined in: [phaser-june-039/src/lib/speciesService.ts:84](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/speciesService.ts#L84)
 
 ## Type Declaration
 

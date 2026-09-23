@@ -1,6 +1,6 @@
 # Class: Game
 
-Defined in: [src/game/scenes/Game.ts:128](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/scenes/Game.ts#L128)
+Defined in: [phaser-june-039/src/game/scenes/Game.ts:66](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L66)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [src/game/scenes/Game.ts:128](https://github.com/kc0588615/phaser-ju
 
 > **new Game**(): `Game`
 
-Defined in: [src/game/scenes/Game.ts:206](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/scenes/Game.ts#L206)
+Defined in: [phaser-june-039/src/game/scenes/Game.ts:134](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L134)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [src/game/scenes/Game.ts:206](https://github.com/kc0588615/phaser-ju
 
 > **create**(): `void`
 
-Defined in: [src/game/scenes/Game.ts:409](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/scenes/Game.ts#L409)
+Defined in: [phaser-june-039/src/game/scenes/Game.ts:261](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L261)
 
 #### Returns
 
@@ -40,7 +40,7 @@ Defined in: [src/game/scenes/Game.ts:409](https://github.com/kc0588615/phaser-ju
 
 > **shutdown**(): `void`
 
-Defined in: [src/game/scenes/Game.ts:1877](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/scenes/Game.ts#L1877)
+Defined in: [phaser-june-039/src/game/scenes/Game.ts:1324](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L1324)
 
 #### Returns
 
@@ -52,7 +52,7 @@ Defined in: [src/game/scenes/Game.ts:1877](https://github.com/kc0588615/phaser-j
 
 > **update**(): `void`
 
-Defined in: [src/game/scenes/Game.ts:257](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/scenes/Game.ts#L257)
+Defined in: [phaser-june-039/src/game/scenes/Game.ts:153](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/scenes/Game.ts#L153)
 
 This method should be overridden by your own Scenes.
 

@@ -6,11 +6,13 @@
 - [ConfirmedClue](interfaces/ConfirmedClue.md)
 - [EarnedObservation](interfaces/EarnedObservation.md)
 - [ExpeditionData](interfaces/ExpeditionData.md)
+- [FieldFact](interfaces/FieldFact.md)
 - [RunState](interfaces/RunState.md)
 
 ## Type Aliases
 
 - [ClueCategoryKey](type-aliases/ClueCategoryKey.md)
+- [LedgerFact](type-aliases/LedgerFact.md)
 - [RunPhase](type-aliases/RunPhase.md)
 
 ## Functions

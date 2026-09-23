@@ -2,7 +2,7 @@
 
 > **filterEliminatedCandidates**\<`T`\>(`candidates`, `eliminatedIds`): `T`[]
 
-Defined in: [src/lib/runCaseState.ts:189](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L189)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:198](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L198)
 
 ## Type Parameters
 

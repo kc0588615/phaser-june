@@ -1,6 +1,6 @@
 # Interface: ComparisonResult
 
-Defined in: [src/lib/deductionEngine.ts:47](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L47)
+Defined in: [phaser-june-039/src/lib/deductionEngine.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L28)
 
 Result of comparing one category between mystery and reference
 
@@ -10,7 +10,7 @@ Result of comparing one category between mystery and reference
 
 > **category**: [`DeductionClueCategory`](../../../db/schema/species/type-aliases/DeductionClueCategory.md)
 
-Defined in: [src/lib/deductionEngine.ts:48](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L48)
+Defined in: [phaser-june-039/src/lib/deductionEngine.ts:29](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L29)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [src/lib/deductionEngine.ts:48](https://github.com/kc0588615/phaser-
 
 > **matched**: `boolean`
 
-Defined in: [src/lib/deductionEngine.ts:49](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L49)
+Defined in: [phaser-june-039/src/lib/deductionEngine.ts:30](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L30)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [src/lib/deductionEngine.ts:49](https://github.com/kc0588615/phaser-
 
 > **matchedTags**: `string`[]
 
-Defined in: [src/lib/deductionEngine.ts:50](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L50)
+Defined in: [phaser-june-039/src/lib/deductionEngine.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L31)
 
 ***
 
@@ -34,4 +34,4 @@ Defined in: [src/lib/deductionEngine.ts:50](https://github.com/kc0588615/phaser-
 
 > **message**: `string`
 
-Defined in: [src/lib/deductionEngine.ts:51](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/deductionEngine.ts#L51)
+Defined in: [phaser-june-039/src/lib/deductionEngine.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/deductionEngine.ts#L32)

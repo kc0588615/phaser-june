@@ -1,10 +1,10 @@
 # Function: parsePublicCaseSnapshot()
 
-> **parsePublicCaseSnapshot**(`value`): [`PublicCaseV3`](../interfaces/PublicCaseV3.md) \| `null`
+> **parsePublicCaseSnapshot**(`value`): [`PublicCaseV4`](../interfaces/PublicCaseV4.md) \| `null`
 
-Defined in: [src/lib/runProjection.ts:335](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runProjection.ts#L335)
+Defined in: [phaser-june-039/src/lib/runProjection.ts:359](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runProjection.ts#L359)
 
-v3 only — stored v1/v2 snapshots parse to null and resume as legacy runs.
+v4 only — earlier snapshots parse to null and resume as legacy runs.
 
 ## Parameters
 
@@ -14,4 +14,4 @@ v3 only — stored v1/v2 snapshots parse to null and resume as legacy runs.
 
 ## Returns
 
-[`PublicCaseV3`](../interfaces/PublicCaseV3.md) \| `null`
+[`PublicCaseV4`](../interfaces/PublicCaseV4.md) \| `null`

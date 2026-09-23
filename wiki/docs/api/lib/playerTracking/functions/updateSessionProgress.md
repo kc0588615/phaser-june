@@ -1,13 +1,16 @@
 # Function: updateSessionProgress()
 
-> **updateSessionProgress**(`sessionId`, `moves`, `score`, `speciesDiscovered`, `cluesUnlocked`): `Promise`\<`void`\>
+> **updateSessionProgress**(`playerId`, `sessionId`, `moves`, `score`, `speciesDiscovered`): `Promise`\<`boolean`\>
 
-Defined in: [src/lib/playerTracking.ts:191](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/playerTracking.ts#L191)
+Defined in: [phaser-june-039/src/lib/playerTracking.ts:134](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/playerTracking.ts#L134)
 
-Update session progress (DEBOUNCED)
-Batches rapid updates to reduce database load
+Update progress for an owned game session
 
 ## Parameters
+
+### playerId
+
+`string`
 
 ### sessionId
 
@@ -25,10 +28,6 @@ Batches rapid updates to reduce database load
 
 `number`
 
-### cluesUnlocked
-
-`number`
-
 ## Returns
 
-`Promise`\<`void`\>
+`Promise`\<`boolean`\>

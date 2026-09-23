@@ -2,4 +2,4 @@
 
 > **GemType** = [`LootGemType`](LootGemType.md)
 
-Defined in: [src/expedition/domain.ts:26](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L26)
+Defined in: [phaser-june-039/src/expedition/domain.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L25)

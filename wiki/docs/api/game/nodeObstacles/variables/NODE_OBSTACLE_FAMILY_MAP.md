@@ -2,4 +2,4 @@
 
 > `const` **NODE\_OBSTACLE\_FAMILY\_MAP**: `Record`\<[`NodeObstacle`](../type-aliases/NodeObstacle.md), [`ObstacleFamily`](../type-aliases/ObstacleFamily.md)\>
 
-Defined in: [src/game/nodeObstacles.ts:63](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/nodeObstacles.ts#L63)
+Defined in: [phaser-june-039/src/game/nodeObstacles.ts:63](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/nodeObstacles.ts#L63)

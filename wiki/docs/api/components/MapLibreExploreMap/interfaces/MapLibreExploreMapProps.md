@@ -1,6 +1,6 @@
 # Interface: MapLibreExploreMapProps
 
-Defined in: [src/components/MapLibreExploreMap.tsx:63](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/MapLibreExploreMap.tsx#L63)
+Defined in: [phaser-june-039/src/components/MapLibreExploreMap.tsx:65](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/MapLibreExploreMap.tsx#L65)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/components/MapLibreExploreMap.tsx:63](https://github.com/kc0588
 
 > `optional` **active**: `boolean`
 
-Defined in: [src/components/MapLibreExploreMap.tsx:67](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/MapLibreExploreMap.tsx#L67)
+Defined in: [phaser-june-039/src/components/MapLibreExploreMap.tsx:69](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/MapLibreExploreMap.tsx#L69)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/components/MapLibreExploreMap.tsx:67](https://github.com/kc0588
 
 > `optional` **activeWaypoint**: `Pick`\<[`ExpeditionWaypoint`](../../../types/waypoints/interfaces/ExpeditionWaypoint.md), `"lon"` \| `"lat"`\> \| `null`
 
-Defined in: [src/components/MapLibreExploreMap.tsx:66](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/MapLibreExploreMap.tsx#L66)
+Defined in: [phaser-june-039/src/components/MapLibreExploreMap.tsx:68](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/MapLibreExploreMap.tsx#L68)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/components/MapLibreExploreMap.tsx:66](https://github.com/kc0588
 
 > `optional` **expeditionPhase**: [`RunPhase`](../../../types/expedition/type-aliases/RunPhase.md)
 
-Defined in: [src/components/MapLibreExploreMap.tsx:65](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/MapLibreExploreMap.tsx#L65)
+Defined in: [phaser-june-039/src/components/MapLibreExploreMap.tsx:67](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/MapLibreExploreMap.tsx#L67)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/components/MapLibreExploreMap.tsx:65](https://github.com/kc0588
 
 > `optional` **onSearchOpen**: () => `void`
 
-Defined in: [src/components/MapLibreExploreMap.tsx:64](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/MapLibreExploreMap.tsx#L64)
+Defined in: [phaser-june-039/src/components/MapLibreExploreMap.tsx:66](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/MapLibreExploreMap.tsx#L66)
 
 #### Returns
 

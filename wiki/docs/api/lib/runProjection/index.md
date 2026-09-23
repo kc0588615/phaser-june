@@ -3,7 +3,7 @@
 ## Interfaces
 
 - [ClientRunProjection](interfaces/ClientRunProjection.md)
-- [PublicCaseV3](interfaces/PublicCaseV3.md)
+- [PublicCaseV4](interfaces/PublicCaseV4.md)
 - [PublicIssuedObservation](interfaces/PublicIssuedObservation.md)
 - [PublicMemoryNode](interfaces/PublicMemoryNode.md)
 - [PublicRunCheckpoint](interfaces/PublicRunCheckpoint.md)

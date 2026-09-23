@@ -2,7 +2,7 @@
 
 > **getCategoryOrderMapping**(): `Record`\<`string`, `string`\>
 
-Defined in: [src/utils/ecoregion.ts:158](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/utils/ecoregion.ts#L158)
+Defined in: [phaser-june-039/src/utils/ecoregion.ts:102](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/utils/ecoregion.ts#L102)
 
 Map category names to order values
 

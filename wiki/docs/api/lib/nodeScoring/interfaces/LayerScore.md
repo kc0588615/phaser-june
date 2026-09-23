@@ -1,6 +1,6 @@
 # Interface: LayerScore
 
-Defined in: [src/lib/nodeScoring.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L21)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L22)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/nodeScoring.ts:21](https://github.com/kc0588615/phaser-june
 
 > **features**: `Record`\<`string`, `unknown`\>
 
-Defined in: [src/lib/nodeScoring.ts:27](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L27)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L28)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/nodeScoring.ts:27](https://github.com/kc0588615/phaser-june
 
 > **nearestDistanceM**: `number`
 
-Defined in: [src/lib/nodeScoring.ts:26](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L26)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L27)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/nodeScoring.ts:26](https://github.com/kc0588615/phaser-june
 
 > **nodeFamily**: [`NodeFamily`](../type-aliases/NodeFamily.md)
 
-Defined in: [src/lib/nodeScoring.ts:22](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L22)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L23)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/nodeScoring.ts:22](https://github.com/kc0588615/phaser-june
 
 > **overlapRatio**: `number`
 
-Defined in: [src/lib/nodeScoring.ts:25](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L25)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L26)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/lib/nodeScoring.ts:25](https://github.com/kc0588615/phaser-june
 
 > **score**: `number`
 
-Defined in: [src/lib/nodeScoring.ts:24](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L24)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L25)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [src/lib/nodeScoring.ts:24](https://github.com/kc0588615/phaser-june
 
 > **variant**: `string`
 
-Defined in: [src/lib/nodeScoring.ts:23](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/nodeScoring.ts#L23)
+Defined in: [phaser-june-039/src/lib/nodeScoring.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/nodeScoring.ts#L24)

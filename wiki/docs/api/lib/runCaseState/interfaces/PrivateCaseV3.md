@@ -1,6 +1,6 @@
 # Interface: PrivateCaseV3
 
-Defined in: [src/lib/runCaseState.ts:28](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L28)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L13)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runCaseState.ts:28](https://github.com/kc0588615/phaser-jun
 
 > **answerId**: `number`
 
-Defined in: [src/lib/runCaseState.ts:30](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L30)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:15](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L15)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runCaseState.ts:30](https://github.com/kc0588615/phaser-jun
 
 > **cascadeHintIds**: `number`[]
 
-Defined in: [src/lib/runCaseState.ts:34](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L34)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L21)
 
 ***
 
@@ -24,7 +24,15 @@ Defined in: [src/lib/runCaseState.ts:34](https://github.com/kc0588615/phaser-jun
 
 > **caseSeed**: `string`
 
-Defined in: [src/lib/runCaseState.ts:31](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L31)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:16](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L16)
+
+***
+
+### familyCardEffects?
+
+> `optional` **familyCardEffects**: `Record`\<`string`, [`ExplanationEffects`](../../liveClaims/interfaces/ExplanationEffects.md) \| `null`\>
+
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L20)
 
 ***
 
@@ -32,7 +40,7 @@ Defined in: [src/lib/runCaseState.ts:31](https://github.com/kc0588615/phaser-jun
 
 > **familyCardIds**: `Record`\<[`EvidenceFamily`](../../../expedition/evidenceFamilies/type-aliases/EvidenceFamily.md), `number`\>
 
-Defined in: [src/lib/runCaseState.ts:32](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L32)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L17)
 
 ***
 
@@ -40,12 +48,28 @@ Defined in: [src/lib/runCaseState.ts:32](https://github.com/kc0588615/phaser-jun
 
 > **familyHintIds**: `Record`\<[`EvidenceFamily`](../../../expedition/evidenceFamilies/type-aliases/EvidenceFamily.md), `number`[]\>
 
-Defined in: [src/lib/runCaseState.ts:33](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L33)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L18)
+
+***
+
+### familyHints?
+
+> `optional` **familyHints**: [`EvidenceHintSnapshot`](../../evidenceHintSnapshot/interfaces/EvidenceHintSnapshot.md)[]
+
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L19)
+
+***
+
+### mystery
+
+> **mystery**: [`PrivateMysteryCase`](../../mysteryCase/interfaces/PrivateMysteryCase.md)
+
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L22)
 
 ***
 
 ### version
 
-> **version**: `3`
+> **version**: `4`
 
-Defined in: [src/lib/runCaseState.ts:29](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L29)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L14)

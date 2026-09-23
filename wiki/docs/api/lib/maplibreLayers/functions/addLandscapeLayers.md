@@ -1,8 +1,8 @@
 # Function: addLandscapeLayers()
 
-> **addLandscapeLayers**(`map`, `data`): `void`
+> **addLandscapeLayers**(`map`, `data`, `options`): `void`
 
-Defined in: [src/lib/maplibreLayers.ts:25](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/maplibreLayers.ts#L25)
+Defined in: [phaser-june-039/src/lib/maplibreLayers.ts:86](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/maplibreLayers.ts#L86)
 
 ## Parameters
 
@@ -13,6 +13,20 @@ Defined in: [src/lib/maplibreLayers.ts:25](https://github.com/kc0588615/phaser-j
 ### data
 
 `Record`\<`string`, `GeoJSON.FeatureCollection`\>
+
+### options
+
+#### cities?
+
+`boolean`
+
+#### labels?
+
+`boolean`
+
+#### regionFill?
+
+`boolean`
 
 ## Returns
 

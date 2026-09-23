@@ -10,6 +10,5 @@
 
 ## Functions
 
-- [getClueCategoryForGemType](functions/getClueCategoryForGemType.md)
 - [isKnowledgeGem](functions/isKnowledgeGem.md)
 - [isResourceGem](functions/isResourceGem.md)

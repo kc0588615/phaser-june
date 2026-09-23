@@ -1,6 +1,6 @@
 # Interface: EcoregionPreviewFeature
 
-Defined in: [src/types/ecoregions.ts:18](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L18)
+Defined in: [phaser-june-039/src/types/ecoregions.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L18)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/ecoregions.ts:18](https://github.com/kc0588615/phaser-jun
 
 > **geometry**: \{ `coordinates`: `unknown`; `type`: `string`; \} \| `null`
 
-Defined in: [src/types/ecoregions.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L21)
+Defined in: [phaser-june-039/src/types/ecoregions.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L21)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/types/ecoregions.ts:21](https://github.com/kc0588615/phaser-jun
 
 > `optional` **id**: `string` \| `number`
 
-Defined in: [src/types/ecoregions.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L20)
+Defined in: [phaser-june-039/src/types/ecoregions.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L20)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/types/ecoregions.ts:20](https://github.com/kc0588615/phaser-jun
 
 > **properties**: [`EcoregionPreviewProperties`](EcoregionPreviewProperties.md)
 
-Defined in: [src/types/ecoregions.ts:25](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L25)
+Defined in: [phaser-june-039/src/types/ecoregions.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L25)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [src/types/ecoregions.ts:25](https://github.com/kc0588615/phaser-jun
 
 > **type**: `"Feature"`
 
-Defined in: [src/types/ecoregions.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/ecoregions.ts#L19)
+Defined in: [phaser-june-039/src/types/ecoregions.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/ecoregions.ts#L19)

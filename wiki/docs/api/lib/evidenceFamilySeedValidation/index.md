@@ -5,6 +5,7 @@
 - [CascadeHintSeed](interfaces/CascadeHintSeed.md)
 - [EvidenceFamilySeed](interfaces/EvidenceFamilySeed.md)
 - [EvidenceFamilySeedCard](interfaces/EvidenceFamilySeedCard.md)
+- [EvidenceFamilySeedHint](interfaces/EvidenceFamilySeedHint.md)
 
 ## Functions
 

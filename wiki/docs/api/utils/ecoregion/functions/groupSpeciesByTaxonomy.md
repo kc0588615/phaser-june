@@ -2,7 +2,7 @@
 
 > **groupSpeciesByTaxonomy**(`species`): [`TaxonomyHierarchy`](../../../types/speciesBrowser/type-aliases/TaxonomyHierarchy.md)
 
-Defined in: [src/utils/ecoregion.ts:89](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/utils/ecoregion.ts#L89)
+Defined in: [phaser-june-039/src/utils/ecoregion.ts:53](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/utils/ecoregion.ts#L53)
 
 Group species by the browse hierarchy (class -\> order -\> family -\> genus).
 

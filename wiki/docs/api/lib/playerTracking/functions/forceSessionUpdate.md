@@ -1,12 +1,16 @@
 # Function: forceSessionUpdate()
 
-> **forceSessionUpdate**(`sessionId`, `moves`, `score`, `speciesDiscovered`, `cluesUnlocked`): `Promise`\<`void`\>
+> **forceSessionUpdate**(`playerId`, `sessionId`, `moves`, `score`, `speciesDiscovered`): `Promise`\<`boolean`\>
 
-Defined in: [src/lib/playerTracking.ts:227](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/playerTracking.ts#L227)
+Defined in: [phaser-june-039/src/lib/playerTracking.ts:168](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/playerTracking.ts#L168)
 
 Force immediate session update (for critical events like species discovery)
 
 ## Parameters
+
+### playerId
+
+`string`
 
 ### sessionId
 
@@ -24,10 +28,6 @@ Force immediate session update (for critical events like species discovery)
 
 `number`
 
-### cluesUnlocked
-
-`number`
-
 ## Returns
 
-`Promise`\<`void`\>
+`Promise`\<`boolean`\>

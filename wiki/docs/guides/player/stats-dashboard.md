@@ -7,19 +7,13 @@ tags: [guide, stats, dashboard]
 
 # Player Stats Dashboard Integration
 
-Display player statistics from `player_stats`. Auth is required; Clerk integration is planned.
+`/stats` (`src/pages/stats.tsx`) renders `ProfileContent`, which loads the signed-in player's profile and `player_stats` aggregates from `GET /api/player/profile` (pass `?userId=` to view another player).
 
 ## Query Stats
 
 ```typescript
-import { fetchPlayerStatsByPlayerId } from '@/lib/playerStatsService';
-
-const stats = await fetchPlayerStatsByPlayerId(userId);
+const res = await fetch('/api/player/profile');
+const profile = await res.json();
 ```
 
-## Display
-
-```tsx
-<StatCard label="Species Found" value={stats.totalSpeciesDiscovered} />
-<StatCard label="Total Games" value={stats.totalGamesPlayed} />
-```
+The old `PlayerStatsDashboard` component and `src/lib/playerStatsService.ts` were never mounted and were removed in plan 039.

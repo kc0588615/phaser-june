@@ -1,8 +1,11 @@
 # Function: applyEvidenceProgress()
 
-> **applyEvidenceProgress**(`state`, `input`): \{ `digest`: `string`; `state`: [`V3NodeEvidenceState`](../interfaces/V3NodeEvidenceState.md); \} \| \{ `error`: `"move_locked"` \| `"move_out_of_order"` \| `"invalid_family"` \| `"charge_overflow"` \| `"checkpoint_mismatch"`; \}
+> **applyEvidenceProgress**(`state`, `input`, `issuedFamilies`): \{ `digest`: `string`; `state`: [`V3NodeEvidenceState`](../interfaces/V3NodeEvidenceState.md); \} \| \{ `error`: `"move_out_of_order"` \| `"move_locked"` \| `"invalid_family"` \| `"charge_overflow"` \| `"checkpoint_mismatch"`; \}
 
-Defined in: [src/lib/evidenceRunState.ts:127](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L127)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:161](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L161)
+
+`issuedFamilies` lists one entry per ladder rung the move reveals (see
+evidenceLadder.selectLadderIssues); hintCounts are the run-wide rung cursors.
 
 ## Parameters
 
@@ -14,6 +17,10 @@ Defined in: [src/lib/evidenceRunState.ts:127](https://github.com/kc0588615/phase
 
 [`EvidenceProgressInput`](../interfaces/EvidenceProgressInput.md)
 
+### issuedFamilies
+
+readonly (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
+
 ## Returns
 
-\{ `digest`: `string`; `state`: [`V3NodeEvidenceState`](../interfaces/V3NodeEvidenceState.md); \} \| \{ `error`: `"move_locked"` \| `"move_out_of_order"` \| `"invalid_family"` \| `"charge_overflow"` \| `"checkpoint_mismatch"`; \}
+\{ `digest`: `string`; `state`: [`V3NodeEvidenceState`](../interfaces/V3NodeEvidenceState.md); \} \| \{ `error`: `"move_out_of_order"` \| `"move_locked"` \| `"invalid_family"` \| `"charge_overflow"` \| `"checkpoint_mismatch"`; \}

@@ -1,22 +1,14 @@
 # Interface: SpeciesCardProgressInput
 
-Defined in: [src/lib/speciesCardProgression.ts:11](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L11)
+Defined in: [phaser-june-039/src/lib/speciesCardProgression.ts:10](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/speciesCardProgression.ts#L10)
 
 ## Properties
-
-### clueCategoriesUnlocked
-
-> **clueCategoriesUnlocked**: `unknown`
-
-Defined in: [src/lib/speciesCardProgression.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L15)
-
-***
 
 ### discovered
 
 > **discovered**: `boolean`
 
-Defined in: [src/lib/speciesCardProgression.ts:12](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L12)
+Defined in: [phaser-june-039/src/lib/speciesCardProgression.ts:11](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/speciesCardProgression.ts#L11)
 
 ***
 
@@ -24,7 +16,7 @@ Defined in: [src/lib/speciesCardProgression.ts:12](https://github.com/kc0588615/
 
 > **factsUnlocked**: `unknown`
 
-Defined in: [src/lib/speciesCardProgression.ts:14](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L14)
+Defined in: [phaser-june-039/src/lib/speciesCardProgression.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/speciesCardProgression.ts#L13)
 
 ***
 
@@ -32,7 +24,7 @@ Defined in: [src/lib/speciesCardProgression.ts:14](https://github.com/kc0588615/
 
 > **gisStamps**: `unknown`
 
-Defined in: [src/lib/speciesCardProgression.ts:16](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L16)
+Defined in: [phaser-june-039/src/lib/speciesCardProgression.ts:14](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/speciesCardProgression.ts#L14)
 
 ***
 
@@ -40,4 +32,4 @@ Defined in: [src/lib/speciesCardProgression.ts:16](https://github.com/kc0588615/
 
 > **timesEncountered**: `number`
 
-Defined in: [src/lib/speciesCardProgression.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/speciesCardProgression.ts#L13)
+Defined in: [phaser-june-039/src/lib/speciesCardProgression.ts:12](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/speciesCardProgression.ts#L12)

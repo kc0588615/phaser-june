@@ -1,6 +1,6 @@
 # Interface: GemDefinition
 
-Defined in: [src/expedition/domain.ts:32](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L32)
+Defined in: [phaser-june-039/src/expedition/domain.ts:31](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L31)
 
 ## Properties
 
@@ -8,15 +8,7 @@ Defined in: [src/expedition/domain.ts:32](https://github.com/kc0588615/phaser-ju
 
 > **assetBacked**: `boolean`
 
-Defined in: [src/expedition/domain.ts:38](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L38)
-
-***
-
-### clueCategory
-
-> **clueCategory**: [`GemCategory`](../../../game/clueConfig/enumerations/GemCategory.md) \| `null`
-
-Defined in: [src/expedition/domain.ts:37](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L37)
+Defined in: [phaser-june-039/src/expedition/domain.ts:36](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L36)
 
 ***
 
@@ -24,7 +16,7 @@ Defined in: [src/expedition/domain.ts:37](https://github.com/kc0588615/phaser-ju
 
 > **color**: `string`
 
-Defined in: [src/expedition/domain.ts:36](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L36)
+Defined in: [phaser-june-039/src/expedition/domain.ts:35](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L35)
 
 ***
 
@@ -32,7 +24,7 @@ Defined in: [src/expedition/domain.ts:36](https://github.com/kc0588615/phaser-ju
 
 > **family**: `"loot"`
 
-Defined in: [src/expedition/domain.ts:34](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L34)
+Defined in: [phaser-june-039/src/expedition/domain.ts:33](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L33)
 
 ***
 
@@ -40,7 +32,7 @@ Defined in: [src/expedition/domain.ts:34](https://github.com/kc0588615/phaser-ju
 
 > **gemType**: `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`
 
-Defined in: [src/expedition/domain.ts:33](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L33)
+Defined in: [phaser-june-039/src/expedition/domain.ts:32](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L32)
 
 ***
 
@@ -48,7 +40,7 @@ Defined in: [src/expedition/domain.ts:33](https://github.com/kc0588615/phaser-ju
 
 > `optional` **isCrate**: `boolean`
 
-Defined in: [src/expedition/domain.ts:39](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L39)
+Defined in: [phaser-june-039/src/expedition/domain.ts:37](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L37)
 
 ***
 
@@ -56,7 +48,7 @@ Defined in: [src/expedition/domain.ts:39](https://github.com/kc0588615/phaser-ju
 
 > `optional` **isMultiplier**: `boolean`
 
-Defined in: [src/expedition/domain.ts:40](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L40)
+Defined in: [phaser-june-039/src/expedition/domain.ts:38](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L38)
 
 ***
 
@@ -64,4 +56,4 @@ Defined in: [src/expedition/domain.ts:40](https://github.com/kc0588615/phaser-ju
 
 > **label**: `string`
 
-Defined in: [src/expedition/domain.ts:35](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L35)
+Defined in: [phaser-june-039/src/expedition/domain.ts:34](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L34)

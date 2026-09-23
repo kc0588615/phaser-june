@@ -2,7 +2,7 @@
 
 > **POST**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `migrated`: `number`; \}\>\>
 
-Defined in: [src/app/api/discoveries/migrate/route.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/app/api/discoveries/migrate/route.ts#L13)
+Defined in: [phaser-june-039/src/app/api/discoveries/migrate/route.ts:13](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/app/api/discoveries/migrate/route.ts#L13)
 
 POST /api/discoveries/migrate
 Migrate localStorage discoveries to database.

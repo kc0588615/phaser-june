@@ -1,6 +1,6 @@
 # Interface: CompilerCascadeHint
 
-Defined in: [src/lib/caseCompilerV3.ts:33](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L33)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:41](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L41)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/caseCompilerV3.ts:33](https://github.com/kc0588615/phaser-j
 
 > **hintText**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:36](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L36)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:44](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L44)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/caseCompilerV3.ts:36](https://github.com/kc0588615/phaser-j
 
 > **id**: `number`
 
-Defined in: [src/lib/caseCompilerV3.ts:34](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L34)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:42](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L42)
 
 ***
 
@@ -24,4 +24,4 @@ Defined in: [src/lib/caseCompilerV3.ts:34](https://github.com/kc0588615/phaser-j
 
 > **sequenceIndex**: `number`
 
-Defined in: [src/lib/caseCompilerV3.ts:35](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L35)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:43](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L43)

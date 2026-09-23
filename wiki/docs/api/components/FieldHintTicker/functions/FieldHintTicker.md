@@ -2,11 +2,15 @@
 
 > **FieldHintTicker**(`__namedParameters`): `Element`
 
-Defined in: [src/components/FieldHintTicker.tsx:8](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/FieldHintTicker.tsx#L8)
+Defined in: [phaser-june-039/src/components/FieldHintTicker.tsx:9](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/FieldHintTicker.tsx#L9)
 
 ## Parameters
 
 ### \_\_namedParameters
+
+#### className?
+
+`string` = `''`
 
 #### feed
 

@@ -1,6 +1,6 @@
 # Interface: BoardSpawnConfig
 
-Defined in: [src/expedition/domain.ts:136](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L136)
+Defined in: [phaser-june-039/src/expedition/domain.ts:113](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L113)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/expedition/domain.ts:136](https://github.com/kc0588615/phaser-j
 
 > `optional` **allowedGemTypes**: (`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`)[]
 
-Defined in: [src/expedition/domain.ts:138](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L138)
+Defined in: [phaser-june-039/src/expedition/domain.ts:115](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L115)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [src/expedition/domain.ts:138](https://github.com/kc0588615/phaser-j
 
 > `optional` **lootWeights**: `Partial`\<`Record`\<`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`, `number`\>\>
 
-Defined in: [src/expedition/domain.ts:137](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/expedition/domain.ts#L137)
+Defined in: [phaser-june-039/src/expedition/domain.ts:114](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/expedition/domain.ts#L114)

@@ -12,9 +12,27 @@ Re-exports [cascadeHints](schema/species/variables/cascadeHints.md)
 
 ***
 
+### casePoolMembers
+
+Re-exports [casePoolMembers](schema/species/variables/casePoolMembers.md)
+
+***
+
+### casePools
+
+Re-exports [casePools](schema/species/variables/casePools.md)
+
+***
+
 ### DeductionClueCategory
 
 Re-exports [DeductionClueCategory](schema/species/type-aliases/DeductionClueCategory.md)
+
+***
+
+### deductionProfileUnknownTags
+
+Re-exports [deductionProfileUnknownTags](schema/species/variables/deductionProfileUnknownTags.md)
 
 ***
 
@@ -114,6 +132,48 @@ Re-exports [IUCN](types/type-aliases/IUCN.md)
 
 ***
 
+### mysteryCases
+
+Re-exports [mysteryCases](schema/species/variables/mysteryCases.md)
+
+***
+
+### mysteryCasesPublic
+
+Re-exports [mysteryCasesPublic](schema/species/variables/mysteryCasesPublic.md)
+
+***
+
+### mysteryEvidenceSteps
+
+Re-exports [mysteryEvidenceSteps](schema/species/variables/mysteryEvidenceSteps.md)
+
+***
+
+### mysteryExplanations
+
+Re-exports [mysteryExplanations](schema/species/variables/mysteryExplanations.md)
+
+***
+
+### mysteryRejectedAlternatives
+
+Re-exports [mysteryRejectedAlternatives](schema/species/variables/mysteryRejectedAlternatives.md)
+
+***
+
+### mysteryResolutions
+
+Re-exports [mysteryResolutions](schema/species/variables/mysteryResolutions.md)
+
+***
+
+### mysterySources
+
+Re-exports [mysterySources](schema/species/variables/mysterySources.md)
+
+***
+
 ### naturalEarthCountries
 
 Re-exports [naturalEarthCountries](schema/gis/variables/naturalEarthCountries.md)
@@ -129,12 +189,6 @@ Re-exports [naturalEarthPopulatedPlaces](schema/gis/variables/naturalEarthPopula
 ### NewHighScore
 
 Re-exports [NewHighScore](types/type-aliases/NewHighScore.md)
-
-***
-
-### NewPlayerClueUnlock
-
-Re-exports [NewPlayerClueUnlock](types/type-aliases/NewPlayerClueUnlock.md)
 
 ***
 
@@ -159,18 +213,6 @@ Re-exports [oneearthBioregion](schema/species/variables/oneearthBioregion.md)
 ### OneEarthBioregion
 
 Re-exports [OneEarthBioregion](types/type-aliases/OneEarthBioregion.md)
-
-***
-
-### PlayerClueUnlock
-
-Re-exports [PlayerClueUnlock](types/type-aliases/PlayerClueUnlock.md)
-
-***
-
-### playerClueUnlocks
-
-Re-exports [playerClueUnlocks](schema/player/variables/playerClueUnlocks.md)
 
 ***
 
@@ -252,12 +294,6 @@ Re-exports [speciesCardUnlocks](schema/game/variables/speciesCardUnlocks.md)
 
 ***
 
-### speciesDeductionClues
-
-Re-exports [speciesDeductionClues](schema/species/variables/speciesDeductionClues.md)
-
-***
-
 ### speciesDeductionProfiles
 
 Re-exports [speciesDeductionProfiles](schema/species/variables/speciesDeductionProfiles.md)
@@ -276,21 +312,27 @@ Re-exports [speciesEcoregions](schema/species/variables/speciesEcoregions.md)
 
 ***
 
-### SpeciesFact
+### SpeciesNote
 
-Re-exports [SpeciesFact](types/type-aliases/SpeciesFact.md)
+Re-exports [SpeciesNote](types/type-aliases/SpeciesNote.md)
 
 ***
 
-### speciesFacts
+### speciesNotes
 
-Re-exports [speciesFacts](schema/species/variables/speciesFacts.md)
+Re-exports [speciesNotes](schema/species/variables/speciesNotes.md)
 
 ***
 
 ### speciesTable
 
 Re-exports [speciesTable](schema/species/variables/speciesTable.md)
+
+***
+
+### traitTags
+
+Re-exports [traitTags](schema/species/variables/traitTags.md)
 
 ***
 

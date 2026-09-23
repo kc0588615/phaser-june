@@ -240,13 +240,13 @@ These files are essential to understand before making any game changes.
 
 ### 12. Player Stats Dashboard
 
-**Source:** `src/components/PlayerStatsDashboard/`
+**Source:** `src/components/ProfileContent.tsx`, `src/pages/api/player/profile.ts`
 **Current State:** Stub only
 **Location:** `docs/guides/player/`
 
 **Needs:**
 - [ ] Component architecture
-- [ ] Data fetching from `playerStatsService.ts`
+- [ ] Data fetching from `/api/player/profile`
 - [ ] Chart/visualization implementation
 - [ ] Real-time updates
 

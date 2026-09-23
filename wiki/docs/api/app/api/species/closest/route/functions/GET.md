@@ -2,7 +2,7 @@
 
 > **GET**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `geometry`: `null`; `species`: `null`; \}\> \| `NextResponse`\<\{ `geometry`: `any`; `species`: \{ `common_name`: `string` \| `null`; `distance_km`: `number`; `id`: `number`; `scientific_name`: `string` \| `null`; \}; \}\>\>
 
-Defined in: [src/app/api/species/closest/route.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/app/api/species/closest/route.ts#L20)
+Defined in: [phaser-june-039/src/app/api/species/closest/route.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/app/api/species/closest/route.ts#L20)
 
 GET /api/species/closest?lon=-30&lat=20
 

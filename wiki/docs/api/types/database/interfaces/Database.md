@@ -1,6 +1,6 @@
 # Interface: Database
 
-Defined in: [src/types/database.ts:213](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/database.ts#L213)
+Defined in: [phaser-june-039/src/types/database.ts:189](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L189)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/types/database.ts:213](https://github.com/kc0588615/phaser-june
 
 > **public**: `object`
 
-Defined in: [src/types/database.ts:214](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/types/database.ts#L214)
+Defined in: [phaser-june-039/src/types/database.ts:190](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/types/database.ts#L190)
 
 #### Tables
 
@@ -29,22 +29,6 @@ Defined in: [src/types/database.ts:214](https://github.com/kc0588615/phaser-june
 ##### Tables.high\_scores.Update
 
 > **Update**: `Partial`\<`Omit`\<[`HighScore`](HighScore.md), `"id"` \| `"created_at"`\>\>
-
-##### Tables.player\_clue\_unlocks
-
-> **player\_clue\_unlocks**: `object`
-
-##### Tables.player\_clue\_unlocks.Insert
-
-> **Insert**: `Omit`\<[`PlayerClueUnlock`](PlayerClueUnlock.md), `"id"` \| `"unlocked_at"`\>
-
-##### Tables.player\_clue\_unlocks.Row
-
-> **Row**: [`PlayerClueUnlock`](PlayerClueUnlock.md)
-
-##### Tables.player\_clue\_unlocks.Update
-
-> **Update**: `Partial`\<`Omit`\<[`PlayerClueUnlock`](PlayerClueUnlock.md), `"id"` \| `"player_id"` \| `"unlocked_at"`\>\>
 
 ##### Tables.player\_game\_sessions
 

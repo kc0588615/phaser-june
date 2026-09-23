@@ -16,6 +16,7 @@
 ## Functions
 
 - [canonicalizeDeductionTag](functions/canonicalizeDeductionTag.md)
+- [canonicalTraitVocabulary](functions/canonicalTraitVocabulary.md)
 - [countDeductionTagOverlaps](functions/countDeductionTagOverlaps.md)
 - [isCanonicalDeductionTag](functions/isCanonicalDeductionTag.md)
 - [isFilteringDeductionTag](functions/isFilteringDeductionTag.md)

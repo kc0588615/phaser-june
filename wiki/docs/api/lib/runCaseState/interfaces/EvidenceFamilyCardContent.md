@@ -1,6 +1,6 @@
 # Interface: EvidenceFamilyCardContent
 
-Defined in: [src/lib/runCaseState.ts:50](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L50)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:38](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L38)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/runCaseState.ts:50](https://github.com/kc0588615/phaser-jun
 
 > **bonusFactText**: `string`
 
-Defined in: [src/lib/runCaseState.ts:56](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L56)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:44](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L44)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/runCaseState.ts:56](https://github.com/kc0588615/phaser-jun
 
 > **compareTag**: `string`
 
-Defined in: [src/lib/runCaseState.ts:58](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L58)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:46](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L46)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/runCaseState.ts:58](https://github.com/kc0588615/phaser-jun
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [src/lib/runCaseState.ts:52](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L52)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:40](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L40)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/runCaseState.ts:52](https://github.com/kc0588615/phaser-jun
 
 > **id**: `number`
 
-Defined in: [src/lib/runCaseState.ts:51](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L51)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:39](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L39)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/lib/runCaseState.ts:51](https://github.com/kc0588615/phaser-jun
 
 > **inferenceText**: `string`
 
-Defined in: [src/lib/runCaseState.ts:54](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L54)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:42](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L42)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [src/lib/runCaseState.ts:54](https://github.com/kc0588615/phaser-jun
 
 > **observationText**: `string`
 
-Defined in: [src/lib/runCaseState.ts:53](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L53)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:41](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L41)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [src/lib/runCaseState.ts:53](https://github.com/kc0588615/phaser-jun
 
 > **traitCategory**: `"behavior"` \| `"habitat"` \| `"morphology"` \| `"diet"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"geography"` \| `"conservation"`
 
-Defined in: [src/lib/runCaseState.ts:57](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L57)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:45](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L45)
 
 ***
 
@@ -64,4 +64,4 @@ Defined in: [src/lib/runCaseState.ts:57](https://github.com/kc0588615/phaser-jun
 
 > **traitPhrase**: `string`
 
-Defined in: [src/lib/runCaseState.ts:55](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L55)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:43](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L43)

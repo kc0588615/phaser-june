@@ -2,7 +2,7 @@
 
 > **applyMapProjection**(`map`, `surface`): `void`
 
-Defined in: [src/lib/maplibreStyle.ts:71](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/maplibreStyle.ts#L71)
+Defined in: [phaser-june-039/src/lib/maplibreStyle.ts:85](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/maplibreStyle.ts#L85)
 
 ## Parameters
 

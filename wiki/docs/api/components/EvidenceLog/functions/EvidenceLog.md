@@ -2,7 +2,7 @@
 
 > **EvidenceLog**(`__namedParameters`): `Element`
 
-Defined in: [src/components/EvidenceLog.tsx:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/components/EvidenceLog.tsx#L13)
+Defined in: [phaser-june-039/src/components/EvidenceLog.tsx:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/components/EvidenceLog.tsx#L8)
 
 ## Parameters
 
@@ -20,7 +20,13 @@ Defined in: [src/components/EvidenceLog.tsx:13](https://github.com/kc0588615/pha
 
 `number` \| `null` = `null`
 
-Highlights + scrolls to one site's slot (map marker taps).
+#### onOpenDetail?
+
+(`nodeIndex`) => `void`
+
+#### variant?
+
+`"detail"` \| `"compact"` = `'detail'`
 
 ## Returns
 

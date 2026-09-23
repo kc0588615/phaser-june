@@ -1,6 +1,6 @@
 # Interface: CompilerEvidenceFamilyCard
 
-Defined in: [src/lib/caseCompilerV3.ts:12](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L12)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L18)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/caseCompilerV3.ts:12](https://github.com/kc0588615/phaser-j
 
 > **bonusFactText**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L19)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L25)
 
 ***
 
@@ -16,7 +16,15 @@ Defined in: [src/lib/caseCompilerV3.ts:19](https://github.com/kc0588615/phaser-j
 
 > **compareTag**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L21)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L27)
+
+***
+
+### explains?
+
+> `optional` **explains**: [`ExplanationEffects`](../../liveClaims/interfaces/ExplanationEffects.md) \| `null`
+
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L28)
 
 ***
 
@@ -24,7 +32,7 @@ Defined in: [src/lib/caseCompilerV3.ts:21](https://github.com/kc0588615/phaser-j
 
 > **family**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
 
-Defined in: [src/lib/caseCompilerV3.ts:15](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L15)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L21)
 
 ***
 
@@ -32,7 +40,7 @@ Defined in: [src/lib/caseCompilerV3.ts:15](https://github.com/kc0588615/phaser-j
 
 > **id**: `number`
 
-Defined in: [src/lib/caseCompilerV3.ts:13](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L13)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L19)
 
 ***
 
@@ -40,7 +48,7 @@ Defined in: [src/lib/caseCompilerV3.ts:13](https://github.com/kc0588615/phaser-j
 
 > **inferenceText**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:17](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L17)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L23)
 
 ***
 
@@ -48,7 +56,7 @@ Defined in: [src/lib/caseCompilerV3.ts:17](https://github.com/kc0588615/phaser-j
 
 > **observationText**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:16](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L16)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L22)
 
 ***
 
@@ -56,7 +64,7 @@ Defined in: [src/lib/caseCompilerV3.ts:16](https://github.com/kc0588615/phaser-j
 
 > **speciesId**: `number`
 
-Defined in: [src/lib/caseCompilerV3.ts:14](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L14)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L20)
 
 ***
 
@@ -64,7 +72,7 @@ Defined in: [src/lib/caseCompilerV3.ts:14](https://github.com/kc0588615/phaser-j
 
 > **traitCategory**: `"behavior"` \| `"habitat"` \| `"morphology"` \| `"diet"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"geography"` \| `"conservation"`
 
-Defined in: [src/lib/caseCompilerV3.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L20)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:26](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L26)
 
 ***
 
@@ -72,4 +80,4 @@ Defined in: [src/lib/caseCompilerV3.ts:20](https://github.com/kc0588615/phaser-j
 
 > **traitPhrase**: `string`
 
-Defined in: [src/lib/caseCompilerV3.ts:18](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/caseCompilerV3.ts#L18)
+Defined in: [phaser-june-039/src/lib/caseCompilerV3.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/caseCompilerV3.ts#L24)

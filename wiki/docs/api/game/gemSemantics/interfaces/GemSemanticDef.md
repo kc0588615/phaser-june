@@ -1,22 +1,14 @@
 # Interface: GemSemanticDef
 
-Defined in: [src/game/gemSemantics.ts:8](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/gemSemantics.ts#L8)
+Defined in: [phaser-june-039/src/game/gemSemantics.ts:6](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/gemSemantics.ts#L6)
 
 ## Properties
-
-### clueCategory
-
-> **clueCategory**: [`GemCategory`](../../clueConfig/enumerations/GemCategory.md) \| `null`
-
-Defined in: [src/game/gemSemantics.ts:11](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/gemSemantics.ts#L11)
-
-***
 
 ### family
 
 > **family**: `"loot"`
 
-Defined in: [src/game/gemSemantics.ts:10](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/gemSemantics.ts#L10)
+Defined in: [phaser-june-039/src/game/gemSemantics.ts:8](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/gemSemantics.ts#L8)
 
 ***
 
@@ -24,4 +16,4 @@ Defined in: [src/game/gemSemantics.ts:10](https://github.com/kc0588615/phaser-ju
 
 > **gemType**: `"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`
 
-Defined in: [src/game/gemSemantics.ts:9](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/game/gemSemantics.ts#L9)
+Defined in: [phaser-june-039/src/game/gemSemantics.ts:7](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/game/gemSemantics.ts#L7)

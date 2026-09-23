@@ -1,6 +1,6 @@
 # Interface: EvidenceProgressInput
 
-Defined in: [src/lib/evidenceRunState.ts:17](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L17)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L18)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/evidenceRunState.ts:17](https://github.com/kc0588615/phaser
 
 > **boardCheckpoint**: [`BoardCheckpointV1`](../../../game/boardTypes/interfaces/BoardCheckpointV1.md)
 
-Defined in: [src/lib/evidenceRunState.ts:23](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L23)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:28](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L28)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [src/lib/evidenceRunState.ts:23](https://github.com/kc0588615/phaser
 
 > **cascadeCount**: `number`
 
-Defined in: [src/lib/evidenceRunState.ts:22](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L22)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:23](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L23)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [src/lib/evidenceRunState.ts:22](https://github.com/kc0588615/phaser
 
 > **directClears**: [`EvidenceChargeState`](../../../expedition/evidenceFamilies/type-aliases/EvidenceChargeState.md)
 
-Defined in: [src/lib/evidenceRunState.ts:20](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L20)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:21](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L21)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [src/lib/evidenceRunState.ts:20](https://github.com/kc0588615/phaser
 
 > **directMatchFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [src/lib/evidenceRunState.ts:21](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L21)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:22](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L22)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [src/lib/evidenceRunState.ts:21](https://github.com/kc0588615/phaser
 
 > **moveNumber**: `number`
 
-Defined in: [src/lib/evidenceRunState.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L19)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:20](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L20)
 
 ***
 
@@ -48,4 +48,30 @@ Defined in: [src/lib/evidenceRunState.ts:19](https://github.com/kc0588615/phaser
 
 > **nodeIndex**: `number`
 
-Defined in: [src/lib/evidenceRunState.ts:18](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/evidenceRunState.ts#L18)
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L19)
+
+***
+
+### signalCleared
+
+> **signalCleared**: `boolean`
+
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:24](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L24)
+
+***
+
+### signalClearedFamily?
+
+> `optional` **signalClearedFamily**: `"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`
+
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:25](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L25)
+
+***
+
+### signalHintCount?
+
+> `optional` **signalHintCount**: `1` \| `2`
+
+Defined in: [phaser-june-039/src/lib/evidenceRunState.ts:27](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/evidenceRunState.ts#L27)
+
+Soft hints the verified clear pays: 1 for a direct 3-match, 2 for 4+.

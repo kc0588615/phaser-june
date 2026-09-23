@@ -2,9 +2,9 @@
 
 > **computeActualEliminatedIds**(`profiles`, `alreadyEliminatedIds`, `traitCategory`, `compareTag`): `number`[]
 
-Defined in: [src/lib/runCaseState.ts:62](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/runCaseState.ts#L62)
+Defined in: [phaser-june-039/src/lib/runCaseState.ts:50](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/runCaseState.ts#L50)
 
-Client-safe elimination: compares one public marker across the symmetric candidate profiles.
+Server-authoritative elimination: compares one private marker across symmetric candidate profiles.
 
 ## Parameters
 

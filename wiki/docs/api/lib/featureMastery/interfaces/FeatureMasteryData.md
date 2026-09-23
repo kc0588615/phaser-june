@@ -1,6 +1,6 @@
 # Interface: FeatureMasteryData
 
-Defined in: [src/lib/featureMastery.ts:17](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureMastery.ts#L17)
+Defined in: [phaser-june-039/src/lib/featureMastery.ts:17](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/featureMastery.ts#L17)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [src/lib/featureMastery.ts:17](https://github.com/kc0588615/phaser-j
 
 > **featureCounts**: `Partial`\<`Record`\<[`FeatureClass`](../../../types/gis/type-aliases/FeatureClass.md), `number`\>\>
 
-Defined in: [src/lib/featureMastery.ts:18](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureMastery.ts#L18)
+Defined in: [phaser-june-039/src/lib/featureMastery.ts:18](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/featureMastery.ts#L18)
 
 ***
 
@@ -16,4 +16,4 @@ Defined in: [src/lib/featureMastery.ts:18](https://github.com/kc0588615/phaser-j
 
 > **totalRuns**: `number`
 
-Defined in: [src/lib/featureMastery.ts:19](https://github.com/kc0588615/phaser-june/blob/a186c5a7d5781fa7bab87bffebc2e4d40f0a8afb/src/lib/featureMastery.ts#L19)
+Defined in: [phaser-june-039/src/lib/featureMastery.ts:19](https://github.com/kc0588615/phaser-june/blob/2412a348dbcd2e4eff57d0f114ff66307d7b96ab/src/lib/featureMastery.ts#L19)
