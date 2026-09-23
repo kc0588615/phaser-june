@@ -76,7 +76,7 @@ function harness({ failure, duplicate = false, conflict = false, failNodeInsert 
   runInNewContext(compiled, { exports, require: (id: string) => {
     if (!(id in deps)) throw new Error(`Unmocked dependency ${id}`); return deps[id];
   }, process: { env: { CASE_COMPILER_SECRET: 'test-secret' } }, Buffer, console: { error: () => {}, warn: () => {} } });
-  return { post: () => exports.POST!({ json: async () => ({ lon: -84.1, lat: 10.4, locationKey: 'fixture', nodes: [1, 2, 3].map(boardSeed => ({ boardSeed, node_type: 'custom', obstacles: [], events: [], waypoint: { lon: -84.1, lat: 10.4 } })) }) }), stats: () => ({ extracts, transactions, committed }) };
+  return { post: () => exports.POST!({ json: async () => ({ lon: -84.1, lat: 10.4, locationKey: 'fixture', nodes: [1, 2, 3].map(boardSeed => ({ boardSeed, node_type: 'custom', obstacles: [], events: [], waypoint: { lon: -84.1, lat: 10.4 } })) }) }), postJson: (json: () => Promise<unknown>) => exports.POST!({ json }), stats: () => ({ extracts, transactions, committed }) };
 }
 
 test('terrain failure returns 503/422 before any transaction or insertion', async () => {
@@ -106,4 +106,13 @@ test('duplicate requests reuse original nodes without extraction, including chan
   assert.equal(replay.runId, 'original-run');
   assert.deepEqual(replay.nodeIds, ['original-1', 'original-2', 'original-3']);
   assert.equal(racing.stats().committed.length, 0);
+});
+
+test('malformed or non-object JSON body returns 400 before any lookup or extraction', async () => {
+  for (const json of [async () => { throw new SyntaxError('Unexpected token'); }, async () => null, async () => 'text']) {
+    const h = harness();
+    const response = await h.postJson(json);
+    assert.equal(response.status, 400);
+    assert.deepEqual(h.stats(), { extracts: 0, transactions: 0, committed: [] });
+  }
 });

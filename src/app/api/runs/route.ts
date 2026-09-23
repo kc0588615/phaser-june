@@ -27,7 +27,10 @@ export async function POST(request: NextRequest) {
     if (!playerId) return NextResponse.json({ error: 'Sign in before starting an expedition' }, { status: 401 });
     const secret = process.env.CASE_COMPILER_SECRET;
     if (!secret) return NextResponse.json({ error: 'Case compiler unavailable: CASE_COMPILER_SECRET is not configured' }, { status: 503 });
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+    }
     const identifiers = resolveRunCreationIdentifiers(body?.createRequestId, randomUUID);
     if (!identifiers) return NextResponse.json({ error: 'createRequestId must be a UUID when provided' }, { status: 400 });
     const { runId, createRequestId } = identifiers;
@@ -132,18 +135,8 @@ export async function POST(request: NextRequest) {
       caseSeed,
       prototypeSpeciesIds: speciesIds,
       speciesPool: profiles,
-      cardsBySpecies: new Map<number, CompilerEvidenceFamilyCard[]>(cardRows.reduce<Array<[number, CompilerEvidenceFamilyCard[]]>>((entries, row) => {
-        const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
-        const card: CompilerEvidenceFamilyCard = { ...row };
-        if (existing) existing[1].push(card); else entries.push([row.speciesId, [card]]);
-        return entries;
-      }, [])),
-      hintsBySpecies: new Map<number, CompilerEvidenceFamilyHint[]>(hintRows.reduce<Array<[number, CompilerEvidenceFamilyHint[]]>>((entries, row) => {
-        const existing = entries.find(([speciesId]) => speciesId === row.speciesId);
-        const hint: CompilerEvidenceFamilyHint = { ...row };
-        if (existing) existing[1].push(hint); else entries.push([row.speciesId, [hint]]);
-        return entries;
-      }, [])),
+      cardsBySpecies: groupBySpeciesId<CompilerEvidenceFamilyCard>(cardRows),
+      hintsBySpecies: groupBySpeciesId<CompilerEvidenceFamilyHint>(hintRows),
       cascadeHints: cascadeRows.map((row): CompilerCascadeHint => ({ ...row })),
       gisPrior,
       boardSeeds: preparedNodes.map(node => node.boardSeed!),
@@ -246,6 +239,16 @@ export async function POST(request: NextRequest) {
     console.error('[API POST /api/runs] Error:', error);
     return NextResponse.json({ error: 'Failed to create run session' }, { status: 500 });
   }
+}
+
+/** Groups rows by species, keeping first-seen species order; rows are shallow-copied. */
+function groupBySpeciesId<T extends { speciesId: number }>(rows: readonly T[]): Map<number, T[]> {
+  const grouped = new Map<number, T[]>();
+  for (const row of rows) {
+    const list = grouped.get(row.speciesId);
+    if (list) list.push({ ...row }); else grouped.set(row.speciesId, [{ ...row }]);
+  }
+  return grouped;
 }
 
 function hasValidNodeContract(nodes: RunNode[]): boolean {
