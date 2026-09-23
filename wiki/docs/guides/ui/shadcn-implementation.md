@@ -16,13 +16,16 @@ Components are in `src/components/ui/`.
 ## Usage Example
 
 ```tsx
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
-<Card>
+<div className="flex items-center gap-2">
+  <Badge>New</Badge>
   <Button variant="outline">Click me</Button>
-</Card>
+</div>
 ```
+
+Only components in use are kept. Add another with `npx shadcn@latest add <name>` (for example `card`).
 
 ## Theme
 
