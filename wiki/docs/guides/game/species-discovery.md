@@ -67,18 +67,7 @@ private handleSpeciesGuess(data: GuessPayload) {
 
 ## Player Tracking Integration
 
-Discoveries are recorded via Drizzle for stats:
-
-```typescript
-async function recordDiscovery(speciesId: number) {
-  await trackSpeciesDiscovery(playerId, speciesId, {
-    sessionId: currentSessionId,
-    cluesUnlockedBeforeGuess: clueCount,
-    incorrectGuessesCount: guessAttempts,
-    scoreEarned: scoreEarned
-  });
-}
-```
+Discoveries are written server-side by `POST /api/runs/[runId]/guess` on a correct claim (`player_species_discoveries`, `species_cards`, `species_card_unlocks`). The client never posts discoveries or session progress; `/api/player/track` only accepts `endGameSession`.
 
 ## Related
 

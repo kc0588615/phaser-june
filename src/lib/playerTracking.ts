@@ -14,7 +14,7 @@ let playerGameSessions: any;
 let playerSpeciesDiscoveries: any;
 let playerStats: any;
 let speciesTable: any;
-let eq: any, and: any, isNull: any, desc: any, sql: any;
+let eq: any, and: any, isNull: any, desc: any;
 
 async function ensureServerDeps() {
   if (!isServer) return false;
@@ -24,7 +24,6 @@ async function ensureServerDeps() {
     and = drizzleOps.and;
     isNull = drizzleOps.isNull;
     desc = drizzleOps.desc;
-    sql = drizzleOps.sql;
 
     let dbModule: any;
     try {
@@ -122,134 +121,6 @@ export async function endGameSession(
     return true;
   } catch (err) {
     console.error('Failed to end game session:', err);
-    throw err;
-  }
-}
-
-/**
- * Update progress for an owned game session
- */
-export async function updateSessionProgress(
-  playerId: string,
-  sessionId: string,
-  moves: number,
-  score: number,
-  speciesDiscovered: number
-): Promise<boolean> {
-  if (!(await ensureServerDeps())) return false; // Client-side no-op
-
-  try {
-    const result = await db
-      .update(playerGameSessions)
-      .set({
-        totalMoves: moves,
-        totalScore: score,
-        speciesDiscoveredInSession: speciesDiscovered,
-      })
-      .where(
-        and(
-          eq(playerGameSessions.id, sessionId),
-          eq(playerGameSessions.playerId, playerId),
-        )
-      )
-      .returning({ id: playerGameSessions.id });
-    return result.length > 0;
-  } catch (err) {
-    console.error('Failed to update session progress:', err);
-    throw err;
-  }
-}
-
-/**
- * Force immediate session update (for critical events like species discovery)
- */
-export async function forceSessionUpdate(
-  playerId: string,
-  sessionId: string,
-  moves: number,
-  score: number,
-  speciesDiscovered: number
-): Promise<boolean> {
-  return updateSessionProgress(
-    playerId, sessionId, moves, score, speciesDiscovered
-  );
-}
-
-/**
- * Track a species discovery
- */
-export async function trackSpeciesDiscovery(
-  playerId: string,
-  speciesId: number,
-  options: {
-    sessionId?: string;
-    timeToDiscoverSeconds?: number;
-    incorrectGuessesCount: number;
-    scoreEarned: number;
-    foundLon?: number;
-    foundLat?: number;
-    foundEcoregionId?: number | null;
-  }
-): Promise<string | null> {
-  if (!(await ensureServerDeps())) return null; // Client-side no-op
-
-  try {
-    const requestedSessionId = options.sessionId ?? null;
-
-    // Use transaction for atomic operation
-    const result = await db.transaction(async (tx: any) => {
-      let sessionId: string | null = null;
-
-      if (requestedSessionId) {
-        const ownedSession = await tx
-          .select({ id: playerGameSessions.id })
-          .from(playerGameSessions)
-          .where(
-            and(
-              eq(playerGameSessions.id, requestedSessionId),
-              eq(playerGameSessions.playerId, playerId),
-            )
-          )
-          .limit(1);
-        sessionId = ownedSession[0] ? requestedSessionId : null;
-      }
-
-      // Upsert discovery (idempotent)
-      const discoveryResult = await tx
-        .insert(playerSpeciesDiscoveries)
-        .values({
-          playerId,
-          speciesId,
-          sessionId,
-          timeToDiscoverSeconds: options.timeToDiscoverSeconds,
-          incorrectGuessesCount: options.incorrectGuessesCount,
-          scoreEarned: options.scoreEarned,
-          foundLon: options.foundLon,
-          foundLat: options.foundLat,
-          foundEcoregionId: options.foundEcoregionId ?? null,
-        })
-        .onConflictDoUpdate({
-          target: [playerSpeciesDiscoveries.playerId, playerSpeciesDiscoveries.speciesId],
-          set: {
-            // If already discovered, update score and fill first known location.
-            scoreEarned: options.scoreEarned,
-            foundLon: sql`COALESCE(${playerSpeciesDiscoveries.foundLon}, ${options.foundLon ?? null})`,
-            foundLat: sql`COALESCE(${playerSpeciesDiscoveries.foundLat}, ${options.foundLat ?? null})`,
-            foundEcoregionId: sql`COALESCE(${playerSpeciesDiscoveries.foundEcoregionId}, ${options.foundEcoregionId ?? null})`,
-          },
-        })
-        .returning({ id: playerSpeciesDiscoveries.id });
-
-      const discovery = discoveryResult[0];
-
-      return discovery;
-    });
-
-    await refreshPlayerStats(playerId);
-
-    return result.id;
-  } catch (err) {
-    console.error('Failed to track species discovery:', err);
     throw err;
   }
 }

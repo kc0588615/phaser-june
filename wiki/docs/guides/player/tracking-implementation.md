@@ -21,22 +21,7 @@ await endGameSession(sessionId, finalMoves, finalScore);
 
 ## Event Recording
 
-```typescript
-import {
-  trackClueUnlock,
-  trackSpeciesDiscovery,
-  updateSessionProgress,
-} from '@/lib/playerTracking';
-
-await trackClueUnlock(playerId, speciesId, category, field, value, null);
-await updateSessionProgress(sessionId, moves, score, speciesDiscovered, cluesUnlocked);
-await trackSpeciesDiscovery(playerId, speciesId, {
-  sessionId,
-  cluesUnlockedBeforeGuess,
-  incorrectGuessesCount,
-  scoreEarned,
-});
-```
+Discoveries are written server-side by `POST /api/runs/[runId]/guess` on a correct claim (`player_species_discoveries`, `species_cards`, `species_card_unlocks`). The client never posts discoveries or session progress; `/api/player/track` only accepts `endGameSession`.
 
 ## Stats Refresh
 

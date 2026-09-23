@@ -20,9 +20,11 @@ test('player tracking security has no process-global session or delayed timer', 
 });
 
 test('player tracking security scopes mutations to authenticated player', () => {
-  assert.match(routeSource, /updateSessionProgress\(profile\.userId/);
-  assert.match(routeSource, /forceSessionUpdate\(profile\.userId/);
   assert.match(routeSource, /endGameSession\(profile\.userId/);
   assert.match(trackingSource, /eq\(playerGameSessions\.playerId, playerId\)/);
-  assert.match(trackingSource, /sessionId = ownedSession\[0\] \? requestedSessionId : null/);
+});
+
+test('player tracking route cannot write discoveries or rewrite session progress', () => {
+  assert.doesNotMatch(routeSource, /trackSpeciesDiscovery|updateSessionProgress|forceSessionUpdate/);
+  assert.doesNotMatch(trackingSource, /export async function (trackSpeciesDiscovery|updateSessionProgress|forceSessionUpdate)/);
 });

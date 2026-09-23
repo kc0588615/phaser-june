@@ -105,16 +105,7 @@ const sessionId = await startGameSession(userId);
 
 ### Record Discovery
 
-```typescript
-import { trackSpeciesDiscovery } from '@/lib/playerTracking';
-
-await trackSpeciesDiscovery(userId, speciesId, {
-  sessionId,
-  cluesUnlockedBeforeGuess: clueCount,
-  incorrectGuessesCount: attempts,
-  scoreEarned: score
-});
-```
+Discoveries are written server-side by `POST /api/runs/[runId]/guess` on a correct claim (`player_species_discoveries`, `species_cards`, `species_card_unlocks`). The client never posts discoveries or session progress; `/api/player/track` only accepts `endGameSession`.
 
 ## React Query Integration
 
