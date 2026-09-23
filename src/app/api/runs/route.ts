@@ -267,7 +267,6 @@ function getWaypointAnchors(snapshotValue: unknown): Array<{ waypointType: strin
   });
 }
 
-function stringArray(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []; }
 function stringOrNull(value: unknown): string | null { return typeof value === 'string' && value ? value : null; }
 
 function answerTerms(commonName: string | null, scientificName: string | null): string[] {

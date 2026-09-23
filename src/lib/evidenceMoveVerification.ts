@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { createEmptyEvidenceCharges, GEM_EVIDENCE_FAMILIES, getAllowedEvidenceGemTypes, type EvidenceChargeState, type EvidenceFamily } from '@/expedition/evidenceFamilies';
+import { createEmptyEvidenceCharges, GEM_EVIDENCE_FAMILIES, getAllowedEvidenceGemTypes, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { BackendPuzzle } from '@/game/BackendPuzzle';
 import { parseBoardCheckpoint } from '@/game/boardCheckpoint';
 import type { BoardCheckpointV1, PuzzleGrid } from '@/game/boardTypes';

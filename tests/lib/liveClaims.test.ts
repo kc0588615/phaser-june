@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { EMPTY_CLAIMS, decideClaim, foldHypotheses, hypothesesFromMetadata, validateExplanationEffects, claimsFromMetadata, withExplanationNote } from '@/lib/liveClaims';
-import { snapshotEvidenceHints } from '@/lib/evidenceHintSnapshot';
 import { resolveCompletedRunRoute } from '@/lib/runCompletion';
 const choices = ['answer', 'wind', 'water', 'crowding'];
 const open = foldHypotheses(choices, []);

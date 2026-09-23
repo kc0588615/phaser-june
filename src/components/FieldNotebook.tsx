@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Dna, Eye, Leaf, MapPin, PawPrint } from 'lucide-react';
 import type { RunState } from '@/types/expedition';
 import { GlassPanel } from '@/components/ui/glass-panel';

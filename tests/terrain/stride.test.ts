@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chooseStride, parseHabitatShares } from '@/lib/habitatHistogram';
-import { extractSiteTerrains, majorityCell, majorityGrid, snapshotFromArrays, sourceWindowAt, TerrainExtractionError } from '@/terrain/extract.server';
+import { extractSiteTerrains, majorityCell, majorityGrid, snapshotFromArrays, sourceWindowAt } from '@/terrain/extract.server';
 import { encodeTerrainNumpy } from '@/terrain/numpy.server';
 import { HABITAT_SOURCE_V1 as SOURCE } from '@/terrain/source';
 import { parseTerrainSnapshot, terrainBounds, terrainCellId, terrainCorner } from '@/terrain/terrain';

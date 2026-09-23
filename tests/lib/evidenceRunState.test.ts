@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { BackendPuzzle } from '@/game/BackendPuzzle';
 import { EVIDENCE_FAMILIES, createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
-import { buildFieldSignalSeed, getFieldSignalFamily } from '@/game/fieldSignal';
+import { buildFieldSignalSeed } from '@/game/fieldSignal';
 import { applyEvidenceProgress, deriveCascadeHintId, parseEvidenceProgressInput, shouldIssueCascadeHint, type EvidenceProgressInput, type V3NodeEvidenceState } from '@/lib/evidenceRunState';
 import { selectLadderIssues } from '@/lib/evidenceLadder';
 

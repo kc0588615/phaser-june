@@ -2,8 +2,8 @@ import { EMPTY_CLAIMS, type ClaimInput, type ClaimState, type Hypotheses } from 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
-import type { CaseState, EarnedObservation, EvidenceProgressResponse, ExpeditionData, FieldFact, LedgerFact, RunState } from '@/types/expedition';
-import type { DeductionProfile, ComparisonResult } from '@/lib/deductionEngine';
+import type { CaseState, EarnedObservation, EvidenceProgressResponse, ExpeditionData, FieldFact, RunState } from '@/types/expedition';
+import type { DeductionProfile } from '@/lib/deductionEngine';
 import type { PublicCaseSnapshot, ClientRunProjection } from '@/lib/runProjection';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import { buildNodeBoardContext } from '@/game/nodeObstacles';
@@ -15,7 +15,7 @@ import { createFlowState, currentNodeIndexForStep, nextFlowStep, reconcileProjec
 import { computeExpeditionRoutePolyline, getRoutePolylineThroughWaypointSlot, type RoutePoint } from '@/lib/expeditionRoute';
 import { createClientUuid } from '@/lib/clientUuid';
 import type { Species } from '@/types/database';
-import type { DiagnosisFeedback, MysteryResolution } from '@/lib/mysteryCase';
+import type { MysteryResolution } from '@/lib/mysteryCase';
 
 const INITIAL_RUN_STATE: RunState = {
   runId: null, phase: 'idle', expedition: null, currentNodeIndex: 0, bankedScore: 0,

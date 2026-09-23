@@ -14,7 +14,7 @@ let playerGameSessions: any;
 let playerSpeciesDiscoveries: any;
 let playerStats: any;
 let speciesTable: any;
-let eq: any, and: any, isNull: any, desc: any, count: any, sum: any, sql: any;
+let eq: any, and: any, isNull: any, desc: any, sql: any;
 
 async function ensureServerDeps() {
   if (!isServer) return false;
@@ -24,8 +24,6 @@ async function ensureServerDeps() {
     and = drizzleOps.and;
     isNull = drizzleOps.isNull;
     desc = drizzleOps.desc;
-    count = drizzleOps.count;
-    sum = drizzleOps.sum;
     sql = drizzleOps.sql;
 
     let dbModule: any;

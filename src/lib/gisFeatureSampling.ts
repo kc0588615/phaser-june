@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { buildSquare } from '@/lib/geoUtils';
 import { dedupeFeatureFingerprints } from '@/lib/gisFeatureHelpers';
-import type { FeatureClass, FeatureFingerprint } from '@/types/gis';
+import type { FeatureFingerprint } from '@/types/gis';
 import type { RoutePoint } from '@/lib/expeditionRoute';
 
 export { dedupeFeatureFingerprints, getGisStampClasses } from '@/lib/gisFeatureHelpers';

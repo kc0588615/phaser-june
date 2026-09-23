@@ -1,5 +1,4 @@
-import React from 'react';
-import { MapPin, Ruler, Weight, Clock, Leaf, Shield, Globe, AlertTriangle, Info, Palette, Trees, CheckCircle, Search } from "lucide-react"
+import { Ruler, Weight, Globe, CheckCircle, Search } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
