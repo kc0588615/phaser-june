@@ -10,12 +10,14 @@ export function FieldHintTicker({ feed, className = '' }: { feed: Hint[]; classN
   const [current, setCurrent] = useState<Hint | null>(() => feed.at(-1) ?? null);
   const queuedRef = useRef<Hint[]>([]);
   const seenIdsRef = useRef<Set<string> | null>(null);
-  if (seenIdsRef.current === null) {
-    seenIdsRef.current = new Set(feed.map(hint => hint.id));
-  }
-  const seenIds = seenIdsRef.current;
 
   useEffect(() => {
+    // The feed present at mount is already on screen, not news.
+    if (seenIdsRef.current === null) {
+      seenIdsRef.current = new Set(feed.map(hint => hint.id));
+      return;
+    }
+    const seenIds = seenIdsRef.current;
     if (feed.length === 0) {
       queuedRef.current = [];
       seenIds.clear();
@@ -32,7 +34,7 @@ export function FieldHintTicker({ feed, className = '' }: { feed: Hint[]; classN
     const wasIdle = queuedRef.current.length === 0;
     queuedRef.current.push(...additions);
     if (wasIdle) setCurrent(queuedRef.current.shift() ?? null);
-  }, [feed, seenIds]);
+  }, [feed]);
 
   useEffect(() => {
     if (queuedRef.current.length === 0) return;

@@ -54,25 +54,13 @@ function MainAppLayoutInner() {
     useAuthBridge();
     const phaserRef = useRef<IRefPhaserGame | null>(null);
     const [viewMode, setViewMode] = useState<'map' | 'species'>('map');
-    const [scrollToSpeciesId, setScrollToSpeciesId] = useState<number | null>(null);
     const [baseTab, setBaseTab] = useState<BaseTab>('explore');
 
     const {
         runState,
         handleRunResume, handleRunReset,
         handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim,
-        onShowSpeciesList,
     } = useExpedition();
-
-    // Register show-species-list handler (replaces EventBus listener)
-    useEffect(() => {
-        onShowSpeciesList.current = (speciesId: number) => {
-            setScrollToSpeciesId(speciesId);
-            setViewMode('species');
-            setBaseTab('field-guide');
-        };
-        return () => { onShowSpeciesList.current = null; };
-    }, [onShowSpeciesList]);
 
     const handlePhaserSceneReady = (scene: Phaser.Scene) => {
         if (phaserRef.current) phaserRef.current.scene = scene;
@@ -240,8 +228,7 @@ function MainAppLayoutInner() {
                 background: 'var(--ds-background)',
             }}>
                 <SpeciesList
-                    onBack={() => { setViewMode('map'); setBaseTab('explore'); setScrollToSpeciesId(null); }}
-                    scrollToSpeciesId={scrollToSpeciesId}
+                    onBack={() => { setViewMode('map'); setBaseTab('explore'); }}
                 />
             </div>
 

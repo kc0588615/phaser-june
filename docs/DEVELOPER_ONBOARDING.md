@@ -141,7 +141,6 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 ## 5) Quick Code Navigation
 - **Map click → briefing → board init:** `src/components/MapLibreExploreMap.tsx` emits `expedition-data-ready` → `MainAppLayout` shows briefing overlay (dismissible; map stays interactive). Player clicks Start → `expedition-start` → `map-location-selected` → `Game.ts.initializeBoardFromMap`. MapLibreExploreMap only blocks clicks during `in-run` and `deduction` phases.
 - **HUD updates:** `Game.ts.emitHud` → `EventBus 'game-hud-updated'` → `src/contexts/GameBridgeContext.tsx` (`useGameBridge().hud`).
-- **Species list sync:** `ExpeditionContext.showSpeciesList` calls the `onShowSpeciesList` ref → `src/MainAppLayout.tsx` toggles view and scrolls `SpeciesList`.
 - **Data access:** `src/lib/speciesService.ts` (RPCs), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (session + telemetry).
 
 ## 6) Gem Assets & Clue Mapping (current build)

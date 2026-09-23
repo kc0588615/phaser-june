@@ -30,8 +30,6 @@ interface ExpeditionContextValue {
   handleChooseEvidenceFamily: (family: EvidenceFamily) => Promise<boolean>;
   handleAcknowledgeIncident: () => Promise<void>;
   handleClaim: (input: ClaimInput) => Promise<boolean | null>;
-  showSpeciesList: (speciesId: number) => void;
-  onShowSpeciesList: React.MutableRefObject<((speciesId: number) => void) | null>;
 }
 
 const ExpeditionContext = createContext<ExpeditionContextValue | null>(null);
@@ -54,7 +52,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const startingRef = useRef(false);
   const advancingRef = useRef(false);
   const plannedRouteRef = useRef<RoutePoint[]>([]);
-  const onShowSpeciesList = useRef<((speciesId: number) => void) | null>(null);
   useEffect(() => { stateRef.current = runState; }, [runState]);
 
   const resetLocal = useCallback(() => {
@@ -484,7 +481,6 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     return () => { EventBus.off('expedition-data-ready', handleExpeditionDataReady); EventBus.off('expedition-start', handleExpeditionStart); EventBus.off('node-objective-updated', handleObjective); EventBus.off('game-reset', resetLocal); EventBus.off('evidence-move-resolved', handleEvidenceMoveResolved); };
   }, [handleExpeditionDataReady, handleExpeditionStart, handleObjective, handleEvidenceMoveResolved, resetLocal]);
 
-  const showSpeciesList = useCallback((speciesId: number) => onShowSpeciesList.current?.(speciesId), []);
   const value = useMemo(() => ({
     runState,
     handleRunResume,
@@ -492,9 +488,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
     handleChooseEvidenceFamily,
     handleAcknowledgeIncident,
     handleClaim,
-    showSpeciesList,
-    onShowSpeciesList,
-  }), [runState, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim, showSpeciesList]);
+  }), [runState, handleRunResume, handleRunReset, handleChooseEvidenceFamily, handleAcknowledgeIncident, handleClaim]);
   return <ExpeditionContext.Provider value={value}>{children}</ExpeditionContext.Provider>;
 }
 

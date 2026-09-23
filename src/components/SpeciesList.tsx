@@ -22,10 +22,9 @@ const RARITY_RANK: Record<string, number> = {
 
 interface SpeciesListProps {
   onBack?: () => void;
-  scrollToSpeciesId?: number | null;
 }
 
-export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListProps = {}) {
+export default function SpeciesList({ onBack }: SpeciesListProps = {}) {
   // Use React Query hook for species data fetching with automatic retries and caching
   const { data: species = [], isLoading, error, refetch, isFetching } = useSpeciesData();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
@@ -137,45 +136,6 @@ export default function SpeciesList({ onBack, scrollToSpeciesId }: SpeciesListPr
     };
   }, [loadDiscoveredSpecies]);
 
-  // Effect to scroll to a specific species when scrollToSpeciesId is provided
-  useEffect(() => {
-    if (!scrollToSpeciesId || isLoading) return;
-    let scrollToTimer: ReturnType<typeof setTimeout> | undefined;
-    let highlightTimer: ReturnType<typeof setTimeout> | undefined;
-
-    // Find the species in the data
-    const targetSpecies = species.find(s => s.id === scrollToSpeciesId);
-    if (!targetSpecies) return;
-
-    const targetAccordion = `${normalizeTaxonName(targetSpecies.class)}:${normalizeTaxonName(targetSpecies.taxon_order)}`;
-
-    // Open the accordion for this category
-    setOpenAccordions(prev => {
-      if (!prev.includes(targetAccordion)) {
-        return [...prev, targetAccordion];
-      }
-      return prev;
-    });
-
-    // Scroll to the species after a short delay to allow accordion to open
-    scrollToTimer = setTimeout(() => {
-      const speciesElement = document.querySelector(`[data-species-id="${scrollToSpeciesId}"]`);
-      if (speciesElement) {
-        speciesElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Add a highlight effect
-        speciesElement.classList.add('ring-2', 'ring-ring', 'ring-offset-2', 'ring-offset-background');
-        highlightTimer = setTimeout(() => {
-          speciesElement.classList.remove('ring-2', 'ring-ring', 'ring-offset-2', 'ring-offset-background');
-        }, 3000);
-      }
-    }, 300);
-
-    return () => {
-      if (scrollToTimer) clearTimeout(scrollToTimer);
-      if (highlightTimer) clearTimeout(highlightTimer);
-    };
-  }, [scrollToSpeciesId, species, isLoading]);
 
 
   // Filter species by selected filter
