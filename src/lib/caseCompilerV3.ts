@@ -127,17 +127,12 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
     }
     if (byFamily.size !== EVIDENCE_FAMILIES.length) return fail('invalid_cards', 'Every family must occur exactly once.');
     const cardIds = {} as Record<EvidenceFamily, number>;
-    for (const family of EVIDENCE_FAMILIES) {
-      const card = byFamily.get(family);
-      if (!card) return fail('invalid_cards', 'Every family must occur exactly once.');
-      cardIds[family] = card.id;
-    }
-    cardIdsBySpecies.set(speciesId, cardIds);
     const hints = input.hintsBySpecies.get(speciesId) ?? [];
     const idsByFamily = {} as Record<EvidenceFamily, number[]>;
     for (const family of EVIDENCE_FAMILIES) {
-      const card = byFamily.get(family);
-      if (!card) return fail('invalid_cards', 'Every family must occur exactly once.');
+      // Every family is present: cards were validated as unique, known families, and byFamily.size matched.
+      const card = byFamily.get(family)!;
+      cardIds[family] = card.id;
       const familyHints = hints.filter(hint => hint.family === family).sort((a, b) => a.sequenceIndex - b.sequenceIndex);
       if (familyHints.some(hint => !Number.isSafeInteger(hint.id) || hint.id <= 0 || hint.speciesId !== speciesId || !hint.hintText)
         // Safety only at run creation: answer-safe, 2-5 survivors, never widening. Strict narrowing is a corpus check.
@@ -147,6 +142,7 @@ export function compileCaseV4(input: CompileCaseV4Input): CompileCaseV4Result {
       idsByFamily[family] = familyHints.map(hint => hint.id);
     }
     if (new Set(Object.values(idsByFamily).flat()).size !== hints.length) return fail('invalid_hints', 'Hint ids must be unique.');
+    cardIdsBySpecies.set(speciesId, cardIds);
     hintIdsBySpecies.set(speciesId, idsByFamily);
   }
   const cascadeHintIds = [...input.cascadeHints].sort((a, b) => a.sequenceIndex - b.sequenceIndex);
@@ -238,7 +234,7 @@ export function verifyCaseCorpusV3(
   return { pathCount, residualCounts, errors, warnings };
 }
 
-export function orderedFamilyPaths(): [EvidenceFamily, EvidenceFamily, EvidenceFamily][] {
+function orderedFamilyPaths(): [EvidenceFamily, EvidenceFamily, EvidenceFamily][] {
   return EVIDENCE_FAMILIES.flatMap(first => EVIDENCE_FAMILIES.flatMap(second => second === first ? []
     : EVIDENCE_FAMILIES.flatMap(third => third === first || third === second ? [] : [[first, second, third]]))) as [EvidenceFamily, EvidenceFamily, EvidenceFamily][];
 }
