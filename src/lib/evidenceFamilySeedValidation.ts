@@ -1,7 +1,7 @@
 import { parseExplanationEffects, validateExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import type { AuthoredMysteryCase } from '@/lib/mysteryCase';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
-import { CASE_TRAIT_CATEGORIES, PROFILE_KEY_BY_CATEGORY, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
+import { CASE_TRAIT_CATEGORIES, type CaseTraitCategory, type CompilerSpeciesProfile } from '@/lib/caseTraits';
 import { isCanonicalDeductionTag } from '@/lib/deductionTags';
 import { validateFamilyLadder } from '@/lib/evidenceLadder';
 import type { EvidenceProfileDossier } from '@/lib/evidenceSeedValidation';
@@ -179,8 +179,4 @@ export function familySeedToCompilerProfiles(dossiers: readonly EvidenceProfileD
     conservationTags: dossier.profile.conservation,
     signatureTag: dossier.profile.signatureTag,
   }));
-}
-
-export function profileHasFamilyCardTag(profile: CompilerSpeciesProfile, card: EvidenceFamilySeedCard): boolean {
-  return (profile[PROFILE_KEY_BY_CATEGORY[card.trait_category]] as readonly string[]).includes(card.compare_tag);
 }

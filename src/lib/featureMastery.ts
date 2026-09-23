@@ -5,15 +5,6 @@
 
 import type { FeatureClass, RunEvidenceBundle } from '@/types/gis';
 
-export type FeatureMasteryTier = 'novice' | 'familiar' | 'expert' | 'master';
-
-const TIER_THRESHOLDS: [number, FeatureMasteryTier][] = [
-  [10, 'master'],
-  [5, 'expert'],
-  [2, 'familiar'],
-  [0, 'novice'],
-];
-
 export interface FeatureMasteryData {
   featureCounts: Partial<Record<FeatureClass, number>>;
   totalRuns: number;
@@ -33,22 +24,4 @@ export function updateFeatureMastery(
     updated.featureCounts[fc] = (updated.featureCounts[fc] ?? 0) + count;
   }
   return updated;
-}
-
-/** Get mastery tier for a specific feature class. */
-export function getFeatureMasteryTier(data: FeatureMasteryData, featureClass: FeatureClass): FeatureMasteryTier {
-  const count = data.featureCounts[featureClass] ?? 0;
-  for (const [threshold, tier] of TIER_THRESHOLDS) {
-    if (count >= threshold) return tier;
-  }
-  return 'novice';
-}
-
-/** Get overall mastery tier across all feature classes. */
-export function getOverallMasteryTier(data: FeatureMasteryData): FeatureMasteryTier {
-  const total = Object.values(data.featureCounts).reduce((sum, v) => sum + (v ?? 0), 0);
-  for (const [threshold, tier] of TIER_THRESHOLDS) {
-    if (total >= threshold * 3) return tier;
-  }
-  return 'novice';
 }

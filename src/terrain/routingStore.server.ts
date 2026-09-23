@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { createRoutingSession, type RoutingSession } from './routingSession';
 import { costaRicaRoutingScenario } from './routingScenario';
 import { loadCostaRicaTerrain } from './routingFixture.server';
@@ -42,13 +41,4 @@ export function createCostaRicaRoutingSession(createRequestId?: string, boardSee
   sessions.set(session.id, session);
   if (createRequestId) createIds.set(createRequestId, session.id);
   return session;
-}
-
-export function rememberRoutingSession(session: RoutingSession, createRequestId?: string): void {
-  sessions.set(session.id, session);
-  if (createRequestId) createIds.set(createRequestId, session.id);
-}
-
-export function newRoutingRequestId(): string {
-  return randomUUID();
 }

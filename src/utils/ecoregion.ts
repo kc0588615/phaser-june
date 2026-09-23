@@ -97,25 +97,6 @@ export function groupSpeciesByTaxonomy(species: Species[]): TaxonomyHierarchy {
 }
 
 /**
- * Map category names to order values
- */
-export function getCategoryOrderMapping(): Record<string, string> {
-  // Since we're now using order names directly, this maps order to itself
-  // and includes some legacy mappings for backward compatibility
-  // Note: Database values are in UPPERCASE
-  return {
-    'Turtles': 'TESTUDINES',
-    'Turtle': 'TESTUDINES',
-    'Frogs': 'ANURA',
-    'Frog': 'ANURA',
-    'Testudines': 'TESTUDINES',
-    'Anura': 'ANURA',
-    'TESTUDINES': 'TESTUDINES',
-    'ANURA': 'ANURA'
-  };
-}
-
-/**
  * Extract unique genus values from species data
  */
 export function getUniqueGenera(species: Species[]): string[] {

@@ -1,6 +1,6 @@
 # Species Database Implementation Guide
 
-> **2026-09-22 (plan 039):** the unused `src/utils/ecoregion.ts` helpers `groupSpeciesByCategory`, `getAllCategories`, `getOrderDisplayName`, `getOrderFromCategory` and `getCategoryFromOrder` were deleted. Mentions of them below are historical.
+> **2026-09-22 (plan 039):** the unused `src/utils/ecoregion.ts` helpers `groupSpeciesByCategory`, `getAllCategories`, `getOrderDisplayName`, `getOrderFromCategory`, `getCategoryFromOrder` and `getCategoryOrderMapping` were deleted. Mentions of them below are historical.
 
 ## Overview
 
