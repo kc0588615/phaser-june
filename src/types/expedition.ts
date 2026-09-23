@@ -29,6 +29,22 @@ export interface FieldFact {
 /** A revealed ladder rung: which family/category spoke, what it said, who it ruled out. */
 export type LedgerFact = import('@/lib/evidenceLadder').PublicLedgerFact;
 
+/** Success body of POST /api/runs/[runId]/evidence-progress. */
+export interface EvidenceProgressResponse {
+  ok: true;
+  duplicate: boolean;
+  nodeIndex: number;
+  segmentMovesUsed: number;
+  evidenceCharges: CaseState['evidenceCharges'];
+  offeredFamilies: import('@/expedition/evidenceFamilies').EvidenceFamily[];
+  hintLines: string[];
+  hintFamilies: import('@/expedition/evidenceFamilies').EvidenceFamily[];
+  cascadeHintLine: string | null;
+  facts: LedgerFact[];
+  hypotheses: import('@/lib/liveClaims').Hypotheses;
+  reinforcedFamilies: import('@/expedition/evidenceFamilies').EvidenceFamily[];
+}
+
 export interface CaseState {
   version: 4;
   claims: import('@/lib/liveClaims').ClaimState;

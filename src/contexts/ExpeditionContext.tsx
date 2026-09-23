@@ -2,7 +2,7 @@ import { EMPTY_CLAIMS, type ClaimInput, type ClaimState, type Hypotheses } from 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
-import type { CaseState, EarnedObservation, ExpeditionData, FieldFact, LedgerFact, RunState } from '@/types/expedition';
+import type { CaseState, EarnedObservation, EvidenceProgressResponse, ExpeditionData, FieldFact, LedgerFact, RunState } from '@/types/expedition';
 import type { DeductionProfile, ComparisonResult } from '@/lib/deductionEngine';
 import type { PublicCaseSnapshot, ClientRunProjection } from '@/lib/runProjection';
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
@@ -369,18 +369,7 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
         const cause = [failure.reason, failure.detail].filter(Boolean).join('/');
         throw new Error(`Evidence progress failed (${response.status}${cause ? `: ${cause}` : ''})`);
       }
-      const result = await response.json() as {
-        duplicate?: boolean;
-        segmentMovesUsed: number;
-        evidenceCharges: CaseState['evidenceCharges'];
-        offeredFamilies: EvidenceFamily[];
-        hintLines?: string[];
-        hintFamilies?: EvidenceFamily[];
-        cascadeHintLine?: string | null;
-        facts?: LedgerFact[];
-        reinforcedFamilies?: EvidenceFamily[];
-        hypotheses?: Hypotheses;
-      };
+      const result = await response.json() as EvidenceProgressResponse;
       if (stateRef.current.phase !== 'mystery' || runIdRef.current !== runId) return;
       const facts = result.facts ?? [];
       const hypothesisLines = Object.entries(result.hypotheses ?? {}).filter(([id, status]) => status !== (stateRef.current.caseState?.hypotheses[id] ?? 'open'))

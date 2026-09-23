@@ -8,21 +8,10 @@ import { parseMysteryResolution, parsePublicMysteryCase, type MysteryResolution,
 import type { PublicLedgerFact } from '@/lib/evidenceLadder';
 import { isCaseTraitCategory } from '@/lib/caseTraits';
 import { getRecord } from '@/lib/record';
+import { NODE_OBSTACLES } from '@/game/nodeObstacles';
 
 const UINT32_MAX = 0xffff_ffff;
-const NODE_OBSTACLES = new Set([
-  'flow_shift',
-  'mud_tiles',
-  'overgrowth',
-  'low_visibility',
-  'junk_blockers',
-  'noise_interference',
-  'steep_terrain',
-  'time_pressure',
-  'signal_dropout',
-  'unknown_terrain',
-  'limited_signal',
-]);
+const NODE_OBSTACLE_SET: ReadonlySet<string> = new Set(NODE_OBSTACLES);
 const NODE_EVENTS = new Set([
   'amphibian_signal',
   'river_crossing',
@@ -421,7 +410,7 @@ export function projectRunNodes(value: unknown): PublicRunNode[] {
       nodeOrder,
       nodeType,
       nodeStatus,
-      obstacles: getAllowedStringArray(hazardProfile.obstacles, NODE_OBSTACLES),
+      obstacles: getAllowedStringArray(hazardProfile.obstacles, NODE_OBSTACLE_SET),
       events: getAllowedStringArray(hazardProfile.events, NODE_EVENTS),
     };
     if (Object.hasOwn(boardContext, 'terrain')) node.terrain = parseTerrainSnapshot(boardContext.terrain);

@@ -15,6 +15,7 @@ import { buildNodeBoardContext, NODE_OBSTACLES, type NodeObstacle } from '@/game
 import { GRID_COLS, GRID_ROWS } from '@/game/constants';
 import type { CaseTraitCategory } from '@/lib/caseTraits';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
+import type { EvidenceProgressResponse } from '@/types/expedition';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ runId: string }> }) {
   try {
@@ -181,14 +182,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         segmentMovesUsed: appliedState.segmentMovesUsed,
         evidenceCharges: persistedState.evidenceCharges,
         offeredFamilies: persistedState.offeredFamilies,
-        hintLine: orderedHints.at(-1)?.hintText ?? null,
         hintLines: orderedHints.map(hint => hint.hintText),
         hintFamilies: orderedHints.map(hint => hint.family),
         cascadeHintLine: cascadeRows[0]?.hintText ?? null,
         facts,
         hypotheses,
         reinforcedFamilies: duplicate ? [] : issues.reinforcedFamilies,
-      });
+      } satisfies EvidenceProgressResponse);
     });
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {
