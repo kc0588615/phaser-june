@@ -85,7 +85,7 @@ export class MainMenu extends Phaser.Scene {
         playButton.on('pointerdown', () => {
             console.log("MainMenu: Starting Game scene...");
             // Add a brief fade out effect (optional)
-             this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+             this.cameras.main.fadeOut(250, 0, 0, 0, (_camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                  if (progress === 1) {
                       this.scene.start('Game');
                  }

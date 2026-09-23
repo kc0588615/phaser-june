@@ -17,12 +17,11 @@ interface SpeciesCardProps {
   category: string;
   onNavigateToTop: () => void;
   isDiscovered?: boolean;
-  discoveredAt?: string;
   speciesPositionLabel?: string;
 }
 
 
-export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, discoveredAt, speciesPositionLabel }: SpeciesCardProps) {
+export default function SpeciesCard({ species, category, onNavigateToTop, isDiscovered, speciesPositionLabel }: SpeciesCardProps) {
   const note = (topic: string, order: number) => species.notes?.find(item => item.topic === topic && item.sort_order === order)?.note_text;
   const hasValue = (value: any) => value && value !== 'NULL' && value !== 'null';
 
@@ -465,7 +464,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 <div className="mb-3">
                   <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Prey:</span>
                   <div className="flex flex-wrap gap-1">
-                    {species.diet_prey!.split(/[,;]/).map((item, index) => (
+                    {species.diet_prey!.split(/[,;]/).map((item) => (
                       <span key={`prey-${species.id}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-400/10 border border-orange-400/30 text-orange-300">
                         {item.trim()}
                       </span>
@@ -477,7 +476,7 @@ export default function SpeciesCard({ species, category, onNavigateToTop, isDisc
                 <div className="mb-3">
                   <span className="text-xs sm:text-sm text-muted-foreground block mb-1">Plant Food:</span>
                   <div className="flex flex-wrap gap-1">
-                    {species.diet_flora!.split(/[,;]/).map((item, index) => (
+                    {species.diet_flora!.split(/[,;]/).map((item) => (
                       <span key={`flora-${species.id}-${item.trim()}`} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-400/10 border border-green-400/30 text-green-300">
                         {item.trim()}
                       </span>

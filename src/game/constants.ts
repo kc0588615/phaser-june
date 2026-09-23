@@ -67,38 +67,6 @@ export const AssetKeys = {
     // SOUND_EXPLODE: 'explode_sound',
 } as const;
 
-// --- Habitat to Gem Mapping ---
-export const HABITAT_GEM_MAP: Partial<Record<number, GemType>> = {
-    // Legacy habitat mapping now routes to rare loot gems.
-    100: 'green', 101: 'green', 102: 'green', 103: 'green', 104: 'green',
-    105: 'green', 106: 'green', 107: 'green', 108: 'green', 109: 'green',
-    
-    // Savannas (200-202) → Orange
-    200: 'orange', 201: 'orange', 202: 'orange',
-    
-    // Shrublands (300-308) → Black
-    300: 'black', 301: 'black', 302: 'black', 303: 'black', 304: 'black',
-    305: 'black', 306: 'black', 307: 'black', 308: 'black',
-    
-    // Grasslands (400-407) → White
-    400: 'white', 401: 'white', 402: 'white', 403: 'white', 404: 'white',
-    405: 'white', 406: 'white', 407: 'white',
-    
-    // Wetlands (500-518) → Blue
-    500: 'blue', 501: 'blue', 502: 'blue', 503: 'blue', 504: 'blue',
-    505: 'blue', 506: 'blue', 507: 'blue', 508: 'blue', 509: 'blue',
-    510: 'blue', 511: 'blue', 512: 'blue', 513: 'blue', 514: 'blue',
-    515: 'blue', 516: 'blue', 517: 'blue', 518: 'blue',
-    
-    // Urban/Artificial (1400-1406) → Red
-    1400: 'red', 1401: 'red', 1402: 'red', 1403: 'red', 1404: 'red',
-    1405: 'red', 1406: 'red',
-    
-    // Default for any unmapped habitat types
-    0: 'white', // No data
-    1700: 'white', // Unknown
-} as const;
-
 // --- Game Mechanics Configuration ---
 export const MAX_MOVES = 50;
 export const STREAK_STEP = 0.25;           // +25% per streak level

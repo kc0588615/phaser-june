@@ -83,8 +83,6 @@ export async function getSpeciesCatalog() {
     .orderBy(asc(speciesTable.commonName));
 }
 
-export type SpeciesCatalogItem = Awaited<ReturnType<typeof getSpeciesCatalog>>[number];
-
 /**
  * Fetches full species details by ID (excludes geometry).
  */

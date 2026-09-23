@@ -148,7 +148,6 @@ function SelectedSpeciesView({
         species={species}
         category={order}
         isDiscovered={Boolean(discoveredSpecies[species.id])}
-        discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
         onNavigateToTop={onNavigateToTop}
       />
     </div>

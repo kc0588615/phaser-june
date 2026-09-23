@@ -97,7 +97,6 @@ export class Game extends Phaser.Scene {
     private canMoveBeforePause: boolean = false;
     
     // --- Player Tracking ---
-    private currentUserId: string | null = null; // Cache user ID
     private currentSessionId: string | null = null; // Active session
     
     // --- Streak and Scoring ---
@@ -197,7 +196,6 @@ export class Game extends Phaser.Scene {
     }
 
     private onMoveResolved(
-        baseTurnScore: number,
         didAnyMatch: boolean,
         moveMultiplier: number,
         evidenceTelemetry?: {
@@ -343,12 +341,10 @@ export class Game extends Phaser.Scene {
     }
 
     private handleAuthUserReady = (data: { playerId: string; sessionId?: string }) => {
-        this.currentUserId = data.playerId;
         this.currentSessionId = data.sessionId ?? null;
     };
 
     private initializePlayerTracking(): void {
-        this.currentUserId = null;
         this.currentSessionId = null;
         EventBus.on('auth-user-ready', this.handleAuthUserReady, this);
     }
@@ -1086,7 +1082,6 @@ export class Game extends Phaser.Scene {
             if (bonus > 0) {
                 this.backendPuzzle.addBonusScore(bonus);
             }
-            this.turnBaseTotalScore = finalScore;
         } else {
             multiplier = 1;
         }
@@ -1100,7 +1095,7 @@ export class Game extends Phaser.Scene {
         this.currentMoveSummary = null;
 
         // Move is fully resolved, apply turn resolution
-        this.onMoveResolved(this.turnBaseTotalScore, this.anyMatchThisTurn, multiplier, evidenceTelemetry);
+        this.onMoveResolved(this.anyMatchThisTurn, multiplier, evidenceTelemetry);
 
         // Reset flags for next move
         this.anyMatchThisTurn = false;
@@ -1344,7 +1339,6 @@ export class Game extends Phaser.Scene {
         this.anyMatchThisTurn = false;
 
         // Clear tracking state
-        this.currentUserId = null;
         this.currentSessionId = null;
 
         // Emit game reset event

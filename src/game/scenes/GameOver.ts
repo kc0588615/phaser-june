@@ -117,7 +117,7 @@ export class GameOver extends Phaser.Scene {
         // Play Again handler - restart directly
         playAgainButton.on('pointerup', () => {
             console.log("GameOver: Restarting game...");
-            this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+            this.cameras.main.fadeOut(250, 0, 0, 0, (_camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                 if (progress === 1) {
                     this.scene.start('Game');
                 }
@@ -133,7 +133,7 @@ export class GameOver extends Phaser.Scene {
             }
 
             console.log("GameOver: Returning to MainMenu...");
-            this.cameras.main.fadeOut(250, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+            this.cameras.main.fadeOut(250, 0, 0, 0, (_camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                 if (progress === 1) {
                     this.scene.start('MainMenu');
                 }

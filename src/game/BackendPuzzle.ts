@@ -522,7 +522,7 @@ export class BackendPuzzle {
         for (let x = 0; x < this.width; x++) {
             newGrid[x] = [];
             const currentColumn = this.puzzleState[x] || [];
-            const survivingGems = currentColumn.filter((gem, y) => !explodeCoords.has(`${x},${y}`));
+            const survivingGems = currentColumn.filter((_gem, y) => !explodeCoords.has(`${x},${y}`));
             const newGemTypes = replacementsMap.get(x) || [];
             const newGems: BoardCell[] = newGemTypes.map(type => createBoardCell(type));
             newGrid[x] = [...newGems, ...survivingGems];

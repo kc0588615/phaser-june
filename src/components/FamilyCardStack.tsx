@@ -219,7 +219,6 @@ export default function FamilyCardStack({
                     category={order}
                     speciesPositionLabel={`Species ${index + 1} of ${speciesList.length}`}
                     isDiscovered={isDiscovered}
-                    discoveredAt={discoveredSpecies[species.id]?.discoveredAt}
                     onNavigateToTop={onNavigateToTop}
                   />
                 </div>

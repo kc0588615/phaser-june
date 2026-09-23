@@ -2,7 +2,6 @@ import type { AffinityType } from '@/expedition/affinities';
 import type { RunNode } from '@/lib/nodeScoring';
 import type { RoutePoint } from '@/lib/expeditionRoute';
 import type { ExpeditionWaypoint } from '@/types/waypoints';
-import type { DeductionClueCategory } from '@/db/schema/species';
 
 export type { RunNode };
 
@@ -114,15 +113,6 @@ export interface RunState {
 }
 
 // --- New Economy Types ---
-
-export type ClueCategoryKey = 'classification' | 'habitat' | 'geographic' | 'morphology'
-  | 'behavior' | 'life_cycle' | 'conservation' | 'key_facts';
-
-export interface ConfirmedClue {
-  clueId: number;
-  category: DeductionClueCategory;
-  compareTags: string[];
-}
 
 /** Early-resolution bonus based on completed research sites (0–3). */
 export function getGuessBonuses(sitesCompleted: number, isCorrect: boolean): { guessBonus: number; efficiencyBonus: number } {

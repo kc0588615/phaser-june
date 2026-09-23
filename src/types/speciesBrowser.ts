@@ -1,7 +1,5 @@
 import type { Species } from '@/types/database';
 
-export type GroupedSpecies = Record<string, Record<string, Species[]>>;
-
 export type TaxonomyHierarchy = Record<
   string,
   Record<string, Record<string, Record<string, Species[]>>>

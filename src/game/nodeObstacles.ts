@@ -52,13 +52,6 @@ export const NODE_OBSTACLE_LABELS: Record<NodeObstacle, string> = {
     limited_signal: 'Limited Signal',
 };
 
-export const OBSTACLE_FAMILY_LABELS: Record<ObstacleFamily, string> = {
-    visibility: 'Visibility',
-    alert: 'Alert',
-    terrain: 'Terrain',
-    sighting: 'Sighting',
-    panic: 'Panic',
-};
 
 export const NODE_OBSTACLE_FAMILY_MAP: Record<NodeObstacle, ObstacleFamily> = {
     flow_shift: 'terrain',

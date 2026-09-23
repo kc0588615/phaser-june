@@ -89,33 +89,6 @@ export interface Bioregion {
   wkb_geometry?: any;
 }
 
-export interface EcoregionCollectionSummary {
-  ecoregion_id: number;
-  bioregion?: string | null;
-  realm?: string | null;
-  subrealm?: string | null;
-  biome?: string | null;
-  total_species: number;
-  found_species: number;
-  groups: Array<{
-    animal_type: string;
-    animal_icon: string;
-    total_species: number;
-    found_species: number;
-  }>;
-  found_points: Array<{
-    discovery_id: string;
-    species_id: number;
-    common_name?: string | null;
-    scientific_name?: string | null;
-    animal_type: string;
-    animal_icon: string;
-    lon: number;
-    lat: number;
-    discovered_at: string;
-  }>;
-}
-
 export interface SpeciesNote {
   topic: 'behavior' | 'life_cycle' | 'key_fact' | 'taxonomy' | 'distribution' | 'reproduction' | 'threats';
   sort_order: number;

@@ -164,8 +164,6 @@ export type DeductionClueCategory =
   | 'habitat' | 'morphology' | 'diet' | 'behavior' | 'reproduction'
   | 'taxonomy' | 'key_fact' | 'geography' | 'conservation';
 
-export type DeductionUnlockMode = 'fragment' | 'score';
-
 export const casePools = pgTable('case_pools', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
   slug: text('slug').notNull().unique(),

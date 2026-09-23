@@ -68,21 +68,6 @@ Legacy aliases remain for compatibility:
 - `DRAG_THRESHOLD`
 - `MOVE_THRESHOLD`
 
-## Habitat to gem mapping
-
-`HABITAT_GEM_MAP` maps habitat classification codes to gem colors. It is currently not referenced by runtime code but is intended for habitat-driven gem selection.
-
-| Habitat codes | Category | Gem |
-|--------------|----------|-----|
-| 100-109 | Forests | Green |
-| 200-202 | Savannas | Orange |
-| 300-308 | Shrublands | Black |
-| 400-407 | Grasslands | White |
-| 500-518 | Wetlands | Blue |
-| 1400-1406 | Urban or artificial | Red |
-| 0 | No data | White |
-| 1700 | Unknown | White |
-
 ## Game mechanics and scoring
 
 | Constant | Value | Purpose | Used in |
@@ -90,14 +75,10 @@ Legacy aliases remain for compatibility:
 | `MAX_MOVES` | `50` | Move cap per round | `BackendPuzzle.ts`, `Game.ts` |
 | `STREAK_STEP` | `0.25` | Multiplier increase per streak step | `Game.ts` |
 | `STREAK_CAP` | `3.0` | Max streak multiplier | `Game.ts` |
-| `EARLY_BONUS_PER_SLOT` | `100` | Bonus per unrevealed clue slot | `Game.ts` |
-| `DEFAULT_TOTAL_CLUE_SLOTS` | `8` | Fallback clue slots per species | `Game.ts` |
 | `MOVE_LARGE_MATCH_THRESHOLD` | `4` | Minimum match length for large bonus | `Game.ts` |
 | `MOVE_HUGE_MATCH_THRESHOLD` | `5` | Minimum match length for huge bonus | `Game.ts` |
 | `MULTIPLIER_LARGE_MATCH` | `1.25` | Score multiplier for large matches | `Game.ts` |
 | `MULTIPLIER_HUGE_MATCH` | `1.5` | Score multiplier for huge matches | `Game.ts` |
-| `MULTIPLIER_MULTI_CATEGORY` | `1.15` | Bonus for multi-category matches | `Game.ts` |
-| `MULTIPLIER_REPEAT_CATEGORY` | `1.25` | Bonus for repeat-category streaks | `Game.ts` |
 
 ```typescript
 // src/game/scenes/Game.ts
