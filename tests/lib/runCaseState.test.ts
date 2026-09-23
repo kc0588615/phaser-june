@@ -4,7 +4,6 @@ import { snapshotEvidenceHints, type EvidenceHintSnapshot } from '@/lib/evidence
 import { hydrateLedgerFact, parseFactLedger, selectLadderIssues } from '@/lib/evidenceLadder';
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeLadderEliminatedIds } from '@/lib/evidenceLadder';
 import {
   filterEliminatedCandidates,
   hydrateFamilyObservation,
@@ -137,7 +136,7 @@ describe('v3 run case metadata', () => {
     ]);
   });
 
-  test('eliminates only mismatching live candidates', () => {
+  test('filters eliminated candidates', () => {
     const profile = (speciesId: number, habitatTags: string[]) => ({
       speciesId,
       habitatTags,
@@ -145,7 +144,6 @@ describe('v3 run case metadata', () => {
       taxonomyTags: [], geographyTags: [], conservationTags: [], keyFactTags: [],
     });
     const profiles = [profile(1, ['wet']), profile(2, []), profile(3, ['wet']), profile(4, [])];
-    assert.deepEqual(computeLadderEliminatedIds(profiles, [2], 'habitat', 'wet'), [4]);
     assert.deepEqual(filterEliminatedCandidates(profiles, [2, 4]).map(item => item.speciesId), [1, 3]);
   });
 

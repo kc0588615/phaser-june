@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
     }
-    const identifiers = resolveRunCreationIdentifiers(body?.createRequestId, randomUUID);
+    const identifiers = resolveRunCreationIdentifiers(body.createRequestId, randomUUID);
     if (!identifiers) return NextResponse.json({ error: 'createRequestId must be a UUID when provided' }, { status: 400 });
     const { runId, createRequestId } = identifiers;
     const [existing] = await db.select().from(ecoRunSessions).where(and(
@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
         casePublic,
       }));
     }
-    const lon = Number(body?.lon);
-    const lat = Number(body?.lat);
-    const locationKey = typeof body?.locationKey === 'string' ? body.locationKey.trim() : '';
-    const nodes = Array.isArray(body?.nodes) ? body.nodes as RunNode[] : [];
+    const lon = Number(body.lon);
+    const lat = Number(body.lat);
+    const locationKey = typeof body.locationKey === 'string' ? body.locationKey.trim() : '';
+    const nodes = Array.isArray(body.nodes) ? body.nodes as RunNode[] : [];
     if (!Number.isFinite(lon) || lon < -180 || lon > 180 || !Number.isFinite(lat) || lat < -90 || lat > 90
       || !locationKey || locationKey.length > 200 || nodes.length !== MYSTERY_NODE_COUNT || jsonSize(nodes) > 65_536
       || !validOptionalString(body.realm, 160) || !validOptionalString(body.biome, 160) || !validOptionalString(body.bioregion, 160)) {
@@ -241,12 +241,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/** Groups rows by species, keeping first-seen species order; rows are shallow-copied. */
 function groupBySpeciesId<T extends { speciesId: number }>(rows: readonly T[]): Map<number, T[]> {
   const grouped = new Map<number, T[]>();
   for (const row of rows) {
     const list = grouped.get(row.speciesId);
-    if (list) list.push({ ...row }); else grouped.set(row.speciesId, [{ ...row }]);
+    if (list) list.push(row); else grouped.set(row.speciesId, [row]);
   }
   return grouped;
 }

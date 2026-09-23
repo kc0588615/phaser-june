@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
 import type { CompilerSpeciesProfile } from '@/lib/caseTraits';
 import {
-  computeLadderEliminatedIds, hydrateLedgerFact, ledgerEliminatedIds, parseFactLedger, selectLadderIssues, validateFamilyLadder,
+  computeTraitEliminatedIds, hydrateLedgerFact, ledgerEliminatedIds, parseFactLedger, selectLadderIssues, validateFamilyLadder,
 } from '@/lib/evidenceLadder';
 
 function profile(speciesId: number, dietTags: string[], taxonomyTags: string[] = []): CompilerSpeciesProfile {
@@ -52,9 +52,15 @@ describe('evidence ladder authoring rules', () => {
 
 describe('evidence ladder runtime', () => {
   it('rules out only live candidates lacking the rung tag, answer-safe by construction', () => {
-    assert.deepEqual(computeLadderEliminatedIds(PROFILES, [], 'diet', 'comparison_diet:not_large_prey_hunter'), [6]);
-    assert.deepEqual(computeLadderEliminatedIds(PROFILES, [6], 'diet', 'food_source:plants'), [4, 5]);
-    assert.deepEqual(computeLadderEliminatedIds(PROFILES, [4, 5, 6], 'diet', 'diet_type:herbivore'), [3]);
+    assert.deepEqual(computeTraitEliminatedIds(PROFILES, [], 'diet', 'comparison_diet:not_large_prey_hunter'), [6]);
+    assert.deepEqual(computeTraitEliminatedIds(PROFILES, [6], 'diet', 'food_source:plants'), [4, 5]);
+    assert.deepEqual(computeTraitEliminatedIds(PROFILES, [4, 5, 6], 'diet', 'diet_type:herbivore'), [3]);
+  });
+
+  it('eliminates hard-card mismatches among live candidates only', () => {
+    const profile = (speciesId: number, habitatTags: string[]) => ({ speciesId, habitatTags });
+    const profiles = [profile(1, ['wet']), profile(2, []), profile(3, ['wet']), profile(4, [])];
+    assert.deepEqual(computeTraitEliminatedIds(profiles, [2], 'habitat', 'wet'), [4]);
   });
 
   it('speaks once per swap for the largest direct match and adds signal rungs on the clearing family', () => {

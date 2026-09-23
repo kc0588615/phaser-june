@@ -67,17 +67,17 @@ export function selectLadderIssues(
   return { issues, reinforcedFamilies: issues.length > 0 ? [] : [...reinforced] };
 }
 
-/** Live candidates lacking the rung tag in the family's trait category. */
-export function computeLadderEliminatedIds(
+/** Live candidates whose profile lacks `tag` in the trait category (ladder rungs and hard cards). */
+export function computeTraitEliminatedIds(
   profiles: ReadonlyArray<Pick<CompilerSpeciesProfile, 'speciesId'> & Partial<CompilerSpeciesProfile>>,
   alreadyEliminatedIds: Iterable<number>,
   traitCategory: CaseTraitCategory,
-  weakTag: string,
+  tag: string,
 ): number[] {
   const key = PROFILE_KEY_BY_CATEGORY[traitCategory];
   const out = new Set(alreadyEliminatedIds);
   return profiles
-    .filter(profile => !out.has(profile.speciesId) && !((profile[key] ?? []) as readonly string[]).includes(weakTag))
+    .filter(profile => !out.has(profile.speciesId) && !((profile[key] ?? []) as readonly string[]).includes(tag))
     .map(profile => profile.speciesId)
     .sort((a, b) => a - b);
 }

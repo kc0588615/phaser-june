@@ -108,7 +108,7 @@ test('duplicate requests reuse original nodes without extraction, including chan
   assert.equal(racing.stats().committed.length, 0);
 });
 
-test('malformed or non-object JSON body returns 400 before any lookup or extraction', async () => {
+test('malformed or non-object JSON body returns 400 before extraction or any transaction', async () => {
   for (const json of [async () => { throw new SyntaxError('Unexpected token'); }, async () => null, async () => 'text']) {
     const h = harness();
     const response = await h.postJson(json);

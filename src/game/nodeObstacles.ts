@@ -33,6 +33,7 @@ export function parseNodeObstacles(hazardProfile: unknown): NodeObstacle[] {
         ? obstacles.filter((item): item is NodeObstacle => typeof item === 'string' && NODE_OBSTACLE_SET.has(item))
         : [];
 }
+
 export type ObstacleFamily = 'visibility' | 'alert' | 'terrain' | 'sighting' | 'panic';
 
 export interface CellStateSeed {

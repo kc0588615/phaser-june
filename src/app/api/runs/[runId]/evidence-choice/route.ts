@@ -5,7 +5,7 @@ import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, speciesDeductionP
 import { createEmptyEvidenceCharges, deriveEvidenceFamilyOffer } from '@/expedition/evidenceFamilies';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { parseEvidenceChoiceInput, parseV3NodeEvidenceState } from '@/lib/evidenceRunState';
-import { computeLadderEliminatedIds, ledgerEliminatedIds, parseFactLedger } from '@/lib/evidenceLadder';
+import { computeTraitEliminatedIds, ledgerEliminatedIds, parseFactLedger } from '@/lib/evidenceLadder';
 import {
   getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard,
   parsePrivateCase, parseV3EvidenceApplications, type V3EvidenceApplicationRecord,
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         ...ledgerEliminatedIds(parseFactLedger(metadata.factLedger)),
       ]);
       const liveBefore = publicCase.candidateIds.filter(id => !alreadyEliminated.has(id));
-      const actualEliminatedIds = computeLadderEliminatedIds(profiles, alreadyEliminated, card.traitCategory, card.compareTag);
+      const actualEliminatedIds = computeTraitEliminatedIds(profiles, alreadyEliminated, card.traitCategory, card.compareTag);
       if (actualEliminatedIds.includes(privateCase.answerId)) return response(409, { reason: 'answer_eliminated' });
       const liveAfterCount = liveBefore.length - actualEliminatedIds.length;
       if (liveAfterCount < 1 || (input.nodeIndex === 2 && liveAfterCount > 3)) return response(409, { reason: 'corpus_invariant_failed' });

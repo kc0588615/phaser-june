@@ -5,7 +5,7 @@ import { cascadeHints, db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, evi
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { applyEvidenceProgress, deriveCascadeHintId, parseV3NodeEvidenceState, shouldIssueCascadeHint, type EvidenceProgressInput } from '@/lib/evidenceRunState';
 import {
-  computeLadderEliminatedIds, hydrateLedgerFact, ledgerEliminatedIds, parseFactLedger, selectLadderIssues,
+  computeTraitEliminatedIds, hydrateLedgerFact, ledgerEliminatedIds, parseFactLedger, selectLadderIssues,
   type FactLedgerEntry, type PublicLedgerFact,
 } from '@/lib/evidenceLadder';
 import { getRecord, isUuid, parseEvidenceFamilyCard, parsePrivateCase, parseV3EvidenceApplications } from '@/lib/runCaseState';
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           const hint = hintById.get(issue.hintId);
           const card = cardByFamily.get(issue.family);
           if (!hint || !card) throw new Error('Compiled hint corpus changed during active run');
-          const actualEliminatedIds = computeLadderEliminatedIds(profileRows, eliminated, card.traitCategory, hint.weakTag);
+          const actualEliminatedIds = computeTraitEliminatedIds(profileRows, eliminated, card.traitCategory, hint.weakTag);
           // Compiler guarantees rung tags sit in the answer profile; refuse rather than mis-eliminate.
           if (actualEliminatedIds.includes(privateCase.answerId)) return response(409, { reason: 'corpus_invariant_failed' });
           for (const id of actualEliminatedIds) eliminated.add(id);

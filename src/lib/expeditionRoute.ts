@@ -33,24 +33,6 @@ export function normalizeRoutePolyline(routePolyline: unknown): RoutePoint[] {
   });
 }
 
-export function getRouteIndexForWaypointSlot(route: RoutePoint[], waypointSlot: number): number {
-  if (route.length === 0) return -1;
-  const routeIndex = route.findIndex((point) => point.waypointSlot === waypointSlot);
-  if (routeIndex >= 0) return routeIndex;
-  return Math.min(Math.max(0, waypointSlot), route.length - 1);
-}
-
-export function getRoutePolylineThroughWaypointSlot(route: RoutePoint[], waypointSlot: number): RoutePoint[] {
-  if (route.length === 0) return [];
-  const maxSlot = Math.min(Math.max(0, waypointSlot), route.length - 1);
-  const points: RoutePoint[] = [];
-  for (let slot = 0; slot <= maxSlot; slot++) {
-    const routeIndex = getRouteIndexForWaypointSlot(route, slot);
-    if (routeIndex >= 0) points.push(route[routeIndex]);
-  }
-  return points;
-}
-
 export function getRouteBounds(points: RoutePoint[]) {
   if (points.length === 0) return null;
 
