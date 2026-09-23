@@ -101,16 +101,6 @@ export const GEM_REGISTRY: Record<GemType, GemDefinition> = {
   ...LOOT_GEM_DEFINITIONS,
 };
 
-export const GEM_COLOR_MAP: Record<GemType, string> = Object.fromEntries(
-  GEM_TYPES.map((gemType) => [gemType, GEM_REGISTRY[gemType].color])
-) as Record<GemType, string>;
-
-export const LOOT_GEM_DEFS = LOOT_GEM_TYPES.map((gemType) => GEM_REGISTRY[gemType]);
-
-export function getGemDefinition(gemType: GemType): GemDefinition {
-  return GEM_REGISTRY[gemType];
-}
-
 export function getGemFamily(gemType: GemType): GemFamily {
   return GEM_REGISTRY[gemType].family;
 }

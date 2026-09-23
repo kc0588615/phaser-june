@@ -48,42 +48,6 @@ export function getBiomes(species: Species[]): string[] {
 }
 
 /**
- * Group species by order and family
- */
-export function groupSpeciesByCategory(species: Species[]): Record<string, Record<string, Species[]>> {
-  const grouped: Record<string, Record<string, Species[]>> = {};
-
-  species.forEach(sp => {
-    // Use the actual order as the category
-    const order = sp.taxon_order || 'Unknown';
-    const family = sp.family || 'Unknown';
-
-    if (!grouped[order]) {
-      grouped[order] = {};
-    }
-
-    if (!grouped[order][family]) {
-      grouped[order][family] = [];
-    }
-
-    grouped[order][family].push(sp);
-  });
-
-  // Sort species within each family by common name
-  Object.values(grouped).forEach(families => {
-    Object.values(families).forEach(speciesList => {
-      speciesList.sort((a, b) => {
-        const nameA = a.common_name || a.scientific_name || '';
-        const nameB = b.common_name || b.scientific_name || '';
-        return nameA.localeCompare(nameB);
-      });
-    });
-  });
-
-  return grouped;
-}
-
-/**
  * Group species by the browse hierarchy (class -> order -> family -> genus).
  */
 export function groupSpeciesByTaxonomy(species: Species[]): TaxonomyHierarchy {
@@ -133,26 +97,6 @@ export function groupSpeciesByTaxonomy(species: Species[]): TaxonomyHierarchy {
 }
 
 /**
- * Get display name for an order
- */
-export function getOrderDisplayName(order: string): string {
-  // Return the order name as-is for now
-  // Can be enhanced later with display names if needed
-  return order;
-}
-
-/**
- * Get all possible categories (orders) from species data
- */
-export function getAllCategories(species?: Species[]): string[] {
-  if (!species || species.length === 0) {
-    // Return known orders as fallback
-    return ['Testudines', 'Anura'];
-  }
-  return getUniqueOrders(species);
-}
-
-/**
  * Map category names to order values
  */
 export function getCategoryOrderMapping(): Record<string, string> {
@@ -169,30 +113,6 @@ export function getCategoryOrderMapping(): Record<string, string> {
     'TESTUDINES': 'TESTUDINES',
     'ANURA': 'ANURA'
   };
-}
-
-/**
- * Get order value from category name (case-insensitive)
- */
-export function getOrderFromCategory(category: string): string | null {
-  const mapping = getCategoryOrderMapping();
-  const normalizedCategory = category.toLowerCase();
-  
-  for (const [key, value] of Object.entries(mapping)) {
-    if (key.toLowerCase() === normalizedCategory) {
-      return value;
-    }
-  }
-  
-  return null;
-}
-
-/**
- * Get category name from order value
- */
-export function getCategoryFromOrder(order: string): string {
-  // Return the order name directly since we're using orders as categories
-  return order || 'Unknown';
 }
 
 /**

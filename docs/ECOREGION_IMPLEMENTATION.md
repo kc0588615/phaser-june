@@ -1,5 +1,7 @@
 # Ecoregion Implementation Documentation
 
+> **2026-09-22 (plan 039):** the unused `src/utils/ecoregion.ts` helpers `groupSpeciesByCategory`, `getAllCategories`, `getOrderDisplayName`, `getOrderFromCategory` and `getCategoryFromOrder` were deleted. Mentions of them below are historical.
+
 ## Overview
 This document details the implementation of ecoregion-based filtering and navigation functionality for the species database in the Phaser June project. The implementation allows users to filter species by ecoregion, realm, and biome while maintaining existing category/genus navigation.
 

@@ -10,15 +10,6 @@ export { getRecord };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const RUN_CHECKPOINT_LIMITS = {
-  currentNodeIndex: 2,
-  bankedScore: 10_000_000,
-  objectiveProgress: 1_000_000,
-  latencyMs: 3_600_000,
-  candidateId: 2_147_483_647,
-  choiceJustificationLength: 500,
-} as const;
-
 export interface PrivateCaseV3 {
   version: 4;
   answerId: number;

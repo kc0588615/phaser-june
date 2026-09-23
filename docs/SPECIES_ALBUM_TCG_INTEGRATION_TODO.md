@@ -12,7 +12,7 @@ Status as of 2026-04-11. Covers remaining work after Phase 0–1 + code review f
 - [x] API routes: species cards CRUD, unlock endpoint, runs list, run memory
 - [x] TCG card with CSS 3D flip, conservation-themed frames
 - [x] AlbumHeroSwiper with lazy run-memory fetch + cache
-- [x] SpeciesAlbumContext (tab/focus/flip state)
+- [x] SpeciesAlbumContext (tab/focus/flip state) — never mounted; deleted 2026-09-22 (plan 039)
 - [x] Auth fix: all new APIs derive playerId from Clerk (no client-supplied IDs)
 - [x] Discovery sync: single fire-and-forget `/api/species/cards/[id]/unlock` write from gameplay tracking
 - [x] Album hydration: `SpeciesList` loads discovered state from authenticated `species_cards` and merges localStorage as fallback

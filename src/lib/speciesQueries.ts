@@ -2,7 +2,7 @@
 // SPECIES QUERIES - Drizzle ORM + Raw SQL for PostGIS
 // =============================================================================
 
-import { eq, inArray, ilike, or, asc, desc, count, sql } from 'drizzle-orm';
+import { eq, inArray, ilike, or, asc, sql } from 'drizzle-orm';
 import { db, speciesTable } from '@/db';
 import type { Species } from '@/types/database';
 
@@ -262,63 +262,4 @@ export async function getSpeciesBioregions(speciesIds: number[]) {
     subrealm: s.subrealm,
     biome: s.biome,
   }));
-}
-
-// =============================================================================
-// RAW SQL ESCAPE HATCH
-// =============================================================================
-
-export async function executeRawQuery<T extends Record<string, unknown>>(
-  query: ReturnType<typeof sql>
-): Promise<T[]> {
-  const results = await db.execute<T>(query);
-  return [...results] as T[];
-}
-
-// =============================================================================
-// AGGREGATION QUERIES
-// =============================================================================
-
-export async function getSpeciesCountByStatus() {
-  const results = await db
-    .select({
-      conservation_code: speciesTable.conservationCode,
-      count: count(speciesTable.id),
-    })
-    .from(speciesTable)
-    .groupBy(speciesTable.conservationCode)
-    .orderBy(desc(count(speciesTable.id)));
-
-  return results.reduce<Record<string, number>>((acc, item) => {
-    if (item.conservation_code) {
-      acc[item.conservation_code] = item.count;
-    }
-    return acc;
-  }, {});
-}
-
-export async function getSpeciesCountByRealm() {
-  const results = await db
-    .select({
-      realm: speciesTable.realm,
-      count: count(speciesTable.id),
-    })
-    .from(speciesTable)
-    .groupBy(speciesTable.realm)
-    .orderBy(desc(count(speciesTable.id)));
-
-  return results.reduce<Record<string, number>>((acc, item) => {
-    if (item.realm) {
-      acc[item.realm] = item.count;
-    }
-    return acc;
-  }, {});
-}
-
-export async function getTotalSpeciesCount(): Promise<number> {
-  const results = await db
-    .select({ count: count(speciesTable.id) })
-    .from(speciesTable);
-
-  return results[0]?.count ?? 0;
 }

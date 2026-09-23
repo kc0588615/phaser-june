@@ -1,5 +1,7 @@
 # Species Database Implementation Guide
 
+> **2026-09-22 (plan 039):** the unused `src/utils/ecoregion.ts` helpers `groupSpeciesByCategory`, `getAllCategories`, `getOrderDisplayName`, `getOrderFromCategory` and `getCategoryFromOrder` were deleted. Mentions of them below are historical.
+
 ## Overview
 
 This document describes the implementation of the species database feature, which displays comprehensive information about all species in the game. The feature was designed to preserve game state while providing a full-page browsing experience.

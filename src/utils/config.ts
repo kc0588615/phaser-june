@@ -24,13 +24,3 @@ export async function getAppConfig(): Promise<AppConfig> {
 
   return cachedConfig;
 }
-
-// Clear cached config (useful for testing or environment changes)
-export function clearConfigCache(): void {
-  cachedConfig = null;
-}
-
-// Helper to check if we're in production
-export function isProduction(): boolean {
-  return process.env.NODE_ENV === 'production';
-}
