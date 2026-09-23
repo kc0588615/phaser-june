@@ -1,6 +1,6 @@
 import { parseExplanationEffects, type ExplanationEffects } from '@/lib/liveClaims';
 import { parseEvidenceHintSnapshot, type EvidenceHintSnapshot } from '@/lib/evidenceHintSnapshot';
-import { PROFILE_KEY_BY_CATEGORY, isCaseTraitCategory, type CaseTraitCategory } from '@/lib/caseTraits';
+import { isCaseTraitCategory, type CaseTraitCategory } from '@/lib/caseTraits';
 import { EVIDENCE_FAMILIES, isEvidenceFamily, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import type { FieldFact } from '@/types/expedition';
 import { parsePrivateMysteryCase, type PrivateMysteryCase } from '@/lib/mysteryCase';
@@ -44,26 +44,6 @@ export interface EvidenceFamilyCardContent {
   bonusFactText: string;
   traitCategory: CaseTraitCategory;
   compareTag: string;
-}
-
-/** Server-authoritative elimination: compares one private marker across symmetric candidate profiles. */
-export function computeActualEliminatedIds(
-  profiles: ReadonlyArray<Pick<import('@/lib/deductionEngine').DeductionProfile,
-    'speciesId' | 'habitatTags' | 'morphologyTags' | 'dietTags' | 'behaviorTags'
-    | 'reproductionTags' | 'taxonomyTags' | 'keyFactTags' | 'geographyTags' | 'conservationTags'>>,
-  alreadyEliminatedIds: readonly number[],
-  traitCategory: CaseTraitCategory,
-  compareTag: string,
-): number[] {
-  const key = PROFILE_KEY_BY_CATEGORY[traitCategory];
-  const alreadyEliminated = new Set(alreadyEliminatedIds);
-  const eliminatedIds: number[] = [];
-  for (const profile of profiles) {
-    if (!alreadyEliminated.has(profile.speciesId) && !profile[key].includes(compareTag)) {
-      eliminatedIds.push(profile.speciesId);
-    }
-  }
-  return eliminatedIds.sort((a, b) => a - b);
 }
 
 /** v4 only — earlier private cases parse to null (legacy runs). */

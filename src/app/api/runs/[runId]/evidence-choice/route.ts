@@ -5,9 +5,9 @@ import { db, ecoRunNodes, ecoRunSessions, evidenceFamilyCards, speciesDeductionP
 import { createEmptyEvidenceCharges, deriveEvidenceFamilyOffer } from '@/expedition/evidenceFamilies';
 import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 import { parseEvidenceChoiceInput, parseV3NodeEvidenceState } from '@/lib/evidenceRunState';
-import { ledgerEliminatedIds, parseFactLedger } from '@/lib/evidenceLadder';
+import { computeLadderEliminatedIds, ledgerEliminatedIds, parseFactLedger } from '@/lib/evidenceLadder';
 import {
-  computeActualEliminatedIds, getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard,
+  getRecord, hydrateFamilyObservation, isUuid, parseEvidenceFamilyCard,
   parsePrivateCase, parseV3EvidenceApplications, type V3EvidenceApplicationRecord,
 } from '@/lib/runCaseState';
 import { parsePublicCaseSnapshot } from '@/lib/runProjection';
@@ -69,13 +69,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const profiles = await tx.select().from(speciesDeductionProfiles).where(inArray(speciesDeductionProfiles.speciesId, publicCase.candidateIds));
       if (profiles.length !== publicCase.candidateIds.length) return response(409, { reason: 'corpus_invariant_failed' });
       // Ladder rungs already ruled candidates out between sites; the hard card only adds what is left.
-      const alreadyEliminated = [...new Set([
+      const alreadyEliminated = new Set([
         ...applications.flatMap(application => application.actualEliminatedIds),
         ...ledgerEliminatedIds(parseFactLedger(metadata.factLedger)),
-      ])];
-      const alreadyEliminatedSet = new Set(alreadyEliminated);
-      const liveBefore = publicCase.candidateIds.filter(id => !alreadyEliminatedSet.has(id));
-      const actualEliminatedIds = computeActualEliminatedIds(profiles, alreadyEliminated, card.traitCategory, card.compareTag);
+      ]);
+      const liveBefore = publicCase.candidateIds.filter(id => !alreadyEliminated.has(id));
+      const actualEliminatedIds = computeLadderEliminatedIds(profiles, alreadyEliminated, card.traitCategory, card.compareTag);
       if (actualEliminatedIds.includes(privateCase.answerId)) return response(409, { reason: 'answer_eliminated' });
       const liveAfterCount = liveBefore.length - actualEliminatedIds.length;
       if (liveAfterCount < 1 || (input.nodeIndex === 2 && liveAfterCount > 3)) return response(409, { reason: 'corpus_invariant_failed' });
