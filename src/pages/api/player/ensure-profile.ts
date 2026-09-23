@@ -26,15 +26,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const clerkUser = await client.users.getUser(clerkUserId);
     const newId = randomUUID();
 
-    await db.insert(profiles).values({
+    // Overlapping sign-in requests can both reach here; the unique clerk_user_id decides
+    // the winner and the loser returns the winner's profile instead of a 500.
+    const [created] = await db.insert(profiles).values({
       userId: newId,
       clerkUserId,
       username: clerkUser.username || clerkUser.firstName || 'Player',
       fullName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || null,
       avatarUrl: clerkUser.imageUrl || null,
-    });
+    }).onConflictDoNothing({ target: profiles.clerkUserId }).returning({ userId: profiles.userId });
 
-    return res.json({ playerId: newId, isNew: true });
+    if (created) return res.json({ playerId: created.userId, isNew: true });
+
+    const [winner] = await db
+      .select({ userId: profiles.userId })
+      .from(profiles)
+      .where(eq(profiles.clerkUserId, clerkUserId))
+      .limit(1);
+    if (!winner) return res.status(500).json({ error: 'Profile creation conflict' });
+    return res.json({ playerId: winner.userId, isNew: false });
   } catch (err: any) {
     console.error('ensure-profile error:', err);
     return res.status(500).json({ error: 'Internal server error' });

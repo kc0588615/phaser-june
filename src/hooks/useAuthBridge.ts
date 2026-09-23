@@ -13,9 +13,9 @@ export function useAuthBridge() {
     fetch('/api/player/ensure-profile', { method: 'POST' })
       .then(async r => {
         if (!r.ok) throw new Error(`ensure-profile failed (${r.status})`);
-        return r.json() as Promise<{ playerId?: unknown; isNew?: boolean }>;
+        return r.json() as Promise<{ playerId?: unknown }>;
       })
-      .then(async ({ playerId, isNew }) => {
+      .then(async ({ playerId }) => {
         // resolvedRef stays unset on a bad or cancelled response so a later sign-in retries.
         if (cancelled || typeof playerId !== 'string') return;
 
@@ -34,16 +34,16 @@ export function useAuthBridge() {
 
         EventBus.emit('auth-user-ready', { playerId, sessionId });
 
-        if (isNew) {
-          const raw = localStorage.getItem('discoveredSpecies');
-          const discoveries = raw ? JSON.parse(raw) : [];
-          if (discoveries.length > 0) {
-            fetch('/api/discoveries/migrate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ discoveries }),
-            }).catch(console.error);
-          }
+        // Not gated on isNew: a cancelled first response would lose that flag, and the
+        // endpoint skips rows the player already has, so re-sending is safe.
+        const raw = localStorage.getItem('discoveredSpecies');
+        const discoveries = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(discoveries) && discoveries.length > 0) {
+          fetch('/api/discoveries/migrate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ discoveries }),
+          }).catch(console.error);
         }
       })
       .catch(console.error);
