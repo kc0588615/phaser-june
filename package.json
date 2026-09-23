@@ -32,6 +32,7 @@
         "serve": "next start -p 8080",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
+        "lint": "eslint src tests scripts",
         "test": "node scripts/run-tests.mjs",
         "typecheck:watch": "tsc --noEmit --watch",
         "verify:waypoints": "node scripts/verify-waypoints.mjs",

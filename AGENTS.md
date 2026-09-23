@@ -46,6 +46,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Dev: `npm run dev` (http://localhost:8080)
 - Build/serve static: `npm run build && npm run serve` (serves `dist/`); or `npm start`
 - Typecheck: `npm run typecheck`
+- Lint: `npm run lint` (not in the gate yet; React Compiler rules still report existing issues)
 - Drizzle: `npm run db:introspect`
 - Env: set `DATABASE_URL` (+ optional `NEXT_PUBLIC_MAP_STYLE_URL`, `NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`) in `.env.local`. Clerk keys TBD.
 
