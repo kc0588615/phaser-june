@@ -25,13 +25,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(clerkUserId);
     const newId = randomUUID();
+    // profiles.username is unique, and the fallbacks (first name, 'Player') repeat across
+    // players, so a taken name gets a short suffix from the new player id.
+    const baseUsername = clerkUser.username || clerkUser.firstName || 'Player';
+    const [taken] = await db
+      .select({ userId: profiles.userId })
+      .from(profiles)
+      .where(eq(profiles.username, baseUsername))
+      .limit(1);
+    const username = taken ? `${baseUsername}-${newId.slice(0, 6)}` : baseUsername;
 
     // Overlapping sign-in requests can both reach here; the unique clerk_user_id decides
     // the winner and the loser returns the winner's profile instead of a 500.
     const [created] = await db.insert(profiles).values({
       userId: newId,
       clerkUserId,
-      username: clerkUser.username || clerkUser.firstName || 'Player',
+      username,
       fullName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || null,
       avatarUrl: clerkUser.imageUrl || null,
     }).onConflictDoNothing({ target: profiles.clerkUserId }).returning({ userId: profiles.userId });
