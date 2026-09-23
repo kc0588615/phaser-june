@@ -75,7 +75,7 @@ src/
     ExpeditionContext.tsx  run state machine (phases, banking, persistence)
     GameBridgeContext.tsx  HUD score snapshots from the board
   components/           React UI (MapLibreExploreMap, SpeciesPanel, FieldNotebook, ...)
-  lib/                  server + shared logic (nodeScoring, deductionEngine,
+  lib/                  server + shared logic (nodeScoring, caseCompilerV3,
                         speciesQueries, playerTracking, ...)
   app/api/              Next.js API routes (runs, species, layers, ...)
   db/schema/            Drizzle schema; db/migrations/ = SQL history
@@ -122,5 +122,5 @@ are characterization tests, so a failure means observable behavior changed.
 | Author species, evidence, or cases | `db/seeds/species/`, `db/seeds/pools/<slug>/`; see `docs/CONTENT_AUTHORING.md` |
 | Change run phases/persistence | `src/contexts/ExpeditionContext.tsx`, `/api/runs/*` |
 | Change the map behavior | `src/components/MapLibreExploreMap.tsx` |
-| Change deduction rules | `src/lib/deductionEngine.ts` |
+| Change deduction rules | `src/lib/caseCompilerV3.ts` (case compile), `src/lib/evidenceLadder.ts` (rungs), `src/lib/runCaseState.ts` (elimination) |
 | Touch the database | `src/db/schema/*` + a NEW migration in `src/db/migrations/` (never edit applied ones) |

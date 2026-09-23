@@ -2,6 +2,8 @@
 
 Replaces static clue shop with active comparative analysis puzzle. Players unblur mystery clues, then place album reference cards into a comparison slot to confirm/reject tag matches, progressively narrowing candidates.
 
+> **2026-09-22 (plan 039):** the comparative runtime in `src/lib/deductionEngine.ts` (`compareReference`, `filterCandidates`, `applyEvidenceBundle`, …) was deleted as dead code. The file now holds only the `DeductionProfile` and `ComparisonResult` types. The rest of this doc is historical.
+
 ## Files Changed
 
 ### Phase 1: Schema + Data (2026-04-11)
