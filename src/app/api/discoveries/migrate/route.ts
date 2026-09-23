@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { inArray } from 'drizzle-orm';
 import { db, speciesTable, playerSpeciesDiscoveries } from '@/db';
+import { getPlayerIdFromClerk } from '@/lib/authHelpers';
 
 /**
  * POST /api/discoveries/migrate
@@ -8,16 +9,18 @@ import { db, speciesTable, playerSpeciesDiscoveries } from '@/db';
  * Accepts entries explicitly marked as stable species.id values only.
  * Raw import ogc_fid values are intentionally not bridged here because full
  * IUCN reimports can reassign ogc_fid and make old client IDs unsafe.
- * Body: { userId: string, discoveries: Array<{ id: number, idSource: 'species.id', discoveredAt?: string }> }
+ * Writes for the signed-in player only; any body userId is ignored.
+ * Body: { discoveries: Array<{ id: number, idSource: 'species.id', discoveredAt?: string }> }
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, discoveries } = body;
+    const userId = await getPlayerIdFromClerk();
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { discoveries } = await request.json();
 
-    if (!userId || !discoveries || !Array.isArray(discoveries)) {
+    if (!Array.isArray(discoveries)) {
       return NextResponse.json(
-        { error: 'Missing userId or discoveries array' },
+        { error: 'Missing discoveries array' },
         { status: 400 }
       );
     }
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
         return {
           playerId: userId,
           speciesId: rawId,
-          discoveredAt: d.discoveredAt ? new Date(d.discoveredAt) : new Date(),
+          discoveredAt: parseDiscoveredAt(d.discoveredAt),
           incorrectGuessesCount: 0,
           scoreEarned: 0,
         };
@@ -100,4 +103,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+/** A malformed client timestamp falls back to now instead of failing the bulk insert. */
+function parseDiscoveredAt(value: unknown): Date {
+  const date = typeof value === 'string' ? new Date(value) : new Date(NaN);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
 }
