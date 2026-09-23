@@ -6,8 +6,6 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   computeActualEliminatedIds,
-  decideDiagnosis,
-  decideGuess,
   filterEliminatedCandidates,
   hydrateFamilyObservation,
   isUuid,
@@ -149,26 +147,6 @@ describe('v3 run case metadata', () => {
     const profiles = [profile(1, ['wet']), profile(2, []), profile(3, ['wet']), profile(4, [])];
     assert.deepEqual(computeActualEliminatedIds(profiles, [2], 'habitat', 'wet'), [4]);
     assert.deepEqual(filterEliminatedCandidates(profiles, [2, 4]).map(item => item.speciesId), [1, 3]);
-  });
-
-  test('keeps guess state readiness-gated and terminal-idempotent', () => {
-    assert.equal(decideGuess('active', 1, 1), 'not_ready');
-    assert.equal(decideGuess('deduction', 2, 1), 'wrong');
-    assert.equal(decideGuess('deduction', 1, 1), 'correct');
-    assert.equal(decideGuess('completed', 1, 1), 'repeat_correct');
-    assert.equal(decideGuess('completed', 2, 1), 'terminal_conflict');
-  });
-
-  test('evaluates species and explanation independently', () => {
-    assert.deepEqual(decideDiagnosis('deduction', 7, 'choice-b', 7, 'choice-a'), {
-      outcome: 'wrong', speciesCorrect: true, explanationCorrect: false,
-    });
-    assert.deepEqual(decideDiagnosis('deduction', 8, 'choice-a', 7, 'choice-a'), {
-      outcome: 'wrong', speciesCorrect: false, explanationCorrect: true,
-    });
-    assert.deepEqual(decideDiagnosis('deduction', 7, 'choice-a', 7, 'choice-a'), {
-      outcome: 'correct', speciesCorrect: true, explanationCorrect: true,
-    });
   });
 
   test('validates run and retry UUIDs independently', () => {

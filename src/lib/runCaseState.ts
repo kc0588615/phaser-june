@@ -218,39 +218,6 @@ export function resolveRunCreationIdentifiers(
   return isUuid(createRequestId) && isUuid(runId) ? { runId, createRequestId } : null;
 }
 
-export type GuessDecision = 'not_ready' | 'wrong' | 'correct' | 'repeat_correct' | 'terminal_conflict';
-
-export function decideGuess(runStatus: string | null | undefined, selectedId: number, answerId: number): GuessDecision {
-  if (runStatus === 'completed') return selectedId === answerId ? 'repeat_correct' : 'terminal_conflict';
-  if (runStatus !== 'deduction') return 'not_ready';
-  return selectedId === answerId ? 'correct' : 'wrong';
-}
-
-export interface DiagnosisDecision {
-  outcome: GuessDecision;
-  speciesCorrect: boolean;
-  explanationCorrect: boolean;
-}
-
-export function decideDiagnosis(
-  runStatus: string | null | undefined,
-  selectedSpeciesId: number,
-  selectedExplanationId: string,
-  answerSpeciesId: number,
-  answerExplanationId: string,
-): DiagnosisDecision {
-  const speciesCorrect = selectedSpeciesId === answerSpeciesId;
-  const explanationCorrect = selectedExplanationId === answerExplanationId;
-  if (runStatus === 'completed') {
-    return { outcome: speciesCorrect && explanationCorrect ? 'repeat_correct' : 'terminal_conflict', speciesCorrect, explanationCorrect };
-  }
-  return {
-    outcome: runStatus !== 'deduction' ? 'not_ready' : speciesCorrect && explanationCorrect ? 'correct' : 'wrong',
-    speciesCorrect,
-    explanationCorrect,
-  };
-}
-
 function isPositiveInteger(value: unknown): value is number {
   return Number.isSafeInteger(value) && (value as number) > 0;
 }

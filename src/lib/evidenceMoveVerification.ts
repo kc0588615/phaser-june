@@ -87,19 +87,11 @@ export function evidenceMoveSubmissionDigest(input: EvidenceMoveSubmission): str
   return createHash('sha256').update(JSON.stringify(input)).digest('hex');
 }
 
-export function verifyEvidenceMove(
-  submission: EvidenceMoveSubmission,
-  context: EvidenceMoveVerificationContext,
-): EvidenceProgressInput | null {
-  const result = verifyEvidenceMoveDetailed(submission, context);
-  return result.ok ? result.input : null;
-}
-
 export function verifyEvidenceMoveDetailed(
   submission: EvidenceMoveSubmission,
   context: EvidenceMoveVerificationContext,
 ): EvidenceMoveVerificationResult {
-  const puzzle = createPuzzle(context, submission.nodeIndex);
+  const puzzle = createPuzzle(context);
   if (puzzle.getMovesUsed() !== submission.moveNumber - 1) return { ok: false, reason: 'previous_move_number' };
   const move = new MoveAction(submission.move.rowOrCol, submission.move.index, submission.move.amount);
   if (puzzle.getMatchesFromHypotheticalMove(move).length === 0) return { ok: false, reason: 'move_has_no_match' };
@@ -217,7 +209,7 @@ function uniqueSlots(slots: Array<[number, number]>): Array<readonly [number, nu
   });
 }
 
-function createPuzzle(context: EvidenceMoveVerificationContext, nodeIndex: number): BackendPuzzle {
+function createPuzzle(context: EvidenceMoveVerificationContext): BackendPuzzle {
   const puzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
   puzzle.setGemPool({ allowedGemTypes: getAllowedEvidenceGemTypes(context.selectedFamilies) });
   if (context.previousCheckpoint) {
@@ -229,7 +221,6 @@ function createPuzzle(context: EvidenceMoveVerificationContext, nodeIndex: numbe
   puzzle.applyCellStateSeeds(context.obstacleSeeds);
   puzzle.resetMoves();
   puzzle.setMaxMoves(6);
-  if (nodeIndex < 0) throw new RangeError('Invalid node index');
   return puzzle;
 }
 

@@ -7,7 +7,7 @@ import { MoveAction } from '@/game/MoveAction';
 import type { BoardCheckpointV1, PuzzleGrid } from '@/game/boardTypes';
 import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '@/game/fieldSignal';
 import { buildNodeBoardContext, type CellStateSeed } from '@/game/nodeObstacles';
-import { parseEvidenceMoveSubmission, verifyEvidenceMove, verifyEvidenceMoveDetailed } from '@/lib/evidenceMoveVerification';
+import { parseEvidenceMoveSubmission, verifyEvidenceMoveDetailed } from '@/lib/evidenceMoveVerification';
 
 describe('server evidence move verification', () => {
   test('replays the selected move and rejects forged checkpoints', () => {
@@ -27,12 +27,13 @@ describe('server evidence move verification', () => {
     });
     assert.ok(submission);
 
-    const verified = verifyEvidenceMove(submission, {
+    const result = verifyEvidenceMoveDetailed(submission, {
       boardSeed,
       selectedFamilies: [],
       obstacleSeeds: [],
     });
-    assert.ok(verified);
+    assert.ok(result.ok);
+    const verified = result.input;
     assert.equal(verified.moveNumber, 1);
     assert.ok(Object.values(verified.directClears).reduce((sum, value) => sum + value, 0) >= 3);
     assert.ok(verified.directMatchFamilies.length >= 1);
@@ -45,7 +46,7 @@ describe('server evidence move verification', () => {
 
     const forged = structuredClone(submission);
     forged.boardCheckpoint.score += 100;
-    assert.equal(verifyEvidenceMove(forged, { boardSeed, selectedFamilies: [], obstacleSeeds: [] }), null);
+    assert.equal(verifyEvidenceMoveDetailed(forged, { boardSeed, selectedFamilies: [], obstacleSeeds: [] }).ok, false);
 
     const forgedGrid = structuredClone(submission);
     const cell = forgedGrid.boardCheckpoint.grid[0][0]!;
@@ -135,7 +136,7 @@ describe('server evidence move verification', () => {
         boardCheckpoint: puzzle.exportCheckpoint(),
       });
       assert.ok(submission);
-      assert.ok(verifyEvidenceMove(submission, { boardSeed, selectedFamilies: [], obstacleSeeds }),
+      assert.ok(verifyEvidenceMoveDetailed(submission, { boardSeed, selectedFamilies: [], obstacleSeeds }).ok,
         `${move.rowOrCol} ${move.index} ${move.amount}`);
     }
   });
