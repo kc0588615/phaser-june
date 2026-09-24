@@ -106,13 +106,6 @@
   height: auto !important;
 }
 
-/* Global reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 /* ── Shadcn semantic vars bridged to DS tokens (dark-only app) ── */
 @layer base {
   :root {

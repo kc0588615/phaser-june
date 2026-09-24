@@ -100,7 +100,7 @@ export function RunCompleteSummary({ runState, onReset }: {
 
   return (
     <div className="absolute inset-0 z-panel flex justify-center overflow-y-auto bg-[rgba(10,14,26,0.86)] backdrop-blur-md">
-      <div className="mx-auto flex min-h-full w-full max-w-md flex-col items-center gap-4 px-5 py-8">
+      <div className="mx-auto flex h-fit min-h-full w-full max-w-md flex-col items-center gap-4 px-5 py-8">
         <div className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.28em] text-ds-cyan">
           <span className="h-px w-8 bg-gradient-to-r from-transparent to-ds-cyan/70" />
           {captured ? 'Ecological Case Resolved' : 'Case Remains Open'}
