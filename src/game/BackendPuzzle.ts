@@ -9,7 +9,7 @@
 // tests/game/backendPuzzle.test.ts (`npm test`).
 import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { ACTIVE_GEM_TYPES, GemType, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
+import { ACTIVE_GEM_TYPES, GemType, LOOT_GEM_TYPES, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
 import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type BoardCheckpointV1, type PuzzleGrid } from './boardTypes';
 import { parseBoardCheckpoint } from './boardCheckpoint';
 import type { CellStateSeed } from './nodeObstacles';
@@ -47,7 +47,7 @@ export class BackendPuzzle {
     }
 
     setGemPool(config: GemPoolConfig): void {
-        const allowedGemTypes = config.allowedGemTypes?.filter(gemType => ACTIVE_GEM_TYPES.includes(gemType));
+        const allowedGemTypes = config.allowedGemTypes?.filter(gemType => LOOT_GEM_TYPES.includes(gemType));
         if (allowedGemTypes && allowedGemTypes.length < 3) {
             throw new RangeError('A board requires at least three allowed gem types.');
         }

@@ -51,7 +51,7 @@ const LOGGED: Record<keyof EventPayloads, true> = {
   'game-reset': true, 'game-hud-updated': true, 'expedition-data-ready': true,
   'expedition-start': true, 'node-complete': true, 'route-progress-updated': true,
   'node-objective-updated': true, 'evidence-move-resolved': true, 'evidence-progress-committed': true,
-  'routing-state-updated': true, 'auth-user-ready': true,
+  'routing-state-updated': true, 'auth-user-ready': true, 'gems-matched': true,
 };
 
 let scene: DebugScene | null = null;

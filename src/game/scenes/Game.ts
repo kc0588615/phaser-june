@@ -572,6 +572,12 @@ export class Game extends Phaser.Scene {
             summary.matchGroups += matches.length;
         }
 
+        const groups = matches.flatMap(match => {
+            const gemType = match.map(([x, y]) => state[x]?.[y]?.gemType).find(Boolean);
+            return gemType ? [{ gemType, size: match.length }] : [];
+        });
+        if (groups.length > 0) EventBus.emit('gems-matched', { groups, cascade: isCascade });
+
         for (const match of matches) {
             if (summary && match.length > summary.largestMatch) {
                 summary.largestMatch = match.length;

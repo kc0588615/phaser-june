@@ -26,7 +26,7 @@ export class Preloader extends Phaser.Scene {
                 this.load.image(key, path);
             }
         });
-        (['red', 'orange', 'yellow', 'green', 'blue'] as GemType[]).forEach(type => {
+        LOOT_GEM_TYPES.forEach((type: GemType) => {
             this.load.svg(
                 AssetKeys.EVIDENCE_GEM_TEXTURE(type),
                 `${assetsFullPath}evidence/${type}.svg?v=018-2`,

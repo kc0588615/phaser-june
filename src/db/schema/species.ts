@@ -5,6 +5,7 @@
 
 import { sql } from 'drizzle-orm';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
+import type { SpeciesClueCategory } from '@/clueGame/categories';
 import {
   bigint,
   jsonb,
@@ -379,6 +380,37 @@ export const mysteryCasesPublic = pgView('mystery_cases_public', {
   e.slug AS explanation_slug, e.label, e.description, e.sort_order
   FROM mystery_cases c JOIN mystery_explanations e ON e.case_id = c.id
   WHERE c.review_status = 'reviewed'`);
+
+// Clue-category game content (restored by migrations 035/036 from db/archive).
+
+export const speciesDeductionClues = pgTable('species_deduction_clues', {
+  id: serial('id').primaryKey(),
+  category: text('category').notNull().$type<SpeciesClueCategory>(),
+  label: text('label').notNull(),
+  compareTags: text('compare_tags').array(),
+  revealOrder: smallint('reveal_order').notNull().default(1),
+  unlockMode: text('unlock_mode').notNull().default('fragment'),
+  baseCost: smallint('base_cost').notNull().default(2),
+  isFiltering: boolean('is_filtering').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+}, table => [
+  index('ix_deduction_clues_category').on(table.speciesId, table.category),
+  index('ix_deduction_clues_species').on(table.speciesId),
+  uniqueIndex('uq_deduction_clues_species_cat_order').on(table.speciesId, table.category, table.revealOrder),
+]);
+
+export const speciesFacts = pgTable('species_facts', {
+  id: serial('id').primaryKey(),
+  speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(),
+  factText: text('fact_text').notNull(),
+  sortOrder: smallint('sort_order').notNull().default(1),
+}, table => [
+  index('ix_species_facts_category').on(table.speciesId, table.category),
+  index('ix_species_facts_species').on(table.speciesId),
+  unique('species_facts_species_id_category_sort_order_key').on(table.speciesId, table.category, table.sortOrder),
+]);
 
 export const speciesNotes = pgTable('species_notes', {
   speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),

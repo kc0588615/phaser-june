@@ -78,6 +78,11 @@ export interface EventPayloads {
     moveNumber: number;
   };
   'routing-state-updated': PublicRoutingView | null;
+  /** Every match group cleared in one explode phase (the player's move or a cascade). */
+  'gems-matched': {
+    groups: Array<{ gemType: import('@/expedition/domain').LootGemType; size: number }>;
+    cascade: boolean;
+  };
   'auth-user-ready': { playerId: string; sessionId?: string };
 }
 

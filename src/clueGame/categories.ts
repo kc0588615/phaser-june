@@ -1,0 +1,39 @@
+// Clue-category game: each gem color outputs clues from one category of the
+// mystery species (the classic clue-board mapping, docs/DEVELOPER_ONBOARDING.md §6).
+import type { LootGemType } from '@/expedition/domain';
+
+export const SPECIES_CLUE_CATEGORIES = ['habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation'] as const;
+export type SpeciesClueCategory = typeof SPECIES_CLUE_CATEGORIES[number];
+
+export interface GemCategory {
+  gem: LootGemType;
+  label: string;
+  question: string;
+  /** `species_deduction_clues.category` values this gem draws from, merged by reveal order. */
+  clueCategories: readonly SpeciesClueCategory[];
+  /** `species_facts.category` values used once the clues run out (never deductive). */
+  factCategories: readonly string[];
+  /** HUD swatch; the light stop of the gem icon's gradient. */
+  color: string;
+}
+
+export const GEM_CATEGORIES: readonly GemCategory[] = [
+  { gem: 'red', label: 'Family tree', question: 'What is it related to?', clueCategories: ['taxonomy'], factCategories: [], color: '#ff8b81' },
+  { gem: 'orange', label: 'Body', question: 'What does it look like?', clueCategories: ['morphology'], factCategories: [], color: '#ffc56b' },
+  { gem: 'yellow', label: 'Behavior & diet', question: 'How does it live and eat?', clueCategories: ['behavior', 'diet'], factCategories: ['behavior', 'diet_prey', 'diet_flora'], color: '#ffe87c' },
+  { gem: 'green', label: 'Habitat', question: 'Where does it live?', clueCategories: ['habitat'], factCategories: [], color: '#7bd99b' },
+  { gem: 'blue', label: 'Range', question: 'Which part of the world?', clueCategories: ['geography'], factCategories: [], color: '#79d7ff' },
+  { gem: 'black', label: 'Life cycle', question: 'How does it grow up?', clueCategories: ['reproduction'], factCategories: ['life_description'], color: '#a7afbd' },
+  { gem: 'white', label: 'Conservation', question: 'Is it in danger?', clueCategories: ['conservation'], factCategories: ['threat'], color: '#e8eef5' },
+  { gem: 'purple', label: 'Key facts', question: 'What makes it special?', clueCategories: ['key_fact'], factCategories: ['key_fact'], color: '#c9a2ff' },
+];
+
+export const CLUE_GAME_GEM_TYPES: readonly LootGemType[] = GEM_CATEGORIES.map(category => category.gem);
+
+const BY_GEM = new Map(GEM_CATEGORIES.map(category => [category.gem, category]));
+
+export function gemCategory(gem: LootGemType): GemCategory {
+  const category = BY_GEM.get(gem);
+  if (!category) throw new Error(`No clue category for gem ${gem}`);
+  return category;
+}

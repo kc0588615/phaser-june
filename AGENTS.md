@@ -65,6 +65,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Data layer: `src/db/schema/*` (schema), `src/db/index.ts` (singleton), `src/app/api/species/*` (Drizzle species routes), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (game sessions + `player_stats` refresh; discoveries are written by the guess route).
 - Styles/UI: shadcn in `src/components/ui/*`, global CSS in `src/styles/globals.css`, Tailwind config at root.
 
+- Clue Match (free-play, gem color → clue category, candidate-pool deduction): page `src/pages/clue-match.tsx`, UI `src/components/clueGame/`, rules `src/clueGame/` (category map, deduction, rounds, session), data `GET /api/clue-game/pool` (`species_deduction_clues` + `species_facts`, migrations 035/036). Board reports matches via the `gems-matched` EventBus event.
 - Content authoring: `db/seeds/species/`, `db/seeds/pools/<slug>/` (pool.json, evidence/, cases/); `docs/CONTENT_AUTHORING.md`.
 
 ## Docs Map
