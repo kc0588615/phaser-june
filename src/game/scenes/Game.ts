@@ -259,7 +259,7 @@ export class Game extends Phaser.Scene {
             return;
         }
 
-        this.statusText = this.add.text(width / 2, height / 2, "Welcome to Critter Connect!\n\nClick on the globe to find a habitat area\nfor a mystery species.\n\nIf the clicked location does not have a species,\nthe nearest species habitat area will flash blue!\n\nFill your Clue List by matching gems and\nguess the species when you're ready. Good luck!", {
+        this.statusText = this.add.text(width / 2, height / 2, "Welcome to Critter Connect!\n\nPick a spot on the map and start an expedition.\n\nMatch gems at each site to gather evidence,\nthen name the mystery species. Good luck!", {
             fontSize: '16px',
             color: '#ffffff',
             backgroundColor: '#000000aa',
@@ -1162,7 +1162,7 @@ export class Game extends Phaser.Scene {
         // Full cleanup when React signals run ended
         this.prepareForNextNode();
         if (this.statusText && this.statusText.active) {
-            this.statusText.setText("Click on the globe to find a habitat area\nfor a mystery species.");
+            this.statusText.setText("Pick a spot on the map and start an expedition.");
         }
     }
 
