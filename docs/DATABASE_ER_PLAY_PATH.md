@@ -20,7 +20,6 @@ Related: [DATABASE_ACCESS.md](./DATABASE_ACCESS.md), [DATABASE_USER_GUIDE.md](./
 | **`ramsar`** | Wetlands | 449 |
 | **`wwf`** | Lakes (GLWD) | 3 721 |
 | **`natural_earth`** | Countries / places | peripheral |
-| **`postgres`** | Legacy `oneearth_ecoregion` | 14 458 |
 
 ---
 
