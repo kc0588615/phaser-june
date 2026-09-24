@@ -43,7 +43,8 @@
         "seed:mystery-cases": "node scripts/run-typescript.mjs scripts/seed-mystery-cases.ts",
         "seed:pools": "node scripts/run-typescript.mjs scripts/seed-pools.ts",
         "seed:species": "node scripts/run-typescript.mjs scripts/seed-species.ts",
-        "seed:evidence-family": "node scripts/run-typescript.mjs scripts/seed-evidence-family.ts"
+        "seed:evidence-family": "node scripts/run-typescript.mjs scripts/seed-evidence-family.ts",
+        "clue:pool": "node scripts/run-typescript.mjs scripts/clue-pool.ts"
     },
     "dependencies": {
         "@clerk/nextjs": "^7.7.8",

@@ -1,64 +1,111 @@
-// Clue-category game rules: clue queues, deduction marks, and scoring.
+// Clue Match rules: records, honest deduction, rounds, session, scoring.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildTraitSets, evaluateClue, fitClue, usefulCategories } from '@/clueGame/deduction';
+import { evaluateClue, fitClue, usefulCategories } from '@/clueGame/deduction';
+import { buildSpeciesRecords, normalizeTag } from '@/clueGame/traits';
 import { correctGuessScore, createRound, liveCandidates, notesLeft, registerWrongGuess, revealNext } from '@/clueGame/round';
-import { clueSessionReducer } from '@/clueGame/session';
+import { clueSessionReducer, currentRoundFeed } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
-import type { CluePool, PoolClue } from '@/clueGame/pool';
+import type { CluePool, PoolClue, PoolSpecies } from '@/clueGame/pool';
 
 let nextId = 1;
 const clue = (speciesId: number, category: PoolClue['category'], label: string, compareTags: string[], revealOrder = 1, isFiltering = true): PoolClue =>
   ({ id: nextId++, speciesId, category, label, compareTags, revealOrder, isFiltering });
+const species = (id: number, className: string, taxonOrder: string, family: string, genus: string): PoolSpecies =>
+  ({ id, commonName: `Species ${id}`, scientificName: `${genus} sp${id}`, className, taxonOrder, family, genus, conservationCode: 'LC', iucnId: 1000 + id });
 
-// 1 frog, 2 frog, 3 turtle, 4 turtle, 5 tortoise, 6 tortoise, 7 tiger.
+// 1-2 frogs, 3-4 turtles (same family), 5-6 tortoises (same family), 7 tiger.
 const pool: CluePool = {
-  species: [1, 2, 3, 4, 5, 6, 7].map(id => ({ id, commonName: `Species ${id}`, scientificName: `S${id}`, className: null, taxonOrder: null })),
+  species: [
+    species(1, 'AMPHIBIA', 'ANURA', 'RHINODERMATIDAE', 'Rhinoderma'),
+    species(2, 'AMPHIBIA', 'ANURA', 'BREVICIPITIDAE', 'Breviceps'),
+    species(3, 'REPTILIA', 'TESTUDINES', 'EMYDIDAE', 'Emydoidea'),
+    species(4, 'REPTILIA', 'TESTUDINES', 'EMYDIDAE', 'Terrapene'),
+    species(5, 'REPTILIA', 'TESTUDINES', 'TESTUDINIDAE', 'Chelonoidis'),
+    species(6, 'REPTILIA', 'TESTUDINES', 'TESTUDINIDAE', 'Astrochelys'),
+    species(7, 'MAMMALIA', 'CARNIVORA', 'FELIDAE', 'Panthera'),
+  ],
   clues: [
-    clue(1, 'taxonomy', 'An amphibian.', ['amphibian']),
+    clue(1, 'taxonomy', 'Class: AMPHIBIA, Order: ANURA', ['amphibia', 'anura']),
+    clue(1, 'taxonomy', 'Family: Rhinodermatidae, Genus: Rhinoderma', ['rhinodermatidae', 'rhinoderma'], 2),
     clue(1, 'habitat', 'Lives in rainforest streams.', ['freshwater', 'rainforest'], 2),
     clue(1, 'habitat', 'Found near water.', ['freshwater'], 1),
+    clue(1, 'reproduction', 'Lays eggs; lives a few years.', ['egg_laying', 'short_lived']),
     clue(1, 'key_fact', 'Discovered on a famous voyage.', [], 1, false),
-    clue(2, 'taxonomy', 'An amphibian.', ['amphibian']),
-    clue(2, 'habitat', 'Lives in deserts.', ['desert']),
-    clue(3, 'taxonomy', 'A reptile.', ['reptile']),
-    clue(3, 'habitat', 'Lives in rivers.', ['freshwater', 'river']),
-    clue(4, 'taxonomy', 'A reptile.', ['reptile']),
+    clue(2, 'taxonomy', 'Class: AMPHIBIA, Order: ANURA', ['amphibia', 'anura']),
+    clue(2, 'habitat', 'Lives in deserts.', ['arid']),
+    clue(2, 'reproduction', 'Lays eggs; long lived.', ['egg_laying', 'long_lived']),
+    clue(3, 'taxonomy', 'Class: REPTILIA, Order: TESTUDINES', ['reptilia', 'testudines']),
+    clue(3, 'habitat', 'Lives in rivers.', ['freshwater', 'riverine']),
+    clue(4, 'taxonomy', 'Class: REPTILIA, Order: TESTUDINES', ['reptilia', 'testudines']),
     clue(4, 'habitat', 'Lives in ponds.', ['freshwater']),
-    clue(5, 'taxonomy', 'A reptile.', ['reptile']),
+    clue(5, 'taxonomy', 'Class: REPTILIA, Order: TESTUDINES', ['reptilia', 'testudines']),
     clue(5, 'habitat', 'Lives in grassland.', ['grassland']),
-    clue(6, 'taxonomy', 'A reptile.', ['reptile']),
-    clue(6, 'habitat', 'Lives in scrub.', ['scrub']),
-    clue(7, 'taxonomy', 'A mammal.', ['mammal']),
+    clue(6, 'taxonomy', 'Class: REPTILIA, Order: TESTUDINES', ['reptilia', 'testudines']),
+    clue(6, 'habitat', 'Lives in scrub.', ['scrubland']),
+    clue(7, 'taxonomy', 'Family: Felidae', ['family:felidae']),
     clue(7, 'habitat', 'Lives in forests.', ['forest']),
+    clue(7, 'behavior', 'Hunts alone.', ['sociality:solitary']),
   ],
   facts: [
     { speciesId: 1, category: 'key_fact', text: 'Males carry tadpoles in their vocal sac.', sortOrder: 1 },
     { speciesId: 1, category: 'key_fact', text: 'Discovered on a famous voyage.', sortOrder: 2 },
   ],
 };
-const traits = buildTraitSets(pool.clues);
+const records = buildSpeciesRecords(pool);
+const find = (label: string) => pool.clues.find(c => c.label === label)!;
+const OTHERS = [2, 3, 4, 5, 6, 7];
 
-describe('fitClue', () => {
-  test('grades shared tags as fits, partial, or contradicts', () => {
-    assert.equal(fitClue(['freshwater', 'rainforest'], new Set(['freshwater', 'rainforest', 'stream'])), 'fits');
-    assert.equal(fitClue(['freshwater', 'rainforest'], new Set(['freshwater'])), 'partial');
-    assert.equal(fitClue(['freshwater'], new Set(['desert'])), 'contradicts');
-    assert.equal(fitClue(['freshwater'], new Set()), 'unknown');
+describe('records', () => {
+  test('authoring prefixes are ignored', () => {
+    assert.equal(normalizeTag('diet_type:Herbivore'), 'herbivore');
+    assert.equal(normalizeTag('family:felidae'), 'felidae');
+    assert.equal(normalizeTag('continent:asia'), 'continent:asia');
   });
 
-  test('a species always fits its own clues', () => {
+  test('taxonomy implies shells and birth type', () => {
+    const traits = (id: number) => new Set([...records.get(id)!.traits.values()].flatMap(tags => [...tags]));
+    assert.ok(traits(3).has('shelled') && traits(3).has('egg_laying'));
+    assert.ok(traits(1).has('unshelled'));
+    assert.ok(traits(7).has('live_birth') && traits(7).has('unshelled'));
+  });
+});
+
+describe('fitClue', () => {
+  test('a taxonomy mismatch rules a candidate out; a match fits', () => {
+    const classClue = find('Class: AMPHIBIA, Order: ANURA');
+    assert.equal(fitClue(classClue, 2, records), 'fits');
+    assert.equal(fitClue(classClue, 3, records), 'contradicts');
+    const familyClue = find('Family: Rhinodermatidae, Genus: Rhinoderma');
+    assert.equal(fitClue(familyClue, 2, records), 'contradicts');
+    assert.equal(fitClue(find('Family: Felidae'), 1, records), 'contradicts');
+  });
+
+  test('a missing open trait is "no record", never a contradiction', () => {
+    const streams = find('Lives in rainforest streams.');
+    assert.equal(fitClue(streams, 3, records), 'partial');
+    assert.equal(fitClue(streams, 5, records), 'unknown');
+    assert.equal(fitClue(streams, 2, records), 'unknown');
+  });
+
+  test('the other value of an exclusive trait rules a candidate out', () => {
+    const eggs = find('Lays eggs; lives a few years.');
+    assert.equal(fitClue(eggs, 2, records), 'contradicts', 'long_lived vs short_lived');
+    assert.equal(fitClue(eggs, 7, records), 'contradicts', 'live_birth vs egg_laying');
+    assert.equal(fitClue(eggs, 3, records), 'partial', 'turtles lay eggs; lifespan unknown');
+  });
+
+  test('every species fits its own clues', () => {
     for (const own of pool.clues.filter(c => c.compareTags.length > 0)) {
-      assert.equal(evaluateClue(own, [own.speciesId], traits)[own.speciesId], 'fits', own.label);
+      assert.equal(evaluateClue(own, [own.speciesId], records)[own.speciesId], 'fits', own.label);
     }
   });
 });
 
 describe('usefulCategories', () => {
   test('a category is useful only while the live candidates differ in it', () => {
-    const useful = usefulCategories([3, 4], traits, ['taxonomy', 'habitat']);
-    assert.deepEqual([...useful], ['habitat']);
-    assert.equal(usefulCategories([3], traits, ['taxonomy', 'habitat']).size, 0);
+    assert.deepEqual([...usefulCategories([3, 4], records, ['taxonomy', 'habitat', 'diet'])], ['taxonomy', 'habitat']);
+    assert.equal(usefulCategories([3], records, ['taxonomy', 'habitat']).size, 0);
   });
 });
 
@@ -70,41 +117,57 @@ describe('rounds', () => {
     assert.ok(round.candidateIds.includes(round.mysteryId));
   });
 
+  test('a small pool plays with fewer candidates', () => {
+    const small: CluePool = { ...pool, clues: pool.clues.filter(c => c.speciesId <= 3) };
+    const round = createRound(small, mulberry32(3), 1);
+    assert.deepEqual([...round.candidateIds].sort(), [1, 2, 3]);
+  });
+
+  test('the same seed gives the same mysteries', () => {
+    const sequence = (seed: number) => {
+      const rng = mulberry32(seed);
+      const history: number[] = [];
+      for (let round = 1; round <= 10; round++) history.push(createRound(pool, rng, round, history).mysteryId);
+      return history;
+    };
+    assert.deepEqual(sequence(42), sequence(42));
+    assert.notDeepEqual(sequence(42), sequence(43));
+  });
+
   test('recent mysteries are skipped while others remain', () => {
-    const recent = [2, 3, 4, 5, 6, 7];
-    for (let seed = 1; seed < 20; seed++) assert.equal(createRound(pool, mulberry32(seed), 2, recent).mysteryId, 1);
+    for (let seed = 1; seed < 20; seed++) assert.equal(createRound(pool, mulberry32(seed), 2, OTHERS).mysteryId, 1);
   });
 
   test('clues come broad to narrow, then facts, without repeating a clue as a fact', () => {
-    const round = { ...createRound(pool, mulberry32(1), 1, [2, 3, 4, 5, 6, 7]) };
+    const round = createRound(pool, mulberry32(1), 1, OTHERS);
     assert.deepEqual(round.queues.green.map(note => note.text), ['Found near water.', 'Lives in rainforest streams.']);
     assert.deepEqual(round.queues.purple.map(note => note.text), ['Discovered on a famous voyage.', 'Males carry tadpoles in their vocal sac.']);
   });
 
   test('deductive clues rule out contradicted candidates; notes do not', () => {
-    let round = createRound(pool, mulberry32(1), 1, [2, 3, 4, 5, 6, 7]);
-    const amphibians = round.candidateIds.filter(id => id === 1 || id === 2).sort();
-    const first = revealNext(round, 'red', traits);
+    let round = createRound(pool, mulberry32(1), 1, OTHERS);
+    const amphibians = round.candidateIds.filter(id => id <= 2).sort();
+    const first = revealNext(round, 'red', records);
     assert.equal(first.reveal?.kind, 'clue');
     round = first.state;
     assert.deepEqual(liveCandidates(round).sort(), amphibians);
-    const note = revealNext(round, 'purple', traits);
+    const note = revealNext(round, 'purple', records);
     assert.equal(note.reveal?.kind, 'note');
     assert.deepEqual(liveCandidates(note.state).sort(), amphibians);
-    assert.equal(note.state.revealed, 2);
+    assert.deepEqual(note.state.revealedByGem, { red: 1, purple: 1 });
   });
 
   test('an empty category says so once, then stays quiet', () => {
-    let round = createRound(pool, mulberry32(1), 1, [2, 3, 4, 5, 6, 7]);
+    let round = createRound(pool, mulberry32(1), 1, OTHERS);
     assert.equal(notesLeft(round, 'white'), 0);
-    const first = revealNext(round, 'white', traits);
+    const first = revealNext(round, 'white', records);
     assert.equal(first.reveal?.kind, 'empty');
     round = first.state;
-    assert.equal(revealNext(round, 'white', traits).reveal, null);
+    assert.equal(revealNext(round, 'white', records).reveal, null);
   });
 
   test('a wrong guess rules the candidate out', () => {
-    const round = createRound(pool, mulberry32(1), 1, [2, 3, 4, 5, 6, 7]);
+    const round = createRound(pool, mulberry32(1), 1, OTHERS);
     const decoy = round.candidateIds.find(id => id !== round.mysteryId)!;
     const after = registerWrongGuess(round, decoy);
     assert.ok(!liveCandidates(after).includes(decoy));
@@ -113,12 +176,13 @@ describe('rounds', () => {
 });
 
 describe('session', () => {
-  const start = () => clueSessionReducer(null, { type: 'load', pool, round: createRound(pool, mulberry32(1), 1, [2, 3, 4, 5, 6, 7]) })!;
+  const start = () => clueSessionReducer(null, { type: 'load', pool, round: createRound(pool, mulberry32(1), 1, OTHERS) })!;
 
-  test('matches feed clues in order, cascades included', () => {
-    const state = clueSessionReducer(start(), { type: 'matched', gems: ['green', 'green', 'red'] })!;
+  test('each explode phase reveals one clue per group; only player moves count as moves', () => {
+    let state = clueSessionReducer(start(), { type: 'matched', gems: ['green', 'green'], cascade: false })!;
+    state = clueSessionReducer(state, { type: 'matched', gems: ['red'], cascade: true })!;
     assert.deepEqual(state.feed.map(item => item.kind), ['round', 'clue', 'clue', 'clue']);
-    assert.equal(state.round.revealed, 3);
+    assert.equal(state.round.moves, 1);
   });
 
   test('a wrong guess costs points and the streak; a right one solves the round', () => {
@@ -131,28 +195,38 @@ describe('session', () => {
     assert.equal(state.phase, 'solved');
     assert.equal(state.solved, 1);
     const last = state.feed.at(-1);
-    assert.ok(last?.kind === 'guess' && last.correct && last.funFact === 'Males carry tadpoles in their vocal sac.');
+    assert.ok(last?.kind === 'guess' && last.correct && last.points === correctGuessScore({ moves: 0, streak: 0, firstTry: false }));
+    assert.ok(last?.kind === 'guess' && last.funFact === 'Males carry tadpoles in their vocal sac.');
   });
 
   test('guesses on ruled-out candidates are ignored', () => {
-    let state = clueSessionReducer(start(), { type: 'matched', gems: ['red'] })!;
+    const state = clueSessionReducer(start(), { type: 'matched', gems: ['red'], cascade: false })!;
     const out = state.round.ruledOut[0];
     assert.ok(out !== undefined, 'the taxonomy clue should rule someone out');
-    const before = state;
-    state = clueSessionReducer(state, { type: 'guess', speciesId: out })!;
-    assert.equal(state, before);
+    assert.equal(clueSessionReducer(state, { type: 'guess', speciesId: out }), state);
   });
 
   test('matches are ignored between rounds', () => {
     const solved = clueSessionReducer(start(), { type: 'guess', speciesId: 1 })!;
-    assert.equal(clueSessionReducer(solved, { type: 'matched', gems: ['red'] }), solved);
+    assert.equal(clueSessionReducer(solved, { type: 'matched', gems: ['red'], cascade: false }), solved);
+  });
+
+  test('the feed keeps the newest 120 items and the current round is findable', () => {
+    let state = start();
+    for (let i = 0; i < 150; i++) state = clueSessionReducer(state, { type: 'matched', gems: ['white'], cascade: true })!;
+    state = clueSessionReducer(state, { type: 'guess', speciesId: 1 })!;
+    state = clueSessionReducer(state, { type: 'start-round', round: createRound(pool, mulberry32(2), 2, [1]) })!;
+    assert.ok(state.feed.length <= 120);
+    assert.deepEqual(currentRoundFeed(state.feed), []);
+    assert.equal(state.feed.at(-1)?.kind, 'round');
   });
 });
 
 describe('scoring', () => {
-  test('earlier and bolder guesses score more', () => {
-    assert.ok(correctGuessScore(2, 3, 0) > correctGuessScore(8, 3, 0));
-    assert.ok(correctGuessScore(4, 2, 0) > correctGuessScore(4, 1, 0));
-    assert.equal(correctGuessScore(50, 1, 0), 20);
+  test('fewer moves, a first try, and a streak score more', () => {
+    assert.ok(correctGuessScore({ moves: 2, streak: 0, firstTry: false }) > correctGuessScore({ moves: 8, streak: 0, firstTry: false }));
+    assert.ok(correctGuessScore({ moves: 4, streak: 0, firstTry: true }) > correctGuessScore({ moves: 4, streak: 0, firstTry: false }));
+    assert.ok(correctGuessScore({ moves: 4, streak: 3, firstTry: false }) > correctGuessScore({ moves: 4, streak: 0, firstTry: false }));
+    assert.equal(correctGuessScore({ moves: 50, streak: 0, firstTry: false }), 50);
   });
 });

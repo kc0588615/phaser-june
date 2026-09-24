@@ -1,10 +1,11 @@
-// One round of the clue-category game: a mystery species hidden in a pool of
-// known candidates. Matching a gem color reveals the next clue in that color's
-// category; deductive clues mark each candidate as fitting or not.
+// One round of Clue Match: a mystery species hidden in a pool of known
+// candidates. Matching a gem color reveals the next clue in that color's
+// category; deductive clues mark how each candidate's record compares.
 import type { LootGemType } from '@/expedition/domain';
-import { GEM_CATEGORIES, gemCategory } from '@/clueGame/categories';
-import { evaluateClue, isDeductive, type ClueFit, type TraitSets } from '@/clueGame/deduction';
+import { GEM_CATEGORIES } from '@/clueGame/categories';
+import { evaluateClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
 import type { CluePool, PoolClue } from '@/clueGame/pool';
+import type { SpeciesRecords } from '@/clueGame/traits';
 
 export const CANDIDATES_PER_ROUND = 6;
 /** A species can't be the mystery again until this many other rounds have passed. */
@@ -21,8 +22,10 @@ export interface RoundState {
   mysteryId: number;
   candidateIds: number[];
   queues: Record<LootGemType, QueuedNote[]>;
-  /** Clues and notes shown this round. */
-  revealed: number;
+  /** Player moves this round (cascades are free). */
+  moves: number;
+  /** Clues and notes shown per gem color this round. */
+  revealedByGem: Partial<Record<LootGemType, number>>;
   /** Candidates contradicted by a clue or wrongly guessed. */
   ruledOut: number[];
   wrongGuesses: number[];
@@ -65,21 +68,27 @@ function buildQueues(pool: CluePool, mysteryId: number): Record<LootGemType, Que
   return queues;
 }
 
+/** Species that can be a mystery: they have at least one clue. */
+export function playableSpeciesIds(pool: Pick<CluePool, 'clues'>): number[] {
+  return [...new Set(pool.clues.map(clue => clue.speciesId))].sort((a, b) => a - b);
+}
+
 /** Pick a mystery (skipping recent ones) and fill the pool with decoys. */
 export function createRound(pool: CluePool, rng: () => number, round: number, recentMysteryIds: readonly number[] = []): RoundState {
-  const withClues = [...new Set(pool.clues.map(clue => clue.speciesId))];
-  if (withClues.length < 2) throw new Error('Clue pool needs at least two species with clues');
+  const playable = playableSpeciesIds(pool);
+  if (playable.length < 2) throw new Error('Clue pool needs at least two species with clues');
   const recent = new Set(recentMysteryIds.slice(-MYSTERY_COOLDOWN));
-  const eligible = withClues.filter(id => !recent.has(id));
-  const choices = eligible.length > 0 ? eligible : withClues;
+  const eligible = playable.filter(id => !recent.has(id));
+  const choices = eligible.length > 0 ? eligible : playable;
   const mysteryId = choices[Math.floor(rng() * choices.length)];
-  const decoys = shuffle(withClues.filter(id => id !== mysteryId), rng).slice(0, CANDIDATES_PER_ROUND - 1);
+  const decoys = shuffle(playable.filter(id => id !== mysteryId), rng).slice(0, CANDIDATES_PER_ROUND - 1);
   return {
     round,
     mysteryId,
     candidateIds: shuffle([mysteryId, ...decoys], rng),
     queues: buildQueues(pool, mysteryId),
-    revealed: 0,
+    moves: 0,
+    revealedByGem: {},
     ruledOut: [],
     wrongGuesses: [],
     exhausted: [],
@@ -87,15 +96,19 @@ export function createRound(pool: CluePool, rng: () => number, round: number, re
 }
 
 /** Reveal the next note for a matched gem color. Null once an empty category has already said so. */
-export function revealNext(state: RoundState, gem: LootGemType, traits: TraitSets): { state: RoundState; reveal: Reveal | null } {
+export function revealNext(state: RoundState, gem: LootGemType, records: SpeciesRecords): { state: RoundState; reveal: Reveal | null } {
   const [note, ...rest] = state.queues[gem] ?? [];
   if (!note) {
     if (state.exhausted.includes(gem)) return { state, reveal: null };
     return { state: { ...state, exhausted: [...state.exhausted, gem] }, reveal: { kind: 'empty', gem } };
   }
-  const next: RoundState = { ...state, queues: { ...state.queues, [gem]: rest }, revealed: state.revealed + 1 };
+  const next: RoundState = {
+    ...state,
+    queues: { ...state.queues, [gem]: rest },
+    revealedByGem: { ...state.revealedByGem, [gem]: (state.revealedByGem[gem] ?? 0) + 1 },
+  };
   if (!note.clue || !isDeductive(note.clue)) return { state: next, reveal: { kind: 'note', gem, text: note.text } };
-  const fits = evaluateClue(note.clue, state.candidateIds, traits);
+  const fits = evaluateClue(note.clue, state.candidateIds, records);
   const contradicted = state.candidateIds.filter(id => fits[id] === 'contradicts' && !state.ruledOut.includes(id));
   return {
     state: { ...next, ruledOut: [...state.ruledOut, ...contradicted] },
@@ -120,17 +133,10 @@ export function registerWrongGuess(state: RoundState, speciesId: number): RoundS
 }
 
 export const WRONG_GUESS_PENALTY = 30;
+export const FIRST_TRY_BONUS = 25;
 
-/**
- * Faster guesses score more: fewer notes read, and a bonus for guessing while
- * more than one candidate is still possible. Streaks add a little on top.
- */
-export function correctGuessScore(revealed: number, liveCount: number, streak: number): number {
-  const base = Math.max(20, 100 - 5 * revealed);
-  const boldBonus = liveCount >= 2 ? 50 : 0;
-  return base + boldBonus + 10 * streak;
-}
-
-export function gemLabel(gem: LootGemType): string {
-  return gemCategory(gem).label;
+/** Fewer moves score more; a first-try guess and a streak add on top. */
+export function correctGuessScore({ moves, streak, firstTry }: { moves: number; streak: number; firstTry: boolean }): number {
+  const speed = Math.max(0, 10 - moves) * 10;
+  return 50 + speed + (firstTry ? FIRST_TRY_BONUS : 0) + 10 * Math.min(streak, 10);
 }

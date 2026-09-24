@@ -1,53 +1,66 @@
-// How a clue about the mystery species compares with each candidate in the pool.
-//
-// A species' traits in a category are the union of the compare_tags on its own
-// clues (this covers every tag in the archived legacy profiles), so the mystery
-// species always fits its own clues.
-import type { SpeciesClueCategory } from '@/clueGame/categories';
+// How a clue about the mystery species compares with each candidate's record
+// (see traits.ts for what a record holds and when records truly disagree).
+import type { SpeciesClueCategory } from '@/types/speciesClues';
 import type { PoolClue } from '@/clueGame/pool';
+import { EXCLUSIVE_AXES, axisOf, clueTags, rankOfTag, type SpeciesRecord, type SpeciesRecords } from '@/clueGame/traits';
 
-/** fits: shares every tag. partial: shares some. contradicts: shares none (rules it out). */
+/**
+ * fits: the candidate's record has every tag. partial: some. unknown: its
+ * record doesn't mention them (proves nothing). contradicts: its record holds
+ * a different taxonomy rank or the other value of an exclusive trait, which
+ * rules it out.
+ */
 export type ClueFit = 'fits' | 'partial' | 'contradicts' | 'unknown';
 
-export type TraitSets = Map<number, Map<SpeciesClueCategory, Set<string>>>;
+type TagOutcome = 'match' | 'conflict' | 'unknown';
 
-export function buildTraitSets(clues: readonly PoolClue[]): TraitSets {
-  const traits: TraitSets = new Map();
-  for (const clue of clues) {
-    let byCategory = traits.get(clue.speciesId);
-    if (!byCategory) traits.set(clue.speciesId, byCategory = new Map());
-    let tags = byCategory.get(clue.category);
-    if (!tags) byCategory.set(clue.category, tags = new Set());
-    for (const tag of clue.compareTags) tags.add(tag);
+function allTraits(record: SpeciesRecord): Set<string> {
+  return new Set([...record.traits.values()].flatMap(tags => [...tags]));
+}
+
+function tagOutcome(tag: string, category: SpeciesClueCategory, own: SpeciesRecord, candidate: SpeciesRecord, candidateTraits: Set<string>): TagOutcome {
+  if (category === 'taxonomy') {
+    const rank = rankOfTag(tag, own.taxonomy);
+    const value = rank ? candidate.taxonomy[rank] : null;
+    if (rank && value) return value === tag ? 'match' : 'conflict';
   }
-  return traits;
+  if (candidateTraits.has(tag)) return 'match';
+  const axis = axisOf(tag);
+  if (axis && EXCLUSIVE_AXES[axis].some(value => value !== tag && candidateTraits.has(value))) return 'conflict';
+  return 'unknown';
 }
 
 /** Deductive clues carry tags and were authored as filtering; the rest are just notes. */
 export function isDeductive(clue: PoolClue): boolean {
-  return clue.isFiltering && clue.compareTags.length > 0;
+  return clue.isFiltering && clueTags(clue).length > 0;
 }
 
-export function fitClue(tags: readonly string[], candidateTraits: ReadonlySet<string> | undefined): ClueFit {
-  if (!candidateTraits || candidateTraits.size === 0 || tags.length === 0) return 'unknown';
-  const shared = tags.filter(tag => candidateTraits.has(tag)).length;
-  if (shared === tags.length) return 'fits';
-  return shared > 0 ? 'partial' : 'contradicts';
+export function fitClue(clue: PoolClue, candidateId: number, records: SpeciesRecords): ClueFit {
+  const own = records.get(clue.speciesId);
+  const candidate = records.get(candidateId);
+  const tags = clueTags(clue);
+  if (!own || !candidate || tags.length === 0) return 'unknown';
+  const traits = allTraits(candidate);
+  const outcomes = tags.map(tag => tagOutcome(tag, clue.category, own, candidate, traits));
+  if (outcomes.includes('conflict')) return 'contradicts';
+  const matches = outcomes.filter(outcome => outcome === 'match').length;
+  if (matches === tags.length) return 'fits';
+  return matches > 0 ? 'partial' : 'unknown';
 }
 
-export function evaluateClue(clue: PoolClue, candidateIds: readonly number[], traits: TraitSets): Record<number, ClueFit> {
-  return Object.fromEntries(candidateIds.map(id => [id, fitClue(clue.compareTags, traits.get(id)?.get(clue.category))]));
+export function evaluateClue(clue: PoolClue, candidateIds: readonly number[], records: SpeciesRecords): Record<number, ClueFit> {
+  return Object.fromEntries(candidateIds.map(id => [id, fitClue(clue, id, records)]));
 }
 
 /**
- * Categories where the live candidates differ, so a clue there can still narrow
- * the field. Uses only the candidates' own traits, never the mystery's identity.
+ * Categories where the live candidates' records differ, so a clue there may
+ * still separate them. Uses only the candidates' records, never the answer.
  */
-export function usefulCategories(liveIds: readonly number[], traits: TraitSets, categories: readonly SpeciesClueCategory[]): Set<SpeciesClueCategory> {
+export function usefulCategories(liveIds: readonly number[], records: SpeciesRecords, categories: readonly SpeciesClueCategory[]): Set<SpeciesClueCategory> {
   const useful = new Set<SpeciesClueCategory>();
   if (liveIds.length < 2) return useful;
   for (const category of categories) {
-    const signatures = new Set(liveIds.map(id => [...(traits.get(id)?.get(category) ?? [])].sort().join('|')));
+    const signatures = new Set(liveIds.map(id => [...(records.get(id)?.traits.get(category) ?? [])].sort().join('|')));
     if (signatures.size > 1) useful.add(category);
   }
   return useful;

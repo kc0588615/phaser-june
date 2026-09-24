@@ -57,7 +57,7 @@ export function ClueMatchGame() {
   }, [boardReady]);
 
   useEffect(() => {
-    const onMatched = ({ groups }: EventPayloads['gems-matched']) => dispatch({ type: 'matched', gems: groups.map(group => group.gemType) });
+    const onMatched = ({ groups, cascade }: EventPayloads['gems-matched']) => dispatch({ type: 'matched', gems: groups.map(group => group.gemType), cascade });
     EventBus.on('gems-matched', onMatched);
     return () => { EventBus.off('gems-matched', onMatched); };
   }, []);
@@ -94,7 +94,7 @@ export function ClueMatchGame() {
   const usefulGems = useMemo(() => {
     const gems = new Set<LootGemType>();
     if (!session || !round) return gems;
-    const useful = usefulCategories(liveCandidates(round), session.traits, GEM_CATEGORIES.flatMap(category => category.clueCategories));
+    const useful = usefulCategories(liveCandidates(round), session.records, GEM_CATEGORIES.flatMap(category => category.clueCategories));
     for (const category of GEM_CATEGORIES) if (category.clueCategories.some(clueCategory => useful.has(clueCategory))) gems.add(category.gem);
     return gems;
   }, [session, round]);

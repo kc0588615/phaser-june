@@ -1,5 +1,5 @@
 // Shape of GET /api/clue-game/pool: every species with clues, plus their clues and facts.
-import type { SpeciesClueCategory } from '@/clueGame/categories';
+import type { SpeciesClueCategory } from '@/types/speciesClues';
 
 export interface PoolSpecies {
   id: number;
@@ -7,6 +7,11 @@ export interface PoolSpecies {
   scientificName: string;
   className: string | null;
   taxonOrder: string | null;
+  family: string | null;
+  genus: string | null;
+  /** IUCN Red List category code, e.g. 'EN'. */
+  conservationCode: string | null;
+  iucnId: number;
 }
 
 export interface PoolClue {

@@ -12,7 +12,7 @@ const FIT_DOT: Record<ClueFit, string> = {
   contradicts: 'bg-rose-400',
   unknown: 'bg-white/20',
 };
-const FIT_LABEL: Record<ClueFit, string> = { fits: 'fits', partial: 'partly fits', contradicts: 'rules it out', unknown: 'no data' };
+const FIT_LABEL: Record<ClueFit, string> = { fits: 'matches its record', partial: 'partly matches', contradicts: 'ruled out', unknown: 'no record' };
 
 export function GemIcon({ gem, className = 'h-6 w-6' }: { gem: LootGemType; className?: string }) {
   // eslint-disable-next-line @next/next/no-img-element -- tiny static SVG icon

@@ -1,0 +1,5891 @@
+{
+ "species": [
+  {
+   "id": 1,
+   "commonName": "Blanding's Turtle",
+   "scientificName": "Emydoidea blandingii",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "EMYDIDAE",
+   "genus": "Emydoidea",
+   "conservationCode": "EN",
+   "iucnId": 7709
+  },
+  {
+   "id": 2,
+   "commonName": "Spiny Softshell Turtle",
+   "scientificName": "Apalone spinifera",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "TRIONYCHIDAE",
+   "genus": "Apalone",
+   "conservationCode": "LC",
+   "iucnId": 163451
+  },
+  {
+   "id": 3,
+   "commonName": "Darwin Frog",
+   "scientificName": "Rhinoderma darwinii",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Rhinodermatidae",
+   "genus": "Rhinoderma",
+   "conservationCode": "EN",
+   "iucnId": 19513
+  },
+  {
+   "id": 4,
+   "commonName": "Big-headed Turtle",
+   "scientificName": "Platysternon megacephalum",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Platysternidae",
+   "genus": "Platysternon",
+   "conservationCode": "CR",
+   "iucnId": 9605
+  },
+  {
+   "id": 5,
+   "commonName": "Wallace's Flying Frog",
+   "scientificName": "Rhacophorus nigropalmatus",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Rhacophoridae",
+   "genus": "Rhacophorus",
+   "conservationCode": "LC",
+   "iucnId": 59008
+  },
+  {
+   "id": 6,
+   "commonName": "Red-eyed Tree Frog",
+   "scientificName": "Agalychnis callidryas",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Phyllomedusidae",
+   "genus": "Agalychnis",
+   "conservationCode": "LC",
+   "iucnId": 55290
+  },
+  {
+   "id": 7,
+   "commonName": "Hairy Frog",
+   "scientificName": "Trichobatrachus robustus",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Arthroleptidae",
+   "genus": "Trichobatrachus",
+   "conservationCode": "LC",
+   "iucnId": 54443
+  },
+  {
+   "id": 8,
+   "commonName": "Coastal Tailed Frog",
+   "scientificName": "Ascaphus truei",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Ascaphidae",
+   "genus": "Ascaphus",
+   "conservationCode": "LC",
+   "iucnId": 54414
+  },
+  {
+   "id": 9,
+   "commonName": "Dyeing Poison Dart Frog",
+   "scientificName": "Dendrobates tinctorius",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Dendrobatidae",
+   "genus": "Dendrobates",
+   "conservationCode": "LC",
+   "iucnId": 55204
+  },
+  {
+   "id": 10,
+   "commonName": "Suriname Toad",
+   "scientificName": "Pipa pipa",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Pipidae",
+   "genus": "Pipa",
+   "conservationCode": "LC",
+   "iucnId": 58163
+  },
+  {
+   "id": 11,
+   "commonName": "Goliath Frog",
+   "scientificName": "Conraua goliath",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Conrauidae",
+   "genus": "Conraua",
+   "conservationCode": "EN",
+   "iucnId": 5263
+  },
+  {
+   "id": 12,
+   "commonName": "Spiny Hill Turtle",
+   "scientificName": "Heosemys spinosa",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Geoemydidae",
+   "genus": "Heosemys",
+   "conservationCode": "EN",
+   "iucnId": 104303
+  },
+  {
+   "id": 13,
+   "commonName": "Madagascar Tomato Frog",
+   "scientificName": "Dyscophus antongilii",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Microhylidae",
+   "genus": "Dyscophus",
+   "conservationCode": "EN",
+   "iucnId": 6937
+  },
+  {
+   "id": 14,
+   "commonName": "Desert Rain Frog",
+   "scientificName": "Breviceps macrops",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Brevicipitidae",
+   "genus": "Breviceps",
+   "conservationCode": "NT",
+   "iucnId": 3070
+  },
+  {
+   "id": 15,
+   "commonName": "Pancake Tortoise",
+   "scientificName": "Malacochersus tornieri",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Testudinidae",
+   "genus": "Malacochersus",
+   "conservationCode": "CR",
+   "iucnId": 9041
+  },
+  {
+   "id": 16,
+   "commonName": "Purple Frog",
+   "scientificName": "Nasikabatrachus sahyadrensis",
+   "className": "AMPHIBIA",
+   "taxonOrder": "ANURA",
+   "family": "Nasikabatrachidae",
+   "genus": "Nasikabatrachus",
+   "conservationCode": "EN",
+   "iucnId": 58051
+  },
+  {
+   "id": 17,
+   "commonName": "Pig-nosed Turtle",
+   "scientificName": "Carettochelys insculpta",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Carettochelyidae",
+   "genus": "Carettochelys",
+   "conservationCode": "EN",
+   "iucnId": 28859
+  },
+  {
+   "id": 18,
+   "commonName": "Yangtze Giant Softshell Turtle",
+   "scientificName": "Rafetus swinhoei",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Trionychidae",
+   "genus": "Rafetus",
+   "conservationCode": "CR",
+   "iucnId": 22971
+  },
+  {
+   "id": 19,
+   "commonName": "Galapagos Giant Tortoise",
+   "scientificName": "Chelonoidis niger",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Testudinidae",
+   "genus": "Chelonoidis",
+   "conservationCode": "VU",
+   "iucnId": 9010
+  },
+  {
+   "id": 20,
+   "commonName": "African Spurred Tortoise",
+   "scientificName": "Centrochelys sulcata",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Testudinidae",
+   "genus": "Centrochelys",
+   "conservationCode": "VU",
+   "iucnId": 9781
+  },
+  {
+   "id": 21,
+   "commonName": "Radiated Tortoise",
+   "scientificName": "Astrochelys radiata",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Testudinidae",
+   "genus": "Astrochelys",
+   "conservationCode": "CR",
+   "iucnId": 3901
+  },
+  {
+   "id": 22,
+   "commonName": "Pinta Island Tortoise",
+   "scientificName": "Chelonoidis abingdonii",
+   "className": "REPTILIA",
+   "taxonOrder": "TESTUDINES",
+   "family": "Testudinidae",
+   "genus": "Chelonoidis",
+   "conservationCode": "EX",
+   "iucnId": 3902
+  },
+  {
+   "id": 25,
+   "commonName": "Tiger",
+   "scientificName": "Panthera tigris",
+   "className": "MAMMALIA",
+   "taxonOrder": "CARNIVORA",
+   "family": "FELIDAE",
+   "genus": "Panthera",
+   "conservationCode": "EN",
+   "iucnId": 15955
+  },
+  {
+   "id": 50,
+   "commonName": "Addax",
+   "scientificName": "Addax nasomaculatus",
+   "className": "MAMMALIA",
+   "taxonOrder": "ARTIODACTYLA",
+   "family": "BOVIDAE",
+   "genus": "Addax",
+   "conservationCode": "CR",
+   "iucnId": 512
+  }
+ ],
+ "clues": [
+  {
+   "id": 122,
+   "speciesId": 1,
+   "category": "behavior",
+   "label": "Is highly mobile and travels extensively between different wetlands.",
+   "compareTags": [
+    "migratory",
+    "scent_trail"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 144,
+   "speciesId": 1,
+   "category": "behavior",
+   "label": "Leaves strong scent trails, making it vulnerable to predators like raccoons and foxes.",
+   "compareTags": [
+    "scent_trail"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 320,
+   "speciesId": 1,
+   "category": "conservation",
+   "label": "Status: EN. Endangered",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 89,
+   "speciesId": 1,
+   "category": "diet",
+   "label": "Diet type: Omnivore. Preys on: crayfish, small animals, carrion",
+   "compareTags": [
+    "scavenger",
+    "omnivore",
+    "piscivore",
+    "crustacean_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 111,
+   "speciesId": 1,
+   "category": "diet",
+   "label": "Plant diet: plant material, seeds",
+   "compareTags": [
+    "granivore"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 298,
+   "speciesId": 1,
+   "category": "geography",
+   "label": "Found in the Great Lakes region, the upper Mississippi basin, and scattered populations in the northeastern United States and Nova Scotia, Canada.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1,
+   "speciesId": 1,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "freshwater",
+    "aquatic",
+    "terrestrial",
+    "wetland"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 23,
+   "speciesId": 1,
+   "category": "habitat",
+   "label": "Prefers shallow, clear standing water with abundant aquatic vegetation, but also uses open grasslands for nesting.",
+   "compareTags": [
+    "lentic",
+    "grassland",
+    "aquatic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 232,
+   "speciesId": 1,
+   "category": "key_fact",
+   "label": "Its bottom shell (plastron) is hinged, allowing it to fully close up for protection.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 254,
+   "speciesId": 1,
+   "category": "key_fact",
+   "label": "It has one of the longest generation times of any turtle, taking 36-47 years for one generation to replace the next.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 276,
+   "speciesId": 1,
+   "category": "key_fact",
+   "label": "Despite being a turtle, it is highly mobile on land and will travel long distances between wetlands.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 45,
+   "speciesId": 1,
+   "category": "morphology",
+   "label": "Has a high, domed upper shell (carapace) and a hinged lower shell (plastron) that allows it to close completely.",
+   "compareTags": [
+    "shelled",
+    "domed_shell",
+    "dark_coloration",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 67,
+   "speciesId": 1,
+   "category": "morphology",
+   "label": "Primary color: Black / Dark Brown. Pattern: Has a dark, smooth upper shell often covered in yellow spots or flecks, with a distinctive bright yellow chin and throat.",
+   "compareTags": [
+    "red_coloration",
+    "leathery_skin",
+    "yellow_coloration",
+    "dark_coloration",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 342,
+   "speciesId": 1,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: 8-15. Lifespan: 77 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 188,
+   "speciesId": 1,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 210,
+   "speciesId": 1,
+   "category": "taxonomy",
+   "label": "Family: EMYDIDAE, Genus: Emydoidea",
+   "compareTags": [
+    "emydoidea",
+    "emydidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 123,
+   "speciesId": 2,
+   "category": "behavior",
+   "label": "An ambush predator that buries itself in sand or mud at the bottom of a river, with only its head exposed.",
+   "compareTags": [
+    "ambush_predator"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 145,
+   "speciesId": 2,
+   "category": "behavior",
+   "label": "Forages by actively thrusting its long snout into vegetation or under rocks.",
+   "compareTags": [
+    "active_forager"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 321,
+   "speciesId": 2,
+   "category": "conservation",
+   "label": "Status: LC. Least Concern",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 90,
+   "speciesId": 2,
+   "category": "diet",
+   "label": "Diet type: Omnivore (Primarily Carnivore). Preys on: crayfish, fish, insects, snails, carrion",
+   "compareTags": [
+    "scavenger",
+    "folivore",
+    "molluscivore",
+    "omnivore",
+    "carnivore",
+    "piscivore",
+    "insect_eater",
+    "crustacean_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 112,
+   "speciesId": 2,
+   "category": "diet",
+   "label": "Plant diet: algae, leaves, acorns, pecans",
+   "compareTags": [
+    "folivore",
+    "granivore"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 299,
+   "speciesId": 2,
+   "category": "geography",
+   "label": "Has a very large native range covering most of the United States east of the Rocky Mountains, southern Canada, and northern Mexico.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 2,
+   "speciesId": 2,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "lentic",
+    "freshwater",
+    "arid",
+    "riverine",
+    "aquatic",
+    "terrestrial",
+    "wetland"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 24,
+   "speciesId": 2,
+   "category": "habitat",
+   "label": "Found in nearly any type of freshwater body, but prefers a soft bottom with sandbars or mudbanks for basking and nesting",
+   "compareTags": [
+    "grassland",
+    "muddy_substrate",
+    "arid"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 233,
+   "speciesId": 2,
+   "category": "key_fact",
+   "label": "Its name comes from the small, cone-like spines found along the front edge of its upper shell.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 255,
+   "speciesId": 2,
+   "category": "key_fact",
+   "label": "Has a very long, tubular snout with nostrils at the tip, which it uses like a snorkel to breathe while buried underwater.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 277,
+   "speciesId": 2,
+   "category": "key_fact",
+   "label": "Unlike most turtles, its shell is not made of hard scutes but is a soft, flexible, leathery disk.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 46,
+   "speciesId": 2,
+   "category": "morphology",
+   "label": "Has a flat, leathery, pancake-like shell instead of a hard dome, and a long, snorkel-like snout.",
+   "compareTags": [
+    "shelled",
+    "large_bodied",
+    "leathery_skin",
+    "flattened_body",
+    "domed_shell",
+    "brown_coloration",
+    "specialized_snout",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 68,
+   "speciesId": 2,
+   "category": "morphology",
+   "label": "Primary color: Olive / Brown / Tan. Pattern: Its leathery upper shell is olive to tan with small dark spots or circles. The underside is a light cream or white color.",
+   "compareTags": [
+    "leathery_skin",
+    "yellow_coloration",
+    "dark_coloration",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 343,
+   "speciesId": 2,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: 12-18. Lifespan: 65 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 189,
+   "speciesId": 2,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 211,
+   "speciesId": 2,
+   "category": "taxonomy",
+   "label": "Family: TRIONYCHIDAE, Genus: Apalone",
+   "compareTags": [
+    "apalone",
+    "trionychidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 125,
+   "speciesId": 3,
+   "category": "behavior",
+   "label": "Male shelters developing tadpoles inside vocal sac; releases live froglets from mouth",
+   "compareTags": [
+    "parental_care"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 147,
+   "speciesId": 3,
+   "category": "behavior",
+   "label": "Diurnal sit and wait hunter that chirps a soft peep call and basks in sun patches",
+   "compareTags": [
+    "vocal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 323,
+   "speciesId": 3,
+   "category": "conservation",
+   "label": "Status: EN. Populations falling due to forest loss disease and climate warming",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 92,
+   "speciesId": 3,
+   "category": "diet",
+   "label": "Diet type: Carnivore. Preys on: Ants; springtails; small beetles; spiders",
+   "compareTags": [
+    "carnivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 301,
+   "speciesId": 3,
+   "category": "geography",
+   "label": "Elevation sea level to one thousand one hundred meter in coastal and Andean ranges",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 4,
+   "speciesId": 3,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "temperate",
+    "forest",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial",
+    "wetland"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 26,
+   "speciesId": 3,
+   "category": "habitat",
+   "label": "Hides among wet leaves and moss by day; often near shallow shaded streams",
+   "compareTags": [
+    "lentic",
+    "riverine"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 235,
+   "speciesId": 3,
+   "category": "key_fact",
+   "label": "Discovered by Charles Darwin during voyage of the Beagle",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 257,
+   "speciesId": 3,
+   "category": "key_fact",
+   "label": "Only frog whose male carries young in throat until fully formed",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 279,
+   "speciesId": 3,
+   "category": "key_fact",
+   "label": "Perfect leaf disguise lets it vanish among forest litter",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 48,
+   "speciesId": 3,
+   "category": "morphology",
+   "label": "Small flat body with long slender limbs and tiny webbing",
+   "compareTags": [
+    "tiny",
+    "green_coloration",
+    "flattened_body",
+    "webbed_digits",
+    "brown_coloration",
+    "slender"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 70,
+   "speciesId": 3,
+   "category": "morphology",
+   "label": "Primary color: Leaf green or bark brown. Pattern: Pointed nose and triangular head mimic fallen leaf",
+   "compareTags": [
+    "green_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 345,
+   "speciesId": 3,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: four to ten eggs. Lifespan: 10 years",
+   "compareTags": [
+    "metamorphosis",
+    "egg_laying",
+    "short_lived",
+    "oral_brooding"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 191,
+   "speciesId": 3,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 213,
+   "speciesId": 3,
+   "category": "taxonomy",
+   "label": "Family: Rhinodermatidae, Genus: Rhinoderma",
+   "compareTags": [
+    "rhinodermatidae",
+    "rhinoderma"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 126,
+   "speciesId": 4,
+   "category": "behavior",
+   "label": "Climbs waterfalls using tail, claws and beak; can scale vertical mossy rock.",
+   "compareTags": [
+    "climber",
+    "bone_claw_defense"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 148,
+   "speciesId": 4,
+   "category": "behavior",
+   "label": "Aggressive when handled; delivers powerful bite and emits a raspy hiss.",
+   "compareTags": [
+    "aggressive"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 324,
+   "speciesId": 4,
+   "category": "conservation",
+   "label": "Status: CR. Intense demand for the pet, food and traditional-medicine trades has decimated populations across it",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 93,
+   "speciesId": 4,
+   "category": "diet",
+   "label": "Diet type: Carnivore (opportunistic). Preys on: Snails, crabs, freshwater shrimp, small fish, carrion",
+   "compareTags": [
+    "crustacean_eater",
+    "frugivore",
+    "scavenger",
+    "molluscivore",
+    "carnivore",
+    "piscivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 114,
+   "speciesId": 4,
+   "category": "diet",
+   "label": "Plant diet: Occasional fruit or fallen figs",
+   "compareTags": [
+    "frugivore"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 302,
+   "speciesId": 4,
+   "category": "geography",
+   "label": "Scattered headwaters across southern China, Hainan, Myanmar, Thailand, Laos and Vietnam.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 5,
+   "speciesId": 4,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "montane",
+    "forest",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 27,
+   "speciesId": 4,
+   "category": "habitat",
+   "label": "Nocturnal stream-bank ambusher that hides beneath flat rocks in clear, fast water up to 1 200 m elevation.",
+   "compareTags": [
+    "montane",
+    "nocturnal_habitat",
+    "rocky",
+    "riverine"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 236,
+   "speciesId": 4,
+   "category": "key_fact",
+   "label": "Only modern turtle whose skull is too large to retract, protected instead by horn-like scales.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 258,
+   "speciesId": 4,
+   "category": "key_fact",
+   "label": "Its tail works like an extra limb, bracing the body as it climbs slick granite waterfalls.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 280,
+   "speciesId": 4,
+   "category": "key_fact",
+   "label": "Represents an entire family on its own, no close living relatives share its quirky build.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 49,
+   "speciesId": 4,
+   "category": "morphology",
+   "label": "Enormous head fixed outside the shell; hooked beak, long prehensile tail and vise-like jaws.",
+   "compareTags": [
+    "shelled",
+    "brown_coloration",
+    "beak",
+    "prehensile_tail"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 71,
+   "speciesId": 4,
+   "category": "morphology",
+   "label": "Primary color: Chocolate-brown carapace. Pattern: Serrated posterior rim and pale bridge mottling",
+   "compareTags": [
+    "spined",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 346,
+   "speciesId": 4,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: 13 eggs per clutch, up to 2 clutches per year. Lifespan: 30 years",
+   "compareTags": [
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 192,
+   "speciesId": 4,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 214,
+   "speciesId": 4,
+   "category": "taxonomy",
+   "label": "Family: Platysternidae, Genus: Platysternon",
+   "compareTags": [
+    "platysternon",
+    "platysternidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 127,
+   "speciesId": 5,
+   "category": "behavior",
+   "label": "Launches from branches and glides up to 15 m, steering with outstretched webbed fingers and toes.",
+   "compareTags": [
+    "glider"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 149,
+   "speciesId": 5,
+   "category": "behavior",
+   "label": "At dusk, pairs build frothy, golf-ball-size nests on leaves that hang above rain-filled pools.",
+   "compareTags": [
+    "nest_builder"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 325,
+   "speciesId": 5,
+   "category": "conservation",
+   "label": "Status: LC. Still widespread but disappearing from logged and palm-oil landscapes; needs intact canopy.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 94,
+   "speciesId": 5,
+   "category": "diet",
+   "label": "Diet type: Carnivore. Preys on: Moths; crickets; beetles; arboreal spiders",
+   "compareTags": [
+    "carnivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 303,
+   "speciesId": 5,
+   "category": "geography",
+   "label": "Sea level to roughly 600 m throughout Sundaland, wherever closed-canopy forest still stands.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 6,
+   "speciesId": 5,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "lentic",
+    "freshwater",
+    "tropical",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 28,
+   "speciesId": 5,
+   "category": "habitat",
+   "label": "Spends most of its life 20–30 m up in emergent trees, gliding between trunks and descending only to mate.",
+   "compareTags": [
+    "forest",
+    "arboreal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 237,
+   "speciesId": 5,
+   "category": "key_fact",
+   "label": "Largest of Asia’s ‘parachute’ frogs – its splayed feet can eclipse a golf ball.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 259,
+   "speciesId": 5,
+   "category": "key_fact",
+   "label": "Black velvet between the toes turns into living wings, letting it surf the humid night air.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 281,
+   "speciesId": 5,
+   "category": "key_fact",
+   "label": "First described by Alfred Russel Wallace’s expedition, hence a name that literally ‘flies’ in evolutionary history.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 50,
+   "speciesId": 5,
+   "category": "morphology",
+   "label": "Broad, flat body with parachute-like skin flaps; toes spread wider than its head when fully splayed.",
+   "compareTags": [
+    "gliding_membranes",
+    "green_coloration",
+    "flattened_body"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 72,
+   "speciesId": 5,
+   "category": "morphology",
+   "label": "Primary color: Vivid leaf-green dorsal. Pattern: Huge yellow toe pads and jet-black membranes give the feet a superhero-cape look.",
+   "compareTags": [
+    "yellow_coloration",
+    "green_coloration",
+    "dark_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 347,
+   "speciesId": 5,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: 200–1000 eggs. Lifespan: 8 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 193,
+   "speciesId": 5,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 215,
+   "speciesId": 5,
+   "category": "taxonomy",
+   "label": "Family: Rhacophoridae, Genus: Rhacophorus",
+   "compareTags": [
+    "rhacophorus",
+    "rhacophoridae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 128,
+   "speciesId": 6,
+   "category": "behavior",
+   "label": "Flashes red eyes and blue flanks to startle predators then snaps them shut to vanish",
+   "compareTags": [
+    "startle_display"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 150,
+   "speciesId": 6,
+   "category": "behavior",
+   "label": "Egg clutches jiggle when attacked so tadpoles drop into water early to escape",
+   "compareTags": [
+    "parental_care",
+    "anti_predator"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 326,
+   "speciesId": 6,
+   "category": "conservation",
+   "label": "Status: LC. Stable overall but suffers where forest is cleared or water bodies are polluted",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 95,
+   "speciesId": 6,
+   "category": "diet",
+   "label": "Diet type: insectivore. Preys on: moths; crickets; flies; small grasshoppers",
+   "compareTags": [
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 304,
+   "speciesId": 6,
+   "category": "geography",
+   "label": "Sea level to about seven hundred metres across humid Caribbean lowlands and patchy Pacific slopes",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 7,
+   "speciesId": 6,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "freshwater",
+    "tropical",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 29,
+   "speciesId": 6,
+   "category": "habitat",
+   "label": "Spends nights clinging to broad leaves high above forest ponds then descends to lay eggs on overhanging vegetation",
+   "compareTags": [
+    "forest",
+    "aquatic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 238,
+   "speciesId": 6,
+   "category": "key_fact",
+   "label": "Iconic frog with traffic light colours that advertises the rainforest in posters worldwide",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 260,
+   "speciesId": 6,
+   "category": "key_fact",
+   "label": "Huge red eyes inspired the common name and help blind night predators with sudden flash",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 282,
+   "speciesId": 6,
+   "category": "key_fact",
+   "label": "Eggs sense snake vibrations and can hatch early turning aerial ambush into splash escape",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 51,
+   "speciesId": 6,
+   "category": "morphology",
+   "label": "Slender limbs with jumbo suction pads and soft body ideal for leaf life",
+   "compareTags": [
+    "tiny",
+    "adhesive_pads",
+    "green_coloration",
+    "leathery_skin",
+    "slender"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 73,
+   "speciesId": 6,
+   "category": "morphology",
+   "label": "Primary color: bright leaf green. Pattern: large crimson eyes and white belly with smooth skin",
+   "compareTags": [
+    "red_coloration",
+    "leathery_skin",
+    "green_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 348,
+   "speciesId": 6,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: twenty to fifty eggs. Lifespan: 5 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 194,
+   "speciesId": 6,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 216,
+   "speciesId": 6,
+   "category": "taxonomy",
+   "label": "Family: Phyllomedusidae, Genus: Agalychnis",
+   "compareTags": [
+    "agalychnis",
+    "phyllomedusidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 129,
+   "speciesId": 7,
+   "category": "behavior",
+   "label": "Breaks its own toe bones to project sharp claws when grabbed",
+   "compareTags": [
+    "bone_claw_defense"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 151,
+   "speciesId": 7,
+   "category": "behavior",
+   "label": "Males grow ‘hair’ that boosts skin breathing during underwater egg guarding",
+   "compareTags": [
+    "parental_care",
+    "bimodal_respiration",
+    "dermal_respiration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 327,
+   "speciesId": 7,
+   "category": "conservation",
+   "label": "Status: LC. Locally common but hunted for meat and impacted by river pollution",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 96,
+   "speciesId": 7,
+   "category": "diet",
+   "label": "Diet type: insectivore. Preys on: beetles; crickets; millipedes; small spiders",
+   "compareTags": [
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 305,
+   "speciesId": 7,
+   "category": "geography",
+   "label": "Lowland to mid-elevation 30–1500 m across Central African equatorial belt",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 8,
+   "speciesId": 7,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 30,
+   "speciesId": 7,
+   "category": "habitat",
+   "label": "Adults hide along rocky forest torrents by day then prowl banks on humid nights",
+   "compareTags": [
+    "forest",
+    "rocky"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 239,
+   "speciesId": 7,
+   "category": "key_fact",
+   "label": "Nicknamed Wolverine frog because it pops claws in self defence",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 261,
+   "speciesId": 7,
+   "category": "key_fact",
+   "label": "Hairy flanks are not fur but skin threads packed with blood vessels",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 283,
+   "speciesId": 7,
+   "category": "key_fact",
+   "label": "Frog is roasted and eaten in Cameroon where hunters spear it in rivers",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 52,
+   "speciesId": 7,
+   "category": "morphology",
+   "label": "Robust body short snout and wide head males sprout hair-like skin filaments on flanks and thighs",
+   "compareTags": [
+    "dermal_filaments",
+    "striped",
+    "brown_coloration",
+    "specialized_snout"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 74,
+   "speciesId": 7,
+   "category": "morphology",
+   "label": "Primary color: mossy olive brown. Pattern: broad dark mid-back band with black limbs",
+   "compareTags": [
+    "striped",
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 349,
+   "speciesId": 7,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: one hundred to two hundred eggs. Lifespan: 15 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 195,
+   "speciesId": 7,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 217,
+   "speciesId": 7,
+   "category": "taxonomy",
+   "label": "Family: Arthroleptidae, Genus: Trichobatrachus",
+   "compareTags": [
+    "trichobatrachus",
+    "arthroleptidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 131,
+   "speciesId": 8,
+   "category": "behavior",
+   "label": "Voiceless frog that uses body signals instead of croaks beside roaring streams",
+   "compareTags": [
+    "voiceless"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 153,
+   "speciesId": 8,
+   "category": "behavior",
+   "label": "Internal fertilisation underwater with the male tail organ",
+   "compareTags": [
+    "internal_fertilization"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 329,
+   "speciesId": 8,
+   "category": "conservation",
+   "label": "Status: LC. Populations stable but sensitive to logging that warms streams and adds silt",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 98,
+   "speciesId": 8,
+   "category": "diet",
+   "label": "Diet type: insectivore. Preys on: aquatic insect larvae; small snails; spiders",
+   "compareTags": [
+    "molluscivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 307,
+   "speciesId": 8,
+   "category": "geography",
+   "label": "Elevation sea level to about two thousand metre across the Pacific Northwest and northern Rocky outliers",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 10,
+   "speciesId": 8,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "montane",
+    "forest",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 32,
+   "speciesId": 8,
+   "category": "habitat",
+   "label": "Lives all year in frigid clear streams where water tumbles over stones; adults shelter in moist leaf litter nearby",
+   "compareTags": [
+    "forest",
+    "riverine"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 241,
+   "speciesId": 8,
+   "category": "key_fact",
+   "label": "Only North American frog that mates with internal fertilisation thanks to a tail that is not really a tail",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 263,
+   "speciesId": 8,
+   "category": "key_fact",
+   "label": "Tadpoles cling to rocks like living limpets with a suction cup mouth",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 285,
+   "speciesId": 8,
+   "category": "key_fact",
+   "label": "Adults are completely mute and cannot croak",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 54,
+   "speciesId": 8,
+   "category": "morphology",
+   "label": "Slender body with flat head; vertical pupils; males carry a tail-like copulatory organ",
+   "compareTags": [
+    "prehensile_tail",
+    "tiny",
+    "flattened_body",
+    "striped",
+    "brown_coloration",
+    "slender"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 76,
+   "speciesId": 8,
+   "category": "morphology",
+   "label": "Primary color: mottled olive brown. Pattern: fine bumps and a dark eye stripe",
+   "compareTags": [
+    "rough_texture",
+    "striped",
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 351,
+   "speciesId": 8,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: forty to eighty eggs. Lifespan: 20 years",
+   "compareTags": [
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 197,
+   "speciesId": 8,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 219,
+   "speciesId": 8,
+   "category": "taxonomy",
+   "label": "Family: Ascaphidae, Genus: Ascaphus",
+   "compareTags": [
+    "ascaphidae",
+    "ascaphus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 132,
+   "speciesId": 9,
+   "category": "behavior",
+   "label": "Males guard eggs then ferry tadpoles piggyback to rain pools",
+   "compareTags": [
+    "parental_care"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 154,
+   "speciesId": 9,
+   "category": "behavior",
+   "label": "Rarely calls; relies on vivid warning colours to deter predators",
+   "compareTags": [
+    "aposematic",
+    "vocal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 330,
+   "speciesId": 9,
+   "category": "conservation",
+   "label": "Status: LC. Widespread and adaptable but vulnerable to habitat loss and illegal pet trade in blue morphs",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 99,
+   "speciesId": 9,
+   "category": "diet",
+   "label": "Diet type: insectivore. Preys on: ants; termites; fruit flies; tiny beetles; mites",
+   "compareTags": [
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 308,
+   "speciesId": 9,
+   "category": "geography",
+   "label": "Sea level to about six hundred metres across the eastern Guiana Shield; especially common near streams that cross sandy soil",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 11,
+   "speciesId": 9,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "freshwater",
+    "tropical",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 33,
+   "speciesId": 9,
+   "category": "habitat",
+   "label": "Active by day on damp forest floor around canopy gaps; requires small water pockets for tadpoles",
+   "compareTags": [
+    "forest"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 242,
+   "speciesId": 9,
+   "category": "key_fact",
+   "label": "Its skin dyes parrot feathers in legends giving rise to the common name",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 264,
+   "speciesId": 9,
+   "category": "key_fact",
+   "label": "One of the few dart frogs whose male rarely uses vocal calls",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 286,
+   "speciesId": 9,
+   "category": "key_fact",
+   "label": "Blue ‘azureus’ morph lives on tiny forest islands in a vast savanna sea",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 55,
+   "speciesId": 9,
+   "category": "morphology",
+   "label": "Sturdy limbs smooth skin and adhesive toe pads suited to short climbs",
+   "compareTags": [
+    "tiny",
+    "adhesive_pads",
+    "yellow_coloration",
+    "blue_coloration",
+    "striped",
+    "dark_coloration",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 77,
+   "speciesId": 9,
+   "category": "morphology",
+   "label": "Primary color: bright blue yellow black mix. Pattern: irregular stripes blotches and spots varying by morph",
+   "compareTags": [
+    "yellow_coloration",
+    "blue_coloration",
+    "striped",
+    "dark_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 352,
+   "speciesId": 9,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: two to six eggs. Lifespan: 8 years",
+   "compareTags": [
+    "metamorphosis",
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 198,
+   "speciesId": 9,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 220,
+   "speciesId": 9,
+   "category": "taxonomy",
+   "label": "Family: Dendrobatidae, Genus: Dendrobates",
+   "compareTags": [
+    "dendrobatidae",
+    "dendrobates"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 133,
+   "speciesId": 10,
+   "category": "behavior",
+   "label": "Creates instant vacuum to suck prey into tongueless mouth",
+   "compareTags": [
+    "suction_feeder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 155,
+   "speciesId": 10,
+   "category": "behavior",
+   "label": "Males perform underwater somersaults while pressing eggs onto female back",
+   "compareTags": [
+    "parental_care",
+    "mating_acrobatics"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 331,
+   "speciesId": 10,
+   "category": "conservation",
+   "label": "Status: LC. Widespread and common but suffers locally from polluted water and habitat loss",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 100,
+   "speciesId": 10,
+   "category": "diet",
+   "label": "Diet type: carnivore. Preys on: small fish; aquatic insects; worms; crustaceans",
+   "compareTags": [
+    "crustacean_eater",
+    "vermivore",
+    "carnivore",
+    "piscivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 309,
+   "speciesId": 10,
+   "category": "geography",
+   "label": "Sea level to four hundred metres across the Amazon and Orinoco drainage and coastal Guiana shield",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 12,
+   "speciesId": 10,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "lentic",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial",
+    "wetland"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 34,
+   "speciesId": 10,
+   "category": "habitat",
+   "label": "Lies motionless buried in leaf litter or soft mud on the floor of dark still waters",
+   "compareTags": [
+    "forest",
+    "muddy_substrate"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 243,
+   "speciesId": 10,
+   "category": "key_fact",
+   "label": "Pancake flat body lets it vanish in leaf litter like a muddy doormat",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 265,
+   "speciesId": 10,
+   "category": "key_fact",
+   "label": "Gives birth to live froglets that erupt from pockets in mums back",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 287,
+   "speciesId": 10,
+   "category": "key_fact",
+   "label": "Star shaped finger tips detect tiny ripples in pitch dark water",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 56,
+   "speciesId": 10,
+   "category": "morphology",
+   "label": "Extremely flat triangle head star finger tips and wide splayed limbs",
+   "compareTags": [
+    "grey_coloration",
+    "flattened_body",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 78,
+   "speciesId": 10,
+   "category": "morphology",
+   "label": "Primary color: mottled brown grey. Pattern: speckled warty skin with rough ridges",
+   "compareTags": [
+    "grey_coloration",
+    "rough_texture",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 353,
+   "speciesId": 10,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: up to one hundred eggs. Lifespan: 8 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 199,
+   "speciesId": 10,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 221,
+   "speciesId": 10,
+   "category": "taxonomy",
+   "label": "Family: Pipidae, Genus: Pipa",
+   "compareTags": [
+    "pipidae",
+    "pipa"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 134,
+   "speciesId": 11,
+   "category": "behavior",
+   "label": "Males shift heavy stones to build nursery pools for eggs",
+   "compareTags": [
+    "nest_builder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 156,
+   "speciesId": 11,
+   "category": "behavior",
+   "label": "Lacks vocal sac and communicates with short whistles and body movements",
+   "compareTags": [
+    "voiceless",
+    "social_display"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 332,
+   "speciesId": 11,
+   "category": "conservation",
+   "label": "Status: EN. Hunted for meat and export and harmed by logging dams and polluted water",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 101,
+   "speciesId": 11,
+   "category": "diet",
+   "label": "Diet type: carnivore. Preys on: crabs; insects; fish; other frogs; small snakes",
+   "compareTags": [
+    "herpetivore",
+    "carnivore",
+    "piscivore",
+    "insect_eater",
+    "crustacean_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 310,
+   "speciesId": 11,
+   "category": "geography",
+   "label": "Sea level to three hundred metres within a coastal corridor about one hundred fifty kilometres inland",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 13,
+   "speciesId": 11,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 35,
+   "speciesId": 11,
+   "category": "habitat",
+   "label": "Adults perch on boulders at night and retreat under water during the day",
+   "compareTags": [
+    "rocky"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 244,
+   "speciesId": 11,
+   "category": "key_fact",
+   "label": "Largest frog on Earth and able to leap three metres in a single bound",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 266,
+   "speciesId": 11,
+   "category": "key_fact",
+   "label": "Stone-moving parents males drag rocks half their weight to craft safe pools",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 288,
+   "speciesId": 11,
+   "category": "key_fact",
+   "label": "Even with a giant adult the tadpole is no bigger than that of a common frog",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 57,
+   "speciesId": 11,
+   "category": "morphology",
+   "label": "Flat broad head huge hind legs and fully webbed feet as big as a human hand",
+   "compareTags": [
+    "green_coloration",
+    "flattened_body",
+    "webbed_digits",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 79,
+   "speciesId": 11,
+   "category": "morphology",
+   "label": "Primary color: olive green brown. Pattern: rough grainy skin with speckled limbs",
+   "compareTags": [
+    "rough_texture",
+    "green_coloration",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 354,
+   "speciesId": 11,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: three hundred to eight hundred eggs. Lifespan: 15 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 200,
+   "speciesId": 11,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 222,
+   "speciesId": 11,
+   "category": "taxonomy",
+   "label": "Family: Conrauidae, Genus: Conraua",
+   "compareTags": [
+    "conrauidae",
+    "conraua"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 135,
+   "speciesId": 12,
+   "category": "behavior",
+   "label": "Diurnal; shifts to crepuscular activity in hot weather; dives into pools when alarmed",
+   "compareTags": [
+    "diurnal",
+    "nest_builder",
+    "crepuscular"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 157,
+   "speciesId": 12,
+   "category": "behavior",
+   "label": "Can emit a high-pitched squeal, a rarity among turtles, when seized",
+   "compareTags": [
+    "vocal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 333,
+   "speciesId": 12,
+   "category": "conservation",
+   "label": "Status: EN. Illegal pet trade and habitat loss have cut wild numbers by >50 % in three generations",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 102,
+   "speciesId": 12,
+   "category": "diet",
+   "label": "Diet type: Omnivore. Preys on: Snails, earthworms, carrion",
+   "compareTags": [
+    "frugivore",
+    "vermivore",
+    "scavenger",
+    "folivore",
+    "molluscivore",
+    "omnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 116,
+   "speciesId": 12,
+   "category": "diet",
+   "label": "Plant diet: Fallen figs, palm fruit, mushrooms, young leaves",
+   "compareTags": [
+    "frugivore",
+    "folivore",
+    "fungivore"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 311,
+   "speciesId": 12,
+   "category": "geography",
+   "label": "Sundaland and Indochina; populations highly fragmented",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 14,
+   "speciesId": 12,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "montane",
+    "forest",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 36,
+   "speciesId": 12,
+   "category": "habitat",
+   "label": "Secretive forest-floor dweller; favours deep leaf litter in closed-canopy rainforest up to 900 m",
+   "compareTags": [
+    "forest"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 245,
+   "speciesId": 12,
+   "category": "key_fact",
+   "label": "Juveniles wear a jagged crown of shell spines, nature scaltrops in the leaf litter",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 267,
+   "speciesId": 12,
+   "category": "key_fact",
+   "label": "If cornered, this turtle squeals like a rubber duck, startling predators and keepers alike",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 289,
+   "speciesId": 12,
+   "category": "key_fact",
+   "label": "Its Latin name means thorny, yet traders dub it the Dracula Turtle for its fiery plastron",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 58,
+   "speciesId": 12,
+   "category": "morphology",
+   "label": "Peaked vertebral keel; shell ridges mimic thorny forest seed pods.",
+   "compareTags": [
+    "shelled",
+    "brown_coloration"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 80,
+   "speciesId": 12,
+   "category": "morphology",
+   "label": "Primary color: Chestnut to ebony. Pattern: Saw-toothed marginal scutes give a spiky outline, esp. in juveniles",
+   "compareTags": [
+    "striped",
+    "spined",
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 355,
+   "speciesId": 12,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: 14 eggs per clutch; up to 3 clutches yr. Lifespan: 40 years",
+   "compareTags": [
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 201,
+   "speciesId": 12,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 223,
+   "speciesId": 12,
+   "category": "taxonomy",
+   "label": "Family: Geoemydidae, Genus: Heosemys",
+   "compareTags": [
+    "geoemydidae",
+    "heosemys"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 136,
+   "speciesId": 13,
+   "category": "behavior",
+   "label": "Inflates like a balloon and exudes sticky toxin when grabbed",
+   "compareTags": [
+    "toxic",
+    "inflates_defense"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 158,
+   "speciesId": 13,
+   "category": "behavior",
+   "label": "Males give a low honk call from the water edge on warm rainy nights",
+   "compareTags": [
+    "vocal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 334,
+   "speciesId": 13,
+   "category": "conservation",
+   "label": "Status: EN. Numbers falling because of pet trade demand and loss of swamp forest",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 103,
+   "speciesId": 13,
+   "category": "diet",
+   "label": "Diet type: Carnivore. Preys on: Ants; termites; small beetles; worms",
+   "compareTags": [
+    "vermivore",
+    "carnivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 312,
+   "speciesId": 13,
+   "category": "geography",
+   "label": "Known mainly from towns near Antongil Bay such as Maroantsetra and Rantabe; low elevation coastal plain",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 15,
+   "speciesId": 13,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "freshwater",
+    "aquatic",
+    "terrestrial",
+    "wetland"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 37,
+   "speciesId": 13,
+   "category": "habitat",
+   "label": "Spends daylight buried under leaf litter; emerges after heavy rain to breed in shallow pools",
+   "compareTags": [
+    "forest",
+    "lentic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 246,
+   "speciesId": 13,
+   "category": "key_fact",
+   "label": "Bright red skin makes it look like a bouncing tomato",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 268,
+   "speciesId": 13,
+   "category": "key_fact",
+   "label": "Sticky skin secretions can gum up the mouth of a snake",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 290,
+   "speciesId": 13,
+   "category": "key_fact",
+   "label": "Lives only in the same island that is home to lemurs and chameleons",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 59,
+   "speciesId": 13,
+   "category": "morphology",
+   "label": "Plump round body with short limbs and wide flat head",
+   "compareTags": [
+    "rounded_body",
+    "red_coloration",
+    "flattened_body",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 81,
+   "speciesId": 13,
+   "category": "morphology",
+   "label": "Primary color: Tomato red. Pattern: Smooth skin with tiny pale flecks",
+   "compareTags": [
+    "red_coloration",
+    "leathery_skin",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 356,
+   "speciesId": 13,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: From one thousand to fifteen hundred eggs. Lifespan: 8 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 202,
+   "speciesId": 13,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 224,
+   "speciesId": 13,
+   "category": "taxonomy",
+   "label": "Family: Microhylidae, Genus: Dyscophus",
+   "compareTags": [
+    "dyscophus",
+    "microhylidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 138,
+   "speciesId": 14,
+   "category": "behavior",
+   "label": "Inflates body and lets out a loud squeak when disturbed",
+   "compareTags": [
+    "vocal",
+    "inflates_defense"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 160,
+   "speciesId": 14,
+   "category": "behavior",
+   "label": "Spends daylight hidden in self dug sand burrow",
+   "compareTags": [
+    "burrower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 336,
+   "speciesId": 14,
+   "category": "conservation",
+   "label": "Status: NT. Small range makes it vulnerable to mining and coastal development",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 105,
+   "speciesId": 14,
+   "category": "diet",
+   "label": "Diet type: insectivore. Preys on: moths; termites; woodlice; small beetles",
+   "compareTags": [
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 314,
+   "speciesId": 14,
+   "category": "geography",
+   "label": "Found within ten kilometres of the Atlantic from Lüderitz Namibia to Port Nolloth South Africa",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 17,
+   "speciesId": 14,
+   "category": "habitat",
+   "label": "Exclusively land-dwelling",
+   "compareTags": [
+    "coastal",
+    "scrubland",
+    "arid",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 39,
+   "speciesId": 14,
+   "category": "habitat",
+   "label": "Burrows in loose sand behind the beach line and surfaces at night when mist wets the ground",
+   "compareTags": [
+    "arid"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 248,
+   "speciesId": 14,
+   "category": "key_fact",
+   "label": "Internet famous squeaky frog that looks like a puffball with eyes",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 270,
+   "speciesId": 14,
+   "category": "key_fact",
+   "label": "Relies on nightly sea fog for drinking water in the desert",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 292,
+   "speciesId": 14,
+   "category": "key_fact",
+   "label": "Can bury itself in seconds using shovel like hind feet",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 61,
+   "speciesId": 14,
+   "category": "morphology",
+   "label": "Round squat body with short limbs and chubby appearance",
+   "compareTags": [
+    "tiny",
+    "rounded_body",
+    "yellow_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 83,
+   "speciesId": 14,
+   "category": "morphology",
+   "label": "Primary color: sandy brown. Pattern: dark blotches on back with translucent skin on the sides",
+   "compareTags": [
+    "yellow_coloration",
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 358,
+   "speciesId": 14,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: twelve to fifteen eggs. Lifespan: 6 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 204,
+   "speciesId": 14,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 226,
+   "speciesId": 14,
+   "category": "taxonomy",
+   "label": "Family: Brevicipitidae, Genus: Breviceps",
+   "compareTags": [
+    "breviceps",
+    "brevicipitidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 141,
+   "speciesId": 15,
+   "category": "behavior",
+   "label": "Runs & climbs with surprising speed; escapes by chimney-climbing into crevices.",
+   "compareTags": [
+    "climber",
+    "fast_runner"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 163,
+   "speciesId": 15,
+   "category": "behavior",
+   "label": "Groups of up to 10 share the same crack; rare sociality for tortoises.",
+   "compareTags": [
+    "social"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 339,
+   "speciesId": 15,
+   "category": "conservation",
+   "label": "Status: CR. Over-collection for pet trade & habitat clearing have cut numbers >80 % in 30 yrs.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 108,
+   "speciesId": 15,
+   "category": "diet",
+   "label": "Diet type: Herbivore (opportunistic)",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 120,
+   "speciesId": 15,
+   "category": "diet",
+   "label": "Plant diet: Dry grasses, succulents, leaves; seldom drinks free water",
+   "compareTags": [
+    "folivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 317,
+   "speciesId": 15,
+   "category": "geography",
+   "label": "Scattered kopjes across southern Kenya, northern & eastern Tanzania; single Zambian site",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 20,
+   "speciesId": 15,
+   "category": "habitat",
+   "label": "Exclusively land-dwelling",
+   "compareTags": [
+    "scrubland",
+    "arid",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 42,
+   "speciesId": 15,
+   "category": "habitat",
+   "label": "Flat-shelled climber that wedges into narrow rock cracks on sun-baked hillsides 301 800 m a.s.l.",
+   "compareTags": [
+    "montane",
+    "rocky"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 251,
+   "speciesId": 15,
+   "category": "key_fact",
+   "label": "Only tortoise whose shell flexes, lighter than balsa, riddled with gaps.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 273,
+   "speciesId": 15,
+   "category": "key_fact",
+   "label": "Instead of hiding inside, it *dashes* and wedges tightpredators cant pry it free.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 295,
+   "speciesId": 15,
+   "category": "key_fact",
+   "label": "Nicknamed the crepe or pizza-box tortoise; looks cooked flat yet climbs vertical rock.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 64,
+   "speciesId": 15,
+   "category": "morphology",
+   "label": "Ultra-flat, flexible shell with open-latticed bone; rear lump ossified.",
+   "compareTags": [
+    "shelled",
+    "flattened_body",
+    "brown_coloration",
+    "radiating_pattern"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 86,
+   "speciesId": 15,
+   "category": "morphology",
+   "label": "Primary color: Brown-tan carapace. Pattern: Dark radiating lines camouflage on each scute",
+   "compareTags": [
+    "striped",
+    "dark_coloration",
+    "brown_coloration",
+    "radiating_pattern"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 361,
+   "speciesId": 15,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: 1 egg per clutch, repeated every 48 wks in season. Lifespan: 30 years",
+   "compareTags": [
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 207,
+   "speciesId": 15,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 229,
+   "speciesId": 15,
+   "category": "taxonomy",
+   "label": "Family: Testudinidae, Genus: Malacochersus",
+   "compareTags": [
+    "testudinidae",
+    "malacochersus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 142,
+   "speciesId": 16,
+   "category": "behavior",
+   "label": "Spends three hundred sixty days a year buried and silent emerging for just a couple of monsoon nights",
+   "compareTags": [
+    "burrower",
+    "ambush_predator"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 164,
+   "speciesId": 16,
+   "category": "behavior",
+   "label": "Males call with a muffled honk while hidden under leaf litter near torrents",
+   "compareTags": [
+    "vocal",
+    "burrower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 340,
+   "speciesId": 16,
+   "category": "conservation",
+   "label": "Status: EN. Fossorial habits hide shrinking numbers threatened by forest clearing agriculture and check dams",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 109,
+   "speciesId": 16,
+   "category": "diet",
+   "label": "Diet type: insectivore. Preys on: termites; ants; tiny soil arthropods",
+   "compareTags": [
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 318,
+   "speciesId": 16,
+   "category": "geography",
+   "label": "Known from less than thirty localities along a six hundred kilometre arc of the southern Western Ghats",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 21,
+   "speciesId": 16,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "forest",
+    "freshwater",
+    "riverine",
+    "aquatic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 43,
+   "speciesId": 16,
+   "category": "habitat",
+   "label": "Lives two metres underground in loose humus rich soil then tunnels to forest streams for brief breeding burst",
+   "compareTags": [
+    "forest",
+    "riverine"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 252,
+   "speciesId": 16,
+   "category": "key_fact",
+   "label": "Looks like a purple balloon with a pig nose not your classic frog shape",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 274,
+   "speciesId": 16,
+   "category": "key_fact",
+   "label": "Emerges only during the first heavy rains then vanishes underground for the rest of the year",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 296,
+   "speciesId": 16,
+   "category": "key_fact",
+   "label": "Shares its closest relatives with tiny Seychelles frogs a living echo of ancient Gondwana",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 65,
+   "speciesId": 16,
+   "category": "morphology",
+   "label": "Round bloated body tiny eyes and a pointed pig snout perfect for termite digging",
+   "compareTags": [
+    "purple_coloration",
+    "tiny",
+    "rounded_body",
+    "specialized_snout"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 87,
+   "speciesId": 16,
+   "category": "morphology",
+   "label": "Primary color: dusky purple. Pattern: smooth balloon like skin with tiny dimples",
+   "compareTags": [
+    "purple_coloration",
+    "leathery_skin"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 362,
+   "speciesId": 16,
+   "category": "reproduction",
+   "label": "Reproduction: oviparous. Clutch: up to three thousand eggs. Lifespan: 7 years",
+   "compareTags": [
+    "egg_laying",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 208,
+   "speciesId": 16,
+   "category": "taxonomy",
+   "label": "Class: AMPHIBIA, Order: ANURA",
+   "compareTags": [
+    "anura",
+    "amphibia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 230,
+   "speciesId": 16,
+   "category": "taxonomy",
+   "label": "Family: Nasikabatrachidae, Genus: Nasikabatrachus",
+   "compareTags": [
+    "nasikabatrachus",
+    "nasikabatrachidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 130,
+   "speciesId": 17,
+   "category": "behavior",
+   "label": "Highly aquatic; surfaces briefly to breathe then cruises mid-water using marine-style flippers.",
+   "compareTags": [
+    "swimmer"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 152,
+   "speciesId": 17,
+   "category": "behavior",
+   "label": "Females migrate en masse to sandy bars to lay eggs that remain in suspended development until first wet-season flood.",
+   "compareTags": [
+    "parental_care",
+    "migratory",
+    "burrower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 328,
+   "speciesId": 17,
+   "category": "conservation",
+   "label": "Status: EN. Populations declining due to illegal egg and adult harvest for pet and meat trade, habitat alteratio",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 97,
+   "speciesId": 17,
+   "category": "diet",
+   "label": "Diet type: Omnivore. Preys on: Aquatic insects, freshwater prawns, snails, carrion",
+   "compareTags": [
+    "crustacean_eater",
+    "frugivore",
+    "scavenger",
+    "folivore",
+    "molluscivore",
+    "omnivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 115,
+   "speciesId": 17,
+   "category": "diet",
+   "label": "Plant diet: Figs, fallen fruit, riverine vegetation",
+   "compareTags": [
+    "frugivore",
+    "folivore"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 306,
+   "speciesId": 17,
+   "category": "geography",
+   "label": "Elevation 0150 m; distribution fragmented into several large river basins across southern New Guinea and the Top End of Australia.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 9,
+   "speciesId": 17,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "lentic",
+    "freshwater",
+    "tropical",
+    "arid",
+    "riverine",
+    "aquatic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 31,
+   "speciesId": 17,
+   "category": "habitat",
+   "label": "Fully aquatic species inhabiting turbid tropical rivers and still backwaters; nests on exposed sandbars late dry season.",
+   "compareTags": [
+    "tropical",
+    "arid",
+    "riverine",
+    "aquatic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 240,
+   "speciesId": 17,
+   "category": "key_fact",
+   "label": "Only freshwater turtle with true flippers, convergent with marine turtles.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 262,
+   "speciesId": 17,
+   "category": "key_fact",
+   "label": "Eggs exhibit facultative diapause, remaining viable for over 12 months if kept dry.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 284,
+   "speciesId": 17,
+   "category": "key_fact",
+   "label": "Locally called Fly River Turtle; culturally significant and historically traded thousands of kilometres by Indigenous communities.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 53,
+   "speciesId": 17,
+   "category": "morphology",
+   "label": "Flipper-like forelimbs, pig-like fleshy snout with nasal openings at tip, pliable shell covered in skin.",
+   "compareTags": [
+    "grey_coloration",
+    "flipper_limbs",
+    "shelled",
+    "large_bodied",
+    "leathery_skin",
+    "brown_coloration",
+    "specialized_snout"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 75,
+   "speciesId": 17,
+   "category": "morphology",
+   "label": "Primary color: Grey-olive carapace. Pattern: Smooth leathery shell without scutes",
+   "compareTags": [
+    "grey_coloration",
+    "leathery_skin",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 350,
+   "speciesId": 17,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: 7–35 eggs per clutch; nests multiple times per year. Lifespan: 35 years",
+   "compareTags": [
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 196,
+   "speciesId": 17,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 218,
+   "speciesId": 17,
+   "category": "taxonomy",
+   "label": "Family: Carettochelyidae, Genus: Carettochelys",
+   "compareTags": [
+    "carettochelys",
+    "carettochelyidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 137,
+   "speciesId": 18,
+   "category": "behavior",
+   "label": "Secretive; surfaces briefly to breathe, spends most time buried in mud.",
+   "compareTags": [
+    "swimmer",
+    "ambush_predator",
+    "burrower"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 159,
+   "speciesId": 18,
+   "category": "behavior",
+   "label": "Capable of bimodal respiration, absorbing oxygen through pharyngeal lining.",
+   "compareTags": [
+    "bimodal_respiration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 335,
+   "speciesId": 18,
+   "category": "conservation",
+   "label": "Status: CR. With only one confirmed male in China and  3 turtles in Vietnam, species is functionally extinct; in",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 104,
+   "speciesId": 18,
+   "category": "diet",
+   "label": "Diet type: Omnivore (carnivore-leaning). Preys on: Fish, crabs, snails, frogs",
+   "compareTags": [
+    "folivore",
+    "molluscivore",
+    "herpetivore",
+    "omnivore",
+    "carnivore",
+    "piscivore",
+    "crustacean_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 117,
+   "speciesId": 18,
+   "category": "diet",
+   "label": "Plant diet: Aquatic vegetation (e.g., water hyacinth)",
+   "compareTags": [
+    "folivore"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 313,
+   "speciesId": 18,
+   "category": "geography",
+   "label": "Confirmed remnant sites: Suzhou Zoo (China), Dong Mo & Xuan Khanh Lakes (Vietnam); elevation  0100 m.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 16,
+   "speciesId": 18,
+   "category": "habitat",
+   "label": "Lives in freshwater aquatic environments",
+   "compareTags": [
+    "lentic",
+    "freshwater",
+    "riverine",
+    "aquatic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 38,
+   "speciesId": 18,
+   "category": "habitat",
+   "label": "Prefers deep pools of large turbid rivers & associated lakes with soft, sandy or muddy substrates.",
+   "compareTags": [
+    "muddy_substrate",
+    "arid",
+    "riverine"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 247,
+   "speciesId": 18,
+   "category": "key_fact",
+   "label": "Possibly the worlds rarest vertebrate fewer than five individuals remain.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 269,
+   "speciesId": 18,
+   "category": "key_fact",
+   "label": "Largest living freshwater turtle; record weight 169 kg.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 291,
+   "speciesId": 18,
+   "category": "key_fact",
+   "label": "eDNA surveys & artificial insemination provide last hope for recovery.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 60,
+   "speciesId": 18,
+   "category": "morphology",
+   "label": "Flattened, leathery carapace; elongated tubular snout; powerful webbed limbs.",
+   "compareTags": [
+    "grey_coloration",
+    "shelled",
+    "large_bodied",
+    "leathery_skin",
+    "flattened_body",
+    "webbed_digits",
+    "brown_coloration",
+    "specialized_snout",
+    "spotted"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 82,
+   "speciesId": 18,
+   "category": "morphology",
+   "label": "Primary color: Olive-grey dorsum. Pattern: Fine pale speckles on carapace & limbs",
+   "compareTags": [
+    "grey_coloration",
+    "brown_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 357,
+   "speciesId": 18,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: 20–80 eggs per clutch. Lifespan: 100 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 203,
+   "speciesId": 18,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 225,
+   "speciesId": 18,
+   "category": "taxonomy",
+   "label": "Family: Trionychidae, Genus: Rafetus",
+   "compareTags": [
+    "rafetus",
+    "trionychidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 139,
+   "speciesId": 19,
+   "category": "behavior",
+   "label": "Diurnal; may rest up to 16 hours a day under vegetation or in mud wallows",
+   "compareTags": [
+    "diurnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 161,
+   "speciesId": 19,
+   "category": "behavior",
+   "label": "Seasonal altitudinal migrations track plant growth and moisture",
+   "compareTags": [
+    "migratory"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 337,
+   "speciesId": 19,
+   "category": "conservation",
+   "label": "Status: VU. Head-starting and predator eradication have raised wild numbers from ~3 000 in the 1970s to > 15 000",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 106,
+   "speciesId": 19,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Preys on: N/A",
+   "compareTags": [
+    "frugivore",
+    "herbivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 118,
+   "speciesId": 19,
+   "category": "diet",
+   "label": "Plant diet: Grasses, forbs, cactus pads, fallen fruit; can survive > 12 months without fresh food or water by sl",
+   "compareTags": [
+    "frugivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 315,
+   "speciesId": 19,
+   "category": "geography",
+   "label": "Restricted to nine major islands and several islets; elevational range sea-level to ~1 200 m.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 18,
+   "speciesId": 19,
+   "category": "habitat",
+   "label": "Exclusively land-dwelling",
+   "compareTags": [
+    "scrubland",
+    "arid",
+    "volcanic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 40,
+   "speciesId": 19,
+   "category": "habitat",
+   "label": "Uses arid cactus lowlands in the cool season and migrates to lush, humid highlands during the wet season",
+   "compareTags": [
+    "arid"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 249,
+   "speciesId": 19,
+   "category": "key_fact",
+   "label": "Island-specific shell shapes inspired Charles Darwins ideas on adaptive radiation in 1835",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 271,
+   "speciesId": 19,
+   "category": "key_fact",
+   "label": "Genomic evidence shows the lineage rafted >1 000 km from South America 23 Myr ago",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 293,
+   "speciesId": 19,
+   "category": "key_fact",
+   "label": "Tortoises store water in pericardial sacs, enabling months-long fasting voyages",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 62,
+   "speciesId": 19,
+   "category": "morphology",
+   "label": "Massive elephant-like limbs, long neck, variable shell profile.",
+   "compareTags": [
+    "shelled",
+    "large_bodied",
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 84,
+   "speciesId": 19,
+   "category": "morphology",
+   "label": "Primary color: Dark brown-black. Pattern: Carapace either domed or saddle-backed depending on subspecies",
+   "compareTags": [
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 359,
+   "speciesId": 19,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: 2–16 eggs per clutch; up to 3 clutches per year. Lifespan: 175 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 205,
+   "speciesId": 19,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 227,
+   "speciesId": 19,
+   "category": "taxonomy",
+   "label": "Family: Testudinidae, Genus: Chelonoidis",
+   "compareTags": [
+    "testudinidae",
+    "chelonoidis"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 143,
+   "speciesId": 20,
+   "category": "behavior",
+   "label": "Crepuscular; emerges at dawn and dusk to forage, retreating underground during midday extremes.",
+   "compareTags": [
+    "crepuscular",
+    "burrower"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 165,
+   "speciesId": 20,
+   "category": "behavior",
+   "label": "Males ram and clash loudly in dominance bouts, sometimes flipping rivals onto their backs.",
+   "compareTags": [
+    "social_display"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 341,
+   "speciesId": 20,
+   "category": "conservation",
+   "label": "Status: VU. Wild numbers shrinking as overgrazing, desertification and trade harvest erode remaining strongholds",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 110,
+   "speciesId": 20,
+   "category": "diet",
+   "label": "Diet type: Herbivore",
+   "compareTags": [
+    "herbivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 121,
+   "speciesId": 20,
+   "category": "diet",
+   "label": "Plant diet: Coarse grasses, forbs, succulents, fallen dry-season blooms; gains moisture from drought-resistant p",
+   "compareTags": [
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 319,
+   "speciesId": 20,
+   "category": "geography",
+   "label": "Broad but patchy band south of the Sahara from Senegal and Mauritania eastward to Sudan and Ethiopia.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 22,
+   "speciesId": 20,
+   "category": "habitat",
+   "label": "Exclusively land-dwelling",
+   "compareTags": [
+    "scrubland",
+    "arid",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 44,
+   "speciesId": 20,
+   "category": "habitat",
+   "label": "Burrow-dwelling grazer that escapes blistering heat in tunnels up to 3 m deep and 10 m long.",
+   "compareTags": [
+    "arid",
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 253,
+   "speciesId": 20,
+   "category": "key_fact",
+   "label": "Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 275,
+   "speciesId": 20,
+   "category": "key_fact",
+   "label": "A master excavator that engineers cool, humid burrow networks sheltering lizards, rodents and even jackals.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 297,
+   "speciesId": 20,
+   "category": "key_fact",
+   "label": "Named for the prominent thigh spurs it brandishes like medieval spikes on its hind legs.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 66,
+   "speciesId": 20,
+   "category": "morphology",
+   "label": "Massive forelimbs armoured with overlapping scales; hind legs sport conical spurs that inspired its name.",
+   "compareTags": [
+    "large_bodied",
+    "yellow_coloration",
+    "spined"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 88,
+   "speciesId": 20,
+   "category": "morphology",
+   "label": "Primary color: Sand-buff carapace. Pattern: Elevated growth annuli on each scute give a rugged, saddle-backed look.",
+   "compareTags": [
+    "yellow_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 363,
+   "speciesId": 20,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous. Clutch: 15–30 eggs per clutch. Lifespan: 70 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 209,
+   "speciesId": 20,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 231,
+   "speciesId": 20,
+   "category": "taxonomy",
+   "label": "Family: Testudinidae, Genus: Centrochelys",
+   "compareTags": [
+    "testudinidae",
+    "centrochelys"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 140,
+   "speciesId": 21,
+   "category": "behavior",
+   "label": "Diurnal (active during the day). Known to graze regularly in the same area, keeping vegetation trimmed.",
+   "compareTags": [
+    "diurnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 162,
+   "speciesId": 21,
+   "category": "behavior",
+   "label": "Males perform noisy mating rituals, bobbing heads and sometimes lifting the female with their shell.",
+   "compareTags": [
+    "social_display"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 338,
+   "speciesId": 21,
+   "category": "conservation",
+   "label": "Status: CR. Critically Endangered",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 107,
+   "speciesId": 21,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Preys on: N/A",
+   "compareTags": [
+    "frugivore",
+    "herbivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 119,
+   "speciesId": 21,
+   "category": "diet",
+   "label": "Plant diet: Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new g",
+   "compareTags": [
+    "frugivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 316,
+   "speciesId": 21,
+   "category": "geography",
+   "label": "Occurs naturally only in the extreme southern and southwestern part of Madagascar. Introduced to the islands of Réunion and Mauritius.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 19,
+   "speciesId": 21,
+   "category": "habitat",
+   "label": "Exclusively land-dwelling",
+   "compareTags": [
+    "forest",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 41,
+   "speciesId": 21,
+   "category": "habitat",
+   "label": "Prefers dry regions of brush, thorn (Diderae) forests, and woodlands of southern Madagascar.",
+   "compareTags": [
+    "forest",
+    "scrubland",
+    "arid"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 250,
+   "speciesId": 21,
+   "category": "key_fact",
+   "label": "The oldest recorded individual, Tu'i Malila, lived to be an estimated 188 years old.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 272,
+   "speciesId": 21,
+   "category": "key_fact",
+   "label": "Unlike other star tortoises, its carapace scutes are smooth and not raised into pyramidal shapes.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 294,
+   "speciesId": 21,
+   "category": "key_fact",
+   "label": "Grazing makes up 80-90% of its diet.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 63,
+   "speciesId": 21,
+   "category": "morphology",
+   "label": "High-domed carapace with smooth (not pyramidal) scutes, a blunt head, and elephantine feet.",
+   "compareTags": [
+    "shelled",
+    "yellow_coloration",
+    "domed_shell",
+    "radiating_pattern"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 85,
+   "speciesId": 21,
+   "category": "morphology",
+   "label": "Primary color: Yellow / Off-white. Pattern: Brilliant yellow lines radiating from the center of each dark shell plate, creating a 'star' pattern.",
+   "compareTags": [
+    "yellow_coloration",
+    "striped",
+    "dark_coloration",
+    "radiating_pattern"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 360,
+   "speciesId": 21,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: 3 to 12 eggs. Lifespan: 100 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 206,
+   "speciesId": 21,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 228,
+   "speciesId": 21,
+   "category": "taxonomy",
+   "label": "Family: Testudinidae, Genus: Astrochelys",
+   "compareTags": [
+    "testudinidae",
+    "astrochelys"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 124,
+   "speciesId": 22,
+   "category": "behavior",
+   "label": "Diurnal (active during the day). Rested for about 16 hours a day.",
+   "compareTags": [
+    "diurnal",
+    "ecosystem_engineer"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 146,
+   "speciesId": 22,
+   "category": "behavior",
+   "label": "A critical ecosystem engineer, shaping the island's vegetation through herbivory and seed dispersal.",
+   "compareTags": [
+    "ecosystem_engineer"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 322,
+   "speciesId": 22,
+   "category": "conservation",
+   "label": "Status: EX. Classified as Extinct (EX) by IUCN. Efforts are underway to 'resurrect' the lineage using recently f",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 91,
+   "speciesId": 22,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Preys on: N/A",
+   "compareTags": [
+    "frugivore",
+    "herbivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 113,
+   "speciesId": 22,
+   "category": "diet",
+   "label": "Plant diet: Fed primarily on greens, grasses, native fruit, and low-hanging cactus pads.",
+   "compareTags": [
+    "frugivore",
+    "grazer",
+    "succulent_feeder"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 300,
+   "speciesId": 22,
+   "category": "geography",
+   "label": "Historically endemic to Pinta Island, Galápagos, Ecuador. Now extinct in its native range, though hybrids exist on Isabela Island.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 3,
+   "speciesId": 22,
+   "category": "habitat",
+   "label": "Exclusively land-dwelling",
+   "compareTags": [
+    "montane",
+    "forest",
+    "volcanic",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 25,
+   "speciesId": 22,
+   "category": "habitat",
+   "label": "Inhabited deciduous forests, evergreen montane forests, and humid grasslands. Juveniles stayed in the warmer lowland are",
+   "compareTags": [
+    "montane",
+    "forest",
+    "grassland"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 234,
+   "speciesId": 22,
+   "category": "key_fact",
+   "label": "The last known individual was named Lonesome George, who became a global icon for conservation.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 256,
+   "speciesId": 22,
+   "category": "key_fact",
+   "label": "First-generation hybrids have been found on Wolf Volcano, offering a chance to resurrect the Pinta lineage.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 278,
+   "speciesId": 22,
+   "category": "key_fact",
+   "label": "Its extinction diminished the Pinta Island ecosystem, as it was a top herbivore and ecosystem engineer.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 47,
+   "speciesId": 22,
+   "category": "morphology",
+   "label": "Characterized by a prominent saddleback-shaped carapace, which distinguishes it from dome-shelled tortoises.",
+   "compareTags": [
+    "grey_coloration",
+    "shelled",
+    "large_bodied",
+    "saddleback_shell",
+    "domed_shell",
+    "dark_coloration"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 69,
+   "speciesId": 22,
+   "category": "morphology",
+   "label": "Primary color: Dark Grey / Black. Pattern: Distinctive saddleback-shaped carapace.",
+   "compareTags": [
+    "grey_coloration",
+    "dark_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 344,
+   "speciesId": 22,
+   "category": "reproduction",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: Unknown. Lifespan: 125 years",
+   "compareTags": [
+    "long_lived",
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 190,
+   "speciesId": 22,
+   "category": "taxonomy",
+   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "compareTags": [
+    "testudines",
+    "reptilia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 212,
+   "speciesId": 22,
+   "category": "taxonomy",
+   "label": "Family: Testudinidae, Genus: Chelonoidis",
+   "compareTags": [
+    "testudinidae",
+    "chelonoidis"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 462,
+   "speciesId": 25,
+   "category": "behavior",
+   "label": "Primarily active at night.",
+   "compareTags": [
+    "activity_pattern:nocturnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 463,
+   "speciesId": 25,
+   "category": "behavior",
+   "label": "Usually lives alone.",
+   "compareTags": [
+    "sociality:solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 466,
+   "speciesId": 25,
+   "category": "conservation",
+   "label": "Its conservation status is Endangered.",
+   "compareTags": [
+    "iucn:EN"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 467,
+   "speciesId": 25,
+   "category": "conservation",
+   "label": "Poaching is a threat.",
+   "compareTags": [
+    "threat_tag:poaching"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 464,
+   "speciesId": 25,
+   "category": "diet",
+   "label": "Is carnivorous.",
+   "compareTags": [
+    "diet_type:carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 458,
+   "speciesId": 25,
+   "category": "geography",
+   "label": "Occurs in tropical climates.",
+   "compareTags": [
+    "climate_zone:tropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 459,
+   "speciesId": 25,
+   "category": "geography",
+   "label": "Native to Asia.",
+   "compareTags": [
+    "continent:asia"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 474,
+   "speciesId": 25,
+   "category": "habitat",
+   "label": "Lives in forests, grasslands and mangrove swamps.",
+   "compareTags": [
+    "forest",
+    "grassland",
+    "wetland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 473,
+   "speciesId": 25,
+   "category": "habitat",
+   "label": "Needs thick cover to stalk its prey unseen.",
+   "compareTags": [
+    "forest",
+    "terrestrial"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 468,
+   "speciesId": 25,
+   "category": "key_fact",
+   "label": "Stripe patterns identify individuals.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 469,
+   "speciesId": 25,
+   "category": "key_fact",
+   "label": "May eat about 34 kilograms after a kill.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 470,
+   "speciesId": 25,
+   "category": "key_fact",
+   "label": "Can swim about eight kilometres.",
+   "compareTags": [
+    "signature:swims_eight_kilometers"
+   ],
+   "revealOrder": 3,
+   "isFiltering": true
+  },
+  {
+   "id": 460,
+   "speciesId": 25,
+   "category": "morphology",
+   "label": "Has a robust body plan.",
+   "compareTags": [
+    "body_plan:robust"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 461,
+   "speciesId": 25,
+   "category": "morphology",
+   "label": "Has vertical stripes.",
+   "compareTags": [
+    "distinctive_features:stripes"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 465,
+   "speciesId": 25,
+   "category": "reproduction",
+   "label": "Breeds repeatedly across its lifetime.",
+   "compareTags": [
+    "parity:iteroparous"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 457,
+   "speciesId": 25,
+   "category": "taxonomy",
+   "label": "Class: MAMMALIA, Order: CARNIVORA",
+   "compareTags": [
+    "mammalia",
+    "carnivora"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 456,
+   "speciesId": 25,
+   "category": "taxonomy",
+   "label": "A member of the cat family.",
+   "compareTags": [
+    "family:felidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 447,
+   "speciesId": 50,
+   "category": "behavior",
+   "label": "Primarily feeds at night.",
+   "compareTags": [
+    "activity_pattern:nocturnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 448,
+   "speciesId": 50,
+   "category": "behavior",
+   "label": "Lives in herds.",
+   "compareTags": [
+    "sociality:herd"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 451,
+   "speciesId": 50,
+   "category": "conservation",
+   "label": "Its conservation status is Critically Endangered.",
+   "compareTags": [
+    "iucn:CR"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 452,
+   "speciesId": 50,
+   "category": "conservation",
+   "label": "Poaching is a threat.",
+   "compareTags": [
+    "threat_tag:poaching"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 449,
+   "speciesId": 50,
+   "category": "diet",
+   "label": "Is herbivorous.",
+   "compareTags": [
+    "diet_type:herbivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 443,
+   "speciesId": 50,
+   "category": "geography",
+   "label": "Lives in arid climates.",
+   "compareTags": [
+    "climate_zone:arid"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 444,
+   "speciesId": 50,
+   "category": "geography",
+   "label": "Native to Africa.",
+   "compareTags": [
+    "continent:africa"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 472,
+   "speciesId": 50,
+   "category": "habitat",
+   "label": "Lives in sandy and stony deserts.",
+   "compareTags": [
+    "arid",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 471,
+   "speciesId": 50,
+   "category": "habitat",
+   "label": "Roams open desert far from any water.",
+   "compareTags": [
+    "arid",
+    "terrestrial"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 453,
+   "speciesId": 50,
+   "category": "key_fact",
+   "label": "Broad hooves spread weight over sand.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 454,
+   "speciesId": 50,
+   "category": "key_fact",
+   "label": "Its coat changes colour seasonally.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 455,
+   "speciesId": 50,
+   "category": "key_fact",
+   "label": "Plant moisture can replace drinking.",
+   "compareTags": [
+    "signature:plant_moisture_replaces_drinking"
+   ],
+   "revealOrder": 3,
+   "isFiltering": true
+  },
+  {
+   "id": 445,
+   "speciesId": 50,
+   "category": "morphology",
+   "label": "Has a robust body plan.",
+   "compareTags": [
+    "body_plan:robust"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 446,
+   "speciesId": 50,
+   "category": "morphology",
+   "label": "Both sexes have horns.",
+   "compareTags": [
+    "distinctive_features:horns"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 450,
+   "speciesId": 50,
+   "category": "reproduction",
+   "label": "Breeds repeatedly across its lifetime.",
+   "compareTags": [
+    "parity:iteroparous"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 442,
+   "speciesId": 50,
+   "category": "taxonomy",
+   "label": "Class: MAMMALIA, Order: ARTIODACTYLA",
+   "compareTags": [
+    "mammalia",
+    "artiodactyla"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 441,
+   "speciesId": 50,
+   "category": "taxonomy",
+   "label": "A member of the bovid family.",
+   "compareTags": [
+    "family:bovidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  }
+ ],
+ "facts": [
+  {
+   "speciesId": 1,
+   "category": "behavior",
+   "text": "Is highly mobile and travels extensively between different wetlands.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 1,
+   "category": "behavior",
+   "text": "Leaves strong scent trails, making it vulnerable to predators like raccoons and foxes.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 1,
+   "category": "diet_flora",
+   "text": "plant material, seeds",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 1,
+   "category": "diet_prey",
+   "text": "crayfish, small animals, carrion",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 1,
+   "category": "key_fact",
+   "text": "Its bottom shell (plastron) is hinged, allowing it to fully close up for protection.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 1,
+   "category": "key_fact",
+   "text": "It has one of the longest generation times of any turtle, taking 36-47 years for one generation to replace the next.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 1,
+   "category": "key_fact",
+   "text": "Despite being a turtle, it is highly mobile on land and will travel long distances between wetlands.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 1,
+   "category": "life_description",
+   "text": "Has an extremely long generation time, calculated at 36-47 years.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 1,
+   "category": "life_description",
+   "text": "Females reach maturity very late, between 14 and 20 years of age.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 1,
+   "category": "threat",
+   "text": "habitat loss, road mortality, nest predation, illegal collection for the pet trade",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 2,
+   "category": "behavior",
+   "text": "An ambush predator that buries itself in sand or mud at the bottom of a river, with only its head exposed.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 2,
+   "category": "behavior",
+   "text": "Forages by actively thrusting its long snout into vegetation or under rocks.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 2,
+   "category": "diet_flora",
+   "text": "algae, leaves, acorns, pecans",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 2,
+   "category": "diet_prey",
+   "text": "crayfish, fish, insects, snails, carrion",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 2,
+   "category": "key_fact",
+   "text": "Its name comes from the small, cone-like spines found along the front edge of its upper shell.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 2,
+   "category": "key_fact",
+   "text": "Has a very long, tubular snout with nostrils at the tip, which it uses like a snorkel to breathe while buried underwater.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 2,
+   "category": "key_fact",
+   "text": "Unlike most turtles, its shell is not made of hard scutes but is a soft, flexible, leathery disk.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 2,
+   "category": "life_description",
+   "text": "Females can produce two clutches of eggs per year in warmer climates.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 2,
+   "category": "life_description",
+   "text": "Has a generation time of about 25 years.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 2,
+   "category": "threat",
+   "text": "nest predation (raccoons), human harvest (for food/pets), boat strikes, habitat modification from dams",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 3,
+   "category": "behavior",
+   "text": "Male shelters developing tadpoles inside vocal sac; releases live froglets from mouth",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 3,
+   "category": "behavior",
+   "text": "Diurnal sit and wait hunter that chirps a soft peep call and basks in sun patches",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 3,
+   "category": "diet_flora",
+   "text": "None",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 3,
+   "category": "diet_prey",
+   "text": "Ants; springtails; small beetles; spiders",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 3,
+   "category": "key_fact",
+   "text": "Discovered by Charles Darwin during voyage of the Beagle",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 3,
+   "category": "key_fact",
+   "text": "Only frog whose male carries young in throat until fully formed",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 3,
+   "category": "key_fact",
+   "text": "Perfect leaf disguise lets it vanish among forest litter",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 3,
+   "category": "life_description",
+   "text": "Female deposits eggs on moist ground close to stream; male guards until tadpoles hatch",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 3,
+   "category": "life_description",
+   "text": "Inside vocal sac tadpoles complete metamorphosis in six weeks then leap out as mini frogs",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 3,
+   "category": "threat",
+   "text": "Deforestation; plantation forestry; chytrid fungus; drought; wildfire",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 4,
+   "category": "behavior",
+   "text": "Climbs waterfalls using tail, claws and beak; can scale vertical mossy rock.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 4,
+   "category": "behavior",
+   "text": "Aggressive when handled; delivers powerful bite and emits a raspy hiss.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 4,
+   "category": "diet_flora",
+   "text": "Occasional fruit or fallen figs",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 4,
+   "category": "diet_prey",
+   "text": "Snails, crabs, freshwater shrimp, small fish, carrion",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 4,
+   "category": "key_fact",
+   "text": "Only modern turtle whose skull is too large to retract, protected instead by horn-like scales.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 4,
+   "category": "key_fact",
+   "text": "Its tail works like an extra limb, bracing the body as it climbs slick granite waterfalls.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 4,
+   "category": "key_fact",
+   "text": "Represents an entire family on its own, no close living relatives share its quirky build.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 4,
+   "category": "life_description",
+   "text": "Nest is a shallow cavity in streamside sand or moss bank during early summer.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 4,
+   "category": "life_description",
+   "text": "Hatchlings boast proportionally giant heads and tails nearly the length of the shell.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 4,
+   "category": "threat",
+   "text": "Over-collection, hydropower dams, sedimentation, deforestation, by-catch in eel traps.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 5,
+   "category": "behavior",
+   "text": "Launches from branches and glides up to 15 m, steering with outstretched webbed fingers and toes.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 5,
+   "category": "behavior",
+   "text": "At dusk, pairs build frothy, golf-ball-size nests on leaves that hang above rain-filled pools.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 5,
+   "category": "diet_flora",
+   "text": "None",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 5,
+   "category": "diet_prey",
+   "text": "Moths; crickets; beetles; arboreal spiders",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 5,
+   "category": "key_fact",
+   "text": "Largest of Asia’s ‘parachute’ frogs – its splayed feet can eclipse a golf ball.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 5,
+   "category": "key_fact",
+   "text": "Black velvet between the toes turns into living wings, letting it surf the humid night air.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 5,
+   "category": "key_fact",
+   "text": "First described by Alfred Russel Wallace’s expedition, hence a name that literally ‘flies’ in evolutionary history.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 5,
+   "category": "life_description",
+   "text": "Female whips mucous into foam with her hind legs, then embeds fertilised eggs inside the airy cradle.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 5,
+   "category": "life_description",
+   "text": "Tadpoles wriggle free when rain softens the nest, plopping straight into the pool below to finish growing.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 5,
+   "category": "threat",
+   "text": "Deforestation; peat-swamp drainage; local pet collection; pesticide drift",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 6,
+   "category": "behavior",
+   "text": "Flashes red eyes and blue flanks to startle predators then snaps them shut to vanish",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 6,
+   "category": "behavior",
+   "text": "Egg clutches jiggle when attacked so tadpoles drop into water early to escape",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 6,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 6,
+   "category": "diet_prey",
+   "text": "moths; crickets; flies; small grasshoppers",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 6,
+   "category": "key_fact",
+   "text": "Iconic frog with traffic light colours that advertises the rainforest in posters worldwide",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 6,
+   "category": "key_fact",
+   "text": "Huge red eyes inspired the common name and help blind night predators with sudden flash",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 6,
+   "category": "key_fact",
+   "text": "Eggs sense snake vibrations and can hatch early turning aerial ambush into splash escape",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 6,
+   "category": "life_description",
+   "text": "Couples in amplexus stick gelatinous eggs to leaf undersides above still water",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 6,
+   "category": "life_description",
+   "text": "Tadpoles develop into tiny tree climbers in about ten weeks",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 6,
+   "category": "threat",
+   "text": "deforestation; agrochemical runoff; chytrid fungus; pet trade",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 7,
+   "category": "behavior",
+   "text": "Breaks its own toe bones to project sharp claws when grabbed",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 7,
+   "category": "behavior",
+   "text": "Males grow ‘hair’ that boosts skin breathing during underwater egg guarding",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 7,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 7,
+   "category": "diet_prey",
+   "text": "beetles; crickets; millipedes; small spiders",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 7,
+   "category": "key_fact",
+   "text": "Nicknamed Wolverine frog because it pops claws in self defence",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 7,
+   "category": "key_fact",
+   "text": "Hairy flanks are not fur but skin threads packed with blood vessels",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 7,
+   "category": "key_fact",
+   "text": "Frog is roasted and eaten in Cameroon where hunters spear it in rivers",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 7,
+   "category": "life_description",
+   "text": "Eggs anchored under submerged stones in swift water where males stay to defend",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 7,
+   "category": "life_description",
+   "text": "Tadpoles cling to rocks with suction mouthparts until metamorphosis",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 7,
+   "category": "threat",
+   "text": "habitat loss; stream siltation; bushmeat harvest; water pollution",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 8,
+   "category": "behavior",
+   "text": "Voiceless frog that uses body signals instead of croaks beside roaring streams",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 8,
+   "category": "behavior",
+   "text": "Internal fertilisation underwater with the male tail organ",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 8,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 8,
+   "category": "diet_prey",
+   "text": "aquatic insect larvae; small snails; spiders",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 8,
+   "category": "key_fact",
+   "text": "Only North American frog that mates with internal fertilisation thanks to a tail that is not really a tail",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 8,
+   "category": "key_fact",
+   "text": "Tadpoles cling to rocks like living limpets with a suction cup mouth",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 8,
+   "category": "key_fact",
+   "text": "Adults are completely mute and cannot croak",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 8,
+   "category": "life_description",
+   "text": "Female fastens egg strings beneath large stream rocks where cold current supplies oxygen",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 8,
+   "category": "life_description",
+   "text": "Tadpoles cling with suctorial mouths for up to four years before hopping onto land during wet nights",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 8,
+   "category": "threat",
+   "text": "logging; road building; sedimentation; water warming; small dams",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 9,
+   "category": "behavior",
+   "text": "Males guard eggs then ferry tadpoles piggyback to rain pools",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 9,
+   "category": "behavior",
+   "text": "Rarely calls; relies on vivid warning colours to deter predators",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 9,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 9,
+   "category": "diet_prey",
+   "text": "ants; termites; fruit flies; tiny beetles; mites",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 9,
+   "category": "key_fact",
+   "text": "Its skin dyes parrot feathers in legends giving rise to the common name",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 9,
+   "category": "key_fact",
+   "text": "One of the few dart frogs whose male rarely uses vocal calls",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 9,
+   "category": "key_fact",
+   "text": "Blue ‘azureus’ morph lives on tiny forest islands in a vast savanna sea",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 9,
+   "category": "life_description",
+   "text": "Eggs deposited under fallen leaves or inside buttress roots in moist micro-cavities",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 9,
+   "category": "life_description",
+   "text": "Tadpoles grow in phytotelmata; siblings may cannibalise weaker larvae for protein",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 9,
+   "category": "threat",
+   "text": "deforestation; mining run-off; selective collection of colourful morphs; climate warming",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 10,
+   "category": "behavior",
+   "text": "Creates instant vacuum to suck prey into tongueless mouth",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 10,
+   "category": "behavior",
+   "text": "Males perform underwater somersaults while pressing eggs onto female back",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 10,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 10,
+   "category": "diet_prey",
+   "text": "small fish; aquatic insects; worms; crustaceans",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 10,
+   "category": "key_fact",
+   "text": "Pancake flat body lets it vanish in leaf litter like a muddy doormat",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 10,
+   "category": "key_fact",
+   "text": "Gives birth to live froglets that erupt from pockets in mums back",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 10,
+   "category": "key_fact",
+   "text": "Star shaped finger tips detect tiny ripples in pitch dark water",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 10,
+   "category": "life_description",
+   "text": "Eggs sink into the female skin forming honeycomb pockets where they grow safely",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 10,
+   "category": "life_description",
+   "text": "Fully formed froglets burst through mothers back skin after around three months",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 10,
+   "category": "threat",
+   "text": "water pollution; dam construction; wetland drainage; aquarium trade",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 11,
+   "category": "behavior",
+   "text": "Males shift heavy stones to build nursery pools for eggs",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 11,
+   "category": "behavior",
+   "text": "Lacks vocal sac and communicates with short whistles and body movements",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 11,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 11,
+   "category": "diet_prey",
+   "text": "crabs; insects; fish; other frogs; small snakes",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 11,
+   "category": "key_fact",
+   "text": "Largest frog on Earth and able to leap three metres in a single bound",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 11,
+   "category": "key_fact",
+   "text": "Stone-moving parents males drag rocks half their weight to craft safe pools",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 11,
+   "category": "key_fact",
+   "text": "Even with a giant adult the tadpole is no bigger than that of a common frog",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 11,
+   "category": "life_description",
+   "text": "Tadpoles feed on one river algae species and stay in rapids for nearly three months",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 11,
+   "category": "life_description",
+   "text": "Young frogs linger at shallow margins before growing into river giants",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 11,
+   "category": "threat",
+   "text": "over harvest; habitat loss; siltation; dam construction; pet trade",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 12,
+   "category": "behavior",
+   "text": "Diurnal; shifts to crepuscular activity in hot weather; dives into pools when alarmed",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 12,
+   "category": "behavior",
+   "text": "Can emit a high-pitched squeala rarity among turtleswhen seized",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 12,
+   "category": "diet_flora",
+   "text": "Fallen figs, palm fruit, mushrooms, young leaves",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 12,
+   "category": "diet_prey",
+   "text": "Snails, earthworms, carrion",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 12,
+   "category": "key_fact",
+   "text": "Juveniles wear a jagged crown of shell spines, nature scaltrops in the leaf litter",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 12,
+   "category": "key_fact",
+   "text": "If cornered, this turtle squeals like a rubber duck, startling predators and keepers alike",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 12,
+   "category": "key_fact",
+   "text": "Its Latin name means thorny, yet traders dub it the Dracula Turtle for its fiery plastron",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 12,
+   "category": "life_description",
+   "text": "Females clear leaf litter and bury parchment-shelled eggs in shallow forest nests.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 12,
+   "category": "life_description",
+   "text": "Hatchlings sport bright orange marginal spines that dull with age.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 12,
+   "category": "threat",
+   "text": "Unsustainable trade, logging, oil-palm expansion, forest fires, road mortality",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 13,
+   "category": "behavior",
+   "text": "Inflates like a balloon and exudes sticky toxin when grabbed",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 13,
+   "category": "behavior",
+   "text": "Males give a low honk call from the water edge on warm rainy nights",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 13,
+   "category": "diet_flora",
+   "text": "None",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 13,
+   "category": "diet_prey",
+   "text": "Ants; termites; small beetles; worms",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 13,
+   "category": "key_fact",
+   "text": "Bright red skin makes it look like a bouncing tomato",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 13,
+   "category": "key_fact",
+   "text": "Sticky skin secretions can gum up the mouth of a snake",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 13,
+   "category": "key_fact",
+   "text": "Lives only in the same island that is home to lemurs and chameleons",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 13,
+   "category": "life_description",
+   "text": "Eggs float on the water surface and hatch in about thirty six hours",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 13,
+   "category": "life_description",
+   "text": "Tadpoles grow fast and change into tiny red froglets in roughly six weeks",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 13,
+   "category": "threat",
+   "text": "Deforestation; polluted runoff; over collection for pets; predatory fish and mosquitoes",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 14,
+   "category": "behavior",
+   "text": "Inflates body and lets out a loud squeak when disturbed",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 14,
+   "category": "behavior",
+   "text": "Spends daylight hidden in self dug sand burrow",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 14,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 14,
+   "category": "diet_prey",
+   "text": "moths; termites; woodlice; small beetles",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 14,
+   "category": "key_fact",
+   "text": "Internet famous squeaky frog that looks like a puffball with eyes",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 14,
+   "category": "key_fact",
+   "text": "Relies on nightly sea fog for drinking water in the desert",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 14,
+   "category": "key_fact",
+   "text": "Can bury itself in seconds using shovel like hind feet",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 14,
+   "category": "life_description",
+   "text": "Eggs are laid in a humid chamber and develop directly into tiny froglets",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 14,
+   "category": "life_description",
+   "text": "Advertisement call sounds like a rubber toy and travels far on still foggy nights",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 14,
+   "category": "threat",
+   "text": "habitat loss; diamond mining; off road vehicles; climate change",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 15,
+   "category": "behavior",
+   "text": "Runs & climbs with surprising speed; escapes by chimney-climbing into crevices.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 15,
+   "category": "behavior",
+   "text": "Groups of up to 10 share the same crack; rare sociality for tortoises.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 15,
+   "category": "diet_flora",
+   "text": "Dry grasses, succulents, leaves; seldom drinks free water",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 15,
+   "category": "key_fact",
+   "text": "Only tortoise whose shell flexes, lighter than balsa, riddled with gaps.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 15,
+   "category": "key_fact",
+   "text": "Instead of hiding inside, it *dashes* and wedges tightpredators cant pry it free.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 15,
+   "category": "key_fact",
+   "text": "Nicknamed the crepe or pizza-box tortoise; looks cooked flat yet climbs vertical rock.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 15,
+   "category": "life_description",
+   "text": "Female digs shallow nest in sandy soil or deposits egg inside crevice mid-year.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 15,
+   "category": "life_description",
+   "text": "Hatchling starts domed; shell flattens as bone fontanelles remain unossified.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 15,
+   "category": "threat",
+   "text": "Illegal trade, bush-clearing, charcoal burning, goat over-grazing, fires.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 16,
+   "category": "behavior",
+   "text": "Spends three hundred sixty days a year buried and silent emerging for just a couple of monsoon nights",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 16,
+   "category": "behavior",
+   "text": "Males call with a muffled honk while hidden under leaf litter near torrents",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 16,
+   "category": "diet_flora",
+   "text": "none",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 16,
+   "category": "diet_prey",
+   "text": "termites; ants; tiny soil arthropods",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 16,
+   "category": "key_fact",
+   "text": "Looks like a purple balloon with a pig nose not your classic frog shape",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 16,
+   "category": "key_fact",
+   "text": "Emerges only during the first heavy rains then vanishes underground for the rest of the year",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 16,
+   "category": "key_fact",
+   "text": "Shares its closest relatives with tiny Seychelles frogs a living echo of ancient Gondwana",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 16,
+   "category": "life_description",
+   "text": "Pairs lay eggs in shaded rock pools of fast streams; embryos hatch in two days",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 16,
+   "category": "life_description",
+   "text": "Tadpoles cling to vertical rocks with suction mouths and metamorphose in about one hundred days",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 16,
+   "category": "threat",
+   "text": "deforestation; soil compaction; dam projects; climate change; local harvest of tadpoles",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 17,
+   "category": "behavior",
+   "text": "Highly aquatic; surfaces briefly to breathe then cruises mid-water using marine-style flippers.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 17,
+   "category": "behavior",
+   "text": "Females migrate en masse to sandy bars to lay eggs that remain in suspended development until first wet-season flood.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 17,
+   "category": "diet_flora",
+   "text": "Figs, fallen fruit, riverine vegetation",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 17,
+   "category": "diet_prey",
+   "text": "Aquatic insects, freshwater prawns, snails, carrion",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 17,
+   "category": "key_fact",
+   "text": "Only freshwater turtle with true flippers, convergent with marine turtles.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 17,
+   "category": "key_fact",
+   "text": "Eggs exhibit facultative diapause, remaining viable for over 12 months if kept dry.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 17,
+   "category": "key_fact",
+   "text": "Locally called Fly River Turtle; culturally significant and historically traded thousands of kilometres by Indigenous communities.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 17,
+   "category": "life_description",
+   "text": "Embryos can delay hatching for months until inundated by seasonal rains, enabling synchronous emergence.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 17,
+   "category": "life_description",
+   "text": "During extreme dry spells juveniles and adults may aestivate in damp riverbed mud.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 17,
+   "category": "threat",
+   "text": "Unregulated international pet trade, over-harvest for food, sand-bar mining, river dams, increased nest predation by feral pigs and dogs.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 18,
+   "category": "behavior",
+   "text": "Secretive; surfaces briefly to breathe, spends most time buried in mud.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 18,
+   "category": "behavior",
+   "text": "Capable of bimodal respiration, absorbing oxygen through pharyngeal lining.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 18,
+   "category": "diet_flora",
+   "text": "Aquatic vegetation (e.g., water hyacinth)",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 18,
+   "category": "diet_prey",
+   "text": "Fish, crabs, snails, frogs",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 18,
+   "category": "key_fact",
+   "text": "Possibly the worlds rarest vertebrate fewer than five individuals remain.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 18,
+   "category": "key_fact",
+   "text": "Largest living freshwater turtle; record weight 169 kg.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 18,
+   "category": "key_fact",
+   "text": "eDNA surveys & artificial insemination provide last hope for recovery.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 18,
+   "category": "life_description",
+   "text": "Nests on sandy banks at night; incubation ~90 days, temperature-dependent sex determination.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 18,
+   "category": "life_description",
+   "text": "Captive pair produced > 100 eggs between 20082015 but none hatched.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 18,
+   "category": "threat",
+   "text": "Historical over-harvest, wetland loss, dam construction, pollution, bycatch; now extreme Allee effect.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 19,
+   "category": "behavior",
+   "text": "Diurnal; may rest up to 16 hours a day under vegetation or in mud wallows",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 19,
+   "category": "behavior",
+   "text": "Seasonal altitudinal migrations track plant growth and moisture",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 19,
+   "category": "diet_flora",
+   "text": "Grasses, forbs, cactus pads, fallen fruit; can survive > 12 months without fresh food or water by slowing metabolism",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 19,
+   "category": "diet_prey",
+   "text": "N/A",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 19,
+   "category": "key_fact",
+   "text": "Island-specific shell shapes inspired Charles Darwins ideas on adaptive radiation in 1835",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 19,
+   "category": "key_fact",
+   "text": "Genomic evidence shows the lineage rafted >1 000 km from South America 23 Myr ago",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 19,
+   "category": "key_fact",
+   "text": "Tortoises store water in pericardial sacs, enabling months-long fasting voyages",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 19,
+   "category": "life_description",
+   "text": "Females dig ~30 cm-deep flask-shaped nests in sunny sandy soils.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 19,
+   "category": "life_description",
+   "text": "Hatchlings remain in warmer coastal zones 510 yrs before moving upslope.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 19,
+   "category": "threat",
+   "text": "Historic over-harvest, egg predation by rats, browsing by feral goats, emerging drought risk from climate change",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 20,
+   "category": "behavior",
+   "text": "Crepuscular; emerges at dawn and dusk to forage, retreating underground during midday extremes.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 20,
+   "category": "behavior",
+   "text": "Males ram and clash loudly in dominance bouts, sometimes flipping rivals onto their backs.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 20,
+   "category": "diet_flora",
+   "text": "Coarse grasses, forbs, succulents, fallen dry-season blooms; gains moisture from drought-resistant plants.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 20,
+   "category": "key_fact",
+   "text": "Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 20,
+   "category": "key_fact",
+   "text": "A master excavator that engineers cool, humid burrow networks sheltering lizards, rodents and even jackals.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 20,
+   "category": "key_fact",
+   "text": "Named for the prominent thigh spurs it brandishes like medieval spikes on its hind legs.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 20,
+   "category": "life_description",
+   "text": "Female excavates a flask-shaped chamber at the burrow entrance and guards the nest for several days.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 20,
+   "category": "life_description",
+   "text": "Hatchlings linger in the natal tunnel until late rains soften surrounding soils for surface emergence.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 20,
+   "category": "threat",
+   "text": "Livestock competition, bush-meat hunting, pet export, expanding agriculture, climate-driven drought.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 21,
+   "category": "behavior",
+   "text": "Diurnal (active during the day). Known to graze regularly in the same area, keeping vegetation trimmed.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 21,
+   "category": "behavior",
+   "text": "Males perform noisy mating rituals, bobbing heads and sometimes lifting the female with their shell.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 21,
+   "category": "diet_flora",
+   "text": "Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new growth over mature growth.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 21,
+   "category": "diet_prey",
+   "text": "N/A",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 21,
+   "category": "key_fact",
+   "text": "The oldest recorded individual, Tu'i Malila, lived to be an estimated 188 years old.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 21,
+   "category": "key_fact",
+   "text": "Unlike other star tortoises, its carapace scutes are smooth and not raised into pyramidal shapes.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 21,
+   "category": "key_fact",
+   "text": "Grazing makes up 80-90% of its diet.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 21,
+   "category": "life_description",
+   "text": "Female digs a 15-20 cm deep hole to lay eggs, then departs. Incubation is very long, lasting 5 to 8 months.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 21,
+   "category": "life_description",
+   "text": "Hatchlings are 3.2-4.0 cm and are white or off-white. They attain their high-domed carapace soon after hatching.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 21,
+   "category": "threat",
+   "text": "Habitat loss, poaching for food, and over-exploitation in the international pet trade. Numbers are declining rapidly.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 22,
+   "category": "behavior",
+   "text": "Diurnal (active during the day). Rested for about 16 hours a day.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 22,
+   "category": "behavior",
+   "text": "A critical ecosystem engineer, shaping the island's vegetation through herbivory and seed dispersal.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 22,
+   "category": "diet_flora",
+   "text": "Fed primarily on greens, grasses, native fruit, and low-hanging cactus pads.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 22,
+   "category": "diet_prey",
+   "text": "N/A",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 22,
+   "category": "key_fact",
+   "text": "The last known individual was named Lonesome George, who became a global icon for conservation.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 22,
+   "category": "key_fact",
+   "text": "First-generation hybrids have been found on Wolf Volcano, offering a chance to resurrect the Pinta lineage.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 22,
+   "category": "key_fact",
+   "text": "Its extinction diminished the Pinta Island ecosystem, as it was a top herbivore and ecosystem engineer.",
+   "sortOrder": 3
+  },
+  {
+   "speciesId": 22,
+   "category": "life_description",
+   "text": "Females migrated to nesting zones to lay eggs. All modern breeding attempts with Lonesome George and other subspecies failed.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 22,
+   "category": "life_description",
+   "text": "The last known individual, Lonesome George, died in 2012. His body is preserved as a taxidermy specimen, serving as a powerful symbol.",
+   "sortOrder": 2
+  },
+  {
+   "speciesId": 22,
+   "category": "threat",
+   "text": "Over-harvesting by whalers in the 19th century and severe habitat destruction caused by invasive, introduced goats.",
+   "sortOrder": 1
+  }
+ ]
+}
