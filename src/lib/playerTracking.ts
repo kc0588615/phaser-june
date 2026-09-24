@@ -2,50 +2,17 @@
 // PLAYER TRACKING SERVICE - Drizzle Version
 // =============================================================================
 // Syncs game events to Postgres with proper session management.
-// Server-only: client imports get no-op stubs to prevent build errors.
+// Server-only: imported by API routes and scripts.
 // =============================================================================
 
-// Client-side guard: export no-op functions to prevent postgres import in browser
-const isServer = typeof window === 'undefined';
-
-// Lazy-load server dependencies only when needed
-let db: any;
-let playerGameSessions: any;
-let playerSpeciesDiscoveries: any;
-let playerStats: any;
-let speciesTable: any;
-let eq: any, and: any, isNull: any, desc: any;
-
-async function ensureServerDeps() {
-  if (!isServer) return false;
-  if (!db) {
-    const drizzleOps = await import('drizzle-orm');
-    eq = drizzleOps.eq;
-    and = drizzleOps.and;
-    isNull = drizzleOps.isNull;
-    desc = drizzleOps.desc;
-
-    let dbModule: any;
-    try {
-      dbModule = await import('@/db');
-    } catch (err) {
-      dbModule = await import('../db');
-    }
-    db = dbModule.db;
-    playerGameSessions = dbModule.playerGameSessions;
-    playerSpeciesDiscoveries = dbModule.playerSpeciesDiscoveries;
-    playerStats = dbModule.playerStats;
-    speciesTable = dbModule.speciesTable;
-  }
-  return true;
-}
+import { and, desc, eq, isNull } from 'drizzle-orm';
+import { db, playerGameSessions, playerSpeciesDiscoveries, playerStats, speciesTable } from '@/db';
 
 /**
  * Start or resume a game session
  * Handles React Strict Mode double-mounting
  */
 export async function startGameSession(playerId: string): Promise<string | null> {
-  if (!(await ensureServerDeps())) return null; // Client-side no-op
 
   try {
     // Check for existing open session (prevent duplicates)
@@ -98,7 +65,6 @@ export async function endGameSession(
   finalMoves: number,
   finalScore: number
 ): Promise<boolean> {
-  if (!(await ensureServerDeps())) return false; // Client-side no-op
 
   try {
     const result = await db
@@ -138,7 +104,6 @@ export async function endGameSession(
  * Uses upsert to create or update the stats row.
  */
 export async function refreshPlayerStats(playerId: string): Promise<boolean> {
-  if (!(await ensureServerDeps())) return false;
 
   try {
     // Get discovery stats with species details
@@ -176,12 +141,12 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
 
     // Calculate aggregates
     const totalSpeciesDiscovered = discoveries.length;
-    const totalScore = discoveries.reduce((sum: number, d: any) => sum + (d.scoreEarned || 0), 0);
-    const totalMovesMade = sessions.reduce((sum: number, s: any) => sum + (s.totalMoves || 0), 0);
+    const totalScore = discoveries.reduce((sum, d) => sum + (d.scoreEarned || 0), 0);
+    const totalMovesMade = sessions.reduce((sum, s) => sum + (s.totalMoves || 0), 0);
     const totalGamesPlayed = sessions.length;
 
     // Calculate play time
-    const totalPlayTimeSeconds = sessions.reduce((sum: number, s: any) => {
+    const totalPlayTimeSeconds = sessions.reduce((sum, s) => {
       if (s.startedAt && s.endedAt) {
         return sum + Math.floor((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 1000);
       }
@@ -190,8 +155,8 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
 
     // Calculate time stats
     const discoverTimes = discoveries
-      .map((d: any) => d.timeToDiscoverSeconds)
-      .filter((t: any) => t != null) as number[];
+      .map((d) => d.timeToDiscoverSeconds)
+      .filter((t) => t != null) as number[];
     const averageTimePerDiscoverySeconds = discoverTimes.length > 0
       ? Math.floor(discoverTimes.reduce((a, b) => a + b, 0) / discoverTimes.length)
       : null;
@@ -246,9 +211,9 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
 
     // Get first/last discovery timestamps
     const discoveryDates = discoveries
-      .map((d: any) => d.discoveredAt)
-      .filter((d: any) => d != null)
-      .sort((a: any, b: any) => new Date(a).getTime() - new Date(b).getTime());
+      .map((d) => d.discoveredAt)
+      .filter((d) => d != null)
+      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
     const firstDiscoveryAt = discoveryDates[0] || null;
     const lastDiscoveryAt = discoveryDates[discoveryDates.length - 1] || null;
 
