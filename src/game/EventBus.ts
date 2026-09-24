@@ -83,6 +83,12 @@ export interface EventPayloads {
     groups: Array<{ gemType: LootGemType; size: number }>;
     cascade: boolean;
   };
+  /** Clue Match: build a seeded board from these gem colors. */
+  'clue-board-setup': { seed: number; allowedGemTypes: LootGemType[] };
+  /** Clue Match: stop (or resume) accepting moves, e.g. between rounds. */
+  'clue-board-lock': { locked: boolean };
+  /** Clue Match: the board had no valid move left and was reshuffled. */
+  'clue-board-shuffled': undefined;
   'auth-user-ready': { playerId: string; sessionId?: string };
 }
 

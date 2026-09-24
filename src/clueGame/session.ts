@@ -4,7 +4,7 @@ import type { LootGemType } from '@/expedition/domain';
 import type { ClueFit } from '@/clueGame/deduction';
 import type { CluePool } from '@/clueGame/pool';
 import { buildSpeciesRecords, type SpeciesRecords } from '@/clueGame/traits';
-import { WRONG_GUESS_PENALTY, correctGuessScore, registerWrongGuess, revealNext, type RoundState } from '@/clueGame/round';
+import { WRONG_GUESS_PENALTY, registerWrongGuess, revealNext, scoreBreakdown, type RoundState, type ScorePart } from '@/clueGame/round';
 
 const FEED_LIMIT = 120;
 
@@ -13,8 +13,20 @@ export type FeedItem = { key: number } & (
   | { kind: 'clue'; gem: LootGemType; text: string; fits: Record<number, ClueFit> }
   | { kind: 'note'; gem: LootGemType; text: string }
   | { kind: 'empty'; gem: LootGemType }
+  | { kind: 'shuffle' }
   | { kind: 'guess'; correct: boolean; speciesId: number; points: number; funFact: string | null }
 );
+
+/** What the reveal card shows after a correct guess. */
+export interface SolveSummary {
+  speciesId: number;
+  points: number;
+  parts: ScorePart[];
+  moves: number;
+  /** Clues and notes read this round. */
+  cluesSeen: number;
+  funFact: string | null;
+}
 
 export interface SessionState {
   pool: CluePool;
@@ -25,6 +37,7 @@ export interface SessionState {
   streak: number;
   bestStreak: number;
   solved: number;
+  lastSolve: SolveSummary | null;
   feed: FeedItem[];
   /** Mystery ids in play order, so recent ones aren't repeated. */
   history: number[];
@@ -36,7 +49,9 @@ export type SessionAction =
   | { type: 'start-round'; round: RoundState }
   /** One explode phase of the board: the player's move (cascade false) or a cascade. */
   | { type: 'matched'; gems: LootGemType[]; cascade: boolean }
-  | { type: 'guess'; speciesId: number };
+  | { type: 'guess'; speciesId: number }
+  /** The board had no valid move left and was reshuffled. */
+  | { type: 'shuffled' };
 
 type FeedEntry = FeedItem extends infer Item ? Item extends FeedItem ? Omit<Item, 'key'> : never : never;
 
@@ -62,14 +77,14 @@ function funFactFor(state: SessionState, speciesId: number): string | null {
 }
 
 function beginRound(state: SessionState, round: RoundState): SessionState {
-  return withFeed({ ...state, round, phase: 'playing', history: [...state.history, round.mysteryId] }, [{ kind: 'round', round: round.round }]);
+  return withFeed({ ...state, round, phase: 'playing', lastSolve: null, history: [...state.history, round.mysteryId] }, [{ kind: 'round', round: round.round }]);
 }
 
 export function clueSessionReducer(state: SessionState | null, action: SessionAction): SessionState | null {
   if (action.type === 'load') {
     const fresh: SessionState = {
       pool: action.pool, records: buildSpeciesRecords(action.pool), round: action.round, phase: 'playing',
-      score: 0, streak: 0, bestStreak: 0, solved: 0, feed: [], history: [], nextKey: 1,
+      score: 0, streak: 0, bestStreak: 0, solved: 0, lastSolve: null, feed: [], history: [], nextKey: 1,
     };
     return beginRound(fresh, action.round);
   }
@@ -91,14 +106,23 @@ export function clueSessionReducer(state: SessionState | null, action: SessionAc
       return withFeed({ ...state, round }, entries);
     }
 
+    case 'shuffled':
+      return state.phase === 'playing' ? withFeed(state, [{ kind: 'shuffle' }]) : state;
+
     case 'guess': {
       if (state.phase !== 'playing' || state.round.ruledOut.includes(action.speciesId)) return state;
       if (action.speciesId === state.round.mysteryId) {
-        const points = correctGuessScore({ moves: state.round.moves, streak: state.streak, firstTry: state.round.wrongGuesses.length === 0 });
+        const parts = scoreBreakdown({ moves: state.round.moves, streak: state.streak, firstTry: state.round.wrongGuesses.length === 0 });
+        const points = parts.reduce((sum, part) => sum + part.points, 0);
         const streak = state.streak + 1;
+        const funFact = funFactFor(state, action.speciesId);
+        const cluesSeen = Object.values(state.round.revealedByGem).reduce((sum, count) => sum + (count ?? 0), 0);
         return withFeed(
-          { ...state, phase: 'solved', score: state.score + points, streak, bestStreak: Math.max(state.bestStreak, streak), solved: state.solved + 1 },
-          [{ kind: 'guess', correct: true, speciesId: action.speciesId, points, funFact: funFactFor(state, action.speciesId) }],
+          {
+            ...state, phase: 'solved', score: state.score + points, streak, bestStreak: Math.max(state.bestStreak, streak), solved: state.solved + 1,
+            lastSolve: { speciesId: action.speciesId, points, parts, moves: state.round.moves, cluesSeen, funFact },
+          },
+          [{ kind: 'guess', correct: true, speciesId: action.speciesId, points, funFact }],
         );
       }
       return withFeed(

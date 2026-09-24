@@ -18,14 +18,16 @@ export class Preloader extends Phaser.Scene {
         this.load.image(AssetKeys.LOGO, `${assetsFullPath}logo.png`);
         this.load.image(AssetKeys.BACKGROUND, `${assetsFullPath}bg.png`); // Corrected key and filename
 
-        // Load loot gem assets. Action gems use generated placeholder textures for now.
-        LOOT_GEM_TYPES.forEach((type: GemType) => {
-            for (let i = 0; i < GEM_FRAME_COUNT; i++) {
-                const key = AssetKeys.GEM_TEXTURE(type, i);
-                const path = `${assetsFullPath}${type}_gem_${i}.png`;
-                this.load.image(key, path);
-            }
-        });
+        // Pixel-art gem frames serve the legacy non-icon board; Clue Match draws icons only.
+        if (this.registry.get('mode') !== 'clue') {
+            LOOT_GEM_TYPES.forEach((type: GemType) => {
+                for (let i = 0; i < GEM_FRAME_COUNT; i++) {
+                    const key = AssetKeys.GEM_TEXTURE(type, i);
+                    const path = `${assetsFullPath}${type}_gem_${i}.png`;
+                    this.load.image(key, path);
+                }
+            });
+        }
         LOOT_GEM_TYPES.forEach((type: GemType) => {
             this.load.svg(
                 AssetKeys.EVIDENCE_GEM_TEXTURE(type),
@@ -103,9 +105,10 @@ export class Preloader extends Phaser.Scene {
     }
 
     create(): void {
-        console.log("Preloader: Starting Game");
+        const startScene = this.registry.get('startScene') ?? 'Game';
+        console.log(`Preloader: Starting ${startScene}`);
         this.time.delayedCall(100, () => {
-             this.scene.start('Game');
+             this.scene.start(startScene);
         });
     }
 }

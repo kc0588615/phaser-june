@@ -135,8 +135,19 @@ export function registerWrongGuess(state: RoundState, speciesId: number): RoundS
 export const WRONG_GUESS_PENALTY = 30;
 export const FIRST_TRY_BONUS = 25;
 
-/** Fewer moves score more; a first-try guess and a streak add on top. */
-export function correctGuessScore({ moves, streak, firstTry }: { moves: number; streak: number; firstTry: boolean }): number {
-  const speed = Math.max(0, 10 - moves) * 10;
-  return 50 + speed + (firstTry ? FIRST_TRY_BONUS : 0) + 10 * Math.min(streak, 10);
+export interface ScorePart { label: string; points: number }
+
+/** Why a correct guess scores what it does: fewer moves score more; a first try and a streak add on top. */
+export function scoreBreakdown({ moves, streak, firstTry }: { moves: number; streak: number; firstTry: boolean }): ScorePart[] {
+  const parts: ScorePart[] = [
+    { label: 'Solved', points: 50 },
+    { label: moves === 1 ? 'Speed (1 move)' : `Speed (${moves} moves)`, points: Math.max(0, 10 - moves) * 10 },
+  ];
+  if (firstTry) parts.push({ label: 'First try', points: FIRST_TRY_BONUS });
+  if (streak > 0) parts.push({ label: `Streak ×${streak}`, points: 10 * Math.min(streak, 10) });
+  return parts.filter(part => part.points > 0);
+}
+
+export function correctGuessScore(input: { moves: number; streak: number; firstTry: boolean }): number {
+  return scoreBreakdown(input).reduce((sum, part) => sum + part.points, 0);
 }

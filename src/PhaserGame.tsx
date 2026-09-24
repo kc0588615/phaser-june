@@ -4,7 +4,7 @@
 // game + current scene through a ref. React never reaches into Phaser beyond
 // this; all gameplay communication goes through the EventBus.
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
-import StartGame from './game/main';
+import StartGame, { type GameMode } from './game/main';
 import { EventBus } from './game/EventBus';
 
 export interface IRefPhaserGame
@@ -15,10 +15,14 @@ export interface IRefPhaserGame
 
 interface IProps
 {
-    currentActiveScene?: (scene_instance: Phaser.Scene) => void
+    currentActiveScene?: (scene_instance: Phaser.Scene) => void;
+    /** Which scenes to boot; fixed for the component's lifetime. */
+    mode?: GameMode;
+    /** Classes for #game-container; Phaser sizes the canvas to it. */
+    className?: string;
 }
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene }, ref)
+export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, mode = 'expedition', className = 'relative z-game' }, ref)
 {
     const game = useRef<Phaser.Game | null>(null!);
 
@@ -27,7 +31,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
         if (game.current === null)
         {
 
-            game.current = StartGame("game-container");
+            game.current = StartGame("game-container", mode);
 
             if (typeof ref === 'function')
             {
@@ -50,7 +54,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
                 }
             }
         }
-    }, [ref]);
+    }, [ref]); // eslint-disable-line react-hooks/exhaustive-deps -- mode is fixed per mount
 
     // Latest callback in a ref: subscribe once, and remove only our own handler.
     const onSceneRef = useRef(currentActiveScene);
@@ -69,7 +73,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     }, [ref]);
 
     return (
-        <div id="game-container" className="relative z-game"></div>
+        <div id="game-container" className={className}></div>
     );
 
 });

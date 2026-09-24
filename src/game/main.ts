@@ -1,11 +1,20 @@
-// Phaser boot config. Scene order matters: Boot -> Preloader (loads assets)
-// -> MainMenu -> Game (the match-3 board) -> GameOver.
+// Phaser boot config. Each page boots one game mode:
+//   expedition: Boot -> Preloader -> Game (the expedition board); MainMenu/GameOver for free play
+//   clue:       Boot -> Preloader -> ClueBoard (Clue Match)
 import { Boot } from './scenes/Boot';
 import { Game } from './scenes/Game';
 import { GameOver } from './scenes/GameOver';
 import { MainMenu } from './scenes/MainMenu';
+import { ClueBoardScene } from './scenes/ClueBoardScene';
 import Phaser from 'phaser';
 import { Preloader } from './scenes/Preloader';
+
+export type GameMode = 'expedition' | 'clue';
+
+const MODES: Record<GameMode, { scenes: Phaser.Types.Scenes.SceneType[]; startScene: string }> = {
+    expedition: { scenes: [Boot, Preloader, MainMenu, Game, GameOver], startScene: 'Game' },
+    clue: { scenes: [Boot, Preloader, ClueBoardScene], startScene: ClueBoardScene.KEY },
+};
 
 // Find out more information about the Game Config at:
 // https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
@@ -32,18 +41,17 @@ const config: Phaser.Types.Core.GameConfig = {
         pixelArt: false, // Set to true if using pixel art assets and want sharp scaling
         roundPixels: true // Helps prevent sub-pixel jitter
     },
-    scene: [
-        Boot,
-        Preloader,
-        MainMenu,
-        Game,
-        GameOver
-    ]
 };
 
-const StartGame = (parent: string): Phaser.Game => {
-    // Pass the updated config and the parent element ID
-    return new Phaser.Game({ ...config, parent });
+const StartGame = (parent: string, mode: GameMode = 'expedition'): Phaser.Game => {
+    const { scenes, startScene } = MODES[mode];
+    return new Phaser.Game({
+        ...config,
+        parent,
+        scene: scenes,
+        // Preloader reads these to pick its assets and the scene to start.
+        callbacks: { preBoot: game => { game.registry.set('mode', mode); game.registry.set('startScene', startScene); } },
+    });
 }
 
 export default StartGame;

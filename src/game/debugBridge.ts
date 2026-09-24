@@ -40,6 +40,8 @@ export interface DebugScene {
 }
 
 type RunSource = () => { runId: string | null; runState: RunState };
+/** Clue Match session summary (JSON-safe), registered by the Clue Match page. */
+type ClueSource = () => unknown;
 type Move = { rowOrCol: MoveDirection; index: number; amount: number };
 type LoggedEvent = { at: number; name: keyof EventPayloads; payload: unknown };
 
@@ -52,10 +54,12 @@ const LOGGED: Record<keyof EventPayloads, true> = {
   'expedition-start': true, 'node-complete': true, 'route-progress-updated': true,
   'node-objective-updated': true, 'evidence-move-resolved': true, 'evidence-progress-committed': true,
   'routing-state-updated': true, 'auth-user-ready': true, 'gems-matched': true,
+  'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
 };
 
 let scene: DebugScene | null = null;
 let runSource: RunSource | null = null;
+let clueSource: ClueSource | null = null;
 const log: LoggedEvent[] = [];
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -191,6 +195,7 @@ function install(): void {
   holder.__cc = {
     state: () => requireScene().debugSnapshot(),
     run: () => runSource?.() ?? null,
+    clue: () => clueSource?.() ?? null,
     validMoves,
     cellCenter,
     drag,
@@ -223,4 +228,12 @@ export function setDebugRunSource(source: RunSource): () => void {
   ensureInstalled();
   runSource = source;
   return () => { if (runSource === source) runSource = null; };
+}
+
+/** Register the Clue Match session getter; returns the unregister function. */
+export function setDebugClueSource(source: ClueSource): () => void {
+  if (!enabled) return () => {};
+  ensureInstalled();
+  clueSource = source;
+  return () => { if (clueSource === source) clueSource = null; };
 }
