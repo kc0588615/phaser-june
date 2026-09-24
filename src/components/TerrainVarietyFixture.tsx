@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
-import { EventBus } from '@/game/EventBus';
+import { EventBus, type EventPayloads } from '@/game/EventBus';
 import { ExpeditionMapHud } from '@/components/ExpeditionMapHud';
 import { createEmptyEvidenceCharges } from '@/expedition/evidenceFamilies';
 import { parseTerrainSnapshot } from '@/terrain/terrain';
@@ -55,6 +55,16 @@ const runState: RunState = {
 export function TerrainVarietyFixture() {
   const phaserRef = useRef<IRefPhaserGame | null>(null);
   const [ready, setReady] = useState(false);
+  useEffect(() => {
+    // No server on this page: confirm each move like the evidence-progress route
+    // would, so the board keeps taking input. Deferred until the scene finishes
+    // resolving the move (it ignores confirmations that arrive mid-resolution).
+    const confirm = ({ nodeIndex, moveNumber }: EventPayloads['evidence-move-resolved']) => {
+      setTimeout(() => EventBus.emit('evidence-progress-committed', { nodeIndex, moveNumber }), 0);
+    };
+    EventBus.on('evidence-move-resolved', confirm);
+    return () => { EventBus.off('evidence-move-resolved', confirm); };
+  }, []);
   useEffect(() => {
     if (!ready) return;
     EventBus.emit('map-location-selected', {

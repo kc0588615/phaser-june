@@ -9,7 +9,7 @@ You review the expedition run pipeline of a Next.js + Phaser deduction game. Rea
 
 Check every one of these invariants and report violations with `file:line`:
 
-1. **Server-private stays private.** Answer species, seed, `casePrivate`, `familyHints` answer tags, explanation `is_answer`, and resolution text must never appear in a route response or in `runProjection` output before the run completes. Grep response builders for these fields.
+1. **Server-private stays private.** Answer species, seed, `casePrivate`, `familyHints` answer tags, explanation `is_answer`, and resolution text must never appear in a route response or in `runProjection` output before the run completes. Grep response builders for these fields. The dev playtest bridge (`src/game/debugBridge.ts`, `window.__cc`) reads only client-side state and is a no-op in production builds.
 2. **Server authority.** Guess/claim/evidence resolution happens in `src/app/api/runs/[runId]/*` routes, never trusted from client payloads. Client only proposes.
 3. **Reload safety.** Anything the player has seen (hints, ladder rungs, claim state, field plates) is in the run snapshot / metadata, not recomputed from live content tables (content reloads must not change a live run). See `preserveRunEvidenceHints`.
 4. **Snapshot version discipline.** Changes to snapshot shape bump or guard the version; old v4 runs still resume or are explicitly rejected.

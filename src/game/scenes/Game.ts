@@ -36,6 +36,7 @@ import {
 import { GEM_EVIDENCE_FAMILIES, type EvidenceFamily } from '@/expedition/evidenceFamilies';
 import { getExpeditionBoardSafeArea } from '../expeditionHudLayout';
 import { applyFieldSignalMatch, buildFieldSignalSeed, FIELD_SIGNAL_BLOCKER_ID } from '../fieldSignal';
+import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from '@/game/debugBridge';
 
 interface BoardOffset {
     x: number;
@@ -330,6 +331,7 @@ export class Game extends Phaser.Scene {
         this.isBoardInitialized = false;
 
         EventBus.emit('current-scene-ready', this);
+        attachDebugScene(this);
 
         // Initialize player tracking
         this.initializePlayerTracking();
@@ -1265,8 +1267,37 @@ export class Game extends Phaser.Scene {
         }
     }
 
+    /** Client-visible board state for the dev playtest bridge (`src/game/debugBridge.ts`). */
+    debugSnapshot(): DebugBoardSnapshot {
+        const puzzle = this.backendPuzzle;
+        return {
+            ready: this.isBoardInitialized && !!puzzle,
+            canMove: this.canMove,
+            isResolvingMove: this.isResolvingMove,
+            isDragging: this.isDragging,
+            isPaused: this.isPaused,
+            inRun: this.inExpeditionRun,
+            nodeIndex: this.currentNodeIndex,
+            boardSeed: this.currentBoardSeed,
+            movesUsed: puzzle?.getMovesUsed() ?? 0,
+            maxMoves: puzzle?.getMaxMoves() ?? 0,
+            gameOver: puzzle?.isGameOver() ?? false,
+            objective: { progress: this.nodeObjectiveProgress, target: this.nodeObjectiveTarget, completed: this.nodeObjectiveCompleted },
+            streak: this.streak,
+            hasAnyValidMove: puzzle?.hasAnyValidMove() ?? false,
+            gemSize: this.gemSize,
+            boardOffset: { ...this.boardOffset },
+            grid: puzzle?.getGridState() ?? [],
+        };
+    }
+
+    debugPuzzle(): BackendPuzzle | null {
+        return this.backendPuzzle;
+    }
+
     shutdown(): void {
         console.log("Game Scene: Shutting down...");
+        detachDebugScene(this);
 
         // End session if active
         if (this.currentSessionId && this.backendPuzzle) {

@@ -2,6 +2,7 @@ import { EMPTY_CLAIMS, type ClaimInput, type ClaimState, type Hypotheses } from 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
+import { setDebugRunSource } from '@/game/debugBridge';
 import type { CaseState, EarnedObservation, EvidenceProgressResponse, ExpeditionData, FieldFact, RunState } from '@/types/expedition';
 import type { DeductionProfile } from '@/lib/deductionEngine';
 import type { PublicCaseSnapshot, ClientRunProjection } from '@/lib/runProjection';
@@ -53,6 +54,8 @@ export function ExpeditionProvider({ children }: { children: React.ReactNode }) 
   const advancingRef = useRef(false);
   const plannedRouteRef = useRef<RoutePoint[]>([]);
   useEffect(() => { stateRef.current = runState; }, [runState]);
+  // Dev playtest bridge: window.__cc.run() reads the same client-side run state.
+  useEffect(() => setDebugRunSource(() => ({ runId: runIdRef.current, runState: stateRef.current })), []);
 
   const resetLocal = useCallback(() => {
     payloadRef.current = null; runIdRef.current = null; pendingCreatedRunRef.current = null; createRequestIdRef.current = null; casePublicRef.current = null;
