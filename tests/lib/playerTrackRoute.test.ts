@@ -37,6 +37,7 @@ test('endGameSession rejects non-integer or negative totals and bad session ids'
   for (const body of [
     { action: 'endGameSession', sessionId: SESSION, finalMoves: 1.5, finalScore: 10 },
     { action: 'endGameSession', sessionId: SESSION, finalMoves: 3, finalScore: -1 },
+    { action: 'endGameSession', sessionId: SESSION, finalMoves: 2_147_483_648, finalScore: 10 },
     { action: 'endGameSession', sessionId: SESSION, finalMoves: '3', finalScore: 10 },
     { action: 'endGameSession', sessionId: 'not-a-uuid', finalMoves: 3, finalScore: 10 },
   ]) {

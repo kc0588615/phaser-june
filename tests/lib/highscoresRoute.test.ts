@@ -37,6 +37,7 @@ test('rejects malformed bodies and bad fields with 400 and writes nothing', asyn
     async () => ({ username: 42, score: 10 }),
     async () => ({ username: 'Ada', score: 1.5 }),
     async () => ({ username: 'Ada', score: -1 }),
+    async () => ({ username: 'Ada', score: 2_147_483_648 }),
     async () => ({ username: 'A', score: 10 }),
   ];
   for (const json of bodies) {

@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!Number.isSafeInteger(score) || (score as number) < 0) {
+    // high_scores.score is a PostgreSQL integer.
+    if (!Number.isInteger(score) || (score as number) < 0 || (score as number) > 2_147_483_647) {
       return NextResponse.json(
         { error: 'Invalid score' },
         { status: 400 }

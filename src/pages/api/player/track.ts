@@ -2,7 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
 import { isUuid } from '@/lib/runCaseState';
 
-const isCount = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
+// Fits a PostgreSQL integer column.
+const isCount = (value: unknown): value is number =>
+  Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 2_147_483_647;
 
 /**
  * POST /api/player/track
