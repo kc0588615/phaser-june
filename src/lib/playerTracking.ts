@@ -173,7 +173,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
     let marineSpeciesCount = 0;
     let terrestrialSpeciesCount = 0;
     let freshwaterSpeciesCount = 0;
-    let aquaticSpeciesCount = 0;
 
     const UNKNOWN_BUCKET = 'Unknown';
     const normalizeBucket = (value: unknown): string => {
@@ -237,7 +236,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
         marineSpeciesCount,
         terrestrialSpeciesCount,
         freshwaterSpeciesCount,
-        aquaticSpeciesCount,
         speciesByIucnStatus,
         firstDiscoveryAt,
         lastDiscoveryAt,
@@ -261,7 +259,6 @@ export async function refreshPlayerStats(playerId: string): Promise<boolean> {
           marineSpeciesCount,
           terrestrialSpeciesCount,
           freshwaterSpeciesCount,
-          aquaticSpeciesCount,
           speciesByIucnStatus,
           firstDiscoveryAt,
           lastDiscoveryAt,

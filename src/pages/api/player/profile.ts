@@ -62,7 +62,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           marineSpeciesCount: raw.marineSpeciesCount,
           terrestrialSpeciesCount: raw.terrestrialSpeciesCount,
           freshwaterSpeciesCount: raw.freshwaterSpeciesCount,
-          aquaticSpeciesCount: raw.aquaticSpeciesCount,
           firstDiscoveryAt: raw.firstDiscoveryAt,
           lastDiscoveryAt: raw.lastDiscoveryAt,
           speciesByBiome: asJsonMap(raw.speciesByBiome),

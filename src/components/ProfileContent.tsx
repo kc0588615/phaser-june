@@ -21,7 +21,6 @@ interface ProfileData {
     marineSpeciesCount: number;
     terrestrialSpeciesCount: number;
     freshwaterSpeciesCount: number;
-    aquaticSpeciesCount: number;
     speciesByBiome: Record<string, number>;
     speciesByFamily: Record<string, number>;
     speciesByGenus: Record<string, number>;
@@ -208,7 +207,7 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
 
   const stats = data?.stats;
   const totalEco = stats
-    ? stats.marineSpeciesCount + stats.terrestrialSpeciesCount + stats.freshwaterSpeciesCount + stats.aquaticSpeciesCount
+    ? stats.marineSpeciesCount + stats.terrestrialSpeciesCount + stats.freshwaterSpeciesCount
     : 0;
 
   const topFamilies = sortedEntries(stats?.speciesByFamily).slice(0, 18);
@@ -354,7 +353,6 @@ export function ProfileContent({ userId, inline }: ProfileContentProps) {
                 <EcosystemBar label="Terrestrial" count={stats.terrestrialSpeciesCount} total={totalEco} color="var(--ds-accent-emerald)" icon={<TreePine className="size-4" />} />
                 <EcosystemBar label="Marine" count={stats.marineSpeciesCount} total={totalEco} color="var(--ds-accent-cyan)" icon={<Waves className="size-4" />} />
                 <EcosystemBar label="Freshwater" count={stats.freshwaterSpeciesCount} total={totalEco} color="var(--ds-gem-scan)" icon={<Droplets className="size-4" />} />
-                <EcosystemBar label="Aquatic" count={stats.aquaticSpeciesCount} total={totalEco} color="var(--ds-gem-focus)" icon={<Droplets className="size-4" />} />
               </div>
             </div>
           )}

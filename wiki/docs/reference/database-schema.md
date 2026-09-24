@@ -173,7 +173,7 @@ Aggregated per-player statistics. JSONB fields store map-style counts.
 | `marine_species_count` | integer | Marine count |
 | `terrestrial_species_count` | integer | Terrestrial count |
 | `freshwater_species_count` | integer | Freshwater count |
-| `aquatic_species_count` | integer | Aquatic count |
+| `aquatic_species_count` | integer | Unused (always 0; no species flag) |
 | `species_by_iucn_status` | jsonb | Counts by IUCN status |
 | `clues_by_category` | jsonb | Counts by clue category |
 | `favorite_clue_category` | text | Favorite category |
