@@ -134,6 +134,15 @@ describe('session', () => {
     assert.ok(last?.kind === 'guess' && last.correct && last.funFact === 'Males carry tadpoles in their vocal sac.');
   });
 
+  test('guesses on ruled-out candidates are ignored', () => {
+    let state = clueSessionReducer(start(), { type: 'matched', gems: ['red'] })!;
+    const out = state.round.ruledOut[0];
+    assert.ok(out !== undefined, 'the taxonomy clue should rule someone out');
+    const before = state;
+    state = clueSessionReducer(state, { type: 'guess', speciesId: out })!;
+    assert.equal(state, before);
+  });
+
   test('matches are ignored between rounds', () => {
     const solved = clueSessionReducer(start(), { type: 'guess', speciesId: 1 })!;
     assert.equal(clueSessionReducer(solved, { type: 'matched', gems: ['red'] }), solved);

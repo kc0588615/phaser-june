@@ -52,37 +52,21 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
         }
     }, [ref]);
 
+    // Latest callback in a ref: subscribe once, and remove only our own handler.
+    const onSceneRef = useRef(currentActiveScene);
+    useEffect(() => { onSceneRef.current = currentActiveScene; }, [currentActiveScene]);
+
     useEffect(() =>
     {
-        EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) =>
+        const onSceneReady = (scene_instance: Phaser.Scene) =>
         {
-            if (currentActiveScene && typeof currentActiveScene === 'function')
-            {
-
-                currentActiveScene(scene_instance);
-
-            }
-
-            if (typeof ref === 'function')
-            {
-
-                ref({ game: game.current, scene: scene_instance });
-            
-            } else if (ref)
-            {
-
-                ref.current = { game: game.current, scene: scene_instance };
-
-            }
-            
-        });
-        return () =>
-        {
-
-            EventBus.removeListener('current-scene-ready');
-        
-        }
-    }, [currentActiveScene, ref]);
+            onSceneRef.current?.(scene_instance);
+            if (typeof ref === 'function') ref({ game: game.current, scene: scene_instance });
+            else if (ref) ref.current = { game: game.current, scene: scene_instance };
+        };
+        EventBus.on('current-scene-ready', onSceneReady);
+        return () => { EventBus.off('current-scene-ready', onSceneReady); };
+    }, [ref]);
 
     return (
         <div id="game-container" className="relative z-game"></div>

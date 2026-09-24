@@ -1,9 +1,9 @@
 // Clue-category game: each gem color outputs clues from one category of the
 // mystery species (the classic clue-board mapping, docs/DEVELOPER_ONBOARDING.md §6).
 import type { LootGemType } from '@/expedition/domain';
+import type { SpeciesClueCategory } from '@/types/speciesClues';
 
-export const SPECIES_CLUE_CATEGORIES = ['habitat', 'morphology', 'diet', 'behavior', 'reproduction', 'taxonomy', 'key_fact', 'geography', 'conservation'] as const;
-export type SpeciesClueCategory = typeof SPECIES_CLUE_CATEGORIES[number];
+export { SPECIES_CLUE_CATEGORIES, type SpeciesClueCategory } from '@/types/speciesClues';
 
 export interface GemCategory {
   gem: LootGemType;

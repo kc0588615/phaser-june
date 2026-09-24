@@ -66,11 +66,11 @@ export function CandidateGrid({ candidates, fitsById, ruledOut, wrongGuesses, an
             <button
               type="button"
               onClick={() => onGuess(species.id)}
-              disabled={!canGuess || isWrong}
+              disabled={!canGuess || isOut}
               className="mt-1.5 w-full rounded-lg border border-cyan-200/30 bg-cyan-300/10 py-1 text-[11px] font-bold uppercase tracking-wider text-cyan-100 transition-colors hover:bg-cyan-300/25 disabled:cursor-not-allowed disabled:opacity-30"
               aria-label={`Guess ${species.commonName}`}
             >
-              {isWrong ? 'Not this one' : 'Guess'}
+              {isWrong ? 'Not this one' : isOut ? 'Ruled out' : 'Guess'}
             </button>
           </div>
         );
@@ -109,10 +109,11 @@ export function ClueFeed({ feed, speciesById, candidateIds }: {
   candidateIds: number[];
 }) {
   const listRef = useRef<HTMLOListElement>(null);
+  const lastKey = feed.at(-1)?.key;
   useEffect(() => {
     const list = listRef.current;
     if (list) list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
-  }, [feed.length]);
+  }, [lastKey]);
 
   return (
     <ol ref={listRef} className="m-0 flex min-h-0 flex-1 list-none flex-col gap-1.5 overflow-y-auto p-0 pr-1 [scrollbar-color:rgba(165,243,252,.25)_transparent] [scrollbar-width:thin]" aria-label="Clue feed" aria-live="polite">

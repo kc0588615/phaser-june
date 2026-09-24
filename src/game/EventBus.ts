@@ -18,7 +18,7 @@ import type { Species } from '@/types/database';
 import type { RasterHabitatResult } from '@/lib/speciesService';
 import type { ExpeditionData } from '@/types/expedition';
 import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
-import type { BoardSpawnConfig } from '@/expedition/domain';
+import type { BoardSpawnConfig, LootGemType } from '@/expedition/domain';
 import type { FeatureFingerprint } from '@/types/gis';
 import type { BoardCheckpointV1 } from './boardTypes';
 import type { TerrainSnapshot, TerrainSelection } from '@/terrain/terrain';
@@ -80,7 +80,7 @@ export interface EventPayloads {
   'routing-state-updated': PublicRoutingView | null;
   /** Every match group cleared in one explode phase (the player's move or a cascade). */
   'gems-matched': {
-    groups: Array<{ gemType: import('@/expedition/domain').LootGemType; size: number }>;
+    groups: Array<{ gemType: LootGemType; size: number }>;
     cascade: boolean;
   };
   'auth-user-ready': { playerId: string; sessionId?: string };

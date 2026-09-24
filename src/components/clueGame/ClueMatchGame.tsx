@@ -1,8 +1,7 @@
 import Head from 'next/head';
-import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
-import type { IRefPhaserGame } from '@/PhaserGame';
+import { PhaserGame, type IRefPhaserGame } from '@/PhaserGame';
 import type { LootGemType } from '@/expedition/domain';
 import { CLUE_GAME_GEM_TYPES, GEM_CATEGORIES } from '@/clueGame/categories';
 import { usefulCategories, type ClueFit } from '@/clueGame/deduction';
@@ -11,8 +10,6 @@ import { createRound, liveCandidates, notesLeft } from '@/clueGame/round';
 import { clueSessionReducer } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
 import { CandidateGrid, CategoryLegend, ClueFeed } from './ClueMatchPanels';
-
-const PhaserGame = dynamic(() => import('@/PhaserGame').then(mod => mod.PhaserGame), { ssr: false });
 
 const NEXT_ROUND_DELAY_MS = 3000;
 // Free-play board: every clue color, no move limit, no seed (so no expedition field signals).
@@ -42,10 +39,14 @@ export function ClueMatchGame() {
         const response = await fetch('/api/clue-game/pool');
         if (!response.ok) throw new Error(`Pool request failed (${response.status})`);
         const pool = await response.json() as CluePool;
+        if (new Set(pool.clues.map(clue => clue.speciesId)).size < 2) {
+          if (!cancelled) setLoadError('Not enough animals have clues yet. Add clues for at least two species.');
+          return;
+        }
         if (!cancelled) dispatch({ type: 'load', pool, round: createRound(pool, rng.current, 1) });
       } catch (error) {
         console.error('[ClueMatch] Failed to load the clue pool:', error);
-        if (!cancelled) setLoadError('Could not load the animal clues. Check the database connection and reload.');
+        if (!cancelled) setLoadError('Could not load the animal clues. Check the connection and reload.');
       }
     })();
     return () => { cancelled = true; };
@@ -61,10 +62,14 @@ export function ClueMatchGame() {
     return () => { EventBus.off('gems-matched', onMatched); };
   }, []);
 
+  // Stable callback: reads the latest session through a ref.
+  const sessionRef = useRef(session);
+  useEffect(() => { sessionRef.current = session; }, [session]);
   const startNextRound = useCallback(() => {
-    if (!session) return;
-    dispatch({ type: 'start-round', round: createRound(session.pool, rng.current, session.round.round + 1, session.history) });
-  }, [session]);
+    const current = sessionRef.current;
+    if (!current || current.phase !== 'solved') return;
+    dispatch({ type: 'start-round', round: createRound(current.pool, rng.current, current.round.round + 1, current.history) });
+  }, []);
 
   useEffect(() => {
     if (session?.phase !== 'solved') return;

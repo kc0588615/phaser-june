@@ -85,7 +85,7 @@ export function clueSessionReducer(state: SessionState | null, action: SessionAc
     }
 
     case 'guess': {
-      if (state.phase !== 'playing' || state.round.wrongGuesses.includes(action.speciesId)) return state;
+      if (state.phase !== 'playing' || state.round.ruledOut.includes(action.speciesId)) return state;
       if (action.speciesId === state.round.mysteryId) {
         const points = correctGuessScore(state.round.revealed, liveCandidates(state.round).length, state.streak);
         return withFeed(

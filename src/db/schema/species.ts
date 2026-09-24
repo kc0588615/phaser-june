@@ -5,7 +5,7 @@
 
 import { sql } from 'drizzle-orm';
 import type { EvidenceFamily } from '@/expedition/evidenceFamilies';
-import type { SpeciesClueCategory } from '@/clueGame/categories';
+import type { SpeciesClueCategory } from '@/types/speciesClues';
 import {
   bigint,
   jsonb,
