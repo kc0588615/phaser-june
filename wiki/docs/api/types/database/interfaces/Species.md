@@ -1,6 +1,6 @@
 # Interface: Species
 
-Defined in: [types/database.ts:126](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L126)
+Defined in: [types/database.ts:99](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L99)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [types/database.ts:126](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **biome**: `string`
 
-Defined in: [types/database.ts:157](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L157)
+Defined in: [types/database.ts:130](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L130)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [types/database.ts:157](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **bioregion**: `string`
 
-Defined in: [types/database.ts:154](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L154)
+Defined in: [types/database.ts:127](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L127)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [types/database.ts:154](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **category**: `string`
 
-Defined in: [types/database.ts:180](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L180)
+Defined in: [types/database.ts:153](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L153)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [types/database.ts:180](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **class**: `string`
 
-Defined in: [types/database.ts:138](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L138)
+Defined in: [types/database.ts:111](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L111)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [types/database.ts:138](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **color\_primary**: `string`
 
-Defined in: [types/database.ts:161](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L161)
+Defined in: [types/database.ts:134](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L134)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [types/database.ts:161](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **color\_secondary**: `string`
 
-Defined in: [types/database.ts:162](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L162)
+Defined in: [types/database.ts:135](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L135)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [types/database.ts:162](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **common\_name**: `string`
 
-Defined in: [types/database.ts:130](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L130)
+Defined in: [types/database.ts:103](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L103)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [types/database.ts:130](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **conservation\_code**: `string`
 
-Defined in: [types/database.ts:179](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L179)
+Defined in: [types/database.ts:152](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L152)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [types/database.ts:179](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **conservation\_text**: `string`
 
-Defined in: [types/database.ts:178](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L178)
+Defined in: [types/database.ts:151](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L151)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [types/database.ts:178](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **diet\_flora**: `string`
 
-Defined in: [types/database.ts:171](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L171)
+Defined in: [types/database.ts:144](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L144)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [types/database.ts:171](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **diet\_prey**: `string`
 
-Defined in: [types/database.ts:170](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L170)
+Defined in: [types/database.ts:143](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L143)
 
 ***
 
@@ -96,7 +96,7 @@ Defined in: [types/database.ts:170](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **diet\_type**: `string`
 
-Defined in: [types/database.ts:169](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L169)
+Defined in: [types/database.ts:142](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L142)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [types/database.ts:169](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **distribution\_comment**: `string`
 
-Defined in: [types/database.ts:151](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L151)
+Defined in: [types/database.ts:124](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L124)
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [types/database.ts:151](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **family**: `string`
 
-Defined in: [types/database.ts:136](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L136)
+Defined in: [types/database.ts:109](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L109)
 
 ***
 
@@ -120,7 +120,7 @@ Defined in: [types/database.ts:136](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **freshwater**: `boolean`
 
-Defined in: [types/database.ts:144](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L144)
+Defined in: [types/database.ts:117](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L117)
 
 ***
 
@@ -128,7 +128,7 @@ Defined in: [types/database.ts:144](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **genus**: `string`
 
-Defined in: [types/database.ts:135](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L135)
+Defined in: [types/database.ts:108](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L108)
 
 ***
 
@@ -136,7 +136,7 @@ Defined in: [types/database.ts:135](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **geographic\_description**: `string`
 
-Defined in: [types/database.ts:150](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L150)
+Defined in: [types/database.ts:123](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L123)
 
 ***
 
@@ -144,7 +144,7 @@ Defined in: [types/database.ts:150](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **habitat\_description**: `string`
 
-Defined in: [types/database.ts:143](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L143)
+Defined in: [types/database.ts:116](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L116)
 
 ***
 
@@ -152,7 +152,7 @@ Defined in: [types/database.ts:143](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **habitat\_tags**: `string` \| `string`[]
 
-Defined in: [types/database.ts:147](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L147)
+Defined in: [types/database.ts:120](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L120)
 
 ***
 
@@ -160,7 +160,7 @@ Defined in: [types/database.ts:147](https://github.com/kc0588615/phaser-june/blo
 
 > **id**: `number`
 
-Defined in: [types/database.ts:128](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L128)
+Defined in: [types/database.ts:101](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L101)
 
 ***
 
@@ -168,7 +168,7 @@ Defined in: [types/database.ts:128](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **iucn\_id**: `number`
 
-Defined in: [types/database.ts:129](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L129)
+Defined in: [types/database.ts:102](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L102)
 
 ***
 
@@ -176,7 +176,7 @@ Defined in: [types/database.ts:129](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **iucn\_url**: `string` \| `null`
 
-Defined in: [types/database.ts:132](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L132)
+Defined in: [types/database.ts:105](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L105)
 
 ***
 
@@ -184,7 +184,7 @@ Defined in: [types/database.ts:132](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **kingdom**: `string`
 
-Defined in: [types/database.ts:140](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L140)
+Defined in: [types/database.ts:113](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L113)
 
 ***
 
@@ -192,7 +192,7 @@ Defined in: [types/database.ts:140](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **marine**: `boolean`
 
-Defined in: [types/database.ts:146](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L146)
+Defined in: [types/database.ts:119](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L119)
 
 ***
 
@@ -200,7 +200,7 @@ Defined in: [types/database.ts:146](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **notes**: [`SpeciesNote`](SpeciesNote.md)[]
 
-Defined in: [types/database.ts:127](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L127)
+Defined in: [types/database.ts:100](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L100)
 
 ***
 
@@ -208,7 +208,7 @@ Defined in: [types/database.ts:127](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **pattern**: `string`
 
-Defined in: [types/database.ts:160](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L160)
+Defined in: [types/database.ts:133](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L133)
 
 ***
 
@@ -216,7 +216,7 @@ Defined in: [types/database.ts:160](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **phylum**: `string`
 
-Defined in: [types/database.ts:139](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L139)
+Defined in: [types/database.ts:112](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L112)
 
 ***
 
@@ -224,7 +224,7 @@ Defined in: [types/database.ts:139](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **realm**: `string`
 
-Defined in: [types/database.ts:155](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L155)
+Defined in: [types/database.ts:128](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L128)
 
 ***
 
@@ -232,7 +232,7 @@ Defined in: [types/database.ts:155](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **scientific\_name**: `string`
 
-Defined in: [types/database.ts:131](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L131)
+Defined in: [types/database.ts:104](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L104)
 
 ***
 
@@ -240,7 +240,7 @@ Defined in: [types/database.ts:131](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **shape\_description**: `string`
 
-Defined in: [types/database.ts:163](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L163)
+Defined in: [types/database.ts:136](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L136)
 
 ***
 
@@ -248,7 +248,7 @@ Defined in: [types/database.ts:163](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **size\_max\_cm**: `number`
 
-Defined in: [types/database.ts:165](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L165)
+Defined in: [types/database.ts:138](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L138)
 
 ***
 
@@ -256,7 +256,7 @@ Defined in: [types/database.ts:165](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **size\_min\_cm**: `number`
 
-Defined in: [types/database.ts:164](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L164)
+Defined in: [types/database.ts:137](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L137)
 
 ***
 
@@ -264,7 +264,7 @@ Defined in: [types/database.ts:164](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **subrealm**: `string`
 
-Defined in: [types/database.ts:156](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L156)
+Defined in: [types/database.ts:129](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L129)
 
 ***
 
@@ -272,7 +272,7 @@ Defined in: [types/database.ts:156](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **taxon\_order**: `string`
 
-Defined in: [types/database.ts:137](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L137)
+Defined in: [types/database.ts:110](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L110)
 
 ***
 
@@ -280,7 +280,7 @@ Defined in: [types/database.ts:137](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **terrestrial**: `boolean`
 
-Defined in: [types/database.ts:145](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L145)
+Defined in: [types/database.ts:118](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L118)
 
 ***
 
@@ -288,7 +288,7 @@ Defined in: [types/database.ts:145](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **threats**: `string`
 
-Defined in: [types/database.ts:181](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L181)
+Defined in: [types/database.ts:154](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L154)
 
 ***
 
@@ -296,7 +296,7 @@ Defined in: [types/database.ts:181](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **weight\_kg**: `number`
 
-Defined in: [types/database.ts:166](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L166)
+Defined in: [types/database.ts:139](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L139)
 
 ***
 
@@ -304,4 +304,4 @@ Defined in: [types/database.ts:166](https://github.com/kc0588615/phaser-june/blo
 
 > `optional` **wkb\_geometry**: `any`
 
-Defined in: [types/database.ts:186](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L186)
+Defined in: [types/database.ts:159](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L159)

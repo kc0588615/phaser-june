@@ -15,5 +15,4 @@
 
 - [evidenceMoveSubmissionDigest](functions/evidenceMoveSubmissionDigest.md)
 - [parseEvidenceMoveSubmission](functions/parseEvidenceMoveSubmission.md)
-- [verifyEvidenceMove](functions/verifyEvidenceMove.md)
 - [verifyEvidenceMoveDetailed](functions/verifyEvidenceMoveDetailed.md)

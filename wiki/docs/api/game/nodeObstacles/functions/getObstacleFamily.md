@@ -2,7 +2,7 @@
 
 > **getObstacleFamily**(`obstacle`): [`ObstacleFamily`](../type-aliases/ObstacleFamily.md)
 
-Defined in: [game/nodeObstacles.ts:147](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L147)
+Defined in: [game/nodeObstacles.ts:153](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L153)
 
 ## Parameters
 

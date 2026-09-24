@@ -2,7 +2,7 @@
 
 > **POST**(`request`): `Promise`\<`NextResponse`\<\{ `error`: `string`; \}\> \| `NextResponse`\<\{ `score`: `Record`\<`string`, `unknown`\>; \}\>\>
 
-Defined in: [app/api/highscores/route.ts:42](https://github.com/kc0588615/phaser-june/blob/main/src/app/api/highscores/route.ts#L42)
+Defined in: [app/api/highscores/route.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/app/api/highscores/route.ts#L33)
 
 POST /api/highscores
 Save a new high score.

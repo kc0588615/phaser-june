@@ -3,7 +3,6 @@
 ## Type Aliases
 
 - [DeductionClueCategory](type-aliases/DeductionClueCategory.md)
-- [DeductionUnlockMode](type-aliases/DeductionUnlockMode.md)
 
 ## Variables
 

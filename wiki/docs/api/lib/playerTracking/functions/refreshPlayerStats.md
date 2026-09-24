@@ -2,7 +2,7 @@
 
 > **refreshPlayerStats**(`playerId`): `Promise`\<`boolean`\>
 
-Defined in: [lib/playerTracking.ts:301](https://github.com/kc0588615/phaser-june/blob/main/src/lib/playerTracking.ts#L301)
+Defined in: [lib/playerTracking.ts:106](https://github.com/kc0588615/phaser-june/blob/main/src/lib/playerTracking.ts#L106)
 
 Uses upsert to create or update the stats row.
 

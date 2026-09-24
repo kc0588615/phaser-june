@@ -2,7 +2,7 @@
 
 > **ExpeditionProvider**(`__namedParameters`): `Element`
 
-Defined in: [contexts/ExpeditionContext.tsx:43](https://github.com/kc0588615/phaser-june/blob/main/src/contexts/ExpeditionContext.tsx#L43)
+Defined in: [contexts/ExpeditionContext.tsx:40](https://github.com/kc0588615/phaser-june/blob/main/src/contexts/ExpeditionContext.tsx#L40)
 
 ## Parameters
 

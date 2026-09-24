@@ -1,6 +1,6 @@
 # Interface: SpeciesNote
 
-Defined in: [types/database.ts:119](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L119)
+Defined in: [types/database.ts:92](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L92)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [types/database.ts:119](https://github.com/kc0588615/phaser-june/blo
 
 > **note\_text**: `string`
 
-Defined in: [types/database.ts:122](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L122)
+Defined in: [types/database.ts:95](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L95)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [types/database.ts:122](https://github.com/kc0588615/phaser-june/blo
 
 > **sort\_order**: `number`
 
-Defined in: [types/database.ts:121](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L121)
+Defined in: [types/database.ts:94](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L94)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [types/database.ts:121](https://github.com/kc0588615/phaser-june/blo
 
 > **source\_url**: `string` \| `null`
 
-Defined in: [types/database.ts:123](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L123)
+Defined in: [types/database.ts:96](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L96)
 
 ***
 
@@ -32,4 +32,4 @@ Defined in: [types/database.ts:123](https://github.com/kc0588615/phaser-june/blo
 
 > **topic**: `"threats"` \| `"behavior"` \| `"reproduction"` \| `"taxonomy"` \| `"key_fact"` \| `"life_cycle"` \| `"distribution"`
 
-Defined in: [types/database.ts:120](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L120)
+Defined in: [types/database.ts:93](https://github.com/kc0588615/phaser-june/blob/main/src/types/database.ts#L93)

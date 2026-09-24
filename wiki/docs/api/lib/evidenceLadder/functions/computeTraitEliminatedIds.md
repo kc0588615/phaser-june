@@ -1,10 +1,10 @@
-# Function: computeLadderEliminatedIds()
+# Function: computeTraitEliminatedIds()
 
-> **computeLadderEliminatedIds**(`profiles`, `alreadyEliminatedIds`, `traitCategory`, `weakTag`): `number`[]
+> **computeTraitEliminatedIds**(`profiles`, `alreadyEliminatedIds`, `traitCategory`, `tag`): `number`[]
 
 Defined in: [lib/evidenceLadder.ts:71](https://github.com/kc0588615/phaser-june/blob/main/src/lib/evidenceLadder.ts#L71)
 
-Live candidates lacking the rung tag in the family's trait category.
+Live candidates whose profile lacks `tag` in the trait category (ladder rungs and hard cards).
 
 ## Parameters
 
@@ -20,7 +20,7 @@ readonly `Pick`\<[`CompilerSpeciesProfile`](../../caseTraits/interfaces/Compiler
 
 `"behavior"` | `"habitat"` | `"morphology"` | `"diet"` | `"reproduction"` | `"taxonomy"` | `"key_fact"` | `"geography"` | `"conservation"`
 
-### weakTag
+### tag
 
 `string`
 

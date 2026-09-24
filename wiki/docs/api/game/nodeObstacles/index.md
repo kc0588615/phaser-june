@@ -15,7 +15,6 @@
 - [NODE\_OBSTACLE\_FAMILY\_MAP](variables/NODE_OBSTACLE_FAMILY_MAP.md)
 - [NODE\_OBSTACLE\_LABELS](variables/NODE_OBSTACLE_LABELS.md)
 - [NODE\_OBSTACLES](variables/NODE_OBSTACLES.md)
-- [OBSTACLE\_FAMILY\_LABELS](variables/OBSTACLE_FAMILY_LABELS.md)
 
 ## Functions
 
@@ -24,3 +23,4 @@
 - [formatNodeObstacleLabel](functions/formatNodeObstacleLabel.md)
 - [getObstacleFamily](functions/getObstacleFamily.md)
 - [isStaticSeededObstacle](functions/isStaticSeededObstacle.md)
+- [parseNodeObstacles](functions/parseNodeObstacles.md)

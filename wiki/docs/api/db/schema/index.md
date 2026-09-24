@@ -32,12 +32,6 @@ Re-exports [deductionProfileUnknownTags](species/variables/deductionProfileUnkno
 
 ***
 
-### DeductionUnlockMode
-
-Re-exports [DeductionUnlockMode](species/type-aliases/DeductionUnlockMode.md)
-
-***
-
 ### ecoGisLayers
 
 Re-exports [ecoGisLayers](game/variables/ecoGisLayers.md)

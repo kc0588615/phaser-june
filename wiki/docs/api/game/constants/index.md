@@ -9,7 +9,6 @@
 - [GEM\_FRAME\_COUNT](variables/GEM_FRAME_COUNT.md)
 - [GRID\_COLS](variables/GRID_COLS.md)
 - [GRID\_ROWS](variables/GRID_ROWS.md)
-- [HABITAT\_GEM\_MAP](variables/HABITAT_GEM_MAP.md)
 - [INPUT\_THRESHOLDS](variables/INPUT_THRESHOLDS.md)
 - [MAX\_MOVES](variables/MAX_MOVES.md)
 - [MOVE\_HUGE\_MATCH\_THRESHOLD](variables/MOVE_HUGE_MATCH_THRESHOLD.md)

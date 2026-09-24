@@ -1,6 +1,6 @@
 # Interface: NodeBoardContext
 
-Defined in: [game/nodeObstacles.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L32)
+Defined in: [game/nodeObstacles.ts:45](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L45)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [game/nodeObstacles.ts:32](https://github.com/kc0588615/phaser-june/
 
 > **dynamicObstacles**: (`"flow_shift"` \| `"mud_tiles"` \| `"overgrowth"` \| `"low_visibility"` \| `"junk_blockers"` \| `"noise_interference"` \| `"steep_terrain"` \| `"time_pressure"` \| `"signal_dropout"` \| `"unknown_terrain"` \| `"limited_signal"`)[]
 
-Defined in: [game/nodeObstacles.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L37)
+Defined in: [game/nodeObstacles.ts:50](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L50)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [game/nodeObstacles.ts:37](https://github.com/kc0588615/phaser-june/
 
 > **height**: `number`
 
-Defined in: [game/nodeObstacles.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L34)
+Defined in: [game/nodeObstacles.ts:47](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L47)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [game/nodeObstacles.ts:34](https://github.com/kc0588615/phaser-june/
 
 > **obstacleSeeds**: [`CellStateSeed`](CellStateSeed.md)[]
 
-Defined in: [game/nodeObstacles.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L38)
+Defined in: [game/nodeObstacles.ts:51](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L51)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [game/nodeObstacles.ts:38](https://github.com/kc0588615/phaser-june/
 
 > **seed**: `number`
 
-Defined in: [game/nodeObstacles.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L35)
+Defined in: [game/nodeObstacles.ts:48](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L48)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [game/nodeObstacles.ts:35](https://github.com/kc0588615/phaser-june/
 
 > **staticObstacles**: (`"flow_shift"` \| `"mud_tiles"` \| `"overgrowth"` \| `"low_visibility"` \| `"junk_blockers"` \| `"noise_interference"` \| `"steep_terrain"` \| `"time_pressure"` \| `"signal_dropout"` \| `"unknown_terrain"` \| `"limited_signal"`)[]
 
-Defined in: [game/nodeObstacles.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L36)
+Defined in: [game/nodeObstacles.ts:49](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L49)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [game/nodeObstacles.ts:36](https://github.com/kc0588615/phaser-june/
 
 > **width**: `number`
 
-Defined in: [game/nodeObstacles.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L33)
+Defined in: [game/nodeObstacles.ts:46](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L46)

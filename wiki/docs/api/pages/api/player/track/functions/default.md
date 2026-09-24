@@ -2,11 +2,11 @@
 
 > **default**(`req`, `res`): `Promise`\<`void`\>
 
-Defined in: [pages/api/player/track.ts:9](https://github.com/kc0588615/phaser-june/blob/main/src/pages/api/player/track.ts#L9)
+Defined in: [pages/api/player/track.ts:12](https://github.com/kc0588615/phaser-june/blob/main/src/pages/api/player/track.ts#L12)
 
 POST /api/player/track
-Client-safe proxy for playerTracking server functions.
-Body: \{ action, ...params \}
+Ends the caller's own game session (sent by Game.ts on shutdown).
+Body: \{ action: 'endGameSession', sessionId, finalMoves, finalScore \}
 
 ## Parameters
 

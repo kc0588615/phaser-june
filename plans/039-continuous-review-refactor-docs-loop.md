@@ -119,3 +119,18 @@ Stopped on the commit cap (26 commits since `BASE` b04d8a04). 0 failed iteration
 - Rejected: shared run-route auth guard (C19), dropping empty `eco_node_attempts` / `eco_node_gis_samples` (C25, owner call).
 - Owner follow-ups: browser playtest (auth bridge, discoveries migrate, SpeciesCarousel, ExpeditionContext start/resume); main checkout `npm install` (prune radix) and `cd wiki && npm ci` (node_modules drifted to 3.10.1).
 - Loop state: `../phaser-june-039/.scratch/039/{log,backlog,codex}.md`.
+
+## Progress, round 2 (2026-09-23, loop stopped)
+
+The owner restarted the loop with a fresh budget (`BASE` e6521e9b). It stopped at the commit budget: 24 commits, 0 failed iterations, 1 rejection (C41, a shared MapLibre status hook). Gate now includes `npm run lint`. Codex reviews: M5 and M6 ok. M7 found 1 major, fixed in C48 (`endGameSession` wrote client totals verbatim and could rewrite ended sessions). `/code-review` ran on M6 and M7; its fixes landed.
+
+- **Security:** removed `POST /api/species/cards/[id]/unlock` (any signed-in user could mark any species discovered). `/api/player/track` now accepts only `endGameSession`: it validates totals and closes a session once. Its discovery and session-progress actions are gone.
+- **Bugs:** `POST /api/runs` and `POST /api/highscores` return 400 for bad JSON. The explore map ignores a WebGL context restore before first load. ESLint runs again (flat config) and exits 0. The pre-run board text now describes the expedition loop. The always-zero "Aquatic" profile bar is gone.
+- **Dead code:** hidden `SpeciesPanel` and the species-queue events; unread `map-location-selected` fields plus the candidate-species fetch; the `showSpeciesList` chain; `GET /api/species` + `speciesQueries.ts`; 6 `speciesService` methods + 3 routes; test-only case helpers; write-only `ExpeditionContext` refs; BoardView survey zones; declaration-only exports; unused params.
+- **Dedupe:** one trait eliminator (`computeTraitEliminatedIds`), one `parseNodeObstacles` for replay and projection, `groupBySpeciesId`, `playerTracking` static typed imports.
+- **Owner follow-ups:**
+  - Browser playtest: hint ticker, explore/HUD map load and context loss, split-layout pre-run text, profile ecosystem bars, run start/resume.
+  - Product call: free-play session totals are still client-reported on first close.
+  - Optional: drop the `player_stats.aquatic_species_count` column.
+  - The DB tunnel dropped mid-round, so the live schema diff was skipped. Rerun it with `.scratch/039/schema_cols.ts`.
+

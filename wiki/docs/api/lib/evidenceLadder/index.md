@@ -17,7 +17,7 @@
 
 ## Functions
 
-- [computeLadderEliminatedIds](functions/computeLadderEliminatedIds.md)
+- [computeTraitEliminatedIds](functions/computeTraitEliminatedIds.md)
 - [hydrateLedgerFact](functions/hydrateLedgerFact.md)
 - [ladderCategoryLabel](functions/ladderCategoryLabel.md)
 - [ladderEliminationReason](functions/ladderEliminationReason.md)

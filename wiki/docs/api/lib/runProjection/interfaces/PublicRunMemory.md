@@ -1,6 +1,6 @@
 # Interface: PublicRunMemory
 
-Defined in: [lib/runProjection.ts:124](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L124)
+Defined in: [lib/runProjection.ts:123](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L123)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [lib/runProjection.ts:124](https://github.com/kc0588615/phaser-june/
 
 > `optional` **biome**: `string` \| `null`
 
-Defined in: [lib/runProjection.ts:144](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L144)
+Defined in: [lib/runProjection.ts:143](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L143)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [lib/runProjection.ts:144](https://github.com/kc0588615/phaser-june/
 
 > `optional` **bioregion**: `string` \| `null`
 
-Defined in: [lib/runProjection.ts:145](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L145)
+Defined in: [lib/runProjection.ts:144](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L144)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [lib/runProjection.ts:145](https://github.com/kc0588615/phaser-june/
 
 > `optional` **createdAt**: `string`
 
-Defined in: [lib/runProjection.ts:146](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L146)
+Defined in: [lib/runProjection.ts:145](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L145)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [lib/runProjection.ts:146](https://github.com/kc0588615/phaser-june/
 
 > **deductionSummary**: \{ `efficiencyBonus?`: `number`; `firstGuessCorrect?`: `boolean`; `guessBonus?`: `number`; `issuedEvidenceCount?`: `number`; `slipped?`: `boolean`; `wrongGuessCount?`: `number`; \} \| `null`
 
-Defined in: [lib/runProjection.ts:134](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L134)
+Defined in: [lib/runProjection.ts:133](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L133)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [lib/runProjection.ts:134](https://github.com/kc0588615/phaser-june/
 
 > `optional` **finalScore**: `number` \| `null`
 
-Defined in: [lib/runProjection.ts:142](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L142)
+Defined in: [lib/runProjection.ts:141](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L141)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [lib/runProjection.ts:142](https://github.com/kc0588615/phaser-june/
 
 > **gisFeaturesNearby**: `object`[]
 
-Defined in: [lib/runProjection.ts:133](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L133)
+Defined in: [lib/runProjection.ts:132](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L132)
 
 #### distanceM
 
@@ -96,7 +96,7 @@ Defined in: [lib/runProjection.ts:133](https://github.com/kc0588615/phaser-june/
 
 > `optional` **id**: `string`
 
-Defined in: [lib/runProjection.ts:125](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L125)
+Defined in: [lib/runProjection.ts:124](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L124)
 
 ***
 
@@ -104,7 +104,7 @@ Defined in: [lib/runProjection.ts:125](https://github.com/kc0588615/phaser-june/
 
 > `optional` **locationKey**: `string`
 
-Defined in: [lib/runProjection.ts:127](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L127)
+Defined in: [lib/runProjection.ts:126](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L126)
 
 ***
 
@@ -112,7 +112,7 @@ Defined in: [lib/runProjection.ts:127](https://github.com/kc0588615/phaser-june/
 
 > **nodes**: [`PublicMemoryNode`](PublicMemoryNode.md)[]
 
-Defined in: [lib/runProjection.ts:132](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L132)
+Defined in: [lib/runProjection.ts:131](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L131)
 
 ***
 
@@ -120,7 +120,7 @@ Defined in: [lib/runProjection.ts:132](https://github.com/kc0588615/phaser-june/
 
 > `optional` **realm**: `string` \| `null`
 
-Defined in: [lib/runProjection.ts:143](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L143)
+Defined in: [lib/runProjection.ts:142](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L142)
 
 ***
 
@@ -128,7 +128,7 @@ Defined in: [lib/runProjection.ts:143](https://github.com/kc0588615/phaser-june/
 
 > **routeBounds**: \{ `maxLat`: `number`; `maxLon`: `number`; `minLat`: `number`; `minLon`: `number`; \} \| `null`
 
-Defined in: [lib/runProjection.ts:131](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L131)
+Defined in: [lib/runProjection.ts:130](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L130)
 
 ***
 
@@ -136,7 +136,7 @@ Defined in: [lib/runProjection.ts:131](https://github.com/kc0588615/phaser-june/
 
 > **routePolyline**: `object`[]
 
-Defined in: [lib/runProjection.ts:130](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L130)
+Defined in: [lib/runProjection.ts:129](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L129)
 
 #### lat
 
@@ -156,7 +156,7 @@ Defined in: [lib/runProjection.ts:130](https://github.com/kc0588615/phaser-june/
 
 > `optional` **runId**: `string`
 
-Defined in: [lib/runProjection.ts:126](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L126)
+Defined in: [lib/runProjection.ts:125](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L125)
 
 ***
 
@@ -164,7 +164,7 @@ Defined in: [lib/runProjection.ts:126](https://github.com/kc0588615/phaser-june/
 
 > `optional` **startLat**: `number`
 
-Defined in: [lib/runProjection.ts:129](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L129)
+Defined in: [lib/runProjection.ts:128](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L128)
 
 ***
 
@@ -172,4 +172,4 @@ Defined in: [lib/runProjection.ts:129](https://github.com/kc0588615/phaser-june/
 
 > `optional` **startLon**: `number`
 
-Defined in: [lib/runProjection.ts:128](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L128)
+Defined in: [lib/runProjection.ts:127](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L127)

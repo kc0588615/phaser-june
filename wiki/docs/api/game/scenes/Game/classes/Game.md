@@ -1,6 +1,6 @@
 # Class: Game
 
-Defined in: [game/scenes/Game.ts:66](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L66)
+Defined in: [game/scenes/Game.ts:64](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L64)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [game/scenes/Game.ts:66](https://github.com/kc0588615/phaser-june/bl
 
 > **new Game**(): `Game`
 
-Defined in: [game/scenes/Game.ts:134](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L134)
+Defined in: [game/scenes/Game.ts:123](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L123)
 
 #### Returns
 
@@ -28,7 +28,7 @@ Defined in: [game/scenes/Game.ts:134](https://github.com/kc0588615/phaser-june/b
 
 > **create**(): `void`
 
-Defined in: [game/scenes/Game.ts:261](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L261)
+Defined in: [game/scenes/Game.ts:244](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L244)
 
 #### Returns
 
@@ -40,7 +40,7 @@ Defined in: [game/scenes/Game.ts:261](https://github.com/kc0588615/phaser-june/b
 
 > **shutdown**(): `void`
 
-Defined in: [game/scenes/Game.ts:1324](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L1324)
+Defined in: [game/scenes/Game.ts:1268](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L1268)
 
 #### Returns
 
@@ -52,7 +52,7 @@ Defined in: [game/scenes/Game.ts:1324](https://github.com/kc0588615/phaser-june/
 
 > **update**(): `void`
 
-Defined in: [game/scenes/Game.ts:153](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L153)
+Defined in: [game/scenes/Game.ts:142](https://github.com/kc0588615/phaser-june/blob/main/src/game/scenes/Game.ts#L142)
 
 This method should be overridden by your own Scenes.
 

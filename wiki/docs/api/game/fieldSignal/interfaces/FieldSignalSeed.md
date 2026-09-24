@@ -20,7 +20,7 @@ Defined in: [game/fieldSignal.ts:9](https://github.com/kc0588615/phaser-june/blo
 
 > **state**: [`BoardCellState`](../../boardTypes/interfaces/BoardCellState.md)
 
-Defined in: [game/nodeObstacles.ts:29](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L29)
+Defined in: [game/nodeObstacles.ts:42](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L42)
 
 #### Inherited from
 
@@ -32,7 +32,7 @@ Defined in: [game/nodeObstacles.ts:29](https://github.com/kc0588615/phaser-june/
 
 > **x**: `number`
 
-Defined in: [game/nodeObstacles.ts:27](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L27)
+Defined in: [game/nodeObstacles.ts:40](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L40)
 
 #### Inherited from
 
@@ -44,7 +44,7 @@ Defined in: [game/nodeObstacles.ts:27](https://github.com/kc0588615/phaser-june/
 
 > **y**: `number`
 
-Defined in: [game/nodeObstacles.ts:28](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L28)
+Defined in: [game/nodeObstacles.ts:41](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L41)
 
 #### Inherited from
 

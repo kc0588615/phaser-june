@@ -3,7 +3,6 @@
 ## Interfaces
 
 - [CaseState](interfaces/CaseState.md)
-- [ConfirmedClue](interfaces/ConfirmedClue.md)
 - [EarnedObservation](interfaces/EarnedObservation.md)
 - [EvidenceProgressResponse](interfaces/EvidenceProgressResponse.md)
 - [ExpeditionData](interfaces/ExpeditionData.md)
@@ -12,7 +11,6 @@
 
 ## Type Aliases
 
-- [ClueCategoryKey](type-aliases/ClueCategoryKey.md)
 - [LedgerFact](type-aliases/LedgerFact.md)
 - [RunPhase](type-aliases/RunPhase.md)
 

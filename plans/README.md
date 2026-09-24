@@ -33,7 +33,7 @@ COG board integration: [034 — Phase A](034-cog-terrain-phase-a.md), [037 — v
 | 036 | September 19, 2026 — Isolated Phase B Routing Prototype | P1 product | M | 034 terrain, current v4 runtime | IN TREE — isolated trail-adjacent direct 3+; production evidence unchanged; C deferred |
 | 037 | September 20, 2026 — Terrain Variety: Variable Stride, Majority Cells | P1 product | M | 034 | IN TREE — stride 8/16 majority cells; TiTiler mode fallback; variety 9/20 and 10/20 ≥3 classes; no commit |
 | 038 | September 20, 2026 — Live Claims: Solve the Case During Play | P1 product | L | 035 (ladder), additive migration | PLAN — [038](038-live-claims-continuous-case.md); two independent claims, explanation evidence effects, three-wrong-claims slip, sites optional |
-| 039 | September 22, 2026 — Continuous Review → Refactor → Docs Loop | P2 health | unattended hours | clean tree (land 034–038) | DONE 2026-09-23 — [039](039-continuous-review-refactor-docs-loop.md); 26 commits b04d8a04..HEAD on main, codex M1-M3 ok; stopped at commit cap; browser playtest open |
+| 039 | September 22, 2026 — Continuous Review → Refactor → Docs Loop | P2 health | unattended hours | clean tree (land 034–038) | DONE 2026-09-23 — [039](039-continuous-review-refactor-docs-loop.md); round 1: 26 commits b04d8a04..e6521e9b; round 2: 24 commits e6521e9b..HEAD, codex M5-M7 (1 major fixed); both stopped at commit cap; browser playtest open |
 
 ## Dependency notes
 

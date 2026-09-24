@@ -4,23 +4,11 @@ Defined in: [game/EventBus.ts:28](https://github.com/kc0588615/phaser-june/blob/
 
 ## Properties
 
-### all-species-completed
-
-> **all-species-completed**: `object`
-
-Defined in: [game/EventBus.ts:66](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L66)
-
-#### totalSpecies
-
-> **totalSpecies**: `number`
-
-***
-
 ### auth-user-ready
 
 > **auth-user-ready**: `object`
 
-Defined in: [game/EventBus.ts:109](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L109)
+Defined in: [game/EventBus.ts:81](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L81)
 
 #### playerId
 
@@ -44,7 +32,7 @@ Defined in: [game/EventBus.ts:30](https://github.com/kc0588615/phaser-june/blob/
 
 > **evidence-move-resolved**: `object`
 
-Defined in: [game/EventBus.ts:98](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L98)
+Defined in: [game/EventBus.ts:70](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L70)
 
 #### boardCheckpoint
 
@@ -80,7 +68,7 @@ Defined in: [game/EventBus.ts:98](https://github.com/kc0588615/phaser-june/blob/
 
 > **evidence-progress-committed**: `object`
 
-Defined in: [game/EventBus.ts:104](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L104)
+Defined in: [game/EventBus.ts:76](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L76)
 
 #### moveNumber
 
@@ -96,7 +84,7 @@ Defined in: [game/EventBus.ts:104](https://github.com/kc0588615/phaser-june/blob
 
 > **expedition-data-ready**: `object`
 
-Defined in: [game/EventBus.ts:82](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L82)
+Defined in: [game/EventBus.ts:54](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L54)
 
 #### ecoregionId?
 
@@ -136,7 +124,7 @@ Defined in: [game/EventBus.ts:82](https://github.com/kc0588615/phaser-june/blob/
 
 > **expedition-start**: `Record`\<`string`, `never`\>
 
-Defined in: [game/EventBus.ts:91](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L91)
+Defined in: [game/EventBus.ts:63](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L63)
 
 ***
 
@@ -144,7 +132,7 @@ Defined in: [game/EventBus.ts:91](https://github.com/kc0588615/phaser-june/blob/
 
 > **game-hud-updated**: `object`
 
-Defined in: [game/EventBus.ts:72](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L72)
+Defined in: [game/EventBus.ts:45](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L45)
 
 #### maxMoves
 
@@ -180,15 +168,7 @@ Defined in: [game/EventBus.ts:72](https://github.com/kc0588615/phaser-june/blob/
 
 > **game-reset**: `undefined`
 
-Defined in: [game/EventBus.ts:64](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L64)
-
-***
-
-### game-restart
-
-> **game-restart**: `Record`\<`string`, `never`\>
-
-Defined in: [game/EventBus.ts:81](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L81)
+Defined in: [game/EventBus.ts:44](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L44)
 
 ***
 
@@ -196,11 +176,9 @@ Defined in: [game/EventBus.ts:81](https://github.com/kc0588615/phaser-june/blob/
 
 > **map-location-selected**: `object`
 
-Defined in: [game/EventBus.ts:31](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L31)
+Defined in: [game/EventBus.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L32)
 
-#### activeAffinities?
-
-> `optional` **activeAffinities**: (`"avian"` \| `"feline"` \| `"amphibian"` \| `"primate"` \| `"insect"` \| `"ungulate"` \| `"reptile"` \| `"fish"` \| `"arachnid"` \| `"burrower"`)[]
+Board setup for one node; Game.ts reads only these fields.
 
 #### boardCheckpoint?
 
@@ -218,41 +196,9 @@ Defined in: [game/EventBus.ts:31](https://github.com/kc0588615/phaser-june/blob/
 
 > `optional` **boardSeed**: `number`
 
-#### candidateIds?
-
-> `optional` **candidateIds**: `number`[]
-
-Public case candidates.
-
-#### candidateSpecies?
-
-> `optional` **candidateSpecies**: [`Species`](../../../types/database/interfaces/Species.md)[]
-
-Full rows for those candidates.
-
 #### difficulty?
 
 > `optional` **difficulty**: `number`
-
-#### ecoregionId?
-
-> `optional` **ecoregionId**: `number` \| `null`
-
-#### events?
-
-> `optional` **events**: `string`[]
-
-#### habitats
-
-> **habitats**: `string`[]
-
-#### lat
-
-> **lat**: `number`
-
-#### lon
-
-> **lon**: `number`
 
 #### moveBudget?
 
@@ -262,33 +208,13 @@ Full rows for those candidates.
 
 > `optional` **nodeIndex**: `number`
 
-#### nodeType?
-
-> `optional` **nodeType**: `string`
-
 #### objectiveProgress?
 
 > `optional` **objectiveProgress**: `number`
 
-#### objectiveTarget?
-
-> `optional` **objectiveTarget**: `number`
-
-#### obstacleFamily?
-
-> `optional` **obstacleFamily**: [`ObstacleFamily`](../../nodeObstacles/type-aliases/ObstacleFamily.md) \| `null`
-
 #### obstacles?
 
 > `optional` **obstacles**: (`"flow_shift"` \| `"mud_tiles"` \| `"overgrowth"` \| `"low_visibility"` \| `"junk_blockers"` \| `"noise_interference"` \| `"steep_terrain"` \| `"time_pressure"` \| `"signal_dropout"` \| `"unknown_terrain"` \| `"limited_signal"`)[]
-
-#### rasterHabitats
-
-> **rasterHabitats**: [`RasterHabitatResult`](../../../lib/speciesService/interfaces/RasterHabitatResult.md)[]
-
-#### species
-
-> **species**: [`Species`](../../../types/database/interfaces/Species.md)[]
 
 #### terrain?
 
@@ -296,43 +222,11 @@ Full rows for those candidates.
 
 ***
 
-### new-game-started
-
-> **new-game-started**: `object`
-
-Defined in: [game/EventBus.ts:58](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L58)
-
-#### currentIndex
-
-> **currentIndex**: `number`
-
-#### speciesId
-
-> **speciesId**: `number`
-
-#### speciesName
-
-> **speciesName**: `string`
-
-#### totalSpecies
-
-> **totalSpecies**: `number`
-
-***
-
-### no-species-found
-
-> **no-species-found**: `object`
-
-Defined in: [game/EventBus.ts:65](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L65)
-
-***
-
 ### node-complete
 
 > **node-complete**: `object`
 
-Defined in: [game/EventBus.ts:92](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L92)
+Defined in: [game/EventBus.ts:64](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L64)
 
 #### nodeIndex
 
@@ -344,7 +238,7 @@ Defined in: [game/EventBus.ts:92](https://github.com/kc0588615/phaser-june/blob/
 
 > **node-objective-updated**: `object`
 
-Defined in: [game/EventBus.ts:94](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L94)
+Defined in: [game/EventBus.ts:66](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L66)
 
 #### progress
 
@@ -360,7 +254,7 @@ Defined in: [game/EventBus.ts:94](https://github.com/kc0588615/phaser-june/blob/
 
 > **route-progress-updated**: `object`
 
-Defined in: [game/EventBus.ts:93](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L93)
+Defined in: [game/EventBus.ts:65](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L65)
 
 #### slot
 
@@ -372,19 +266,7 @@ Defined in: [game/EventBus.ts:93](https://github.com/kc0588615/phaser-june/blob/
 
 > **routing-state-updated**: [`PublicRoutingView`](../../../terrain/routing/interfaces/PublicRoutingView.md) \| `null`
 
-Defined in: [game/EventBus.ts:108](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L108)
-
-***
-
-### show-species-list
-
-> **show-species-list**: `object`
-
-Defined in: [game/EventBus.ts:69](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L69)
-
-#### speciesId
-
-> **speciesId**: `number`
+Defined in: [game/EventBus.ts:80](https://github.com/kc0588615/phaser-june/blob/main/src/game/EventBus.ts#L80)
 
 ***
 

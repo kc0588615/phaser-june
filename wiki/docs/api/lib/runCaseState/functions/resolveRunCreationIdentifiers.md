@@ -2,7 +2,7 @@
 
 > **resolveRunCreationIdentifiers**(`requestedCreateRequestId`, `generateUuid`): \{ `createRequestId`: `string`; `runId`: `string`; \} \| `null`
 
-Defined in: [lib/runCaseState.ts:210](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L210)
+Defined in: [lib/runCaseState.ts:190](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runCaseState.ts#L190)
 
 ## Parameters
 

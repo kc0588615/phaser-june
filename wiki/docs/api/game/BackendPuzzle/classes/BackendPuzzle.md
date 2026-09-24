@@ -64,31 +64,13 @@ Defined in: [game/BackendPuzzle.ts:141](https://github.com/kc0588615/phaser-june
 
 > **addNextGemsToSpawn**(`gemTypes`): `void`
 
-Defined in: [game/BackendPuzzle.ts:378](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L378)
+Defined in: [game/BackendPuzzle.ts:374](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L374)
 
 #### Parameters
 
 ##### gemTypes
 
 (`"black"` \| `"blue"` \| `"green"` \| `"orange"` \| `"red"` \| `"white"` \| `"yellow"` \| `"purple"`)[]
-
-#### Returns
-
-`void`
-
-***
-
-### addNextGemToSpawn()
-
-> **addNextGemToSpawn**(`gemType`): `void`
-
-Defined in: [game/BackendPuzzle.ts:374](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L374)
-
-#### Parameters
-
-##### gemType
-
-`"black"` | `"blue"` | `"green"` | `"orange"` | `"red"` | `"white"` | `"yellow"` | `"purple"`
 
 #### Returns
 
@@ -136,7 +118,7 @@ Defined in: [game/BackendPuzzle.ts:177](https://github.com/kc0588615/phaser-june
 
 > **damageBlocker**(`x`, `y`): `boolean`
 
-Defined in: [game/BackendPuzzle.ts:433](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L433)
+Defined in: [game/BackendPuzzle.ts:429](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L429)
 
 Damage a blocker at (x,y). Returns true if the blocker was destroyed.
 
@@ -363,7 +345,7 @@ Defined in: [game/BackendPuzzle.ts:145](https://github.com/kc0588615/phaser-june
 
 > **reset**(): `void`
 
-Defined in: [game/BackendPuzzle.ts:382](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L382)
+Defined in: [game/BackendPuzzle.ts:378](https://github.com/kc0588615/phaser-june/blob/main/src/game/BackendPuzzle.ts#L378)
 
 #### Returns
 

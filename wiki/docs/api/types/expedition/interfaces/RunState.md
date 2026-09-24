@@ -1,6 +1,6 @@
 # Interface: RunState
 
-Defined in: [types/expedition.ts:99](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L99)
+Defined in: [types/expedition.ts:98](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L98)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [types/expedition.ts:99](https://github.com/kc0588615/phaser-june/bl
 
 > **bankedScore**: `number`
 
-Defined in: [types/expedition.ts:104](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L104)
+Defined in: [types/expedition.ts:103](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L103)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [types/expedition.ts:104](https://github.com/kc0588615/phaser-june/b
 
 > **caseResolution**: [`MysteryResolution`](../../../lib/mysteryCase/interfaces/MysteryResolution.md) \| `null`
 
-Defined in: [types/expedition.ts:112](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L112)
+Defined in: [types/expedition.ts:111](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L111)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [types/expedition.ts:112](https://github.com/kc0588615/phaser-june/b
 
 > **caseState**: [`CaseState`](CaseState.md) \| `null`
 
-Defined in: [types/expedition.ts:113](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L113)
+Defined in: [types/expedition.ts:112](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L112)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [types/expedition.ts:113](https://github.com/kc0588615/phaser-june/b
 
 > `optional` **completionReason**: `"slipped"` \| `"captured"`
 
-Defined in: [types/expedition.ts:107](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L107)
+Defined in: [types/expedition.ts:106](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L106)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [types/expedition.ts:107](https://github.com/kc0588615/phaser-june/b
 
 > **currentNodeIndex**: `number`
 
-Defined in: [types/expedition.ts:103](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L103)
+Defined in: [types/expedition.ts:102](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L102)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [types/expedition.ts:103](https://github.com/kc0588615/phaser-june/b
 
 > **expedition**: [`ExpeditionData`](ExpeditionData.md) \| `null`
 
-Defined in: [types/expedition.ts:102](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L102)
+Defined in: [types/expedition.ts:101](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L101)
 
 ***
 
@@ -56,7 +56,7 @@ Defined in: [types/expedition.ts:102](https://github.com/kc0588615/phaser-june/b
 
 > **fieldFacts**: [`FieldFact`](FieldFact.md)[]
 
-Defined in: [types/expedition.ts:111](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L111)
+Defined in: [types/expedition.ts:110](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L110)
 
 ***
 
@@ -64,7 +64,7 @@ Defined in: [types/expedition.ts:111](https://github.com/kc0588615/phaser-june/b
 
 > **finalScore**: `number` \| `null`
 
-Defined in: [types/expedition.ts:105](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L105)
+Defined in: [types/expedition.ts:104](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L104)
 
 ***
 
@@ -72,7 +72,7 @@ Defined in: [types/expedition.ts:105](https://github.com/kc0588615/phaser-june/b
 
 > **phase**: [`RunPhase`](../type-aliases/RunPhase.md)
 
-Defined in: [types/expedition.ts:101](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L101)
+Defined in: [types/expedition.ts:100](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L100)
 
 ***
 
@@ -80,7 +80,7 @@ Defined in: [types/expedition.ts:101](https://github.com/kc0588615/phaser-june/b
 
 > **resolvedExplanationId**: `string` \| `null`
 
-Defined in: [types/expedition.ts:110](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L110)
+Defined in: [types/expedition.ts:109](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L109)
 
 ***
 
@@ -88,7 +88,7 @@ Defined in: [types/expedition.ts:110](https://github.com/kc0588615/phaser-june/b
 
 > **resolvedSpeciesId**: `number` \| `null`
 
-Defined in: [types/expedition.ts:109](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L109)
+Defined in: [types/expedition.ts:108](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L108)
 
 The public candidate selected in a server-confirmed correct diagnosis.
 
@@ -98,7 +98,7 @@ The public candidate selected in a server-confirmed correct diagnosis.
 
 > **runId**: `string` \| `null`
 
-Defined in: [types/expedition.ts:100](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L100)
+Defined in: [types/expedition.ts:99](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L99)
 
 ***
 
@@ -106,4 +106,4 @@ Defined in: [types/expedition.ts:100](https://github.com/kc0588615/phaser-june/b
 
 > **visitedWaypointSlot**: `number`
 
-Defined in: [types/expedition.ts:106](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L106)
+Defined in: [types/expedition.ts:105](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L105)

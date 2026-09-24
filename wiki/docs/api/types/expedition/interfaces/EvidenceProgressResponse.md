@@ -1,6 +1,6 @@
 # Interface: EvidenceProgressResponse
 
-Defined in: [types/expedition.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L33)
+Defined in: [types/expedition.ts:32](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L32)
 
 Success body of POST /api/runs/[runId]/evidence-progress.
 
@@ -10,7 +10,7 @@ Success body of POST /api/runs/[runId]/evidence-progress.
 
 > **cascadeHintLine**: `string` \| `null`
 
-Defined in: [types/expedition.ts:42](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L42)
+Defined in: [types/expedition.ts:41](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L41)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [types/expedition.ts:42](https://github.com/kc0588615/phaser-june/bl
 
 > **duplicate**: `boolean`
 
-Defined in: [types/expedition.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L35)
+Defined in: [types/expedition.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L34)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [types/expedition.ts:35](https://github.com/kc0588615/phaser-june/bl
 
 > **evidenceCharges**: [`EvidenceChargeState`](../../../expedition/evidenceFamilies/type-aliases/EvidenceChargeState.md)
 
-Defined in: [types/expedition.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L38)
+Defined in: [types/expedition.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L37)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [types/expedition.ts:38](https://github.com/kc0588615/phaser-june/bl
 
 > **facts**: [`PublicLedgerFact`](../../../lib/evidenceLadder/interfaces/PublicLedgerFact.md)[]
 
-Defined in: [types/expedition.ts:43](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L43)
+Defined in: [types/expedition.ts:42](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L42)
 
 ***
 
@@ -42,7 +42,7 @@ Defined in: [types/expedition.ts:43](https://github.com/kc0588615/phaser-june/bl
 
 > **hintFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [types/expedition.ts:41](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L41)
+Defined in: [types/expedition.ts:40](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L40)
 
 ***
 
@@ -50,7 +50,7 @@ Defined in: [types/expedition.ts:41](https://github.com/kc0588615/phaser-june/bl
 
 > **hintLines**: `string`[]
 
-Defined in: [types/expedition.ts:40](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L40)
+Defined in: [types/expedition.ts:39](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L39)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [types/expedition.ts:40](https://github.com/kc0588615/phaser-june/bl
 
 > **hypotheses**: [`Hypotheses`](../../../lib/liveClaims/type-aliases/Hypotheses.md)
 
-Defined in: [types/expedition.ts:44](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L44)
+Defined in: [types/expedition.ts:43](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L43)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [types/expedition.ts:44](https://github.com/kc0588615/phaser-june/bl
 
 > **nodeIndex**: `number`
 
-Defined in: [types/expedition.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L36)
+Defined in: [types/expedition.ts:35](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L35)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [types/expedition.ts:36](https://github.com/kc0588615/phaser-june/bl
 
 > **offeredFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [types/expedition.ts:39](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L39)
+Defined in: [types/expedition.ts:38](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L38)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [types/expedition.ts:39](https://github.com/kc0588615/phaser-june/bl
 
 > **ok**: `true`
 
-Defined in: [types/expedition.ts:34](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L34)
+Defined in: [types/expedition.ts:33](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L33)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [types/expedition.ts:34](https://github.com/kc0588615/phaser-june/bl
 
 > **reinforcedFamilies**: (`"relatives"` \| `"body"` \| `"behavior"` \| `"habits"` \| `"place"`)[]
 
-Defined in: [types/expedition.ts:45](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L45)
+Defined in: [types/expedition.ts:44](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L44)
 
 ***
 
@@ -98,4 +98,4 @@ Defined in: [types/expedition.ts:45](https://github.com/kc0588615/phaser-june/bl
 
 > **segmentMovesUsed**: `number`
 
-Defined in: [types/expedition.ts:37](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L37)
+Defined in: [types/expedition.ts:36](https://github.com/kc0588615/phaser-june/blob/main/src/types/expedition.ts#L36)

@@ -2,21 +2,16 @@
 
 ## Interfaces
 
-- [DiagnosisDecision](interfaces/DiagnosisDecision.md)
 - [EvidenceFamilyCardContent](interfaces/EvidenceFamilyCardContent.md)
 - [PrivateCaseV3](interfaces/PrivateCaseV3.md)
 - [V3EvidenceApplicationRecord](interfaces/V3EvidenceApplicationRecord.md)
 
 ## Type Aliases
 
-- [GuessDecision](type-aliases/GuessDecision.md)
 - [PrivateCaseSnapshot](type-aliases/PrivateCaseSnapshot.md)
 
 ## Functions
 
-- [computeActualEliminatedIds](functions/computeActualEliminatedIds.md)
-- [decideDiagnosis](functions/decideDiagnosis.md)
-- [decideGuess](functions/decideGuess.md)
 - [filterEliminatedCandidates](functions/filterEliminatedCandidates.md)
 - [hydrateFamilyObservation](functions/hydrateFamilyObservation.md)
 - [isUuid](functions/isUuid.md)

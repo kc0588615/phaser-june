@@ -2,7 +2,7 @@
 
 > **isStaticSeededObstacle**(`obstacle`): `boolean`
 
-Defined in: [game/nodeObstacles.ts:120](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L120)
+Defined in: [game/nodeObstacles.ts:126](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L126)
 
 ## Parameters
 

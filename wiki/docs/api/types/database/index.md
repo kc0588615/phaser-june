@@ -4,7 +4,6 @@
 
 - [Bioregion](interfaces/Bioregion.md)
 - [Database](interfaces/Database.md)
-- [EcoregionCollectionSummary](interfaces/EcoregionCollectionSummary.md)
 - [HighScore](interfaces/HighScore.md)
 - [PlayerGameSession](interfaces/PlayerGameSession.md)
 - [PlayerLeaderboard](interfaces/PlayerLeaderboard.md)

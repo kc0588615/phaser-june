@@ -2,7 +2,7 @@
 
 > **formatNodeObstacleLabel**(`obstacle`): `string`
 
-Defined in: [game/nodeObstacles.ts:143](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L143)
+Defined in: [game/nodeObstacles.ts:149](https://github.com/kc0588615/phaser-june/blob/main/src/game/nodeObstacles.ts#L149)
 
 ## Parameters
 

@@ -1,6 +1,6 @@
 # Interface: ClientRunProjection
 
-Defined in: [lib/runProjection.ts:228](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L228)
+Defined in: [lib/runProjection.ts:227](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L227)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [lib/runProjection.ts:228](https://github.com/kc0588615/phaser-june/
 
 > **casePublic**: [`PublicCaseV4`](PublicCaseV4.md) \| `null`
 
-Defined in: [lib/runProjection.ts:234](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L234)
+Defined in: [lib/runProjection.ts:233](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L233)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [lib/runProjection.ts:234](https://github.com/kc0588615/phaser-june/
 
 > **checkpoint**: [`PublicRunCheckpoint`](PublicRunCheckpoint.md)
 
-Defined in: [lib/runProjection.ts:235](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L235)
+Defined in: [lib/runProjection.ts:234](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L234)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [lib/runProjection.ts:235](https://github.com/kc0588615/phaser-june/
 
 > **claims**: [`ClaimState`](../../liveClaims/interfaces/ClaimState.md)
 
-Defined in: [lib/runProjection.ts:229](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L229)
+Defined in: [lib/runProjection.ts:228](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L228)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [lib/runProjection.ts:229](https://github.com/kc0588615/phaser-june/
 
 > **completionReason**: `"slipped"` \| `"captured"` \| `null`
 
-Defined in: [lib/runProjection.ts:232](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L232)
+Defined in: [lib/runProjection.ts:231](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L231)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [lib/runProjection.ts:232](https://github.com/kc0588615/phaser-june/
 
 > **explanationFeedback**: `Record`\<`string`, `string`\>
 
-Defined in: [lib/runProjection.ts:231](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L231)
+Defined in: [lib/runProjection.ts:230](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L230)
 
 ***
 
@@ -48,7 +48,7 @@ Defined in: [lib/runProjection.ts:231](https://github.com/kc0588615/phaser-june/
 
 > **factLedger**: [`PublicLedgerFact`](../../evidenceLadder/interfaces/PublicLedgerFact.md)[]
 
-Defined in: [lib/runProjection.ts:238](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L238)
+Defined in: [lib/runProjection.ts:237](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L237)
 
 Ladder facts already revealed by matches, hydrated from reviewed hint text. Never hint ids or tags.
 
@@ -58,7 +58,7 @@ Ladder facts already revealed by matches, hydrated from reviewed hint text. Neve
 
 > **hypotheses**: [`Hypotheses`](../../liveClaims/type-aliases/Hypotheses.md)
 
-Defined in: [lib/runProjection.ts:230](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L230)
+Defined in: [lib/runProjection.ts:229](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L229)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [lib/runProjection.ts:230](https://github.com/kc0588615/phaser-june/
 
 > **legacy**: `boolean`
 
-Defined in: [lib/runProjection.ts:241](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L241)
+Defined in: [lib/runProjection.ts:240](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L240)
 
 ***
 
@@ -74,7 +74,7 @@ Defined in: [lib/runProjection.ts:241](https://github.com/kc0588615/phaser-june/
 
 > **memory**: [`PublicRunMemory`](PublicRunMemory.md) \| `null`
 
-Defined in: [lib/runProjection.ts:240](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L240)
+Defined in: [lib/runProjection.ts:239](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L239)
 
 ***
 
@@ -82,7 +82,7 @@ Defined in: [lib/runProjection.ts:240](https://github.com/kc0588615/phaser-june/
 
 > **nodes**: [`PublicRunNode`](PublicRunNode.md)[]
 
-Defined in: [lib/runProjection.ts:239](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L239)
+Defined in: [lib/runProjection.ts:238](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L238)
 
 ***
 
@@ -90,7 +90,7 @@ Defined in: [lib/runProjection.ts:239](https://github.com/kc0588615/phaser-june/
 
 > **observations**: [`PublicIssuedObservation`](PublicIssuedObservation.md)[]
 
-Defined in: [lib/runProjection.ts:236](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L236)
+Defined in: [lib/runProjection.ts:235](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L235)
 
 ***
 
@@ -98,7 +98,7 @@ Defined in: [lib/runProjection.ts:236](https://github.com/kc0588615/phaser-june/
 
 > **run**: [`PublicRunSummary`](PublicRunSummary.md)
 
-Defined in: [lib/runProjection.ts:233](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L233)
+Defined in: [lib/runProjection.ts:232](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L232)
 
 ***
 
@@ -106,4 +106,4 @@ Defined in: [lib/runProjection.ts:233](https://github.com/kc0588615/phaser-june/
 
 > **verdict**: \{ `fieldFacts`: `object`[]; `resolution`: [`MysteryResolution`](../../mysteryCase/interfaces/MysteryResolution.md); `resolvedExplanationId`: `string`; `resolvedSpeciesId`: `number`; \} \| `null`
 
-Defined in: [lib/runProjection.ts:242](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L242)
+Defined in: [lib/runProjection.ts:241](https://github.com/kc0588615/phaser-june/blob/main/src/lib/runProjection.ts#L241)
