@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db';
 import { buildSquare } from '@/lib/geoUtils';
 import { dedupeFeatureFingerprints } from '@/lib/gisFeatureHelpers';
@@ -9,11 +9,25 @@ export { dedupeFeatureFingerprints, getGisStampClasses } from '@/lib/gisFeatureH
 
 type EnabledLayerSet = Set<string>;
 
+type SqlExecutor = Pick<typeof db, 'execute' | 'transaction'>;
+
+/**
+ * Runs one optional-layer query. On a caller's transaction each query gets its own
+ * savepoint (Drizzle nests `transaction()` as one), because a failed statement would
+ * otherwise abort the whole transaction even after the error is caught.
+ */
+function optionalLayerQuery(executor: SqlExecutor) {
+  return <TRow extends Record<string, unknown>>(query: SQL) =>
+    executor === db ? executor.execute<TRow>(query) : executor.transaction(sp => sp.execute<TRow>(query));
+}
+
 interface SampleGisFeaturesOptions {
   lon: number;
   lat: number;
   sizeMeters?: number;
   enabledLayers?: EnabledLayerSet;
+  /** Pass the caller's transaction when sampling inside one: the pool has a single connection, so querying the shared `db` there deadlocks. */
+  executor?: SqlExecutor;
 }
 
 interface ProtectedAreaFingerprintRow {
@@ -76,14 +90,16 @@ export async function sampleGisFeaturesAtPoint({
   lat,
   sizeMeters = 100,
   enabledLayers,
+  executor = db,
 }: SampleGisFeaturesOptions): Promise<FeatureFingerprint[]> {
   const square = buildSquare(lon, lat, sizeMeters);
   const squareJson = JSON.stringify(square.geometry);
   const pointWkt = `SRID=4326;POINT(${lon} ${lat})`;
   const fingerprints: FeatureFingerprint[] = [];
+  const query = optionalLayerQuery(executor);
 
   try {
-    const rows = await db.execute<ProtectedAreaFingerprintRow>(sql`
+    const rows = await query<ProtectedAreaFingerprintRow>(sql`
       WITH square AS (
         SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
       )
@@ -121,7 +137,7 @@ export async function sampleGisFeaturesAtPoint({
   } catch { /* optional layer */ }
 
   try {
-    const rows = await db.execute<BioregionFingerprintRow>(sql`
+    const rows = await query<BioregionFingerprintRow>(sql`
       WITH square AS (
         SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
       ), pt AS (
@@ -156,7 +172,7 @@ export async function sampleGisFeaturesAtPoint({
 
   if (layerEnabled(enabledLayers, 'unesco_rivers')) {
     try {
-      const rows = await db.execute<RiverFingerprintRow>(sql`
+      const rows = await query<RiverFingerprintRow>(sql`
         WITH pt AS (
           SELECT ST_GeomFromEWKT(${pointWkt}) AS geom
         )
@@ -188,7 +204,7 @@ export async function sampleGisFeaturesAtPoint({
 
   if (layerEnabled(enabledLayers, 'wwf_glwd')) {
     try {
-      const rows = await db.execute<LakeFingerprintRow>(sql`
+      const rows = await query<LakeFingerprintRow>(sql`
         WITH square AS (
           SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
         ), pt AS (
@@ -226,7 +242,7 @@ export async function sampleGisFeaturesAtPoint({
 
   if (layerEnabled(enabledLayers, 'ramsar_wetland')) {
     try {
-      const rows = await db.execute<WetlandFingerprintRow>(sql`
+      const rows = await query<WetlandFingerprintRow>(sql`
         WITH square AS (
           SELECT ST_SetSRID(ST_GeomFromGeoJSON(${squareJson}), 4326) AS geom
         )
@@ -262,8 +278,10 @@ export async function sampleGisFeaturesForRoute(
   points: RoutePoint[],
   options: Omit<SampleGisFeaturesOptions, 'lon' | 'lat'> = {},
 ): Promise<FeatureFingerprint[]> {
-  const samples = await Promise.all(
-    points.map((point) => sampleGisFeaturesAtPoint({ ...options, lon: point.lon, lat: point.lat })),
-  );
-  return dedupeFeatureFingerprints(samples.flat());
+  // Sequential: savepoints on one transaction connection must not interleave.
+  const samples: FeatureFingerprint[] = [];
+  for (const point of points) {
+    samples.push(...await sampleGisFeaturesAtPoint({ ...options, lon: point.lon, lat: point.lat }));
+  }
+  return dedupeFeatureFingerprints(samples);
 }

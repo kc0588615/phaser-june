@@ -98,7 +98,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return response(200, claimResponse);
       }
       let completionArtifacts: ReturnType<typeof buildRunMemoryArtifacts>;
-      try { completionArtifacts = buildRunMemoryArtifacts(route, await sampleGisFeaturesForRoute(route)); }
+      try { completionArtifacts = buildRunMemoryArtifacts(route, await sampleGisFeaturesForRoute(route, { executor: tx })); }
       catch (error) { console.error('[claims] GIS completion failed', error); return response(503, { error: 'Could not finalize expedition memory; retry claim' }); }
       const fieldFacts = await loadFieldFacts(tx, v3Applications);
       if (fieldFacts.length !== v3Applications.length) return response(503, { error: 'Verdict facts unavailable' });
