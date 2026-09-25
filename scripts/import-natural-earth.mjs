@@ -1,10 +1,10 @@
 import postgres from 'postgres';
 import { readFile } from 'node:fs/promises';
 
-const [, , placesPath, countriesPath] = process.argv;
+const [, , countriesPath] = process.argv;
 
-if (!placesPath || !countriesPath) {
-  console.error('Usage: node scripts/import-natural-earth.mjs <populated_places.geojson> <countries.geojson>');
+if (!countriesPath) {
+  console.error('Usage: node scripts/import-natural-earth.mjs <countries.geojson>');
   process.exit(1);
 }
 
@@ -53,54 +53,9 @@ function numberValue(properties, ...keys) {
   return Number.isFinite(n) ? n : null;
 }
 
-function integerValue(properties, ...keys) {
-  const n = numberValue(properties, ...keys);
-  return n === null ? null : Math.round(n);
-}
-
 function asGeometryJson(feature) {
   if (!feature.geometry) return null;
   return JSON.stringify(feature.geometry);
-}
-
-async function importPlaces(tx, features) {
-  await tx`TRUNCATE natural_earth.populated_places`;
-
-  let gid = 1;
-  for (const feature of features) {
-    const properties = feature.properties || {};
-    const geom = asGeometryJson(feature);
-    if (!geom || feature.geometry.type !== 'Point') continue;
-
-    const coordinates = feature.geometry.coordinates;
-    const longitude = numberValue(properties, 'longitude', 'LONGITUDE') ?? Number(coordinates?.[0]);
-    const latitude = numberValue(properties, 'latitude', 'LATITUDE') ?? Number(coordinates?.[1]);
-
-    await tx`
-      INSERT INTO natural_earth.populated_places (
-        gid, name, nameascii, adm0name, adm0_a3, latitude, longitude,
-        pop_max, pop_min, featurecla, scalerank, natscale, capital, geom
-      )
-      VALUES (
-        ${gid++},
-        ${textValue(properties, 'name', 'NAME')},
-        ${textValue(properties, 'nameascii', 'NAMEASCII')},
-        ${textValue(properties, 'adm0name', 'ADM0NAME', 'adm0_name', 'ADM0_NAME')},
-        ${boundedTextValue(properties, 3, 'adm0_a3', 'ADM0_A3')},
-        ${latitude},
-        ${longitude},
-        ${numberValue(properties, 'pop_max', 'POP_MAX')},
-        ${numberValue(properties, 'pop_min', 'POP_MIN')},
-        ${textValue(properties, 'featurecla', 'FEATURECLA')},
-        ${integerValue(properties, 'scalerank', 'SCALERANK')},
-        ${integerValue(properties, 'natscale', 'NATSCALE')},
-        ${textValue(properties, 'capital', 'CAPITAL')},
-        ST_SetSRID(ST_GeomFromGeoJSON(${geom}), 4326)::geometry(Point, 4326)
-      )
-    `;
-  }
-
-  return gid - 1;
 }
 
 async function importCountries(tx, features) {
@@ -138,18 +93,9 @@ async function importCountries(tx, features) {
 }
 
 try {
-  const [places, countries] = await Promise.all([
-    readGeoJson(placesPath),
-    readGeoJson(countriesPath),
-  ]);
-
-  const result = await sql.begin(async (tx) => {
-    const placeCount = await importPlaces(tx, places);
-    const countryCount = await importCountries(tx, countries);
-    return { placeCount, countryCount };
-  });
-
-  console.log(`Imported ${result.placeCount} populated places and ${result.countryCount} countries.`);
+  const countries = await readGeoJson(countriesPath);
+  const count = await sql.begin(tx => importCountries(tx, countries));
+  console.log(`Imported ${count} countries.`);
 } finally {
   await sql.end();
 }

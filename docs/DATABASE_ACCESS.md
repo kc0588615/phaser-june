@@ -91,8 +91,7 @@ and other version-sensitive administration.
 ## WSL agent/raw tunnel
 
 Agents follow the `postgres-tunnel` skill and connect only through
-`127.0.0.1:55432`. The working WSL key is `~/.ssh/hetzner-vps`; its Windows
-source is `D:\VPS\new_hetzner_keys_ssh\id_ed25519`.
+`127.0.0.1:55432`. The working WSL key is `~/.ssh/hetzner-vps`.
 
 In one WSL terminal, start the tunnel and keep that terminal open:
 
@@ -104,7 +103,7 @@ ssh -N \
   -o PreferredAuthentications=publickey \
   -i ~/.ssh/hetzner-vps \
   -L 127.0.0.1:55432:172.18.0.2:5432 \
-  root@178.156.159.183
+  root@<vps-ip>
 ```
 
 A successful `ssh -N` session stays silent and occupies the terminal. In a
