@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   bigint,
+  bigserial,
   boolean,
   doublePrecision,
   geometry,
@@ -291,4 +292,27 @@ export const speciesCardUnlocks = pgTable(
     ixSpeciesCardUnlocksSpecies: index('ix_species_card_unlocks_species').on(table.speciesId),
     ixSpeciesCardUnlocksRun: index('ix_species_card_unlocks_run').on(table.runId),
   })
+);
+
+/** One solved Clue Match mystery (migration 042), for analyzing play with SQL. */
+export const clueMatchSolves = pgTable(
+  'clue_match_solves',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    playerId: uuid('player_id').references(() => profiles.userId, { onDelete: 'set null' }),
+    sessionSeed: bigint('session_seed', { mode: 'number' }).notNull(),
+    round: smallint('round').notNull(),
+    speciesId: integer('species_id').notNull().references(() => speciesTable.id, { onDelete: 'cascade' }),
+    moves: smallint('moves').notNull(),
+    wrongGuesses: smallint('wrong_guesses').notNull(),
+    cluesSeen: smallint('clues_seen').notNull(),
+    relatives: smallint('relatives').notNull(),
+    points: integer('points').notNull(),
+    revealedByGem: jsonb('revealed_by_gem').$type<Record<string, number>>().notNull().default({}),
+    solvedAt: timestamp('solved_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  table => [
+    index('ix_clue_match_solves_species').on(table.speciesId),
+    index('ix_clue_match_solves_player').on(table.playerId).where(sql`${table.playerId} IS NOT NULL`),
+  ],
 );

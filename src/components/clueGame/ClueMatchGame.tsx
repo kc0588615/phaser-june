@@ -16,6 +16,7 @@ import { JournalSheet } from './JournalSheet';
 import { RevealSheet } from './RevealSheet';
 import { TopBar } from './TopBar';
 import { useClueMatch } from './useClueMatch';
+import { reportSolve } from './reportSolve';
 import { useJournal } from './useJournal';
 
 export function ClueMatchGame() {
@@ -58,7 +59,13 @@ export function ClueMatchGame() {
     setNewDiscovery(!journalRef.current[species.scientificName]);
     setNewBest(recordsRef.current.bestScore > 0 && session.score > recordsRef.current.bestScore);
     record(species, lastSolve.moves, { score: session.score, streak: session.bestStreak });
-  }, [session, lastSolve, record]);
+    const { round } = session;
+    reportSolve({
+      seed, round: round.round, speciesId: species.id, moves: lastSolve.moves, wrongGuesses: round.wrongGuesses.length,
+      cluesSeen: lastSolve.cluesSeen, relatives: round.relatives, points: lastSolve.points,
+      revealedByGem: Object.fromEntries(Object.entries(round.revealedByGem).filter(([, count]) => count !== undefined)) as Record<string, number>,
+    });
+  }, [session, lastSolve, record, seed]);
 
   const candidates = useMemo(() => session ? candidateViews(session) : [], [session]);
   const legend = useMemo(() => session ? legendViews(session) : [], [session]);

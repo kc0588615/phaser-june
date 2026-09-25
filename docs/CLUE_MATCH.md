@@ -2,7 +2,7 @@
 
 A fast, mobile-first free-play mode at `/clue-match`. A mystery animal hides among six candidates. Matching gems reveals clues about it: each gem color is one clue category, and each match shows that category's next clue. Clues that can be checked against the candidates' records put colored dots on the candidate cards and rule animals out. Tap the animal you think it is, then **Guess**. A correct guess shows a reveal card (range map, Red List status, a fact), records the animal in the Field Journal, and the next mystery starts.
 
-50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in, no server writes. `?seed=N` replays a session exactly (same mysteries, same starting board).
+50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in needed; each solve is saved to `clue_match_solves` for analysis (with the player's profile id when signed in). `?seed=N` replays a session exactly (same mysteries, same starting board).
 
 ## Where the code lives
 
@@ -13,7 +13,7 @@ A fast, mobile-first free-play mode at `/clue-match`. A mystery animal hides amo
 | UI pieces | `src/components/clueGame/` (TopBar, GemLegend, CandidateGrid, GuessBar, ClueFeed, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText) |
 | Rules (pure, unit-tested) | `src/clueGame/`: `categories` (gem → category), `traits` (species records), `deduction` (how a clue compares with a candidate), `round`, `session` (reducer), `selectors` (what the HUD shows), `validatePool` (content checks), `glossary`, `journal`, `speciesInfo` |
 | Board | `src/game/scenes/ClueBoardScene.ts` (square seeded board), `src/game/board/BoardController.ts` (drag + cascade loop shared with the expedition board) |
-| Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>` |
+| Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`) |
 | Tests | `tests/clueGame/*`, fixture `tests/fixtures/clueGame/pool.json` |
 
 ## How it fits together
@@ -81,6 +81,7 @@ Content lives in Postgres. Edit it with any SQL tool (psql, DBeaver, pgAdmin, QG
 | `039_clue_match_realm_clues.sql` | Range clues from IUCN range × OneEarth realm (PostGIS), 10% share cut; nearest realm for tiny islands |
 | `040_clue_match_ranges_view.sql` | `clue_match_ranges` materialized view: simplified range SVG paths for the reveal card |
 | `041_clue_match_mammals.sql` | 26 mammals join the pool (common names, clues, facts); content drafted by Claude, worth an expert read |
+| `042_clue_match_solves.sql` | `clue_match_solves`: one row per solved mystery (moves, wrong guesses, clues per color) |
 
 Each is idempotent. The world basemap under range maps is `public/assets/clue-match/world-land.svg`, drawn from `natural_earth.countries` by `npm run clue:world-map`.
 
@@ -96,6 +97,7 @@ Each is idempotent. The world basemap under range maps is `public/assets/clue-ma
 | `04_realm_shares.sql` | PostGIS `ST_Intersects`, `ST_Intersection`, `ST_Area(geography)`, window functions |
 | `05_text_quality.sql` | UNION ALL, regex operators: the validator's text checks in SQL |
 | `06_ranges_for_qgis.sql` | `ST_Union`, a geometry layer to load in QGIS over the realm map |
+| `07_solve_stats.sql` | `percentile_cont`, `jsonb_each_text`: hardest animals and most-used colors from real play |
 
 ## Checking it as an agent
 

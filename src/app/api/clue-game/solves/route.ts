@@ -1,0 +1,43 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { db, clueMatchSolves } from '@/db';
+import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { parseSolveReport } from '@/clueGame/solveReport';
+
+/**
+ * POST /api/clue-game/solves
+ * Records one solved Clue Match mystery (table clue_match_solves, migration 042)
+ * for analyzing play with SQL. Anonymous play is recorded without a player.
+ */
+export async function POST(request: NextRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Body must be JSON' }, { status: 400 });
+  }
+  const report = parseSolveReport(body);
+  if (!report) return NextResponse.json({ error: 'Invalid solve report' }, { status: 400 });
+
+  try {
+    const playerId = await getPlayerIdFromClerk();
+    await db.insert(clueMatchSolves).values({
+      playerId,
+      sessionSeed: report.seed,
+      round: report.round,
+      speciesId: report.speciesId,
+      moves: report.moves,
+      wrongGuesses: report.wrongGuesses,
+      cluesSeen: report.cluesSeen,
+      relatives: report.relatives,
+      points: report.points,
+      revealedByGem: report.revealedByGem,
+    });
+    return NextResponse.json({ ok: true }, { status: 201 });
+  } catch (error) {
+    // 23503: the species id doesn't exist.
+    const code = (error as { cause?: { code?: string }; code?: string }).cause?.code ?? (error as { code?: string }).code;
+    if (code === '23503') return NextResponse.json({ error: 'Unknown species' }, { status: 400 });
+    console.error('[API /clue-game/solves] Error:', error);
+    return NextResponse.json({ error: 'Failed to record the solve' }, { status: 500 });
+  }
+}
