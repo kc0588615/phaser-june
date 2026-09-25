@@ -20,7 +20,7 @@ export function TopBar({ round, live, total, score, streak, solved, onHelp, onJo
       <div className="min-w-0">
         <h1 className="m-0 truncate text-base font-bold leading-tight">Clue Match</h1>
         <p className="m-0 truncate text-[11px] leading-tight text-cyan-100/70" aria-live="polite">
-          {round === null ? 'Loading animals…' : `Animal ${round} · ${live} of ${total} possible`}
+          {round === null ? 'Loading animals…' : `Animal ${round} · ${live} of ${total} left`}
         </p>
       </div>
       <dl className="m-0 ml-auto flex shrink-0 items-center gap-2">
