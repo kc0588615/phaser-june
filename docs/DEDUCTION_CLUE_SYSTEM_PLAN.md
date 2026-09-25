@@ -1,1 +1,0 @@
-Content tables, constraints, JSON loaders, and SQL editing workflows are documented in [Content Authoring](CONTENT_AUTHORING.md). That guide replaces the retired per-gem trivia design and describes the current database-backed species pools, evidence families, mystery cases, and trait vocabulary.
