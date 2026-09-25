@@ -75,7 +75,7 @@ export function ClueMatchGame() {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#06121a" />
       </Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-[#06121a] text-white [grid-template-areas:'top'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_rail']">
+      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-[#06121a] text-white [grid-template-areas:'top'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] lg:grid-cols-[minmax(0,1fr)_460px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_rail']">
         <TopBar
           round={session?.round.round ?? null}
           live={session ? liveCandidates(session.round).length : 0}

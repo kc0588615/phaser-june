@@ -1,7 +1,7 @@
 // The Field Journal keeps solves per animal and never trusts malformed storage.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseJournal, recordSolve } from '@/clueGame/journal';
+import { parseJournal, parseWords, recordSolve } from '@/clueGame/journal';
 
 const frog = { scientificName: 'Rhinoderma darwinii', commonName: 'Darwin Frog' };
 
@@ -23,5 +23,17 @@ describe('journal', () => {
     assert.deepEqual(parseJournal('[1,2]'), {});
     assert.deepEqual(parseJournal(JSON.stringify({ x: { scientificName: 'y', commonName: 'Y', timesSolved: 1, bestMoves: 1, firstSolvedAt: 'a', lastSolvedAt: 'b' } })), {});
     assert.deepEqual(parseJournal(JSON.stringify({ [frog.scientificName]: { ...frog, timesSolved: 0 } })), {});
+  });
+});
+
+describe('parseWords', () => {
+  test('keeps unique non-empty strings in order and drops the rest', () => {
+    assert.deepEqual(parseWords(JSON.stringify(['Clutch', 'Realm', 'Clutch', '', 7, null])), ['Clutch', 'Realm']);
+  });
+
+  test('bad or missing storage is an empty list', () => {
+    assert.deepEqual(parseWords(null), []);
+    assert.deepEqual(parseWords('{oops'), []);
+    assert.deepEqual(parseWords('{"a":1}'), []);
   });
 });

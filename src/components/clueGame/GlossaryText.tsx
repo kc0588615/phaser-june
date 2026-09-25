@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import { glossaryParts, type GlossaryTerm } from '@/clueGame/glossary';
+import { learnWord } from './useWordsLearned';
 
 /** Text whose science words can be tapped; the tapped word's meaning opens underneath. */
 export function GlossaryText({ text }: { text: string }) {
@@ -7,7 +8,9 @@ export function GlossaryText({ text }: { text: string }) {
   const definitionId = useId();
   const definitionRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    if (open) definitionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (!open) return;
+    learnWord(open.term);
+    definitionRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [open]);
 
   return (

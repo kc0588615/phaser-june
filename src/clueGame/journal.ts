@@ -50,3 +50,16 @@ export function parseJournal(raw: string | null): Journal {
     return {};
   }
 }
+
+/** Glossary words the player has opened, oldest first (their vocabulary list). */
+export const WORDS_STORAGE_KEY = 'clue-match:words:v1';
+
+export function parseWords(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? [...new Set(parsed.filter((word): word is string => typeof word === 'string' && word.length > 0))] : [];
+  } catch {
+    return [];
+  }
+}

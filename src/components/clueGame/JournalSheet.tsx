@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { GLOSSARY } from '@/clueGame/glossary';
 import type { Journal } from '@/clueGame/journal';
 import { speciesBadge, type CluePool } from '@/clueGame/pool';
 import { playableSpeciesIds } from '@/clueGame/round';
@@ -6,12 +7,14 @@ import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
 import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
 import { useEscapeKey } from './useEscapeKey';
+import { useWordsLearned } from './useWordsLearned';
 
 const LEARNED_FACTS = 3;
 
 /** Every animal this player has identified, with facts to revisit. */
 export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null; journal: Journal; onClose: () => void }) {
   useEscapeKey(onClose);
+  const words = useWordsLearned().flatMap(word => GLOSSARY.find(entry => entry.term === word) ?? []);
   const playable = pool ? playableSpeciesIds(pool).flatMap(id => pool.species.find(species => species.id === id) ?? []) : [];
   const found = playable.filter(species => journal[species.scientificName]);
   const hidden = playable.length - found.length;
@@ -63,6 +66,21 @@ export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null
           })}
           {hidden > 0 && found.length > 0 && (
             <li className="p-3 text-center text-xs text-white/50">{hidden} more animal{hidden === 1 ? '' : 's'} to discover.</li>
+          )}
+          {words.length > 0 && (
+            <li className="rounded-xl border border-cyan-200/20 bg-cyan-300/[.05] p-3">
+              <details>
+                <summary className="cursor-pointer text-sm font-semibold text-cyan-100">Words you&apos;ve learned ({words.length})</summary>
+                <dl className="m-0 mt-2 flex flex-col gap-1.5 text-[12px] leading-snug">
+                  {words.map(entry => (
+                    <div key={entry.term}>
+                      <dt className="inline font-semibold text-white">{entry.term}: </dt>
+                      <dd className="m-0 inline text-white/75">{entry.definition}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </details>
+            </li>
           )}
           {found.length > 0 && <li className="pb-2 text-center text-[10px] text-white/35">Range maps: IUCN Red List</li>}
         </ul>
