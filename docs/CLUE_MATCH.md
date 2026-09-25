@@ -98,5 +98,5 @@ The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, 
 
 ## Checking it as an agent
 
-- `npm test`: rules, selectors, glossary, validator, and simulations over the content snapshot.
+- `npm test`: only what a playtest can't see: deduction rules, simulations over the content snapshot, solve-report and localStorage parsing, board invariants. Test by playing first (AGENTS.md, Testing).
 - In a dev browser, `window.__cc.clue()` returns the session (mystery, candidates, live, moves, feed tail) and `window.__cc.drag(move, { input: 'touch' })` plays a real move. The `playtest` skill (`.claude/skills/playtest/SKILL.md`) lists the invariants to check.

@@ -54,8 +54,8 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-match`, optional `?place=` and `?seed=`). Guide: `docs/CLUE_MATCH.md`.
 - Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` with TiTiler habitat snapshot). Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
 - Clue Match UI: `src/pages/clue-match.tsx` -> `src/components/clueGame/` (`ClueMatchGame` shell, `useClueMatch` state + board wiring, `useJournal` on-device journal, `PhaserGame` board host). Client GETs share `src/lib/getJson.ts` (cached per page load).
-- Rules (pure, tested in `tests/clueGame/`): `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool, glossary, journal, solveReport, speciesInfo, worldMap).
-- Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules (pure, `tests/game/`), `BoardView.ts` sprites + animation, `BoardController.ts` drag input + cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).
+- Rules (pure): `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool, glossary, journal, solveReport, speciesInfo, worldMap).
+- Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules (pure), `BoardView.ts` sprites + animation, `BoardController.ts` drag input + cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).
 - Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `POST /api/clue-game/solves`. Drizzle `src/db/schema/*` models only the columns the app reads (species, clues, facts, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file); Range clues `db/realm-clues.sql`. Scripts connect via `scripts/connect.ts`.
 - Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). A signed-in player's `profiles` row is created on their first solve (`src/lib/player.ts`).
 - Content: edit rows in Postgres, then `npm run clue:pool -- --check` (and `--snapshot` for the test fixture). Practice SQL: `db/analysis/clue-match/`.
@@ -69,6 +69,12 @@ The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-mat
 - TypeScript everywhere; use `@/` path alias.
 - Prefer `rg` for search. Avoid network installs (restricted). No destructive git commands unless explicitly asked.
 - Keep edits minimal and commented only when non-obvious.
+
+## Testing
+- Never write unit tests after you write code.
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
+- If you must test a system in isolation, first write down all the ways it could fail, then write the code.
+- E2E here: the `playtest` skill (real browser + `window.__cc`; `?seed=N` replays a session exactly); its artifact is the report in `docs/playtests/`. `npm test` keeps only unit tests for failures a playtest can't see (deduction rules, content simulations, input/storage parsing, board invariants).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

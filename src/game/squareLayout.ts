@@ -1,5 +1,5 @@
 // Board layout for a canvas that belongs entirely to the board: the largest
-// gem that fits, the board centered. Pure, so it's unit-tested.
+// gem that fits, the board centered.
 
 export interface BoardLayout {
     gemSize: number;
@@ -7,7 +7,7 @@ export interface BoardLayout {
     offset: { x: number; y: number };
 }
 
-export const SQUARE_LAYOUT = {
+const SQUARE_LAYOUT = {
     /** Space kept free around the board, in pixels. */
     padding: 8,
     minGem: 24,
