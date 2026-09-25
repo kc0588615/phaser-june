@@ -18,18 +18,20 @@ The app has two screens.
 | Rules (pure, unit-tested) | `src/clueGame/`: `categories` (gem → category), `traits` (species records), `deduction` (how a clue compares with a candidate), `round`, `session` (reducer), `selectors` (what the HUD shows), `validatePool` (content checks), `glossary`, `journal`, `speciesInfo` (portrait, taxonomy line, Red List), `worldMap` (basemaps, range shape) |
 | Board | `src/game/`: `ClueBoardScene.ts` (square seeded board), `BoardModel.ts` (rules), `BoardView.ts` (sprites), `BoardController.ts` (drag + cascade loop) |
 | Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`) |
-| Tests | `tests/clueGame/*`, `tests/game/*`, fixture `tests/fixtures/clueGame/pool.json` |
+| Content | `db/content/` (profiles + source registry, docs/CONTENT_SOURCES.md), `scripts/content.ts` (`npm run content`), `src/clueGame/profiles.ts` (profile → rows) |
+| Tests | `tests/clueGame/*` (content tests read `db/content/`), `tests/game/*` |
 
 ## How it fits together
 
 ```mermaid
 flowchart LR
+  J[db/content profiles] -->|content build| C & F & S
   subgraph Postgres
     C[species_deduction_clues] --> P
     F[species_facts] --> P
     S[species] --> P
     I[iucn ranges] --> R[clue_match_ranges<br/>materialized view]
-    O[oneearth realms] -. db/realm-clues.sql .-> C
+    O[oneearth realms] -.->|content ranges| J
   end
   P[/api/clue-game/pool/] --> H[useClueMatch<br/>session reducer]
   R --> M[/api/clue-game/range/] --> RM[RangeMap]
@@ -42,43 +44,39 @@ The board only reports matches (`gems-matched`, one event per explode phase, wit
 
 ## Rules
 
-**Gem colors.** red Family tree (taxonomy), orange Body (morphology), yellow Behavior & diet, green Habitat, blue Range (geography), black Life cycle (reproduction), white Conservation, purple Key facts. Each color draws its category's clues in `reveal_order`, then `species_facts` of matching categories as fun notes, then says "No more clues". A group of 4 reveals one extra clue of its color, 5 or more reveal two (`cluesForMatch`).
+**Gem colors.** red Family tree (taxonomy), orange Body (morphology), yellow Behavior & diet, green Habitat, blue Range (geography), black Life cycle (reproduction), white Conservation, purple Key facts. Each color draws its category's clues (the ones that fit the most candidates first), then `species_facts` of matching categories as fun notes, then says "No more clues". A group of 4 reveals one extra clue of its color, 5 or more reveal two (`cluesForMatch`).
 
-**Deduction** (`src/clueGame/traits.ts`, `deduction.ts`). A species' record is its taxonomy plus every tag on its own clues. A clue with tags (`is_filtering`) compares the mystery's tags with each candidate's record:
+**Deduction** (`src/clueGame/traits.ts`, `deduction.ts`). A species' record is its taxonomy plus every tag on its own clues. Tags are `prefix:value` (vocabulary in docs/CONTENT_SOURCES.md). A clue with tags compares the mystery's tags with each candidate's record:
 
-- **fits**: the candidate has every tag. **partial**: some. **unknown**: its record doesn't mention them. That proves nothing, so it never rules anything out.
+- **fits**: the candidate has every tag. **partial**: some (it shares a few of the countries). **unknown**: its record doesn't mention them. That proves nothing, so it never rules anything out.
 - **contradicts** (the card is ruled out) only when the records truly disagree:
-  - taxonomy: a different class, order, family or genus;
-  - exclusive axes: the other value of a pair like `egg_laying` / `live_birth`, `long_lived` / `short_lived`, `carnivore` / `herbivore` (`EXCLUSIVE_AXES`);
-  - complete families: realms. Every species gets its realms from the same range data, so a candidate that lives in other realms but not this one is ruled out.
+  - one-value traits: another class, order, family or genus, or another size, diet, activity, birth, young, social life, lifespan or covering;
+  - full lists: realms, countries, land/water systems, IUCN habitats and their kinds. Every species gets these from the same data, so a candidate that has others but not this one is ruled out.
+  - Open traits (`burrower`, `stripes`) never rule anything out; they only add matching dots.
 
 The answer always fits its own clues, so it is never ruled out; `tests/clueGame/poolData.test.ts` checks this over hundreds of seeded rounds of the real content.
 
-**Rounds.** Six candidates. From round 3, up to three decoys are the mystery's closest relatives (`relativesForRound`), so later rounds need body, habitat and range clues, not just the family tree. A mystery isn't repeated within 8 rounds.
+**Rounds.** Six candidates. Some decoys are look-alikes: the animals sharing the most traits with the mystery, rare traits weighted most. One at first, up to four from round 7 (`lookalikesForRound`), drawn from the closest few so rounds vary. Each color shows its broadest clue first, so the answer shows itself slowly. A mystery isn't repeated within 8 rounds. Once every animal of a place has been found, rounds move on to its region (the country's continent, or all wildlife areas of its realm): "You found them all! Now exploring Africa".
 
 **Scoring.** Solved 50, speed `(10 − moves) × 10`, first try 25, streak 10 per solve in a row (max 100). A wrong guess costs 30 and the streak. Cascades are free moves.
 
 ## Content: the human in the loop
 
-Content lives in Postgres. Edit it with any SQL tool (psql, DBeaver, pgAdmin, QGIS DB Manager), then check it:
+Content lives in git as one JSON profile per animal (`db/content/animals/`), each fact sourced from a ranked registry (`db/content/sources.json`). docs/CONTENT_SOURCES.md has the source tiers, the tag vocabulary and the workflow:
 
-1. Change rows in `species_deduction_clues` (`category`, `label`, `compare_tags`, `reveal_order`, `is_filtering`) or `species_facts` (`category`, `fact_text`, `sort_order`). Wrap ad hoc writes in `BEGIN; ... COMMIT;`.
-2. `npm run clue:pool -- --check` validates the live pool: errors (a clue that doesn't fit its own animal, duplicate reveal order, an unknown realm tag) and warnings (placeholder text, Red List codes, text cut off by an import, numbers run together, a color with no notes).
-3. If range data or the set of playable species changed: `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;` and `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;`
-4. `npm run clue:pool -- --snapshot` refreshes the test fixture, then `npm test`.
-5. Play it: `/clue-match?seed=1`.
-
-**Adding a species.** It needs a `species` row with class, order, family, genus and `iucn_id` (for the range map), clues for as many colors as possible (tag the ones that should narrow the field), and facts. Then run `db/realm-clues.sql`: it only adds realm clues for species that don't have them yet. Refresh both views.
-
-**Tags.** Lowercase `snake_case`. Authoring prefixes like `diet_type:` or `family:` are ignored (`normalizeTag`). Realms are exactly `realm:nearctic`, `realm:neotropical`, `realm:palearctic`, `realm:afrotropical`, `realm:indomalayan`, `realm:australasian`, `realm:oceanian`, `realm:antarctic`. Anything else is an open trait: it can add dots but never rules a candidate out, unless it is one side of an exclusive axis.
+1. Edit a profile; `npm run content -- preview [name]` shows its clues and problems.
+2. New animal: `npm run content -- ranges`, then `npm run content -- photos`.
+3. `npm run content -- build` loads the database in one transaction; `npm run content -- check` validates the live pool.
+4. If ranges or the set of animals changed: `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;` and `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;`
+5. `npm test`, then play `/clue-match?seed=1`.
 
 **Plain words.** Players are in grades 6–12. Science words stay (they are part of the lesson), and `src/clueGame/glossary.ts` gives each one a tap-to-read definition. Add a glossary entry when new content brings a new term.
 
 ## Database
 
-`db/schema.sql` is the schema the app uses: the content tables (`species`, `species_deduction_clues`, `species_facts`), `profiles`, `clue_match_solves`, and two materialized views. `clue_match_ranges` holds simplified range SVG paths for the reveal card (~10 s to refresh). `clue_match_places` holds the globe's places and who lives there (≥5% or 5,000 km² of a range). It splits Russia at the Urals and moves France's overseas parts to their continent, and takes ~90 s to refresh. The file is a baseline, not a history: the old migrations 001–044 are in git history. Change the database with SQL, then update the file to match.
+`db/schema.sql` is the schema the app uses: the content tables (`content_sources`, `species` with Red List link and photo credit, `species_deduction_clues` and `species_facts` with their sources), `profiles`, `clue_match_solves`, and two materialized views. `clue_match_ranges` holds simplified range SVG paths for the reveal card (~10 s to refresh). `clue_match_places` holds the globe's places and who lives there (≥5% or 5,000 km² of a range). It splits Russia at the Urals and moves France's overseas parts to their continent, and takes ~90 s to refresh. The file is a baseline, not a history: the old migrations 001–044 are in git history. Change the database with SQL, then update the file to match.
 
-`db/realm-clues.sql` computes Range clues from IUCN range × OneEarth realm (PostGIS): each realm that holds 10% of a range becomes a clue, and a tiny island takes the nearest realm. It is safe to rerun.
+`npm run content -- ranges` computes each profile's realms from IUCN range × OneEarth realm (PostGIS): each realm that holds 10% of a range counts, and a tiny island takes the nearest realm. Countries are the globe's countries that hold the animal.
 
 The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, `world-land.geojson` on the globe) are drawn from `natural_earth.countries` by `npm run clue:world-map`. The habitat pictures come from TiTiler rendering the habitat GeoTIFF (`NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`).
 
@@ -98,5 +96,5 @@ The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, 
 
 ## Checking it as an agent
 
-- `npm test`: only what a playtest can't see: deduction rules, simulations over the content snapshot, solve-report and localStorage parsing, board invariants. Test by playing first (AGENTS.md, Testing).
+- `npm test`: only what a playtest can't see: deduction rules, profile checks and simulations over the real content, solve-report and localStorage parsing, board invariants. Test by playing first (AGENTS.md, Testing).
 - In a dev browser, `window.__cc.clue()` returns the session (mystery, candidates, live, moves, feed tail) and `window.__cc.drag(move, { input: 'touch' })` plays a real move. The `playtest` skill (`.claude/skills/playtest/SKILL.md`) lists the invariants to check.

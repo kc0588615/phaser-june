@@ -1,5 +1,5 @@
 -- Where each species lives, by biogeographic realm: the share of its IUCN range
--- in each OneEarth realm. db/realm-clues.sql turns shares of 10% or more into Range
+-- in each OneEarth realm. `npm run content -- ranges` turns shares of 10% or more into Range
 -- clues; this query shows the numbers behind them (it takes ~20 s).
 --
 -- Practice: PostGIS joins (ST_Intersects), geometry math (ST_Intersection,

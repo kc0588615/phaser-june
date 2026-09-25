@@ -1,9 +1,9 @@
 -- Text a player would stumble on, found with regular expressions. The same
--- checks run in `npm run clue:pool -- --check` (src/clueGame/validatePool.ts).
+-- checks run in `npm run content -- check` (src/clueGame/validatePool.ts).
 --
 -- Practice: UNION ALL to stack two tables, the ~ regex operator, CASE.
--- Question: fix one problem with an UPDATE inside BEGIN ... COMMIT, rerun this
---           query, then `npm run clue:pool -- --check`.
+-- Question: fix one problem in its profile (db/content/animals/), run
+--           `npm run content -- build`, then rerun this query.
 WITH texts AS (
   SELECT 'clue' AS source, c.id::text AS row_id, s.common_name, c.category, c.label AS text
   FROM species_deduction_clues c JOIN species s ON s.id = c.species_id

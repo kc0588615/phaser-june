@@ -44,7 +44,7 @@ Invariants to check each move:
 - With `?place=`, every mystery is one of that place's animals, and a solve adds a sighting for that place to the journal.
 - No page scroll: `document.documentElement.scrollHeight === innerHeight`; every button at least 44px.
 
-Content problems (a clue that doesn't fit its own animal, missing notes for a color) come from the database: `npm run clue:pool -- --check`.
+Content problems (a clue that doesn't fit its own animal, missing notes for a color) come from the profiles in `db/content/`: `npm run content -- preview <name>`, then `npm run content -- check` on the live pool.
 
 ## 4. Report
 
