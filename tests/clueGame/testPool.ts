@@ -40,6 +40,11 @@ export const pool: CluePool = {
     clue(7, 'taxonomy', 'Family: Felidae', ['family:felidae']),
     clue(7, 'habitat', 'Lives in forests.', ['forest']),
     clue(7, 'behavior', 'Hunts alone.', ['sociality:solitary']),
+    // Realms from range maps: complete wherever a species has one (3-6 have none).
+    clue(1, 'geography', 'Lives in Central or South America.', ['realm:neotropical']),
+    clue(2, 'geography', 'Lives in Africa south of the Sahara.', ['realm:afrotropical']),
+    clue(7, 'geography', 'Lives in South or Southeast Asia.', ['realm:indomalayan']),
+    clue(7, 'geography', 'Also lives in northern Asia.', ['realm:palearctic'], 2),
   ],
   facts: [
     { speciesId: 1, category: 'key_fact', text: 'Males carry tadpoles in their vocal sac.', sortOrder: 1 },

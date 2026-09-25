@@ -2,11 +2,14 @@
 //
 // A record is the species' taxonomy (from the species table) plus the tags on
 // its own clues, normalized. Most tags are open traits: a candidate whose
-// record lacks one has "no record" of it, which proves nothing. Only two kinds
+// record lacks one has "no record" of it, which proves nothing. Only three kinds
 // of difference count as a contradiction:
 //   - taxonomy: every species has exactly one class, order, family, and genus;
 //   - exclusive axes: pairs like egg-laying vs live birth, where having one
-//     value means not having the other.
+//     value means not having the other;
+//   - complete families: tags computed for every species from full data, like
+//     realms from range maps, so a record with some realm but not this one
+//     truly doesn't live there.
 import type { SpeciesClueCategory } from '@/types/speciesClues';
 import type { CluePool, PoolClue, PoolSpecies } from '@/clueGame/pool';
 
@@ -25,6 +28,19 @@ export const EXCLUSIVE_AXES = {
   sociality: ['herd', 'solitary'],
 } as const satisfies Record<string, readonly string[]>;
 export type ExclusiveAxis = keyof typeof EXCLUSIVE_AXES;
+
+/** Biogeographic realms, tagged on Range clues from each species' IUCN range map (migration 039). */
+export const REALM_TAGS = [
+  'realm:nearctic', 'realm:neotropical', 'realm:palearctic', 'realm:afrotropical',
+  'realm:indomalayan', 'realm:australasian', 'realm:oceanian', 'realm:antarctic',
+] as const;
+
+/** Tag families that are complete wherever a record has any member (see the header). */
+const COMPLETE_FAMILIES = ['realm:'] as const;
+
+export function completeFamilyOf(tag: string): string | null {
+  return COMPLETE_FAMILIES.find(prefix => tag.startsWith(prefix)) ?? null;
+}
 
 const AXIS_BY_TAG = new Map<string, ExclusiveAxis>(
   (Object.entries(EXCLUSIVE_AXES) as Array<[ExclusiveAxis, readonly string[]]>)

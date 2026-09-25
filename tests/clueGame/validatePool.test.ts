@@ -38,6 +38,11 @@ describe('validatePool text checks', () => {
     assert.ok(has(warnings, 'looks cut off; species_facts (diet_flora) has the full text'));
   });
 
+  test('a misspelled realm is an error, since realms rule candidates out', () => {
+    const report = validatePool(withContent({ clues: [clue(3, 'geography', 'Lives in North America.', ['realm:nearctik'])] }));
+    assert.ok(has(report.errors, 'unknown realm tags [realm:nearctik]'));
+  });
+
   test('the shared test pool itself is clean', () => {
     assert.deepEqual(validatePool(pool).errors, []);
   });

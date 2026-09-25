@@ -4,7 +4,7 @@
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { fitClue, isDeductive } from '@/clueGame/deduction';
 import { isPlaceholderText, type CluePool } from '@/clueGame/pool';
-import { EXCLUSIVE_AXES, buildSpeciesRecords, clueTags, rankOfTag } from '@/clueGame/traits';
+import { EXCLUSIVE_AXES, REALM_TAGS, buildSpeciesRecords, clueTags, rankOfTag } from '@/clueGame/traits';
 import { playableSpeciesIds } from '@/clueGame/round';
 
 export interface PoolReport {
@@ -49,6 +49,13 @@ export function validatePool(pool: CluePool): PoolReport {
     const key = `${clue.speciesId}|${clue.category}|${clue.revealOrder}`;
     if (orderKeys.has(key)) errors.push(`${name(clue.speciesId)}: two ${clue.category} clues share reveal order ${clue.revealOrder}`);
     orderKeys.add(key);
+  }
+
+  const realms = new Set<string>(REALM_TAGS);
+  for (const clue of pool.clues) {
+    // Realms are a complete family: a misspelled one would rule out every candidate.
+    const unknown = clueTags(clue).filter(tag => tag.startsWith('realm:') && !realms.has(tag));
+    if (unknown.length) errors.push(`clue ${clue.id} (${name(clue.speciesId)}): unknown realm tags [${unknown.join(', ')}]`);
   }
 
   for (const clue of pool.clues.filter(isDeductive)) {

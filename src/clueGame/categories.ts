@@ -26,7 +26,7 @@ export const GEM_CATEGORIES: readonly GemCategory[] = [
   { gem: 'orange', label: 'Body', shortLabel: 'Body', question: 'What does it look like?', clueCategories: ['morphology'], factCategories: [], color: '#ffc56b', deduces: true },
   { gem: 'yellow', label: 'Behavior & diet', shortLabel: 'Habits', question: 'How does it live and eat?', clueCategories: ['behavior', 'diet'], factCategories: ['behavior', 'diet_prey', 'diet_flora'], color: '#ffe87c', deduces: true },
   { gem: 'green', label: 'Habitat', shortLabel: 'Habitat', question: 'Where does it live?', clueCategories: ['habitat'], factCategories: [], color: '#7bd99b', deduces: true },
-  { gem: 'blue', label: 'Range', shortLabel: 'Range', question: 'Which part of the world?', clueCategories: ['geography'], factCategories: [], color: '#79d7ff', deduces: false },
+  { gem: 'blue', label: 'Range', shortLabel: 'Range', question: 'Which part of the world?', clueCategories: ['geography'], factCategories: [], color: '#79d7ff', deduces: true },
   { gem: 'black', label: 'Life cycle', shortLabel: 'Life', question: 'How does it grow up?', clueCategories: ['reproduction'], factCategories: ['life_description'], color: '#a7afbd', deduces: true },
   { gem: 'white', label: 'Conservation', shortLabel: 'Status', question: 'Is it in danger?', clueCategories: ['conservation'], factCategories: ['threat'], color: '#e8eef5', deduces: false },
   { gem: 'purple', label: 'Key facts', shortLabel: 'Facts', question: 'What makes it special?', clueCategories: ['key_fact'], factCategories: ['key_fact'], color: '#c9a2ff', deduces: false },

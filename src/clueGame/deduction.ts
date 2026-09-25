@@ -2,13 +2,13 @@
 // (see traits.ts for what a record holds and when records truly disagree).
 import type { SpeciesClueCategory } from '@/types/speciesClues';
 import type { PoolClue } from '@/clueGame/pool';
-import { EXCLUSIVE_AXES, axisOf, clueTags, rankOfTag, type SpeciesRecord, type SpeciesRecords } from '@/clueGame/traits';
+import { EXCLUSIVE_AXES, axisOf, clueTags, completeFamilyOf, rankOfTag, type SpeciesRecord, type SpeciesRecords } from '@/clueGame/traits';
 
 /**
  * fits: the candidate's record has every tag. partial: some. unknown: its
  * record doesn't mention them (proves nothing). contradicts: its record holds
- * a different taxonomy rank or the other value of an exclusive trait, which
- * rules it out.
+ * a different taxonomy rank, the other value of an exclusive trait, or other
+ * members of a complete family (a different realm), which rules it out.
  */
 export type ClueFit = 'fits' | 'partial' | 'contradicts' | 'unknown';
 
@@ -27,6 +27,8 @@ function tagOutcome(tag: string, category: SpeciesClueCategory, own: SpeciesReco
   if (candidateTraits.has(tag)) return 'match';
   const axis = axisOf(tag);
   if (axis && EXCLUSIVE_AXES[axis].some(value => value !== tag && candidateTraits.has(value))) return 'conflict';
+  const family = completeFamilyOf(tag);
+  if (family && [...candidateTraits].some(trait => trait.startsWith(family))) return 'conflict';
   return 'unknown';
 }
 

@@ -48,6 +48,15 @@ describe('fitClue', () => {
     assert.equal(fitClue(eggs, 3, records), 'partial', 'turtles lay eggs; lifespan unknown');
   });
 
+  test('realms are complete: a candidate living elsewhere is ruled out, one without realm data is not', () => {
+    const neotropical = find('Lives in Central or South America.');
+    assert.equal(fitClue(neotropical, 1, records), 'fits');
+    assert.equal(fitClue(neotropical, 2, records), 'contradicts', 'lives only in the Afrotropics');
+    assert.equal(fitClue(neotropical, 7, records), 'contradicts', 'two realms, neither this one');
+    assert.equal(fitClue(neotropical, 3, records), 'unknown', 'no range data');
+    assert.equal(fitClue(find('Also lives in northern Asia.'), 7, records), 'fits');
+  });
+
   test('every species fits its own clues', () => {
     for (const own of pool.clues.filter(c => c.compareTags.length > 0)) {
       assert.equal(evaluateClue(own, [own.speciesId], records)[own.speciesId], 'fits', own.label);

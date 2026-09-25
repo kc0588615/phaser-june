@@ -324,12 +324,23 @@
    "isFiltering": true
   },
   {
+   "id": 502,
+   "speciesId": 1,
+   "category": "geography",
+   "label": "Lives in North America (the Nearctic realm).",
+   "compareTags": [
+    "realm:nearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 298,
    "speciesId": 1,
    "category": "geography",
    "label": "Found in the Great Lakes region, the upper Mississippi basin, and scattered populations in the northeastern United States and Nova Scotia, Canada.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -515,12 +526,23 @@
    "isFiltering": true
   },
   {
+   "id": 503,
+   "speciesId": 2,
+   "category": "geography",
+   "label": "Lives in North America (the Nearctic realm).",
+   "compareTags": [
+    "realm:nearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 299,
    "speciesId": 2,
    "category": "geography",
    "label": "Has a very large native range covering most of the United States east of the Rocky Mountains, southern Canada, and northern Mexico.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -693,12 +715,23 @@
    "isFiltering": true
   },
   {
+   "id": 504,
+   "speciesId": 3,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 301,
    "speciesId": 3,
    "category": "geography",
    "label": "Elevation sea level to one thousand one hundred meter in coastal and Andean ranges",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -883,12 +916,23 @@
    "isFiltering": true
   },
   {
+   "id": 505,
+   "speciesId": 4,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 302,
    "speciesId": 4,
    "category": "geography",
    "label": "Scattered headwaters across southern China, Hainan, Myanmar, Thailand, Laos and Vietnam.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -1053,12 +1097,23 @@
    "isFiltering": true
   },
   {
+   "id": 506,
+   "speciesId": 5,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 303,
    "speciesId": 5,
    "category": "geography",
    "label": "Sea level to roughly 600 m throughout Sundaland, wherever closed-canopy forest still stands.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -1222,12 +1277,23 @@
    "isFiltering": true
   },
   {
+   "id": 507,
+   "speciesId": 6,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 304,
    "speciesId": 6,
    "category": "geography",
    "label": "Sea level to about seven hundred metres across humid Caribbean lowlands and patchy Pacific slopes",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -1394,12 +1460,23 @@
    "isFiltering": true
   },
   {
+   "id": 508,
+   "speciesId": 7,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 305,
    "speciesId": 7,
    "category": "geography",
    "label": "Lowland to mid-elevation 30–1500 m across Central African equatorial belt",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -1563,12 +1640,23 @@
    "isFiltering": true
   },
   {
+   "id": 509,
+   "speciesId": 8,
+   "category": "geography",
+   "label": "Lives in North America (the Nearctic realm).",
+   "compareTags": [
+    "realm:nearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 307,
    "speciesId": 8,
    "category": "geography",
    "label": "Elevation sea level to about two thousand metre across the Pacific Northwest and northern Rocky outliers",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -1735,12 +1823,23 @@
    "isFiltering": true
   },
   {
+   "id": 510,
+   "speciesId": 9,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 308,
    "speciesId": 9,
    "category": "geography",
    "label": "Sea level to about six hundred metres across the eastern Guiana Shield; especially common near streams that cross sandy soil",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -1913,12 +2012,23 @@
    "isFiltering": true
   },
   {
+   "id": 511,
+   "speciesId": 10,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 309,
    "speciesId": 10,
    "category": "geography",
    "label": "Sea level to four hundred metres across the Amazon and Orinoco drainage and coastal Guiana shield",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -2089,12 +2199,23 @@
    "isFiltering": true
   },
   {
+   "id": 512,
+   "speciesId": 11,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 310,
    "speciesId": 11,
    "category": "geography",
    "label": "Sea level to three hundred metres within a coastal corridor about one hundred fifty kilometres inland",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -2277,12 +2398,23 @@
    "isFiltering": true
   },
   {
+   "id": 513,
+   "speciesId": 12,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 311,
    "speciesId": 12,
    "category": "geography",
    "label": "Sundaland and Indochina; populations highly fragmented",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -2446,12 +2578,23 @@
    "isFiltering": true
   },
   {
+   "id": 514,
+   "speciesId": 13,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 312,
    "speciesId": 13,
    "category": "geography",
    "label": "Known mainly from towns near Antongil Bay such as Maroantsetra and Rantabe; low elevation coastal plain",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -2615,12 +2758,23 @@
    "isFiltering": true
   },
   {
+   "id": 515,
+   "speciesId": 14,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 314,
    "speciesId": 14,
    "category": "geography",
    "label": "Found within ten kilometres of the Atlantic from Lüderitz Namibia to Port Nolloth South Africa",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -2798,12 +2952,23 @@
    "isFiltering": true
   },
   {
+   "id": 516,
+   "speciesId": 15,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 317,
    "speciesId": 15,
    "category": "geography",
    "label": "Scattered kopjes across southern Kenya, northern & eastern Tanzania; single Zambian site",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -2966,12 +3131,23 @@
    "isFiltering": true
   },
   {
+   "id": 517,
+   "speciesId": 16,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 318,
    "speciesId": 16,
    "category": "geography",
    "label": "Known from less than thirty localities along a six hundred kilometre arc of the southern Western Ghats",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -3153,12 +3329,23 @@
    "isFiltering": true
   },
   {
+   "id": 518,
+   "speciesId": 17,
+   "category": "geography",
+   "label": "Lives in Australia or New Guinea (the Australasian realm).",
+   "compareTags": [
+    "realm:australasian"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 306,
    "speciesId": 17,
    "category": "geography",
    "label": "Elevation 0–150 m; distribution fragmented into several large river basins across southern New Guinea and the Top End of Australia.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -3345,12 +3532,34 @@
    "isFiltering": true
   },
   {
+   "id": 519,
+   "speciesId": 18,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 520,
+   "speciesId": 18,
+   "category": "geography",
+   "label": "Also lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
    "id": 313,
    "speciesId": 18,
    "category": "geography",
    "label": "Confirmed remnant sites: Suzhou Zoo (China), Dong Mo & Xuan Khanh Lakes (Vietnam); elevation 0–100 m.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 3,
    "isFiltering": false
   },
   {
@@ -3534,12 +3743,23 @@
    "isFiltering": true
   },
   {
+   "id": 521,
+   "speciesId": 19,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 315,
    "speciesId": 19,
    "category": "geography",
    "label": "Restricted to nine major islands and several islets; elevational range sea-level to ~1 200 m.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -3714,12 +3934,34 @@
    "isFiltering": true
   },
   {
+   "id": 522,
+   "speciesId": 20,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 523,
+   "speciesId": 20,
+   "category": "geography",
+   "label": "Also lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
    "id": 319,
    "speciesId": 20,
    "category": "geography",
    "label": "Broad but patchy band south of the Sahara from Senegal and Mauritania eastward to Sudan and Ethiopia.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 3,
    "isFiltering": false
   },
   {
@@ -3893,12 +4135,23 @@
    "isFiltering": true
   },
   {
+   "id": 524,
+   "speciesId": 21,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 316,
    "speciesId": 21,
    "category": "geography",
    "label": "Occurs naturally only in the extreme southern and southwestern part of Madagascar. Introduced to the islands of Réunion and Mauritius.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -4077,12 +4330,23 @@
    "isFiltering": true
   },
   {
+   "id": 525,
+   "speciesId": 22,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 300,
    "speciesId": 22,
    "category": "geography",
    "label": "Historically endemic to Pinta Island, Galápagos, Ecuador. Now extinct in its native range, though hybrids exist on Isabela Island.",
    "compareTags": [],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": false
   },
   {
@@ -4259,6 +4523,28 @@
    "isFiltering": true
   },
   {
+   "id": 526,
+   "speciesId": 25,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 527,
+   "speciesId": 25,
+   "category": "geography",
+   "label": "Also lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
    "id": 458,
    "speciesId": 25,
    "category": "geography",
@@ -4266,7 +4552,7 @@
    "compareTags": [
     "climate_zone:tropical"
    ],
-   "revealOrder": 1,
+   "revealOrder": 3,
    "isFiltering": true
   },
   {
@@ -4277,7 +4563,7 @@
    "compareTags": [
     "continent:asia"
    ],
-   "revealOrder": 2,
+   "revealOrder": 4,
    "isFiltering": true
   },
   {
@@ -4447,6 +4733,17 @@
    "isFiltering": true
   },
   {
+   "id": 528,
+   "speciesId": 50,
+   "category": "geography",
+   "label": "Lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
    "id": 443,
    "speciesId": 50,
    "category": "geography",
@@ -4454,7 +4751,7 @@
    "compareTags": [
     "climate_zone:arid"
    ],
-   "revealOrder": 1,
+   "revealOrder": 2,
    "isFiltering": true
   },
   {
@@ -4465,7 +4762,7 @@
    "compareTags": [
     "continent:africa"
    ],
-   "revealOrder": 2,
+   "revealOrder": 3,
    "isFiltering": true
   },
   {
