@@ -16,14 +16,14 @@ export function TopBar({ round, live, total, score, streak, solved, onHelp, onJo
     { label: 'Solved', value: solved, icon: <Trophy className="h-3.5 w-3.5 text-cyan-300" aria-hidden="true" /> },
   ];
   return (
-    <header className="flex items-center gap-2 px-3 py-1.5 [grid-area:top]">
+    <header className="flex min-w-0 items-center gap-2 px-3 py-1.5 [grid-area:top]">
       <div className="min-w-0">
-        <h1 className="m-0 text-base font-bold leading-tight">Clue Match</h1>
+        <h1 className="m-0 truncate text-base font-bold leading-tight">Clue Match</h1>
         <p className="m-0 truncate text-[11px] leading-tight text-cyan-100/70" aria-live="polite">
           {round === null ? 'Loading animals…' : `Animal ${round} · ${live} of ${total} possible`}
         </p>
       </div>
-      <dl className="m-0 ml-auto flex items-center gap-2.5">
+      <dl className="m-0 ml-auto flex shrink-0 items-center gap-2">
         {stats.map(stat => (
           <div key={stat.label} className="flex items-center gap-1" title={stat.label}>
             <dt className="sr-only">{stat.label}</dt>
