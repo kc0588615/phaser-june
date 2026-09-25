@@ -18,6 +18,9 @@ export class BoardView {
     /** Sprites mirroring the model's grid, [x][y]. */
     private sprites: (Sprite | null)[][] = [];
     private readonly group: Phaser.GameObjects.Group;
+    /** Keyboard cursor outline, drawn once the player uses the keyboard. */
+    private cursor: Phaser.GameObjects.Graphics | null = null;
+    private cursorCell: Cell | null = null;
 
     constructor(private readonly scene: Phaser.Scene, private readonly cols: number, private readonly rows: number, private layout: BoardLayout) {
         this.group = scene.add.group();
@@ -39,6 +42,7 @@ export class BoardView {
     /** Tweens the sprites to a new gem size and offset after a resize. */
     setLayout(layout: BoardLayout): void {
         this.layout = layout;
+        if (this.cursorCell) this.showCursor(...this.cursorCell);
         this.forEachSprite((sprite, x, y) => {
             this.scene.tweens.killTweensOf(sprite);
             this.scene.tweens.add({
@@ -51,7 +55,8 @@ export class BoardView {
     /** Drag preview: the row or column follows the pointer by `offset` pixels, wrapping around the board edge. */
     dragLine(direction: MoveDirection, index: number, offset: number): void {
         const { gemSize, offset: board } = this.layout;
-        const min = (direction === 'row' ? board.x : board.y) - gemSize / 2;
+        // Half a pixel past the outside cell's center, so an exact whole-cell offset lands inside the board.
+        const min = (direction === 'row' ? board.x : board.y) - gemSize / 2 + 0.5;
         const max = min + (direction === 'row' ? this.cols : this.rows) * gemSize;
         const length = direction === 'row' ? this.cols : this.rows;
         for (let i = 0; i < length; i++) {
@@ -122,6 +127,23 @@ export class BoardView {
             falls.push(this.tween({ targets: sprite, ...target, alpha: 1, scale: this.scaleFor(sprite), duration, ease: 'Quad.easeOut' }));
         });
         return Promise.all(falls).then(() => undefined);
+    }
+
+    /** Outlines the keyboard cursor's cell. */
+    showCursor(x: number, y: number): void {
+        this.cursorCell = [x, y];
+        this.cursor ??= this.scene.add.graphics().setDepth(40);
+        const { gemSize } = this.layout;
+        const center = this.positionOf(x, y);
+        const half = gemSize / 2 - 2;
+        this.cursor.clear()
+            .lineStyle(Math.max(3, gemSize * 0.07), 0xfde68a, 1)
+            .strokeRoundedRect(center.x - half, center.y - half, half * 2, half * 2, gemSize * 0.18);
+    }
+
+    hideCursor(): void {
+        this.cursorCell = null;
+        this.cursor?.clear();
     }
 
     /** Puts every sprite on its cell, fully visible. */

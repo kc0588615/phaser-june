@@ -42,6 +42,7 @@ const MAX_EVENTS = 200;
 // Every EventBus event; a Record so a new event missing here fails typecheck.
 const LOGGED: Record<keyof EventPayloads, true> = {
   'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
+  'clue-board-key': true, 'clue-board-announce': true,
 };
 
 let scene: DebugScene | null = null;

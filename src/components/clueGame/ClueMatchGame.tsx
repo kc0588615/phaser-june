@@ -8,6 +8,7 @@ import { candidateViews, legendViews } from '@/clueGame/selectors';
 import type { SolveSummary } from '@/clueGame/session';
 import type { SolveReport } from '@/clueGame/solveReport';
 import { sightingPoint } from '@/clueGame/places';
+import { EventBus, type BoardKey } from '@/game/EventBus';
 import { CandidateGrid } from './CandidateGrid';
 import { ClueFeed } from './ClueFeed';
 import { GemLegend } from './GemLegend';
@@ -19,6 +20,15 @@ import { RevealSheet } from './RevealSheet';
 import { TopBar } from './TopBar';
 import { useClueMatch } from './useClueMatch';
 import { useJournal } from './useJournal';
+
+const BOARD_KEYS = new Set<string>(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape']);
+
+/** Keys on the focused board go to the board scene (arrows, Shift+arrows, Enter, Escape). */
+function onBoardKey(event: React.KeyboardEvent): void {
+  if (!BOARD_KEYS.has(event.key) || event.altKey || event.ctrlKey || event.metaKey) return;
+  event.preventDefault();
+  EventBus.emit('clue-board-key', { key: event.key as BoardKey, shift: event.shiftKey });
+}
 
 /** Send a solve to POST /api/clue-game/solves. Best effort: play never waits on it or fails because of it. */
 function reportSolve(report: SolveReport): void {
@@ -38,6 +48,13 @@ export function ClueMatchGame() {
   const [journalOpen, setJournalOpen] = useState(false);
   const [newDiscovery, setNewDiscovery] = useState(false);
   const [newBest, setNewBest] = useState(false);
+  const [boardStatus, setBoardStatus] = useState('');
+
+  useEffect(() => {
+    const onAnnounce = (text: string) => setBoardStatus(text);
+    EventBus.on('clue-board-announce', onAnnounce);
+    return () => { EventBus.off('clue-board-announce', onAnnounce); };
+  }, []);
 
   useEffect(() => {
     try {
@@ -110,8 +127,19 @@ export function ClueMatchGame() {
           onHelp={() => setHelpOpen(true)}
           onJournal={() => setJournalOpen(true)}
         />
-        <section aria-label="Game board" className="relative h-[min(calc(100vw-8px),calc(100dvh-440px))] w-full [grid-area:board] max-md:short:h-[min(calc(100vw-8px),calc(100dvh-370px))] md:h-full">
+        <section
+          role="application"
+          aria-label="Game board"
+          aria-describedby="board-keys"
+          tabIndex={0}
+          onKeyDown={onBoardKey}
+          className="group relative h-[min(calc(100vw-8px),calc(100dvh-440px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-200/70 max-md:short:h-[min(calc(100vw-8px),calc(100dvh-370px))] md:h-full"
+        >
           <PhaserGame className="absolute inset-0" />
+          <p id="board-keys" className="pointer-events-none absolute inset-x-2 bottom-1 m-0 hidden rounded-md bg-black/75 px-2 py-1 text-center text-[11px] text-white/90 group-focus-visible:block">
+            Arrows move the cursor. Shift + arrows slide its row or column. Enter makes the move, Esc cancels.
+          </p>
+          <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
         <div className="relative flex min-h-0 flex-col gap-2 px-2 pb-[max(8px,env(safe-area-inset-bottom))] [grid-area:rail] md:border-l md:border-white/10 md:px-3 md:pt-1">
           {loadError && <p className="m-0 rounded-lg border border-rose-400/40 bg-rose-950/40 p-2 text-xs text-rose-100" role="alert">{loadError}</p>}

@@ -15,6 +15,7 @@ export function HowToPlay({ seed, onClose }: { seed: number; onClose: () => void
           <li>
             Drag a row or column to line up <b>3 or more gems</b> of the same color. Line up 4 or 5 for extra clues.
             <span className="mt-1 flex gap-1" aria-hidden="true"><GemIcon gem="green" /><GemIcon gem="green" /><GemIcon gem="green" /></span>
+            <span className="mt-1 block text-[12px] text-white/75">Keyboard: Tab to the board. Arrows move the cursor, <b>Shift + arrows</b> slide its row or column, <b>Enter</b> makes the move.</span>
           </li>
           <li>
             Each color reveals a kind of clue about the <b>mystery animal</b>:

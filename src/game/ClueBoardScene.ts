@@ -41,11 +41,16 @@ export class ClueBoardScene extends Phaser.Scene {
         this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
             onMoveResolved: () => this.reshuffleIfStuck(),
+            announce: (text, cell) => {
+                const gem = cell ? this.model.getGrid()[cell[0]]?.[cell[1]] : undefined;
+                EventBus.emit('clue-board-announce', gem ? `${text}: ${gem}, ${gemCategory(gem).label}` : text);
+            },
         });
 
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('clue-board-setup', this.setupBoard, this);
         EventBus.on('clue-board-lock', this.setLock, this);
+        EventBus.on('clue-board-key', this.onKey, this);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
 
         EventBus.emit('current-scene-ready', this);
@@ -56,12 +61,17 @@ export class ClueBoardScene extends Phaser.Scene {
         if (!this.view || !this.controller) return;
         this.seed = seed;
         this.model.newBoard(seed, allowedGemTypes);
+        this.controller.resetInput();
         this.view.createBoard(this.model.getGrid());
         this.controller.ready = true;
     }
 
     private setLock({ locked }: EventPayloads['clue-board-lock']): void {
         if (this.controller) this.controller.locked = locked;
+    }
+
+    private onKey({ key, shift }: EventPayloads['clue-board-key']): void {
+        void this.controller?.key(key, shift);
     }
 
     private reportMatches(phase: ExplodePhase, cascade: boolean): void {
@@ -159,6 +169,7 @@ export class ClueBoardScene extends Phaser.Scene {
         detachDebugScene(this);
         EventBus.off('clue-board-setup', this.setupBoard, this);
         EventBus.off('clue-board-lock', this.setLock, this);
+        EventBus.off('clue-board-key', this.onKey, this);
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.view?.destroyBoard();
         this.view = null;

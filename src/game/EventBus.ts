@@ -7,6 +7,8 @@
 //   page  -> board 'clue-board-lock'      stop or resume accepting moves
 //   board -> page  'gems-matched'         groups cleared in one explode phase
 //   board -> page  'clue-board-shuffled'  no moves were left, so it reshuffled
+//   page  -> board 'clue-board-key'       a key pressed on the focused board
+//   board -> page  'clue-board-announce'  what a keyboard action did, for screen readers
 import Phaser from 'phaser';
 import type { GemType } from './constants';
 
@@ -17,7 +19,12 @@ export interface EventPayloads {
     'clue-board-setup': { seed: number; allowedGemTypes: GemType[] };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
+    /** Arrows move the cursor; with Shift they preview a slide; Enter makes it, Escape cancels. */
+    'clue-board-key': { key: BoardKey; shift: boolean };
+    'clue-board-announce': string;
 }
+
+export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Enter' | 'Escape';
 
 class TypedEventBus extends Phaser.Events.EventEmitter {
     emit<K extends keyof EventPayloads>(event: K, ...args: [EventPayloads[K]]): boolean {
