@@ -3,7 +3,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateClue, fitClue, usefulCategories } from '@/clueGame/deduction';
 import { normalizeTag } from '@/clueGame/traits';
-import { cluesForMatch, correctGuessScore, createRound, liveCandidates, notesLeft, registerWrongGuess, revealNext } from '@/clueGame/round';
+import { cluesForMatch, correctGuessScore, createRound, liveCandidates, notesLeft, registerWrongGuess, relativesForRound, revealNext } from '@/clueGame/round';
 import { clueSessionReducer, currentRoundFeed } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
 import type { CluePool } from '@/clueGame/pool';
@@ -94,6 +94,18 @@ describe('rounds', () => {
     };
     assert.deepEqual(sequence(42), sequence(42));
     assert.notDeepEqual(sequence(42), sequence(43));
+  });
+
+  test('later rounds bring in the mystery\'s closest relatives', () => {
+    assert.deepEqual([1, 2, 3, 4, 5, 6, 7, 8].map(relativesForRound), [0, 0, 1, 1, 2, 2, 3, 3]);
+    const notThree = [1, 2, 4, 5, 6, 7];
+    for (let seed = 1; seed <= 10; seed++) {
+      const late = createRound(pool, mulberry32(seed), 7, notThree);
+      assert.equal(late.mysteryId, 3);
+      assert.equal(late.relatives, 3);
+      for (const relative of [4, 5, 6]) assert.ok(late.candidateIds.includes(relative), `seed ${seed}: turtle/tortoise ${relative} is in the lineup`);
+      assert.equal(createRound(pool, mulberry32(seed), 1, notThree).relatives, 0);
+    }
   });
 
   test('recent mysteries are skipped while others remain', () => {

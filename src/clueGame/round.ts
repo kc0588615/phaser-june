@@ -5,7 +5,7 @@ import type { LootGemType } from '@/expedition/domain';
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { evaluateClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
 import { isPlaceholderText, type CluePool, type PoolClue } from '@/clueGame/pool';
-import type { SpeciesRecords } from '@/clueGame/traits';
+import { TAXONOMY_RANKS, taxonomyOf, type SpeciesRecords, type Taxonomy } from '@/clueGame/traits';
 
 export const CANDIDATES_PER_ROUND = 6;
 /** A species can't be the mystery again until this many other rounds have passed. */
@@ -21,6 +21,8 @@ export interface RoundState {
   round: number;
   mysteryId: number;
   candidateIds: number[];
+  /** Decoys picked for being close relatives of the mystery (the difficulty ramp). */
+  relatives: number;
   queues: Record<LootGemType, QueuedNote[]>;
   /** Player moves this round (cascades are free). */
   moves: number;
@@ -79,7 +81,26 @@ export function playableSpeciesIds(pool: Pick<CluePool, 'clues'>): number[] {
   return [...new Set(pool.clues.map(clue => clue.speciesId))].sort((a, b) => a - b);
 }
 
-/** Pick a mystery (skipping recent ones) and fill the pool with decoys. */
+/** How many decoys are close relatives of the mystery: none at first, up to three from round 7. */
+export function relativesForRound(round: number): number {
+  return Math.min(3, Math.floor((round - 1) / 2));
+}
+
+/** Ranks two species share from the top of the family tree (class, order, family, genus). */
+function kinship(a: Taxonomy, b: Taxonomy): number {
+  let shared = 0;
+  for (const rank of TAXONOMY_RANKS) {
+    if (!a[rank] || a[rank] !== b[rank]) break;
+    shared++;
+  }
+  return shared;
+}
+
+/**
+ * Pick a mystery (skipping recent ones) and fill the pool with decoys. Later
+ * rounds swap some random decoys for the mystery's closest relatives, so the
+ * family tree alone stops giving the answer away.
+ */
 export function createRound(pool: CluePool, rng: () => number, round: number, recentMysteryIds: readonly number[] = []): RoundState {
   const playable = playableSpeciesIds(pool);
   if (playable.length < 2) throw new Error('Clue pool needs at least two species with clues');
@@ -87,10 +108,20 @@ export function createRound(pool: CluePool, rng: () => number, round: number, re
   const eligible = playable.filter(id => !recent.has(id));
   const choices = eligible.length > 0 ? eligible : playable;
   const mysteryId = choices[Math.floor(rng() * choices.length)];
-  const decoys = shuffle(playable.filter(id => id !== mysteryId), rng).slice(0, CANDIDATES_PER_ROUND - 1);
+
+  const taxonomy = new Map(pool.species.map(species => [species.id, taxonomyOf(species)]));
+  const kin = (id: number) => {
+    const a = taxonomy.get(id);
+    const b = taxonomy.get(mysteryId);
+    return a && b ? kinship(a, b) : 0;
+  };
+  const others = shuffle(playable.filter(id => id !== mysteryId), rng); // random order breaks kinship ties
+  const relatives = [...others].sort((a, b) => kin(b) - kin(a)).slice(0, relativesForRound(round)).filter(id => kin(id) > 0);
+  const decoys = [...relatives, ...others.filter(id => !relatives.includes(id))].slice(0, CANDIDATES_PER_ROUND - 1);
   return {
     round,
     mysteryId,
+    relatives: relatives.length,
     candidateIds: shuffle([mysteryId, ...decoys], rng),
     queues: buildQueues(pool, mysteryId),
     moves: 0,

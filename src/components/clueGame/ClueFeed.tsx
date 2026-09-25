@@ -32,8 +32,13 @@ export function ClueFeed({ feed, speciesById, displayOrder }: {
       {feed.map(item => {
         if (item.kind === 'round') {
           return (
-            <li key={item.key} className="my-0.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-cyan-100/60">
-              <span className="h-px flex-1 bg-cyan-100/20" />Animal {item.round}: a new mystery<span className="h-px flex-1 bg-cyan-100/20" />
+            <li key={item.key} className="my-0.5 flex items-center gap-2 text-center text-[10px] font-bold uppercase tracking-[.16em] text-cyan-100/60">
+              <span className="h-px flex-1 bg-cyan-100/20" />
+              <span>
+                Animal {item.round}: a new mystery
+                {item.relatives > 0 && <span className="block text-amber-200/80">{item.relatives} close relative{item.relatives === 1 ? '' : 's'} in the lineup</span>}
+              </span>
+              <span className="h-px flex-1 bg-cyan-100/20" />
             </li>
           );
         }
