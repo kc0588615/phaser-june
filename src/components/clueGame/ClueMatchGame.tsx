@@ -88,6 +88,8 @@ export function ClueMatchGame() {
     ? speciesById.get(selectedId) ?? null
     : null;
   const answer = session?.lastSolve ? speciesById.get(session.lastSolve.speciesId) : undefined;
+  const funFact = session?.lastSolve?.funFact;
+  const factSource = (answer && funFact && session?.pool.facts.find(fact => fact.speciesId === answer.id && fact.text === funFact)?.source) || null;
 
   const confirmGuess = useCallback(() => {
     if (selected) guess(selected.id);
@@ -121,7 +123,7 @@ export function ClueMatchGame() {
               <GuessBar selected={selected} canGuess={session.phase === 'playing'} onGuess={confirmGuess} />
               <ClueFeed feed={session.feed} speciesById={speciesById} displayOrder={session.round.candidateIds} />
               {session.phase === 'solved' && session.lastSolve && answer && (
-                <RevealSheet key={session.round.round} species={answer} solve={session.lastSolve} isNew={newDiscovery} newBest={newBest} onNext={nextRound} />
+                <RevealSheet key={session.round.round} species={answer} solve={session.lastSolve} factSource={factSource} isNew={newDiscovery} newBest={newBest} onNext={nextRound} />
               )}
             </>
           )}

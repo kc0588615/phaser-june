@@ -1,7 +1,7 @@
 import { Check, X } from 'lucide-react';
 import type { ClueFit } from '@/clueGame/deduction';
 import type { CandidateView } from '@/clueGame/selectors';
-import { speciesBadge } from '@/clueGame/speciesInfo';
+import { SpeciesPortrait } from './SpeciesPortrait';
 
 /** The dot each clue leaves on a card (explained in How to play). */
 export const FIT_DOTS: Record<ClueFit, { dot: string; label: string }> = {
@@ -31,7 +31,7 @@ export function CandidateGrid({ candidates, selectedId, onSelect }: {
               disabled={out || status === 'answer'}
               aria-pressed={selected}
               aria-label={`${species.commonName}${status === 'ruled-out' ? ', ruled out' : status === 'wrong-guess' ? ', not it' : status === 'answer' ? ', the answer' : ''}. ${matches} of ${fits.length} clues match.`}
-              className={`relative flex min-h-14 w-full short:min-h-12 items-center gap-1.5 rounded-xl border px-1.5 py-1 text-left transition-all ${
+              className={`relative flex min-h-14 w-full short:min-h-12 items-center gap-1 rounded-xl border px-1.5 py-1 text-left transition-all ${
                 status === 'answer' ? 'border-amber-300 bg-amber-300/15'
                   : status === 'wrong-guess' ? 'cm-shake border-rose-400/40 bg-rose-950/30 opacity-60'
                   : status === 'ruled-out' ? 'border-white/10 bg-white/[.02] opacity-40'
@@ -39,9 +39,9 @@ export function CandidateGrid({ candidates, selectedId, onSelect }: {
                   : 'border-white/15 bg-white/[.05] active:bg-white/10'
               }`}
             >
-              <span className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-full border text-xl ${out ? 'border-rose-300/30 bg-slate-800 grayscale' : 'border-cyan-100/25 bg-gradient-to-br from-cyan-300/20 to-emerald-300/10'}`}>
-                <span aria-hidden="true">{speciesBadge(species)}</span>
-                {out && <span className="roster-cross absolute inset-0 grid place-items-center"><X className="h-8 w-8 text-rose-400/80" strokeWidth={3} /></span>}
+              <span className="relative h-8 w-8 shrink-0">
+                <SpeciesPortrait species={species} className={`h-8 w-8 border text-lg ${out ? 'border-rose-300/30 bg-slate-800 grayscale' : 'border-cyan-100/25 bg-gradient-to-br from-cyan-300/20 to-emerald-300/10'}`} />
+                {out && <span className="roster-cross absolute inset-0 grid place-items-center"><X className="h-7 w-7 text-rose-400/80" strokeWidth={3} /></span>}
                 {status === 'answer' && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-amber-300 text-black"><Check className="h-3 w-3" /></span>}
               </span>
               <span className="min-w-0 flex-1">

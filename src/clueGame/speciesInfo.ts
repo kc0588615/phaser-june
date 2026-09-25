@@ -59,6 +59,11 @@ export function redListStatus(code: string | null): RedListStatus | null {
 
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 
+/** A Commons thumbnail at a standard width (120, 250, 330, 500...); other URLs as they are. */
+export function photoAt(url: string, width: number): string {
+  return url.replace(/\/\d+px-([^/]+)$/, `/${width}px-$1`);
+}
+
 /** e.g. "Amphibian · Frogs and toads · Rhinodermatidae family". */
 export function taxonomyLine(species: PoolSpecies): string {
   const parts = [

@@ -1,11 +1,12 @@
-import { X } from 'lucide-react';
+import { ExternalLink, X } from 'lucide-react';
 import { GLOSSARY } from '@/clueGame/glossary';
 import type { Journal, Records } from '@/clueGame/journal';
 import { keyFacts, type CluePool } from '@/clueGame/pool';
 import { playableSpeciesIds } from '@/clueGame/round';
-import { redListStatus, speciesBadge, taxonomyLine } from '@/clueGame/speciesInfo';
+import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
 import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
+import { PhotoCredit, SpeciesPortrait } from './SpeciesPortrait';
 import { useEscapeKey } from './useEscapeKey';
 import { useWordsLearned } from './useWordsLearned';
 
@@ -43,7 +44,7 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
             return (
               <li key={species.id} className="rounded-xl border border-white/10 bg-white/[.04] p-3">
                 <div className="flex items-center gap-2">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cyan-300/15 text-2xl" aria-hidden="true">{speciesBadge(species)}</span>
+                  <SpeciesPortrait species={species} className="h-12 w-12 bg-cyan-300/15 text-2xl" />
                   <div className="min-w-0">
                     <p className="m-0 font-semibold leading-tight">{species.commonName}</p>
                     <p className="m-0 text-xs italic text-white/55">{species.scientificName}</p>
@@ -53,11 +54,17 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
                 <p className="m-0 mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-white/70">
                   {taxonomyLine(species)}
                   {status && <span className={`rounded-full border px-2 py-0.5 font-semibold ${status.badge}`}>{status.label}</span>}
+                  {species.redlistUrl && (
+                    <a href={species.redlistUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 text-cyan-200 underline decoration-cyan-200/40 underline-offset-2">
+                      Red List<ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    </a>
+                  )}
                 </p>
                 <div className="mt-1.5"><RangeMap speciesId={species.id} name={species.commonName} caption={false} /></div>
                 <ul className="m-0 mt-1.5 list-disc pl-4 text-[12px] leading-snug text-white/85">
                   {(pool ? keyFacts(pool, species.id).slice(0, LEARNED_FACTS) : []).map(fact => <li key={fact}><GlossaryText text={fact} /></li>)}
                 </ul>
+                {species.photo && <p className="m-0 mt-1 text-[10px]"><PhotoCredit photo={species.photo} /></p>}
               </li>
             );
           })}

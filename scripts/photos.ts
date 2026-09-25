@@ -1,9 +1,11 @@
 // A photo for an animal: the lead image of its English Wikipedia article, with
 // license and author from Wikimedia Commons. Only licenses that allow reuse
-// with credit (public domain, CC0, CC BY, CC BY-SA) are kept.
+// with credit (public domain, CC0, CC BY, CC BY-SA) are kept, and only files
+// whose name, description or categories name the species (Wikipedia sometimes
+// leads with a relative). Look at every result before building.
 const HEADERS = { 'User-Agent': 'CritterConnect/1.0 (educational game; https://github.com/kc0588615/phaser-june)' };
 const REUSABLE = /^(public domain|pd|cc0|cc[- ]by(-sa)?( \d(\.\d)?)?)/i;
-const NOT_A_PHOTO = /(map|range|distribution|skeleton|skull|illustration|drawing|plate|diagram)/i;
+const NOT_A_PHOTO = /(map|range|area|distribution|skeleton|skull|illustration|drawing|plate|diagram)/i;
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
 
@@ -37,6 +39,9 @@ export async function findPhoto(scientificName: string, commonName: string): Pro
     const image = Object.values(info?.query?.pages ?? {})[0]?.imageinfo?.[0];
     const license = image?.extmetadata?.LicenseShortName?.value ?? '';
     if (!image || !REUSABLE.test(license)) continue;
+    const meta = image.extmetadata ?? {};
+    const about = `${file} ${stripHtml(meta.ImageDescription?.value ?? '')} ${stripHtml(meta.ObjectName?.value ?? '')} ${meta.Categories?.value ?? ''}`.toLowerCase().replace(/_/g, ' ');
+    if (![scientificName, commonName].some(name => about.includes(name.toLowerCase()))) continue;
     const artist = stripHtml(image.extmetadata?.Artist?.value ?? '') || 'Unknown author';
     return { url: image.thumburl.split('?')[0], credit: artist.slice(0, 120), license, page: image.descriptionurl };
   }
