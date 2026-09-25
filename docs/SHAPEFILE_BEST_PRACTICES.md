@@ -3,9 +3,6 @@
 Current architecture: raw IUCN range shapefiles land in the `iucn` table with **source-owned field names**.
 Game/app data lives on the `species` table. They join via `species.iucn_id = iucn.id_no`.
 
-> The pre-2026-04 version of this doc (which described an app-shaped `icaa` table and the abandoned
-> taxa/taxon normalization schema) is archived at `docs/archive/SHAPEFILE_BEST_PRACTICES_pre_iucn.mdx`.
-
 ---
 
 ## Table of Contents
@@ -291,15 +288,14 @@ FROM (
 WHERE sub.id_no = s.iucn_id::numeric;
 ```
 
-For newly imported `id_no` values, seed minimal `species` rows before testing map
-clicks. Spatial APIs join `species` to `iucn`, so raw `iucn` polygons alone are not
-returned by `/api/species/in-radius` or `/api/species/closest`.
+For newly imported `id_no` values, seed minimal `species` rows. A species only
+reaches the game once it has clues (`docs/CLUE_MATCH.md`, adding a species).
 
 ```sql
 INSERT INTO species (
   iucn_id, scientific_name, common_name,
   kingdom, phylum, class, taxon_order, family, genus,
-  conservation_code, taxonomic_comment, distribution_comment,
+  conservation_code, distribution_comment,
   marine, terrestrial, freshwater
 )
 SELECT
@@ -307,7 +303,7 @@ SELECT
   MAX(i.sci_name),
   MAX(i.sci_name), -- raw IUCN has no common_name; enrich later
   MAX(i.kingdom), MAX(i.phylum), MAX(i.class), MAX(i.order_), MAX(i.family), MAX(i.genus),
-  MAX(i.category), MAX(i.tax_comm), MAX(i.dist_comm),
+  MAX(i.category), MAX(i.dist_comm),
   COALESCE(BOOL_OR(i.marine), false),
   COALESCE(BOOL_OR(i.terrestria), false),
   COALESCE(BOOL_OR(i.freshwater), false)
@@ -349,10 +345,11 @@ ANALYZE iucn;
 DROP TABLE IF EXISTS iucn_staging;
 ```
 
-### Drizzle re-introspection
+### Refresh the game's views
 
-If the `iucn` table schema changed (new columns, type changes):
+Range maps and the globe's places are computed from `iucn`:
 
-```bash
-npm run db:introspect
+```sql
+REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;
+REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;  -- ~90 s
 ```

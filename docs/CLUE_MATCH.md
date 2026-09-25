@@ -14,11 +14,11 @@ The app has two screens.
 | Globe | `src/pages/index.tsx` → `src/components/globe/` (GlobeScreen, Globe, PlaceList, PlaceCard); helpers `src/clueGame/places.ts`; data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`) |
 | Clue Match page | `src/pages/clue-match.tsx` → `src/components/clueGame/ClueMatchGame.tsx` |
 | Session state + board wiring | `src/components/clueGame/useClueMatch.ts` |
-| UI pieces | `src/components/clueGame/` (TopBar, GemLegend, CandidateGrid, GuessBar, ClueFeed, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText) |
-| Rules (pure, unit-tested) | `src/clueGame/`: `categories` (gem → category), `traits` (species records), `deduction` (how a clue compares with a candidate), `round`, `session` (reducer), `selectors` (what the HUD shows), `validatePool` (content checks), `glossary`, `journal`, `speciesInfo` |
-| Board | `src/game/scenes/ClueBoardScene.ts` (square seeded board), `src/game/board/BoardController.ts` (drag + cascade loop), `BackendPuzzle.ts` (model), `BoardView.ts` (sprites) |
+| UI pieces | `src/components/clueGame/` (TopBar, GemLegend, CandidateGrid, GuessBar, ClueFeed, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText, PhaserGame) |
+| Rules (pure, unit-tested) | `src/clueGame/`: `categories` (gem → category), `traits` (species records), `deduction` (how a clue compares with a candidate), `round`, `session` (reducer), `selectors` (what the HUD shows), `validatePool` (content checks), `glossary`, `journal`, `speciesInfo` (portrait, taxonomy line, Red List), `worldMap` (basemaps, range shape) |
+| Board | `src/game/`: `ClueBoardScene.ts` (square seeded board), `BoardModel.ts` (rules), `BoardView.ts` (sprites), `BoardController.ts` (drag + cascade loop) |
 | Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`) |
-| Tests | `tests/clueGame/*`, fixture `tests/fixtures/clueGame/pool.json` |
+| Tests | `tests/clueGame/*`, `tests/game/*`, fixture `tests/fixtures/clueGame/pool.json` |
 
 ## How it fits together
 

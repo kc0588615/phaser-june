@@ -2,9 +2,8 @@
 // Direct psql through DATABASE_URL/PgBouncer without exposing credentials in argv.
 //   ./scripts/db                      interactive shell
 //   ./scripts/db "select 1;"          one-off query
-//   ./scripts/db -f migration.sql     run a file (stops on first error)
-//   ./scripts/db --rehearsal --exec npm run seed:species -- --check
-//   ./scripts/db --production -1 -f migration.sql   WSL SSH tunnel
+//   ./scripts/db -f change.sql        run a file (stops on first error)
+//   ./scripts/db --production -1 -f change.sql   raw Postgres through the WSL SSH tunnel
 
 const { existsSync } = require('node:fs');
 const { resolve } = require('node:path');
@@ -35,22 +34,12 @@ try {
   process.exit(2);
 }
 
-const inputArgs = process.argv.slice(2);
-const target = inputArgs[0];
-if (target === '--rehearsal' || target === '--production') {
-  inputArgs.shift();
+const userArgs = process.argv.slice(2);
+if (userArgs[0] === '--production') {
+  userArgs.shift();
   url.hostname = '127.0.0.1';
   url.port = '55432';
-  url.pathname = target === '--rehearsal' ? '/phaser_june_rehearsal' : '/phaser_june';
-  url.searchParams.delete('pgbouncer');
   url.searchParams.set('sslmode', 'disable');
-}
-if (inputArgs[0] === '--exec') {
-  const [command, ...args] = inputArgs.slice(1);
-  if (!command) { console.error('--exec requires a command'); process.exit(2); }
-  const result = spawnSync(command, args, { env: { ...process.env, DATABASE_URL: url.toString() }, stdio: 'inherit' });
-  if (result.error) { console.error(result.error.message); process.exit(2); }
-  process.exit(result.status ?? 1);
 }
 
 const database = decodeURIComponent(url.pathname.replace(/^\//, ''));
@@ -72,7 +61,6 @@ if (password) childEnv.PGPASSWORD = password;
 const sslMode = url.searchParams.get('sslmode');
 if (sslMode) childEnv.PGSSLMODE = sslMode;
 
-const userArgs = inputArgs;
 const psqlArgs = ['-X'];
 if (userArgs.length > 0) psqlArgs.push('-v', 'ON_ERROR_STOP=1', '-P', 'pager=off');
 if (userArgs.length === 0) {

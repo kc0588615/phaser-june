@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Connection Pooler (public with TLS for Vercel)
+  # Connection pooler (public, with TLS)
   pgbouncer:
     image: edoburu/pgbouncer
     container_name: pgbouncer

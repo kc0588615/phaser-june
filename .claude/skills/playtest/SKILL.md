@@ -54,7 +54,7 @@ Write `docs/playtests/YYYY-MM-DD-<topic>.md`: what you played (seed, place), the
 
 | Call | Returns |
 |---|---|
-| `state()` | board: `ready`, `canMove`, `locked`, `isResolvingMove`, `isDragging`, `boardSeed`, `movesUsed`, `hasAnyValidMove`, `grid`, `gemSize`, `boardOffset` |
+| `state()` | board: `ready`, `canMove`, `locked`, `isResolvingMove`, `isDragging`, `boardSeed`, `movesUsed`, `hasAnyValidMove`, `grid` (`grid[x][y]` is a color name), `gemSize`, `boardOffset` |
 | `clue()` | session: `phase`, `round`, `mysteryId`, `candidateIds`, `live`, `moves`, `ruledOut`, `wrongGuesses`, `revealedByGem`, `score`, `streak`, `feedTail` |
 | `validMoves()` | `[{ rowOrCol, index, amount, matches, largest }]` for shifts of 1–3; `largest` is the biggest group |
 | `drag(move, { input, timeoutMs })` | `{ counted, movesUsed, timedOut, blocked, after }` once the board settles; `input: 'touch'` drags with a finger |

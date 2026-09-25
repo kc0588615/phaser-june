@@ -1,6 +1,6 @@
 -- Critter Connect: the Postgres objects the app uses, as they stand on
 -- 2026-09-24. This is a baseline, not a migration history: migrations 001-044
--- were squashed into it (they are in git history before the squash commit).
+-- were squashed into it (git log --all -- src/db/migrations).
 --
 -- To change the schema, apply the change (./scripts/db -1 -f change.sql), then
 -- edit this file to match. On an existing database this file fails at the first

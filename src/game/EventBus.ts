@@ -28,10 +28,6 @@ class TypedEventBus extends Phaser.Events.EventEmitter {
         return super.on(event, fn, context);
     }
 
-    once<K extends keyof EventPayloads>(event: K, fn: (arg: EventPayloads[K]) => void, context?: unknown): this {
-        return super.once(event, fn, context);
-    }
-
     off<K extends keyof EventPayloads>(event: K, fn?: (arg: EventPayloads[K]) => void, context?: unknown): this {
         return super.off(event, fn, context);
     }
