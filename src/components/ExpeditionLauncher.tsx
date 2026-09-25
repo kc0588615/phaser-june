@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
-import { AlertCircle, ArrowRight, Clock, Compass, Loader2, MapPin, RefreshCw, Route, Swords } from 'lucide-react';
+import { AlertCircle, ArrowRight, Clock, Compass, Gem, Loader2, MapPin, RefreshCw, Route, Swords } from 'lucide-react';
 import { ExpeditionHistory } from '@/components/ExpeditionHistory';
 import { getRunNodeLabel } from '@/expedition/domain';
 import type { RunSummary } from '@/types/runSummary';
@@ -122,6 +123,27 @@ export function ExpeditionLauncher({ onStart, onResume }: ExpeditionLauncherProp
                 Start Expedition
                 <ArrowRight size={18} aria-hidden="true" />
               </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-ds-subtle bg-ds-surface/60 p-ds-lg">
+          <div className="flex items-start gap-ds-md">
+            <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-ds-cyan/10 text-ds-cyan">
+              <Gem size={20} aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="m-0 text-ds-heading-sm font-semibold">Quick play: Clue Match</h2>
+              <p className="mb-ds-md mt-ds-xs text-ds-body text-ds-text-secondary">
+                Match gems to reveal clues and name the mystery animal. 50 animals to discover.
+              </p>
+              <Link
+                href="/clue-match"
+                className="inline-flex w-full items-center justify-center gap-ds-sm rounded-full border border-ds-cyan/40 px-5 py-3 text-sm font-bold text-ds-cyan no-underline hover:bg-ds-cyan/10 sm:w-auto"
+              >
+                Play Clue Match
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
             </div>
           </div>
         </section>
