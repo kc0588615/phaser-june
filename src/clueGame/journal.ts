@@ -1,5 +1,7 @@
 // The Field Journal: animals this player has identified, kept on their device.
-// Keyed by scientific name so it survives database id changes.
+// Keyed by scientific name so it survives database id changes. A signed-in
+// player's solves are also on the server; mergeServerJournal folds them in.
+import { sightingPoint, type Place } from '@/clueGame/places';
 
 export const JOURNAL_STORAGE_KEY = 'clue-match:journal:v1';
 
@@ -49,6 +51,51 @@ export function recordSolve(
       ...(sightings.length ? { sightings } : {}),
     },
   };
+}
+
+/** One animal the signed-in player solved, from their saved solves (GET /api/clue-game/journal). */
+export interface ServerJournalEntry {
+  speciesId: number;
+  scientificName: string;
+  commonName: string;
+  className: string | null;
+  timesSolved: number;
+  bestMoves: number;
+  firstSolvedAt: string;
+  lastSolvedAt: string;
+  /** Globe places it was solved in. */
+  placeKeys: string[];
+}
+
+/**
+ * The device's journal plus what the player solved while signed in elsewhere:
+ * the larger count, the lower best, the earliest and latest dates. Places become
+ * sightings when `placeFor` knows them. Safe to repeat.
+ */
+export function mergeServerJournal(journal: Journal, entries: readonly ServerJournalEntry[], placeFor: (key: string) => Place | undefined = () => undefined): Journal {
+  const merged: Journal = { ...journal };
+  for (const entry of entries) {
+    const local = merged[entry.scientificName];
+    const sightings = [...(local?.sightings ?? [])];
+    for (const key of entry.placeKeys) {
+      const place = placeFor(key);
+      if (!place || sightings.some(sighting => sighting.placeKey === key)) continue;
+      const [lon, lat] = sightingPoint(place, entry.speciesId);
+      sightings.push({ placeKey: key, placeName: place.name, lon, lat });
+    }
+    const className = local?.className ?? entry.className;
+    merged[entry.scientificName] = {
+      scientificName: entry.scientificName,
+      commonName: local?.commonName ?? entry.commonName,
+      timesSolved: Math.max(local?.timesSolved ?? 0, entry.timesSolved),
+      bestMoves: Math.min(local?.bestMoves ?? Infinity, entry.bestMoves),
+      firstSolvedAt: local && local.firstSolvedAt < entry.firstSolvedAt ? local.firstSolvedAt : entry.firstSolvedAt,
+      lastSolvedAt: local && local.lastSolvedAt > entry.lastSolvedAt ? local.lastSolvedAt : entry.lastSolvedAt,
+      ...(className ? { className } : {}),
+      ...(sightings.length ? { sightings } : {}),
+    };
+  }
+  return merged;
 }
 
 function isEntry(value: unknown): value is JournalEntry {

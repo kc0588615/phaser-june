@@ -15,8 +15,8 @@ import { PlaceList } from './PlaceList';
 
 export function GlobeScreen() {
   const router = useRouter();
-  const { journal } = useJournal();
   const [data, setData] = useState<PlacesResponse | null>(null);
+  const { journal } = useJournal(data?.places);
   const [error, setError] = useState<string | null>(null);
   const [kind, setKind] = useState<PlaceKind>('country');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);

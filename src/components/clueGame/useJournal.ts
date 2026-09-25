@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { JOURNAL_STORAGE_KEY, NO_RECORDS, RECORDS_STORAGE_KEY, parseJournal, parseRecords, recordSolve, updateRecords, type Journal, type Records, type Sighting } from '@/clueGame/journal';
+import { useAuth } from '@clerk/nextjs';
+import {
+  JOURNAL_STORAGE_KEY, NO_RECORDS, RECORDS_STORAGE_KEY, mergeServerJournal, parseJournal, parseRecords, recordSolve, updateRecords,
+  type Journal, type Records, type ServerJournalEntry, type Sighting,
+} from '@/clueGame/journal';
+import type { Place } from '@/clueGame/places';
+import { getJson } from '@/lib/getJson';
 
 function save(key: string, value: unknown): void {
   try {
@@ -9,10 +15,17 @@ function save(key: string, value: unknown): void {
   }
 }
 
-/** The Field Journal and personal bests in localStorage. Storage can be unavailable (private mode); play still works. */
-export function useJournal() {
+/**
+ * The Field Journal and personal bests in localStorage. Storage can be
+ * unavailable (private mode); play still works. A signed-in player's saved
+ * solves are merged in, so the journal follows them between devices; pass the
+ * globe's places to turn their solves there into sightings.
+ */
+export function useJournal(places?: readonly Place[]) {
   const [journal, setJournal] = useState<Journal>({});
   const [records, setRecords] = useState<Records>(NO_RECORDS);
+  const [saved, setSaved] = useState<ServerJournalEntry[]>([]);
+  const { isSignedIn } = useAuth();
 
   useEffect(() => {
     try {
@@ -22,6 +35,25 @@ export function useJournal() {
       setJournal({});
     }
   }, []);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    let cancelled = false;
+    getJson<{ entries: ServerJournalEntry[] }>('/api/clue-game/journal/')
+      .then(result => { if (!cancelled) setSaved(result.entries); })
+      .catch(error => console.error('[Journal] Could not load saved solves:', error));
+    return () => { cancelled = true; };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (saved.length === 0) return;
+    const byKey = new Map((places ?? []).map(place => [place.key, place]));
+    setJournal(previous => {
+      const next = mergeServerJournal(previous, saved, key => byKey.get(key));
+      save(JOURNAL_STORAGE_KEY, next);
+      return next;
+    });
+  }, [saved, places]);
 
   const record = useCallback((
     species: { scientificName: string; commonName: string; className?: string | null },

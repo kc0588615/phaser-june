@@ -5,7 +5,7 @@ The app has two screens.
 - **Globe (`/`).** A globe beside a list of places: countries, wildlife areas (OneEarth bioregions) and continents where at least two of the game's animals live. Pick one from the list, or tap its dot on the globe. The globe flies there and outlines it, and a card shows how many animals live there (named once you've found them) and a habitat-type picture of the place. **Explore** opens Clue Match with that place's animals. Animals you've found glow on the globe where you found them: green for amphibians and reptiles, amber for mammals.
 - **Clue Match (`/clue-match`).** A fast, mobile-first match-3. A mystery animal hides among six candidates. Matching gems reveals clues about it: each gem color is one clue category, and each match shows that category's next clue. Clues that can be checked against the candidates' records put colored dots on the candidate cards and rule animals out. Tap the animal you think it is, then **Guess**. A correct guess shows a reveal card (range map, Red List status, a fact), records the animal in the Field Journal, and the next mystery starts.
 
-50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in needed; each solve is saved to `clue_match_solves` for analysis (with the player's profile id when signed in, and the place when played from the globe). `?place=country:KEN` plays one place; `?seed=N` replays a session exactly (same mysteries, same starting board).
+50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in needed; each solve is saved to `clue_match_solves` for analysis (with the player's profile id when signed in, and the place when played from the globe). The Field Journal lives on the device; when signed in, it also pulls the player's saved solves, so it follows them to another device. `?place=country:KEN` plays one place; `?seed=N` replays a session exactly (same mysteries, same starting board).
 
 ## Where the code lives
 
@@ -17,7 +17,7 @@ The app has two screens.
 | UI pieces | `src/components/clueGame/` (TopBar, GemLegend, CandidateGrid, GuessBar, ClueFeed, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText, PhaserGame) |
 | Rules (pure, unit-tested) | `src/clueGame/`: `categories` (gem → category), `traits` (species records), `deduction` (how a clue compares with a candidate), `round`, `session` (reducer), `selectors` (what the HUD shows), `validatePool` (content checks), `glossary`, `journal`, `speciesInfo` (portrait, taxonomy line, Red List), `worldMap` (basemaps, range shape) |
 | Board | `src/game/`: `ClueBoardScene.ts` (square seeded board), `BoardModel.ts` (rules), `BoardView.ts` (sprites), `BoardController.ts` (drag + cascade loop) |
-| Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`) |
+| Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`), `GET /api/clue-game/journal` (a signed-in player's solves, merged into the device journal by `useJournal`) |
 | Content | `db/content/` (profiles + source registry, docs/CONTENT_SOURCES.md), `scripts/content.ts` (`npm run content`), `src/clueGame/profiles.ts` (profile → rows) |
 | Tests | `tests/clueGame/*` (content tests read `db/content/`), `tests/game/*` |
 
