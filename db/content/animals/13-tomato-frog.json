@@ -1,0 +1,165 @@
+{
+  "id": 13,
+  "commonName": "Madagascar Tomato Frog",
+  "scientificName": "Dyscophus antongilii",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Microhylidae",
+    "genus": "Dyscophus"
+  },
+  "iucnId": 6937,
+  "redList": {
+    "category": "LC",
+    "year": 2017,
+    "trend": "unknown",
+    "url": "https://www.iucnredlist.org/species/6937/84159360"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:bogs_marshes",
+    "wetlands:permanent_marshes",
+    "wetlands:seasonal_marshes",
+    "artificial",
+    "artificial:arable",
+    "artificial:plantations",
+    "artificial:gardens",
+    "artificial:urban",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    0,
+    600
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "It weighs about 26 g. Females are 8.5 to 10.5 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "Insects, worms and other small invertebrates.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female can lay several thousand eggs at once.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Females can live 11 years in the wild.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It is bright reddish orange, like a ripe tomato.",
+      "tags": [
+        "red_orange"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Females are bigger and brighter than males, which look more brown.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When grabbed, its skin oozes a sticky white glue that can gum up a predator's mouth and eyes.",
+      "tags": [
+        "sticky_skin"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It likes to burrow into soft ground.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives near the coast, even in drainage ditches and gardens in town.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It breeds after heavy rain, in ditches, swamps and still pools.",
+      "tags": [
+        "rain_breeder"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Collecting wild frogs for pets has stopped; pet tomato frogs are now bred in captivity.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its red color depends partly on what it eats.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Young frogs start out black, turn tan, then turn red as they grow up.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Its skin glue is among the stickiest made by any amphibian.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Pollution of the ponds where it breeds could harm it.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/6937/84159360",
+    "adw": "https://animaldiversity.org/accounts/Dyscophus_antongilii/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "MDG",
+        "name": "Madagascar"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/5/51/Dyscophus_antongilii02.jpg",
+    "credit": "Franco Andreone - [:it:Wikipedia:Autorizzazioni_ottenute/Franco_Andreone see authorization]",
+    "license": "CC BY-SA 2.5",
+    "page": "https://commons.wikimedia.org/wiki/File:Dyscophus_antongilii02.jpg"
+  }
+}

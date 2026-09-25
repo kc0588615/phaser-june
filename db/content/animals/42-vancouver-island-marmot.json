@@ -1,0 +1,181 @@
+{
+  "id": 42,
+  "commonName": "Vancouver Island Marmot",
+  "scientificName": "Marmota vancouverensis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Sciuridae",
+    "genus": "Marmota"
+  },
+  "iucnId": 12828,
+  "redList": {
+    "category": "CR",
+    "year": 2017,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12828/22259184"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:boreal",
+    "grassland",
+    "grassland:subarctic",
+    "rocky"
+  ],
+  "elevation": [
+    900,
+    1400
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is dark chocolate brown.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 3 to 7 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats grasses and sedges in spring, and flowers like lupines in summer.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "It lives in small family colonies.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A litter has 1 to 7 pups, about 3 on average.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Wild marmots live about 10 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has white patches on its nose, chin, forehead and chest.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its front teeth never stop growing, like all rodents'.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Rodent"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps through the winter in its burrow for about 7 months.",
+      "tags": [
+        "winter_rest",
+        "burrower"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs its burrows under big rocks, and uses the rocks as lookouts.",
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in steep mountain meadows above the forest.",
+      "tags": [
+        "mountain_meadows"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives only on Vancouver Island, off the west coast of Canada.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "In 2004 only about 35 were left in the wild.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Zoo-bred marmots were released to rebuild the wild population, which grew to just over 250 by 2021.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Vancouver_Island_marmot"
+    },
+    {
+      "category": "key_fact",
+      "text": "Logging first opened up new meadows for marmots, but few survived the winters there.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "It loses about a third of its weight while it hibernates.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Vancouver_Island_marmot"
+    },
+    {
+      "category": "behavior",
+      "text": "Its burrows must go below the frost line, where it stays at least 5 °C all winter.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Pups are born black-brown and turn reddish brown by summer.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Most deaths happen during hibernation or to predators like wolves, cougars and golden eagles.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12828/22259184",
+    "adw": "https://animaldiversity.org/accounts/Marmota_vancouverensis/"
+  },
+  "range": {
+    "realms": [
+      "realm:nearctic"
+    ],
+    "countries": [
+      {
+        "code": "CAN",
+        "name": "Canada"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Vancouver_Island_marmot_%28Marmota_vancouverensis%29_Mt_Washington.jpg/500px-Vancouver_Island_marmot_%28Marmota_vancouverensis%29_Mt_Washington.jpg",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Vancouver_Island_marmot_(Marmota_vancouverensis)_Mt_Washington.jpg"
+  }
+}

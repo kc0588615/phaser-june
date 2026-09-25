@@ -1,0 +1,170 @@
+{
+  "id": 46,
+  "commonName": "Golden-rumped Sengi",
+  "scientificName": "Rhynchocyon chrysopygus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Macroscelidea",
+    "family": "Macroscelididae",
+    "genus": "Rhynchocyon"
+  },
+  "iucnId": 19705,
+  "redList": {
+    "category": "EN",
+    "year": 2015,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/19705/21287265"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "shrubland",
+    "shrubland:tropical_dry"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its glossy fur is dark reddish brown.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs about 540 g.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats beetles, termites, earthworms and millipedes.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "pairs",
+      "note": "Pairs stay together for life.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single baby about every 2 or 3 months.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has a long, bendy snout, which is why sengis are also called elephant shrews.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is black, then white near the end, with a black tip.",
+      "tags": [
+        "white_tail_tip"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a bright golden patch of fur on its rump.",
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its back legs are long and strong for running.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds several leaf nests on the forest floor and sleeps in a different one each night.",
+      "tags": [
+        "builds_nests"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    {
+      "category": "diet",
+      "text": "It hunts through thick fallen leaves on the forest floor.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only in coastal forests of Kenya, mostly in the Arabuko-Sokoke Forest.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Tree cutting and clearing for farms are shrinking its small forests.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Despite the name 'elephant shrew', sengis are more closely related to elephants than to shrews.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sengi"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is one of the two biggest kinds of sengi.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    {
+      "category": "key_fact",
+      "text": "Switching nests every night leaves no pattern for predators to follow.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden-rumped_sengi"
+    },
+    {
+      "category": "life_description",
+      "text": "A baby stays in the nest for two weeks, then follows its mother and is on its own about five days later.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "About 13,000 adults are left.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/19705/21287265",
+    "adw": "https://animaldiversity.org/accounts/Rhynchocyon_chrysopygus/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Rhynchocyon_chrysopygus.jpg/500px-Rhynchocyon_chrysopygus.jpg",
+    "credit": "Simon Tonge",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Rhynchocyon_chrysopygus.jpg"
+  }
+}

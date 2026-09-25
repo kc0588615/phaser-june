@@ -1,0 +1,195 @@
+{
+  "id": 40,
+  "commonName": "Sumatran Orangutan",
+  "scientificName": "Pongo abelii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Primates",
+    "family": "Hominidae",
+    "genus": "Pongo"
+  },
+  "iucnId": 121097935,
+  "redList": {
+    "category": "CR",
+    "year": 2024,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/121097935/259045437"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane"
+  ],
+  "elevation": [
+    0,
+    1500
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its long, fine hair is reddish.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 30 to 90 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It mostly eats fruit, plus leaves, bark, flowers and sometimes insects.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild orangutans can live 44 to 58 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its long reddish hair covers its body and face.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its arms stretch about 2.25 m from fingertip to fingertip, much longer than its legs.",
+      "tags": [
+        "long_arms"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Grown males have big cheek pads.",
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Fruit is its main food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds a nest of branches in the trees to sleep in each night.",
+      "tags": [
+        "builds_nests"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives almost entirely in the trees; females almost never touch the ground.",
+      "tags": [
+        "tree_dweller",
+        "climber"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It uses sticks as tools to get termites, honey and seeds.",
+      "tags": [
+        "uses_tools"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sumatran_orangutan"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only in the north of the island of Sumatra, in Indonesia.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Forest cleared for farms and plantations, and illegal killing, are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Orangutan mothers have a baby only every 6 to 9 years, the longest gap of any great ape.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
+    },
+    {
+      "category": "key_fact",
+      "text": "Some orangutans keep their best stick tools, building up whole 'toolboxes'.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sumatran_orangutan"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists recently found a third kind of orangutan, the Tapanuli orangutan, also on Sumatra.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sumatran_orangutan"
+    },
+    {
+      "category": "behavior",
+      "text": "When building its nest, an orangutan may smack its lips or blow raspberries.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
+    },
+    {
+      "category": "life_description",
+      "text": "Young orangutans learn to build nests by watching their mothers.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Orangutan"
+    },
+    {
+      "category": "threat",
+      "text": "Even careful logging can cut the number of orangutans in a forest by up to 60%.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/121097935/259045437",
+    "adw": "https://animaldiversity.org/accounts/Pongo_abelii/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Sumatra-Orang-Utan_im_Pongoland.jpg/500px-Sumatra-Orang-Utan_im_Pongoland.jpg",
+    "credit": "Fiver, der Hellseher",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Sumatra-Orang-Utan_im_Pongoland.jpg"
+  }
+}

@@ -10,7 +10,7 @@ const FEED_LIMIT = 120;
 
 /** `bonus`: revealed because the matched group was bigger than three. */
 type FeedEntry =
-  | { kind: 'round'; round: number; relatives: number }
+  | { kind: 'round'; round: number; relatives: number; scope?: string }
   | { kind: 'clue'; gem: GemType; text: string; fits: Record<number, ClueFit>; bonus?: true }
   | { kind: 'note'; gem: GemType; text: string; bonus?: true }
   | { kind: 'empty'; gem: GemType }
@@ -75,7 +75,8 @@ function funFactFor(state: SessionState, speciesId: number): string | null {
 }
 
 function beginRound(state: SessionState, round: RoundState): SessionState {
-  return withFeed({ ...state, round, phase: 'playing', lastSolve: null, history: [...state.history, round.mysteryId] }, [{ kind: 'round', round: round.round, relatives: round.relatives }]);
+  return withFeed({ ...state, round, phase: 'playing', lastSolve: null, history: [...state.history, round.mysteryId] },
+    [{ kind: 'round', round: round.round, relatives: round.relatives, ...(round.scope ? { scope: round.scope } : {}) }]);
 }
 
 export function clueSessionReducer(state: SessionState | null, action: SessionAction): SessionState | null {

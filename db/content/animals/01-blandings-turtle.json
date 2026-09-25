@@ -1,0 +1,151 @@
+{
+  "id": 1,
+  "commonName": "Blanding's Turtle",
+  "scientificName": "Emydoidea blandingii",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Emydidae",
+    "genus": "Emydoidea"
+  },
+  "iucnId": 7709,
+  "redList": {
+    "category": "EN",
+    "year": 2011,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/7709/155088836"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:temperate",
+    "grassland",
+    "grassland:temperate",
+    "wetlands",
+    "wetlands:bogs_marshes",
+    "wetlands:seasonal_marshes"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "note": "Its smooth, dark shell is sprinkled with yellow spots.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs 750 to 1,400 g, with a shell 15 to 24 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "Half its food is crayfish. It also eats insects, fish, frogs, snails and water plants.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild Blanding's turtles can live more than 70 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has yellow scales on its legs and tail.",
+      "tags": [
+        "yellow_scales"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its bottom shell has a hinge, so it can close up tight.",
+      "tags": [
+        "hinged_shell"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in shallow marshes, ponds and bogs full of water plants.",
+      "tags": [
+        "shallow_wetlands"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It often climbs out of the water to bask on logs.",
+      "tags": [
+        "basker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on how warm the nest is.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: wetlands lost to farms and houses, and many turtles die crossing roads.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "The older a Blanding's turtle gets, the better its chance of surviving each year.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "To court a female, a male squirts water from his mouth onto her head.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Hatchlings are 3 to 4 cm long and weigh just 6 to 10 g.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Hatchlings find their way to water by smell, following the scent trails of other young turtles.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/7709/155088836",
+    "adw": "https://animaldiversity.org/accounts/Emydoidea_blandingii/"
+  },
+  "range": {
+    "realms": [
+      "realm:nearctic"
+    ],
+    "countries": [
+      {
+        "code": "CAN",
+        "name": "Canada"
+      },
+      {
+        "code": "USA",
+        "name": "United States of America"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Blanding%27s_turtle_%28Emydoidea_blandingii%29_%2817812011862%29.jpg/500px-Blanding%27s_turtle_%28Emydoidea_blandingii%29_%2817812011862%29.jpg",
+    "credit": "Andrew C",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Blanding%27s_turtle_(Emydoidea_blandingii)_(17812011862).jpg"
+  }
+}

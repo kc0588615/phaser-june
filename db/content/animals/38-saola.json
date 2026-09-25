@@ -1,0 +1,169 @@
+{
+  "id": 38,
+  "commonName": "Saola",
+  "scientificName": "Pseudoryx nghetinhensis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Artiodactyla",
+    "family": "Bovidae",
+    "genus": "Pseudoryx"
+  },
+  "iucnId": 18597,
+  "redList": {
+    "category": "CR",
+    "year": 2020,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/18597/166485696"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 80 to 100 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It browses mostly on leaves.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It may be busiest at dawn and dusk too.",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Villagers sometimes see two or three together.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Both males and females have long, straight, nearly parallel horns.",
+      "tags": [
+        "horns"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "White bands circle its legs just above its hooves.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has white patches on its face, hiding what may be the biggest face scent glands of any mammal.",
+      "tags": [
+        "face_markings",
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It may mark its area by snapping small saplings with its horns.",
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in wet evergreen forests of the Annamite Mountains, where it rains all year.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Wire snares set for other animals are its biggest danger.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "conservation",
+      "text": "Maybe only 50 to 300 adults are left.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It was discovered in 1992, the first large mammal new to science in 50 years.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is so rare and hard to find that people call it the 'Asian unicorn'.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "key_fact",
+      "text": "The last photo of a wild saola was taken by a camera trap in 2013.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    },
+    {
+      "category": "behavior",
+      "text": "Saolas kept by people have never lived long, most only weeks or months.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother carries her calf for about 8 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Conservation teams have removed more than 26,000 snares from its forests.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Saola"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/18597/166485696",
+    "adw": "https://animaldiversity.org/accounts/Pseudoryx_nghetinhensis/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "LAO",
+        "name": "Laos"
+      },
+      {
+        "code": "VNM",
+        "name": "Vietnam"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Pseudoryx_nghetinhensis_318197.jpg/500px-Pseudoryx_nghetinhensis_318197.jpg",
+    "credit": "James Hardcastle",
+    "license": "CC BY 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pseudoryx_nghetinhensis_318197.jpg"
+  }
+}

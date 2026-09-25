@@ -1,20 +1,19 @@
-// Invariants on the real Clue Match content (tests/fixtures/clueGame/pool.json,
-// refreshed with `npm run clue:pool -- --snapshot`).
+// Invariants on the real Clue Match content (db/content/).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import snapshot from '../fixtures/clueGame/pool.json';
 import { validatePool } from '@/clueGame/validatePool';
 import { buildSpeciesRecords } from '@/clueGame/traits';
 import { CLUE_GAME_GEM_TYPES } from '@/clueGame/categories';
 import { createRound, liveCandidates, revealNext } from '@/clueGame/round';
 import { mulberry32 } from '@/lib/seededRng';
-import type { CluePool } from '@/clueGame/pool';
+import { checkProfile } from '@/clueGame/profiles';
+import { contentPool as pool, profiles, sources } from './contentPool';
 
-const pool = snapshot as unknown as CluePool;
 const records = buildSpeciesRecords(pool);
 
 describe('Clue Match content', () => {
-  test('the pool validates with no errors or warnings', () => {
+  test('every profile is complete and the pool validates with no errors or warnings', () => {
+    assert.deepEqual(profiles.flatMap(profile => checkProfile(profile, sources).map(problem => `${profile.commonName}: ${problem}`)), []);
     const report = validatePool(pool);
     assert.deepEqual(report.errors, []);
     assert.deepEqual(report.warnings, []);

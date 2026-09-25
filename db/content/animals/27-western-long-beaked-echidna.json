@@ -1,0 +1,192 @@
+{
+  "id": 27,
+  "commonName": "Western Long-beaked Echidna",
+  "scientificName": "Zaglossus bruijnii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Monotremata",
+    "family": "Tachyglossidae",
+    "genus": "Zaglossus"
+  },
+  "iucnId": 23179,
+  "redList": {
+    "category": "CR",
+    "year": 2016,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/23179/21964204"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane"
+  ],
+  "elevation": [
+    0,
+    2500
+  ],
+  "traits": {
+    "covering": {
+      "value": "spines",
+      "note": "Short spines poke out through its coarse brown fur.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 5 to 16 kg, the biggest of all echidnas.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It mostly eats earthworms, plus insect grubs.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "note": "It is a mammal that lays eggs.",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A female lays a single egg every 2 or 3 years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "One at Taronga Zoo in Sydney was nearly 60 years old in 2024.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its long snout curves down like a beak.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has no teeth. It mashes food against hard ridges in its mouth.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long, sticky tongue is covered in tiny spines for catching worms.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When threatened, it curls into a spiny ball or quickly digs itself into the ground.",
+      "tags": [
+        "rolls_into_ball",
+        "burrower",
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It has poor eyesight, and it hunts by smell.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It pokes its snout into soft soil and sniffs out worms, and it can even sense their tiny electric signals.",
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its egg hatches in a pouch on the mother's belly, and the baby, called a puggle, grows there.",
+      "tags": [
+        "pouch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rainforests on steep, rugged mountains, even in rocky limestone country.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Hunters use trained dogs that can follow its scent to where it sleeps during the day.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is one of only five kinds of mammal alive today that lay eggs: the platypus and four echidnas.",
+      "source": "news",
+      "url": "https://www-cdn.abcnews.com/US/scientists-confirmed-existence-200-million-year-species-thought/story?id=122773046"
+    },
+    {
+      "category": "key_fact",
+      "text": "A skin in a museum, collected in 1901, shows it once lived in the Kimberley region of Australia too.",
+      "source": "literature",
+      "url": "https://doi.org/10.3897/zookeys.255.3774"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its body stays cooler than most mammals', between 28 and 35 °C.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It has no outer ears, just slits behind its eyes.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A newly hatched puggle weighs just 1 or 2 grams, and has no hair or spines yet.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers are thought to have dropped by 80% in about 45 years, mostly from hunting.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/23179/21964204",
+    "adw": "https://animaldiversity.org/accounts/Zaglossus_bruijni/"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Long-beakedEchidna.jpg/500px-Long-beakedEchidna.jpg",
+    "credit": "User:Jaganath",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Long-beakedEchidna.jpg"
+  }
+}

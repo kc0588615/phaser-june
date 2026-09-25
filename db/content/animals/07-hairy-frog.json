@@ -1,0 +1,163 @@
+{
+  "id": 7,
+  "commonName": "Hairy Frog",
+  "scientificName": "Trichobatrachus robustus",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Arthroleptidae",
+    "genus": "Trichobatrachus"
+  },
+  "iucnId": 54443,
+  "redList": {
+    "category": "LC",
+    "year": 2017,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/54443/18361006"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "artificial",
+    "artificial:arable",
+    "artificial:plantations",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    26,
+    1458
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "source": "wikipedia"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats slugs, millipedes, spiders, beetles and grasshoppers.",
+      "source": "wikipedia"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "wikipedia"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "In the breeding season, males grow thin, hair-like frills of skin on their sides and thighs.",
+      "tags": [
+        "hair_like_frills"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Males grow to about 13 cm long, bigger than females.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "If it is grabbed, it can push sharp bone claws out through the skin of its toes.",
+      "tags": [
+        "bone_claws"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives by fast-flowing rivers in the rainforest; its tadpoles live in rushing water at the foot of waterfalls.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Eggs are laid on rocks in streams, and the male stays to guard them.",
+      "tags": [
+        "egg_guarding"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: people hunt it for food, and forests are cleared for farms.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "The 'hairs' are full of tiny blood vessels. They help the male take in extra oxygen through his skin while he guards his eggs underwater.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its nicknames are the horror frog and the wolverine frog, because of its hidden claws.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "Its tadpoles are hunters, with several rows of tiny horny teeth.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "threat",
+      "text": "Near villages it is often rare, because people catch and eat the frogs and even their tadpoles.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Traders in Cameroon collect some for the pet trade in the USA and Japan.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/54443/18361006",
+    "wikipedia": "https://en.wikipedia.org/wiki/Hairy_frog"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "COG",
+        "name": "Congo"
+      },
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      },
+      {
+        "code": "GNQ",
+        "name": "Eq. Guinea"
+      },
+      {
+        "code": "GAB",
+        "name": "Gabon"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/Trichobatrachus_robustus.JPG/500px-Trichobatrachus_robustus.JPG",
+    "credit": "Gustavocarra",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Trichobatrachus_robustus.JPG"
+  }
+}

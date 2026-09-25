@@ -1,0 +1,187 @@
+{
+  "id": 44,
+  "commonName": "Javan Rhinoceros",
+  "scientificName": "Rhinoceros sondaicus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Perissodactyla",
+    "family": "Rhinocerotidae",
+    "genus": "Rhinoceros"
+  },
+  "iucnId": 19495,
+  "redList": {
+    "category": "CR",
+    "year": 2020,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/19495/18493900"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane"
+  ],
+  "elevation": [
+    0,
+    600
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its gray hide is almost hairless.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "huge",
+      "note": "It weighs 1,500 to 2,000 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It browses leaves, twigs, bark and fruit.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Mothers stay with their young.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one calf every 4 or 5 years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild rhinos can live 30 to 40 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Males have a single short horn, less than 25 cm long; females often have none.",
+      "tags": [
+        "horns"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its skin has deep folds that make it look like it wears plates of armor.",
+      "tags": [
+        "skin_folds"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its pointed upper lip can grab leaves and twigs.",
+      "tags": [
+        "grasping_lip"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It spends much of the day wallowing in mud pools.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a good swimmer.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It visits salt licks for minerals.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Javan_rhinoceros"
+    },
+    {
+      "category": "geography",
+      "text": "It once lived from India to Vietnam, but now survives in just one national park on the island of Java.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Only a few dozen are left, all in one place.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is one of the rarest large mammals on Earth.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Javan_rhinoceros"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its horn is smaller than any other rhino's, so it's also called the lesser one-horned rhino.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2011 hidden cameras filmed two mothers with calves, proof that they still breed in the wild.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Javan_rhinoceros"
+    },
+    {
+      "category": "behavior",
+      "text": "It can walk up to 20 km in a day while it feeds.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother carries her calf for about 16 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "A fast-spreading palm called langkap is crowding out the plants it eats.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Poaching for its horn wiped it out everywhere else it lived.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/19495/18493900",
+    "adw": "https://animaldiversity.org/accounts/Rhinoceros_sondaicus/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Rhinoceros_sondaicus_in_London_Zoo.jpg/500px-Rhinoceros_sondaicus_in_London_Zoo.jpg",
+    "credit": "T.Dixon. The Zoological Society of London",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Rhinoceros_sondaicus_in_London_Zoo.jpg"
+  }
+}

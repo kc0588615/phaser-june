@@ -1,0 +1,218 @@
+{
+  "id": 41,
+  "commonName": "African Forest Elephant",
+  "scientificName": "Loxodonta cyclotis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Proboscidea",
+    "family": "Elephantidae",
+    "genus": "Loxodonta"
+  },
+  "iucnId": 181007989,
+  "redList": {
+    "category": "CR",
+    "year": 2021,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/181007989/204404464"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_moist"
+  ],
+  "elevation": [
+    0,
+    2000
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its gray skin has only sparse, coarse hair.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/African_forest_elephant"
+    },
+    "size": {
+      "value": "huge",
+      "note": "It weighs 2,700 to 6,000 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats lots of fruit, plus leaves, seeds and bark.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "any",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a calf only every 4 to 9 years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It can live 60 to 70 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Both males and females have straight tusks that point down.",
+      "tags": [
+        "tusks"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/African_forest_elephant"
+    },
+    {
+      "category": "morphology",
+      "text": "It has big, rounded ears and fans them to cool off.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Its feet can feel rumbles through the ground from up to 16 km away.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It picks fruit with its trunk and spreads the seeds in its droppings, sometimes 5 km away.",
+      "tags": [
+        "trunk",
+        "fruit_eater",
+        "seed_spreader"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/African_forest_elephant"
+    },
+    {
+      "category": "diet",
+      "text": "It travels long distances to reach places with mineral salts.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Poaching for ivory rose sharply after 2008 and is still too high.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Its numbers fell by more than 80% in 93 years.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "In 2021 the Red List judged it separately from the savanna elephant for the first time, and listed it as Critically Endangered.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Some rainforest trees depend on it to spread their big seeds.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is smaller than the savanna elephant, and its tusks hang straight down to fit through thick forest.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "After a mud bath, its gray skin can look yellow or reddish.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/African_forest_elephant"
+    },
+    {
+      "category": "life_description",
+      "text": "Mothers can nurse their young for up to 6.5 years.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Farms, roads and towns spreading into its forests lead to more run-ins with people.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/181007989/204404464",
+    "adw": "https://animaldiversity.org/accounts/Loxodonta_cyclotis/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "BEN",
+        "name": "Benin"
+      },
+      {
+        "code": "BFA",
+        "name": "Burkina Faso"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "COG",
+        "name": "Congo"
+      },
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      },
+      {
+        "code": "GNQ",
+        "name": "Eq. Guinea"
+      },
+      {
+        "code": "GAB",
+        "name": "Gabon"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Loxodontacyclotis.jpg/500px-Loxodontacyclotis.jpg",
+    "credit": "Thomas Breuer",
+    "license": "CC BY 2.5",
+    "page": "https://commons.wikimedia.org/wiki/File:Loxodontacyclotis.jpg"
+  }
+}

@@ -1,0 +1,187 @@
+{
+  "id": 10,
+  "commonName": "Suriname Toad",
+  "scientificName": "Pipa pipa",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Pipidae",
+    "genus": "Pipa"
+  },
+  "iucnId": 58163,
+  "redList": {
+    "category": "LC",
+    "year": 2023,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/58163/85900348"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:bogs_marshes",
+    "wetlands:permanent_marshes",
+    "wetlands:seasonal_marshes"
+  ],
+  "elevation": [
+    0,
+    400
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It eats worms, insects, crustaceans and small fish.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "About 100 eggs grow on the mother's back.",
+      "source": "government"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In zoos they live about 7 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its body is very flat, with a triangle-shaped head.",
+      "tags": [
+        "flat_body"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Each fingertip ends in a tiny star shape.",
+      "tags": [
+        "star_fingers"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tiny black eyes have no eyelids.",
+      "tags": [
+        "lidless_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It almost never leaves the water, resting on the bottom of murky ponds.",
+      "tags": [
+        "fully_aquatic"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It has no tongue: it feels for food with its fingers and stuffs it into its mouth.",
+      "tags": [
+        "no_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its eggs sink into pockets in the mother's back and hatch there as tiny toads, with no tadpole stage.",
+      "tags": [
+        "mother_carries_young",
+        "no_tadpoles"
+      ],
+      "source": "government"
+    },
+    {
+      "category": "conservation",
+      "text": "No major threats: it is widespread, with plenty of rainforest left.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its babies climb out of little pockets in their mother's back after 3 to 4 months.",
+      "source": "government"
+    },
+    {
+      "category": "key_fact",
+      "text": "Males call to females with sharp clicks instead of croaks.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims up to the surface for air about every half hour.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "While mating, the pair flip and loop through the water as the eggs roll onto the female's back.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/58163/85900348",
+    "adw": "https://animaldiversity.org/accounts/Pipa_pipa/",
+    "government": "https://nas.er.usgs.gov/queries/FactSheet.aspx?speciesID=2728"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Pipa_pipa01.jpg/500px-Pipa_pipa01.jpg",
+    "credit": "Hugo Claessen",
+    "license": "CC BY-SA 2.5",
+    "page": "https://commons.wikimedia.org/wiki/File:Pipa_pipa01.jpg"
+  }
+}

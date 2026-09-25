@@ -1,0 +1,174 @@
+{
+  "id": 3,
+  "commonName": "Darwin Frog",
+  "scientificName": "Rhinoderma darwinii",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Rhinodermatidae",
+    "genus": "Rhinoderma"
+  },
+  "iucnId": 19513,
+  "redList": {
+    "category": "EN",
+    "year": 2018,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/19513/79809372"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:subantarctic",
+    "forest:temperate",
+    "wetlands",
+    "wetlands:bogs_marshes"
+  ],
+  "elevation": [
+    0,
+    1340
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin is smooth, with just a few small bumps.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "It is only 2.5 to 3.5 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It often sits in patches of sunlight.",
+      "source": "amphibiaweb"
+    },
+    "social": {
+      "value": "groups",
+      "note": "It lives in small colonies in certain patches of forest.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female lays about 40 eggs, though fewer in the far south.",
+      "source": "amphibiaweb"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Some are still breeding at 15 years old.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its snout ends in a soft, pointy tip.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It can be brown or bright green, matching the ground where it sits.",
+      "tags": [
+        "camouflage"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is black with big white spots.",
+      "tags": [
+        "spotted_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in the fallen leaves of southern beech forests.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "The father carries the tadpoles inside his throat pouch until they turn into froglets.",
+      "tags": [
+        "father_carries_young"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: forests cut down or replaced with pine plantations, and chytrid, a fungus that kills frogs.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Zoos in Chile and Germany breed it as a backup population.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Charles Darwin found this frog in Chile during his voyage on HMS Beagle.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "The tadpoles live in their father's throat pouch for about 6 weeks, then hop out as tiny frogs.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its whole home can be just 1 to 3 square meters: about the size of a bath mat.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "In the cold months it shelters under logs and moss.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "life_description",
+      "text": "Females lay their eggs in damp leaf litter on the forest floor.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "threat",
+      "text": "It has vanished from many places where it was common until the 1980s.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/19513/79809372",
+    "adw": "https://animaldiversity.org/accounts/Rhinoderma_darwinii/",
+    "amphibiaweb": "https://amphibiaweb.org/species/4322",
+    "wikipedia": "https://en.wikipedia.org/wiki/Darwin%27s_frog"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": []
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Ranita_de_Darwin_%28Rhinoderma_darwinii%29.png/500px-Ranita_de_Darwin_%28Rhinoderma_darwinii%29.png",
+    "credit": "Ong ranita",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Ranita_de_Darwin_(Rhinoderma_darwinii).png"
+  }
+}

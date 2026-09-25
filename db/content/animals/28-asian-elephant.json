@@ -1,0 +1,234 @@
+{
+  "id": 28,
+  "commonName": "Asian Elephant",
+  "scientificName": "Elephas maximus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Proboscidea",
+    "family": "Elephantidae",
+    "genus": "Elephas"
+  },
+  "iucnId": 7140,
+  "redList": {
+    "category": "EN",
+    "year": 2020,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/7140/45818198"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "artificial",
+    "artificial:plantations"
+  ],
+  "elevation": [
+    0,
+    3000
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its wrinkled gray skin has only a few scattered hairs.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "huge",
+      "note": "Males weigh 3,500 to 6,000 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats grass, leaves, bark, roots and fruit: more than 100 kinds of plants.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "any",
+      "note": "It spends 12 to 18 hours a day finding and eating food.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Related females and their young live in herds. Adult males live alone or in small groups.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "Twins are very rare.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It can live 60 to 70 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has a long trunk with one finger-like tip.",
+      "tags": [
+        "trunk"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Only males grow tusks, and in Sri Lanka most males have none.",
+      "tags": [
+        "tusks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It flaps its big ears to cool off.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a good swimmer and can use its trunk as a snorkel.",
+      "tags": [
+        "swimmer",
+        "snorkel_nose"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It coats itself in mud and dust to keep its skin cool.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can call with rumbles too low for people to hear.",
+      "tags": [
+        "low_rumbles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It eats about a tenth of its own weight in food every day.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Fewer than 50,000 are left in the wild.",
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/news/asian-elephant-pregnant-smithsonians-national-zoo-and-conservation-biology-institute"
+    },
+    {
+      "category": "conservation",
+      "text": "Its forests are being cut into pieces too small for herds to live in.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest land animal in Asia.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Asian_elephant"
+    },
+    {
+      "category": "key_fact",
+      "text": "A mother carries her calf for 18 to 22 months, nearly two years.",
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/news/asian-elephant-pregnant-smithsonians-national-zoo-and-conservation-biology-institute"
+    },
+    {
+      "category": "key_fact",
+      "text": "You can tell it from an African elephant: its ears are smaller, and its head, not its shoulders, is the highest point of its body.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "The tip of its trunk is so sensitive it can feel vibrations in the ground.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A newborn calf weighs about 100 kg.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "More than 69% of the Sumatran elephant's forest was lost in just 25 years.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/7140/45818198",
+    "adw": "https://animaldiversity.org/accounts/Elephas_maximus/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "BGD",
+        "name": "Bangladesh"
+      },
+      {
+        "code": "KHM",
+        "name": "Cambodia"
+      },
+      {
+        "code": "IND",
+        "name": "India"
+      },
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "LAO",
+        "name": "Laos"
+      },
+      {
+        "code": "MYS",
+        "name": "Malaysia"
+      },
+      {
+        "code": "MMR",
+        "name": "Myanmar"
+      },
+      {
+        "code": "NPL",
+        "name": "Nepal"
+      },
+      {
+        "code": "THA",
+        "name": "Thailand"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Elephas_maximus_%28Bandipur%29.jpg/500px-Elephas_maximus_%28Bandipur%29.jpg",
+    "credit": "Yathin S Krishnappa",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Elephas_maximus_(Bandipur).jpg"
+  }
+}

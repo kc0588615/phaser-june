@@ -1,0 +1,142 @@
+{
+  "id": 21,
+  "commonName": "Radiated Tortoise",
+  "scientificName": "Astrochelys radiata",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Testudinidae",
+    "genus": "Astrochelys"
+  },
+  "iucnId": 3901,
+  "redList": {
+    "category": "CR",
+    "year": 2008,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/9014/12950491"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "marine",
+    "marine:coastal"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "note": "Its shell is high and domed.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It can weigh up to 16 kg, with a shell up to 40 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "Grasses, fruit and succulent plants. It loves prickly pear cactus.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A female lays 3 to 12 eggs in a hole she digs.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "A generation takes about 42 years.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its dark shell is covered in yellow lines that spread out like stars.",
+      "tags": [
+        "star_pattern"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its head, legs and feet are yellow, with a black patch on top of the head.",
+      "tags": [
+        "yellow_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It grazes the same patches again and again, keeping the plants trimmed short like a lawn mower.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in the dry spiny forests and brush of southern Madagascar.",
+      "tags": [
+        "spiny_forest"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: collecting for food and the pet trade, and loss of its forest.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "A radiated tortoise named Tu'i Malila, given to the royal family of Tonga, is said to have lived about 188 years.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "Its eggs take 145 to 231 days to hatch.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Hatchlings are white to off-white, not yellow like the adults.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/9014/12950491",
+    "adw": "https://animaldiversity.org/accounts/Astrochelys_radiata/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Tu%27i_Malila"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "MDG",
+        "name": "Madagascar"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Radiated_tortoise_%28Astrochelys_radiata%29_Tsimanampetsotsa.jpg/500px-Radiated_tortoise_%28Astrochelys_radiata%29_Tsimanampetsotsa.jpg",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Radiated_tortoise_(Astrochelys_radiata)_Tsimanampetsotsa.jpg"
+  }
+}

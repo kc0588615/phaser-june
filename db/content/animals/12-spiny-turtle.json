@@ -1,0 +1,162 @@
+{
+  "id": 12,
+  "commonName": "Spiny Hill Turtle",
+  "scientificName": "Heosemys spinosa",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Geoemydidae",
+    "genus": "Heosemys"
+  },
+  "iucnId": 104303,
+  "redList": {
+    "category": "EN",
+    "year": 2021,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/9942/3152508"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:bogs_marshes"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "britannica"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Scientists estimate it lives about 35 years.",
+      "source": "iucn"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "It eats fruit and plants, plus insects and dead animals.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    },
+    "activity": {
+      "value": "night",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    },
+    "young": {
+      "value": "one",
+      "note": "A female lays 1 or 2 eggs at a time, up to three times a year.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its other name is the sunburst turtle, for the spikes around the edge of its shell.",
+      "tags": [
+        "spiky_shell"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives by hilly forest streams, in flooded forest and in lowland swamps.",
+      "tags": [
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "By day it hides buried in fallen leaves, where its brown shell blends in.",
+      "tags": [
+        "leaf_litter",
+        "camouflage"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    },
+    {
+      "category": "diet",
+      "text": "Fallen fruit is one of its favorite foods.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Spiny_turtle"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: collecting for food and pets, and rainforest cleared for farms.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Its numbers dropped by 50 to 80% over the last 51 years.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "In Indonesia only 250 can be caught legally each year, and only small ones under 20 cm.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "It starts breeding at about 7 years old.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Many die while they are being caught and shipped.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/9942/3152508",
+    "britannica": "https://www.britannica.com/animal/turtle-reptile"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "BRN",
+        "name": "Brunei"
+      },
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "MYS",
+        "name": "Malaysia"
+      },
+      {
+        "code": "MMR",
+        "name": "Myanmar"
+      },
+      {
+        "code": "THA",
+        "name": "Thailand"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Asian_leaf_turtle_%28Cyclemys_dentata%29_%286707223935%29.jpg/500px-Asian_leaf_turtle_%28Cyclemys_dentata%29_%286707223935%29.jpg",
+    "credit": "Bernard DUPONT from FRANCE",
+    "license": "CC BY-SA 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Asian_leaf_turtle_(Cyclemys_dentata)_(6707223935).jpg"
+  }
+}

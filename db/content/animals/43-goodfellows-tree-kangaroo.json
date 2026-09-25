@@ -1,0 +1,169 @@
+{
+  "id": 43,
+  "commonName": "Goodfellow's Tree-kangaroo",
+  "scientificName": "Dendrolagus goodfellowi",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Diprotodontia",
+    "family": "Macropodidae",
+    "genus": "Dendrolagus"
+  },
+  "iucnId": 6429,
+  "redList": {
+    "category": "EN",
+    "year": 2016,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/6429/21957524"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is short and woolly.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs about 7 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats leaves and other plant parts.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Tree-kangaroos in zoos have lived more than 23 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its fur is chestnut to red-brown, with yellow cheeks and feet.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has two golden stripes down its back.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long, golden-brown tail helps it balance in the trees.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in the treetops, gripping branches with strong arms and hooked claws.",
+      "tags": [
+        "tree_dweller",
+        "climber"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its pouch opens forward, like other kangaroos'.",
+      "tags": [
+        "pouch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "It lives in the mountain rainforests of New Guinea.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Hunting for food is its biggest threat, and it has vanished from much of its old range.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is a kangaroo that lives in trees, and its front and back legs are closer in size than a ground kangaroo's.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is also called the ornate tree-kangaroo.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Goodfellow%27s_tree-kangaroo"
+    },
+    {
+      "category": "key_fact",
+      "text": "It has a swirl of hair in the middle of its back.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A newborn climbs into the pouch on its own and grows there for 10 to 12 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "It once lived in lowland forest too, but now survives only in mountain forest.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Coffee farms and fields are replacing its forest.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/6429/21957524",
+    "adw": "https://animaldiversity.org/accounts/Dendrolagus_goodfellowi/"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "PNG",
+        "name": "Papua New Guinea"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Tree_kangaroo2.jpg/500px-Tree_kangaroo2.jpg",
+    "credit": "Tim Williams",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Tree_kangaroo2.jpg"
+  }
+}

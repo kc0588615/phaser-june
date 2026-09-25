@@ -1,0 +1,192 @@
+{
+  "id": 48,
+  "commonName": "Tasmanian Devil",
+  "scientificName": "Sarcophilus harrisii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Dasyuromorphia",
+    "family": "Dasyuridae",
+    "genus": "Sarcophilus"
+  },
+  "iucnId": 40540,
+  "redList": {
+    "category": "EN",
+    "year": 2008,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/40540/10331066"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate",
+    "shrubland",
+    "shrubland:temperate",
+    "grassland",
+    "caves",
+    "artificial",
+    "artificial:arable",
+    "artificial:pasture"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is black, often with a white patch on its throat.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 4 to 12 kg, about as much as a small dog.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It hunts and scavenges, crunching up bones too.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A mother gives birth to 20 to 30 tiny young, but her pouch only has room for four.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Wild devils rarely live past 5 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "behavior",
+      "text": "It makes loud, spooky screeches, especially when feeding.",
+      "tags": [
+        "screecher"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "morphology",
+      "text": "Its huge head and jaws give it one of the strongest bites for its size of any land predator.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "morphology",
+      "text": "It stores fat in its tail.",
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It eats almost any dead animal it finds, bones and all.",
+      "tags": [
+        "scavenger"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps in dens: hollow logs, caves or old wombat burrows.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its pouch opens backward.",
+      "tags": [
+        "pouch",
+        "backward_pouch"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "geography",
+      "text": "It survives only on the island of Tasmania, south of mainland Australia.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Since the 1990s, a disease that causes lumps on devils' faces has spread and wiped out many of them.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest meat-eating marsupial in the world.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "key_fact",
+      "text": "Devils once lived on mainland Australia, but disappeared from there about 3,500 years ago.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "key_fact",
+      "text": "Some wild devils seem to be evolving resistance to the face disease.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tasmanian_devil"
+    },
+    {
+      "category": "behavior",
+      "text": "Adult devils may use the same dens all their lives.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "Joeys stay in the pouch for about 4 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Cars and dogs are dangers too.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/40540/10331066",
+    "adw": "https://animaldiversity.org/accounts/Sarcophilus_harrisii/"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "AUS",
+        "name": "Australia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/43/Sarcophilus_harrisii_taranna.jpg/500px-Sarcophilus_harrisii_taranna.jpg",
+    "credit": "JJ Harrison (https://www.jjharrison.com.au/)",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Sarcophilus_harrisii_taranna.jpg"
+  }
+}

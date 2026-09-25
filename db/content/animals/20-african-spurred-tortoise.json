@@ -1,0 +1,176 @@
+{
+  "id": 20,
+  "commonName": "African Spurred Tortoise",
+  "scientificName": "Centrochelys sulcata",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Testudinidae",
+    "genus": "Centrochelys"
+  },
+  "iucnId": 9781,
+  "redList": {
+    "category": "EN",
+    "year": 2021,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/163423/1006958"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "grassland:tropical_dry"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "source": "tftsg"
+    },
+    "size": {
+      "value": "large",
+      "note": "Big males can weigh more than 100 kg.",
+      "source": "tftsg"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It sometimes eats dead animals or garbage too.",
+      "source": "tftsg"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It is out mostly in the early morning and in the rainy season.",
+      "source": "tftsg"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "tftsg"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female lays 2 or 3 clutches of 14 to 40 eggs each.",
+      "source": "tftsg"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It takes 10 to 15 years just to grow up.",
+      "source": "tftsg"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It is the biggest tortoise living on a continent instead of an island.",
+      "tags": [
+        "giant_tortoise"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "morphology",
+      "text": "It has big pointed scales, like spurs, on its back legs.",
+      "tags": [
+        "leg_spurs"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs deep burrows, up to 15 m long, to escape the heat.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "behavior",
+      "text": "Males fight by ramming each other, and the bigger male usually wins.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in dry savanna, often along streams that only flow in the rainy season.",
+      "tags": [
+        "seasonal_streams"
+      ],
+      "source": "tftsg"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: farms and cattle taking over its land, and people collecting it for food and the pet trade.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest tortoise in Africa.",
+      "source": "tftsg"
+    },
+    {
+      "category": "key_fact",
+      "text": "It breeds easily in captivity, and many local communities raise them.",
+      "source": "tftsg"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/163423/1006958",
+    "tftsg": "https://iucn-tftsg.org/cbftt/species-accounts/centrochelys-sulcata-110",
+    "wikipedia": "https://en.wikipedia.org/wiki/African_spurred_tortoise"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical",
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "BEN",
+        "name": "Benin"
+      },
+      {
+        "code": "BFA",
+        "name": "Burkina Faso"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "MRT",
+        "name": "Mauritania"
+      },
+      {
+        "code": "NER",
+        "name": "Niger"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/Sulcata_Tortoise_%285%29_%288679964197%29.jpg/500px-Sulcata_Tortoise_%285%29_%288679964197%29.jpg",
+    "credit": "John5199",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Sulcata_Tortoise_(5)_(8679964197).jpg"
+  }
+}

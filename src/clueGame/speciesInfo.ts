@@ -5,13 +5,32 @@ import type { PoolSpecies } from '@/clueGame/pool';
 const CLASS_NAMES: Record<string, string> = {
   AMPHIBIA: 'Amphibian', REPTILIA: 'Reptile', MAMMALIA: 'Mammal', AVES: 'Bird', ACTINOPTERYGII: 'Ray-finned fish', INSECTA: 'Insect',
 };
-const ORDER_NAMES: Record<string, string> = {
+export const ORDER_NAMES: Record<string, string> = {
   ANURA: 'Frogs and toads', TESTUDINES: 'Turtles and tortoises', CARNIVORA: 'Carnivores', ARTIODACTYLA: 'Even-toed hoofed mammals',
   CAUDATA: 'Salamanders and newts', SQUAMATA: 'Lizards and snakes', PRIMATES: 'Primates', PHOLIDOTA: 'Pangolins', CHIROPTERA: 'Bats',
   PERISSODACTYLA: 'Odd-toed hoofed mammals', PROBOSCIDEA: 'Elephants', MONOTREMATA: 'Egg-laying mammals', PILOSA: 'Sloths and anteaters',
   CINGULATA: 'Armadillos', DIPROTODONTIA: 'Kangaroos, koalas and wombats', DASYUROMORPHIA: 'Meat-eating marsupials',
   PERAMELEMORPHIA: 'Bandicoots and bilbies', AFROSORICIDA: 'Tenrecs and golden moles', MACROSCELIDEA: 'Sengis',
   LAGOMORPHA: 'Rabbits, hares and pikas', RODENTIA: 'Rodents', EULIPOTYPHLA: 'Shrews, moles and relatives',
+};
+
+/** Friendly names for families, as they finish "Its family is Felidae, ...". */
+export const FAMILY_NAMES: Record<string, string> = {
+  ARTHROLEPTIDAE: 'the squeaker and cricket frogs', ASCAPHIDAE: 'the tailed frogs', BREVICIPITIDAE: 'the rain frogs',
+  CONRAUIDAE: 'the slippery frogs', DENDROBATIDAE: 'the poison dart frogs', MICROHYLIDAE: 'the narrow-mouthed frogs',
+  NASIKABATRACHIDAE: 'the purple frogs of India', PHYLLOMEDUSIDAE: 'the leaf frogs', PIPIDAE: 'the tongueless frogs',
+  RHACOPHORIDAE: 'the shrub frogs of Asia and Africa', RHINODERMATIDAE: "Darwin's frogs",
+  CARETTOCHELYIDAE: 'which has only one living species', EMYDIDAE: 'the pond and box turtles', GEOEMYDIDAE: 'the Asian river and leaf turtles',
+  PLATYSTERNIDAE: 'which has only one living species', TESTUDINIDAE: 'the land tortoises', TRIONYCHIDAE: 'the softshell turtles',
+  CHRYSOCHLORIDAE: 'the golden moles', BOVIDAE: 'cattle, antelopes, goats and their relatives', GIRAFFIDAE: 'the giraffes and okapis',
+  AILURIDAE: 'which has only one living species', CANIDAE: 'the dogs, wolves and foxes', FELIDAE: 'the cats',
+  MUSTELIDAE: 'the weasels, ferrets, otters and badgers', PTEROPODIDAE: 'the fruit bats and flying foxes',
+  CHLAMYPHORIDAE: 'the armadillos', DASYURIDAE: 'the meat-eating marsupials', MACROPODIDAE: 'the kangaroos and wallabies',
+  VOMBATIDAE: 'the wombats', SOLENODONTIDAE: 'the solenodons', OCHOTONIDAE: 'the pikas', MACROSCELIDIDAE: 'the sengis (elephant shrews)',
+  TACHYGLOSSIDAE: 'the echidnas', THYLACOMYIDAE: 'the bilbies', EQUIDAE: 'the horses, zebras and donkeys', RHINOCEROTIDAE: 'the rhinos',
+  MANIDAE: 'the pangolins', BRADYPODIDAE: 'the three-toed sloths', CERCOPITHECIDAE: 'the monkeys of Africa and Asia',
+  DAUBENTONIIDAE: 'which has only one living species', HOMINIDAE: 'the great apes', ELEPHANTIDAE: 'the elephants',
+  SCIURIDAE: 'the squirrels, chipmunks and marmots',
 };
 
 export interface RedListStatus {

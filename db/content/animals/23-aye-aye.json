@@ -1,0 +1,233 @@
+{
+  "id": 23,
+  "commonName": "Aye-aye",
+  "scientificName": "Daubentonia madagascariensis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Primates",
+    "family": "Daubentoniidae",
+    "genus": "Daubentonia"
+  },
+  "iucnId": 6302,
+  "redList": {
+    "category": "EN",
+    "year": 2020,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/6302/115560793"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:mangrove",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "artificial",
+    "artificial:plantations",
+    "artificial:gardens"
+  ],
+  "elevation": [
+    10,
+    1875
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its long, coarse coat is dark brown or black, with scattered white hairs.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs about 2.5 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "It eats beetle grubs, nuts, seeds, fruit and nectar.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It wakes up around sunset.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Now and then two or three forage together.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one baby every 2 or 3 years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "One aye-aye lived more than 23 years in a zoo.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its front teeth never stop growing, like a rodent's.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has big eyes and large, bat-like ears.",
+      "tags": [
+        "large_eyes",
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its bushy tail is longer than its body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "ngo",
+      "url": "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate"
+    },
+    {
+      "category": "morphology",
+      "text": "One finger on each hand is extra long and as thin as a twig.",
+      "tags": [
+        "long_finger"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a tiny extra 'false thumb' that helps it grip branches.",
+      "tags": [
+        "false_thumb"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ajpa.23936"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps all day in a ball-shaped nest of leaves high in the trees.",
+      "tags": [
+        "builds_nests",
+        "tree_dweller"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It often hangs upside down from branches.",
+      "tags": [
+        "hangs_upside_down"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It taps on bark with its thin finger and listens for hollow tunnels where grubs hide.",
+      "tags": [
+        "tap_forager"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It also drinks nectar from the flowers of the traveler's tree.",
+      "tags": [
+        "nectar_drinker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It gnaws a hole through bark or a nutshell, then scoops out the food with its thin finger.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "In some places people believe it brings bad luck, so it gets hunted.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Trees it feeds from are cut down to build boats and houses.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It does the job of a woodpecker in Madagascar, which has no woodpeckers: it taps on wood to find grubs inside.",
+      "source": "news",
+      "url": "https://www.eurekalert.org/news-releases/598865"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2019 scientists found it has a tiny sixth finger, a 'pseudothumb' with its own fingerprint, that helps it grip branches.",
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ajpa.23936"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its rodent-like teeth and bushy tail made early scientists think it was a kind of squirrel. It is really a lemur, a primate like us.",
+      "source": "news",
+      "url": "https://kids.nationalgeographic.com/animals/mammals/facts/aye-aye"
+    },
+    {
+      "category": "behavior",
+      "text": "When it is scared or excited, it fluffs up its long hairs and looks twice as big.",
+      "source": "ngo",
+      "url": "https://www.worldwildlife.org/news/magazine/spring-2021/meet-the-aye-aye-the-worlds-weirdest-primate"
+    },
+    {
+      "category": "life_description",
+      "text": "Babies have green eyes and floppy ears. They first leave the nest at about 8 weeks old.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Young aye-ayes still beg their mothers for food at a year old.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers are thought to have fallen by half or more in 36 years, from forest loss and hunting.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/6302/115560793",
+    "adw": "https://animaldiversity.org/accounts/Daubentonia_madagascariensis/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "MDG",
+        "name": "Madagascar"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Wild_aye_aye.jpg/500px-Wild_aye_aye.jpg",
+    "credit": "nomis-simon",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Wild_aye_aye.jpg"
+  }
+}

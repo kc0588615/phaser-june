@@ -1,0 +1,157 @@
+{
+  "id": 17,
+  "commonName": "Pig-nosed Turtle",
+  "scientificName": "Carettochelys insculpta",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Carettochelyidae",
+    "genus": "Carettochelys"
+  },
+  "iucnId": 28859,
+  "redList": {
+    "category": "EN",
+    "year": 2018,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/3898/2884984"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater",
+    "marine"
+  ],
+  "habitats": [
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:permanent_lakes",
+    "marine",
+    "marine:estuaries"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "note": "Its shell is covered in leathery skin instead of hard plates.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "Mostly fruit, leaves and flowers from the riverbank, plus snails and insects.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "In the dry season, many gather together in the river pools that are left.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "One lived more than 38 years in a zoo.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its nose looks like a pig's snout.",
+      "tags": [
+        "pig_nose"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its front legs are paddle-shaped flippers, like a sea turtle's.",
+      "tags": [
+        "flippers"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It uses its nose as a snorkel to breathe in murky water.",
+      "tags": [
+        "snorkel_nose"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Males never leave the water, and females come out only to lay eggs.",
+      "tags": [
+        "fully_aquatic"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in rivers, lagoons and even salty water near the coast.",
+      "tags": [
+        "brackish_water"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Whether its eggs hatch as males or females depends on nest temperature: half a degree makes the difference.",
+      "tags": [
+        "temperature_sex"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: turtles and eggs collected for food and the pet trade, and pollution from mines.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its nose has special sensors that help it find food in muddy water.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Females travel together to find safe beaches for their eggs.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "In Australia's Daly River, females nest every other year, laying two clutches in the dry season.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/3898/2884984",
+    "adw": "https://animaldiversity.org/accounts/Carettochelys_insculpta/"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "AUS",
+        "name": "Australia"
+      },
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "PNG",
+        "name": "Papua New Guinea"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/Carettochelys_insculpta_01.JPG/500px-Carettochelys_insculpta_01.JPG",
+    "credit": "Bjoertvedt",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Carettochelys_insculpta_01.JPG"
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "id": 35,
+  "commonName": "Red Panda",
+  "scientificName": "Ailurus fulgens",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Ailuridae",
+    "genus": "Ailurus"
+  },
+  "iucnId": 714,
+  "redList": {
+    "category": "EN",
+    "year": 2015,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/714/110023718"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_high_altitude"
+  ],
+  "elevation": [
+    2500,
+    4800
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs about 4 to 6 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "Bamboo leaves are most of its food.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "twilight",
+      "note": "It is also active at night.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has 1 to 4 cubs, about 2 on average.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In the wild it lives 8 to 10 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its fur is reddish brown on its back and black on its belly and legs.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long, bushy tail has about 12 red and pale rings.",
+      "tags": [
+        "long_tail",
+        "ringed_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "The soles of its feet are covered in thick fur.",
+      "tags": [
+        "furry_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a 'false thumb', a long wrist bone that helps it grip bamboo.",
+      "tags": [
+        "false_thumb"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps high in the trees and climbs down trunks headfirst.",
+      "tags": [
+        "tree_dweller",
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives high in the mountains, in forests with thick bamboo underneath.",
+      "tags": [
+        "high_mountains",
+        "bamboo_forest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Losing and breaking up its forests is its main threat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It isn't a bear or a raccoon. It is the only living member of its own family.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "key_fact",
+      "text": "The giant panda also has a 'false thumb' for bamboo, though the two aren't close relatives.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "key_fact",
+      "text": "There are two kinds, the Himalayan and the Chinese red panda, which split apart about 250,000 years ago.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "behavior",
+      "text": "It washes its face with a paw, like a cat.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Cubs are born in a hollow tree or a rock crack, mostly in June.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers are thought to have fallen by half in 18 years.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/714/110023718",
+    "adw": "https://animaldiversity.org/accounts/Ailurus_fulgens/"
+  },
+  "range": {
+    "realms": [
+      "realm:palearctic",
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "BTN",
+        "name": "Bhutan"
+      },
+      {
+        "code": "CHN",
+        "name": "China"
+      },
+      {
+        "code": "IND",
+        "name": "India"
+      },
+      {
+        "code": "NPL",
+        "name": "Nepal"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/Red_Panda%2C_Gentle_Tree-Dweller_of_the_Himalayas.jpg/500px-Red_Panda%2C_Gentle_Tree-Dweller_of_the_Himalayas.jpg",
+    "credit": "Sunuwargr",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Red_Panda,_Gentle_Tree-Dweller_of_the_Himalayas.jpg"
+  }
+}

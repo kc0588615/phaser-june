@@ -1,0 +1,18 @@
+[
+{"id": 1, "key": "iucn", "tier": 1, "name": "IUCN Red List", "url": "https://www.iucnredlist.org", "notes": "The species' Red List assessment: status, trend, habitats (IUCN classification), systems, elevation, generation length, threats, and its habitat and ecology text. First choice for every fact it covers."},
+{"id": 2, "key": "iucn_range", "tier": 1, "name": "IUCN range map", "url": "https://www.iucnredlist.org/resources/spatial-data-download", "notes": "The species' IUCN range polygons, analyzed in PostGIS by this project: realms (OneEarth) and countries (Natural Earth) that hold a real share of the range."},
+{"id": 3, "key": "tftsg", "tier": 2, "name": "IUCN SSC Tortoise and Freshwater Turtle Specialist Group", "url": "https://iucn-tftsg.org", "notes": "Species accounts in Conservation Biology of Freshwater Turtles and Tortoises: size, diet, breeding, clutch size, lifespan."},
+{"id": 4, "key": "amphibiaweb", "tier": 2, "name": "AmphibiaWeb", "url": "https://amphibiaweb.org", "notes": "Species accounts written or reviewed by amphibian scientists (University of California, Berkeley): size, calls, breeding, life history."},
+{"id": 5, "key": "asw", "tier": 2, "name": "Amphibian Species of the World", "url": "https://amphibiansoftheworld.amnh.org", "notes": "American Museum of Natural History: amphibian taxonomy and distribution."},
+{"id": 6, "key": "reptile_db", "tier": 2, "name": "The Reptile Database", "url": "https://reptile-database.reptarium.cz", "notes": "Reptile taxonomy, size and distribution, with citations to the literature."},
+{"id": 7, "key": "adw", "tier": 2, "name": "Animal Diversity Web", "url": "https://animaldiversity.org", "notes": "University of Michigan Museum of Zoology species accounts with cited sources: mass, lifespan, diet, activity, breeding."},
+{"id": 8, "key": "mdd", "tier": 2, "name": "Mammal Diversity Database", "url": "https://www.mammaldiversity.org", "notes": "American Society of Mammalogists: mammal taxonomy."},
+{"id": 9, "key": "literature", "tier": 2, "name": "Peer-reviewed study", "url": "https://doi.org", "notes": "A published scientific paper; the source URL is its DOI or journal page."},
+{"id": 10, "key": "smithsonian", "tier": 3, "name": "Smithsonian's National Zoo and Conservation Biology Institute", "url": "https://nationalzoo.si.edu", "notes": "Animal fact sheets from zoo scientists and keepers."},
+{"id": 11, "key": "sdzwa", "tier": 3, "name": "San Diego Zoo Wildlife Alliance Library", "url": "https://ielc.libguides.com/sdzg", "notes": "Species fact sheets with references."},
+{"id": 12, "key": "government", "tier": 3, "name": "Government wildlife agency", "url": "https://www.fws.gov", "notes": "National wildlife agencies (US Fish and Wildlife Service, Parks Canada, Australian Government and others) and their recovery plans."},
+{"id": 13, "key": "ngo", "tier": 3, "name": "Conservation organization", "url": "https://www.worldwildlife.org", "notes": "Major conservation groups working with the species (WWF, WCS, Fauna & Flora and others)."},
+{"id": 14, "key": "britannica", "tier": 3, "name": "Encyclopaedia Britannica", "url": "https://www.britannica.com", "notes": "Edited encyclopedia articles, often by specialists."},
+{"id": 15, "key": "wikipedia", "tier": 4, "name": "Wikipedia", "url": "https://en.wikipedia.org", "notes": "Only for a fact the higher tiers don't cover, checked against the article's own cited source."},
+{"id": 16, "key": "news", "tier": 4, "name": "News report", "url": "https://www.bbc.com/news", "notes": "A major news organization reporting a finding or event; only when the higher tiers don't cover it."}
+]

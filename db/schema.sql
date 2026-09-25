@@ -1,5 +1,5 @@
 -- Critter Connect: the Postgres objects the app uses, as they stand on
--- 2026-09-24. This is a baseline, not a migration history: migrations 001-044
+-- 2026-09-25. This is a baseline, not a migration history: migrations 001-044
 -- were squashed into it (git log --all -- src/db/migrations).
 --
 -- To change the schema, apply the change (./scripts/db -1 -f change.sql), then
@@ -11,55 +11,43 @@
 --   oneearth.oneearth_bioregion  OneEarth bioregions: realm, sub_realm, wkb_geometry
 --   natural_earth.countries      Natural Earth countries (scripts/import-natural-earth.mjs)
 -- Extensions: postgis, pgcrypto (init/01-extensions.sql).
---
--- The database also still holds the old expedition game's tables. Nothing reads them.
 BEGIN;
 SET LOCAL search_path = public;
 
 -- Content ---------------------------------------------------------------------
+-- Built from db/content/ by `npm run content -- build` (docs/CONTENT_SOURCES.md).
+
+-- Where facts come from, tier 1 (the IUCN Red List) first.
+CREATE TABLE content_sources (
+  id     serial PRIMARY KEY,
+  key    text NOT NULL UNIQUE,
+  tier   smallint NOT NULL CHECK (tier BETWEEN 1 AND 4),
+  name   text NOT NULL,
+  url    text NOT NULL,
+  notes  text NOT NULL DEFAULT ''
+);
 
 CREATE TABLE species (
-  id                     serial PRIMARY KEY,
-  iucn_id                bigint NOT NULL UNIQUE,  -- joins iucn.id_no (range maps)
-  scientific_name        text NOT NULL,
-  common_name            text NOT NULL,
-  kingdom                text,
-  phylum                 text,
-  class                  text,
-  taxon_order            text,
-  family                 text,
-  genus                  text,
-  conservation_code      text,                    -- IUCN Red List category, e.g. 'EN'
-  created_at             timestamptz NOT NULL DEFAULT now(),
-  updated_at             timestamptz NOT NULL DEFAULT now(),
-  -- Expedition-era descriptions; the game reads clues and facts instead.
-  conservation_text      text,
-  realm                  text,
-  subrealm               text,
-  biome                  text,
-  bioregion              text,
-  habitat_description    text,
-  habitat_tags           text[],
-  geographic_description text,
-  marine                 boolean DEFAULT false,
-  terrestrial            boolean DEFAULT false,
-  freshwater             boolean DEFAULT false,
-  color_primary          text,
-  color_secondary        text,
-  pattern                text,
-  shape_description      text,
-  size_min_cm            numeric,
-  size_max_cm            numeric,
-  weight_kg              numeric,
-  diet_type              text,
-  distribution_comment   text,
-  diet_prey              text,
-  diet_flora             text,
-  threats                text
+  id                 serial PRIMARY KEY,
+  iucn_id            bigint NOT NULL UNIQUE,  -- joins iucn.id_no (range maps)
+  scientific_name    text NOT NULL,
+  common_name        text NOT NULL,
+  class              text,
+  taxon_order        text,
+  family             text,
+  genus              text,
+  conservation_code  text,                    -- IUCN Red List category, e.g. 'EN'
+  redlist_url        text,                    -- the species' Red List assessment
+  photo_url          text,                    -- Wikimedia Commons, reusable with credit
+  photo_credit       text,
+  photo_license      text,
+  photo_page         text,
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  updated_at         timestamptz NOT NULL DEFAULT now()
 );
 
 -- One row per clue. The gem colors map to these categories in
--- src/clueGame/categories.ts. Tagged clues (is_filtering) rule candidates out.
+-- src/clueGame/categories.ts. Tagged clues (is_filtering) compare candidates.
 CREATE TABLE species_deduction_clues (
   id            serial PRIMARY KEY,
   species_id    integer NOT NULL REFERENCES species(id) ON DELETE CASCADE,
@@ -68,10 +56,9 @@ CREATE TABLE species_deduction_clues (
   compare_tags  text[],
   reveal_order  smallint NOT NULL DEFAULT 1,
   is_filtering  boolean NOT NULL DEFAULT true,
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  -- Expedition era, unused.
-  unlock_mode   text NOT NULL DEFAULT 'fragment' CHECK (unlock_mode IN ('fragment', 'score')),
-  base_cost     smallint NOT NULL DEFAULT 2
+  source_key    text REFERENCES content_sources(key),
+  source_url    text,
+  created_at    timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX uq_deduction_clues_species_cat_order ON species_deduction_clues (species_id, category, reveal_order);
 CREATE INDEX ix_deduction_clues_species ON species_deduction_clues (species_id);
@@ -85,26 +72,30 @@ CREATE TABLE species_facts (
   category    text NOT NULL,
   fact_text   text NOT NULL,
   sort_order  smallint NOT NULL DEFAULT 1,
+  source_key  text REFERENCES content_sources(key),
+  source_url  text,
   UNIQUE (species_id, category, sort_order)
 );
 CREATE INDEX ix_species_facts_species ON species_facts (species_id);
 CREATE INDEX ix_species_facts_category ON species_facts (species_id, category);
 
+-- Legend of the habitat raster behind the globe's habitat pictures: pixel value
+-- -> IUCN habitat class and kind (e.g. 106 = Forest - Subtropical-tropical moist lowland).
+CREATE TABLE habitat_colormap (
+  value  integer,
+  label  text
+);
+
 -- Players ---------------------------------------------------------------------
 
--- One row per signed-in player (a Clerk user).
+-- One row per signed-in player (a Clerk user), created on their first solve.
 CREATE TABLE profiles (
   user_id        uuid PRIMARY KEY,
   clerk_user_id  text,
   created_at     timestamptz DEFAULT CURRENT_TIMESTAMP,
-  updated_at     timestamptz DEFAULT CURRENT_TIMESTAMP,
-  -- Filled for players from the expedition era only.
-  username       text,
-  full_name      text,
-  avatar_url     text
+  updated_at     timestamptz DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX uq_profiles_clerk_user_id ON profiles (clerk_user_id);
-CREATE UNIQUE INDEX uq_profiles_username ON profiles (username);
 
 -- One row per solved mystery (POST /api/clue-game/solves), for analysis with SQL
 -- (db/analysis/clue-match/07_solve_stats.sql). Anonymous play has no player_id.

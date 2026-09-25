@@ -1,0 +1,125 @@
+{
+  "id": 19,
+  "commonName": "Floreana Giant Tortoise",
+  "scientificName": "Chelonoidis niger",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Testudinidae",
+    "genus": "Chelonoidis"
+  },
+  "iucnId": 9010,
+  "redList": {
+    "category": "EX",
+    "year": 2017,
+    "url": "https://www.iucnredlist.org/species/9023/3149101"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "shrubland"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "source": "iucn"
+    },
+    "size": {
+      "value": "large",
+      "note": "Galápagos giant tortoises can weigh more than 200 kg.",
+      "source": "britannica"
+    },
+    "diet": {
+      "value": "plants",
+      "source": "britannica"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "britannica"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Galápagos giant tortoises can live well over 100 years.",
+      "source": "britannica"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It was a giant tortoise.",
+      "tags": [
+        "giant_tortoise"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its shell was a 'saddleback': raised at the front like a saddle.",
+      "tags": [
+        "saddleback_shell"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "habitat",
+      "text": "It lived on Floreana Island in the Galápagos.",
+      "tags": [
+        "floreana_island"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "By eating fruit and spreading the seeds, it helped shape the island's forests.",
+      "tags": [
+        "seed_spreader"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "conservation",
+      "text": "It died out in the mid-1800s, hunted by whalers and harmed by animals people brought to the island.",
+      "source": "ngo"
+    },
+    {
+      "category": "conservation",
+      "text": "In February 2026, 158 young tortoises with Floreana ancestry were released on the island.",
+      "source": "ngo"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It was the first Galápagos tortoise species to be driven extinct.",
+      "source": "ngo"
+    },
+    {
+      "category": "key_fact",
+      "text": "Whalers moved tortoises between islands as food. Some Floreana tortoises survived on Wolf Volcano, and their hybrid descendants are now being bred to bring the lineage back.",
+      "source": "ngo"
+    },
+    {
+      "category": "key_fact",
+      "text": "One of the last sightings of Floreana tortoises was around the time of Charles Darwin's visit.",
+      "source": "ngo"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/9023/3149101",
+    "ngo": "https://www.galapagos.org/newsroom/a-homecoming-for-floreana",
+    "britannica": "https://www.britannica.com/animal/Galapagos-tortoise"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      }
+    ]
+  }
+}

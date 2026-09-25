@@ -1,0 +1,255 @@
+{
+  "id": 25,
+  "commonName": "Tiger",
+  "scientificName": "Panthera tigris",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Felidae",
+    "genus": "Panthera"
+  },
+  "iucnId": 15955,
+  "redList": {
+    "category": "EN",
+    "year": 2022,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/15955/214862019"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:boreal",
+    "forest:temperate",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:mangrove",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:boreal",
+    "shrubland:temperate",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:temperate",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "grassland:tropical_high_altitude",
+    "wetlands",
+    "wetlands:bogs_marshes",
+    "marine",
+    "artificial",
+    "artificial:plantations",
+    "artificial:gardens",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    0,
+    4500
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is reddish orange with black stripes and a white belly.",
+      "source": "smithsonian"
+    },
+    "size": {
+      "value": "large",
+      "note": "The biggest males weigh up to about 300 kg.",
+      "source": "smithsonian"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It mostly hunts deer and wild pigs.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It hunts mostly at night, but can be active any time.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "The only lasting bond is between a mother and her cubs.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A mother has 1 to 7 cubs at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild tigers usually live 10 to 15 years, and some reach their 20s.",
+      "source": "smithsonian"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has stripes, and no two have the same pattern, like fingerprints.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a white spot on the back of each ear.",
+      "tags": [
+        "ear_spots"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a strong swimmer and easily crosses rivers.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Each one marks its own home area with scent and scratches.",
+      "tags": [
+        "territorial",
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can leap 8 to 10 m in one bound.",
+      "tags": [
+        "big_leaper"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It sneaks up close, using every bush and rock as cover, then pounces.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It likes prey about as heavy as itself, like big deer.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "The 2022 Red List count found about 3,140 adult tigers in the wild.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Poaching for its skin and bones, and the loss of its prey, are the main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the biggest cat species in the world.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its stripes are on its skin, not just its fur.",
+      "source": "ngo",
+      "url": "https://wwf.ca/stories/19-amazing-tiger-facts-global-tiger-day"
+    },
+    {
+      "category": "key_fact",
+      "text": "Only about 1 hunt in 10 to 20 succeeds.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Tigers live in places as different as snowy forests in Russia and mangrove swamps by the sea.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Tigers can't purr, but they roar, grunt and make a friendly puffing sound called chuffing.",
+      "source": "smithsonian",
+      "url": "https://nationalzoo.si.edu/animals/news/just-how-big-are-tigers-what-does-tiger-poop-look-and-more-tiger-facts"
+    },
+    {
+      "category": "life_description",
+      "text": "Cubs are born blind and helpless. They stay with their mother until they are 18 months to 3 years old.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Tigers have vanished from large areas of good forest because of poaching and too little prey.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/15955/214862019",
+    "adw": "https://animaldiversity.org/accounts/Panthera_tigris/",
+    "smithsonian": "https://nationalzoo.si.edu/animals/tiger"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan",
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "BGD",
+        "name": "Bangladesh"
+      },
+      {
+        "code": "BTN",
+        "name": "Bhutan"
+      },
+      {
+        "code": "CHN",
+        "name": "China"
+      },
+      {
+        "code": "IND",
+        "name": "India"
+      },
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "MYS",
+        "name": "Malaysia"
+      },
+      {
+        "code": "MMR",
+        "name": "Myanmar"
+      },
+      {
+        "code": "NPL",
+        "name": "Nepal"
+      },
+      {
+        "code": "THA",
+        "name": "Thailand"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/Bengal_tiger_%28Panthera_tigris_tigris%29_female_3_crop.jpg/500px-Bengal_tiger_%28Panthera_tigris_tigris%29_female_3_crop.jpg",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Bengal_tiger_(Panthera_tigris_tigris)_female_3_crop.jpg"
+  }
+}

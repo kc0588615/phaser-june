@@ -1,15 +1,16 @@
 // What each species' record says, and when two records truly disagree.
 //
-// A record is the species' taxonomy (from the species table) plus the tags on
-// its own clues, normalized. Most tags are open traits: a candidate whose
-// record lacks one has "no record" of it, which proves nothing. Only three kinds
-// of difference count as a contradiction:
-//   - taxonomy: every species has exactly one class, order, family, and genus;
-//   - exclusive axes: pairs like egg-laying vs live birth, where having one
-//     value means not having the other;
-//   - complete families: tags computed for every species from full data, like
-//     realms from range maps, so a record with some realm but not this one
-//     truly doesn't live there.
+// Tags are `prefix:value` (docs/CONTENT_SOURCES.md has the vocabulary). A
+// species' record is its taxonomy (as class:/order:/family:/genus: tags) plus
+// every tag on its own clues. How a clue's tag compares with a candidate:
+//   - exclusive prefixes hold one value per species (size:small, diet:plants,
+//     family:felidae): the candidate holding another value is ruled out;
+//   - complete prefixes list every value a species has, from one data source
+//     for all species (realm:, country:, habitat:): a candidate that has some
+//     values but not this one is ruled out;
+//   - anything else is an open trait: a candidate lacking it has "no record",
+//     which proves nothing.
+// A candidate with no value at all for a prefix is never ruled out by it.
 import type { SpeciesClueCategory } from '@/clueGame/categories';
 import type { CluePool, PoolClue, PoolSpecies } from '@/clueGame/pool';
 
@@ -17,47 +18,30 @@ export const TAXONOMY_RANKS = ['class', 'order', 'family', 'genus'] as const;
 export type TaxonomyRank = typeof TAXONOMY_RANKS[number];
 export type Taxonomy = Record<TaxonomyRank, string | null>;
 
-/** Tags that are mutually exclusive: a record holding one value rules out the others. */
-export const EXCLUSIVE_AXES = {
-  birth: ['egg_laying', 'live_birth'],
-  lifespan: ['long_lived', 'short_lived'],
-  size: ['tiny', 'large_bodied'],
-  voice: ['vocal', 'voiceless'],
-  diet: ['carnivore', 'herbivore'],
-  shell: ['shelled', 'unshelled'],
-  sociality: ['herd', 'solitary'],
-} as const satisfies Record<string, readonly string[]>;
-export type ExclusiveAxis = keyof typeof EXCLUSIVE_AXES;
+/** One value per species. */
+export const EXCLUSIVE_PREFIXES = new Set<string>([
+  ...TAXONOMY_RANKS, 'size', 'lifespan', 'diet', 'activity', 'birth', 'young', 'social', 'covering',
+]);
 
-/** Biogeographic realms, tagged on Range clues from each species' IUCN range map (db/realm-clues.sql). */
+/** IUCN habitat classes (level 1); each class name is also the prefix of its level-2 kinds, e.g. forest:tropical_moist_lowland. */
+export const HABITAT_CLASSES = ['forest', 'savanna', 'shrubland', 'grassland', 'wetlands', 'rocky', 'caves', 'desert', 'marine', 'artificial'] as const;
+
+/** Every value a species has, from one source for all species. */
+export const COMPLETE_PREFIXES = new Set<string>(['realm', 'country', 'system', 'habitat', ...HABITAT_CLASSES]);
+
+/** Biogeographic realms, tagged on Range clues from each species' IUCN range map. */
 export const REALM_TAGS = [
   'realm:nearctic', 'realm:neotropical', 'realm:palearctic', 'realm:afrotropical',
   'realm:indomalayan', 'realm:australasian', 'realm:oceanian', 'realm:antarctic',
 ] as const;
 
-/** Tag families that are complete wherever a record has any member (see the header). */
-const COMPLETE_FAMILIES = ['realm:'] as const;
-
-export function completeFamilyOf(tag: string): string | null {
-  return COMPLETE_FAMILIES.find(prefix => tag.startsWith(prefix)) ?? null;
+export function prefixOf(tag: string): string | null {
+  const colon = tag.indexOf(':');
+  return colon > 0 ? tag.slice(0, colon) : null;
 }
-
-const AXIS_BY_TAG = new Map<string, ExclusiveAxis>(
-  (Object.entries(EXCLUSIVE_AXES) as Array<[ExclusiveAxis, readonly string[]]>)
-    .flatMap(([axis, values]) => values.map(value => [value, axis] as const)),
-);
-
-// Authoring prefixes that don't change a tag's meaning.
-const MEANINGLESS_PREFIXES = ['diet_type:', 'activity_pattern:', 'sociality:', 'body_plan:', 'distinctive_features:', 'family:', 'parity:'];
 
 export function normalizeTag(tag: string): string {
-  const lower = tag.trim().toLowerCase();
-  const prefix = MEANINGLESS_PREFIXES.find(candidate => lower.startsWith(candidate));
-  return prefix ? lower.slice(prefix.length) : lower;
-}
-
-export function axisOf(tag: string): ExclusiveAxis | null {
-  return AXIS_BY_TAG.get(tag) ?? null;
+  return tag.trim().toLowerCase();
 }
 
 export interface SpeciesRecord {
@@ -72,21 +56,6 @@ export function taxonomyOf(species: PoolSpecies): Taxonomy {
   return { class: lower(species.className), order: lower(species.taxonOrder), family: lower(species.family), genus: lower(species.genus) };
 }
 
-// Orders whose every member has a shell (turtles, armadillos) or lays eggs.
-const SHELLED_ORDERS = new Set(['testudines', 'cingulata']);
-const EGG_LAYING_ORDERS = new Set(['testudines', 'monotremata']);
-
-/** Facts that follow from taxonomy, added to every record so axes can compare fairly. */
-function derivedTraits(taxonomy: Taxonomy): Array<[SpeciesClueCategory, string]> {
-  const derived: Array<[SpeciesClueCategory, string]> = [];
-  const order = taxonomy.order ?? '';
-  if (SHELLED_ORDERS.has(order)) derived.push(['morphology', 'shelled']);
-  else if (taxonomy.class) derived.push(['morphology', 'unshelled']);
-  if (EGG_LAYING_ORDERS.has(order)) derived.push(['reproduction', 'egg_laying']);
-  else if (taxonomy.class === 'mammalia') derived.push(['reproduction', 'live_birth']);
-  return derived;
-}
-
 export function buildSpeciesRecords(pool: Pick<CluePool, 'species' | 'clues'>): SpeciesRecords {
   const records: SpeciesRecords = new Map();
   const add = (record: SpeciesRecord, category: SpeciesClueCategory, tag: string) => {
@@ -95,8 +64,7 @@ export function buildSpeciesRecords(pool: Pick<CluePool, 'species' | 'clues'>): 
   };
   for (const species of pool.species) {
     const record: SpeciesRecord = { taxonomy: taxonomyOf(species), traits: new Map() };
-    for (const [category, tag] of derivedTraits(record.taxonomy)) add(record, category, tag);
-    for (const rank of TAXONOMY_RANKS) if (record.taxonomy[rank]) add(record, 'taxonomy', record.taxonomy[rank]!);
+    for (const rank of TAXONOMY_RANKS) if (record.taxonomy[rank]) add(record, 'taxonomy', `${rank}:${record.taxonomy[rank]}`);
     records.set(species.id, record);
   }
   for (const clue of pool.clues) {
@@ -106,9 +74,9 @@ export function buildSpeciesRecords(pool: Pick<CluePool, 'species' | 'clues'>): 
   return records;
 }
 
-/** The taxonomy rank a tag names for the clue's own species, if any. */
-export function rankOfTag(tag: string, ownTaxonomy: Taxonomy): TaxonomyRank | null {
-  return TAXONOMY_RANKS.find(rank => ownTaxonomy[rank] === tag) ?? null;
+/** Every tag in a record, across categories. */
+export function allTraits(record: SpeciesRecord): Set<string> {
+  return new Set([...record.traits.values()].flatMap(tags => [...tags]));
 }
 
 /** A clue's tags, normalized, with duplicates removed. */

@@ -1,0 +1,187 @@
+{
+  "id": 39,
+  "commonName": "Grévy's Zebra",
+  "scientificName": "Equus grevyi",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Perissodactyla",
+    "family": "Equidae",
+    "genus": "Equus"
+  },
+  "iucnId": 7950,
+  "redList": {
+    "category": "EN",
+    "year": 2016,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/7950/89624491"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "grassland:tropical_dry"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "source": "adw"
+    },
+    "size": {
+      "value": "huge",
+      "note": "It weighs 350 to 450 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It mostly eats grass, and browses bushes in droughts.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Its herds are loose and change often; mothers and foals stay together.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gr%C3%A9vy%27s_zebra"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one foal about every two years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild zebras live up to 18 years, and zoo zebras up to 30.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its stripes are narrow and run all the way down its legs to its hooves.",
+      "tags": [
+        "stripes",
+        "hooves"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gr%C3%A9vy%27s_zebra"
+    },
+    {
+      "category": "morphology",
+      "text": "Its belly is plain white, with no stripes.",
+      "tags": [
+        "white_belly"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has big, round ears, a bit like a mule's.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It is a grazer that mostly eats grass.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It can go up to five days without drinking.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Gr%C3%A9vy%27s_zebra"
+    },
+    {
+      "category": "behavior",
+      "text": "Males guard territories that hold water and good grass.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Almost all of them live in northern Kenya, with a few in Ethiopia.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Loss of land, drought and poaching are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest wild member of the horse family.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Foals are born with reddish-brown stripes that turn black as they grow.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Numbers fell from about 15,600 in the late 1970s to about 2,000 in 2004.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "In Kenya, volunteers count them in a big photo census called the Great Grévy's Rally.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother carries her foal for about 13 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Grazing livestock compete with it for grass and water.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/7950/89624491",
+    "adw": "https://animaldiversity.org/accounts/Equus_grevyi/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Grevy%27s_Zebra_Stallion.jpg/500px-Grevy%27s_Zebra_Stallion.jpg",
+    "credit": "Rainbirder",
+    "license": "CC BY-SA 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Grevy%27s_Zebra_Stallion.jpg"
+  }
+}

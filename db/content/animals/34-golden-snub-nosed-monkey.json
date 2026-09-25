@@ -1,0 +1,167 @@
+{
+  "id": 34,
+  "commonName": "Golden Snub-nosed Monkey",
+  "scientificName": "Rhinopithecus roxellana",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Primates",
+    "family": "Cercopithecidae",
+    "genus": "Rhinopithecus"
+  },
+  "iucnId": 19596,
+  "redList": {
+    "category": "EN",
+    "year": 2021,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/19596/196491153"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate"
+  ],
+  "elevation": [
+    1400,
+    2800
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "It has golden fur on its forehead, neck and belly.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "Males weigh about 16 kg and females about 9 kg.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_snub-nosed_monkey"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats leaves, buds, seeds, bark and lichens.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "groups",
+      "note": "In summer, groups can hold up to 600 monkeys.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its nose is flat and turned up, with nostrils facing forward.",
+      "tags": [
+        "snub_nose"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in mountain forests where snow can cover the ground for up to six months.",
+      "tags": [
+        "snowy_winters"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "In winter it gets by on bark and lichens.",
+      "tags": [
+        "eats_lichen"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs in the trees but also spends time on the ground.",
+      "tags": [
+        "climber"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It can call without moving its face at all, like a ventriloquist.",
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only in the mountains of central China.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Forest cleared for farming is its biggest threat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It handles cold better than any other primate except humans.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_snub-nosed_monkey"
+    },
+    {
+      "category": "key_fact",
+      "text": "Summer groups of up to 600 monkeys are a huge crowd for any primate except humans.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Pairs sometimes call back and forth in duets, a bit like songbirds.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When cold weather comes, big groups split into bands of 60 to 70 and join up again in spring.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Babies are born about 7 months after their parents mate.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Illegal hunting still threatens some groups.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/19596/196491153",
+    "adw": "https://animaldiversity.org/accounts/Rhinopithecus_roxellana/"
+  },
+  "range": {
+    "realms": [
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "CHN",
+        "name": "China"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Golden_Snub-nosed_Monkeys%2C_Qinling_Mountains_-_China.jpg/500px-Golden_Snub-nosed_Monkeys%2C_Qinling_Mountains_-_China.jpg",
+    "credit": "Giovanni Mari",
+    "license": "CC BY-SA 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Golden_Snub-nosed_Monkeys,_Qinling_Mountains_-_China.jpg"
+  }
+}

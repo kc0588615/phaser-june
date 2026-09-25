@@ -37,7 +37,7 @@
         "typecheck:watch": "tsc --noEmit --watch",
         "clean": "rm -rf .next .test-dist",
         "db:introspect": "drizzle-kit introspect",
-        "clue:pool": "node scripts/run-typescript.mjs scripts/clue-pool.ts",
+        "content": "node scripts/run-typescript.mjs scripts/content.ts",
         "clue:world-map": "node scripts/run-typescript.mjs scripts/clue-world-map.ts"
     },
     "dependencies": {

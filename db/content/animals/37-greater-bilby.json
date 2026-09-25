@@ -1,0 +1,182 @@
+{
+  "id": 37,
+  "commonName": "Greater Bilby",
+  "scientificName": "Macrotis lagotis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Peramelemorphia",
+    "family": "Thylacomyidae",
+    "genus": "Macrotis"
+  },
+  "iucnId": 12650,
+  "redList": {
+    "category": "VU",
+    "year": 2016,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12650/21967189"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "grassland",
+    "grassland:tropical_dry"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its soft, silky fur is bluish gray, with a white belly.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs 0.6 to 2.5 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "It eats termites, ants, beetles and spiders, plus seeds and bulbs.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A litter usually has 1 or 2 young, and a mother can have up to 4 litters a year.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Bilbies in zoos have lived up to 10 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has huge, rabbit-like ears.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a long, pointed snout with a pink nose.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is black with a pure white tip.",
+      "tags": [
+        "white_tail_tip"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Its long, sticky tongue is perfect for catching termites.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs deep burrows that spiral down as far as 3 m.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It gallops across the desert instead of hopping.",
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its pouch opens backward, so it doesn't fill with dirt when it digs.",
+      "tags": [
+        "pouch",
+        "backward_pouch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Foxes and feral cats brought to Australia are its biggest threat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "One bilby may dig more than 12 burrows around its home area.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its huge ears help it hear well in the dark.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Greater_bilby"
+    },
+    {
+      "category": "key_fact",
+      "text": "Many bilbies now live inside fenced areas that keep foxes and cats out.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "A tiny newborn crawls into its mother's pouch and stays there for about 75 days.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It gets most of its food by digging, often leaving small pits in the ground.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Changes in how often wildfires burn also harm it.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12650/21967189",
+    "adw": "https://animaldiversity.org/accounts/Macrotis_lagotis/"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "AUS",
+        "name": "Australia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/Bilby_at_Sydney_Wildlife_World.jpg/500px-Bilby_at_Sydney_Wildlife_World.jpg",
+    "credit": "Dcoetzee",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Bilby_at_Sydney_Wildlife_World.jpg"
+  }
+}

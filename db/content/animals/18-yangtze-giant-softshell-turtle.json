@@ -1,0 +1,137 @@
+{
+  "id": 18,
+  "commonName": "Yangtze Giant Softshell Turtle",
+  "scientificName": "Rafetus swinhoei",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Trionychidae",
+    "genus": "Rafetus"
+  },
+  "iucnId": 22971,
+  "redList": {
+    "category": "CR",
+    "year": 2021,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/39621/2931537"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:permanent_lakes"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "source": "iucn"
+    },
+    "size": {
+      "value": "large",
+      "note": "One found in Vietnam weighed 93 kg and was 1.56 m long.",
+      "source": "news"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "Adults eat almost anything: fish, crayfish, snails and plants.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "many",
+      "note": "The last known female laid 55 to 65 eggs at a time.",
+      "source": "iucn"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "The last known female was over 90 years old.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It is one of the largest freshwater turtles in the world.",
+      "tags": [
+        "giant_turtle"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It buries itself in the mud on the bottom of rivers and lakes.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in the deep parts of big rivers, in backwaters and in lakes.",
+      "tags": [
+        "big_rivers"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "When it was last assessed, only 3 adults were known to be alive.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "The last known female died at a zoo in China in 2019, aged over 90.",
+      "source": "ngo"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "A giant turtle lived for decades in Hoan Kiem Lake in the middle of Hanoi, Vietnam, until it died in 2016.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists think one generation of this turtle lasts about 100 years.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Dams, sand mining and polluted rivers destroyed much of its home.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/39621/2931537",
+    "ngo": "https://www.turtleconservancy.org/outreach/death-of-a-mythical-giant",
+    "news": "https://vietnamnews.vn/environment/1524587/soft-shelled-turtle-of-rare-species-dies-in-ha-noi.html"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan",
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "CHN",
+        "name": "China"
+      },
+      {
+        "code": "VNM",
+        "name": "Vietnam"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/R%C3%B9a_%C4%90%E1%BB%93ng_M%C3%B4.jpg/500px-R%C3%B9a_%C4%90%E1%BB%93ng_M%C3%B4.jpg",
+    "credit": "Phuongcacanh at Vietnamese Wikipedia",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:R%C3%B9a_%C4%90%E1%BB%93ng_M%C3%B4.jpg"
+  }
+}

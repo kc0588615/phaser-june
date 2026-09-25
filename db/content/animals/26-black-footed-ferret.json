@@ -1,0 +1,171 @@
+{
+  "id": 26,
+  "commonName": "Black-footed Ferret",
+  "scientificName": "Mustela nigripes",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Mustelidae",
+    "genus": "Mustela"
+  },
+  "iucnId": 14020,
+  "redList": {
+    "category": "EN",
+    "year": 2015,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/14020/45200314"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:temperate",
+    "grassland",
+    "grassland:temperate"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is yellowish tan, with black feet.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs about 0.6 to 1.1 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "Prairie dogs make up more than 90% of its food.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It is busiest around dusk.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "It lives alone except in the breeding season.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A litter has 1 to 6 kits, about 3 or 4 on average.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Ferrets in zoos have lived about 12 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "habitat",
+      "text": "It lives in prairie dog towns and sleeps in their burrows.",
+      "tags": [
+        "borrowed_burrows",
+        "prairie_dog_towns"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a black mask across its eyes, like a bandit.",
+      "tags": [
+        "face_mask"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "In winter it may stay underground for up to a week.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends its area against other ferrets of the same sex.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When frightened, it chatters and hisses.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "It was listed as Extinct in the Wild in 1996. Every wild one today comes from zoo-bred ferrets that were set free.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Farms and towns have replaced much of the grassland where prairie dogs live.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "People thought it was extinct until 1981, when a ranch dog in Wyoming brought one home.",
+      "source": "news",
+      "url": "https://www.smithsonianmag.com/smart-news/elizabeth-ann-first-cloned-black-footed-ferret-180977065"
+    },
+    {
+      "category": "key_fact",
+      "text": "Almost every black-footed ferret alive today comes from just 7 ferrets rescued in the 1980s.",
+      "source": "government",
+      "url": "https://www.fws.gov/project/qas-black-footed-ferret-cloning-research-update"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2020 scientists cloned a ferret, Elizabeth Ann, from cells frozen in 1988. In 2024 another clone, Antonia, had babies of her own.",
+      "source": "government",
+      "url": "https://www.fws.gov/press-release/2024-11/advancements-black-footed-ferret-conservation-continue-new-offspring-cloned"
+    },
+    {
+      "category": "diet_prey",
+      "text": "One ferret needs about 40 to 60 hectares of prairie dog town to find enough to eat.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "Kits stay in the burrow for about 6 weeks before they first come above ground.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "A disease spread by fleas wipes out whole prairie dog towns, and ferrets catch it too.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/14020/45200314",
+    "adw": "https://animaldiversity.org/accounts/Mustela_nigripes/"
+  },
+  "range": {
+    "realms": [
+      "realm:nearctic"
+    ],
+    "countries": [
+      {
+        "code": "USA",
+        "name": "United States of America"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Mustela_nigripes_2.jpg/500px-Mustela_nigripes_2.jpg",
+    "credit": "USFWS Mountain Prairie",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Mustela_nigripes_2.jpg"
+  }
+}

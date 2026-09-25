@@ -1,0 +1,168 @@
+{
+  "id": 11,
+  "commonName": "Goliath Frog",
+  "scientificName": "Conraua goliath",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Conrauidae",
+    "genus": "Conraua"
+  },
+  "iucnId": 5263,
+  "redList": {
+    "category": "EN",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/5263/96062132"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "artificial",
+    "artificial:degraded_forest"
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin is grainy and greenish brown on top.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 600 g to 3.25 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "Insects, crabs, fish, snails, small mammals and smaller frogs.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female lays several hundred eggs at a time.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It is the biggest frog on Earth, up to 32 cm long.",
+      "tags": [
+        "giant_frog"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its eyes can be almost 2.5 cm across.",
+      "tags": [
+        "large_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It needs big, clean, fast-flowing rivers deep in the rainforest.",
+      "tags": [
+        "fast_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests on wet, mossy rocks by rivers and waterfalls.",
+      "tags": [
+        "rock_basker"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It has no vocal sac, so it can't croak. Males whistle with their mouths open instead.",
+      "tags": [
+        "voiceless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threat: hunting for food. Its numbers fell by more than 70% in 15 years.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Some were shipped to the USA for zoos, pets and even frog-jumping races.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "A big one weighs about as much as a newborn baby.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its tadpoles eat only one kind of water plant, which grows near waterfalls.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Young goliath frogs spend most of their time underwater.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Its eggs stick to plants on the river bottom. Tadpoles grow for about 75 to 90 days.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "New roads to plantations make its rivers easier for hunters to reach.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/5263/96062132",
+    "adw": "https://animaldiversity.org/accounts/Conraua_goliath/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "GNQ",
+        "name": "Eq. Guinea"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Conraua_goliath_photo_from_iNaturalist_539752953.jpg/500px-Conraua_goliath_photo_from_iNaturalist_539752953.jpg",
+    "credit": "jeanlouisamiet",
+    "license": "CC BY 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Conraua_goliath_photo_from_iNaturalist_539752953.jpg"
+  }
+}

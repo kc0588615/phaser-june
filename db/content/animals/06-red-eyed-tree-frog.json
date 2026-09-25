@@ -1,0 +1,178 @@
+{
+  "id": 6,
+  "commonName": "Red-eyed Tree Frog",
+  "scientificName": "Agalychnis callidryas",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Phyllomedusidae",
+    "genus": "Agalychnis"
+  },
+  "iucnId": 55290,
+  "redList": {
+    "category": "LC",
+    "year": 2020,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/55290/3028059"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane",
+    "wetlands",
+    "wetlands:permanent_marshes",
+    "wetlands:seasonal_marshes",
+    "artificial",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    0,
+    1700
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin is smooth, with almost no bumps.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "It weighs 6 to 15 g and is 4 to 7 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "Flies, grasshoppers and mosquitoes are on the menu.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A clutch has about 40 green eggs.",
+      "source": "amphibiaweb"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In the wild it lives about 5 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has big, bulging red eyes.",
+      "tags": [
+        "red_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It is leaf green, with blue and yellow stripes on its sides and orange feet.",
+      "tags": [
+        "bright_green",
+        "orange_feet"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in trees near ponds.",
+      "tags": [
+        "tree_dweller"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When a predator comes close, it flashes its bright eyes to startle it.",
+      "tags": [
+        "startle_display"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs on a leaf over water, so the tadpoles drop into the pond when they hatch.",
+      "tags": [
+        "eggs_over_water"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: forest loss, capture for the pet trade, and disease.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Its international trade has been controlled since 2008 (CITES Appendix II).",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "If a snake or wasp attacks its eggs, the tadpoles can hatch up to 30% early and escape into the water.",
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "key_fact",
+      "text": "Males shake branches to send vibration messages to other frogs.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Young froglets can change their skin color between day and night.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Tadpoles live in the water for several weeks before they turn into froglets.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "In some countries, wild frogs are caught for the pet trade.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/55290/3028059",
+    "adw": "https://animaldiversity.org/accounts/Agalychnis_callidryas/",
+    "amphibiaweb": "https://amphibiaweb.org/species/616"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "MEX",
+        "name": "Mexico"
+      },
+      {
+        "code": "PAN",
+        "name": "Panama"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Red-eyed_Tree_Frog_%28Agalychnis_callidryas%29_1.png/500px-Red-eyed_Tree_Frog_%28Agalychnis_callidryas%29_1.png",
+    "credit": "Red-eyed Tree Frog (Agalychnis callidryas) 3.jpg: Geoff Gallice from Gainesville, FL, USA derivative work: B kimmel",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Red-eyed_Tree_Frog_(Agalychnis_callidryas)_1.png"
+  }
+}

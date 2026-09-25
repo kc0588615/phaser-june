@@ -1,0 +1,166 @@
+{
+  "id": 5,
+  "commonName": "Wallace's Flying Frog",
+  "scientificName": "Rhacophorus nigropalmatus",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Rhacophoridae",
+    "genus": "Rhacophorus"
+  },
+  "iucnId": 59008,
+  "redList": {
+    "category": "LC",
+    "year": 2022,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/59008/64129329"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:seasonal_marshes"
+  ],
+  "elevation": [
+    0,
+    600
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin is smooth or finely grainy.",
+      "source": "amphibiaweb"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "Its body is 9 to 10 cm long, big for a tree frog.",
+      "source": "amphibiaweb"
+    },
+    "diet": {
+      "value": "insects",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its huge hands and feet are webbed right to the fingertips.",
+      "tags": [
+        "webbed_feet"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It is shiny green, with yellow sides and yellow toe pads.",
+      "tags": [
+        "bright_green"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It glides from tree to tree, up to about 15 m.",
+      "tags": [
+        "glider"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives high in the trees and only climbs down to breed.",
+      "tags": [
+        "tree_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It makes a foam nest on leaves over a pool, and the tadpoles drop into the water.",
+      "tags": [
+        "foam_nest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It breeds at rain pools and even muddy animal wallows in the forest.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threat: lowland rainforest cut down for timber and oil palm plantations.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is named after Alfred Russel Wallace, who came up with the idea of evolution by natural selection at the same time as Darwin.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Flaps of skin on its arms and legs work like a sail when it glides.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes a long, low approach before landing, then grips the tree with sticky toe pads.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "The female whips a fluid into foam with her back legs and lays her eggs inside it.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "A few are caught for the pet trade, but that isn't a big threat.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/59008/64129329",
+    "adw": "https://animaldiversity.org/accounts/Rhacophorus_nigropalmatus/",
+    "amphibiaweb": "https://amphibiaweb.org/species/4524",
+    "wikipedia": "https://en.wikipedia.org/wiki/Wallace%27s_flying_frog"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "MYS",
+        "name": "Malaysia"
+      },
+      {
+        "code": "MMR",
+        "name": "Myanmar"
+      },
+      {
+        "code": "THA",
+        "name": "Thailand"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Rhacophorus_nigropalmatus.jpg/500px-Rhacophorus_nigropalmatus.jpg",
+    "credit": "Rushenb",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Rhacophorus_nigropalmatus.jpg"
+  }
+}

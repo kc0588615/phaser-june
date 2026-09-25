@@ -1,0 +1,174 @@
+{
+  "id": 45,
+  "commonName": "Livingstone's Flying Fox",
+  "scientificName": "Pteropus livingstonii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Pteropodidae",
+    "genus": "Pteropus"
+  },
+  "iucnId": 18732,
+  "redList": {
+    "category": "EN",
+    "year": 2025,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/18732/276948980"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane"
+  ],
+  "elevation": [
+    200,
+    1100
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "It is black, with golden or tan patches on its rump.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs 500 to 800 g.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It flies out to feed at night.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "It roosts in groups.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In zoos it lives about 15 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has wings: black, bare skin stretching up to 1.4 m across.",
+      "tags": [
+        "wings"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
+    },
+    {
+      "category": "morphology",
+      "text": "It has large, rounded ears.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
+    },
+    {
+      "category": "behavior",
+      "text": "Unlike most bats, it can soar on rising warm air.",
+      "tags": [
+        "soars"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
+    },
+    {
+      "category": "diet",
+      "text": "It feeds on fruit and flowers.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It roosts in groups in the branches of big, old forest trees.",
+      "tags": [
+        "tree_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only on two small islands, Anjouan and Mohéli, in the Comoros off East Africa.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Forest is cleared for farms, and trees are cut for fuel to make ylang-ylang perfume oil.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Only about 1,200 to 1,500 adults are left.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the biggest bat in the Comoros.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
+    },
+    {
+      "category": "key_fact",
+      "text": "Only about 21 roost sites are known: 15 on Anjouan and 6 on Mohéli.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Livingstone%27s_fruit_bat"
+    },
+    {
+      "category": "key_fact",
+      "text": "It mostly roosts in old native trees, the same big trees people cut for timber.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Mothers fly out to feed at night and return to a nursery roost to feed their babies.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Since 2016 at least three long-used roosts have been lost or abandoned.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/18732/276948980",
+    "adw": "https://animaldiversity.org/accounts/Pteropus_livingstonii/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": []
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Bristol.zoo.livfruitbat.arp.jpg/500px-Bristol.zoo.livfruitbat.arp.jpg",
+    "credit": "Adrian Pingstone",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Bristol.zoo.livfruitbat.arp.jpg"
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "id": 49,
+  "commonName": "Hispaniolan Solenodon",
+  "scientificName": "Solenodon paradoxus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Eulipotyphla",
+    "family": "Solenodontidae",
+    "genus": "Solenodon"
+  },
+  "iucnId": 20321,
+  "redList": {
+    "category": "LC",
+    "year": 2020,
+    "trend": "unknown",
+    "url": "https://www.iucnredlist.org/species/20321/22327218"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "shrubland",
+    "caves",
+    "artificial",
+    "artificial:arable",
+    "artificial:pasture",
+    "artificial:plantations",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    13,
+    2026
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is black to reddish brown, but its tail, feet and snout are bare.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs 0.6 to 1 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It mostly eats insects it finds in soil and fallen leaves.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Up to eight may share one den.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "one",
+      "note": "A litter has 1 or 2 young.",
+      "source": "iucn"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In zoos it has lived about 11 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It is one of the few venomous mammals: venom flows along a groove in a lower front tooth.",
+      "tags": [
+        "venomous"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long, bendy snout is held up by a special bone of its own.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It roots in the soil with its snout and rips open rotten logs with its claws.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "By day it rests in rock cracks, hollow trees or tunnels it digs.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It runs in a wobbly zigzag.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Hispaniolan_solenodon"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only on the island of Hispaniola, shared by Haiti and the Dominican Republic.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Dogs, cats and mongooses brought to the island hunt it.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its family split from all other living mammals about 78 million years ago, when dinosaurs still roamed.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Hispaniolan_solenodon"
+    },
+    {
+      "category": "key_fact",
+      "text": "By 1964 people thought it was extinct, but it has turned out to be more widespread than anyone knew.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "A mother has only two teats, so usually just two babies survive.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Hispaniolan_solenodon"
+    },
+    {
+      "category": "behavior",
+      "text": "When chased, it sometimes freezes and tucks its head out of sight.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "It is doing well across much of Hispaniola, but in Haiti it clings on in a small area where forests are disappearing.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/20321/22327218",
+    "adw": "https://animaldiversity.org/accounts/Solenodon_paradoxus/"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": []
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Hispaniolan_Solenodon_crop.jpg/500px-Hispaniolan_Solenodon_crop.jpg",
+    "credit": "Seb az86556",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Hispaniolan_Solenodon_crop.jpg"
+  }
+}

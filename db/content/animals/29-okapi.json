@@ -1,0 +1,193 @@
+{
+  "id": 29,
+  "commonName": "Okapi",
+  "scientificName": "Okapia johnstoni",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Artiodactyla",
+    "family": "Giraffidae",
+    "genus": "Okapia"
+  },
+  "iucnId": 15188,
+  "redList": {
+    "category": "EN",
+    "year": 2015,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/15188/51140517"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp"
+  ],
+  "elevation": [
+    450,
+    1500
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its coat is oily, so rain runs off.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs about 290 kg on average.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It browses leaves, buds and shoots from more than 100 kinds of plants.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It sometimes feeds at night too.",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother carries her calf for about 440 days.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Okapis in zoos live 15 to 30 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its velvety body is dark reddish brown.",
+      "tags": [
+        "reddish_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its legs have white and brown stripes, like a zebra's.",
+      "tags": [
+        "stripes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long, dark tongue can reach more than 30 cm.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Males have two short horns covered in skin.",
+      "tags": [
+        "horns"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It walks on hooves.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It licks clay, charcoal and even bat droppings to get extra minerals.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks its home area with urine and by rubbing its neck to leave its scent.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It only lives under the tall, closed canopy of the rainforest, never in open country.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Logging and people settling in its forests, even in protected areas, are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It looks like part zebra, but its closest living relative is the giraffe.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "People of the Ituri Forest knew it for generations, but scientists only learned about it in 1901.",
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is the only forest hoofed animal that lives mainly on leaves from the forest's lower layer.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It drinks like a giraffe, with its front legs spread wide and knees bent.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother hides her newborn in a quiet spot and comes back to feed it, so predators can't find it.",
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/okapi"
+    },
+    {
+      "category": "threat",
+      "text": "Surveys in the Okapi Wildlife Reserve found a 43% drop in numbers from 1995 to 2007.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/15188/51140517",
+    "adw": "https://animaldiversity.org/accounts/Okapia_johnstoni/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Saint-Aignan_%28Loir-et-Cher%29._Okapi.jpg/500px-Saint-Aignan_%28Loir-et-Cher%29._Okapi.jpg",
+    "credit": "Daniel Jolivet",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Saint-Aignan_(Loir-et-Cher)._Okapi.jpg"
+  }
+}

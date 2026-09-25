@@ -1,35 +1,25 @@
 // How a clue about the mystery species compares with each candidate's record
-// (see traits.ts for what a record holds and when records truly disagree).
+// (traits.ts says what a record holds and when records truly disagree).
 import type { SpeciesClueCategory } from '@/clueGame/categories';
 import type { PoolClue } from '@/clueGame/pool';
-import { EXCLUSIVE_AXES, axisOf, clueTags, completeFamilyOf, rankOfTag, type SpeciesRecord, type SpeciesRecords } from '@/clueGame/traits';
+import { COMPLETE_PREFIXES, EXCLUSIVE_PREFIXES, allTraits, clueTags, prefixOf, type SpeciesRecords } from '@/clueGame/traits';
 
 /**
  * fits: the candidate's record has every tag. partial: some. unknown: its
  * record doesn't mention them (proves nothing). contradicts: its record holds
- * a different taxonomy rank, the other value of an exclusive trait, or other
- * members of a complete family (a different realm), which rules it out.
+ * another value of an exclusive prefix, or other values of a complete one,
+ * which rules it out.
  */
 export type ClueFit = 'fits' | 'partial' | 'contradicts' | 'unknown';
 
-type TagOutcome = 'match' | 'conflict' | 'unknown';
+type TagOutcome = 'match' | 'exclusive-conflict' | 'complete-conflict' | 'unknown';
 
-function allTraits(record: SpeciesRecord): Set<string> {
-  return new Set([...record.traits.values()].flatMap(tags => [...tags]));
-}
-
-function tagOutcome(tag: string, category: SpeciesClueCategory, own: SpeciesRecord, candidate: SpeciesRecord, candidateTraits: Set<string>): TagOutcome {
-  if (category === 'taxonomy') {
-    const rank = rankOfTag(tag, own.taxonomy);
-    const value = rank ? candidate.taxonomy[rank] : null;
-    if (rank && value) return value === tag ? 'match' : 'conflict';
-  }
+function tagOutcome(tag: string, candidateTraits: Set<string>): TagOutcome {
   if (candidateTraits.has(tag)) return 'match';
-  const axis = axisOf(tag);
-  if (axis && EXCLUSIVE_AXES[axis].some(value => value !== tag && candidateTraits.has(value))) return 'conflict';
-  const family = completeFamilyOf(tag);
-  if (family && [...candidateTraits].some(trait => trait.startsWith(family))) return 'conflict';
-  return 'unknown';
+  const prefix = prefixOf(tag);
+  if (!prefix || ![...candidateTraits].some(trait => prefixOf(trait) === prefix)) return 'unknown';
+  if (EXCLUSIVE_PREFIXES.has(prefix)) return 'exclusive-conflict';
+  return COMPLETE_PREFIXES.has(prefix) ? 'complete-conflict' : 'unknown';
 }
 
 /** Deductive clues carry tags and were authored as filtering; the rest are just notes. */
@@ -38,16 +28,18 @@ export function isDeductive(clue: PoolClue): boolean {
 }
 
 export function fitClue(clue: PoolClue, candidateId: number, records: SpeciesRecords): ClueFit {
-  const own = records.get(clue.speciesId);
   const candidate = records.get(candidateId);
   const tags = clueTags(clue);
-  if (!own || !candidate || tags.length === 0) return 'unknown';
+  if (!records.has(clue.speciesId) || !candidate || tags.length === 0) return 'unknown';
   const traits = allTraits(candidate);
-  const outcomes = tags.map(tag => tagOutcome(tag, clue.category, own, candidate, traits));
-  if (outcomes.includes('conflict')) return 'contradicts';
+  const outcomes = tags.map(tag => tagOutcome(tag, traits));
+  if (outcomes.includes('exclusive-conflict')) return 'contradicts';
   const matches = outcomes.filter(outcome => outcome === 'match').length;
   if (matches === tags.length) return 'fits';
-  return matches > 0 ? 'partial' : 'unknown';
+  // A clue listing several values of a complete prefix (the countries a species
+  // lives in) partly fits a candidate that shares some of them.
+  if (matches > 0) return 'partial';
+  return outcomes.includes('complete-conflict') ? 'contradicts' : 'unknown';
 }
 
 export function evaluateClue(clue: PoolClue, candidateIds: readonly number[], records: SpeciesRecords): Record<number, ClueFit> {

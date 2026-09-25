@@ -1,0 +1,140 @@
+{
+  "id": 16,
+  "commonName": "Purple Frog",
+  "scientificName": "Nasikabatrachus sahyadrensis",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Nasikabatrachidae",
+    "genus": "Nasikabatrachus"
+  },
+  "iucnId": 58051,
+  "redList": {
+    "category": "NT",
+    "year": 2022,
+    "url": "https://www.iucnredlist.org/species/58051/166098621"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "wetlands",
+    "wetlands:seasonal_rivers"
+  ],
+  "elevation": [
+    30,
+    1400
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "source": "amphibiaweb"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "Mostly termites, which it catches underground.",
+      "source": "wikipedia"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "literature"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its body is round and puffy, with a small head and a pointy, pig-like snout.",
+      "tags": [
+        "pointed_snout",
+        "round_body"
+      ],
+      "source": "amphibiaweb"
+    },
+    {
+      "category": "morphology",
+      "text": "It is dark purplish gray.",
+      "tags": [
+        "purple_gray"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It spends almost the whole year underground, digging head first.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4814056"
+    },
+    {
+      "category": "reproduction",
+      "text": "It comes above ground for just a few hours a year, when the monsoon rains start, to breed.",
+      "tags": [
+        "surfaces_to_breed"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its tadpoles hold on to rocks in rushing streams with a sucker mouth.",
+      "tags": [
+        "sucker_mouth_tadpoles"
+      ],
+      "source": "literature"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: granite quarries, new roads, landslides, and farms clearing its forest.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Scientists call it the 'coelacanth of frogs'. Its closest living relatives live far away, on the islands of the Seychelles.",
+      "source": "literature",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4814056"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists only described it in 2003, even though its tadpoles were first found in 1917.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "Eggs are laid in small rocky pools in fast streams. The tadpoles grow for about 100 days.",
+      "source": "literature"
+    },
+    {
+      "category": "behavior",
+      "text": "Its call is said to sound like a clucking chicken.",
+      "source": "wikipedia"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/58051/166098621",
+    "literature": "https://doi.org/10.11646/zootaxa.3510.1.3",
+    "amphibiaweb": "https://amphibiaweb.org/species/6197",
+    "wikipedia": "https://en.wikipedia.org/wiki/Purple_frog"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "IND",
+        "name": "India"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/08/Nasikabatrachus_sahyadrensis.jpg/500px-Nasikabatrachus_sahyadrensis.jpg",
+    "credit": "Original uploader was Karthickbala at ta.wikipedia",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Nasikabatrachus_sahyadrensis.jpg"
+  }
+}

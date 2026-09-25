@@ -1,11 +1,12 @@
-// One round of Clue Match: a mystery species hidden in a pool of known
+// One round of Clue Match: a mystery species hidden among look-alike
 // candidates. Matching a gem color reveals the next clue in that color's
-// category; deductive clues mark how each candidate's record compares.
+// category, broadest first, so the answer shows itself slowly; deductive clues
+// mark how each candidate's record compares.
 import type { GemType } from '@/game/constants';
 import { GEM_CATEGORIES } from '@/clueGame/categories';
-import { evaluateClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
+import { evaluateClue, fitClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
 import { isPlaceholderText, type CluePool, type PoolClue } from '@/clueGame/pool';
-import { TAXONOMY_RANKS, taxonomyOf, type SpeciesRecords, type Taxonomy } from '@/clueGame/traits';
+import { allTraits, buildSpeciesRecords, type SpeciesRecords } from '@/clueGame/traits';
 import { shuffled } from '@/lib/seededRng';
 
 const CANDIDATES_PER_ROUND = 6;
@@ -22,8 +23,10 @@ export interface RoundState {
   round: number;
   mysteryId: number;
   candidateIds: number[];
-  /** Decoys picked for being close relatives of the mystery (the difficulty ramp). */
+  /** Decoys picked for sharing the mystery's traits (the difficulty ramp). */
   relatives: number;
+  /** Where the mysteries come from now, when it changed (e.g. "Africa" after a place's animals are all found). */
+  scope?: string;
   queues: Record<GemType, QueuedNote[]>;
   /** Player moves this round (cascades are free). */
   moves: number;
@@ -46,14 +49,19 @@ const FACT_LEAD: Partial<Record<string, string>> = { threat: 'Threats', diet_pre
 
 const comparable = (text: string) => text.trim().toLowerCase().replace(/\.$/, '');
 
-function buildQueues(pool: CluePool, mysteryId: number): Record<GemType, QueuedNote[]> {
+/**
+ * Each color's queue: deductive clues that fit the most candidates first (they
+ * narrow the least), then notes, then facts.
+ */
+function buildQueues(pool: CluePool, mysteryId: number, candidateIds: readonly number[], records: SpeciesRecords): Record<GemType, QueuedNote[]> {
   const clues = pool.clues.filter(clue => clue.speciesId === mysteryId);
   const facts = pool.facts.filter(fact => fact.speciesId === mysteryId && !isPlaceholderText(fact.text));
+  const breadth = new Map(clues.map(clue => [clue, isDeductive(clue) ? candidateIds.filter(id => fitClue(clue, id, records) === 'fits').length : -1]));
   const queues = {} as Record<GemType, QueuedNote[]>;
   for (const category of GEM_CATEGORIES) {
     const ownClues = clues
       .filter(clue => category.clueCategories.includes(clue.category))
-      .sort((a, b) => a.revealOrder - b.revealOrder
+      .sort((a, b) => breadth.get(b)! - breadth.get(a)! || a.revealOrder - b.revealOrder
         || category.clueCategories.indexOf(a.category) - category.clueCategories.indexOf(b.category));
     // Skip facts a clue already says, even inside a longer label ("Preys on: <fact>").
     const said = ownClues.map(clue => comparable(clue.label));
@@ -61,7 +69,8 @@ function buildQueues(pool: CluePool, mysteryId: number): Record<GemType, QueuedN
       .filter(fact => category.factCategories.includes(fact.category) && !said.some(label => label.includes(comparable(fact.text))))
       .sort((a, b) => category.factCategories.indexOf(a.category) - category.factCategories.indexOf(b.category) || a.sortOrder - b.sortOrder);
     queues[category.gem] = [
-      ...ownClues.map(clue => ({ text: clue.label, clue })),
+      ...ownClues.filter(isDeductive).map(clue => ({ text: clue.label, clue })),
+      ...ownClues.filter(clue => !isDeductive(clue)).map(clue => ({ text: clue.label, clue })),
       ...ownFacts.map(fact => ({ text: FACT_LEAD[fact.category] ? `${FACT_LEAD[fact.category]}: ${fact.text}` : fact.text, clue: null })),
     ];
   }
@@ -73,59 +82,71 @@ export function playableSpeciesIds(pool: Pick<CluePool, 'clues'>): number[] {
   return [...new Set(pool.clues.map(clue => clue.speciesId))].sort((a, b) => a - b);
 }
 
-/** How many decoys are close relatives of the mystery: none at first, up to three from round 7. */
-export function relativesForRound(round: number): number {
-  return Math.min(3, Math.floor((round - 1) / 2));
+/** How many decoys share the mystery's traits: one at first, up to four from round 7. */
+export function lookalikesForRound(round: number): number {
+  return Math.min(4, Math.ceil(round / 2));
 }
 
-/** Ranks two species share from the top of the family tree (class, order, family, genus). */
-function kinship(a: Taxonomy, b: Taxonomy): number {
-  let shared = 0;
-  for (const rank of TAXONOMY_RANKS) {
-    if (!a[rank] || a[rank] !== b[rank]) break;
-    shared++;
-  }
-  return shared;
+const recordsCache = new WeakMap<CluePool, SpeciesRecords>();
+function recordsFor(pool: CluePool): SpeciesRecords {
+  let records = recordsCache.get(pool);
+  if (!records) recordsCache.set(pool, records = buildSpeciesRecords(pool));
+  return records;
 }
 
 /**
- * Pick a mystery (skipping recent ones) and fill the pool with decoys. Later
- * rounds swap some random decoys for the mystery's closest relatives, so the
- * family tree alone stops giving the answer away.
+ * How much two species look alike: the traits they share, rare ones counting
+ * most (sharing dry savanna says more than both living on land).
  */
-export function createRound(
-  pool: CluePool,
-  rng: () => number,
-  round: number,
-  recentMysteryIds: readonly number[] = [],
+function similarity(pool: CluePool, records: SpeciesRecords): (a: number, b: number) => number {
+  const traits = new Map([...records].map(([id, record]) => [id, allTraits(record)]));
+  const count = new Map<string, number>();
+  for (const tags of traits.values()) for (const tag of tags) count.set(tag, (count.get(tag) ?? 0) + 1);
+  const weight = (tag: string) => Math.log((pool.species.length + 1) / (count.get(tag) ?? 1));
+  return (a, b) => [...(traits.get(a) ?? [])].filter(tag => traits.get(b)?.has(tag)).reduce((sum, tag) => sum + weight(tag), 0);
+}
+
+export interface RoundOptions {
+  /** Mysteries of recent rounds, oldest first; they aren't repeated for a while. */
+  recent?: readonly number[];
   /** Only these species can be the mystery (a place's animals); decoys still come from the whole pool. */
-  mysteryIds?: readonly number[],
-): RoundState {
+  mysteryIds?: readonly number[];
+  /** Shown on the round's divider when the mysteries' source changes. */
+  scope?: string;
+}
+
+/**
+ * Pick a mystery (skipping recent ones) and five decoys: some are look-alikes
+ * that share its traits (more each round), the rest random, so no single
+ * clue gives the answer away.
+ */
+export function createRound(pool: CluePool, rng: () => number, round: number, { recent = [], mysteryIds, scope }: RoundOptions = {}): RoundState {
   const playable = playableSpeciesIds(pool);
   if (playable.length < 2) throw new Error('Clue pool needs at least two species with clues');
-  const inPlace = mysteryIds ? playable.filter(id => mysteryIds.includes(id)) : [];
-  const candidates = inPlace.length > 0 ? inPlace : playable;
+  const inScope = mysteryIds ? playable.filter(id => mysteryIds.includes(id)) : [];
+  const candidates = inScope.length > 0 ? inScope : playable;
   // A small place repeats sooner: the cooldown never covers all its animals.
-  const recent = new Set(recentMysteryIds.slice(-Math.min(MYSTERY_COOLDOWN, candidates.length - 1)));
-  const eligible = candidates.filter(id => !recent.has(id));
+  const cooldown = new Set(recent.slice(-Math.min(MYSTERY_COOLDOWN, candidates.length - 1)));
+  const eligible = candidates.filter(id => !cooldown.has(id));
   const choices = eligible.length > 0 ? eligible : candidates;
   const mysteryId = choices[Math.floor(rng() * choices.length)];
 
-  const taxonomy = new Map(pool.species.map(species => [species.id, taxonomyOf(species)]));
-  const kin = (id: number) => {
-    const a = taxonomy.get(id);
-    const b = taxonomy.get(mysteryId);
-    return a && b ? kinship(a, b) : 0;
-  };
-  const others = shuffled(playable.filter(id => id !== mysteryId), rng); // random order breaks kinship ties
-  const relatives = [...others].sort((a, b) => kin(b) - kin(a)).slice(0, relativesForRound(round)).filter(id => kin(id) > 0);
-  const decoys = [...relatives, ...others.filter(id => !relatives.includes(id))].slice(0, CANDIDATES_PER_ROUND - 1);
+  const records = recordsFor(pool);
+  const alike = similarity(pool, records);
+  const others = shuffled(playable.filter(id => id !== mysteryId), rng); // random order breaks ties
+  const wanted = Math.min(lookalikesForRound(round), CANDIDATES_PER_ROUND - 1);
+  // Draw the look-alikes from a few more of the closest, so rounds vary.
+  const closest = [...others].sort((a, b) => alike(mysteryId, b) - alike(mysteryId, a)).slice(0, wanted + 2);
+  const lookalikes = shuffled(closest, rng).slice(0, wanted);
+  const decoys = [...lookalikes, ...others.filter(id => !lookalikes.includes(id))].slice(0, CANDIDATES_PER_ROUND - 1);
+  const candidateIds = shuffled([mysteryId, ...decoys], rng);
   return {
     round,
     mysteryId,
-    relatives: relatives.length,
-    candidateIds: shuffled([mysteryId, ...decoys], rng),
-    queues: buildQueues(pool, mysteryId),
+    relatives: lookalikes.length,
+    ...(scope ? { scope } : {}),
+    candidateIds,
+    queues: buildQueues(pool, mysteryId, candidateIds, records),
     moves: 0,
     revealedByGem: {},
     ruledOut: [],

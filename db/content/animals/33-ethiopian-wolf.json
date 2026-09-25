@@ -1,0 +1,195 @@
+{
+  "id": 33,
+  "commonName": "Ethiopian Wolf",
+  "scientificName": "Canis simensis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Canidae",
+    "genus": "Canis"
+  },
+  "iucnId": 3748,
+  "redList": {
+    "category": "EN",
+    "year": 2011,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/3748/10051312"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:tropical_high_altitude",
+    "grassland",
+    "grassland:tropical_high_altitude",
+    "wetlands",
+    "wetlands:alpine",
+    "rocky"
+  ],
+  "elevation": [
+    3000,
+    4500
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 11 to 19 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It mostly eats rodents.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "At night it sleeps out in the open.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Packs have 3 to 13 wolves.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A litter has 2 to 6 pups.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Wild wolves live up to about 12 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has a red coat with a white throat and a white crescent under each eye.",
+      "tags": [
+        "reddish_fur",
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives in a pack, but each wolf hunts on its own.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Packs patrol their borders and mark them with scent.",
+      "tags": [
+        "territorial",
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It hunts rodents, especially the big giant mole-rat.",
+      "tags": [
+        "rodent_hunter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It licks sweet nectar from red hot poker flowers.",
+      "tags": [
+        "nectar_drinker"
+      ],
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ecy.4470"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives only on high mountain plateaus, above where trees can grow.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It survives in a few separate mountain ranges in Ethiopia.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Diseases like rabies, caught from village dogs, have wiped out many wolves.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "About 60% of the land above 3,200 m in its range has become farmland.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the world's rarest wild dog, and Africa's most endangered carnivore.",
+      "source": "news",
+      "url": "https://www.science.org/content/article/watch-ethiopian-wolves-drink-flower-nectar-first-large-carnivore"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2024 scientists found it may help pollinate flowers: pollen sticks to its muzzle as it licks nectar.",
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ecy.4470"
+    },
+    {
+      "category": "key_fact",
+      "text": "A 2024 count found about 450 wolves in 99 packs.",
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "Packs meet at dawn, midday and evening to greet each other and patrol.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Pups are born in a den under a boulder or in a rock crack, and every adult in the pack helps feed them.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "In the north, farms push the wolves up above 3,500 m.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/3748/10051312",
+    "adw": "https://animaldiversity.org/accounts/Canis_simensis/",
+    "ngo": "https://www.wildcru.org/species/ethiopian-wolves"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Ethiopian_wolf_%28Canis_simensis_citernii%29.jpg/500px-Ethiopian_wolf_%28Canis_simensis_citernii%29.jpg",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Ethiopian_wolf_(Canis_simensis_citernii).jpg"
+  }
+}

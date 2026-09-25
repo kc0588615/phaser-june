@@ -1,0 +1,249 @@
+{
+  "id": 24,
+  "commonName": "Sunda Pangolin",
+  "scientificName": "Manis javanica",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pholidota",
+    "family": "Manidae",
+    "genus": "Manis"
+  },
+  "iucnId": 12763,
+  "redList": {
+    "category": "CR",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12763/123584856"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:mangrove",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_moist",
+    "artificial",
+    "artificial:arable",
+    "artificial:pasture",
+    "artificial:plantations",
+    "artificial:gardens",
+    "artificial:urban",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    0,
+    1700
+  ],
+  "traits": {
+    "covering": {
+      "value": "scales",
+      "note": "Its hard, overlapping scales make it look like a walking pine cone.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It usually weighs 4 to 7 kg.",
+      "source": "literature",
+      "url": "https://doi.org/10.1016/B978-0-12-815507-3.00006-X"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats only ants and termites.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one baby, rarely two.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its sticky tongue can stretch about 25 cm out of its mouth.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long tail can grip branches, and it uses it to climb trees.",
+      "tags": [
+        "long_tail",
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When it is scared, it curls up into a tight ball.",
+      "tags": [
+        "rolls_into_ball"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs burrows near termite mounds and ant nests with its big front claws.",
+      "tags": [
+        "burrower",
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When it hurries, it runs on just its back legs, balancing with its tail.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It has poor eyesight but a great sense of smell.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sunda_pangolin"
+    },
+    {
+      "category": "reproduction",
+      "text": "A baby rides around on the base of its mother's tail.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It can close its nostrils and ears so ants can't crawl in while it eats.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Pangolins are among the most illegally traded mammals on Earth, taken for their scales and meat.",
+      "source": "news",
+      "url": "https://www.nationalgeographic.com/animals/mammals/facts/sunda-pangolin"
+    },
+    {
+      "category": "conservation",
+      "text": "It is protected from all international trade under CITES.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Pangolins are the only mammals covered in scales.",
+      "source": "news",
+      "url": "https://www.nationalgeographic.com/animals/mammals/facts/sunda-pangolin"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its tongue is so long that, when pulled in, it reaches down through its chest to near its hips.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its scales are made of keratin, the same stuff as your fingernails.",
+      "source": "news",
+      "url": "https://www.nationalgeographic.com/animals/mammals/facts/sunda-pangolin"
+    },
+    {
+      "category": "behavior",
+      "text": "A mother in danger curls into a ball with her baby tucked safely inside.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Babies are born with soft scales that harden after a few days.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Hunting and poaching are thought to have cut its numbers by 80% in just 21 years.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12763/123584856",
+    "adw": "https://animaldiversity.org/accounts/Manis_javanica/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "BRN",
+        "name": "Brunei"
+      },
+      {
+        "code": "KHM",
+        "name": "Cambodia"
+      },
+      {
+        "code": "CHN",
+        "name": "China"
+      },
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "LAO",
+        "name": "Laos"
+      },
+      {
+        "code": "MYS",
+        "name": "Malaysia"
+      },
+      {
+        "code": "MMR",
+        "name": "Myanmar"
+      },
+      {
+        "code": "THA",
+        "name": "Thailand"
+      },
+      {
+        "code": "VNM",
+        "name": "Vietnam"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Pangolin_borneo.jpg/500px-Pangolin_borneo.jpg",
+    "credit": "Piekfrosch at German Wikipedia (Original text: Piekfrosch (Wikipedia-User))",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pangolin_borneo.jpg"
+  }
+}

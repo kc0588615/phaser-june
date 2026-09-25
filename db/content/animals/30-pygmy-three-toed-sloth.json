@@ -1,0 +1,170 @@
+{
+  "id": 30,
+  "commonName": "Pygmy Three-toed Sloth",
+  "scientificName": "Bradypus pygmaeus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pilosa",
+    "family": "Bradypodidae",
+    "genus": "Bradypus"
+  },
+  "iucnId": 61925,
+  "redList": {
+    "category": "CR",
+    "year": 2022,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/61925/210445926"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:mangrove"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its shaggy fur often looks green.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 2.5 to 3.5 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats leaves.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "any",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single baby.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Green algae grow in its fur and help it blend in with the leaves.",
+      "tags": [
+        "camouflage",
+        "algae_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It moves very slowly and spends most of its life up in the trees.",
+      "tags": [
+        "tree_dweller",
+        "slow_mover"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Like other tree sloths, it hangs upside down from branches.",
+      "tags": [
+        "hangs_upside_down"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sloth"
+    },
+    {
+      "category": "behavior",
+      "text": "It is slow in the trees, but it can swim.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives only on Isla Escudo de Veraguas, a tiny island off the coast of Panama.",
+      "tags": [
+        "one_island"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in red mangroves along the shore and in the island's rainforest.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Only about 2,000 to 2,500 live on its island.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "New buildings, visitors and tree cutting on its island put it at risk.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the smallest sloth in the world.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its island was cut off from the mainland by rising seas thousands of years ago, and the sloths there slowly became smaller than their mainland cousins.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Pygmy_three-toed_sloth"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists only named it as its own species in 2001.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "The algae in a sloth's fur make it a tiny home for moths and beetles, too.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Sloth"
+    },
+    {
+      "category": "threat",
+      "text": "It is Critically Endangered mainly because its whole world is one island smaller than 5 square km.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/61925/210445926",
+    "adw": "https://animaldiversity.org/accounts/Bradypus_pygmaeus/"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "PAN",
+        "name": "Panama"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Perezoso_La_Mochila.jpg/500px-Perezoso_La_Mochila.jpg",
+    "credit": "Lider Sucre",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Perezoso_La_Mochila.jpg"
+  }
+}

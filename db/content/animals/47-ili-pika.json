@@ -1,0 +1,148 @@
+{
+  "id": 47,
+  "commonName": "Ili Pika",
+  "scientificName": "Ochotona iliensis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Lagomorpha",
+    "family": "Ochotonidae",
+    "genus": "Ochotona"
+  },
+  "iucnId": 15050,
+  "redList": {
+    "category": "EN",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/15050/45179204"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "rocky"
+  ],
+  "elevation": [
+    2800,
+    4100
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    "size": {
+      "value": "small",
+      "note": "It weighs up to 250 g.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats many kinds of mountain plants.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It is sometimes active at night too.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    }
+  },
+  "clues": [
+    {
+      "category": "behavior",
+      "text": "It gathers plants in summer and stores them in haypiles for the winter.",
+      "tags": [
+        "stores_food"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives among piles of broken rock below high cliffs, hiding in the gaps.",
+      "tags": [
+        "crevice_hider",
+        "high_mountains"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "It is big for a pika: about 20 cm long.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only in the Tian Shan mountains of Xinjiang, in northwest China.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "conservation",
+      "text": "Fewer than 1,000 are thought to be left.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "More sheep grazing and a warming climate are harming its home.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It was discovered in 1983 by Li Weidong, then not seen again until he found it once more in 2014.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its nickname is the 'magic rabbit', and photos of it went viral in 2015.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "key_fact",
+      "text": "Pikas are relatives of rabbits and hares.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers fell by about 70% in 15 years.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Ili_pika"
+    },
+    {
+      "category": "threat",
+      "text": "Mastiff dogs kept by herders also hunt pikas.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/15050/45179204"
+  },
+  "range": {
+    "realms": [
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "CHN",
+        "name": "China"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Ili_Pika_area.png",
+    "credit": "Chermundy",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Ili_Pika_area.png"
+  }
+}

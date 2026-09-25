@@ -1,0 +1,171 @@
+{
+  "id": 2,
+  "commonName": "Spiny Softshell Turtle",
+  "scientificName": "Apalone spinifera",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Trionychidae",
+    "genus": "Apalone"
+  },
+  "iucnId": 163451,
+  "redList": {
+    "category": "LC",
+    "year": 2024,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/163451/161722123"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:permanent_lakes",
+    "wetlands:bogs_marshes",
+    "artificial",
+    "artificial:ponds"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "note": "Its shell is soft, flat and leathery, with no hard plates.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "Water insects, crayfish and sometimes fish.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It spends much of the day basking and hunting.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female lays 9 to 38 round eggs.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "A big female may live up to 50 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Small spines stick up along the front edge of its shell.",
+      "tags": [
+        "shell_spines"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its nose is long and pointed, like a snorkel.",
+      "tags": [
+        "snorkel_nose"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When disturbed, it dives and buries itself in sand with only its head showing.",
+      "tags": [
+        "buries_itself"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can take in oxygen underwater through its skin and throat.",
+      "tags": [
+        "underwater_breathing"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "From October to April it rests buried on the bottom of rivers and lakes.",
+      "tags": [
+        "winter_rest"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It likes open rivers and lakes with sandy or muddy bottoms.",
+      "tags": [
+        "sandy_bottoms"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: dams, boats, roads and people catching it.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Adult spiny softshells have almost no natural predators.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "If it's bothered, it shoots out its long neck and can give a painful bite.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Females dig a flask-shaped nest in a sunny sandbar, usually in under an hour.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Unlike many turtles, nest temperature doesn't decide whether its babies are male or female.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/163451/161722123",
+    "adw": "https://animaldiversity.org/accounts/Apalone_spinifera/"
+  },
+  "range": {
+    "realms": [
+      "realm:nearctic"
+    ],
+    "countries": [
+      {
+        "code": "CAN",
+        "name": "Canada"
+      },
+      {
+        "code": "MEX",
+        "name": "Mexico"
+      },
+      {
+        "code": "USA",
+        "name": "United States of America"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Spiny_softshell_turtle_%28Apalone_spinifera%29.jpg/500px-Spiny_softshell_turtle_%28Apalone_spinifera%29.jpg",
+    "credit": "U.S. Fish and Wildlife Service Headquarters",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Spiny_softshell_turtle_(Apalone_spinifera).jpg"
+  }
+}

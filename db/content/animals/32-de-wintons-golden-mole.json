@@ -1,0 +1,143 @@
+{
+  "id": 32,
+  "commonName": "De Winton's Golden Mole",
+  "scientificName": "Cryptochloris wintoni",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Afrosoricida",
+    "family": "Chrysochloridae",
+    "genus": "Cryptochloris"
+  },
+  "iucnId": 5748,
+  "redList": {
+    "category": "CR",
+    "year": 2015,
+    "trend": "unknown",
+    "url": "https://www.iucnredlist.org/species/5748/21287143"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:tropical_dry",
+    "artificial",
+    "artificial:urban"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its dense fur shimmers with a rainbow-like sheen.",
+      "source": "ngo"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "Golden moles feed on insects and earthworms.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_mole"
+    },
+    "birth": {
+      "value": "live",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Golden_mole"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It is blind, and relies on super-sharp hearing.",
+      "tags": [
+        "poor_eyesight",
+        "super_hearing"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It 'swims' through loose sand instead of digging lasting tunnels.",
+      "tags": [
+        "burrower",
+        "sand_swimmer"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It feels the vibrations of footsteps above it and slips away.",
+      "tags": [
+        "senses_vibrations"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in sand dunes along the coast.",
+      "tags": [
+        "coastal_dunes"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It has only ever been found near the town of Port Nolloth in South Africa.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Digging up beach sand to mine diamonds may destroy its home.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Nobody saw it for 86 years, from 1937 until it was found again in 2023.",
+      "source": "news",
+      "url": "https://www.theguardian.com/environment/2023/nov/30/back-from-the-brink-de-wintons-golden-mole-feared-extinct-rediscovered-after-86-years-aoe"
+    },
+    {
+      "category": "key_fact",
+      "text": "A border collie named Jessie, trained to sniff out golden moles, helped find it.",
+      "source": "news",
+      "url": "https://www.theguardian.com/environment/2023/nov/30/back-from-the-brink-de-wintons-golden-mole-feared-extinct-rediscovered-after-86-years-aoe"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists proved it was still there by finding its DNA in sand samples.",
+      "source": "literature",
+      "url": "https://doi.org/10.1007/s10531-023-02728-2"
+    },
+    {
+      "category": "behavior",
+      "text": "Oil on its fur helps it slide through the sand.",
+      "source": "news",
+      "url": "https://www.theguardian.com/environment/2023/nov/30/back-from-the-brink-de-wintons-golden-mole-feared-extinct-rediscovered-after-86-years-aoe"
+    },
+    {
+      "category": "threat",
+      "text": "It has never been found inside a protected area.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/5748/21287143",
+    "ngo": "https://ewt.org/found-iridescent-blind-mole"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/De_Winton%27s_golden_mole_%28Cryptochloris_wintoni%29.jpg/500px-De_Winton%27s_golden_mole_%28Cryptochloris_wintoni%29.jpg",
+    "credit": "Jp le Roux",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:De_Winton%27s_golden_mole_(Cryptochloris_wintoni).jpg"
+  }
+}

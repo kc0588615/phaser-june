@@ -1,0 +1,171 @@
+{
+  "id": 15,
+  "commonName": "Pancake Tortoise",
+  "scientificName": "Malacochersus tornieri",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Testudinidae",
+    "genus": "Malacochersus"
+  },
+  "iucnId": 9041,
+  "redList": {
+    "category": "CR",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12696/508210"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "rocky"
+  ],
+  "elevation": [
+    500,
+    1800
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "note": "Unlike most tortoises, its shell bends when pressed.",
+      "source": "iucn"
+    },
+    "size": {
+      "value": "small",
+      "note": "Its shell grows to about 18 cm long, and it rarely weighs more than 500 g.",
+      "source": "iucn"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats herbs, succulent plants and flowers, plus the odd beetle.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It comes out to feed in the early morning.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "one",
+      "note": "A female lays one large egg a year, rarely two.",
+      "source": "tftsg"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Pancake tortoises have lived more than 25 years in zoos.",
+      "source": "tftsg"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its shell is so flat it looks like a pancake.",
+      "tags": [
+        "flat_shell"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives on rocky hills called kopjes that rise out of the savanna.",
+      "tags": [
+        "kopjes"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It hides in narrow cracks between and under slabs of rock.",
+      "tags": [
+        "crevice_hider"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a good climber: some have been found in cracks high up on tall boulders.",
+      "tags": [
+        "climber"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: collecting for the pet trade, and breaking up the rocks it hides in.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "International trade in it has been controlled since 1975 (CITES Appendix II).",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its shell is soft and bendy because the bones underneath have open gaps. That lets it squeeze into narrow cracks.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Collecting and habitat damage cut its numbers by about 80% in 30 years.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "In Kenya, about 95% of pancake tortoises live outside protected areas.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It keeps to a small home area and returns to the same rock cracks again and again.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "The egg is laid at the start of the rainy season. Hatchlings are 3 to 5 cm long.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "It takes 5 to 9 years to grow up.",
+      "source": "tftsg"
+    },
+    {
+      "category": "threat",
+      "text": "Collectors sometimes pry apart the rocks it hides in, destroying the cracks it needs.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12696/508210",
+    "tftsg": "https://iucn-tftsg.org/cbftt/species-accounts/malacochersus-tornieri-107"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Malacochersus_tornieri_-_Buffalo_Zoo.jpg/500px-Malacochersus_tornieri_-_Buffalo_Zoo.jpg",
+    "credit": "Dave Pape",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Malacochersus_tornieri_-_Buffalo_Zoo.jpg"
+  }
+}

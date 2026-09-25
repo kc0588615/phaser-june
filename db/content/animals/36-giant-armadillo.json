@@ -1,0 +1,211 @@
+{
+  "id": 36,
+  "commonName": "Giant Armadillo",
+  "scientificName": "Priodontes maximus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Cingulata",
+    "family": "Chlamyphoridae",
+    "genus": "Priodontes"
+  },
+  "iucnId": 18144,
+  "redList": {
+    "category": "VU",
+    "year": 2025,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/18144/244101181"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "savanna",
+    "savanna:moist",
+    "grassland",
+    "grassland:tropical_seasonally_wet"
+  ],
+  "elevation": [
+    0,
+    500
+  ],
+  "traits": {
+    "covering": {
+      "value": "armor",
+      "note": "Its dark shell of bony plates has a pale band along the bottom edge.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It usually weighs 19 to 32 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It mostly eats termites and ants.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one baby, sometimes two.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Wild ones live 12 to 15 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has 80 to 100 teeth, more than any other land mammal.",
+      "tags": [
+        "many_teeth"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "morphology",
+      "text": "Its curved middle front claw can be 22 cm long, the biggest claws for its size of any mammal.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "behavior",
+      "text": "It can stand up on its back legs and tail to reach into termite mounds.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs big burrows and rests in them during the day.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Unlike some armadillos, it can't roll up into a ball.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "conservation",
+      "text": "Farms replacing forest and grassland, car crashes and wildfires all threaten it.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "It has already disappeared from Uruguay.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the biggest armadillo alive today.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its burrows are like hotels: dozens of kinds of mammals, reptiles and birds use them.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "key_fact",
+      "text": "It has more teeth than almost any other land mammal, but none of them have enamel.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "life_description",
+      "text": "It takes 6 to 8 years to grow up and start a family.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother sometimes seals the burrow entrance to keep her baby safe inside.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_armadillo"
+    },
+    {
+      "category": "threat",
+      "text": "Some beekeepers go after armadillos that break into their hives for bee grubs.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/18144/244101181",
+    "adw": "https://animaldiversity.org/accounts/Priodontes_maximus/"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Priodontes_maximus_at_R%C3%A9gina.jpg/500px-Priodontes_maximus_at_R%C3%A9gina.jpg",
+    "credit": "Guillaume Delaitre",
+    "license": "CC BY 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Priodontes_maximus_at_R%C3%A9gina.jpg"
+  }
+}

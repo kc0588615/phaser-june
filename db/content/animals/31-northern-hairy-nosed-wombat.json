@@ -1,0 +1,204 @@
+{
+  "id": 31,
+  "commonName": "Northern Hairy-nosed Wombat",
+  "scientificName": "Lasiorhinus krefftii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Diprotodontia",
+    "family": "Vombatidae",
+    "genus": "Lasiorhinus"
+  },
+  "iucnId": 11343,
+  "redList": {
+    "category": "CR",
+    "year": 2016,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/11343/21959050"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "savanna",
+    "savanna:dry"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is soft and grayish.",
+      "source": "ngo"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs about 32 kg on average.",
+      "source": "government",
+      "url": "https://www.qld.gov.au/environment/plants-animals/conservation/threatened-species/featured-projects/northern-hairy-nosed-wombat2/northern-hairy-nosed-wombat/about-northern-hairy-nosed-wombats"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats grasses and sedges.",
+      "source": "ngo"
+    },
+    "activity": {
+      "value": "night",
+      "source": "ngo"
+    },
+    "social": {
+      "value": "alone",
+      "source": "ngo"
+    },
+    "birth": {
+      "value": "live",
+      "source": "ngo"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single joey, usually every two years.",
+      "source": "ngo"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It can live at least 30 years.",
+      "source": "ngo"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its teeth keep growing all its life, worn down by tough grass.",
+      "tags": [
+        "ever_growing_teeth"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "It has strong front legs and long claws for digging.",
+      "tags": [
+        "digging_claws"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "morphology",
+      "text": "Long whiskers stick out from the sides of its broad nose.",
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It grazes on native grasses near its burrows.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs huge burrows: the biggest one mapped had more than 90 m of tunnels and six entrances.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "behavior",
+      "text": "It sees poorly and finds its way by smell and hearing.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "ngo"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its pouch opens backward, toward its back legs.",
+      "tags": [
+        "pouch",
+        "backward_pouch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in open eucalyptus woodland with deep, sandy soil for digging.",
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It once lived across eastern Australia, but now survives at just three sites in Queensland.",
+      "source": "ngo"
+    },
+    {
+      "category": "conservation",
+      "text": "In the 1980s only about 35 were left.",
+      "source": "government",
+      "url": "https://www.stateoftheenvironment.detsi.qld.gov.au/biodiversity/case-studies/northern-hairy-nosed-wombat"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest burrowing marsupial in the world.",
+      "source": "ngo"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists count wombats by catching loose hairs on sticky tape at burrow doors and reading the DNA.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its numbers have grown from about 35 in the 1980s to more than 400.",
+      "source": "government",
+      "url": "https://www.stateoftheenvironment.detsi.qld.gov.au/biodiversity/case-studies/northern-hairy-nosed-wombat"
+    },
+    {
+      "category": "behavior",
+      "text": "Deep in its burrow, the temperature changes by only 5 or 6 °C over a whole day.",
+      "source": "government",
+      "url": "https://www.qld.gov.au/environment/plants-animals/conservation/threatened-species/featured-projects/northern-hairy-nosed-wombat2/northern-hairy-nosed-wombat/about-northern-hairy-nosed-wombats"
+    },
+    {
+      "category": "life_description",
+      "text": "A joey grows in its mother's pouch for 9 to 10 months.",
+      "source": "ngo"
+    },
+    {
+      "category": "life_description",
+      "text": "In 2025 the first joeys were born at a new colony in Powrunna State Forest.",
+      "source": "news",
+      "url": "https://newsapp.abc.net.au/newsapp/2025-10-27/conservation-success-for-rare-queensland-wombat/105934066"
+    },
+    {
+      "category": "threat",
+      "text": "Buffel grass, a plant brought from overseas, is crowding out the native grasses it eats.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "A 20 km fence, built in 2002, keeps dingoes away from its main home.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/11343/21959050",
+    "adw": "https://animaldiversity.org/accounts/Lasiorhinus_krefftii/",
+    "ngo": "https://www.australianwildlife.org/animals/northern-hairy-nosed-wombat"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "AUS",
+        "name": "Australia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/Haarnasenwombat_%28Lasiorhinus_krefftii%29.jpg",
+    "credit": "Unknown author",
+    "license": "CC BY-SA 2.0 de",
+    "page": "https://commons.wikimedia.org/wiki/File:Haarnasenwombat_(Lasiorhinus_krefftii).jpg"
+  }
+}

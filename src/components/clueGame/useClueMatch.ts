@@ -6,7 +6,7 @@ import { EventBus, type EventPayloads } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { CLUE_GAME_GEM_TYPES } from '@/clueGame/categories';
 import type { CluePool } from '@/clueGame/pool';
-import type { Place, PlacesResponse } from '@/clueGame/places';
+import { groupLabel, type Place, type PlacesResponse } from '@/clueGame/places';
 import { createRound, playableSpeciesIds } from '@/clueGame/round';
 import { debugSummary } from '@/clueGame/selectors';
 import { clueSessionReducer } from '@/clueGame/session';
@@ -26,11 +26,24 @@ function sessionSeed(): number {
   return Number.isInteger(fromUrl) && fromUrl > 0 && fromUrl <= 0xffff_ffff ? fromUrl : Math.floor(Math.random() * 0xffff_fffe) + 1;
 }
 
-/** The place from GET /api/places; null (play everywhere) if it's unknown or the request fails. */
-async function loadPlace(key: string): Promise<Place | null> {
+/** Where mysteries come from once a place's own animals are all found. */
+interface Region { name: string; speciesIds: number[] }
+
+/**
+ * The place from GET /api/places and its region: a country's continent, or
+ * every wildlife area of the same realm. Null (play everywhere) if the place is
+ * unknown or the request fails.
+ */
+async function loadPlace(key: string): Promise<{ place: Place; region: Region | null } | null> {
   try {
     const { places } = await getJson<PlacesResponse>('/api/places/');
-    return places.find(place => place.key === key) ?? null;
+    const place = places.find(candidate => candidate.key === key);
+    if (!place) return null;
+    const neighbors = place.kind === 'country' ? places.filter(other => other.kind === 'continent' && other.name === place.group)
+      : place.kind === 'wildlife_area' ? places.filter(other => other.kind === 'wildlife_area' && other.group === place.group)
+      : [];
+    const speciesIds = [...new Set(neighbors.flatMap(other => other.speciesIds))];
+    return { place, region: speciesIds.length > place.speciesIds.length ? { name: groupLabel(place), speciesIds } : null };
   } catch (error) {
     console.error('[ClueMatch] Failed to load the place; playing with every animal:', error);
     return null;
@@ -41,6 +54,8 @@ export function useClueMatch() {
   const [seed] = useState(sessionSeed);
   const [placeKey] = useState(placeKeyFromUrl);
   const [place, setPlace] = useState<Place | null>(null);
+  const region = useRef<Region | null>(null);
+  const inRegion = useRef(false);
   const rng = useRef(mulberry32(seed));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [session, dispatch] = useReducer(clueSessionReducer, null);
@@ -61,8 +76,9 @@ export function useClueMatch() {
           setLoadError('Not enough animals have clues yet. Add clues for at least two species.');
           return;
         }
-        setPlace(found);
-        dispatch({ type: 'load', pool, round: createRound(pool, rng.current, 1, [], found?.speciesIds) });
+        region.current = found?.region ?? null;
+        setPlace(found?.place ?? null);
+        dispatch({ type: 'load', pool, round: createRound(pool, rng.current, 1, { mysteryIds: found?.place.speciesIds }) });
       } catch (error) {
         console.error('[ClueMatch] Failed to load the clue pool:', error);
         if (!cancelled) setLoadError('Could not load the animal clues. Check the connection and reload.');
@@ -105,7 +121,15 @@ export function useClueMatch() {
   const nextRound = useCallback(() => {
     const current = sessionRef.current;
     if (!current || current.phase !== 'solved') return;
-    dispatch({ type: 'start-round', round: createRound(current.pool, rng.current, current.round.round + 1, current.history, place?.speciesIds) });
+    // After every animal of the place has been a mystery, keep exploring its region.
+    const found = new Set(current.history);
+    const toRegion = place && region.current && place.speciesIds.every(id => found.has(id)) ? region.current : null;
+    const scope = toRegion && !inRegion.current ? toRegion.name : undefined;
+    inRegion.current = Boolean(toRegion);
+    dispatch({
+      type: 'start-round',
+      round: createRound(current.pool, rng.current, current.round.round + 1, { recent: current.history, mysteryIds: toRegion?.speciesIds ?? place?.speciesIds, scope }),
+    });
   }, [place]);
 
   return { session, loadError, seed, place, guess, nextRound };

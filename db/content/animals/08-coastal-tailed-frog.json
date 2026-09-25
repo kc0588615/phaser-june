@@ -1,0 +1,168 @@
+{
+  "id": 8,
+  "commonName": "Coastal Tailed Frog",
+  "scientificName": "Ascaphus truei",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ascaphidae",
+    "genus": "Ascaphus"
+  },
+  "iucnId": 54414,
+  "redList": {
+    "category": "LC",
+    "year": 2022,
+    "trend": "unknown",
+    "url": "https://www.iucnredlist.org/species/54414/196332997"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate",
+    "wetlands",
+    "wetlands:permanent_rivers"
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin feels rough.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "Adults are only 2.2 to 5.1 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "It can live at least 14 years, a long life for a frog.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Males have a short 'tail' that is really a body part used for mating.",
+      "tags": [
+        "tail_organ"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its pupils are vertical slits.",
+      "tags": [
+        "vertical_pupils"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its toe tips are hard, for gripping rocks in rushing water.",
+      "tags": [
+        "hard_toe_tips"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in clear, cold mountain streams beside old forests.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can't call like most frogs: it has no vocal sac and no eardrums.",
+      "tags": [
+        "voiceless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its tadpoles hold on to rocks in fast water with a suction-cup mouth.",
+      "tags": [
+        "sucker_mouth_tadpoles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Unlike most frogs, its eggs are fertilized inside the female's body.",
+      "tags": [
+        "internal_fertilization"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "In Canada it is listed as a species of Special Concern.",
+      "source": "government"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its family is one of the oldest frog lineages. The only other member is the Rocky Mountain tailed frog.",
+      "source": "government"
+    },
+    {
+      "category": "life_description",
+      "text": "Tadpoles take 1 to 4 years to become frogs.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Females glue their eggs under big rocks in the stream. They hatch about 6 weeks later.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It stays active through the winter, just more slowly.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/54414/196332997",
+    "adw": "https://animaldiversity.org/accounts/Ascaphus_truei/",
+    "government": "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/coastal-tailed-frog-ascaphus-truei-2011.html"
+  },
+  "range": {
+    "realms": [
+      "realm:nearctic"
+    ],
+    "countries": [
+      {
+        "code": "CAN",
+        "name": "Canada"
+      },
+      {
+        "code": "USA",
+        "name": "United States of America"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Ascaphus_truei_web.jpg/500px-Ascaphus_truei_web.jpg",
+    "credit": "Mokele",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Ascaphus_truei_web.jpg"
+  }
+}

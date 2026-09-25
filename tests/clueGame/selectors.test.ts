@@ -9,8 +9,8 @@ import { mulberry32 } from '@/lib/seededRng';
 import { OTHERS, pool } from './testPool';
 
 test('the legend never depends on which candidate is the mystery', () => {
-  const state = clueSessionReducer(null, { type: 'load', pool, round: createRound(pool, mulberry32(1), 1, OTHERS) })!;
-  const other = createRound(pool, mulberry32(1), 1, pool.species.map(s => s.id).filter(id => id !== 2));
+  const state = clueSessionReducer(null, { type: 'load', pool, round: createRound(pool, mulberry32(1), 1, { recent: OTHERS }) })!;
+  const other = createRound(pool, mulberry32(1), 1, { recent: pool.species.map(s => s.id).filter(id => id !== 2) });
   const swapped: SessionState = { ...state, round: { ...state.round, mysteryId: other.mysteryId, queues: other.queues } };
   assert.notEqual(swapped.round.mysteryId, state.round.mysteryId);
   assert.deepEqual(legendViews(swapped), legendViews(state));

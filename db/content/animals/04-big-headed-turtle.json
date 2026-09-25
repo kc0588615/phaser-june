@@ -1,0 +1,156 @@
+{
+  "id": 4,
+  "commonName": "Big-headed Turtle",
+  "scientificName": "Platysternon megacephalum",
+  "taxonomy": {
+    "class": "Reptilia",
+    "order": "Testudines",
+    "family": "Platysternidae",
+    "genus": "Platysternon"
+  },
+  "iucnId": 9605,
+  "redList": {
+    "category": "CR",
+    "year": 2021,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/17585/1423706"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "wetlands",
+    "wetlands:permanent_rivers"
+  ],
+  "traits": {
+    "covering": {
+      "value": "shell",
+      "note": "Its shell is flat, with a squared-off front.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "Fish, snails and worms, crunched with a strong hooked beak.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "By day it hides under rocks or underwater.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "It lays just 1 or 2 eggs at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "A generation takes about 30 years.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its head is huge and can't be pulled into its shell.",
+      "tags": [
+        "huge_head"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long, muscular tail is almost as long as its shell.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a poor swimmer but a good rock climber.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in cool, fast, rocky mountain streams.",
+      "tags": [
+        "cold_streams"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threat: huge numbers are caught for food and the pet trade.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its hooked jaws can bite hard and hang on for a long time.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "The top of its skull is solid bone, unlike most turtles' skulls.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Its white eggs look like small bird eggs.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At night it searches the stream bottom and bushes along the banks for food.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/17585/1423706",
+    "adw": "https://animaldiversity.org/accounts/Platysternon_megacephalum/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "CHN",
+        "name": "China"
+      },
+      {
+        "code": "LAO",
+        "name": "Laos"
+      },
+      {
+        "code": "MMR",
+        "name": "Myanmar"
+      },
+      {
+        "code": "THA",
+        "name": "Thailand"
+      },
+      {
+        "code": "VNM",
+        "name": "Vietnam"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Big-headed_Turtle_HK.jpg/500px-Big-headed_Turtle_HK.jpg",
+    "credit": "Chetatata",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Big-headed_Turtle_HK.jpg"
+  }
+}

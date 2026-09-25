@@ -36,7 +36,8 @@ export function ClueFeed({ feed, speciesById, displayOrder }: {
               <span className="h-px flex-1 bg-cyan-100/20" />
               <span>
                 Animal {item.round}: a new mystery
-                {item.relatives > 0 && <span className="block text-amber-200/80">{item.relatives} close relative{item.relatives === 1 ? '' : 's'} in the lineup</span>}
+                {item.scope && <span className="block text-emerald-200/90">You found them all! Now exploring {item.scope}</span>}
+                {item.relatives > 0 && <span className="block text-amber-200/80">{item.relatives} look-alike{item.relatives === 1 ? '' : 's'} in the lineup</span>}
               </span>
               <span className="h-px flex-1 bg-cyan-100/20" />
             </li>

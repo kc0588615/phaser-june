@@ -1,0 +1,137 @@
+{
+  "id": 14,
+  "commonName": "Desert Rain Frog",
+  "scientificName": "Breviceps macrops",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Brevicipitidae",
+    "genus": "Breviceps"
+  },
+  "iucnId": 3070,
+  "redList": {
+    "category": "VU",
+    "year": 2026,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/3070/248906550"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "shrubland",
+    "shrubland:tropical_dry",
+    "desert",
+    "desert:cold"
+  ],
+  "elevation": [
+    0,
+    420
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It is most active on foggy nights.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "behavior",
+      "text": "When it is scared, it puffs up and lets out a loud squeak.",
+      "tags": [
+        "squeaker",
+        "puffs_up"
+      ],
+      "source": "news"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs burrows in sand dunes.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives only on white sand dunes within about 10 km of the ocean.",
+      "tags": [
+        "coastal_dunes"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It gets the water it needs from fog rolling in from the sea.",
+      "tags": [
+        "fog_drinker"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "It lays its eggs in an underground chamber, not in water.",
+      "tags": [
+        "eggs_on_land"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: diamond mining, a new port and green hydrogen projects on its dunes.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "In 2026 its status was raised from Near Threatened to Vulnerable.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Videos of its squeak made it famous online.",
+      "source": "news"
+    },
+    {
+      "category": "key_fact",
+      "text": "It lives in a desert where it almost never rains, so fog is its water supply.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Building projects could affect a third of its range in South Africa and two thirds in Namibia within 20 years.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/3070/248906550",
+    "news": "https://www.bbc.com/news/articles/cq819y09g2lo"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Breviceps_macrops_454407799.jpg/500px-Breviceps_macrops_454407799.jpg",
+    "credit": "Dylan Leonard",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Breviceps_macrops_454407799.jpg"
+  }
+}

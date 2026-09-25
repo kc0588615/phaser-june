@@ -1,0 +1,167 @@
+{
+  "id": 9,
+  "commonName": "Dyeing Poison Dart Frog",
+  "scientificName": "Dendrobates tinctorius",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Dendrobatidae",
+    "genus": "Dendrobates"
+  },
+  "iucnId": 55204,
+  "redList": {
+    "category": "LC",
+    "year": 2023,
+    "trend": "stable",
+    "url": "https://www.iucnredlist.org/species/55204/61395760"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:seasonal_marshes"
+  ],
+  "elevation": [
+    0,
+    600
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin is mostly smooth and covered in poison glands.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "It weighs about 3 g and is 3 to 4.5 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "Ants, beetles, flies, mites, spiders and termites.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Males and females each defend their own patch of ground.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "iucn"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "It lives 4 to 6 years in the wild and up to 12 in zoos.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its bright colors, like blue, or yellow and black, warn predators that it is poisonous.",
+      "tags": [
+        "warning_colors"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It hops around on the forest floor near small streams.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It defends its patch by calling, chasing and wrestling other frogs.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "The father carries the tadpoles on his back to puddles or water-filled tree holes.",
+      "tags": [
+        "father_carries_young"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Main threats: illegal collecting for the pet trade, farming and logging.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "It breeds easily in zoos, and zoos all over the world keep it.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its poison comes from the ants and other small prey it eats. Frogs raised on crickets in zoos aren't poisonous.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "The spot pattern on each frog is different, like a fingerprint.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is one of the most traded frogs in the world.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Its tadpoles eat eggs that their mother lays just to feed them.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Eggs hatch in about two weeks; tadpoles become froglets 10 to 12 weeks later.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/55204/61395760",
+    "adw": "https://animaldiversity.org/accounts/Dendrobates_tinctorius/"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Dendrobates_tinctorius_-_Karlsruhe_Zoo_05.jpg/500px-Dendrobates_tinctorius_-_Karlsruhe_Zoo_05.jpg",
+    "credit": "H. Zell",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Dendrobates_tinctorius_-_Karlsruhe_Zoo_05.jpg"
+  }
+}

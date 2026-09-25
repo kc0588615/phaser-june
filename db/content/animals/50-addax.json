@@ -1,0 +1,183 @@
+{
+  "id": 50,
+  "commonName": "Addax",
+  "scientificName": "Addax nasomaculatus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Artiodactyla",
+    "family": "Bovidae",
+    "genus": "Addax"
+  },
+  "iucnId": 512,
+  "redList": {
+    "category": "CR",
+    "year": 2016,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/512/50180603"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "desert",
+    "desert:hot",
+    "savanna",
+    "savanna:dry",
+    "grassland",
+    "grassland:tropical_dry"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its coat is almost white in summer and grayish brown in winter.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 60 to 125 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats desert grasses, leaves and shrubs.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Herds of 5 to 20 are led by a top male.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Addax in zoos have lived 25 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Both males and females have long horns that twist in 1.5 to 3 spirals.",
+      "tags": [
+        "horns",
+        "spiral_horns"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its wide, spread-out hooves help it walk on soft sand.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a dark tuft of hair on its forehead and white markings on its face.",
+      "tags": [
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can go most of its life without drinking, getting water from the plants it eats.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It wanders huge distances across the desert looking for fresh grazing.",
+      "tags": [
+        "nomadic",
+        "grazer"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in the Sahara, in some of the driest places on Earth.",
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "Wild addax survive only in Niger and Chad.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Only about 30 to 90 adults are left in the wild.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the most desert-loving of all large hoofed animals.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "It has vanished from Algeria, Egypt, Libya, Morocco, Sudan, Tunisia and Western Sahara.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Scientists say it has recovered only about 14% of the way to healthy numbers.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother carries her calf for about 8.5 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Hunting, and oil drilling in its desert home, are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/512/50180603",
+    "adw": "https://animaldiversity.org/accounts/Addax_nasomaculatus/"
+  },
+  "range": {
+    "realms": [
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "MRT",
+        "name": "Mauritania"
+      },
+      {
+        "code": "NER",
+        "name": "Niger"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/A_big_male_Addax_showing_as_the_power_of_his_horns.jpg/500px-A_big_male_Addax_showing_as_the_power_of_his_horns.jpg",
+    "credit": "HaytemBouchri93",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:A_big_male_Addax_showing_as_the_power_of_his_horns.jpg"
+  }
+}

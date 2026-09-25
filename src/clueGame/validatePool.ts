@@ -1,10 +1,10 @@
 // Content checks for the Clue Match pool. Errors make the game wrong or
 // unplayable; warnings are content worth a human look. Used by the unit tests
-// (on the checked-in snapshot) and by `npm run clue:pool -- --check` (live DB).
+// (on db/content/) and by `npm run content -- check` (live DB).
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { fitClue, isDeductive } from '@/clueGame/deduction';
 import { isPlaceholderText, type CluePool } from '@/clueGame/pool';
-import { EXCLUSIVE_AXES, REALM_TAGS, buildSpeciesRecords, clueTags, rankOfTag } from '@/clueGame/traits';
+import { EXCLUSIVE_PREFIXES, REALM_TAGS, allTraits, buildSpeciesRecords, clueTags, prefixOf } from '@/clueGame/traits';
 import { playableSpeciesIds } from '@/clueGame/round';
 
 export interface PoolReport {
@@ -63,19 +63,16 @@ export function validatePool(pool: CluePool): PoolReport {
     if (fitClue(clue, clue.speciesId, records) !== 'fits') {
       errors.push(`clue ${clue.id} (${name(clue.speciesId)}, ${clue.category}): does not fit its own species`);
     }
-    if (clue.category === 'taxonomy') {
-      const own = records.get(clue.speciesId);
-      const unranked = own ? clueTags(clue).filter(tag => !rankOfTag(tag, own.taxonomy)) : [];
-      if (unranked.length) warnings.push(`clue ${clue.id} (${name(clue.speciesId)}): taxonomy tags [${unranked.join(', ')}] match none of its class/order/family/genus`);
-    }
   }
 
   for (const [id, record] of records) {
-    const traits = new Set([...record.traits.values()].flatMap(tags => [...tags]));
-    for (const [axis, values] of Object.entries(EXCLUSIVE_AXES)) {
-      const held = values.filter(value => traits.has(value));
-      if (held.length > 1) warnings.push(`${name(id)}: record holds both ${held.join(' and ')} (${axis})`);
+    // Two values of a one-value trait would rule out the answer's look-alikes wrongly.
+    const byPrefix = new Map<string, string[]>();
+    for (const tag of allTraits(record)) {
+      const prefix = prefixOf(tag);
+      if (prefix && EXCLUSIVE_PREFIXES.has(prefix)) byPrefix.set(prefix, [...(byPrefix.get(prefix) ?? []), tag]);
     }
+    for (const [prefix, held] of byPrefix) if (held.length > 1) errors.push(`${name(id)}: holds ${held.join(' and ')}, but ${prefix} takes one value`);
     if (!record.taxonomy.class) warnings.push(`${name(id)}: no class in the species table, so taxonomy clues can't rule it in or out`);
   }
 
