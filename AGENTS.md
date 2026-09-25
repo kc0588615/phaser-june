@@ -63,6 +63,7 @@ The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-mat
 ## Docs Map
 - `docs/CLUE_MATCH.md`: the game, globe, rules, content workflow, database, practice SQL.
 - `docs/CONTENT_SOURCES.md`: source tiers, tag vocabulary, profile workflow.
+- `docs/DEPLOY.md`: serving the app from the VPS (Dockerfile, `deploy/`), the `critter_app` role, backups, hardening.
 - `docs/DATABASE_ACCESS.md`, `docs/SHAPEFILE_BEST_PRACTICES.md`, `docs/DRIZZLE_ORM_GUIDE.md`: data layer.
 - `README.md`: start here.
 

@@ -1,0 +1,50 @@
+# The web app and its HTTPS front door, added to the database stack in
+# docker-compose.yml:
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.app.yml up -d --build
+# Needs deploy/app.env (from deploy/app.env.example) and APP_DOMAIN in .env.
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_TITILER_BASE_URL: ${NEXT_PUBLIC_TITILER_BASE_URL}
+        NEXT_PUBLIC_COG_URL: ${NEXT_PUBLIC_COG_URL}
+    container_name: critter-app
+    restart: unless-stopped
+    env_file: deploy/app.env
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8080"
+    networks:
+      - backend
+      - web
+
+  # Automatic HTTPS (Let's Encrypt) for APP_DOMAIN, proxying to the app.
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

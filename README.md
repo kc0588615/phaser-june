@@ -30,5 +30,6 @@ npm run typecheck && npm run lint
 
 - [`docs/CLUE_MATCH.md`](docs/CLUE_MATCH.md): how the game and globe work, the rules, the content workflow, the database, practice SQL.
 - [`docs/CONTENT_SOURCES.md`](docs/CONTENT_SOURCES.md): where animal facts come from (tiered sources), the clue tag vocabulary, adding an animal.
+- [`docs/DEPLOY.md`](docs/DEPLOY.md): running it on the VPS over HTTPS, the app's database role, nightly backups.
 - [`docs/DATABASE_ACCESS.md`](docs/DATABASE_ACCESS.md), [`docs/SHAPEFILE_BEST_PRACTICES.md`](docs/SHAPEFILE_BEST_PRACTICES.md), [`docs/DRIZZLE_ORM_GUIDE.md`](docs/DRIZZLE_ORM_GUIDE.md): the data layer.
 - [`AGENTS.md`](AGENTS.md): notes for coding agents.

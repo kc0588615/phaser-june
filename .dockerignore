@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.test-dist
+e2e-artifacts
+*.png
+*.log
+.env
+.env.*
+claude_code_design
+plans
+next
+template-nextjs@1.2.0
+pgdata
