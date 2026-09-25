@@ -62,7 +62,7 @@ npm run start    # http://localhost:3000
 ## 3) Recommended Reading Path
 1) **Current runtime truth:** [GAME_SYSTEM_ARCHITECTURE.md](./GAME_SYSTEM_ARCHITECTURE.md), [EXPEDITION_RUN_LOOP.md](./EXPEDITION_RUN_LOOP.md), [DEDUCTION_CAMP_ECONOMY.md](./DEDUCTION_CAMP_ECONOMY.md), [../AGENTS.md](../AGENTS.md).
 Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](./AFFINITY_MIGRATION_IMPLEMENTATION.md).
-2) **Game board & clues:** [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
+2) **Game board & clues:** [CLUE_MATCH.md](./CLUE_MATCH.md) (current free-play clue mode), [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md), [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md).
 3) **Map & data ingress:** [MAPLIBRE_UI_CUSTOMIZATION.md](./MAPLIBRE_UI_CUSTOMIZATION.md), [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md), [HABITAT_RASTER_MIGRATION.md](./HABITAT_RASTER_MIGRATION.md).
 4) **UI & styling:** [SHADCN_IMPLEMENTATION_GUIDE.md](./SHADCN_IMPLEMENTATION_GUIDE.md), [STYLE_MAPPING.md](./archive/STYLE_MAPPING.md), [SPECIES_CARD_UI_IMPROVEMENTS.md](./SPECIES_CARD_UI_IMPROVEMENTS.md), [SPECIES_UI_MOBILE_IMPROVEMENTS.md](./SPECIES_UI_MOBILE_IMPROVEMENTS.md), [SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md](./SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md).
 5) **Partial runtime / schema context:** [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md).
@@ -85,6 +85,7 @@ Affinity-specific implementation state: [AFFINITY_MIGRATION_IMPLEMENTATION.md](.
 - [ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md](./ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md) — GIS layer scoring, node family taxonomy, DB schema; partially forward-looking.
 
 **Game Board & Clues**
+- [CLUE_MATCH.md](./CLUE_MATCH.md) — Clue Match: gem color → clue category, candidate deduction, content workflow, practice SQL.
 - [CLUE_BOARD_IMPLEMENTATION.md](./archive/CLUE_BOARD_IMPLEMENTATION.md) — historical/free-play clue-board flow; not the expedition runtime source of truth.
 - [SPECIES_DISCOVERY_IMPLEMENTATION.md](./SPECIES_DISCOVERY_IMPLEMENTATION.md) — species progression and discovery flow.
 - [HABITAT_HIGHLIGHT_IMPLEMENTATION.md](./HABITAT_HIGHLIGHT_IMPLEMENTATION.md) — habitat hit/highlight flow.
