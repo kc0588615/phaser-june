@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { GLOSSARY } from '@/clueGame/glossary';
-import type { Journal } from '@/clueGame/journal';
+import type { Journal, Records } from '@/clueGame/journal';
 import { speciesBadge, type CluePool } from '@/clueGame/pool';
 import { playableSpeciesIds } from '@/clueGame/round';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
@@ -12,7 +12,7 @@ import { useWordsLearned } from './useWordsLearned';
 const LEARNED_FACTS = 3;
 
 /** Every animal this player has identified, with facts to revisit. */
-export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null; journal: Journal; onClose: () => void }) {
+export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePool | null; journal: Journal; records: Records; onClose: () => void }) {
   useEscapeKey(onClose);
   const words = useWordsLearned().flatMap(word => GLOSSARY.find(entry => entry.term === word) ?? []);
   const playable = pool ? playableSpeciesIds(pool).flatMap(id => pool.species.find(species => species.id === id) ?? []) : [];
@@ -30,6 +30,7 @@ export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null
           <div>
             <h2 id="journal-title" className="m-0 text-lg font-bold">Field Journal</h2>
             <p className="m-0 text-xs text-white/60">{found.length} of {playable.length} animals identified</p>
+            {records.bestScore > 0 && <p className="m-0 text-xs text-amber-200/80">Best score {records.bestScore} · best streak {records.bestStreak}</p>}
           </div>
           <button type="button" onClick={onClose} className="ml-auto grid h-11 w-11 place-items-center rounded-full hover:bg-white/10" aria-label="Close journal">
             <X className="h-5 w-5" />

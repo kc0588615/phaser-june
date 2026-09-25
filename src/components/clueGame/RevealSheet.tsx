@@ -9,10 +9,12 @@ import { RangeMap } from './RangeMap';
 const AUTO_ADVANCE_MS = 9000;
 
 /** The answer, what it's worth, and something new to learn about it. */
-export function RevealSheet({ species, solve, isNew, onNext }: {
+export function RevealSheet({ species, solve, isNew, newBest, onNext }: {
   species: PoolSpecies;
   solve: SolveSummary;
   isNew: boolean;
+  /** This solve set a new personal best score. */
+  newBest: boolean;
   onNext: () => void;
 }) {
   const [autoAdvance, setAutoAdvance] = useState(true);
@@ -43,6 +45,7 @@ export function RevealSheet({ species, solve, isNew, onNext }: {
         <span className="text-white/70">{taxonomyLine(species)}</span>
         {status && <span className={`rounded-full border px-2 py-0.5 font-semibold ${status.badge}`}>{status.label}</span>}
         {isNew && <span className="flex items-center gap-1 rounded-full bg-cyan-300/20 px-2 py-0.5 font-semibold text-cyan-100"><Sparkles className="h-3 w-3" aria-hidden="true" />New in your journal</span>}
+        {newBest && <span className="rounded-full bg-amber-300/25 px-2 py-0.5 font-semibold text-amber-100">New best score!</span>}
       </div>
 
       <RangeMap speciesId={species.id} name={species.commonName} />

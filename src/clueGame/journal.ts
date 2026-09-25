@@ -63,3 +63,24 @@ export function parseWords(raw: string | null): string[] {
     return [];
   }
 }
+
+/** Personal bests across sessions. */
+export const RECORDS_STORAGE_KEY = 'clue-match:records:v1';
+
+export interface Records { bestScore: number; bestStreak: number }
+
+export const NO_RECORDS: Records = { bestScore: 0, bestStreak: 0 };
+
+export function updateRecords(records: Records, session: { score: number; streak: number }): Records {
+  return { bestScore: Math.max(records.bestScore, session.score), bestStreak: Math.max(records.bestStreak, session.streak) };
+}
+
+export function parseRecords(raw: string | null): Records {
+  try {
+    const parsed = raw ? JSON.parse(raw) as Partial<Records> : null;
+    const count = (value: unknown) => (Number.isInteger(value) && (value as number) > 0 ? value as number : 0);
+    return { bestScore: count(parsed?.bestScore), bestStreak: count(parsed?.bestStreak) };
+  } catch {
+    return NO_RECORDS;
+  }
+}

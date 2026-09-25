@@ -20,11 +20,12 @@ import { useJournal } from './useJournal';
 
 export function ClueMatchGame() {
   const { session, loadError, seed, onSceneReady, guess, nextRound } = useClueMatch();
-  const { journal, record } = useJournal();
+  const { journal, records, record } = useJournal();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [newDiscovery, setNewDiscovery] = useState(false);
+  const [newBest, setNewBest] = useState(false);
 
   useEffect(() => {
     try {
@@ -42,9 +43,11 @@ export function ClueMatchGame() {
   const roundNumber = session?.round.round;
   useEffect(() => setSelectedId(null), [roundNumber]);
 
-  // Record each solve once (each solve is a new object), noting whether it's a first discovery.
+  // Record each solve once (each solve is a new object), noting a first discovery or a new best score.
   const journalRef = useRef(journal);
   useEffect(() => { journalRef.current = journal; }, [journal]);
+  const recordsRef = useRef(records);
+  useEffect(() => { recordsRef.current = records; }, [records]);
   const recordedSolve = useRef<SolveSummary | null>(null);
   const lastSolve = session?.lastSolve;
   useEffect(() => {
@@ -53,7 +56,8 @@ export function ClueMatchGame() {
     const species = session.pool.species.find(candidate => candidate.id === lastSolve.speciesId);
     if (!species) return;
     setNewDiscovery(!journalRef.current[species.scientificName]);
-    record(species, lastSolve.moves);
+    setNewBest(recordsRef.current.bestScore > 0 && session.score > recordsRef.current.bestScore);
+    record(species, lastSolve.moves, { score: session.score, streak: session.bestStreak });
   }, [session, lastSolve, record]);
 
   const candidates = useMemo(() => session ? candidateViews(session) : [], [session]);
@@ -99,14 +103,14 @@ export function ClueMatchGame() {
               <GuessBar selected={selected} canGuess={session.phase === 'playing'} onGuess={confirmGuess} />
               <ClueFeed feed={session.feed} speciesById={speciesById} displayOrder={session.round.candidateIds} />
               {session.phase === 'solved' && session.lastSolve && answer && (
-                <RevealSheet key={session.round.round} species={answer} solve={session.lastSolve} isNew={newDiscovery} onNext={nextRound} />
+                <RevealSheet key={session.round.round} species={answer} solve={session.lastSolve} isNew={newDiscovery} newBest={newBest} onNext={nextRound} />
               )}
             </>
           )}
         </div>
       </main>
       {helpOpen && <HowToPlay seed={seed} onClose={closeHelp} />}
-      {journalOpen && <JournalSheet pool={session?.pool ?? null} journal={journal} onClose={closeJournal} />}
+      {journalOpen && <JournalSheet pool={session?.pool ?? null} journal={journal} records={records} onClose={closeJournal} />}
     </>
   );
 }

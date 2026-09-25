@@ -1,7 +1,7 @@
 // The Field Journal keeps solves per animal and never trusts malformed storage.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseJournal, parseWords, recordSolve } from '@/clueGame/journal';
+import { NO_RECORDS, parseJournal, parseRecords, parseWords, recordSolve, updateRecords } from '@/clueGame/journal';
 
 const frog = { scientificName: 'Rhinoderma darwinii', commonName: 'Darwin Frog' };
 
@@ -35,5 +35,20 @@ describe('parseWords', () => {
     assert.deepEqual(parseWords(null), []);
     assert.deepEqual(parseWords('{oops'), []);
     assert.deepEqual(parseWords('{"a":1}'), []);
+  });
+});
+
+describe('records', () => {
+  test('bests only go up', () => {
+    let records = updateRecords(NO_RECORDS, { score: 300, streak: 4 });
+    records = updateRecords(records, { score: 120, streak: 6 });
+    assert.deepEqual(records, { bestScore: 300, bestStreak: 6 });
+  });
+
+  test('stored records round-trip; junk becomes zero', () => {
+    assert.deepEqual(parseRecords(JSON.stringify({ bestScore: 300, bestStreak: 6 })), { bestScore: 300, bestStreak: 6 });
+    assert.deepEqual(parseRecords(JSON.stringify({ bestScore: -5, bestStreak: 'x' })), NO_RECORDS);
+    assert.deepEqual(parseRecords('nope'), NO_RECORDS);
+    assert.deepEqual(parseRecords(null), NO_RECORDS);
   });
 });
