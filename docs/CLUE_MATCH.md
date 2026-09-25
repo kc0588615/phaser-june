@@ -40,7 +40,7 @@ flowchart LR
   H --> SEL[selectors] --> UI[legend, cards, feed, reveal]
 ```
 
-The board only reports matches (`gems-matched`, one event per explode phase, with each group's color and size). React owns everything else. While a round is solved the board is locked (`clue-board-lock`), so matches between rounds can't reveal anything.
+The board only reports matches (`gems-matched`, one event per explode phase, with each group's color and size). React owns everything else. Keyboard: the board is focusable; React forwards arrows, Shift+arrows, Enter and Esc (`clue-board-key`). Arrows move a cursor, Shift+arrows preview sliding its row or column one cell per press, Enter makes the move, Esc cancels. The board describes each step (`clue-board-announce`) in a screen-reader live region; the feed announces new clues. While a round is solved the board is locked (`clue-board-lock`), so matches between rounds can't reveal anything.
 
 ## Rules
 
