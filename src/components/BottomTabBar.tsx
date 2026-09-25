@@ -42,7 +42,7 @@ export function BottomTabBar({ active, onChange }: BottomTabBarProps) {
                 className={cn('mb-1 transition-all duration-300', isActive ? 'text-ds-cyan drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]' : 'text-ds-text-muted')}
                 strokeWidth={isActive ? 2 : 1.5}
               />
-              <span className={cn('text-ds-caption tracking-wide transition-colors', isActive ? 'text-ds-cyan' : 'text-ds-text-muted')}>
+              <span className={cn('max-w-full truncate px-0.5 text-[11px] leading-tight transition-colors sm:text-ds-caption sm:tracking-wide', isActive ? 'text-ds-cyan' : 'text-ds-text-muted')}>
                 {label}
               </span>
               {isActive && (
