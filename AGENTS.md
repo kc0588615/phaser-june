@@ -39,7 +39,6 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Do not add `?pgbouncer=true` (invalid for `psql`/postgres.js; causes introspection issues).
 - Always use the `DATABASE_URL` from environment, never hardcode connection strings.
 - Always wrap database lookups and external calls in try/catch blocks.
-- In migration scripts, verify imported modules are available in the migration context (migrations run in isolation).
 
 ## Repo Quick Start
 - Install: `npm install`
@@ -57,12 +56,12 @@ The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-mat
 - Clue Match UI: `src/pages/clue-match.tsx` -> `src/components/clueGame/` (`ClueMatchGame` shell, `useClueMatch` state + board wiring, `useJournal` on-device journal).
 - Rules (pure, tested in `tests/clueGame/`): `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool, glossary, journal, solveReport).
 - Board: `src/PhaserGame.tsx` boots `src/game/main.ts` (Preloader -> `scenes/ClueBoardScene.ts`). Model `BackendPuzzle.ts`, view `BoardView.ts`, input + cascade loop `board/BoardController.ts`. React <-> Phaser only via typed `src/game/EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `current-scene-ready`). Dev bridge `window.__cc` (`src/game/debugBridge.ts`).
-- Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `POST /api/clue-game/solves`. Drizzle schema `src/db/schema/*` models only the tables the app uses (species, clues, facts, iucn, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Migrations `src/db/migrations/` (Clue Match: 035-044).
+- Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `POST /api/clue-game/solves`. Drizzle schema `src/db/schema/*` models only the tables the app uses (species, clues, facts, iucn, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file); Range clues `db/realm-clues.sql`.
 - Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`); `useEnsureProfile` creates the `profiles` row via `/api/player/ensure-profile`.
 - Content: edit rows in Postgres, then `npm run clue:pool -- --check` (and `--snapshot` for the test fixture). Practice SQL: `db/analysis/clue-match/`.
 
 ## Docs Map
-- `docs/CLUE_MATCH.md`: the game, globe, rules, content workflow, migrations, practice SQL.
+- `docs/CLUE_MATCH.md`: the game, globe, rules, content workflow, database, practice SQL.
 - `docs/DATABASE_ACCESS.md`, `docs/SHAPEFILE_BEST_PRACTICES.md`, `docs/DRIZZLE_ORM_GUIDE.md`: data layer.
 - `README.md`: start here.
 

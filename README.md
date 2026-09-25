@@ -22,11 +22,11 @@ npm run typecheck && npm run lint
 - `src/clueGame/`: the game's rules as pure, tested TypeScript.
 - `src/game/`: the Phaser board (model, view, input), talking to React only through `EventBus.ts`.
 - `src/app/api/`: `places`, `clue-game/pool`, `clue-game/range`, `clue-game/solves`.
-- `src/db/`: Drizzle client and schema; `src/db/migrations/`: SQL migrations.
-- `db/analysis/clue-match/`: read-only SQL exercises on the game's data.
+- `src/db/`: Drizzle client and schema.
+- `db/schema.sql`: the database schema (tables and views); `db/realm-clues.sql`: Range clues from range maps; `db/analysis/clue-match/`: read-only SQL exercises.
 
 ## Docs
 
-- [`docs/CLUE_MATCH.md`](docs/CLUE_MATCH.md): how the game and globe work, the rules, the content workflow, migrations, practice SQL.
+- [`docs/CLUE_MATCH.md`](docs/CLUE_MATCH.md): how the game and globe work, the rules, the content workflow, the database, practice SQL.
 - [`docs/DATABASE_ACCESS.md`](docs/DATABASE_ACCESS.md), [`docs/SHAPEFILE_BEST_PRACTICES.md`](docs/SHAPEFILE_BEST_PRACTICES.md), [`docs/DRIZZLE_ORM_GUIDE.md`](docs/DRIZZLE_ORM_GUIDE.md): the data layer.
 - [`AGENTS.md`](AGENTS.md): notes for coding agents.

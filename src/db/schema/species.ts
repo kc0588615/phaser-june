@@ -100,7 +100,7 @@ export const speciesTable = pgTable('species', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-/** Clues shown by gem color (migrations 035-041). */
+/** Clues shown by gem color. */
 export const speciesDeductionClues = pgTable('species_deduction_clues', {
   id: serial('id').primaryKey(),
   category: text('category').notNull().$type<SpeciesClueCategory>(),

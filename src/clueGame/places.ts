@@ -1,5 +1,5 @@
 // Places to explore from the home globe (GET /api/places, built from the
-// clue_match_places view, migration 043), plus the small pure helpers the globe
+// clue_match_places view in db/schema.sql), plus the small pure helpers the globe
 // screen uses. Unit-tested in tests/clueGame/places.test.ts.
 
 export type PlaceKind = 'country' | 'wildlife_area' | 'continent';

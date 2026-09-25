@@ -8,7 +8,7 @@ type RangeRow = { svg_path: string; lon: number; lat: number; area_km2: string |
 /**
  * GET /api/clue-game/range?species=<id>
  * One species' range map for Clue Match, from the clue_match_ranges
- * materialized view (migration 040). 404 when the species has no range map.
+ * materialized view (db/schema.sql). 404 when the species has no range map.
  */
 export async function GET(request: NextRequest) {
   const speciesId = Number(request.nextUrl.searchParams.get('species'));

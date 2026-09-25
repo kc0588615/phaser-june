@@ -1,4 +1,4 @@
-// Loads the globe's places from the clue_match_places view (migration 043).
+// Loads the globe's places from the clue_match_places view (db/schema.sql).
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import type { Place, PlaceAnimal, PlaceKind, PlacesResponse } from '@/clueGame/places';

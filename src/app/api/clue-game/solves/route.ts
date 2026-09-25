@@ -5,7 +5,7 @@ import { parseSolveReport } from '@/clueGame/solveReport';
 
 /**
  * POST /api/clue-game/solves
- * Records one solved Clue Match mystery (table clue_match_solves, migration 042)
+ * Records one solved Clue Match mystery (table clue_match_solves, db/schema.sql)
  * for analyzing play with SQL. Anonymous play is recorded without a player.
  */
 export async function POST(request: NextRequest) {

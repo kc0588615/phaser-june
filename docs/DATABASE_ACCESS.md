@@ -38,7 +38,7 @@ server-session affinity matters.
 
 | Client or task | Route | Tunnel required? |
 |---|---|---|
-| Next.js, Drizzle, Vercel | `DATABASE_URL` → port 6432 | No |
+| Next.js, Drizzle | `DATABASE_URL` → port 6432 | No |
 | Human `psql`, PgBouncer-compatible SQL | `./scripts/db` → port 6432 | No |
 | Codex/other WSL agents | `127.0.0.1:55432` → raw PostgreSQL | Yes |
 | Session-bound SQL, raw imports, recovery | `127.0.0.1:55432` → raw PostgreSQL | Yes |
@@ -56,10 +56,6 @@ current reality, not the desired least-privilege end state. Default to read-only
 queries. Run writes only when explicitly authorized, name the affected tables,
 and use an explicit transaction.
 
-The old password formerly present in `docs/archive/CODEX.md` was rotated and
-removed from the working tree. Current credentials live only in local and
-deployment environments.
-
 ## Direct PgBouncer access
 
 Use the helper for human `psql` work that is compatible with transaction
@@ -68,8 +64,8 @@ pooling:
 ```bash
 ./scripts/db                                      # interactive shell
 ./scripts/db "select count(*) from species;"      # one-off query
-./scripts/db -f src/db/migrations/example.sql     # stop on first SQL error
-./scripts/db -1 -f src/db/migrations/example.sql  # one transaction
+./scripts/db -f change.sql                        # stop on first SQL error
+./scripts/db -1 -f change.sql                     # one transaction
 ```
 
 The helper loads `DATABASE_URL` from the environment or `.env.local`, parses it
@@ -161,9 +157,8 @@ from WSL.
 ## Related
 
 - `AGENTS.md` — authoritative agent policy
-- `docs/DATABASE_USER_GUIDE.md` — tables, Drizzle queries, TiTiler
-- `docs/DATABASE_ER_PLAY_PATH.md` — ER diagram and play-path fields
-- `docs/DRIZZLE_VERCEL_MIGRATION.md` — Vercel and PgBouncer runtime
+- `db/schema.sql` — the tables and views the app uses
+- `docs/DRIZZLE_ORM_GUIDE.md` — Drizzle client and queries
 - [PostgreSQL 17 `psql`](https://www.postgresql.org/docs/17/app-psql.html)
 - [PostgreSQL 17 libpq connections](https://www.postgresql.org/docs/17/libpq-connect.html)
 - [PostgreSQL SSH tunnels](https://www.postgresql.org/docs/17/ssh-tunnels.html)

@@ -1,5 +1,7 @@
--- Clue Match: Range clues computed from range maps, so the blue gem narrows the
--- candidates too.
+-- Range clues computed from range maps, so the blue gem narrows the candidates
+-- too. Run it after adding species (it skips species that already have realm
+-- clues), then refresh the views (db/schema.sql):
+--   ./scripts/db -f db/realm-clues.sql
 --
 -- Each playable species' IUCN range (iucn, joined on species.iucn_id = iucn.id_no)
 -- is split by OneEarth biogeographic realm (oneearth.oneearth_bioregion). Every
@@ -13,8 +15,8 @@
 -- complete: a candidate that lives in other realms but not this one is ruled out
 -- (src/clueGame/traits.ts, complete families).
 --
--- Idempotent: species that already have a realm clue are skipped. To redo one
--- species, delete its realm clues (compare_tags && ARRAY['realm:...']) and rerun.
+-- To redo one species, delete its realm clues (compare_tags && ARRAY['realm:...'])
+-- and rerun.
 BEGIN;
 SET LOCAL search_path = public;
 

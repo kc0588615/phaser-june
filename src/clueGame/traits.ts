@@ -29,7 +29,7 @@ export const EXCLUSIVE_AXES = {
 } as const satisfies Record<string, readonly string[]>;
 export type ExclusiveAxis = keyof typeof EXCLUSIVE_AXES;
 
-/** Biogeographic realms, tagged on Range clues from each species' IUCN range map (migration 039). */
+/** Biogeographic realms, tagged on Range clues from each species' IUCN range map (db/realm-clues.sql). */
 export const REALM_TAGS = [
   'realm:nearctic', 'realm:neotropical', 'realm:palearctic', 'realm:afrotropical',
   'realm:indomalayan', 'realm:australasian', 'realm:oceanian', 'realm:antarctic',

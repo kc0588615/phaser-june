@@ -1,5 +1,5 @@
 -- How players actually do: every solved mystery is a row in clue_match_solves
--- (migration 042). Which animals take the most moves or wrong guesses, and
+-- (db/schema.sql). Which animals take the most moves or wrong guesses, and
 -- which gem colors do players lean on?
 --
 -- Practice: aggregates (avg, percentile_cont ... WITHIN GROUP), FILTER,

@@ -18,7 +18,7 @@ export interface SolveReport {
 
 const PLACE_KEY = /^(country|area|continent):[A-Za-z0-9-]{1,80}$/;
 
-// Same bounds as the table's CHECK constraints (migration 042).
+// Same bounds as the table's CHECK constraints (db/schema.sql).
 const LIMITS: Record<Exclude<keyof SolveReport, 'revealedByGem' | 'placeKey'>, [number, number]> = {
   seed: [1, 0xffff_ffff],
   round: [1, 10000],
