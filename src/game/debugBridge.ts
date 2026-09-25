@@ -94,18 +94,18 @@ function cellCenter(x: number, y: number): { x: number; y: number } {
   };
 }
 
-/** Moves (shifts of 1-3 cells either way) that would produce a match right now. */
-function validMoves(): Array<Move & { matches: number }> {
+/** Moves (shifts of 1-3 cells either way) that would produce a match right now; `largest` is the biggest group. */
+function validMoves(): Array<Move & { matches: number; largest: number }> {
   const puzzle = requireScene().debugPuzzle();
   if (!puzzle) return [];
   const { width, height } = puzzle;
-  const found: Array<Move & { matches: number }> = [];
+  const found: Array<Move & { matches: number; largest: number }> = [];
   for (const rowOrCol of ['row', 'col'] as const) {
     const lines = rowOrCol === 'row' ? height : width;
     for (let index = 0; index < lines; index++) {
       for (const amount of [1, -1, 2, -2, 3]) {
-        const matches = puzzle.getMatchesFromHypotheticalMove(new MoveAction(rowOrCol, index, amount)).length;
-        if (matches > 0) found.push({ rowOrCol, index, amount, matches });
+        const groups = puzzle.getMatchesFromHypotheticalMove(new MoveAction(rowOrCol, index, amount));
+        if (groups.length > 0) found.push({ rowOrCol, index, amount, matches: groups.length, largest: Math.max(...groups.map(group => group.length)) });
       }
     }
   }

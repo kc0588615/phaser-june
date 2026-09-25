@@ -3,11 +3,11 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateClue, fitClue, usefulCategories } from '@/clueGame/deduction';
 import { normalizeTag } from '@/clueGame/traits';
-import { correctGuessScore, createRound, liveCandidates, notesLeft, registerWrongGuess, revealNext } from '@/clueGame/round';
+import { cluesForMatch, correctGuessScore, createRound, liveCandidates, notesLeft, registerWrongGuess, revealNext } from '@/clueGame/round';
 import { clueSessionReducer, currentRoundFeed } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
 import type { CluePool } from '@/clueGame/pool';
-import { OTHERS, clue, find, pool, records } from './testPool';
+import { OTHERS, clue, find, matched, pool, records } from './testPool';
 
 describe('records', () => {
   test('authoring prefixes are ignored', () => {
@@ -157,10 +157,19 @@ describe('session', () => {
   const start = () => clueSessionReducer(null, { type: 'load', pool, round: createRound(pool, mulberry32(1), 1, OTHERS) })!;
 
   test('each explode phase reveals one clue per group; only player moves count as moves', () => {
-    let state = clueSessionReducer(start(), { type: 'matched', gems: ['green', 'green'], cascade: false })!;
-    state = clueSessionReducer(state, { type: 'matched', gems: ['red'], cascade: true })!;
+    let state = clueSessionReducer(start(), matched(['green', 'green']))!;
+    state = clueSessionReducer(state, matched(['red'], true))!;
     assert.deepEqual(state.feed.map(item => item.kind), ['round', 'clue', 'clue', 'clue']);
     assert.equal(state.round.moves, 1);
+  });
+
+  test('a bigger match reveals extra clues of its color, marked as a bonus', () => {
+    const four = clueSessionReducer(start(), matched(['green'], false, 4))!;
+    assert.deepEqual(currentRoundFeed(four.feed).map(item => [item.kind, 'bonus' in item && item.bonus === true]), [['clue', false], ['clue', true]]);
+    // Species 1 has two green clues: a 5-match shows both, then says green is out.
+    const five = clueSessionReducer(start(), matched(['green'], false, 5))!;
+    assert.deepEqual(currentRoundFeed(five.feed).map(item => item.kind), ['clue', 'clue', 'empty']);
+    assert.equal(five.round.moves, 1);
   });
 
   test('a wrong guess costs points and the streak; a right one solves the round', () => {
@@ -178,7 +187,7 @@ describe('session', () => {
   });
 
   test('guesses on ruled-out candidates are ignored', () => {
-    const state = clueSessionReducer(start(), { type: 'matched', gems: ['red'], cascade: false })!;
+    const state = clueSessionReducer(start(), matched(['red']))!;
     const out = state.round.ruledOut[0];
     assert.ok(out !== undefined, 'the taxonomy clue should rule someone out');
     assert.equal(clueSessionReducer(state, { type: 'guess', speciesId: out }), state);
@@ -186,12 +195,12 @@ describe('session', () => {
 
   test('matches are ignored between rounds', () => {
     const solved = clueSessionReducer(start(), { type: 'guess', speciesId: 1 })!;
-    assert.equal(clueSessionReducer(solved, { type: 'matched', gems: ['red'], cascade: false }), solved);
+    assert.equal(clueSessionReducer(solved, matched(['red'])), solved);
   });
 
   test('the feed keeps the newest 120 items and the current round is findable', () => {
     let state = start();
-    for (let i = 0; i < 150; i++) state = clueSessionReducer(state, { type: 'matched', gems: ['white'], cascade: true })!;
+    for (let i = 0; i < 150; i++) state = clueSessionReducer(state, matched(['white'], true))!;
     state = clueSessionReducer(state, { type: 'guess', speciesId: 1 })!;
     state = clueSessionReducer(state, { type: 'start-round', round: createRound(pool, mulberry32(2), 2, [1]) })!;
     assert.ok(state.feed.length <= 120);
@@ -201,6 +210,10 @@ describe('session', () => {
 });
 
 describe('scoring', () => {
+  test('matches of 4 and 5+ reveal one and two extra clues', () => {
+    assert.deepEqual([3, 4, 5, 6].map(cluesForMatch), [1, 2, 3, 3]);
+  });
+
   test('fewer moves, a first try, and a streak score more', () => {
     assert.ok(correctGuessScore({ moves: 2, streak: 0, firstTry: false }) > correctGuessScore({ moves: 8, streak: 0, firstTry: false }));
     assert.ok(correctGuessScore({ moves: 4, streak: 0, firstTry: true }) > correctGuessScore({ moves: 4, streak: 0, firstTry: false }));

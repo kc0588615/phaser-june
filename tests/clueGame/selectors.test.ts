@@ -6,7 +6,7 @@ import { createRound } from '@/clueGame/round';
 import { candidateViews, debugSummary, fitGroups, legendViews } from '@/clueGame/selectors';
 import { clueSessionReducer, type SessionState } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
-import { OTHERS, pool } from './testPool';
+import { OTHERS, matched, pool } from './testPool';
 
 /** A fresh session whose mystery is species 1 (the Rhinoderma frog). */
 const start = (): SessionState => clueSessionReducer(null, { type: 'load', pool, round: createRound(pool, mulberry32(1), 1, OTHERS) })!;
@@ -23,7 +23,7 @@ describe('candidateViews', () => {
   });
 
   test('a deductive clue adds one dot per candidate and rules out contradictions', () => {
-    const state = act(start(), { type: 'matched', gems: ['red'], cascade: false });
+    const state = act(start(), matched(['red']));
     for (const view of candidateViews(state)) {
       assert.equal(view.fits.length, 1);
       const amphibian = view.species.className === 'AMPHIBIA';
@@ -33,7 +33,7 @@ describe('candidateViews', () => {
   });
 
   test('notes add no dots', () => {
-    const state = act(start(), { type: 'matched', gems: ['purple'], cascade: false });
+    const state = act(start(), matched(['purple']));
     assert.ok(candidateViews(state).every(view => view.fits.length === 0));
   });
 
@@ -47,7 +47,7 @@ describe('candidateViews', () => {
   });
 
   test('dots reset when a new round starts', () => {
-    let state = act(start(), { type: 'matched', gems: ['red', 'green'], cascade: false }, { type: 'guess', speciesId: 1 });
+    let state = act(start(), matched(['red', 'green']), { type: 'guess', speciesId: 1 });
     state = act(state, { type: 'start-round', round: createRound(pool, mulberry32(9), 2, state.history) });
     assert.ok(candidateViews(state).every(view => view.fits.length === 0 && view.status === 'live'));
   });
@@ -55,7 +55,7 @@ describe('candidateViews', () => {
 
 describe('legendViews', () => {
   test('counts what each color revealed this round', () => {
-    const state = act(start(), { type: 'matched', gems: ['green', 'green', 'purple'], cascade: false });
+    const state = act(start(), matched(['green', 'green', 'purple']));
     const legend = Object.fromEntries(legendViews(state).map(tile => [tile.gem, tile]));
     assert.equal(legend.green.revealed, 2);
     assert.equal(legend.purple.revealed, 1);
@@ -63,7 +63,7 @@ describe('legendViews', () => {
   });
 
   test('only deducing colors can be useful, and an empty color is marked', () => {
-    const state = act(start(), { type: 'matched', gems: ['white'], cascade: false });
+    const state = act(start(), matched(['white']));
     const legend = Object.fromEntries(legendViews(state).map(tile => [tile.gem, tile]));
     assert.equal(legend.white.exhausted, true);
     for (const tile of legendViews(state)) if (!tile.deduces) assert.equal(tile.useful, false, tile.gem);
@@ -93,7 +93,7 @@ describe('fitGroups', () => {
 describe('debugSummary', () => {
   test('is JSON-safe and keeps a short feed tail', () => {
     let state = start();
-    for (let i = 0; i < 12; i++) state = act(state, { type: 'matched', gems: ['green'], cascade: true });
+    for (let i = 0; i < 12; i++) state = act(state, matched(['green'], true));
     const summary = debugSummary(state, 77);
     assert.deepEqual(JSON.parse(JSON.stringify(summary)), summary);
     assert.equal(summary.seed, 77);

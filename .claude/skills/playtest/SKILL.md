@@ -85,7 +85,7 @@ Content problems (a clue that doesn't fit its own animal, missing notes for a co
 |---|---|
 | `state()` | board: `ready`, `canMove`, `isResolvingMove`, `inRun`, `nodeIndex`, `boardSeed`, `movesUsed`/`maxMoves`, `gameOver`, `objective`, `hasAnyValidMove`, `grid`, layout |
 | `run()` | `{ runId, runState }` from ExpeditionContext |
-| `validMoves()` | `[{ rowOrCol, index, amount, matches }]` for shifts of 1–3 |
+| `validMoves()` | `[{ rowOrCol, index, amount, matches, largest }]` for shifts of 1–3; `largest` is the biggest group |
 | `drag(move, { input, timeoutMs })` | `{ counted, movesUsed, timedOut, blocked, after }` once the board settles; `input: 'touch'` drags with a finger |
 | `clue()` | Clue Match session: `phase`, `round`, `mysteryId`, `candidateIds`, `live`, `moves`, `ruledOut`, `wrongGuesses`, `revealedByGem`, `score`, `streak`, `feedTail` |
 | `waitIdle(ms)` | snapshot once input returns or the node is done |

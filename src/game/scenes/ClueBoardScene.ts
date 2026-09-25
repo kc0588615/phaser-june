@@ -12,6 +12,7 @@ import { BoardController, type BoardLayout } from '../board/BoardController';
 import { squareBoardLayout } from '../board/squareLayout';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from '@/game/debugBridge';
 import { gemCategory } from '@/clueGame/categories';
+import { cluesForMatch } from '@/clueGame/round';
 
 const NEVER_ENDS = Number.MAX_SAFE_INTEGER;
 
@@ -92,7 +93,7 @@ export class ClueBoardScene extends Phaser.Scene {
         }
     }
 
-    /** A colored ring where a group cleared; bigger groups ring wider. */
+    /** A colored ring where a group cleared; bigger groups ring wider and call out their extra clues. */
     private burst(cells: Array<[number, number]>, color: string, size: number): void {
         const { gemSize, offset } = this.layout;
         const cx = offset.x + (cells.reduce((sum, [x]) => sum + x, 0) / cells.length + 0.5) * gemSize;
@@ -107,6 +108,26 @@ export class ClueBoardScene extends Phaser.Scene {
             duration: 420,
             ease: 'Cubic.easeOut',
             onComplete: () => ring.destroy(),
+        });
+
+        const extra = cluesForMatch(size) - 1;
+        if (extra <= 0) return;
+        const label = this.add.text(cx, cy, `+${extra} clue${extra === 1 ? '' : 's'}`, {
+            fontFamily: 'Arial Black, Arial, sans-serif',
+            fontSize: `${Math.round(gemSize * 0.34)}px`,
+            color: color,
+            stroke: '#06121a',
+            strokeThickness: Math.max(3, Math.round(gemSize * 0.08)),
+        }).setOrigin(0.5).setDepth(60).setScale(0.6);
+        this.tweens.add({ targets: label, scale: 1, duration: 160, ease: 'Back.easeOut' });
+        this.tweens.add({
+            targets: label,
+            y: cy - gemSize * 0.9,
+            alpha: 0,
+            delay: 420,
+            duration: 700,
+            ease: 'Cubic.easeIn',
+            onComplete: () => label.destroy(),
         });
     }
 

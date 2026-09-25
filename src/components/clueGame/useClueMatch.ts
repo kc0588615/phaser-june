@@ -51,7 +51,7 @@ export function useClueMatch() {
 
   useEffect(() => {
     const onMatched = ({ groups, cascade }: EventPayloads['gems-matched']) =>
-      dispatch({ type: 'matched', gems: groups.map(group => group.gemType), cascade });
+      dispatch({ type: 'matched', groups: groups.map(group => ({ gem: group.gemType, size: group.size })), cascade });
     const onShuffled = () => dispatch({ type: 'shuffled' });
     EventBus.on('gems-matched', onMatched);
     EventBus.on('clue-board-shuffled', onShuffled);

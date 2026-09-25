@@ -19,7 +19,7 @@ export function HowToPlay({ seed, onClose }: { seed: number; onClose: () => void
         <h2 id="how-to-play-title" className="m-0 text-lg font-bold">How to play</h2>
         <ol className="m-0 flex list-decimal flex-col gap-2.5 pl-5 text-sm leading-snug text-white/90">
           <li>
-            Drag a row or column to line up <b>3 or more gems</b> of the same color.
+            Drag a row or column to line up <b>3 or more gems</b> of the same color. Line up 4 or 5 for extra clues.
             <span className="mt-1 flex gap-1" aria-hidden="true"><GemIcon gem="green" /><GemIcon gem="green" /><GemIcon gem="green" /></span>
           </li>
           <li>

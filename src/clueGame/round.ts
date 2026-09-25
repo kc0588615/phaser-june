@@ -138,6 +138,11 @@ export function registerWrongGuess(state: RoundState, speciesId: number): RoundS
   };
 }
 
+/** Clues a matched group reveals: one, plus one per gem past three (at most three). */
+export function cluesForMatch(size: number): number {
+  return 1 + Math.min(2, Math.max(0, size - 3));
+}
+
 export const WRONG_GUESS_PENALTY = 30;
 export const FIRST_TRY_BONUS = 25;
 

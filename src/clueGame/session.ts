@@ -4,14 +4,15 @@ import type { LootGemType } from '@/expedition/domain';
 import type { ClueFit } from '@/clueGame/deduction';
 import type { CluePool } from '@/clueGame/pool';
 import { buildSpeciesRecords, type SpeciesRecords } from '@/clueGame/traits';
-import { WRONG_GUESS_PENALTY, registerWrongGuess, revealNext, scoreBreakdown, type RoundState, type ScorePart } from '@/clueGame/round';
+import { WRONG_GUESS_PENALTY, cluesForMatch, registerWrongGuess, revealNext, scoreBreakdown, type RoundState, type ScorePart } from '@/clueGame/round';
 
 const FEED_LIMIT = 120;
 
+/** `bonus`: revealed because the matched group was bigger than three. */
 export type FeedItem = { key: number } & (
   | { kind: 'round'; round: number }
-  | { kind: 'clue'; gem: LootGemType; text: string; fits: Record<number, ClueFit> }
-  | { kind: 'note'; gem: LootGemType; text: string }
+  | { kind: 'clue'; gem: LootGemType; text: string; fits: Record<number, ClueFit>; bonus?: true }
+  | { kind: 'note'; gem: LootGemType; text: string; bonus?: true }
   | { kind: 'empty'; gem: LootGemType }
   | { kind: 'shuffle' }
   | { kind: 'guess'; correct: boolean; speciesId: number; points: number; funFact: string | null }
@@ -44,11 +45,13 @@ export interface SessionState {
   nextKey: number;
 }
 
+export interface MatchedGroup { gem: LootGemType; size: number }
+
 export type SessionAction =
   | { type: 'load'; pool: CluePool; round: RoundState }
   | { type: 'start-round'; round: RoundState }
   /** One explode phase of the board: the player's move (cascade false) or a cascade. */
-  | { type: 'matched'; gems: LootGemType[]; cascade: boolean }
+  | { type: 'matched'; groups: MatchedGroup[]; cascade: boolean }
   | { type: 'guess'; speciesId: number }
   /** The board had no valid move left and was reshuffled. */
   | { type: 'shuffled' };
@@ -98,10 +101,13 @@ export function clueSessionReducer(state: SessionState | null, action: SessionAc
       if (state.phase !== 'playing') return state;
       let round = action.cascade ? state.round : { ...state.round, moves: state.round.moves + 1 };
       const entries: FeedEntry[] = [];
-      for (const gem of action.gems) {
-        const result = revealNext(round, gem, state.records);
-        round = result.state;
-        if (result.reveal) entries.push(result.reveal);
+      for (const { gem, size } of action.groups) {
+        for (let n = 0; n < cluesForMatch(size); n++) {
+          const result = revealNext(round, gem, state.records);
+          round = result.state;
+          if (!result.reveal) break;
+          entries.push(n > 0 && result.reveal.kind !== 'empty' ? { ...result.reveal, bonus: true } : result.reveal);
+        }
       }
       return withFeed({ ...state, round }, entries);
     }

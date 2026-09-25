@@ -57,6 +57,7 @@ export function ClueFeed({ feed, speciesById, displayOrder }: {
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[9px] font-bold uppercase tracking-[.14em]" style={{ color: category.color }}>
                   {category.label}{item.kind === 'note' ? ' · fun note' : ''}
+                  {'bonus' in item && item.bonus && <span className="ml-1.5 rounded bg-amber-300/20 px-1 py-px text-amber-200">Big match bonus</span>}
                 </p>
                 <p className="m-0 text-[13px] leading-snug text-white/90">
                   {item.kind === 'empty' ? `No more ${category.label.toLowerCase()} clues for this animal.` : <GlossaryText text={item.text} />}
