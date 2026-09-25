@@ -101,12 +101,22 @@ function kinship(a: Taxonomy, b: Taxonomy): number {
  * rounds swap some random decoys for the mystery's closest relatives, so the
  * family tree alone stops giving the answer away.
  */
-export function createRound(pool: CluePool, rng: () => number, round: number, recentMysteryIds: readonly number[] = []): RoundState {
+export function createRound(
+  pool: CluePool,
+  rng: () => number,
+  round: number,
+  recentMysteryIds: readonly number[] = [],
+  /** Only these species can be the mystery (a place's animals); decoys still come from the whole pool. */
+  mysteryIds?: readonly number[],
+): RoundState {
   const playable = playableSpeciesIds(pool);
   if (playable.length < 2) throw new Error('Clue pool needs at least two species with clues');
-  const recent = new Set(recentMysteryIds.slice(-MYSTERY_COOLDOWN));
-  const eligible = playable.filter(id => !recent.has(id));
-  const choices = eligible.length > 0 ? eligible : playable;
+  const inPlace = mysteryIds ? playable.filter(id => mysteryIds.includes(id)) : [];
+  const candidates = inPlace.length > 0 ? inPlace : playable;
+  // A small place repeats sooner: the cooldown never covers all its animals.
+  const recent = new Set(recentMysteryIds.slice(-Math.min(MYSTERY_COOLDOWN, candidates.length - 1)));
+  const eligible = candidates.filter(id => !recent.has(id));
+  const choices = eligible.length > 0 ? eligible : candidates;
   const mysteryId = choices[Math.floor(rng() * choices.length)];
 
   const taxonomy = new Map(pool.species.map(species => [species.id, taxonomyOf(species)]));

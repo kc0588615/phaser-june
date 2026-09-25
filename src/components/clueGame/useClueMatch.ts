@@ -1,14 +1,22 @@
-// Clue Match page state: loads the pool, runs the session reducer, and wires
-// the board over the EventBus (setup, lock, matches, reshuffles).
+// Clue Match page state: loads the pool (and the place, when played from the
+// globe with ?place=), runs the session reducer, and wires the board over the
+// EventBus (setup, lock, matches, reshuffles).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { CLUE_GAME_GEM_TYPES } from '@/clueGame/categories';
 import type { CluePool } from '@/clueGame/pool';
+import type { Place, PlacesResponse } from '@/clueGame/places';
 import { createRound, playableSpeciesIds } from '@/clueGame/round';
 import { debugSummary } from '@/clueGame/selectors';
 import { clueSessionReducer } from '@/clueGame/session';
 import { hash32, mulberry32 } from '@/lib/seededRng';
+
+/** `?place=country:KEN`: mysteries come from that place's animals. */
+function placeKeyFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  return new URLSearchParams(window.location.search).get('place');
+}
 
 /** `?seed=N` replays a session: same mysteries, same starting board. */
 function sessionSeed(): number {
@@ -19,6 +27,9 @@ function sessionSeed(): number {
 
 export function useClueMatch() {
   const [seed] = useState(sessionSeed);
+  const [placeKey] = useState(placeKeyFromUrl);
+  const [place, setPlace] = useState<Place | null>(null);
+  const placeRef = useRef<Place | null>(null);
   const rng = useRef(mulberry32(seed));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [session, dispatch] = useReducer(clueSessionReducer, null);
@@ -35,19 +46,22 @@ export function useClueMatch() {
         const response = await fetch('/api/clue-game/pool/');
         if (!response.ok) throw new Error(`Pool request failed (${response.status})`);
         const pool = await response.json() as CluePool;
+        const found = placeKey ? await loadPlace(placeKey) : null;
         if (cancelled) return;
         if (playableSpeciesIds(pool).length < 2) {
           setLoadError('Not enough animals have clues yet. Add clues for at least two species.');
           return;
         }
-        dispatch({ type: 'load', pool, round: createRound(pool, rng.current, 1) });
+        placeRef.current = found;
+        setPlace(found);
+        dispatch({ type: 'load', pool, round: createRound(pool, rng.current, 1, [], found?.speciesIds) });
       } catch (error) {
         console.error('[ClueMatch] Failed to load the clue pool:', error);
         if (!cancelled) setLoadError('Could not load the animal clues. Check the connection and reload.');
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [placeKey]);
 
   useEffect(() => {
     const onMatched = ({ groups, cascade }: EventPayloads['gems-matched']) =>
@@ -84,8 +98,21 @@ export function useClueMatch() {
   const nextRound = useCallback(() => {
     const current = sessionRef.current;
     if (!current || current.phase !== 'solved') return;
-    dispatch({ type: 'start-round', round: createRound(current.pool, rng.current, current.round.round + 1, current.history) });
+    dispatch({ type: 'start-round', round: createRound(current.pool, rng.current, current.round.round + 1, current.history, placeRef.current?.speciesIds) });
   }, []);
 
-  return { session, loadError, seed, onSceneReady, guess, nextRound };
+  return { session, loadError, seed, place, onSceneReady, guess, nextRound };
+}
+
+/** The place from GET /api/places; null (play everywhere) if it's unknown or the request fails. */
+async function loadPlace(key: string): Promise<Place | null> {
+  try {
+    const response = await fetch('/api/places/');
+    if (!response.ok) throw new Error(`Places request failed (${response.status})`);
+    const { places } = await response.json() as PlacesResponse;
+    return places.find(place => place.key === key) ?? null;
+  } catch (error) {
+    console.error('[ClueMatch] Failed to load the place; playing with every animal:', error);
+    return null;
+  }
 }

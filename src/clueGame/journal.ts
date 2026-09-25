@@ -11,12 +11,31 @@ export interface JournalEntry {
   bestMoves: number;
   firstSolvedAt: string;
   lastSolvedAt: string;
+  /** e.g. 'MAMMALIA'; colors the animal's markers on the globe. */
+  className?: string | null;
+  /** Places it was found in from the globe, one per place. */
+  sightings?: Sighting[];
+}
+
+/** Where on the globe an animal was found. */
+export interface Sighting {
+  placeKey: string;
+  placeName: string;
+  lon: number;
+  lat: number;
 }
 
 export type Journal = Record<string, JournalEntry>;
 
-export function recordSolve(journal: Journal, species: { scientificName: string; commonName: string }, moves: number, at: string): Journal {
+export function recordSolve(
+  journal: Journal,
+  species: { scientificName: string; commonName: string; className?: string | null },
+  moves: number,
+  at: string,
+  sighting?: Sighting,
+): Journal {
   const previous = journal[species.scientificName];
+  const sightings = [...(previous?.sightings ?? []).filter(old => old.placeKey !== sighting?.placeKey), ...(sighting ? [sighting] : [])];
   return {
     ...journal,
     [species.scientificName]: {
@@ -26,6 +45,8 @@ export function recordSolve(journal: Journal, species: { scientificName: string;
       bestMoves: Math.min(previous?.bestMoves ?? Infinity, moves),
       firstSolvedAt: previous?.firstSolvedAt ?? at,
       lastSolvedAt: at,
+      ...(species.className ?? previous?.className ? { className: species.className ?? previous?.className } : {}),
+      ...(sightings.length ? { sightings } : {}),
     },
   };
 }
@@ -36,7 +57,14 @@ function isEntry(value: unknown): value is JournalEntry {
   return typeof entry.scientificName === 'string' && typeof entry.commonName === 'string'
     && Number.isInteger(entry.timesSolved) && (entry.timesSolved as number) > 0
     && typeof entry.bestMoves === 'number' && Number.isFinite(entry.bestMoves)
-    && typeof entry.firstSolvedAt === 'string' && typeof entry.lastSolvedAt === 'string';
+    && typeof entry.firstSolvedAt === 'string' && typeof entry.lastSolvedAt === 'string'
+    && (entry.sightings === undefined || (Array.isArray(entry.sightings) && entry.sightings.every(isSighting)));
+}
+
+function isSighting(value: unknown): value is Sighting {
+  const sighting = value as Partial<Sighting> | null;
+  return !!sighting && typeof sighting.placeKey === 'string' && typeof sighting.placeName === 'string'
+    && Number.isFinite(sighting.lon) && Number.isFinite(sighting.lat);
 }
 
 /** Stored JSON back to a journal; anything malformed is dropped rather than trusted. */

@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       relatives: report.relatives,
       points: report.points,
       revealedByGem: report.revealedByGem,
+      placeKey: report.placeKey ?? null,
     });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {

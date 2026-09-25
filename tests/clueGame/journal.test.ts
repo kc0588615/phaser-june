@@ -26,6 +26,24 @@ describe('journal', () => {
   });
 });
 
+describe('sightings', () => {
+  const kenya = { placeKey: 'country:KEN', placeName: 'Kenya', lon: 37, lat: 0 };
+  test('one sighting per place, the newest kept; class is remembered', () => {
+    let journal = recordSolve({}, { ...frog, className: 'AMPHIBIA' }, 4, 'a', kenya);
+    journal = recordSolve(journal, frog, 3, 'b', { ...kenya, lon: 38 });
+    journal = recordSolve(journal, frog, 5, 'c');
+    const entry = journal[frog.scientificName];
+    assert.deepEqual(entry.sightings, [{ ...kenya, lon: 38 }]);
+    assert.equal(entry.className, 'AMPHIBIA');
+    assert.deepEqual(parseJournal(JSON.stringify(journal)), journal);
+  });
+
+  test('a malformed sighting drops the entry', () => {
+    const bad = { [frog.scientificName]: { ...frog, timesSolved: 1, bestMoves: 1, firstSolvedAt: 'a', lastSolvedAt: 'a', sightings: [{ placeKey: 'x' }] } };
+    assert.deepEqual(parseJournal(JSON.stringify(bad)), {});
+  });
+});
+
 describe('parseWords', () => {
   test('keeps unique non-empty strings in order and drops the rest', () => {
     assert.deepEqual(parseWords(JSON.stringify(['Clutch', 'Realm', 'Clutch', '', 7, null])), ['Clutch', 'Realm']);

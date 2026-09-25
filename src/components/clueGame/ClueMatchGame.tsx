@@ -7,6 +7,7 @@ import { PhaserGame } from '@/PhaserGame';
 import { liveCandidates } from '@/clueGame/round';
 import { candidateViews, legendViews } from '@/clueGame/selectors';
 import type { SolveSummary } from '@/clueGame/session';
+import { sightingPoint } from '@/clueGame/places';
 import { CandidateGrid } from './CandidateGrid';
 import { ClueFeed } from './ClueFeed';
 import { GemLegend } from './GemLegend';
@@ -20,7 +21,7 @@ import { reportSolve } from './reportSolve';
 import { useJournal } from './useJournal';
 
 export function ClueMatchGame() {
-  const { session, loadError, seed, onSceneReady, guess, nextRound } = useClueMatch();
+  const { session, loadError, seed, place, onSceneReady, guess, nextRound } = useClueMatch();
   const { journal, records, record } = useJournal();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -58,14 +59,17 @@ export function ClueMatchGame() {
     if (!species) return;
     setNewDiscovery(!journalRef.current[species.scientificName]);
     setNewBest(recordsRef.current.bestScore > 0 && session.score > recordsRef.current.bestScore);
-    record(species, lastSolve.moves, { score: session.score, streak: session.bestStreak });
+    const point = place ? sightingPoint(place, species.id) : null;
+    const sighting = place && point ? { placeKey: place.key, placeName: place.name, lon: point[0], lat: point[1] } : undefined;
+    record(species, lastSolve.moves, { score: session.score, streak: session.bestStreak }, sighting);
     const { round } = session;
     reportSolve({
       seed, round: round.round, speciesId: species.id, moves: lastSolve.moves, wrongGuesses: round.wrongGuesses.length,
       cluesSeen: lastSolve.cluesSeen, relatives: round.relatives, points: lastSolve.points,
       revealedByGem: Object.fromEntries(Object.entries(round.revealedByGem).filter(([, count]) => count !== undefined)) as Record<string, number>,
+      ...(place ? { placeKey: place.key } : {}),
     });
-  }, [session, lastSolve, record, seed]);
+  }, [session, lastSolve, record, seed, place]);
 
   const candidates = useMemo(() => session ? candidateViews(session) : [], [session]);
   const legend = useMemo(() => session ? legendViews(session) : [], [session]);
@@ -88,6 +92,7 @@ export function ClueMatchGame() {
       </Head>
       <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-[#06121a] text-white [grid-template-areas:'top'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] lg:grid-cols-[minmax(0,1fr)_460px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_rail']">
         <TopBar
+          placeName={place?.name ?? null}
           round={session?.round.round ?? null}
           live={session ? liveCandidates(session.round).length : 0}
           total={session?.round.candidateIds.length ?? 0}

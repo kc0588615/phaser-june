@@ -108,6 +108,19 @@ describe('rounds', () => {
     }
   });
 
+  test('a place limits the mystery to its animals, cycling through them', () => {
+    const history: number[] = [];
+    const rng = mulberry32(5);
+    for (let n = 1; n <= 6; n++) {
+      const round = createRound(pool, rng, n, history, [3, 4, 5]);
+      assert.ok([3, 4, 5].includes(round.mysteryId));
+      assert.equal(round.candidateIds.length, 6, 'decoys still fill the lineup');
+      history.push(round.mysteryId);
+    }
+    assert.deepEqual(new Set(history.slice(0, 3)).size, 3, 'no repeat until all three were played');
+    assert.ok([1, 2, 3, 4, 5, 6, 7].includes(createRound(pool, mulberry32(1), 1, [], [999]).mysteryId), 'unknown ids fall back to the whole pool');
+  });
+
   test('recent mysteries are skipped while others remain', () => {
     for (let seed = 1; seed < 20; seed++) assert.equal(createRound(pool, mulberry32(seed), 2, OTHERS).mysteryId, 1);
   });

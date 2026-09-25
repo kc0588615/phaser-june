@@ -55,7 +55,7 @@ const ORDER_EMOJI: Record<string, string> = {
 const CLASS_EMOJI: Record<string, string> = { AMPHIBIA: '🐸', REPTILIA: '🦎', MAMMALIA: '🐾', AVES: '🐦' };
 
 /** Card portrait: an emoji for the animal's group, else its initials. */
-export function speciesBadge(species: PoolSpecies): string {
+export function speciesBadge(species: Pick<PoolSpecies, 'commonName' | 'className' | 'taxonOrder' | 'family'>): string {
   return FAMILY_EMOJI[species.family?.toUpperCase() ?? ''] ?? ORDER_EMOJI[species.taxonOrder ?? ''] ?? CLASS_EMOJI[species.className ?? '']
     ?? species.commonName.split(/\s+/).map(word => word[0]).join('').slice(0, 2).toUpperCase();
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { JOURNAL_STORAGE_KEY, NO_RECORDS, RECORDS_STORAGE_KEY, parseJournal, parseRecords, recordSolve, updateRecords, type Journal, type Records } from '@/clueGame/journal';
+import { JOURNAL_STORAGE_KEY, NO_RECORDS, RECORDS_STORAGE_KEY, parseJournal, parseRecords, recordSolve, updateRecords, type Journal, type Records, type Sighting } from '@/clueGame/journal';
 
 function save(key: string, value: unknown): void {
   try {
@@ -23,9 +23,14 @@ export function useJournal() {
     }
   }, []);
 
-  const record = useCallback((species: { scientificName: string; commonName: string }, moves: number, session: { score: number; streak: number }) => {
+  const record = useCallback((
+    species: { scientificName: string; commonName: string; className?: string | null },
+    moves: number,
+    session: { score: number; streak: number },
+    sighting?: Sighting,
+  ) => {
     setJournal(previous => {
-      const next = recordSolve(previous, species, moves, new Date().toISOString());
+      const next = recordSolve(previous, species, moves, new Date().toISOString(), sighting);
       save(JOURNAL_STORAGE_KEY, next);
       return next;
     });

@@ -12,10 +12,14 @@ export interface SolveReport {
   relatives: number;
   points: number;
   revealedByGem: Record<string, number>;
+  /** The globe place it was played in (clue_match_places.key), if any. */
+  placeKey?: string;
 }
 
+const PLACE_KEY = /^(country|area|continent):[A-Za-z0-9-]{1,80}$/;
+
 // Same bounds as the table's CHECK constraints (migration 042).
-const LIMITS: Record<Exclude<keyof SolveReport, 'revealedByGem'>, [number, number]> = {
+const LIMITS: Record<Exclude<keyof SolveReport, 'revealedByGem' | 'placeKey'>, [number, number]> = {
   seed: [1, 0xffff_ffff],
   round: [1, 10000],
   speciesId: [1, 2 ** 31 - 1],
@@ -32,9 +36,10 @@ const inRange = (value: unknown, [min, max]: [number, number]) => Number.isInteg
 export function parseSolveReport(body: unknown): SolveReport | null {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
   const input = body as Record<string, unknown>;
-  const allowed = new Set([...Object.keys(LIMITS), 'revealedByGem']);
+  const allowed = new Set([...Object.keys(LIMITS), 'revealedByGem', 'placeKey']);
   if (Object.keys(input).some(key => !allowed.has(key))) return null;
   for (const [key, range] of Object.entries(LIMITS)) if (!inRange(input[key], range)) return null;
+  if (input.placeKey !== undefined && (typeof input.placeKey !== 'string' || !PLACE_KEY.test(input.placeKey))) return null;
 
   const gems = input.revealedByGem;
   if (!gems || typeof gems !== 'object' || Array.isArray(gems)) return null;

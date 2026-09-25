@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { bigint, bigserial, index, integer, jsonb, pgTable, smallint, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { bigint, bigserial, index, integer, jsonb, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { profiles } from './player';
 import { speciesTable } from './species';
 
@@ -16,6 +16,8 @@ export const clueMatchSolves = pgTable(
     cluesSeen: smallint('clues_seen').notNull(),
     relatives: smallint('relatives').notNull(),
     points: integer('points').notNull(),
+    /** clue_match_places.key when played from the globe (migration 044). */
+    placeKey: text('place_key'),
     revealedByGem: jsonb('revealed_by_gem').$type<Record<string, number>>().notNull().default({}),
     solvedAt: timestamp('solved_at', { withTimezone: true }).notNull().defaultNow(),
   },

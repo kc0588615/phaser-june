@@ -1,6 +1,9 @@
-import { BookOpen, CircleHelp, Flame, Star, Trophy } from 'lucide-react';
+import Link from 'next/link';
+import { BookOpen, CircleHelp, Flame, Globe2, Star, Trophy } from 'lucide-react';
 
-export function TopBar({ round, live, total, score, streak, solved, onHelp, onJournal }: {
+export function TopBar({ placeName, round, live, total, score, streak, solved, onHelp, onJournal }: {
+  /** The globe place being explored, if any; shown as the title. */
+  placeName: string | null;
   round: number | null;
   live: number;
   total: number;
@@ -16,9 +19,12 @@ export function TopBar({ round, live, total, score, streak, solved, onHelp, onJo
     { label: 'Solved', value: solved, icon: <Trophy className="h-3.5 w-3.5 text-cyan-300" aria-hidden="true" /> },
   ];
   return (
-    <header className="flex min-w-0 items-center gap-2 px-3 py-1.5 [grid-area:top]">
+    <header className="flex min-w-0 items-center gap-1 py-1.5 pl-1 pr-3 [grid-area:top]">
+      <Link href="/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-cyan-100/80 hover:bg-white/10" aria-label="Back to the globe">
+        <Globe2 className="h-5 w-5" />
+      </Link>
       <div className="min-w-0">
-        <h1 className="m-0 truncate text-base font-bold leading-tight">Clue Match</h1>
+        <h1 className="m-0 truncate text-base font-bold leading-tight">{placeName ?? 'Clue Match'}</h1>
         <p className="m-0 truncate text-[11px] leading-tight text-cyan-100/70" aria-live="polite">
           {round === null ? 'Loading animals…' : `Animal ${round} · ${live} of ${total} left`}
         </p>

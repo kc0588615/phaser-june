@@ -23,6 +23,11 @@ describe('parseSolveReport', () => {
     assert.equal(parseSolveReport({ ...good, revealedByGem: { red: -1 } }), null);
   });
 
+  test('an optional place key must look like a place', () => {
+    assert.equal(parseSolveReport({ ...good, placeKey: 'country:KEN' })?.placeKey, 'country:KEN');
+    for (const bad of ['KEN', 'country:', 'planet:mars', 'area:a b', 7]) assert.equal(parseSolveReport({ ...good, placeKey: bad }), null, String(bad));
+  });
+
   test('non-objects are rejected', () => {
     for (const bad of [null, 'x', 7, []]) assert.equal(parseSolveReport(bad), null);
   });
