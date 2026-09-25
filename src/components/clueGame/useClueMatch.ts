@@ -28,10 +28,11 @@ export function useClueMatch() {
   const [sceneGeneration, setSceneGeneration] = useState(0);
 
   useEffect(() => {
+    if (sessionRef.current) return; // a dev hot reload re-runs effects; keep the session
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch('/api/clue-game/pool');
+        const response = await fetch('/api/clue-game/pool/');
         if (!response.ok) throw new Error(`Pool request failed (${response.status})`);
         const pool = await response.json() as CluePool;
         if (cancelled) return;

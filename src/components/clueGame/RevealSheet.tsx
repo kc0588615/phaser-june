@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react';
 import { speciesBadge, type PoolSpecies } from '@/clueGame/pool';
 import type { SolveSummary } from '@/clueGame/session';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
+import { RangeMap } from './RangeMap';
 
 const AUTO_ADVANCE_MS = 9000;
 
@@ -43,6 +44,8 @@ export function RevealSheet({ species, solve, isNew, onNext }: {
         {isNew && <span className="flex items-center gap-1 rounded-full bg-cyan-300/20 px-2 py-0.5 font-semibold text-cyan-100"><Sparkles className="h-3 w-3" aria-hidden="true" />New in your journal</span>}
       </div>
 
+      <RangeMap speciesId={species.id} name={species.commonName} />
+
       <ul className="m-0 flex list-none flex-wrap gap-1 p-0" aria-label="Points">
         {solve.parts.map(part => (
           <li key={part.label} className="rounded-md bg-white/[.06] px-2 py-0.5 text-[11px] text-white/80">
@@ -60,7 +63,7 @@ export function RevealSheet({ species, solve, isNew, onNext }: {
         {solve.cluesSeen} clue{solve.cluesSeen === 1 ? '' : 's'} read in {solve.moves} move{solve.moves === 1 ? '' : 's'}.
       </p>
 
-      <div className="mt-auto flex flex-col gap-1.5">
+      <div className="sticky bottom-0 -mx-3 -mb-3 mt-auto flex flex-col gap-1.5 bg-[#081a21] px-3 pb-3 pt-2">
         {autoAdvance && (
           <div className="h-1 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
             <div className="cm-countdown h-full bg-amber-300/70" style={{ animationDuration: `${AUTO_ADVANCE_MS}ms` }} />

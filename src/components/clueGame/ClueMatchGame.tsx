@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PhaserGame } from '@/PhaserGame';
 import { liveCandidates } from '@/clueGame/round';
 import { candidateViews, legendViews } from '@/clueGame/selectors';
+import type { SolveSummary } from '@/clueGame/session';
 import { CandidateGrid } from './CandidateGrid';
 import { ClueFeed } from './ClueFeed';
 import { GemLegend } from './GemLegend';
@@ -41,14 +42,14 @@ export function ClueMatchGame() {
   const roundNumber = session?.round.round;
   useEffect(() => setSelectedId(null), [roundNumber]);
 
-  // Record each solve once, noting whether it's a first discovery.
+  // Record each solve once (each solve is a new object), noting whether it's a first discovery.
   const journalRef = useRef(journal);
   useEffect(() => { journalRef.current = journal; }, [journal]);
-  const recordedRound = useRef<number | null>(null);
+  const recordedSolve = useRef<SolveSummary | null>(null);
   const lastSolve = session?.lastSolve;
   useEffect(() => {
-    if (!session || !lastSolve || recordedRound.current === session.round.round) return;
-    recordedRound.current = session.round.round;
+    if (!session || !lastSolve || recordedSolve.current === lastSolve) return;
+    recordedSolve.current = lastSolve;
     const species = session.pool.species.find(candidate => candidate.id === lastSolve.speciesId);
     if (!species) return;
     setNewDiscovery(!journalRef.current[species.scientificName]);

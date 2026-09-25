@@ -44,7 +44,7 @@ export function CandidateGrid({ candidates, selectedId, onSelect }: {
                 {status === 'answer' && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-amber-300 text-black"><Check className="h-3 w-3" /></span>}
               </span>
               <span className="min-w-0 flex-1">
-                <span className={`line-clamp-2 block text-[11px] font-semibold leading-tight text-white ${out ? 'line-through' : ''}`}>{species.commonName}</span>
+                <span className={`block hyphens-auto text-[11px] font-semibold leading-tight text-white ${out ? 'line-through' : ''}`} lang="en">{species.commonName}</span>
                 <span className="mt-1 flex items-center gap-0.5" aria-hidden="true">
                   {fits.slice(-8).map((fit, index) => <span key={index} className={`h-2 w-2 shrink-0 rounded-full ${FIT_STYLE[fit].dot}`} />)}
                   {fits.length > 0 && <span className="ml-0.5 text-[9px] font-bold tabular-nums text-emerald-200/90">{matches}✓</span>}

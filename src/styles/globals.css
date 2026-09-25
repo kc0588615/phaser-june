@@ -528,6 +528,10 @@ body {
   0% { opacity: 0; transform: translateY(6px); }
   100% { opacity: 1; transform: none; }
 }
+@keyframes cm-range-ping {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
 @keyframes cm-countdown {
   from { transform: scaleX(1); }
   to { transform: scaleX(0); }
@@ -536,7 +540,8 @@ body {
 .cm-pop-in { animation: cm-pop-in 260ms cubic-bezier(.2,.8,.2,1) both; }
 .cm-feed-in { animation: cm-feed-in 220ms ease-out both; }
 .cm-countdown { transform-origin: left; animation-name: cm-countdown; animation-timing-function: linear; animation-fill-mode: forwards; }
+.cm-range-ping { transform-box: fill-box; transform-origin: center; animation: cm-range-ping 1.6s ease-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .cm-shake, .cm-pop-in, .cm-feed-in { animation: none; }
+  .cm-shake, .cm-pop-in, .cm-feed-in, .cm-range-ping { animation: none; }
 }

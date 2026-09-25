@@ -3,6 +3,7 @@ import type { Journal } from '@/clueGame/journal';
 import { speciesBadge, type CluePool } from '@/clueGame/pool';
 import { playableSpeciesIds } from '@/clueGame/round';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
+import { RangeMap } from './RangeMap';
 import { useEscapeKey } from './useEscapeKey';
 
 const LEARNED_FACTS = 3;
@@ -52,6 +53,7 @@ export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null
                   {taxonomyLine(species)}
                   {status && <span className={`rounded-full border px-2 py-0.5 font-semibold ${status.badge}`}>{status.label}</span>}
                 </p>
+                <div className="mt-1.5"><RangeMap speciesId={species.id} name={species.commonName} caption={false} /></div>
                 <ul className="m-0 mt-1.5 list-disc pl-4 text-[12px] leading-snug text-white/85">
                   {factsFor(species.id).map(fact => <li key={fact}>{fact}</li>)}
                 </ul>
@@ -61,6 +63,7 @@ export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null
           {hidden > 0 && found.length > 0 && (
             <li className="p-3 text-center text-xs text-white/50">{hidden} more animal{hidden === 1 ? '' : 's'} to discover.</li>
           )}
+          {found.length > 0 && <li className="pb-2 text-center text-[10px] text-white/35">Range maps: IUCN Red List</li>}
         </ul>
       </div>
     </div>
