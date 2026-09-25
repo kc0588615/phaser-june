@@ -1,6 +1,6 @@
 ---
 name: playtest
-description: Play Critter Connect in the real browser build and report what breaks. Use to verify a gameplay or UI change by playing it, to reproduce a board or run bug, or to launch and drive the app.
+description: Play Critter Connect (expedition runs or Clue Match) in the real browser build and report what breaks. Use to verify a gameplay or UI change by playing it, to reproduce a board or run bug, or to launch and drive the app.
 ---
 
 # Playtest
@@ -66,6 +66,19 @@ Write `docs/playtests/YYYY-MM-DD-<site>.md`: run id, site, then one entry per fi
 
 Done when every finding carries evidence and the report states what the run did not cover.
 
+## Clue Match (no sign-in)
+
+`/clue-match?seed=N`: same seed, same mysteries and starting board. Mobile first: `emulate` viewport `390x844x3,mobile,touch`, play with `drag(move, { input: 'touch' })`. Guess by clicking a card in `[aria-label="Possible animals"]`, then the `Guess: <name>` button. The reveal card auto-advances after 9s.
+
+Invariants to check each move:
+
+- `clue().mysteryId` is never in `ruledOut`; `moves` goes up by one per counted drag (cascades are free).
+- Each matched group adds one feed item (clue, fun note, or "no more"), then that color goes quiet.
+- While `phase === 'solved'` the board is locked: drags don't count and no `gems-matched` events fire.
+- No page scroll: `document.documentElement.scrollHeight === innerHeight`; every button at least 44px.
+
+Content problems (a clue that doesn't fit its own animal, missing notes for a color) come from the database: `npm run clue:pool -- --check`.
+
 ## Bridge reference (`window.__cc`)
 
 | Call | Returns |
@@ -73,7 +86,8 @@ Done when every finding carries evidence and the report states what the run did 
 | `state()` | board: `ready`, `canMove`, `isResolvingMove`, `inRun`, `nodeIndex`, `boardSeed`, `movesUsed`/`maxMoves`, `gameOver`, `objective`, `hasAnyValidMove`, `grid`, layout |
 | `run()` | `{ runId, runState }` from ExpeditionContext |
 | `validMoves()` | `[{ rowOrCol, index, amount, matches }]` for shifts of 1–3 |
-| `drag(move)` | `{ counted, movesUsed, timedOut, blocked, after }` once the board settles |
+| `drag(move, { input, timeoutMs })` | `{ counted, movesUsed, timedOut, blocked, after }` once the board settles; `input: 'touch'` drags with a finger |
+| `clue()` | Clue Match session: `phase`, `round`, `mysteryId`, `candidateIds`, `live`, `moves`, `ruledOut`, `wrongGuesses`, `revealedByGem`, `score`, `streak`, `feedTail` |
 | `waitIdle(ms)` | snapshot once input returns or the node is done |
 | `events(n)` | last n EventBus events, bulky payloads omitted |
 | `speed(x)` | animation time scale; pausing resets it |

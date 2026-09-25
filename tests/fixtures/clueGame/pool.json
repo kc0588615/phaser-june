@@ -293,7 +293,7 @@
    "id": 320,
    "speciesId": 1,
    "category": "conservation",
-   "label": "Status: EN. Endangered",
+   "label": "Status: Endangered.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -336,7 +336,7 @@
    "id": 1,
    "speciesId": 1,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in wetlands, moving between the water and land.",
    "compareTags": [
     "freshwater",
     "aquatic",
@@ -433,7 +433,7 @@
    "id": 188,
    "speciesId": 1,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -445,7 +445,7 @@
    "id": 210,
    "speciesId": 1,
    "category": "taxonomy",
-   "label": "Family: EMYDIDAE, Genus: Emydoidea",
+   "label": "Family: Emydidae, Genus: Emydoidea",
    "compareTags": [
     "emydoidea",
     "emydidae"
@@ -479,7 +479,7 @@
    "id": 321,
    "speciesId": 2,
    "category": "conservation",
-   "label": "Status: LC. Least Concern",
+   "label": "Status: Least Concern.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -527,7 +527,7 @@
    "id": 2,
    "speciesId": 2,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in rivers, lakes and wetlands, and basks on land.",
    "compareTags": [
     "lentic",
     "freshwater",
@@ -629,7 +629,7 @@
    "id": 189,
    "speciesId": 2,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -641,7 +641,7 @@
    "id": 211,
    "speciesId": 2,
    "category": "taxonomy",
-   "label": "Family: TRIONYCHIDAE, Genus: Apalone",
+   "label": "Family: Trionychidae, Genus: Apalone",
    "compareTags": [
     "apalone",
     "trionychidae"
@@ -675,7 +675,7 @@
    "id": 323,
    "speciesId": 3,
    "category": "conservation",
-   "label": "Status: EN. Populations falling due to forest loss disease and climate warming",
+   "label": "Status: Endangered. Populations falling due to forest loss disease and climate warming",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -705,7 +705,7 @@
    "id": 4,
    "speciesId": 3,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in cool, temperate forests near streams and bogs.",
    "compareTags": [
     "temperate",
     "forest",
@@ -803,7 +803,7 @@
    "id": 191,
    "speciesId": 3,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -850,7 +850,7 @@
    "id": 324,
    "speciesId": 4,
    "category": "conservation",
-   "label": "Status: CR. Intense demand for the pet, food and traditional-medicine trades has decimated populations across it",
+   "label": "Status: Critically Endangered. Demand for the pet, food and traditional-medicine trades has wiped out populations across its range.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -895,7 +895,7 @@
    "id": 5,
    "speciesId": 4,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in rocky mountain streams in forests.",
    "compareTags": [
     "montane",
     "forest",
@@ -989,7 +989,7 @@
    "id": 192,
    "speciesId": 4,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -1035,7 +1035,7 @@
    "id": 325,
    "speciesId": 5,
    "category": "conservation",
-   "label": "Status: LC. Still widespread but disappearing from logged and palm-oil landscapes; needs intact canopy.",
+   "label": "Status: Least Concern. Still widespread but disappearing from logged and palm-oil landscapes; needs intact canopy.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -1065,7 +1065,7 @@
    "id": 6,
    "speciesId": 5,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in tropical rainforests and breeds at forest pools.",
    "compareTags": [
     "forest",
     "lentic",
@@ -1158,7 +1158,7 @@
    "id": 193,
    "speciesId": 5,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -1205,7 +1205,7 @@
    "id": 326,
    "speciesId": 6,
    "category": "conservation",
-   "label": "Status: LC. Stable overall but suffers where forest is cleared or water bodies are polluted",
+   "label": "Status: Least Concern. Stable overall but suffers where forest is cleared or water bodies are polluted",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -1214,7 +1214,7 @@
    "id": 95,
    "speciesId": 6,
    "category": "diet",
-   "label": "Diet type: insectivore. Preys on: moths; crickets; flies; small grasshoppers",
+   "label": "Diet type: Insectivore. Preys on: moths; crickets; flies; small grasshoppers",
    "compareTags": [
     "insect_eater"
    ],
@@ -1234,7 +1234,7 @@
    "id": 7,
    "speciesId": 6,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in tropical rainforests near ponds and streams.",
    "compareTags": [
     "forest",
     "freshwater",
@@ -1317,7 +1317,7 @@
    "id": 348,
    "speciesId": 6,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: twenty to fifty eggs. Lifespan: 5 years",
+   "label": "Reproduction: Oviparous. Clutch: twenty to fifty eggs. Lifespan: 5 years",
    "compareTags": [
     "egg_laying",
     "short_lived"
@@ -1329,7 +1329,7 @@
    "id": 194,
    "speciesId": 6,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -1377,7 +1377,7 @@
    "id": 327,
    "speciesId": 7,
    "category": "conservation",
-   "label": "Status: LC. Locally common but hunted for meat and impacted by river pollution",
+   "label": "Status: Least Concern. Locally common but hunted for meat and impacted by river pollution",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -1386,7 +1386,7 @@
    "id": 96,
    "speciesId": 7,
    "category": "diet",
-   "label": "Diet type: insectivore. Preys on: beetles; crickets; millipedes; small spiders",
+   "label": "Diet type: Insectivore. Preys on: beetles; crickets; millipedes; small spiders",
    "compareTags": [
     "insect_eater"
    ],
@@ -1406,7 +1406,7 @@
    "id": 8,
    "speciesId": 7,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in forests along fast-flowing rivers.",
    "compareTags": [
     "forest",
     "freshwater",
@@ -1487,7 +1487,7 @@
    "id": 349,
    "speciesId": 7,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: one hundred to two hundred eggs. Lifespan: 15 years",
+   "label": "Reproduction: Oviparous. Clutch: one hundred to two hundred eggs. Lifespan: 15 years",
    "compareTags": [
     "egg_laying",
     "short_lived"
@@ -1499,7 +1499,7 @@
    "id": 195,
    "speciesId": 7,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -1545,7 +1545,7 @@
    "id": 329,
    "speciesId": 8,
    "category": "conservation",
-   "label": "Status: LC. Populations stable but sensitive to logging that warms streams and adds silt",
+   "label": "Status: Least Concern. Populations stable but sensitive to logging that warms streams and adds silt",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -1554,7 +1554,7 @@
    "id": 98,
    "speciesId": 8,
    "category": "diet",
-   "label": "Diet type: insectivore. Preys on: aquatic insect larvae; small snails; spiders",
+   "label": "Diet type: Insectivore. Preys on: aquatic insect larvae; small snails; spiders",
    "compareTags": [
     "molluscivore",
     "insect_eater"
@@ -1575,7 +1575,7 @@
    "id": 10,
    "speciesId": 8,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in cold mountain streams in forests.",
    "compareTags": [
     "montane",
     "forest",
@@ -1660,7 +1660,7 @@
    "id": 351,
    "speciesId": 8,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: forty to eighty eggs. Lifespan: 20 years",
+   "label": "Reproduction: Oviparous. Clutch: forty to eighty eggs. Lifespan: 20 years",
    "compareTags": [
     "egg_laying"
    ],
@@ -1671,7 +1671,7 @@
    "id": 197,
    "speciesId": 8,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -1718,7 +1718,7 @@
    "id": 330,
    "speciesId": 9,
    "category": "conservation",
-   "label": "Status: LC. Widespread and adaptable but vulnerable to habitat loss and illegal pet trade in blue morphs",
+   "label": "Status: Least Concern. Widespread and adaptable but vulnerable to habitat loss and illegal pet trade in blue morphs",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -1727,7 +1727,7 @@
    "id": 99,
    "speciesId": 9,
    "category": "diet",
-   "label": "Diet type: insectivore. Preys on: ants; termites; fruit flies; tiny beetles; mites",
+   "label": "Diet type: Insectivore. Preys on: ants; termites; fruit flies; tiny beetles; mites",
    "compareTags": [
     "insect_eater"
    ],
@@ -1747,7 +1747,7 @@
    "id": 11,
    "speciesId": 9,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives on the floor of tropical rainforests near water.",
    "compareTags": [
     "forest",
     "freshwater",
@@ -1832,7 +1832,7 @@
    "id": 352,
    "speciesId": 9,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: two to six eggs. Lifespan: 8 years",
+   "label": "Reproduction: Oviparous. Clutch: two to six eggs. Lifespan: 8 years",
    "compareTags": [
     "metamorphosis",
     "egg_laying",
@@ -1845,7 +1845,7 @@
    "id": 198,
    "speciesId": 9,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -1892,7 +1892,7 @@
    "id": 331,
    "speciesId": 10,
    "category": "conservation",
-   "label": "Status: LC. Widespread and common but suffers locally from polluted water and habitat loss",
+   "label": "Status: Least Concern. Widespread and common but suffers locally from polluted water and habitat loss",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -1901,7 +1901,7 @@
    "id": 100,
    "speciesId": 10,
    "category": "diet",
-   "label": "Diet type: carnivore. Preys on: small fish; aquatic insects; worms; crustaceans",
+   "label": "Diet type: Carnivore. Preys on: small fish; aquatic insects; worms; crustaceans",
    "compareTags": [
     "crustacean_eater",
     "vermivore",
@@ -1925,7 +1925,7 @@
    "id": 12,
    "speciesId": 10,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in still and slow water in forests and swamps.",
    "compareTags": [
     "forest",
     "lentic",
@@ -1963,7 +1963,7 @@
    "id": 265,
    "speciesId": 10,
    "category": "key_fact",
-   "label": "Gives birth to live froglets that erupt from pockets in mums back",
+   "label": "Live froglets burst out of pockets in the mother's back.",
    "compareTags": [],
    "revealOrder": 2,
    "isFiltering": false
@@ -2009,7 +2009,7 @@
    "id": 353,
    "speciesId": 10,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: up to one hundred eggs. Lifespan: 8 years",
+   "label": "Reproduction: Oviparous. Clutch: up to one hundred eggs. Lifespan: 8 years",
    "compareTags": [
     "egg_laying",
     "short_lived"
@@ -2021,7 +2021,7 @@
    "id": 199,
    "speciesId": 10,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -2068,7 +2068,7 @@
    "id": 332,
    "speciesId": 11,
    "category": "conservation",
-   "label": "Status: EN. Hunted for meat and export and harmed by logging dams and polluted water",
+   "label": "Status: Endangered. Hunted for meat and export and harmed by logging dams and polluted water",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2077,7 +2077,7 @@
    "id": 101,
    "speciesId": 11,
    "category": "diet",
-   "label": "Diet type: carnivore. Preys on: crabs; insects; fish; other frogs; small snakes",
+   "label": "Diet type: Carnivore. Preys on: crabs; insects; fish; other frogs; small snakes",
    "compareTags": [
     "herpetivore",
     "carnivore",
@@ -2101,7 +2101,7 @@
    "id": 13,
    "speciesId": 11,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in and beside fast, rocky rivers.",
    "compareTags": [
     "freshwater",
     "riverine",
@@ -2135,7 +2135,7 @@
    "id": 266,
    "speciesId": 11,
    "category": "key_fact",
-   "label": "Stone-moving parents males drag rocks half their weight to craft safe pools",
+   "label": "Stone-moving parents: males drag rocks half their weight to build safe pools.",
    "compareTags": [],
    "revealOrder": 2,
    "isFiltering": false
@@ -2182,7 +2182,7 @@
    "id": 354,
    "speciesId": 11,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: three hundred to eight hundred eggs. Lifespan: 15 years",
+   "label": "Reproduction: Oviparous. Clutch: three hundred to eight hundred eggs. Lifespan: 15 years",
    "compareTags": [
     "egg_laying",
     "short_lived"
@@ -2194,7 +2194,7 @@
    "id": 200,
    "speciesId": 11,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -2242,7 +2242,7 @@
    "id": 333,
    "speciesId": 12,
    "category": "conservation",
-   "label": "Status: EN. Illegal pet trade and habitat loss have cut wild numbers by >50 % in three generations",
+   "label": "Status: Endangered. Illegal pet trade and habitat loss have cut wild numbers by more than half in three generations.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2289,7 +2289,7 @@
    "id": 14,
    "speciesId": 12,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in hilly rainforests near streams.",
    "compareTags": [
     "montane",
     "forest",
@@ -2316,7 +2316,7 @@
    "id": 245,
    "speciesId": 12,
    "category": "key_fact",
-   "label": "Juveniles wear a jagged crown of shell spines, nature scaltrops in the leaf litter",
+   "label": "Juveniles wear a jagged crown of shell spines, like nature's caltrops in the leaf litter.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2369,7 +2369,7 @@
    "id": 355,
    "speciesId": 12,
    "category": "reproduction",
-   "label": "Reproduction: Oviparous (egg-laying). Clutch: 14 eggs per clutch; up to 3 clutches yr. Lifespan: 40 years",
+   "label": "Reproduction: Oviparous (egg-laying). Clutch: 1–4 eggs per clutch; up to 3 clutches a year. Lifespan: 40 years",
    "compareTags": [
     "egg_laying"
    ],
@@ -2380,7 +2380,7 @@
    "id": 201,
    "speciesId": 12,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -2427,7 +2427,7 @@
    "id": 334,
    "speciesId": 13,
    "category": "conservation",
-   "label": "Status: EN. Numbers falling because of pet trade demand and loss of swamp forest",
+   "label": "Status: Endangered. Numbers falling because of pet trade demand and loss of swamp forest",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2458,7 +2458,7 @@
    "id": 15,
    "speciesId": 13,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in lowland forests, swamps and shallow pools.",
    "compareTags": [
     "forest",
     "freshwater",
@@ -2551,7 +2551,7 @@
    "id": 202,
    "speciesId": 13,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -2598,7 +2598,7 @@
    "id": 336,
    "speciesId": 14,
    "category": "conservation",
-   "label": "Status: NT. Small range makes it vulnerable to mining and coastal development",
+   "label": "Status: Near Threatened. Small range makes it vulnerable to mining and coastal development",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2607,7 +2607,7 @@
    "id": 105,
    "speciesId": 14,
    "category": "diet",
-   "label": "Diet type: insectivore. Preys on: moths; termites; woodlice; small beetles",
+   "label": "Diet type: Insectivore. Preys on: moths; termites; woodlice; small beetles",
    "compareTags": [
     "insect_eater"
    ],
@@ -2627,7 +2627,7 @@
    "id": 17,
    "speciesId": 14,
    "category": "habitat",
-   "label": "Exclusively land-dwelling",
+   "label": "Lives only on land, in dry coastal dunes and scrub.",
    "compareTags": [
     "coastal",
     "scrubland",
@@ -2706,7 +2706,7 @@
    "id": 358,
    "speciesId": 14,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: twelve to fifteen eggs. Lifespan: 6 years",
+   "label": "Reproduction: Oviparous. Clutch: twelve to fifteen eggs. Lifespan: 6 years",
    "compareTags": [
     "egg_laying",
     "short_lived"
@@ -2718,7 +2718,7 @@
    "id": 204,
    "speciesId": 14,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -2765,7 +2765,7 @@
    "id": 339,
    "speciesId": 15,
    "category": "conservation",
-   "label": "Status: CR. Over-collection for pet trade & habitat clearing have cut numbers >80 % in 30 yrs.",
+   "label": "Status: Critically Endangered. Collecting for the pet trade and habitat clearing have cut numbers by more than 80% in 30 years.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2810,7 +2810,7 @@
    "id": 20,
    "speciesId": 15,
    "category": "habitat",
-   "label": "Exclusively land-dwelling",
+   "label": "Lives only on land, in dry rocky scrubland.",
    "compareTags": [
     "scrubland",
     "arid",
@@ -2823,7 +2823,7 @@
    "id": 42,
    "speciesId": 15,
    "category": "habitat",
-   "label": "Flat-shelled climber that wedges into narrow rock cracks on sun-baked hillsides 301 800 m a.s.l.",
+   "label": "Flat-shelled climber that wedges into narrow rock cracks on sun-baked hillsides 30–1,800 m above sea level.",
    "compareTags": [
     "montane",
     "rocky"
@@ -2844,7 +2844,7 @@
    "id": 273,
    "speciesId": 15,
    "category": "key_fact",
-   "label": "Instead of hiding inside, it *dashes* and wedges tightpredators cant pry it free.",
+   "label": "Instead of hiding inside its shell, it dashes into a crack and wedges itself so tight that predators can't pry it free.",
    "compareTags": [],
    "revealOrder": 2,
    "isFiltering": false
@@ -2890,7 +2890,7 @@
    "id": 361,
    "speciesId": 15,
    "category": "reproduction",
-   "label": "Reproduction: Oviparous. Clutch: 1 egg per clutch, repeated every 48 wks in season. Lifespan: 30 years",
+   "label": "Reproduction: Oviparous. Clutch: 1 egg per clutch, laid every 4–8 weeks in season. Lifespan: 30 years",
    "compareTags": [
     "egg_laying"
    ],
@@ -2901,7 +2901,7 @@
    "id": 207,
    "speciesId": 15,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -2949,7 +2949,7 @@
    "id": 340,
    "speciesId": 16,
    "category": "conservation",
-   "label": "Status: EN. Fossorial habits hide shrinking numbers threatened by forest clearing agriculture and check dams",
+   "label": "Status: Endangered. Fossorial habits hide shrinking numbers threatened by forest clearing agriculture and check dams",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -2958,7 +2958,7 @@
    "id": 109,
    "speciesId": 16,
    "category": "diet",
-   "label": "Diet type: insectivore. Preys on: termites; ants; tiny soil arthropods",
+   "label": "Diet type: Insectivore. Preys on: termites; ants; tiny soil arthropods",
    "compareTags": [
     "insect_eater"
    ],
@@ -2978,7 +2978,7 @@
    "id": 21,
    "speciesId": 16,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in forests near streams, mostly underground.",
    "compareTags": [
     "forest",
     "freshwater",
@@ -3058,7 +3058,7 @@
    "id": 362,
    "speciesId": 16,
    "category": "reproduction",
-   "label": "Reproduction: oviparous. Clutch: up to three thousand eggs. Lifespan: 7 years",
+   "label": "Reproduction: Oviparous. Clutch: up to three thousand eggs. Lifespan: 7 years",
    "compareTags": [
     "egg_laying",
     "short_lived"
@@ -3070,7 +3070,7 @@
    "id": 208,
    "speciesId": 16,
    "category": "taxonomy",
-   "label": "Class: AMPHIBIA, Order: ANURA",
+   "label": "Class: Amphibia, Order: Anura",
    "compareTags": [
     "anura",
     "amphibia"
@@ -3118,7 +3118,7 @@
    "id": 328,
    "speciesId": 17,
    "category": "conservation",
-   "label": "Status: EN. Populations declining due to illegal egg and adult harvest for pet and meat trade, habitat alteratio",
+   "label": "Status: Endangered. Populations are declining due to illegal egg and adult harvest for the pet and meat trade, and habitat change.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3156,7 +3156,7 @@
    "id": 306,
    "speciesId": 17,
    "category": "geography",
-   "label": "Elevation 0150 m; distribution fragmented into several large river basins across southern New Guinea and the Top End of Australia.",
+   "label": "Elevation 0–150 m; distribution fragmented into several large river basins across southern New Guinea and the Top End of Australia.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3165,7 +3165,7 @@
    "id": 9,
    "speciesId": 17,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in tropical rivers, lagoons and lakes.",
    "compareTags": [
     "lentic",
     "freshwater",
@@ -3263,7 +3263,7 @@
    "id": 196,
    "speciesId": 17,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -3311,7 +3311,7 @@
    "id": 335,
    "speciesId": 18,
    "category": "conservation",
-   "label": "Status: CR. With only one confirmed male in China and  3 turtles in Vietnam, species is functionally extinct; in",
+   "label": "Status: Critically Endangered. With one confirmed male in China and no more than three turtles in Vietnam, the species is functionally extinct.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3348,7 +3348,7 @@
    "id": 313,
    "speciesId": 18,
    "category": "geography",
-   "label": "Confirmed remnant sites: Suzhou Zoo (China), Dong Mo & Xuan Khanh Lakes (Vietnam); elevation  0100 m.",
+   "label": "Confirmed remnant sites: Suzhou Zoo (China), Dong Mo & Xuan Khanh Lakes (Vietnam); elevation 0–100 m.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3357,7 +3357,7 @@
    "id": 16,
    "speciesId": 18,
    "category": "habitat",
-   "label": "Lives in freshwater aquatic environments",
+   "label": "Lives in large rivers and lakes.",
    "compareTags": [
     "lentic",
     "freshwater",
@@ -3384,7 +3384,7 @@
    "id": 247,
    "speciesId": 18,
    "category": "key_fact",
-   "label": "Possibly the worlds rarest vertebrate fewer than five individuals remain.",
+   "label": "Possibly the world's rarest vertebrate: fewer than five individuals remain.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3455,7 +3455,7 @@
    "id": 203,
    "speciesId": 18,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -3501,7 +3501,7 @@
    "id": 337,
    "speciesId": 19,
    "category": "conservation",
-   "label": "Status: VU. Head-starting and predator eradication have raised wild numbers from ~3 000 in the 1970s to > 15 000",
+   "label": "Status: Vulnerable. Raising young tortoises safely and removing invasive predators have raised wild numbers from about 3,000 in the 1970s to more than 15,000.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3510,7 +3510,7 @@
    "id": 106,
    "speciesId": 19,
    "category": "diet",
-   "label": "Diet type: Herbivore. Preys on: N/A",
+   "label": "Diet type: Herbivore. Eats only plants.",
    "compareTags": [
     "frugivore",
     "herbivore",
@@ -3524,7 +3524,7 @@
    "id": 118,
    "speciesId": 19,
    "category": "diet",
-   "label": "Plant diet: Grasses, forbs, cactus pads, fallen fruit; can survive > 12 months without fresh food or water by sl",
+   "label": "Plant diet: Grasses, forbs, cactus pads, fallen fruit; can survive more than 12 months without fresh food or water by slowing its metabolism.",
    "compareTags": [
     "frugivore",
     "grazer",
@@ -3546,7 +3546,7 @@
    "id": 18,
    "speciesId": 19,
    "category": "habitat",
-   "label": "Exclusively land-dwelling",
+   "label": "Lives only on land, on dry volcanic islands.",
    "compareTags": [
     "scrubland",
     "arid",
@@ -3571,7 +3571,7 @@
    "id": 249,
    "speciesId": 19,
    "category": "key_fact",
-   "label": "Island-specific shell shapes inspired Charles Darwins ideas on adaptive radiation in 1835",
+   "label": "Island-specific shell shapes inspired Charles Darwin's ideas on adaptive radiation in 1835.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3580,7 +3580,7 @@
    "id": 271,
    "speciesId": 19,
    "category": "key_fact",
-   "label": "Genomic evidence shows the lineage rafted >1 000 km from South America 23 Myr ago",
+   "label": "Genetic evidence shows its ancestors rafted more than 1,000 km from South America 2–3 million years ago.",
    "compareTags": [],
    "revealOrder": 2,
    "isFiltering": false
@@ -3636,7 +3636,7 @@
    "id": 205,
    "speciesId": 19,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -3683,7 +3683,7 @@
    "id": 341,
    "speciesId": 20,
    "category": "conservation",
-   "label": "Status: VU. Wild numbers shrinking as overgrazing, desertification and trade harvest erode remaining strongholds",
+   "label": "Status: Vulnerable. Wild numbers shrinking as overgrazing, desertification and trade harvest erode remaining strongholds",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3705,7 +3705,7 @@
    "id": 121,
    "speciesId": 20,
    "category": "diet",
-   "label": "Plant diet: Coarse grasses, forbs, succulents, fallen dry-season blooms; gains moisture from drought-resistant p",
+   "label": "Plant diet: Coarse grasses, forbs, succulents, fallen dry-season blooms; gains moisture from drought-resistant plants.",
    "compareTags": [
     "grazer",
     "succulent_feeder"
@@ -3726,7 +3726,7 @@
    "id": 22,
    "speciesId": 20,
    "category": "habitat",
-   "label": "Exclusively land-dwelling",
+   "label": "Lives only on land, in dry grassland and scrub.",
    "compareTags": [
     "scrubland",
     "arid",
@@ -3751,7 +3751,7 @@
    "id": 253,
    "speciesId": 20,
    "category": "key_fact",
-   "label": "Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.",
+   "label": "Third-largest tortoise on Earth, and the heaviest found on a continent rather than an island.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3814,7 +3814,7 @@
    "id": 209,
    "speciesId": 20,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -3860,7 +3860,7 @@
    "id": 338,
    "speciesId": 21,
    "category": "conservation",
-   "label": "Status: CR. Critically Endangered",
+   "label": "Status: Critically Endangered.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -3869,7 +3869,7 @@
    "id": 107,
    "speciesId": 21,
    "category": "diet",
-   "label": "Diet type: Herbivore. Preys on: N/A",
+   "label": "Diet type: Herbivore. Eats only plants.",
    "compareTags": [
     "frugivore",
     "herbivore",
@@ -3883,7 +3883,7 @@
    "id": 119,
    "speciesId": 21,
    "category": "diet",
-   "label": "Plant diet: Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new g",
+   "label": "Plant diet: Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new growth over mature growth.",
    "compareTags": [
     "frugivore",
     "grazer",
@@ -3905,7 +3905,7 @@
    "id": 19,
    "speciesId": 21,
    "category": "habitat",
-   "label": "Exclusively land-dwelling",
+   "label": "Lives only on land, in dry spiny forest.",
    "compareTags": [
     "forest",
     "terrestrial"
@@ -3997,7 +3997,7 @@
    "id": 206,
    "speciesId": 21,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -4044,7 +4044,7 @@
    "id": 322,
    "speciesId": 22,
    "category": "conservation",
-   "label": "Status: EX. Classified as Extinct (EX) by IUCN. Efforts are underway to 'resurrect' the lineage using recently f",
+   "label": "Status: Extinct. Efforts are underway to bring back the lineage using hybrid tortoises found recently.",
    "compareTags": [],
    "revealOrder": 1,
    "isFiltering": false
@@ -4053,7 +4053,7 @@
    "id": 91,
    "speciesId": 22,
    "category": "diet",
-   "label": "Diet type: Herbivore. Preys on: N/A",
+   "label": "Diet type: Herbivore. Eats only plants.",
    "compareTags": [
     "frugivore",
     "herbivore",
@@ -4089,7 +4089,7 @@
    "id": 3,
    "speciesId": 22,
    "category": "habitat",
-   "label": "Exclusively land-dwelling",
+   "label": "Lived only on land, in the forests of a volcanic island.",
    "compareTags": [
     "montane",
     "forest",
@@ -4183,7 +4183,7 @@
    "id": 190,
    "speciesId": 22,
    "category": "taxonomy",
-   "label": "Class: REPTILIA, Order: TESTUDINES",
+   "label": "Class: Reptilia, Order: Testudines",
    "compareTags": [
     "testudines",
     "reptilia"
@@ -4372,7 +4372,7 @@
    "id": 457,
    "speciesId": 25,
    "category": "taxonomy",
-   "label": "Class: MAMMALIA, Order: CARNIVORA",
+   "label": "Class: Mammalia, Order: Carnivora",
    "compareTags": [
     "mammalia",
     "carnivora"
@@ -4558,7 +4558,7 @@
    "id": 442,
    "speciesId": 50,
    "category": "taxonomy",
-   "label": "Class: MAMMALIA, Order: ARTIODACTYLA",
+   "label": "Class: Mammalia, Order: Artiodactyla",
    "compareTags": [
     "mammalia",
     "artiodactyla"
@@ -4713,12 +4713,6 @@
   },
   {
    "speciesId": 3,
-   "category": "diet_flora",
-   "text": "None",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 3,
    "category": "diet_prey",
    "text": "Ants; springtails; small beetles; spiders",
    "sortOrder": 1
@@ -4833,12 +4827,6 @@
   },
   {
    "speciesId": 5,
-   "category": "diet_flora",
-   "text": "None",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 5,
    "category": "diet_prey",
    "text": "Moths; crickets; beetles; arboreal spiders",
    "sortOrder": 1
@@ -4890,12 +4878,6 @@
    "category": "behavior",
    "text": "Egg clutches jiggle when attacked so tadpoles drop into water early to escape",
    "sortOrder": 2
-  },
-  {
-   "speciesId": 6,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
   },
   {
    "speciesId": 6,
@@ -4953,12 +4935,6 @@
   },
   {
    "speciesId": 7,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 7,
    "category": "diet_prey",
    "text": "beetles; crickets; millipedes; small spiders",
    "sortOrder": 1
@@ -5010,12 +4986,6 @@
    "category": "behavior",
    "text": "Internal fertilisation underwater with the male tail organ",
    "sortOrder": 2
-  },
-  {
-   "speciesId": 8,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
   },
   {
    "speciesId": 8,
@@ -5073,12 +5043,6 @@
   },
   {
    "speciesId": 9,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 9,
    "category": "diet_prey",
    "text": "ants; termites; fruit flies; tiny beetles; mites",
    "sortOrder": 1
@@ -5133,12 +5097,6 @@
   },
   {
    "speciesId": 10,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 10,
    "category": "diet_prey",
    "text": "small fish; aquatic insects; worms; crustaceans",
    "sortOrder": 1
@@ -5152,7 +5110,7 @@
   {
    "speciesId": 10,
    "category": "key_fact",
-   "text": "Gives birth to live froglets that erupt from pockets in mums back",
+   "text": "Live froglets burst out of pockets in the mother's back.",
    "sortOrder": 2
   },
   {
@@ -5170,7 +5128,7 @@
   {
    "speciesId": 10,
    "category": "life_description",
-   "text": "Fully formed froglets burst through mothers back skin after around three months",
+   "text": "Fully formed froglets burst through the mother's back skin after around three months.",
    "sortOrder": 2
   },
   {
@@ -5193,12 +5151,6 @@
   },
   {
    "speciesId": 11,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 11,
    "category": "diet_prey",
    "text": "crabs; insects; fish; other frogs; small snakes",
    "sortOrder": 1
@@ -5212,7 +5164,7 @@
   {
    "speciesId": 11,
    "category": "key_fact",
-   "text": "Stone-moving parents males drag rocks half their weight to craft safe pools",
+   "text": "Stone-moving parents: males drag rocks half their weight to build safe pools.",
    "sortOrder": 2
   },
   {
@@ -5266,7 +5218,7 @@
   {
    "speciesId": 12,
    "category": "key_fact",
-   "text": "Juveniles wear a jagged crown of shell spines, nature scaltrops in the leaf litter",
+   "text": "Juveniles wear a jagged crown of shell spines, like nature's caltrops in the leaf litter.",
    "sortOrder": 1
   },
   {
@@ -5310,12 +5262,6 @@
    "category": "behavior",
    "text": "Males give a low honk call from the water edge on warm rainy nights",
    "sortOrder": 2
-  },
-  {
-   "speciesId": 13,
-   "category": "diet_flora",
-   "text": "None",
-   "sortOrder": 1
   },
   {
    "speciesId": 13,
@@ -5370,12 +5316,6 @@
    "category": "behavior",
    "text": "Spends daylight hidden in self dug sand burrow",
    "sortOrder": 2
-  },
-  {
-   "speciesId": 14,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
   },
   {
    "speciesId": 14,
@@ -5446,7 +5386,7 @@
   {
    "speciesId": 15,
    "category": "key_fact",
-   "text": "Instead of hiding inside, it *dashes* and wedges tightpredators cant pry it free.",
+   "text": "Instead of hiding inside its shell, it dashes into a crack and wedges itself so tight that predators can't pry it free.",
    "sortOrder": 2
   },
   {
@@ -5484,12 +5424,6 @@
    "category": "behavior",
    "text": "Males call with a muffled honk while hidden under leaf litter near torrents",
    "sortOrder": 2
-  },
-  {
-   "speciesId": 16,
-   "category": "diet_flora",
-   "text": "none",
-   "sortOrder": 1
   },
   {
    "speciesId": 16,
@@ -5620,7 +5554,7 @@
   {
    "speciesId": 18,
    "category": "key_fact",
-   "text": "Possibly the worlds rarest vertebrate fewer than five individuals remain.",
+   "text": "Possibly the world's rarest vertebrate: fewer than five individuals remain.",
    "sortOrder": 1
   },
   {
@@ -5644,7 +5578,7 @@
   {
    "speciesId": 18,
    "category": "life_description",
-   "text": "Captive pair produced > 100 eggs between 20082015 but none hatched.",
+   "text": "A captive pair produced more than 100 eggs between 2008 and 2015, but none hatched.",
    "sortOrder": 2
   },
   {
@@ -5668,25 +5602,19 @@
   {
    "speciesId": 19,
    "category": "diet_flora",
-   "text": "Grasses, forbs, cactus pads, fallen fruit; can survive > 12 months without fresh food or water by slowing metabolism",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 19,
-   "category": "diet_prey",
-   "text": "N/A",
+   "text": "Grasses, forbs, cactus pads, fallen fruit; can survive more than 12 months without fresh food or water by slowing its metabolism.",
    "sortOrder": 1
   },
   {
    "speciesId": 19,
    "category": "key_fact",
-   "text": "Island-specific shell shapes inspired Charles Darwins ideas on adaptive radiation in 1835",
+   "text": "Island-specific shell shapes inspired Charles Darwin's ideas on adaptive radiation in 1835.",
    "sortOrder": 1
   },
   {
    "speciesId": 19,
    "category": "key_fact",
-   "text": "Genomic evidence shows the lineage rafted >1 000 km from South America 23 Myr ago",
+   "text": "Genetic evidence shows its ancestors rafted more than 1,000 km from South America 2–3 million years ago.",
    "sortOrder": 2
   },
   {
@@ -5704,7 +5632,7 @@
   {
    "speciesId": 19,
    "category": "life_description",
-   "text": "Hatchlings remain in warmer coastal zones 510 yrs before moving upslope.",
+   "text": "Hatchlings stay in warmer coastal zones for 5–10 years before moving upslope.",
    "sortOrder": 2
   },
   {
@@ -5734,7 +5662,7 @@
   {
    "speciesId": 20,
    "category": "key_fact",
-   "text": "Third-largest tortoise on Earthand the heaviest found on a continent rather than an island.",
+   "text": "Third-largest tortoise on Earth, and the heaviest found on a continent rather than an island.",
    "sortOrder": 1
   },
   {
@@ -5783,12 +5711,6 @@
    "speciesId": 21,
    "category": "diet_flora",
    "text": "Grazes on grasses, fruit, and succulent plants. A favorite food is the Opuntia cactus. Prefers new growth over mature growth.",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 21,
-   "category": "diet_prey",
-   "text": "N/A",
    "sortOrder": 1
   },
   {
@@ -5843,12 +5765,6 @@
    "speciesId": 22,
    "category": "diet_flora",
    "text": "Fed primarily on greens, grasses, native fruit, and low-hanging cactus pads.",
-   "sortOrder": 1
-  },
-  {
-   "speciesId": 22,
-   "category": "diet_prey",
-   "text": "N/A",
    "sortOrder": 1
   },
   {

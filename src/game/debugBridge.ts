@@ -1,8 +1,8 @@
 // Dev-only playtest bridge. Exposes `window.__cc` so an agent driving the
 // browser (chrome-devtools `evaluate_script`) can read the board and play real
-// moves. Moves are synthetic mouse drags on the canvas, so they go through the
-// same pointer handlers a player uses. Reads client-visible state only; every
-// entry point is a no-op in production builds.
+// moves. Moves are synthetic mouse or touch drags on the canvas, so they go
+// through the same pointer handlers a player uses. Reads client-visible state
+// only; every entry point is a no-op in production builds.
 import { EventBus, type EventPayloads } from '@/game/EventBus';
 import { MoveAction, type MoveDirection } from '@/game/MoveAction';
 import type { BackendPuzzle } from '@/game/BackendPuzzle';
@@ -129,11 +129,27 @@ async function waitIdle(timeoutMs = 15000): Promise<DebugBoardSnapshot & { timed
   return { ...requireScene().debugSnapshot(), timedOut: true };
 }
 
-function fire(type: 'mousedown' | 'mousemove' | 'mouseup', point: { x: number; y: number }): void {
+type Phase = 'down' | 'move' | 'up';
+type DragInput = 'mouse' | 'touch';
+
+function fireMouse(phase: Phase, point: { x: number; y: number }): void {
+  const type = ({ down: 'mousedown', move: 'mousemove', up: 'mouseup' } as const)[phase];
   requireScene().game.canvas.dispatchEvent(new MouseEvent(type, {
     clientX: point.x, clientY: point.y, bubbles: true, cancelable: true, view: window,
-    button: 0, buttons: type === 'mouseup' ? 0 : 1,
+    button: 0, buttons: phase === 'up' ? 0 : 1,
   }));
+}
+
+/** One finger, as a phone sends it: touches on the canvas, which Phaser turns into pointer events. */
+function fireTouch(phase: Phase, point: { x: number; y: number }): void {
+  const canvas = requireScene().game.canvas;
+  const type = ({ down: 'touchstart', move: 'touchmove', up: 'touchend' } as const)[phase];
+  const touch = new Touch({
+    identifier: 1, target: canvas, clientX: point.x, clientY: point.y,
+    pageX: point.x + window.scrollX, pageY: point.y + window.scrollY, radiusX: 8, radiusY: 8, force: 1,
+  });
+  const down = phase === 'up' ? [] : [touch];
+  canvas.dispatchEvent(new TouchEvent(type, { touches: down, targetTouches: down, changedTouches: [touch], bubbles: true, cancelable: true, view: window }));
 }
 
 /** What a player's pointer would hit at this point, or null when it's the board canvas. */
@@ -146,12 +162,14 @@ function overlayAt(point: { x: number; y: number }): string | null {
 }
 
 /**
- * Drag a row/column like a player: mouse down on one cell, move in steps, release
- * `amount` cells away. Resolves once the board settles. A drag that makes no match
- * snaps back and uses no move. Refuses (`blocked`) when UI covers the start cell,
- * since a player couldn't make that drag either.
+ * Drag a row/column like a player: press on one cell, move in steps, release
+ * `amount` cells away, with the mouse or (`input: 'touch'`) a finger. Resolves
+ * once the board settles. A drag that makes no match snaps back and uses no move.
+ * Refuses (`blocked`) when UI covers the start cell, since a player couldn't make
+ * that drag either.
  */
-async function drag(move: Move, timeoutMs = 15000) {
+async function drag(move: Move, { timeoutMs = 15000, input = 'mouse' }: { timeoutMs?: number; input?: DragInput } = {}) {
+  const fire = input === 'touch' ? fireTouch : fireMouse;
   const before = requireScene().debugSnapshot();
   const last = (move.rowOrCol === 'row' ? before.grid[0]?.length ?? 6 : before.grid.length) - 1;
   const start = move.amount > 0 ? 0 : last;
@@ -161,12 +179,12 @@ async function drag(move: Move, timeoutMs = 15000) {
   const b = cellCenter(to.x, to.y);
   const blocked = overlayAt(a);
   if (blocked) return { move, counted: false, movesUsed: before.movesUsed, timedOut: false, blocked, after: before };
-  fire('mousedown', a);
+  fire('down', a);
   for (let step = 1; step <= 6; step++) {
     await sleep(16);
-    fire('mousemove', { x: a.x + (b.x - a.x) * step / 6, y: a.y + (b.y - a.y) * step / 6 });
+    fire('move', { x: a.x + (b.x - a.x) * step / 6, y: a.y + (b.y - a.y) * step / 6 });
   }
-  fire('mouseup', b);
+  fire('up', b);
   await sleep(50);
   const after = await waitIdle(timeoutMs);
   return { move, counted: after.movesUsed > before.movesUsed, movesUsed: after.movesUsed, timedOut: after.timedOut, blocked: null, after };

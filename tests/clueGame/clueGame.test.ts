@@ -7,7 +7,7 @@ import { correctGuessScore, createRound, liveCandidates, notesLeft, registerWron
 import { clueSessionReducer, currentRoundFeed } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
 import type { CluePool } from '@/clueGame/pool';
-import { OTHERS, find, pool, records } from './testPool';
+import { OTHERS, clue, find, pool, records } from './testPool';
 
 describe('records', () => {
   test('authoring prefixes are ignored', () => {
@@ -95,6 +95,22 @@ describe('rounds', () => {
     const round = createRound(pool, mulberry32(1), 1, OTHERS);
     assert.deepEqual(round.queues.green.map(note => note.text), ['Found near water.', 'Lives in rainforest streams.']);
     assert.deepEqual(round.queues.purple.map(note => note.text), ['Discovered on a famous voyage.', 'Males carry tadpoles in their vocal sac.']);
+  });
+
+  test('notes skip what a clue already said, lead in bare lists, and never show placeholders', () => {
+    const withFacts: CluePool = {
+      ...pool,
+      clues: [...pool.clues, clue(1, 'diet', 'Diet type: Carnivore. Preys on: ants; beetles', ['carnivore'])],
+      facts: [
+        ...pool.facts,
+        { speciesId: 1, category: 'diet_prey', text: 'Ants; beetles', sortOrder: 1 },
+        { speciesId: 1, category: 'diet_flora', text: 'None', sortOrder: 1 },
+        { speciesId: 1, category: 'threat', text: 'logging; fire', sortOrder: 1 },
+      ],
+    };
+    const round = createRound(withFacts, mulberry32(1), 1, OTHERS);
+    assert.deepEqual(round.queues.yellow.map(note => note.text), ['Diet type: Carnivore. Preys on: ants; beetles']);
+    assert.deepEqual(round.queues.white.map(note => note.text), ['Threats: logging; fire']);
   });
 
   test('deductive clues rule out contradicted candidates; notes do not', () => {

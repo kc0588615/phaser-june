@@ -4,7 +4,7 @@
 import type { LootGemType } from '@/expedition/domain';
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { evaluateClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
-import type { CluePool, PoolClue } from '@/clueGame/pool';
+import { isPlaceholderText, type CluePool, type PoolClue } from '@/clueGame/pool';
 import type { SpeciesRecords } from '@/clueGame/traits';
 
 export const CANDIDATES_PER_ROUND = 6;
@@ -47,22 +47,28 @@ function shuffle<T>(items: readonly T[], rng: () => number): T[] {
   return copy;
 }
 
+/** Lead-ins for fact categories whose text is a bare list ("Ants; termites"). */
+const FACT_LEAD: Partial<Record<string, string>> = { threat: 'Threats', diet_prey: 'Eats', diet_flora: 'Plants it eats' };
+
+const comparable = (text: string) => text.trim().toLowerCase().replace(/\.$/, '');
+
 function buildQueues(pool: CluePool, mysteryId: number): Record<LootGemType, QueuedNote[]> {
   const clues = pool.clues.filter(clue => clue.speciesId === mysteryId);
-  const facts = pool.facts.filter(fact => fact.speciesId === mysteryId);
+  const facts = pool.facts.filter(fact => fact.speciesId === mysteryId && !isPlaceholderText(fact.text));
   const queues = {} as Record<LootGemType, QueuedNote[]>;
   for (const category of GEM_CATEGORIES) {
     const ownClues = clues
       .filter(clue => category.clueCategories.includes(clue.category))
       .sort((a, b) => a.revealOrder - b.revealOrder
         || category.clueCategories.indexOf(a.category) - category.clueCategories.indexOf(b.category));
-    const seen = new Set(ownClues.map(clue => clue.label.trim().toLowerCase()));
+    // Skip facts a clue already says, even inside a longer label ("Preys on: <fact>").
+    const said = ownClues.map(clue => comparable(clue.label));
     const ownFacts = facts
-      .filter(fact => category.factCategories.includes(fact.category) && !seen.has(fact.text.trim().toLowerCase()))
+      .filter(fact => category.factCategories.includes(fact.category) && !said.some(label => label.includes(comparable(fact.text))))
       .sort((a, b) => category.factCategories.indexOf(a.category) - category.factCategories.indexOf(b.category) || a.sortOrder - b.sortOrder);
     queues[category.gem] = [
       ...ownClues.map(clue => ({ text: clue.label, clue })),
-      ...ownFacts.map(fact => ({ text: fact.text, clue: null })),
+      ...ownFacts.map(fact => ({ text: FACT_LEAD[fact.category] ? `${FACT_LEAD[fact.category]}: ${fact.text}` : fact.text, clue: null })),
     ];
   }
   return queues;

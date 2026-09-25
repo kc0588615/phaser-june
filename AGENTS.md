@@ -52,9 +52,9 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 
 ## Where Things Live
 - Layout host: `src/MainAppLayout.tsx` (keeps MapLibre + Phaser mounted; viewMode toggles map/clues/species list).
-- Phaser entry: `src/PhaserGame.tsx` boots `src/game/main.ts` -> scenes (Boot, Preloader, MainMenu, Game, GameOver).
-- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: board setup (`map-location-selected`, `terrain-cell-selected`, `routing-state-updated`), board/HUD (`game-hud-updated`, `node-objective-updated`, `game-reset`), expedition (`expedition-data-ready`, `expedition-start`, `evidence-move-resolved`, `evidence-progress-committed`, `node-complete`, `route-progress-updated`), auth (`auth-user-ready`).
-- Controller: `src/game/scenes/Game.ts` (input, move flow, streak/score, HUD emit, node objectives).
+- Phaser entry: `src/PhaserGame.tsx` boots `src/game/main.ts` `StartGame(parent, mode)`: `expedition` -> Boot, Preloader, MainMenu, Game, GameOver; `clue` -> Boot, Preloader, ClueBoard.
+- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: board setup (`map-location-selected`, `terrain-cell-selected`, `routing-state-updated`), board/HUD (`game-hud-updated`, `node-objective-updated`, `game-reset`), expedition (`expedition-data-ready`, `expedition-start`, `evidence-move-resolved`, `evidence-progress-committed`, `node-complete`, `route-progress-updated`), Clue Match (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`), auth (`auth-user-ready`).
+- Controller: `src/game/board/BoardController.ts` (drag input + move/cascade loop, shared by both boards); `src/game/scenes/Game.ts` (expedition: streak/score, HUD emit, node objectives).
 - Model: `src/game/BackendPuzzle.ts` (board state, matches, move registration), `src/game/boardTypes.ts` (cell schema), `src/game/gemSemantics.ts` (shared gem meaning config), `src/game/nodeObstacles.ts` (typed obstacle contracts + seeded cell state).
 - Move pipeline: `src/game/MoveAction.ts`, `src/game/ExplodeAndReplacePhase.ts` (swap/cascade).
 - View: `src/game/BoardView.ts` (sprite layout/animation, resize tweens).
@@ -65,7 +65,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Data layer: `src/db/schema/*` (schema), `src/db/index.ts` (singleton), `src/app/api/species/*` (Drizzle species routes), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (game sessions + `player_stats` refresh; discoveries are written by the guess route).
 - Styles/UI: shadcn in `src/components/ui/*`, global CSS in `src/styles/globals.css`, Tailwind config at root.
 
-- Clue Match (free-play, gem color → clue category, candidate-pool deduction): page `src/pages/clue-match.tsx`, UI `src/components/clueGame/`, rules `src/clueGame/` (category map, deduction, rounds, session), data `GET /api/clue-game/pool` (`species_deduction_clues` + `species_facts`, migrations 035/036). Board reports matches via the `gems-matched` EventBus event.
+- Clue Match (free-play, gem color → clue category, candidate-pool deduction; mobile first): page `src/pages/clue-match.tsx`, UI `src/components/clueGame/` (`ClueMatchGame` shell, `useClueMatch` state + board wiring), pure rules `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool; tests in `tests/clueGame/`), board `src/game/scenes/ClueBoardScene.ts`, data `GET /api/clue-game/pool` (`src/lib/cluePool.ts`; `species_deduction_clues` + `species_facts`, migrations 035-037). Content check: `npm run clue:pool -- --check`; `--snapshot` refreshes `tests/fixtures/clueGame/pool.json`. `?seed=N` replays a session. Guide: `docs/CLUE_MATCH.md`.
 - Content authoring: `db/seeds/species/`, `db/seeds/pools/<slug>/` (pool.json, evidence/, cases/); `docs/CONTENT_AUTHORING.md`.
 
 ## Docs Map

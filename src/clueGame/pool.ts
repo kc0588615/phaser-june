@@ -37,6 +37,11 @@ export interface CluePool {
   facts: PoolFact[];
 }
 
+/** Text that stands in for "nothing here" ("None", "N/A"); never shown to players. */
+export function isPlaceholderText(text: string): boolean {
+  return /^(none|n\/a|unknown|-)?\.?$/i.test(text.trim());
+}
+
 const ORDER_EMOJI: Record<string, string> = { ANURA: '🐸', TESTUDINES: '🐢', CARNIVORA: '🐅', ARTIODACTYLA: '🦌' };
 const CLASS_EMOJI: Record<string, string> = { AMPHIBIA: '🐸', REPTILIA: '🦎', MAMMALIA: '🐾', AVES: '🐦' };
 

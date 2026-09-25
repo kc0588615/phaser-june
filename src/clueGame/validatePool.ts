@@ -3,7 +3,7 @@
 // (on the checked-in snapshot) and by `npm run clue:pool -- --check` (live DB).
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { fitClue, isDeductive } from '@/clueGame/deduction';
-import type { CluePool } from '@/clueGame/pool';
+import { isPlaceholderText, type CluePool } from '@/clueGame/pool';
 import { EXCLUSIVE_AXES, buildSpeciesRecords, clueTags, rankOfTag } from '@/clueGame/traits';
 import { playableSpeciesIds } from '@/clueGame/round';
 
@@ -27,6 +27,21 @@ export function validatePool(pool: CluePool): PoolReport {
   for (const fact of pool.facts) {
     if (!speciesById.has(fact.speciesId)) errors.push(`fact for species ${fact.speciesId}: species is missing from the pool`);
     if (!fact.text.trim()) errors.push(`fact for ${name(fact.speciesId)}: empty text`);
+  }
+
+  // Text a player would stumble on: placeholders, Red List codes, text an import
+  // cut short (the full version survives in species_facts), numbers run together.
+  const texts = [
+    ...pool.clues.map(clue => ({ speciesId: clue.speciesId, where: `clue ${clue.id} (${name(clue.speciesId)}, ${clue.category})`, text: clue.label })),
+    ...pool.facts.map(fact => ({ speciesId: fact.speciesId, where: `fact (${name(fact.speciesId)}, ${fact.category} ${fact.sortOrder})`, text: fact.text })),
+  ];
+  for (const { speciesId, where, text } of texts) {
+    if (text.trim() && isPlaceholderText(text)) warnings.push(`${where}: placeholder text "${text.trim()}"; delete the row`);
+    if (/^Status: [A-Z]{2}\b/.test(text)) warnings.push(`${where}: spell out the Red List code ("${text.slice(0, 11)}")`);
+    if (/(?<![\d,.])0\d{2,}\b|\b(19|20)\d{2}(19|20)\d{2}\b/.test(text)) warnings.push(`${where}: numbers run together, a lost dash? "${text}"`);
+    const body = text.replace(/^[A-Z][a-z ]+: /, '');
+    const longer = body.length >= 20 && pool.facts.find(fact => fact.speciesId === speciesId && fact.text.length > body.length && fact.text.startsWith(body));
+    if (longer) warnings.push(`${where}: looks cut off; species_facts (${longer.category}) has the full text`);
   }
 
   const orderKeys = new Set<string>();
