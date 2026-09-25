@@ -1,5 +1,5 @@
 // Clue-category game: each gem color outputs clues from one category of the
-// mystery species (the classic clue-board mapping, docs/DEVELOPER_ONBOARDING.md §6).
+// mystery species (the classic clue-board mapping).
 import type { GemType } from '@/game/constants';
 import type { SpeciesClueCategory } from '@/types/speciesClues';
 

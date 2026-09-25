@@ -44,49 +44,30 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 ## Repo Quick Start
 - Install: `npm install`
 - Dev: `npm run dev` (http://localhost:8080)
-- Build/serve static: `npm run build && npm run serve` (serves `dist/`); or `npm start`
+- Globe basemaps: `npm run clue:world-map`
+- Build + serve: `npm run build && npm run serve`
 - Typecheck: `npm run typecheck`
 - Lint: `npm run lint` (must exit 0; `react-hooks/set-state-in-effect` is off by design, see `eslint.config.mjs`)
 - Drizzle: `npm run db:introspect`
-- Env: set `DATABASE_URL` (+ optional `NEXT_PUBLIC_MAP_STYLE_URL`, `NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`) in `.env.local`. Clerk keys TBD.
+- Env (`.env.local`): `DATABASE_URL`, Clerk keys, `NEXT_PUBLIC_TITILER_BASE_URL` + `NEXT_PUBLIC_COG_URL` (habitat snapshots; optional).
 
 ## Where Things Live
-- Layout host: `src/MainAppLayout.tsx` (keeps MapLibre + Phaser mounted; viewMode toggles map/clues/species list).
-- Phaser entry: `src/PhaserGame.tsx` boots `src/game/main.ts` `StartGame(parent, mode)`: `expedition` -> Boot, Preloader, MainMenu, Game, GameOver; `clue` -> Boot, Preloader, ClueBoard.
-- Event bus: `src/game/EventBus.ts` -- fully typed; see file for catalog. Key categories: board setup (`map-location-selected`, `terrain-cell-selected`, `routing-state-updated`), board/HUD (`game-hud-updated`, `node-objective-updated`, `game-reset`), expedition (`expedition-data-ready`, `expedition-start`, `evidence-move-resolved`, `evidence-progress-committed`, `node-complete`, `route-progress-updated`), Clue Match (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`), auth (`auth-user-ready`).
-- Controller: `src/game/board/BoardController.ts` (drag input + move/cascade loop, shared by both boards); `src/game/scenes/Game.ts` (expedition: streak/score, HUD emit, node objectives).
-- Model: `src/game/BackendPuzzle.ts` (board state, matches, move registration), `src/game/boardTypes.ts` (cell schema), `src/game/gemSemantics.ts` (shared gem meaning config), `src/game/nodeObstacles.ts` (typed obstacle contracts + seeded cell state).
-- Move pipeline: `src/game/MoveAction.ts`, `src/game/ExplodeAndReplacePhase.ts` (swap/cascade).
-- View: `src/game/BoardView.ts` (sprite layout/animation, resize tweens).
-- Map ingress: `src/components/MapLibreExploreMap.tsx` (click -> expedition data, highlights habitats/species polygons).
-- HUD bridge: `src/contexts/GameBridgeContext.tsx` (mirrors `game-hud-updated` into React for `RunCompleteSummary`).
-- Species catalog: `src/components/SpeciesList.tsx` (React Query, filters, localStorage discoveries).
-- Expedition run: `src/types/expedition.ts` (RunState, clue fragments, deduction state), `src/contexts/ExpeditionContext.tsx` (run state/persistence), `src/expedition/` (affinities.ts, domain.ts), `src/lib/nodeScoring.ts` (node generation from GIS), `src/components/ExpeditionBriefing.tsx`, `src/components/FieldNotebook.tsx`, `src/components/ExpeditionRouteRecap.tsx`.
-- Data layer: `src/db/schema/*` (schema), `src/db/index.ts` (singleton), `src/app/api/species/*` (Drizzle species routes), `src/hooks/useSpeciesData.ts` (React Query), `src/lib/playerTracking.ts` (game sessions + `player_stats` refresh; discoveries are written by the guess route).
-- Styles/UI: shadcn in `src/components/ui/*`, global CSS in `src/styles/globals.css`, Tailwind config at root.
-
-- Clue Match (free-play, gem color → clue category, candidate-pool deduction; mobile first): page `src/pages/clue-match.tsx`, UI `src/components/clueGame/` (`ClueMatchGame` shell, `useClueMatch` state + board wiring), pure rules `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool; tests in `tests/clueGame/`), board `src/game/scenes/ClueBoardScene.ts`, data `GET /api/clue-game/pool` (`src/lib/cluePool.ts`; `species_deduction_clues` + `species_facts`, migrations 035-042), range maps `GET /api/clue-game/range` (`clue_match_ranges` view), solves `POST /api/clue-game/solves` (`clue_match_solves`). Content check: `npm run clue:pool -- --check`; `--snapshot` refreshes `tests/fixtures/clueGame/pool.json`. `?seed=N` replays a session. Guide: `docs/CLUE_MATCH.md`.
-- Content authoring: `db/seeds/species/`, `db/seeds/pools/<slug>/` (pool.json, evidence/, cases/); `docs/CONTENT_AUTHORING.md`.
+The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-match`, optional `?place=` and `?seed=`). Guide: `docs/CLUE_MATCH.md`.
+- Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` with TiTiler habitat snapshot). Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
+- Clue Match UI: `src/pages/clue-match.tsx` -> `src/components/clueGame/` (`ClueMatchGame` shell, `useClueMatch` state + board wiring, `useJournal` on-device journal).
+- Rules (pure, tested in `tests/clueGame/`): `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool, glossary, journal, solveReport).
+- Board: `src/PhaserGame.tsx` boots `src/game/main.ts` (Preloader -> `scenes/ClueBoardScene.ts`). Model `BackendPuzzle.ts`, view `BoardView.ts`, input + cascade loop `board/BoardController.ts`. React <-> Phaser only via typed `src/game/EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `current-scene-ready`). Dev bridge `window.__cc` (`src/game/debugBridge.ts`).
+- Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `POST /api/clue-game/solves`. Drizzle schema `src/db/schema/*` models only the tables the app uses (species, clues, facts, iucn, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Migrations `src/db/migrations/` (Clue Match: 035-044).
+- Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`); `useEnsureProfile` creates the `profiles` row via `/api/player/ensure-profile`.
+- Content: edit rows in Postgres, then `npm run clue:pool -- --check` (and `--snapshot` for the test fixture). Practice SQL: `db/analysis/clue-match/`.
 
 ## Docs Map
-Read relevant docs before big edits.
-
-- Hub: `docs/DEVELOPER_ONBOARDING.md` (full index + reading order).
-- Architecture: `docs/GAME_SYSTEM_ARCHITECTURE.md`.
-- Board/clues: `docs/CLUE_MATCH.md` (Clue Match; practice SQL in `db/analysis/clue-match/`), `docs/archive/CLUE_BOARD_IMPLEMENTATION.md` (archived), `docs/SPECIES_DISCOVERY_IMPLEMENTATION.md`.
-- Expedition/runs: `docs/EXPEDITION_RUN_LOOP.md`, `docs/ACTION_RUN_SCHEMA_AND_GIS_SOURCES.md`, `docs/DEDUCTION_CAMP_ECONOMY.md`.
-- Affinity system: `docs/AFFINITY_MIGRATION_IMPLEMENTATION.md`.
-- Album/TCG: `docs/SPECIES_ALBUM_TCG_SYSTEM_SPEC.md`, `docs/SPECIES_ALBUM_TCG_INTEGRATION_TODO.md` (Phase 2-3 remaining work).
-- Comparative ref slot: `docs/COMPARATIVE_REFERENCE_SLOT.md`.
-- Map/data: `docs/MAPLIBRE_UI_CUSTOMIZATION.md`, `docs/HABITAT_HIGHLIGHT_IMPLEMENTATION.md`, `docs/HABITAT_RASTER_MIGRATION.md`.
-- UI/styling: `docs/SHADCN_IMPLEMENTATION_GUIDE.md`, `docs/SPECIES_CARD_UI_IMPROVEMENTS.md`, `docs/SPECIES_UI_MOBILE_IMPROVEMENTS.md`, `docs/SPECIES_UI_BREADCRUMB_AND_DROPDOWN_FIX.md`.
-- Data/auth: `docs/DATABASE_USER_GUIDE.md`, `docs/SPECIES_DATABASE_IMPLEMENTATION.md`, `docs/SPECIES_TABLE_SIMPLIFICATION_PLAN.md` (species table + iucn rename), `docs/DRIZZLE_ORM_GUIDE.md`, `docs/DRIZZLE_VERCEL_MIGRATION.md`.
-- Tracking/stats: `docs/PLAYER_TRACKING_IMPLEMENTATION_SUMMARY.md`, `docs/PLAYER_TRACKING_INTEGRATION_PLAN.md`, `docs/PLAYER_STATS_DASHBOARD_INTEGRATION.md`, `docs/PLAYER_STATS_DASHBOARD_FINAL_REVIEW.md`.
-- Biodiversity content: `docs/archive/BIOREGION_FEATURE_SUMMARY.md` (archived), `docs/BIOREGION_IMPLEMENTATION.md`, `docs/ECOREGION_IMPLEMENTATION.md`.
+- `docs/CLUE_MATCH.md`: the game, globe, rules, content workflow, migrations, practice SQL.
+- `docs/DATABASE_ACCESS.md`, `docs/SHAPEFILE_BEST_PRACTICES.md`, `docs/DRIZZLE_ORM_GUIDE.md`: data layer.
+- `README.md`: start here.
 
 ## Code Style / Safety
 - TypeScript everywhere; use `@/` path alias.
-- Keep React/Phaser components mounted (prefer `display: none` over unmount) to preserve EventBus listeners.
 - Prefer `rg` for search. Avoid network installs (restricted). No destructive git commands unless explicitly asked.
 - Keep edits minimal and commented only when non-obvious.
 

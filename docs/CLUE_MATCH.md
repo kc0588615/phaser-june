@@ -1,18 +1,22 @@
-# Clue Match
+# Critter Connect: the globe and Clue Match
 
-A fast, mobile-first free-play mode at `/clue-match`. A mystery animal hides among six candidates. Matching gems reveals clues about it: each gem color is one clue category, and each match shows that category's next clue. Clues that can be checked against the candidates' records put colored dots on the candidate cards and rule animals out. Tap the animal you think it is, then **Guess**. A correct guess shows a reveal card (range map, Red List status, a fact), records the animal in the Field Journal, and the next mystery starts.
+The app has two screens.
 
-50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in needed; each solve is saved to `clue_match_solves` for analysis (with the player's profile id when signed in). `?seed=N` replays a session exactly (same mysteries, same starting board).
+- **Globe (`/`).** A globe beside a list of places: countries, wildlife areas (OneEarth bioregions) and continents where at least two of the game's animals live. Pick one from the list, or tap its dot on the globe. The globe flies there and outlines it, and a card shows how many animals live there (named once you've found them) and a habitat-type picture of the place. **Explore** opens Clue Match with that place's animals. Animals you've found glow on the globe where you found them: green for amphibians and reptiles, amber for mammals.
+- **Clue Match (`/clue-match`).** A fast, mobile-first match-3. A mystery animal hides among six candidates. Matching gems reveals clues about it: each gem color is one clue category, and each match shows that category's next clue. Clues that can be checked against the candidates' records put colored dots on the candidate cards and rule animals out. Tap the animal you think it is, then **Guess**. A correct guess shows a reveal card (range map, Red List status, a fact), records the animal in the Field Journal, and the next mystery starts.
+
+50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in needed; each solve is saved to `clue_match_solves` for analysis (with the player's profile id when signed in, and the place when played from the globe). `?place=country:KEN` plays one place; `?seed=N` replays a session exactly (same mysteries, same starting board).
 
 ## Where the code lives
 
 | Part | Path |
 |---|---|
-| Page | `src/pages/clue-match.tsx` → `src/components/clueGame/ClueMatchGame.tsx` |
+| Globe | `src/pages/index.tsx` → `src/components/globe/` (GlobeScreen, Globe, PlaceList, PlaceCard); helpers `src/clueGame/places.ts`; data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`) |
+| Clue Match page | `src/pages/clue-match.tsx` → `src/components/clueGame/ClueMatchGame.tsx` |
 | Session state + board wiring | `src/components/clueGame/useClueMatch.ts` |
 | UI pieces | `src/components/clueGame/` (TopBar, GemLegend, CandidateGrid, GuessBar, ClueFeed, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText) |
 | Rules (pure, unit-tested) | `src/clueGame/`: `categories` (gem → category), `traits` (species records), `deduction` (how a clue compares with a candidate), `round`, `session` (reducer), `selectors` (what the HUD shows), `validatePool` (content checks), `glossary`, `journal`, `speciesInfo` |
-| Board | `src/game/scenes/ClueBoardScene.ts` (square seeded board), `src/game/board/BoardController.ts` (drag + cascade loop shared with the expedition board) |
+| Board | `src/game/scenes/ClueBoardScene.ts` (square seeded board), `src/game/board/BoardController.ts` (drag + cascade loop), `BackendPuzzle.ts` (model), `BoardView.ts` (sprites) |
 | Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`) |
 | Tests | `tests/clueGame/*`, fixture `tests/fixtures/clueGame/pool.json` |
 
@@ -60,7 +64,7 @@ Content lives in Postgres. Edit it with any SQL tool (psql, DBeaver, pgAdmin, QG
 
 1. Change rows in `species_deduction_clues` (`category`, `label`, `compare_tags`, `reveal_order`, `is_filtering`) or `species_facts` (`category`, `fact_text`, `sort_order`). Wrap ad hoc writes in `BEGIN; ... COMMIT;`.
 2. `npm run clue:pool -- --check` validates the live pool: errors (a clue that doesn't fit its own animal, duplicate reveal order, an unknown realm tag) and warnings (placeholder text, Red List codes, text cut off by an import, numbers run together, a color with no notes).
-3. If range data or the set of playable species changed: `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;`
+3. If range data or the set of playable species changed: `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;` and `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_places;`
 4. `npm run clue:pool -- --snapshot` refreshes the test fixture, then `npm test`.
 5. Play it: `/clue-match?seed=1`.
 
@@ -82,8 +86,10 @@ Content lives in Postgres. Edit it with any SQL tool (psql, DBeaver, pgAdmin, QG
 | `040_clue_match_ranges_view.sql` | `clue_match_ranges` materialized view: simplified range SVG paths for the reveal card |
 | `041_clue_match_mammals.sql` | 26 mammals join the pool (common names, clues, facts); content drafted by Claude, worth an expert read |
 | `042_clue_match_solves.sql` | `clue_match_solves`: one row per solved mystery (moves, wrong guesses, clues per color) |
+| `043_clue_match_places.sql` | `clue_match_places` materialized view: the globe's places and who lives there (≥5% or 5,000 km² of a range); Russia split at the Urals, France's overseas parts moved to their continent; ~90 s to refresh |
+| `044_clue_match_solves_place.sql` | `clue_match_solves.place_key` |
 
-Each is idempotent. The world basemap under range maps is `public/assets/clue-match/world-land.svg`, drawn from `natural_earth.countries` by `npm run clue:world-map`.
+Each is idempotent. The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, `world-land.geojson` on the globe) are drawn from `natural_earth.countries` by `npm run clue:world-map`. The habitat pictures come from TiTiler rendering the habitat GeoTIFF (`NEXT_PUBLIC_TITILER_BASE_URL`, `NEXT_PUBLIC_COG_URL`).
 
 ## Practice SQL on this data
 
