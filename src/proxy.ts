@@ -1,17 +1,8 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
-const isProtectedRoute = createRouteMatcher([
-  '/api/player/ensure-profile',
-  '/api/player/start-session',
-]);
-
-const proxy = clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
-});
-
-export default proxy;
+// Makes the Clerk session available to routes; each route checks auth itself
+// (/api/player/ensure-profile returns 401 when signed out).
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
