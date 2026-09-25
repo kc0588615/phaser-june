@@ -14,8 +14,6 @@ import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from '@/g
 import { gemCategory } from '@/clueGame/categories';
 import { cluesForMatch } from '@/clueGame/round';
 
-const NEVER_ENDS = Number.MAX_SAFE_INTEGER;
-
 export class ClueBoardScene extends Phaser.Scene {
     static readonly KEY = 'ClueBoard';
 
@@ -38,9 +36,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.drawBackdrop();
 
         this.puzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
-        this.puzzle.setMaxMoves(NEVER_ENDS);
         this.view = new BoardView(this, { cols: GRID_COLS, rows: GRID_ROWS, gemSize: this.layout.gemSize, boardOffset: this.layout.offset });
-        this.view.setEvidenceFamilyMode(true);
         this.controller = new BoardController(this, this.puzzle, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
             onMoveResolved: (_move, anyMatch) => {
@@ -62,10 +58,9 @@ export class ClueBoardScene extends Phaser.Scene {
     private setupBoard({ seed, allowedGemTypes }: EventPayloads['clue-board-setup']): void {
         if (!this.puzzle || !this.view || !this.controller) return;
         this.seed = seed;
-        this.puzzle.setGemPool({ allowedGemTypes });
+        this.puzzle.setGemTypes(allowedGemTypes);
         this.puzzle.setSeed(seed);
         this.puzzle.regenerateBoard();
-        this.puzzle.setMaxMoves(NEVER_ENDS);
         this.view.destroyBoard();
         this.view.createBoard(this.puzzle.getGridState());
         this.controller.setReady(true);
@@ -165,17 +160,11 @@ export class ClueBoardScene extends Phaser.Scene {
         return {
             ready: this.controller?.isReady() ?? false,
             canMove: this.controller?.isInputEnabled() ?? false,
+            locked: this.locked,
             isResolvingMove: this.controller?.isResolving() ?? false,
             isDragging: this.controller?.isDragging() ?? false,
-            isPaused: false,
-            inRun: false,
-            nodeIndex: 0,
             boardSeed: this.seed,
             movesUsed: puzzle?.getMovesUsed() ?? 0,
-            maxMoves: puzzle?.getMaxMoves() ?? 0,
-            gameOver: false,
-            objective: { progress: 0, target: 0, completed: false },
-            streak: 0,
             hasAnyValidMove: puzzle?.hasAnyValidMove() ?? false,
             gemSize: this.layout.gemSize,
             boardOffset: { ...this.layout.offset },

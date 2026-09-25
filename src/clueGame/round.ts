@@ -1,7 +1,7 @@
 // One round of Clue Match: a mystery species hidden in a pool of known
 // candidates. Matching a gem color reveals the next clue in that color's
 // category; deductive clues mark how each candidate's record compares.
-import type { LootGemType } from '@/expedition/domain';
+import type { GemType } from '@/game/constants';
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { evaluateClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
 import { isPlaceholderText, type CluePool, type PoolClue } from '@/clueGame/pool';
@@ -23,22 +23,22 @@ export interface RoundState {
   candidateIds: number[];
   /** Decoys picked for being close relatives of the mystery (the difficulty ramp). */
   relatives: number;
-  queues: Record<LootGemType, QueuedNote[]>;
+  queues: Record<GemType, QueuedNote[]>;
   /** Player moves this round (cascades are free). */
   moves: number;
   /** Clues and notes shown per gem color this round. */
-  revealedByGem: Partial<Record<LootGemType, number>>;
+  revealedByGem: Partial<Record<GemType, number>>;
   /** Candidates contradicted by a clue or wrongly guessed. */
   ruledOut: number[];
   wrongGuesses: number[];
   /** Gems whose "no more notes" message was already shown. */
-  exhausted: LootGemType[];
+  exhausted: GemType[];
 }
 
 export type Reveal =
-  | { kind: 'clue'; gem: LootGemType; text: string; fits: Record<number, ClueFit> }
-  | { kind: 'note'; gem: LootGemType; text: string }
-  | { kind: 'empty'; gem: LootGemType };
+  | { kind: 'clue'; gem: GemType; text: string; fits: Record<number, ClueFit> }
+  | { kind: 'note'; gem: GemType; text: string }
+  | { kind: 'empty'; gem: GemType };
 
 function shuffle<T>(items: readonly T[], rng: () => number): T[] {
   const copy = [...items];
@@ -54,10 +54,10 @@ const FACT_LEAD: Partial<Record<string, string>> = { threat: 'Threats', diet_pre
 
 const comparable = (text: string) => text.trim().toLowerCase().replace(/\.$/, '');
 
-function buildQueues(pool: CluePool, mysteryId: number): Record<LootGemType, QueuedNote[]> {
+function buildQueues(pool: CluePool, mysteryId: number): Record<GemType, QueuedNote[]> {
   const clues = pool.clues.filter(clue => clue.speciesId === mysteryId);
   const facts = pool.facts.filter(fact => fact.speciesId === mysteryId && !isPlaceholderText(fact.text));
-  const queues = {} as Record<LootGemType, QueuedNote[]>;
+  const queues = {} as Record<GemType, QueuedNote[]>;
   for (const category of GEM_CATEGORIES) {
     const ownClues = clues
       .filter(clue => category.clueCategories.includes(clue.category))
@@ -133,7 +133,7 @@ export function createRound(pool: CluePool, rng: () => number, round: number, re
 }
 
 /** Reveal the next note for a matched gem color. Null once an empty category has already said so. */
-export function revealNext(state: RoundState, gem: LootGemType, records: SpeciesRecords): { state: RoundState; reveal: Reveal | null } {
+export function revealNext(state: RoundState, gem: GemType, records: SpeciesRecords): { state: RoundState; reveal: Reveal | null } {
   const [note, ...rest] = state.queues[gem] ?? [];
   if (!note) {
     if (state.exhausted.includes(gem)) return { state, reveal: null };
@@ -157,7 +157,7 @@ export function liveCandidates(state: RoundState): number[] {
   return state.candidateIds.filter(id => !state.ruledOut.includes(id));
 }
 
-export function notesLeft(state: RoundState, gem: LootGemType): number {
+export function notesLeft(state: RoundState, gem: GemType): number {
   return state.queues[gem]?.length ?? 0;
 }
 

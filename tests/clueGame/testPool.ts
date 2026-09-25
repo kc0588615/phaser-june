@@ -1,7 +1,7 @@
 // Small hand-built pool shared by the Clue Match rule tests.
 import { buildSpeciesRecords } from '@/clueGame/traits';
 import type { CluePool, PoolClue, PoolSpecies } from '@/clueGame/pool';
-import type { LootGemType } from '@/expedition/domain';
+import type { GemType } from '@/game/constants';
 
 let nextId = 1;
 export const clue = (speciesId: number, category: PoolClue['category'], label: string, compareTags: string[], revealOrder = 1, isFiltering = true): PoolClue =>
@@ -58,5 +58,5 @@ export const find = (label: string) => pool.clues.find(c => c.label === label)!;
 export const OTHERS = [2, 3, 4, 5, 6, 7];
 
 /** A session 'matched' action: one group of `size` per gem. */
-export const matched = (gems: LootGemType[], cascade = false, size = 3) =>
+export const matched = (gems: GemType[], cascade = false, size = 3) =>
   ({ type: 'matched' as const, groups: gems.map(gem => ({ gem, size })), cascade });

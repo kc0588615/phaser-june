@@ -1,6 +1,6 @@
 // A play session: rounds back to back, the clue feed, and score. Pure reducer;
 // the React page owns the RNG and starts each new round.
-import type { LootGemType } from '@/expedition/domain';
+import type { GemType } from '@/game/constants';
 import type { ClueFit } from '@/clueGame/deduction';
 import type { CluePool } from '@/clueGame/pool';
 import { buildSpeciesRecords, type SpeciesRecords } from '@/clueGame/traits';
@@ -11,9 +11,9 @@ const FEED_LIMIT = 120;
 /** `bonus`: revealed because the matched group was bigger than three. */
 export type FeedItem = { key: number } & (
   | { kind: 'round'; round: number; relatives: number }
-  | { kind: 'clue'; gem: LootGemType; text: string; fits: Record<number, ClueFit>; bonus?: true }
-  | { kind: 'note'; gem: LootGemType; text: string; bonus?: true }
-  | { kind: 'empty'; gem: LootGemType }
+  | { kind: 'clue'; gem: GemType; text: string; fits: Record<number, ClueFit>; bonus?: true }
+  | { kind: 'note'; gem: GemType; text: string; bonus?: true }
+  | { kind: 'empty'; gem: GemType }
   | { kind: 'shuffle' }
   | { kind: 'guess'; correct: boolean; speciesId: number; points: number; funFact: string | null }
 );
@@ -45,7 +45,7 @@ export interface SessionState {
   nextKey: number;
 }
 
-export interface MatchedGroup { gem: LootGemType; size: number }
+export interface MatchedGroup { gem: GemType; size: number }
 
 export type SessionAction =
   | { type: 'load'; pool: CluePool; round: RoundState }

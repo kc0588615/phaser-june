@@ -98,7 +98,7 @@ export function ClueMatchGame() {
           onJournal={() => setJournalOpen(true)}
         />
         <section aria-label="Game board" className="relative h-[min(calc(100vw-8px),calc(100dvh-440px))] w-full [grid-area:board] max-md:short:h-[min(calc(100vw-8px),calc(100dvh-370px))] md:h-full">
-          <PhaserGame mode="clue" className="absolute inset-0" currentActiveScene={onSceneReady} />
+          <PhaserGame className="absolute inset-0" currentActiveScene={onSceneReady} />
         </section>
         <div className="relative flex min-h-0 flex-col gap-2 px-2 pb-[max(8px,env(safe-area-inset-bottom))] [grid-area:rail] md:border-l md:border-white/10 md:px-3 md:pt-1">
           {loadError && <p className="m-0 rounded-lg border border-rose-400/40 bg-rose-950/40 p-2 text-xs text-rose-100" role="alert">{loadError}</p>}

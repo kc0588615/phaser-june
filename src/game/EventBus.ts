@@ -1,142 +1,40 @@
-// EventBus — the single bridge between the React world (map, HUD,
-// panels, ExpeditionContext) and the Phaser world (the match-3 board).
+// EventBus — the single bridge between React (the Clue Match page) and Phaser
+// (the board). Neither side imports the other; they only emit and listen to
+// the events typed in `EventPayloads`:
 //
-// The two sides never import each other's components; they only communicate by
-// emitting and listening to the events declared in `EventPayloads` below.
-// A typical run flows through it like this:
-//
-//   Explore map --'expedition-data-ready'----> ExpeditionContext (briefing)
-//   Context    --'map-location-selected'----> Game scene (board setup)
-//   Context    --'expedition-start'---------->  Game scene (board begins)
-//   Game scene --'evidence-move-resolved'----> Context (server-replayed checkpoint)
-//   Context    --'node-complete'-------------> Game scene (next board begins)
-//
-// To add an event: add its name + payload type to `EventPayloads`, then both
-// `EventBus.emit` and `EventBus.on` become type-checked for it everywhere.
+//   board -> page  'current-scene-ready'  the board scene started (send setup)
+//   page  -> board 'clue-board-setup'     build a seeded board from these colors
+//   page  -> board 'clue-board-lock'      stop or resume accepting moves
+//   board -> page  'gems-matched'         groups cleared in one explode phase
+//   board -> page  'clue-board-shuffled'  no moves were left, so it reshuffled
 import Phaser from 'phaser';
-import type { Species } from '@/types/database';
-import type { RasterHabitatResult } from '@/lib/speciesService';
-import type { ExpeditionData } from '@/types/expedition';
-import type { NodeBoardContext, NodeObstacle } from './nodeObstacles';
-import type { BoardSpawnConfig, LootGemType } from '@/expedition/domain';
-import type { FeatureFingerprint } from '@/types/gis';
-import type { BoardCheckpointV1 } from './boardTypes';
-import type { TerrainSnapshot, TerrainSelection } from '@/terrain/terrain';
-import type { PublicRoutingView } from '@/terrain/routing';
+import type { GemType } from './constants';
 
-// Define all event types and their payloads
 export interface EventPayloads {
-  'terrain-cell-selected': TerrainSelection;
-  'current-scene-ready': Phaser.Scene;
-  /** Board setup for one node; Game.ts reads only these fields. */
-  'map-location-selected': {
-    difficulty?: number;
-    moveBudget?: number;
-    obstacles?: NodeObstacle[];
-    objectiveProgress?: number;
-    nodeIndex?: number;
-    boardSeed?: number;
-    boardContext?: NodeBoardContext;
-    boardConfig?: BoardSpawnConfig;
-    boardCheckpoint?: BoardCheckpointV1;
-    terrain?: TerrainSnapshot;
-  };
-  'game-reset': undefined;
-  'game-hud-updated': {
-    score: number;
-    movesRemaining: number;
-    movesUsed: number;
-    maxMoves: number;
-    streak: number;
-    multiplier: number;
-    moveMultiplier?: number;
-  };
-  'expedition-data-ready': {
-    lon: number; lat: number;
-    ecoregionId?: number | null;
-    expedition: ExpeditionData;
-    species: Species[];
-    rasterHabitats: RasterHabitatResult[];
-    habitats: string[];
-    featureFingerprints?: FeatureFingerprint[];
-  };
-  'expedition-start': Record<string, never>;
-  'node-complete': { nodeIndex: number };
-  'route-progress-updated': { slot: number };
-  'node-objective-updated': {
-    progress: number;
-    target: number;
-  };
-  'evidence-move-resolved': {
-    nodeIndex: number;
-    moveNumber: number;
-    move: { rowOrCol: 'row' | 'col'; index: number; amount: number };
-    boardCheckpoint: BoardCheckpointV1;
-  };
-  'evidence-progress-committed': {
-    nodeIndex: number;
-    moveNumber: number;
-  };
-  'routing-state-updated': PublicRoutingView | null;
-  /** Every match group cleared in one explode phase (the player's move or a cascade). */
-  'gems-matched': {
-    groups: Array<{ gemType: LootGemType; size: number }>;
-    cascade: boolean;
-  };
-  /** Clue Match: build a seeded board from these gem colors. */
-  'clue-board-setup': { seed: number; allowedGemTypes: LootGemType[] };
-  /** Clue Match: stop (or resume) accepting moves, e.g. between rounds. */
-  'clue-board-lock': { locked: boolean };
-  /** Clue Match: the board had no valid move left and was reshuffled. */
-  'clue-board-shuffled': undefined;
-  'auth-user-ready': { playerId: string; sessionId?: string };
+    'current-scene-ready': Phaser.Scene;
+    /** Every match group cleared in one explode phase (the player's move or a cascade). */
+    'gems-matched': { groups: Array<{ gemType: GemType; size: number }>; cascade: boolean };
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[] };
+    'clue-board-lock': { locked: boolean };
+    'clue-board-shuffled': undefined;
 }
 
-// Type-safe EventBus class
 class TypedEventBus extends Phaser.Events.EventEmitter {
-  emit<K extends keyof EventPayloads>(event: K, ...args: [EventPayloads[K]]): boolean {
-    return super.emit(event, ...args);
-  }
+    emit<K extends keyof EventPayloads>(event: K, ...args: [EventPayloads[K]]): boolean {
+        return super.emit(event, ...args);
+    }
 
-  on<K extends keyof EventPayloads>(
-    event: K,
-    fn: (arg: EventPayloads[K]) => void,
-    context?: any
-  ): this {
-    return super.on(event, fn, context);
-  }
+    on<K extends keyof EventPayloads>(event: K, fn: (arg: EventPayloads[K]) => void, context?: unknown): this {
+        return super.on(event, fn, context);
+    }
 
-  once<K extends keyof EventPayloads>(
-    event: K,
-    fn: (arg: EventPayloads[K]) => void,
-    context?: any
-  ): this {
-    return super.once(event, fn, context);
-  }
+    once<K extends keyof EventPayloads>(event: K, fn: (arg: EventPayloads[K]) => void, context?: unknown): this {
+        return super.once(event, fn, context);
+    }
 
-  off<K extends keyof EventPayloads>(
-    event: K,
-    fn?: (arg: EventPayloads[K]) => void,
-    context?: any
-  ): this {
-    return super.off(event, fn, context);
-  }
-
-  removeListener<K extends keyof EventPayloads>(
-    event: K,
-    fn?: (arg: EventPayloads[K]) => void,
-    context?: any
-  ): this {
-    return super.removeListener(event, fn, context);
-  }
+    off<K extends keyof EventPayloads>(event: K, fn?: (arg: EventPayloads[K]) => void, context?: unknown): this {
+        return super.off(event, fn, context);
+    }
 }
 
-// Used to emit events between React components and Phaser scenes
-// https://newdocs.phaser.io/docs/3.70.0/Phaser.Events.EventEmitter
 export const EventBus = new TypedEventBus();
-
-// Export event names as constants for consistency
-export const EVT_GAME_HUD_UPDATED = 'game-hud-updated' as const;
-
-// Re-export event types for convenience
-export type GameHudUpdatedEvent = EventPayloads['game-hud-updated'];

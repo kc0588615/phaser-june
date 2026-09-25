@@ -7,29 +7,23 @@ import { EventBus, type EventPayloads } from '@/game/EventBus';
 import { MoveAction, type MoveDirection } from '@/game/MoveAction';
 import type { BackendPuzzle } from '@/game/BackendPuzzle';
 import type { PuzzleGrid } from '@/game/boardTypes';
-import type { RunState } from '@/types/expedition';
 
 export interface DebugBoardSnapshot {
   ready: boolean;
   canMove: boolean;
+  /** The page locked the board (between rounds). */
+  locked: boolean;
   isResolvingMove: boolean;
   isDragging: boolean;
-  isPaused: boolean;
-  inRun: boolean;
-  nodeIndex: number;
   boardSeed: number | null;
   movesUsed: number;
-  maxMoves: number;
-  gameOver: boolean;
-  objective: { progress: number; target: number; completed: boolean };
-  streak: number;
   hasAnyValidMove: boolean;
   gemSize: number;
   boardOffset: { x: number; y: number };
   grid: PuzzleGrid;
 }
 
-/** What the Game scene hands the bridge; typed so field renames fail typecheck. */
+/** What the board scene hands the bridge; typed so field renames fail typecheck. */
 export interface DebugScene {
   debugSnapshot(): DebugBoardSnapshot;
   debugPuzzle(): BackendPuzzle | null;
@@ -39,7 +33,6 @@ export interface DebugScene {
   readonly time: Phaser.Time.Clock;
 }
 
-type RunSource = () => { runId: string | null; runState: RunState };
 /** Clue Match session summary (JSON-safe), registered by the Clue Match page. */
 type ClueSource = () => unknown;
 type Move = { rowOrCol: MoveDirection; index: number; amount: number };
@@ -49,31 +42,18 @@ const enabled = process.env.NODE_ENV !== 'production' && typeof window !== 'unde
 const MAX_EVENTS = 200;
 // Every EventBus event; a Record so a new event missing here fails typecheck.
 const LOGGED: Record<keyof EventPayloads, true> = {
-  'terrain-cell-selected': true, 'current-scene-ready': true, 'map-location-selected': true,
-  'game-reset': true, 'game-hud-updated': true, 'expedition-data-ready': true,
-  'expedition-start': true, 'node-complete': true, 'route-progress-updated': true,
-  'node-objective-updated': true, 'evidence-move-resolved': true, 'evidence-progress-committed': true,
-  'routing-state-updated': true, 'auth-user-ready': true, 'gems-matched': true,
-  'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
+  'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
 };
 
 let scene: DebugScene | null = null;
-let runSource: RunSource | null = null;
 let clueSource: ClueSource | null = null;
 const log: LoggedEvent[] = [];
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
-/** Keep the log small: drop bulky payload fields, keep what an agent reasons about. */
+/** Keep the log small: the scene becomes its key. */
 function summarize(name: keyof EventPayloads, payload: unknown): unknown {
-  if (name === 'current-scene-ready') return (payload as Phaser.Scene).sys.settings.key;
-  if (name === 'expedition-data-ready') {
-    const p = payload as EventPayloads['expedition-data-ready'];
-    return { lon: p.lon, lat: p.lat, species: p.species.length };
-  }
-  if (!payload || typeof payload !== 'object') return payload;
-  const { boardCheckpoint, terrain, ...rest } = payload as Record<string, unknown>;
-  return { ...rest, ...(boardCheckpoint ? { boardCheckpoint: '[omitted]' } : {}), ...(terrain ? { terrain: '[omitted]' } : {}) };
+  return name === 'current-scene-ready' ? (payload as Phaser.Scene).sys.settings.key : payload;
 }
 
 function requireScene(): DebugScene {
@@ -112,10 +92,9 @@ function validMoves(): Array<Move & { matches: number; largest: number }> {
   return found;
 }
 
-/** Settled = no animation or drag in flight, and input is back (or the board is done). */
+/** Settled = no animation or drag in flight, and input is back (or the page locked the board). */
 function isSettled(state: DebugBoardSnapshot): boolean {
-  if (!state.ready || state.isResolvingMove || state.isDragging) return false;
-  return state.canMove || state.gameOver || state.objective.completed || state.movesUsed >= state.maxMoves;
+  return state.ready && !state.isResolvingMove && !state.isDragging && (state.canMove || state.locked);
 }
 
 async function waitIdle(timeoutMs = 15000): Promise<DebugBoardSnapshot & { timedOut: boolean }> {
@@ -212,7 +191,6 @@ function install(): void {
   holder.__ccUninstall = () => listeners.forEach(off => off());
   holder.__cc = {
     state: () => requireScene().debugSnapshot(),
-    run: () => runSource?.() ?? null,
     clue: () => clueSource?.() ?? null,
     validMoves,
     cellCenter,
@@ -238,14 +216,6 @@ export function attachDebugScene(next: DebugScene): void {
 
 export function detachDebugScene(prev: DebugScene): void {
   if (enabled && scene === prev) scene = null;
-}
-
-/** Register the React-side run state getter; returns the unregister function. */
-export function setDebugRunSource(source: RunSource): () => void {
-  if (!enabled) return () => {};
-  ensureInstalled();
-  runSource = source;
-  return () => { if (runSource === source) runSource = null; };
 }
 
 /** Register the Clue Match session getter; returns the unregister function. */

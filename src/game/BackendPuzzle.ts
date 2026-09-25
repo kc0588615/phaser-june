@@ -1,556 +1,186 @@
-// BackendPuzzle — the pure "rules engine" of the match-3 board (the Model).
+// BackendPuzzle — the pure rules engine of the match-3 board (the model).
 //
 // It owns the grid of gems, applies row/column shifts (MoveAction), finds
-// matches, refills columns, and tracks score + move budget. It knows nothing
-// about Phaser, sprites, or animation — BoardView renders what this class
-// decides, and scenes/Game.ts orchestrates the two.
-//
-// Because it is pure TypeScript, its behavior is pinned down by
-// tests/game/backendPuzzle.test.ts (`npm test`).
-import { ExplodeAndReplacePhase, ColumnReplacement, Match } from './ExplodeAndReplacePhase';
+// matches and refills columns. It knows nothing about Phaser: BoardView renders
+// what this class decides and BoardController runs the two together. Behavior is
+// pinned by tests/game/backendPuzzle.test.ts.
+import { ExplodeAndReplacePhase, type ColumnReplacement, type Match } from './ExplodeAndReplacePhase';
 import { MoveAction } from './MoveAction';
-import { ACTIVE_GEM_TYPES, GemType, LOOT_GEM_TYPES, MAX_MOVES, type BoardSpawnConfig, DEFAULT_BOARD_SPAWN_CONFIG, type LootGemType } from './constants';
-import { createBoardCell, getBoardCellGemType, type BoardCell, type BoardCellState, type BoardCheckpointV1, type PuzzleGrid } from './boardTypes';
-import { parseBoardCheckpoint } from './boardCheckpoint';
-import type { CellStateSeed } from './nodeObstacles';
-import { createStatefulMulberry32, type StatefulRng } from '@/lib/seededRng';
+import { GEM_TYPES, type GemType } from './constants';
+import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
+import { createStatefulMulberry32 } from '@/lib/seededRng';
 
-export type Gem = BoardCell;
 export type { BoardCell, PuzzleGrid };
 
-export type GemPoolConfig = BoardSpawnConfig;
-
-const DEFAULT_GEM_POOL: GemPoolConfig = {
-    lootWeights: { ...(DEFAULT_BOARD_SPAWN_CONFIG.lootWeights ?? {}) },
-    allowedGemTypes: [...ACTIVE_GEM_TYPES],
-};
-
 export class BackendPuzzle {
-    private puzzleState: PuzzleGrid;
-    private nextGemsToSpawn: GemType[] = [];
-    private score: number = 0;
-    private movesUsed: number = 0;
-    private maxMoves: number = MAX_MOVES;
-    private gemPool: GemPoolConfig = DEFAULT_GEM_POOL;
+    private grid: PuzzleGrid;
+    private movesUsed = 0;
+    private gemTypes: GemType[] = [...GEM_TYPES];
     private rng: () => number = Math.random;
-    private statefulRng: StatefulRng | null = null;
-    private fieldSignalSpawned: boolean = false;
 
-    constructor(
-        public readonly width: number,
-        public readonly height: number
-    ) {
-        console.log(`BackendPuzzle: Constructor (width=${width}, height=${height})`);
-        // Initial puzzle state will be random, can be influenced later
-        this.puzzleState = this.getInitialPuzzleStateWithNoMatches(width, height);
-        console.log("BackendPuzzle: Initial puzzleState created.");
+    constructor(public readonly width: number, public readonly height: number) {
+        this.grid = this.freshGrid();
     }
 
-    setGemPool(config: GemPoolConfig): void {
-        const allowedGemTypes = config.allowedGemTypes?.filter(gemType => LOOT_GEM_TYPES.includes(gemType));
-        if (allowedGemTypes && allowedGemTypes.length < 3) {
-            throw new RangeError('A board requires at least three allowed gem types.');
-        }
-        this.gemPool = {
-            lootWeights: { ...(config.lootWeights ?? {}) },
-            allowedGemTypes: allowedGemTypes ? [...new Set(allowedGemTypes)] : [...ACTIVE_GEM_TYPES],
-        };
+    /** Colors that spawn; at least three. */
+    setGemTypes(types: readonly GemType[]): void {
+        const unique = [...new Set(types.filter(type => GEM_TYPES.includes(type)))];
+        if (unique.length < 3) throw new RangeError('A board requires at least three gem types.');
+        this.gemTypes = unique;
     }
 
+    /** Seed the board's RNG (uint32), so the same seed gives the same boards and refills. */
     setSeed(seed: number): void {
-        if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) {
-            throw new RangeError('Board seed must be a uint32.');
-        }
-        this.statefulRng = createStatefulMulberry32(seed);
-        this.rng = () => this.statefulRng!.next();
+        if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) throw new RangeError('Board seed must be a uint32.');
+        const rng = createStatefulMulberry32(seed);
+        this.rng = () => rng.next();
     }
 
-    /**
-     * Regenerates the puzzle board with new random gems.
-     * Called when user clicks on the map to start a new game.
-     */
+    /** A new board with no ready-made matches and at least one valid move. */
     regenerateBoard(): void {
-        console.log("BackendPuzzle: Regenerating puzzle state with new random gems.");
-        this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
-        this.nextGemsToSpawn = [];
-        this.score = 0;
+        this.grid = this.freshGrid();
         this.movesUsed = 0;
-        this.fieldSignalSpawned = false;
         if (!this.hasAnyValidMove()) this.shuffle();
     }
 
-    getScore(): number {
-        return this.score;
+    getGridState(): PuzzleGrid {
+        return this.grid.map(column => column.map(cell => (cell ? { ...cell } : null)));
     }
 
-    getMovesRemaining(): number {
-        return Math.max(0, this.maxMoves - this.movesUsed);
+    registerMove(): number {
+        return ++this.movesUsed;
     }
 
     getMovesUsed(): number {
         return this.movesUsed;
     }
 
-    getMaxMoves(): number {
-        return this.maxMoves;
-    }
-
-    isGameOver(): boolean {
-        return this.movesUsed >= this.maxMoves;
-    }
-
-    getGridState(): PuzzleGrid {
-        return this.cloneGridState(this.puzzleState);
-    }
-
-    exportCheckpoint(): BoardCheckpointV1 {
-        if (!this.statefulRng) throw new Error('A seeded board is required for checkpoint export.');
-        return {
-            version: 1,
-            width: this.width,
-            height: this.height,
-            grid: this.getGridState(),
-            score: this.score,
-            movesUsed: this.movesUsed,
-            maxMoves: this.maxMoves,
-            nextGemsToSpawn: [...this.nextGemsToSpawn],
-            allowedGemTypes: [...(this.gemPool.allowedGemTypes ?? ACTIVE_GEM_TYPES)],
-            rngState: this.statefulRng.getState(),
-            ...(this.fieldSignalSpawned ? { fieldSignalSpawned: true } : {}),
-        };
-    }
-
-    importCheckpoint(value: unknown): void {
-        const checkpoint = parseBoardCheckpoint(value, { width: this.width, height: this.height });
-        if (!checkpoint) throw new TypeError('Invalid board checkpoint.');
-        const rng = createStatefulMulberry32(checkpoint.rngState);
-        this.statefulRng = rng;
-        this.rng = () => rng.next();
-        this.puzzleState = this.cloneGridState(checkpoint.grid);
-        this.score = checkpoint.score;
-        this.movesUsed = checkpoint.movesUsed;
-        this.maxMoves = checkpoint.maxMoves;
-        this.nextGemsToSpawn = [...checkpoint.nextGemsToSpawn];
-        this.fieldSignalSpawned = checkpoint.fieldSignalSpawned === true;
-        this.gemPool = {
-            lootWeights: {},
-            allowedGemTypes: [...checkpoint.allowedGemTypes] as LootGemType[],
-        };
-    }
-
-    addBonusScore(points: number): void {
-        if (points > 0) this.score += Math.floor(points);
-    }
-
-    registerMove(): number {
-        this.movesUsed = Math.min(this.maxMoves, this.movesUsed + 1);
-        return this.movesUsed;
-    }
-
-    resetMoves(): void {
-        this.movesUsed = 0;
-    }
-
-    setMaxMoves(max: number): void {
-        this.maxMoves = max;
-    }
-
-    hasFieldSignalSpawned(): boolean {
-        return this.fieldSignalSpawned;
-    }
-
-    markFieldSignalSpawned(): void {
-        this.fieldSignalSpawned = true;
-    }
-
-    applyCellStateSeeds(seeds: CellStateSeed[]): void {
-        for (const seed of seeds) {
-            const cell = this.puzzleState[seed.x]?.[seed.y];
-            if (!cell) continue;
-            this.puzzleState[seed.x][seed.y] = {
-                ...cell,
-                state: this.mergeCellState(cell.state, seed.state),
-            };
-        }
-    }
-
-    calculatePhaseBaseScore(phase: ExplodeAndReplacePhase): number {
-        let totalMatched = 0;
-        phase.matches.forEach(match => {
-            totalMatched += match.length;
-        });
-        
-        if (totalMatched > 0) {
-            const baseScore = totalMatched * 10;
-            const bonus = totalMatched > 3 ? (totalMatched - 3) * 5 : 0;
-            return baseScore + bonus;
-        }
-        return 0;
-    }
-
-    /**
-     * Generates an initial grid state with no immediate matches.
-     * Uses the algorithm from the Python match_three code.
-     */
-    private getInitialPuzzleStateWithNoMatches(width: number, height: number): PuzzleGrid {
-        console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches called.");
-        const grid: PuzzleGrid = [];
-
-        // Initialize empty grid
-        for (let x = 0; x < width; x++) {
-            grid[x] = [];
-        }
-
-        // Fill the grid left-to-right, top-to-bottom
-        for (let x = 0; x < width; x++) {
-            for (let y = 0; y < height; y++) {
-                // Start with all clue-color gem types
-                let possibleGems = new Set<GemType>(this.getAllowedGemTypes());
-
-                // Check if placing a gem would create a vertical match of 3
-                if (y >= 2) {
-                    const gem1 = grid[x][y - 1]?.gemType;
-                    const gem2 = grid[x][y - 2]?.gemType;
-                    if (gem1 && gem2 && gem1 === gem2) {
-                        // Remove this gem type from possible choices
-                        possibleGems.delete(gem1);
-                    }
-                }
-
-                // Check if placing a gem would create a horizontal match of 3
-                if (x >= 2) {
-                    const gem1 = grid[x - 1][y]?.gemType;
-                    const gem2 = grid[x - 2][y]?.gemType;
-                    if (gem1 && gem2 && gem1 === gem2) {
-                        // Remove this gem type from possible choices
-                        possibleGems.delete(gem1);
-                    }
-                }
-
-                // Pick a weighted random gem, retrying if it would create a match
-                let gemType: GemType;
-                let attempts = 0;
-                do {
-                    gemType = this.pickWeightedGem();
-                    attempts++;
-                } while (!possibleGems.has(gemType) && attempts < 20);
-                // Fallback: pick any non-matching gem
-                if (!possibleGems.has(gemType)) {
-                    const possibleGemsArray = Array.from(possibleGems);
-                    gemType = possibleGemsArray[Math.floor(this.rng() * possibleGemsArray.length)] as GemType;
-                }
-
-                grid[x][y] = createBoardCell(gemType);
-            }
-        }
-        console.log("BackendPuzzle: getInitialPuzzleStateWithNoMatches finished creating grid.");
-        return grid;
-    }
-
+    /** Apply the moves, then clear one round of matches and refill. Call again for cascades (with no moves). */
     getNextExplodeAndReplacePhase(actions: MoveAction[]): ExplodeAndReplacePhase {
-        for (const action of actions) {
-            this.applyMoveToGrid(this.puzzleState, action);
-        }
-        const matchGridState = this.cloneGridState(this.puzzleState);
-        const matches = this.getMatches(this.puzzleState);
+        for (const action of actions) this.applyMove(this.grid, action);
+        const matchGridState = this.getGridState();
+        const matches = this.findMatches(this.grid);
         const replacements: ColumnReplacement[] = [];
-        
         if (matches.length > 0) {
-            const explosionCounts: Record<number, number> = {};
-            const explodedCoords = new Set<string>();
-            matches.forEach(match => match.forEach(([x, y]) => explodedCoords.add(`${x},${y}`)));
-            
-            explodedCoords.forEach(coordStr => {
-                const [xStr] = coordStr.split(',');
-                const x = parseInt(xStr, 10);
-                explosionCounts[x] = (explosionCounts[x] || 0) + 1;
-            });
-            
+            const cleared = new Set(matches.flatMap(match => match.map(([x, y]) => `${x},${y}`)));
             for (let x = 0; x < this.width; x++) {
-                const count = explosionCounts[x] || 0;
-                if (count > 0) {
-                    const typesForCol: GemType[] = [];
-                    for (let i = 0; i < count; i++) {
-                        typesForCol.push(this.getNextGemToSpawnType());
-                    }
-                    replacements.push([x, typesForCol]);
-                }
+                const count = [...cleared].filter(key => Number(key.split(',')[0]) === x).length;
+                if (count > 0) replacements.push([x, Array.from({ length: count }, () => this.pickGem())]);
             }
         }
-        
-        const phaseResult = new ExplodeAndReplacePhase(matches, replacements, matchGridState);
-        if (!phaseResult.isNothingToDo()) {
-            this.applyExplodeAndReplacePhase(phaseResult);
-        }
-        return phaseResult;
+        const phase = new ExplodeAndReplacePhase(matches, replacements, matchGridState);
+        if (!phase.isNothingToDo()) this.applyPhase(phase);
+        return phase;
     }
 
-    getMatchesFromHypotheticalMove(moveAction: MoveAction): Match[] {
-        let hypotheticalState: PuzzleGrid;
-        try {
-            hypotheticalState = structuredClone(this.puzzleState);
-        } catch (e) {
-            console.warn("structuredClone not supported, using JSON workaround.");
-            hypotheticalState = JSON.parse(JSON.stringify(this.puzzleState));
-        }
-        this.applyMoveToGrid(hypotheticalState, moveAction);
-        return this.getMatches(hypotheticalState);
+    getMatchesFromHypotheticalMove(move: MoveAction): Match[] {
+        const grid = this.getGridState();
+        this.applyMove(grid, move);
+        return this.findMatches(grid);
     }
 
-    /**
-     * Returns the type of the next gem to spawn randomly.
-     * This is used when gems are falling in to replace matched ones.
-     */
-    private getNextGemToSpawnType(): GemType {
-        if (this.nextGemsToSpawn.length > 0) {
-            return this.nextGemsToSpawn.shift()!;
-        }
-
-        return this.pickWeightedGem();
-    }
-
-    /** Pick a weighted investigation-method gem. */
-    private pickWeightedGem(): GemType {
-        const weights = this.gemPool.lootWeights ?? {};
-        const allowedGemTypes = this.getAllowedGemTypes();
-        const total = allowedGemTypes.reduce((sum, gemType) => {
-            const weight = weights[gemType] ?? 1;
-            return sum + (Number.isFinite(weight) && weight > 0 ? weight : 1);
-        }, 0);
-        let roll = this.rng() * total;
-
-        for (const gemType of allowedGemTypes) {
-            const weight = weights[gemType] ?? 1;
-            roll -= Number.isFinite(weight) && weight > 0 ? weight : 1;
-            if (roll <= 0) {
-                return gemType;
-            }
-        }
-        return allowedGemTypes[allowedGemTypes.length - 1] as LootGemType;
-    }
-
-    /** Check if any single-cell row/col shift produces a match. */
+    /** Whether any one-cell row or column shift makes a match. */
     hasAnyValidMove(): boolean {
-        for (let y = 0; y < this.height; y++) {
-            for (let amt of [1, -1]) {
-                const m = new MoveAction('row', y, amt);
-                if (this.getMatchesFromHypotheticalMove(m).length > 0) return true;
-            }
-        }
-        for (let x = 0; x < this.width; x++) {
-            for (let amt of [1, -1]) {
-                const m = new MoveAction('col', x, amt);
-                if (this.getMatchesFromHypotheticalMove(m).length > 0) return true;
+        for (const [rowOrCol, lines] of [['row', this.height], ['col', this.width]] as const) {
+            for (let index = 0; index < lines; index++) {
+                for (const amount of [1, -1]) {
+                    if (this.getMatchesFromHypotheticalMove(new MoveAction(rowOrCol, index, amount)).length > 0) return true;
+                }
             }
         }
         return false;
     }
 
-    /** Shuffle all gem types in place (Fisher-Yates), preserving cell states. Repeats until at least one valid move exists. */
+    /** Shuffle the gems in place until no match is standing and a valid move exists (up to 50 tries). */
     shuffle(): void {
-        const cells: { x: number; y: number; cell: BoardCell }[] = [];
-        for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height; y++) {
-                const c = this.puzzleState[x]?.[y];
-                if (c) cells.push({ x, y, cell: c });
-            }
-        }
+        const cells: Array<[number, number]> = [];
+        for (let x = 0; x < this.width; x++) for (let y = 0; y < this.height; y++) if (this.grid[x]?.[y]) cells.push([x, y]);
         let attempts = 0;
         do {
-            // Fisher-Yates on gem types only
-            const types = cells.map(c => c.cell.gemType);
+            const types = cells.map(([x, y]) => this.grid[x][y]!.gemType);
             for (let i = types.length - 1; i > 0; i--) {
                 const j = Math.floor(this.rng() * (i + 1));
                 [types[i], types[j]] = [types[j], types[i]];
             }
-            for (let i = 0; i < cells.length; i++) {
-                const { x, y } = cells[i];
-                this.puzzleState[x][y] = createBoardCell(types[i], cells[i].cell.state);
-            }
+            cells.forEach(([x, y], i) => { this.grid[x][y] = createBoardCell(types[i]); });
             attempts++;
-        } while (!this.hasAnyValidMove() && attempts < 50);
+        } while ((this.findMatches(this.grid).length > 0 || !this.hasAnyValidMove()) && attempts < 50);
     }
 
-    addNextGemsToSpawn(gemTypes: GemType[]): void {
-        this.nextGemsToSpawn.push(...gemTypes);
-    }
-
-    reset(): void {
-        // Generate a new random board
-        this.puzzleState = this.getInitialPuzzleStateWithNoMatches(this.width, this.height);
-        this.nextGemsToSpawn = [];
-        this.movesUsed = 0;
-        this.fieldSignalSpawned = false;
-        console.log("BackendPuzzle reset: new random board generated.");
-    }
-
-    private applyMoveToGrid(grid: PuzzleGrid, moveAction: MoveAction): void {
-        const { rowOrCol, index, amount } = moveAction;
-        if (amount === 0) return;
-
-        if (rowOrCol === 'row') {
-            const width = this.width;
-            const effectiveAmount = ((amount % width) + width) % width;
-            if (effectiveAmount === 0) return;
-            const y = index;
-            if (y < 0 || y >= this.height) return;
-
-            const currentRow: (BoardCell | null)[] = [];
-            for (let x = 0; x < width; x++) {
-                currentRow.push(grid[x]?.[y] ?? null);
-            }
-            if (currentRow.some(gem => gem === undefined)) {
-                console.error(`Error reading row ${y} for move application.`);
-                return;
-            }
-            const newRow = [...currentRow.slice(-effectiveAmount), ...currentRow.slice(0, width - effectiveAmount)];
-            for (let x = 0; x < width; x++) {
-                if (grid[x]) {
-                    grid[x][y] = newRow[x];
-                }
-            }
-        } else { // 'col'
-            const height = this.height;
-            const effectiveAmount = ((amount % height) + height) % height;
-            if (effectiveAmount === 0) return;
-            const x = index;
-            if (x < 0 || x >= this.width || !grid[x]) return;
-            const currentCol = grid[x];
-            if (currentCol.some(gem => gem === undefined)) {
-                console.error(`Error reading column ${x} for move application.`);
-                return;
-            }
-            const newCol = [...currentCol.slice(height - effectiveAmount), ...currentCol.slice(0, height - effectiveAmount)];
-            grid[x] = newCol;
-        }
-    }
-
-    /** Damage a blocker at (x,y). Returns true if the blocker was destroyed. */
-    damageBlocker(x: number, y: number): boolean {
-        const cell = this.puzzleState[x]?.[y];
-        if (!cell?.state?.blockerId || !cell.state.durability) return false;
-        cell.state.durability -= 1;
-        if (cell.state.durability <= 0) {
-            cell.state.blockerId = null;
-            cell.state.durability = null;
-            cell.state.flags = [];
-            return true;
-        }
-        return false;
-    }
-
-    private getMatches(puzzleState: PuzzleGrid): Match[] {
-        const matches: Match[] = [];
-        if (!puzzleState || this.width === 0 || this.height === 0) return matches;
-
-        const getGemType = (x: number, y: number): GemType | null => {
-            const cell = puzzleState[x]?.[y];
-            // Skip cells with active blockers
-            if (cell?.state?.blockerId && cell.state.durability && cell.state.durability > 0) return null;
-            return getBoardCellGemType(cell);
-        };
-
-        // Check vertical matches
+    /** Fill left to right, top to bottom, never placing a third gem in a line. */
+    private freshGrid(): PuzzleGrid {
+        const grid: PuzzleGrid = Array.from({ length: this.width }, () => []);
         for (let x = 0; x < this.width; x++) {
-            for (let y = 0; y < this.height - 2; ) {
-                const currentType = getGemType(x, y);
-                if (!currentType) { y++; continue; }
-                let matchLength = 1;
-                while (y + matchLength < this.height && getGemType(x, y + matchLength) === currentType) {
-                    matchLength++;
+            for (let y = 0; y < this.height; y++) {
+                const allowed = new Set(this.gemTypes);
+                const above = [grid[x][y - 1]?.gemType, grid[x][y - 2]?.gemType];
+                if (y >= 2 && above[0] && above[0] === above[1]) allowed.delete(above[0]);
+                const left = [grid[x - 1]?.[y]?.gemType, grid[x - 2]?.[y]?.gemType];
+                if (x >= 2 && left[0] && left[0] === left[1]) allowed.delete(left[0]);
+                let gem = this.pickGem();
+                for (let attempt = 1; !allowed.has(gem) && attempt < 20; attempt++) gem = this.pickGem();
+                if (!allowed.has(gem)) {
+                    const options = [...allowed];
+                    gem = options[Math.floor(this.rng() * options.length)];
                 }
-                if (matchLength >= 3) {
-                    const match: Match = [];
-                    for (let i = 0; i < matchLength; i++) {
-                        match.push([x, y + i]);
-                    }
-                    matches.push(match);
-                }
-                y += matchLength;
+                grid[x][y] = createBoardCell(gem);
             }
         }
-        
-        // Check horizontal matches
+        return grid;
+    }
+
+    private pickGem(): GemType {
+        return this.gemTypes[Math.min(this.gemTypes.length - 1, Math.floor(this.rng() * this.gemTypes.length))];
+    }
+
+    /** Shift a row right (or a column down) by `amount`, wrapping around. */
+    private applyMove(grid: PuzzleGrid, { rowOrCol, index, amount }: MoveAction): void {
+        if (rowOrCol === 'row') {
+            const shift = ((amount % this.width) + this.width) % this.width;
+            if (shift === 0 || index < 0 || index >= this.height) return;
+            const row = grid.map(column => column[index] ?? null);
+            const shifted = [...row.slice(-shift), ...row.slice(0, this.width - shift)];
+            grid.forEach((column, x) => { column[index] = shifted[x]; });
+        } else {
+            const shift = ((amount % this.height) + this.height) % this.height;
+            if (shift === 0 || !grid[index]) return;
+            const column = grid[index];
+            grid[index] = [...column.slice(this.height - shift), ...column.slice(0, this.height - shift)];
+        }
+    }
+
+    private findMatches(grid: PuzzleGrid): Match[] {
+        const matches: Match[] = [];
+        const at = (x: number, y: number) => grid[x]?.[y]?.gemType ?? null;
+        // Vertical runs, then horizontal runs, of 3 or more.
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height - 2;) {
+                const type = at(x, y);
+                let length = 1;
+                while (type && y + length < this.height && at(x, y + length) === type) length++;
+                if (type && length >= 3) matches.push(Array.from({ length }, (_, i) => [x, y + i] as [number, number]));
+                y += type ? length : 1;
+            }
+        }
         for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width - 2; ) {
-                const currentType = getGemType(x, y);
-                if (!currentType) { x++; continue; }
-                let matchLength = 1;
-                while (x + matchLength < this.width && getGemType(x + matchLength, y) === currentType) {
-                    matchLength++;
-                }
-                if (matchLength >= 3) {
-                    const match: Match = [];
-                    for (let i = 0; i < matchLength; i++) {
-                        match.push([x + i, y]);
-                    }
-                    matches.push(match);
-                }
-                x += matchLength;
+            for (let x = 0; x < this.width - 2;) {
+                const type = at(x, y);
+                let length = 1;
+                while (type && x + length < this.width && at(x + length, y) === type) length++;
+                if (type && length >= 3) matches.push(Array.from({ length }, (_, i) => [x + i, y] as [number, number]));
+                x += type ? length : 1;
             }
         }
         return matches;
     }
 
-    private applyExplodeAndReplacePhase(phase: ExplodeAndReplacePhase): void {
-        if (phase.isNothingToDo()) return;
-        
-        // Calculate score based on matched gems
-        let totalMatched = 0;
-        phase.matches.forEach(match => {
-            totalMatched += match.length;
+    /** Remove cleared gems; each column's survivors fall and new gems fill in from the top. */
+    private applyPhase(phase: ExplodeAndReplacePhase): void {
+        const cleared = new Set(phase.matches.flatMap(match => match.map(([x, y]) => `${x},${y}`)));
+        const refills = new Map(phase.replacements);
+        this.grid = this.grid.map((column, x) => {
+            const survivors = column.filter((_cell, y) => !cleared.has(`${x},${y}`));
+            return [...(refills.get(x) ?? []).map(createBoardCell), ...survivors].slice(0, this.height);
         });
-        
-        if (totalMatched > 0) {
-            // Basic scoring: 10 points per gem, with bonus for larger matches
-            const baseScore = totalMatched * 10;
-            const bonus = totalMatched > 3 ? (totalMatched - 3) * 5 : 0;
-            this.score += baseScore + bonus;
-            
-            // Note: Moves are now decremented in Game.ts once per turn, not per match
-        }
-        
-        const explodeCoords = new Set<string>();
-        phase.matches.forEach(match => match.forEach(coord => explodeCoords.add(`${coord[0]},${coord[1]}`)));
-        const replacementsMap = new Map(phase.replacements);
-        const newGrid: PuzzleGrid = [];
-        
-        for (let x = 0; x < this.width; x++) {
-            newGrid[x] = [];
-            const currentColumn = this.puzzleState[x] || [];
-            const survivingGems = currentColumn.filter((_gem, y) => !explodeCoords.has(`${x},${y}`));
-            const newGemTypes = replacementsMap.get(x) || [];
-            const newGems: BoardCell[] = newGemTypes.map(type => createBoardCell(type));
-            newGrid[x] = [...newGems, ...survivingGems];
-            
-            if (newGrid[x].length !== this.height) {
-                console.error(`Backend Error: Column ${x} length mismatch after phase. Expected ${this.height}, got ${newGrid[x].length}. Fixing...`);
-                while (newGrid[x].length < this.height) newGrid[x].push(null); // Pad with null
-                if (newGrid[x].length > this.height) newGrid[x] = newGrid[x].slice(0, this.height); // Truncate
-            }
-        }
-        this.puzzleState = newGrid;
     }
-
-    private mergeCellState(current: BoardCellState | undefined, incoming: BoardCellState): BoardCellState {
-        return {
-            blockerId: incoming.blockerId ?? current?.blockerId ?? null,
-            durability: incoming.durability ?? current?.durability ?? null,
-            flags: incoming.flags ?? current?.flags ?? [],
-        };
-    }
-
-    private cloneGridState(grid: PuzzleGrid): PuzzleGrid {
-        return grid.map(col => col.map(cell => cell ? {
-            ...cell,
-            ...(cell.state ? { state: { ...cell.state, flags: [...(cell.state.flags ?? [])] } } : {}),
-        } : null));
-    }
-
-    private getAllowedGemTypes(): LootGemType[] {
-        return this.gemPool.allowedGemTypes?.length
-            ? [...this.gemPool.allowedGemTypes]
-            : [...ACTIVE_GEM_TYPES];
-    }
-
 }

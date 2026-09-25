@@ -1,22 +1,19 @@
-// BoardView — the visual half of the board (the View).
+// BoardView — the visual half of the board (the view).
 //
 // It turns BackendPuzzle's grid into Phaser sprites and runs every animation:
-// drag previews, snap-back, explosions, falling refills, and resize tweens.
-// It never decides the rules — scenes/Game.ts asks BackendPuzzle what
-// happened, then tells this class what to animate.
-
+// drag previews, snap-back, clears, falling refills, and resize tweens. It never
+// decides the rules: BoardController asks BackendPuzzle what happened, then tells
+// this class what to animate.
 import Phaser from 'phaser';
 import {
-    AssetKeys,
+    gemTexture,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SNAP, TWEEN_DURATION_LAYOUT_UPDATE,
-    GemType, GEM_FRAME_COUNT
+    type GemType,
 } from './constants';
-import { MoveAction, MoveDirection } from './MoveAction';
-import { Coordinate } from './ExplodeAndReplacePhase';
-import { createBoardCell, type BoardCell, type PuzzleGrid } from './boardTypes';
-import { selectedTerrainCell, type TerrainSnapshot, type TerrainSelection } from '@/terrain/terrain';
-import type { PublicRoutingView } from '@/terrain/routing';
+import type { MoveAction, MoveDirection } from './MoveAction';
+import type { Coordinate } from './ExplodeAndReplacePhase';
+import type { PuzzleGrid } from './boardTypes';
 
 interface BoardConfig {
     cols: number;
@@ -25,942 +22,239 @@ interface BoardConfig {
     boardOffset: { x: number; y: number };
 }
 
-interface SpritePosition {
-    x: number;
-    y: number;
-}
-
-interface AnimationTarget {
-    sprite: Phaser.GameObjects.Sprite;
-    targetGridY: number;
-}
+type Sprite = Phaser.GameObjects.Sprite;
+type StartPosition = { x: number; y: number; gridX: number; gridY: number };
 
 export class BoardView {
-    private scene: Phaser.Scene;
-    private gridCols: number;
-    private gridRows: number;
+    private readonly scene: Phaser.Scene;
+    private readonly cols: number;
+    private readonly rows: number;
     private gemSize: number;
     private boardOffset: { x: number; y: number };
-    private gemsSprites: (Phaser.GameObjects.Sprite | null)[][] = []; // The 2D array [x][y] mirroring the logical grid
-    private gemGroup: Phaser.GameObjects.Group; // Group for efficient management
-    private overlayGraphics: (Phaser.GameObjects.Graphics | null)[][] = []; // Obstacle overlay visuals
-    private evidenceFamilyMode = false;
-    private terrain?: TerrainSnapshot;
-    private terrainGraphics: Phaser.GameObjects.Graphics | null = null;
-    private routingGraphics: Phaser.GameObjects.Graphics | null = null;
-    private terrainSelection: TerrainSelection | null = null;
-    private routing: PublicRoutingView | null = null;
+    /** Sprites mirroring the logical grid, [x][y]. */
+    private sprites: (Sprite | null)[][] = [];
+    private readonly group: Phaser.GameObjects.Group;
 
     constructor(scene: Phaser.Scene, config: BoardConfig) {
-        if (!scene || !(scene instanceof Phaser.Scene)) {
-            throw new Error("BoardView requires a valid Phaser.Scene instance.");
-        }
         this.scene = scene;
-        this.gridCols = config.cols;
-        this.gridRows = config.rows;
+        this.cols = config.cols;
+        this.rows = config.rows;
         this.gemSize = config.gemSize;
         this.boardOffset = config.boardOffset;
-        this.gemGroup = this.scene.add.group();
-        console.log("BoardView initialized");
+        this.group = scene.add.group();
     }
 
-    // --- Public Methods (Called by Controller: Game.js) ---
-
-    /** Creates the initial sprites based on the model state. */
-    createBoard(initialPuzzleState: PuzzleGrid): void {
-        console.log("BoardView: Creating board visuals...");
-        // <<< ADD LOG HERE to inspect the incoming argument >>>
-        console.log(">>> BoardView: Received initialPuzzleState:",
-             initialPuzzleState === null ? 'null' :
-             initialPuzzleState === undefined ? 'undefined' :
-             Array.isArray(initialPuzzleState) ? `Array[${initialPuzzleState.length}][${initialPuzzleState[0]?.length ?? '?'}]` :
-             typeof initialPuzzleState // Log type if not array/null/undefined
-         );
-
-        this.destroyBoard(); // Clear any previous board
-        this.drawTerrain();
-        this.drawRouting();
-        this.gemsSprites = [];
-
-        if (!initialPuzzleState || !Array.isArray(initialPuzzleState) || initialPuzzleState.length !== this.gridCols) { // <<< MODIFIED CHECK: More robust
-             console.error(`BoardView: Cannot create board. Invalid initialPuzzleState received (null, undefined, not array, or wrong width). Expected ${this.gridCols} columns. Exiting createBoard.`);
-             return; // <<< It exits here if state is invalid
-        }
-
-        console.log("BoardView: Board visuals creation continuing..."); // Add log to see if it gets past the check
-
-        for (let x = 0; x < this.gridCols; x++) {
-            this.gemsSprites[x] = new Array(this.gridRows).fill(null);
-             // Check if the column itself is a valid array and has the correct length
-             if (!Array.isArray(initialPuzzleState[x]) || initialPuzzleState[x].length !== this.gridRows) {
-                 console.error(`BoardView: Initial puzzle state column ${x} is invalid or has wrong height. Expected ${this.gridRows} rows.`);
-                 // Decide how to handle this - skip column, fill with null, error out?
-                 // For now, we'll just have nulls in this.gemsSprites[x]
-                 continue; // Skip to the next column
-             }
-            for (let y = 0; y < this.gridRows; y++) {
-                const gemData = initialPuzzleState[x][y];
-                if (gemData && gemData.gemType) {
-                    this.createSprite(x, y, gemData);
-                } else {
-                    // Optional: Log if a cell is unexpectedly null in the initial state
-                    // console.log(`BoardView: No initial gem data at [${x}, ${y}]`);
-                }
-            }
-        }
-        console.log("BoardView: Board visuals created successfully."); // Modified log
+    /** Creates a sprite for every gem in the grid. */
+    createBoard(grid: PuzzleGrid): void {
+        this.destroyBoard();
+        this.sprites = Array.from({ length: this.cols }, () => new Array(this.rows).fill(null));
+        grid.forEach((column, x) => column.forEach((cell, y) => {
+            if (cell) this.createSprite(x, y, cell.gemType);
+        }));
     }
 
-    /** Updates sprite positions and scales after resize/orientation change. */
-    updateVisualLayout(newGemSize: number, newBoardOffset: { x: number; y: number }): void {
-        console.log("BoardView: Updating visual layout.");
-        this.gemSize = newGemSize;
-        this.boardOffset = newBoardOffset;
-        this.drawTerrain();
-        this.drawRouting();
-
-        this.iterateSprites((sprite, x, y) => {
-            const targetPos = this.getSpritePosition(x, y);
-            const newScale = this.calculateSpriteScale(sprite);
-
-            this.scene.tweens.killTweensOf(sprite); // Stop existing movement
+    /** Tweens sprites to a new size and offset after a resize. */
+    updateVisualLayout(gemSize: number, boardOffset: { x: number; y: number }): void {
+        this.gemSize = gemSize;
+        this.boardOffset = boardOffset;
+        this.forEachSprite((sprite, x, y) => {
+            const target = this.positionOf(x, y);
+            this.scene.tweens.killTweensOf(sprite);
             this.scene.tweens.add({
-                targets: sprite,
-                x: targetPos.x,
-                y: targetPos.y,
-                scale: newScale,
-                duration: TWEEN_DURATION_LAYOUT_UPDATE,
-                ease: 'Sine.easeInOut' // Smoother ease
+                targets: sprite, x: target.x, y: target.y, scale: this.scaleFor(sprite),
+                duration: TWEEN_DURATION_LAYOUT_UPDATE, ease: 'Sine.easeInOut',
             });
         });
     }
 
-    /** Updates dimensions without animation (for use before board recreation). */
-    updateDimensions(newGemSize: number, newBoardOffset: { x: number; y: number }): void {
-        console.log("BoardView: Updating dimensions (no animation).");
-        this.gemSize = newGemSize;
-        this.boardOffset = newBoardOffset;
-        this.drawTerrain();
-        this.drawRouting();
-    }
-
-    setTerrain(terrain: TerrainSnapshot | undefined): void {
-        this.terrain = terrain;
-        this.terrainSelection = null;
-        this.drawTerrain();
-        this.drawRouting();
-        this.iterateSprites(sprite => sprite.setScale(this.calculateSpriteScale(sprite)));
-    }
-
-    setRouting(view: PublicRoutingView | null): void {
-        this.routing = view;
-        this.drawRouting();
-    }
-
-    selectTerrain(selection: TerrainSelection): void {
-        if (!selectedTerrainCell(this.terrain, selection)) return;
-        this.terrainSelection = selection;
-        this.drawTerrain();
-    }
-
-    terrainSelectionAt(x: number, y: number): TerrainSelection | null {
-        const cell = this.terrain?.cells[x]?.[y];
-        return cell && this.terrain ? { snapshotId: this.terrain.id, cellId: cell.id } : null;
-    }
-
-    private drawTerrain(): void {
-        this.terrainGraphics?.destroy();
-        this.terrainGraphics = null;
-        if (!this.terrain) return;
-        const gfx = this.scene.add.graphics().setDepth(-1);
-        this.terrainGraphics = gfx;
-        this.terrain.cells.forEach((column, x) => column.forEach((cell, y) => {
-            const left = this.boardOffset.x + x * this.gemSize;
-            const top = this.boardOffset.y + y * this.gemSize;
-            gfx.fillStyle(Number.parseInt(cell.color.slice(1), 16), 1);
-            gfx.fillRect(left, top, this.gemSize, this.gemSize);
-            gfx.lineStyle(1, 0x142a2b, 0.55);
-            gfx.strokeRect(left, top, this.gemSize, this.gemSize);
-            if (!cell.valid) {
-                gfx.lineStyle(2, 0xe2e8f0, 0.5);
-                gfx.lineBetween(left + 3, top + 3, left + this.gemSize - 3, top + this.gemSize - 3);
-            }
-            if (this.terrainSelection?.cellId === cell.id) {
-                gfx.lineStyle(3, 0xffffff, 1);
-                gfx.strokeRect(left + 2, top + 2, this.gemSize - 4, this.gemSize - 4);
-            }
-        }));
-    }
-
-    private drawRouting(): void {
-        this.routingGraphics?.destroy();
-        this.routingGraphics = null;
-        if (!this.terrain || !this.routing) return;
-        const gfx = this.scene.add.graphics().setDepth(-0.5);
-        this.routingGraphics = gfx;
-        const inked = new Set(this.routing.inkedIds);
-        const reachable = new Set(this.routing.reachableIds);
-        const frontier = new Set(this.routing.frontierIds);
-        const barriers = new Set(this.routing.barrierIds);
-        this.terrain.cells.forEach((column, x) => column.forEach((cell, y) => {
-            const left = this.boardOffset.x + x * this.gemSize;
-            const top = this.boardOffset.y + y * this.gemSize;
-            const cx = left + this.gemSize / 2;
-            const cy = top + this.gemSize / 2;
-            if (barriers.has(cell.id)) {
-                gfx.lineStyle(2, 0x0f172a, 0.55);
-                gfx.lineBetween(left + 4, top + 4, left + this.gemSize - 4, top + this.gemSize - 4);
-                gfx.lineBetween(left + this.gemSize - 4, top + 4, left + 4, top + this.gemSize - 4);
-            }
-            if (inked.has(cell.id)) {
-                gfx.fillStyle(reachable.has(cell.id) ? 0xf8fafc : 0x64748b, reachable.has(cell.id) ? 0.28 : 0.18);
-                gfx.fillRect(left + 3, top + 3, this.gemSize - 6, this.gemSize - 6);
-            }
-            if (this.routing?.pendingExtension && frontier.has(cell.id)) {
-                gfx.lineStyle(3, 0xfbbf24, 1);
-                gfx.strokeRect(left + 4, top + 4, this.gemSize - 8, this.gemSize - 8);
-            }
-            if (cell.id === this.routing!.campId) {
-                gfx.fillStyle(0xf59e0b, 0.95);
-                gfx.fillTriangle(cx, top + 8, left + 8, top + this.gemSize - 8, left + this.gemSize - 8, top + this.gemSize - 8);
-            }
-            if (cell.id === this.routing!.surveyId) {
-                gfx.fillStyle(0x38bdf8, 0.95);
-                gfx.fillCircle(cx, cy, Math.max(4, this.gemSize * 0.14));
-            }
-            if (cell.id === this.routing!.partyId) {
-                gfx.lineStyle(3, 0xffffff, 1);
-                gfx.strokeCircle(cx, cy, Math.max(6, this.gemSize * 0.22));
-            }
-        }));
-    }
-
-    /** V3 uses family silhouettes; color is only a secondary cue. */
-    setEvidenceFamilyMode(enabled: boolean): void {
-        this.evidenceFamilyMode = enabled;
-    }
-
-    /** Visually moves sprites during drag, handling wrapping. */
-    moveDraggingSprites(
-        spritesToMove: Phaser.GameObjects.Sprite[],
-        startVisualPositions: Array<{ x: number; y: number; gridX: number; gridY: number }>,
-        deltaX: number,
-        deltaY: number,
-        direction: MoveDirection
-    ): void {
-        if (!spritesToMove || spritesToMove.length === 0 || !startVisualPositions) return;
-
-        spritesToMove.forEach((sprite, i) => {
-            if (!sprite || !sprite.active || !startVisualPositions[i]) return;
-
-            const startPos = startVisualPositions[i]; // The initial *visual* position
-            let targetX = startPos.x;
-            let targetY = startPos.y;
-
-            if (direction === 'row') {
-                const totalBoardWidth = this.gridCols * this.gemSize;
-                const minX = this.boardOffset.x - this.gemSize / 2; // Left edge of the wrap zone
-                const maxX = minX + totalBoardWidth;                 // Right edge (exclusive) of the wrap zone
-                targetX = startPos.x + deltaX;
-                sprite.x = Phaser.Math.Wrap(targetX, minX, maxX); // Wrap visual position
-            } else { // 'col'
-                const totalBoardHeight = this.gridRows * this.gemSize;
-                const minY = this.boardOffset.y - this.gemSize / 2; // Top edge
-                const maxY = minY + totalBoardHeight;                // Bottom edge (exclusive)
-                targetY = startPos.y + deltaY;
-                sprite.y = Phaser.Math.Wrap(targetY, minY, maxY); // Wrap visual position
-            }
+    /** Moves a dragged row or column with the pointer, wrapping around the board edge. */
+    moveDraggingSprites(sprites: Sprite[], starts: StartPosition[], deltaX: number, deltaY: number, direction: MoveDirection): void {
+        const [min, max] = this.wrapRange(direction);
+        sprites.forEach((sprite, i) => {
+            const start = starts[i];
+            if (!sprite?.active || !start) return;
+            if (direction === 'row') sprite.x = Phaser.Math.Wrap(start.x + deltaX, min, max);
+            else sprite.y = Phaser.Math.Wrap(start.y + deltaY, min, max);
         });
     }
 
-    /** Instantly sets dragged sprites to their final grid positions. Assumes gemsSprites array is already updated. */
+    /** Puts every sprite exactly on its cell (after the sprite grid was updated for a move). */
     snapDraggedGemsToFinalGridPositions(): void {
-        console.log("BoardView: Snapping dragged gems visually.");
-        this.iterateSprites((sprite, x, y) => {
-            const targetPos = this.getSpritePosition(x, y);
+        this.forEachSprite((sprite, x, y) => {
+            const target = this.positionOf(x, y);
             this.scene.tweens.killTweensOf(sprite);
-            sprite.setPosition(targetPos.x, targetPos.y);
-            sprite.setScale(this.calculateSpriteScale(sprite)); // Ensure correct scale
-            // Ensure logical data matches visual array position
-            sprite.setData('gridX', x);
-            sprite.setData('gridY', y);
+            sprite.setPosition(target.x, target.y).setScale(this.scaleFor(sprite));
+            sprite.setData('gridX', x).setData('gridY', y);
         });
     }
 
-    /** Animates sprites back to their original start positions, sliding the row/column as a unit. */
-    snapBack(
-        spritesToSnap: Phaser.GameObjects.Sprite[],
-        startPositions: Array<{ x: number; y: number; gridX: number; gridY: number }>,
-        dragDirection: MoveDirection | undefined,
-        totalDeltaX: number,
-        totalDeltaY: number
-    ): Promise<void> {
-        console.log(`BoardView: Starting snap back for ${dragDirection || 'direct'}. DeltaX: ${totalDeltaX}, DeltaY: ${totalDeltaY}`);
-        return new Promise<void>((resolve) => {
-            if (!spritesToSnap || spritesToSnap.length === 0 ||
-                !startPositions || startPositions.length === 0 ||
-                spritesToSnap.length !== startPositions.length) {
-                console.warn("BoardView: SnapBack called with invalid arguments.");
-                resolve();
-                return;
-            }
-
-            // If dragDirection is not provided, perform a direct snap to origin for each sprite.
-            if (!dragDirection) {
-                console.log("BoardView: SnapBack called without dragDirection. Performing direct snap to origin.");
-                const directSnapPromises = spritesToSnap.map((sprite, i) => {
-                    const startPosData = startPositions[i];
-                    if (sprite && sprite.active && startPosData) {
-                        return new Promise<void>((resolveDirectSnap) => {
-                            // Ensure logical grid coordinates are set before tweening
-                            sprite.setData('gridX', startPosData.gridX);
-                            sprite.setData('gridY', startPosData.gridY);
-                            this.scene.tweens.killTweensOf(sprite);
-                            this.scene.tweens.add({
-                                targets: sprite,
-                                x: startPosData.x,
-                                y: startPosData.y,
-                                duration: TWEEN_DURATION_SNAP,
-                                ease: 'Quad.easeOut',
-                                onComplete: () => {
-                                    sprite.setPosition(startPosData.x, startPosData.y);
-                                    // Redundant setData if already set, but ensures final state
-                                    sprite.setData('gridX', startPosData.gridX);
-                                    sprite.setData('gridY', startPosData.gridY);
-                                    resolveDirectSnap();
-                                }
-                            });
-                        });
-                    }
-                    return Promise.resolve();
-                });
-                Promise.all(directSnapPromises).then(() => {
-                    console.log("BoardView: Direct snap back complete.");
-                    resolve();
-                }).catch(error => {
-                    console.error("BoardView: Error during direct snap back:", error);
-                    resolve(); // Resolve anyway
-                });
-                return;
-            }
-
-            // Coordinated "slide" snap back logic using a proxy tween
-            console.log(`BoardView: Performing coordinated slide snap back for ${dragDirection}.`);
-
-            // Kill any existing tweens on the sprites themselves
-            spritesToSnap.forEach(sprite => {
-                if (sprite && sprite.active) {
-                    this.scene.tweens.killTweensOf(sprite);
-                }
-            });
-            
-            let minWrap, maxWrap;
-            const boardTotalSize = (dragDirection === 'row')
-                ? this.gridCols * this.gemSize
-                : this.gridRows * this.gemSize;
-
-            if (dragDirection === 'row') {
-                minWrap = this.boardOffset.x - this.gemSize / 2;
-                maxWrap = minWrap + boardTotalSize;
-            } else { // 'col'
-                minWrap = this.boardOffset.y - this.gemSize / 2;
-                maxWrap = minWrap + boardTotalSize;
-            }
-
-            const proxy = { value: 1 }; // 1 = full drag offset, 0 = original position
-
-            this.scene.tweens.add({
-                targets: proxy,
-                value: 0,
-                duration: TWEEN_DURATION_SNAP,
-                ease: 'Quad.easeOut',
-                onUpdate: () => {
-                    spritesToSnap.forEach((sprite, i) => {
-                        if (!sprite || !sprite.active) return;
-                        const startPosData = startPositions[i]; // Original visual x/y when drag started
-
-                        if (dragDirection === 'row') {
-                            const currentEffectiveDeltaX = totalDeltaX * proxy.value;
-                            const newVisualX = startPosData.x + currentEffectiveDeltaX;
-                            sprite.x = Phaser.Math.Wrap(newVisualX, minWrap, maxWrap);
-                            sprite.y = startPosData.y; // Row doesn't change Y
-                        } else { // 'col'
-                            const currentEffectiveDeltaY = totalDeltaY * proxy.value;
-                            const newVisualY = startPosData.y + currentEffectiveDeltaY;
-                            sprite.y = Phaser.Math.Wrap(newVisualY, minWrap, maxWrap);
-                            sprite.x = startPosData.x; // Column doesn't change X
-                        }
-                    });
-                },
-                onComplete: () => {
-                    spritesToSnap.forEach((sprite, i) => {
-                        if (!sprite || !sprite.active) return;
-                        const startPosData = startPositions[i];
-                        sprite.setPosition(startPosData.x, startPosData.y);
-                        sprite.setData('gridX', startPosData.gridX);
-                        sprite.setData('gridY', startPosData.gridY);
-                    });
-                    console.log("BoardView: Coordinated slide snap back complete.");
-                    resolve();
-                }
-            });
+    /** Slides a dragged row or column back to where it started (a drag that made no match). */
+    snapBack(sprites: Sprite[], starts: StartPosition[], direction: MoveDirection | undefined, totalDeltaX: number, totalDeltaY: number): Promise<void> {
+        if (!sprites.length || sprites.length !== starts.length) return Promise.resolve();
+        sprites.forEach(sprite => { if (sprite?.active) this.scene.tweens.killTweensOf(sprite); });
+        const finish = () => sprites.forEach((sprite, i) => {
+            if (!sprite?.active) return;
+            sprite.setPosition(starts[i].x, starts[i].y).setData('gridX', starts[i].gridX).setData('gridY', starts[i].gridY);
         });
+
+        if (!direction) {
+            return Promise.all(sprites.map((sprite, i) => sprite?.active
+                ? this.tween({ targets: sprite, x: starts[i].x, y: starts[i].y, duration: TWEEN_DURATION_SNAP, ease: 'Quad.easeOut' })
+                : Promise.resolve())).then(finish);
+        }
+
+        const [min, max] = this.wrapRange(direction);
+        const proxy = { value: 1 }; // 1 = the full drag offset, 0 = back at the start
+        return this.tween({
+            targets: proxy, value: 0, duration: TWEEN_DURATION_SNAP, ease: 'Quad.easeOut',
+            onUpdate: () => sprites.forEach((sprite, i) => {
+                if (!sprite?.active) return;
+                if (direction === 'row') sprite.setPosition(Phaser.Math.Wrap(starts[i].x + totalDeltaX * proxy.value, min, max), starts[i].y);
+                else sprite.setPosition(starts[i].x, Phaser.Math.Wrap(starts[i].y + totalDeltaY * proxy.value, min, max));
+            }),
+        }).then(finish);
     }
 
-    /** Animates gem explosions. Removes sprites from grid and destroys them. */
-    animateExplosions(matchCoords: Coordinate[]): Promise<void> {
-        console.log(`BoardView: Animating ${matchCoords.length} explosions.`);
-        return new Promise<void>((resolve) => {
-            if (!matchCoords || matchCoords.length === 0) { resolve(); return; }
+    /** Pops and removes the sprites at the matched cells. */
+    animateExplosions(coords: Coordinate[]): Promise<void> {
+        const cleared = new Set<string>();
+        const pops: Promise<void>[] = [];
+        for (const [x, y] of coords) {
+            const sprite = this.getSpriteAt(x, y);
+            if (!sprite || cleared.has(`${x},${y}`)) continue;
+            cleared.add(`${x},${y}`);
+            this.sprites[x][y] = null;
+            this.scene.tweens.killTweensOf(sprite);
+            pops.push(this.tween({
+                targets: sprite, alpha: 0, scale: this.scaleFor(sprite) * 1.25, duration: TWEEN_DURATION_EXPLODE, ease: 'Quad.easeOut',
+            }).then(() => this.destroySprite(sprite)));
+        }
+        return Promise.all(pops).then(() => undefined);
+    }
 
-            const explosionPromises: Promise<void>[] = [];
-            const explodedCoordsSet = new Set<string>(); // Prevent double animation
+    /** Survivors fall to the bottom of each column; new gems drop in from above. */
+    animateFalls(replacements: Array<[number, GemType[]]>, _finalGrid: PuzzleGrid): Promise<void> {
+        const next: (Sprite | null)[][] = Array.from({ length: this.cols }, () => new Array(this.rows).fill(null));
+        const moving: Array<{ sprite: Sprite; x: number; y: number }> = [];
 
-            matchCoords.forEach(([x, y]) => {
-                const coordKey = `${x},${y}`;
-                if (explodedCoordsSet.has(coordKey)) return;
-
+        for (let x = 0; x < this.cols; x++) {
+            let slot = this.rows - 1;
+            for (let y = this.rows - 1; y >= 0; y--) {
                 const sprite = this.getSpriteAt(x, y);
-                if (sprite) {
-                    explodedCoordsSet.add(coordKey);
-                    this.gemsSprites[x][y] = null; // Remove reference immediately
-
-                    explosionPromises.push(new Promise<void>((resolveExplosion) => {
-                        this.scene.tweens.killTweensOf(sprite);
-                        if (this.evidenceFamilyMode) {
-                            this.scene.tweens.add({
-                                targets: sprite,
-                                alpha: 0,
-                                scale: this.calculateSpriteScale(sprite) * 1.25,
-                                duration: TWEEN_DURATION_EXPLODE,
-                                ease: 'Quad.easeOut',
-                                onComplete: () => {
-                                    this.safelyDestroySprite(sprite);
-                                    resolveExplosion();
-                                },
-                            });
-                            return;
-                        }
-                        
-                        // Get the gem type from sprite data
-                        const gemType = sprite.getData('gemType') as GemType;
-                        if (!gemType) {
-                            console.warn(`BoardView: No gem type data for sprite at [${x}, ${y}]`);
-                            this.safelyDestroySprite(sprite);
-                            resolveExplosion();
-                            return;
-                        }
-
-                        // Create frame animation for explosion
-                        const frameRate = 30; // 30 FPS for explosion animation
-                        const frameDuration = 1000 / frameRate; // Duration per frame in ms
-                        const totalFrames = GEM_FRAME_COUNT; // 8 frames (0-7)
-                        
-                        let currentFrame = 0;
-                        const explosionTimer = this.scene.time.addEvent({
-                            delay: frameDuration,
-                            callback: () => {
-                                if (currentFrame < totalFrames) {
-                                    // Update sprite texture to next frame
-                                    const textureKey = AssetKeys.GEM_TEXTURE(gemType, currentFrame);
-                                    if (this.scene.textures.exists(textureKey)) {
-                                        sprite.setTexture(textureKey);
-                                    }
-                                    currentFrame++;
-                                } else {
-                                    // Animation complete, destroy sprite
-                                    explosionTimer.destroy();
-                                    this.safelyDestroySprite(sprite);
-                                    resolveExplosion();
-                                }
-                            },
-                            repeat: totalFrames
-                        });
-                    }));
-                } else {
-                    // This might happen if a cascade explodes something already animating explosion
-                    // console.warn(`BoardView: Explosion requested for non-existent sprite at [${x}, ${y}]`);
-                }
-            });
-
-            Promise.all(explosionPromises)
-                .then(() => { console.log("BoardView: Explosions complete."); resolve(); })
-                .catch(error => { console.error("BoardView: Error during explosions:", error); resolve(); });
-        });
-    }
-
-    /** Animates existing gems falling and new gems entering. Updates gemsSprites array. */
-    animateFalls(replacements: Array<[number, GemType[]]>, finalBackendState: PuzzleGrid): Promise<void> {
-        console.log("BoardView: Animating falls...");
-        return new Promise<void>((resolve) => {
-            const fallPromises: Promise<void>[] = [];
-            const newGrid: (Phaser.GameObjects.Sprite | null)[][] = []; // Stores the final configuration of sprites
-            const spritesToAnimate: AnimationTarget[] = []; // { sprite, targetY }
-
-            // 1. Initialize newGrid structure
-            for (let x = 0; x < this.gridCols; x++) {
-                newGrid[x] = new Array(this.gridRows).fill(null);
-            }
-
-            // 2. Place surviving sprites into their final slots in newGrid (bottom-up)
-            for (let x = 0; x < this.gridCols; x++) {
-                let targetY = this.gridRows - 1; // Start checking from the bottom row
-                // Iterate current visual grid from bottom up
-                for (let y = this.gridRows - 1; y >= 0; y--) {
-                    const sprite = this.getSpriteAt(x, y);
-                    if (sprite) {
-                         // This sprite survived, find its target slot
-                         if (targetY >= 0) {
-                             newGrid[x][targetY] = sprite; // Place in new grid config
-                             sprite.setData('gridX', x);   // Update logical coords stored on sprite
-                             sprite.setData('gridY', targetY);
-                             spritesToAnimate.push({ sprite, targetGridY: targetY });
-                             targetY--; // Move to the next slot up
-                         } else {
-                              console.error(`BoardView Error: No slot for surviving sprite from [${x},${y}]`);
-                              this.safelyDestroySprite(sprite);
-                         }
-                    }
-                }
-            }
-
-            // 3. Create new sprites for replacements and place them in empty slots (top-down)
-            const replacementMap = new Map(replacements); // colIndex -> [types]
-            for (let x = 0; x < this.gridCols; x++) {
-                const typesToSpawn = replacementMap.get(x) || [];
-                // New gems fill the highest available slots (lowest Y index)
-                for (let i = 0; i < typesToSpawn.length; i++) {
-                    let targetY = -1;
-                     // Find the first null slot from the top in the newGrid config
-                    for(let searchY = 0; searchY < this.gridRows; searchY++){
-                        if(!newGrid[x][searchY]){
-                            targetY = searchY;
-                            break;
-                        }
-                    }
-
-                    if (targetY !== -1) {
-                        const gemType = typesToSpawn[i];
-                        // Calculate start position above the board
-                        const startVisualY = this.boardOffset.y - (i + 1) * this.gemSize - this.gemSize / 2;
-                        const sprite = this.createSprite(x, targetY, gemType, startVisualY);
-
-                        if (sprite) {
-                            newGrid[x][targetY] = sprite; // Place in new grid config
-                            spritesToAnimate.push({ sprite, targetGridY: targetY });
-                        } else {
-                             console.error(`BoardView Error: Failed to create replacement sprite at [${x},${targetY}]`);
-                        }
-                    } else {
-                        console.error(`BoardView Error: No empty slot found for replacement gem in column ${x}`);
-                    }
-                }
-            }
-
-            // 4. Update the main gemsSprites reference
-            this.gemsSprites = newGrid;
-
-            // Sync sprite metadata from the authoritative backend state.
-            for (let x = 0; x < this.gridCols; x++) {
-                for (let y = 0; y < this.gridRows; y++) {
-                    const sprite = this.gemsSprites[x]?.[y];
-                    const cell = finalBackendState[x]?.[y];
-                    if (sprite && cell) {
-                        this.applyBoardCellDataToSprite(sprite, cell);
-                    }
-                }
-            }
-
-            // 5. Animate all sprites (survivors and new) to their final visual positions
-            spritesToAnimate.forEach(({ sprite, targetGridY }) => {
-                if (!sprite || !sprite.active) return;
-
-                const targetPos = this.getSpritePosition(sprite.getData('gridX'), targetGridY);
-                const currentY = sprite.y;
-
-                // Skip animation if already visually in the correct place
-                if (Math.round(currentY) === Math.round(targetPos.y) && Math.round(sprite.x) === Math.round(targetPos.x) && sprite.alpha === 1) {
-                    sprite.setScale(this.calculateSpriteScale(sprite)); // Ensure scale
-                    return;
-                }
-
-                const fallDistance = Math.abs(currentY - targetPos.y);
-                const duration = Phaser.Math.Clamp(
-                    TWEEN_DURATION_FALL_BASE + fallDistance * TWEEN_DURATION_FALL_PER_UNIT,
-                    TWEEN_DURATION_FALL_BASE, // Min duration
-                    TWEEN_DURATION_FALL_MAX   // Max duration
-                );
-
-                fallPromises.push(new Promise<void>((resolveFall) => {
-                    this.scene.tweens.killTweensOf(sprite);
-                    this.scene.tweens.add({
-                        targets: sprite,
-                        x: targetPos.x,
-                        y: targetPos.y,
-                        alpha: 1, // Ensure visible
-                        scale: this.calculateSpriteScale(sprite), // Ensure correct scale
-                        duration: duration,
-                        ease: 'Quad.easeOut', // 'Bounce.easeOut' or 'Cubic.easeOut' also good
-                        onComplete: () => {
-                            sprite.setPosition(targetPos.x, targetPos.y); // Final exact position
-                            resolveFall();
-                        }
-                    });
-                }));
-            });
-
-            if (fallPromises.length === 0) {
-                console.log("BoardView: No fall animations needed.");
-                resolve();
-                return;
-            }
-
-            Promise.all(fallPromises)
-                .then(() => { console.log("BoardView: Falls complete."); resolve(); })
-                .catch(error => { console.error("BoardView: Error during falls:", error); resolve(); });
-        });
-    }
-
-    /** Updates the internal gemsSprites array structure after a move. */
-    updateGemsSpritesArrayAfterMove(moveAction: MoveAction): void {
-        // console.log("BoardView: Updating gemsSprites array structure."); // Less verbose
-        const tempSprites = [];
-        const { rowOrCol, index, amount } = moveAction;
-
-        if (rowOrCol === 'row') {
-            const y = index;
-            if (y < 0 || y >= this.gridRows) return;
-            const width = this.gridCols;
-            const effectiveAmount = ((amount % width) + width) % width;
-            if (effectiveAmount === 0) return;
-
-            for (let x = 0; x < width; x++) tempSprites.push(this.gemsSprites[x]?.[y]);
-            const shifted = [...tempSprites.slice(-effectiveAmount), ...tempSprites.slice(0, width - effectiveAmount)];
-            for (let x = 0; x < width; x++) {
-                if (this.gemsSprites[x]) {
-                    const sprite = shifted[x];
-                    this.gemsSprites[x][y] = sprite;
-                    if (sprite) { // Update logical position stored on sprite
-                        sprite.setData('gridX', x);
-                        sprite.setData('gridY', y);
-                    }
-                }
-            }
-        } else { // col
-            const x = index;
-            if (x < 0 || x >= this.gridCols || !this.gemsSprites[x]) return;
-            const height = this.gridRows;
-            const effectiveAmount = ((amount % height) + height) % height;
-            if (effectiveAmount === 0) return;
-
-            const originalCol = this.gemsSprites[x];
-            for (let y = 0; y < height; y++) tempSprites.push(originalCol[y]);
-            const shifted = [...tempSprites.slice(height - effectiveAmount), ...tempSprites.slice(0, height - effectiveAmount)];
-            for (let y = 0; y < height; y++) {
-                 const sprite = shifted[y];
-                 this.gemsSprites[x][y] = sprite;
-                 if (sprite) { // Update logical position stored on sprite
-                     sprite.setData('gridX', x);
-                     sprite.setData('gridY', y);
-                 }
-            }
-        }
-    }
-
-    /** Destroys all sprites and clears the board representation. */
-    destroyBoard(): void {
-        this.terrainGraphics?.destroy();
-        this.terrainGraphics = null;
-        this.routingGraphics?.destroy();
-        this.routingGraphics = null;
-        console.log("BoardView: Destroying board visuals...");
-
-        // Destroy all sprites referenced in the grid cache
-        for (let x = 0; x < this.gemsSprites.length; x++) {
-            const column = this.gemsSprites[x];
-            if (!column) continue;
-
-            for (let y = 0; y < column.length; y++) {
-                const sprite = column[y];
                 if (!sprite) continue;
-
-                this.scene.tweens.killTweensOf(sprite);
-                if (sprite.active && typeof sprite.destroy === 'function') {
-                    sprite.destroy();
-                }
+                next[x][slot] = sprite;
+                moving.push({ sprite, x, y: slot });
+                slot--;
             }
         }
-
-        this.gemsSprites = [];
-
-        // Destroy all obstacle overlays
-        for (const col of this.overlayGraphics) {
-            if (!col) continue;
-            for (const gfx of col) {
-                if (gfx) gfx.destroy();
-            }
+        for (const [x, types] of replacements) {
+            types.forEach((type, i) => {
+                const y = next[x].findIndex(sprite => sprite === null);
+                if (y < 0) return;
+                const startY = this.boardOffset.y - (i + 1) * this.gemSize - this.gemSize / 2;
+                const sprite = this.createSprite(x, y, type, startY, next);
+                if (sprite) moving.push({ sprite, x, y });
+            });
         }
-        this.overlayGraphics = [];
+        this.sprites = next;
 
-        // Clear Phaser group without recreating it
-        if (this.gemGroup) {
-            try {
-                this.gemGroup.clear(false);
-            } catch (error) {
-                console.warn("BoardView: gemGroup.clear() failed, continuing without raising.", error);
-            }
-        }
-    }
-
-    // --- Internal Helper Methods ---
-
-    /** Safely destroys a sprite (if active) and removes from group. */
-    private safelyDestroySprite(sprite: Phaser.GameObjects.Sprite | null): void {
-        if (sprite && sprite.active) {
-            // console.log(`Safely destroying sprite type ${sprite.getData('gemType')} at [${sprite.getData('gridX')}, ${sprite.getData('gridY')}]`);
+        return Promise.all(moving.map(({ sprite, x, y }) => {
+            sprite.setData('gridX', x).setData('gridY', y);
+            const target = this.positionOf(x, y);
+            if (Math.round(sprite.x) === target.x && Math.round(sprite.y) === target.y && sprite.alpha === 1) return Promise.resolve();
+            const duration = Phaser.Math.Clamp(
+                TWEEN_DURATION_FALL_BASE + Math.abs(sprite.y - target.y) * TWEEN_DURATION_FALL_PER_UNIT,
+                TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_MAX,
+            );
             this.scene.tweens.killTweensOf(sprite);
-            if (this.gemGroup) {
-                this.gemGroup.remove(sprite, true, true);
-            } else {
-                sprite.destroy();
-            }
+            return this.tween({ targets: sprite, x: target.x, y: target.y, alpha: 1, scale: this.scaleFor(sprite), duration, ease: 'Quad.easeOut' });
+        })).then(() => undefined);
+    }
+
+    /** Shifts the sprite grid the same way BackendPuzzle shifted the gems. */
+    updateGemsSpritesArrayAfterMove({ rowOrCol, index, amount }: MoveAction): void {
+        if (rowOrCol === 'row') {
+            const shift = ((amount % this.cols) + this.cols) % this.cols;
+            if (shift === 0 || index < 0 || index >= this.rows) return;
+            const row = this.sprites.map(column => column[index] ?? null);
+            const shifted = [...row.slice(-shift), ...row.slice(0, this.cols - shift)];
+            shifted.forEach((sprite, x) => { this.sprites[x][index] = sprite; sprite?.setData('gridX', x).setData('gridY', index); });
+        } else {
+            const shift = ((amount % this.rows) + this.rows) % this.rows;
+            const column = this.sprites[index];
+            if (shift === 0 || !column) return;
+            this.sprites[index] = [...column.slice(this.rows - shift), ...column.slice(0, this.rows - shift)];
+            this.sprites[index].forEach((sprite, y) => sprite?.setData('gridX', index).setData('gridY', y));
         }
     }
 
-    /** Creates a single sprite, adds to group, stores data, places in gemsSprites array. */
-    private createSprite(gridX: number, gridY: number, cellOrGemType: BoardCell | GemType, startVisualY?: number): Phaser.GameObjects.Sprite | null {
-        const gemType = typeof cellOrGemType === 'string' ? cellOrGemType : cellOrGemType.gemType;
-        const textureKey = this.evidenceFamilyMode
-            ? AssetKeys.EVIDENCE_GEM_TEXTURE(gemType)
-            : AssetKeys.GEM_TEXTURE(gemType, 0);
-        if (!this.scene.textures.exists(textureKey)) {
-            console.error(`Texture missing: ${textureKey}`); return null;
+    destroyBoard(): void {
+        this.forEachSprite(sprite => this.scene.tweens.killTweensOf(sprite));
+        this.group.clear(true, true);
+        this.sprites = [];
+    }
+
+    /** Puts any sprite that drifted back on its cell, fully visible. */
+    syncSpritesToGridPositions(): void {
+        this.forEachSprite((sprite, x, y) => {
+            const target = this.positionOf(x, y);
+            this.scene.tweens.killTweensOf(sprite);
+            sprite.setPosition(target.x, target.y).setScale(this.scaleFor(sprite)).setAlpha(1);
+        });
+    }
+
+    getGemsSprites(): (Sprite | null)[][] {
+        return this.sprites;
+    }
+
+    private getSpriteAt(x: number, y: number): Sprite | null {
+        const sprite = this.sprites[x]?.[y];
+        return sprite?.active ? sprite : null;
+    }
+
+    private createSprite(x: number, y: number, type: GemType, startY?: number, into = this.sprites): Sprite | null {
+        const key = gemTexture(type);
+        if (!this.scene.textures.exists(key)) {
+            console.error(`[BoardView] Missing texture ${key}`);
+            return null;
         }
-
-        const targetPos = this.getSpritePosition(gridX, gridY);
-        const xPos = targetPos.x;
-        const yPos = (startVisualY !== undefined) ? startVisualY : targetPos.y;
-
-        // Add sprite via the group for automatic scene addition
-        let group = this.gemGroup;
-        if (!group || !group.scene) {
-            if (!this.scene || !(this.scene as any).add) {
-                console.error("BoardView: Scene add factory unavailable. Cannot create sprite.");
-                return null;
-            }
-            group = this.scene.add.group();
-            this.gemGroup = group;
-        }
-
-        const sprite = group.create(xPos, yPos, textureKey);
-        if (!sprite) { console.error(`Failed to create sprite ${textureKey}`); return null; }
-
-        sprite.setOrigin(0.5);
-        sprite.setData('gridX', gridX);
-        sprite.setData('gridY', gridY);
-        this.applyBoardCellDataToSprite(
-            sprite,
-            typeof cellOrGemType === 'string' ? createBoardCell(cellOrGemType) : cellOrGemType
-        );
-        sprite.setScale(this.calculateSpriteScale(sprite));
-        sprite.setInteractive(); // Enable input detection ON the sprite (used by Scene)
-
-        if (startVisualY !== undefined) {
-            sprite.setAlpha(0); // Start invisible if spawning from above
-        }
-
-        // Store reference in the grid array (ensure column exists)
-        if (!this.gemsSprites[gridX]) {
-             console.warn(`BoardView: gemsSprites column ${gridX} was not initialized before createSprite. Initializing now.`);
-             this.gemsSprites[gridX] = new Array(this.gridRows).fill(null);
-        }
-        // Only assign if the slot is within bounds (safety check)
-        if(gridY >= 0 && gridY < this.gridRows) {
-             this.gemsSprites[gridX][gridY] = sprite;
-        } else {
-             console.error(`BoardView Error: Attempted to assign sprite to invalid row ${gridY} in column ${gridX}.`);
-             this.safelyDestroySprite(sprite); // Clean up the created sprite
-             return null;
-        }
-
+        const target = this.positionOf(x, y);
+        const sprite = this.group.create(target.x, startY ?? target.y, key) as Sprite;
+        sprite.setOrigin(0.5).setData('gridX', x).setData('gridY', y).setData('gemType', type);
+        sprite.setScale(this.scaleFor(sprite)).setInteractive();
+        if (startY !== undefined) sprite.setAlpha(0);
+        into[x][y] = sprite;
         return sprite;
     }
 
-    private applyBoardCellDataToSprite(sprite: Phaser.GameObjects.Sprite, cell: BoardCell): void {
-        sprite.setData('gemType', cell.gemType);
-        sprite.setData('cellState', cell.state ?? null);
-        this.applyBoardCellVisualState(sprite, cell);
+    private destroySprite(sprite: Sprite): void {
+        if (!sprite.active) return;
+        this.scene.tweens.killTweensOf(sprite);
+        this.group.remove(sprite, true, true);
     }
 
-    private applyBoardCellVisualState(sprite: Phaser.GameObjects.Sprite, cell: BoardCell): void {
-        const blockerId = cell.state?.blockerId ?? null;
-        sprite.clearTint();
-
-        // Get grid coords from sprite data or position
-        const gx: number | undefined = sprite.getData('gridX');
-        const gy: number | undefined = sprite.getData('gridY');
-
-        switch (blockerId) {
-            case 'mud':
-                sprite.setTint(0x8b5a2b);
-                break;
-            case 'vine':
-                sprite.setTint(0x4f8f3a);
-                break;
-            case 'junk':
-                sprite.setTint(0x6b7280);
-                break;
-            case 'stone':
-                sprite.setTint(0x7c7c84);
-                break;
-            case 'signal':
-                sprite.setTint(0x38bdf8);
-                break;
-            case 'field_signal':
-                sprite.setTint(0x67e8f9);
-                break;
-            case 'noise':
-                sprite.setTint(0xf59e0b);
-                break;
-            case 'unknown':
-                sprite.setTint(0xa855f7);
-                break;
-            default:
-                sprite.clearTint();
-                break;
-        }
-
-        // Obstacle overlay graphics
-        if (typeof gx === 'number' && typeof gy === 'number') {
-            this.clearOverlayAt(gx, gy);
-            if (blockerId) {
-                this.drawOverlayAt(gx, gy, blockerId);
-            }
-        }
-    }
-
-    private clearOverlayAt(x: number, y: number): void {
-        const gfx = this.overlayGraphics[x]?.[y];
-        if (gfx) {
-            gfx.destroy();
-            this.overlayGraphics[x][y] = null;
-        }
-    }
-
-    private drawOverlayAt(x: number, y: number, blockerId: string): void {
-        if (!this.overlayGraphics[x]) this.overlayGraphics[x] = [];
-        const pos = this.getSpritePosition(x, y);
-        const half = this.gemSize / 2;
-        const gfx = this.scene.add.graphics();
-        gfx.setDepth(10);
-
-        const flags = this.gemsSprites[x]?.[y]?.getData('cellState')?.flags as string[] | undefined;
-        const isVisibility = flags?.some((f: string) => ['overgrowth', 'low_visibility', 'signal_dropout', 'limited_signal'].includes(f));
-
-        if (blockerId === 'field_signal') {
-            // Field cache: bright receiver icon, deliberately unlike hazard overlays.
-            gfx.fillStyle(0x082f49, 0.72);
-            gfx.fillRoundedRect(pos.x - half * 0.82, pos.y - half * 0.82, this.gemSize * 0.82, this.gemSize * 0.82, 7);
-            gfx.lineStyle(2.2, 0xfef3c7, 0.95);
-            gfx.strokeRoundedRect(pos.x - half * 0.82, pos.y - half * 0.82, this.gemSize * 0.82, this.gemSize * 0.82, 7);
-            gfx.fillStyle(0xfbbf24, 1);
-            gfx.fillCircle(pos.x, pos.y + half * 0.24, Math.max(2.5, half * 0.1));
-            gfx.lineStyle(2, 0xfef3c7, 1);
-            gfx.lineBetween(pos.x, pos.y + half * 0.16, pos.x, pos.y - half * 0.3);
-            for (const radius of [half * 0.28, half * 0.48]) {
-                gfx.beginPath();
-                gfx.arc(pos.x, pos.y - half * 0.2, radius, Math.PI * 1.14, Math.PI * 1.86);
-                gfx.strokePath();
-            }
-        } else if (isVisibility) {
-            // Fog overlay — translucent white cloud
-            gfx.fillStyle(0xffffff, 0.3);
-            gfx.fillRoundedRect(pos.x - half, pos.y - half, this.gemSize, this.gemSize, 6);
-            gfx.fillStyle(0xffffff, 0.15);
-            gfx.fillCircle(pos.x - half * 0.3, pos.y - half * 0.2, half * 0.6);
-            gfx.fillCircle(pos.x + half * 0.3, pos.y + half * 0.2, half * 0.5);
-        } else {
-            // Bramble/terrain overlay — cross-hatch lines
-            gfx.lineStyle(1.5, 0x5a3e1b, 0.5);
-            const step = this.gemSize / 4;
-            for (let i = 1; i < 4; i++) {
-                gfx.lineBetween(pos.x - half + i * step, pos.y - half, pos.x - half, pos.y - half + i * step);
-                gfx.lineBetween(pos.x + half - i * step, pos.y + half, pos.x + half, pos.y + half - i * step);
-            }
-        }
-
-        this.overlayGraphics[x][y] = gfx;
-    }
-
-    /** Gets the sprite at [x, y] if active, otherwise null. */
-    getSpriteAt(x: number, y: number): Phaser.GameObjects.Sprite | null {
-        const sprite = this.gemsSprites[x]?.[y];
-        return (sprite && sprite.active) ? sprite : null;
-    }
-
-    /** Returns the 2D array of sprite references. */
-    getGemsSprites(): (Phaser.GameObjects.Sprite | null)[][] {
-        return this.gemsSprites;
-    }
-
-    /** Calculates the center visual coordinate for a grid cell. */
-    private getSpritePosition(gridX: number, gridY: number): SpritePosition {
+    private positionOf(x: number, y: number): { x: number; y: number } {
         return {
-            x: Math.round(this.boardOffset.x + gridX * this.gemSize + this.gemSize / 2),
-            y: Math.round(this.boardOffset.y + gridY * this.gemSize + this.gemSize / 2)
+            x: Math.round(this.boardOffset.x + x * this.gemSize + this.gemSize / 2),
+            y: Math.round(this.boardOffset.y + y * this.gemSize + this.gemSize / 2),
         };
     }
 
-    /** Calculates the appropriate scale based on gemSize and texture width. */
-    private calculateSpriteScale(sprite: Phaser.GameObjects.Sprite): number {
-        if (!sprite || !sprite.width || sprite.width === 0) return 1;
-        return this.gemSize * (this.terrain ? 0.8 : 1) / sprite.width;
+    private scaleFor(sprite: Sprite): number {
+        return sprite.width ? this.gemSize / sprite.width : 1;
     }
 
-    /** Helper to iterate over all active sprites in the grid. */
-    private iterateSprites(callback: (sprite: Phaser.GameObjects.Sprite, x: number, y: number) => void): void {
-        for (let x = 0; x < this.gemsSprites.length; x++) {
-            if (!this.gemsSprites[x]) continue;
-            for (let y = 0; y < this.gemsSprites[x].length; y++) {
-                const sprite = this.gemsSprites[x][y];
-                if (sprite && sprite.active) {
-                    callback(sprite, x, y);
-                }
-            }
-        }
+    /** The visual span a dragged row (x) or column (y) wraps within. */
+    private wrapRange(direction: MoveDirection): [number, number] {
+        const min = (direction === 'row' ? this.boardOffset.x : this.boardOffset.y) - this.gemSize / 2;
+        return [min, min + (direction === 'row' ? this.cols : this.rows) * this.gemSize];
     }
 
-    /** Utility to sync sprite visual positions to their stored logical grid coords. */
-    syncSpritesToGridPositions(): void {
-         console.warn("BoardView: Attempting to sync sprites to logical grid positions.");
-         this.iterateSprites((sprite, x, y) => {
-              const logicalX = sprite.getData('gridX');
-              const logicalY = sprite.getData('gridY');
-              // Basic check: does the sprite's stored logical position match its array position?
-              if (logicalX !== x || logicalY !== y) {
-                   console.warn(`Sync Mismatch: Sprite at array pos [${x},${y}] has logical pos [${logicalX},${logicalY}]`);
-                   // Optionally force visual snap based on stored logical position
-                   // const targetPos = this.getSpritePosition(logicalX, logicalY);
-                   // sprite.setPosition(targetPos.x, targetPos.y);
-              } else {
-                   // Ensure visual position matches array position
-                   const targetPos = this.getSpritePosition(x, y);
-                   if(Math.round(sprite.x) !== targetPos.x || Math.round(sprite.y) !== targetPos.y) {
-                       console.warn(`Sync Visual Correction: Snapping sprite at [${x},${y}] to correct visual position.`);
-                       this.scene.tweens.killTweensOf(sprite);
-                       sprite.setPosition(targetPos.x, targetPos.y);
-                   }
-              }
-              sprite.setScale(this.calculateSpriteScale(sprite));
-              sprite.setAlpha(1); // Ensure visible
-         });
+    private forEachSprite(callback: (sprite: Sprite, x: number, y: number) => void): void {
+        this.sprites.forEach((column, x) => column?.forEach((sprite, y) => { if (sprite?.active) callback(sprite, x, y); }));
     }
 
-    /** Refreshes blocker metadata and overlays without rebuilding the board. */
-    syncCellStates(grid: PuzzleGrid): void {
-        this.iterateSprites((sprite, x, y) => {
-            const cell = grid[x]?.[y];
-            if (cell) this.applyBoardCellDataToSprite(sprite, cell);
-        });
+    private tween(config: Phaser.Types.Tweens.TweenBuilderConfig): Promise<void> {
+        return new Promise(resolve => { this.scene.tweens.add({ ...config, onComplete: () => resolve() }); });
     }
 }

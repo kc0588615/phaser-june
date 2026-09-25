@@ -1,18 +1,6 @@
-import { sql } from 'drizzle-orm';
-import {
-  doublePrecision,
-  index,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { oneearthBioregion, speciesTable } from './species';
-
+/** One row per signed-in player, keyed to their Clerk user (created by /api/player/ensure-profile). */
 export const profiles = pgTable('profiles', {
   userId: uuid('user_id').primaryKey(),
   clerkUserId: text('clerk_user_id').unique('uq_profiles_clerk_user_id'),
@@ -21,87 +9,4 @@ export const profiles = pgTable('profiles', {
   avatarUrl: text('avatar_url'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-export const playerGameSessions = pgTable(
-  'player_game_sessions',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    playerId: uuid('player_id').notNull().references(() => profiles.userId),
-    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
-    endedAt: timestamp('ended_at', { withTimezone: true }),
-    totalMoves: integer('total_moves').notNull().default(0),
-    totalScore: integer('total_score').notNull().default(0),
-    speciesDiscoveredInSession: integer('species_discovered_in_session').notNull().default(0),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => ({
-    ixPlayerGameSessionsPlayerId: index('ix_player_game_sessions_player_id').on(
-      table.playerId
-    ),
-  })
-);
-
-export const playerSpeciesDiscoveries = pgTable(
-  'player_species_discoveries',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    playerId: uuid('player_id').notNull().references(() => profiles.userId),
-    speciesId: integer('species_id').notNull().references(() => speciesTable.id),
-    sessionId: uuid('session_id').references(() => playerGameSessions.id),
-    discoveredAt: timestamp('discovered_at', { withTimezone: true }).notNull().defaultNow(),
-    timeToDiscoverSeconds: integer('time_to_discover_seconds'),
-    incorrectGuessesCount: integer('incorrect_guesses_count').notNull().default(0),
-    scoreEarned: integer('score_earned').notNull().default(0),
-    runId: uuid('run_id'),
-    runNodeId: uuid('run_node_id'),
-    foundLon: doublePrecision('found_lon'),
-    foundLat: doublePrecision('found_lat'),
-    foundEcoregionId: integer('found_ecoregion_id').references(() => oneearthBioregion.ogcFid, { onDelete: 'set null' }),
-  },
-  (table) => ({
-    uqPlayerSpeciesDiscoveriesPlayerSpecies: uniqueIndex(
-      'uq_player_species_discoveries_player_species'
-    ).on(table.playerId, table.speciesId),
-    ixPlayerSpeciesDiscoveriesSessionId: index(
-      'ix_player_species_discoveries_session_id'
-    ).on(table.sessionId),
-    ixPlayerSpeciesDiscoveriesRunId: index(
-      'ix_player_species_discoveries_run_id'
-    ).on(table.runId),
-    ixPlayerSpeciesDiscoveriesRunNodeId: index(
-      'ix_player_species_discoveries_run_node_id'
-    ).on(table.runNodeId),
-    ixPlayerSpeciesDiscoveriesFoundEcoregion: index(
-      'ix_player_species_discoveries_found_ecoregion'
-    ).on(table.foundEcoregionId),
-    ixPlayerSpeciesDiscoveriesFoundLocation: index(
-      'ix_player_species_discoveries_found_location'
-    ).on(table.foundLon, table.foundLat),
-  })
-);
-
-export const playerStats = pgTable('player_stats', {
-  playerId: uuid('player_id').primaryKey().references(() => profiles.userId),
-  totalSpeciesDiscovered: integer('total_species_discovered').notNull().default(0),
-  totalScore: integer('total_score').notNull().default(0),
-  totalMovesMade: integer('total_moves_made').notNull().default(0),
-  totalGamesPlayed: integer('total_games_played').notNull().default(0),
-  totalPlayTimeSeconds: integer('total_play_time_seconds').notNull().default(0),
-  averageTimePerDiscoverySeconds: integer('average_time_per_discovery_seconds'),
-  speciesByOrder: jsonb('species_by_order').notNull().default(sql`'{}'::jsonb`),
-  speciesByFamily: jsonb('species_by_family').notNull().default(sql`'{}'::jsonb`),
-  speciesByGenus: jsonb('species_by_genus').notNull().default(sql`'{}'::jsonb`),
-  speciesByRealm: jsonb('species_by_realm').notNull().default(sql`'{}'::jsonb`),
-  speciesByBiome: jsonb('species_by_biome').notNull().default(sql`'{}'::jsonb`),
-  speciesByBioregion: jsonb('species_by_bioregion').notNull().default(sql`'{}'::jsonb`),
-  marineSpeciesCount: integer('marine_species_count').notNull().default(0),
-  terrestrialSpeciesCount: integer('terrestrial_species_count').notNull().default(0),
-  freshwaterSpeciesCount: integer('freshwater_species_count').notNull().default(0),
-  aquaticSpeciesCount: integer('aquatic_species_count').notNull().default(0),
-  speciesByIucnStatus: jsonb('species_by_iucn_status').notNull().default(sql`'{}'::jsonb`),
-  firstDiscoveryAt: timestamp('first_discovery_at', { withTimezone: true }),
-  lastDiscoveryAt: timestamp('last_discovery_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,12 +1,12 @@
 // Clue-category game: each gem color outputs clues from one category of the
 // mystery species (the classic clue-board mapping, docs/DEVELOPER_ONBOARDING.md §6).
-import type { LootGemType } from '@/expedition/domain';
+import type { GemType } from '@/game/constants';
 import type { SpeciesClueCategory } from '@/types/speciesClues';
 
 export { SPECIES_CLUE_CATEGORIES, type SpeciesClueCategory } from '@/types/speciesClues';
 
 export interface GemCategory {
-  gem: LootGemType;
+  gem: GemType;
   label: string;
   /** Fits a phone legend tile. */
   shortLabel: string;
@@ -32,11 +32,11 @@ export const GEM_CATEGORIES: readonly GemCategory[] = [
   { gem: 'purple', label: 'Key facts', shortLabel: 'Facts', question: 'What makes it special?', clueCategories: ['key_fact'], factCategories: ['key_fact'], color: '#c9a2ff', deduces: false },
 ];
 
-export const CLUE_GAME_GEM_TYPES: readonly LootGemType[] = GEM_CATEGORIES.map(category => category.gem);
+export const CLUE_GAME_GEM_TYPES: readonly GemType[] = GEM_CATEGORIES.map(category => category.gem);
 
 const BY_GEM = new Map(GEM_CATEGORIES.map(category => [category.gem, category]));
 
-export function gemCategory(gem: LootGemType): GemCategory {
+export function gemCategory(gem: GemType): GemCategory {
   const category = BY_GEM.get(gem);
   if (!category) throw new Error(`No clue category for gem ${gem}`);
   return category;
