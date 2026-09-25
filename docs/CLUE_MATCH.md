@@ -2,7 +2,7 @@
 
 A fast, mobile-first free-play mode at `/clue-match`. A mystery animal hides among six candidates. Matching gems reveals clues about it: each gem color is one clue category, and each match shows that category's next clue. Clues that can be checked against the candidates' records put colored dots on the candidate cards and rule animals out. Tap the animal you think it is, then **Guess**. A correct guess shows a reveal card (range map, Red List status, a fact), records the animal in the Field Journal, and the next mystery starts.
 
-No sign-in, no server writes. `?seed=N` replays a session exactly (same mysteries, same starting board).
+50 animals: 11 frogs, 11 turtles and tortoises, 28 mammals. No sign-in, no server writes. `?seed=N` replays a session exactly (same mysteries, same starting board).
 
 ## Where the code lives
 
@@ -78,8 +78,9 @@ Content lives in Postgres. Edit it with any SQL tool (psql, DBeaver, pgAdmin, QG
 | `036_restore_species_facts.sql` | Restores the facts table |
 | `037_clue_content_fixes.sql` | First content fixes found by the validator |
 | `038_clue_text_cleanup.sql` | Placeholder facts, cut-off and garbled text, Red List codes spelled out, clearer habitat clues |
-| `039_clue_match_realm_clues.sql` | Range clues from IUCN range × OneEarth realm (PostGIS), 10% share cut |
+| `039_clue_match_realm_clues.sql` | Range clues from IUCN range × OneEarth realm (PostGIS), 10% share cut; nearest realm for tiny islands |
 | `040_clue_match_ranges_view.sql` | `clue_match_ranges` materialized view: simplified range SVG paths for the reveal card |
+| `041_clue_match_mammals.sql` | 26 mammals join the pool (common names, clues, facts); content drafted by Claude, worth an expert read |
 
 Each is idempotent. The world basemap under range maps is `public/assets/clue-match/world-land.svg`, drawn from `natural_earth.countries` by `npm run clue:world-map`.
 
