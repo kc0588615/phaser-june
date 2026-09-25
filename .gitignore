@@ -16,7 +16,6 @@
 
 # production
 /build
-/dist
 
 # misc
 .DS_Store
@@ -34,24 +33,14 @@ yarn-error.log*
 .env
 .env*.local
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 repomix-output-*.xml
 
-# nextJS
-
 # Claude
 CLAUDE.md
-CLUE_SYSTEM_GUIDE.mdx
-/home/danby/phaser-june/.mcp.json
-
-# Repomix
-repomix-output-*.xml
 
 # Generated tool output
 /.playwright-mcp/
@@ -64,7 +53,7 @@ repomix-output-*.xml
 /next
 /template-nextjs@1.2.0
 
-# Raw agent transcript
-/plans/012-july9-improved deducation game system
-
 .scratch/
+
+# Raw agent transcript (local only)
+/plans/012-july9-improved deducation game system

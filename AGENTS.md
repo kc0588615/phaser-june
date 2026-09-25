@@ -22,7 +22,7 @@ Guidance for coding agents in this repo. Keep instructions short; prefer facts o
 - Database: PostgreSQL with PostGIS on Hetzner VPS, accessed via PgBouncer with TLS
 - Auth: Clerk
 - Hosting: local Next.js dev server in WSL (frontend), Hetzner VPS (database/services)
-- Docs: Docusaurus wiki with TypeDoc
+- Docs: `README.md`, `docs/` (Markdown)
 
 ## Important: Prefer Simplicity
 When implementing solutions, prefer the simplest approach that works. Do not over-engineer with excessive fallbacks, complex verification chains, or multi-layer abstractions. If the user asks for something straightforward, implement it straightforwardly. Ask before adding complexity.

@@ -11,9 +11,9 @@ Repo convention: `plans/NNN-<slug>.md`, three-digit zero-padded, sequential. Ind
 
 ## Steps
 
-1. Next number: `ls plans | grep -oE '^[0-9]{3}' | sort -n | tail -1`, add 1.
+1. Next number: `ls plans | grep -oE '^[0-9]{3}' | sort -n | tail -1`, add 1 (040 if there are none yet; 006–039 are in git history).
 2. Slug from `$ARGUMENTS` (lowercase, hyphens). If no goal given, ask one line.
-3. Write `plans/NNN-<slug>.md` using the template below. Today's date in the title. Read the two most recent plans first to match tone and depth.
+3. Write `plans/NNN-<slug>.md` using the template below. Today's date in the title. Read the two most recent plans first, if any, to match tone and depth.
 4. Append a row to the README table: `| NNN | <Month D, YYYY> — <Title> | <P0-P3> <kind> | <XS-XL> | <depends on> | PLAN — [NNN](NNN-<slug>.md); <one clause> |`.
 5. Add a dependency note bullet under "Dependency notes" only if the plan constrains or is constrained by another plan.
 6. Do not commit. Report the path and row.
