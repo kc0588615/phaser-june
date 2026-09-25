@@ -3,6 +3,7 @@ import type { Journal } from '@/clueGame/journal';
 import { speciesBadge, type CluePool } from '@/clueGame/pool';
 import { playableSpeciesIds } from '@/clueGame/round';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
+import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
 import { useEscapeKey } from './useEscapeKey';
 
@@ -55,7 +56,7 @@ export function JournalSheet({ pool, journal, onClose }: { pool: CluePool | null
                 </p>
                 <div className="mt-1.5"><RangeMap speciesId={species.id} name={species.commonName} caption={false} /></div>
                 <ul className="m-0 mt-1.5 list-disc pl-4 text-[12px] leading-snug text-white/85">
-                  {factsFor(species.id).map(fact => <li key={fact}>{fact}</li>)}
+                  {factsFor(species.id).map(fact => <li key={fact}><GlossaryText text={fact} /></li>)}
                 </ul>
               </li>
             );

@@ -3,6 +3,7 @@ import { Sparkles } from 'lucide-react';
 import { speciesBadge, type PoolSpecies } from '@/clueGame/pool';
 import type { SolveSummary } from '@/clueGame/session';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
+import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
 
 const AUTO_ADVANCE_MS = 9000;
@@ -56,7 +57,7 @@ export function RevealSheet({ species, solve, isNew, onNext }: {
 
       {solve.funFact && (
         <p className="m-0 rounded-lg border border-white/10 bg-white/[.04] p-2 text-[13px] leading-snug text-white/90">
-          <span className="font-semibold text-cyan-200">Did you know? </span>{solve.funFact}
+          <span className="font-semibold text-cyan-200">Did you know? </span><GlossaryText text={solve.funFact} />
         </p>
       )}
       <p className="m-0 text-[11px] text-white/50">

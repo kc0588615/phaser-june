@@ -29,6 +29,7 @@ export function HowToPlay({ seed, onClose }: { seed: number; onClose: () => void
                 <span key={category.gem} className="flex items-center gap-1.5"><GemIcon gem={category.gem} className="h-5 w-5" />{category.label}</span>
               ))}
             </span>
+            <span className="mt-1.5 block text-[12px] text-white/75">A <b className="text-cyan-200">★</b> on a color means its next clue can still narrow down the animals. Dashed colors give fun notes to learn from.</span>
           </li>
           <li>
             Watch each animal&apos;s dots. For every clue:
@@ -37,6 +38,7 @@ export function HowToPlay({ seed, onClose }: { seed: number; onClose: () => void
             </span>
           </li>
           <li>Tap the animal you think it is, then <b>Guess</b>. Fewer moves score more points; a wrong guess costs 30.</li>
+          <li>Tap an <span className="underline decoration-cyan-200/70 decoration-dotted underline-offset-[3px]">underlined word</span> in a clue to learn what it means.</li>
         </ol>
         <button type="button" onClick={onClose} className="h-12 rounded-xl bg-cyan-300 text-sm font-bold text-slate-950 active:scale-[.98]">Let&apos;s play</button>
         <p className="m-0 text-center text-[10px] text-white/35">Seed {seed} · add ?seed={seed} to the address to replay these animals</p>

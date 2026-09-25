@@ -30,7 +30,7 @@ export function CandidateGrid({ candidates, selectedId, onSelect }: {
               disabled={out || status === 'answer'}
               aria-pressed={selected}
               aria-label={`${species.commonName}${status === 'ruled-out' ? ', ruled out' : status === 'wrong-guess' ? ', not it' : status === 'answer' ? ', the answer' : ''}. ${matches} of ${fits.length} clues match.`}
-              className={`relative flex min-h-16 w-full short:min-h-12 items-center gap-1.5 rounded-xl border px-1.5 py-1 text-left transition-all ${
+              className={`relative flex min-h-14 w-full short:min-h-12 items-center gap-1.5 rounded-xl border px-1.5 py-1 text-left transition-all ${
                 status === 'answer' ? 'border-amber-300 bg-amber-300/15'
                   : status === 'wrong-guess' ? 'cm-shake border-rose-400/40 bg-rose-950/30 opacity-60'
                   : status === 'ruled-out' ? 'border-white/10 bg-white/[.02] opacity-40'

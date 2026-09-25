@@ -4,6 +4,7 @@ import type { PoolSpecies } from '@/clueGame/pool';
 import { fitGroups } from '@/clueGame/selectors';
 import type { FeedItem } from '@/clueGame/session';
 import { GemIcon } from './GemIcon';
+import { GlossaryText } from './GlossaryText';
 
 const shortName = (species: PoolSpecies | undefined) => species?.commonName ?? '?';
 
@@ -58,7 +59,7 @@ export function ClueFeed({ feed, speciesById, displayOrder }: {
                   {category.label}{item.kind === 'note' ? ' · fun note' : ''}
                 </p>
                 <p className="m-0 text-[13px] leading-snug text-white/90">
-                  {item.kind === 'empty' ? `No more ${category.label.toLowerCase()} clues for this animal.` : item.text}
+                  {item.kind === 'empty' ? `No more ${category.label.toLowerCase()} clues for this animal.` : <GlossaryText text={item.text} />}
                 </p>
                 {groups && (
                   <p className="m-0 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] leading-tight">

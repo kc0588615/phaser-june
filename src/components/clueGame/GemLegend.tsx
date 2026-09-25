@@ -28,7 +28,7 @@ export function GemLegend({ legend }: { legend: LegendView[] }) {
           </li>
         ))}
       </ul>
-      <p className="m-0 mt-1 text-center text-[10px] text-white/45 short:hidden">Match a color to get its clue · ★ can still narrow it down · dashed = fun notes</p>
+      <p className="m-0 mt-1 hidden text-center text-[10px] text-white/45 md:block">Match a color to get its clue · ★ can still narrow it down · dashed = fun notes</p>
     </section>
   );
 }
