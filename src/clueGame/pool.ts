@@ -1,5 +1,5 @@
 // Shape of GET /api/clue-game/pool: every species with clues, plus their clues and facts.
-import type { SpeciesClueCategory } from '@/types/speciesClues';
+import type { SpeciesClueCategory } from '@/clueGame/categories';
 
 export interface PoolSpecies {
   id: number;
@@ -11,7 +11,6 @@ export interface PoolSpecies {
   genus: string | null;
   /** IUCN Red List category code, e.g. 'EN'. */
   conservationCode: string | null;
-  iucnId: number;
 }
 
 export interface PoolClue {
@@ -42,20 +41,10 @@ export function isPlaceholderText(text: string): boolean {
   return /^(none|n\/a|unknown|-)?\.?$/i.test(text.trim());
 }
 
-// Card portraits, most specific first: family, then order, then class.
-const FAMILY_EMOJI: Record<string, string> = {
-  FELIDAE: '🐅', CANIDAE: '🐺', MUSTELIDAE: '🦡', AILURIDAE: '🦊', GIRAFFIDAE: '🦒', BOVIDAE: '🐐',
-  EQUIDAE: '🦓', RHINOCEROTIDAE: '🦏', HOMINIDAE: '🦧',
-};
-const ORDER_EMOJI: Record<string, string> = {
-  ANURA: '🐸', TESTUDINES: '🐢', ARTIODACTYLA: '🦌', PRIMATES: '🐒', PROBOSCIDEA: '🐘', PILOSA: '🦥',
-  DIPROTODONTIA: '🦘', MONOTREMATA: '🦔', EULIPOTYPHLA: '🦔', CHIROPTERA: '🦇', LAGOMORPHA: '🐇',
-  PERAMELEMORPHIA: '🐇', RODENTIA: '🐿️', MACROSCELIDEA: '🐁', AFROSORICIDA: '🐁', PERISSODACTYLA: '🐎',
-};
-const CLASS_EMOJI: Record<string, string> = { AMPHIBIA: '🐸', REPTILIA: '🦎', MAMMALIA: '🐾', AVES: '🐦' };
-
-/** Card portrait: an emoji for the animal's group, else its initials. */
-export function speciesBadge(species: Pick<PoolSpecies, 'commonName' | 'className' | 'taxonOrder' | 'family'>): string {
-  return FAMILY_EMOJI[species.family?.toUpperCase() ?? ''] ?? ORDER_EMOJI[species.taxonOrder ?? ''] ?? CLASS_EMOJI[species.className ?? '']
-    ?? species.commonName.split(/\s+/).map(word => word[0]).join('').slice(0, 2).toUpperCase();
+/** An animal's key facts (facts first, then key-fact clues), without repeats. */
+export function keyFacts(pool: Pick<CluePool, 'facts' | 'clues'>, speciesId: number): string[] {
+  return [...new Set([
+    ...pool.facts.filter(fact => fact.speciesId === speciesId && fact.category === 'key_fact').map(fact => fact.text),
+    ...pool.clues.filter(clue => clue.speciesId === speciesId && clue.category === 'key_fact').map(clue => clue.label),
+  ])];
 }

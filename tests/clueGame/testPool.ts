@@ -7,7 +7,7 @@ let nextId = 1;
 export const clue = (speciesId: number, category: PoolClue['category'], label: string, compareTags: string[], revealOrder = 1, isFiltering = true): PoolClue =>
   ({ id: nextId++, speciesId, category, label, compareTags, revealOrder, isFiltering });
 export const species = (id: number, className: string, taxonOrder: string, family: string, genus: string): PoolSpecies =>
-  ({ id, commonName: `Species ${id}`, scientificName: `${genus} sp${id}`, className, taxonOrder, family, genus, conservationCode: 'LC', iucnId: 1000 + id });
+  ({ id, commonName: `Species ${id}`, scientificName: `${genus} sp${id}`, className, taxonOrder, family, genus, conservationCode: 'LC' });
 
 // 1-2 frogs, 3-4 turtles (same family), 5-6 tortoises (same family), 7 tiger.
 export const pool: CluePool = {

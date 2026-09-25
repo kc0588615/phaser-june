@@ -1,12 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { db, clueMatchSolves } from '@/db';
-import { getPlayerIdFromClerk } from '@/lib/authHelpers';
+import { currentPlayerId } from '@/lib/player';
 import { parseSolveReport } from '@/clueGame/solveReport';
 
 /**
  * POST /api/clue-game/solves
  * Records one solved Clue Match mystery (table clue_match_solves, db/schema.sql)
- * for analyzing play with SQL. Anonymous play is recorded without a player.
+ * for analyzing play with SQL. Anonymous play is recorded without a player; a
+ * signed-in player's profile is created on their first solve.
  */
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   if (!report) return NextResponse.json({ error: 'Invalid solve report' }, { status: 400 });
 
   try {
-    const playerId = await getPlayerIdFromClerk();
+    const playerId = await currentPlayerId();
     await db.insert(clueMatchSolves).values({
       playerId,
       sessionSeed: report.seed,

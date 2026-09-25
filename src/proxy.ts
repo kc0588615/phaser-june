@@ -1,7 +1,7 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 
-// Makes the Clerk session available to routes; each route checks auth itself
-// (/api/player/ensure-profile returns 401 when signed out).
+// Makes the Clerk session available to routes (POST /api/clue-game/solves reads
+// it to save a solve under the player's profile).
 export default clerkMiddleware();
 
 export const config = {

@@ -21,6 +21,6 @@ export default {
   dbCredentials: {
     url: dbUrl,
   },
-  tablesFilter: ['species', 'species_deduction_clues', 'species_facts', 'profiles', 'clue_match_solves', 'iucn'],
+  tablesFilter: ['species', 'species_deduction_clues', 'species_facts', 'profiles', 'clue_match_solves'],
   schemaFilter: ['public'],
 } satisfies Config;

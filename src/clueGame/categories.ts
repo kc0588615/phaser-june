@@ -1,9 +1,9 @@
 // Clue-category game: each gem color outputs clues from one category of the
 // mystery species (the classic clue-board mapping).
 import type { GemType } from '@/game/constants';
-import type { SpeciesClueCategory } from '@/types/speciesClues';
 
-export { SPECIES_CLUE_CATEGORIES, type SpeciesClueCategory } from '@/types/speciesClues';
+/** `species_deduction_clues.category` values (the table's CHECK constraint). */
+export type SpeciesClueCategory = 'habitat' | 'morphology' | 'diet' | 'behavior' | 'reproduction' | 'taxonomy' | 'key_fact' | 'geography' | 'conservation';
 
 export interface GemCategory {
   gem: GemType;

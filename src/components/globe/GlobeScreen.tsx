@@ -8,6 +8,7 @@ import { Shuffle } from 'lucide-react';
 import { SignInButton, Show, UserButton } from '@clerk/nextjs';
 import { classColor, type PlaceAnimal, type PlaceKind, type PlacesResponse } from '@/clueGame/places';
 import { useJournal } from '@/components/clueGame/useJournal';
+import { getJson } from '@/lib/getJson';
 import { Globe, type GlobeSighting } from './Globe';
 import { PlaceCard } from './PlaceCard';
 import { PlaceList } from './PlaceList';
@@ -22,8 +23,7 @@ export function GlobeScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/places/')
-      .then(response => { if (!response.ok) throw new Error(`Places request failed (${response.status})`); return response.json() as Promise<PlacesResponse>; })
+    getJson<PlacesResponse>('/api/places/')
       .then(result => { if (!cancelled) setData(result); })
       .catch(failure => {
         console.error('[Globe] Failed to load places:', failure);
@@ -42,11 +42,7 @@ export function GlobeScreen() {
 
   return (
     <>
-      <Head>
-        <title>Critter Connect</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#06121a" />
-      </Head>
+      <Head><title>Critter Connect</title></Head>
       <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_42dvh_minmax(0,1fr)] overflow-hidden bg-[#06121a] text-white [grid-template-areas:'top'_'globe'_'panel'] md:grid-cols-[minmax(0,1fr)_420px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'globe_top'_'globe_panel']">
         <header className="flex min-w-0 items-center gap-2 px-3 py-2 [grid-area:top]">
           <div className="min-w-0 flex-1">

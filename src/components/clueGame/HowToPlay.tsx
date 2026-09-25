@@ -1,15 +1,9 @@
 import { GEM_CATEGORIES } from '@/clueGame/categories';
+import { FIT_DOTS } from './CandidateGrid';
 import { GemIcon } from './GemIcon';
 import { useEscapeKey } from './useEscapeKey';
 
 export const HOW_TO_PLAY_SEEN_KEY = 'clue-match:how-to-play-seen:v1';
-
-const DOTS = [
-  { dot: 'bg-emerald-300', text: 'matches that animal' },
-  { dot: 'bg-amber-300', text: 'partly matches' },
-  { dot: 'bg-white/25', text: 'no record either way' },
-  { dot: 'bg-rose-400', text: 'rules it out' },
-];
 
 export function HowToPlay({ seed, onClose }: { seed: number; onClose: () => void }) {
   useEscapeKey(onClose);
@@ -34,7 +28,7 @@ export function HowToPlay({ seed, onClose }: { seed: number; onClose: () => void
           <li>
             Watch each animal&apos;s dots. For every clue:
             <span className="mt-1.5 flex flex-col gap-1 text-[12px]">
-              {DOTS.map(item => <span key={item.text} className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${item.dot}`} />{item.text}</span>)}
+              {Object.values(FIT_DOTS).map(item => <span key={item.label} className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${item.dot}`} />{item.label}</span>)}
             </span>
           </li>
           <li>Tap the animal you think it is, then <b>Guess</b>. Fewer moves score more points; a wrong guess costs 30.</li>

@@ -3,10 +3,10 @@
 // From the md breakpoint the board takes the left and the rail the right.
 import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PhaserGame } from '@/PhaserGame';
 import { liveCandidates } from '@/clueGame/round';
 import { candidateViews, legendViews } from '@/clueGame/selectors';
 import type { SolveSummary } from '@/clueGame/session';
+import type { SolveReport } from '@/clueGame/solveReport';
 import { sightingPoint } from '@/clueGame/places';
 import { CandidateGrid } from './CandidateGrid';
 import { ClueFeed } from './ClueFeed';
@@ -14,14 +14,24 @@ import { GemLegend } from './GemLegend';
 import { GuessBar } from './GuessBar';
 import { HOW_TO_PLAY_SEEN_KEY, HowToPlay } from './HowToPlay';
 import { JournalSheet } from './JournalSheet';
+import { PhaserGame } from './PhaserGame';
 import { RevealSheet } from './RevealSheet';
 import { TopBar } from './TopBar';
 import { useClueMatch } from './useClueMatch';
-import { reportSolve } from './reportSolve';
 import { useJournal } from './useJournal';
 
+/** Send a solve to POST /api/clue-game/solves. Best effort: play never waits on it or fails because of it. */
+function reportSolve(report: SolveReport): void {
+  fetch('/api/clue-game/solves/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(report),
+    keepalive: true,
+  }).catch(error => console.error('[ClueMatch] Failed to record a solve:', error));
+}
+
 export function ClueMatchGame() {
-  const { session, loadError, seed, place, onSceneReady, guess, nextRound } = useClueMatch();
+  const { session, loadError, seed, place, guess, nextRound } = useClueMatch();
   const { journal, records, record } = useJournal();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -85,11 +95,7 @@ export function ClueMatchGame() {
 
   return (
     <>
-      <Head>
-        <title>Clue Match</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#06121a" />
-      </Head>
+      <Head><title>Clue Match</title></Head>
       <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-[#06121a] text-white [grid-template-areas:'top'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] lg:grid-cols-[minmax(0,1fr)_460px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_rail']">
         <TopBar
           placeName={place?.name ?? null}
@@ -103,7 +109,7 @@ export function ClueMatchGame() {
           onJournal={() => setJournalOpen(true)}
         />
         <section aria-label="Game board" className="relative h-[min(calc(100vw-8px),calc(100dvh-440px))] w-full [grid-area:board] max-md:short:h-[min(calc(100vw-8px),calc(100dvh-370px))] md:h-full">
-          <PhaserGame className="absolute inset-0" currentActiveScene={onSceneReady} />
+          <PhaserGame className="absolute inset-0" />
         </section>
         <div className="relative flex min-h-0 flex-col gap-2 px-2 pb-[max(8px,env(safe-area-inset-bottom))] [grid-area:rail] md:border-l md:border-white/10 md:px-3 md:pt-1">
           {loadError && <p className="m-0 rounded-lg border border-rose-400/40 bg-rose-950/40 p-2 text-xs text-rose-100" role="alert">{loadError}</p>}

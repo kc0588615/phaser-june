@@ -10,6 +10,7 @@ import type { Place, PlacesResponse } from '@/clueGame/places';
 import { createRound, playableSpeciesIds } from '@/clueGame/round';
 import { debugSummary } from '@/clueGame/selectors';
 import { clueSessionReducer } from '@/clueGame/session';
+import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 
 /** `?place=country:KEN`: mysteries come from that place's animals. */
@@ -25,11 +26,21 @@ function sessionSeed(): number {
   return Number.isInteger(fromUrl) && fromUrl > 0 && fromUrl <= 0xffff_ffff ? fromUrl : Math.floor(Math.random() * 0xffff_fffe) + 1;
 }
 
+/** The place from GET /api/places; null (play everywhere) if it's unknown or the request fails. */
+async function loadPlace(key: string): Promise<Place | null> {
+  try {
+    const { places } = await getJson<PlacesResponse>('/api/places/');
+    return places.find(place => place.key === key) ?? null;
+  } catch (error) {
+    console.error('[ClueMatch] Failed to load the place; playing with every animal:', error);
+    return null;
+  }
+}
+
 export function useClueMatch() {
   const [seed] = useState(sessionSeed);
   const [placeKey] = useState(placeKeyFromUrl);
   const [place, setPlace] = useState<Place | null>(null);
-  const placeRef = useRef<Place | null>(null);
   const rng = useRef(mulberry32(seed));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [session, dispatch] = useReducer(clueSessionReducer, null);
@@ -43,16 +54,13 @@ export function useClueMatch() {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch('/api/clue-game/pool/');
-        if (!response.ok) throw new Error(`Pool request failed (${response.status})`);
-        const pool = await response.json() as CluePool;
+        const pool = await getJson<CluePool>('/api/clue-game/pool/');
         const found = placeKey ? await loadPlace(placeKey) : null;
         if (cancelled) return;
         if (playableSpeciesIds(pool).length < 2) {
           setLoadError('Not enough animals have clues yet. Add clues for at least two species.');
           return;
         }
-        placeRef.current = found;
         setPlace(found);
         dispatch({ type: 'load', pool, round: createRound(pool, rng.current, 1, [], found?.speciesIds) });
       } catch (error) {
@@ -64,12 +72,15 @@ export function useClueMatch() {
   }, [placeKey]);
 
   useEffect(() => {
+    const onSceneReady = () => setSceneGeneration(generation => generation + 1);
     const onMatched = ({ groups, cascade }: EventPayloads['gems-matched']) =>
       dispatch({ type: 'matched', groups: groups.map(group => ({ gem: group.gemType, size: group.size })), cascade });
     const onShuffled = () => dispatch({ type: 'shuffled' });
+    EventBus.on('current-scene-ready', onSceneReady);
     EventBus.on('gems-matched', onMatched);
     EventBus.on('clue-board-shuffled', onShuffled);
     return () => {
+      EventBus.off('current-scene-ready', onSceneReady);
       EventBus.off('gems-matched', onMatched);
       EventBus.off('clue-board-shuffled', onShuffled);
     };
@@ -89,30 +100,13 @@ export function useClueMatch() {
 
   useEffect(() => setDebugClueSource(() => sessionRef.current ? debugSummary(sessionRef.current, seed) : null), [seed]);
 
-  const onSceneReady = useCallback((scene: Phaser.Scene) => {
-    if (scene.sys.settings.key === 'ClueBoard') setSceneGeneration(generation => generation + 1);
-  }, []);
-
   const guess = useCallback((speciesId: number) => dispatch({ type: 'guess', speciesId }), []);
 
   const nextRound = useCallback(() => {
     const current = sessionRef.current;
     if (!current || current.phase !== 'solved') return;
-    dispatch({ type: 'start-round', round: createRound(current.pool, rng.current, current.round.round + 1, current.history, placeRef.current?.speciesIds) });
-  }, []);
+    dispatch({ type: 'start-round', round: createRound(current.pool, rng.current, current.round.round + 1, current.history, place?.speciesIds) });
+  }, [place]);
 
-  return { session, loadError, seed, place, onSceneReady, guess, nextRound };
-}
-
-/** The place from GET /api/places; null (play everywhere) if it's unknown or the request fails. */
-async function loadPlace(key: string): Promise<Place | null> {
-  try {
-    const response = await fetch('/api/places/');
-    if (!response.ok) throw new Error(`Places request failed (${response.status})`);
-    const { places } = await response.json() as PlacesResponse;
-    return places.find(place => place.key === key) ?? null;
-  } catch (error) {
-    console.error('[ClueMatch] Failed to load the place; playing with every animal:', error);
-    return null;
-  }
+  return { session, loadError, seed, place, guess, nextRound };
 }

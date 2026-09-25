@@ -2,21 +2,22 @@
 // the React page owns the RNG and starts each new round.
 import type { GemType } from '@/game/constants';
 import type { ClueFit } from '@/clueGame/deduction';
-import type { CluePool } from '@/clueGame/pool';
+import { keyFacts, type CluePool } from '@/clueGame/pool';
 import { buildSpeciesRecords, type SpeciesRecords } from '@/clueGame/traits';
 import { WRONG_GUESS_PENALTY, cluesForMatch, registerWrongGuess, revealNext, scoreBreakdown, type RoundState, type ScorePart } from '@/clueGame/round';
 
 const FEED_LIMIT = 120;
 
 /** `bonus`: revealed because the matched group was bigger than three. */
-export type FeedItem = { key: number } & (
+type FeedEntry =
   | { kind: 'round'; round: number; relatives: number }
   | { kind: 'clue'; gem: GemType; text: string; fits: Record<number, ClueFit>; bonus?: true }
   | { kind: 'note'; gem: GemType; text: string; bonus?: true }
   | { kind: 'empty'; gem: GemType }
   | { kind: 'shuffle' }
-  | { kind: 'guess'; correct: boolean; speciesId: number; points: number; funFact: string | null }
-);
+  | { kind: 'guess'; correct: boolean; speciesId: number; points: number };
+
+export type FeedItem = FeedEntry & { key: number };
 
 /** What the reveal card shows after a correct guess. */
 export interface SolveSummary {
@@ -56,11 +57,9 @@ export type SessionAction =
   /** The board had no valid move left and was reshuffled. */
   | { type: 'shuffled' };
 
-type FeedEntry = FeedItem extends infer Item ? Item extends FeedItem ? Omit<Item, 'key'> : never : never;
-
 function withFeed(state: SessionState, entries: FeedEntry[]): SessionState {
   if (entries.length === 0) return state;
-  const keyed = entries.map((entry, index) => ({ ...entry, key: state.nextKey + index }) as FeedItem);
+  const keyed = entries.map((entry, index) => ({ ...entry, key: state.nextKey + index }));
   return { ...state, feed: [...state.feed, ...keyed].slice(-FEED_LIMIT), nextKey: state.nextKey + entries.length };
 }
 
@@ -72,11 +71,7 @@ export function currentRoundFeed(feed: readonly FeedItem[]): FeedItem[] {
 /** A key fact about the answer that this round's feed hasn't already shown. */
 function funFactFor(state: SessionState, speciesId: number): string | null {
   const shown = new Set(currentRoundFeed(state.feed).flatMap(item => 'text' in item ? [item.text.trim().toLowerCase()] : []));
-  const candidates = [
-    ...state.pool.facts.filter(fact => fact.speciesId === speciesId && fact.category === 'key_fact').map(fact => fact.text),
-    ...state.pool.clues.filter(clue => clue.speciesId === speciesId && clue.category === 'key_fact').map(clue => clue.label),
-  ];
-  return candidates.find(text => !shown.has(text.trim().toLowerCase())) ?? null;
+  return keyFacts(state.pool, speciesId).find(text => !shown.has(text.trim().toLowerCase())) ?? null;
 }
 
 function beginRound(state: SessionState, round: RoundState): SessionState {
@@ -128,12 +123,12 @@ export function clueSessionReducer(state: SessionState | null, action: SessionAc
             ...state, phase: 'solved', score: state.score + points, streak, bestStreak: Math.max(state.bestStreak, streak), solved: state.solved + 1,
             lastSolve: { speciesId: action.speciesId, points, parts, moves: state.round.moves, cluesSeen, funFact },
           },
-          [{ kind: 'guess', correct: true, speciesId: action.speciesId, points, funFact }],
+          [{ kind: 'guess', correct: true, speciesId: action.speciesId, points }],
         );
       }
       return withFeed(
         { ...state, round: registerWrongGuess(state.round, action.speciesId), score: Math.max(0, state.score - WRONG_GUESS_PENALTY), streak: 0 },
-        [{ kind: 'guess', correct: false, speciesId: action.speciesId, points: -WRONG_GUESS_PENALTY, funFact: null }],
+        [{ kind: 'guess', correct: false, speciesId: action.speciesId, points: -WRONG_GUESS_PENALTY }],
       );
     }
   }

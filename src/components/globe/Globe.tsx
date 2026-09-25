@@ -3,7 +3,9 @@
 // animal the player found. Tapping a dot picks that place; picking flies there.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
-import { WORLD_LAND_GEOJSON_URL, type Place } from '@/clueGame/places';
+import type { Place } from '@/clueGame/places';
+import { WORLD_LAND_GEOJSON_URL } from '@/clueGame/worldMap';
+import { getJson } from '@/lib/getJson';
 
 export interface GlobeSighting {
   lon: number;
@@ -49,23 +51,6 @@ const STYLE: StyleSpecification = {
     'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0],
   },
 };
-
-const outlines = new Map<string, Promise<GeoJSON.Feature | null>>();
-
-function loadOutline(key: string): Promise<GeoJSON.Feature | null> {
-  let pending = outlines.get(key);
-  if (!pending) {
-    pending = fetch(`/api/places/outline/?key=${encodeURIComponent(key)}`)
-      .then(response => (response.ok ? response.json() as Promise<GeoJSON.Feature> : null))
-      .catch(error => {
-        console.error('[Globe] Failed to load an outline:', error);
-        outlines.delete(key);
-        return null;
-      });
-    outlines.set(key, pending);
-  }
-  return pending;
-}
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -176,7 +161,12 @@ export function Globe({ places, selected, sightings, onPick }: {
     const [west, south, east, north] = selected.bbox;
     map.fitBounds([[west, south], [east, north]], { padding: 40, maxZoom: 5, duration: reducedMotion() ? 0 : 1600 });
     let current = true;
-    loadOutline(selected.key).then(outline => { if (current) source?.setData(outline ?? EMPTY); });
+    getJson<GeoJSON.Feature>(`/api/places/outline/?key=${encodeURIComponent(selected.key)}`)
+      .catch(error => {
+        console.error('[Globe] Failed to load an outline:', error);
+        return EMPTY;
+      })
+      .then(outline => { if (current) source?.setData(outline); });
     return () => { current = false; };
   }, [selected, ready]);
 

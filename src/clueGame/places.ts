@@ -33,8 +33,6 @@ export interface PlacesResponse {
   animals: PlaceAnimal[];
 }
 
-export const WORLD_LAND_GEOJSON_URL = '/assets/clue-match/world-land.geojson';
-
 export const PLACE_KIND_LABELS: Record<PlaceKind, string> = {
   country: 'Countries',
   wildlife_area: 'Wildlife areas',
@@ -100,10 +98,12 @@ export function sightingPoint(place: Pick<Place, 'bbox' | 'center'>, speciesId: 
   return [round(clamp(lon, west, east)), round(clamp(lat, south, north))];
 }
 
-/**
- * TiTiler URL for a PNG of the habitat-type raster over a place (the COG the
- * old map used, rendered with its registered `habitat_custom` colors).
- */
+// The habitat-type raster: a Cloud-Optimized GeoTIFF served by TiTiler. Without
+// both env vars the place card skips its habitat picture.
+export const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL ?? '';
+export const HABITAT_COG_URL = process.env.NEXT_PUBLIC_COG_URL ?? '';
+
+/** TiTiler URL for a PNG of the habitat raster over a place, in its registered `habitat_custom` colors. */
 export function habitatSnapshotUrl(bbox: Place['bbox'], titilerBaseUrl: string, cogUrl: string, maxSize = 512): string {
   const [west, south, east, north] = bbox;
   const padX = Math.max(0.2, (east - west) * 0.05);

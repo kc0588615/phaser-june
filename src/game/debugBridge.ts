@@ -3,10 +3,9 @@
 // moves. Moves are synthetic mouse or touch drags on the canvas, so they go
 // through the same pointer handlers a player uses. Reads client-visible state
 // only; every entry point is a no-op in production builds.
-import { EventBus, type EventPayloads } from '@/game/EventBus';
-import { MoveAction, type MoveDirection } from '@/game/MoveAction';
-import type { BackendPuzzle } from '@/game/BackendPuzzle';
-import type { PuzzleGrid } from '@/game/boardTypes';
+import { EventBus, type EventPayloads } from './EventBus';
+import type { BoardModel, Grid, Move } from './BoardModel';
+import { GRID_COLS, GRID_ROWS } from './constants';
 
 export interface DebugBoardSnapshot {
   ready: boolean;
@@ -20,13 +19,14 @@ export interface DebugBoardSnapshot {
   hasAnyValidMove: boolean;
   gemSize: number;
   boardOffset: { x: number; y: number };
-  grid: PuzzleGrid;
+  /** Column-major gem colors, grid[x][y]. */
+  grid: Grid;
 }
 
 /** What the board scene hands the bridge; typed so field renames fail typecheck. */
-export interface DebugScene {
+interface DebugScene {
   debugSnapshot(): DebugBoardSnapshot;
-  debugPuzzle(): BackendPuzzle | null;
+  debugModel(): BoardModel;
   readonly game: Phaser.Game;
   readonly scale: Phaser.Scale.ScaleManager;
   readonly tweens: Phaser.Tweens.TweenManager;
@@ -35,7 +35,6 @@ export interface DebugScene {
 
 /** Clue Match session summary (JSON-safe), registered by the Clue Match page. */
 type ClueSource = () => unknown;
-type Move = { rowOrCol: MoveDirection; index: number; amount: number };
 type LoggedEvent = { at: number; name: keyof EventPayloads; payload: unknown };
 
 const enabled = process.env.NODE_ENV !== 'production' && typeof window !== 'undefined';
@@ -76,16 +75,14 @@ function cellCenter(x: number, y: number): { x: number; y: number } {
 
 /** Moves (shifts of 1-3 cells either way) that would produce a match right now; `largest` is the biggest group. */
 function validMoves(): Array<Move & { matches: number; largest: number }> {
-  const puzzle = requireScene().debugPuzzle();
-  if (!puzzle) return [];
-  const { width, height } = puzzle;
+  const model = requireScene().debugModel();
   const found: Array<Move & { matches: number; largest: number }> = [];
   for (const rowOrCol of ['row', 'col'] as const) {
-    const lines = rowOrCol === 'row' ? height : width;
+    const lines = rowOrCol === 'row' ? model.height : model.width;
     for (let index = 0; index < lines; index++) {
       for (const amount of [1, -1, 2, -2, 3]) {
-        const groups = puzzle.getMatchesFromHypotheticalMove(new MoveAction(rowOrCol, index, amount));
-        if (groups.length > 0) found.push({ rowOrCol, index, amount, matches: groups.length, largest: Math.max(...groups.map(group => group.length)) });
+        const groups = model.matchesAfter({ rowOrCol, index, amount });
+        if (groups.length > 0) found.push({ rowOrCol, index, amount, matches: groups.length, largest: Math.max(...groups.map(group => group.cells.length)) });
       }
     }
   }
@@ -150,7 +147,7 @@ function overlayAt(point: { x: number; y: number }): string | null {
 async function drag(move: Move, { timeoutMs = 15000, input = 'mouse' }: { timeoutMs?: number; input?: DragInput } = {}) {
   const fire = input === 'touch' ? fireTouch : fireMouse;
   const before = requireScene().debugSnapshot();
-  const last = (move.rowOrCol === 'row' ? before.grid[0]?.length ?? 6 : before.grid.length) - 1;
+  const last = (move.rowOrCol === 'row' ? GRID_COLS : GRID_ROWS) - 1;
   const start = move.amount > 0 ? 0 : last;
   const from = move.rowOrCol === 'row' ? { x: start, y: move.index } : { x: move.index, y: start };
   const to = move.rowOrCol === 'row' ? { x: start + move.amount, y: move.index } : { x: move.index, y: start + move.amount };

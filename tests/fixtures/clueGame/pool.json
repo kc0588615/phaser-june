@@ -8,8 +8,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "EMYDIDAE",
    "genus": "Emydoidea",
-   "conservationCode": "EN",
-   "iucnId": 7709
+   "conservationCode": "EN"
   },
   {
    "id": 2,
@@ -19,8 +18,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "TRIONYCHIDAE",
    "genus": "Apalone",
-   "conservationCode": "LC",
-   "iucnId": 163451
+   "conservationCode": "LC"
   },
   {
    "id": 3,
@@ -30,8 +28,7 @@
    "taxonOrder": "ANURA",
    "family": "Rhinodermatidae",
    "genus": "Rhinoderma",
-   "conservationCode": "EN",
-   "iucnId": 19513
+   "conservationCode": "EN"
   },
   {
    "id": 4,
@@ -41,8 +38,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Platysternidae",
    "genus": "Platysternon",
-   "conservationCode": "CR",
-   "iucnId": 9605
+   "conservationCode": "CR"
   },
   {
    "id": 5,
@@ -52,8 +48,7 @@
    "taxonOrder": "ANURA",
    "family": "Rhacophoridae",
    "genus": "Rhacophorus",
-   "conservationCode": "LC",
-   "iucnId": 59008
+   "conservationCode": "LC"
   },
   {
    "id": 6,
@@ -63,8 +58,7 @@
    "taxonOrder": "ANURA",
    "family": "Phyllomedusidae",
    "genus": "Agalychnis",
-   "conservationCode": "LC",
-   "iucnId": 55290
+   "conservationCode": "LC"
   },
   {
    "id": 7,
@@ -74,8 +68,7 @@
    "taxonOrder": "ANURA",
    "family": "Arthroleptidae",
    "genus": "Trichobatrachus",
-   "conservationCode": "LC",
-   "iucnId": 54443
+   "conservationCode": "LC"
   },
   {
    "id": 8,
@@ -85,8 +78,7 @@
    "taxonOrder": "ANURA",
    "family": "Ascaphidae",
    "genus": "Ascaphus",
-   "conservationCode": "LC",
-   "iucnId": 54414
+   "conservationCode": "LC"
   },
   {
    "id": 9,
@@ -96,8 +88,7 @@
    "taxonOrder": "ANURA",
    "family": "Dendrobatidae",
    "genus": "Dendrobates",
-   "conservationCode": "LC",
-   "iucnId": 55204
+   "conservationCode": "LC"
   },
   {
    "id": 10,
@@ -107,8 +98,7 @@
    "taxonOrder": "ANURA",
    "family": "Pipidae",
    "genus": "Pipa",
-   "conservationCode": "LC",
-   "iucnId": 58163
+   "conservationCode": "LC"
   },
   {
    "id": 11,
@@ -118,8 +108,7 @@
    "taxonOrder": "ANURA",
    "family": "Conrauidae",
    "genus": "Conraua",
-   "conservationCode": "EN",
-   "iucnId": 5263
+   "conservationCode": "EN"
   },
   {
    "id": 12,
@@ -129,8 +118,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Geoemydidae",
    "genus": "Heosemys",
-   "conservationCode": "EN",
-   "iucnId": 104303
+   "conservationCode": "EN"
   },
   {
    "id": 13,
@@ -140,8 +128,7 @@
    "taxonOrder": "ANURA",
    "family": "Microhylidae",
    "genus": "Dyscophus",
-   "conservationCode": "EN",
-   "iucnId": 6937
+   "conservationCode": "EN"
   },
   {
    "id": 14,
@@ -151,8 +138,7 @@
    "taxonOrder": "ANURA",
    "family": "Brevicipitidae",
    "genus": "Breviceps",
-   "conservationCode": "NT",
-   "iucnId": 3070
+   "conservationCode": "NT"
   },
   {
    "id": 15,
@@ -162,8 +148,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Testudinidae",
    "genus": "Malacochersus",
-   "conservationCode": "CR",
-   "iucnId": 9041
+   "conservationCode": "CR"
   },
   {
    "id": 16,
@@ -173,8 +158,7 @@
    "taxonOrder": "ANURA",
    "family": "Nasikabatrachidae",
    "genus": "Nasikabatrachus",
-   "conservationCode": "EN",
-   "iucnId": 58051
+   "conservationCode": "EN"
   },
   {
    "id": 17,
@@ -184,8 +168,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Carettochelyidae",
    "genus": "Carettochelys",
-   "conservationCode": "EN",
-   "iucnId": 28859
+   "conservationCode": "EN"
   },
   {
    "id": 18,
@@ -195,8 +178,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Trionychidae",
    "genus": "Rafetus",
-   "conservationCode": "CR",
-   "iucnId": 22971
+   "conservationCode": "CR"
   },
   {
    "id": 19,
@@ -206,8 +188,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Testudinidae",
    "genus": "Chelonoidis",
-   "conservationCode": "VU",
-   "iucnId": 9010
+   "conservationCode": "VU"
   },
   {
    "id": 20,
@@ -217,8 +198,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Testudinidae",
    "genus": "Centrochelys",
-   "conservationCode": "VU",
-   "iucnId": 9781
+   "conservationCode": "VU"
   },
   {
    "id": 21,
@@ -228,8 +208,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Testudinidae",
    "genus": "Astrochelys",
-   "conservationCode": "CR",
-   "iucnId": 3901
+   "conservationCode": "CR"
   },
   {
    "id": 22,
@@ -239,8 +218,7 @@
    "taxonOrder": "TESTUDINES",
    "family": "Testudinidae",
    "genus": "Chelonoidis",
-   "conservationCode": "EX",
-   "iucnId": 3902
+   "conservationCode": "EX"
   },
   {
    "id": 23,
@@ -250,8 +228,7 @@
    "taxonOrder": "PRIMATES",
    "family": "DAUBENTONIIDAE",
    "genus": "Daubentonia",
-   "conservationCode": "EN",
-   "iucnId": 6302
+   "conservationCode": "EN"
   },
   {
    "id": 24,
@@ -261,8 +238,7 @@
    "taxonOrder": "PHOLIDOTA",
    "family": "MANIDAE",
    "genus": "Manis",
-   "conservationCode": "CR",
-   "iucnId": 12763
+   "conservationCode": "CR"
   },
   {
    "id": 25,
@@ -272,8 +248,7 @@
    "taxonOrder": "CARNIVORA",
    "family": "FELIDAE",
    "genus": "Panthera",
-   "conservationCode": "EN",
-   "iucnId": 15955
+   "conservationCode": "EN"
   },
   {
    "id": 26,
@@ -283,8 +258,7 @@
    "taxonOrder": "CARNIVORA",
    "family": "MUSTELIDAE",
    "genus": "Mustela",
-   "conservationCode": "EN",
-   "iucnId": 14020
+   "conservationCode": "EN"
   },
   {
    "id": 27,
@@ -294,8 +268,7 @@
    "taxonOrder": "MONOTREMATA",
    "family": "TACHYGLOSSIDAE",
    "genus": "Zaglossus",
-   "conservationCode": "CR",
-   "iucnId": 23179
+   "conservationCode": "CR"
   },
   {
    "id": 28,
@@ -305,8 +278,7 @@
    "taxonOrder": "PROBOSCIDEA",
    "family": "ELEPHANTIDAE",
    "genus": "Elephas",
-   "conservationCode": "EN",
-   "iucnId": 7140
+   "conservationCode": "EN"
   },
   {
    "id": 29,
@@ -316,8 +288,7 @@
    "taxonOrder": "ARTIODACTYLA",
    "family": "GIRAFFIDAE",
    "genus": "Okapia",
-   "conservationCode": "EN",
-   "iucnId": 15188
+   "conservationCode": "EN"
   },
   {
    "id": 30,
@@ -327,8 +298,7 @@
    "taxonOrder": "PILOSA",
    "family": "BRADYPODIDAE",
    "genus": "Bradypus",
-   "conservationCode": "CR",
-   "iucnId": 61925
+   "conservationCode": "CR"
   },
   {
    "id": 31,
@@ -338,8 +308,7 @@
    "taxonOrder": "DIPROTODONTIA",
    "family": "VOMBATIDAE",
    "genus": "Lasiorhinus",
-   "conservationCode": "CR",
-   "iucnId": 11343
+   "conservationCode": "CR"
   },
   {
    "id": 32,
@@ -349,8 +318,7 @@
    "taxonOrder": "AFROSORICIDA",
    "family": "CHRYSOCHLORIDAE",
    "genus": "Cryptochloris",
-   "conservationCode": "CR",
-   "iucnId": 5748
+   "conservationCode": "CR"
   },
   {
    "id": 33,
@@ -360,8 +328,7 @@
    "taxonOrder": "CARNIVORA",
    "family": "CANIDAE",
    "genus": "Canis",
-   "conservationCode": "EN",
-   "iucnId": 3748
+   "conservationCode": "EN"
   },
   {
    "id": 34,
@@ -371,8 +338,7 @@
    "taxonOrder": "PRIMATES",
    "family": "CERCOPITHECIDAE",
    "genus": "Rhinopithecus",
-   "conservationCode": "EN",
-   "iucnId": 19596
+   "conservationCode": "EN"
   },
   {
    "id": 35,
@@ -382,8 +348,7 @@
    "taxonOrder": "CARNIVORA",
    "family": "AILURIDAE",
    "genus": "Ailurus",
-   "conservationCode": "EN",
-   "iucnId": 714
+   "conservationCode": "EN"
   },
   {
    "id": 36,
@@ -393,8 +358,7 @@
    "taxonOrder": "CINGULATA",
    "family": "CHLAMYPHORIDAE",
    "genus": "Priodontes",
-   "conservationCode": "VU",
-   "iucnId": 18144
+   "conservationCode": "VU"
   },
   {
    "id": 37,
@@ -404,8 +368,7 @@
    "taxonOrder": "PERAMELEMORPHIA",
    "family": "THYLACOMYIDAE",
    "genus": "Macrotis",
-   "conservationCode": "VU",
-   "iucnId": 12650
+   "conservationCode": "VU"
   },
   {
    "id": 38,
@@ -415,8 +378,7 @@
    "taxonOrder": "ARTIODACTYLA",
    "family": "BOVIDAE",
    "genus": "Pseudoryx",
-   "conservationCode": "CR",
-   "iucnId": 18597
+   "conservationCode": "CR"
   },
   {
    "id": 39,
@@ -426,8 +388,7 @@
    "taxonOrder": "PERISSODACTYLA",
    "family": "EQUIDAE",
    "genus": "Equus",
-   "conservationCode": "EN",
-   "iucnId": 7950
+   "conservationCode": "EN"
   },
   {
    "id": 40,
@@ -437,8 +398,7 @@
    "taxonOrder": "PRIMATES",
    "family": "HOMINIDAE",
    "genus": "Pongo",
-   "conservationCode": "CR",
-   "iucnId": 121097935
+   "conservationCode": "CR"
   },
   {
    "id": 41,
@@ -448,8 +408,7 @@
    "taxonOrder": "PROBOSCIDEA",
    "family": "ELEPHANTIDAE",
    "genus": "Loxodonta",
-   "conservationCode": "CR",
-   "iucnId": 181007989
+   "conservationCode": "CR"
   },
   {
    "id": 42,
@@ -459,8 +418,7 @@
    "taxonOrder": "RODENTIA",
    "family": "SCIURIDAE",
    "genus": "Marmota",
-   "conservationCode": "CR",
-   "iucnId": 12828
+   "conservationCode": "CR"
   },
   {
    "id": 43,
@@ -470,8 +428,7 @@
    "taxonOrder": "DIPROTODONTIA",
    "family": "MACROPODIDAE",
    "genus": "Dendrolagus",
-   "conservationCode": "EN",
-   "iucnId": 6429
+   "conservationCode": "EN"
   },
   {
    "id": 44,
@@ -481,8 +438,7 @@
    "taxonOrder": "PERISSODACTYLA",
    "family": "RHINOCEROTIDAE",
    "genus": "Rhinoceros",
-   "conservationCode": "CR",
-   "iucnId": 19495
+   "conservationCode": "CR"
   },
   {
    "id": 45,
@@ -492,8 +448,7 @@
    "taxonOrder": "CHIROPTERA",
    "family": "PTEROPODIDAE",
    "genus": "Pteropus",
-   "conservationCode": "EN",
-   "iucnId": 18732
+   "conservationCode": "EN"
   },
   {
    "id": 46,
@@ -503,8 +458,7 @@
    "taxonOrder": "MACROSCELIDEA",
    "family": "MACROSCELIDIDAE",
    "genus": "Rhynchocyon",
-   "conservationCode": "EN",
-   "iucnId": 19705
+   "conservationCode": "EN"
   },
   {
    "id": 47,
@@ -514,8 +468,7 @@
    "taxonOrder": "LAGOMORPHA",
    "family": "OCHOTONIDAE",
    "genus": "Ochotona",
-   "conservationCode": "EN",
-   "iucnId": 15050
+   "conservationCode": "EN"
   },
   {
    "id": 48,
@@ -525,8 +478,7 @@
    "taxonOrder": "DASYUROMORPHIA",
    "family": "DASYURIDAE",
    "genus": "Sarcophilus",
-   "conservationCode": "EN",
-   "iucnId": 40540
+   "conservationCode": "EN"
   },
   {
    "id": 49,
@@ -536,8 +488,7 @@
    "taxonOrder": "EULIPOTYPHLA",
    "family": "SOLENODONTIDAE",
    "genus": "Solenodon",
-   "conservationCode": "LC",
-   "iucnId": 20321
+   "conservationCode": "LC"
   },
   {
    "id": 50,
@@ -547,8 +498,7 @@
    "taxonOrder": "ARTIODACTYLA",
    "family": "BOVIDAE",
    "genus": "Addax",
-   "conservationCode": "CR",
-   "iucnId": 512
+   "conservationCode": "CR"
   }
  ],
  "clues": [

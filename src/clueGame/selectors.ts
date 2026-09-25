@@ -51,10 +51,6 @@ export function legendViews(state: SessionState): LegendView[] {
   }));
 }
 
-export function speciesById(state: SessionState, id: number): PoolSpecies | undefined {
-  return state.pool.species.find(species => species.id === id);
-}
-
 /**
  * Fits grouped for a feed line: who matches, partly matches, and was ruled out.
  * Ids follow `displayOrder`; a past round's candidates not in it come last.

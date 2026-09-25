@@ -1,25 +1,10 @@
 // Where the animal lives: its IUCN range on a small world map.
 import { useEffect, useState } from 'react';
-import { WORLD_LAND_URL, WORLD_VIEWBOX, type SpeciesRange } from '@/clueGame/rangeMap';
+import { WORLD_LAND_URL, WORLD_VIEWBOX, type SpeciesRange } from '@/clueGame/worldMap';
+import { getJson } from '@/lib/getJson';
 
 /** Ranges smaller than this get a ring so they show up on a world map. */
 const SMALL_RANGE_KM2 = 200_000;
-const ranges = new Map<number, Promise<SpeciesRange | null>>();
-
-function loadRange(speciesId: number): Promise<SpeciesRange | null> {
-  let pending = ranges.get(speciesId);
-  if (!pending) {
-    pending = fetch(`/api/clue-game/range/?species=${speciesId}`)
-      .then(response => (response.ok ? response.json() as Promise<SpeciesRange> : null))
-      .catch(error => {
-        console.error('[ClueMatch] Failed to load a range map:', error);
-        ranges.delete(speciesId); // let a later view retry
-        return null;
-      });
-    ranges.set(speciesId, pending);
-  }
-  return pending;
-}
 
 const area = new Intl.NumberFormat('en', { maximumSignificantDigits: 2 });
 
@@ -29,7 +14,12 @@ export function RangeMap({ speciesId, name, caption = true }: { speciesId: numbe
   useEffect(() => {
     let current = true;
     setRange(undefined);
-    loadRange(speciesId).then(loaded => { if (current) setRange(loaded); });
+    getJson<SpeciesRange>(`/api/clue-game/range/?species=${speciesId}`)
+      .catch(error => {
+        console.error('[ClueMatch] No range map:', error);
+        return null;
+      })
+      .then(loaded => { if (current) setRange(loaded); });
     return () => { current = false; };
   }, [speciesId]);
 

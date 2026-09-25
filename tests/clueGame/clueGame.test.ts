@@ -3,11 +3,13 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateClue, fitClue, usefulCategories } from '@/clueGame/deduction';
 import { normalizeTag } from '@/clueGame/traits';
-import { cluesForMatch, correctGuessScore, createRound, liveCandidates, notesLeft, registerWrongGuess, relativesForRound, revealNext } from '@/clueGame/round';
+import { cluesForMatch, createRound, liveCandidates, registerWrongGuess, relativesForRound, revealNext, scoreBreakdown } from '@/clueGame/round';
 import { clueSessionReducer, currentRoundFeed } from '@/clueGame/session';
 import { mulberry32 } from '@/lib/seededRng';
 import type { CluePool } from '@/clueGame/pool';
 import { OTHERS, clue, find, matched, pool, records } from './testPool';
+
+const points = (input: Parameters<typeof scoreBreakdown>[0]) => scoreBreakdown(input).reduce((sum, part) => sum + part.points, 0);
 
 describe('records', () => {
   test('authoring prefixes are ignored', () => {
@@ -162,7 +164,7 @@ describe('rounds', () => {
 
   test('an empty category says so once, then stays quiet', () => {
     let round = createRound(pool, mulberry32(1), 1, OTHERS);
-    assert.equal(notesLeft(round, 'white'), 0);
+    assert.equal(round.queues.white.length, 0);
     const first = revealNext(round, 'white', records);
     assert.equal(first.reveal?.kind, 'empty');
     round = first.state;
@@ -207,8 +209,8 @@ describe('session', () => {
     assert.equal(state.phase, 'solved');
     assert.equal(state.solved, 1);
     const last = state.feed.at(-1);
-    assert.ok(last?.kind === 'guess' && last.correct && last.points === correctGuessScore({ moves: 0, streak: 0, firstTry: false }));
-    assert.ok(last?.kind === 'guess' && last.funFact === 'Males carry tadpoles in their vocal sac.');
+    assert.ok(last?.kind === 'guess' && last.correct && last.points === points({ moves: 0, streak: 0, firstTry: false }));
+    assert.equal(state.lastSolve?.funFact, 'Males carry tadpoles in their vocal sac.');
   });
 
   test('guesses on ruled-out candidates are ignored', () => {
@@ -240,9 +242,9 @@ describe('scoring', () => {
   });
 
   test('fewer moves, a first try, and a streak score more', () => {
-    assert.ok(correctGuessScore({ moves: 2, streak: 0, firstTry: false }) > correctGuessScore({ moves: 8, streak: 0, firstTry: false }));
-    assert.ok(correctGuessScore({ moves: 4, streak: 0, firstTry: true }) > correctGuessScore({ moves: 4, streak: 0, firstTry: false }));
-    assert.ok(correctGuessScore({ moves: 4, streak: 3, firstTry: false }) > correctGuessScore({ moves: 4, streak: 0, firstTry: false }));
-    assert.equal(correctGuessScore({ moves: 50, streak: 0, firstTry: false }), 50);
+    assert.ok(points({ moves: 2, streak: 0, firstTry: false }) > points({ moves: 8, streak: 0, firstTry: false }));
+    assert.ok(points({ moves: 4, streak: 0, firstTry: true }) > points({ moves: 4, streak: 0, firstTry: false }));
+    assert.ok(points({ moves: 4, streak: 3, firstTry: false }) > points({ moves: 4, streak: 0, firstTry: false }));
+    assert.equal(points({ moves: 50, streak: 0, firstTry: false }), 50);
   });
 });

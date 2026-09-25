@@ -1,6 +1,6 @@
 // How a clue about the mystery species compares with each candidate's record
 // (see traits.ts for what a record holds and when records truly disagree).
-import type { SpeciesClueCategory } from '@/types/speciesClues';
+import type { SpeciesClueCategory } from '@/clueGame/categories';
 import type { PoolClue } from '@/clueGame/pool';
 import { EXCLUSIVE_AXES, axisOf, clueTags, completeFamilyOf, rankOfTag, type SpeciesRecord, type SpeciesRecords } from '@/clueGame/traits';
 

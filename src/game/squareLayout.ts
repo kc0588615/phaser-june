@@ -1,6 +1,11 @@
 // Board layout for a canvas that belongs entirely to the board: the largest
 // gem that fits, the board centered. Pure, so it's unit-tested.
-import type { BoardLayout } from './BoardController';
+
+export interface BoardLayout {
+    gemSize: number;
+    /** Top-left corner of the board, in canvas pixels. */
+    offset: { x: number; y: number };
+}
 
 export const SQUARE_LAYOUT = {
     /** Space kept free around the board, in pixels. */

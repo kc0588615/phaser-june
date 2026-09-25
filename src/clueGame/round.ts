@@ -6,8 +6,9 @@ import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { evaluateClue, isDeductive, type ClueFit } from '@/clueGame/deduction';
 import { isPlaceholderText, type CluePool, type PoolClue } from '@/clueGame/pool';
 import { TAXONOMY_RANKS, taxonomyOf, type SpeciesRecords, type Taxonomy } from '@/clueGame/traits';
+import { shuffled } from '@/lib/seededRng';
 
-export const CANDIDATES_PER_ROUND = 6;
+const CANDIDATES_PER_ROUND = 6;
 /** A species can't be the mystery again until this many other rounds have passed. */
 const MYSTERY_COOLDOWN = 8;
 
@@ -39,15 +40,6 @@ export type Reveal =
   | { kind: 'clue'; gem: GemType; text: string; fits: Record<number, ClueFit> }
   | { kind: 'note'; gem: GemType; text: string }
   | { kind: 'empty'; gem: GemType };
-
-function shuffle<T>(items: readonly T[], rng: () => number): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 /** Lead-ins for fact categories whose text is a bare list ("Ants; termites"). */
 const FACT_LEAD: Partial<Record<string, string>> = { threat: 'Threats', diet_prey: 'Eats', diet_flora: 'Plants it eats' };
@@ -125,14 +117,14 @@ export function createRound(
     const b = taxonomy.get(mysteryId);
     return a && b ? kinship(a, b) : 0;
   };
-  const others = shuffle(playable.filter(id => id !== mysteryId), rng); // random order breaks kinship ties
+  const others = shuffled(playable.filter(id => id !== mysteryId), rng); // random order breaks kinship ties
   const relatives = [...others].sort((a, b) => kin(b) - kin(a)).slice(0, relativesForRound(round)).filter(id => kin(id) > 0);
   const decoys = [...relatives, ...others.filter(id => !relatives.includes(id))].slice(0, CANDIDATES_PER_ROUND - 1);
   return {
     round,
     mysteryId,
     relatives: relatives.length,
-    candidateIds: shuffle([mysteryId, ...decoys], rng),
+    candidateIds: shuffled([mysteryId, ...decoys], rng),
     queues: buildQueues(pool, mysteryId),
     moves: 0,
     revealedByGem: {},
@@ -167,10 +159,6 @@ export function liveCandidates(state: RoundState): number[] {
   return state.candidateIds.filter(id => !state.ruledOut.includes(id));
 }
 
-export function notesLeft(state: RoundState, gem: GemType): number {
-  return state.queues[gem]?.length ?? 0;
-}
-
 export function registerWrongGuess(state: RoundState, speciesId: number): RoundState {
   return {
     ...state,
@@ -198,8 +186,4 @@ export function scoreBreakdown({ moves, streak, firstTry }: { moves: number; str
   if (firstTry) parts.push({ label: 'First try', points: FIRST_TRY_BONUS });
   if (streak > 0) parts.push({ label: `Streak ×${streak}`, points: 10 * Math.min(streak, 10) });
   return parts.filter(part => part.points > 0);
-}
-
-export function correctGuessScore(input: { moves: number; streak: number; firstTry: boolean }): number {
-  return scoreBreakdown(input).reduce((sum, part) => sum + part.points, 0);
 }

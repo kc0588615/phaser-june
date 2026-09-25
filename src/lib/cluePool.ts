@@ -23,7 +23,6 @@ export async function buildCluePool(db: Database): Promise<CluePool> {
     family: speciesTable.family,
     genus: speciesTable.genus,
     conservationCode: speciesTable.conservationCode,
-    iucnId: speciesTable.iucnId,
   }).from(speciesTable).where(inArray(speciesTable.id, speciesIds)).orderBy(asc(speciesTable.id));
 
   const facts = await db.select().from(speciesFacts)

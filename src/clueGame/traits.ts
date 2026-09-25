@@ -10,7 +10,7 @@
 //   - complete families: tags computed for every species from full data, like
 //     realms from range maps, so a record with some realm but not this one
 //     truly doesn't live there.
-import type { SpeciesClueCategory } from '@/types/speciesClues';
+import type { SpeciesClueCategory } from '@/clueGame/categories';
 import type { CluePool, PoolClue, PoolSpecies } from '@/clueGame/pool';
 
 export const TAXONOMY_RANKS = ['class', 'order', 'family', 'genus'] as const;
@@ -89,26 +89,19 @@ function derivedTraits(taxonomy: Taxonomy): Array<[SpeciesClueCategory, string]>
 
 export function buildSpeciesRecords(pool: Pick<CluePool, 'species' | 'clues'>): SpeciesRecords {
   const records: SpeciesRecords = new Map();
+  const add = (record: SpeciesRecord, category: SpeciesClueCategory, tag: string) => {
+    const tags = record.traits.get(category) ?? new Set<string>();
+    record.traits.set(category, tags.add(tag));
+  };
   for (const species of pool.species) {
-    const taxonomy = taxonomyOf(species);
-    const traits = new Map<SpeciesClueCategory, Set<string>>();
-    const add = (category: SpeciesClueCategory, tag: string) => {
-      let tags = traits.get(category);
-      if (!tags) traits.set(category, tags = new Set());
-      tags.add(tag);
-    };
-    for (const [category, tag] of derivedTraits(taxonomy)) add(category, tag);
-    for (const rank of TAXONOMY_RANKS) if (taxonomy[rank]) add('taxonomy', taxonomy[rank]!);
-    records.set(species.id, { taxonomy, traits });
+    const record: SpeciesRecord = { taxonomy: taxonomyOf(species), traits: new Map() };
+    for (const [category, tag] of derivedTraits(record.taxonomy)) add(record, category, tag);
+    for (const rank of TAXONOMY_RANKS) if (record.taxonomy[rank]) add(record, 'taxonomy', record.taxonomy[rank]!);
+    records.set(species.id, record);
   }
   for (const clue of pool.clues) {
     const record = records.get(clue.speciesId);
-    if (!record) continue;
-    for (const tag of clue.compareTags.map(normalizeTag)) {
-      let tags = record.traits.get(clue.category);
-      if (!tags) record.traits.set(clue.category, tags = new Set());
-      tags.add(tag);
-    }
+    if (record) for (const tag of clue.compareTags) add(record, clue.category, normalizeTag(tag));
   }
   return records;
 }

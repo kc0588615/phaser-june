@@ -1,10 +1,11 @@
 import { Check, X } from 'lucide-react';
 import type { ClueFit } from '@/clueGame/deduction';
-import { speciesBadge } from '@/clueGame/pool';
 import type { CandidateView } from '@/clueGame/selectors';
+import { speciesBadge } from '@/clueGame/speciesInfo';
 
-export const FIT_STYLE: Record<ClueFit, { dot: string; label: string }> = {
-  fits: { dot: 'bg-emerald-300', label: 'matches its record' },
+/** The dot each clue leaves on a card (explained in How to play). */
+export const FIT_DOTS: Record<ClueFit, { dot: string; label: string }> = {
+  fits: { dot: 'bg-emerald-300', label: 'matches that animal' },
   partial: { dot: 'bg-amber-300', label: 'partly matches' },
   unknown: { dot: 'bg-white/25', label: 'no record either way' },
   contradicts: { dot: 'bg-rose-400', label: 'rules it out' },
@@ -46,7 +47,7 @@ export function CandidateGrid({ candidates, selectedId, onSelect }: {
               <span className="min-w-0 flex-1">
                 <span className={`block hyphens-auto text-[11px] font-semibold leading-tight text-white [overflow-wrap:anywhere] ${out ? 'line-through' : ''}`} lang="en">{species.commonName}</span>
                 <span className="mt-1 flex items-center gap-0.5" aria-hidden="true">
-                  {fits.slice(-8).map((fit, index) => <span key={index} className={`h-2 w-2 shrink-0 rounded-full ${FIT_STYLE[fit].dot}`} />)}
+                  {fits.slice(-8).map((fit, index) => <span key={index} className={`h-2 w-2 shrink-0 rounded-full ${FIT_DOTS[fit].dot}`} />)}
                   {fits.length > 0 && <span className="ml-0.5 text-[9px] font-bold tabular-nums text-emerald-200/90">{matches}✓</span>}
                 </span>
               </span>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { speciesBadge, type PoolSpecies } from '@/clueGame/pool';
+import type { PoolSpecies } from '@/clueGame/pool';
 import type { SolveSummary } from '@/clueGame/session';
-import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
+import { redListStatus, speciesBadge, taxonomyLine } from '@/clueGame/speciesInfo';
 import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
 

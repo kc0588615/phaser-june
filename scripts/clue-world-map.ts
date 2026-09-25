@@ -6,24 +6,15 @@
 // CLUE_USE_TUNNEL=1 connects through the agent SSH tunnel (127.0.0.1:55432).
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { config as loadEnv } from 'dotenv';
-import postgres from 'postgres';
-import { WORLD_LAND_URL, WORLD_VIEWBOX } from '../src/clueGame/rangeMap';
-import { WORLD_LAND_GEOJSON_URL } from '../src/clueGame/places';
+import { WORLD_LAND_GEOJSON_URL, WORLD_LAND_URL, WORLD_VIEWBOX } from '../src/clueGame/worldMap';
+import { connect, run } from './connect';
 
 const OUT = path.join(process.cwd(), 'public', WORLD_LAND_URL);
 const OUT_GEOJSON = path.join(process.cwd(), 'public', WORLD_LAND_GEOJSON_URL);
 const LAND_FILL = '#1a3f49';
 
-async function main() {
-  loadEnv({ path: '.env.local', quiet: true });
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required.');
-  const url = new URL(process.env.DATABASE_URL);
-  url.searchParams.delete('pgbouncer');
-  if (process.env.CLUE_USE_TUNNEL === '1') {
-    url.hostname = '127.0.0.1'; url.port = '55432'; url.searchParams.set('sslmode', 'disable');
-  }
-  const sql = postgres(url.toString(), { max: 1, connect_timeout: 10 });
+run(async () => {
+  const sql = connect();
   try {
     const [row] = await sql<{ path: string }[]>`
       WITH land AS (SELECT (ST_Dump(ST_Union(geom))).geom AS part FROM natural_earth.countries)
@@ -49,10 +40,4 @@ async function main() {
   } finally {
     await sql.end({ timeout: 5 });
   }
-}
-
-main().catch(error => {
-  const cause = error instanceof Error && error.cause instanceof Error ? ` (${error.cause.message})` : '';
-  console.error(`${error instanceof Error ? error.message.split('\n')[0] : error}${cause}`);
-  process.exit(1);
 });

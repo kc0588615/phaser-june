@@ -1,7 +1,7 @@
 // The Clue Match board fills its square canvas and stays centered.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { SQUARE_LAYOUT, squareBoardLayout } from '@/game/board/squareLayout';
+import { SQUARE_LAYOUT, squareBoardLayout } from '@/game/squareLayout';
 
 describe('squareBoardLayout', () => {
   test('a phone-width square canvas gets large, centered gems', () => {

@@ -1,91 +1,72 @@
-// ClueBoardScene — the Clue Match board. The canvas belongs to the board: the
-// layout is a centered square, there is no in-canvas HUD, and React owns
-// everything else. The scene reports each matched group ('gems-matched') and
-// obeys 'clue-board-setup' / 'clue-board-lock'.
+// ClueBoardScene: the Clue Match board. The canvas belongs to the board: a
+// centered square, no in-canvas HUD; React owns everything else. The scene
+// reports each explode phase's groups ('gems-matched') and obeys
+// 'clue-board-setup' / 'clue-board-lock'.
 import Phaser from 'phaser';
-import { BackendPuzzle } from '../BackendPuzzle';
-import { BoardView } from '../BoardView';
-import type { ExplodeAndReplacePhase } from '../ExplodeAndReplacePhase';
-import { GRID_COLS, GRID_ROWS } from '../constants';
-import { EventBus, type EventPayloads } from '../EventBus';
-import { BoardController, type BoardLayout } from '../board/BoardController';
-import { squareBoardLayout } from '../board/squareLayout';
-import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from '@/game/debugBridge';
+import { BoardController } from './BoardController';
+import { BoardModel, type ExplodePhase } from './BoardModel';
+import { BoardView } from './BoardView';
+import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture } from './constants';
+import { EventBus, type EventPayloads } from './EventBus';
+import { squareBoardLayout, type BoardLayout } from './squareLayout';
+import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
 import { gemCategory } from '@/clueGame/categories';
 import { cluesForMatch } from '@/clueGame/round';
 
 export class ClueBoardScene extends Phaser.Scene {
     static readonly KEY = 'ClueBoard';
 
-    private puzzle: BackendPuzzle | null = null;
+    private readonly model = new BoardModel(GRID_COLS, GRID_ROWS);
     private view: BoardView | null = null;
     private controller: BoardController | null = null;
     private layout: BoardLayout = { gemSize: 64, offset: { x: 0, y: 0 } };
     private backdrop: Phaser.GameObjects.Graphics | null = null;
     private seed: number | null = null;
-    private locked = false;
 
     constructor() {
         super(ClueBoardScene.KEY);
     }
 
+    /** The gem icons (public/assets/evidence/<color>.svg). */
+    preload(): void {
+        for (const type of GEM_TYPES) this.load.svg(gemTexture(type), `/assets/evidence/${type}.svg`, { width: 128, height: 128 });
+        this.load.on('loaderror', (file: Phaser.Loader.File) => console.error(`[ClueBoardScene] Failed to load ${file.url}`));
+    }
+
     create(): void {
-        this.cameras.main.setBackgroundColor('#06121a');
         this.layout = squareBoardLayout(this.scale.width, this.scale.height, GRID_COLS, GRID_ROWS);
         this.backdrop = this.add.graphics().setDepth(-1);
         this.drawBackdrop();
-
-        this.puzzle = new BackendPuzzle(GRID_COLS, GRID_ROWS);
-        this.view = new BoardView(this, { cols: GRID_COLS, rows: GRID_ROWS, gemSize: this.layout.gemSize, boardOffset: this.layout.offset });
-        this.controller = new BoardController(this, this.puzzle, this.view, this.layout, {
+        this.view = new BoardView(this, GRID_COLS, GRID_ROWS, this.layout);
+        this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
-            onMoveResolved: (_move, anyMatch) => {
-                if (anyMatch) this.puzzle?.registerMove();
-                this.reshuffleIfStuck();
-            },
-            shouldResumeInput: () => !this.locked,
+            onMoveResolved: () => this.reshuffleIfStuck(),
         });
 
         this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         EventBus.on('clue-board-setup', this.setupBoard, this);
         EventBus.on('clue-board-lock', this.setLock, this);
-        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
 
         EventBus.emit('current-scene-ready', this);
         attachDebugScene(this);
     }
 
     private setupBoard({ seed, allowedGemTypes }: EventPayloads['clue-board-setup']): void {
-        if (!this.puzzle || !this.view || !this.controller) return;
+        if (!this.view || !this.controller) return;
         this.seed = seed;
-        this.puzzle.setGemTypes(allowedGemTypes);
-        this.puzzle.setSeed(seed);
-        this.puzzle.regenerateBoard();
-        this.view.destroyBoard();
-        this.view.createBoard(this.puzzle.getGridState());
-        this.controller.setReady(true);
-        this.controller.setInputEnabled(!this.locked);
+        this.model.newBoard(seed, allowedGemTypes);
+        this.view.createBoard(this.model.getGrid());
+        this.controller.ready = true;
     }
 
     private setLock({ locked }: EventPayloads['clue-board-lock']): void {
-        this.locked = locked;
-        // A move in flight re-checks the lock when it settles.
-        if (this.controller && !this.controller.isResolving()) {
-            this.controller.setInputEnabled(!locked && this.controller.isReady());
-        }
+        if (this.controller) this.controller.locked = locked;
     }
 
-    private reportMatches(phase: ExplodeAndReplacePhase, cascade: boolean): void {
-        const grid = phase.matchGridState ?? this.puzzle?.getGridState();
-        if (!grid) return;
-        const groups = phase.matches.flatMap(match => {
-            const gemType = match.map(([x, y]) => grid[x]?.[y]?.gemType).find(Boolean);
-            return gemType ? [{ gemType, size: match.length, cells: match }] : [];
-        });
-        for (const group of groups) this.burst(group.cells, gemCategory(group.gemType).color, group.size);
-        if (groups.length > 0) {
-            EventBus.emit('gems-matched', { groups: groups.map(({ gemType, size }) => ({ gemType, size })), cascade });
-        }
+    private reportMatches(phase: ExplodePhase, cascade: boolean): void {
+        for (const group of phase.groups) this.burst(group.cells, gemCategory(group.gemType).color, group.cells.length);
+        EventBus.emit('gems-matched', { groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length })), cascade });
     }
 
     /** A colored ring where a group cleared; bigger groups ring wider and call out their extra clues. */
@@ -127,17 +108,16 @@ export class ClueBoardScene extends Phaser.Scene {
     }
 
     private reshuffleIfStuck(): void {
-        if (!this.puzzle || !this.view || this.puzzle.hasAnyValidMove()) return;
-        this.puzzle.shuffle();
-        this.view.destroyBoard();
-        this.view.createBoard(this.puzzle.getGridState());
+        if (!this.view || this.model.hasAnyValidMove()) return;
+        this.model.shuffle();
+        this.view.createBoard(this.model.getGrid());
         EventBus.emit('clue-board-shuffled', undefined);
     }
 
     private handleResize(): void {
         this.layout = squareBoardLayout(this.scale.width, this.scale.height, GRID_COLS, GRID_ROWS);
         this.controller?.setLayout(this.layout);
-        this.view?.updateVisualLayout(this.layout.gemSize, this.layout.offset);
+        this.view?.setLayout(this.layout);
         this.drawBackdrop();
     }
 
@@ -156,37 +136,33 @@ export class ClueBoardScene extends Phaser.Scene {
     }
 
     debugSnapshot(): DebugBoardSnapshot {
-        const puzzle = this.puzzle;
         return {
-            ready: this.controller?.isReady() ?? false,
-            canMove: this.controller?.isInputEnabled() ?? false,
-            locked: this.locked,
-            isResolvingMove: this.controller?.isResolving() ?? false,
-            isDragging: this.controller?.isDragging() ?? false,
+            ready: this.controller?.ready ?? false,
+            canMove: this.controller?.canMove ?? false,
+            locked: this.controller?.locked ?? false,
+            isResolvingMove: this.controller?.isResolving ?? false,
+            isDragging: this.controller?.isDragging ?? false,
             boardSeed: this.seed,
-            movesUsed: puzzle?.getMovesUsed() ?? 0,
-            hasAnyValidMove: puzzle?.hasAnyValidMove() ?? false,
+            movesUsed: this.model.movesUsed,
+            hasAnyValidMove: this.seed !== null && this.model.hasAnyValidMove(),
             gemSize: this.layout.gemSize,
             boardOffset: { ...this.layout.offset },
-            grid: puzzle?.getGridState() ?? [],
+            grid: this.model.getGrid(),
         };
     }
 
-    debugPuzzle(): BackendPuzzle | null {
-        return this.puzzle;
+    debugModel(): BoardModel {
+        return this.model;
     }
 
-    shutdown(): void {
+    private shutdown(): void {
         detachDebugScene(this);
         EventBus.off('clue-board-setup', this.setupBoard, this);
         EventBus.off('clue-board-lock', this.setLock, this);
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-        this.controller?.destroy();
-        this.controller = null;
         this.view?.destroyBoard();
         this.view = null;
-        this.puzzle = null;
-        this.backdrop?.destroy();
+        this.controller = null;
         this.backdrop = null;
     }
 }

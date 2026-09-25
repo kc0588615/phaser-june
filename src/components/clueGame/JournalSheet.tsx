@@ -1,9 +1,9 @@
 import { X } from 'lucide-react';
 import { GLOSSARY } from '@/clueGame/glossary';
 import type { Journal, Records } from '@/clueGame/journal';
-import { speciesBadge, type CluePool } from '@/clueGame/pool';
+import { keyFacts, type CluePool } from '@/clueGame/pool';
 import { playableSpeciesIds } from '@/clueGame/round';
-import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
+import { redListStatus, speciesBadge, taxonomyLine } from '@/clueGame/speciesInfo';
 import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';
 import { useEscapeKey } from './useEscapeKey';
@@ -18,10 +18,6 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
   const playable = pool ? playableSpeciesIds(pool).flatMap(id => pool.species.find(species => species.id === id) ?? []) : [];
   const found = playable.filter(species => journal[species.scientificName]);
   const hidden = playable.length - found.length;
-  const factsFor = (speciesId: number) => pool ? [
-    ...pool.facts.filter(fact => fact.speciesId === speciesId && fact.category === 'key_fact').map(fact => fact.text),
-    ...pool.clues.filter(clue => clue.speciesId === speciesId && clue.category === 'key_fact').map(clue => clue.label),
-  ].filter((text, index, all) => all.indexOf(text) === index).slice(0, LEARNED_FACTS) : [];
 
   return (
     <div className="fixed inset-0 z-[8300] flex justify-end bg-black/60" role="dialog" aria-modal="true" aria-labelledby="journal-title" onClick={onClose}>
@@ -60,7 +56,7 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
                 </p>
                 <div className="mt-1.5"><RangeMap speciesId={species.id} name={species.commonName} caption={false} /></div>
                 <ul className="m-0 mt-1.5 list-disc pl-4 text-[12px] leading-snug text-white/85">
-                  {factsFor(species.id).map(fact => <li key={fact}><GlossaryText text={fact} /></li>)}
+                  {(pool ? keyFacts(pool, species.id).slice(0, LEARNED_FACTS) : []).map(fact => <li key={fact}><GlossaryText text={fact} /></li>)}
                 </ul>
               </li>
             );

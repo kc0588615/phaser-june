@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Play } from 'lucide-react';
-import { groupLabel, habitatSnapshotUrl, type Place, type PlaceAnimal } from '@/clueGame/places';
-import { HABITAT_COG_URL, HABITAT_RASTER_READY, TITILER_BASE_URL } from '@/clueGame/habitatRaster';
-import { speciesBadge } from '@/clueGame/pool';
+import { HABITAT_COG_URL, TITILER_BASE_URL, groupLabel, habitatSnapshotUrl, type Place, type PlaceAnimal } from '@/clueGame/places';
+import { speciesBadge } from '@/clueGame/speciesInfo';
 
 /** The picked place: who lives there (named once found), its habitats, and the button to play. */
 export function PlaceCard({ place, animals, isFound, onBack, onStart }: {
@@ -40,7 +39,7 @@ export function PlaceCard({ place, animals, isFound, onBack, onStart }: {
         </ul>
       </section>
 
-      {HABITAT_RASTER_READY && <HabitatSnapshot key={place.key} place={place} />}
+      {TITILER_BASE_URL && HABITAT_COG_URL && <HabitatSnapshot key={place.key} place={place} />}
 
       <button type="button" onClick={onStart} className="mt-auto flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-cyan-300 text-sm font-bold text-slate-950 shadow-[0_0_16px_rgba(103,232,249,.35)] active:scale-[.98]">
         <Play className="h-4 w-4" aria-hidden="true" /> Explore {place.name}

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
-import type { SpeciesRange } from '@/clueGame/rangeMap';
+import type { SpeciesRange } from '@/clueGame/worldMap';
 
 type RangeRow = { svg_path: string; lon: number; lat: number; area_km2: string | number };
 
