@@ -7,6 +7,10 @@ const CLASS_NAMES: Record<string, string> = {
 const ORDER_NAMES: Record<string, string> = {
   ANURA: 'Frogs and toads', TESTUDINES: 'Turtles and tortoises', CARNIVORA: 'Carnivores', ARTIODACTYLA: 'Even-toed hoofed mammals',
   CAUDATA: 'Salamanders and newts', SQUAMATA: 'Lizards and snakes', PRIMATES: 'Primates', PHOLIDOTA: 'Pangolins', CHIROPTERA: 'Bats',
+  PERISSODACTYLA: 'Odd-toed hoofed mammals', PROBOSCIDEA: 'Elephants', MONOTREMATA: 'Egg-laying mammals', PILOSA: 'Sloths and anteaters',
+  CINGULATA: 'Armadillos', DIPROTODONTIA: 'Kangaroos, koalas and wombats', DASYUROMORPHIA: 'Meat-eating marsupials',
+  PERAMELEMORPHIA: 'Bandicoots and bilbies', AFROSORICIDA: 'Tenrecs and golden moles', MACROSCELIDEA: 'Sengis',
+  LAGOMORPHA: 'Rabbits, hares and pikas', RODENTIA: 'Rodents', EULIPOTYPHLA: 'Shrews, moles and relatives',
 };
 
 export interface RedListStatus {
@@ -14,7 +18,7 @@ export interface RedListStatus {
   label: string;
   /** Tailwind classes for the badge. */
   badge: string;
-  /** How worried scientists are, 0 (least) to 5 (gone from the wild). */
+  /** How worried scientists are, 0 (least) to 5 (gone from the wild, or gone). */
   level: number;
 }
 
@@ -25,6 +29,7 @@ const RED_LIST: Record<string, Omit<RedListStatus, 'code'>> = {
   EN: { label: 'Endangered', badge: 'bg-orange-500/20 text-orange-200 border-orange-300/40', level: 3 },
   CR: { label: 'Critically Endangered', badge: 'bg-rose-500/25 text-rose-200 border-rose-300/50', level: 4 },
   EW: { label: 'Extinct in the Wild', badge: 'bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-300/40', level: 5 },
+  EX: { label: 'Extinct', badge: 'bg-zinc-500/25 text-zinc-200 border-zinc-300/40', level: 5 },
   DD: { label: 'Data Deficient', badge: 'bg-slate-400/20 text-slate-200 border-slate-300/40', level: 0 },
 };
 

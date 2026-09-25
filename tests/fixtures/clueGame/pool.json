@@ -243,6 +243,28 @@
    "iucnId": 3902
   },
   {
+   "id": 23,
+   "commonName": "Aye-aye",
+   "scientificName": "Daubentonia madagascariensis",
+   "className": "MAMMALIA",
+   "taxonOrder": "PRIMATES",
+   "family": "DAUBENTONIIDAE",
+   "genus": "Daubentonia",
+   "conservationCode": "EN",
+   "iucnId": 6302
+  },
+  {
+   "id": 24,
+   "commonName": "Sunda Pangolin",
+   "scientificName": "Manis javanica",
+   "className": "MAMMALIA",
+   "taxonOrder": "PHOLIDOTA",
+   "family": "MANIDAE",
+   "genus": "Manis",
+   "conservationCode": "CR",
+   "iucnId": 12763
+  },
+  {
    "id": 25,
    "commonName": "Tiger",
    "scientificName": "Panthera tigris",
@@ -252,6 +274,270 @@
    "genus": "Panthera",
    "conservationCode": "EN",
    "iucnId": 15955
+  },
+  {
+   "id": 26,
+   "commonName": "Black-footed Ferret",
+   "scientificName": "Mustela nigripes",
+   "className": "MAMMALIA",
+   "taxonOrder": "CARNIVORA",
+   "family": "MUSTELIDAE",
+   "genus": "Mustela",
+   "conservationCode": "EN",
+   "iucnId": 14020
+  },
+  {
+   "id": 27,
+   "commonName": "Western Long-beaked Echidna",
+   "scientificName": "Zaglossus bruijnii",
+   "className": "MAMMALIA",
+   "taxonOrder": "MONOTREMATA",
+   "family": "TACHYGLOSSIDAE",
+   "genus": "Zaglossus",
+   "conservationCode": "CR",
+   "iucnId": 23179
+  },
+  {
+   "id": 28,
+   "commonName": "Asian Elephant",
+   "scientificName": "Elephas maximus",
+   "className": "MAMMALIA",
+   "taxonOrder": "PROBOSCIDEA",
+   "family": "ELEPHANTIDAE",
+   "genus": "Elephas",
+   "conservationCode": "EN",
+   "iucnId": 7140
+  },
+  {
+   "id": 29,
+   "commonName": "Okapi",
+   "scientificName": "Okapia johnstoni",
+   "className": "MAMMALIA",
+   "taxonOrder": "ARTIODACTYLA",
+   "family": "GIRAFFIDAE",
+   "genus": "Okapia",
+   "conservationCode": "EN",
+   "iucnId": 15188
+  },
+  {
+   "id": 30,
+   "commonName": "Pygmy Three-toed Sloth",
+   "scientificName": "Bradypus pygmaeus",
+   "className": "MAMMALIA",
+   "taxonOrder": "PILOSA",
+   "family": "BRADYPODIDAE",
+   "genus": "Bradypus",
+   "conservationCode": "CR",
+   "iucnId": 61925
+  },
+  {
+   "id": 31,
+   "commonName": "Northern Hairy-nosed Wombat",
+   "scientificName": "Lasiorhinus krefftii",
+   "className": "MAMMALIA",
+   "taxonOrder": "DIPROTODONTIA",
+   "family": "VOMBATIDAE",
+   "genus": "Lasiorhinus",
+   "conservationCode": "CR",
+   "iucnId": 11343
+  },
+  {
+   "id": 32,
+   "commonName": "De Winton's Golden Mole",
+   "scientificName": "Cryptochloris wintoni",
+   "className": "MAMMALIA",
+   "taxonOrder": "AFROSORICIDA",
+   "family": "CHRYSOCHLORIDAE",
+   "genus": "Cryptochloris",
+   "conservationCode": "CR",
+   "iucnId": 5748
+  },
+  {
+   "id": 33,
+   "commonName": "Ethiopian Wolf",
+   "scientificName": "Canis simensis",
+   "className": "MAMMALIA",
+   "taxonOrder": "CARNIVORA",
+   "family": "CANIDAE",
+   "genus": "Canis",
+   "conservationCode": "EN",
+   "iucnId": 3748
+  },
+  {
+   "id": 34,
+   "commonName": "Golden Snub-nosed Monkey",
+   "scientificName": "Rhinopithecus roxellana",
+   "className": "MAMMALIA",
+   "taxonOrder": "PRIMATES",
+   "family": "CERCOPITHECIDAE",
+   "genus": "Rhinopithecus",
+   "conservationCode": "EN",
+   "iucnId": 19596
+  },
+  {
+   "id": 35,
+   "commonName": "Red Panda",
+   "scientificName": "Ailurus fulgens",
+   "className": "MAMMALIA",
+   "taxonOrder": "CARNIVORA",
+   "family": "AILURIDAE",
+   "genus": "Ailurus",
+   "conservationCode": "EN",
+   "iucnId": 714
+  },
+  {
+   "id": 36,
+   "commonName": "Giant Armadillo",
+   "scientificName": "Priodontes maximus",
+   "className": "MAMMALIA",
+   "taxonOrder": "CINGULATA",
+   "family": "CHLAMYPHORIDAE",
+   "genus": "Priodontes",
+   "conservationCode": "VU",
+   "iucnId": 18144
+  },
+  {
+   "id": 37,
+   "commonName": "Greater Bilby",
+   "scientificName": "Macrotis lagotis",
+   "className": "MAMMALIA",
+   "taxonOrder": "PERAMELEMORPHIA",
+   "family": "THYLACOMYIDAE",
+   "genus": "Macrotis",
+   "conservationCode": "VU",
+   "iucnId": 12650
+  },
+  {
+   "id": 38,
+   "commonName": "Saola",
+   "scientificName": "Pseudoryx nghetinhensis",
+   "className": "MAMMALIA",
+   "taxonOrder": "ARTIODACTYLA",
+   "family": "BOVIDAE",
+   "genus": "Pseudoryx",
+   "conservationCode": "CR",
+   "iucnId": 18597
+  },
+  {
+   "id": 39,
+   "commonName": "Grévy's Zebra",
+   "scientificName": "Equus grevyi",
+   "className": "MAMMALIA",
+   "taxonOrder": "PERISSODACTYLA",
+   "family": "EQUIDAE",
+   "genus": "Equus",
+   "conservationCode": "EN",
+   "iucnId": 7950
+  },
+  {
+   "id": 40,
+   "commonName": "Sumatran Orangutan",
+   "scientificName": "Pongo abelii",
+   "className": "MAMMALIA",
+   "taxonOrder": "PRIMATES",
+   "family": "HOMINIDAE",
+   "genus": "Pongo",
+   "conservationCode": "CR",
+   "iucnId": 121097935
+  },
+  {
+   "id": 41,
+   "commonName": "African Forest Elephant",
+   "scientificName": "Loxodonta cyclotis",
+   "className": "MAMMALIA",
+   "taxonOrder": "PROBOSCIDEA",
+   "family": "ELEPHANTIDAE",
+   "genus": "Loxodonta",
+   "conservationCode": "CR",
+   "iucnId": 181007989
+  },
+  {
+   "id": 42,
+   "commonName": "Vancouver Island Marmot",
+   "scientificName": "Marmota vancouverensis",
+   "className": "MAMMALIA",
+   "taxonOrder": "RODENTIA",
+   "family": "SCIURIDAE",
+   "genus": "Marmota",
+   "conservationCode": "CR",
+   "iucnId": 12828
+  },
+  {
+   "id": 43,
+   "commonName": "Goodfellow's Tree-kangaroo",
+   "scientificName": "Dendrolagus goodfellowi",
+   "className": "MAMMALIA",
+   "taxonOrder": "DIPROTODONTIA",
+   "family": "MACROPODIDAE",
+   "genus": "Dendrolagus",
+   "conservationCode": "EN",
+   "iucnId": 6429
+  },
+  {
+   "id": 44,
+   "commonName": "Javan Rhinoceros",
+   "scientificName": "Rhinoceros sondaicus",
+   "className": "MAMMALIA",
+   "taxonOrder": "PERISSODACTYLA",
+   "family": "RHINOCEROTIDAE",
+   "genus": "Rhinoceros",
+   "conservationCode": "CR",
+   "iucnId": 19495
+  },
+  {
+   "id": 45,
+   "commonName": "Livingstone's Flying Fox",
+   "scientificName": "Pteropus livingstonii",
+   "className": "MAMMALIA",
+   "taxonOrder": "CHIROPTERA",
+   "family": "PTEROPODIDAE",
+   "genus": "Pteropus",
+   "conservationCode": "EN",
+   "iucnId": 18732
+  },
+  {
+   "id": 46,
+   "commonName": "Golden-rumped Sengi",
+   "scientificName": "Rhynchocyon chrysopygus",
+   "className": "MAMMALIA",
+   "taxonOrder": "MACROSCELIDEA",
+   "family": "MACROSCELIDIDAE",
+   "genus": "Rhynchocyon",
+   "conservationCode": "EN",
+   "iucnId": 19705
+  },
+  {
+   "id": 47,
+   "commonName": "Ili Pika",
+   "scientificName": "Ochotona iliensis",
+   "className": "MAMMALIA",
+   "taxonOrder": "LAGOMORPHA",
+   "family": "OCHOTONIDAE",
+   "genus": "Ochotona",
+   "conservationCode": "EN",
+   "iucnId": 15050
+  },
+  {
+   "id": 48,
+   "commonName": "Tasmanian Devil",
+   "scientificName": "Sarcophilus harrisii",
+   "className": "MAMMALIA",
+   "taxonOrder": "DASYUROMORPHIA",
+   "family": "DASYURIDAE",
+   "genus": "Sarcophilus",
+   "conservationCode": "EN",
+   "iucnId": 40540
+  },
+  {
+   "id": 49,
+   "commonName": "Hispaniolan Solenodon",
+   "scientificName": "Solenodon paradoxus",
+   "className": "MAMMALIA",
+   "taxonOrder": "EULIPOTYPHLA",
+   "family": "SOLENODONTIDAE",
+   "genus": "Solenodon",
+   "conservationCode": "LC",
+   "iucnId": 20321
   },
   {
    "id": 50,
@@ -4468,6 +4754,364 @@
    "isFiltering": true
   },
   {
+   "id": 923,
+   "speciesId": 23,
+   "category": "behavior",
+   "label": "Taps on tree bark with its long middle finger and listens for the hollow tunnels of beetle grubs.",
+   "compareTags": [
+    "tap_forager"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 924,
+   "speciesId": 23,
+   "category": "behavior",
+   "label": "Active at night; spends the day curled up in a ball-shaped nest of leaves high in the trees.",
+   "compareTags": [
+    "nocturnal",
+    "nest_builder",
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 930,
+   "speciesId": 23,
+   "category": "conservation",
+   "label": "Status: Endangered. Forest clearing, and old beliefs that it brings bad luck, put it at risk.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 925,
+   "speciesId": 23,
+   "category": "diet",
+   "label": "Diet type: Omnivore. Eats: beetle grubs, seeds, nuts, fruit, nectar and fungi.",
+   "compareTags": [
+    "omnivore",
+    "insect_eater",
+    "frugivore",
+    "granivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1309,
+   "speciesId": 23,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 928,
+   "speciesId": 23,
+   "category": "geography",
+   "label": "Found across much of Madagascar, from the eastern rainforests to the dry forests of the west and north.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 926,
+   "speciesId": 23,
+   "category": "habitat",
+   "label": "Lives high in the trees of tropical rainforests and dry forests.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "arboreal",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 927,
+   "speciesId": 23,
+   "category": "habitat",
+   "label": "Also visits mangroves and coconut and lychee plantations when searching for food.",
+   "compareTags": [
+    "forest",
+    "coastal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 931,
+   "speciesId": 23,
+   "category": "key_fact",
+   "label": "It does the job of a woodpecker in Madagascar, where there are no woodpeckers.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 932,
+   "speciesId": 23,
+   "category": "key_fact",
+   "label": "Its skinny middle finger sits on a ball-and-socket joint, so it can turn in almost any direction.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 933,
+   "speciesId": 23,
+   "category": "key_fact",
+   "label": "Its front teeth keep growing all its life, so early scientists thought it was a kind of squirrel.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 921,
+   "speciesId": 23,
+   "category": "morphology",
+   "label": "Big bat-like ears, huge eyes, front teeth that never stop growing, and one very thin, long middle finger.",
+   "compareTags": [
+    "large_ears",
+    "specialized_digit"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 922,
+   "speciesId": 23,
+   "category": "morphology",
+   "label": "Primary color: Dark brown to black. Pattern: Shaggy coat with pale-tipped hairs and a big bushy tail.",
+   "compareTags": [
+    "dark_coloration",
+    "brown_coloration",
+    "bushy_tail"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 929,
+   "speciesId": 23,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 every 2 to 3 years. Lifespan: about 20 years",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 919,
+   "speciesId": 23,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Primates",
+   "compareTags": [
+    "mammalia",
+    "primates"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 920,
+   "speciesId": 23,
+   "category": "taxonomy",
+   "label": "Family: Daubentoniidae, Genus: Daubentonia",
+   "compareTags": [
+    "daubentoniidae",
+    "daubentonia"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 938,
+   "speciesId": 24,
+   "category": "behavior",
+   "label": "Rolls into a tight, armored ball when it feels threatened.",
+   "compareTags": [
+    "rolls_into_ball"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 939,
+   "speciesId": 24,
+   "category": "behavior",
+   "label": "Active at night; climbs trees using its grasping tail and sleeps in tree hollows or burrows.",
+   "compareTags": [
+    "nocturnal",
+    "climber",
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 945,
+   "speciesId": 24,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. It is one of the most illegally traded mammals in the world, taken for its scales and meat.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 940,
+   "speciesId": 24,
+   "category": "diet",
+   "label": "Diet type: Insectivore. Eats: ants and termites, found with its strong sense of smell.",
+   "compareTags": [
+    "insect_eater",
+    "carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1310,
+   "speciesId": 24,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 943,
+   "speciesId": 24,
+   "category": "geography",
+   "label": "Found across Southeast Asia, from Myanmar and Thailand to Malaysia, Sumatra, Java and Borneo.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 941,
+   "speciesId": 24,
+   "category": "habitat",
+   "label": "Lives in tropical forests, from old rainforest to plantations and gardens.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "arboreal",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 942,
+   "speciesId": 24,
+   "category": "habitat",
+   "label": "Rests in tree hollows or in burrows it digs with its strong front claws.",
+   "compareTags": [
+    "forest",
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 946,
+   "speciesId": 24,
+   "category": "key_fact",
+   "label": "Its scales are made of keratin, the same material as your fingernails.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 947,
+   "speciesId": 24,
+   "category": "key_fact",
+   "label": "Its long, sticky tongue starts deep inside its body, near its hips.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 948,
+   "speciesId": 24,
+   "category": "key_fact",
+   "label": "It has no teeth; small stones it swallows help grind up food in its stomach.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 936,
+   "speciesId": 24,
+   "category": "morphology",
+   "label": "Covered in overlapping scales like a walking pinecone, with a long sticky tongue and no teeth.",
+   "compareTags": [
+    "scaled",
+    "toothless"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 937,
+   "speciesId": 24,
+   "category": "morphology",
+   "label": "Primary color: Brown to yellowish brown. Pattern: Rows of overlapping scales from head to tail.",
+   "compareTags": [
+    "brown_coloration",
+    "yellow_coloration",
+    "scaled"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 944,
+   "speciesId": 24,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 at a time; the baby rides on its mother's tail. Lifespan: about 20 years",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 934,
+   "speciesId": 24,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Pholidota",
+   "compareTags": [
+    "mammalia",
+    "pholidota"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 935,
+   "speciesId": 24,
+   "category": "taxonomy",
+   "label": "Family: Manidae, Genus: Manis",
+   "compareTags": [
+    "manidae",
+    "manis"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
    "id": 462,
    "speciesId": 25,
    "category": "behavior",
@@ -4673,6 +5317,4279 @@
    "label": "A member of the cat family.",
    "compareTags": [
     "family:felidae"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 953,
+   "speciesId": 26,
+   "category": "behavior",
+   "label": "Hunts mostly at night and moves through prairie dog tunnels.",
+   "compareTags": [
+    "nocturnal",
+    "burrower",
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 954,
+   "speciesId": 26,
+   "category": "behavior",
+   "label": "Spends most of its life underground, coming up mainly at night.",
+   "compareTags": [
+    "burrower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 960,
+   "speciesId": 26,
+   "category": "conservation",
+   "label": "Status: Endangered. It was once thought extinct; every black-footed ferret alive today comes from 18 animals saved in the 1980s.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 955,
+   "speciesId": 26,
+   "category": "diet",
+   "label": "Diet type: Carnivore. Preys on: prairie dogs, which make up about 90% of its diet.",
+   "compareTags": [
+    "carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1311,
+   "speciesId": 26,
+   "category": "geography",
+   "label": "Lives in North America (the Nearctic realm).",
+   "compareTags": [
+    "realm:nearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 958,
+   "speciesId": 26,
+   "category": "geography",
+   "label": "Once found across the Great Plains; now lives only where it has been released in the western United States, Canada and Mexico.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 956,
+   "speciesId": 26,
+   "category": "habitat",
+   "label": "Lives on short-grass and mixed-grass prairies.",
+   "compareTags": [
+    "grassland",
+    "temperate",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 957,
+   "speciesId": 26,
+   "category": "habitat",
+   "label": "Needs large prairie dog towns, where it finds both food and shelter.",
+   "compareTags": [
+    "grassland",
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 961,
+   "speciesId": 26,
+   "category": "key_fact",
+   "label": "Scientists thought it was extinct until a ranch dog found one in Wyoming in 1981.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 962,
+   "speciesId": 26,
+   "category": "key_fact",
+   "label": "A single black-footed ferret may eat more than 100 prairie dogs in a year.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 963,
+   "speciesId": 26,
+   "category": "key_fact",
+   "label": "In 2020 scientists cloned a black-footed ferret, named Elizabeth Ann, to add new genes to the population.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 951,
+   "speciesId": 26,
+   "category": "morphology",
+   "label": "Long, slim body with short legs, a black face mask, black feet and a black tail tip.",
+   "compareTags": [
+    "slender",
+    "masked_face"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 952,
+   "speciesId": 26,
+   "category": "morphology",
+   "label": "Primary color: Sandy tan. Pattern: Black mask across the eyes, black legs and feet.",
+   "compareTags": [
+    "yellow_coloration",
+    "brown_coloration",
+    "dark_coloration",
+    "masked_face"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 959,
+   "speciesId": 26,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Litter: 3 to 4 kits. Lifespan: 3 to 4 years in the wild",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 949,
+   "speciesId": 26,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Carnivora",
+   "compareTags": [
+    "mammalia",
+    "carnivora"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 950,
+   "speciesId": 26,
+   "category": "taxonomy",
+   "label": "Family: Mustelidae, Genus: Mustela",
+   "compareTags": [
+    "mustelidae",
+    "mustela"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 968,
+   "speciesId": 27,
+   "category": "behavior",
+   "label": "Active mostly at night, snuffling through leaf litter with its long snout.",
+   "compareTags": [
+    "nocturnal",
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 969,
+   "speciesId": 27,
+   "category": "behavior",
+   "label": "When threatened, it digs itself into the soil to protect its soft belly.",
+   "compareTags": [
+    "burrower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 975,
+   "speciesId": 27,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Hunting and forest clearing have made it very rare.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 970,
+   "speciesId": 27,
+   "category": "diet",
+   "label": "Diet type: Insectivore. Eats: mostly earthworms, plus beetle larvae and other insects.",
+   "compareTags": [
+    "vermivore",
+    "insect_eater",
+    "carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1312,
+   "speciesId": 27,
+   "category": "geography",
+   "label": "Lives in Australia or New Guinea (the Australasian realm).",
+   "compareTags": [
+    "realm:australasian"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 973,
+   "speciesId": 27,
+   "category": "geography",
+   "label": "Found only in the Bird's Head Peninsula of western New Guinea and a nearby island, in Indonesia.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 971,
+   "speciesId": 27,
+   "category": "habitat",
+   "label": "Lives in hill and mountain forests and alpine meadows.",
+   "compareTags": [
+    "forest",
+    "montane",
+    "tropical",
+    "grassland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 972,
+   "speciesId": 27,
+   "category": "habitat",
+   "label": "Usually found high up, above 1,000 m, in cool, wet mountain forest.",
+   "compareTags": [
+    "montane",
+    "forest"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 976,
+   "speciesId": 27,
+   "category": "key_fact",
+   "label": "It is a mammal that lays eggs, one of only five such species alive today.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 977,
+   "speciesId": 27,
+   "category": "key_fact",
+   "label": "It has no teeth; tiny spikes on its tongue help it grab worms.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 978,
+   "speciesId": 27,
+   "category": "key_fact",
+   "label": "A baby echidna is called a puggle.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 966,
+   "speciesId": 27,
+   "category": "morphology",
+   "label": "Long, down-curved snout, short spines hidden in thick fur, and strong clawed feet.",
+   "compareTags": [
+    "specialized_snout",
+    "spined"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 967,
+   "speciesId": 27,
+   "category": "morphology",
+   "label": "Primary color: Dark brown to black. Pattern: Pale spines poking through thick dark fur.",
+   "compareTags": [
+    "dark_coloration",
+    "brown_coloration",
+    "spined"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 974,
+   "speciesId": 27,
+   "category": "reproduction",
+   "label": "Reproduction: Lays a single leathery egg, which hatches in the mother's pouch. Lifespan: 30 years or more",
+   "compareTags": [
+    "egg_laying"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 964,
+   "speciesId": 27,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Monotremata",
+   "compareTags": [
+    "mammalia",
+    "monotremata"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 965,
+   "speciesId": 27,
+   "category": "taxonomy",
+   "label": "Family: Tachyglossidae, Genus: Zaglossus",
+   "compareTags": [
+    "tachyglossidae",
+    "zaglossus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 983,
+   "speciesId": 28,
+   "category": "behavior",
+   "label": "Females and young live in family herds led by an older female.",
+   "compareTags": [
+    "herd",
+    "social"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 984,
+   "speciesId": 28,
+   "category": "behavior",
+   "label": "A strong swimmer that can use its trunk like a snorkel.",
+   "compareTags": [
+    "swimmer"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 990,
+   "speciesId": 28,
+   "category": "conservation",
+   "label": "Status: Endangered. Loss of forests, conflict with farmers and poaching for ivory threaten it.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 985,
+   "speciesId": 28,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: grasses, bark, roots, leaves and fruit, for up to 19 hours a day.",
+   "compareTags": [
+    "herbivore",
+    "grazer",
+    "folivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1313,
+   "speciesId": 28,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 988,
+   "speciesId": 28,
+   "category": "geography",
+   "label": "Found in 13 countries of South and Southeast Asia, from India and Sri Lanka to Borneo.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 986,
+   "speciesId": 28,
+   "category": "habitat",
+   "label": "Lives in tropical forests with grassy openings, from lowlands to hills.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "grassland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 987,
+   "speciesId": 28,
+   "category": "habitat",
+   "label": "Needs plenty of water and travels long distances between feeding areas.",
+   "compareTags": [
+    "freshwater"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 991,
+   "speciesId": 28,
+   "category": "key_fact",
+   "label": "Its trunk has tens of thousands of muscles and can pick up a single blade of grass.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 992,
+   "speciesId": 28,
+   "category": "key_fact",
+   "label": "Asian elephants have one finger-like tip on the trunk; African elephants have two.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 993,
+   "speciesId": 28,
+   "category": "key_fact",
+   "label": "Elephants can hear low rumbles from other elephants several kilometres away.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 981,
+   "speciesId": 28,
+   "category": "morphology",
+   "label": "Huge body, a long trunk with one finger-like tip, and smaller ears than African elephants.",
+   "compareTags": [
+    "large_bodied",
+    "trunk"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 982,
+   "speciesId": 28,
+   "category": "morphology",
+   "label": "Primary color: Grey, often with pink patches. Pattern: Only some males grow tusks.",
+   "compareTags": [
+    "grey_coloration",
+    "tusks"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 989,
+   "speciesId": 28,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young after nearly 2 years of pregnancy. Young: 1 calf. Lifespan: about 60 years",
+   "compareTags": [
+    "live_birth",
+    "long_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 979,
+   "speciesId": 28,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Proboscidea",
+   "compareTags": [
+    "mammalia",
+    "proboscidea"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 980,
+   "speciesId": 28,
+   "category": "taxonomy",
+   "label": "Family: Elephantidae, Genus: Elephas",
+   "compareTags": [
+    "elephantidae",
+    "elephas"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 998,
+   "speciesId": 29,
+   "category": "behavior",
+   "label": "Shy and solitary; walks the same trails through the forest again and again.",
+   "compareTags": [
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 999,
+   "speciesId": 29,
+   "category": "behavior",
+   "label": "Active mostly by day and very quiet, so it is hard to spot.",
+   "compareTags": [
+    "diurnal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1005,
+   "speciesId": 29,
+   "category": "conservation",
+   "label": "Status: Endangered. Forest loss, hunting and unrest in its home region have cut its numbers.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1000,
+   "speciesId": 29,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: leaves, buds, fruit, ferns and fungi.",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1314,
+   "speciesId": 29,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1003,
+   "speciesId": 29,
+   "category": "geography",
+   "label": "Found only in the rainforests of the Democratic Republic of the Congo, in central Africa.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1001,
+   "speciesId": 29,
+   "category": "habitat",
+   "label": "Lives in dense tropical rainforest.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1002,
+   "speciesId": 29,
+   "category": "habitat",
+   "label": "Stays deep in the forest, far from open grassland.",
+   "compareTags": [
+    "forest"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1006,
+   "speciesId": 29,
+   "category": "key_fact",
+   "label": "Its closest living relative is the giraffe, not the zebra.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1007,
+   "speciesId": 29,
+   "category": "key_fact",
+   "label": "Its tongue is long enough to lick its own eyes and ears clean.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1008,
+   "speciesId": 29,
+   "category": "key_fact",
+   "label": "Scientists outside Africa only learned about the okapi in 1901.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 996,
+   "speciesId": 29,
+   "category": "morphology",
+   "label": "Looks like a mix of a horse and a zebra, with a long neck, large ears and a very long tongue.",
+   "compareTags": [
+    "large_bodied",
+    "large_ears"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 997,
+   "speciesId": 29,
+   "category": "morphology",
+   "label": "Primary color: Dark reddish-brown. Pattern: White and black stripes on the legs and rump.",
+   "compareTags": [
+    "brown_coloration",
+    "red_coloration",
+    "dark_coloration",
+    "striped"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1004,
+   "speciesId": 29,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young after about 15 months. Young: 1 calf. Lifespan: 20 to 30 years",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 994,
+   "speciesId": 29,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Artiodactyla",
+   "compareTags": [
+    "mammalia",
+    "artiodactyla"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 995,
+   "speciesId": 29,
+   "category": "taxonomy",
+   "label": "Family: Giraffidae, Genus: Okapia",
+   "compareTags": [
+    "giraffidae",
+    "okapia"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1013,
+   "speciesId": 30,
+   "category": "behavior",
+   "label": "Moves very slowly and hangs upside down in trees for most of its life.",
+   "compareTags": [
+    "climber",
+    "slow_mover"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1014,
+   "speciesId": 30,
+   "category": "behavior",
+   "label": "A surprisingly good swimmer.",
+   "compareTags": [
+    "swimmer"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1020,
+   "speciesId": 30,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Only a small number live on its one island, where mangroves are being cut.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1015,
+   "speciesId": 30,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: mostly the leaves of red mangrove trees.",
+   "compareTags": [
+    "herbivore",
+    "folivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1335,
+   "speciesId": 30,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1018,
+   "speciesId": 30,
+   "category": "geography",
+   "label": "Found only on Isla Escudo de Veraguas, an island off the Caribbean coast of Panama.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1016,
+   "speciesId": 30,
+   "category": "habitat",
+   "label": "Lives in red mangrove forests along the coast.",
+   "compareTags": [
+    "forest",
+    "coastal",
+    "tropical",
+    "arboreal",
+    "wetland"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1017,
+   "speciesId": 30,
+   "category": "habitat",
+   "label": "Found on a single small island of only about 4 square kilometres.",
+   "compareTags": [
+    "coastal",
+    "island"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1021,
+   "speciesId": 30,
+   "category": "key_fact",
+   "label": "It is the smallest of the three-toed sloths.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1022,
+   "speciesId": 30,
+   "category": "key_fact",
+   "label": "It became its own species after its island was cut off from the mainland about 9,000 years ago.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1023,
+   "speciesId": 30,
+   "category": "key_fact",
+   "label": "Algae growing in its fur give it a greenish color that helps it hide in the trees.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1011,
+   "speciesId": 30,
+   "category": "morphology",
+   "label": "A small, slow sloth with three long, curved claws on each front foot.",
+   "compareTags": [
+    "long_claws"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1012,
+   "speciesId": 30,
+   "category": "morphology",
+   "label": "Primary color: Greyish brown, often tinted green by algae. Pattern: Dark stripe across the eyes and a pale face.",
+   "compareTags": [
+    "grey_coloration",
+    "brown_coloration",
+    "green_coloration",
+    "masked_face"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1019,
+   "speciesId": 30,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 at a time.",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1009,
+   "speciesId": 30,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Pilosa",
+   "compareTags": [
+    "mammalia",
+    "pilosa"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1010,
+   "speciesId": 30,
+   "category": "taxonomy",
+   "label": "Family: Bradypodidae, Genus: Bradypus",
+   "compareTags": [
+    "bradypodidae",
+    "bradypus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1028,
+   "speciesId": 31,
+   "category": "behavior",
+   "label": "Digs long burrows and stays underground during the heat of the day, coming out at night.",
+   "compareTags": [
+    "burrower",
+    "nocturnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1029,
+   "speciesId": 31,
+   "category": "behavior",
+   "label": "Mostly solitary, though neighbors may share groups of burrows.",
+   "compareTags": [
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1035,
+   "speciesId": 31,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. By the 1980s only about 35 were left; careful protection has helped numbers grow.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1030,
+   "speciesId": 31,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: native grasses, roots and sedges.",
+   "compareTags": [
+    "herbivore",
+    "grazer"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1315,
+   "speciesId": 31,
+   "category": "geography",
+   "label": "Lives in Australia or New Guinea (the Australasian realm).",
+   "compareTags": [
+    "realm:australasian"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1033,
+   "speciesId": 31,
+   "category": "geography",
+   "label": "Found only in two protected places in Queensland, Australia: Epping Forest National Park and the Richard Underwood Nature Refuge.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1031,
+   "speciesId": 31,
+   "category": "habitat",
+   "label": "Lives in semi-dry open woodland with deep, sandy soil.",
+   "compareTags": [
+    "forest",
+    "grassland",
+    "arid",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1032,
+   "speciesId": 31,
+   "category": "habitat",
+   "label": "Needs soft, sandy soil to dig its burrows.",
+   "compareTags": [
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1036,
+   "speciesId": 31,
+   "category": "key_fact",
+   "label": "Its pouch faces backward, so dirt does not get in when it digs.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1037,
+   "speciesId": 31,
+   "category": "key_fact",
+   "label": "Wombats make cube-shaped droppings.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1038,
+   "speciesId": 31,
+   "category": "key_fact",
+   "label": "It is one of the rarest large mammals on Earth.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1026,
+   "speciesId": 31,
+   "category": "morphology",
+   "label": "Stocky, barrel-shaped body with short legs, a broad hairy nose and strong digging claws.",
+   "compareTags": [
+    "rounded_body",
+    "robust"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1027,
+   "speciesId": 31,
+   "category": "morphology",
+   "label": "Primary color: Soft grey-brown. Pattern: Fine fur, pointed ears and a furry muzzle.",
+   "compareTags": [
+    "grey_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1034,
+   "speciesId": 31,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to a tiny baby that grows in a pouch. Young: 1 joey. Lifespan: 25 years or more",
+   "compareTags": [
+    "live_birth",
+    "pouch"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1024,
+   "speciesId": 31,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Diprotodontia",
+   "compareTags": [
+    "mammalia",
+    "diprotodontia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1025,
+   "speciesId": 31,
+   "category": "taxonomy",
+   "label": "Family: Vombatidae, Genus: Lasiorhinus",
+   "compareTags": [
+    "vombatidae",
+    "lasiorhinus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1043,
+   "speciesId": 32,
+   "category": "behavior",
+   "label": "'Swims' through loose sand just under the surface instead of digging lasting tunnels.",
+   "compareTags": [
+    "burrower",
+    "sand_swimmer"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1044,
+   "speciesId": 32,
+   "category": "behavior",
+   "label": "Senses tiny vibrations in the sand to find food.",
+   "compareTags": [
+    "vibration_sense"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1050,
+   "speciesId": 32,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Diamond mining and building along the coast have destroyed much of its dune habitat.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1045,
+   "speciesId": 32,
+   "category": "diet",
+   "label": "Diet type: Insectivore. Eats: insects, worms and other small animals in the sand.",
+   "compareTags": [
+    "insect_eater",
+    "vermivore",
+    "carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1316,
+   "speciesId": 32,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1048,
+   "speciesId": 32,
+   "category": "geography",
+   "label": "Known only from a small stretch of the Namaqualand coast in South Africa, near Port Nolloth.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1046,
+   "speciesId": 32,
+   "category": "habitat",
+   "label": "Lives in coastal sand dunes with low shrubs.",
+   "compareTags": [
+    "coastal",
+    "arid",
+    "scrubland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1047,
+   "speciesId": 32,
+   "category": "habitat",
+   "label": "Needs loose, soft sand that it can move through.",
+   "compareTags": [
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1051,
+   "speciesId": 32,
+   "category": "key_fact",
+   "label": "It was lost to science for 86 years until scientists found it again in 2023.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1052,
+   "speciesId": 32,
+   "category": "key_fact",
+   "label": "It was found again using eDNA: tiny traces of DNA in the sand, gathered with help from a detection dog.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1053,
+   "speciesId": 32,
+   "category": "key_fact",
+   "label": "Like other golden moles, its fur can shimmer with rainbow colors in the light.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1041,
+   "speciesId": 32,
+   "category": "morphology",
+   "label": "Tiny body with silky fur, eyes hidden under skin, a leathery nose pad and big digging claws.",
+   "compareTags": [
+    "tiny",
+    "long_claws"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1042,
+   "speciesId": 32,
+   "category": "morphology",
+   "label": "Primary color: Pale yellowish grey. Pattern: Fur with a shiny, golden sheen.",
+   "compareTags": [
+    "yellow_coloration",
+    "grey_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1049,
+   "speciesId": 32,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young.",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1039,
+   "speciesId": 32,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Afrosoricida",
+   "compareTags": [
+    "mammalia",
+    "afrosoricida"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1040,
+   "speciesId": 32,
+   "category": "taxonomy",
+   "label": "Family: Chrysochloridae, Genus: Cryptochloris",
+   "compareTags": [
+    "chrysochloridae",
+    "cryptochloris"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1058,
+   "speciesId": 33,
+   "category": "behavior",
+   "label": "Lives in packs that share a territory, but hunts alone during the day.",
+   "compareTags": [
+    "social",
+    "diurnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1059,
+   "speciesId": 33,
+   "category": "behavior",
+   "label": "Pack members greet each other with loud, excited calls.",
+   "compareTags": [
+    "vocal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1065,
+   "speciesId": 33,
+   "category": "conservation",
+   "label": "Status: Endangered. Fewer than 500 adults remain; diseases caught from pet dogs and loss of habitat threaten them.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1060,
+   "speciesId": 33,
+   "category": "diet",
+   "label": "Diet type: Carnivore. Preys on: mostly giant mole rats and other highland rodents.",
+   "compareTags": [
+    "carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1317,
+   "speciesId": 33,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1063,
+   "speciesId": 33,
+   "category": "geography",
+   "label": "Found only in a few mountain ranges in the highlands of Ethiopia, including the Bale Mountains.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1061,
+   "speciesId": 33,
+   "category": "habitat",
+   "label": "Lives on cold mountain grasslands called Afroalpine meadows, above 3,000 m.",
+   "compareTags": [
+    "grassland",
+    "montane",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1062,
+   "speciesId": 33,
+   "category": "habitat",
+   "label": "Prefers open moorland where rodents are plentiful.",
+   "compareTags": [
+    "grassland"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1066,
+   "speciesId": 33,
+   "category": "key_fact",
+   "label": "It is Africa's most threatened carnivore.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1067,
+   "speciesId": 33,
+   "category": "key_fact",
+   "label": "Other wolves in the pack help feed and guard the pups.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1068,
+   "speciesId": 33,
+   "category": "key_fact",
+   "label": "It is closely related to the gray wolf and the coyote.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1056,
+   "speciesId": 33,
+   "category": "morphology",
+   "label": "Long legs, a long narrow snout and a bushy tail, a bit like a slim fox.",
+   "compareTags": [
+    "slender",
+    "bushy_tail"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1057,
+   "speciesId": 33,
+   "category": "morphology",
+   "label": "Primary color: Bright reddish orange. Pattern: White throat, chest and belly, with a dark tail tip.",
+   "compareTags": [
+    "red_coloration",
+    "white_markings"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1064,
+   "speciesId": 33,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young in a den. Litter: 2 to 6 pups. Lifespan: about 8 to 10 years",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1054,
+   "speciesId": 33,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Carnivora",
+   "compareTags": [
+    "mammalia",
+    "carnivora"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1055,
+   "speciesId": 33,
+   "category": "taxonomy",
+   "label": "Family: Canidae, Genus: Canis",
+   "compareTags": [
+    "canidae",
+    "canis"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1073,
+   "speciesId": 34,
+   "category": "behavior",
+   "label": "Lives in large, social bands that can number hundreds of monkeys.",
+   "compareTags": [
+    "social"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1074,
+   "speciesId": 34,
+   "category": "behavior",
+   "label": "Spends most of its time in the trees but also looks for food on the ground.",
+   "compareTags": [
+    "climber"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1080,
+   "speciesId": 34,
+   "category": "conservation",
+   "label": "Status: Endangered. Logging and hunting reduced its numbers; nature reserves are helping.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1075,
+   "speciesId": 34,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: lichens in winter, plus leaves, buds, bark, seeds and fruit.",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "frugivore",
+    "granivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1318,
+   "speciesId": 34,
+   "category": "geography",
+   "label": "Lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1078,
+   "speciesId": 34,
+   "category": "geography",
+   "label": "Found only in mountain forests of central and southwestern China.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1076,
+   "speciesId": 34,
+   "category": "habitat",
+   "label": "Lives in cold mountain forests that are often covered in snow in winter.",
+   "compareTags": [
+    "forest",
+    "montane",
+    "temperate",
+    "arboreal",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1077,
+   "speciesId": 34,
+   "category": "habitat",
+   "label": "Found at 1,500 to 3,400 m above sea level.",
+   "compareTags": [
+    "montane"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1081,
+   "speciesId": 34,
+   "category": "key_fact",
+   "label": "It is one of the most cold-tolerant primates, living where winter temperatures fall far below freezing.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1082,
+   "speciesId": 34,
+   "category": "key_fact",
+   "label": "Its tiny nose is thought to help it cope with freezing winters.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1083,
+   "speciesId": 34,
+   "category": "key_fact",
+   "label": "Babies are cared for by several adults in the group, not just their mothers.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1071,
+   "speciesId": 34,
+   "category": "morphology",
+   "label": "Thick, long fur, a pale blue face and a tiny upturned nose.",
+   "compareTags": [
+    "snub_nose",
+    "long_fur"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1072,
+   "speciesId": 34,
+   "category": "morphology",
+   "label": "Primary color: Bright golden orange. Pattern: Dark brown back and a blue face.",
+   "compareTags": [
+    "yellow_coloration",
+    "brown_coloration",
+    "blue_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1079,
+   "speciesId": 34,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 baby about every 2 years. Lifespan: about 20 years",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1069,
+   "speciesId": 34,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Primates",
+   "compareTags": [
+    "mammalia",
+    "primates"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1070,
+   "speciesId": 34,
+   "category": "taxonomy",
+   "label": "Family: Cercopithecidae, Genus: Rhinopithecus",
+   "compareTags": [
+    "cercopithecidae",
+    "rhinopithecus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1088,
+   "speciesId": 35,
+   "category": "behavior",
+   "label": "Spends much of its time alone in the trees and sleeps curled up on branches.",
+   "compareTags": [
+    "climber",
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1089,
+   "speciesId": 35,
+   "category": "behavior",
+   "label": "Most active at dawn and dusk.",
+   "compareTags": [
+    "crepuscular"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1095,
+   "speciesId": 35,
+   "category": "conservation",
+   "label": "Status: Endangered. Forest loss and the illegal pet trade threaten it.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1090,
+   "speciesId": 35,
+   "category": "diet",
+   "label": "Diet type: Herbivore (mostly). Eats: bamboo leaves and shoots, plus fruit, acorns and the odd egg.",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1319,
+   "speciesId": 35,
+   "category": "geography",
+   "label": "Lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1320,
+   "speciesId": 35,
+   "category": "geography",
+   "label": "Also lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1093,
+   "speciesId": 35,
+   "category": "geography",
+   "label": "Found in the eastern Himalayas and mountains of southwestern China, including Nepal, India, Bhutan and Myanmar.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1091,
+   "speciesId": 35,
+   "category": "habitat",
+   "label": "Lives in cool mountain forests with a thick bamboo understory.",
+   "compareTags": [
+    "forest",
+    "montane",
+    "temperate",
+    "arboreal",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1092,
+   "speciesId": 35,
+   "category": "habitat",
+   "label": "Found at 2,200 to 4,800 m above sea level.",
+   "compareTags": [
+    "montane"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1096,
+   "speciesId": 35,
+   "category": "key_fact",
+   "label": "It was called a panda before the giant panda was, and the two are not close relatives.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1097,
+   "speciesId": 35,
+   "category": "key_fact",
+   "label": "A special wrist bone works like an extra thumb for gripping bamboo.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1098,
+   "speciesId": 35,
+   "category": "key_fact",
+   "label": "It wraps its bushy tail around itself like a blanket when it is cold.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1086,
+   "speciesId": 35,
+   "category": "morphology",
+   "label": "Cat-sized, with a round face, pointed ears and a long, bushy, ringed tail.",
+   "compareTags": [
+    "bushy_tail",
+    "ringed_tail"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1087,
+   "speciesId": 35,
+   "category": "morphology",
+   "label": "Primary color: Rusty red. Pattern: White face markings, dark legs and a striped tail.",
+   "compareTags": [
+    "red_coloration",
+    "brown_coloration",
+    "dark_coloration",
+    "striped"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1094,
+   "speciesId": 35,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Litter: 1 to 4 cubs. Lifespan: about 8 to 10 years in the wild",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1084,
+   "speciesId": 35,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Carnivora",
+   "compareTags": [
+    "mammalia",
+    "carnivora"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1085,
+   "speciesId": 35,
+   "category": "taxonomy",
+   "label": "Family: Ailuridae, Genus: Ailurus",
+   "compareTags": [
+    "ailuridae",
+    "ailurus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1103,
+   "speciesId": 36,
+   "category": "behavior",
+   "label": "Active at night; digs a new, large burrow almost every night.",
+   "compareTags": [
+    "burrower",
+    "nocturnal",
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1104,
+   "speciesId": 36,
+   "category": "behavior",
+   "label": "Its old burrows become shelters for many other animals.",
+   "compareTags": [
+    "ecosystem_engineer"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1110,
+   "speciesId": 36,
+   "category": "conservation",
+   "label": "Status: Vulnerable. Hunting and forest clearing have made it rare.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1105,
+   "speciesId": 36,
+   "category": "diet",
+   "label": "Diet type: Insectivore. Eats: mostly termites and ants, plus worms and other small animals.",
+   "compareTags": [
+    "insect_eater",
+    "carnivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1321,
+   "speciesId": 36,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1108,
+   "speciesId": 36,
+   "category": "geography",
+   "label": "Found across much of South America east of the Andes, from Venezuela to northern Argentina.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1106,
+   "speciesId": 36,
+   "category": "habitat",
+   "label": "Lives in tropical forests and savannas.",
+   "compareTags": [
+    "forest",
+    "grassland",
+    "tropical",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1107,
+   "speciesId": 36,
+   "category": "habitat",
+   "label": "Often found near termite mounds, where it digs for food.",
+   "compareTags": [
+    "grassland"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1111,
+   "speciesId": 36,
+   "category": "key_fact",
+   "label": "Its middle front claw can be about 20 cm long, among the largest claws of any living animal for its size.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1112,
+   "speciesId": 36,
+   "category": "key_fact",
+   "label": "It can have up to 100 small teeth, more than almost any other land mammal.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1113,
+   "speciesId": 36,
+   "category": "key_fact",
+   "label": "It can weigh as much as a large dog, about 50 kg.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1101,
+   "speciesId": 36,
+   "category": "morphology",
+   "label": "The largest armadillo, with a flexible armored shell and a huge claw on each front foot.",
+   "compareTags": [
+    "large_bodied",
+    "shelled",
+    "long_claws"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1102,
+   "speciesId": 36,
+   "category": "morphology",
+   "label": "Primary color: Dark brown shell. Pattern: A pale band along the lower edge of the shell.",
+   "compareTags": [
+    "dark_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1109,
+   "speciesId": 36,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 pup, which stays in the burrow for weeks.",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1099,
+   "speciesId": 36,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Cingulata",
+   "compareTags": [
+    "mammalia",
+    "cingulata"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1100,
+   "speciesId": 36,
+   "category": "taxonomy",
+   "label": "Family: Chlamyphoridae, Genus: Priodontes",
+   "compareTags": [
+    "chlamyphoridae",
+    "priodontes"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1118,
+   "speciesId": 37,
+   "category": "behavior",
+   "label": "Active at night; digs deep spiral burrows to escape the desert heat.",
+   "compareTags": [
+    "nocturnal",
+    "burrower",
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1119,
+   "speciesId": 37,
+   "category": "behavior",
+   "label": "Uses its big ears to hear insects underground and to let off body heat.",
+   "compareTags": [
+    "burrower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1125,
+   "speciesId": 37,
+   "category": "conservation",
+   "label": "Status: Vulnerable. Foxes, feral cats and land changes have wiped it out from most of its old range.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1120,
+   "speciesId": 37,
+   "category": "diet",
+   "label": "Diet type: Omnivore. Eats: insects, larvae, seeds, bulbs, fruit and fungi.",
+   "compareTags": [
+    "omnivore",
+    "insect_eater",
+    "granivore",
+    "frugivore",
+    "fungivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1322,
+   "speciesId": 37,
+   "category": "geography",
+   "label": "Lives in Australia or New Guinea (the Australasian realm).",
+   "compareTags": [
+    "realm:australasian"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1123,
+   "speciesId": 37,
+   "category": "geography",
+   "label": "Found in scattered parts of central and western Australia.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1121,
+   "speciesId": 37,
+   "category": "habitat",
+   "label": "Lives in deserts and dry grasslands.",
+   "compareTags": [
+    "arid",
+    "grassland",
+    "scrubland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1122,
+   "speciesId": 37,
+   "category": "habitat",
+   "label": "Digs burrows up to 2 m deep in sandy or rocky soil.",
+   "compareTags": [
+    "burrower_habitat",
+    "rocky"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1126,
+   "speciesId": 37,
+   "category": "key_fact",
+   "label": "In Australia, many people celebrate with chocolate Easter Bilbies instead of Easter Bunnies.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1127,
+   "speciesId": 37,
+   "category": "key_fact",
+   "label": "It does not need to drink; it gets water from its food.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1128,
+   "speciesId": 37,
+   "category": "key_fact",
+   "label": "Its pregnancy lasts only about two weeks, one of the shortest of any mammal.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1116,
+   "speciesId": 37,
+   "category": "morphology",
+   "label": "Rabbit-sized, with very long ears, a long pointed snout and a long tail.",
+   "compareTags": [
+    "large_ears",
+    "specialized_snout"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1117,
+   "speciesId": 37,
+   "category": "morphology",
+   "label": "Primary color: Soft blue-grey. Pattern: Black and white tail with a white tip.",
+   "compareTags": [
+    "grey_coloration",
+    "blue_coloration",
+    "dark_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1124,
+   "speciesId": 37,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to tiny babies that grow in a backward-facing pouch. Litter: 1 to 3. Lifespan: about 6 to 7 years",
+   "compareTags": [
+    "live_birth",
+    "pouch",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1114,
+   "speciesId": 37,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Peramelemorphia",
+   "compareTags": [
+    "mammalia",
+    "peramelemorphia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1115,
+   "speciesId": 37,
+   "category": "taxonomy",
+   "label": "Family: Thylacomyidae, Genus: Macrotis",
+   "compareTags": [
+    "thylacomyidae",
+    "macrotis"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1133,
+   "speciesId": 38,
+   "category": "behavior",
+   "label": "So shy that no scientist has ever seen one in the wild.",
+   "compareTags": [
+    "elusive"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1134,
+   "speciesId": 38,
+   "category": "behavior",
+   "label": "Has large scent glands on its face that it may use to mark its territory.",
+   "compareTags": [
+    "scent_marking"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1140,
+   "speciesId": 38,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Snares set for other animals are its biggest threat; it may be close to disappearing.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1135,
+   "speciesId": 38,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: leaves, especially from plants along forest streams.",
+   "compareTags": [
+    "herbivore",
+    "folivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1323,
+   "speciesId": 38,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1138,
+   "speciesId": 38,
+   "category": "geography",
+   "label": "Found only in the Annamite Mountains along the border of Vietnam and Laos.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1136,
+   "speciesId": 38,
+   "category": "habitat",
+   "label": "Lives in wet, steep evergreen forests in the mountains.",
+   "compareTags": [
+    "forest",
+    "montane",
+    "tropical",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1137,
+   "speciesId": 38,
+   "category": "habitat",
+   "label": "Prefers forest near rivers and streams.",
+   "compareTags": [
+    "riverine"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1141,
+   "speciesId": 38,
+   "category": "key_fact",
+   "label": "Scientists discovered it in 1992, one of the most surprising large-mammal finds of the 1900s.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1142,
+   "speciesId": 38,
+   "category": "key_fact",
+   "label": "It is nicknamed the 'Asian unicorn' because it is so rare and hard to find.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1143,
+   "speciesId": 38,
+   "category": "key_fact",
+   "label": "Its name means 'spinning-wheel posts' in a local language, after the shape of its horns.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1131,
+   "speciesId": 38,
+   "category": "morphology",
+   "label": "Long, straight, almost parallel horns and white markings on its face.",
+   "compareTags": [
+    "large_bodied",
+    "horns"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1132,
+   "speciesId": 38,
+   "category": "morphology",
+   "label": "Primary color: Dark chocolate brown. Pattern: Bold white stripes and spots on the face.",
+   "compareTags": [
+    "brown_coloration",
+    "dark_coloration",
+    "white_markings"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1139,
+   "speciesId": 38,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 calf.",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1129,
+   "speciesId": 38,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Artiodactyla",
+   "compareTags": [
+    "mammalia",
+    "artiodactyla"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1130,
+   "speciesId": 38,
+   "category": "taxonomy",
+   "label": "Family: Bovidae, Genus: Pseudoryx",
+   "compareTags": [
+    "bovidae",
+    "pseudoryx"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1148,
+   "speciesId": 39,
+   "category": "behavior",
+   "label": "Lives in loose herds whose members often change.",
+   "compareTags": [
+    "herd",
+    "social"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1149,
+   "speciesId": 39,
+   "category": "behavior",
+   "label": "Males guard large territories around water holes.",
+   "compareTags": [
+    "territorial"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1155,
+   "speciesId": 39,
+   "category": "conservation",
+   "label": "Status: Endangered. Loss of grazing land and water to livestock, and hunting, have cut its numbers.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1150,
+   "speciesId": 39,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: tough grasses that many other grazers cannot digest.",
+   "compareTags": [
+    "herbivore",
+    "grazer"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1324,
+   "speciesId": 39,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1153,
+   "speciesId": 39,
+   "category": "geography",
+   "label": "Found in northern Kenya and parts of Ethiopia.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1151,
+   "speciesId": 39,
+   "category": "habitat",
+   "label": "Lives in dry grasslands and bushland.",
+   "compareTags": [
+    "arid",
+    "grassland",
+    "scrubland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1152,
+   "speciesId": 39,
+   "category": "habitat",
+   "label": "Must stay within reach of water, though adults can go several days without drinking.",
+   "compareTags": [
+    "arid"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1156,
+   "speciesId": 39,
+   "category": "key_fact",
+   "label": "Every zebra's stripe pattern is unique, like a fingerprint.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1157,
+   "speciesId": 39,
+   "category": "key_fact",
+   "label": "It is named after Jules Grévy, a French president who was given one as a gift.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1158,
+   "speciesId": 39,
+   "category": "key_fact",
+   "label": "Its stripes are thinner and closer together than those of other zebras.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1146,
+   "speciesId": 39,
+   "category": "morphology",
+   "label": "The largest wild member of the horse family, with big round ears and a tall, upright mane.",
+   "compareTags": [
+    "large_bodied",
+    "large_ears"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1147,
+   "speciesId": 39,
+   "category": "morphology",
+   "label": "Primary color: White. Pattern: Narrow black stripes that stop short of its white belly.",
+   "compareTags": [
+    "striped",
+    "white_markings",
+    "dark_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1154,
+   "speciesId": 39,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young after about 13 months. Young: 1 foal. Lifespan: about 20 years",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1144,
+   "speciesId": 39,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Perissodactyla",
+   "compareTags": [
+    "mammalia",
+    "perissodactyla"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1145,
+   "speciesId": 39,
+   "category": "taxonomy",
+   "label": "Family: Equidae, Genus: Equus",
+   "compareTags": [
+    "equidae",
+    "equus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1163,
+   "speciesId": 40,
+   "category": "behavior",
+   "label": "Builds a new sleeping nest of branches high in the trees every night.",
+   "compareTags": [
+    "nest_builder",
+    "climber"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1164,
+   "speciesId": 40,
+   "category": "behavior",
+   "label": "Mostly solitary; uses sticks as tools to get insects and seeds out of fruit.",
+   "compareTags": [
+    "tool_user",
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1170,
+   "speciesId": 40,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Its forests are being cleared for palm oil farms and roads.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1165,
+   "speciesId": 40,
+   "category": "diet",
+   "label": "Diet type: Omnivore (mostly fruit). Eats: fruit, especially figs, plus leaves, bark, insects and honey.",
+   "compareTags": [
+    "omnivore",
+    "frugivore",
+    "folivore",
+    "insect_eater"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1325,
+   "speciesId": 40,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1168,
+   "speciesId": 40,
+   "category": "geography",
+   "label": "Found only in northern Sumatra, Indonesia.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1166,
+   "speciesId": 40,
+   "category": "habitat",
+   "label": "Lives in tropical rainforest, especially swamp and lowland forests.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "arboreal",
+    "wetland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1167,
+   "speciesId": 40,
+   "category": "habitat",
+   "label": "Spends almost all its life in the trees and rarely comes down to the ground.",
+   "compareTags": [
+    "arboreal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1171,
+   "speciesId": 40,
+   "category": "key_fact",
+   "label": "Mothers have a baby only about once every 8 or 9 years, the longest gap of any mammal.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1172,
+   "speciesId": 40,
+   "category": "key_fact",
+   "label": "Orangutan means 'person of the forest' in the Malay language.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1173,
+   "speciesId": 40,
+   "category": "key_fact",
+   "label": "Young orangutans stay with their mothers for years, learning which plants are good to eat.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1161,
+   "speciesId": 40,
+   "category": "morphology",
+   "label": "A great ape with very long arms and shaggy hair; adult males grow cheek pads and a beard.",
+   "compareTags": [
+    "large_bodied",
+    "long_fur"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1162,
+   "speciesId": 40,
+   "category": "morphology",
+   "label": "Primary color: Pale orange-red. Pattern: Long, shaggy hair, lighter than its Bornean cousin's.",
+   "compareTags": [
+    "red_coloration",
+    "brown_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1169,
+   "speciesId": 40,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 about every 8 or 9 years. Lifespan: 50 years or more",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1159,
+   "speciesId": 40,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Primates",
+   "compareTags": [
+    "mammalia",
+    "primates"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1160,
+   "speciesId": 40,
+   "category": "taxonomy",
+   "label": "Family: Hominidae, Genus: Pongo",
+   "compareTags": [
+    "hominidae",
+    "pongo"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1178,
+   "speciesId": 41,
+   "category": "behavior",
+   "label": "Lives in small family groups led by a mother.",
+   "compareTags": [
+    "herd",
+    "social"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1179,
+   "speciesId": 41,
+   "category": "behavior",
+   "label": "Plants forest trees by spreading their seeds in its dung as it travels.",
+   "compareTags": [
+    "ecosystem_engineer",
+    "seed_disperser"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1185,
+   "speciesId": 41,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Poaching for ivory has cut its numbers by more than 80% in about 30 years.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1180,
+   "speciesId": 41,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: leaves, bark and lots of fruit.",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1326,
+   "speciesId": 41,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1183,
+   "speciesId": 41,
+   "category": "geography",
+   "label": "Found in the rainforests of West and Central Africa, such as Gabon and the Republic of the Congo.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1181,
+   "speciesId": 41,
+   "category": "habitat",
+   "label": "Lives in dense tropical rainforests.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1182,
+   "speciesId": 41,
+   "category": "habitat",
+   "label": "Visits forest clearings called bais to drink and to eat minerals from the soil.",
+   "compareTags": [
+    "wetland",
+    "freshwater"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1186,
+   "speciesId": 41,
+   "category": "key_fact",
+   "label": "It was listed as its own species, separate from the savanna elephant, only in 2021.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1187,
+   "speciesId": 41,
+   "category": "key_fact",
+   "label": "It is called the 'gardener of the forest' because it spreads so many seeds.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1188,
+   "speciesId": 41,
+   "category": "key_fact",
+   "label": "Its tusks are straighter and harder than a savanna elephant's, which helps it move through thick forest.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1176,
+   "speciesId": 41,
+   "category": "morphology",
+   "label": "Smaller than the savanna elephant, with rounded ears and straight, downward-pointing tusks.",
+   "compareTags": [
+    "large_bodied",
+    "trunk",
+    "tusks"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1177,
+   "speciesId": 41,
+   "category": "morphology",
+   "label": "Primary color: Dark grey. Pattern: Often tinted reddish by the forest mud it bathes in.",
+   "compareTags": [
+    "grey_coloration",
+    "dark_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1184,
+   "speciesId": 41,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young after about 22 months. Young: 1 calf. Lifespan: about 60 years",
+   "compareTags": [
+    "live_birth",
+    "long_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1174,
+   "speciesId": 41,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Proboscidea",
+   "compareTags": [
+    "mammalia",
+    "proboscidea"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1175,
+   "speciesId": 41,
+   "category": "taxonomy",
+   "label": "Family: Elephantidae, Genus: Loxodonta",
+   "compareTags": [
+    "elephantidae",
+    "loxodonta"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1193,
+   "speciesId": 42,
+   "category": "behavior",
+   "label": "Hibernates in its burrow for up to 7 months each year.",
+   "compareTags": [
+    "burrower",
+    "hibernator"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1194,
+   "speciesId": 42,
+   "category": "behavior",
+   "label": "Lives in family colonies and whistles to warn others of danger.",
+   "compareTags": [
+    "social",
+    "vocal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1200,
+   "speciesId": 42,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Around 2003 fewer than 30 lived in the wild; breeding and release programs have helped.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1195,
+   "speciesId": 42,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: grasses, wildflowers and other mountain plants.",
+   "compareTags": [
+    "herbivore",
+    "grazer",
+    "folivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1327,
+   "speciesId": 42,
+   "category": "geography",
+   "label": "Lives in North America (the Nearctic realm).",
+   "compareTags": [
+    "realm:nearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1198,
+   "speciesId": 42,
+   "category": "geography",
+   "label": "Found only on Vancouver Island in British Columbia, Canada.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1196,
+   "speciesId": 42,
+   "category": "habitat",
+   "label": "Lives in high mountain meadows above the forest.",
+   "compareTags": [
+    "montane",
+    "grassland",
+    "temperate",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1197,
+   "speciesId": 42,
+   "category": "habitat",
+   "label": "Uses rocky slopes and boulders as lookouts and shelters.",
+   "compareTags": [
+    "rocky"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1201,
+   "speciesId": 42,
+   "category": "key_fact",
+   "label": "It lives only on one island, and nowhere else on Earth.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1202,
+   "speciesId": 42,
+   "category": "key_fact",
+   "label": "It is one of the rarest mammals in North America.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1203,
+   "speciesId": 42,
+   "category": "key_fact",
+   "label": "While it hibernates, its body temperature drops to just a few degrees above freezing.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1191,
+   "speciesId": 42,
+   "category": "morphology",
+   "label": "A chubby, cat-sized ground squirrel with short legs and a bushy tail.",
+   "compareTags": [
+    "rounded_body",
+    "bushy_tail"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1192,
+   "speciesId": 42,
+   "category": "morphology",
+   "label": "Primary color: Rich chocolate brown. Pattern: White patches on the nose, chin and chest.",
+   "compareTags": [
+    "brown_coloration",
+    "dark_coloration",
+    "white_markings"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1199,
+   "speciesId": 42,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Litter: 3 to 4 pups, usually every other year. Lifespan: about 10 years",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1189,
+   "speciesId": 42,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Rodentia",
+   "compareTags": [
+    "mammalia",
+    "rodentia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1190,
+   "speciesId": 42,
+   "category": "taxonomy",
+   "label": "Family: Sciuridae, Genus: Marmota",
+   "compareTags": [
+    "sciuridae",
+    "marmota"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1208,
+   "speciesId": 43,
+   "category": "behavior",
+   "label": "Climbs trees easily and can hop down from high branches.",
+   "compareTags": [
+    "climber"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1209,
+   "speciesId": 43,
+   "category": "behavior",
+   "label": "Mostly solitary and quiet.",
+   "compareTags": [
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1215,
+   "speciesId": 43,
+   "category": "conservation",
+   "label": "Status: Endangered. Hunting and forest clearing threaten it.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1210,
+   "speciesId": 43,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: leaves, fruit, flowers and ferns.",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1328,
+   "speciesId": 43,
+   "category": "geography",
+   "label": "Lives in Australia or New Guinea (the Australasian realm).",
+   "compareTags": [
+    "realm:australasian"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1213,
+   "speciesId": 43,
+   "category": "geography",
+   "label": "Found in the mountain forests of Papua New Guinea.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1211,
+   "speciesId": 43,
+   "category": "habitat",
+   "label": "Lives in tropical rainforest in the mountains.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "montane",
+    "arboreal",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1212,
+   "speciesId": 43,
+   "category": "habitat",
+   "label": "Spends most of its life high in the rainforest canopy.",
+   "compareTags": [
+    "arboreal"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1216,
+   "speciesId": 43,
+   "category": "key_fact",
+   "label": "Tree-kangaroos come from ground kangaroos whose ancestors moved back into the trees.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1217,
+   "speciesId": 43,
+   "category": "key_fact",
+   "label": "Tree-kangaroos can jump down to the ground from branches many metres up.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1218,
+   "speciesId": 43,
+   "category": "key_fact",
+   "label": "Unlike ground kangaroos, it can move its back legs one at a time to walk along branches.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1206,
+   "speciesId": 43,
+   "category": "morphology",
+   "label": "A kangaroo built for climbing, with strong front legs, curved claws and a very long tail for balance.",
+   "compareTags": [
+    "long_claws",
+    "long_tail"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1207,
+   "speciesId": 43,
+   "category": "morphology",
+   "label": "Primary color: Chestnut red-brown. Pattern: Golden stripes down the back and a ringed tail.",
+   "compareTags": [
+    "red_coloration",
+    "brown_coloration",
+    "yellow_coloration",
+    "striped"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1214,
+   "speciesId": 43,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to a tiny joey that grows in its mother's pouch. Young: 1.",
+   "compareTags": [
+    "live_birth",
+    "pouch"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1204,
+   "speciesId": 43,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Diprotodontia",
+   "compareTags": [
+    "mammalia",
+    "diprotodontia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1205,
+   "speciesId": 43,
+   "category": "taxonomy",
+   "label": "Family: Macropodidae, Genus: Dendrolagus",
+   "compareTags": [
+    "macropodidae",
+    "dendrolagus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1223,
+   "speciesId": 44,
+   "category": "behavior",
+   "label": "Solitary, except for mothers with calves.",
+   "compareTags": [
+    "solitary"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1224,
+   "speciesId": 44,
+   "category": "behavior",
+   "label": "Wallows in mud to keep cool and protect its skin.",
+   "compareTags": [
+    "wallower"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1230,
+   "speciesId": 44,
+   "category": "conservation",
+   "label": "Status: Critically Endangered. Fewer than 80 remain, all in one national park.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1225,
+   "speciesId": 44,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: leaves, young shoots, twigs and fallen fruit.",
+   "compareTags": [
+    "herbivore",
+    "folivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1329,
+   "speciesId": 44,
+   "category": "geography",
+   "label": "Lives in South or Southeast Asia (the Indomalayan realm).",
+   "compareTags": [
+    "realm:indomalayan"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1228,
+   "speciesId": 44,
+   "category": "geography",
+   "label": "Found only in Ujung Kulon National Park, at the western tip of Java, Indonesia.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1226,
+   "speciesId": 44,
+   "category": "habitat",
+   "label": "Lives in lowland tropical rainforest with mud wallows.",
+   "compareTags": [
+    "forest",
+    "tropical",
+    "wetland",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1227,
+   "speciesId": 44,
+   "category": "habitat",
+   "label": "Stays close to water and swampy ground.",
+   "compareTags": [
+    "freshwater",
+    "wetland",
+    "muddy_substrate"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1231,
+   "speciesId": 44,
+   "category": "key_fact",
+   "label": "Every Javan rhino left in the world lives in a single national park.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1232,
+   "speciesId": 44,
+   "category": "key_fact",
+   "label": "Females often have no horn at all.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1233,
+   "speciesId": 44,
+   "category": "key_fact",
+   "label": "It is one of the rarest large mammals on Earth.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1221,
+   "speciesId": 44,
+   "category": "morphology",
+   "label": "Huge body with one small horn and loose folds of skin that look like armor plates.",
+   "compareTags": [
+    "large_bodied",
+    "horns",
+    "skin_folds"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1222,
+   "speciesId": 44,
+   "category": "morphology",
+   "label": "Primary color: Dusky grey. Pattern: Skin with a mosaic-like, scaly texture.",
+   "compareTags": [
+    "grey_coloration",
+    "rough_texture"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1229,
+   "speciesId": 44,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young after about 16 months. Young: 1 calf. Lifespan: about 30 to 40 years",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1219,
+   "speciesId": 44,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Perissodactyla",
+   "compareTags": [
+    "mammalia",
+    "perissodactyla"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1220,
+   "speciesId": 44,
+   "category": "taxonomy",
+   "label": "Family: Rhinocerotidae, Genus: Rhinoceros",
+   "compareTags": [
+    "rhinocerotidae",
+    "rhinoceros"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1238,
+   "speciesId": 45,
+   "category": "behavior",
+   "label": "Roosts in groups in tall trees on steep, forested slopes.",
+   "compareTags": [
+    "social",
+    "flier"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1239,
+   "speciesId": 45,
+   "category": "behavior",
+   "label": "Soars on rising warm air like a bird of prey, which is rare for bats.",
+   "compareTags": [
+    "flier"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1245,
+   "speciesId": 45,
+   "category": "conservation",
+   "label": "Status: Endangered. Forest clearing on its two small islands threatens its roosts.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1240,
+   "speciesId": 45,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: fruit, flowers, nectar and pollen.",
+   "compareTags": [
+    "herbivore",
+    "frugivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1330,
+   "speciesId": 45,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1243,
+   "speciesId": 45,
+   "category": "geography",
+   "label": "Found only on the islands of Anjouan and Mohéli in the Comoros, between Africa and Madagascar.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1241,
+   "speciesId": 45,
+   "category": "habitat",
+   "label": "Lives in mountain rainforest and cloud forest.",
+   "compareTags": [
+    "forest",
+    "montane",
+    "tropical",
+    "arboreal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1242,
+   "speciesId": 45,
+   "category": "habitat",
+   "label": "Roosts on steep, wet slopes high up in the forest.",
+   "compareTags": [
+    "montane"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1246,
+   "speciesId": 45,
+   "category": "key_fact",
+   "label": "It is one of the largest bats in the world.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1247,
+   "speciesId": 45,
+   "category": "key_fact",
+   "label": "It spreads seeds and pollen, helping its island forests grow.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1248,
+   "speciesId": 45,
+   "category": "key_fact",
+   "label": "It is named after the explorer David Livingstone.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1236,
+   "speciesId": 45,
+   "category": "morphology",
+   "label": "A big fruit bat with wings about 1.4 m across, a fox-like face and large eyes.",
+   "compareTags": [
+    "wings",
+    "large_eyes"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1237,
+   "speciesId": 45,
+   "category": "morphology",
+   "label": "Primary color: Black. Pattern: Some have golden or orange fur patches.",
+   "compareTags": [
+    "dark_coloration",
+    "yellow_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1244,
+   "speciesId": 45,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 pup a year.",
+   "compareTags": [
+    "live_birth"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1234,
+   "speciesId": 45,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Chiroptera",
+   "compareTags": [
+    "mammalia",
+    "chiroptera"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1235,
+   "speciesId": 45,
+   "category": "taxonomy",
+   "label": "Family: Pteropodidae, Genus: Pteropus",
+   "compareTags": [
+    "pteropodidae",
+    "pteropus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1253,
+   "speciesId": 46,
+   "category": "behavior",
+   "label": "Active by day, searching the leaf litter with its twitching nose.",
+   "compareTags": [
+    "diurnal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1254,
+   "speciesId": 46,
+   "category": "behavior",
+   "label": "Lives in pairs that share a territory.",
+   "compareTags": [
+    "territorial"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1260,
+   "speciesId": 46,
+   "category": "conservation",
+   "label": "Status: Endangered. Its small forests are being cleared and broken up.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1255,
+   "speciesId": 46,
+   "category": "diet",
+   "label": "Diet type: Insectivore. Eats: beetles, ants, termites, earthworms and spiders.",
+   "compareTags": [
+    "insect_eater",
+    "carnivore",
+    "vermivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1331,
+   "speciesId": 46,
+   "category": "geography",
+   "label": "Lives in Africa south of the Sahara (the Afrotropical realm).",
+   "compareTags": [
+    "realm:afrotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1258,
+   "speciesId": 46,
+   "category": "geography",
+   "label": "Found only in coastal forests of Kenya, such as Arabuko-Sokoke Forest.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1256,
+   "speciesId": 46,
+   "category": "habitat",
+   "label": "Lives on the floor of dry coastal forests.",
+   "compareTags": [
+    "forest",
+    "coastal",
+    "tropical",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1257,
+   "speciesId": 46,
+   "category": "habitat",
+   "label": "Builds nests of dead leaves on the forest floor to rest in.",
+   "compareTags": [
+    "forest"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1261,
+   "speciesId": 46,
+   "category": "key_fact",
+   "label": "Sengis are more closely related to elephants than to shrews.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1262,
+   "speciesId": 46,
+   "category": "key_fact",
+   "label": "The golden patch may trick predators into going for its thick-skinned rump instead of its head.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1263,
+   "speciesId": 46,
+   "category": "key_fact",
+   "label": "It is also called the golden-rumped elephant shrew.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1251,
+   "speciesId": 46,
+   "category": "morphology",
+   "label": "Rat-sized, with long thin legs and a long, bendy, trunk-like nose.",
+   "compareTags": [
+    "specialized_snout",
+    "slender"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1252,
+   "speciesId": 46,
+   "category": "morphology",
+   "label": "Primary color: Reddish brown. Pattern: A bright golden patch on its rump.",
+   "compareTags": [
+    "red_coloration",
+    "brown_coloration",
+    "yellow_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1259,
+   "speciesId": 46,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Young: 1 at a time, several times a year. Lifespan: about 4 to 5 years",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1249,
+   "speciesId": 46,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Macroscelidea",
+   "compareTags": [
+    "mammalia",
+    "macroscelidea"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1250,
+   "speciesId": 46,
+   "category": "taxonomy",
+   "label": "Family: Macroscelididae, Genus: Rhynchocyon",
+   "compareTags": [
+    "macroscelididae",
+    "rhynchocyon"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1268,
+   "speciesId": 47,
+   "category": "behavior",
+   "label": "Stores dried plants as 'haypiles' in rock cracks to eat in winter.",
+   "compareTags": [
+    "food_storer"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1269,
+   "speciesId": 47,
+   "category": "behavior",
+   "label": "Lives alone and is very quiet, unlike most pikas.",
+   "compareTags": [
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1275,
+   "speciesId": 47,
+   "category": "conservation",
+   "label": "Status: Endangered. Fewer than 1,000 may remain as warming pushes it higher up the mountains.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1270,
+   "speciesId": 47,
+   "category": "diet",
+   "label": "Diet type: Herbivore. Eats: mountain grasses and herbs.",
+   "compareTags": [
+    "herbivore",
+    "grazer",
+    "folivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1332,
+   "speciesId": 47,
+   "category": "geography",
+   "label": "Lives in Europe, North Africa or northern Asia (the Palearctic realm).",
+   "compareTags": [
+    "realm:palearctic"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1273,
+   "speciesId": 47,
+   "category": "geography",
+   "label": "Found only in the Tian Shan mountains of Xinjiang, China.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1271,
+   "speciesId": 47,
+   "category": "habitat",
+   "label": "Lives on rocky cliffs high in the mountains.",
+   "compareTags": [
+    "montane",
+    "rocky",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1272,
+   "speciesId": 47,
+   "category": "habitat",
+   "label": "Found at 2,800 to 4,100 m above sea level.",
+   "compareTags": [
+    "montane"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1276,
+   "speciesId": 47,
+   "category": "key_fact",
+   "label": "It was discovered in 1983 by a scientist who then spent years searching to see it again.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1277,
+   "speciesId": 47,
+   "category": "key_fact",
+   "label": "It is nicknamed the 'magic rabbit' because it is so rarely seen.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1278,
+   "speciesId": 47,
+   "category": "key_fact",
+   "label": "As the climate warms, it is moving higher up the mountains, where there is less room.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1266,
+   "speciesId": 47,
+   "category": "morphology",
+   "label": "Small, round and tailless, with rounded ears; a relative of rabbits.",
+   "compareTags": [
+    "tiny",
+    "rounded_body"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1267,
+   "speciesId": 47,
+   "category": "morphology",
+   "label": "Primary color: Grey. Pattern: Rusty red spots on the forehead and neck.",
+   "compareTags": [
+    "grey_coloration",
+    "red_coloration",
+    "spotted"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1274,
+   "speciesId": 47,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Lifespan: probably only a few years",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1264,
+   "speciesId": 47,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Lagomorpha",
+   "compareTags": [
+    "mammalia",
+    "lagomorpha"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1265,
+   "speciesId": 47,
+   "category": "taxonomy",
+   "label": "Family: Ochotonidae, Genus: Ochotona",
+   "compareTags": [
+    "ochotonidae",
+    "ochotona"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1283,
+   "speciesId": 48,
+   "category": "behavior",
+   "label": "Active at night and makes loud screeches and growls, especially at meals.",
+   "compareTags": [
+    "nocturnal",
+    "vocal"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1284,
+   "speciesId": 48,
+   "category": "behavior",
+   "label": "Mostly solitary, though several devils may gather at one big meal.",
+   "compareTags": [
+    "solitary"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1290,
+   "speciesId": 48,
+   "category": "conservation",
+   "label": "Status: Endangered. A spreading disease has greatly reduced wild devil numbers.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1285,
+   "speciesId": 48,
+   "category": "diet",
+   "label": "Diet type: Carnivore. Eats: mostly carrion, plus small animals; it eats the bones and fur too.",
+   "compareTags": [
+    "carnivore",
+    "scavenger"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1333,
+   "speciesId": 48,
+   "category": "geography",
+   "label": "Lives in Australia or New Guinea (the Australasian realm).",
+   "compareTags": [
+    "realm:australasian"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1288,
+   "speciesId": 48,
+   "category": "geography",
+   "label": "Found in the wild only on the island of Tasmania, Australia.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1286,
+   "speciesId": 48,
+   "category": "habitat",
+   "label": "Lives in forests, woodlands and coastal scrub.",
+   "compareTags": [
+    "forest",
+    "scrubland",
+    "coastal",
+    "temperate",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1287,
+   "speciesId": 48,
+   "category": "habitat",
+   "label": "Rests by day in dens, hollow logs and burrows.",
+   "compareTags": [
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1291,
+   "speciesId": 48,
+   "category": "key_fact",
+   "label": "For its size, it has one of the strongest bites of any mammal.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1292,
+   "speciesId": 48,
+   "category": "key_fact",
+   "label": "It is the largest meat-eating marsupial alive today.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1293,
+   "speciesId": 48,
+   "category": "key_fact",
+   "label": "Its ears turn red when it is excited or upset.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1281,
+   "speciesId": 48,
+   "category": "morphology",
+   "label": "Stocky, dog-sized body with a large head, strong jaws and a thick tail.",
+   "compareTags": [
+    "robust"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1282,
+   "speciesId": 48,
+   "category": "morphology",
+   "label": "Primary color: Black. Pattern: A white stripe or patch across the chest.",
+   "compareTags": [
+    "dark_coloration",
+    "white_markings"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1289,
+   "speciesId": 48,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to tiny babies that grow in a pouch. Litter: up to 4 joeys. Lifespan: about 5 years",
+   "compareTags": [
+    "live_birth",
+    "pouch",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1279,
+   "speciesId": 48,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Dasyuromorphia",
+   "compareTags": [
+    "mammalia",
+    "dasyuromorphia"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1280,
+   "speciesId": 48,
+   "category": "taxonomy",
+   "label": "Family: Dasyuridae, Genus: Sarcophilus",
+   "compareTags": [
+    "dasyuridae",
+    "sarcophilus"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1298,
+   "speciesId": 49,
+   "category": "behavior",
+   "label": "Active at night, rooting through soil and leaf litter with its snout.",
+   "compareTags": [
+    "nocturnal",
+    "burrower"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1299,
+   "speciesId": 49,
+   "category": "behavior",
+   "label": "One of the few venomous mammals; its venom flows along grooves in its teeth.",
+   "compareTags": [
+    "venomous"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1305,
+   "speciesId": 49,
+   "category": "conservation",
+   "label": "Status: Least Concern. Still found across much of Hispaniola, but forest loss and pet dogs and cats are a danger.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1300,
+   "speciesId": 49,
+   "category": "diet",
+   "label": "Diet type: Insectivore. Eats: insects, spiders, worms and other small animals.",
+   "compareTags": [
+    "insect_eater",
+    "carnivore",
+    "vermivore"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1334,
+   "speciesId": 49,
+   "category": "geography",
+   "label": "Lives in Central or South America (the Neotropical realm).",
+   "compareTags": [
+    "realm:neotropical"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1303,
+   "speciesId": 49,
+   "category": "geography",
+   "label": "Found only on the island of Hispaniola, shared by Haiti and the Dominican Republic.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1301,
+   "speciesId": 49,
+   "category": "habitat",
+   "label": "Lives in forests and scrub, often on rocky limestone ground.",
+   "compareTags": [
+    "forest",
+    "scrubland",
+    "rocky",
+    "tropical",
+    "terrestrial"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1302,
+   "speciesId": 49,
+   "category": "habitat",
+   "label": "Shelters in caves, hollow logs and burrows.",
+   "compareTags": [
+    "burrower_habitat"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1306,
+   "speciesId": 49,
+   "category": "key_fact",
+   "label": "Its name means 'grooved tooth', after the teeth that carry its venom.",
+   "compareTags": [],
+   "revealOrder": 1,
+   "isFiltering": false
+  },
+  {
+   "id": 1307,
+   "speciesId": 49,
+   "category": "key_fact",
+   "label": "Its family is ancient: its ancestors split from other mammals while dinosaurs still lived.",
+   "compareTags": [],
+   "revealOrder": 2,
+   "isFiltering": false
+  },
+  {
+   "id": 1308,
+   "speciesId": 49,
+   "category": "key_fact",
+   "label": "It walks with a wobbly zigzag and sometimes trips over its own feet.",
+   "compareTags": [],
+   "revealOrder": 3,
+   "isFiltering": false
+  },
+  {
+   "id": 1296,
+   "speciesId": 49,
+   "category": "morphology",
+   "label": "Shrew-like, with a long bendy snout, tiny eyes, big claws and a bare, scaly tail.",
+   "compareTags": [
+    "specialized_snout",
+    "long_claws"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1297,
+   "speciesId": 49,
+   "category": "morphology",
+   "label": "Primary color: Dark brown. Pattern: Paler, reddish fur on the face.",
+   "compareTags": [
+    "brown_coloration",
+    "dark_coloration",
+    "red_coloration"
+   ],
+   "revealOrder": 2,
+   "isFiltering": true
+  },
+  {
+   "id": 1304,
+   "speciesId": 49,
+   "category": "reproduction",
+   "label": "Reproduction: Gives birth to live young. Litter: 1 to 2. Lifespan: about 11 years",
+   "compareTags": [
+    "live_birth",
+    "short_lived"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1294,
+   "speciesId": 49,
+   "category": "taxonomy",
+   "label": "Class: Mammalia, Order: Eulipotyphla",
+   "compareTags": [
+    "mammalia",
+    "eulipotyphla"
+   ],
+   "revealOrder": 1,
+   "isFiltering": true
+  },
+  {
+   "id": 1295,
+   "speciesId": 49,
+   "category": "taxonomy",
+   "label": "Family: Solenodontidae, Genus: Solenodon",
+   "compareTags": [
+    "solenodontidae",
+    "solenodon"
    ],
    "revealOrder": 2,
    "isFiltering": true
@@ -6098,6 +11015,294 @@
    "speciesId": 22,
    "category": "threat",
    "text": "Over-harvesting by whalers in the 19th century and severe habitat destruction caused by invasive, introduced goats.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 23,
+   "category": "life_description",
+   "text": "A young aye-aye stays with its mother for about two years while it learns to find food.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 23,
+   "category": "threat",
+   "text": "Forest clearing for farming; hunting; old beliefs that it is bad luck",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 24,
+   "category": "life_description",
+   "text": "A baby pangolin clings to its mother's tail and rides along as she searches for food.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 24,
+   "category": "threat",
+   "text": "Illegal hunting and trade for scales and meat; forest loss",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 26,
+   "category": "life_description",
+   "text": "Kits are born underground in spring and first peek out of the burrow in summer.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 26,
+   "category": "threat",
+   "text": "Loss of prairie dog towns; sylvatic plague disease; plowing of grasslands",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 27,
+   "category": "life_description",
+   "text": "The puggle hatches in its mother's pouch and stays there until its spines start to grow.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 27,
+   "category": "threat",
+   "text": "Hunting with dogs; forest clearing; mining and new roads",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 28,
+   "category": "life_description",
+   "text": "A calf can stand within an hour of birth and drinks its mother's milk for several years.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 28,
+   "category": "threat",
+   "text": "Forest loss; conflict with farmers; poaching for ivory and skin",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 29,
+   "category": "life_description",
+   "text": "A newborn calf hides in a nest in the undergrowth for its first weeks.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 29,
+   "category": "threat",
+   "text": "Forest clearing for mining and farming; hunting; unrest in the region",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 30,
+   "category": "life_description",
+   "text": "A baby sloth clings to its mother's belly for months as she moves through the mangroves.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 30,
+   "category": "threat",
+   "text": "Cutting of mangroves; visitors disturbing the island; a very small range",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 31,
+   "category": "life_description",
+   "text": "A joey lives in its mother's pouch for about 8 to 9 months.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 31,
+   "category": "threat",
+   "text": "Very small population in few places; drought and fire; competition with cattle for grass",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 32,
+   "category": "threat",
+   "text": "Diamond mining in coastal dunes; building and roads along the coast",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 33,
+   "category": "life_description",
+   "text": "Pups are born in a den, and the whole pack helps feed them.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 33,
+   "category": "threat",
+   "text": "Diseases from domestic dogs; farming and grazing in the highlands",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 34,
+   "category": "life_description",
+   "text": "Babies are born in spring and stay close to their mothers for their first year.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 34,
+   "category": "threat",
+   "text": "Logging; past hunting; roads and tourism in its forests",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 35,
+   "category": "life_description",
+   "text": "Cubs are born in tree hollows or rock crevices and stay in the nest for about three months.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 35,
+   "category": "threat",
+   "text": "Forest clearing; loss of bamboo; poaching and illegal pet trade",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 36,
+   "category": "threat",
+   "text": "Hunting for meat; forests and savannas cleared for farms",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 37,
+   "category": "life_description",
+   "text": "Joeys stay in the pouch for about 80 days.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 37,
+   "category": "threat",
+   "text": "Feral cats and foxes; wildfires; competition with rabbits and grazing animals",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 38,
+   "category": "threat",
+   "text": "Wire snares set in the forest; forest loss; roads through its mountains",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 39,
+   "category": "life_description",
+   "text": "A foal can walk within an hour of being born.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 39,
+   "category": "threat",
+   "text": "Competition with livestock for grass and water; hunting; drought",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 40,
+   "category": "life_description",
+   "text": "Babies cling to their mothers and drink their milk for several years.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 40,
+   "category": "threat",
+   "text": "Forest clearing for palm oil and farms; roads; illegal pet trade",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 41,
+   "category": "life_description",
+   "text": "Calves are cared for by the whole family group.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 41,
+   "category": "threat",
+   "text": "Poaching for ivory and meat; logging roads; forest loss",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 42,
+   "category": "life_description",
+   "text": "Pups first come out of the burrow in early summer, about a month after they are born.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 42,
+   "category": "threat",
+   "text": "Very small population; predators such as wolves, cougars and eagles; changing mountain meadows",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 43,
+   "category": "life_description",
+   "text": "A joey lives in the pouch for about 10 months.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 43,
+   "category": "threat",
+   "text": "Hunting; forest clearing for farming and logging",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 44,
+   "category": "life_description",
+   "text": "A calf stays with its mother for about two years.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 44,
+   "category": "threat",
+   "text": "Poaching for its horn; volcano and tsunami risk; all the rhinos living in one place",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 45,
+   "category": "life_description",
+   "text": "A mother carries her pup while it is small, then leaves it at the roost while she feeds.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 45,
+   "category": "threat",
+   "text": "Forest clearing for farms; cutting of roost trees; cyclones",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 46,
+   "category": "life_description",
+   "text": "Young are born in a leaf nest and grow up fast, leaving their parents within weeks.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 46,
+   "category": "threat",
+   "text": "Forest clearing; logging; snares",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 47,
+   "category": "threat",
+   "text": "Warming climate; livestock grazing; its tiny, scattered range",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 48,
+   "category": "life_description",
+   "text": "Newborns are the size of a grain of rice and crawl into the pouch.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 48,
+   "category": "threat",
+   "text": "A spreading facial tumor disease; cars on roads at night",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 49,
+   "category": "life_description",
+   "text": "Young follow their mother closely for months, learning where to find food.",
+   "sortOrder": 1
+  },
+  {
+   "speciesId": 49,
+   "category": "threat",
+   "text": "Forest clearing; dogs, cats and mongooses brought by people",
    "sortOrder": 1
   }
  ]

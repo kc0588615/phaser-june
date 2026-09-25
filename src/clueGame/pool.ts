@@ -42,11 +42,20 @@ export function isPlaceholderText(text: string): boolean {
   return /^(none|n\/a|unknown|-)?\.?$/i.test(text.trim());
 }
 
-const ORDER_EMOJI: Record<string, string> = { ANURA: '🐸', TESTUDINES: '🐢', CARNIVORA: '🐅', ARTIODACTYLA: '🦌' };
+// Card portraits, most specific first: family, then order, then class.
+const FAMILY_EMOJI: Record<string, string> = {
+  FELIDAE: '🐅', CANIDAE: '🐺', MUSTELIDAE: '🦡', AILURIDAE: '🦊', GIRAFFIDAE: '🦒', BOVIDAE: '🐐',
+  EQUIDAE: '🦓', RHINOCEROTIDAE: '🦏', HOMINIDAE: '🦧',
+};
+const ORDER_EMOJI: Record<string, string> = {
+  ANURA: '🐸', TESTUDINES: '🐢', ARTIODACTYLA: '🦌', PRIMATES: '🐒', PROBOSCIDEA: '🐘', PILOSA: '🦥',
+  DIPROTODONTIA: '🦘', MONOTREMATA: '🦔', EULIPOTYPHLA: '🦔', CHIROPTERA: '🦇', LAGOMORPHA: '🐇',
+  PERAMELEMORPHIA: '🐇', RODENTIA: '🐿️', MACROSCELIDEA: '🐁', AFROSORICIDA: '🐁', PERISSODACTYLA: '🐎',
+};
 const CLASS_EMOJI: Record<string, string> = { AMPHIBIA: '🐸', REPTILIA: '🦎', MAMMALIA: '🐾', AVES: '🐦' };
 
 /** Card portrait: an emoji for the animal's group, else its initials. */
 export function speciesBadge(species: PoolSpecies): string {
-  return ORDER_EMOJI[species.taxonOrder ?? ''] ?? CLASS_EMOJI[species.className ?? '']
+  return FAMILY_EMOJI[species.family?.toUpperCase() ?? ''] ?? ORDER_EMOJI[species.taxonOrder ?? ''] ?? CLASS_EMOJI[species.className ?? '']
     ?? species.commonName.split(/\s+/).map(word => word[0]).join('').slice(0, 2).toUpperCase();
 }

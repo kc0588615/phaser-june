@@ -72,13 +72,18 @@ export function taxonomyOf(species: PoolSpecies): Taxonomy {
   return { class: lower(species.className), order: lower(species.taxonOrder), family: lower(species.family), genus: lower(species.genus) };
 }
 
+// Orders whose every member has a shell (turtles, armadillos) or lays eggs.
+const SHELLED_ORDERS = new Set(['testudines', 'cingulata']);
+const EGG_LAYING_ORDERS = new Set(['testudines', 'monotremata']);
+
 /** Facts that follow from taxonomy, added to every record so axes can compare fairly. */
 function derivedTraits(taxonomy: Taxonomy): Array<[SpeciesClueCategory, string]> {
   const derived: Array<[SpeciesClueCategory, string]> = [];
-  if (taxonomy.order === 'testudines') derived.push(['morphology', 'shelled']);
+  const order = taxonomy.order ?? '';
+  if (SHELLED_ORDERS.has(order)) derived.push(['morphology', 'shelled']);
   else if (taxonomy.class) derived.push(['morphology', 'unshelled']);
-  if (taxonomy.class === 'mammalia') derived.push(['reproduction', 'live_birth']);
-  if (taxonomy.order === 'testudines') derived.push(['reproduction', 'egg_laying']);
+  if (EGG_LAYING_ORDERS.has(order)) derived.push(['reproduction', 'egg_laying']);
+  else if (taxonomy.class === 'mammalia') derived.push(['reproduction', 'live_birth']);
   return derived;
 }
 
