@@ -10,6 +10,7 @@ Next.js 16 (pages + API routes), Phaser 3 (the board), MapLibre GL (the globe), 
 npm install
 npm run dev          # http://localhost:8080
 npm test             # rules, content checks, board model
+npm run e2e          # headless Chrome plays the dev build; artifact in e2e-artifacts/
 npm run typecheck && npm run lint
 ```
 

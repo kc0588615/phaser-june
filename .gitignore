@@ -57,3 +57,6 @@ CLAUDE.md
 
 # Raw agent transcript (local only)
 /plans/012-july9-improved deducation game system
+
+# e2e runs (npm run e2e)
+/e2e-artifacts/

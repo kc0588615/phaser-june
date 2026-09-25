@@ -75,7 +75,7 @@ The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-mat
 - Never write unit tests after you write code.
 - Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
 - If you must test a system in isolation, first write down all the ways it could fail, then write the code.
-- E2E here: the `playtest` skill (real browser + `window.__cc`; `?seed=N` replays a session exactly); its artifact is the report in `docs/playtests/`. `npm test` keeps only unit tests for failures a playtest can't see (deduction rules, content simulations, input/storage parsing, board invariants).
+- E2E here: `npm run e2e` (headless Chrome plays globe → place → Clue Match rounds against `npm run dev`, checks invariants every move; artifact `e2e-artifacts/<run>/report.json` + screenshots, same seed = same run), and the `playtest` skill for judgment calls (report in `docs/playtests/`). `npm test` keeps only unit tests for failures a playtest can't see (deduction rules, content simulations, input/storage parsing, board invariants).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

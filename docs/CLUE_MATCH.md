@@ -96,5 +96,6 @@ The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, 
 
 ## Checking it as an agent
 
+- `npm run e2e` (with `npm run dev` running): headless Chrome plays three rounds of the biggest country (`E2E_PLACE`, `E2E_SEED`, `E2E_ROUNDS` to change), checks the answer is never ruled out, moves count once, the reveal names the mystery with its photo and Red List link, the journal counts it, no console errors or failed requests. Artifact: `e2e-artifacts/<run>/report.json` and screenshots.
 - `npm test`: only what a playtest can't see: deduction rules, profile checks and simulations over the real content, solve-report and localStorage parsing, board invariants. Test by playing first (AGENTS.md, Testing).
 - In a dev browser, `window.__cc.clue()` returns the session (mystery, candidates, live, moves, feed tail) and `window.__cc.drag(move, { input: 'touch' })` plays a real move. The `playtest` skill (`.claude/skills/playtest/SKILL.md`) lists the invariants to check.
