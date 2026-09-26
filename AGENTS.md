@@ -38,6 +38,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Do not set up a new database MCP server.
 - Do not add `?pgbouncer=true` (invalid for `psql`/postgres.js; causes introspection issues).
 - Always use the `DATABASE_URL` from environment, never hardcode connection strings.
+- Credentials, SSH, firewall or deploy work: read `docs/DEPLOY.md#hardening-status-2026-09-26` first (password rotated; SSH keys only; UFW enabled; remaining owner tasks).
 - Always wrap database lookups and external calls in try/catch blocks.
 
 ## Repo Quick Start

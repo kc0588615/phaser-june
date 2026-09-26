@@ -4,6 +4,11 @@
 > `postgres` on PostgreSQL 17.5. Application traffic uses the public PgBouncer
 > endpoint defined by `DATABASE_URL`.
 
+> 2026-09-26 owner handoff: password rotated, SSH keys only, UFW enabled.
+> See [hardening status](DEPLOY.md#hardening-status-2026-09-26) for credential
+> locations, firewall caveats and remaining tasks. These changes were reported
+> by the owner, not independently re-tested during the documentation update.
+
 ## Connection map
 
 There is one PostgreSQL server. `db.critterconnect.org` resolves to the Hetzner
@@ -27,7 +32,8 @@ Windows / QGIS
 | 5432 | Docker-internal | Raw PostgreSQL; not internet-accessible |
 | 55432 | WSL loopback | Agent/raw PostgreSQL SSH tunnel |
 | 5433 | Windows loopback | Separate QGIS/Windows tunnel |
-| 22 | Public, IP-allowlisted | SSH and tunnel transport |
+| 22 | Allowed by host UFW; provider firewall separate | Key-only SSH and tunnel transport |
+| 8000 | UFW allows only the owner's home IP; host network, so UFW applies (verified 2026-09-26) | Existing server `postgres-mcp`; WSL agents use the SSH tunnel instead |
 
 Repository deployment config sets PgBouncer to **transaction mode**. Do not
 depend on connection-wide `SET`, `LISTEN`/`NOTIFY`, session advisory locks, or
@@ -135,9 +141,11 @@ is still `SYN-SENT`:
 ss -tnp
 ```
 
-A common cause is a changed public IPv4 no longer matching the Hetzner
-Firewall's TCP/22 allowlist. Find the current egress address, then add only that
-address as a `/32` source. Never open SSH to all IPv4/IPv6.
+Check both host UFW and the separate Hetzner Firewall. The 2026-09-26 handoff
+reports port 22 allowed by UFW; it does not establish the current provider
+firewall rules. If a provider TCP/22 source allowlist is still configured, a
+changed public IPv4 may cause a timeout. Update that allowlist with the current
+egress address as a `/32` source.
 
 ```bash
 curl -4 https://ifconfig.me/ip
@@ -152,6 +160,11 @@ assuming silence means success.
 Windows/QGIS uses its own Windows-local tunnel on port 5433. WSL agents must
 not use it, and Windows `127.0.0.1` listeners should not be assumed reachable
 from WSL.
+
+The saved QGIS database password still needs updating after the 2026-09-26
+rotation. Obtain it privately from `.env.local`'s `DATABASE_URL`; URL-decode
+the password component if percent-encoded. See the hardening status for SSH
+key passphrase tasks affecting both WSL and Windows copies.
 
 ## Related
 
