@@ -98,7 +98,7 @@ port 8000 is not their database route.
 1. Update QGIS's saved database password from `.env.local` (see [database access](DATABASE_ACCESS.md#windowsqgis)).
 2. Change the exposed SSH key passphrase interactively: `ssh-keygen -p -f ~/.ssh/hetzner-vps`. Also update the Windows key copy at `D:\VPS\new_hetzner_keys_ssh\id_ed25519`, then delete `hetzner ssh key passphrase.txt`. Keep passphrases out of chat and command arguments.
 3. Remove obsolete password-bearing entries from `~/.codex/rules/default.rules` and old session logs/scratchpad. Preserve unrelated rules; the old database password is no longer valid.
-4. Open TCP 443 in the Hetzner Cloud firewall (see first deploy below). Until then the site is unreachable over HTTPS from outside.
+4. Sign up on play.critterconnect.org to test Clerk production sign-in.
 5. `unattended-upgrades` and `fail2ban` installation remains unconfirmed by this handoff.
 
 ## First deploy (2026-09-26)
@@ -114,4 +114,4 @@ Ran `deploy-vps.sh` (steps above) from WSL.
 | Swap | 2 GB `/swapfile` added (in fstab) for the Next build |
 | Stack | Compose project `critter`: `critter-app` healthy, `caddy` up; Let's Encrypt cert for play.critterconnect.org issued |
 | Backups | `/etc/cron.d/critter-backup` installed; first dump written (90 MB) |
-| HTTPS from outside | **Blocked.** Port 80 answers from outside (308 to HTTPS), 443 times out from outside, but works on the server (200 via the public name). UFW and Docker allow 443, so a Hetzner Cloud firewall is most likely missing a 443 rule. Add an inbound TCP 443 rule (IPv4 + IPv6) in Hetzner Console → Firewalls. |
+| HTTPS from outside | Works after an inbound TCP 443 rule (IPv4 + IPv6) was added to the Hetzner Cloud firewall. `/`, `/clue-match/`, `/login/`, `/privacy/`, `/terms/`, `/api/places/`, pool (50 species, 1,458 clues) and range APIs return 200; HSTS and nosniff headers set. |
