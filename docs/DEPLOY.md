@@ -6,10 +6,12 @@ Today the app runs as `npm run dev` in WSL against the Hetzner database. This is
 
 | Service | From | Reachable |
 |---|---|---|
-| `db` (PostGIS 17) | `docker-compose.yml` | internal network only |
-| `pgbouncer` (TLS, port 6432) | `docker-compose.yml` | public, for dev machines and QGIS |
+| `db` (PostGIS 17) | `/opt/postgis/docker-compose.yml` (server copy of `docker-compose.yml`, plus `postgres-mcp`) | internal network only |
+| `pgbouncer` (TLS, port 6432) | `/opt/postgis/docker-compose.yml` | public, for dev machines and QGIS |
 | `app` (Next.js, `Dockerfile`) | `deploy/docker-compose.app.yml` | internal, port 8080 |
 | `caddy` (HTTPS for `APP_DOMAIN`) | `deploy/docker-compose.app.yml` | public, ports 80 and 443 |
+
+The app is its own Compose project (`critter`, in `/opt/critter-connect`). It joins the database stack's `postgis_backend` network and reaches Postgres as `db`, so deploying the app never restarts the database.
 
 ## One-time setup
 
@@ -24,7 +26,7 @@ Today the app runs as `npm run dev` in WSL against the Hetzner database. This is
    ```
 
 4. **Owner. Settings on the VPS** (repo checked out at `/opt/critter-connect`):
-   - `.env` (stack): the existing `POSTGRES_*`, `PGDATA_PATH` and `DB_DOMAIN`, plus `APP_DOMAIN` and the build-time `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `NEXT_PUBLIC_TITILER_BASE_URL` and `NEXT_PUBLIC_COG_URL`.
+   - `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN` and the build-time `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `NEXT_PUBLIC_TITILER_BASE_URL` and `NEXT_PUBLIC_COG_URL`.
    - `deploy/app.env` (runtime): copy `deploy/app.env.example` and fill in `DATABASE_URL` (the `critter_app` password), `CLERK_SECRET_KEY` and the public values. `chmod 600 deploy/app.env`.
 5. **Ports 80 and 443.** Caddy needs them to get and renew its certificate. If certbot renews the PgBouncer certificate in standalone mode on port 80, add hooks so it doesn't collide with Caddy: `--pre-hook "docker stop caddy" --post-hook "docker start caddy"` in `/etc/letsencrypt/renewal/<DB_DOMAIN>.conf`.
 
@@ -33,8 +35,8 @@ Today the app runs as `npm run dev` in WSL against the Hetzner database. This is
 ```sh
 cd /opt/critter-connect
 git pull
-docker compose -f docker-compose.yml -f deploy/docker-compose.app.yml up -d --build
-docker compose -f docker-compose.yml -f deploy/docker-compose.app.yml ps     # app healthy
+docker compose -f deploy/docker-compose.app.yml --project-directory . up -d --build
+docker compose -f deploy/docker-compose.app.yml --project-directory . ps     # app healthy
 curl -fsS https://$APP_DOMAIN/api/places/ > /dev/null && echo ok
 ```
 
@@ -63,9 +65,38 @@ Roll back with `git checkout <previous commit>` and the same `up -d --build`. Co
 
   For a real restore, add `--clean --if-exists -d phaser_june`.
 
-## Harden the server (owner)
+## Hardening status (2026-09-26)
 
-- SSH keys only: in `/etc/ssh/sshd_config` set `PasswordAuthentication no` and `PermitRootLogin prohibit-password` (better: a sudo user and `PermitRootLogin no`), then `systemctl reload ssh`. Keep a second session open while testing.
-- Firewall: `ufw default deny incoming`, then allow 22, 80, 443 and 6432, and `ufw enable`.
-- `apt install unattended-upgrades fail2ban`.
-- Rotate the `postgres` password if it was ever shared outside the server. After the app uses `critter_app`, only admin tools need the superuser.
+Owner-reported state and tests; not independently re-tested during this documentation update.
+
+| Area | Reported state |
+|---|---|
+| PostgreSQL password | Rotated to a random value, never printed. Root-only server copy: `/root/postgres-password.txt`; local app copy: `DATABASE_URL` in `.env.local`. Agents continue using `DATABASE_URL`. |
+| Server configuration | Updated `/opt/postgis/.env` and the hardcoded password in the server's `docker-compose.yml`. Restarted `pgbouncer` and `postgres-mcp`; did not restart `postgis`. The repository Compose file uses environment substitution and does not define `postgres-mcp`. |
+| Database tests | PgBouncer accepted the new password and rejected a wrong one; the app connection read 50 species. |
+| SSH | `/etc/ssh/sshd_config.d/00-hardening.conf` disables password login; root uses keys only. Fresh key login succeeded; password login was refused. |
+| Host firewall | UFW enabled; ports 22, 80, 443 and 6432 allowed. Port 8000 (`postgres-mcp`, host network, no Docker DNAT) allows only the owner's home IP; verified 2026-09-26 via iptables. 6432 is Docker-published, so it bypasses UFW (public by design). Provider-firewall state was not included in the handoff. |
+| Rotation backups | Server config backups: `/opt/postgis/*.bak-20260926-165109`. Old `.env.local`: prior session scratchpad. These contain old credentials; keep them private. |
+
+### Port 8000 verification outstanding
+
+The existing `postgres-mcp` service was reported to expose superuser SQL publicly
+before hardening. **A UFW rule alone does not prove it is now restricted:**
+[Docker-published container ports can bypass UFW](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw).
+Inspect the live container's port binding/network mode and effective firewall
+rules, then verify access from the allowed IP and rejection from another IP
+(including IPv6 if exposed). The repository lacks this service's configuration.
+
+If the home IP changes, replace the old source allowance with the new IP in the
+effective firewall. The reported UFW addition is
+`ufw allow from <new-ip> to any port 8000 proto tcp`; remove the obsolete allowance
+after testing. WSL agents continue using the SSH tunnel on local port 55432;
+port 8000 is not their database route.
+
+### Remaining owner tasks
+
+1. Update QGIS's saved database password from `.env.local` (see [database access](DATABASE_ACCESS.md#windowsqgis)).
+2. Change the exposed SSH key passphrase interactively: `ssh-keygen -p -f ~/.ssh/hetzner-vps`. Also update the Windows key copy at `D:\VPS\new_hetzner_keys_ssh\id_ed25519`, then delete `hetzner ssh key passphrase.txt`. Keep passphrases out of chat and command arguments.
+3. Remove obsolete password-bearing entries from `~/.codex/rules/default.rules` and old session logs/scratchpad. Preserve unrelated rules; the old database password is no longer valid.
+4. Next deploy steps: app DNS, Clerk production instance, then the `critter_app` login/password and app settings described above. The app still uses the `postgres` role until switched.
+5. `unattended-upgrades` and `fail2ban` installation remains unconfirmed by this handoff.

@@ -1,5 +1,5 @@
 # Critter Connect web app (Next.js). Built and run on the VPS next to the
-# database: docker compose -f docker-compose.yml -f deploy/docker-compose.app.yml up -d --build
+# database: docker compose -f deploy/docker-compose.app.yml --project-directory . up -d --build
 # (docs/DEPLOY.md). NEXT_PUBLIC_* values are baked into the browser bundle at
 # build time, so they are build args; server secrets come in at run time.
 
