@@ -123,6 +123,10 @@
     ],
     "countries": [
       {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
         "code": "ZAF",
         "name": "South Africa"
       }

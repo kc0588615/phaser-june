@@ -179,7 +179,8 @@ CREATE UNIQUE INDEX clue_match_ranges_species_id ON clue_match_ranges (species_i
 -- which would put tigers in Europe and Amazon frogs in France. So Russia is split
 -- at the Urals (60°E: west is Europe, east is Asia, and Russia is listed under
 -- Asia), and France's overseas parts count for the continent they sit on, not
--- for France.
+-- for France. OneEarth spells a few sub_realms two ways ("Southern Mexican Dry
+-- Forests" / "... dry forests"), so wildlife areas group by their key.
 --
 -- bbox and center use the place's largest part, so France flies to France, not
 -- to a box that also holds French Guiana. outline is simplified for drawing.
@@ -227,10 +228,10 @@ WITH playable AS (
   FROM country_parts
   GROUP BY continent
   UNION ALL
-  SELECT 'wildlife_area', 'area:' || lower(regexp_replace(b.sub_realm, '[^A-Za-z0-9]+', '-', 'g')), b.sub_realm, min(b.realm), ST_Union(ST_MakeValid(b.wkb_geometry))
+  SELECT 'wildlife_area', 'area:' || lower(regexp_replace(b.sub_realm, '[^A-Za-z0-9]+', '-', 'g')), min(b.sub_realm), min(b.realm), ST_Union(ST_MakeValid(b.wkb_geometry))
   FROM oneearth.oneearth_bioregion b
   WHERE btrim(coalesce(b.sub_realm, '')) <> ''
-  GROUP BY b.sub_realm
+  GROUP BY 2
 ), lives_in AS (
   SELECT a.key, k.species_id
   FROM areas a

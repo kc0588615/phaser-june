@@ -150,8 +150,16 @@
         "name": "Chad"
       },
       {
+        "code": "ERI",
+        "name": "Eritrea"
+      },
+      {
         "code": "ETH",
         "name": "Ethiopia"
+      },
+      {
+        "code": "MLI",
+        "name": "Mali"
       },
       {
         "code": "MRT",
@@ -164,6 +172,14 @@
       {
         "code": "NGA",
         "name": "Nigeria"
+      },
+      {
+        "code": "SEN",
+        "name": "Senegal"
+      },
+      {
+        "code": "SDN",
+        "name": "Sudan"
       }
     ]
   },

@@ -192,6 +192,10 @@
         "name": "Congo"
       },
       {
+        "code": "CIV",
+        "name": "Côte d'Ivoire"
+      },
+      {
         "code": "COD",
         "name": "Dem. Rep. Congo"
       },
@@ -204,8 +208,20 @@
         "name": "Gabon"
       },
       {
+        "code": "GHA",
+        "name": "Ghana"
+      },
+      {
+        "code": "LBR",
+        "name": "Liberia"
+      },
+      {
         "code": "NGA",
         "name": "Nigeria"
+      },
+      {
+        "code": "TGO",
+        "name": "Togo"
       }
     ]
   },

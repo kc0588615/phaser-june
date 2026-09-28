@@ -41,7 +41,7 @@
     },
     "diet": {
       "value": "plants",
-      "note": "Bamboo leaves are most of its food.",
+      "note": "It also eats berries, blossoms and bird eggs.",
       "source": "adw"
     },
     "activity": {
@@ -102,6 +102,14 @@
       ],
       "source": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Red_panda"
+    },
+    {
+      "category": "diet",
+      "text": "Bamboo leaves are its main food. It bends the stems down to reach them.",
+      "tags": [
+        "bamboo_eater"
+      ],
+      "source": "adw"
     },
     {
       "category": "behavior",

@@ -1,0 +1,285 @@
+{
+  "id": 56,
+  "commonName": "Chimpanzee",
+  "scientificName": "Pan troglodytes",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Primates",
+    "family": "Hominidae",
+    "genus": "Pan"
+  },
+  "iucnId": 15933,
+  "redList": {
+    "category": "EN",
+    "year": 2018,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/15933/129038584"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:dry"
+  ],
+  "elevation": [
+    0,
+    2790
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its hair is black to brown.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "Wild males weigh 34 to 70 kg and females 26 to 50 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "It mostly eats ripe fruit and young leaves, plus seeds, insects, eggs and sometimes meat.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Communities have about 35 members.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother usually has one baby at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Chimpanzees can live 40 to 60 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its arms are long: from fingertip to fingertip they span about 1.5 times its height.",
+      "tags": [
+        "long_arms"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It walks on all fours, resting its weight on its knuckles.",
+      "tags": [
+        "walks_on_knuckles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Ripe fruit is its main food.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It pokes twigs into termite and ant nests to 'fish' for insects.",
+      "tags": [
+        "uses_tools"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Every night it builds a fresh nest of leafy branches in a tree to sleep in.",
+      "tags": [
+        "builds_nests"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Its loud 'pant-hoot' call helps friends and family find each other when they are far apart.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "A baby rides on its mother's back until it is about 4 years old.",
+      "tags": [
+        "carries_young_on_back",
+        "mother_carries_young"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "It lives in patches across the forest belt of Africa, from Senegal in the west to Tanzania in the east.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Illegal hunting is its biggest threat, along with forests cleared for farms, logging and mines.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Chimpanzees and bonobos are our closest living relatives.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Chimpanzee"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 1960, a chimp in Tanzania was seen shaping a twig to fish for termites: the first report of an animal other than humans making a tool.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Chimpanzee"
+    },
+    {
+      "category": "key_fact",
+      "text": "A 2025 study found that chimps drum on big tree roots with a steady beat, and chimps in West and East Africa drum in different rhythms.",
+      "source": "literature",
+      "url": "https://doi.org/10.1016/j.cub.2025.04.019"
+    },
+    {
+      "category": "behavior",
+      "text": "Each community has its own traditions: some crack hard nuts with stone or wooden hammers, while others never do.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "A community splits into small parties that travel on their own and meet up again later.",
+      "source": "iucn"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It sometimes hunts monkeys and young wild pigs, and some groups hunt as a team.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Young chimps drink their mother's milk until they are 3 to 4 years old and stay with her until about 6.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "By the early 2000s, West Africa had lost more than 80% of its original forest.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/15933/129038584",
+    "adw": "https://animaldiversity.org/accounts/Pan_troglodytes/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "BDI",
+        "name": "Burundi"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "COG",
+        "name": "Congo"
+      },
+      {
+        "code": "CIV",
+        "name": "Côte d'Ivoire"
+      },
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      },
+      {
+        "code": "GNQ",
+        "name": "Eq. Guinea"
+      },
+      {
+        "code": "GAB",
+        "name": "Gabon"
+      },
+      {
+        "code": "GHA",
+        "name": "Ghana"
+      },
+      {
+        "code": "GIN",
+        "name": "Guinea"
+      },
+      {
+        "code": "GNB",
+        "name": "Guinea-Bissau"
+      },
+      {
+        "code": "LBR",
+        "name": "Liberia"
+      },
+      {
+        "code": "MLI",
+        "name": "Mali"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      },
+      {
+        "code": "SEN",
+        "name": "Senegal"
+      },
+      {
+        "code": "SLE",
+        "name": "Sierra Leone"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "UGA",
+        "name": "Uganda"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/015_Chimpanzee_at_Kibale_forest_National_Park_Photo_by_Giles_Laurent.jpg/500px-015_Chimpanzee_at_Kibale_forest_National_Park_Photo_by_Giles_Laurent.jpg",
+    "credit": "Giles Laurent",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:015_Chimpanzee_at_Kibale_forest_National_Park_Photo_by_Giles_Laurent.jpg"
+  }
+}

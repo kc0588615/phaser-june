@@ -95,7 +95,7 @@ run(async () => {
 
   if (mode === 'photos') {
     for (const { file, profile } of await readProfiles()) {
-      if (profile.photo) continue;
+      if (profile.photo !== undefined) continue;
       const photo = await findPhoto(profile.scientificName, profile.commonName);
       if (!photo) { console.log(`  no photo: ${profile.commonName}`); continue; }
       await writeProfile(file, { ...profile, photo });

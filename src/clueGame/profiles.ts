@@ -57,7 +57,8 @@ export interface AnimalProfile {
   facts: Array<{ category: FactCategory; text: string; source: string; url?: string }>;
   /** Source key (content_sources.key) -> the page used for this animal. */
   sources: Record<string, string>;
-  photo?: { url: string; credit: string; license: string; page: string };
+  /** null: checked, no photo of the right species (`photos` skips it). */
+  photo?: { url: string; credit: string; license: string; page: string } | null;
 }
 
 export interface ContentSource { id: number; key: string; tier: 1 | 2 | 3 | 4; name: string; url: string; notes: string }

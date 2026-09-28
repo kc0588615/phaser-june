@@ -1,0 +1,289 @@
+{
+  "id": 58,
+  "commonName": "Cheetah",
+  "scientificName": "Acinonyx jubatus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Felidae",
+    "genus": "Acinonyx"
+  },
+  "iucnId": 219,
+  "redList": {
+    "category": "VU",
+    "year": 2024,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/219/259025524"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "grassland:tropical_seasonally_wet",
+    "wetlands",
+    "wetlands:inland_deltas",
+    "rocky",
+    "desert",
+    "desert:hot",
+    "desert:temperate",
+    "desert:cold",
+    "artificial",
+    "artificial:pasture"
+  ],
+  "elevation": [
+    0,
+    4000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its short, coarse fur is yellow or tan with a white throat and belly.",
+      "source": "smithsonian"
+    },
+    "size": {
+      "value": "large",
+      "note": "An adult weighs 34 to 64 kg.",
+      "source": "smithsonian"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It mostly hunts gazelles, kob, impala and other small antelope.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "In a few places, like the Sahara, it is mostly active at night.",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Females live alone with their cubs, but some males team up in small groups.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A mother has 1 to 6 cubs at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "The oldest known cheetah lived to about 20.5 years in a zoo.",
+      "source": "literature",
+      "url": "https://genomics.senescence.info/species/entry.php?species=Acinonyx_jubatus"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its coat is covered in small, solid black spots.",
+      "tags": [
+        "spots"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "A black 'tear line' runs from the inner corner of each eye down to its mouth.",
+      "tags": [
+        "tear_lines"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "The end of its tail has dark rings and a white tip.",
+      "tags": [
+        "ringed_tail",
+        "white_tail_tip"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is the fastest land animal, but it can only keep up its top speed for a few hundred meters.",
+      "tags": [
+        "fast_runner"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It can't roar. Instead it purrs and makes a loud chirp, like a bird.",
+      "tags": [
+        "chirps"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "Brothers often stay together for life in a small team called a coalition.",
+      "tags": [
+        "coalitions"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its cubs have a long, smoky gray mane down their backs.",
+      "tags": [
+        "cub_mane"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "geography",
+      "text": "Most cheetahs live in eastern and southern Africa. Fewer than 50 adults are left in Iran.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Most cheetahs live outside protected parks, where they lose land and prey and come into conflict with farmers.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "GPS collars on wild cheetahs in Botswana recorded a top speed of 93 km/h, but most hunts used only moderate speeds.",
+      "source": "literature",
+      "url": "https://doi.org/10.1038/nature12295"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2022, cheetahs from Namibia were released in India, 70 years after cheetahs were declared gone from the country.",
+      "source": "government",
+      "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=1860055"
+    },
+    {
+      "category": "key_fact",
+      "text": "Like fingerprints, each cheetah's spots and tail rings are unique, so scientists can tell them apart.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It creeps to within about 100 m of its prey, then sprints for about 20 seconds.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "A loud cheetah chirp can be heard about 1.6 km (a mile) away.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "life_description",
+      "text": "Cubs stay with their mother for about 18 months, then the brothers and sisters stay together for about six more months.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "threat",
+      "text": "Only about 6,500 adult cheetahs are left in the wild.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/219/259025524",
+    "adw": "https://animaldiversity.org/accounts/Acinonyx_jubatus/",
+    "smithsonian": "https://nationalzoo.si.edu/animals/cheetah"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical",
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "BEN",
+        "name": "Benin"
+      },
+      {
+        "code": "BWA",
+        "name": "Botswana"
+      },
+      {
+        "code": "BFA",
+        "name": "Burkina Faso"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "DJI",
+        "name": "Djibouti"
+      },
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      },
+      {
+        "code": "MLI",
+        "name": "Mali"
+      },
+      {
+        "code": "MOZ",
+        "name": "Mozambique"
+      },
+      {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
+        "code": "NER",
+        "name": "Niger"
+      },
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "SDN",
+        "name": "Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "ZMB",
+        "name": "Zambia"
+      },
+      {
+        "code": "ZWE",
+        "name": "Zimbabwe"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Male_cheetah_facing_left_in_South_Africa.jpg/500px-Male_cheetah_facing_left_in_South_Africa.jpg",
+    "credit": "AfricanConservation",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Male_cheetah_facing_left_in_South_Africa.jpg"
+  }
+}

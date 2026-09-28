@@ -1,0 +1,215 @@
+{
+  "id": 61,
+  "commonName": "Indri",
+  "scientificName": "Indri indri",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Primates",
+    "family": "Indriidae",
+    "genus": "Indri"
+  },
+  "iucnId": 10826,
+  "redList": {
+    "category": "CR",
+    "year": 2020,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/10826/115565566"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane"
+  ],
+  "elevation": [
+    10,
+    1800
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is long and silky.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It is one of the biggest living lemurs, weighing up to about 10 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It mostly eats young leaves, plus flowers, fruit, seeds and bark.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It is thought to be the most daytime-active of all lemurs.",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "groups",
+      "note": "A family group is a mated pair and up to four of their young.",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one baby every 2 or 3 years.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its tail is just a tiny stub, only about 5 cm long.",
+      "tags": [
+        "stubby_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its silky fur is mostly black with white patches, and its tufted ears are black.",
+      "tags": [
+        "black_and_white"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It clings upright to tree trunks and travels by leaping from trunk to trunk.",
+      "tags": [
+        "tree_dweller",
+        "big_leaper"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "On the ground it hops upright on its back legs, holding its arms above its head.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Families sing loud, wailing songs that can be heard up to 2 km away.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Each family keeps its own territory and settles most border meetings by singing, not fighting.",
+      "tags": [
+        "territorial"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "Young, tender leaves are its main food.",
+      "tags": [
+        "leaf_eater"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A baby clings to its mother's belly, then rides on her back from about 4 or 5 months old.",
+      "tags": [
+        "mother_carries_young",
+        "carries_young_on_back"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Forest cleared for slash-and-burn farming, logging and firewood is its main threat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "In 2021 scientists found that indri songs use the same kinds of rhythm as human music. It was the first mammal besides people known to do this.",
+      "source": "literature",
+      "url": "https://doi.org/10.1016/j.cub.2021.09.032"
+    },
+    {
+      "category": "key_fact",
+      "text": "No zoo has ever kept indris for long, so saving its rainforest is the only way to save it.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its Malagasy name, babakoto, is often translated as 'father' or 'ancestor'. Many local legends treat it as sacred.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Indri"
+    },
+    {
+      "category": "behavior",
+      "text": "The adult female is the boss of the family group.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "In the morning it often sits facing the rising sun, as if sunbathing.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Indri"
+    },
+    {
+      "category": "diet_flora",
+      "text": "It sometimes climbs down to eat soil, which may help it handle harsh chemicals in the seeds it eats.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "Young indris move around on their own at 8 months, but stay close to their mother until they are 2.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers are thought to be falling by 80% or more over 33 years, from forest loss and hunting.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "It is hunted for meat, even in places where old taboos once protected it.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Scientists expect climate change alone to shrink its range by about 40% between 2000 and 2080.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/10826/115565566",
+    "adw": "https://animaldiversity.org/accounts/Indri_indri/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "MDG",
+        "name": "Madagascar"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Indri_%28Indri_indri%29.jpg/500px-Indri_%28Indri_indri%29.jpg",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Indri_(Indri_indri).jpg"
+  }
+}

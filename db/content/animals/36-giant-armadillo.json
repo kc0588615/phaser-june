@@ -169,6 +169,10 @@
     ],
     "countries": [
       {
+        "code": "ARG",
+        "name": "Argentina"
+      },
+      {
         "code": "BOL",
         "name": "Bolivia"
       },
@@ -187,6 +191,10 @@
       {
         "code": "GUY",
         "name": "Guyana"
+      },
+      {
+        "code": "PRY",
+        "name": "Paraguay"
       },
       {
         "code": "PER",

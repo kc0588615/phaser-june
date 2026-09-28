@@ -1,0 +1,276 @@
+{
+  "id": 55,
+  "commonName": "Giant Pangolin",
+  "scientificName": "Smutsia gigantea",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pholidota",
+    "family": "Manidae",
+    "genus": "Smutsia"
+  },
+  "iucnId": 12762,
+  "redList": {
+    "category": "EN",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12762/123584478"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist"
+  ],
+  "elevation": [
+    0,
+    2220
+  ],
+  "traits": {
+    "covering": {
+      "value": "scales",
+      "note": "Its big brown scales can be more than 10 cm long.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "Adults weigh more than 30 kg.",
+      "source": "literature",
+      "url": "https://doi.org/10.1016/B978-0-12-815507-3.00010-1"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It mostly eats ants and termites.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single baby, maybe only every year or two.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has no teeth, so it can't chew.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its sticky tongue is up to 70 cm long.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It digs deep to break open underground ant and termite nests with its big front claws.",
+      "tags": [
+        "raids_termite_mounds",
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It walks on the sides of its curled-up front feet to protect its big claws.",
+      "tags": [
+        "walks_on_knuckles"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_pangolin"
+    },
+    {
+      "category": "behavior",
+      "text": "When in danger, it rolls into a tight ball of scales that is almost impossible to open.",
+      "tags": [
+        "rolls_into_ball"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "By day it sleeps in a burrow, either one it dug or an old one another animal left behind.",
+      "tags": [
+        "burrower",
+        "borrowed_burrows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Males and females mark their home areas with scent.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Even though it lives in forests, it never climbs trees.",
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "It is hunted and sold for its scales and meat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the biggest pangolin alive, up to 1.8 m long: about as long as a tall adult.",
+      "source": "literature",
+      "url": "https://doi.org/10.1016/B978-0-12-815507-3.00010-1"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2023, camera traps photographed one in Senegal's Niokolo-Koba National Park, where none had been seen since 1999.",
+      "source": "literature",
+      "url": "https://doi.org/10.1111/aje.13279"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is so hard to find that across 17 camera-trap studies it showed up at only about 1 in 8 camera spots.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It leans its heavy body on a termite mound, resting on its tail, and rips at it until part of the mound falls in.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_pangolin"
+    },
+    {
+      "category": "behavior",
+      "text": "While it eats, it closes its eyes, nostrils and ears, and it can shake ants off its scales.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It eats many kinds of ants and termites, including driver ants.",
+      "source": "iucn"
+    },
+    {
+      "category": "life_description",
+      "text": "Young ones follow their mother until they are big and strong enough to open termite mounds themselves.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_pangolin"
+    },
+    {
+      "category": "threat",
+      "text": "From 2012 to 2017, officials seized more than 6,000 kg of its scales, taken from about 1,700 animals.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12762/123584478",
+    "adw": "https://animaldiversity.org/accounts/Manis_gigantea/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "COG",
+        "name": "Congo"
+      },
+      {
+        "code": "CIV",
+        "name": "Côte d'Ivoire"
+      },
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      },
+      {
+        "code": "GNQ",
+        "name": "Eq. Guinea"
+      },
+      {
+        "code": "GAB",
+        "name": "Gabon"
+      },
+      {
+        "code": "GHA",
+        "name": "Ghana"
+      },
+      {
+        "code": "GIN",
+        "name": "Guinea"
+      },
+      {
+        "code": "GNB",
+        "name": "Guinea-Bissau"
+      },
+      {
+        "code": "LBR",
+        "name": "Liberia"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      },
+      {
+        "code": "SEN",
+        "name": "Senegal"
+      },
+      {
+        "code": "SLE",
+        "name": "Sierra Leone"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "UGA",
+        "name": "Uganda"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Giant_pangolin_%28Manis_gigantea%29%2C_Natural_History_Museum%2C_London%2C_Mammals_Gallery.JPG/500px-Giant_pangolin_%28Manis_gigantea%29%2C_Natural_History_Museum%2C_London%2C_Mammals_Gallery.JPG",
+    "credit": "John Cummings",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Giant_pangolin_(Manis_gigantea),_Natural_History_Museum,_London,_Mammals_Gallery.JPG"
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "id": 53,
+  "commonName": "Lowland Tapir",
+  "scientificName": "Tapirus terrestris",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Perissodactyla",
+    "family": "Tapiridae",
+    "genus": "Tapirus"
+  },
+  "iucnId": 21474,
+  "redList": {
+    "category": "VU",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/21474/45174127"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:seasonal_rivers",
+    "wetlands:shrub_wetlands",
+    "wetlands:bogs_marshes"
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its thick, leathery skin has only short, sparse bristles.",
+      "source": "sdzwa"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs about 150 to 250 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats leaves, fruit, stems and seeds.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It rests in thick forest by day and comes out to feed at night.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Mothers travel with their young.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one calf at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It can live about 35 years in zoos.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its nose and upper lip form a short, bendy trunk that it uses to grab leaves.",
+      "tags": [
+        "trunk"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "morphology",
+      "text": "It has four hoofed toes on each front foot and three on each back foot.",
+      "tags": [
+        "hooves"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "morphology",
+      "text": "A short, stiff mane runs along a hump on the back of its head and neck.",
+      "tags": [
+        "mane"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a good swimmer and runs into the water to escape danger.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It has poor eyesight but a strong sense of smell.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It often visits salt licks to get minerals.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It feasts on palm fruit and is the main spreader of the moriche palm's seeds.",
+      "tags": [
+        "fruit_eater",
+        "seed_spreader"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its babies are reddish brown with white stripes and spots, which fade after about seven months.",
+      "tags": [
+        "striped_young"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Hunting, forest loss and road accidents are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest native land mammal in the Amazon.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/South_American_tapir"
+    },
+    {
+      "category": "key_fact",
+      "text": "Tapirs look a bit like pigs, but their closest relatives are horses and rhinos.",
+      "source": "sdzwa",
+      "url": "https://animals.sandiegozoo.org/animals/tapir"
+    },
+    {
+      "category": "key_fact",
+      "text": "In 2024 a tapir was seen in the Brazilian state of Rio de Janeiro for the first time since 1914.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/South_American_tapir"
+    },
+    {
+      "category": "behavior",
+      "text": "It makes clicking sounds to let other tapirs know who it is, and shrieks when it is scared.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_flora",
+      "text": "Besides fruit, it eats leaves, buds, twigs, grasses and water plants.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/South_American_tapir"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother carries her calf for about 13 months.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Hunters wait at salt licks, because tapirs visit them so often.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "It has disappeared from about half of its old range in Argentina.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/21474/45174127",
+    "adw": "https://animaldiversity.org/accounts/Tapirus_terrestris/",
+    "sdzwa": "https://ielc.libguides.com/sdzg/factsheets/tapirs/characteristics"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "ARG",
+        "name": "Argentina"
+      },
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "PRY",
+        "name": "Paraguay"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/South_American_tapir_%28Tapirus_terrestris%29.JPG/500px-South_American_tapir_%28Tapirus_terrestris%29.JPG",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:South_American_tapir_(Tapirus_terrestris).JPG"
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "id": 52,
+  "commonName": "Giant Anteater",
+  "scientificName": "Myrmecophaga tridactyla",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pilosa",
+    "family": "Myrmecophagidae",
+    "genus": "Myrmecophaga"
+  },
+  "iucnId": 14224,
+  "redList": {
+    "category": "VU",
+    "year": 2025,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/14224/210444314"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:mangrove",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "shrubland:tropical_high_altitude",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "artificial",
+    "artificial:plantations",
+    "artificial:urban"
+  ],
+  "elevation": [
+    0,
+    2000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its coarse hair feels like straw and grows longest on its tail.",
+      "source": "sdzwa"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 27 to 45 kg.",
+      "source": "smithsonian"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats almost only ants and termites.",
+      "source": "smithsonian"
+    },
+    "activity": {
+      "value": "any",
+      "note": "It is active by day where few people live, and at night near people.",
+      "source": "smithsonian"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single baby once a year.",
+      "source": "iucn"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It can live up to 26 years in zoos.",
+      "source": "smithsonian"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its snout is long and narrow, and it has no teeth at all.",
+      "tags": [
+        "pointed_snout",
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its sticky tongue is about 60 cm long and flicks in and out up to 150 times a minute.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "A black stripe outlined in white runs across its shoulders and along its back.",
+      "tags": [
+        "stripes",
+        "shoulder_stripe"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "morphology",
+      "text": "Its big, bushy tail is almost as long as its body.",
+      "tags": [
+        "long_tail"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It rips open ant nests and termite mounds with its long, sharp front claws.",
+      "tags": [
+        "raids_termite_mounds",
+        "digging_claws"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "It sees poorly, but its sense of smell is about 40 times better than ours.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "If it can't get away, it rears up on its back legs, leaning on its tail, and swipes with its claws.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "behavior",
+      "text": "It walks on its knuckles, with its claws tucked in, to keep them sharp.",
+      "tags": [
+        "walks_on_knuckles"
+      ],
+      "source": "sdzwa"
+    },
+    {
+      "category": "reproduction",
+      "text": "A baby rides on its mother's back for about six months.",
+      "tags": [
+        "carries_young_on_back",
+        "mother_carries_young"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Wildfires, road crashes and farms replacing its grasslands and forests all threaten it.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It feeds at each nest for only about a minute before moving on, so it never wipes out its food supply.",
+      "source": "sdzwa"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its body temperature is only about 33 °C, one of the lowest of any mammal.",
+      "source": "sdzwa"
+    },
+    {
+      "category": "key_fact",
+      "text": "It had vanished from Iberá, in northern Argentina, and has now been successfully brought back.",
+      "source": "iucn"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It can eat up to 30,000 ants and termites in a day.",
+      "source": "sdzwa"
+    },
+    {
+      "category": "life_description",
+      "text": "A baby's markings match its mother's, so it blends in while riding on her back.",
+      "source": "sdzwa"
+    },
+    {
+      "category": "threat",
+      "text": "Scientists think more than 220,000 giant anteaters died in the 2020 wildfires in Brazil's Pantanal.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/14224/210444314",
+    "adw": "https://animaldiversity.org/accounts/Myrmecophaga_tridactyla/",
+    "smithsonian": "https://nationalzoo.si.edu/animals/giant-anteater",
+    "sdzwa": "https://animals.sandiegozoo.org/animals/giant-anteater"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "ARG",
+        "name": "Argentina"
+      },
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "CRI",
+        "name": "Costa Rica"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "HND",
+        "name": "Honduras"
+      },
+      {
+        "code": "NIC",
+        "name": "Nicaragua"
+      },
+      {
+        "code": "PAN",
+        "name": "Panama"
+      },
+      {
+        "code": "PRY",
+        "name": "Paraguay"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Myresluger2.jpg/500px-Myresluger2.jpg",
+    "credit": "Malene Thyssen",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Myresluger2.jpg"
+  }
+}

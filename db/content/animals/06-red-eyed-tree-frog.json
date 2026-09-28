@@ -160,8 +160,28 @@
     ],
     "countries": [
       {
+        "code": "BLZ",
+        "name": "Belize"
+      },
+      {
+        "code": "CRI",
+        "name": "Costa Rica"
+      },
+      {
+        "code": "GTM",
+        "name": "Guatemala"
+      },
+      {
+        "code": "HND",
+        "name": "Honduras"
+      },
+      {
         "code": "MEX",
         "name": "Mexico"
+      },
+      {
+        "code": "NIC",
+        "name": "Nicaragua"
       },
       {
         "code": "PAN",

@@ -38,6 +38,7 @@
         "clean": "rm -rf .next .test-dist",
         "db:introspect": "drizzle-kit introspect",
         "content": "node scripts/run-typescript.mjs scripts/content.ts",
+        "iucn": "node scripts/run-typescript.mjs scripts/iucn.ts",
         "e2e": "node scripts/e2e.mjs",
         "clue:world-map": "node scripts/run-typescript.mjs scripts/clue-world-map.ts"
     },

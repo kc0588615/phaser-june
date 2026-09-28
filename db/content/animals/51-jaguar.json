@@ -1,0 +1,296 @@
+{
+  "id": 51,
+  "commonName": "Jaguar",
+  "scientificName": "Panthera onca",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Felidae",
+    "genus": "Panthera"
+  },
+  "iucnId": 15953,
+  "redList": {
+    "category": "NT",
+    "year": 2018,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/15953/123791436"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:mangrove",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:temperate",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "shrubland:tropical_high_altitude",
+    "shrubland:mediterranean",
+    "grassland",
+    "grassland:temperate",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "grassland:tropical_high_altitude",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:seasonal_rivers",
+    "wetlands:shrub_wetlands",
+    "wetlands:bogs_marshes",
+    "wetlands:permanent_lakes",
+    "wetlands:seasonal_lakes",
+    "wetlands:permanent_marshes",
+    "wetlands:seasonal_marshes",
+    "artificial",
+    "artificial:arable",
+    "artificial:pasture",
+    "artificial:plantations",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    0,
+    3000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is pale yellow to reddish brown with black spots and an off-white belly.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 68 to 136 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It prefers big prey like peccaries, tapirs and deer.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "twilight",
+      "note": "It can be active at any time of day.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother usually has 2 cubs (1 to 4).",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild jaguars live 11 to 12 years; in zoos some reach 28.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its coat is covered in black spots shaped like roses, called rosettes.",
+      "tags": [
+        "spots"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Some jaguars are all black, but up close you can still see their spots.",
+      "tags": [
+        "black_coat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Its bite is strong enough to crack turtle shells and caiman skin.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It hides in thick plants, then pounces on its prey.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is an excellent swimmer and usually lives near rivers, lagoons or swamps.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Each one marks its home area with scent, scratches on trees and calls.",
+      "tags": [
+        "territorial",
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It can climb trees to stay safe or to hunt.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "It lives from Mexico to Argentina, and its stronghold is the Amazon rainforest.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Forests cleared and broken up for farms and ranches are its main threat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the biggest cat in the Americas and the third biggest in the world, after the tiger and the lion.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "key_fact",
+      "text": "A jaguar's rosettes often have a small spot in the middle. A leopard's rosettes don't.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "key_fact",
+      "text": "A few jaguars still wander into the United States: cameras photographed eight there between 1996 and 2024.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Jaguar"
+    },
+    {
+      "category": "diet_prey",
+      "text": "Scientists have recorded more than 85 kinds of prey, from capybaras and peccaries to caimans, turtles and fish.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Jaguars talk with deep grunting calls, repeated 7 to 12 times in a row.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Cubs are born with their eyes closed and stay with their mother until they are almost two years old.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Jaguars are gone from about half of the land where they once lived, and some ranchers hunt them to protect their cattle.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/15953/123791436",
+    "adw": "https://animaldiversity.org/accounts/Panthera_onca/"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "ARG",
+        "name": "Argentina"
+      },
+      {
+        "code": "BLZ",
+        "name": "Belize"
+      },
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "CRI",
+        "name": "Costa Rica"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "GTM",
+        "name": "Guatemala"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "HND",
+        "name": "Honduras"
+      },
+      {
+        "code": "MEX",
+        "name": "Mexico"
+      },
+      {
+        "code": "NIC",
+        "name": "Nicaragua"
+      },
+      {
+        "code": "PAN",
+        "name": "Panama"
+      },
+      {
+        "code": "PRY",
+        "name": "Paraguay"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Standing_jaguar.jpg/500px-Standing_jaguar.jpg",
+    "credit": "USFWS",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Standing_jaguar.jpg"
+  }
+}

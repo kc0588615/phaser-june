@@ -1,0 +1,225 @@
+{
+  "id": 62,
+  "commonName": "Chinese Giant Salamander",
+  "scientificName": "Andrias davidianus",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Caudata",
+    "family": "Cryptobranchidae",
+    "genus": "Andrias"
+  },
+  "iucnId": 179010104,
+  "redList": {
+    "category": "CR",
+    "year": 2023,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/179010104/48438418"
+  },
+  "systems": [
+    "freshwater"
+  ],
+  "habitats": [
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:karst"
+  ],
+  "elevation": [
+    100,
+    1700
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its skin is dark brown to black, with marbled markings.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "Adults average about 1 m long and 11 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It eats crabs, fish, frogs, insects and even water shrews.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It rests in its den by day.",
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/behavior"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female lays 300 to 1,500 eggs.",
+      "source": "iucn"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Some have lived more than 55 years in zoos.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its huge head and heavy body are both broad and flat.",
+      "tags": [
+        "huge_head",
+        "flat_body"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
+    },
+    {
+      "category": "morphology",
+      "text": "Its small, round eyes have no eyelids.",
+      "tags": [
+        "lidless_eyes"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Folds of skin along its sides help it take in oxygen from the water through its skin.",
+      "tags": [
+        "underwater_breathing"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
+    },
+    {
+      "category": "behavior",
+      "text": "It sees poorly. Bumps along its body feel the tiny ripples that prey makes in the water.",
+      "tags": [
+        "poor_eyesight",
+        "senses_vibrations"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "After hatching, it spends its whole life in the water.",
+      "tags": [
+        "fully_aquatic"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It waits in ambush on the stream bed, then sucks prey into its wide mouth.",
+      "tags": [
+        "ambush_hunter"
+      ],
+      "source": "sdzwa",
+      "url": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders/characteristics"
+    },
+    {
+      "category": "reproduction",
+      "text": "The father guards the eggs in his underwater den until they hatch, 50 to 60 days later.",
+      "tags": [
+        "egg_guarding"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in clear, cool mountain streams in steep valleys, often with forest and caves in the rocky banks.",
+      "tags": [
+        "cold_streams",
+        "forest_streams"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Wild ones are caught to stock salamander farms, which raise millions for food.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Until 2019 all of China's giant salamanders counted as one species. DNA from old museum specimens showed there are at least three, and the South China giant salamander may be the biggest amphibian of all.",
+      "source": "literature",
+      "url": "https://doi.org/10.1002/ece3.5257"
+    },
+    {
+      "category": "key_fact",
+      "text": "Since that split, this species is known only from the Yangtze and Yellow River basins in China.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "Some of its calls sound like a crying baby. Its Chinese name, wawayu, means 'baby fish'.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Chinese_giant_salamander"
+    },
+    {
+      "category": "behavior",
+      "text": "Before breeding, a male pushes sand and gravel out of his den until it is smooth and clean.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is the top predator in its streams; only other giant salamanders and people hunt it.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_prey",
+      "text": "In a study in the Qinling mountains, freshwater crabs were its most common food.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Chinese_giant_salamander"
+    },
+    {
+      "category": "life_description",
+      "text": "Young ones hatch about 3.5 cm long, with gills they lose by about 3 years old. They can breed at 5 or 6.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers are thought to have fallen by more than 80% in 45 years, mostly from being caught for food.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Farm salamanders released into rivers are often from other parts of China. They mix with local ones and can bring disease.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "A 2013 to 2016 search of 55 stream sites across China found only six wild ones.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/179010104/48438418",
+    "adw": "https://animaldiversity.org/accounts/Andrias_davidianus/",
+    "sdzwa": "https://ielc.libguides.com/sdzg/factsheets/chinesegiantsalamanders"
+  },
+  "range": {
+    "realms": [
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "CHN",
+        "name": "China"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Velemlok_%C4%8D%C3%ADnsk%C3%BD_zoo_praha_1.jpg/500px-Velemlok_%C4%8D%C3%ADnsk%C3%BD_zoo_praha_1.jpg",
+    "credit": "Petr Hamerník",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Velemlok_%C4%8D%C3%ADnsk%C3%BD_zoo_praha_1.jpg"
+  }
+}

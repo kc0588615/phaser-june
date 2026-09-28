@@ -1,0 +1,204 @@
+{
+  "id": 60,
+  "commonName": "Giant Panda",
+  "scientificName": "Ailuropoda melanoleuca",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Ursidae",
+    "genus": "Ailuropoda"
+  },
+  "iucnId": 712,
+  "redList": {
+    "category": "VU",
+    "year": 2016,
+    "trend": "increasing",
+    "url": "https://www.iucnredlist.org/species/712/121745669"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:temperate"
+  ],
+  "elevation": [
+    1200,
+    4100
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its thick, woolly coat keeps it warm.",
+      "source": "smithsonian"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs about 80 to 125 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "Bamboo is almost all of its food.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "any",
+      "note": "It is active about 14 hours a day.",
+      "source": "sdzwa"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother may have twins, but usually only one survives.",
+      "source": "smithsonian"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "Wild pandas live about 15 to 20 years; zoo pandas have reached 35.",
+      "source": "smithsonian"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its white coat has black ears, eye patches, legs and shoulders.",
+      "tags": [
+        "black_and_white"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a 'false thumb', a wrist bone covered by a pad, that helps it hold bamboo.",
+      "tags": [
+        "false_thumb"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a very strong bite, with big jaw muscles and wide, flat back teeth for crushing bamboo.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "diet",
+      "text": "Bamboo makes up more than 99% of its food.",
+      "tags": [
+        "bamboo_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It feeds on the ground, but it is a good tree climber.",
+      "tags": [
+        "climber"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rubs scent on tree trunks and rocks to mark its home area.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "smithsonian"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives high in the mountains, in cool forests with thick bamboo underneath.",
+      "tags": [
+        "high_mountains",
+        "bamboo_forest"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only in a few mountain ranges in central China.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "A network of 67 nature reserves now protects about two thirds of wild pandas.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "A newborn cub is pink, blind and about the size of a stick of butter, around 1/900th of its mother's weight.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "key_fact",
+      "text": "China's panda counts rose from 1,216 in the 1980s to 1,864 in 2011 to 2014, after poaching was banned and reserves were set up.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "The name 'panda' first belonged to the red panda; the giant panda was named about 40 years later.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Giant_panda"
+    },
+    {
+      "category": "diet_flora",
+      "text": "It eats up to 12.5 kg of bamboo a day, because it can digest only about a fifth of it.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Unlike most bears, it does not hibernate; in winter it shelters in caves and hollow trees.",
+      "source": "sdzwa"
+    },
+    {
+      "category": "life_description",
+      "text": "A cub may stay with its mother for up to three years.",
+      "source": "smithsonian"
+    },
+    {
+      "category": "threat",
+      "text": "Every 15 to 100 years a whole bamboo species flowers and dies at once, which can leave pandas short of food.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Climate change could wipe out more than a third of its bamboo habitat in the next 80 years.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/712/121745669",
+    "adw": "https://animaldiversity.org/accounts/Ailuropoda_melanoleuca/",
+    "smithsonian": "https://nationalzoo.si.edu/animals/giant-panda",
+    "sdzwa": "https://ielc.libguides.com/sdzg/factsheets/giantpanda/behavior"
+  },
+  "range": {
+    "realms": [
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "CHN",
+        "name": "China"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Grosser_Panda.JPG/500px-Grosser_Panda.JPG",
+    "credit": "J. Patrick Fischer",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Grosser_Panda.JPG"
+  }
+}

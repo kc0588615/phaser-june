@@ -8,7 +8,7 @@ const CLASS_NAMES: Record<string, string> = {
 export const ORDER_NAMES: Record<string, string> = {
   ANURA: 'Frogs and toads', TESTUDINES: 'Turtles and tortoises', CARNIVORA: 'Carnivores', ARTIODACTYLA: 'Even-toed hoofed mammals',
   CAUDATA: 'Salamanders and newts', SQUAMATA: 'Lizards and snakes', PRIMATES: 'Primates', PHOLIDOTA: 'Pangolins', CHIROPTERA: 'Bats',
-  PERISSODACTYLA: 'Odd-toed hoofed mammals', PROBOSCIDEA: 'Elephants', MONOTREMATA: 'Egg-laying mammals', PILOSA: 'Sloths and anteaters',
+  PERISSODACTYLA: 'Odd-toed hoofed mammals', PROBOSCIDEA: 'Elephants', MONOTREMATA: 'Egg-laying mammals', PILOSA: 'Sloths and anteaters', TUBULIDENTATA: 'Aardvarks',
   CINGULATA: 'Armadillos', DIPROTODONTIA: 'Kangaroos, koalas and wombats', DASYUROMORPHIA: 'Meat-eating marsupials',
   PERAMELEMORPHIA: 'Bandicoots and bilbies', AFROSORICIDA: 'Tenrecs and golden moles', MACROSCELIDEA: 'Sengis',
   LAGOMORPHA: 'Rabbits, hares and pikas', RODENTIA: 'Rodents', EULIPOTYPHLA: 'Shrews, moles and relatives',
@@ -30,7 +30,9 @@ export const FAMILY_NAMES: Record<string, string> = {
   TACHYGLOSSIDAE: 'the echidnas', THYLACOMYIDAE: 'the bilbies', EQUIDAE: 'the horses, zebras and donkeys', RHINOCEROTIDAE: 'the rhinos',
   MANIDAE: 'the pangolins', BRADYPODIDAE: 'the three-toed sloths', CERCOPITHECIDAE: 'the monkeys of Africa and Asia',
   DAUBENTONIIDAE: 'which has only one living species', HOMINIDAE: 'the great apes', ELEPHANTIDAE: 'the elephants',
-  SCIURIDAE: 'the squirrels, chipmunks and marmots',
+  SCIURIDAE: 'the squirrels, chipmunks and marmots', MYRMECOPHAGIDAE: 'the anteaters', ORYCTEROPODIDAE: 'which has only one living species',
+  TAPIRIDAE: 'the tapirs', URSIDAE: 'the bears', INDRIIDAE: 'the indris, sifakas and woolly lemurs',
+  CRYPTOBRANCHIDAE: 'the giant salamanders and hellbenders',
 };
 
 export interface RedListStatus {
@@ -77,10 +79,10 @@ export function taxonomyLine(species: PoolSpecies): string {
 // Card portraits, most specific first: family, then order, then class.
 const FAMILY_EMOJI: Record<string, string> = {
   FELIDAE: '🐅', CANIDAE: '🐺', MUSTELIDAE: '🦡', AILURIDAE: '🦊', GIRAFFIDAE: '🦒', BOVIDAE: '🐐',
-  EQUIDAE: '🦓', RHINOCEROTIDAE: '🦏', HOMINIDAE: '🦧',
+  EQUIDAE: '🦓', RHINOCEROTIDAE: '🦏', HOMINIDAE: '🦧', URSIDAE: '🐼', MYRMECOPHAGIDAE: '🐜',
 };
 const ORDER_EMOJI: Record<string, string> = {
-  ANURA: '🐸', TESTUDINES: '🐢', ARTIODACTYLA: '🦌', PRIMATES: '🐒', PROBOSCIDEA: '🐘', PILOSA: '🦥',
+  ANURA: '🐸', CAUDATA: '🦎', TESTUDINES: '🐢', ARTIODACTYLA: '🦌', PRIMATES: '🐒', PROBOSCIDEA: '🐘', PILOSA: '🦥',
   DIPROTODONTIA: '🦘', MONOTREMATA: '🦔', EULIPOTYPHLA: '🦔', CHIROPTERA: '🦇', LAGOMORPHA: '🐇',
   PERAMELEMORPHIA: '🐇', RODENTIA: '🐿️', MACROSCELIDEA: '🐁', AFROSORICIDA: '🐁', PERISSODACTYLA: '🐎',
 };

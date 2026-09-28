@@ -23,7 +23,7 @@ Rules:
 - Red List data comes from the latest assessment; `redList.url` is its page. `year` is the year published.
 - Habitats are IUCN classes and level-2 kinds, marginal ones included. Add a kind the IUCN text supports but its table omits (the Sunda pangolin's "lowland dipterocarp forest"), so a clue can't wrongly rule the animal out. Never add one no source supports.
 - Leave a trait out when no source documents it. Missing data never rules a candidate out.
-- Photos: Wikimedia Commons, public domain, CC0, CC BY or CC BY-SA only, credited. A real photo of the right species; no photo beats a wrong one (the extinct Floreana tortoise has none).
+- Photos: Wikimedia Commons, public domain, CC0, CC BY or CC BY-SA only, credited. A real photo of the right species; no photo beats a wrong one. `"photo": null` marks "checked, none" so `photos` skips it (the extinct Floreana tortoise: Commons only has other Galápagos tortoises under its old shared name).
 
 ## From profile to clues
 
@@ -65,7 +65,7 @@ Look-alike decoys are the animals sharing the most traits, rare ones weighted mo
 
 1. Edit or add `db/content/animals/<id>-<slug>.json` (a new animal takes the next id; ids never change).
 2. `npm run content -- preview [name]`: the clues and facts a profile makes, and any problems.
-3. New animal: `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
+3. New animal: import its range first (`npm run iucn -- find|import`, see `scripts/iucn.ts` and plan 040), then after a build `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
 4. `npm run content -- build` (one transaction), then `npm run content -- check`.
 5. If the set of animals or their ranges changed, refresh `clue_match_ranges` and `clue_match_places` (docs/CLUE_MATCH.md).
 6. `npm test` validates every profile and simulates rounds; then play `/clue-match?seed=1`.

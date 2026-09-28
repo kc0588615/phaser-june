@@ -1,0 +1,229 @@
+{
+  "id": 59,
+  "commonName": "Indian Pangolin",
+  "scientificName": "Manis crassicaudata",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pholidota",
+    "family": "Manidae",
+    "genus": "Manis"
+  },
+  "iucnId": 12761,
+  "redList": {
+    "category": "EN",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12761/123583998"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "savanna",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:tropical_dry",
+    "desert",
+    "desert:hot",
+    "artificial",
+    "artificial:plantations",
+    "artificial:degraded_forest"
+  ],
+  "elevation": [
+    0,
+    1850
+  ],
+  "traits": {
+    "covering": {
+      "value": "scales",
+      "note": "Its scales are pale, yellowish brown.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "Adults weigh 10 to 20 kg.",
+      "source": "iucn"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats mostly ants and termites.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "source": "iucn"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "iucn"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother usually has one baby; twins are rare.",
+      "source": "iucn"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "One lived 19 years in a zoo.",
+      "source": "iucn"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has no teeth at all.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its sticky tongue is up to 42.5 cm long.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "morphology",
+      "text": "Its thick tail is almost as long as its body and helps it climb trees.",
+      "tags": [
+        "long_tail",
+        "climber"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "diet",
+      "text": "It rips open ant nests and termite mounds with its big front claws.",
+      "tags": [
+        "raids_termite_mounds",
+        "digging_claws"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "When in danger, it curls into a tight, armored ball.",
+      "tags": [
+        "rolls_into_ball"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "The only sound it is known to make is a loud hiss.",
+      "tags": [
+        "hisses"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "By day it sleeps in a deep burrow, often dug under a big rock.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her baby on her tail while she looks for food.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "It is hunted and sold for its scales and meat.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its scales are so heavy that they make up a quarter to a third of its body weight.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its other name is the thick-tailed pangolin.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It walks with its big front claws tucked under its feet.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks the edges of its territory with urine on trees.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_prey",
+      "text": "In Pakistan, most of its meals are two kinds of black ants.",
+      "source": "iucn"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It swallows sand and small stones that help grind up insects in its stomach.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother wraps her body around her baby to keep it safe.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "In one part of Pakistan, its numbers fell by about 79% in just two years as people caught it for its scales.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12761/123583998",
+    "adw": "https://animaldiversity.org/accounts/Manis_crassicaudata/"
+  },
+  "range": {
+    "realms": [
+      "realm:indomalayan"
+    ],
+    "countries": [
+      {
+        "code": "BGD",
+        "name": "Bangladesh"
+      },
+      {
+        "code": "IND",
+        "name": "India"
+      },
+      {
+        "code": "NPL",
+        "name": "Nepal"
+      },
+      {
+        "code": "LKA",
+        "name": "Sri Lanka"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Scaly_ant_eater_by_Dushy_Ranetunge_2.jpg/500px-Scaly_ant_eater_by_Dushy_Ranetunge_2.jpg",
+    "credit": "Dushy Ranetunge",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Scaly_ant_eater_by_Dushy_Ranetunge_2.jpg"
+  }
+}

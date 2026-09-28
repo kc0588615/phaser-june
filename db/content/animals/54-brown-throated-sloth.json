@@ -1,0 +1,240 @@
+{
+  "id": 54,
+  "commonName": "Brown-throated Sloth",
+  "scientificName": "Bradypus variegatus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pilosa",
+    "family": "Bradypodidae",
+    "genus": "Bradypus"
+  },
+  "iucnId": 3038,
+  "redList": {
+    "category": "LC",
+    "year": 2022,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/3038/210442893"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "artificial",
+    "artificial:plantations",
+    "artificial:urban"
+  ],
+  "elevation": [
+    0,
+    2500
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its thick, woolly fur often looks green.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs about 3.5 to 5 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats leaves, plus some flowers and fruit.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "any",
+      "note": "It is most active in the afternoon.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single baby.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its throat is brown, which gives it its name.",
+      "tags": [
+        "brown_throat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Algae living in its fur give it a greenish tint that helps it hide in the leaves.",
+      "tags": [
+        "camouflage",
+        "algae_fur"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It moves very slowly and spends almost all its life high in the treetops.",
+      "tags": [
+        "tree_dweller",
+        "slow_mover"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It hangs upside down from branches, even while it sleeps.",
+      "tags": [
+        "hangs_upside_down"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It seldom walks on the ground, but it can swim well.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Its favorite food is the leaves of Cecropia trees.",
+      "tags": [
+        "cecropia_leaves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "A mother carries her baby clinging to her belly.",
+      "tags": [
+        "mother_carries_young"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It even lives in trees in town squares, city parks and cacao plantations.",
+      "tags": [
+        "town_dweller"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Forest loss, wildfires and road accidents threaten it in parts of its range.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the most common and widespread of the three-toed sloths, found from Honduras to Bolivia and Brazil.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Brown-throated_sloth"
+    },
+    {
+      "category": "key_fact",
+      "text": "Extra bones in its neck let it turn its head about 270 degrees.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "A kind of moth lives in its fur and lays its eggs in the sloth's droppings.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Brown-throated_sloth"
+    },
+    {
+      "category": "behavior",
+      "text": "It climbs down to the ground only once every 3 to 8 days, to leave its droppings.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sleeps about 14 to 16 hours a day.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A female calls with a loud, shrill scream to attract a mate.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Brown-throated_sloth"
+    },
+    {
+      "category": "threat",
+      "text": "In some places wild sloths are caught to sell as pets or to pose for tourists' selfies.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/3038/210442893",
+    "adw": "https://animaldiversity.org/accounts/Bradypus_variegatus/"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "CRI",
+        "name": "Costa Rica"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "HND",
+        "name": "Honduras"
+      },
+      {
+        "code": "NIC",
+        "name": "Nicaragua"
+      },
+      {
+        "code": "PAN",
+        "name": "Panama"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Bradypus.jpg/500px-Bradypus.jpg",
+    "credit": "Stefan Laube (Tauchgurke)",
+    "license": "Public domain",
+    "page": "https://commons.wikimedia.org/wiki/File:Bradypus.jpg"
+  }
+}

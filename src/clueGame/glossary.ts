@@ -94,6 +94,7 @@ const ENTRIES: Array<[string, string, string?]> = [
   ['Reptilia', 'Reptiles: turtles, snakes, lizards and crocodiles. They have scaly skin and most lay eggs on land.'],
   ['Mammalia', 'Mammals: animals with hair that feed their young milk.'],
   ['Anura', 'Frogs and toads.'],
+  ['Caudata', 'Salamanders and newts: amphibians with tails.'],
   ['Testudines', 'Turtles and tortoises.'],
   ['Carnivora', 'Meat-eating mammals like cats, dogs and bears.'],
   ['Artiodactyla', 'Hoofed mammals with an even number of toes, like deer, antelopes and cattle.'],
@@ -113,6 +114,7 @@ const ENTRIES: Array<[string, string, string?]> = [
   ['Eulipotyphla', 'Shrews, moles, hedgehogs and solenodons.'],
   ['Chiroptera', 'Bats.'],
   ['Pholidota', 'Pangolins.'],
+  ['Tubulidentata', 'The aardvark, the only living member of its order.'],
   // Conservation (IUCN Red List)
   ['Critically Endangered', 'At extremely high risk of dying out in the wild.'],
   ['Endangered', 'At very high risk of dying out in the wild.'],

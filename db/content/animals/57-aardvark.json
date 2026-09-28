@@ -1,0 +1,358 @@
+{
+  "id": 57,
+  "commonName": "Aardvark",
+  "scientificName": "Orycteropus afer",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Tubulidentata",
+    "family": "Orycteropodidae",
+    "genus": "Orycteropus"
+  },
+  "iucnId": 41504,
+  "redList": {
+    "category": "LC",
+    "year": 2015,
+    "trend": "unknown",
+    "url": "https://www.iucnredlist.org/species/41504/21286437"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "grassland:temperate",
+    "grassland:tropical_dry"
+  ],
+  "elevation": [
+    0,
+    3200
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its thin coat of coarse hair often wears off, showing its thick skin.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 40 to 82 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats almost only ants and termites.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother usually has one baby a year.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "In zoos it can live about 23 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its peg-like back teeth are made of tiny tubes, have no enamel and keep growing all its life.",
+      "tags": [
+        "tube_teeth",
+        "ever_growing_teeth"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "morphology",
+      "text": "Its long snout looks like a stretched-out pig's snout.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "morphology",
+      "text": "It sees poorly, but its long ears hear very well.",
+      "tags": [
+        "poor_eyesight",
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It licks up ants and termites with its long, sticky tongue and swallows them without chewing.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It digs into ant nests and termite mounds with its strong, spade-like claws.",
+      "tags": [
+        "raids_termite_mounds",
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It gets almost all the water it needs from its food, so it rarely drinks.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It spends the day resting in a burrow it digs itself.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "If it can't dig away from danger, it stands up on its back legs and tail and defends itself with its claws.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Hunting for bushmeat may be a real threat to it in some countries, like Zambia and Mozambique.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its name means 'earth pig' in Afrikaans, but it isn't related to pigs.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is the only living species in its whole order of mammals, the Tubulidentata.",
+      "source": "iucn"
+    },
+    {
+      "category": "key_fact",
+      "text": "It belongs to a group of African mammals that includes elephants, sengis and golden moles.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its old burrows become homes for warthogs, hyenas, mongooses, bats, birds and reptiles.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_flora",
+      "text": "The only fruit it eats is the aardvark cucumber, which grows underground. It spreads the seeds in its droppings.",
+      "source": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aardvark"
+    },
+    {
+      "category": "behavior",
+      "text": "Before heading out at night, it checks for danger at the burrow entrance, then runs out and jumps around.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "During a drought in the Kalahari, aardvarks short of food began feeding in the daytime, and many didn't survive.",
+      "source": "literature",
+      "url": "https://doi.org/10.3389/fphys.2020.00637"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/41504/21286437",
+    "adw": "https://animaldiversity.org/accounts/Orycteropus_afer/"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "BEN",
+        "name": "Benin"
+      },
+      {
+        "code": "BWA",
+        "name": "Botswana"
+      },
+      {
+        "code": "BFA",
+        "name": "Burkina Faso"
+      },
+      {
+        "code": "BDI",
+        "name": "Burundi"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "COG",
+        "name": "Congo"
+      },
+      {
+        "code": "CIV",
+        "name": "Côte d'Ivoire"
+      },
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      },
+      {
+        "code": "DJI",
+        "name": "Djibouti"
+      },
+      {
+        "code": "GNQ",
+        "name": "Eq. Guinea"
+      },
+      {
+        "code": "ERI",
+        "name": "Eritrea"
+      },
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "GAB",
+        "name": "Gabon"
+      },
+      {
+        "code": "GHA",
+        "name": "Ghana"
+      },
+      {
+        "code": "GIN",
+        "name": "Guinea"
+      },
+      {
+        "code": "GNB",
+        "name": "Guinea-Bissau"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      },
+      {
+        "code": "LBR",
+        "name": "Liberia"
+      },
+      {
+        "code": "MLI",
+        "name": "Mali"
+      },
+      {
+        "code": "MRT",
+        "name": "Mauritania"
+      },
+      {
+        "code": "MOZ",
+        "name": "Mozambique"
+      },
+      {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
+        "code": "NER",
+        "name": "Niger"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      },
+      {
+        "code": "SEN",
+        "name": "Senegal"
+      },
+      {
+        "code": "SLE",
+        "name": "Sierra Leone"
+      },
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "SDN",
+        "name": "Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "TGO",
+        "name": "Togo"
+      },
+      {
+        "code": "UGA",
+        "name": "Uganda"
+      },
+      {
+        "code": "ZMB",
+        "name": "Zambia"
+      },
+      {
+        "code": "ZWE",
+        "name": "Zimbabwe"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Orycteropus_afer_175359469.jpg/500px-Orycteropus_afer_175359469.jpg",
+    "credit": "Kelly Abram",
+    "license": "CC BY 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Orycteropus_afer_175359469.jpg"
+  }
+}

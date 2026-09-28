@@ -4,7 +4,7 @@ Handoff for a fresh agent. Written 2026-09-26 by the agent that built the 50-ani
 
 ## Goal
 
-Most globe places have only 3 or 4 animals, so a place runs out fast and falls back to its region. Add animals, preferably ones that make good look-alikes for existing animals (shared traits make rounds harder and more fun). Secondary: a habitat color legend on the place card (Part B, blocked).
+Before batch 1, 51 of 88 country/wildlife-area places had only 2 animals, so a place ran out fast and falls back to its region. Add animals, preferably ones that make good look-alikes for existing animals (shared traits make rounds harder and more fun). Secondary: a habitat color legend on the place card (Part B, blocked).
 
 ## Blocker: range polygons
 
@@ -20,30 +20,28 @@ IUCN range shapefiles need a logged-in IUCN Red List account (Spatial Data Downl
 
 `iucn` columns (IUCN shapefile schema, lowercased by ogr2ogr): `ogc_fid, id_no, sci_name, tax_comm, kingdom, phylum, class, order_, family, genus, category, marine, terrestria, freshwater, island, origin, presence, seasonal, compiler, yrcompiled, citation, source, subspecies, subpop, legend, generalisd, shape_leng, shape_area, wkb_geometry, dist_comm`.
 
-`ogr2ogr` is **not installed** in WSL, and Docker doesn't work in this WSL distro. Options: `sudo apt install gdal-bin` (network installs may be restricted; ask), or run ogr2ogr on the VPS (Docker works there: `docker run --rm --network postgis_backend -v $PWD:/data ghcr.io/osgeo/gdal ogr2ogr ...`). Append, don't replace:
+Unblocked 2026-09-27: the owner's Red List group downloads (Dec 2024, 44 zips: MAMMALS_TERRESTRIAL_ONLY, MAMMALS_FRESHWATER, ANURA, CAUDATA, TURTLES, SCALED_REPTILES, ...) are copied to `~/data/iucn/zips` and unzipped to `~/data/iucn/shp/<GROUP>/` (42 GB, outside the repo; originals on `D:\ArcGIS\data\iucn`). No ogr2ogr needed: `scripts/iucn.ts` reads a species' records straight from the shapefile (via `.shx` offsets) and appends them, attributes and all, through `DATABASE_URL`:
 
 ```sh
-ogr2ogr -f PostgreSQL "PG:<conn>" data_0.shp -nln iucn -append -t_srs EPSG:4326 -nlt PROMOTE_TO_MULTI -lco GEOMETRY_NAME=wkb_geometry
+npm run iucn -- find ~/data/iucn/shp "Panthera onca"                 # which file, id_no, category, polygons
+npm run iucn -- import ~/data/iucn/shp/MAMMALS_TERRESTRIAL_ONLY/MAMMALS_TERRESTRIAL_ONLY.shp "Panthera onca"
 ```
 
-Check the SRID and geometry type of existing rows first (`SELECT Find_SRID('public','iucn','wkb_geometry'), GeometryType(wkb_geometry), count(*) FROM iucn GROUP BY 1,2`) and match them. Only import the species you're adding, never the whole group file (the DB is ~120 MB; a full mammal file is several GB). `presence` 1–3 = extant/probably/possibly extant; the views use those, falling back to all polygons for extinct species.
+A species already in `iucn` is skipped. Tapirs, rhinos, hippos and otters are in MAMMALS_FRESHWATER, not TERRESTRIAL_ONLY. The imported areas match the shapefile's `SHAPE_Area`; some polygons are invalid (self-intersections), which the views' `ST_MakeValid` handles.
 
-## Candidates
+Check the SRID and geometry type of existing rows first (`SELECT Find_SRID('public','iucn','wkb_geometry'), GeometryType(wkb_geometry), count(*) FROM iucn GROUP BY 1,2`) and match them. Only import the species you're adding, never the whole group file (a full mammal file is several GB). Range rows with no `species` row are invisible to the game. `presence` 1–3 = extant/probably/possibly extant; the views use those, falling back to all polygons for extinct species.
 
-Picked for look-alike value with current animals (confirm current Red List status when writing each profile):
+## Batch 1: done 2026-09-27
 
-| Animal | Scientific name | Pairs with |
-|---|---|---|
-| Indri | *Indri indri* | aye-aye (Madagascar lemurs) |
-| Ploughshare tortoise | *Astrochelys yniphora* | radiated tortoise (same genus, Madagascar) |
-| Giant panda | *Ailuropoda melanoleuca* | red panda (bamboo, "false thumb", same mountains) |
-| Tonkin snub-nosed monkey | *Rhinopithecus avunculus* | golden snub-nosed monkey (same genus) |
-| Indian pangolin | *Manis crassicaudata* | Sunda pangolin (same genus) |
-| Hirola | *Beatragus hunteri* | addax, saola (Kenya antelopes, horns/hooves) |
-| Red wolf | *Canis rufus* | Ethiopian wolf (same genus) |
-| Chinese giant salamander | *Andrias davidianus* (IUCN may list split species; check) | first salamander (order Caudata) |
+12 animals, ids 51-62: jaguar, giant anteater, lowland tapir, brown-throated sloth, giant pangolin, chimpanzee, aardvark, cheetah, Indian pangolin, giant panda, indri, Chinese giant salamander (IUCN now lists *A. davidianus* as taxon 179010104; *A. sligoi* is split off). Profiles were researched by parallel agents, one per look-alike cluster, so shared tags stayed consistent: `raids_termite_mounds` (anteater, aardvark, both new pangolins), `walks_on_knuckles` (anteater, giant pangolin, chimp), `spots`, `bamboo_eater` (+ red panda), `black_and_white`, `carries_young_on_back`, `loud_calls`.
 
-Thin places to favor: Madagascar, Kenya, China, India, USA each gain at least one. A place only appears on the globe when ≥2 animals hold ≥5% (or 5,000 km²) of their range in it (`clue_match_places`, `db/schema.sql`).
+Picked by measuring, not guessing: 35 candidate ranges were imported and run through the places rules against the current animals (the query is `clue_match_places` with unlinked `iucn` rows added as extra species), scoring thin places joined and new places created; the unpicked 23 were deleted from `iucn`. Result: countries 43 -> 73 (only-2-animal ones 20 -> 15), wildlife areas 45 -> 68 (31 -> 14), about 4 animals per place. The original list's red wolf, Tonkin snub-nosed monkey, ploughshare tortoise and hirola each filled almost no thin place.
+
+Next batch, already measured (ids and files via `npm run iucn -- find`): Temminck's pangolin, African savanna elephant (same genus as the forest elephant), African wild dog, black rhino, eastern long-beaked echidna (thin Papua New Guinea), hirola, dama gazelle (Chad/Niger with the addax), Baird's tapir, spectacled bear, maned wolf, giant otter, axolotl and hellbender (look-alikes of the salamander), golden poison frog.
+
+Fixed on the way: two OneEarth sub_realms spelled two ways ("Southern Mexican Dry Forests" / "dry forests") collided on the place key and broke the places refresh; wildlife areas now group by key (`db/schema.sql`; the view was rebuilt beside the old one and swapped in one transaction). `photos` re-added a generic Galápagos tortoise to the Floreana tortoise; `"photo": null` now means "checked, none" and `photos` skips it.
+
+Owner review: cheetah has `forest` (IUCN text "dry forest", not its table); Indian pangolin has `desert` (IUCN text "arid areas", Thar); tapir covering is `skin`; giant panda year 2016 (errata); the giant pangolin photo is a museum mount (a live but grainy camera-trap photo exists: Commons `Smutsia_gigantea_464600306.jpg`).
 
 ## Workflow for one new animal
 
