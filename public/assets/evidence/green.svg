@@ -1,7 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7bd99b"/><stop offset="1" stop-color="#17633f"/></linearGradient></defs>
-  <path d="M64 4 111 31 118 82 83 119 33 113 7 70 23 22Z" fill="url(#g)" stroke="#baf0c8" stroke-width="5"/>
-  <path d="M25 83c5-39 26-57 62-55-2 36-19 58-62 55Z" fill="#fff9e9"/>
-  <path d="M31 93c17-28 35-43 60-58" fill="none" stroke="#285b39" stroke-width="7" stroke-linecap="round"/>
-  <path d="m81 54 19 5-16 12Z" fill="#fff9e9" stroke="#285b39" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Habitat: a green leaf. -->
+  <defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7cf0a6"/><stop offset="1" stop-color="#18a85c"/></linearGradient></defs>
+  <path d="M24 104 10 120" stroke="#0b5c31" stroke-width="8" stroke-linecap="round"/>
+  <path d="M16 110C6 48 44 8 118 8c8 72-30 110-102 102Z" transform="translate(0 6)" fill="#0b5c31"/>
+  <path d="M16 110C6 48 44 8 118 8c8 72-30 110-102 102Z" fill="url(#f)" stroke="#0b5c31" stroke-width="3" stroke-linejoin="round"/>
+  <ellipse cx="40" cy="48" rx="16" ry="6.5" transform="rotate(-52 40 48)" fill="#fff" fill-opacity=".42"/>
+  <g fill="none" stroke-linecap="round" stroke="#127a40" stroke-opacity=".7" transform="translate(0 2.5)">
+    <path d="M26 102 104 22" stroke-width="7.5"/><path d="M46 81 34 60M70 57 60 36M58 69l21 10M82 45l18 7" stroke-width="5.5"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke="#fff">
+    <path d="M26 102 104 22" stroke-width="7.5"/><path d="M46 81 34 60M70 57 60 36M58 69l21 10M82 45l18 7" stroke-width="5.5"/>
+  </g>
 </svg>

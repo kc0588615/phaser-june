@@ -1,7 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#dcb6ff"/><stop offset="1" stop-color="#57208f"/></linearGradient></defs>
-  <path d="M64 4 111 31 118 82 83 119 33 113 7 70 23 22Z" fill="url(#g)" stroke="#efdcff" stroke-width="5"/>
-  <path d="M36 52 50 34h28l14 18-28 44Z" fill="#fff9ed" fill-opacity=".16" stroke="#fff9ed" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M36 52h56M56 36l8 56M72 36l-8 56" fill="none" stroke="#fff9ed" stroke-width="5" stroke-linecap="round"/>
-  <path d="M98 20l3.5 8.5L110 32l-8.5 3.5L98 44l-3.5-8.5L86 32l8.5-3.5Z" fill="#fff9ed"/>
+  <!-- Field notes (the rare gem): a purple sparkle with a notebook. -->
+  <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dcb4ff"/><stop offset="1" stop-color="#8f4dff"/></linearGradient></defs>
+  <polygon points="64,10 83,43 116,62 83,81 64,114 45,81 12,62 45,43" transform="translate(0 6)" fill="#45188f" stroke="#45188f" stroke-width="12" stroke-linejoin="round"/>
+  <polygon points="64,10 83,43 116,62 83,81 64,114 45,81 12,62 45,43" fill="#45188f" stroke="#45188f" stroke-width="12" stroke-linejoin="round"/>
+  <polygon points="64,10 83,43 116,62 83,81 64,114 45,81 12,62 45,43" fill="url(#f)" stroke="url(#f)" stroke-width="6" stroke-linejoin="round"/>
+  <ellipse cx="57" cy="34" rx="4" ry="10" transform="rotate(28 57 34)" fill="#fff" fill-opacity=".55"/>
+  <rect x="51" y="50" width="26" height="31" rx="4" fill="#5a22b8" fill-opacity=".7"/>
+  <rect x="51" y="47" width="26" height="31" rx="4" fill="#fff"/>
+  <path d="M57 56h14M57 63h14M57 70h9" stroke="#7a3fe0" stroke-width="3" stroke-linecap="round"/>
 </svg>

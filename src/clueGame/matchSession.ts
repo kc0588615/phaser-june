@@ -1,8 +1,9 @@
 // A play session (plan 041): rounds back to back, with score and streak. A pure
 // reducer over the round rules in questionMatch.ts; the page owns the RNG (it picks
 // each round) and the board (it reports matches).
+import { GEM_OF } from '@/clueGame/gems';
 import {
-  ask, applyMatches, buyFamilyTreeStep, guess, scoreSolve, standing,
+  CHARGE_CATEGORIES, ask, applyMatches, buyFamilyTreeStep, guess, leadQuestions, scoreSolve, standing,
   type Book, type GemKind, type RoundState, type ScorePart,
 } from '@/clueGame/questionMatch';
 
@@ -87,10 +88,13 @@ export function matchSessionReducer(session: MatchSession | null, action: MatchA
   }
 }
 
-/** A JSON-safe summary for the dev bridge (window.__cc.clue()) and the e2e test. */
+/** A JSON-safe summary for the dev bridge (window.__cc.clue()) and the e2e test. `legend`: each color's next question, in the order charges are spent. */
 export function debugSummary(session: MatchSession, seed: number) {
   const { round } = session;
+  const leads = leadQuestions(session.book, round);
   return {
+    legend: CHARGE_CATEGORIES.map(category => ({ category, gem: GEM_OF[category], tag: leads[category]?.tag ?? null })),
+    questionCost: round.rules.questionCost, perMatch: round.rules.perMatch,
     seed, roundNo: session.roundNo, rulesVersion: round.rules.version, moves: round.rules.moves, candidates: round.rules.candidates, status: round.status,
     mysteryId: round.mysteryId, candidateIds: round.candidateIds,
     standing: standing(round), out: Object.keys(round.out).map(Number), movesLeft: round.movesLeft, movesUsed: round.movesUsed,

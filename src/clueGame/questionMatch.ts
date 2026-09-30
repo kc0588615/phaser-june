@@ -1,11 +1,13 @@
 // Question Match rules (plan 041): matches earn charges, charges buy yes/no
 // questions and (one of each color) family tree steps, rare note gems collected
 // next to matches save field notes for a last chance, and the player names the
-// mystery animal within a move budget. Pure: no DOM, no Phaser, no randomness except
+// mystery animal within a move budget. Rules 043 (plan 043, `askOnMatch`): a match
+// asks its color's lead question at once instead. Pure: no DOM, no Phaser, no randomness except
 // the rng passed in. Shared by the game, the balance bot (scripts/balance-041.ts) and
 // the prototype (PROTOTYPE-041-question-match.html).
 import type { ContinentKey } from '@/clueGame/regions';
 import { REGIONS } from '@/clueGame/regions';
+import { hash32 } from '@/lib/seededRng';
 
 export const CHARGE_CATEGORIES = ['body', 'habits', 'habitat', 'range', 'life'] as const;
 export type ChargeCategory = typeof CHARGE_CATEGORIES[number];
@@ -74,6 +76,12 @@ export interface Rules {
   autoAsk: boolean;
   /** Also offer questions that can't cross anything out (every animal standing shares the answer), as Guess Who does. */
   offerUseless: boolean;
+  /** Rules 043: a match asks its color's lead question at once (see leadQuestions); charges are never held or chosen. */
+  askOnMatch: boolean;
+  /** Which question leads a color: the best split ('best'), or one dealt at random per round from the useful ones ('dealt'). */
+  lead: 'best' | 'dealt';
+  /** Charges a question costs. */
+  questionCost: number;
   /** Charges for a match of 3, 4 and 5 or more. */
   perMatch: [three: number, four: number, fivePlus: number];
   /** Gems a toy clears outside any match (all colors together) that earn one charge, of the color it cleared most. */
@@ -86,9 +94,9 @@ export interface Rules {
 
 /**
  * The charges game with toys on the board (plan 041, part 13): 12 look-alike animals keep random tapping from
- * solving nearly every round now that toys make the board worth 4 moves of play.
+ * solving nearly every round now that toys make the board worth 4 moves of play. Kept for the balance bot.
  */
-export const DEFAULT_RULES: Rules = {
+export const RULES_041: Rules = {
   version: '041-5',
   moves: 4,
   candidates: 12,
@@ -98,9 +106,28 @@ export const DEFAULT_RULES: Rules = {
   lookAlikes: true,
   autoAsk: true,
   offerUseless: false,
+  askOnMatch: false,
+  lead: 'dealt',
+  questionCost: 1,
   perMatch: [1, 2, 3],
   perBlast: 3,
   points: { solved: 50, moveLeft: 10, standing: 10, firstTry: 25, wrongGuess: 30, wrongGuessMoves: 2, streakStep: 10, streakMax: 100 },
+};
+
+/**
+ * Plan 043, part 0: each color leads with one question, dealt per round and shown in the legend under the board;
+ * a color's charges ask it as soon as they cover it (2 charges), on a 7x7 board with 5 moves. A match of 5 or more
+ * in a line reveals the next family tree step: at 4, big matches on 7x7 solved rounds through the tree and
+ * questions stopped mattering. Bot numbers: plans/043, part 0.
+ */
+export const DEFAULT_RULES: Rules = {
+  ...RULES_041,
+  version: '043-0',
+  moves: 5,
+  familyTree: { cost: 'match', match: 5, charges: 8 },
+  askOnMatch: true,
+  lead: 'dealt',
+  questionCost: 2,
 };
 
 const QUESTION_TEXT: Record<string, string> = {
@@ -124,11 +151,35 @@ const QUESTION_TEXT: Record<string, string> = {
   'habitat:artificial': 'Does it also live on farms, plantations or in towns?',
 };
 
+/** Two-line versions for the gem legend (rules 043). */
+const SHORT_TEXT: Record<string, string> = {
+  'size:tiny': 'Tiny (under 100 g)?', 'size:small': 'Small (100 g to 2 kg)?', 'size:medium': 'Medium (2 to 30 kg)?',
+  'size:large': 'Large (30 to 300 kg)?', 'size:huge': 'Huge (over 300 kg)?',
+  'covering:fur': 'Covered in fur?', 'covering:spines': 'Covered in spines?', 'covering:scales': 'Covered in scales?',
+  'covering:armor': 'Bands of bony armor?', 'covering:shell': 'Has a shell?', 'covering:skin': 'Bare skin?',
+  'diet:plants': 'Eats only plants?', 'diet:meat': 'Eats only meat?', 'diet:insects': 'Eats mostly bugs?', 'diet:mixed': 'Eats plants and animals?',
+  'activity:day': 'Out in the day?', 'activity:night': 'Out at night?', 'activity:twilight': 'Out at dawn and dusk?', 'activity:any': 'Out day and night?',
+  'social:alone': 'Lives alone?', 'social:pairs': 'Lives in pairs?', 'social:groups': 'Lives in groups?',
+  'birth:eggs': 'Lays eggs?', 'birth:live': 'Gives birth to live young?',
+  'young:one': '1 or 2 young at a time?', 'young:few': '3 to 10 young at a time?', 'young:many': 'Over 10 young at once?',
+  'lifespan:short': 'Lives under 5 years?', 'lifespan:medium': 'Lives 5 to 20 years?', 'lifespan:long': 'Lives over 20 years?',
+  'system:terrestrial': 'Lives on land?', 'system:freshwater': 'Lives in fresh water?', 'system:marine': 'Lives in the sea?',
+  'habitat:forest': 'Lives in forests?', 'habitat:savanna': 'Lives in savanna?', 'habitat:shrubland': 'Lives in shrubland?',
+  'habitat:grassland': 'Lives in grassland?', 'habitat:wetlands': 'Lives in wetlands?', 'habitat:rocky': 'Lives in rocky places?',
+  'habitat:caves': 'Lives in caves?', 'habitat:desert': 'Lives in desert?', 'habitat:marine': 'Lives by coasts or sea?',
+  'habitat:artificial': 'Lives on farms or in towns?',
+};
+
 export const prefixOf = (tag: string): string => tag.slice(0, tag.indexOf(':'));
 
 export function questionText(tag: string): string {
   if (tag.startsWith('region:')) return `Does it live in ${REGIONS[tag.slice(7)]?.name ?? tag.slice(7)}?`;
   return QUESTION_TEXT[tag] ?? tag;
+}
+
+export function shortQuestionText(tag: string): string {
+  if (tag.startsWith('region:')) return `Lives in ${REGIONS[tag.slice(7)]?.name ?? tag.slice(7)}?`;
+  return SHORT_TEXT[tag] ?? questionText(tag);
 }
 
 // ---- Looking animals up ----
@@ -280,10 +331,10 @@ export function applyMatches(book: Book, state: RoundState, groups: ReadonlyArra
     ...state, charges, movesLeft, movesUsed: state.movesUsed + (cascade ? 0 : 1), notesCollected: state.notesCollected + saved,
     status: movesLeft <= 0 ? 'out-of-moves' : state.status, log: [...state.log, ...log],
   };
-  // With cost 'match', each big match reveals the next family tree step (free steps are already filled in, so it always tells something).
+  // With cost 'match', each big match (a run, not a toy's clear) reveals the next family tree step (free steps are already filled in, so it always tells something).
   const { cost, match } = state.rules.familyTree;
   for (const group of groups) {
-    if (cost !== 'match' || group.kind === 'notes' || group.size < match || next.familyTreeSteps >= FAMILY_TREE_RANKS.length) continue;
+    if (cost !== 'match' || group.kind === 'notes' || group.blast || group.size < match || next.familyTreeSteps >= FAMILY_TREE_RANKS.length) continue;
     next = settleFamilyTree(book, revealStep(book, next, false));
   }
   return autoAsk(book, next);
@@ -295,7 +346,14 @@ export function applyMatches(book: Book, state: RoundState, groups: ReadonlyArra
  * other colors' lists, so it repeats until nothing qualifies.
  */
 export function autoAsk(book: Book, state: RoundState): RoundState {
-  if (!state.rules.autoAsk || isOver(state)) return state;
+  if (isOver(state)) return state;
+  if (state.rules.askOnMatch) {
+    // Every charge a match earned asks its color's lead question; a color with none left keeps its charges unused.
+    const leads = leadQuestions(book, state);
+    const category = CHARGE_CATEGORIES.find(c => state.charges[c] >= state.rules.questionCost && leads[c]);
+    return category ? ask(book, state, leads[category]!.tag) : state;
+  }
+  if (!state.rules.autoAsk) return state;
   const reserve = state.rules.familyTree.cost === 'one-of-each' && state.familyTreeSteps < FAMILY_TREE_RANKS.length ? 1 : 0;
   const all = questionsFor(book, state);
   const useful = (c: ChargeCategory) => all[c].filter(question => question.lacks > 0);
@@ -362,9 +420,25 @@ export function questionsFor(book: Book, state: RoundState): Record<ChargeCatego
   return byCategory;
 }
 
+/**
+ * Rules 043: the question a match of each color asks now, the one that splits the animals still standing most
+ * evenly (ties: questionsFor's order); null when no question of that color can cross anything out.
+ */
+export function leadQuestions(book: Book, state: RoundState): Record<ChargeCategory, Question | null> {
+  const all = questionsFor(book, state);
+  // Dealt: a fixed shuffle per round (the round's animals seed it), so a color keeps its question until it's asked or can't help.
+  const deal = (q: Question) => -hash32(`${state.candidateIds.join(',')}:${q.tag}`);
+  const score = state.rules.lead === 'best' ? splitOf : deal;
+  const lead = (list: Question[]) => list.filter(q => q.lacks > 0).reduce<Question | null>((best, q) => (!best || score(q) > score(best) ? q : best), null);
+  return { body: lead(all.body), habits: lead(all.habits), habitat: lead(all.habitat), range: lead(all.range), life: lead(all.life) };
+}
+
+/** Animals a question is sure to cross out: whichever way the answer goes. */
+export const splitOf = (q: Question): number => Math.min(q.has, q.lacks);
+
 /** Whether a question of this category can be asked now: the round is on and there's a charge of its color. */
 export function canAsk(state: RoundState, category: ChargeCategory): boolean {
-  return !isOver(state) && state.charges[category] > 0;
+  return !isOver(state) && state.charges[category] >= state.rules.questionCost;
 }
 
 /** Spend a charge of the tag's category on a yes/no question. No record: the charge comes back. `auto`: asked by autoAsk. */
@@ -390,7 +464,7 @@ export function ask(book: Book, state: RoundState, tag: string, auto = false): R
   for (const id of ruledOut) out[id] = { by: 'answer', question: n };
   const source = mystery.traitSources[yes ? tag : [...values][0]] ?? null;
   return autoAsk(book, settleFamilyTree(book, {
-    ...state, out, asked: [...state.asked, tag], charges: { ...state.charges, [category]: state.charges[category] - 1 },
+    ...state, out, asked: [...state.asked, tag], charges: { ...state.charges, [category]: state.charges[category] - state.rules.questionCost },
     log: [...state.log, { ...base, answer: yes ? 'yes' : 'no', ruledOut, noRecord, source }],
   }));
 }

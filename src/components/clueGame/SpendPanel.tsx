@@ -1,10 +1,11 @@
 // Out of moves, the board has nothing left to give, so this panel covers it (plan
 // 041): every question the player can still pay for, one tap each, and the family
-// tree step when a set is ready. On a last chance it shows the opened field notes.
+// tree step when a set is ready (rules 043 ask as you match, so usually there's
+// nothing to spend). On a last chance it shows the opened field notes.
 // The animal tiles below stay in view for the guess.
 import { TreeDeciduous } from 'lucide-react';
 import { GEM_OF } from '@/clueGame/gems';
-import { CATEGORY_LABELS, CHARGE_CATEGORIES, familyTreeQuote, questionsFor, type Book, type RoundState } from '@/clueGame/questionMatch';
+import { CATEGORY_LABELS, CHARGE_CATEGORIES, canAsk, familyTreeQuote, questionsFor, type Book, type RoundState } from '@/clueGame/questionMatch';
 import { GemIcon } from './GemIcon';
 import { LogEntryText, plural } from './LogEntryText';
 
@@ -17,11 +18,11 @@ export function SpendPanel({ book, round, nameOf, onAsk, onBuy }: {
 }) {
   const questions = questionsFor(book, round);
   const quote = familyTreeQuote(book, round);
-  const categories = CHARGE_CATEGORIES.filter(category => round.charges[category] > 0).sort((a, b) => round.charges[b] - round.charges[a]);
-  const canSpend = Boolean(quote?.affordable) || categories.some(category => questions[category].length > 0);
+  const categories = CHARGE_CATEGORIES.filter(category => canAsk(round, category) && questions[category].length > 0).sort((a, b) => round.charges[b] - round.charges[a]);
+  const canSpend = Boolean(quote?.affordable) || categories.length > 0;
   const lastChance = round.status === 'last-chance';
   return (
-    <div className="cm-pop-in absolute inset-0 z-10 flex flex-col overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-[#081a21] p-3" role="region" aria-label={lastChance ? 'Last chance' : 'Spend your charges'}>
+    <div className="cm-pop-in absolute inset-0 z-10 flex flex-col overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-[#081a21] p-3" role="region" aria-label={lastChance ? 'Last chance' : 'Out of moves'}>
       {lastChance ? (
         <>
           <h2 className="m-0 text-base font-bold">📓 Last chance!</h2>
@@ -36,7 +37,7 @@ export function SpendPanel({ book, round, nameOf, onAsk, onBuy }: {
         <>
           <h2 className="m-0 text-base font-bold">Out of moves!</h2>
           <p className="m-0 text-[13px] text-white/70">
-            Spend your charges, then tap an animal to guess.
+            {canSpend ? 'Spend your charges, then tap an animal to guess.' : 'Tap an animal to guess.'}
             {round.notesCollected > 0 && ` If you're wrong, your ${plural(round.notesCollected, 'field note')} ${round.notesCollected === 1 ? 'gives' : 'give'} you a last chance.`}
           </p>
         </>
@@ -52,14 +53,13 @@ export function SpendPanel({ book, round, nameOf, onAsk, onBuy }: {
             <GemIcon gem={GEM_OF[category]} className="h-4 w-4" /> {CATEGORY_LABELS[category]}
             <span className="ml-auto font-normal text-white/55">{plural(round.charges[category], 'charge')}</span>
           </h3>
-          {questions[category].length ? questions[category].map(question => (
+          {questions[category].map(question => (
             <button key={question.tag} type="button" onClick={() => onAsk(question.tag)} className="mt-1 block min-h-11 w-full rounded-lg border border-white/15 bg-white/[.05] px-3 py-2 text-left text-sm active:bg-white/15">
               {question.text}
             </button>
-          )) : <p className="m-0 mt-0.5 text-[12px] text-white/50">No {CATEGORY_LABELS[category]} question can cross out an animal left.</p>}
+          ))}
         </section>
       ))}
-      {!canSpend && !lastChance && <p className="m-0 mt-3 text-sm"><b>Nothing left to spend.</b> Tap an animal to guess.</p>}
     </div>
   );
 }

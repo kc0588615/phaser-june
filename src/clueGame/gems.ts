@@ -18,9 +18,9 @@ export const MATCH_GEMS: GemType[] = CHARGE_CATEGORIES.map(category => GEM_OF[ca
 /** The rare note gem: collected when a match happens next to it. About 1 in 20 new gems. */
 export const NOTE_GEM = { type: GEM_OF.notes, chance: 0.05 };
 
-/** HUD swatches: the light stop of each gem icon's gradient. */
+/** HUD swatches: each gem icon's main color (public/assets/evidence/<gem>.svg). */
 export const KIND_COLOR: Record<GemKind, string> = {
-  body: '#ffc56b', habits: '#ffe87c', habitat: '#7bd99b', range: '#79d7ff', life: '#a7afbd', notes: '#c9a2ff',
+  body: '#ff8a3d', habits: '#ffd84a', habitat: '#3fcf7c', range: '#4aa6fb', life: '#f66aa6', notes: '#b27dff',
 };
 
 /** Fits a phone chip. */

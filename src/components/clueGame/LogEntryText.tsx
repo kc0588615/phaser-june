@@ -50,7 +50,7 @@ export function LogEntryText({ entry, status, nameOf }: { entry: LogEntry; statu
           <GemIcon gem={GEM_OF[entry.category]} className="mr-1 inline h-4 w-4 align-[-3px]" />
           {entry.question}{' '}
           {entry.answer === 'no-record' ? (
-            <><b>No record:</b> the field guide doesn&apos;t say, for this animal. Your charge came back.</>
+            <><b>No record:</b> the field guide doesn&apos;t say, for this animal. Your charges came back.</>
           ) : (
             <>
               <b className={entry.answer === 'yes' ? 'text-emerald-300' : 'text-rose-300'}>{entry.answer === 'yes' ? 'Yes' : 'No'}.</b>{' '}

@@ -1,12 +1,12 @@
 // Board constants shared by the model (BackendPuzzle), view (BoardView) and
 // input (BoardController).
 
-/** Gem colors. The game uses six: five categories and the rare note gem (src/clueGame/gems.ts). */
+/** Gem color keys (saved with each solve). The game uses six: five categories and the rare note gem (src/clueGame/gems.ts). A key names the gem, not its look: 'black' draws a pink egg. */
 export const GEM_TYPES = ['black', 'blue', 'green', 'orange', 'red', 'white', 'yellow', 'purple'] as const;
 export type GemType = typeof GEM_TYPES[number];
 
-export const GRID_COLS = 5 as const;
-export const GRID_ROWS = 5 as const;
+export const GRID_COLS = 7 as const;
+export const GRID_ROWS = 7 as const;
 
 /** Phaser texture key for a gem's icon (public/assets/evidence/<color>.svg). */
 export const gemTexture = (type: GemType): string => `gem_${type}`;

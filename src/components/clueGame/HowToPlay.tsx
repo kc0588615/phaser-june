@@ -4,8 +4,8 @@ import { CATEGORY_LABELS, CHARGE_CATEGORIES, type Rules } from '@/clueGame/quest
 import { GemIcon } from './GemIcon';
 import { useEscapeKey } from './useEscapeKey';
 
-/** v6: toys on the board (plan 041, part 13), so returning players see the rules once more. */
-export const HOW_TO_PLAY_SEEN_KEY = 'critter-connect:how-to-play-seen:v6';
+/** v7: a match asks its gem's question (plan 043), so returning players see the rules once more. */
+export const HOW_TO_PLAY_SEEN_KEY = 'critter-connect:how-to-play-seen:v7';
 
 const tree = <TreeDeciduous className="inline h-4 w-4 align-[-2px] text-emerald-200" aria-hidden="true" />;
 
@@ -25,20 +25,27 @@ export function HowToPlay({ rules, seed, onClose }: { rules: Rules; seed: number
         <ol className="m-0 flex list-decimal flex-col gap-2.5 pl-5 text-sm leading-snug text-white/90">
           <li>A <b>mystery animal</b> is hiding among the {rules.candidates} animals at the bottom. Find out which one it is.</li>
           <li>
-            Swap two gems side by side (swipe, or tap one then the other) to line up <b>3 or more</b> of a color. Each color earns <b>charges</b>:{colors}
-            <span className="mt-1 block text-[12px] text-white/75">4 in a row earns 2 charges, 5 earns 3.</span>
+            Swap two gems side by side (swipe, or tap one then the other) to line up <b>3 or more</b> of a kind. Each kind asks one kind of <b>yes/no question</b>:{colors}
+            <span className="mt-1 block text-[12px] text-white/75">
+              The list under the board shows the question each gem asks next, and how many animals its answer is sure to cross out (&quot;4+ out&quot;).
+            </span>
+          </li>
+          <li>
+            {rules.questionCost > 1
+              ? <>A question needs <b>{rules.questionCost} charges</b> of its gem. A match of 3 earns 1 charge, 4 earns 2, 5 earns 3. When a gem&apos;s dots fill up, its question is asked at once.</>
+              : <>Every match asks its gem&apos;s question at once.</>}
+            {' '}The answer crosses animals out.
           </li>
           <li>
             Big matches leave a <b>toy</b> on the board. Match it to set it off:
             <span className="mt-1 block text-[12px] text-white/75">
               4 in a line makes a <b>line gem</b> that clears its row or column. An L or T makes a <b>blast gem</b> that clears the gems around it.
               5 in a line makes a <b>color gem</b>: swap it with any gem to clear every gem of that color. Swap two toys together for a big clear.
-              Gems a toy clears earn charges too: every 3 gems earn 1 charge, in the color it cleared most.
+              Gems a toy clears earn charges too: every 3 gems earn 1 charge, for the gem it cleared most.
             </span>
           </li>
-          <li>Tap a color to spend a charge on a <b>yes/no question</b>, like &quot;Does it live in forests?&quot;. The answer crosses animals out.</li>
-          <li>You have <b>{rules.moves} moves</b>. When they run out, spend your charges, then tap an animal to guess.</li>
-          <li>{tree} <b>Family tree:</b> one charge of each color reveals its class, then its order, then its family.</li>
+          <li>You have <b>{rules.moves} moves</b>. When they run out, tap an animal to guess.</li>
+          <li>{tree} <b>Family tree:</b> line up {rules.familyTree.match} or more of one gem to reveal its class, then its order, then its family.</li>
           <li>
             <GemIcon gem={GEM_OF.notes} className="inline h-4 w-4 align-[-3px]" /> <b>Note gems</b> glow. Make a match next to one to save a field note <Lock className="inline h-3.5 w-3.5 align-[-2px]" aria-hidden="true" />.
             If your final guess is wrong, your notes open for one more guess.

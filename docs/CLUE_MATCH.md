@@ -3,7 +3,7 @@
 The app has two screens. (The game was called Clue Match until plan 041; code and tables still say `clue`, players never see the word.)
 
 - **Globe (`/`).** A globe beside the list of continents. Pick one, or tap its dot: the globe flies there and outlines it, and a card shows how many animals live there (named once you've found them) and a habitat picture. **Explore** opens the game with that continent's animals. A continent opens once it has 12 animals; smaller ones show "coming soon". **Anywhere** plays animals from the whole world. Animals you've found glow on the globe where you found them: green for amphibians and reptiles, amber for mammals.
-- **The game (`/explore`, optional `?place=continent:africa` and `?seed=N`).** A mystery animal hides among 12 look-alike animals. Match gems on a 5×5 board to earn **charges** (big matches leave **toys** that clear more), spend them on yes/no **questions** that cross animals out, and name it before your moves run out. Old `/clue-match` links redirect here with their query.
+- **The game (`/explore`, optional `?place=continent:africa` and `?seed=N`).** A mystery animal hides among 12 look-alike animals. Match gems on a 7×7 board. Each gem color leads with one yes/no **question**, shown in the legend under the board; its matches fill **charges**, and full charges ask that question at once (big matches leave **toys** that clear more). Answers cross animals out; name it before your moves run out. This is rules 043-0 on branch `variant/043-literal-gems` (plans/043); `main` keeps the charges game, 041-5. Old `/clue-match` links redirect here with their query.
 
 No sign-in needed; every finished round, solved or lost, is saved to `clue_match_solves` for analysis (with the player's profile id when signed in, and the continent when played from the globe). The Field Journal lives on the device; when signed in, it also pulls the player's saved solves, so it follows them to another device. `?seed=N` replays a session exactly (same mysteries, same boards).
 
@@ -14,13 +14,13 @@ No sign-in needed; every finished round, solved or lost, is saved to `clue_match
 | Globe | `src/pages/index.tsx` → `src/components/globe/` (GlobeScreen, Globe, PlaceList, PlaceCard); helpers `src/clueGame/places.ts`; data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`) |
 | Game page | `src/pages/explore.tsx` → `src/components/clueGame/MatchGame.tsx` |
 | Page state + board wiring | `src/components/clueGame/useMatchSession.ts` |
-| UI pieces | `src/components/clueGame/` (TopBar, ChargeChips, AnimalTiles, SpendPanel, MatchSheets, LogEntryText, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText, PhaserGame) |
+| UI pieces | `src/components/clueGame/` (TopBar, GemLegend, AnimalTiles, SpendPanel (the out-of-moves panel), MatchSheets, LogEntryText, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText, PhaserGame) |
 | Rules (pure) | `src/clueGame/questionMatch.ts` (rounds, charges, questions, family tree, field notes, last chance, scoring), `matchSession.ts` (score and streak across rounds), `gems.ts` (gem color ↔ category) |
 | Content → rules data | `src/clueGame/questionMatchContent.ts` (traits, regions, family tree names, field notes with blanks, sources), `regions.ts` (every country → UN region with kid names → continent) |
-| Board | `src/game/`: `ClueBoardScene.ts` (seeded 5×5 board), `BoardModel.ts` (swaps, matches, toys, the rare note gem), `BoardView.ts` (sprites, toy effects), `toyTextures.ts` (toy looks), `sfx.ts` (sounds), `BoardController.ts` (swipe, tap, keyboard, cascade loop) |
+| Board | `src/game/`: `ClueBoardScene.ts` (seeded 7×7 board), `BoardModel.ts` (swaps, matches, toys, the rare note gem), `BoardView.ts` (sprites, toy effects), `toyTextures.ts` (toy looks), `sfx.ts` (sounds), `BoardController.ts` (swipe, tap, keyboard, cascade loop) |
 | Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`), `GET /api/clue-game/journal` (a signed-in player's solves) |
 | Content | `db/content/` (profiles + source registry, docs/CONTENT_SOURCES.md), `scripts/content.ts` (`npm run content`), `src/clueGame/profiles.ts` (profile → rows) |
-| Balance | `scripts/balance-041.ts` (seeded bot on the real rules and board); prototype `src/clueGame/PROTOTYPE-041-question-match.html` (built by `scripts/prototype-041-question-match.ts`) |
+| Balance | `scripts/balance-041.ts` (seeded bot on the real rules and board; `--rules 041-5 --board 5` for the charges game); prototype `src/clueGame/PROTOTYPE-041-question-match.html` (built by `scripts/prototype-041-question-match.ts`) |
 | Tests | `tests/clueGame/*`, `tests/game/*`; `npm run e2e` |
 
 ## How it fits together
@@ -38,7 +38,7 @@ flowchart LR
   R --> M[/api/clue-game/range/] --> RM[RangeMap]
   B[ClueBoardScene] -- gems-matched --> H
   H -- clue-board-setup / clue-board-lock --> B
-  H --> UI[chips, tiles, sheets, spend panel, reveal]
+  H --> UI[gem legend, tiles, sheets, out-of-moves panel, reveal]
   H -- every round end --> SV[/api/clue-game/solves/]
 ```
 
@@ -48,12 +48,13 @@ The board only reports matches (`gems-matched`, one event per explode phase, wit
 
 The design and every number's reasoning are in `plans/041-gameplay-tactics.md`; terms are in `CONTEXT.md`.
 
-**Round.** 12 animals from the continent (or the whole world): closest relatives first (same family, then order, then class), then **look-alikes**, the animals that share the most traits with the mystery. An animal no question can tell apart from the mystery is left out, so every round can be narrowed to one. A mystery isn't repeated within 8 rounds. **4 moves.** A move swaps two neighboring gems and must line up 3 or more (or set a toy off); any other swap slides back for free. Cascades are free. When no swap is left, the board reshuffles (toys stay on their gems). Each animal gets a fresh board from the session seed.
+**Round.** 12 animals from the continent (or the whole world): closest relatives first (same family, then order, then class), then **look-alikes**, the animals that share the most traits with the mystery. An animal no question can tell apart from the mystery is left out, so every round can be narrowed to one. A mystery isn't repeated within 8 rounds. **5 moves.** A move swaps two neighboring gems and must line up 3 or more (or set a toy off); any other swap slides back for free. Cascades are free. When no swap is left, the board reshuffles (toys stay on their gems). Each animal gets a fresh board from the session seed.
 
-**Charges.** Five colors, one per category: Body, Habits, Habitat, Range, Life cycle. A match of 3 earns 1 charge of its color, 4 earns 2, 5 or more earns 3. Tap a color to see its questions; a question costs 1 charge.
-- Only questions that could cross out an animal still standing are offered, broad ones only (no countries, no genus). Range asks about UN regions inside the continent, in kid wording ("Central Africa", "the USA and Canada").
-- The answer crosses out every standing animal whose record disagrees; an animal with no record for that trait stays standing ("No record for: …"). If the mystery itself has no record, the answer says so and the charge comes back.
-- When a color's charges cover every one of its questions (with one to spare for the family tree while it still needs one of each), they're asked automatically.
+**Gems ask questions.** Five colors, one per category, each with its own shape: Body (orange ball, paw), Habits (yellow triangle, moon), Habitat (green leaf), Range (blue hexagon, map pin), Life cycle (pink square, egg). A match of 3 earns 1 charge of its color, 4 earns 2, 5 or more earns 3. A question costs **2 charges** (`Rules.questionCost`); the moment a color holds 2, it asks its **lead question** (`leadQuestions`), no choosing.
+- **The legend** under the board (`GemLegend`) shows each color's lead question in short words, its charges as dots, and how many animals the answer is sure to cross out ("4+ out", the smaller side of the split).
+- **Lead questions are dealt**, one per color, from the questions that could cross out an animal still standing, broad ones only (no countries, no genus), in a fixed shuffle per round. A color keeps its question until it's asked or can't help any more; then the next one is dealt. A color with no useful question left shows "No question left" and its charges wait unused. Range asks about UN regions inside the continent, in kid wording ("Central Africa", "the USA and Canada").
+- The answer crosses out every standing animal whose record disagrees; an animal with no record for that trait stays standing ("No record for: …"). If the mystery itself has no record, the answer says so, the charges come back and the color's next question is asked.
+- Why 2 charges, 5 moves and a family tree step only for a 5-match: the bot (plans/043, part 0) found that asking on every match let random swaps solve 95–100% of rounds, and a step for every 4-match solved rounds through the family tree while questions stopped mattering.
 
 **Toys.** A big match leaves a toy on the board, riding on one of its gems; matching the toy sets it off.
 - **Line gem** (4 in a line, white bars and arrows): clears its row, or its column when the match was up and down.
@@ -61,19 +62,19 @@ The design and every number's reasoning are in `plans/041-gameplay-tactics.md`; 
 - **Color gem** (5 in a line, a disc of all five colors): swap it with any gem to clear every gem of that color. It never matches by itself.
 - **Two toys swapped together** go off as one big clear: two line gems make a cross; a blast gem with a line gem or another blast gem clears the 5×5 around; two color gems clear the board. A color gem swapped with a line or blast gem clears that toy's color, and the toy goes off with them.
 - **A toy caught in another toy's clear** goes off too.
-- **Charges:** every 3 gems a toy clears outside a match (all colors together) earn 1 charge, of the color it cleared most (`Rules.perBlast`); the board calls it out ("+1 charge"). Note gems it clears are collected.
+- **Charges:** every 3 gems a toy clears outside a match (all colors together) earn 1 charge, for the color it cleared most (`Rules.perBlast`); the board calls it out ("+1 charge"). Note gems it clears are collected.
 
 **Feel.** Every match pops, with a pitch that climbs through a chain ("Chain ×2!"). Big matches and toys shake the board. Animations are quick. Sounds are synthesized in the browser (`src/game/sfx.ts`); they're off until the player taps the speaker button, and the choice is kept on the device.
 
-**Family tree.** Kingdom Animalia and phylum Chordata show from the start. Class, then order, then family are revealed one at a time, each for **one charge of each color**; the reveal crosses out every animal in another group. A step every standing animal shares fills in free (all 12 are mammals: class Mammalia shows at once). Genus and species appear on the reveal card.
+**Family tree.** Kingdom Animalia and phylum Chordata show from the start. Class, then order, then family are revealed one at a time, each by a **match of 5 or more in a line** (a run, not a toy's clear); the reveal crosses out every animal in another group. A step every standing animal shares fills in free (all 12 are mammals: class Mammalia shows at once). Genus and species appear on the reveal card.
 
 **Field notes.** About 1 in 20 new gems is a glowing **note gem**. It never matches by itself; a match next to it (up, down, left or right) collects it and saves one field note, sealed. Notes are the animal's hand-written clues, then its fun facts. Any word that would name the animal (its name, its group words like frog or pangolin, its Latin names, its countries and regions) shows as a blank `____`; a note with more than 2 blanks waits for the reveal card.
 
-**Guessing.** Tap an animal to read its field guide and guess. A wrong guess crosses it out and costs 30 points, 2 moves and the streak. At 0 moves the board is covered by the **spend panel**: spend the charges left, then guess. A wrong final guess ends the round, unless notes were saved: then they open for a **last chance**, one more guess.
+**Guessing.** Tap an animal to read its field guide and guess. A wrong guess crosses it out and costs 30 points, 2 moves and the streak. At 0 moves a panel covers the board: guess. A wrong final guess ends the round, unless notes were saved: then they open for a **last chance**, one more guess.
 
 **Scoring.** Solved 50, +10 per move left, +10 per other animal still standing, +25 first try, plus the streak (+10 per solve in a row, max 100). A last-chance solve scores 50 only. A lost round scores 0.
 
-**Rules versions** (saved with every round as `rules_version`): 041-1 the charges game with 8 relatives; 041-5 (now) adds toys and 12 look-alike animals (plans/041, part 13). Tried and removed (parts 8–12): one question a move (041-2, 041-3) and pick-then-earn (041-4); the owner found them too clunky.
+**Rules versions** (saved with every round as `rules_version`): 041-1 the charges game with 8 relatives; 041-5 (`main`) adds toys and 12 look-alike animals (plans/041, part 13); 043-0 (this branch) a color asks its dealt lead question at 2 charges, on 7×7 with 5 moves (plans/043, part 0). Tried and removed (parts 8–12): one question a move (041-2, 041-3) and pick-then-earn (041-4); the owner found them too clunky.
 
 **Sources.** Every answer and note names its source. The link opens only after the round, because a source page names the animal; the reveal card lists every source.
 
@@ -114,12 +115,12 @@ The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, 
 ## Checking it as an agent
 
 - `npm run e2e` (with `npm run dev` running): headless Chrome picks the continent with the most animals and plays three rounds at 390×844, through real swipes and buttons.
-  - **Each move:** one move used; charges never below zero; the mystery never crossed out.
+  - **Each move:** one move used; charges never below zero; the mystery never crossed out; no source link while the round is on; a move of plain runs of 3 asks the legend's question for the first color whose charges now cover it.
   - **Once a run:** the sound button starts off and turns sound on; a big match leaves a toy; matching a toy sets it off (a blast group in `gems-matched`); a toy-only move (a color gem, or two toys side by side) goes off when one shows up; naming the animal and starting the next one while gems still fall leaves every sprite matching the model (`state().view`).
-  - **Every round:** once, it asks a question from a color's sheet. Out of moves, it spends everything in the spend panel and checks that no source link shows during a round. Then it guesses through the field guide.
+  - **Every round:** the legend on screen shows each color's lead question (`window.__cc.clue().legend`). Out of moves, the panel covers the board, the board locks, and no source link shows. Then it guesses through the field guide.
   - **Round 2 plays carelessly** (spends nothing, guesses the mystery last) to cover wrong guesses and the last chance.
   - **At the end:** the reveal names the mystery with its photo, Red List link, family tree and source links; the journal counts the solves; no console errors or failed requests.
   - **Artifact:** `e2e-artifacts/<run>/report.json` and screenshots. `E2E_PLACE`, `E2E_SEED`, `E2E_ROUNDS` change it.
-- `node scripts/run-typescript.mjs scripts/balance-041.ts`: the seeded balance table (careful, careful questions with random swaps, random, worst and family-tree-first players): solved, first try, on a last chance, narrowed to one, charges earned.
+- `node scripts/run-typescript.mjs scripts/balance-041.ts`: the seeded balance table (rules 043: careful, who reads the legend, random and worst players; `--rules 041-5`: careful, careful questions with random swaps, random, worst and family-tree-first): solved, first try, on a last chance, narrowed to one, charges earned.
 - `npm test`: only what a playtest can't see: content checks, solve-report and localStorage parsing, board invariants. Test by playing first (AGENTS.md, Testing).
 - In a dev browser, `window.__cc.clue()` returns the session (rules version, status, mystery, candidates, standing, moves left, charges, notes, family tree steps, score, streak, how the round ended, log tail), `window.__cc.drag(move, { input: 'touch' })` swipes a real move and `window.__cc.tap(cell)` taps. The `playtest` skill (`.claude/skills/playtest/SKILL.md`) lists the invariants to check.

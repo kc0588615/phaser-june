@@ -1,22 +1,22 @@
-// The game screen (plan 041). Mobile-first: on a phone, a top bar, the square board
-// (a spend panel covers it once moves run out), then the rail: the charge row, the
-// latest answer and the round's animals. From the md breakpoint the board takes
+// The game screen (plans 041, 043). Mobile-first: on a phone, a top bar, the square board
+// (a panel covers it once moves run out), then the rail: the gem legend (what each
+// color asks), the latest answer and the round's animals. From the md breakpoint the board takes
 // the left and the rail the right.
 import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GEM_OF } from '@/clueGame/gems';
 import { sightingPoint } from '@/clueGame/places';
-import { familyTreeQuote, scoreSolve, standing, type ChargeCategory } from '@/clueGame/questionMatch';
+import { scoreSolve, standing } from '@/clueGame/questionMatch';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
 import type { SolveReport } from '@/clueGame/solveReport';
 import { EventBus, type BoardKey } from '@/game/EventBus';
 import { isSoundOn, setSoundOn, sfx, wakeOnFirstGesture } from '@/game/sfx';
 import { AnimalTiles } from './AnimalTiles';
-import { ChargeChips } from './ChargeChips';
 import { HOW_TO_PLAY_SEEN_KEY, HowToPlay } from './HowToPlay';
 import { JournalSheet } from './JournalSheet';
 import { LogEntryText, isLive } from './LogEntryText';
-import { FamilyTreeSheet, FieldGuideSheet, LogSheet, NotesSheet, QuestionsSheet } from './MatchSheets';
+import { GemLegend } from './GemLegend';
+import { FamilyTreeSheet, FieldGuideSheet, LogSheet, NotesSheet } from './MatchSheets';
 import { PhaserGame } from './PhaserGame';
 import { RevealSheet } from './RevealSheet';
 import { SpendPanel } from './SpendPanel';
@@ -44,7 +44,6 @@ function reportRound(report: SolveReport): void {
 }
 
 type Sheet =
-  | { kind: 'questions'; category: ChargeCategory }
   | { kind: 'guide'; id: number }
   | { kind: 'tree' }
   | { kind: 'notes' }
@@ -146,7 +145,6 @@ export function MatchGame() {
   }, [session]);
   const live = round ? isLive(round.status) : false;
   const worth = session && round && live ? scoreSolve(round, session.streak).reduce((sum, part) => sum + part.points, 0) : 0;
-  const treeReady = Boolean(session && round && live && familyTreeQuote(session.book, round)?.affordable);
   const latest = round ? [...round.log].reverse().find(entry => !(entry.kind === 'step' && entry.free) && !(entry.kind === 'guess' && entry.correct)) : undefined;
   const mystery = session && round ? session.book.byId.get(round.mysteryId) : undefined;
   const guideAnimal = session && sheet?.kind === 'guide' ? session.book.byId.get(sheet.id) : undefined;
@@ -182,7 +180,7 @@ export function MatchGame() {
           aria-describedby="board-keys"
           tabIndex={0}
           onKeyDown={onBoardKey}
-          className="group relative h-[min(calc(100vw-8px),calc(100dvh-392px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-200/70 md:h-full"
+          className="group relative h-[min(calc(100vw-8px),calc(100dvh-490px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-200/70 md:h-full"
         >
           <PhaserGame className="absolute inset-0" />
           {session && round && (round.status === 'out-of-moves' || round.status === 'last-chance') && (
@@ -198,16 +196,10 @@ export function MatchGame() {
           {!session && !loadError && <p className="m-0 p-2 text-xs text-white/60">Loading animals…</p>}
           {session && round && (
             <>
-              <ChargeChips
-                round={round}
-                treeReady={treeReady}
-                onCategory={category => setSheet({ kind: 'questions', category })}
-                onNotes={() => setSheet({ kind: 'notes' })}
-                onTree={() => setSheet({ kind: 'tree' })}
-              />
+              <GemLegend book={session.book} round={round} onNotes={() => setSheet({ kind: 'notes' })} onTree={() => setSheet({ kind: 'tree' })} />
               <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] py-1 pl-2.5 pr-1 text-[13px] leading-snug" aria-live="polite">
-                <p className="m-0 line-clamp-3 min-w-0 flex-1">
-                  {latest ? <LogEntryText entry={latest} status={round.status} nameOf={nameOf} /> : 'Match gems to earn charges, then tap a color to ask a question.'}
+                <p className="m-0 line-clamp-2 min-w-0 flex-1">
+                  {latest ? <LogEntryText entry={latest} status={round.status} nameOf={nameOf} /> : (rules.questionCost > 1 ? 'Match gems to fill their dots. Full dots ask that gem\'s question.' : 'Match gems to ask their questions.')}
                 </p>
                 <button type="button" onClick={() => setSheet({ kind: 'log' })} className="h-10 shrink-0 rounded-lg border border-white/15 px-3 text-[12px] font-semibold text-cyan-100 active:bg-white/10">All</button>
               </div>
@@ -217,7 +209,6 @@ export function MatchGame() {
         </div>
       </main>
 
-      {session && round && sheet?.kind === 'questions' && <QuestionsSheet book={session.book} round={round} category={sheet.category} onAsk={ask} onClose={closeSheet} />}
       {session && round && guideAnimal && <FieldGuideSheet animal={guideAnimal} species={speciesById.get(guideAnimal.id)} round={round} onGuess={onGuess} onClose={closeSheet} />}
       {session && round && mystery && sheet?.kind === 'tree' && <FamilyTreeSheet book={session.book} animal={mystery} round={round} onBuy={() => { buyFamilyTreeStep(); setSheet(null); }} onClose={closeSheet} />}
       {round && sheet?.kind === 'notes' && <NotesSheet round={round} nameOf={nameOf} onClose={closeSheet} />}

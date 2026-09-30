@@ -1,8 +1,9 @@
-// Balance bot for plan 041: plays seeded Question Match rounds with the real
+// Balance bot for plans 041 and 043: plays seeded Question Match rounds with the real
 // rules (src/clueGame/questionMatch.ts) on the real board (src/game/BoardModel.ts)
 // and prints how each kind of player does. Every player gets the same rounds and
-// boards; same arguments, same numbers.
-//   node scripts/run-typescript.mjs scripts/balance-041.ts [--rounds 400] [--moves 4] [--board 5] [--candidates 8]
+// boards; same arguments, same numbers. Default: today's rules (043, a match asks its
+// color's lead question); `--rules 041-5 --board 5` plays the charges game.
+//   node scripts/run-typescript.mjs scripts/balance-041.ts [--rules 041-5] [--rounds 400] [--moves 6] [--board 7] [--candidates 12]
 //     [--tree one-of-each|charges|match] [--tree-charges 8] [--tree-match 4] [--notes-chance 0.05] [--per-match 1,2,3]
 //     [--places africa,asia,world] [--offer-useless] [--no-auto-ask] [--look-alikes | --relatives]
 import { readdir, readFile } from 'node:fs/promises';
@@ -10,13 +11,13 @@ import path from 'node:path';
 import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import {
-  CHARGE_CATEGORIES, DEFAULT_RULES, FAMILY_TREE_RANKS, applyMatches, ask, buyFamilyTreeStep, familyTreeQuote, guess, makeBook, newRound, pickRound,
-  poolFor, questionsFor, scoreSolve, standing,
+  CHARGE_CATEGORIES, DEFAULT_RULES, FAMILY_TREE_RANKS, RULES_041, applyMatches, ask, buyFamilyTreeStep, canAsk, familyTreeQuote, guess, leadQuestions,
+  makeBook, newRound, pickRound, poolFor, questionsFor, scoreSolve, splitOf, standing,
   type Book, type ChargeCategory, type FamilyTreeCost, type GemKind, type Question, type RoundState, type Rules,
 } from '../src/clueGame/questionMatch';
 import type { ContinentKey } from '../src/clueGame/regions';
 import { BoardModel, neighborSwaps, type Move } from '../src/game/BoardModel';
-import type { GemType } from '../src/game/constants';
+import { GRID_COLS, type GemType } from '../src/game/constants';
 import { mulberry32 } from '../src/lib/seededRng';
 
 const GEM_OF: Record<GemKind, GemType> = { body: 'orange', habits: 'yellow', habitat: 'green', range: 'blue', life: 'black', notes: 'purple' };
@@ -25,7 +26,8 @@ const COLORS = CHARGE_CATEGORIES.map(c => GEM_OF[c]);
 
 // 'random swaps': careful questions with random swaps, to show what the board part of the skill is worth.
 type Strategy = 'careful' | 'random swaps' | 'random' | 'worst' | 'family tree first';
-const STRATEGIES: Strategy[] = ['careful', 'random swaps', 'random', 'worst', 'family tree first'];
+// Rules 043 have no question to choose, so only the swap differs: careful reads the legend, worst matches what the legend says is useless.
+const strategiesFor = (rules: Rules): Strategy[] => (rules.askOnMatch ? ['careful', 'random', 'worst'] : ['careful', 'random swaps', 'random', 'worst', 'family tree first']);
 
 function arg(name: string, fallback: string): string {
   const at = process.argv.indexOf(`--${name}`);
@@ -45,7 +47,7 @@ function play(book: Book, rules: Rules, board: BoardModel, setup: Parameters<typ
     for (;;) {
       if (standing(state).length <= 1) return;
       // The family tree: always first for its fan; for everyone else, only with charges no question can use.
-      const affordable = Object.values(questionsFor(book, state)).flat().filter(q => state.charges[q.category] > 0);
+      const affordable = Object.values(questionsFor(book, state)).flat().filter(q => canAsk(state, q.category));
       const quote = familyTreeQuote(book, state);
       if (quote?.affordable && (treeFirst || affordable.length === 0)) { state = buyFamilyTreeStep(book, state); continue; }
       // The fan saves for the next step, and asks only once the tree is done or the round is ending.
@@ -60,7 +62,28 @@ function play(book: Book, rules: Rules, board: BoardModel, setup: Parameters<typ
   while (state.status === 'playing' && standing(state).length > 1) {
     const valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
     let move: Move = valid[Math.floor(rng() * valid.length)];
-    if (strategy === 'careful' || treeFirst) {
+    if (rules.askOnMatch && strategy !== 'random') {
+      // What the legend shows: each color's lead question and the animals it's sure to cross out. A run of 4+ also
+      // reveals a family tree step while one is left (worth about 3 animals to the careful player).
+      const leads = leadQuestions(book, state);
+      const treeOpen = rules.familyTree.cost === 'match' && state.familyTreeSteps < FAMILY_TREE_RANKS.length;
+      const worth = (m: Move) => {
+        const groups = board.matchesAfter(m);
+        // Charges this swap's own runs earn per color; a color's worth is its lead question's sure split, by how much of a question they fill.
+        const gained = new Map<ChargeCategory, number>();
+        for (const group of groups) {
+          const kind = KIND_OF.get(group.gemType);
+          if (!kind || kind === 'notes' || group.blast) continue;
+          gained.set(kind, (gained.get(kind) ?? 0) + rules.perMatch[group.cells.length >= 5 ? 2 : group.cells.length === 4 ? 1 : 0]);
+        }
+        const big = treeOpen && groups.some(group => !group.blast && group.cells.length >= rules.familyTree.match);
+        let value = big ? 3 : 0;
+        for (const [kind, n] of gained) if (leads[kind]) value += splitOf(leads[kind]!) * Math.min(2, (state.charges[kind] + n) / rules.questionCost);
+        return value;
+      };
+      const sign = strategy === 'worst' ? -1 : 1;
+      move = valid.reduce((best, m) => (sign * worth(m) > sign * worth(best) ? m : best), move);
+    } else if (strategy === 'careful' || treeFirst) {
       // Aim: a big match while it earns a family tree step; else a color that's missing (the fan wants one of each)
       // or, for the careful player, a color with a useful question and no charge yet.
       const questions = questionsFor(book, state);
@@ -91,20 +114,23 @@ function play(book: Book, rules: Rules, board: BoardModel, setup: Parameters<typ
 
 async function main() {
   const rounds = Number(arg('rounds', '400'));
-  const boardSize = Number(arg('board', '5'));
+  const boardSize = Number(arg('board', String(GRID_COLS)));
   const notesChance = Number(arg('notes-chance', '0.05'));
+  const base = arg('rules', DEFAULT_RULES.version) === RULES_041.version ? RULES_041 : DEFAULT_RULES;
   const rules: Rules = {
-    ...DEFAULT_RULES,
-    moves: Number(arg('moves', String(DEFAULT_RULES.moves))),
-    perMatch: arg('per-match', DEFAULT_RULES.perMatch.join(',')).split(',').map(Number) as Rules['perMatch'],
+    ...base,
+    moves: Number(arg('moves', String(base.moves))),
+    perMatch: arg('per-match', base.perMatch.join(',')).split(',').map(Number) as Rules['perMatch'],
     offerUseless: process.argv.includes('--offer-useless'),
     autoAsk: !process.argv.includes('--no-auto-ask'),
-    candidates: Number(arg('candidates', String(DEFAULT_RULES.candidates))),
-    lookAlikes: process.argv.includes('--relatives') ? false : process.argv.includes('--look-alikes') || DEFAULT_RULES.lookAlikes,
+    candidates: Number(arg('candidates', String(base.candidates))),
+    lead: arg('lead', base.lead) as Rules['lead'],
+    questionCost: Number(arg('cost', String(base.questionCost))),
+    lookAlikes: process.argv.includes('--relatives') ? false : process.argv.includes('--look-alikes') || base.lookAlikes,
     familyTree: {
-      cost: arg('tree', DEFAULT_RULES.familyTree.cost) as FamilyTreeCost,
-      match: Number(arg('tree-match', String(DEFAULT_RULES.familyTree.match))),
-      charges: Number(arg('tree-charges', String(DEFAULT_RULES.familyTree.charges))),
+      cost: arg('tree', base.familyTree.cost) as FamilyTreeCost,
+      match: Number(arg('tree-match', String(base.familyTree.match))),
+      charges: Number(arg('tree-charges', String(base.familyTree.charges))),
     },
   };
   const dir = path.join(process.cwd(), 'db/content');
@@ -116,7 +142,7 @@ async function main() {
 
   const { cost, match, charges } = rules.familyTree;
   const treeText = cost === 'match' ? `a ${match}+ match` : cost === 'charges' ? `${charges} charges of any color` : 'one charge of each color';
-  console.log(`Plan 041 balance, rules ${rules.version}: ${rounds} rounds per row, ${rules.candidates} ${rules.lookAlikes ? 'look-alike' : 'related'} animals, ${rules.moves} moves, ${boardSize}x${boardSize} board (5 colors + note gems at ${notesChance}), family tree step = ${treeText}.\n`);
+  console.log(`Balance, rules ${rules.version}${rules.askOnMatch ? ` (a match asks its color's lead question, ${rules.lead}, ${rules.questionCost} charge${rules.questionCost === 1 ? '' : 's'} a question)` : ''}: ${rounds} rounds per row, ${rules.candidates} ${rules.lookAlikes ? 'look-alike' : 'related'} animals, ${rules.moves} moves, ${boardSize}x${boardSize} board (5 colors + note gems at ${notesChance}), family tree step = ${treeText}.\n`);
   console.log('| Place | Player | Solved | First try | On a last chance | Narrowed to 1 before guessing | Questions asked | Charges earned | Field notes saved | Family tree steps (not free) | Avg points |');
   console.log('|---|---|---|---|---|---|---|---|---|---|---|');
   const verdicts: string[] = [];
@@ -133,7 +159,7 @@ async function main() {
       return { setup, boardSeed: Math.floor(setupRng() * 0xffff_ffff) };
     });
     const solvedBy: Partial<Record<Strategy, number>> = {};
-    for (const strategy of STRATEGIES) {
+    for (const strategy of strategiesFor(rules)) {
       const rng = mulberry32(7);
       const board = new BoardModel(boardSize, boardSize);
       let solved = 0, firstTry = 0, lastChance = 0, narrowed = 0, points = 0, steps = 0, income = 0, notes = 0, asked = 0;
@@ -159,7 +185,7 @@ async function main() {
       console.log(`| ${name} (${pool.length}) | ${strategy} | ${pct(solved)} | ${pct(firstTry)} | ${pct(lastChance)} | ${pct(narrowed)} | ${per(asked)} | ${per(income)} | ${per(notes)} | ${per(steps)} | ${Math.round(points / rounds)} |`);
     }
     const f = (strategy: Strategy) => (solvedBy[strategy] ?? 0).toFixed(0);
-    verdicts.push(`${name} (${pool.length}): solved careful ${f('careful')}%, careful questions with random swaps ${f('random swaps')}%, random ${f('random')}%, worst ${f('worst')}%, family tree first ${f('family tree first')}%`);
+    verdicts.push(`${name} (${pool.length}): solved ${strategiesFor(rules).map(strategy => `${strategy} ${f(strategy)}%`).join(', ')}`);
   }
   console.log(`\n${verdicts.join('\n')}`);
 }

@@ -1,13 +1,12 @@
-// The sheets that slide up over the game (plan 041): a color's questions, an
-// animal's field guide (and the guess), the family tree, the saved field notes and
+// The sheets that slide up over the game (plan 041): an animal's field guide (and the guess), the family tree, the saved field notes and
 // the whole log. One wrapper; each sheet is small.
 import { useId, type ReactNode } from 'react';
 import { Lock, TreeDeciduous } from 'lucide-react';
 import { GEM_OF } from '@/clueGame/gems';
 import type { PoolSpecies } from '@/clueGame/pool';
 import {
-  CATEGORY_LABELS, CHARGE_CATEGORIES, FAMILY_TREE_RANKS, canAsk, familyTreeQuote, questionsFor,
-  type Animal, type Book, type ChargeCategory, type RoundState,
+  CATEGORY_LABELS, CHARGE_CATEGORIES, FAMILY_TREE_RANKS, familyTreeQuote,
+  type Animal, type Book, type RoundState,
 } from '@/clueGame/questionMatch';
 import { photoAt } from '@/clueGame/speciesInfo';
 import { GemIcon } from './GemIcon';
@@ -31,30 +30,6 @@ function Sheet({ title, onClose, children, footer }: { title: ReactNode; onClose
         </div>
       </div>
     </div>
-  );
-}
-
-export function QuestionsSheet({ book, round, category, onAsk, onClose }: {
-  book: Book; round: RoundState; category: ChargeCategory; onAsk: (tag: string) => void; onClose: () => void;
-}) {
-  const questions = questionsFor(book, round)[category];
-  const label = CATEGORY_LABELS[category];
-  const can = canAsk(round, category);
-  return (
-    <Sheet title={<span className="flex items-center gap-2"><GemIcon gem={GEM_OF[category]} className="h-6 w-6" />{label} questions</span>} onClose={onClose}>
-      <p className="m-0 mb-2 text-[13px] text-white/70">
-        {plural(round.charges[category], 'charge')}. Each question costs 1. Match {label} gems for more.
-      </p>
-      {questions.length === 0 && <p className="m-0 text-sm text-white/70">No {label} question can cross out an animal left.</p>}
-      <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-        {questions.map(question => (
-          <li key={question.tag} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.03] p-2">
-            <span className="min-w-0 flex-1 text-sm">{question.text}</span>
-            <button type="button" disabled={!can} onClick={() => onAsk(question.tag)} className="h-11 shrink-0 rounded-lg bg-cyan-300 px-4 text-sm font-bold text-slate-950 disabled:opacity-35">Ask</button>
-          </li>
-        ))}
-      </ul>
-    </Sheet>
   );
 }
 
@@ -122,6 +97,11 @@ export function FamilyTreeSheet({ book, animal, round, onBuy, onClose }: {
         })}
         <li className="flex justify-between border-t border-white/10 py-2 text-sm"><span>Genus and species ?</span><span className="text-[12px] text-white/55">on the reveal card</span></li>
       </ul>
+      {round.rules.familyTree.cost === 'match' && round.familyTreeSteps < FAMILY_TREE_RANKS.length && (
+        <p className="m-0 mt-2 text-[13px] text-white/80">
+          Line up {round.rules.familyTree.match} or more gems of one color to reveal its {FAMILY_TREE_RANKS[round.familyTreeSteps]}. It crosses out every animal in another {FAMILY_TREE_RANKS[round.familyTreeSteps]}.
+        </p>
+      )}
       {quote && (
         <p className="m-0 mt-2 text-[13px] text-white/80">
           Revealing its {quote.rank} costs one charge of each color, and crosses out every animal in another {quote.rank}.{' '}
