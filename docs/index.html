@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Critter Connect docs</title>
+  <link rel="stylesheet" id="theme-dark" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/dark.css">
+  <link rel="stylesheet" id="theme-light" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css" disabled>
+  <style>
+    #theme-toggle { position: fixed; top: 12px; right: 16px; z-index: 100; padding: 4px 10px; cursor: pointer; }
+    /* Dark palette: #121212 background, off-white text, muted accent (all >= 4.5:1). */
+    html.dark {
+      --bg: #121212; --surface: #1e1e1e; --text: #e0e0e0; --heading: #fafafa;
+      --muted: #b0b0b0; --border: #444; --accent: #8ab4f8; --theme-color: #8ab4f8;
+    }
+    html.dark body, html.dark .sidebar { background-color: var(--bg); color: var(--text); }
+    html.dark .sidebar { border-right: 1px solid var(--border); }
+    html.dark .sidebar ul li a { color: var(--muted); }
+    html.dark .sidebar ul li.active > a, html.dark .sidebar ul li a:hover { color: var(--accent); }
+    html.dark .sidebar-toggle, html.dark body.close .sidebar-toggle { background-color: var(--surface); }
+    html.dark input[type=search] { background: var(--surface); border-color: var(--border); color: var(--text); }
+    html.dark .markdown-section h1, html.dark .markdown-section h2, html.dark .markdown-section h3,
+    html.dark .markdown-section h4, html.dark .markdown-section strong,
+    html.dark .anchor span { color: var(--heading); }
+    html.dark .markdown-section h6, html.dark .markdown-section em,
+    html.dark .markdown-section blockquote { color: var(--muted); }
+    html.dark .markdown-section a { color: var(--accent); }
+    html.dark .markdown-section code, html.dark .markdown-section pre,
+    html.dark .markdown-section pre > code { background-color: var(--surface); color: var(--text); }
+    html.dark .markdown-section :not(pre) > code { background-color: #2a2a2a; }
+    html.dark .markdown-section td, html.dark .markdown-section th,
+    html.dark .markdown-section tr { border-color: var(--border); }
+    html.dark .markdown-section tr:nth-child(2n) { background-color: var(--surface); }
+    html.dark .markdown-section hr { border-bottom-color: var(--border); }
+    html.dark .token.punctuation { color: var(--muted); }
+    html.dark .token.tag, html.dark .token.attr-name { color: var(--accent); }
+    html.dark .token.boolean, html.dark .token.number { color: #d7a07a; }
+    html.dark .token.selector { color: #a8b5e8; }
+    html.dark #theme-toggle { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle">Light</button>
+  <div id="app"></div>
+  <script>
+    // Dark by default; the choice is remembered per browser.
+    (function () {
+      var dark = document.getElementById('theme-dark');
+      var light = document.getElementById('theme-light');
+      var btn = document.getElementById('theme-toggle');
+      function apply(mode) {
+        dark.disabled = mode === 'light';
+        light.disabled = mode !== 'light';
+        document.documentElement.classList.toggle('dark', mode !== 'light');
+        btn.textContent = mode === 'light' ? 'Dark' : 'Light';
+        try { localStorage.setItem('docs-theme', mode); } catch (e) {}
+      }
+      var saved = null;
+      try { saved = localStorage.getItem('docs-theme'); } catch (e) {}
+      window.docsTheme = saved === 'light' ? 'light' : 'dark';
+      apply(window.docsTheme);
+      // Reload so Mermaid redraws diagrams in the new theme.
+      btn.onclick = function () { apply(dark.disabled ? 'dark' : 'light'); location.reload(); };
+    })();
+  </script>
+  <script>
+    window.$docsify = {
+      name: 'Critter Connect',
+      homepage: 'CLUE_MATCH.md',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      search: { depth: 3 },
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: false, theme: window.docsTheme === 'light' ? 'default' : 'dark' });</script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
+</body>
+</html>

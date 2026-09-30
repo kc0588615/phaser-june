@@ -28,9 +28,13 @@ export interface PoolClue {
   compareTags: string[];
   revealOrder: number;
   isFiltering: boolean;
+  /** Where the clue's fact comes from (content_sources), for a source link. */
+  source?: { name: string; url: string | null } | null;
 }
 
 export interface PoolFact {
+  /** species id x 100 + position in the profile, so it sorts in the profile's order. */
+  id?: number;
   speciesId: number;
   category: string;
   text: string;
@@ -52,8 +56,8 @@ export interface ContentRows {
     conservation_code: string | null; redlist_url?: string | null;
     photo_url?: string | null; photo_credit?: string | null; photo_license?: string | null; photo_page?: string | null;
   }>;
-  clues: Array<{ id: number; species_id: number; category: string; label: string; compare_tags: string[] | null; reveal_order: number; is_filtering: boolean }>;
-  facts: Array<{ species_id: number; category: string; fact_text: string; sort_order: number; source_name?: string | null; source_url?: string | null }>;
+  clues: Array<{ id: number; species_id: number; category: string; label: string; compare_tags: string[] | null; reveal_order: number; is_filtering: boolean; source_name?: string | null; source_url?: string | null }>;
+  facts: Array<{ id?: number; species_id: number; category: string; fact_text: string; sort_order: number; source_name?: string | null; source_url?: string | null }>;
 }
 
 /** The pool: every species that has clues, with its clues and facts in reveal order. */
@@ -73,13 +77,19 @@ export function poolFromRows({ species, clues, facts }: ContentRows): CluePool {
     clues: [...clues].sort(byOrder(row => [row.species_id, row.category, row.reveal_order])).map(row => ({
       id: row.id, speciesId: row.species_id, category: row.category as SpeciesClueCategory, label: row.label,
       compareTags: row.compare_tags ?? [], revealOrder: row.reveal_order, isFiltering: row.is_filtering,
+      source: row.source_name ? { name: row.source_name, url: row.source_url ?? null } : null,
     })),
     facts: facts.filter(row => playable.has(row.species_id)).sort(byOrder(row => [row.species_id, row.category, row.sort_order]))
       .map(row => ({
-        speciesId: row.species_id, category: row.category, text: row.fact_text, sortOrder: row.sort_order,
+        ...(row.id !== undefined ? { id: row.id } : {}), speciesId: row.species_id, category: row.category, text: row.fact_text, sortOrder: row.sort_order,
         source: row.source_name ? { name: row.source_name, url: row.source_url ?? null } : null,
       })),
   };
+}
+
+/** Species that can be a mystery: they have at least one clue. */
+export function playableSpeciesIds(pool: Pick<CluePool, 'clues'>): number[] {
+  return [...new Set(pool.clues.map(clue => clue.speciesId))].sort((a, b) => a - b);
 }
 
 /** Text that stands in for "nothing here" ("None", "N/A"); never shown to players. */

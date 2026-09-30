@@ -8,10 +8,12 @@ import { BoardModel, type ExplodePhase } from './BoardModel';
 import { BoardView } from './BoardView';
 import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
+import { sfx } from './sfx';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
+import { makeToyTextures } from './toyTextures';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
-import { gemCategory } from '@/clueGame/categories';
-import { cluesForMatch } from '@/clueGame/round';
+import { KIND_COLOR, SHORT_LABEL, kindOf } from '@/clueGame/gems';
+import { DEFAULT_RULES } from '@/clueGame/questionMatch';
 
 export class ClueBoardScene extends Phaser.Scene {
     static readonly KEY = 'ClueBoard';
@@ -22,6 +24,8 @@ export class ClueBoardScene extends Phaser.Scene {
     private layout: BoardLayout = { gemSize: 64, offset: { x: 0, y: 0 } };
     private backdrop: Phaser.GameObjects.Graphics | null = null;
     private seed: number | null = null;
+    /** Explode phases so far in this move: 1 for the move's own matches, then each cascade. */
+    private chain = 0;
 
     constructor() {
         super(ClueBoardScene.KEY);
@@ -34,6 +38,7 @@ export class ClueBoardScene extends Phaser.Scene {
     }
 
     create(): void {
+        makeToyTextures(this, GEM_TYPES);
         this.layout = squareBoardLayout(this.scale.width, this.scale.height, GRID_COLS, GRID_ROWS);
         this.backdrop = this.add.graphics().setDepth(-1);
         this.drawBackdrop();
@@ -43,7 +48,8 @@ export class ClueBoardScene extends Phaser.Scene {
             onMoveResolved: () => this.reshuffleIfStuck(),
             announce: (text, cell) => {
                 const gem = cell ? this.model.getGrid()[cell[0]]?.[cell[1]] : undefined;
-                EventBus.emit('clue-board-announce', gem ? `${text}: ${gem}, ${gemCategory(gem).label}` : text);
+                const kind = gem ? kindOf(gem) : null;
+                EventBus.emit('clue-board-announce', kind ? `${text}: ${kind === 'notes' ? 'note gem' : `${SHORT_LABEL[kind]} gem`}` : text);
             },
         });
 
@@ -57,12 +63,13 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
-        this.model.newBoard(seed, allowedGemTypes);
+        this.model.newBoard(seed, allowedGemTypes, rare ?? null);
+        this.view.setRareGem(rare?.type ?? null);
         this.controller.resetInput();
-        this.view.createBoard(this.model.getGrid());
+        this.view.createBoard(this.model.getGrid(), this.model.getToys());
         this.controller.ready = true;
     }
 
@@ -75,11 +82,52 @@ export class ClueBoardScene extends Phaser.Scene {
     }
 
     private reportMatches(phase: ExplodePhase, cascade: boolean): void {
-        for (const group of phase.groups) this.burst(group.cells, gemCategory(group.gemType).color, group.cells.length);
-        EventBus.emit('gems-matched', { groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length })), cascade });
+        this.chain = cascade ? this.chain + 1 : 1;
+        for (const group of phase.groups) {
+            if (group.blast) continue; // a toy's clear flashes on its own (BoardView.animateFires)
+            const kind = kindOf(group.gemType);
+            // A note gem group is the notes collected this phase, not a match of its own.
+            this.burst(group.cells, kind ? KIND_COLOR[kind] : '#ffffff', kind === 'notes' ? 0 : group.cells.length);
+        }
+        const big = phase.groups.some(group => !group.blast && group.cells.length >= 4);
+        if (phase.fired.length > 0) {
+            sfx.blast();
+            this.cameras.main.shake(180, 0.008);
+        } else if (big) {
+            this.cameras.main.shake(120, 0.004);
+        }
+        sfx.pop(this.chain);
+        if (phase.made.length > 0) sfx.toy();
+        // What a toy's clear pays (the same rule as applyMatches): every `perBlast` gems, of the color cleared most.
+        const blasts = phase.groups.filter(group => group.blast);
+        const pooled = Math.floor(blasts.reduce((sum, group) => sum + group.cells.length, 0) / DEFAULT_RULES.perBlast);
+        if (pooled > 0 && phase.fired.length > 0) {
+            const most = blasts.reduce((a, b) => (b.cells.length > a.cells.length ? b : a));
+            const kind = kindOf(most.gemType);
+            this.label(phase.fired[0].cell, `+${pooled} charge${pooled === 1 ? '' : 's'}`, kind ? KIND_COLOR[kind] : '#ffffff');
+        }
+        if (this.chain >= 2) this.callout(`Chain ×${this.chain}!`);
+        EventBus.emit('gems-matched', {
+            groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length, ...(group.blast ? { blast: true } : {}) })),
+            cascade,
+        });
     }
 
-    /** A colored ring where a group cleared; bigger groups ring wider and call out their extra clues. */
+    /** Big text across the middle of the board that floats up and fades. */
+    private callout(text: string): void {
+        const { gemSize, offset } = this.layout;
+        const label = this.add.text(offset.x + (GRID_COLS * gemSize) / 2, offset.y + (GRID_ROWS * gemSize) / 2, text, {
+            fontFamily: 'Arial Black, Arial, sans-serif',
+            fontSize: `${Math.round(gemSize * 0.45)}px`,
+            color: '#fde68a',
+            stroke: '#06121a',
+            strokeThickness: Math.max(4, Math.round(gemSize * 0.1)),
+        }).setOrigin(0.5).setDepth(70).setScale(0.5);
+        this.tweens.add({ targets: label, scale: 1, duration: 160, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: label, y: label.y - gemSize * 0.8, alpha: 0, delay: 380, duration: 520, ease: 'Cubic.easeIn', onComplete: () => label.destroy() });
+    }
+
+    /** A colored ring where a group cleared; bigger matches ring wider and call out their charges. `size` 0: collected notes. */
     private burst(cells: Array<[number, number]>, color: string, size: number): void {
         const { gemSize, offset } = this.layout;
         const cx = offset.x + (cells.reduce((sum, [x]) => sum + x, 0) / cells.length + 0.5) * gemSize;
@@ -89,16 +137,30 @@ export class ClueBoardScene extends Phaser.Scene {
             .setDepth(50);
         this.tweens.add({
             targets: ring,
-            scale: 1.6 + 0.3 * (size - 3),
+            scale: 1.6 + 0.3 * Math.max(0, size - 3),
             alpha: 0,
             duration: 420,
             ease: 'Cubic.easeOut',
             onComplete: () => ring.destroy(),
         });
 
-        const extra = cluesForMatch(size) - 1;
-        if (extra <= 0) return;
-        const label = this.add.text(cx, cy, `+${extra} clue${extra === 1 ? '' : 's'}`, {
+        // Only the bigger matches call their charges out (Rules.perMatch: 3, 4, 5 or more).
+        const charges = size >= 5 ? DEFAULT_RULES.perMatch[2] : size === 4 ? DEFAULT_RULES.perMatch[1] : 0;
+        const text = size === 0 ? '📓 saved' : `+${charges} charges`;
+        if (size !== 0 && charges === 0) return;
+        this.floatLabel(cx, cy, text, color);
+    }
+
+    /** A floating label over a cell. */
+    private label([x, y]: [number, number], text: string, color: string): void {
+        const { gemSize, offset } = this.layout;
+        this.floatLabel(offset.x + (x + 0.5) * gemSize, offset.y + (y + 0.5) * gemSize, text, color);
+    }
+
+    /** Text that pops in at a point, then floats up and fades. */
+    private floatLabel(cx: number, cy: number, text: string, color: string): void {
+        const { gemSize } = this.layout;
+        const label = this.add.text(cx, cy, text, {
             fontFamily: 'Arial Black, Arial, sans-serif',
             fontSize: `${Math.round(gemSize * 0.34)}px`,
             color: color,
@@ -120,7 +182,7 @@ export class ClueBoardScene extends Phaser.Scene {
     private reshuffleIfStuck(): void {
         if (!this.view || this.model.hasAnyValidMove()) return;
         this.model.shuffle();
-        this.view.createBoard(this.model.getGrid());
+        this.view.createBoard(this.model.getGrid(), this.model.getToys());
         EventBus.emit('clue-board-shuffled', undefined);
     }
 
@@ -158,6 +220,8 @@ export class ClueBoardScene extends Phaser.Scene {
             gemSize: this.layout.gemSize,
             boardOffset: { ...this.layout.offset },
             grid: this.model.getGrid(),
+            toys: this.model.getToys(),
+            view: this.view?.textureKeys() ?? [],
         };
     }
 

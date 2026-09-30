@@ -4,14 +4,17 @@ import { HABITAT_COG_URL, TITILER_BASE_URL, groupLabel, habitatSnapshotUrl, type
 import { speciesBadge } from '@/clueGame/speciesInfo';
 
 /** The picked place: who lives there (named once found), its habitats, and the button to play. */
-export function PlaceCard({ place, animals, isFound, onBack, onStart }: {
+export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart }: {
   place: Place;
   animals: PlaceAnimal[];
   isFound: (animal: PlaceAnimal) => boolean;
+  /** A continent opens at this many animals. */
+  minAnimals: number;
   onBack: () => void;
   onStart: () => void;
 }) {
   const found = animals.filter(isFound).length;
+  const soon = animals.length < minAnimals;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-3 pb-[max(12px,env(safe-area-inset-bottom))]">
       <div className="flex items-start gap-1">
@@ -41,9 +44,13 @@ export function PlaceCard({ place, animals, isFound, onBack, onStart }: {
 
       {TITILER_BASE_URL && HABITAT_COG_URL && <HabitatSnapshot key={place.key} place={place} />}
 
-      <button type="button" onClick={onStart} className="mt-auto flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-cyan-300 text-sm font-bold text-slate-950 shadow-[0_0_16px_rgba(103,232,249,.35)] active:scale-[.98]">
-        <Play className="h-4 w-4" aria-hidden="true" /> Explore {place.name}
-      </button>
+      {soon ? (
+        <p className="mt-auto m-0 rounded-xl border border-white/15 p-3 text-center text-sm text-white/75">Coming soon: a round needs at least {minAnimals} animals from here, and more are on the way.</p>
+      ) : (
+        <button type="button" onClick={onStart} className="mt-auto flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-cyan-300 text-sm font-bold text-slate-950 shadow-[0_0_16px_rgba(103,232,249,.35)] active:scale-[.98]">
+          <Play className="h-4 w-4" aria-hidden="true" /> Explore {place.name}
+        </button>
+      )}
     </div>
   );
 }

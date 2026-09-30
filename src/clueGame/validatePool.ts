@@ -3,9 +3,8 @@
 // (on db/content/) and by `npm run content -- check` (live DB).
 import { GEM_CATEGORIES } from '@/clueGame/categories';
 import { fitClue, isDeductive } from '@/clueGame/deduction';
-import { isPlaceholderText, type CluePool } from '@/clueGame/pool';
+import { isPlaceholderText, playableSpeciesIds, type CluePool } from '@/clueGame/pool';
 import { EXCLUSIVE_PREFIXES, REALM_TAGS, allTraits, buildSpeciesRecords, clueTags, prefixOf } from '@/clueGame/traits';
-import { playableSpeciesIds } from '@/clueGame/round';
 
 export interface PoolReport {
   errors: string[];

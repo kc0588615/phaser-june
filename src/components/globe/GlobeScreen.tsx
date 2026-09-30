@@ -1,12 +1,12 @@
-// Home: pick a place on the globe (from the list, or by tapping a dot), see who
-// lives there, then explore it in Clue Match. Found animals glow on the globe.
+// Home: pick a continent on the globe (from the list, or by tapping its dot), see
+// who lives there, then explore it. Found animals glow on the globe.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Shuffle } from 'lucide-react';
 import { SignInButton, Show, UserButton } from '@clerk/nextjs';
-import { classColor, type PlaceAnimal, type PlaceKind, type PlacesResponse } from '@/clueGame/places';
+import { MIN_PLACE_ANIMALS, classColor, type PlaceAnimal, type PlacesResponse } from '@/clueGame/places';
 import { useJournal } from '@/components/clueGame/useJournal';
 import { getJson } from '@/lib/getJson';
 import { Globe, type GlobeSighting } from './Globe';
@@ -18,7 +18,6 @@ export function GlobeScreen() {
   const [data, setData] = useState<PlacesResponse | null>(null);
   const { journal } = useJournal(data?.places);
   const [error, setError] = useState<string | null>(null);
-  const [kind, setKind] = useState<PlaceKind>('country');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +34,8 @@ export function GlobeScreen() {
   const animals = useMemo(() => new Map((data?.animals ?? []).map(animal => [animal.id, animal])), [data]);
   const isFound = useCallback((animal: PlaceAnimal) => Boolean(journal[animal.scientificName]), [journal]);
   const selected = data?.places.find(place => place.key === selectedKey) ?? null;
-  const shown = useMemo(() => (data?.places ?? []).filter(place => place.kind === (selected?.kind ?? kind)), [data, kind, selected]);
+  // Rounds draw from a whole continent (plan 041); countries and wildlife areas are too small a pool.
+  const shown = useMemo(() => (data?.places ?? []).filter(place => place.kind === 'continent'), [data]);
   const sightings = useMemo<GlobeSighting[]>(() => Object.values(journal).flatMap(entry =>
     (entry.sightings ?? []).map(sighting => ({ lon: sighting.lon, lat: sighting.lat, color: classColor(entry.className), name: entry.commonName }))), [journal]);
   const foundCount = Object.keys(journal).length;
@@ -51,7 +51,7 @@ export function GlobeScreen() {
               {data ? `${foundCount} of ${animals.size} animals found` : 'Pick a place to explore'}
             </p>
           </div>
-          <Link href="/clue-match/" className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-white/85 no-underline active:bg-white/10" aria-label="Play with animals from everywhere">
+          <Link href="/explore/" className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-white/85 no-underline active:bg-white/10" aria-label="Play with animals from everywhere">
             <Shuffle className="h-4 w-4" aria-hidden="true" /> Anywhere
           </Link>
           <Show when="signed-out">
@@ -78,14 +78,14 @@ export function GlobeScreen() {
               animals={selected.speciesIds.flatMap(id => animals.get(id) ?? [])}
               isFound={isFound}
               onBack={() => setSelectedKey(null)}
-              onStart={() => router.push(`/clue-match/?place=${encodeURIComponent(selected.key)}`)}
+              minAnimals={MIN_PLACE_ANIMALS}
+              onStart={() => router.push(`/explore/?place=${encodeURIComponent(selected.key)}`)}
             />
           )}
           {data && !selected && (
             <PlaceList
-              places={data.places}
-              kind={kind}
-              onKind={setKind}
+              places={shown}
+              minAnimals={MIN_PLACE_ANIMALS}
               selectedKey={selectedKey}
               foundIn={place => place.speciesIds.filter(id => { const animal = animals.get(id); return animal ? isFound(animal) : false; }).length}
               onPick={setSelectedKey}

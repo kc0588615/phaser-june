@@ -5,9 +5,9 @@ import { parseSolveReport } from '@/clueGame/solveReport';
 
 /**
  * POST /api/clue-game/solves
- * Records one solved Clue Match mystery (table clue_match_solves, db/schema.sql)
+ * Records one finished round, solved or lost (table clue_match_solves, db/schema.sql),
  * for analyzing play with SQL. Anonymous play is recorded without a player; a
- * signed-in player's profile is created on their first solve.
+ * signed-in player's profile is created on their first saved round.
  */
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -33,6 +33,14 @@ export async function POST(request: NextRequest) {
       points: report.points,
       revealedByGem: report.revealedByGem,
       placeKey: report.placeKey ?? null,
+      outcome: report.outcome ?? 'solved',
+      lastChance: report.lastChance ?? null,
+      rulesVersion: report.rulesVersion ?? null,
+      movesLeft: report.movesLeft ?? null,
+      standingAtGuess: report.standingAtGuess ?? null,
+      notesSaved: report.notesSaved ?? null,
+      treeSteps: report.treeSteps ?? null,
+      questions: report.questions ?? null,
     });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
@@ -40,6 +48,6 @@ export async function POST(request: NextRequest) {
     const code = (error as { cause?: { code?: string }; code?: string }).cause?.code ?? (error as { code?: string }).code;
     if (code === '23503') return NextResponse.json({ error: 'Unknown species' }, { status: 400 });
     console.error('[API /clue-game/solves] Error:', error);
-    return NextResponse.json({ error: 'Failed to record the solve' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to record the round' }, { status: 500 });
   }
 }

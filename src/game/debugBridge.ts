@@ -1,11 +1,10 @@
 // Dev-only playtest bridge. Exposes `window.__cc` so an agent driving the
 // browser (chrome-devtools `evaluate_script`) can read the board and play real
-// moves. Moves are synthetic mouse or touch drags on the canvas, so they go
-// through the same pointer handlers a player uses. Reads client-visible state
+// moves. Moves are synthetic mouse or touch swipes (or taps) on the canvas, so
+// they go through the same pointer handlers a player uses. Reads client-visible state
 // only; every entry point is a no-op in production builds.
 import { EventBus, type EventPayloads } from './EventBus';
-import type { BoardModel, Grid, Move } from './BoardModel';
-import { GRID_COLS, GRID_ROWS } from './constants';
+import { neighborSwaps, type BoardModel, type Cell, type Grid, type Move, type Toys } from './BoardModel';
 
 export interface DebugBoardSnapshot {
   ready: boolean;
@@ -21,6 +20,10 @@ export interface DebugBoardSnapshot {
   boardOffset: { x: number; y: number };
   /** Column-major gem colors, grid[x][y]. */
   grid: Grid;
+  /** Column-major toys ('row', 'column', 'bomb', 'color' or null), toys[x][y]. */
+  toys: Toys;
+  /** Column-major texture key each sprite shows (gem_<color>, toy_<special>_<color>, toy_color), view[x][y]. */
+  view: (string | null)[][];
 }
 
 /** What the board scene hands the bridge; typed so field renames fail typecheck. */
@@ -74,20 +77,18 @@ function cellCenter(x: number, y: number): { x: number; y: number } {
   };
 }
 
-/** Moves (shifts of 1-3 cells either way) that would produce a match right now; `largest` is the biggest group. */
-function validMoves(): Array<Move & { matches: number; largest: number }> {
+/** Swaps that would produce a match right now; `largest` is the biggest group. */
+/** Every move: swaps that match, and (`trigger`) swaps that only set toys off (a color gem, or two toys together). */
+function validMoves(): Array<Move & { matches: number; largest: number; colors: string[]; trigger: boolean }> {
   const model = requireScene().debugModel();
-  const found: Array<Move & { matches: number; largest: number }> = [];
-  for (const rowOrCol of ['row', 'col'] as const) {
-    const lines = rowOrCol === 'row' ? model.height : model.width;
-    for (let index = 0; index < lines; index++) {
-      for (const amount of [1, -1, 2, -2, 3]) {
-        const groups = model.matchesAfter({ rowOrCol, index, amount });
-        if (groups.length > 0) found.push({ rowOrCol, index, amount, matches: groups.length, largest: Math.max(...groups.map(group => group.cells.length)) });
-      }
-    }
-  }
-  return found;
+  return neighborSwaps(model.width, model.height).flatMap(move => {
+    if (!model.canSwap(move)) return [];
+    const groups = model.matchesAfter(move);
+    return [{
+      ...move, matches: groups.length, largest: groups.length ? Math.max(...groups.map(group => group.cells.length)) : 0,
+      colors: [...new Set(groups.map(group => group.gemType))], trigger: groups.length === 0,
+    }];
+  });
 }
 
 /** Settled = no animation or drag in flight, and input is back (or the page locked the board). */
@@ -139,21 +140,16 @@ function overlayAt(point: { x: number; y: number }): string | null {
 }
 
 /**
- * Drag a row/column like a player: press on one cell, move in steps, release
- * `amount` cells away, with the mouse or (`input: 'touch'`) a finger. Resolves
- * once the board settles. A drag that makes no match snaps back and uses no move.
- * Refuses (`blocked`) when UI covers the start cell, since a player couldn't make
- * that drag either.
+ * Swipe like a player: press on `move.from`, move in steps to `move.to`, release,
+ * with the mouse or (`input: 'touch'`) a finger. Resolves once the board settles.
+ * A swap that makes no match slides back and uses no move. Refuses (`blocked`)
+ * when UI covers the start cell, since a player couldn't make that swipe either.
  */
 async function drag(move: Move, { timeoutMs = 15000, input = 'mouse' }: { timeoutMs?: number; input?: DragInput } = {}) {
   const fire = input === 'touch' ? fireTouch : fireMouse;
   const before = requireScene().debugSnapshot();
-  const last = (move.rowOrCol === 'row' ? GRID_COLS : GRID_ROWS) - 1;
-  const start = move.amount > 0 ? 0 : last;
-  const from = move.rowOrCol === 'row' ? { x: start, y: move.index } : { x: move.index, y: start };
-  const to = move.rowOrCol === 'row' ? { x: start + move.amount, y: move.index } : { x: move.index, y: start + move.amount };
-  const a = cellCenter(from.x, from.y);
-  const b = cellCenter(to.x, to.y);
+  const a = cellCenter(...move.from);
+  const b = cellCenter(...move.to);
   const blocked = overlayAt(a);
   if (blocked) return { move, counted: false, movesUsed: before.movesUsed, timedOut: false, blocked, after: before };
   fire('down', a);
@@ -165,6 +161,20 @@ async function drag(move: Move, { timeoutMs = 15000, input = 'mouse' }: { timeou
   await sleep(50);
   const after = await waitIdle(timeoutMs);
   return { move, counted: after.movesUsed > before.movesUsed, movesUsed: after.movesUsed, timedOut: after.timedOut, blocked: null, after };
+}
+
+/** Tap one cell like a player (press and release in place). Tap a gem, then a neighbor, to swap them. Resolves once the board settles. */
+async function tap([x, y]: Cell, { timeoutMs = 15000, input = 'mouse' }: { timeoutMs?: number; input?: DragInput } = {}) {
+  const fire = input === 'touch' ? fireTouch : fireMouse;
+  const point = cellCenter(x, y);
+  const blocked = overlayAt(point);
+  if (blocked) return { blocked, timedOut: false, after: requireScene().debugSnapshot() };
+  fire('down', point);
+  await sleep(16);
+  fire('up', point);
+  await sleep(50);
+  const after = await waitIdle(timeoutMs);
+  return { blocked: null, timedOut: after.timedOut, after };
 }
 
 /** Scale animation speed (1 = normal). Pausing resets the clock to 1. */
@@ -193,6 +203,7 @@ function install(): void {
     validMoves,
     cellCenter,
     drag,
+    tap,
     waitIdle,
     events: (n = 20) => log.slice(-n),
     speed,

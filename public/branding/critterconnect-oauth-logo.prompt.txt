@@ -1,0 +1,7 @@
+Generated with the built-in image_gen tool.
+
+Use case: logo-brand.
+Asset type: square app logo for CritterConnect's OAuth consent screen, supplied as a finished PNG image.
+Primary request: create a polished wildlife discovery app icon using the app's existing visual identity: a golden animal paw inside a cyan circular globe-like enclosure, on dark navy.
+Design: one confident, beautifully balanced emblem. A warm gold (#fcd34d) paw with four distinct rounded toe pads and one broad softly sculpted central pad, centered within a clean cyan (#67e8f9) circular ring. Deep teal (#0e3a47) inside the ring, solid dark navy (#06121a) square background. The paw should feel friendly and natural; crisp flat vector-like shapes, smooth edges, carefully controlled proportions. Keep the ring simple and continuous; the combination suggests wildlife around the world. The emblem occupies approximately 76 percent of the square with generous symmetrical safe margins for rounded or circular cropping. Strong silhouette and clarity when displayed at 40 pixels. Professional, restrained, distinctive finish.
+Constraints: single centered icon only, square 1:1 canvas, preferably 1024x1024. No text, letters, wordmark, watermark, gradients, shadows, mockup, dimensional effects, extra ornaments, grid lines, fine details, or multiple variants.

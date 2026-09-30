@@ -8,6 +8,11 @@ const nextConfig = {
     trailingSlash: true,
     poweredByHeader: false,
 
+    // The game moved from /clue-match to /explore (plan 041); old links keep their ?place= and ?seed=.
+    async redirects() {
+        return [{ source: '/clue-match', destination: '/explore', permanent: true }];
+    },
+
     async headers() {
         // Dev only: Turbopack serves /_next/static/development/_clientMiddlewareManifest.js as JSON, which nosniff blocks.
         if (process.env.NODE_ENV !== 'production') return [];

@@ -1,15 +1,17 @@
-// BoardController: pointer and keyboard input, and the move loop. A drag moves a
-// row or column; on release a move that makes a match is applied, then each
-// explode phase (the move's, then every cascade) is reported and animated. On the
-// keyboard, arrows move a cursor, Shift+arrows preview sliding its row or column
-// (one cell per press), Enter makes that move and Escape cancels. Rules live in
-// BoardModel, visuals in BoardView; the scene says what a match means.
+// BoardController: pointer and keyboard input, and the move loop. A move swaps a
+// gem with a neighbor: swipe from a gem toward its neighbor, or tap a gem, then
+// a neighbor. A swap that makes a match is made, then each explode phase (the
+// move's, then every cascade) is reported and animated; any other swap slides
+// back and costs nothing. On the keyboard, arrows move a cursor and Shift+arrows
+// swap its gem that way; Escape drops a tapped gem. Rules live in BoardModel,
+// visuals in BoardView; the scene says what a match means.
 import Phaser from 'phaser';
-import type { BoardModel, Cell, ExplodePhase, Move, MoveDirection } from './BoardModel';
+import { isNeighbor, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
 import type { BoardKey } from './EventBus';
 import type { BoardView } from './BoardView';
+import { sfx } from './sfx';
 import type { BoardLayout } from './squareLayout';
-import { GRID_COLS, GRID_ROWS, DRAG_THRESHOLD, MOVE_THRESHOLD } from './constants';
+import { GRID_COLS, GRID_ROWS, SWIPE_THRESHOLD } from './constants';
 
 export interface BoardHooks {
     /** Each explode phase, before it animates: the move's (cascade false), then each cascade. */
@@ -23,14 +25,13 @@ export interface BoardHooks {
 const ARROWS: Partial<Record<BoardKey, [dx: number, dy: number]>> = {
     ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
 };
+const WAYS: Record<string, string> = { '-1,0': 'left', '1,0': 'right', '0,-1': 'up', '0,1': 'down' };
 
-interface Drag {
-    x: number;
-    y: number;
+/** A pointer pressed on a gem, not yet a swipe or a tap. */
+interface Press {
+    cell: Cell;
     pointerX: number;
     pointerY: number;
-    /** Locked once the pointer has moved past DRAG_THRESHOLD. */
-    direction: MoveDirection | null;
 }
 
 export class BoardController {
@@ -39,10 +40,13 @@ export class BoardController {
     /** The page stopped accepting moves (between rounds). */
     locked = false;
     private resolving = false;
-    private drag: Drag | null = null;
+    private press: Press | null = null;
+    /** Keyboard cursor, and the gem a tap picked (outlined the same way). */
     private cursor: Cell = [Math.floor(GRID_COLS / 2), Math.floor(GRID_ROWS / 2)];
-    /** A keyboard slide being previewed, not yet made. */
-    private pending: Move | null = null;
+    /** The cursor's gem was tapped and waits for a neighbor tap. */
+    private picked = false;
+    /** Bumped for each new board, so a move still animating on the old one stops instead of playing on the new one. */
+    private board = 0;
 
     /** Listens to the scene's pointer; Phaser drops the listeners when the scene shuts down. */
     constructor(
@@ -60,140 +64,140 @@ export class BoardController {
 
     get canMove(): boolean { return this.ready && !this.locked && !this.resolving; }
     get isResolving(): boolean { return this.resolving; }
-    get isDragging(): boolean { return this.drag !== null; }
+    get isDragging(): boolean { return this.press !== null; }
 
     setLayout(layout: BoardLayout): void { this.layout = layout; }
 
-    /** A new board: forget any drag or keyboard preview. */
+    /** A new board: forget any press or tapped gem, and stop a move still animating on the old board. */
     resetInput(): void {
-        this.drag = null;
-        this.pending = null;
+        this.board++;
+        this.press = null;
+        this.drop();
     }
 
     private onPointerDown(pointer: Phaser.Input.Pointer): void {
         if (!this.canMove) return;
         const { gemSize, offset } = this.layout;
-        const x = Math.floor((pointer.x - offset.x) / gemSize);
-        const y = Math.floor((pointer.y - offset.y) / gemSize);
-        if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return;
-        if (this.drag?.direction || this.pending) this.view.resetPositions(); // a drag whose release never arrived, or a keyboard preview
-        this.pending = null;
-        this.view.hideCursor();
-        this.drag = { x, y, pointerX: pointer.x, pointerY: pointer.y, direction: null };
+        const cell: Cell = [Math.floor((pointer.x - offset.x) / gemSize), Math.floor((pointer.y - offset.y) / gemSize)];
+        if (!this.model.onBoard(cell)) return;
+        if (!this.picked) this.view.hideCursor(); // the keyboard cursor, from earlier keyboard play
+        this.press = { cell, pointerX: pointer.x, pointerY: pointer.y };
     }
 
+    /** Past the threshold, a press becomes a swipe: swap toward the neighbor that way. */
     private onPointerMove(pointer: Phaser.Input.Pointer): void {
-        const drag = this.drag;
-        if (!drag) return;
+        const press = this.press;
+        if (!press) return;
         if (!pointer.isDown) {
-            void this.onPointerUp(pointer); // released outside our events
+            this.onPointerUp(); // released outside our events
             return;
         }
-        const dx = pointer.x - drag.pointerX;
-        const dy = pointer.y - drag.pointerY;
-        if (!drag.direction) {
-            if (Math.max(Math.abs(dx), Math.abs(dy)) <= DRAG_THRESHOLD) return;
-            drag.direction = Math.abs(dx) > Math.abs(dy) ? 'row' : 'col';
-        }
-        const row = drag.direction === 'row';
-        this.view.dragLine(drag.direction, row ? drag.y : drag.x, row ? dx : dy);
+        const dx = pointer.x - press.pointerX;
+        const dy = pointer.y - press.pointerY;
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < this.layout.gemSize * SWIPE_THRESHOLD) return;
+        this.press = null;
+        this.drop();
+        const [x, y] = press.cell;
+        const to: Cell = Math.abs(dx) > Math.abs(dy) ? [x + Math.sign(dx), y] : [x, y + Math.sign(dy)];
+        void this.trySwap({ from: press.cell, to });
     }
 
-    private async onPointerUp(pointer: Phaser.Input.Pointer): Promise<void> {
-        const drag = this.drag;
-        this.drag = null;
-        if (!drag?.direction) return; // a tap
-        const row = drag.direction === 'row';
-        const index = row ? drag.y : drag.x;
-        const offset = row ? pointer.x - drag.pointerX : pointer.y - drag.pointerY;
-        const cells = offset / this.layout.gemSize;
-        const move: Move = { rowOrCol: drag.direction, index, amount: Math.abs(cells) >= MOVE_THRESHOLD ? Math.round(cells) : 0 };
-        if (!this.canMove || move.amount === 0 || this.model.matchesAfter(move).length === 0) {
-            await this.view.snapBack(drag.direction, index, offset);
-            return;
+    /** A press that never became a swipe is a tap. */
+    private onPointerUp(): void {
+        const press = this.press;
+        this.press = null;
+        if (press && this.canMove) void this.tap(press.cell);
+    }
+
+    /** Tap a gem to pick it, then a neighbor to swap them. Tapping it again, or a gem further away, picks again. */
+    private async tap(cell: Cell): Promise<void> {
+        if (this.picked && isNeighbor(this.cursor, cell)) {
+            const from = this.cursor;
+            this.drop();
+            await this.trySwap({ from, to: cell });
+        } else if (this.picked && cell[0] === this.cursor[0] && cell[1] === this.cursor[1]) {
+            this.drop();
+        } else {
+            this.cursor = cell;
+            this.picked = true;
+            this.view.showCursor(...cell);
         }
-        await this.resolve(move);
+    }
+
+    private drop(): void {
+        if (!this.picked) return;
+        this.picked = false;
+        this.view.hideCursor();
     }
 
     /** A key pressed on the focused board. */
     async key(key: BoardKey, shift: boolean): Promise<void> {
-        if (!this.ready || this.drag) return;
+        if (!this.ready || this.press) return;
         const arrow = ARROWS[key];
         if (arrow && shift) {
-            if (this.canMove) this.preview(arrow);
+            this.picked = false;
+            this.view.showCursor(...this.cursor);
+            const [x, y] = this.cursor;
+            const to: Cell = [x + arrow[0], y + arrow[1]];
+            if (!this.model.onBoard(to)) {
+                this.hooks.announce('Edge of the board');
+                return;
+            }
+            const swapped = await this.trySwap({ from: this.cursor, to });
+            if (swapped) this.hooks.announce(`Swapped ${WAYS[arrow.join()]}`);
         } else if (arrow) {
-            this.cancelPreview();
+            this.picked = false;
             const [x, y] = this.cursor;
             this.cursor = [clamp(x + arrow[0], GRID_COLS), clamp(y + arrow[1], GRID_ROWS)];
             this.view.showCursor(...this.cursor);
             this.hooks.announce(`Row ${this.cursor[1] + 1}, column ${this.cursor[0] + 1}`, this.cursor);
-        } else if (key === 'Escape') {
-            if (this.cancelPreview()) this.hooks.announce('Slide canceled');
-        } else if (key === 'Enter') {
-            await this.commitPreview();
+        } else if (key === 'Escape' && this.picked) {
+            this.drop();
+            this.hooks.announce('Gem dropped');
         }
     }
 
-    /** One more cell of slide along the cursor's row (left/right) or column (up/down). */
-    private preview([dx, dy]: [number, number]): void {
-        const rowOrCol: MoveDirection = dx !== 0 ? 'row' : 'col';
-        if (this.pending && this.pending.rowOrCol !== rowOrCol) this.cancelPreview();
-        const length = rowOrCol === 'row' ? GRID_COLS : GRID_ROWS;
-        const index = rowOrCol === 'row' ? this.cursor[1] : this.cursor[0];
-        const amount = ((this.pending?.amount ?? 0) + dx + dy) % length;
-        this.view.showCursor(...this.cursor);
-        if (amount === 0) {
-            this.cancelPreview();
-            this.hooks.announce('Back where it started');
-            return;
+    /** Make a swap that matches (or sets a toy off), or show one that doesn't sliding back. True when the move was made. */
+    private async trySwap(move: Move): Promise<boolean> {
+        if (!this.canMove || !this.model.onBoard(move.to)) return false;
+        if (!this.model.canSwap(move)) {
+            sfx.swapBack();
+            this.resolving = true;
+            try {
+                await this.view.animateSwapBack(move);
+            } finally {
+                this.resolving = false;
+            }
+            this.hooks.announce('No match that way');
+            return false;
         }
-        this.pending = { rowOrCol, index, amount };
-        this.view.dragLine(rowOrCol, index, amount * this.layout.gemSize);
-        const way = rowOrCol === 'row' ? (amount > 0 ? 'right' : 'left') : (amount > 0 ? 'down' : 'up');
-        const cells = Math.abs(amount);
-        const match = this.model.matchesAfter(this.pending).length > 0 ? 'Makes a match: press Enter.' : 'No match yet.';
-        this.hooks.announce(`${rowOrCol === 'row' ? 'Row' : 'Column'} ${index + 1} ${way} ${cells} cell${cells === 1 ? '' : 's'}. ${match}`);
-    }
-
-    private cancelPreview(): boolean {
-        const pending = this.pending;
-        if (!pending) return false;
-        this.pending = null;
-        void this.view.snapBack(pending.rowOrCol, pending.index, pending.amount * this.layout.gemSize);
+        await this.resolve(move);
         return true;
     }
 
-    private async commitPreview(): Promise<void> {
-        const move = this.pending;
-        if (!move) return;
-        if (!this.canMove || this.model.matchesAfter(move).length === 0) {
-            this.cancelPreview();
-            this.hooks.announce('No match that way');
-            return;
-        }
-        this.pending = null;
-        // The cursor rides along with its gem.
-        const [x, y] = this.cursor;
-        this.cursor = move.rowOrCol === 'row' ? [wrap(x + move.amount, GRID_COLS), y] : [x, wrap(y + move.amount, GRID_ROWS)];
-        this.view.showCursor(...this.cursor);
-        await this.resolve(move);
-    }
-
-    /** Make a move that matches: shift, then animate each explode phase. */
+    /** Swap, then animate each explode phase. A new board mid-move (the next round) ends it at the next pause. */
     private async resolve(move: Move): Promise<void> {
         this.resolving = true;
+        const board = this.board;
+        const replaced = () => board !== this.board;
         try {
-            this.view.applyMove(move);
+            await this.view.animateSwap(move);
+            if (replaced()) return;
             let phase = this.model.nextPhase(move);
-            for (let cascade = false; phase.groups.length > 0; cascade = true) {
+            for (let cascade = false; phase.cleared.length > 0; cascade = true) {
                 this.hooks.onPhase(phase, cascade);
-                await this.view.animateExplosions(phase.groups.flatMap(group => group.cells));
+                if (phase.fired.length > 0) await this.view.animateFires(phase.fired);
+                if (replaced()) return;
+                await this.view.animateExplosions(phase.cleared);
+                if (replaced()) return;
+                this.view.showToys(phase.made);
                 await this.view.animateFalls(phase.refills);
+                if (replaced()) return;
                 phase = this.model.nextPhase();
             }
         } catch (error) {
             console.error('[BoardController] Move failed; redrawing the board:', error);
-            this.view.createBoard(this.model.getGrid());
+            this.view.createBoard(this.model.getGrid(), this.model.getToys());
         } finally {
             this.resolving = false;
             this.hooks.onMoveResolved();
@@ -202,4 +206,3 @@ export class BoardController {
 }
 
 const clamp = (value: number, length: number) => Math.min(length - 1, Math.max(0, value));
-const wrap = (value: number, length: number) => ((value % length) + length) % length;

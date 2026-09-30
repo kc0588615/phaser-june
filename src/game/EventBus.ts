@@ -14,17 +14,18 @@ import type { GemType } from './constants';
 
 export interface EventPayloads {
     'current-scene-ready': Phaser.Scene;
-    /** Every match group cleared in one explode phase (the player's move or a cascade). */
-    'gems-matched': { groups: Array<{ gemType: GemType; size: number }>; cascade: boolean };
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[] };
+    /** Every group cleared in one explode phase (the player's move or a cascade); `blast`: gems a toy cleared outside any match. */
+    'gems-matched': { groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean };
+    /** `rare`: a gem that never matches by itself and is collected by a match next to it (the note gem). */
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number } };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
-    /** Arrows move the cursor; with Shift they preview a slide; Enter makes it, Escape cancels. */
+    /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */
     'clue-board-key': { key: BoardKey; shift: boolean };
     'clue-board-announce': string;
 }
 
-export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Enter' | 'Escape';
+export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';
 
 class TypedEventBus extends Phaser.Events.EventEmitter {
     emit<K extends keyof EventPayloads>(event: K, ...args: [EventPayloads[K]]): boolean {

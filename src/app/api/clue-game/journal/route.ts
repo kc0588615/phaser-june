@@ -11,7 +11,7 @@ type Row = {
 
 /**
  * GET /api/clue-game/journal
- * The signed-in player's Field Journal from their saved solves (clue_match_solves),
+ * The signed-in player's Field Journal from their saved solves (clue_match_solves, solved rounds only),
  * so it follows them to another device. Signed out: no entries.
  */
 export async function GET() {
@@ -26,7 +26,7 @@ export async function GET() {
       FROM clue_match_solves c
       JOIN profiles p ON p.user_id = c.player_id
       JOIN species s ON s.id = c.species_id
-      WHERE p.clerk_user_id = ${clerkUserId}
+      WHERE p.clerk_user_id = ${clerkUserId} AND c.outcome = 'solved'
       GROUP BY s.id
       ORDER BY s.id`);
     const entries: ServerJournalEntry[] = [...rows].map(row => ({

@@ -30,6 +30,7 @@
         "dev": "next dev -p 8080",
         "build": "npm run typecheck && next build",
         "serve": "next start -p 8080",
+        "docs": "python3 -m http.server 3000 -d docs",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
         "lint": "eslint src tests scripts",

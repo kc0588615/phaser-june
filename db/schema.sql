@@ -112,9 +112,24 @@ CREATE TABLE clue_match_solves (
   relatives        smallint NOT NULL CHECK (relatives BETWEEN 0 AND 5),
   points           integer NOT NULL CHECK (points BETWEEN 0 AND 1000),
   revealed_by_gem  jsonb NOT NULL DEFAULT '{}' CHECK (jsonb_typeof(revealed_by_gem) = 'object'),
+  -- When the round ended, solved or lost.
   solved_at        timestamptz NOT NULL DEFAULT now(),
   -- clue_match_places.key when played from the globe.
-  place_key        text CHECK (place_key IS NULL OR place_key ~ '^(country|area|continent):[A-Za-z0-9-]{1,80}$')
+  place_key        text CHECK (place_key IS NULL OR place_key ~ '^(country|area|continent):[A-Za-z0-9-]{1,80}$'),
+  -- Plan 041: every round is saved. Discoveries (the journal) count only 'solved'.
+  outcome           text NOT NULL DEFAULT 'solved' CHECK (outcome IN ('solved', 'lost')),
+  -- Solved (or lost) on a last chance, to tell first-try and rescued solves apart; NULL for rounds saved before 2026-09-28.
+  last_chance       boolean,
+  -- Rules.version of the rules played (src/clueGame/questionMatch.ts): 041-1 charges; 041-5 charges with toys and 12 look-alikes; 041-2 to 041-4 were removed experiments (plans/041); NULL before plan 041.
+  rules_version     text CHECK (rules_version IS NULL OR rules_version ~ '^[a-z0-9.-]{1,20}$'),
+  moves_left        smallint CHECK (moves_left IS NULL OR moves_left BETWEEN 0 AND 100),
+  -- Animals still standing at the first guess.
+  standing_at_guess smallint CHECK (standing_at_guess IS NULL OR standing_at_guess BETWEEN 1 AND 50),
+  notes_saved       smallint CHECK (notes_saved IS NULL OR notes_saved BETWEEN 0 AND 100),
+  -- Family tree steps bought (free steps not counted).
+  tree_steps        smallint CHECK (tree_steps IS NULL OR tree_steps BETWEEN 0 AND 3),
+  -- Every question asked, in order: [{"tag": "region:east-africa", "answer": "yes"}, ...].
+  questions         jsonb CHECK (questions IS NULL OR jsonb_typeof(questions) = 'array')
 );
 CREATE INDEX ix_clue_match_solves_species ON clue_match_solves (species_id);
 CREATE INDEX ix_clue_match_solves_player ON clue_match_solves (player_id) WHERE player_id IS NOT NULL;

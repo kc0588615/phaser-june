@@ -33,6 +33,9 @@ export interface PlacesResponse {
   animals: PlaceAnimal[];
 }
 
+/** A continent opens once it has this many animals (plan 041); a round shows 8 of them. */
+export const MIN_PLACE_ANIMALS = 12;
+
 export const PLACE_KIND_LABELS: Record<PlaceKind, string> = {
   country: 'Countries',
   wildlife_area: 'Wildlife areas',

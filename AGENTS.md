@@ -52,11 +52,11 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Env (`.env.local`): `DATABASE_URL`, Clerk keys, `NEXT_PUBLIC_TITILER_BASE_URL` + `NEXT_PUBLIC_COG_URL` (habitat snapshots; optional).
 
 ## Where Things Live
-The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-match`, optional `?place=` and `?seed=`). Guide: `docs/CLUE_MATCH.md`.
+The app is two screens: a globe to pick a continent (`/`) and the game (`/explore`, optional `?place=` and `?seed=`; `/clue-match` redirects). Guide: `docs/CLUE_MATCH.md`; design and decisions: `plans/041-gameplay-tactics.md`; terms: `CONTEXT.md`.
 - Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` with TiTiler habitat snapshot). Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
-- Clue Match UI: `src/pages/clue-match.tsx` -> `src/components/clueGame/` (`ClueMatchGame` shell, `useClueMatch` state + board wiring, `useJournal` on-device journal, `PhaserGame` board host). Client GETs share `src/lib/getJson.ts` (cached per page load).
-- Rules (pure): `src/clueGame/` (categories, traits, deduction, round, session, selectors, validatePool, glossary, journal, solveReport, speciesInfo, worldMap).
-- Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules (pure), `BoardView.ts` sprites + animation, `BoardController.ts` drag + keyboard input, cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `clue-board-key`, `clue-board-announce`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).
+- Game UI: `src/pages/explore.tsx` -> `src/components/clueGame/` (`MatchGame` shell, `useMatchSession` state + board wiring, `ChargeChips`, `AnimalTiles`, `SpendPanel`, `MatchSheets`, `RevealSheet`, `useJournal` on-device journal, `PhaserGame` board host). Client GETs share `src/lib/getJson.ts` (cached per page load).
+- Rules (pure): `src/clueGame/` (`questionMatch` round rules, `matchSession` score/streak, `questionMatchContent` content -> rules data, `regions`, `gems`; plus glossary, journal, solveReport, speciesInfo, worldMap, and the content checks traits, deduction, validatePool). Balance bot: `scripts/balance-041.ts`.
+- Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules incl. toys (pure), `BoardView.ts` sprites + animation, `toyTextures.ts`, `sfx.ts` (synth sounds, off by default), `BoardController.ts` swipe/tap/keyboard swaps, cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `clue-board-key`, `clue-board-announce`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).
 - Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `POST /api/clue-game/solves`, `GET /api/clue-game/journal` (signed-in journal sync). Drizzle `src/db/schema/*` models only the columns the app reads (species, clues, facts, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file). Scripts connect via `scripts/connect.ts`.
 - Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). A signed-in player's `profiles` row is created on their first solve (`src/lib/player.ts`).
 - Content: profiles in `db/content/animals/*.json`, tiered sources `db/content/sources.json` (guide `docs/CONTENT_SOURCES.md`). `npm run content -- preview|build|check|ranges|photos`; never hand-edit content rows. New animal's range: `npm run iucn -- find|import` (IUCN shapefiles in `~/data/iucn/shp`). Practice SQL: `db/analysis/clue-match/`.
@@ -77,7 +77,21 @@ The app is two screens: a globe to pick a place (`/`) and Clue Match (`/clue-mat
 - Never write unit tests after you write code.
 - Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
 - If you must test a system in isolation, first write down all the ways it could fail, then write the code.
-- E2E here: `npm run e2e` (headless Chrome plays globe → place → Clue Match rounds against `npm run dev`, checks invariants every move; artifact `e2e-artifacts/<run>/report.json` + screenshots, same seed = same run), and the `playtest` skill for judgment calls (report in `docs/playtests/`). `npm test` keeps only unit tests for failures a playtest can't see (deduction rules, content simulations, input/storage parsing, board invariants).
+- E2E here: `npm run e2e` (headless Chrome plays globe → continent → game rounds at /explore against `npm run dev`, checks invariants every move; artifact `e2e-artifacts/<run>/report.json` + screenshots, same seed = same run), and the `playtest` skill for judgment calls (report in `docs/playtests/`). `npm test` keeps only unit tests for failures a playtest can't see (content checks, input/storage parsing, board invariants); game balance is the bot's job.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on kc0588615/phaser-june via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five roles: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -1,6 +1,6 @@
 # Critter Connect
 
-An educational animal game for grades 6–12. Pick a place on a globe, then play **Clue Match**: a match-3 where each gem color reveals a clue about a mystery animal (family tree, body, habits, habitat, range, life cycle, status, key facts). Use the clues to rule out look-alikes and name the animal. Every animal you find glows on the globe and goes in your Field Journal.
+An educational animal game for grades 6–12. Pick a continent on a globe, then find the mystery animal among 12 look-alikes: match gems on a small board to earn charges (body, habits, habitat, range, life cycle), set off the toys big matches leave, spend charges on yes/no questions that cross animals out, climb its family tree, and collect rare note gems for a last chance. Every animal you find glows on the globe and goes in your Field Journal.
 
 Next.js 16 (pages + API routes), Phaser 3 (the board), MapLibre GL (the globe), Drizzle + PostgreSQL/PostGIS (content, ranges, places), Clerk (sign-in).
 
@@ -19,7 +19,7 @@ npm run typecheck && npm run lint
 ## Where things are
 
 - `src/pages/index.tsx` → `src/components/globe/`: the globe and place picker.
-- `src/pages/clue-match.tsx` → `src/components/clueGame/`: the Clue Match screen.
+- `src/pages/explore.tsx` → `src/components/clueGame/`: the game screen (rules in `src/clueGame/questionMatch.ts`).
 - `src/clueGame/`: the game's rules as pure, tested TypeScript.
 - `src/game/`: the Phaser board (model, view, input), talking to React only through `EventBus.ts`.
 - `src/app/api/`: `places`, `clue-game/pool`, `clue-game/range`, `clue-game/solves`.

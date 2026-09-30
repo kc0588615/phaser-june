@@ -1,8 +1,7 @@
 import { ExternalLink, X } from 'lucide-react';
 import { GLOSSARY } from '@/clueGame/glossary';
 import type { Journal, Records } from '@/clueGame/journal';
-import { keyFacts, type CluePool } from '@/clueGame/pool';
-import { playableSpeciesIds } from '@/clueGame/round';
+import { keyFacts, playableSpeciesIds, type CluePool } from '@/clueGame/pool';
 import { redListStatus, taxonomyLine } from '@/clueGame/speciesInfo';
 import { GlossaryText } from './GlossaryText';
 import { RangeMap } from './RangeMap';

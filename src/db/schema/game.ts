@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { bigint, bigserial, index, integer, jsonb, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { bigint, bigserial, boolean, index, integer, jsonb, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { profiles } from './player';
 import { speciesTable } from './species';
 
@@ -19,7 +19,18 @@ export const clueMatchSolves = pgTable(
     /** clue_match_places.key when played from the globe. */
     placeKey: text('place_key'),
     revealedByGem: jsonb('revealed_by_gem').$type<Record<string, number>>().notNull().default({}),
+    /** When the round ended (solved or lost). */
     solvedAt: timestamp('solved_at', { withTimezone: true }).notNull().defaultNow(),
+    // Plan 041: every round is saved; readers of discoveries count only outcome = 'solved'.
+    outcome: text('outcome').$type<'solved' | 'lost'>().notNull().default('solved'),
+    /** Solved (or lost) on a last chance; NULL for rounds saved before 2026-09-28. */
+    lastChance: boolean('last_chance'),
+    rulesVersion: text('rules_version'),
+    movesLeft: smallint('moves_left'),
+    standingAtGuess: smallint('standing_at_guess'),
+    notesSaved: smallint('notes_saved'),
+    treeSteps: smallint('tree_steps'),
+    questions: jsonb('questions').$type<Array<{ tag: string; answer: string }>>(),
   },
   table => [
     index('ix_clue_match_solves_species').on(table.speciesId),

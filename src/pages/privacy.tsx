@@ -25,8 +25,8 @@ export default function PrivacyPage() {
           your name and profile picture if you sign in with Google. We never see your password.
         </li>
         <li>
-          Our database keeps an account ID from Clerk and your game results: which animal, which place, moves, clues seen,
-          points, and when you played. We use this to sync your Field Journal between devices.
+          Our database keeps an account ID from Clerk and your game results: which animal, which place, whether you found it,
+          moves, the questions you asked, points, and when you played. We use this to sync your Field Journal between devices.
         </li>
       </ul>
 

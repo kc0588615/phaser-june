@@ -282,6 +282,18 @@ export function profileClues(profile: AnimalProfile): ClueDraft[] {
   return drafts;
 }
 
+/**
+ * Whether a clue row is one the profile author wrote (it becomes a field note) rather than one profileClues
+ * generates from shared traits. Generated clues carry a trait tag (size:, realm:, habitat:, class: ...), except
+ * the elevation line and the two Red List lines.
+ */
+export function isHandWrittenClue({ category, text, tags }: { category: string; text: string; tags: readonly string[] }): boolean {
+  if (tags.some(tag => { const prefix = prefixOf(tag); return prefix !== null && (EXCLUSIVE_PREFIXES.has(prefix) || COMPLETE_PREFIXES.has(prefix)); })) return false;
+  if (/^It is found (at about|from) [\d,]+( to [\d,]+)? m above sea level\.$/.test(text)) return false;
+  if (category === 'conservation' && (text.startsWith('IUCN Red List (') || (Object.values(TREND_TEXT) as string[]).includes(text))) return false;
+  return true;
+}
+
 const TRAIT_VALUES: Record<keyof AnimalProfile['traits'], readonly string[]> = {
   size: Object.keys(SIZE_TEXT), lifespan: Object.keys(LIFESPAN_TEXT), diet: Object.keys(DIET_TEXT), activity: Object.keys(ACTIVITY_TEXT),
   birth: Object.keys(BIRTH_TEXT), young: Object.keys(YOUNG_TEXT), social: Object.keys(SOCIAL_TEXT), covering: Object.keys(COVERING_TEXT),
