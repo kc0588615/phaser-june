@@ -1,0 +1,209 @@
+{
+  "id": 71,
+  "commonName": "Andean Bear",
+  "scientificName": "Tremarctos ornatus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Ursidae",
+    "genus": "Tremarctos"
+  },
+  "iucnId": 22066,
+  "redList": {
+    "category": "VU",
+    "year": 2017,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/22066/123792952"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "shrubland:tropical_high_altitude",
+    "grassland",
+    "grassland:tropical_high_altitude"
+  ],
+  "elevation": [
+    200,
+    4750
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its shaggy coat is usually all black.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 60 to 200 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It mostly eats bromeliads and fruit, and sometimes small animals.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Mothers stay with their cubs.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has 1 to 4 cubs, usually 2.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "One lived almost 37 years at the National Zoo in Washington, D.C.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Cream or tan markings around its eyes can look like glasses, and each bear's pattern is different.",
+      "tags": [
+        "spectacles",
+        "face_markings"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has the strongest chewing muscles, for its size, of any bear, for grinding tough plants.",
+      "tags": [
+        "strong_bite"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is a great climber and spends lots of time in trees.",
+      "tags": [
+        "climber",
+        "tree_dweller"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It builds platforms, like nests, in fruit trees, where it feeds and sleeps.",
+      "tags": [
+        "builds_nests"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Bromeliads, spiky plants of the pineapple family, are one of its main foods.",
+      "tags": [
+        "bromeliad_eater"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "It has a strong liking for fruit.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in the Andes, from cloud forest up to the high grassland called páramo.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "conservation",
+      "text": "Farms, mining and oil drilling are cutting up its forests.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the only bear that lives in South America.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is also called the spectacled bear. Paddington Bear, who comes from Peru, is one.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "After the giant panda, it is probably the bear that eats the most plants.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is the last living short-faced bear.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It doesn't hibernate.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Cubs weigh only about 300 g at birth, and are born with their eyes closed.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Bears that raid farmers' corn are sometimes shot.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/22066/123792952",
+    "adw": "https://animaldiversity.org/accounts/Tremarctos_ornatus/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Spectacled_bear"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Tremarctos_ornatus_in_Jardim_Zool%C3%B3gico_de_Curitiba.jpg/500px-Tremarctos_ornatus_in_Jardim_Zool%C3%B3gico_de_Curitiba.jpg",
+    "credit": "Wilfredor",
+    "license": "CC0",
+    "page": "https://commons.wikimedia.org/wiki/File:Tremarctos_ornatus_in_Jardim_Zool%C3%B3gico_de_Curitiba.jpg"
+  }
+}

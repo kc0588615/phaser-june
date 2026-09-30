@@ -1,0 +1,206 @@
+{
+  "id": 67,
+  "commonName": "Eastern Long-beaked Echidna",
+  "scientificName": "Zaglossus bartoni",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Monotremata",
+    "family": "Tachyglossidae",
+    "genus": "Zaglossus"
+  },
+  "iucnId": 136552,
+  "redList": {
+    "category": "VU",
+    "year": 2016,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/136552/21964496"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_high_altitude",
+    "grassland",
+    "grassland:tropical_high_altitude"
+  ],
+  "elevation": [
+    0,
+    4150
+  ],
+  "traits": {
+    "covering": {
+      "value": "spines",
+      "note": "White spines poke out of thick black or dark brown fur on its back.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 5 to 10 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats mostly earthworms, and sometimes grubs.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother lays one egg at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "One lived 30 years at London Zoo.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its snout is a long tube, about 12 cm long.",
+      "tags": [
+        "pointed_snout"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has no teeth; a hard plate at the back of its mouth grinds its food.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tongue has rows of tiny spines for gripping earthworms.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has five claws on each front foot. Its western cousin usually has only three.",
+      "tags": [
+        "five_front_claws",
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "About 2,000 sensors on its snout pick up the tiny electric signals of worms in wet soil.",
+      "tags": [
+        "electric_sense"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests by day in a den, dug underground or hidden in thick plants.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When threatened it rolls into a spiny ball.",
+      "tags": [
+        "rolls_into_ball"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its egg hatches after about 10 days, and the baby stays in its mother's pouch for 6 or 7 weeks.",
+      "tags": [
+        "pouch"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in New Guinea's mountains, and is still common above 3,000 m, far from villages.",
+      "tags": [
+        "high_mountains"
+      ],
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest living egg-laying mammal.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "It has spurs on its back feet, like a platypus, but they aren't venomous.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It can live about twice as long as scientists expect for an animal its size.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It presses its snout into wet soil to make a hole, then pulls out earthworms.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Echidnas have no nipples. Babies drink milk from tiny pores in their mother's skin.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Hunters use trained dogs that can track it to the spot where it sleeps.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/136552/21964496",
+    "adw": "https://animaldiversity.org/accounts/Zaglossus_bartoni/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Eastern_long-beaked_echidna"
+  },
+  "range": {
+    "realms": [
+      "realm:australasian"
+    ],
+    "countries": [
+      {
+        "code": "IDN",
+        "name": "Indonesia"
+      },
+      {
+        "code": "PNG",
+        "name": "Papua New Guinea"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Zaglossus_bartoni_-_MUSE.JPG/500px-Zaglossus_bartoni_-_MUSE.JPG",
+    "credit": "Unknown author",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Zaglossus_bartoni_-_MUSE.JPG"
+  }
+}

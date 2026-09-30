@@ -256,6 +256,10 @@
         "name": "Eritrea"
       },
       {
+        "code": "SWZ",
+        "name": "eSwatini"
+      },
+      {
         "code": "ETH",
         "name": "Ethiopia"
       },
@@ -284,6 +288,10 @@
         "name": "Liberia"
       },
       {
+        "code": "MWI",
+        "name": "Malawi"
+      },
+      {
         "code": "MLI",
         "name": "Mali"
       },
@@ -306,6 +314,10 @@
       {
         "code": "NGA",
         "name": "Nigeria"
+      },
+      {
+        "code": "RWA",
+        "name": "Rwanda"
       },
       {
         "code": "SEN",

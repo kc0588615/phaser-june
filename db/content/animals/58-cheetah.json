@@ -203,6 +203,10 @@
     ],
     "countries": [
       {
+        "code": "DZA",
+        "name": "Algeria"
+      },
+      {
         "code": "AGO",
         "name": "Angola"
       },

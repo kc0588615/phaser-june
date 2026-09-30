@@ -1,0 +1,230 @@
+{
+  "id": 73,
+  "commonName": "Giant Otter",
+  "scientificName": "Pteronura brasiliensis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Mustelidae",
+    "genus": "Pteronura"
+  },
+  "iucnId": 18711,
+  "redList": {
+    "category": "EN",
+    "year": 2023,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/18711/244867206"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:mangrove",
+    "forest:tropical_swamp",
+    "grassland",
+    "grassland:tropical_seasonally_wet",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:seasonal_rivers",
+    "wetlands:shrub_wetlands",
+    "wetlands:bogs_marshes",
+    "wetlands:permanent_lakes",
+    "wetlands:seasonal_lakes",
+    "wetlands:permanent_marshes",
+    "wetlands:seasonal_marshes",
+    "artificial",
+    "artificial:ponds"
+  ],
+  "elevation": [
+    0,
+    1000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its fur is very thick and velvety.",
+      "source": "wikipedia"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs about 24 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It eats almost only fish.",
+      "source": "iucn"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It is active only in daylight.",
+      "source": "wikipedia"
+    },
+    "social": {
+      "value": "groups",
+      "note": "A family has 5 to 8 otters: a mother, a father and their young.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "It lives about 10 to 13 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has webbed feet and a flat, wing-shaped tail for swimming.",
+      "tags": [
+        "swimmer",
+        "webbed_feet",
+        "paddle_tail"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Each otter has its own pattern of cream patches on its throat.",
+      "tags": [
+        "throat_patch"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "Families sometimes dive together to trap fish against the shore.",
+      "tags": [
+        "fish_eater",
+        "pack_hunter"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It is the noisiest otter, with many different calls for alarm and for keeping in touch.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "Families clear campsites on riverbanks and mark their territory with scent and shared toilet spots.",
+      "tags": [
+        "territorial",
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It digs big dens under fallen logs near the water.",
+      "tags": [
+        "burrower"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in slow rivers, oxbow lakes and swamps, and moves into flooded forest in the wet season.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Gold mining poisons its rivers with mercury, and new dams change the rivers it needs.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the longest member of the weasel family, up to 1.8 m long.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "In Brazil it is called the \"water jaguar\", and in Spanish the \"river wolf\".",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Hunting for its velvety fur, mostly in the 1950s and 1960s, nearly wiped it out.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It eats about 3 to 4 kg of fish a day, mostly catfish and other river fish, and sometimes small caimans.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It eats small fish floating on its back, and carries big ones to shore.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "Pups open their eyes at 1 month and hunt as well as their parents by 9 or 10 months.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/18711/244867206",
+    "adw": "https://animaldiversity.org/accounts/Pteronura_brasiliensis/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Giant_otter"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "ECU",
+        "name": "Ecuador"
+      },
+      {
+        "code": "GUY",
+        "name": "Guyana"
+      },
+      {
+        "code": "PRY",
+        "name": "Paraguay"
+      },
+      {
+        "code": "PER",
+        "name": "Peru"
+      },
+      {
+        "code": "SUR",
+        "name": "Suriname"
+      },
+      {
+        "code": "VEN",
+        "name": "Venezuela"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Giant_otters_%28Pteronura_brasiliensis%29.jpg/500px-Giant_otters_%28Pteronura_brasiliensis%29.jpg",
+    "credit": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Giant_otters_(Pteronura_brasiliensis).jpg"
+  }
+}

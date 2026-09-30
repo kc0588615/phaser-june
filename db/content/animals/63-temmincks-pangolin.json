@@ -1,0 +1,267 @@
+{
+  "id": 63,
+  "commonName": "Temminck's Pangolin",
+  "scientificName": "Smutsia temminckii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Pholidota",
+    "family": "Manidae",
+    "genus": "Smutsia"
+  },
+  "iucnId": 12765,
+  "redList": {
+    "category": "VU",
+    "year": 2019,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12765/123585768"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "rocky"
+  ],
+  "traits": {
+    "covering": {
+      "value": "scales",
+      "note": "Its olive-brown scales cover everything except its face, throat and belly.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 7 to 18 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats mostly ants and termites.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "iucn"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother usually has a single baby.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has no teeth. It swallows small stones that help grind up food in its stomach.",
+      "tags": [
+        "toothless"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its sticky tongue can be up to 25 cm long.",
+      "tags": [
+        "long_tongue"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It walks on its back legs, using its front legs and tail now and then for balance.",
+      "tags": [
+        "walks_upright"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "It sniffs out ant and termite nests and tears them open with its long front claws.",
+      "tags": [
+        "raids_termite_mounds",
+        "digging_claws"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "At the first sign of danger it rolls into a ball, wrapping its tail around its body.",
+      "tags": [
+        "rolls_into_ball"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It can dig its own burrow, but it prefers old ones left by warthogs or aardvarks.",
+      "tags": [
+        "burrower",
+        "borrowed_burrows"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It marks trees with urine and scent to leave messages for other pangolins.",
+      "tags": [
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Babies ride on their mother's back or tail until they weigh about 3 kg.",
+      "tags": [
+        "carries_young_on_back",
+        "mother_carries_young"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Trade in pangolins, and farms taking over its land, are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the only pangolin in southern and eastern Africa.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is named after the Dutch zoologist Coenraad Jacob Temminck.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its scales are made of keratin, the same stuff as your fingernails.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "Its burrows can be big enough for a person to crawl into.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "A baby weighs 200 to 500 g at birth and starts finding its own food at about 3 months old.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Electric fences on farms are a growing danger to it across its range.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12765/123585768",
+    "adw": "https://animaldiversity.org/accounts/Manis_temminckii/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Ground_pangolin"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "BWA",
+        "name": "Botswana"
+      },
+      {
+        "code": "BDI",
+        "name": "Burundi"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "SWZ",
+        "name": "eSwatini"
+      },
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      },
+      {
+        "code": "MWI",
+        "name": "Malawi"
+      },
+      {
+        "code": "MOZ",
+        "name": "Mozambique"
+      },
+      {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
+        "code": "RWA",
+        "name": "Rwanda"
+      },
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "SDN",
+        "name": "Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "UGA",
+        "name": "Uganda"
+      },
+      {
+        "code": "ZMB",
+        "name": "Zambia"
+      },
+      {
+        "code": "ZWE",
+        "name": "Zimbabwe"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Manis_temminckii_%2829645803646%29.jpg/500px-Manis_temminckii_%2829645803646%29.jpg",
+    "credit": "U.S. Fish and Wildlife Service Headquarters",
+    "license": "CC BY 2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Manis_temminckii_(29645803646).jpg"
+  }
+}

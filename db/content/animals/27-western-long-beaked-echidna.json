@@ -113,6 +113,9 @@
     {
       "category": "diet",
       "text": "It pokes its snout into soft soil and sniffs out worms, and it can even sense their tiny electric signals.",
+      "tags": [
+        "electric_sense"
+      ],
       "source": "adw"
     },
     {

@@ -1,0 +1,238 @@
+{
+  "id": 70,
+  "commonName": "Baird's Tapir",
+  "scientificName": "Tapirus bairdii",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Perissodactyla",
+    "family": "Tapiridae",
+    "genus": "Tapirus"
+  },
+  "iucnId": 21471,
+  "redList": {
+    "category": "EN",
+    "year": 2016,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/21471/45173340"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_moist_montane",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "shrubland:tropical_high_altitude",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "grassland:tropical_high_altitude",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:seasonal_rivers",
+    "wetlands:shrub_wetlands",
+    "wetlands:bogs_marshes"
+  ],
+  "elevation": [
+    0,
+    3600
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its thick hide has only short, bristly hair.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 150 to 300 kg, about as much as a small donkey.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats mostly leaves, plus fruit, twigs, flowers and grass.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "night",
+      "note": "It is sometimes active by day, but more at night where it is hunted.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one calf at a time.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "One lived almost 30 years in a zoo.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its nose and upper lip form a short, bendy trunk it uses to find and grab food.",
+      "tags": [
+        "trunk"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its large, oval ears have white edges, and its lips are white.",
+      "tags": [
+        "white_ear_rims"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It swims, wades and dives very well.",
+      "tags": [
+        "swimmer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "In the dry season it sleeps in muddy pools of water.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Its eyes are small and it sees poorly; it relies on smell and hearing.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Tapirs call to each other with long, high whistles.",
+      "tags": [
+        "whistle_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It eats fruit whenever it is in season.",
+      "tags": [
+        "fruit_eater"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Its babies are reddish brown with white spots and stripes.",
+      "tags": [
+        "striped_young"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "conservation",
+      "text": "People hunting it are its biggest danger.",
+      "source": "adw"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest native land mammal in Central and South America.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is the national animal of Belize, where people call it the \"mountain cow\".",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is named after the American naturalist Spencer Fullerton Baird.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "At night it blends in with leafy bushes, and by day it can look like a big rock.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother is pregnant for about 13 months, and her calf stays with her for 1 to 2 years.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "In southern Mexico, scientists counted about five times fewer tapirs where they are hunted a lot.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/21471/45173340",
+    "adw": "https://animaldiversity.org/accounts/Tapirus_bairdii/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Baird's_tapir"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "BLZ",
+        "name": "Belize"
+      },
+      {
+        "code": "COL",
+        "name": "Colombia"
+      },
+      {
+        "code": "CRI",
+        "name": "Costa Rica"
+      },
+      {
+        "code": "GTM",
+        "name": "Guatemala"
+      },
+      {
+        "code": "HND",
+        "name": "Honduras"
+      },
+      {
+        "code": "MEX",
+        "name": "Mexico"
+      },
+      {
+        "code": "NIC",
+        "name": "Nicaragua"
+      },
+      {
+        "code": "PAN",
+        "name": "Panama"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Baird%27s_tapir_mother_with_baby_%2892151%29.jpg/500px-Baird%27s_tapir_mother_with_baby_%2892151%29.jpg",
+    "credit": "Rhododendrites",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Baird%27s_tapir_mother_with_baby_(92151).jpg"
+  }
+}

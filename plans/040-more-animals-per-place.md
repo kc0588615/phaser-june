@@ -37,7 +37,13 @@ Check the SRID and geometry type of existing rows first (`SELECT Find_SRID('publ
 
 Picked by measuring, not guessing: 35 candidate ranges were imported and run through the places rules against the current animals (the query is `clue_match_places` with unlinked `iucn` rows added as extra species), scoring thin places joined and new places created; the unpicked 23 were deleted from `iucn`. Result: countries 43 -> 73 (only-2-animal ones 20 -> 15), wildlife areas 45 -> 68 (31 -> 14), about 4 animals per place. The original list's red wolf, Tonkin snub-nosed monkey, ploughshare tortoise and hirola each filled almost no thin place.
 
-Next batch, already measured (ids and files via `npm run iucn -- find`): Temminck's pangolin, African savanna elephant (same genus as the forest elephant), African wild dog, black rhino, eastern long-beaked echidna (thin Papua New Guinea), hirola, dama gazelle (Chad/Niger with the addax), Baird's tapir, spectacled bear, maned wolf, giant otter, axolotl and hellbender (look-alikes of the salamander), golden poison frog.
+## Batch 2: done 2026-09-29
+
+14 animals, ids 63-76: Temminck's pangolin, African savanna elephant, African wild dog, black rhino, eastern long-beaked echidna, hirola, dama gazelle, Baird's tapir, Andean (spectacled) bear, maned wolf, giant otter, axolotl, hellbender, golden poison frog. Ranges imported from MAMMALS_TERRESTRIAL_ONLY, MAMMALS_FRESHWATER, CAUDATA and ANURA_PART2 (42 polygons). New shared tags: `spectacles` (hirola, Andean bear), `electric_sense` (both echidnas, axolotl; added to the western echidna's worm clue), `long_legs` (dama gazelle, maned wolf), `pack_hunter` (wild dog, giant otter); reused `borrowed_burrows`, `grasping_lip`, `white_tail_tip`, `underwater_breathing`, `father_carries_young` and others. New family name: Ambystomatidae.
+
+Result: countries 73 -> 77 (only-2-animal ones 15 -> 7), wildlife areas 68 -> 74 (14 -> 13), about 5 animals per place. South America (10 -> 15) and North America (11 -> 14) passed the 12-animal continent threshold, so both are playable now.
+
+Owner review: black rhino has `desert:cold` only (IUCN table 8.3; its text just says "desert areas in Namibia"); Andean bear has `forest:tropical_moist_montane` (cloud forest, from Wikipedia; the IUCN table omits it); giant otter has `wetlands:permanent_rivers`, `forest:tropical_swamp`, `grassland:tropical_seasonally_wet` and `artificial:ponds` from the IUCN text (its table omits rivers); axolotl `size: tiny` (60 to 110 g); giant otter has no `young` (litters of 1 to 5, usually 2 or 3, straddle one/few); the echidna photo is a museum mount (Commons has no live one); the hirola photo was swapped from an 1894 drawing to a wild photo (Jan Ebr, CC BY 4.0).
 
 Fixed on the way: two OneEarth sub_realms spelled two ways ("Southern Mexican Dry Forests" / "dry forests") collided on the place key and broke the places refresh; wildlife areas now group by key (`db/schema.sql`; the view was rebuilt beside the old one and swapped in one transaction). `photos` re-added a generic Galápagos tortoise to the Floreana tortoise; `"photo": null` now means "checked, none" and `photos` skips it.
 
@@ -48,7 +54,7 @@ Owner review: cheetah has `forest` (IUCN text "dry forest", not its table); Indi
 Order matters: the places view only includes animals that have clues, and `ranges` reads the places view.
 
 1. Owner downloads the IUCN range; import its polygons into `iucn` (above).
-2. Write `db/content/animals/<id>-<slug>.json` (next id 51; ids never change). `iucnId` = the polygon's `id_no`. Copy the shape of an existing profile (e.g. `35-red-panda.json`).
+2. Write `db/content/animals/<id>-<slug>.json` (next id 77; ids never change). `iucnId` = the polygon's `id_no`. Copy the shape of an existing profile (e.g. `35-red-panda.json`).
 3. `npm run content -- preview <name>` until it prints no `PROBLEM` lines.
 4. `npm run content -- build` (deletes and reloads all clues/facts in one transaction; upserts species).
 5. `REFRESH MATERIALIZED VIEW CONCURRENTLY clue_match_ranges;` then `... clue_match_places;` (~90 s). Needs the SSH tunnel (`./scripts/db --production "..."`; the owner opens the tunnel, the key has a passphrase).

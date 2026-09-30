@@ -1,0 +1,289 @@
+{
+  "id": 64,
+  "commonName": "African Savanna Elephant",
+  "scientificName": "Loxodonta africana",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Proboscidea",
+    "family": "Elephantidae",
+    "genus": "Loxodonta"
+  },
+  "iucnId": 181008073,
+  "redList": {
+    "category": "EN",
+    "year": 2022,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/181008073/223031019"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "forest:tropical_swamp",
+    "forest:tropical_moist_montane",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "wetlands",
+    "wetlands:permanent_rivers",
+    "wetlands:seasonal_rivers",
+    "wetlands:shrub_wetlands",
+    "wetlands:inland_deltas",
+    "desert",
+    "desert:hot",
+    "desert:cold"
+  ],
+  "elevation": [
+    0,
+    2500
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its thick, wrinkled gray skin has only scattered hairs.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "huge",
+      "note": "Females weigh 2,000 to 3,500 kg and males 4,500 to 6,100 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats grass, leaves, fruit, roots and bark.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "any",
+      "note": "It feeds for most of the day and night and sleeps only about 4 hours.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Herds of mothers and young follow the oldest female; adult males often live alone.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one calf, rarely twins, every 3 to 9 years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It can live 60 to 70 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Both males and females have big, curved ivory tusks.",
+      "tags": [
+        "tusks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its huge ears help it cool down on hot days.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "The tip of its trunk has two finger-like points for picking things up.",
+      "tags": [
+        "trunk"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "It sprays mud and water over itself with its trunk to keep its skin cool and healthy.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It talks with deep rumbles that other elephants can hear more than 2 km away.",
+      "tags": [
+        "low_rumbles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It pushes over whole trees to reach their roots and bark.",
+      "tags": [
+        "pushes_over_trees"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives from mountain forests and swamps to dry deserts, and walks long distances to find water and food.",
+      "tags": [
+        "nomadic"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Farms and towns taking its land, and poaching for ivory, are its main threats.",
+      "source": "wikipedia"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest land animal alive today.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "A mother is pregnant for about 22 months, longer than any other mammal.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "In Gorongosa, Mozambique, so many tusked elephants were poached during a war that more tuskless females were born afterward.",
+      "source": "literature",
+      "url": "https://doi.org/10.1126/science.abe7389"
+    },
+    {
+      "category": "behavior",
+      "text": "By knocking down trees, it keeps grassland open and makes homes for frogs and lizards.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_flora",
+      "text": "An adult eats about 150 kg of plants and drinks about 230 L of water a day.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "A newborn calf weighs about 100 kg and stays close to its mother until about 8 years old.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Since 2021 the Red List has judged it apart from the forest elephant, and listed it as Endangered.",
+      "source": "wikipedia"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/181008073/223031019",
+    "adw": "https://animaldiversity.org/accounts/Loxodonta_africana/",
+    "wikipedia": "https://en.wikipedia.org/wiki/African_bush_elephant"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "BWA",
+        "name": "Botswana"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "COD",
+        "name": "Dem. Rep. Congo"
+      },
+      {
+        "code": "ERI",
+        "name": "Eritrea"
+      },
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      },
+      {
+        "code": "MWI",
+        "name": "Malawi"
+      },
+      {
+        "code": "MLI",
+        "name": "Mali"
+      },
+      {
+        "code": "MOZ",
+        "name": "Mozambique"
+      },
+      {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      },
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "UGA",
+        "name": "Uganda"
+      },
+      {
+        "code": "ZMB",
+        "name": "Zambia"
+      },
+      {
+        "code": "ZWE",
+        "name": "Zimbabwe"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/178_Male_African_bush_elephant_in_Etosha_National_Park_Photo_by_Giles_Laurent.jpg/500px-178_Male_African_bush_elephant_in_Etosha_National_Park_Photo_by_Giles_Laurent.jpg",
+    "credit": "Giles Laurent",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:178_Male_African_bush_elephant_in_Etosha_National_Park_Photo_by_Giles_Laurent.jpg"
+  }
+}

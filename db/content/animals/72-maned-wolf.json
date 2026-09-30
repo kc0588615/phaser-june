@@ -1,0 +1,212 @@
+{
+  "id": 72,
+  "commonName": "Maned Wolf",
+  "scientificName": "Chrysocyon brachyurus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Canidae",
+    "genus": "Chrysocyon"
+  },
+  "iucnId": 4819,
+  "redList": {
+    "category": "NT",
+    "year": 2015,
+    "trend": "unknown",
+    "url": "https://www.iucnredlist.org/species/4819/88135664"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:tropical_moist_lowland",
+    "savanna",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:tropical_dry",
+    "grassland:tropical_seasonally_wet",
+    "wetlands",
+    "wetlands:bogs_marshes",
+    "artificial",
+    "artificial:arable",
+    "artificial:pasture"
+  ],
+  "elevation": [
+    0,
+    2000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 20 to 30 kg.",
+      "source": "wikipedia"
+    },
+    "diet": {
+      "value": "mixed",
+      "note": "It eats fruit, roots, small mammals, birds, eggs, reptiles and insects.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "twilight",
+      "note": "It is also active at night.",
+      "source": "wikipedia"
+    },
+    "social": {
+      "value": "pairs",
+      "note": "A pair shares a home area, but hunts, travels and rests apart.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A litter has 1 to 5 pups, about 3 on average.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "It can live about 15 years in zoos.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its long coat is golden red, with black legs and a black mane on its neck.",
+      "tags": [
+        "reddish_fur",
+        "mane"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its very long, thin legs help it see over tall grass.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has big, upright ears.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "Its favorite food is the wolf apple, a tomato-like fruit, and it spreads the seeds in its droppings.",
+      "tags": [
+        "fruit_eater",
+        "seed_spreader"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "It stalks small animals and pounces on them, like a fox.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Pairs mark the borders of their home with urine and droppings, and neighbors stay on their own side.",
+      "tags": [
+        "territorial",
+        "scent_marks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "After dusk it often gives a single loud, deep bark.",
+      "tags": [
+        "loud_calls"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "Big farms and ranches are replacing its grasslands.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It isn't a wolf or a fox. It is the only species in its genus, and its name means \"golden dog\".",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is the tallest wild dog in the world, and the largest in South America.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its urine has such a strong smell that it is nicknamed the \"skunk wolf\".",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "Pups are born black and turn red by about 10 weeks old.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rests in thick brush during the day.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "It often raids farms for free-ranging chickens, which angers farmers.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/4819/88135664",
+    "adw": "https://animaldiversity.org/accounts/Chrysocyon_brachyurus/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Maned_wolf"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "ARG",
+        "name": "Argentina"
+      },
+      {
+        "code": "BOL",
+        "name": "Bolivia"
+      },
+      {
+        "code": "BRA",
+        "name": "Brazil"
+      },
+      {
+        "code": "PRY",
+        "name": "Paraguay"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Lobo_Guar%C3%A1_andando.jpg/500px-Lobo_Guar%C3%A1_andando.jpg",
+    "credit": "Jonathan Wilkins",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Lobo_Guar%C3%A1_andando.jpg"
+  }
+}

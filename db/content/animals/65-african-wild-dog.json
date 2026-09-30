@@ -1,0 +1,277 @@
+{
+  "id": 65,
+  "commonName": "African Wild Dog",
+  "scientificName": "Lycaon pictus",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Canidae",
+    "genus": "Lycaon"
+  },
+  "iucnId": 12436,
+  "redList": {
+    "category": "EN",
+    "year": 2025,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/12436/221299510"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_dry",
+    "forest:mangrove",
+    "savanna",
+    "savanna:dry",
+    "savanna:moist",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "shrubland:tropical_moist",
+    "grassland",
+    "grassland:tropical_dry",
+    "desert",
+    "desert:hot"
+  ],
+  "elevation": [
+    0,
+    4000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its short fur is so thin in places that its dark skin shows.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "medium",
+      "note": "It weighs 18 to 36 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It hunts antelope like impala, and sometimes wildebeest and zebra.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "note": "It hunts mostly in the morning and early evening, and on bright moonlit nights.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Packs usually have 7 to 15 dogs.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "few",
+      "note": "A litter has 2 to 20 pups, about 8 on average.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "Wild dogs live about 10 to 11 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its coat is a patchwork of brown, red, black, yellow and white, and no two dogs have the same pattern.",
+      "tags": [
+        "patchy_coat"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has large, rounded ears.",
+      "tags": [
+        "big_ears"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its bushy tail has a white tip.",
+      "tags": [
+        "white_tail_tip"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "It has only four toes on each foot. Most dogs have a fifth, small toe on their front feet.",
+      "tags": [
+        "four_toes"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "The pack hunts together, chasing prey for kilometres at up to 55 km/h until it tires.",
+      "tags": [
+        "pack_hunter",
+        "fast_runner"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Pack members bring up food for the pups, and for sick or hurt dogs that stayed behind.",
+      "tags": [
+        "shares_food"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "reproduction",
+      "text": "Pups are born in a den, often an old aardvark burrow.",
+      "tags": [
+        "borrowed_burrows"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "conservation",
+      "text": "It needs huge areas, so it often wanders out of parks into farmland, snares and busy roads.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its scientific name, Lycaon pictus, means \"painted wolf\".",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "Before a hunt, pack members vote by sneezing: the more sneezes, the more likely the pack sets off.",
+      "source": "literature",
+      "url": "https://doi.org/10.1098/rspb.2017.1347"
+    },
+    {
+      "category": "key_fact",
+      "text": "It has more pups at a time than any other wild dog.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is the largest wild dog in Africa, and the only living species in its genus.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "Only the top male and female in a pack usually breed, and the whole pack helps raise the pups.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Village dogs can pass deadly diseases on to wild dogs.",
+      "source": "iucn"
+    },
+    {
+      "category": "threat",
+      "text": "Only about 1,700 adults that can breed are left.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/12436/221299510",
+    "adw": "https://animaldiversity.org/accounts/Lycaon_pictus/",
+    "wikipedia": "https://en.wikipedia.org/wiki/African_wild_dog"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "DZA",
+        "name": "Algeria"
+      },
+      {
+        "code": "BWA",
+        "name": "Botswana"
+      },
+      {
+        "code": "BFA",
+        "name": "Burkina Faso"
+      },
+      {
+        "code": "CMR",
+        "name": "Cameroon"
+      },
+      {
+        "code": "CAF",
+        "name": "Central African Rep."
+      },
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "ETH",
+        "name": "Ethiopia"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      },
+      {
+        "code": "MWI",
+        "name": "Malawi"
+      },
+      {
+        "code": "MOZ",
+        "name": "Mozambique"
+      },
+      {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
+        "code": "NGA",
+        "name": "Nigeria"
+      },
+      {
+        "code": "SEN",
+        "name": "Senegal"
+      },
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      },
+      {
+        "code": "SDS",
+        "name": "S. Sudan"
+      },
+      {
+        "code": "SDN",
+        "name": "Sudan"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "ZMB",
+        "name": "Zambia"
+      },
+      {
+        "code": "ZWE",
+        "name": "Zimbabwe"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/African_Wild_Dog_at_Working_with_Wildlife.jpg/500px-African_Wild_Dog_at_Working_with_Wildlife.jpg",
+    "credit": "AfricanConservation",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:African_Wild_Dog_at_Working_with_Wildlife.jpg"
+  }
+}

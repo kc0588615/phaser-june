@@ -1,0 +1,182 @@
+{
+  "id": 74,
+  "commonName": "Axolotl",
+  "scientificName": "Ambystoma mexicanum",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Caudata",
+    "family": "Ambystomatidae",
+    "genus": "Ambystoma"
+  },
+  "iucnId": 1095,
+  "redList": {
+    "category": "CR",
+    "year": 2020,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/1095/53947343"
+  },
+  "systems": [
+    "freshwater"
+  ],
+  "habitats": [
+    "wetlands",
+    "wetlands:permanent_lakes",
+    "artificial",
+    "artificial:ponds"
+  ],
+  "elevation": [
+    2240,
+    2240
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Wild ones are dark, mottled brownish green.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "It is about 23 cm long.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "meat",
+      "note": "It eats snails, fish, insects, worms and tiny water animals.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "any",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A female lays 100 to 300 eggs.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In labs it can live 10 to 15 years.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Even as an adult it keeps feathery gills sticking out behind its head.",
+      "tags": [
+        "feathery_gills"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "A fin runs from the back of its head along its tail, like a tadpole's.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "reproduction",
+      "text": "It grows up and breeds without ever changing into a land form, like a tadpole that never becomes a frog.",
+      "tags": [
+        "stays_larval"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It lives its whole life under water.",
+      "tags": [
+        "fully_aquatic"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "It can regrow lost legs, gills, and even parts of its eyes and brain.",
+      "tags": [
+        "regrows_body_parts"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "diet",
+      "text": "It can sense the tiny electric fields of prey.",
+      "tags": [
+        "electric_sense"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives only in the canals and lakes of Xochimilco and Chalco, inside Mexico City.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Tilapia, fish that people put in its lakes, hunt it and compete for its food.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "Its name comes from Nahuatl, the language of the Aztecs.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Since 2021 an axolotl has been on the back of Mexico's 50-peso banknote.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its genome, the full set of its DNA, is about 10 times bigger than ours. It was the biggest animal genome ever read when it was published in 2018.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Huge numbers live in labs and homes around the world, but only 50 to 1,000 adults are left in the wild.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "life_description",
+      "text": "Its eggs hatch after 10 to 14 days, and the young look after themselves right away.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Surveys of Lake Xochimilco found about 6,000 per square kilometre in 1998, but only 100 in 2008.",
+      "source": "wikipedia"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/1095/53947343",
+    "adw": "https://animaldiversity.org/accounts/Ambystoma_mexicanum/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Axolotl"
+  },
+  "range": {
+    "realms": [
+      "realm:nearctic",
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "MEX",
+        "name": "Mexico"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Axolotl_ganz.jpg/500px-Axolotl_ganz.jpg",
+    "credit": "LoKiLeCh",
+    "license": "CC BY-SA 3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Axolotl_ganz.jpg"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "id": 76,
+  "commonName": "Golden Poison Frog",
+  "scientificName": "Phyllobates terribilis",
+  "taxonomy": {
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Dendrobatidae",
+    "genus": "Phyllobates"
+  },
+  "iucnId": 55264,
+  "redList": {
+    "category": "EN",
+    "year": 2017,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/55264/85887889"
+  },
+  "systems": [
+    "terrestrial",
+    "freshwater"
+  ],
+  "habitats": [
+    "forest",
+    "forest:tropical_moist_lowland",
+    "wetlands",
+    "wetlands:permanent_marshes"
+  ],
+  "elevation": [
+    50,
+    400
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "source": "adw"
+    },
+    "size": {
+      "value": "tiny",
+      "note": "It is about 5 to 6 cm long.",
+      "source": "wikipedia"
+    },
+    "diet": {
+      "value": "insects",
+      "note": "It eats mostly ants, plus termites and beetles.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "eggs",
+      "source": "adw"
+    },
+    "young": {
+      "value": "many",
+      "note": "A clutch has 8 to 18 eggs, about 13 on average.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its whole body is one bright color, usually yellow, but sometimes orange or pale green.",
+      "tags": [
+        "warning_colors"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "A bony plate in its jaw makes it look like it has teeth.",
+      "tags": [
+        "tooth_plate"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It stays on the ground and hardly ever climbs.",
+      "tags": [
+        "forest_floor"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It isn't shy like other poison frogs; it has few enemies, so it doesn't hide.",
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives in the leaf litter of very rainy forest.",
+      "tags": [
+        "leaf_litter"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "reproduction",
+      "text": "The father carries the tadpoles to pools of water.",
+      "tags": [
+        "father_carries_young"
+      ],
+      "source": "iucn"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only on the Pacific coast of Colombia.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "conservation",
+      "text": "Illegal crops, logging, mining and pollution are destroying its small forest.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is thought to be the most poisonous animal on Earth. One wild frog has enough poison to be deadly to 10 to 20 people.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "The Emberá people of Colombia use its poison on the darts they hunt with.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its poison comes from its food. Frogs raised in zoos on crickets lose their poison.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "behavior",
+      "text": "Males sing to females with a long, musical trill.",
+      "source": "adw"
+    },
+    {
+      "category": "diet_prey",
+      "text": "It catches ants with a sticky tongue so fast the eye can barely follow it.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Only one enemy is known: a small snake that can eat young frogs without being harmed.",
+      "source": "adw"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/55264/85887889",
+    "adw": "https://animaldiversity.org/accounts/Phyllobates_terribilis/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Golden_poison_frog"
+  },
+  "range": {
+    "realms": [
+      "realm:neotropical"
+    ],
+    "countries": [
+      {
+        "code": "COL",
+        "name": "Colombia"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/Schrecklicherpfeilgiftfrosch-01.jpg/500px-Schrecklicherpfeilgiftfrosch-01.jpg",
+    "credit": "Wilfried Berns",
+    "license": "CC BY-SA 2.0 de",
+    "page": "https://commons.wikimedia.org/wiki/File:Schrecklicherpfeilgiftfrosch-01.jpg"
+  }
+}

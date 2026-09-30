@@ -1,0 +1,192 @@
+{
+  "id": 68,
+  "commonName": "Hirola",
+  "scientificName": "Beatragus hunteri",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Artiodactyla",
+    "family": "Bovidae",
+    "genus": "Beatragus"
+  },
+  "iucnId": 6234,
+  "redList": {
+    "category": "CR",
+    "year": 2017,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/6234/50185297"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "grassland",
+    "grassland:tropical_seasonally_wet"
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its coat is sandy brown, turning slate gray with age.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 65 to 155 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It grazes short, fresh grass.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "twilight",
+      "note": "It feeds most in the morning and evening.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "A male lives with 7 or 8 females and their young; herds can join up into the hundreds.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has a single calf, rarely twins.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "In zoos it lived about 10 years on average.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Both males and females have sharp, ringed horns that curve up like a lyre.",
+      "tags": [
+        "horns"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "White rings around its eyes look like glasses, joined by a white V between the eyes.",
+      "tags": [
+        "spectacles",
+        "face_markings"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Big dark scent glands below its eyes earned it the name \"four-eyed antelope\".",
+      "tags": [
+        "eye_glands"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its tail is white, and its white ears have black tips.",
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It picks only short, new grass, and moves on when the grass grows too long.",
+      "tags": [
+        "grazer"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It can go a long time without drinking by resting and storing fat.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "Males guard a territory, marking grass stems with scent and scraping the ground with their hooves.",
+      "tags": [
+        "territorial",
+        "scent_marks",
+        "hooves"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "geography",
+      "text": "It lives only in Kenya, near the border with Somalia.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "conservation",
+      "text": "Poaching, drought, disease and too many cattle all threaten it.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the only living species in its genus. Losing it would be the first loss of a whole genus of mammals on mainland Africa in modern times.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "There are no hirola in any zoo.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Only about 200 to 250 adults are left.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "Males fight on their knees. Play fights happen standing up.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother leaves the herd for two weeks to give birth, then rejoins it with her calf.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers fell by more than 80% in 16 years.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/6234/50185297",
+    "adw": "https://animaldiversity.org/accounts/Beatragus_hunteri/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Hirola"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/Beatragus_hunteri_176040791.jpg/500px-Beatragus_hunteri_176040791.jpg",
+    "credit": "Jan Ebr",
+    "license": "CC BY 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Beatragus_hunteri_176040791.jpg"
+  }
+}

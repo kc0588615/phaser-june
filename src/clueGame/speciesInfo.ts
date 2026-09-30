@@ -32,7 +32,7 @@ export const FAMILY_NAMES: Record<string, string> = {
   DAUBENTONIIDAE: 'which has only one living species', HOMINIDAE: 'the great apes', ELEPHANTIDAE: 'the elephants',
   SCIURIDAE: 'the squirrels, chipmunks and marmots', MYRMECOPHAGIDAE: 'the anteaters', ORYCTEROPODIDAE: 'which has only one living species',
   TAPIRIDAE: 'the tapirs', URSIDAE: 'the bears', INDRIIDAE: 'the indris, sifakas and woolly lemurs',
-  CRYPTOBRANCHIDAE: 'the giant salamanders and hellbenders',
+  CRYPTOBRANCHIDAE: 'the giant salamanders and hellbenders', AMBYSTOMATIDAE: 'the mole salamanders',
 };
 
 export interface RedListStatus {

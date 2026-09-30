@@ -1,0 +1,235 @@
+{
+  "id": 66,
+  "commonName": "Black Rhinoceros",
+  "scientificName": "Diceros bicornis",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Perissodactyla",
+    "family": "Rhinocerotidae",
+    "genus": "Diceros"
+  },
+  "iucnId": 6557,
+  "redList": {
+    "category": "CR",
+    "year": 2020,
+    "trend": "increasing",
+    "url": "https://www.iucnredlist.org/species/6557/152728945"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "desert",
+    "desert:cold"
+  ],
+  "traits": {
+    "covering": {
+      "value": "skin",
+      "note": "Its gray skin is bare except for short hair on its ears.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "huge",
+      "note": "It weighs 800 to 1,400 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It browses twigs, shrubs, small trees and herbs.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "twilight",
+      "note": "It rests in the midday heat and feeds in the morning and evening.",
+      "source": "adw"
+    },
+    "social": {
+      "value": "alone",
+      "note": "Mothers stay with their young.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one calf every 2 to 4 years.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "long",
+      "note": "It lives 30 to 35 years in the wild, and up to 49 in zoos.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "It has two horns, one behind the other; the front one can be more than a metre long.",
+      "tags": [
+        "horns"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "morphology",
+      "text": "Its pointed, hooked upper lip grabs twigs and leaves.",
+      "tags": [
+        "grasping_lip"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It rolls in mud to keep cool in the heat.",
+      "tags": [
+        "mud_bather"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It visits salt licks to get minerals.",
+      "tags": [
+        "salt_licks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It sees only about 25 to 30 m away and relies on its nose.",
+      "tags": [
+        "poor_eyesight"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It leaves messages in dung piles, and males kick their dung around to mark their home area.",
+      "tags": [
+        "scent_marks",
+        "territorial",
+        "dung_piles"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "It lives anywhere from Namibia's deserts to wetter woodlands, and is most common in savanna.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Poaching for its horn is the biggest threat, though it has been falling since 2015.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It isn't black: its skin is gray to brown, often colored by the mud it rolls in.",
+      "source": "adw"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is called the hook-lipped rhino. The white rhino has a wide, square lip for eating grass.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Its horns are made of keratin, like hair and fingernails, not bone.",
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "When startled it runs off snorting, then often turns and charges to check out what scared it.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A mother is pregnant for about 15 months, and her calf weighs 20 to 25 kg at birth.",
+      "source": "adw"
+    },
+    {
+      "category": "threat",
+      "text": "The western black rhino, one of its subspecies, was declared extinct in 2011.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "threat",
+      "text": "Its numbers are slowly climbing again: about 3,100 adults now.",
+      "source": "iucn"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/6557/152728945",
+    "adw": "https://animaldiversity.org/accounts/Diceros_bicornis/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Black_rhinoceros"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical"
+    ],
+    "countries": [
+      {
+        "code": "AGO",
+        "name": "Angola"
+      },
+      {
+        "code": "BWA",
+        "name": "Botswana"
+      },
+      {
+        "code": "SWZ",
+        "name": "eSwatini"
+      },
+      {
+        "code": "KEN",
+        "name": "Kenya"
+      },
+      {
+        "code": "MWI",
+        "name": "Malawi"
+      },
+      {
+        "code": "MOZ",
+        "name": "Mozambique"
+      },
+      {
+        "code": "NAM",
+        "name": "Namibia"
+      },
+      {
+        "code": "RWA",
+        "name": "Rwanda"
+      },
+      {
+        "code": "ZAF",
+        "name": "South Africa"
+      },
+      {
+        "code": "TZA",
+        "name": "Tanzania"
+      },
+      {
+        "code": "ZMB",
+        "name": "Zambia"
+      },
+      {
+        "code": "ZWE",
+        "name": "Zimbabwe"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Black_Rhino_at_Working_with_Wildlife.jpg/500px-Black_Rhino_at_Working_with_Wildlife.jpg",
+    "credit": "AfricanConservation",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Black_Rhino_at_Working_with_Wildlife.jpg"
+  }
+}

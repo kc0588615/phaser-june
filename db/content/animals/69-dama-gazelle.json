@@ -1,0 +1,195 @@
+{
+  "id": 69,
+  "commonName": "Dama Gazelle",
+  "scientificName": "Nanger dama",
+  "taxonomy": {
+    "class": "Mammalia",
+    "order": "Artiodactyla",
+    "family": "Bovidae",
+    "genus": "Nanger"
+  },
+  "iucnId": 8968,
+  "redList": {
+    "category": "CR",
+    "year": 2026,
+    "trend": "decreasing",
+    "url": "https://www.iucnredlist.org/species/8968/280381412"
+  },
+  "systems": [
+    "terrestrial"
+  ],
+  "habitats": [
+    "savanna",
+    "savanna:dry",
+    "shrubland",
+    "shrubland:tropical_dry",
+    "desert",
+    "desert:hot",
+    "rocky"
+  ],
+  "elevation": [
+    0,
+    1000
+  ],
+  "traits": {
+    "covering": {
+      "value": "fur",
+      "note": "Its glossy coat is white with a reddish-brown neck and back.",
+      "source": "adw"
+    },
+    "size": {
+      "value": "large",
+      "note": "It weighs 35 to 75 kg.",
+      "source": "adw"
+    },
+    "diet": {
+      "value": "plants",
+      "note": "It eats shrubs, herbs, desert grasses and acacia leaves.",
+      "source": "adw"
+    },
+    "activity": {
+      "value": "day",
+      "source": "adw"
+    },
+    "social": {
+      "value": "groups",
+      "note": "Herds are usually 10 to 20 gazelles.",
+      "source": "adw"
+    },
+    "birth": {
+      "value": "live",
+      "source": "adw"
+    },
+    "young": {
+      "value": "one",
+      "note": "A mother has one fawn, rarely twins.",
+      "source": "adw"
+    },
+    "lifespan": {
+      "value": "medium",
+      "note": "It lives up to 12 years in the wild and 19 in zoos.",
+      "source": "adw"
+    }
+  },
+  "clues": [
+    {
+      "category": "morphology",
+      "text": "Its ringed horns are shaped like an S: they sweep back, then curl up.",
+      "tags": [
+        "horns",
+        "s_shaped_horns"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "It has a long, thin neck and very long legs that help it lose heat.",
+      "tags": [
+        "long_legs"
+      ],
+      "source": "wikipedia"
+    },
+    {
+      "category": "morphology",
+      "text": "Its face and belly are white, and it has a white patch on its throat.",
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It stands up on its back legs to reach high acacia leaves.",
+      "tags": [
+        "stands_on_hind_legs"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "diet",
+      "text": "It gets most of the water it needs from the plants it eats.",
+      "tags": [
+        "rarely_drinks"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "behavior",
+      "text": "It moves into the Sahara in the rainy season and back to bushland in the dry season.",
+      "tags": [
+        "nomadic"
+      ],
+      "source": "adw"
+    },
+    {
+      "category": "habitat",
+      "text": "In Niger, some of the last herds live in rocky mountains, where poachers' cars can't follow.",
+      "source": "iucn"
+    },
+    {
+      "category": "conservation",
+      "text": "Poaching, and livestock eating its food, are its main threats.",
+      "source": "iucn"
+    }
+  ],
+  "facts": [
+    {
+      "category": "key_fact",
+      "text": "It is the largest gazelle.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "It is a national symbol of Niger. Niger's football team is nicknamed the Ménas, after its local name.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "key_fact",
+      "text": "Fewer than 80 adults are left in the wild, and no group has more than 50.",
+      "source": "iucn"
+    },
+    {
+      "category": "behavior",
+      "text": "When it spots a predator, it stamps its feet and snorts to warn the herd.",
+      "source": "adw"
+    },
+    {
+      "category": "life_description",
+      "text": "A few days after birth, a fawn can follow the herd, and after a week it runs as fast as the adults.",
+      "source": "wikipedia"
+    },
+    {
+      "category": "threat",
+      "text": "It has vanished from Libya, Mauritania, Morocco and Nigeria.",
+      "source": "wikipedia"
+    }
+  ],
+  "sources": {
+    "iucn": "https://www.iucnredlist.org/species/8968/280381412",
+    "adw": "https://animaldiversity.org/accounts/Nanger_dama/",
+    "wikipedia": "https://en.wikipedia.org/wiki/Dama_gazelle"
+  },
+  "range": {
+    "realms": [
+      "realm:afrotropical",
+      "realm:palearctic"
+    ],
+    "countries": [
+      {
+        "code": "TCD",
+        "name": "Chad"
+      },
+      {
+        "code": "MLI",
+        "name": "Mali"
+      },
+      {
+        "code": "NER",
+        "name": "Niger"
+      }
+    ]
+  },
+  "photo": {
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Gazella_dama_ruficollis_3zz.jpg/500px-Gazella_dama_ruficollis_3zz.jpg",
+    "credit": "Photo by David J. Stang",
+    "license": "CC BY-SA 4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Gazella_dama_ruficollis_3zz.jpg"
+  }
+}
