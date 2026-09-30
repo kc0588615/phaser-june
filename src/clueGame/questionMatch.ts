@@ -305,23 +305,29 @@ export function newRound(book: Book, rules: Rules, { mysteryId, candidateIds, pl
 export const standing = (state: RoundState): number[] => state.candidateIds.filter(id => !state.out[id]);
 const isOver = (state: RoundState) => state.status === 'solved' || state.status === 'lost';
 
-/** One explode phase of the board: the move's own matches (cascade false) or a cascade. `blast`: gems a toy cleared. */
-export function applyMatches(book: Book, state: RoundState, groups: ReadonlyArray<{ kind: GemKind; size: number; blast?: boolean }>, cascade: boolean): RoundState {
-  if (isOver(state) || (!cascade && state.status !== 'playing')) return state;
-  const perMatch = (size: number) => state.rules.perMatch[size >= 5 ? 2 : size === 4 ? 1 : 0];
-  const charges = { ...state.charges };
-  let notes = 0;
+export type MatchedGroup = { kind: GemKind; size: number; blast?: boolean };
+
+/** Charges one explode phase earns, before any are spent (applyMatches, and the balance bot's move values). */
+export function chargesEarned(rules: Rules, groups: ReadonlyArray<MatchedGroup>): Record<ChargeCategory, number> {
+  const earned: Record<ChargeCategory, number> = { body: 0, habits: 0, habitat: 0, range: 0, life: 0 };
   for (const group of groups) {
-    if (group.kind === 'notes') notes += group.size; // each note gem collected next to a match
-    else if (!group.blast) charges[group.kind] += perMatch(group.size);
+    if (group.kind !== 'notes' && !group.blast) earned[group.kind] += rules.perMatch[group.size >= 5 ? 2 : group.size === 4 ? 1 : 0];
   }
   // Toys: every `perBlast` gems cleared outside a match (all colors together) earn a charge, of the color cleared most.
   const blasts = groups.filter(group => group.blast && group.kind !== 'notes');
-  const pooled = Math.floor(blasts.reduce((sum, group) => sum + group.size, 0) / state.rules.perBlast);
-  if (pooled > 0) {
-    const most = blasts.reduce((a, b) => (b.size > a.size ? b : a));
-    charges[most.kind as ChargeCategory] += pooled;
-  }
+  const pooled = Math.floor(blasts.reduce((sum, group) => sum + group.size, 0) / rules.perBlast);
+  if (pooled > 0) earned[blasts.reduce((a, b) => (b.size > a.size ? b : a)).kind as ChargeCategory] += pooled;
+  return earned;
+}
+
+/** One explode phase of the board: the move's own matches (cascade false) or a cascade. `blast`: gems a toy cleared. */
+export function applyMatches(book: Book, state: RoundState, groups: ReadonlyArray<MatchedGroup>, cascade: boolean): RoundState {
+  if (isOver(state) || (!cascade && state.status !== 'playing')) return state;
+  const earned = chargesEarned(state.rules, groups);
+  const charges = { ...state.charges };
+  for (const category of CHARGE_CATEGORIES) charges[category] += earned[category];
+  // Each note gem collected next to a match.
+  const notes = groups.reduce((sum, group) => sum + (group.kind === 'notes' ? group.size : 0), 0);
   const mystery = animal(book, state.mysteryId);
   // Note gems save field notes for a last chance; they aren't read now.
   const saved = Math.min(notes, mystery.notes.length - state.notesCollected);

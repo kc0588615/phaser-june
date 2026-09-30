@@ -130,6 +130,16 @@ async function main() {
       await page('Page.navigate', { url });
       await waitFor(() => document.readyState === 'complete', `${url} to load`);
     };
+    // The gem legend as shown: each tile's category, question tag and visible text (after React has painted).
+    const readLegend = () => evaluate(async () => {
+      await new Promise(resolve => setTimeout(resolve, 80));
+      return [...document.querySelectorAll('[aria-label="Gem questions"] li[data-category]')]
+        .map(li => ({ category: li.dataset.category, tag: li.dataset.tag || null, text: li.innerText.replace(/\s+/g, ' ').trim() }));
+    });
+    const legendMismatch = (shown, legend) => legend.filter(row => {
+      const tile = shown.find(candidate => candidate.category === row.category);
+      return !tile || tile.tag !== row.tag || (row.text && !tile.text.includes(row.text));
+    }).map(row => ({ want: row, shown: shown.find(candidate => candidate.category === row.category) ?? null }));
     const screenshot = async name => {
       const { data } = await page('Page.captureScreenshot', { format: 'png' });
       writeFileSync(path.join(outDir, name), Buffer.from(data, 'base64'));
@@ -174,15 +184,16 @@ async function main() {
     let triggerFired = false;
     let legendShot = false;
     let askSeen = false;
+    let legendUpdated = false;
 
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const mysteryName = names.get(start.mysteryId);
       check(`round ${n}: ${start.candidates} animals, the mystery among them`, start.candidateIds.length === start.candidates && start.candidateIds.includes(start.mysteryId), `${start.candidateIds.length} animals`);
       check(`round ${n}: starts with the rules' moves`, start.movesLeft === start.moves && start.status === 'playing', `${start.movesLeft} of ${start.moves} moves, ${start.status}`);
-      // The legend under the board shows each color's next question (rules 043).
-      const legendShown = await evaluate(() => Object.fromEntries([...document.querySelectorAll('[aria-label="Gem questions"] li[data-category]')].map(li => [li.dataset.category, li.dataset.tag || null])));
-      check(`round ${n}: the legend shows each color's next question`, start.legend.every(row => legendShown[row.category] === row.tag), JSON.stringify(legendShown));
+      // The legend under the board shows each color's next question (rules 043), checked again after every move.
+      const startMismatch = legendMismatch(await readLegend(), start.legend);
+      check(`round ${n}: the legend shows each color's next question`, startMismatch.length === 0, JSON.stringify(startMismatch));
       let state = start;
       let moves = 0;
       let askChecked = false;
@@ -239,6 +250,9 @@ async function main() {
         check(`round ${n} move ${moves}: charges never go below zero`, Object.values(state.charges).every(count => count >= 0), JSON.stringify(state.charges));
         check(`round ${n} move ${moves}: the mystery is never crossed out`, !state.out.includes(state.mysteryId));
         check(`round ${n} move ${moves}: no source link while the round is on`, result.links === 0, `${result.links} links`);
+        const mismatch = legendMismatch(await readLegend(), state.legend);
+        check(`round ${n} move ${moves}: the legend on screen shows the rules' questions`, mismatch.length === 0, JSON.stringify(mismatch));
+        if (mismatch.length === 0 && state.legend.some((row, i) => row.tag !== before.legend[i].tag)) legendUpdated = true;
         if (result.expected) {
           askChecked = true;
           askSeen = true;
@@ -369,6 +383,7 @@ async function main() {
     check('a big match leaves a toy on the board', toySeen);
     check('matching a toy sets it off', toyFired);
     check('a match that fills its charges asks the legend question (checked at least once)', askSeen);
+    check('the legend on screen changes after an answer (seen at least once)', legendUpdated);
 
     // 3. The Field Journal lists what was solved (lost rounds aren't discoveries).
     const journal = await evaluate(async () => {

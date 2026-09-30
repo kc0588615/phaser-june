@@ -28,6 +28,7 @@ export function HowToPlay({ rules, seed, onClose }: { rules: Rules; seed: number
             Swap two gems side by side (swipe, or tap one then the other) to line up <b>3 or more</b> of a kind. Each kind asks one kind of <b>yes/no question</b>:{colors}
             <span className="mt-1 block text-[12px] text-white/75">
               The list under the board shows the question each gem asks next, and how many animals its answer is sure to cross out (&quot;4+ out&quot;).
+              A &quot;?&quot; (&quot;4? out&quot;) means some animals have no record for it, so it might cross out fewer.
             </span>
           </li>
           <li>

@@ -3,7 +3,7 @@
 // each round) and the board (it reports matches).
 import { GEM_OF } from '@/clueGame/gems';
 import {
-  CHARGE_CATEGORIES, ask, applyMatches, buyFamilyTreeStep, guess, leadQuestions, scoreSolve, standing,
+  CHARGE_CATEGORIES, ask, applyMatches, buyFamilyTreeStep, guess, leadQuestions, scoreSolve, shortQuestionText, standing,
   type Book, type GemKind, type RoundState, type ScorePart,
 } from '@/clueGame/questionMatch';
 
@@ -93,7 +93,10 @@ export function debugSummary(session: MatchSession, seed: number) {
   const { round } = session;
   const leads = leadQuestions(session.book, round);
   return {
-    legend: CHARGE_CATEGORIES.map(category => ({ category, gem: GEM_OF[category], tag: leads[category]?.tag ?? null })),
+    legend: CHARGE_CATEGORIES.map(category => {
+      const lead = leads[category];
+      return { category, gem: GEM_OF[category], tag: lead?.tag ?? null, text: lead ? shortQuestionText(lead.tag) : null };
+    }),
     questionCost: round.rules.questionCost, perMatch: round.rules.perMatch,
     seed, roundNo: session.roundNo, rulesVersion: round.rules.version, moves: round.rules.moves, candidates: round.rules.candidates, status: round.status,
     mysteryId: round.mysteryId, candidateIds: round.candidateIds,

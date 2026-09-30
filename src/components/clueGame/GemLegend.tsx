@@ -1,7 +1,9 @@
 // Rules 043 (plan 043): what each gem color asks. One tile per color: its gem, the
 // charges it holds toward a question, the question a match asks next, and how many
-// animals that answer is sure to cross out. The sixth tile holds the saved field notes
-// and the family tree.
+// animals that answer is sure to cross out ("4+"). When some animals have no record
+// for it, the count isn't sure ("4?"): if the mystery is one of them, the answer
+// crosses out none and the color's next question is asked. The sixth tile holds the
+// saved field notes and the family tree.
 import { Lock, TreeDeciduous } from 'lucide-react';
 import { GEM_OF, SHORT_LABEL } from '@/clueGame/gems';
 import { CHARGE_CATEGORIES, FAMILY_TREE_RANKS, leadQuestions, shortQuestionText, splitOf, type Book, type RoundState } from '@/clueGame/questionMatch';
@@ -25,6 +27,7 @@ export function GemLegend({ book, round, onNotes, onTree }: {
       {CHARGE_CATEGORIES.map(category => {
         const lead = leads[category];
         const held = Math.min(cost, round.charges[category]);
+        const sure = lead?.unknown === 0;
         return (
           <li
             key={category}
@@ -32,7 +35,7 @@ export function GemLegend({ book, round, onNotes, onTree }: {
             data-tag={lead?.tag ?? ''}
             title={lead?.text}
             aria-label={lead
-              ? `${SHORT_LABEL[category]} gems ask: ${lead.text} Crosses out at least ${splitOf(lead)}.${cost > 1 ? ` ${held} of ${cost} charges.` : ''}`
+              ? `${SHORT_LABEL[category]} gems ask: ${lead.text} Crosses out ${sure ? 'at least' : 'maybe'} ${splitOf(lead)}${sure ? '' : ': some animals have no record for it'}.${cost > 1 ? ` ${held} of ${cost} charges.` : ''}`
               : `${SHORT_LABEL[category]} gems: no question left.`}
             className={`${tile} ${lead ? 'border-white/15 bg-white/[.05]' : 'border-white/5 bg-transparent opacity-45'}`}
           >
@@ -49,7 +52,7 @@ export function GemLegend({ book, round, onNotes, onTree }: {
             </span>
             {lead && (
               <span className="shrink-0 text-center leading-none" aria-hidden="true">
-                <b className="block text-[15px] tabular-nums">{splitOf(lead)}+</b>
+                <b className="block text-[15px] tabular-nums">{splitOf(lead)}{sure ? '+' : '?'}</b>
                 <span className="text-[9px] text-white/60">out</span>
               </span>
             )}

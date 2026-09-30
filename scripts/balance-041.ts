@@ -11,12 +11,12 @@ import path from 'node:path';
 import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import {
-  CHARGE_CATEGORIES, DEFAULT_RULES, FAMILY_TREE_RANKS, RULES_041, applyMatches, ask, buyFamilyTreeStep, canAsk, familyTreeQuote, guess, leadQuestions,
+  CHARGE_CATEGORIES, DEFAULT_RULES, FAMILY_TREE_RANKS, RULES_041, applyMatches, ask, buyFamilyTreeStep, canAsk, chargesEarned, familyTreeQuote, guess, leadQuestions,
   makeBook, newRound, pickRound, poolFor, questionsFor, scoreSolve, splitOf, standing,
-  type Book, type ChargeCategory, type FamilyTreeCost, type GemKind, type Question, type RoundState, type Rules,
+  type Book, type ChargeCategory, type FamilyTreeCost, type GemKind, type MatchedGroup, type Question, type Rules,
 } from '../src/clueGame/questionMatch';
 import type { ContinentKey } from '../src/clueGame/regions';
-import { BoardModel, neighborSwaps, type Move } from '../src/game/BoardModel';
+import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from '../src/game/BoardModel';
 import { GRID_COLS, type GemType } from '../src/game/constants';
 import { mulberry32 } from '../src/lib/seededRng';
 
@@ -35,10 +35,14 @@ function arg(name: string, fallback: string): string {
 }
 
 const split = (q: Question) => Math.min(q.has, q.lacks);
-const totalCharges = (state: RoundState) => CHARGE_CATEGORIES.reduce((sum, c) => sum + state.charges[c], 0);
+const groupsOf = (phase: ExplodePhase): MatchedGroup[] => phase.groups.map(group => ({ kind: KIND_OF.get(group.gemType)!, size: group.cells.length, ...(group.blast ? { blast: true } : {}) }));
+const toysOf = (board: BoardModel): Array<[Cell, Special]> => board.getToys().flatMap((column, x) => column.flatMap((toy, y): Array<[Cell, Special]> => (toy ? [[[x, y], toy]] : [])));
 
-/** Play one round; returns the final state and the charges earned. */
-function play(book: Book, rules: Rules, board: BoardModel, setup: Parameters<typeof newRound>[2], strategy: Strategy, rng: () => number) {
+/**
+ * Play one round; returns the final state and the charges earned (before any are spent). `scratch`: a board with the
+ * same colors, to try a move on without making it (a toy's or a color gem's clear shows only when it's played).
+ */
+function play(book: Book, rules: Rules, board: BoardModel, scratch: BoardModel, setup: Parameters<typeof newRound>[2], strategy: Strategy, rng: () => number) {
   let state = newRound(book, rules, setup);
   let income = 0;
   const treeFirst = strategy === 'family tree first';
@@ -63,22 +67,24 @@ function play(book: Book, rules: Rules, board: BoardModel, setup: Parameters<typ
     const valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
     let move: Move = valid[Math.floor(rng() * valid.length)];
     if (rules.askOnMatch && strategy !== 'random') {
-      // What the legend shows: each color's lead question and the animals it's sure to cross out. A run of 4+ also
-      // reveals a family tree step while one is left (worth about 3 animals to the careful player).
+      // What the legend shows: each color's lead question and the animals it's sure to cross out ("?" when some have
+      // no record, read as less sure). A run reaching the family tree size also reveals a step while one is left
+      // (worth about 3 animals). Each move is tried on the scratch board: its first clear, runs and toys alike.
       const leads = leadQuestions(book, state);
+      const left = standing(state).length;
       const treeOpen = rules.familyTree.cost === 'match' && state.familyTreeSteps < FAMILY_TREE_RANKS.length;
+      const grid = board.getGrid();
+      const toys = toysOf(board);
       const worth = (m: Move) => {
-        const groups = board.matchesAfter(m);
-        // Charges this swap's own runs earn per color; a color's worth is its lead question's sure split, by how much of a question they fill.
-        const gained = new Map<ChargeCategory, number>();
-        for (const group of groups) {
-          const kind = KIND_OF.get(group.gemType);
-          if (!kind || kind === 'notes' || group.blast) continue;
-          gained.set(kind, (gained.get(kind) ?? 0) + rules.perMatch[group.cells.length >= 5 ? 2 : group.cells.length === 4 ? 1 : 0]);
+        scratch.loadBoard(grid, toys);
+        const groups = groupsOf(scratch.nextPhase(m));
+        const earned = chargesEarned(rules, groups);
+        let value = treeOpen && groups.some(group => !group.blast && group.kind !== 'notes' && group.size >= rules.familyTree.match) ? 3 : 0;
+        for (const category of CHARGE_CATEGORIES) {
+          const lead = leads[category];
+          if (!lead || earned[category] === 0) continue;
+          value += splitOf(lead) * ((left - lead.unknown) / left) * Math.min(2, (state.charges[category] + earned[category]) / rules.questionCost);
         }
-        const big = treeOpen && groups.some(group => !group.blast && group.cells.length >= rules.familyTree.match);
-        let value = big ? 3 : 0;
-        for (const [kind, n] of gained) if (leads[kind]) value += splitOf(leads[kind]!) * Math.min(2, (state.charges[kind] + n) / rules.questionCost);
         return value;
       };
       const sign = strategy === 'worst' ? -1 : 1;
@@ -95,9 +101,9 @@ function play(book: Book, rules: Rules, board: BoardModel, setup: Parameters<typ
     }
     let phase = board.nextPhase(move);
     for (let cascade = false; phase.groups.length > 0; cascade = true) {
-      const before = totalCharges(state);
-      state = applyMatches(book, state, phase.groups.map(group => ({ kind: KIND_OF.get(group.gemType)!, size: group.cells.length, blast: group.blast })), cascade);
-      income += Math.max(0, totalCharges(state) - before);
+      const groups = groupsOf(phase);
+      income += Object.values(chargesEarned(rules, groups)).reduce((sum, n) => sum + n, 0);
+      state = applyMatches(book, state, groups, cascade);
       phase = board.nextPhase();
     }
     if (!board.hasAnyValidMove()) board.shuffle();
@@ -162,10 +168,12 @@ async function main() {
     for (const strategy of strategiesFor(rules)) {
       const rng = mulberry32(7);
       const board = new BoardModel(boardSize, boardSize);
+      const scratch = new BoardModel(boardSize, boardSize);
+      scratch.newBoard(1, COLORS, { type: GEM_OF.notes, chance: notesChance }); // its colors and note gem; the grid is loaded per try
       let solved = 0, firstTry = 0, lastChance = 0, narrowed = 0, points = 0, steps = 0, income = 0, notes = 0, asked = 0;
       for (const { setup, boardSeed } of deals) {
         board.newBoard(boardSeed, COLORS, { type: GEM_OF.notes, chance: notesChance });
-        const { state, income: earned } = play(book, rules, board, setup, strategy, rng);
+        const { state, income: earned } = play(book, rules, board, scratch, setup, strategy, rng);
         const atGuess = standing(state).length + state.wrongGuesses.length;
         if (state.status === 'solved') {
           solved++;

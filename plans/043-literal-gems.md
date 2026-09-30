@@ -76,13 +76,19 @@ What changed from the sketch above, and why (bot: `node scripts/run-typescript.m
 | Rules | Careful solved (first try) | Random solved (first try) | Worst solved | Careful questions a round |
 |---|---|---|---|---|
 | 041-5 on `main` (5×5, 4 moves) | 96–98% | 87–91% | 77–78% | 3.7 |
-| **043-0** (7×7, 5 moves, 2 charges, dealt, tree at 5) | 89–93% (79–85%) | 71–72% (55–57%) | 56–62% | 3.4–3.5 |
+| **043-0** (7×7, 5 moves, 2 charges, dealt, tree at 5) | 91–92% (81–85%) | 71–72% (55–57%) | 56–59% | 3.4–3.5 |
 | 043-0 with 3 charges | 77% | 57–60% | 42–45% | 2.8 |
 | 043-0 with the tree at a 4-match, 3 charges | 94–97% | 62–64% | 47–50% | 0.6–0.9 |
 
 The careful-to-random gap roughly doubles (about 9 points to about 20). Random still solves 71%, above the ≤60% target; random's first-try rate (55–57%) meets it. Lower levers left: fewer note gems barely moved random (75% vs 73–76%), and 3 charges pulls careful under 90%.
 
-E2E: `npm run e2e` 130/130 (seed 7, Africa): the legend on screen matches the rules each round, and a match that fills a color's charges asks exactly its legend question (checked twice). Screens fit 390×844. Known: on short phones (667 px tall) the 7×7 board gets small gems; not fixed.
+E2E: `npm run e2e` 146/146 (seed 7, Africa): the legend on screen (tags and text) matches the rules at the start and after every move, it changes after an answer, and a match that fills a color's charges asks exactly its legend question. Screens fit 390×844. Known: on short phones (667 px tall) the 7×7 board gets small gems; not fixed.
+
+**Codex review of d496643a (2026-09-30), all fixed the same day:**
+- The legend's "4+ out" was not sure when some animals have no record: if the mystery is one of them, the answer crosses out none and the next question is asked. Such counts now show "4?" (legend, aria text, How to play, docs).
+- The e2e read the on-screen legend only at round start, so a legend frozen after its first paint would pass. It now compares tags and visible text after every move and checks that the legend changed after an answer.
+- The bot scored a move by its plain runs only, so a color gem or two toys swapped (big clears, no run) scored 0: careful skipped them and worst chased them. It now plays each move on a scratch board and scores its first clear, toys included, with `chargesEarned` (shared with `applyMatches`); careful also discounts "?" questions. "Charges earned" counted what was left after auto-asking; it now counts every charge earned. The 043-0 row above is the rerun; 041-5 solve rates are unchanged.
+- Codex reproduced the plan's 400-round numbers and found no bug in the ask/refund loop or in 041-5.
 
 **For Part 1:** keep charges (2 a question) and deal slots at random, not the 6 best splits: both easy versions were measured here. The family tree needs its own source (the tree gem).
 
