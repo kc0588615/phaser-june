@@ -125,16 +125,19 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
   ];
   const notes: FieldNote[] = [];
   const revealNotes: FieldNote[] = [];
-  for (const item of [...input.clues.filter(clue => clue.handWritten), ...input.facts]) {
+  const items: Array<{ text: string; source: Source; tags?: readonly string[] }> = [...input.clues.filter(clue => clue.handWritten), ...input.facts];
+  for (const item of items) {
     const { text, blanks } = censor(item.text, giveaways);
-    if (blanks === 0) notes.push({ text: item.text, source: item.source });
-    else if (blanks <= MAX_BLANKS) notes.push({ text, full: item.text, source: item.source });
-    else revealNotes.push({ text: item.text, source: item.source });
+    const tags = item.tags?.length ? { tags: [...item.tags] } : {};
+    if (blanks === 0) notes.push({ text: item.text, source: item.source, ...tags });
+    else if (blanks <= MAX_BLANKS) notes.push({ text, full: item.text, source: item.source, ...tags });
+    else revealNotes.push({ text: item.text, source: item.source, ...tags });
   }
 
   return {
     id: input.id, name: input.commonName, scientificName: input.scientificName, photo: input.photo,
     redList: input.redList.category, redListUrl: input.redList.url, continents, traits, traitSources, familyTree, notes, revealNotes, guide,
+    tags: [...new Set(input.clues.flatMap(clue => clue.tags))],
   };
 }
 

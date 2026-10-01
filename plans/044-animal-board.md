@@ -22,6 +22,8 @@ The root cause in every version so far: **the game does the reasoning.** Any mat
 
 **Witness gem** (the old note gem, kept): rare; collected by a match next to it. It shows one hand-written clue from the mystery's profile with the naming words blanked, and how many suspects' field guides agree: "It digs into ant nests and termite mounds with its strong, spade-like claws. **The field guides of 2 of the 5 say this too.**" Working out which two is the player's job. Only notes whose tags fit 2 to 4 of the 5 suspects are used: a note fitting only the mystery would solve the round, and a note without tags says nothing. The count is from the field guides' records (an untagged trait counts as not recorded), and the wording says so. Collected notes stay readable in the notes list.
 
+**Signs.** During play, each suspect's card and field guide list its **signs**: the open tags its field guide records, as short phrases (digging claws, raids termite mounds, walks on knuckles). They never show the hand-written sentences: a witness note would match one word for word. Most tags read fine with spaces for underscores; Part 3 adds a phrase list for the awkward ones.
+
 **Marks.** Tap a suspect card and choose **Rule out** to mark it; tap again to unmark (until it's released). Marking is free and instant. **Only marked animals can be released.**
 
 **Releasing.** A marked animal is released (it hops off the board) when **any gem next to it** (up, down, left or right) is cleared: by your run, a toy, a cascade or a color gem. Unmarked tiles are never released, so nothing escapes by a stray swipe; every loss comes from a wrong conclusion. A released tile's cell becomes an ordinary cell and fills like any other.
@@ -38,7 +40,7 @@ The root cause in every version so far: **the game does the reasoning.** Any mat
 
 ## How a round starts
 
-1. **Suspect set first** (`pickSuspectSet`): a seed animal from the place plus its 4 closest look-alikes (most shared traits, relatives first). **Substitution:** a candidate that no full yes/no question can tell apart from an animal already in the set is skipped for the next look-alike. Real pairs this catches: the Western and Eastern long-beaked echidnas, the Dyeing Poison Dart Frog and the Golden Poison Frog, Africa's small frogs. A seed that can't make a set of 5 isn't a seed (count them per place). Without this rule, the Fable review found no valid deck for 11 of 20 Asia sets, 4 of 26 Africa, 3 of 14 South America and 29 of 76 world.
+1. **Suspect set first** (`pickSuspectSet`): a seed animal from the place plus its 4 closest look-alikes (most shared traits, relatives first). **Substitution:** a candidate is skipped for the next look-alike when, with it in, some two suspects would answer every full question alike. Only two pairs of today's 76 can never be told apart: the Dyeing Poison Dart Frog and the Golden Poison Frog, and the Saola and the Sumatran Orangutan (their records barely overlap). Many more pairs can't be told apart inside a particular set, when another suspect lacks a record for the trait that would split them (the two long-beaked echidnas differ only on shrubland and Melanesia); the rule checks the whole set. Without it, the Fable review found no valid deck for 11 of 20 Asia sets, 4 of 26 Africa, 3 of 14 South America and 29 of 76 world. With it, every seed makes a set except 8 frogs in whole-world play (Part 1 results).
 2. **Clue deck** (`dealClues`), from the set only: 4 questions where **every suspect has a record** (a full yes/no table), and the 5 suspects' answer rows all differ. Five distinct rows always have a separating set of 4 or fewer questions. Ties break on a hash of the set's sorted ids. Prefer clues with different splits and a mix of strong (2/3) and weak (1/4) ones, so which order to chase first matters.
 3. **Witness notes:** the mystery's hand-written clues whose tags fit 2-4 suspects, in profile order.
 4. **Mystery last:** chosen uniformly among the 5. The deck and the board depend only on the set, so they can't hint at it (a test checks it, Part 1).
@@ -90,6 +92,32 @@ Charges, the question sheet and spend panel, family tree steps, the last chance,
 
 **Targets (percentage points, held-out seed, 400 rounds a place):** careful found ≥ 85% and ★★★ about 40%; reader at least 20 points under careful (board play matters) but ≥ 50% (fair); guesser ≤ 22%; random 0%; trail success careful ≥ 90%, guesser ≤ 8%. If careful misses, check the solver first: a round with no possible finish is a board problem (moves, order size, 8×8); a round the solver wins and careful doesn't is a bot problem. **Gate:** the owner sees the table before Part 2.
 
+### Part 1: built 2026-09-30 (rules 044-0, no UI)
+
+Built on `variant/044-animal-board`: pinned tiles in `src/game/BoardModel.ts` (5 new board tests; the 32 old ones pass unchanged, and the 043 bot gives the same numbers), the rules in `src/clueGame/animalBoard.ts` (9 rules tests on the real content), note and animal tags carried into the game data (`questionMatchContent.ts`), and `scripts/balance-044.ts` (`--explain N` prints a dealt round).
+
+**Tuned values** (`ANIMAL_RULES`): 7×7 board, 30 moves, clue orders of 24 gems, witness gems 3% of new gems, ★★ at 6 moves left, ★★★ at 13. The sweep: orders of 12 ended rounds after about 10 moves; orders of 16-20 with 22-26 moves came close; orders of 24 with 30 moves gave the longest rounds that still met the targets.
+
+**Held-out run** (setup seed 4401, 400 rounds a place, ±2-5 points):
+
+| Place (animals, distinct sets) | Careful found (★★★) | Reader | Guesser | Random | Oracle | Moves careful uses | Trails finished: careful / guesser |
+|---|---|---|---|---|---|---|---|
+| Africa (26, 23) | 95% (53%) | 77% | 20% | 0% | 99% | 16 | 100% / 6% |
+| Asia (20, 17) | 95% (42%) | 68% | 20% | 0% | 99% | 19 | 100% / 6% |
+| North America (13, 8) | 97% (52%) | 80% | 22% | 0% | 100% | 17 | 100% / 6% |
+| South America (14, 10) | 96% (53%) | 76% | 20% | 0% | 100% | 16 | 100% / 5% |
+| Oceania (6, 2) | 95% (55%) | 72% | 20% | 0% | 100% | 16 | 100% / 6% |
+| World (76, 45) | 97% (52%) | 79% | 20% | 0% | 100% | 17 | 100% / 6% |
+
+- **Met:** careful finds 95-97% (target ≥ 85%); random finds none and names the right animal at the end 19% of the time (journal only); the guesser sits on the blind floor (20-22%, target ≤ 22%) and escapes in 80% of rounds; careful finishes every trail, the guesser 5-6% (targets ≥ 90% / ≤ 8%); the oracle finds 99-100%, so every round could be won in the moves (no board problem).
+- **Borderline:** the reader trails careful by 15-27 points (target 20): Asia 27, Oceania 23, South America 20, but Africa 18, world 18, North America 17. Aiming matters, a little less than hoped. Levers if the owner wants more: orders of 28, or fewer witness gems (they fill reasoning gaps for both).
+- **★★★** lands at 42-55% of careful's rounds (target about 40%); move the ★★★ line to 14 to bring it down.
+- **No grind after the answer:** careful knows the mystery about 2 moves before its find; most moves go into filling orders (it needs about 2 of the 4 answers plus 1.5-2 witness notes). The plan's fear of "identify early, then grind" doesn't show up.
+- **Small pools repeat:** Oceania's 6 animals make only 2 distinct sets, North America's 13 make 8. Plan 040's content batches matter here. In whole-world play, 8 frogs can't seed a set (records too thin).
+- **Bot limits:** careful and reader read witness notes perfectly (through tags) and never misjudge a trait, so they're an upper bound on reasoning; careful looks one move ahead. Kids will reason slower: the playtest has to show where they land.
+
+**Gate:** the owner reviews this table before Part 2.
+
 ### Part 2: graybox phone playtest
 
 Before any new art: emoji or letter glyphs on the 043 gem shapes, photo tiles, order tiles with counts and answers, suspect cards with trait chips and Rule out, release preview, witness notes, out-of-moves sheet, stars, trail hearts. Questions: can a kid say why an animal is ruled out, and does marking feel like committing? Do long rounds stay fun once the mystery is known (the bot reports moves after identification)?
@@ -121,24 +149,26 @@ The 043 system: each of the 4 clue slots keeps its own silhouette and color (bal
 
 ## Example round (real data, Africa)
 
-Generated examples come from `scripts/balance-044.ts --explain <seed>` (same content pipeline as the game); this one was checked against the profiles.
+Generated with the real rules (`dealClues`, `witnessNotes`) from the profiles; `scripts/balance-044.ts --explain <round>` prints any dealt round the same way.
 
-Suspects: Okapi, Aardvark, Giant Pangolin, Black Rhinoceros, Hirola; the mystery is the Aardvark. Clues, with every suspect's record:
+Suspects: Okapi, Aardvark, Giant Pangolin, Black Rhinoceros, Hirola; the mystery is the Aardvark. The deck the rules deal for this set, with every suspect's record:
 
-| Suspect | Eats mostly bugs? | Covered in fur? | Lives in groups? | Lives in desert? |
+| Suspect | Covered in fur? | Lives alone? | Lives in shrubland? | Lives in Southern Africa? |
 |---|---|---|---|---|
-| Okapi | no | yes | no | no |
-| Aardvark | yes | yes | no | no |
-| Giant Pangolin | yes | no (scales) | no | no |
-| Black Rhinoceros | no | no (skin) | no | yes |
-| Hirola | no | yes | yes | no |
+| Okapi | yes | yes | no | no |
+| Giant Pangolin | no | yes | no | no |
+| Aardvark | yes | yes | yes | yes |
+| Black Rhinoceros | no | yes | yes | yes |
+| Hirola | yes | no | yes | no |
 
-1. The fly and fur orders split the five best (2 against 3), so chase the flies. A few moves later: "Eats mostly bugs? Yes." The Okapi, Rhino and Hirola eat plants. Mark all three **Rule out**.
-2. Keep matching: clears next to the three marked tiles release them, some from your runs, some from cascades.
-3. A witness gem next to a match: "It digs into ant nests and termite mounds with its strong, spade-like claws. The field guides of 2 of the 5 say this too." The Aardvark and the Pangolin both dig into termite mounds: it doesn't settle it.
-4. Fill the fur order: "Covered in fur? Yes." The Pangolin has scales: mark it, release it. Only the Aardvark is left: found.
+The Aardvark's witness notes for this set: the long sticky tongue (fits 3: Okapi, Aardvark, Pangolin), the spade-like claws digging into termite mounds (fits 2), rarely drinking (fits 2), resting in a burrow it digs (fits 2).
 
-The danger is a hasty mark. After the witness note, a player who guesses "it's the Aardvark" and marks the Pangolin before the fur answer is right this time; had the mystery been the Pangolin, releasing it would have lost the round.
+1. "Covered in fur?" splits the five 3 against 2; chase its order. A few moves later: "Covered in fur? Yes." The Pangolin (scales) and the Rhino (skin) are out: mark both **Rule out**.
+2. Keep matching: clears next to the two marked tiles release them, some from your runs, some from cascades.
+3. A witness gem next to a match: "It digs into ant nests and termite mounds with its strong, spade-like claws. The field guides of 2 of the 5 say this too." The signs show *digging claws* and *raids termite mounds* on the Aardvark and the Pangolin only, and the Pangolin is already out: it's the Aardvark. Mark the Okapi and the Hirola.
+4. Release them: only the Aardvark is left, found.
+
+The danger is a hasty mark. A player who marks the Okapi and Hirola right after the fur answer, guessing between the three furry ones, is right this time; had the mystery been the Hirola, releasing it would have lost the round.
 
 ## Owner decisions (2026-09-30)
 

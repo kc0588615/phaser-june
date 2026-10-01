@@ -2,6 +2,12 @@
 // (special gems left by big matches), swaps neighbors, finds matches, sets toys
 // off and refills. No Phaser: BoardView draws what it decides and
 // BoardController runs the two together. Pinned by tests/game/boardModel.test.ts.
+//
+// Pinned tiles (plan 044): an animal can sit on a cell. A pinned cell holds no gem
+// (its grid value is ignored), never matches, can't be swapped, isn't cleared by
+// toys and never moves; gems fall past it. Each phase reports the tiles it touched
+// (a run, or a cleared gem, right next to them); the rules decide what that does.
+// With no pins, every behavior is the one the tests pin for 041/043.
 import { GEM_TYPES, type GemType } from './constants';
 import { mulberry32, shuffled } from '@/lib/seededRng';
 
@@ -44,10 +50,15 @@ export interface ExplodePhase {
   made: Toy[];
   fired: Fire[];
   refills: Array<[column: number, gems: GemType[]]>;
+  /** Pinned tiles (their ids) with a run or a cleared gem right next to them (up, down, left or right). */
+  touched: number[];
 }
+/** Column-major like the grid: the id pinned on each cell, or null. */
+export type Pins = (number | null)[][];
 
 const key = ([x, y]: Cell) => `${x},${y}`;
-const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [] };
+const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [] };
+const NEAR: ReadonlyArray<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 export function isNeighbor([ax, ay]: Cell, [bx, by]: Cell): boolean {
   return Math.abs(ax - bx) + Math.abs(ay - by) === 1;
@@ -73,6 +84,7 @@ export function applySwap<T>(grid: T[][], { from: [ax, ay], to: [bx, by] }: Move
 export class BoardModel {
   private grid: Grid = [];
   private toys: Toys = [];
+  private pins: Pins = [];
   private gemTypes: GemType[] = [...GEM_TYPES];
   private rng: () => number = Math.random;
   private rare: RareGem | null = null;
@@ -85,8 +97,8 @@ export class BoardModel {
     return this.moves;
   }
 
-  /** A new board from a uint32 seed and at least three colors: no ready-made matches, at least one valid move. */
-  newBoard(seed: number, gemTypes: readonly GemType[] = GEM_TYPES, rare: RareGem | null = null): void {
+  /** A new board from a uint32 seed and at least three colors: no ready-made matches, at least one valid move. `pins`: tiles to pin. */
+  newBoard(seed: number, gemTypes: readonly GemType[] = GEM_TYPES, rare: RareGem | null = null, pins: ReadonlyArray<[Cell, number]> = []): void {
     if (!Number.isInteger(seed) || seed < 0 || seed > 0xffff_ffff) throw new RangeError('Board seed must be a uint32.');
     const types = [...new Set(gemTypes.filter(type => GEM_TYPES.includes(type)))];
     if (types.length < 3) throw new RangeError('A board needs at least three gem types.');
@@ -96,14 +108,36 @@ export class BoardModel {
     this.moves = 0;
     this.grid = this.freshGrid();
     this.toys = this.noToys();
+    this.setPins(pins);
     if (!this.hasAnyValidMove()) this.shuffle();
   }
 
-  /** Replace the board with these gems and toys (tests and the dev bridge); the rng and colors stay. */
-  loadBoard(grid: Grid, toys: Array<[Cell, Special]> = []): void {
+  /** Replace the board with these gems, toys and pins (tests, the bot's scratch board, the dev bridge); the rng and colors stay. */
+  loadBoard(grid: Grid, toys: Array<[Cell, Special]> = [], pins: ReadonlyArray<[Cell, number]> = []): void {
     this.grid = grid.map(column => [...column]);
     this.toys = this.noToys();
     for (const [[x, y], special] of toys) this.toys[x][y] = special;
+    this.setPins(pins);
+  }
+
+  getPins(): Pins {
+    return this.pins.map(column => [...column]);
+  }
+
+  /** The cell each pinned id sits on. */
+  pinnedCells(): Array<[Cell, number]> {
+    return this.pins.flatMap((column, x) => column.flatMap((id, y): Array<[Cell, number]> => (id === null ? [] : [[[x, y], id]])));
+  }
+
+  /** Unpin these ids (released animals): their cells fill like cleared ones, gems above falling in. Returns the refills. */
+  unpin(ids: readonly number[]): ExplodePhase['refills'] {
+    const freed = new Set<string>();
+    for (const [cell, id] of this.pinnedCells()) {
+      if (!ids.includes(id)) continue;
+      this.pins[cell[0]][cell[1]] = null;
+      freed.add(key(cell));
+    }
+    return freed.size ? this.collapse(freed) : [];
   }
 
   getGrid(): Grid {
@@ -122,6 +156,7 @@ export class BoardModel {
     let triggered: Trigger[] = [];
     if (move) {
       if (!this.canSwap(move)) return NONE;
+      // canSwap refuses pinned cells, so pins never swap.
       triggered = this.swapTriggers(move);
       applySwap(this.grid, move);
       applySwap(this.toys, move);
@@ -161,7 +196,7 @@ export class BoardModel {
       for (const run of runs) {
         for (const [x, y] of run.cells) {
           for (const near of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as Cell[]) {
-            if (this.onBoard(near) && this.grid[near[0]][near[1]] === rare) collected.set(key(near), near);
+            if (this.onBoard(near) && !this.isPinned(near) && this.grid[near[0]][near[1]] === rare) collected.set(key(near), near);
           }
         }
       }
@@ -179,30 +214,40 @@ export class BoardModel {
 
     const clearedKeys = new Set([...matched, ...collected.keys(), ...blasted].filter(cellKey => !madeKeys.has(cellKey)));
     const cleared = [...clearedKeys].map(cellKey => cellKey.split(',').map(Number) as Cell);
+    // Tiles touched: a run cell (a toy made in it included) or a cleared gem right next to them.
+    const near = new Set([...matched, ...clearedKeys]);
+    const touched = this.pinnedCells().filter(([[x, y]]) => NEAR.some(([dx, dy]) => near.has(`${x + dx},${y + dy}`))).map(([, id]) => id);
     for (const toy of made) this.toys[toy.cell[0]][toy.cell[1]] = toy.special;
+    const refills = this.collapse(clearedKeys);
+    return { groups, cleared, made, fired, refills, touched };
+  }
+
+  /** Drop the gems left in each column past its pinned cells and fill the free cells at the top with new gems. */
+  private collapse(clearedKeys: ReadonlySet<string>): ExplodePhase['refills'] {
     const refills: ExplodePhase['refills'] = [];
-    const nextToys: Toys = [];
-    this.grid = this.grid.map((column, x) => {
-      const keep = column.map((_gem, y) => !clearedKeys.has(`${x},${y}`));
-      const survivors = column.filter((_gem, y) => keep[y]);
-      const fresh = Array.from({ length: this.height - survivors.length }, () => this.pickGem());
+    for (let x = 0; x < this.width; x++) {
+      const slots = Array.from({ length: this.height }, (_cell, y) => y).filter(y => this.pins[x]?.[y] == null);
+      const kept = slots.filter(y => !clearedKeys.has(`${x},${y}`));
+      const fresh = Array.from({ length: slots.length - kept.length }, () => this.pickGem());
       if (fresh.length > 0) refills.push([x, fresh]);
-      nextToys[x] = [...fresh.map(() => null), ...this.toys[x].filter((_toy, y) => keep[y])];
-      return [...fresh, ...survivors];
-    });
-    this.toys = nextToys;
-    return { groups, cleared, made, fired, refills };
+      const gems = [...fresh, ...kept.map(y => this.grid[x][y])];
+      const toys = [...fresh.map(() => null), ...kept.map(y => this.toys[x][y])];
+      slots.forEach((y, i) => { this.grid[x][y] = gems[i]; this.toys[x][y] = toys[i]; });
+    }
+    return refills;
   }
 
   /** Whether a swap is a move: it makes a match, or sets a toy off (a color gem with any gem, or two toys together). */
   canSwap(move: Move): boolean {
     if (!this.onBoard(move.from) || !this.onBoard(move.to) || !isNeighbor(move.from, move.to)) return false;
+    if (this.isPinned(move.from) || this.isPinned(move.to)) return false;
     return this.matchesAfter(move).length > 0 || this.swapTriggers(move).length > 0;
   }
 
   /** The groups a swap would clear, without making it; none when the cells aren't neighbors on the board. */
   matchesAfter(move: Move): MatchGroup[] {
     if (!this.onBoard(move.from) || !this.onBoard(move.to) || !isNeighbor(move.from, move.to)) return [];
+    if (this.isPinned(move.from) || this.isPinned(move.to)) return [];
     const grid = this.getGrid();
     const toys = this.getToys();
     applySwap(grid, move);
@@ -219,14 +264,29 @@ export class BoardModel {
     return x >= 0 && x < this.width && y >= 0 && y < this.height;
   }
 
-  /** Reshuffle the same gems (each toy stays on its gem) until no match is standing and a valid move exists (up to 50 tries). */
+  isPinned([x, y]: Cell): boolean {
+    return this.pins[x]?.[y] != null;
+  }
+
+  /**
+   * Reshuffle the same gems (each toy stays on its gem) until no match is standing and a valid move exists (up to 50
+   * tries). Pinned tiles stay where they are.
+   */
   shuffle(): void {
-    const pairs = this.grid.flatMap((column, x) => column.map((gem, y): [GemType, Special | null] => [gem, this.toys[x][y]]));
+    const cells = this.grid.flatMap((column, x) => column.map((_gem, y): Cell => [x, y])).filter(cell => !this.isPinned(cell));
+    const pairs = cells.map(([x, y]): [GemType, Special | null] => [this.grid[x][y], this.toys[x][y]]);
     for (let attempt = 0; attempt < 50; attempt++) {
       const order = shuffled(pairs, this.rng);
-      this.grid = Array.from({ length: this.width }, (_column, x) => order.slice(x * this.height, (x + 1) * this.height).map(([gem]) => gem));
-      this.toys = Array.from({ length: this.width }, (_column, x) => order.slice(x * this.height, (x + 1) * this.height).map(([, toy]) => toy));
+      cells.forEach(([x, y], i) => { [this.grid[x][y], this.toys[x][y]] = order[i]; });
       if (this.findMatches(this.grid, this.toys).length === 0 && this.hasAnyValidMove()) return;
+    }
+  }
+
+  private setPins(pins: ReadonlyArray<[Cell, number]>): void {
+    this.pins = Array.from({ length: this.width }, () => new Array<number | null>(this.height).fill(null));
+    for (const [[x, y], id] of pins) {
+      this.pins[x][y] = id;
+      this.toys[x][y] = null;
     }
   }
 
@@ -239,7 +299,7 @@ export class BoardModel {
     const [a, b] = [this.toys[from[0]][from[1]], this.toys[to[0]][to[1]]];
     const [gemA, gemB] = [this.grid[from[0]][from[1]], this.grid[to[0]][to[1]]];
     const rare = this.rare?.type;
-    const everywhere = this.grid.flatMap((column, x) => column.map((_gem, y): Cell => [x, y])).filter(([x, y]) => x !== to[0] || y !== to[1]);
+    const everywhere = this.grid.flatMap((column, x) => column.map((_gem, y): Cell => [x, y])).filter(([x, y]) => (x !== to[0] || y !== to[1]) && !this.isPinned([x, y]));
     if (a === 'color' && b === 'color') return [{ cell: to, special: 'color', combo: 'board', cells: everywhere, used: [from] }];
     // A color gem clears every gem of the other gem's color (not note gems); a toy of that color goes off with them.
     if (a === 'color' && gemB !== rare) return [{ cell: to, special: 'color', target: gemB }];
@@ -260,21 +320,23 @@ export class BoardModel {
     const color = target ?? this.commonestColor();
     const cells: Cell[] = [];
     this.grid.forEach((column, x) => column.forEach((gem, y) => {
-      if ((x !== cell[0] || y !== cell[1]) && (color === 'all' || (gem === color && gem !== this.rare?.type))) cells.push([x, y]);
+      if ((x !== cell[0] || y !== cell[1]) && !this.isPinned([x, y]) && (color === 'all' || (gem === color && gem !== this.rare?.type))) cells.push([x, y]);
     }));
     return cells;
   }
 
+  /** A line's cells (not the toy's own); it passes behind pinned tiles without clearing them. */
   private lineCells([x, y]: Cell, line: 'row' | 'column'): Cell[] {
-    return line === 'row'
+    const cells = line === 'row'
       ? Array.from({ length: this.width }, (_cell, i): Cell => [i, y]).filter(([cx]) => cx !== x)
       : Array.from({ length: this.height }, (_cell, i): Cell => [x, i]).filter(([, cy]) => cy !== y);
+    return cells.filter(cell => !this.isPinned(cell));
   }
 
   private squareCells([x, y]: Cell, radius: number): Cell[] {
     const cells: Cell[] = [];
     for (let cx = x - radius; cx <= x + radius; cx++) {
-      for (let cy = y - radius; cy <= y + radius; cy++) if ((cx !== x || cy !== y) && this.onBoard([cx, cy])) cells.push([cx, cy]);
+      for (let cy = y - radius; cy <= y + radius; cy++) if ((cx !== x || cy !== y) && this.onBoard([cx, cy]) && !this.isPinned([cx, cy])) cells.push([cx, cy]);
     }
     return cells;
   }
@@ -283,7 +345,7 @@ export class BoardModel {
   private commonestColor(): GemType {
     const counts = new Map<GemType, number>();
     this.grid.forEach((column, x) => column.forEach((gem, y) => {
-      if (gem !== this.rare?.type && this.toys[x][y] !== 'color') counts.set(gem, (counts.get(gem) ?? 0) + 1);
+      if (gem !== this.rare?.type && this.toys[x][y] !== 'color' && !this.isPinned([x, y])) counts.set(gem, (counts.get(gem) ?? 0) + 1);
     }));
     return this.gemTypes.reduce((best, gem) => ((counts.get(gem) ?? 0) > (counts.get(best) ?? 0) ? gem : best), this.gemTypes[0]);
   }
@@ -343,7 +405,7 @@ export class BoardModel {
     return this.gemTypes[Math.floor(this.rng() * this.gemTypes.length)];
   }
 
-  /** Runs of three or more: down each column, then along each row. Rare gems and color gems never match. */
+  /** Runs of three or more: down each column, then along each row. Rare gems, color gems and pinned cells never match. */
   private findMatches(grid: Grid, toys: Toys): MatchGroup[] {
     const lines: Cell[][] = [
       ...Array.from({ length: this.width }, (_line, x) => Array.from({ length: this.height }, (_cell, y): Cell => [x, y])),
@@ -351,7 +413,7 @@ export class BoardModel {
     ];
     const groups: MatchGroup[] = [];
     for (const line of lines) {
-      const gemAt = (i: number) => (toys[line[i][0]]?.[line[i][1]] === 'color' ? `color${i}` : grid[line[i][0]][line[i][1]]);
+      const gemAt = (i: number) => (this.isPinned(line[i]) ? `pin${i}` : toys[line[i][0]]?.[line[i][1]] === 'color' ? `color${i}` : grid[line[i][0]][line[i][1]]);
       for (let start = 0, end = 1; end <= line.length; end++) {
         if (end < line.length && gemAt(end) === gemAt(start)) continue;
         if (end - start >= 3 && gemAt(start) !== this.rare?.type) groups.push({ gemType: gemAt(start) as GemType, cells: line.slice(start, end) });

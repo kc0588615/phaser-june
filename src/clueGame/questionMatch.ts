@@ -33,8 +33,8 @@ export const FAMILY_TREE_RANKS = ['class', 'order', 'family'] as const;
 export type FamilyTreeRank = typeof FAMILY_TREE_RANKS[number];
 
 export interface Source { name: string; url: string | null }
-/** `text` may have blanks where a word would name the animal; `full` is the whole note, for after the round. */
-export interface FieldNote { text: string; full?: string; source: Source }
+/** `text` may have blanks where a word would name the animal; `full` is the whole note, for after the round; `tags`: the hand-written clue's tags (plan 044 witness notes). */
+export interface FieldNote { text: string; full?: string; source: Source; tags?: readonly string[] }
 export interface RankName { latin: string; plain: string | null }
 
 export interface Animal {
@@ -56,6 +56,8 @@ export interface Animal {
   revealNotes: FieldNote[];
   /** Field guide lines by category, plus 'family' (class, order, family; never the genus). */
   guide: Record<ChargeCategory | 'family', string[]>;
+  /** Every tag on its clues, trait tags and open ones like digging_claws (plan 044: what its field guide records). */
+  tags?: readonly string[];
 }
 
 export type FamilyTreeCost = 'match' | 'charges' | 'one-of-each';
@@ -269,7 +271,7 @@ export function pickRound(
 }
 
 /** How alike two animals' records are: +1 for each kind of trait they share, -1 for each they differ on (no record: 0). */
-function likeness(book: Book, a: number, b: number): number {
+export function likeness(book: Book, a: number, b: number): number {
   const theirs = book.traits.get(b)!;
   let score = 0;
   for (const [prefix, tags] of book.traits.get(a)!) {
