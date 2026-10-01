@@ -122,6 +122,27 @@ Built on `variant/044-animal-board`: pinned tiles in `src/game/BoardModel.ts` (5
 
 Before any new art: emoji or letter glyphs on the 043 gem shapes, photo tiles, order tiles with counts and answers, suspect cards with trait chips and Rule out, release preview, witness notes, out-of-moves sheet, stars, trail hearts. Questions: can a kid say why an animal is ruled out, and does marking feel like committing? Do long rounds stay fun once the mystery is known (the bot reports moves after identification)?
 
+### Part 2: built 2026-10-01 (graybox at `/explore` on this branch)
+
+**Play it:** `npm run dev`, then `http://localhost:8080/explore/?place=continent:africa` in a phone-sized window (`?seed=N` replays). The first visit shows How to play.
+
+What's there:
+- **Board:** the five animals pinned as photo tiles (Commons thumbnails in a round cream frame, a badge if the photo fails); gems fall past them; each round's clue gems show the clue's picture (emoji) on the 043 shapes (`src/game/faceTextures.ts`), toys drawn on those faces; ruled-out tiles wear a red ring and cross; tapping a gem outlines in amber the ruled-out animals its swap would release (the preview); released tiles hop off and gems drop into their cells.
+- **Screen** (`src/components/animalBoard/`): suspect cards with each animal's own answer per clue (picture plus ✓ or ✗), a field guide sheet per animal (its answers, its signs, its field guide lines, **Rule out** / Undo), the four clue orders with progress and stamped answers, the latest event, witness notes (with "the field guides of N of the 5 say this too"), the out-of-moves sheet (name it for the journal), the round-end card (stars, points, family tree, all field notes), trail and hearts on the top bar, How to play, the journal (finds and right names).
+- **Rules wiring:** the board releases what the rules have marked (`clue-board-marks`), reports `touched` and `released` per phase, and says when a move has settled (`clue-board-settled`); the session reducer is `src/clueGame/animalSession.ts`.
+- **Range clues** each get a direction arrow (⬅️ West Africa, ➡️ East Africa, 🎯 Central…), and a deck never shows the same picture twice (two Range clues both showed a compass in the first build). The held-out bot numbers didn't change.
+- **Thumbnails:** Wikimedia serves only standard widths (120, 250, 330, 500 work; 160 and 440 return 400, which the browser blocks as a cross-origin error page), so tiles use 120 and the round-end photo 500.
+
+**E2E** (`npm run e2e`, rewritten for the animal board; the 043 one is in git history): 427/427 at seed 7, Africa. Round 1 plays carefully (rules out through the real cards, aims at marked tiles) and finds the Hairy Frog in 24 moves; round 2 rules out the mystery on purpose and it escapes; round 3 rules out nobody, runs out of moves and names the mystery, which lands in the journal. Every move: only ruled-out animals leave, the mystery leaves only by escaping, tiles never move, the view shows a tile exactly on each pinned cell, the clue orders on screen match the rules; once a run, the release preview outlines the right animals and a witness note shows its count. A 4-round careful run: 518/518, all found.
+
+**Not built yet:** saving rounds to the database (no POST: Part 3 maps only fields with unchanged meaning), the optional recall question, easy mode (4 suspects), the drawn clue art (Part 4), and the 043 screen code (`MatchGame` and its parts) is still in the tree, unused here.
+
+**Watch in the playtest:**
+- Witness notes are strong: in the e2e, two or three notes alone identified the mystery twice (rounds found in 5 and 10 moves). If rounds end too fast, lower the witness rate (3%).
+- Can a kid say why an animal is ruled out, and does **Rule out** feel like committing?
+- Do the emoji faces read at a glance as their clue, and do the cards' ✓/✗ chips help or crowd?
+- Do 30-move rounds stay fun once the mystery is known?
+
 ### Part 3: the playable screen
 
 - `useMatchSession` → a session over `animalBoard.ts`; rules version `044-1`.

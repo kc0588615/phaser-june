@@ -1,7 +1,9 @@
 // ClueBoardScene: the Clue Match board. The canvas belongs to the board: a
 // centered square, no in-canvas HUD; React owns everything else. The scene
 // reports each explode phase's groups ('gems-matched') and obeys
-// 'clue-board-setup' / 'clue-board-lock'.
+// 'clue-board-setup' / 'clue-board-lock'. Plan 044: animals pinned on the board,
+// faces on the gems, and 'clue-board-marks': a marked animal touched by a clear is
+// released (the rules decide the same from the same marks).
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
 import { BoardModel, type ExplodePhase } from './BoardModel';
@@ -10,6 +12,7 @@ import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
 import { sfx } from './sfx';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
+import { makeFaceTextures } from './faceTextures';
 import { makeToyTextures } from './toyTextures';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
 import { KIND_COLOR, SHORT_LABEL, kindOf } from '@/clueGame/gems';
@@ -26,6 +29,9 @@ export class ClueBoardScene extends Phaser.Scene {
     private seed: number | null = null;
     /** Explode phases so far in this move: 1 for the move's own matches, then each cascade. */
     private chain = 0;
+    /** Plan 044: the pinned animals the player ruled out, and whether this board has animals at all. */
+    private marked = new Set<number>();
+    private animals = false;
 
     constructor() {
         super(ClueBoardScene.KEY);
@@ -34,6 +40,7 @@ export class ClueBoardScene extends Phaser.Scene {
     /** The gem icons (public/assets/evidence/<color>.svg). */
     preload(): void {
         for (const type of GEM_TYPES) this.load.svg(gemTexture(type), `/assets/evidence/${type}.svg`, { width: 128, height: 128 });
+        this.load.setCORS('anonymous'); // animal photos come from Wikimedia Commons
         this.load.on('loaderror', (file: Phaser.Loader.File) => console.error(`[ClueBoardScene] Failed to load ${file.url}`));
     }
 
@@ -45,7 +52,11 @@ export class ClueBoardScene extends Phaser.Scene {
         this.view = new BoardView(this, GRID_COLS, GRID_ROWS, this.layout);
         this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
-            onMoveResolved: () => this.reshuffleIfStuck(),
+            preview: cell => this.previewReleases(cell),
+            onMoveResolved: () => {
+                this.reshuffleIfStuck();
+                EventBus.emit('clue-board-settled', undefined);
+            },
             announce: (text, cell) => {
                 const gem = cell ? this.model.getGrid()[cell[0]]?.[cell[1]] : undefined;
                 const kind = gem ? kindOf(gem) : null;
@@ -57,20 +68,43 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-setup', this.setupBoard, this);
         EventBus.on('clue-board-lock', this.setLock, this);
         EventBus.on('clue-board-key', this.onKey, this);
+        EventBus.on('clue-board-marks', this.onMarks, this);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
 
         EventBus.emit('current-scene-ready', this);
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {} }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
-        this.model.newBoard(seed, allowedGemTypes, rare ?? null);
+        this.model.newBoard(seed, allowedGemTypes, rare ?? null, pins.map(pin => [pin.cell, pin.id]));
+        this.view.destroyBoard();
+        const faceKeys = makeFaceTextures(this, faces);
+        if (faceKeys.size > 0) makeToyTextures(this, GEM_TYPES, gem => faceKeys.get(gem) ?? gemTexture(gem), true);
+        this.view.setFaces(faceKeys);
         this.view.setRareGem(rare?.type ?? null);
+        this.marked.clear();
+        this.animals = pins.length > 0;
         this.controller.resetInput();
+        this.view.createTiles(pins);
         this.view.createBoard(this.model.getGrid(), this.model.getToys());
         this.controller.ready = true;
+    }
+
+    private onMarks({ marked }: EventPayloads['clue-board-marks']): void {
+        this.marked = new Set(marked);
+        this.view?.setMarked(marked);
+    }
+
+    /** The marked animals any swap from this gem would release (the release preview after a tap). */
+    private previewReleases([x, y]: [number, number]): number[] {
+        if (this.marked.size === 0) return [];
+        const ids = new Set<number>();
+        for (const to of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as Array<[number, number]>) {
+            for (const id of this.model.previewTouched({ from: [x, y], to })) if (this.marked.has(id)) ids.add(id);
+        }
+        return [...ids];
     }
 
     private setLock({ locked }: EventPayloads['clue-board-lock']): void {
@@ -81,7 +115,8 @@ export class ClueBoardScene extends Phaser.Scene {
         void this.controller?.key(key, shift);
     }
 
-    private reportMatches(phase: ExplodePhase, cascade: boolean): void {
+    /** Reports a phase to the page; returns the marked animals it touched, which the controller releases. */
+    private reportMatches(phase: ExplodePhase, cascade: boolean): number[] {
         this.chain = cascade ? this.chain + 1 : 1;
         for (const group of phase.groups) {
             if (group.blast) continue; // a toy's clear flashes on its own (BoardView.animateFires)
@@ -89,6 +124,7 @@ export class ClueBoardScene extends Phaser.Scene {
             // A note gem group is the notes collected this phase, not a match of its own.
             this.burst(group.cells, kind ? KIND_COLOR[kind] : '#ffffff', kind === 'notes' ? 0 : group.cells.length);
         }
+        const released = phase.touched.filter(id => this.marked.has(id));
         const big = phase.groups.some(group => !group.blast && group.cells.length >= 4);
         if (phase.fired.length > 0) {
             sfx.blast();
@@ -101,7 +137,7 @@ export class ClueBoardScene extends Phaser.Scene {
         // What a toy's clear pays (the same rule as applyMatches): every `perBlast` gems, of the color cleared most.
         const blasts = phase.groups.filter(group => group.blast);
         const pooled = Math.floor(blasts.reduce((sum, group) => sum + group.cells.length, 0) / DEFAULT_RULES.perBlast);
-        if (pooled > 0 && phase.fired.length > 0) {
+        if (!this.animals && pooled > 0 && phase.fired.length > 0) {
             const most = blasts.reduce((a, b) => (b.cells.length > a.cells.length ? b : a));
             const kind = kindOf(most.gemType);
             this.label(phase.fired[0].cell, `+${pooled} charge${pooled === 1 ? '' : 's'}`, kind ? KIND_COLOR[kind] : '#ffffff');
@@ -110,7 +146,9 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.emit('gems-matched', {
             groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length, ...(group.blast ? { blast: true } : {}) })),
             cascade,
+            ...(this.animals ? { touched: phase.touched, released } : {}),
         });
+        return released;
     }
 
     /** Big text across the middle of the board that floats up and fades. */
@@ -144,11 +182,10 @@ export class ClueBoardScene extends Phaser.Scene {
             onComplete: () => ring.destroy(),
         });
 
-        // Only the bigger matches call their charges out (Rules.perMatch: 3, 4, 5 or more).
+        // Only the bigger matches call their charges out (Rules.perMatch: 3, 4, 5 or more); the animal board has no charges.
         const charges = size >= 5 ? DEFAULT_RULES.perMatch[2] : size === 4 ? DEFAULT_RULES.perMatch[1] : 0;
-        const text = size === 0 ? '📓 saved' : `+${charges} charges`;
-        if (size !== 0 && charges === 0) return;
-        this.floatLabel(cx, cy, text, color);
+        if (size === 0) this.floatLabel(cx, cy, this.animals ? '📓 note!' : '📓 saved', color);
+        else if (charges > 0 && !this.animals) this.floatLabel(cx, cy, `+${charges} charges`, color);
     }
 
     /** A floating label over a cell. */
@@ -222,6 +259,8 @@ export class ClueBoardScene extends Phaser.Scene {
             grid: this.model.getGrid(),
             toys: this.model.getToys(),
             view: this.view?.textureKeys() ?? [],
+            pins: this.model.pinnedCells(),
+            preview: this.view?.previewIds() ?? [],
         };
     }
 
@@ -234,8 +273,9 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.off('clue-board-setup', this.setupBoard, this);
         EventBus.off('clue-board-lock', this.setLock, this);
         EventBus.off('clue-board-key', this.onKey, this);
+        EventBus.off('clue-board-marks', this.onMarks, this);
         this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-        this.view?.destroyBoard();
+        this.view?.destroyAll();
         this.view = null;
         this.controller = null;
         this.backdrop = null;

@@ -22,8 +22,11 @@ export interface DebugBoardSnapshot {
   grid: Grid;
   /** Column-major toys ('row', 'column', 'bomb', 'color' or null), toys[x][y]. */
   toys: Toys;
-  /** Column-major texture key each sprite shows (gem_<color>, toy_<special>_<color>, toy_color), view[x][y]. */
+  /** Column-major texture key each sprite shows (gem_<color>, toy_<special>_<color>, toy_color, 'tile'), view[x][y]. */
   view: (string | null)[][];
+  /** Plan 044: the animals pinned on the board, [cell, id], and the ones the release preview outlines. */
+  pins: Array<[Cell, number]>;
+  preview: number[];
 }
 
 /** What the board scene hands the bridge; typed so field renames fail typecheck. */
@@ -45,7 +48,7 @@ const MAX_EVENTS = 200;
 // Every EventBus event; a Record so a new event missing here fails typecheck.
 const LOGGED: Record<keyof EventPayloads, true> = {
   'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
-  'clue-board-key': true, 'clue-board-announce': true,
+  'clue-board-key': true, 'clue-board-announce': true, 'clue-board-marks': true, 'clue-board-settled': true,
 };
 
 let scene: DebugScene | null = null;
@@ -201,6 +204,8 @@ function install(): void {
     state: () => requireScene().debugSnapshot(),
     clue: () => clueSource?.() ?? null,
     validMoves,
+    /** Plan 044: the pinned animals a move's first clear would touch (what the release preview uses). */
+    touchedBy: (move: Move) => requireScene().debugModel().previewTouched(move),
     cellCenter,
     drag,
     tap,

@@ -1,5 +1,7 @@
 # Critter Connect: the globe and the game
 
+> On branch `variant/044-animal-board`, `/explore` plays the plan 044 animal board (a graybox: five suspects pinned on the board, clue orders, Rule out and release; plans/044-animal-board.md, Part 2). `npm run e2e` checks that game. The rules below describe the 043 game.
+
 The app has two screens. (The game was called Clue Match until plan 041; code and tables still say `clue`, players never see the word.)
 
 - **Globe (`/`).** A globe beside the list of continents. Pick one, or tap its dot: the globe flies there and outlines it, and a card shows how many animals live there (named once you've found them) and a habitat picture. **Explore** opens the game with that continent's animals. A continent opens once it has 12 animals; smaller ones show "coming soon". **Anywhere** plays animals from the whole world. Animals you've found glow on the globe where you found them: green for amphibians and reptiles, amber for mammals.

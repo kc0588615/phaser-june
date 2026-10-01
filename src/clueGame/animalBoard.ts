@@ -11,6 +11,7 @@ import {
   FAMILY_TREE_RANKS, PREFIX_CATEGORY, likeness, prefixOf, questionText, shortQuestionText,
   type Animal, type Book, type FieldNote,
 } from '@/clueGame/questionMatch';
+import { clueFace } from '@/clueGame/clueFaces';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';
 
@@ -99,7 +100,8 @@ function* combinations<T>(items: readonly T[], size: number, start = 0, picked: 
 /**
  * The clue deck: `count` questions that tell every suspect apart, chosen from the set alone (its sorted ids), so the
  * deck never depends on which suspect is the mystery. Prefers a mix of a strong clue (splits 2 against 3) and a weak
- * one (1 against 4), then the most categories; ties break on a hash of the set. Null when no such deck exists.
+ * one (1 against 4), then the most categories; ties break on a hash of the set. No two clues show the same picture
+ * on the board (clueFace), or their gems couldn't be told apart. Null when no such deck exists.
  */
 export function dealClues(book: Book, set: readonly number[], place: ContinentKey | null, count: number): Clue[] | null {
   const sorted = [...set].sort((a, b) => a - b);
@@ -108,7 +110,7 @@ export function dealClues(book: Book, set: readonly number[], place: ContinentKe
   const salt = sorted.join(',');
   let best: { clues: Clue[]; score: number; tie: number } | null = null;
   for (const deck of combinations(table, count)) {
-    if (!tellsApart(deck, sorted.length)) continue;
+    if (!tellsApart(deck, sorted.length) || new Set(deck.map(clue => clueFace(clue.tag))).size < deck.length) continue;
     const smaller = deck.map(clue => { const yes = clue.row.filter(Boolean).length; return Math.min(yes, sorted.length - yes); });
     const score = (smaller.some(n => n >= 2) ? 4 : 0) + (smaller.some(n => n === 1) ? 4 : 0) + new Set(deck.map(clue => PREFIX_CATEGORY[prefixOf(clue.tag)])).size;
     const tie = hash32(`${salt}:${deck.map(clue => clue.tag).join('|')}`);

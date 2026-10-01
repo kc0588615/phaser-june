@@ -14,8 +14,13 @@ import type { BoardLayout } from './squareLayout';
 import { GRID_COLS, GRID_ROWS, SWIPE_THRESHOLD } from './constants';
 
 export interface BoardHooks {
-    /** Each explode phase, before it animates: the move's (cascade false), then each cascade. */
-    onPhase(phase: ExplodePhase, cascade: boolean): void;
+    /**
+     * Each explode phase, before it animates: the move's (cascade false), then each cascade. Returns the pinned animals
+     * to release (plan 044): they hop off once the phase has fallen, and gems drop into their cells.
+     */
+    onPhase(phase: ExplodePhase, cascade: boolean): number[] | void;
+    /** A gem was picked: the pinned animals a swap from it would release (the release preview). */
+    preview?(cell: Cell): number[];
     /** The move and every cascade have settled. */
     onMoveResolved(): void;
     /** What a keyboard action did, in words (for screen readers). */
@@ -79,7 +84,7 @@ export class BoardController {
         if (!this.canMove) return;
         const { gemSize, offset } = this.layout;
         const cell: Cell = [Math.floor((pointer.x - offset.x) / gemSize), Math.floor((pointer.y - offset.y) / gemSize)];
-        if (!this.model.onBoard(cell)) return;
+        if (!this.model.onBoard(cell) || this.model.isPinned(cell)) return; // an animal tile is never swapped
         if (!this.picked) this.view.hideCursor(); // the keyboard cursor, from earlier keyboard play
         this.press = { cell, pointerX: pointer.x, pointerY: pointer.y };
     }
@@ -121,6 +126,7 @@ export class BoardController {
             this.cursor = cell;
             this.picked = true;
             this.view.showCursor(...cell);
+            this.view.showPreview(this.hooks.preview?.(cell) ?? []);
         }
     }
 
@@ -128,6 +134,7 @@ export class BoardController {
         if (!this.picked) return;
         this.picked = false;
         this.view.hideCursor();
+        this.view.clearPreview();
     }
 
     /** A key pressed on the focused board. */
@@ -160,6 +167,10 @@ export class BoardController {
     /** Make a swap that matches (or sets a toy off), or show one that doesn't sliding back. True when the move was made. */
     private async trySwap(move: Move): Promise<boolean> {
         if (!this.canMove || !this.model.onBoard(move.to)) return false;
+        if (this.model.isPinned(move.from) || this.model.isPinned(move.to)) {
+            this.hooks.announce('An animal is there');
+            return false;
+        }
         if (!this.model.canSwap(move)) {
             sfx.swapBack();
             this.resolving = true;
@@ -185,7 +196,7 @@ export class BoardController {
             if (replaced()) return;
             let phase = this.model.nextPhase(move);
             for (let cascade = false; phase.cleared.length > 0; cascade = true) {
-                this.hooks.onPhase(phase, cascade);
+                const released = this.hooks.onPhase(phase, cascade) ?? [];
                 if (phase.fired.length > 0) await this.view.animateFires(phase.fired);
                 if (replaced()) return;
                 await this.view.animateExplosions(phase.cleared);
@@ -193,6 +204,13 @@ export class BoardController {
                 this.view.showToys(phase.made);
                 await this.view.animateFalls(phase.refills);
                 if (replaced()) return;
+                if (released.length > 0) {
+                    const refills = this.model.unpin(released);
+                    await this.view.releaseTiles(released);
+                    if (replaced()) return;
+                    await this.view.animateFalls(refills);
+                    if (replaced()) return;
+                }
                 phase = this.model.nextPhase();
             }
         } catch (error) {

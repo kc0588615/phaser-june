@@ -26,14 +26,19 @@ function drawLine(g: Phaser.GameObjects.Graphics, across: boolean): void {
   }
 }
 
-export function makeToyTextures(scene: Phaser.Scene, gems: readonly GemType[]): void {
+/**
+ * `base`: the texture a toy is drawn on (a round's face, plan 044); `rebuild`: replace toys already drawn (call only
+ * when no sprite shows them, between boards).
+ */
+export function makeToyTextures(scene: Phaser.Scene, gems: readonly GemType[], base: (gem: GemType) => string = gemTexture, rebuild = false): void {
   for (const gem of gems) {
     for (const special of ['row', 'column', 'bomb'] as const) {
       const key = toyTexture(gem, special);
-      if (scene.textures.exists(key) || !scene.textures.exists(gemTexture(gem))) continue;
+      if (rebuild && scene.textures.exists(key)) scene.textures.remove(key);
+      if (scene.textures.exists(key) || !scene.textures.exists(base(gem))) continue;
       const texture = scene.textures.addDynamicTexture(key, SIZE, SIZE);
       if (!texture) continue;
-      texture.stamp(gemTexture(gem), undefined, SIZE / 2, SIZE / 2);
+      texture.stamp(base(gem), undefined, SIZE / 2, SIZE / 2);
       const g = scene.make.graphics({}, false);
       if (special === 'bomb') {
         g.lineStyle(14, 0x06121a, 0.55).strokeCircle(64, 64, 52);

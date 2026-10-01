@@ -9,20 +9,33 @@
 //   board -> page  'clue-board-shuffled'  no moves were left, so it reshuffled
 //   page  -> board 'clue-board-key'       a key pressed on the focused board
 //   board -> page  'clue-board-announce'  what a keyboard action did, for screen readers
+//   page  -> board 'clue-board-marks'     the pinned animals the player ruled out (plan 044)
+//   board -> page  'clue-board-settled'   a move and its cascades finished
 import Phaser from 'phaser';
 import type { GemType } from './constants';
 
+/** An animal pinned on the board (plan 044): its cell, id, photo (null: show `label`) and name. */
+export interface BoardPin { cell: [x: number, y: number]; id: number; photo: string | null; label: string; name: string }
+
 export interface EventPayloads {
     'current-scene-ready': Phaser.Scene;
-    /** Every group cleared in one explode phase (the player's move or a cascade); `blast`: gems a toy cleared outside any match. */
-    'gems-matched': { groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean };
-    /** `rare`: a gem that never matches by itself and is collected by a match next to it (the note gem). */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number } };
+    /**
+     * Every group cleared in one explode phase (the player's move or a cascade); `blast`: gems a toy cleared outside any
+     * match. `touched`: pinned animals with a cleared gem next to them; `released`: the marked ones among them, unpinned.
+     */
+    'gems-matched': { groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean; touched?: number[]; released?: number[] };
+    /**
+     * `rare`: a gem that never matches by itself and is collected by a match next to it (the note gem). `pins`: animals
+     * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox).
+     */
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>> };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */
     'clue-board-key': { key: BoardKey; shift: boolean };
     'clue-board-announce': string;
+    'clue-board-marks': { marked: number[] };
+    'clue-board-settled': undefined;
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

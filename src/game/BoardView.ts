@@ -1,7 +1,9 @@
 // BoardView: the board's sprites and every animation (swaps, swap-backs, toys going
 // off, clears, falling refills, resize tweens). It never decides the rules:
 // BoardController asks BoardModel what happened, then tells this class what to
-// animate.
+// animate. Plan 044: animals pinned on the board are photo tiles in a round frame;
+// gems fall past them; a ruled-out tile wears a red ring, the release preview an
+// amber one, and a released tile hops off.
 import Phaser from 'phaser';
 import {
     gemTexture,
@@ -10,10 +12,23 @@ import {
     type GemType,
 } from './constants';
 import { applySwap, type Cell, type ExplodePhase, type Fire, type Grid, type Move, type Special, type Toy, type Toys } from './BoardModel';
+import type { BoardPin } from './EventBus';
 import type { BoardLayout } from './squareLayout';
 import { toyTexture } from './toyTextures';
 
 type Sprite = Phaser.GameObjects.Sprite;
+
+/** A pinned animal's look: a cream disc, its photo (or a badge) masked round, and a ring for marks and the preview. */
+interface Tile {
+    pin: BoardPin;
+    back: Phaser.GameObjects.Graphics;
+    face: Phaser.GameObjects.Image | Phaser.GameObjects.Text;
+    mask: Phaser.GameObjects.Graphics | null;
+    ring: Phaser.GameObjects.Graphics;
+    cross: Phaser.GameObjects.Text;
+}
+
+const cellKey = ([x, y]: readonly [number, number]) => `${x},${y}`;
 
 export class BoardView {
     /** Sprites mirroring the model's grid, [x][y]. */
@@ -27,6 +42,13 @@ export class BoardView {
     /** Keyboard cursor outline, drawn once the player uses the keyboard. */
     private cursor: Phaser.GameObjects.Graphics | null = null;
     private cursorCell: Cell | null = null;
+    /** Cells holding a pinned animal (no gem sprite there), and each animal's tile. */
+    private pinned = new Set<string>();
+    private tiles = new Map<number, Tile>();
+    private marked = new Set<number>();
+    private previewed = new Set<number>();
+    /** Gem color -> the texture drawn for it this round (plan 044 faces); default gem_<color>. */
+    private faces = new Map<GemType, string>();
 
     constructor(private readonly scene: Phaser.Scene, private readonly cols: number, private readonly rows: number, private layout: BoardLayout) {
         this.group = scene.add.group();
@@ -37,11 +59,82 @@ export class BoardView {
     }
 
 
-    /** A sprite for every gem (with its toy, if any), replacing any board already drawn. */
+    setFaces(faces: ReadonlyMap<GemType, string>): void {
+        this.faces = new Map(faces);
+    }
+
+    /** A sprite for every gem (with its toy, if any), replacing any board already drawn. Pinned cells get none. */
     createBoard(grid: Grid, toys?: Toys): void {
         this.destroyBoard();
         this.sprites = Array.from({ length: this.cols }, () => new Array(this.rows).fill(null));
-        grid.forEach((column, x) => column.forEach((gem, y) => this.createSprite(x, y, gem, undefined, toys?.[x]?.[y] ?? null)));
+        grid.forEach((column, x) => column.forEach((gem, y) => {
+            if (!this.pinned.has(`${x},${y}`)) this.createSprite(x, y, gem, undefined, toys?.[x]?.[y] ?? null);
+        }));
+    }
+
+    /** Photo tiles for the pinned animals, replacing any drawn before. Call before createBoard. */
+    createTiles(pins: readonly BoardPin[]): void {
+        for (const id of [...this.tiles.keys()]) this.destroyTile(id);
+        this.pinned = new Set(pins.map(pin => cellKey(pin.cell)));
+        this.marked.clear();
+        this.previewed.clear();
+        for (const pin of pins) {
+            const back = this.scene.add.graphics().setDepth(5);
+            const ring = this.scene.add.graphics().setDepth(7);
+            const cross = this.scene.add.text(0, 0, '✕', { fontFamily: 'Arial Black, Arial, sans-serif', color: '#ffffff', stroke: '#b91c1c', strokeThickness: 6 })
+                .setOrigin(0.5).setDepth(8).setVisible(false);
+            const key = `tile_${pin.id}`;
+            const tile: Tile = { pin, back, ring, cross, mask: null, face: this.badge(pin) };
+            this.tiles.set(pin.id, tile);
+            if (this.scene.textures.exists(key)) this.usePhoto(tile, key);
+            else if (pin.photo) {
+                this.scene.load.once(`filecomplete-image-${key}`, () => { if (this.tiles.get(pin.id) === tile) this.usePhoto(tile, key); });
+                this.scene.load.setCORS('anonymous'); // Commons photos: a canvas texture needs CORS
+                this.scene.load.image(key, pin.photo);
+                this.scene.load.start();
+            }
+            this.drawTile(tile);
+        }
+    }
+
+    /** Ruled-out animals wear a red ring and a cross. */
+    setMarked(ids: readonly number[]): void {
+        this.marked = new Set(ids);
+        for (const tile of this.tiles.values()) this.drawTile(tile);
+    }
+
+    /** The release preview: the marked tiles a swap would release wear an amber ring. */
+    showPreview(ids: readonly number[]): void {
+        this.previewed = new Set(ids);
+        for (const tile of this.tiles.values()) this.drawTile(tile);
+    }
+
+    /** The animals the release preview outlines (dev bridge). */
+    previewIds(): number[] {
+        return [...this.previewed];
+    }
+
+    clearPreview(): void {
+        if (this.previewed.size === 0) return;
+        this.showPreview([]);
+    }
+
+    /** Released animals hop off the board; their cells become ordinary cells. */
+    releaseTiles(ids: readonly number[]): Promise<void> {
+        const hops: Promise<void>[] = [];
+        for (const id of ids) {
+            const tile = this.tiles.get(id);
+            if (!tile) continue;
+            this.tiles.delete(id);
+            this.pinned.delete(cellKey(tile.pin.cell));
+            const parts = [tile.back, tile.face, tile.ring, tile.cross];
+            tile.face.clearMask();
+            tile.mask?.destroy();
+            hops.push(this.tween({
+                targets: parts, y: `-=${this.layout.gemSize * 0.9}`, alpha: 0, duration: 420, ease: 'Back.easeIn',
+            }).then(() => { for (const part of parts) part.destroy(); }));
+        }
+        return Promise.all(hops).then(() => undefined);
     }
 
     /** The gems a big match turned into toys change look, with a small pop. */
@@ -104,10 +197,18 @@ export class BoardView {
         this.sprites = [];
     }
 
+    /** The board scene is closing: drop the tiles too. */
+    destroyAll(): void {
+        this.destroyBoard();
+        for (const id of [...this.tiles.keys()]) this.destroyTile(id);
+        this.pinned.clear();
+    }
+
     /** Tweens the sprites to a new gem size and offset after a resize. */
     setLayout(layout: BoardLayout): void {
         this.layout = layout;
         if (this.cursorCell) this.showCursor(...this.cursorCell);
+        for (const tile of this.tiles.values()) this.drawTile(tile);
         this.forEachSprite((sprite, x, y) => {
             this.stopTweens(sprite);
             this.scene.tweens.add({
@@ -144,18 +245,21 @@ export class BoardView {
         return Promise.all(pops).then(() => undefined);
     }
 
-    /** Survivors fall to the bottom of each column; new gems drop in from above. */
+    /** Survivors fall to the bottom of each column, past pinned tiles; new gems drop in from above into the top free cells. */
     animateFalls(refills: ExplodePhase['refills']): Promise<void> {
         const next: (Sprite | null)[][] = Array.from({ length: this.cols }, () => new Array(this.rows).fill(null));
+        const slots = (x: number) => Array.from({ length: this.rows }, (_cell, y) => y).filter(y => !this.pinned.has(`${x},${y}`));
         for (let x = 0; x < this.cols; x++) {
-            const survivors = (this.sprites[x] ?? []).filter((sprite): sprite is Sprite => sprite !== null);
-            survivors.forEach((sprite, i) => { next[x][this.rows - survivors.length + i] = sprite; });
+            const free = slots(x);
+            const survivors = (this.sprites[x] ?? []).filter((sprite): sprite is Sprite => sprite !== null && sprite.active);
+            survivors.forEach((sprite, i) => { next[x][free[free.length - survivors.length + i]] = sprite; });
         }
         this.sprites = next;
         for (const [x, gems] of refills) {
+            const free = slots(x);
             gems.forEach((gem, i) => {
                 const startY = this.layout.offset.y - (gems.length - i) * this.layout.gemSize - this.layout.gemSize / 2;
-                this.createSprite(x, i, gem, startY);
+                this.createSprite(x, free[i], gem, startY);
             });
         }
 
@@ -173,9 +277,10 @@ export class BoardView {
         return Promise.all(falls).then(() => undefined);
     }
 
-    /** The texture each cell's sprite shows (dev bridge: the view must match the model). */
+    /** The texture each cell's sprite shows (dev bridge: the view must match the model); 'tile' on a pinned cell. */
     textureKeys(): (string | null)[][] {
-        return Array.from({ length: this.cols }, (_column, x) => Array.from({ length: this.rows }, (_cell, y) => this.spriteAt(x, y)?.texture.key ?? null));
+        return Array.from({ length: this.cols }, (_column, x) => Array.from({ length: this.rows }, (_cell, y) =>
+            (this.pinned.has(`${x},${y}`) ? 'tile' : this.spriteAt(x, y)?.texture.key ?? null)));
     }
 
     /** Outlines the keyboard cursor's cell. */
@@ -212,7 +317,7 @@ export class BoardView {
 
     /** A gem sprite on its cell (a toy's look when it carries one), or (with startY) invisible above the board, ready to fall. */
     private createSprite(x: number, y: number, gem: GemType, startY?: number, toy: Special | null = null): void {
-        const key = toy && this.scene.textures.exists(toyTexture(gem, toy)) ? toyTexture(gem, toy) : gemTexture(gem);
+        const key = toy && this.scene.textures.exists(toyTexture(gem, toy)) ? toyTexture(gem, toy) : this.faces.get(gem) ?? gemTexture(gem);
         if (!this.scene.textures.exists(key)) {
             console.error(`[BoardView] Missing texture ${key}`);
             return;
@@ -223,6 +328,49 @@ export class BoardView {
         // preFX is WebGL only; on a canvas renderer the note gem just doesn't glow.
         if (gem === this.rareGem) sprite.preFX?.addGlow(0xf3e8ff, 6, 0, false, 0.1, 12);
         this.sprites[x][y] = sprite;
+    }
+
+    /** The tile's look at its cell for the current layout, marks and preview. */
+    private drawTile(tile: Tile): void {
+        const { gemSize } = this.layout;
+        const { x, y } = this.positionOf(...tile.pin.cell);
+        const radius = gemSize * 0.46;
+        const inner = radius * 0.84;
+        tile.back.clear().fillStyle(0xf5efe1, 1).fillCircle(x, y, radius);
+        if (tile.face instanceof Phaser.GameObjects.Image) {
+            const scale = Math.max((inner * 2) / tile.face.width, (inner * 2) / tile.face.height);
+            tile.face.setPosition(x, y).setScale(scale);
+            tile.mask?.clear().fillStyle(0xffffff).fillCircle(x, y, inner);
+        } else {
+            tile.face.setPosition(x, y).setFontSize(Math.round(gemSize * 0.42));
+        }
+        const marked = this.marked.has(tile.pin.id);
+        tile.ring.clear().lineStyle(Math.max(3, gemSize * 0.07), marked ? 0xef4444 : 0xf5efe1, 1).strokeCircle(x, y, inner + gemSize * 0.03);
+        if (this.previewed.has(tile.pin.id)) tile.ring.lineStyle(Math.max(3, gemSize * 0.08), 0xfde68a, 1).strokeCircle(x, y, radius + gemSize * 0.04);
+        tile.cross.setPosition(x + radius * 0.62, y - radius * 0.62).setFontSize(Math.round(gemSize * 0.3)).setVisible(marked);
+    }
+
+    /** The fallback face: the animal's badge (an emoji or its initials) on the cream disc. */
+    private badge(pin: BoardPin): Phaser.GameObjects.Text {
+        return this.scene.add.text(0, 0, pin.label, { fontFamily: 'Arial, sans-serif', color: '#06121a' }).setOrigin(0.5).setDepth(6);
+    }
+
+    /** Swap the badge for the loaded photo, masked to a circle. */
+    private usePhoto(tile: Tile, key: string): void {
+        tile.face.destroy();
+        tile.face = this.scene.add.image(0, 0, key).setDepth(6);
+        tile.mask = this.scene.make.graphics({}, false);
+        tile.face.setMask(tile.mask.createGeometryMask());
+        this.drawTile(tile);
+    }
+
+    private destroyTile(id: number): void {
+        const tile = this.tiles.get(id);
+        if (!tile) return;
+        this.tiles.delete(id);
+        tile.face.clearMask();
+        tile.mask?.destroy();
+        for (const part of [tile.back, tile.face, tile.ring, tile.cross]) part.destroy();
     }
 
     private positionOf(x: number, y: number): { x: number; y: number } {

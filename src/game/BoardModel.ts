@@ -255,6 +255,19 @@ export class BoardModel {
     return this.findMatches(grid, toys);
   }
 
+  /** The pinned tiles a swap's own clear would touch, without making it (the release preview); none if it isn't a move. */
+  previewTouched(move: Move): number[] {
+    if (!this.canSwap(move)) return [];
+    const copy = new BoardModel(this.width, this.height);
+    copy.gemTypes = this.gemTypes;
+    copy.rare = this.rare;
+    copy.rng = () => 0; // the refill doesn't change what the first clear touches
+    copy.grid = this.getGrid();
+    copy.toys = this.getToys();
+    copy.pins = this.getPins();
+    return copy.nextPhase(move).touched;
+  }
+
   /** Whether any swap of two neighbors is a move. */
   hasAnyValidMove(): boolean {
     return neighborSwaps(this.width, this.height).some(move => this.canSwap(move));

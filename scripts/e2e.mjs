@@ -1,7 +1,8 @@
 // End-to-end play test. Headless Chrome plays the dev build like a player: the
-// globe's continent list, then rounds of the game for one continent at /explore,
-// driven through the real board (window.__cc, dev only) and the real buttons. It checks the rules a player relies on
-// after every move and writes a repeatable artifact:
+// globe's continent list, then rounds of the animal board (plan 044) for one
+// continent at /explore, driven through the real board (window.__cc, dev only) and
+// the real cards and buttons. It checks the rules a player relies on after every
+// move and writes a repeatable artifact:
 //   e2e-artifacts/<run>/report.json   what was played, every check, errors
 //   e2e-artifacts/<run>/*.png         what the player saw
 // Same seed and place, same mysteries and boards.
@@ -17,7 +18,7 @@ const BASE = (process.env.E2E_BASE_URL ?? 'http://localhost:8080').replace(/\/$/
 const SEED = Number(process.env.E2E_SEED ?? 7);
 const ROUNDS = Number(process.env.E2E_ROUNDS ?? 3);
 const CHROME = process.env.CHROME_PATH ?? '/usr/bin/google-chrome';
-const MAX_MOVES = 10;
+const MAX_MOVES = 45;
 
 const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-seed${SEED}`;
 const outDir = path.join(process.cwd(), 'e2e-artifacts', runId);
@@ -110,7 +111,7 @@ async function main() {
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:how-to-play-seen:v7', '1'); } catch {}" });
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v1', '1'); } catch {}" });
 
     const evaluate = async (fn, ...args) => {
       const { result, exceptionDetails } = await page('Runtime.evaluate', { expression: `(${fn})(...${JSON.stringify(args)})`, awaitPromise: true, returnByValue: true });
@@ -160,13 +161,13 @@ async function main() {
     await sleep(1500);
     await screenshot('01-globe.png');
 
-    // 2. The game for that continent.
+    // 2. The animal board for that continent (plan 044).
     await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(place.key)}`);
-    await waitFor(() => window.__cc?.clue?.() && window.__cc.state().ready, 'the game session (window.__cc; is this a dev build?)', 60_000);
+    await waitFor(() => window.__cc?.clue?.() && window.__cc.state().ready && window.__cc.state().pins.length === 5, 'the animal board (window.__cc; is this a dev build?)', 60_000);
     await evaluate(() => window.__cc.speed(4));
-    await screenshot('02-first-round.png');
+    await sleep(2500); // the animal photos load
+    await screenshot('02-board.png');
     const names = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, s.commonName]))));
-    // Sound starts off; its button turns it on and off.
     const sound = await evaluate(async () => {
       const button = document.querySelector('button[aria-label^="Sound"]');
       if (!button) return null;
@@ -178,221 +179,168 @@ async function main() {
       return { before, after };
     });
     check('sound starts off and its button turns it on', sound?.before === 'false' && sound?.after === 'true', JSON.stringify(sound));
-    // Toys: a big match leaves one, and matching it sets it off (checked once a run, when a move can use one).
-    let toySeen = false;
-    let toyFired = false;
-    let triggerFired = false;
-    let legendShot = false;
-    let askSeen = false;
-    let legendUpdated = false;
 
+    const journalFinds = new Set();
+    let previewChecked = false;
+    let notesChecked = false;
+    let markShot = false;
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
+      const pins = await evaluate(() => window.__cc.state().pins);
       const mysteryName = names.get(start.mysteryId);
-      check(`round ${n}: ${start.candidates} animals, the mystery among them`, start.candidateIds.length === start.candidates && start.candidateIds.includes(start.mysteryId), `${start.candidateIds.length} animals`);
-      check(`round ${n}: starts with the rules' moves`, start.movesLeft === start.moves && start.status === 'playing', `${start.movesLeft} of ${start.moves} moves, ${start.status}`);
-      // The legend under the board shows each color's next question (rules 043), checked again after every move.
-      const startMismatch = legendMismatch(await readLegend(), start.legend);
-      check(`round ${n}: the legend shows each color's next question`, startMismatch.length === 0, JSON.stringify(startMismatch));
+      check(`round ${n}: 5 suspects, the mystery among them, each pinned on the board`, start.suspects.length === 5 && start.suspects.includes(start.mysteryId)
+        && start.suspects.every(id => pins.some(([, pin]) => pin === id)), JSON.stringify(pins));
+      check(`round ${n}: starts with the rules' moves`, start.movesLeft === start.moves && start.status === 'playing', `${start.movesLeft} of ${start.moves}, ${start.status}`);
+      const corner = ([x, y]) => (x === 0 || x === 6) && (y === 0 || y === 6);
+      check(`round ${n}: tiles at least 3 apart and never in a corner`, pins.every(([a]) => !corner(a) && pins.every(([b]) => a === b || Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) >= 3)));
+      const screen = await evaluate(() => ({
+        cards: document.querySelectorAll('[aria-label="Suspects"] li').length,
+        orders: [...document.querySelectorAll('[aria-label="Clue orders"] li')].map(li => li.dataset.tag),
+      }));
+      check(`round ${n}: 5 suspect cards and the 4 clue orders on screen`, screen.cards === 5 && screen.orders.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
+      const trailBefore = start.trail;
+      // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then a name); others play carefully.
+      const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : 'careful';
       let state = start;
       let moves = 0;
-      let askChecked = false;
       while (state.status === 'playing' && moves < MAX_MOVES) {
-        const before = state;
-        const result = await evaluate(async ({ preferToy, preferTrigger, preferAsk }) => {
-          const cc = window.__cc;
-          const toys = cc.state().toys;
-          const before = cc.clue();
-          const moves = cc.validMoves().sort((a, b) => b.largest - a.largest || b.matches - a.matches || a.from[0] - b.from[0] || a.from[1] - b.from[1] || a.to[0] - b.to[0] || a.to[1] - b.to[1]);
-          // A move that only sets toys off (a color gem, or two toys side by side), once a run when one shows up.
-          const triggerMove = preferTrigger ? moves.find(candidate => candidate.trigger) : undefined;
-          const toyMove = triggerMove ?? (preferToy ? moves.find(candidate => toys[candidate.from[0]][candidate.from[1]] || toys[candidate.to[0]][candidate.to[1]]) : undefined);
-          // Once a round: plain runs of 3 that fill a color's charges, to see the match ask the legend's question.
-          const askMove = preferAsk ? moves.find(candidate => candidate.largest === 3 && candidate.colors.some(gem => {
-            const row = before.legend.find(entry => entry.gem === gem);
-            return row?.tag && before.charges[row.category] + before.perMatch[0] >= before.questionCost;
-          })) : undefined;
-          const move = toyMove ?? askMove ?? moves[0];
-          if (!move) return null;
-          const since = Date.now();
-          const drag = await cc.drag(move, { input: 'touch', timeoutMs: 20_000 });
-          const matched = cc.events(200).filter(event => event.at >= since && event.name === 'gems-matched');
-          const blasts = matched.filter(event => event.payload.groups.some(group => group.blast)).length;
-          // A move of plain runs of 3 (no toy, no family tree step): the first question asked is the legend's, for the
-          // first color (in legend order) whose charges now cover a question.
-          const own = matched.find(event => !event.payload.cascade)?.payload.groups ?? [];
-          let expected;
-          if (own.length && own.every(group => !group.blast && group.size === 3)) {
-            const row = before.legend.find(row => row.tag && before.charges[row.category] + own.filter(group => group.gemType === row.gem).length * before.perMatch[0] >= before.questionCost);
-            expected = row?.tag;
+        // Rule out, through the real card and its field guide: careful, every suspect the answers and notes so far rule
+        // out; reckless, the mystery itself; idle, nobody.
+        const toMark = mode === 'careful' ? state.suspects.filter(id => !state.possible.includes(id))
+          : mode === 'reckless' ? [state.mysteryId] : [];
+        for (const id of toMark.filter(id => !state.marked.includes(id) && !state.released.includes(id))) {
+          const marked = await evaluate(async id => {
+            const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+            document.querySelector(`[data-suspect="${id}"] button`)?.click();
+            await wait(250);
+            const button = [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Rule out');
+            button?.click();
+            await wait(200);
+            return window.__cc.clue().marked.includes(id);
+          }, id);
+          check(`round ${n}: Rule out in the field guide marks the ${names.get(id)}`, marked);
+          if (mode === 'reckless') check(`round ${n}: ruling out the mystery doesn't release it by itself`, (await evaluate(() => window.__cc.clue())).status === 'playing');
+          if (marked && !markShot) { markShot = true; await sleep(400); await screenshot('02b-marked.png'); }
+        }
+        state = await evaluate(() => window.__cc.clue());
+        // Once a run: tap a gem whose swap would release a marked animal, and see the preview outline it.
+        if (!previewChecked) {
+          const preview = await evaluate(async () => {
+            const cc = window.__cc;
+            const clue = cc.clue();
+            const live = clue.marked.filter(id => !clue.released.includes(id));
+            const move = cc.validMoves().find(candidate => cc.touchedBy(candidate).some(id => live.includes(id)));
+            if (!move) return null;
+            await cc.tap(move.from, { input: 'touch' });
+            const shown = cc.state().preview;
+            await cc.tap(move.from, { input: 'touch' }); // tap again: drop it
+            return { shown, expected: cc.touchedBy(move).filter(id => live.includes(id)), after: cc.state().preview };
+          });
+          if (preview) {
+            previewChecked = true;
+            check(`round ${n}: tapping a gem outlines the marked animals its swap would release`, preview.expected.every(id => preview.shown.includes(id)) && preview.after.length === 0, JSON.stringify(preview));
           }
-          const after = cc.clue();
-          return {
-            counted: drag.counted, timedOut: drag.timedOut, toyMove: Boolean(toyMove), triggerMove: Boolean(triggerMove), blasts, toys: cc.state().toys.flat().filter(Boolean).length, clue: after,
-            expected, firstAsked: after.asked[before.asked.length] ?? null, links: document.querySelectorAll('main a[href^="http"]').length,
-          };
-        }, { preferToy: !toyFired, preferTrigger: !triggerFired, preferAsk: !askChecked });
+        }
+        const before = state;
+        const result = await evaluate(async () => {
+          const cc = window.__cc;
+          const clue = cc.clue();
+          const live = new Set(clue.marked.filter(id => !clue.released.includes(id)));
+          const useful = new Set(clue.orders.filter(order => !order.answer).map(order => order.gem));
+          // (Reckless aims at its marked animal, the mystery, the same way: a clear next to it.)
+          const value = move => 10 * cc.touchedBy(move).filter(id => live.has(id)).length + (move.colors.some(color => useful.has(color)) ? 3 : 0) + move.largest;
+          const moves = cc.validMoves();
+          if (moves.length === 0) return null;
+          const move = moves.reduce((best, candidate) => (value(candidate) > value(best) ? candidate : best));
+          const drag = await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
+          await new Promise(resolve => setTimeout(resolve, 150));
+          const { pins, view } = cc.state();
+          const orders = [...document.querySelectorAll('[aria-label="Clue orders"] li')].map(li => ({ tag: li.dataset.tag, label: li.getAttribute('aria-label') }));
+          return { counted: drag.counted, timedOut: drag.timedOut, pins, view, orders, clue: cc.clue() };
+        });
         if (!result) break;
         moves++;
         state = result.clue;
-        if (result.toys > 0 && !toySeen) await screenshot('02b-toy.png');
-        if (result.toys > 0) toySeen = true;
-        if (result.triggerMove && !triggerFired) {
-          triggerFired = true;
-          check(`round ${n} move ${moves}: a color gem (or two toys) swapped without a match goes off`, result.counted && result.blasts > 0, `${result.blasts} blasts`);
-        }
-        if (result.toyMove && result.blasts > 0 && !toyFired) {
-          toyFired = true;
-          check(`round ${n} move ${moves}: a matched toy goes off and its clear still leaves charges at zero or more`, Object.values(result.clue.charges).every(count => count >= 0));
-        }
         check(`round ${n} move ${moves}: settles`, !result.timedOut);
         if (result.counted) check(`round ${n} move ${moves}: uses exactly one move`, state.movesLeft === before.movesLeft - 1, `${before.movesLeft} -> ${state.movesLeft}`);
-        check(`round ${n} move ${moves}: charges never go below zero`, Object.values(state.charges).every(count => count >= 0), JSON.stringify(state.charges));
-        check(`round ${n} move ${moves}: the mystery is never crossed out`, !state.out.includes(state.mysteryId));
-        check(`round ${n} move ${moves}: no source link while the round is on`, result.links === 0, `${result.links} links`);
-        const mismatch = legendMismatch(await readLegend(), state.legend);
-        check(`round ${n} move ${moves}: the legend on screen shows the rules' questions`, mismatch.length === 0, JSON.stringify(mismatch));
-        if (mismatch.length === 0 && state.legend.some((row, i) => row.tag !== before.legend[i].tag)) legendUpdated = true;
-        if (result.expected) {
-          askChecked = true;
-          askSeen = true;
-          check(`round ${n} move ${moves}: a match asks its color's legend question`, result.firstAsked === result.expected, `${result.firstAsked} vs ${result.expected}`);
-          if (!legendShot) { legendShot = true; await screenshot('02c-asked-by-match.png'); }
+        check(`round ${n} move ${moves}: only ruled-out animals leave the board`, state.released.every(id => state.marked.includes(id)), JSON.stringify({ released: state.released, marked: state.marked }));
+        check(`round ${n} move ${moves}: the mystery leaves only by escaping, which loses the round`,
+          !state.released.includes(state.mysteryId) || (state.status === 'lost' && state.lostBy === 'escaped'));
+        // After an escape the board may release more marked animals in the move's last cascades; the round is over by then.
+        const left = 5 - state.released.length;
+        check(`round ${n} move ${moves}: tiles never move; released ones are gone`, result.pins.every(([cell, id]) => pins.some(([c, i]) => i === id && c[0] === cell[0] && c[1] === cell[1]))
+          && (state.status === 'lost' ? result.pins.length <= left : result.pins.length === left), JSON.stringify({ pins: result.pins, released: state.released }));
+        check(`round ${n} move ${moves}: the view shows a tile exactly on each pinned cell`, result.view.every((column, x) => column.every((key, y) => (key === 'tile') === result.pins.some(([[px, py]]) => px === x && py === y))));
+        check(`round ${n} move ${moves}: the clue orders on screen match the rules`, state.orders.every(order => {
+          const tile = result.orders.find(candidate => candidate.tag === order.tag);
+          return tile && (order.answer ? tile.label.includes(`Answer: ${order.answer}`) : tile.label.includes(`${order.have} of`));
+        }), JSON.stringify(result.orders));
+        if (!notesChecked && state.notes > 0) {
+          notesChecked = true;
+          const notes = await evaluate(async () => {
+            document.querySelector('button[aria-label^="Witness notes"]')?.click();
+            await new Promise(resolve => setTimeout(resolve, 250));
+            const text = document.querySelector('[role=dialog]')?.innerText ?? '';
+            [...document.querySelectorAll('[role=dialog] button')].find(button => button.textContent === 'Close')?.click();
+            return text;
+          });
+          check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of the 5/.test(notes), notes.slice(0, 120));
+          await screenshot('02c-notes.png');
         }
       }
-      // Round 2 plays carelessly: spends nothing and guesses the mystery last, so wrong guesses,
-      // the last chance (when notes were saved) and a lost round get played too.
-      const careless = n === 2;
-      // Out of moves: a panel covers the board; spend whatever it offers, one tap each.
-      const spent = await evaluate(async careless => {
-        const panel = document.querySelector('[aria-label="Out of moves"]');
-        if (!panel) return { panel: false };
-        let taps = 0;
-        for (let i = 0; i < (careless ? 0 : 60); i++) {
-          const button = document.querySelector('[aria-label="Out of moves"] button');
-          if (!button) break;
-          button.click();
-          taps++;
-          await new Promise(resolve => setTimeout(resolve, 60));
-        }
-        const clue = window.__cc.clue();
-        return { panel: true, taps, clue, links: document.querySelectorAll('main a[href^="http"]').length, noScroll: document.documentElement.scrollHeight <= innerHeight + 1 };
-      }, careless);
-      check(`round ${n}: out of moves, the out-of-moves panel shows`, spent.panel);
-      if (spent.panel) {
-        check(`round ${n}: the board is locked out of moves`, await evaluate(() => window.__cc.state().locked));
-        check(`round ${n}: the mystery is still standing`, !spent.clue.out.includes(spent.clue.mysteryId));
-        check(`round ${n}: no source link out of moves`, spent.links === 0, `${spent.links} links`);
-        check(`round ${n}: no page scroll`, spent.noScroll);
-        await screenshot(`03-round-${n}-spend.png`);
+      // Out of moves: the round is lost; naming one only fills the journal.
+      if (state.status === 'out-of-moves') {
+        await screenshot(`03-round-${n}-out-of-moves.png`);
+        const pickName = names.get(mode === 'idle' ? state.mysteryId : state.possible[0]);
+        const named = await evaluate(async pickName => {
+          const sheet = document.querySelector('[aria-label="Out of moves"]');
+          const buttons = [...(sheet?.querySelectorAll('button') ?? [])];
+          (buttons.find(b => b.textContent === pickName) ?? buttons[0])?.click();
+          await new Promise(resolve => setTimeout(resolve, 300));
+          return { sheet: Boolean(sheet), clue: window.__cc.clue() };
+        }, pickName);
+        check(`round ${n}: out of moves, the name sheet shows`, named.sheet);
+        state = named.clue;
+        check(`round ${n}: out of moves loses the round, even named right`, state.status === 'lost' && state.lostBy === 'out-of-moves', `${state.status} ${state.lostBy}`);
       }
-      // Guess the animals still standing, first to last, through each one's field guide (a last chance opens on the way if notes were saved).
-      const guessed = await evaluate(async careless => {
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-        const guesses = [];
-        let sawLastChance = false;
-        for (let i = 0; i < 6 && !window.__cc.clue().end; i++) {
-          const clue = window.__cc.clue();
-          const order = careless ? [...clue.standing].sort((a, b) => Number(a === clue.mysteryId) - Number(b === clue.mysteryId)) : clue.standing;
-          const id = order.find(candidate => !guesses.includes(candidate));
-          const index = clue.candidateIds.indexOf(id);
-          document.querySelectorAll('[aria-label="Possible animals"] button')[index].click();
-          await wait(250);
-          [...document.querySelectorAll('[role=dialog] button')].find(button => button.textContent.startsWith('Guess'))?.click();
-          await wait(500);
-          guesses.push(id);
-          if (window.__cc.clue().status === 'last-chance') sawLastChance = sawLastChance || Boolean(document.querySelector('[aria-label="Last chance"]'));
-        }
-        return { guesses, clue: window.__cc.clue(), sawLastChance };
-      }, careless);
-      const end = guessed.clue.end;
-      check(`round ${n}: the round ends`, Boolean(end), guessed.clue.status);
-      if (careless && guessed.guesses.length > 1) {
-        const standingAtGuess = spent.clue ? spent.clue.standing.length : 0;
-        const notes = spent.clue ? spent.clue.notesCollected : 0;
-        check(`round ${n}: a wrong final guess opens a last chance only with saved notes`, notes > 0 ? guessed.sawLastChance || standingAtGuess <= 2 : !guessed.sawLastChance, `${notes} notes, last chance ${guessed.sawLastChance}`);
-        check(`round ${n}: a wrong guess ends the streak`, guessed.clue.streak === (end?.outcome === 'solved' ? 1 : 0), `streak ${guessed.clue.streak}`);
-        if (end?.outcome === 'solved') check(`round ${n}: a last-chance solve scores 50 only`, !end.lastChance || end.points === 50, `${end.points}`);
-      }
+      const end = state.end;
+      check(`round ${n}: the round ends`, Boolean(end), state.status);
+      if (mode === 'reckless') check(`round ${n}: releasing the ruled-out mystery loses the round (it escapes)`, state.status === 'lost' && state.lostBy === 'escaped', `${state.status} ${state.lostBy}`);
+      if (mode === 'idle') check(`round ${n}: with nobody ruled out, nothing leaves and the moves run out`, state.released.length === 0 && state.lostBy === 'out-of-moves', JSON.stringify({ released: state.released, lostBy: state.lostBy }));
+      check(`round ${n}: the trail moves on: a find, or one heart less`, end?.outcome === 'found'
+        ? state.trail.finds === trailBefore.finds + 1 && state.trail.hearts === trailBefore.hearts
+        : state.trail.hearts === trailBefore.hearts - 1, JSON.stringify({ before: trailBefore, after: state.trail }));
+      const namedRight = state.logTail.some(entry => entry.kind === 'named' && entry.correct);
+      if (end?.outcome === 'found' || namedRight) journalFinds.add(start.mysteryId);
       const reveal = await waitFor(() => {
         const sheet = document.querySelector('section[aria-label^="It was the"]');
-        if (!sheet) return null;
-        const photo = sheet.querySelector('img');
-        return {
-          name: sheet.getAttribute('aria-label').replace('It was the ', ''), photo: photo ? photo.complete && photo.naturalWidth > 0 : 'no photo',
-          redList: Boolean([...sheet.querySelectorAll('a')].find(a => a.textContent.includes('Red List'))),
-          sources: sheet.querySelectorAll('a[href^="http"]').length, tree: sheet.innerText.includes('Animalia › Chordata'),
-        };
-      }, 'the reveal card', 10_000);
-      await sleep(800);
-      check(`round ${n}: the reveal names the mystery`, reveal.name === mysteryName, reveal.name);
-      check(`round ${n}: the reveal photo loads`, reveal.photo !== false, String(reveal.photo));
-      check(`round ${n}: the reveal links the Red List`, reveal.redList);
-      check(`round ${n}: the reveal shows the family tree`, reveal.tree);
-      check(`round ${n}: source links open after the round`, reveal.sources > 1, `${reveal.sources} links`);
-      await screenshot(`04-round-${n}-reveal.png`);
+        return sheet ? { name: sheet.getAttribute('aria-label').replace('It was the ', ''), text: sheet.innerText } : null;
+      }, 'the round-end card', 10_000);
+      check(`round ${n}: the round-end card names the mystery`, reveal.name === mysteryName, reveal.name);
+      check(`round ${n}: the round-end card shows the family tree`, reveal.text.includes('Animalia › Chordata'));
+      await screenshot(`04-round-${n}-end.png`);
       report.rounds.push({
-        round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, candidates: start.candidateIds,
-        outcome: end?.outcome, points: end?.points, lastChance: end?.lastChance, movesUsed: guessed.clue.movesUsed,
-        questions: guessed.clue.asked.length, notesSaved: guessed.clue.notesCollected, treeSteps: guessed.clue.familyTreeSteps, treeStepsTaken: guessed.clue.treeStepsTaken,
-        wrongGuesses: guessed.clue.wrongGuesses.length, score: guessed.clue.score,
+        round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, suspects: start.suspects.map(id => names.get(id)),
+        outcome: end?.outcome, lostBy: state.lostBy, stars: end?.stars, points: end?.points, movesUsed: state.movesUsed,
+        answers: state.orders.filter(order => order.answer).length, notes: state.notes, marked: state.marked.length, released: state.released.length,
+        trail: state.trail, score: state.score,
       });
-      console.log(`  round ${n}: ${mysteryName} ${end?.outcome ?? '?'}${end?.lastChance ? ' on a last chance' : ''}, ${guessed.clue.asked.length} questions, ${guessed.clue.wrongGuesses.length} wrong, +${end?.points ?? 0}`);
+      console.log(`  round ${n}: ${mysteryName} ${end?.outcome ?? '?'}${state.lostBy ? ` (${state.lostBy})` : ''}, ${state.movesUsed} moves, ${state.orders.filter(order => order.answer).length} answers, ${state.notes} notes, +${end?.points ?? 0}`);
       if (n < ROUNDS) {
-        await evaluate(() => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Next animal')?.click());
-        await waitFor(round => window.__cc.clue().roundNo === round && window.__cc.clue().status === 'playing' && window.__cc.state().ready, 'the next round', 15_000, n + 1);
+        await evaluate(() => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Next animal' || b.textContent.trim() === 'New trail')?.click());
+        await waitFor(round => window.__cc.clue().roundNo === round && window.__cc.clue().status === 'playing' && window.__cc.state().ready && window.__cc.state().pins.length === 5, 'the next round', 20_000, n + 1);
+        await sleep(800);
       }
     }
+    check('the release preview was checked at least once', previewChecked);
 
-    // 2b. Naming the animal and starting the next one while gems still fall must leave the board showing the model's
-    // board (a move from the old board used to keep animating on the new one).
-    const race = await evaluate(async () => {
-      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-      const cc = window.__cc;
-      const nextAnimal = () => [...document.querySelectorAll('button')].find(button => button.textContent.trim() === 'Next animal')?.click();
-      nextAnimal();
-      for (let i = 0; i < 60 && !(cc.state().ready && cc.clue().status === 'playing' && !cc.state().isResolvingMove); i++) await wait(250);
-      const clue = cc.clue();
-      const move = cc.validMoves().find(candidate => !candidate.trigger);
-      if (!move) return null;
-      cc.speed(0.15);
-      const since = Date.now();
-      const drag = cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
-      for (let i = 0; i < 120 && !cc.events(50).some(event => event.at >= since && event.name === 'gems-matched'); i++) await wait(25);
-      document.querySelectorAll('[aria-label="Possible animals"] button')[clue.candidateIds.indexOf(clue.mysteryId)].click();
-      await wait(150);
-      [...document.querySelectorAll('[role=dialog] button')].find(button => button.textContent.startsWith('Guess'))?.click();
-      await wait(300);
-      nextAnimal();
-      await drag.catch(() => undefined);
-      cc.speed(4);
-      for (let i = 0; i < 80 && (cc.state().isResolvingMove || !cc.state().ready); i++) await wait(100);
-      await wait(800);
-      const { grid, toys, view } = cc.state();
-      const mismatches = [];
-      grid.forEach((column, x) => column.forEach((gem, y) => {
-        const toy = toys[x][y];
-        const want = toy === 'color' ? 'toy_color' : toy ? `toy_${toy}_${gem}` : `gem_${gem}`;
-        if (view[x]?.[y] !== want) mismatches.push([x, y, view[x]?.[y], want]);
-      }));
-      return { solvedId: clue.mysteryId, mismatches };
-    });
-    check('starting the next animal while gems fall leaves the board showing the real board', race && race.mismatches.length === 0, JSON.stringify(race?.mismatches?.slice(0, 3) ?? 'no move'));
-    if (race) report.rounds.push({ round: 'race', mysteryId: race.solvedId, outcome: 'solved' });
-
-    check('a big match leaves a toy on the board', toySeen);
-    check('matching a toy sets it off', toyFired);
-    check('a match that fills its charges asks the legend question (checked at least once)', askSeen);
-    check('the legend on screen changes after an answer (seen at least once)', legendUpdated);
-
-    // 3. The Field Journal lists what was solved (lost rounds aren't discoveries).
+    // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {
       document.querySelector('button[aria-label="Field journal"]')?.click();
       await new Promise(resolve => setTimeout(resolve, 1200));
       return document.querySelector('[role=dialog] #journal-title')?.nextElementSibling?.textContent ?? '';
     });
-    const found = new Set(report.rounds.filter(round => round.outcome === 'solved').map(round => round.mysteryId)).size;
-    check('the journal counts the animals solved', journal.startsWith(`${found} of`), journal);
+    check('the journal counts the animals found (and named right when moves ran out)', journal.startsWith(`${journalFinds.size} of`), `${journal} (expected ${journalFinds.size})`);
     await screenshot('05-journal.png');
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));

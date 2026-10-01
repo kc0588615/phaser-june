@@ -14,7 +14,7 @@ import { GlossaryText } from './GlossaryText';
 import { LogEntryText, isLive, plural, rankName } from './LogEntryText';
 import { useEscapeKey } from './useEscapeKey';
 
-function Sheet({ title, onClose, children, footer }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+export function Sheet({ title, onClose, children, footer }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
   useEscapeKey(onClose);
   const titleId = useId();
   return (
