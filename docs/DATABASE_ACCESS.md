@@ -155,6 +155,21 @@ Restart the SSH command after changing the rule. A timeout can also indicate a
 routing problem or unavailable host, so confirm the listener rather than
 assuming silence means success.
 
+### Stale tunnel
+
+`ss` shows the `ssh` listener on 55432 but `psql` fails with "server closed the
+connection unexpectedly" and `pg_isready` says "no response": the SSH session
+behind the listener has died (sleep, network change) while its process still
+holds the port. The terminal still shows the `ssh -N` command, so it looks
+alive. Stop it (Ctrl-C) and start it again; the key asks for its passphrase
+each time, and it's up once the prompt goes silent. `ps -o etime -p <pid>` (pid
+from `ss -ltnp`) tells a fresh session from an old one.
+
+While the tunnel is down, the repo scripts (`npm run content`, `npm run iucn`)
+and `./scripts/db` still work: they use `DATABASE_URL` through PgBouncer.
+Content builds, range imports and `REFRESH MATERIALIZED VIEW CONCURRENTLY`
+(about 2.5 minutes for `clue_match_places`) all ran that way on 2026-09-29.
+
 ## Windows/QGIS
 
 Windows/QGIS uses its own Windows-local tunnel on port 5433. WSL agents must

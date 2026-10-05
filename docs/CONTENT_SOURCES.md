@@ -65,9 +65,21 @@ Look-alike decoys are the animals sharing the most traits, rare ones weighted mo
 
 1. Edit or add `db/content/animals/<id>-<slug>.json` (a new animal takes the next id; ids never change).
 2. `npm run content -- preview [name]`: the clues and facts a profile makes, and any problems.
-3. New animal: import its range first (`npm run iucn -- find|import`, see `scripts/iucn.ts` and plan 040), then after a build `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
+3. New animal: import its range first (`npm run iucn -- find|import`, see `docs/SHAPEFILE_BEST_PRACTICES.md`), then after a build `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
 4. `npm run content -- build` (one transaction), then `npm run content -- check`.
 5. If the set of animals or their ranges changed, refresh `clue_match_ranges` and `clue_match_places` (docs/CLUE_MATCH.md).
 6. `npm test` validates every profile and the pool; `node scripts/run-typescript.mjs scripts/balance-041.ts` plays seeded rounds; then play `/explore/?seed=1`.
 
 Copy is for grades 6 to 12: short sentences, no gore, no medical words. Science words stay and get a glossary entry (`src/clueGame/glossary.ts`).
+
+## Research access
+
+- **IUCN**: `iucnredlist.org` blocks bots. The `parallel-search` MCP `web_fetch` can read `https://staging-www.iucnredlist.org/details/<taxon>/0` (latest assessment: category, year, trend, habitat classes, elevation, citation with assessment id) and `https://staging-www.iucnredlist.org/species/<taxon>/<assessment>/pdf` (full text + Appendix habitat table). Batch ~7 URLs per call. Excerpts can silently drop table rows (the savanna elephant's wetland and desert rows only came back on a second fetch): when a habitat class on the details page has no kinds in the table, refetch with objective "every row of the Appendix Habitats table" and `search_queries`.
+- **parallel-search `web_search` hits a free-tier rate limit** after a burst (~15 calls); `web_fetch` kept working. Fall back to direct fetches.
+- **ADW**: plain `curl`/urllib works: `https://animaldiversity.org/accounts/<Genus_species>/`, sections split on `<h2 id="...">` (`physical_description, reproduction, lifespan_longevity, behavior, food_habits, habitat, communication, predation`). Some accounts use old spellings (`Zaglossus_bruijni`). Keep ~7,000 chars per section; the first scraper truncated to 1,600 and lost the key numbers.
+- **Wikipedia**: the API with a User-Agent works: `api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=<title>`. Retry on rate limits.
+- **AmphibiaWeb** blocks bots; its text shows up in search excerpts.
+- **Wikimedia Commons** API (`action=query&prop=imageinfo&iiprop=url|extmetadata`) gives license, author, description. `generator=search&gsrnamespace=6` searches files.
+- **Red List details**: `year` is the year *published*, not assessed (the elephant was assessed 2020, published 2022). Errata and amended versions carry a new assessment id; use the id in the citation line. A Green Status assessment on the same page can show its own trend; the Red List trend is under Population.
+- **Habitat tables miss things the text says**: the giant otter's table has no rivers, the Andean bear's no cloud forest. Add the kind the text supports (see Rules); note it for owner review in the plan.
+- **Photos**: `npm run content -- photos` can pick a book illustration (the hirola's was an 1894 drawing) or a museum mount (both long-beaked echidnas). Look at every photo; search Commons (`generator=search&gsrnamespace=6&gsrsearch=<Genus species>`) for a live one, often an iNaturalist upload named `<Genus_species>_<number>.jpg`, and set `photo` by hand with the 500px thumb URL. Keep a mount only when Commons has nothing better, and say so.

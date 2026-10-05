@@ -63,9 +63,9 @@ The app is two screens: a globe to pick a continent (`/`) and the game (`/explor
 
 ## Docs Map
 - `docs/CLUE_MATCH.md`: the game, globe, rules, content workflow, database, practice SQL.
-- `docs/CONTENT_SOURCES.md`: source tiers, tag vocabulary, profile workflow.
+- `docs/CONTENT_SOURCES.md`: source tiers, tag vocabulary, profile workflow, research access (IUCN, ADW, Wikipedia, Commons photos).
 - `docs/DEPLOY.md`: serving the app from the VPS (Dockerfile, `deploy/`), the `critter_app` role, backups, hardening.
-- `docs/DATABASE_ACCESS.md`, `docs/SHAPEFILE_BEST_PRACTICES.md`, `docs/DRIZZLE_ORM_GUIDE.md`: data layer.
+- `docs/DATABASE_ACCESS.md`: connection routes, tunnel troubleshooting. `docs/SHAPEFILE_BEST_PRACTICES.md`: importing IUCN ranges, `iucn` table gotchas. `docs/DRIZZLE_ORM_GUIDE.md`: Drizzle.
 - `README.md`: start here.
 
 ## Code Style / Safety

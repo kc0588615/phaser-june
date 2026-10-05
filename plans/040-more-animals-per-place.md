@@ -18,18 +18,7 @@ IUCN range shapefiles need a logged-in IUCN Red List account (Spatial Data Downl
 
 ### Importing polygons
 
-`iucn` columns (IUCN shapefile schema, lowercased by ogr2ogr): `ogc_fid, id_no, sci_name, tax_comm, kingdom, phylum, class, order_, family, genus, category, marine, terrestria, freshwater, island, origin, presence, seasonal, compiler, yrcompiled, citation, source, subspecies, subpop, legend, generalisd, shape_leng, shape_area, wkb_geometry, dist_comm`.
-
-Unblocked 2026-09-27: the owner's Red List group downloads (Dec 2024, 44 zips: MAMMALS_TERRESTRIAL_ONLY, MAMMALS_FRESHWATER, ANURA, CAUDATA, TURTLES, SCALED_REPTILES, ...) are copied to `~/data/iucn/zips` and unzipped to `~/data/iucn/shp/<GROUP>/` (42 GB, outside the repo; originals on `D:\ArcGIS\data\iucn`). No ogr2ogr needed: `scripts/iucn.ts` reads a species' records straight from the shapefile (via `.shx` offsets) and appends them, attributes and all, through `DATABASE_URL`:
-
-```sh
-npm run iucn -- find ~/data/iucn/shp "Panthera onca"                 # which file, id_no, category, polygons
-npm run iucn -- import ~/data/iucn/shp/MAMMALS_TERRESTRIAL_ONLY/MAMMALS_TERRESTRIAL_ONLY.shp "Panthera onca"
-```
-
-A species already in `iucn` is skipped. Tapirs, rhinos, hippos and otters are in MAMMALS_FRESHWATER, not TERRESTRIAL_ONLY. The imported areas match the shapefile's `SHAPE_Area`; some polygons are invalid (self-intersections), which the views' `ST_MakeValid` handles.
-
-Check the SRID and geometry type of existing rows first (`SELECT Find_SRID('public','iucn','wkb_geometry'), GeometryType(wkb_geometry), count(*) FROM iucn GROUP BY 1,2`) and match them. Only import the species you're adding, never the whole group file (a full mammal file is several GB). Range rows with no `species` row are invisible to the game. `presence` 1–3 = extant/probably/possibly extant; the views use those, falling back to all polygons for extinct species.
+Unblocked 2026-09-27: the owner's Red List group downloads are in `~/data/iucn/shp`, and `npm run iucn -- find|import` loads one species at a time. How, and the gotchas: `docs/SHAPEFILE_BEST_PRACTICES.md`.
 
 ## Batch 1: done 2026-09-27
 
@@ -76,14 +65,9 @@ Production (https://play.critterconnect.org) reads the DB live; content changes 
 - **Copy**: grades 6–12, short sentences, no gore or medical words ("a disease that causes lumps", not "cancer"; "hunted", not "killed on sight"). One fact per clue. Every profile needs ≥1 `key_fact`, and every color needs a tagged clue or the check warns.
 - Surprising, recent facts make the reveal card (rediscoveries, clones, new behaviors), but source them to the report or paper.
 
-## Research access that worked (and didn't)
+## Research access
 
-- **IUCN**: `iucnredlist.org` blocks bots. The `parallel-search` MCP `web_fetch` can read `https://staging-www.iucnredlist.org/details/<taxon>/0` (latest assessment: category, year, trend, habitat classes, elevation, citation with assessment id) and `https://staging-www.iucnredlist.org/species/<taxon>/<assessment>/pdf` (full text + Appendix habitat table). Batch ~7 URLs per call. If the habitat table is missing from an excerpt, refetch with objective "every row of the Appendix Habitats table" and `search_queries`.
-- **parallel-search `web_search` hits a free-tier rate limit** after a burst (~15 calls); `web_fetch` kept working. Fall back to direct fetches.
-- **ADW**: plain `curl`/urllib works: `https://animaldiversity.org/accounts/<Genus_species>/`, sections split on `<h2 id="...">` (`physical_description, reproduction, lifespan_longevity, behavior, food_habits, habitat, communication, predation`). Some accounts use old spellings (`Zaglossus_bruijni`). Keep ~7,000 chars per section; the first scraper truncated to 1,600 and lost the key numbers.
-- **Wikipedia**: the API with a User-Agent works: `api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=<title>`. Retry on rate limits.
-- **AmphibiaWeb** blocks bots; its text shows up in search excerpts.
-- **Wikimedia Commons** API (`action=query&prop=imageinfo&iiprop=url|extmetadata`) gives license, author, description. `generator=search&gsrnamespace=6` searches files.
+What worked for IUCN, ADW, Wikipedia and Commons (and what blocks bots): `docs/CONTENT_SOURCES.md#research-access`.
 
 ## Gotchas already fixed (don't re-break)
 

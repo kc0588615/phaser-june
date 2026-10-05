@@ -277,4 +277,13 @@ JOIN largest l USING (key);
 
 CREATE UNIQUE INDEX clue_match_places_key ON clue_match_places (key);
 
+-- Recreating a view drops its grants; give the app role (deploy/db/app-role.sql)
+-- its read back, or /api/places returns 500.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'critter_app') THEN
+    GRANT SELECT ON clue_match_places, clue_match_ranges TO critter_app;
+  END IF;
+END $$;
+
 COMMIT;
