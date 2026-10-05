@@ -24,13 +24,13 @@ export function GlossaryText({ text }: { text: string }) {
             onClick={() => setOpen(current => (current === part.term ? null : part.term))}
             aria-expanded={open === part.term}
             aria-controls={definitionId}
-            className="inline cursor-help p-0 text-left text-inherit underline decoration-cyan-200/70 decoration-dotted underline-offset-[3px] active:text-cyan-100"
+            className="inline cursor-help p-0 text-left text-inherit underline decoration-sage/70 decoration-dotted underline-offset-[3px] active:text-mist"
           >
             {part.text}
           </button>
         ))}
       {open && (
-        <span ref={definitionRef} id={definitionId} role="note" className="cm-feed-in mt-1 block rounded-md border border-cyan-200/25 bg-cyan-300/10 px-2 py-1 text-[12px] leading-snug text-cyan-50">
+        <span ref={definitionRef} id={definitionId} role="note" className="cm-feed-in mt-1 block rounded-md border border-line bg-raised px-2 py-1 text-[12px] leading-snug text-mist">
           <b>{open.term}:</b> {open.definition}
         </span>
       )}

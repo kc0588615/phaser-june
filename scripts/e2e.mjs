@@ -194,7 +194,7 @@ async function main() {
       const corner = ([x, y]) => (x === 0 || x === 6) && (y === 0 || y === 6);
       check(`round ${n}: tiles at least 3 apart and never in a corner`, pins.every(([a]) => !corner(a) && pins.every(([b]) => a === b || Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) >= 3)));
       const screen = await evaluate(() => ({
-        cards: document.querySelectorAll('[aria-label="Suspects"] li').length,
+        cards: document.querySelectorAll('[aria-label="Suspects"] li[data-suspect]').length,
         orders: [...document.querySelectorAll('[aria-label="Clue orders"] li')].map(li => li.dataset.tag),
       }));
       check(`round ${n}: 5 suspect cards and the 4 clue orders on screen`, screen.cards === 5 && screen.orders.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));

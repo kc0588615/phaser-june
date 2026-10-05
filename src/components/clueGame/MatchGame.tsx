@@ -158,7 +158,7 @@ export function MatchGame() {
   return (
     <>
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-[#06121a] text-white [grid-template-areas:'top'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] lg:grid-cols-[minmax(0,1fr)_460px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_rail']">
+      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-night text-mist [grid-template-areas:'top'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] lg:grid-cols-[minmax(0,1fr)_460px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_rail']">
         <TopBar
           placeName={placeName}
           roundNo={session?.roundNo ?? null}
@@ -180,20 +180,20 @@ export function MatchGame() {
           aria-describedby="board-keys"
           tabIndex={0}
           onKeyDown={onBoardKey}
-          className="group relative h-[min(calc(100vw-8px),calc(100dvh-490px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-200/70 md:h-full"
+          className="group relative h-[min(calc(100vw-8px),calc(100dvh-490px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-globe md:h-full"
         >
           <PhaserGame className="absolute inset-0" />
           {session && round && (round.status === 'out-of-moves' || round.status === 'last-chance') && (
             <SpendPanel book={session.book} round={round} nameOf={nameOf} onAsk={ask} onBuy={buyFamilyTreeStep} />
           )}
-          <p id="board-keys" className="pointer-events-none absolute inset-x-2 bottom-1 m-0 hidden rounded-md bg-black/75 px-2 py-1 text-center text-[11px] text-white/90 group-focus-visible:block">
+          <p id="board-keys" className="pointer-events-none absolute inset-x-2 bottom-1 m-0 hidden rounded-md bg-black/75 px-2 py-1 text-center text-[11px] text-mist/90 group-focus-visible:block">
             Arrows move the cursor. Shift + arrows swap its gem that way.
           </p>
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
         <div className="relative flex min-h-0 flex-col gap-2 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1 [grid-area:rail] md:border-l md:border-white/10 md:px-3">
-          {loadError && <p className="m-0 rounded-lg border border-rose-400/40 bg-rose-950/40 p-2 text-xs text-rose-100" role="alert">{loadError}</p>}
-          {!session && !loadError && <p className="m-0 p-2 text-xs text-white/60">Loading animals…</p>}
+          {loadError && <p className="m-0 rounded-lg border border-danger/50 bg-danger/10 p-2 text-xs text-mist" role="alert">{loadError}</p>}
+          {!session && !loadError && <p className="m-0 p-2 text-xs text-mist/60">Loading animals…</p>}
           {session && round && (
             <>
               <GemLegend book={session.book} round={round} onNotes={() => setSheet({ kind: 'notes' })} onTree={() => setSheet({ kind: 'tree' })} />
@@ -201,7 +201,7 @@ export function MatchGame() {
                 <p className="m-0 line-clamp-2 min-w-0 flex-1">
                   {latest ? <LogEntryText entry={latest} status={round.status} nameOf={nameOf} /> : (rules.questionCost > 1 ? 'Match gems to fill their dots. Full dots ask that gem\'s question.' : 'Match gems to ask their questions.')}
                 </p>
-                <button type="button" onClick={() => setSheet({ kind: 'log' })} className="h-10 shrink-0 rounded-lg border border-white/15 px-3 text-[12px] font-semibold text-cyan-100 active:bg-white/10">All</button>
+                <button type="button" onClick={() => setSheet({ kind: 'log' })} className="h-10 shrink-0 rounded-lg border border-white/15 px-3 text-[12px] font-semibold text-mist active:bg-white/10">All</button>
               </div>
               <AnimalTiles round={round} speciesById={speciesById} onPick={id => setSheet({ kind: 'guide', id })} />
             </>

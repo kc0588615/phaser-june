@@ -29,25 +29,25 @@ export function RangeMap({ speciesId, name, caption = true }: { speciesId: numbe
     <figure className="m-0">
       <svg
         viewBox={`${x} ${y} ${width} ${height}`}
-        className="block w-full rounded-lg border border-white/10 bg-[#0b2530]"
+        className="block w-full rounded-lg border border-white/10 bg-raised"
         role="img"
         aria-label={range ? `Map of where the ${name} lives` : 'Loading map'}
       >
         <image href={WORLD_LAND_URL} x={x} y={y} width={width} height={height} />
         {range && (
           <>
-            <path d={range.path} fill="#fcd34d" fillOpacity={0.9} stroke="#fde68a" strokeWidth={0.4} strokeLinejoin="round" />
+            <path d={range.path} fill="#6fa8bc" fillOpacity={0.9} stroke="#a9cfdc" strokeWidth={0.4} strokeLinejoin="round" />
             {range.areaKm2 < SMALL_RANGE_KM2 && (
               <>
-                <circle cx={range.lon} cy={-range.lat} r={2} fill="#fcd34d" />
-                <circle cx={range.lon} cy={-range.lat} r={7} fill="none" stroke="#fcd34d" strokeWidth={2} className="cm-range-ping" />
+                <circle cx={range.lon} cy={-range.lat} r={2} fill="#6fa8bc" />
+                <circle cx={range.lon} cy={-range.lat} r={7} fill="none" stroke="#6fa8bc" strokeWidth={2} className="cm-range-ping" />
               </>
             )}
           </>
         )}
       </svg>
       {range && caption && (
-        <figcaption className="mt-0.5 flex justify-between text-[10px] text-white/45">
+        <figcaption className="mt-0.5 flex justify-between text-[10px] text-mist/45">
           <span>Range about {area.format(range.areaKm2)} km²</span>
           <span>Map: IUCN Red List</span>
         </figcaption>

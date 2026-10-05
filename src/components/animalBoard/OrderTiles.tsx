@@ -14,17 +14,17 @@ export function OrderTiles({ round }: { round: AnimalRound }) {
           key={order.tag}
           data-tag={order.tag}
           aria-label={`${order.question} ${order.answer ? `Answer: ${order.answer}.` : `${order.have} of ${size} gems.`}`}
-          className={`flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg border px-1.5 py-1 ${order.answer ? 'border-amber-200/50 bg-amber-200/10' : 'border-white/15 bg-white/[.05]'}`}
+          className={`flex min-h-11 min-w-0 items-center gap-1.5 rounded-lg border px-1.5 py-1 ${order.answer ? 'border-ochre/50 bg-ochre/15' : 'border-white/15 bg-white/[.05]'}`}
         >
           <FaceIcon gem={order.gem} face={clueFace(order.tag)} className="h-8 w-8 text-[15px]" />
           <span className="min-w-0 flex-1" aria-hidden="true">
             <span className="line-clamp-2 text-[12px] leading-tight">{order.short}</span>
             {order.answer ? (
-              <b className={`text-[13px] ${order.answer === 'yes' ? 'text-emerald-300' : 'text-rose-300'}`}>{order.answer === 'yes' ? 'Yes ✓' : 'No ✗'}</b>
+              <b className={`text-[13px] ${order.answer === 'yes' ? 'text-leaf' : 'text-danger'}`}>{order.answer === 'yes' ? 'Yes ✓' : 'No ✗'}</b>
             ) : (
               <span className="mt-0.5 flex items-center gap-1">
-                <span className="h-1.5 flex-1 overflow-hidden rounded bg-white/15"><i className="block h-full rounded bg-amber-300" style={{ width: `${(100 * order.have) / size}%` }} /></span>
-                <span className="text-[10px] tabular-nums text-white/60">{order.have}/{size}</span>
+                <span className="h-1.5 flex-1 overflow-hidden rounded bg-white/15"><i className="block h-full rounded bg-ochre" style={{ width: `${(100 * order.have) / size}%` }} /></span>
+                <span className="text-[10px] tabular-nums text-mist/60">{order.have}/{size}</span>
               </span>
             )}
           </span>

@@ -3,6 +3,33 @@
 /* Short screens (small phones, landscape): Clue Match compacts its rail. */
 @custom-variant short (@media (max-height: 740px));
 
+/* Night Field Guide tokens (DESIGN.md). Green = action, blue = place, ochre = discovery, bark = structure.
+   Gem / Red List colours are game data and stay in their own files. */
+@theme {
+  --color-night: #08110d;
+  --color-surface: #151b17;
+  --color-raised: #1b241d;
+  --color-line: #354238;
+  --color-line-strong: #5c6b60;
+  --color-mist: #f3f1e8;
+  --color-sage: #a8b1a4;
+  --color-action: #56754e;
+  --color-leaf: #95bc8b; /* success/yes text: forest green light enough to read (8.2:1) */
+  --color-moss: #71845a;
+  --color-bark: #7a5b44;
+  --color-river: #47788a;
+  --color-globe: #6fa8bc;
+  --color-ochre: #c49a43;
+  --color-danger: #d07a6e;
+  --color-notes: #b27dff;
+}
+
+/* Fonts come from next/font in _app.tsx, which sets these variables on :root. */
+@theme inline {
+  --font-sans: var(--font-atkinson), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+}
+
 html, body, #__next {
   margin: 0;
   width: 100%;
@@ -11,10 +38,12 @@ html, body, #__next {
 }
 
 body {
-  background: #06121a;
-  color: #fff;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background: var(--color-night);
+  color: var(--color-mist);
+  font-family: var(--font-sans);
 }
+
+:focus-visible { outline: 2px solid var(--color-globe); outline-offset: 2px; }
 
 /* Clue Match */
 @keyframes roster-cross-in {

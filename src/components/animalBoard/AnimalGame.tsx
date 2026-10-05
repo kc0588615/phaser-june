@@ -31,11 +31,11 @@ function onBoardKey(event: React.KeyboardEvent): void {
 
 function LogText({ entry, nameOf, count }: { entry: AnimalLogEntry; nameOf: (id: number) => string; count: number }): ReactNode {
   switch (entry.kind) {
-    case 'answer': return <span>{clueFace(entry.tag)} {entry.question} <b className={entry.answer === 'yes' ? 'text-emerald-300' : 'text-rose-300'}>{entry.answer === 'yes' ? 'Yes.' : 'No.'}</b></span>;
-    case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-white/60">Fits {entry.note.fits} of {count}.</span></span>;
+    case 'answer': return <span>{clueFace(entry.tag)} {entry.question} <b className={entry.answer === 'yes' ? 'text-leaf' : 'text-danger'}>{entry.answer === 'yes' ? 'Yes.' : 'No.'}</b></span>;
+    case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-mist/60">Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} left the board.</span>;
-    case 'escaped': return <span className="text-rose-300">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
-    case 'found': return <span className="text-emerald-300">Found it: the {nameOf(entry.id)}!</span>;
+    case 'escaped': return <span className="text-danger">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
+    case 'found': return <span className="text-leaf">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
     case 'named': return <span>You named the {nameOf(entry.id)}.</span>;
   }
@@ -113,12 +113,12 @@ export function AnimalGame() {
   return (
     <>
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-y-1 overflow-hidden overscroll-none bg-[#06121a] text-white [grid-template-areas:'top'_'suspects'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_suspects'_'board_rail'] lg:grid-cols-[minmax(0,1fr)_460px]">
+      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-y-1 overflow-hidden overscroll-none bg-night text-mist [grid-template-areas:'top'_'suspects'_'board'_'rail'] md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_top'_'board_suspects'_'board_rail'] lg:grid-cols-[minmax(0,1fr)_460px]">
         <header className="flex min-w-0 items-center gap-1 py-1.5 pl-1 pr-2 [grid-area:top]">
-          <Link href="/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-cyan-100/80 hover:bg-white/10" aria-label="Back to the globe"><Globe2 className="h-5 w-5" /></Link>
+          <Link href="/" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-sage hover:bg-white/10" aria-label="Back to the globe"><Globe2 className="h-5 w-5" /></Link>
           <div className="min-w-0">
-            <h1 className="m-0 truncate text-base font-bold leading-tight">{placeName ?? 'Critter Connect'}</h1>
-            <p className="m-0 truncate text-[11px] leading-tight text-cyan-100/70">
+            <h1 className="m-0 font-display truncate text-base font-bold leading-tight">{placeName ?? 'Critter Connect'}</h1>
+            <p className="m-0 truncate text-[11px] leading-tight text-sage">
               {trail ? <>Animal {inTrail}/{rules.trailRounds}{(session?.trailNo ?? 1) > 1 ? ` · trail ${session?.trailNo}` : ''}</> : 'Loading animals…'}
             </p>
           </div>
@@ -127,26 +127,26 @@ export function AnimalGame() {
               <div className="flex gap-0.5" title="Hearts">
                 <dt className="sr-only">Hearts</dt>
                 <dd className="m-0 flex gap-0.5" aria-label={`${trail.hearts} of ${rules.hearts}`}>
-                  {Array.from({ length: rules.hearts }, (_, i) => <Heart key={i} className={`h-3.5 w-3.5 ${i < trail.hearts ? 'fill-rose-400 text-rose-400' : 'text-white/25'}`} aria-hidden="true" />)}
+                  {Array.from({ length: rules.hearts }, (_, i) => <Heart key={i} className={`h-3.5 w-3.5 ${i < trail.hearts ? 'fill-danger text-danger' : 'text-mist/25'}`} aria-hidden="true" />)}
                 </dd>
               </div>
             )}
             <div className="flex flex-col items-center leading-none" title="Moves left">
               <dt className="sr-only">Moves left</dt>
               <dd className="m-0 text-base font-bold tabular-nums">{round?.movesLeft ?? 0}</dd>
-              <span className="text-[9px] text-white/55" aria-hidden="true">moves</span>
+              <span className="text-[9px] text-mist/55" aria-hidden="true">moves</span>
             </div>
             <div className="flex items-center gap-1" title="Score">
               <dt className="sr-only">Score</dt>
-              <Star className="h-3.5 w-3.5 text-amber-300" aria-hidden="true" />
+              <Star className="h-3.5 w-3.5 text-ochre" aria-hidden="true" />
               <dd className="m-0 text-sm font-bold tabular-nums">{session?.score ?? 0}</dd>
             </div>
           </dl>
-          <button type="button" onClick={toggleSound} className="grid h-11 w-11 place-items-center rounded-full text-cyan-100/80 hover:bg-white/10" aria-label={soundOn ? 'Sound on. Turn it off' : 'Sound off. Turn it on'} aria-pressed={soundOn}>
+          <button type="button" onClick={toggleSound} className="grid h-11 w-11 place-items-center rounded-full text-sage hover:bg-white/10" aria-label={soundOn ? 'Sound on. Turn it off' : 'Sound off. Turn it on'} aria-pressed={soundOn}>
             {soundOn ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </button>
-          <button type="button" onClick={() => setJournalOpen(true)} className="-ml-2 grid h-11 w-11 place-items-center rounded-full text-cyan-100/80 hover:bg-white/10" aria-label="Field journal"><BookOpen className="h-5 w-5" /></button>
-          <button type="button" onClick={() => setHelpOpen(true)} className="-ml-2 grid h-11 w-11 place-items-center rounded-full text-cyan-100/80 hover:bg-white/10" aria-label="How to play"><CircleHelp className="h-5 w-5" /></button>
+          <button type="button" onClick={() => setJournalOpen(true)} className="-ml-2 grid h-11 w-11 place-items-center rounded-full text-sage hover:bg-white/10" aria-label="Field journal"><BookOpen className="h-5 w-5" /></button>
+          <button type="button" onClick={() => setHelpOpen(true)} className="-ml-2 grid h-11 w-11 place-items-center rounded-full text-sage hover:bg-white/10" aria-label="How to play"><CircleHelp className="h-5 w-5" /></button>
         </header>
 
         {session && round ? <SuspectRow round={round} speciesById={speciesById} onPick={id => setSheet({ kind: 'suspect', id })} /> : <div className="[grid-area:suspects]" />}
@@ -157,18 +157,18 @@ export function AnimalGame() {
           aria-describedby="board-keys"
           tabIndex={0}
           onKeyDown={onBoardKey}
-          className="group relative h-[min(calc(100vw-8px),calc(100dvh-330px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-200/70 md:h-full"
+          className="group relative h-[min(calc(100vw-8px),calc(100dvh-330px))] w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-globe md:h-full"
         >
           <PhaserGame className="absolute inset-0" />
-          <p id="board-keys" className="pointer-events-none absolute inset-x-2 bottom-1 m-0 hidden rounded-md bg-black/75 px-2 py-1 text-center text-[11px] text-white/90 group-focus-visible:block">
+          <p id="board-keys" className="pointer-events-none absolute inset-x-2 bottom-1 m-0 hidden rounded-md bg-black/75 px-2 py-1 text-center text-[11px] text-mist/90 group-focus-visible:block">
             Arrows move the cursor. Shift + arrows swap its gem that way.
           </p>
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
 
         <div className="relative flex min-h-0 flex-col gap-1.5 px-2 pb-[max(8px,env(safe-area-inset-bottom))] [grid-area:rail] md:px-3">
-          {loadError && <p className="m-0 rounded-lg border border-rose-400/40 bg-rose-950/40 p-2 text-xs text-rose-100" role="alert">{loadError}</p>}
-          {!session && !loadError && <p className="m-0 p-2 text-xs text-white/60">Loading animals…</p>}
+          {loadError && <p className="m-0 rounded-lg border border-danger/50 bg-danger/10 p-2 text-xs text-mist" role="alert">{loadError}</p>}
+          {!session && !loadError && <p className="m-0 p-2 text-xs text-mist/60">Loading animals…</p>}
           {session && round && (
             <>
               <OrderTiles round={round} />
@@ -176,7 +176,7 @@ export function AnimalGame() {
                 <p className="m-0 line-clamp-2 min-w-0 flex-1">
                   {latest ? <LogText entry={latest} nameOf={nameOf} count={round.suspects.length} /> : 'Fill a clue to ask about the mystery. Tap an animal to rule it out.'}
                 </p>
-                <button type="button" onClick={() => setSheet({ kind: 'notes' })} className="h-10 shrink-0 rounded-lg border border-violet-300/40 bg-violet-400/10 px-3 text-[12px] font-semibold text-violet-100 active:bg-white/10" aria-label={`Witness notes: ${round.notes.length}`}>
+                <button type="button" onClick={() => setSheet({ kind: 'notes' })} className="h-10 shrink-0 rounded-lg border border-notes/50 bg-notes/10 px-3 text-[12px] font-semibold text-mist active:bg-white/10" aria-label={`Witness notes: ${round.notes.length}`}>
                   📓 {round.notes.length}
                 </button>
               </div>

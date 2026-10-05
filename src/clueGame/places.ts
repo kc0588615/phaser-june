@@ -84,7 +84,7 @@ export function classColor(className: string | null | undefined): string {
     case 'AVES':
       return '#38bdf8';
     default:
-      return '#67e8f9';
+      return '#6fa8bc';
   }
 }
 

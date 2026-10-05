@@ -43,7 +43,7 @@ export function GemLegend({ book, round, onNotes, onTree }: {
               <GemIcon gem={GEM_OF[category]} className="h-5 w-5" />
               {cost > 1 && lead && (
                 <span className="flex gap-0.5">
-                  {Array.from({ length: cost }, (_, index) => <i key={index} className={`h-1.5 w-1.5 rounded-full ${index < held ? 'bg-amber-200' : 'bg-white/20'}`} />)}
+                  {Array.from({ length: cost }, (_, index) => <i key={index} className={`h-1.5 w-1.5 rounded-full ${index < held ? 'bg-ochre' : 'bg-white/20'}`} />)}
                 </span>
               )}
             </span>
@@ -53,19 +53,19 @@ export function GemLegend({ book, round, onNotes, onTree }: {
             {lead && (
               <span className="shrink-0 text-center leading-none" aria-hidden="true">
                 <b className="block text-[15px] tabular-nums">{splitOf(lead)}{sure ? '+' : '?'}</b>
-                <span className="text-[9px] text-white/60">out</span>
+                <span className="text-[9px] text-mist/60">out</span>
               </span>
             )}
           </li>
         );
       })}
       <li className="grid grid-cols-2 gap-1">
-        <button type="button" onClick={onNotes} aria-label={`Field notes: ${round.notesCollected} saved${sealed ? ', sealed until a last chance' : ''}`} className={`${tile} justify-center border-violet-300/40 bg-violet-400/10`}>
-          {sealed ? <Lock className="h-4 w-4 text-violet-200" aria-hidden="true" /> : <GemIcon gem={GEM_OF.notes} className="h-5 w-5" />}
+        <button type="button" onClick={onNotes} aria-label={`Field notes: ${round.notesCollected} saved${sealed ? ', sealed until a last chance' : ''}`} className={`${tile} justify-center border-notes/50 bg-notes/10`}>
+          {sealed ? <Lock className="h-4 w-4 text-notes" aria-hidden="true" /> : <GemIcon gem={GEM_OF.notes} className="h-5 w-5" />}
           <b className="text-[15px] tabular-nums">{round.notesCollected}</b>
         </button>
-        <button type="button" onClick={onTree} aria-label={`Family tree: ${round.familyTreeSteps} of ${FAMILY_TREE_RANKS.length} steps`} className={`${tile} justify-center border-emerald-300/40 bg-emerald-400/10`}>
-          <TreeDeciduous className="h-4 w-4 text-emerald-200" aria-hidden="true" />
+        <button type="button" onClick={onTree} aria-label={`Family tree: ${round.familyTreeSteps} of ${FAMILY_TREE_RANKS.length} steps`} className={`${tile} justify-center border-action bg-action/15`}>
+          <TreeDeciduous className="h-4 w-4 text-leaf" aria-hidden="true" />
           <b className="text-[13px] tabular-nums">{treeDone ? '✓' : `${round.familyTreeSteps}/${FAMILY_TREE_RANKS.length}`}</b>
         </button>
       </li>

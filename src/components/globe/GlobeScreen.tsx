@@ -43,20 +43,23 @@ export function GlobeScreen() {
   return (
     <>
       <Head><title>Critter Connect</title></Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_42dvh_minmax(0,1fr)] overflow-hidden bg-[#06121a] text-white [grid-template-areas:'top'_'globe'_'panel'] md:grid-cols-[minmax(0,1fr)_420px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'globe_top'_'globe_panel']">
+      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_42dvh_minmax(0,1fr)] overflow-hidden bg-night text-mist [grid-template-areas:'top'_'globe'_'panel'] md:grid-cols-[minmax(0,1fr)_420px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'globe_top'_'globe_panel']">
         <header className="flex min-w-0 items-center gap-2 px-3 py-2 [grid-area:top]">
           <div className="min-w-0 flex-1">
-            <h1 className="m-0 truncate text-base font-bold leading-tight">Critter Connect</h1>
-            <p className="m-0 truncate text-[11px] text-cyan-100/70">
+            <h1 className="m-0 leading-none">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static SVG wordmark */}
+              <img src="/branding/critterconnect-logo.svg" alt="Critter Connect" className="block h-6 w-auto" />
+            </h1>
+            <p className="m-0 truncate text-[11px] text-sage">
               {data ? `${foundCount} of ${animals.size} animals found` : 'Pick a place to explore'}
             </p>
           </div>
-          <Link href="/explore/" className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-white/85 no-underline active:bg-white/10" aria-label="Play with animals from everywhere">
+          <Link href="/explore/" className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-mist/85 no-underline active:bg-white/10" aria-label="Play with animals from everywhere">
             <Shuffle className="h-4 w-4" aria-hidden="true" /> Anywhere
           </Link>
           <Show when="signed-out">
             <SignInButton mode="modal">
-              <button type="button" className="h-11 shrink-0 rounded-full bg-cyan-300 px-4 text-[13px] font-bold text-slate-950">Sign in</button>
+              <button type="button" className="h-11 shrink-0 rounded-full bg-action px-4 text-[13px] font-bold text-mist">Sign in</button>
             </SignInButton>
           </Show>
           <Show when="signed-in">
@@ -69,8 +72,8 @@ export function GlobeScreen() {
         </section>
 
         <div className="flex min-h-0 flex-col border-t border-white/10 pt-2 [grid-area:panel] md:border-l md:border-t-0">
-          {error && <p className="m-3 rounded-lg border border-rose-400/40 bg-rose-950/40 p-2 text-xs text-rose-100" role="alert">{error}</p>}
-          {!data && !error && <p className="m-3 text-xs text-white/60">Loading places…</p>}
+          {error && <p className="m-3 rounded-lg border border-danger/50 bg-danger/10 p-2 text-xs text-mist" role="alert">{error}</p>}
+          {!data && !error && <p className="m-3 text-xs text-mist/60">Loading places…</p>}
           {data && selected && (
             <PlaceCard
               key={selected.key}

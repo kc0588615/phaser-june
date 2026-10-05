@@ -16,38 +16,51 @@ export interface GlobeSighting {
 
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 
+// The logo's map grid on the globe: meridians and parallels every 30°.
+const steps = (from: number, to: number, by: number) => Array.from({ length: Math.floor((to - from) / by) + 1 }, (_, i) => from + i * by);
+const line = (coordinates: [number, number][]): GeoJSON.Feature => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } });
+const GRATICULE: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    ...steps(-180, 150, 30).map(lon => line(steps(-90, 90, 5).map(lat => [lon, lat]))),
+    ...steps(-60, 60, 30).map(lat => line(steps(-180, 180, 5).map(lon => [lon, lat]))),
+  ],
+};
+
 const STYLE: StyleSpecification = {
   version: 8,
   projection: { type: 'globe' },
   sources: {
     land: { type: 'geojson', data: WORLD_LAND_GEOJSON_URL, attribution: 'Natural Earth' },
+    graticule: { type: 'geojson', data: GRATICULE },
     selected: { type: 'geojson', data: EMPTY },
     places: { type: 'geojson', data: EMPTY },
     sightings: { type: 'geojson', data: EMPTY },
   },
   layers: [
-    { id: 'ocean', type: 'background', paint: { 'background-color': '#08202b' } },
-    { id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': '#15404a' } },
-    { id: 'land-edge', type: 'line', source: 'land', paint: { 'line-color': '#2d7282', 'line-width': 0.6 } },
-    { id: 'selected-fill', type: 'fill', source: 'selected', paint: { 'fill-color': '#67e8f9', 'fill-opacity': 0.16 } },
-    { id: 'selected-line', type: 'line', source: 'selected', paint: { 'line-color': '#a5f3fc', 'line-width': 1.6 } },
+    { id: 'ocean', type: 'background', paint: { 'background-color': '#0b1a1f' } },
+    { id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': '#1f3d47' } },
+    { id: 'graticule', type: 'line', source: 'graticule', paint: { 'line-color': '#47788a', 'line-width': 0.6, 'line-opacity': 0.45 } },
+    { id: 'land-edge', type: 'line', source: 'land', paint: { 'line-color': '#47788a', 'line-width': 0.6 } },
+    { id: 'selected-fill', type: 'fill', source: 'selected', paint: { 'fill-color': '#6fa8bc', 'fill-opacity': 0.2 } },
+    { id: 'selected-line', type: 'line', source: 'selected', paint: { 'line-color': '#a9cfdc', 'line-width': 1.6 } },
     {
       id: 'places', type: 'circle', source: 'places',
       paint: {
         'circle-radius': ['case', ['get', 'selected'], 7, 4.5],
-        'circle-color': ['case', ['get', 'selected'], '#ecfeff', '#67e8f9'],
+        'circle-color': ['case', ['get', 'selected'], '#f3f1e8', '#6fa8bc'],
         'circle-opacity': 0.9,
-        'circle-stroke-color': '#06121a',
+        'circle-stroke-color': '#08110d',
         'circle-stroke-width': 1.5,
       },
     },
     { id: 'sighting-glow', type: 'circle', source: 'sightings', paint: { 'circle-radius': 18, 'circle-color': ['get', 'color'], 'circle-blur': 0.9, 'circle-opacity': 0.7 } },
     { id: 'sighting-ring', type: 'circle', source: 'sightings', paint: { 'circle-radius': 8, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': ['get', 'color'], 'circle-stroke-width': 1.5, 'circle-stroke-opacity': 0.9 } },
-    { id: 'sighting-core', type: 'circle', source: 'sightings', paint: { 'circle-radius': 4.5, 'circle-color': ['get', 'color'], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5 } },
+    { id: 'sighting-core', type: 'circle', source: 'sightings', paint: { 'circle-radius': 4.5, 'circle-color': ['get', 'color'], 'circle-stroke-color': '#f3f1e8', 'circle-stroke-width': 1.5 } },
   ],
   sky: {
-    'sky-color': '#06121a',
-    'horizon-color': '#0e4a5c',
+    'sky-color': '#08110d',
+    'horizon-color': '#1d3a44',
     'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0],
   },
 };

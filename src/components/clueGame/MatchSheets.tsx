@@ -19,14 +19,14 @@ export function Sheet({ title, onClose, children, footer }: { title: ReactNode; 
   const titleId = useId();
   return (
     <div className="fixed inset-0 z-[8200] flex items-end justify-center bg-black/60" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={onClose}>
-      <div className="cm-pop-in flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-2xl border border-white/15 bg-[#081a21] text-white shadow-2xl" onClick={event => event.stopPropagation()}>
+      <div className="cm-pop-in flex max-h-[85dvh] w-full max-w-md flex-col rounded-t-2xl border border-white/15 bg-surface text-mist shadow-2xl" onClick={event => event.stopPropagation()}>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-2">
-          <h2 id={titleId} className="m-0 mb-2 text-lg font-bold leading-tight">{title}</h2>
+          <h2 id={titleId} className="m-0 font-display mb-2 text-lg font-bold leading-tight">{title}</h2>
           {children}
         </div>
         <div className="flex gap-2 px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-2">
           {footer}
-          <button type="button" onClick={onClose} className="h-12 flex-1 rounded-xl border border-white/20 text-sm font-semibold text-white/85 active:bg-white/10">Close</button>
+          <button type="button" onClick={onClose} className="h-12 flex-1 rounded-xl border border-white/20 text-sm font-semibold text-mist/85 active:bg-white/10">Close</button>
         </div>
       </div>
     </div>
@@ -47,19 +47,19 @@ export function FieldGuideSheet({ animal, species, round, onGuess, onClose }: {
     <Sheet
       title={animal.name}
       onClose={onClose}
-      footer={canGuess ? <button type="button" onClick={() => onGuess(animal.id)} className="h-12 flex-[2] rounded-xl bg-amber-300 text-sm font-bold text-slate-950 active:scale-[.98]">Guess: it&apos;s the {animal.name}!</button> : undefined}
+      footer={canGuess ? <button type="button" onClick={() => onGuess(animal.id)} className="h-12 flex-[2] rounded-xl bg-action text-sm font-bold text-mist active:scale-[.98]">Guess: it&apos;s the {animal.name}!</button> : undefined}
     >
       {species?.photo && (
         // eslint-disable-next-line @next/next/no-img-element -- a remote Commons thumbnail
         <img src={photoAt(species.photo.url, 330)} alt={`A ${animal.name}`} decoding="async" className="mb-2 h-36 w-full rounded-xl object-cover" />
       )}
-      {why && <p className="m-0 mb-2 text-sm font-semibold text-rose-300">{why}</p>}
+      {why && <p className="m-0 mb-2 text-sm font-semibold text-danger">{why}</p>}
       {sections.map(([key, label]) => animal.guide[key].length > 0 && (
         <section key={key} className="mb-2">
-          <h3 className="m-0 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-cyan-200">
+          <h3 className="m-0 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-sage">
             {key !== 'family' && <GemIcon gem={GEM_OF[key]} className="h-4 w-4" />}{label}
           </h3>
-          {animal.guide[key].map(line => <p key={line} className="m-0 mt-0.5 text-[13px] leading-snug text-white/85"><GlossaryText text={line} /></p>)}
+          {animal.guide[key].map(line => <p key={line} className="m-0 mt-0.5 text-[13px] leading-snug text-mist/85"><GlossaryText text={line} /></p>)}
         </section>
       ))}
     </Sheet>
@@ -75,13 +75,13 @@ export function FamilyTreeSheet({ book, animal, round, onBuy, onClose }: {
   const missing = CHARGE_CATEGORIES.filter(category => round.charges[category] < 1);
   return (
     <Sheet
-      title={<span className="flex items-center gap-2"><TreeDeciduous className="h-5 w-5 text-emerald-200" aria-hidden="true" />Family tree</span>}
+      title={<span className="flex items-center gap-2"><TreeDeciduous className="h-5 w-5 text-leaf" aria-hidden="true" />Family tree</span>}
       onClose={onClose}
       footer={quote?.affordable && isLive(round.status)
-        ? <button type="button" onClick={onBuy} className="h-12 flex-[2] rounded-xl bg-emerald-300 text-sm font-bold text-slate-950 active:scale-[.98]">Reveal its {quote.rank}</button>
+        ? <button type="button" onClick={onBuy} className="h-12 flex-[2] rounded-xl bg-action text-sm font-bold text-mist active:scale-[.98]">Reveal its {quote.rank}</button>
         : undefined}
     >
-      <p className="m-0 mb-1 text-[13px] text-white/70">Every animal here is in kingdom Animalia and phylum Chordata (animals with a backbone).</p>
+      <p className="m-0 mb-1 text-[13px] text-mist/70">Every animal here is in kingdom Animalia and phylum Chordata (animals with a backbone).</p>
       <ul className="m-0 list-none p-0">
         {FAMILY_TREE_RANKS.map((rank, index) => {
           const known = index < round.familyTreeSteps;
@@ -89,23 +89,23 @@ export function FamilyTreeSheet({ book, animal, round, onBuy, onClose }: {
           return (
             <li key={rank} className="flex items-baseline justify-between gap-2 border-t border-white/10 py-2 text-sm">
               <span>{rankName(rank)} {known ? <><b>{tree[rank].latin}</b>{tree[rank].plain ? ` (${tree[rank].plain})` : ''}</> : '?'}</span>
-              <span className="shrink-0 text-right text-[12px] text-white/55">
-                {known ? (step?.kind === 'step' && step.free ? 'every animal left is one, so it came free' : '✓') : index === round.familyTreeSteps ? <b className="text-white">next</b> : ''}
+              <span className="shrink-0 text-right text-[12px] text-mist/55">
+                {known ? (step?.kind === 'step' && step.free ? 'every animal left is one, so it came free' : '✓') : index === round.familyTreeSteps ? <b className="text-mist">next</b> : ''}
               </span>
             </li>
           );
         })}
-        <li className="flex justify-between border-t border-white/10 py-2 text-sm"><span>Genus and species ?</span><span className="text-[12px] text-white/55">on the reveal card</span></li>
+        <li className="flex justify-between border-t border-white/10 py-2 text-sm"><span>Genus and species ?</span><span className="text-[12px] text-mist/55">on the reveal card</span></li>
       </ul>
       {round.rules.familyTree.cost === 'match' && round.familyTreeSteps < FAMILY_TREE_RANKS.length && (
-        <p className="m-0 mt-2 text-[13px] text-white/80">
+        <p className="m-0 mt-2 text-[13px] text-mist/80">
           Line up {round.rules.familyTree.match} or more gems of one color to reveal its {FAMILY_TREE_RANKS[round.familyTreeSteps]}. It crosses out every animal in another {FAMILY_TREE_RANKS[round.familyTreeSteps]}.
         </p>
       )}
       {quote && (
-        <p className="m-0 mt-2 text-[13px] text-white/80">
+        <p className="m-0 mt-2 text-[13px] text-mist/80">
           Revealing its {quote.rank} costs one charge of each color, and crosses out every animal in another {quote.rank}.{' '}
-          {quote.affordable ? 'You have a full set.' : <span className="text-white/60">Still missing: {missing.map(category => CATEGORY_LABELS[category]).join(', ')}.</span>}
+          {quote.affordable ? 'You have a full set.' : <span className="text-mist/60">Still missing: {missing.map(category => CATEGORY_LABELS[category]).join(', ')}.</span>}
         </p>
       )}
     </Sheet>
@@ -116,17 +116,17 @@ export function NotesSheet({ round, nameOf, onClose }: { round: RoundState; name
   const sealed = isLive(round.status) && round.status !== 'last-chance';
   const notes = round.log.filter(entry => entry.kind === 'note');
   return (
-    <Sheet title={sealed ? <span className="flex items-center gap-2"><Lock className="h-5 w-5 text-violet-200" aria-hidden="true" />Field notes: {round.notesCollected}</span> : '📓 Field notes'} onClose={onClose}>
+    <Sheet title={sealed ? <span className="flex items-center gap-2"><Lock className="h-5 w-5 text-notes" aria-hidden="true" />Field notes: {round.notesCollected}</span> : '📓 Field notes'} onClose={onClose}>
       {sealed ? (
         <>
-          <p className="m-0 text-sm text-white/85">Match next to a glowing note gem to save a field note. Saved notes stay sealed: if your final guess is wrong, they open and you get one more guess.</p>
-          {round.notesCollected === 0 && <p className="m-0 mt-2 text-sm text-white/60">You haven&apos;t saved any yet.</p>}
+          <p className="m-0 text-sm text-mist/85">Match next to a glowing note gem to save a field note. Saved notes stay sealed: if your final guess is wrong, they open and you get one more guess.</p>
+          {round.notesCollected === 0 && <p className="m-0 mt-2 text-sm text-mist/60">You haven&apos;t saved any yet.</p>}
         </>
       ) : notes.length ? (
         <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-          {notes.map((entry, index) => <li key={index} className="rounded-lg border border-violet-300/25 bg-violet-400/10 p-2 text-[13px] leading-snug"><LogEntryText entry={entry} status={round.status} nameOf={nameOf} /></li>)}
+          {notes.map((entry, index) => <li key={index} className="rounded-lg border border-notes/30 bg-notes/10 p-2 text-[13px] leading-snug"><LogEntryText entry={entry} status={round.status} nameOf={nameOf} /></li>)}
         </ul>
-      ) : <p className="m-0 text-sm text-white/60">No field notes opened this round.</p>}
+      ) : <p className="m-0 text-sm text-mist/60">No field notes opened this round.</p>}
     </Sheet>
   );
 }
@@ -135,7 +135,7 @@ export function LogSheet({ round, nameOf, onClose }: { round: RoundState; nameOf
   const entries = [...round.log].reverse();
   return (
     <Sheet title="Answers so far" onClose={onClose}>
-      {entries.length === 0 && <p className="m-0 text-sm text-white/60">Nothing yet. Match gems to earn charges, then tap a color to ask.</p>}
+      {entries.length === 0 && <p className="m-0 text-sm text-mist/60">Nothing yet. Match gems to earn charges, then tap a color to ask.</p>}
       <ul className="m-0 flex list-none flex-col p-0">
         {entries.map((entry, index) => <li key={index} className="border-t border-white/10 py-2 text-[13px] leading-snug first:border-t-0"><LogEntryText entry={entry} status={round.status} nameOf={nameOf} /></li>)}
       </ul>

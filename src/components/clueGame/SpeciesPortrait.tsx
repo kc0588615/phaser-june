@@ -25,7 +25,7 @@ export function SpeciesPortrait({ species, className, width = 120 }: {
 /** "Photo: Charles J. Sharp, CC BY-SA 4.0", linked to the file page (the license asks for credit). */
 export function PhotoCredit({ photo, className = '' }: { photo: NonNullable<PoolSpecies['photo']>; className?: string }) {
   return (
-    <a href={photo.page} target="_blank" rel="noopener noreferrer" className={`text-white/45 underline decoration-white/20 underline-offset-2 hover:text-white/70 ${className}`}>
+    <a href={photo.page} target="_blank" rel="noopener noreferrer" className={`text-mist/45 underline decoration-white/20 underline-offset-2 hover:text-mist/70 ${className}`}>
       Photo: {photo.credit}, {photo.license}
     </a>
   );
