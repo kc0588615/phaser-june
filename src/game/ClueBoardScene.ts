@@ -70,6 +70,9 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-key', this.onKey, this);
         EventBus.on('clue-board-marks', this.onMarks, this);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
+        // game.destroy() (React unmount, HMR) fires DESTROY, not SHUTDOWN; the display list is already gone by
+        // then, so only unsubscribe, or a stale scene answers the next 'clue-board-setup' and crashes.
+        this.events.once(Phaser.Scenes.Events.DESTROY, this.unsubscribe, this);
 
         EventBus.emit('current-scene-ready', this);
         attachDebugScene(this);
@@ -268,16 +271,20 @@ export class ClueBoardScene extends Phaser.Scene {
         return this.model;
     }
 
-    private shutdown(): void {
+    private unsubscribe(): void {
         detachDebugScene(this);
         EventBus.off('clue-board-setup', this.setupBoard, this);
         EventBus.off('clue-board-lock', this.setLock, this);
         EventBus.off('clue-board-key', this.onKey, this);
         EventBus.off('clue-board-marks', this.onMarks, this);
-        this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
-        this.view?.destroyAll();
+        this.scale?.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.view = null;
         this.controller = null;
         this.backdrop = null;
+    }
+
+    private shutdown(): void {
+        this.view?.destroyAll();
+        this.unsubscribe();
     }
 }
