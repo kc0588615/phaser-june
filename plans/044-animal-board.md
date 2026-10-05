@@ -143,6 +143,19 @@ What's there:
 - Do the emoji faces read at a glance as their clue, and do the cards' ✓/✗ chips help or crowd?
 - Do 30-move rounds stay fun once the mystery is known?
 
+### Evidence grid: built 2026-10-04 (replaces the suspect cards and order tiles)
+
+Why: the cards held each animal's answers in a 2×2 block, so the same clue sat in a different spot on each card and nothing lined up; the order tiles repeated the mystery's answers under the board. Settled with the owner after ChatGPT, Grok and Fable proposals and a throwaway prototype (two layouts on real rounds; the owner picked animals as rows).
+
+- **One table** (`EvidenceGrid.tsx`): a column per clue (its gem face and a short label, `columnLabel` in `questionMatch.ts`, qualifiers kept: "Huge 300+ kg", "Mostly bugs"); the Mystery row, where each cell fills with that clue's gems and flips to an ochre YES/NO stamp; a row per suspect with its own ✓/✗. Rows never move or collapse; ruled out = red ring and ✕, released = dimmed.
+- **Point, don't conclude:** during play nothing marks a contradiction, says who is "still possible", or eliminates anyone. When an answer lands the whole column lights, not the mismatching cells. The counter is the player's own marks ("2 ruled out"). The round-end card replays the grid with red exactly where an *earned* answer rules an animal out; unearned answers stay "?" (small pools repeat sets, so showing all four would leak).
+- **Numbers, not just photos:** each animal has a number (1–5, the suspect order) on its row and on its board tile, because look-alike photos can't be told apart at 30 px. Tapping a row or a tile picks the animal (the tile pulses blue); its Field guide and **Rule out** appear in the status line, so marking takes two taps and a stray tap can't start an escape.
+- **Gem flight:** each color cleared sends one gem from the board to its column (`gems-matched` gains `from`, page pixels). The rules still count at once (`data-have` on the cell, which the e2e reads); only the grid's number waits for the landing or the settle (`useShownOrders.ts`). The round-end card waits for the board to settle. Reduced motion: no flight.
+- **Screen:** grid, one status line (events only; the whole question once, when its first gems land), board. The top bar is gone: menu, hearts, trail and moves sit in the grid's empty corner; globe, journal, how to play, sound and score are in the menu. DESIGN.md records the exception (12 px grid text, 34 px rows). At 375×548 the board keeps 210 px (the old layout gave 218).
+- **Deferred:** close-up photo crops (one focus point per animal; a tight crop can hide the trait a clue asks about), the released tile flying to its row, the first-round "point at mismatches" help.
+
+E2E: 501/501 at seed 7, Africa (adds: grid rows and columns match the rules, the Mystery row never named during play, no mismatch marks during play, marks counted, Rule out through the row and status line, a tile tap picks its row, the board keeps 210 px at 375×548, the end card's red cells are exactly the earned mismatches).
+
 ### Part 3: the playable screen
 
 - `useMatchSession` → a session over `animalBoard.ts`; rules version `044-1`.

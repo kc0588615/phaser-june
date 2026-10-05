@@ -49,6 +49,7 @@ const MAX_EVENTS = 200;
 const LOGGED: Record<keyof EventPayloads, true> = {
   'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
   'clue-board-key': true, 'clue-board-announce': true, 'clue-board-marks': true, 'clue-board-settled': true,
+  'clue-board-select': true, 'clue-board-tile': true,
 };
 
 let scene: DebugScene | null = null;

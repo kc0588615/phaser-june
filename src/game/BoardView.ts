@@ -3,7 +3,8 @@
 // BoardController asks BoardModel what happened, then tells this class what to
 // animate. Plan 044: animals pinned on the board are photo tiles in a round frame;
 // gems fall past them; a ruled-out tile wears a red ring, the release preview an
-// amber one, and a released tile hops off.
+// amber one, and a released tile hops off. Each tile carries its number from the
+// evidence grid, and the animal picked there gets a pulsing blue ring.
 import Phaser from 'phaser';
 import {
     gemTexture,
@@ -26,6 +27,9 @@ interface Tile {
     mask: Phaser.GameObjects.Graphics | null;
     ring: Phaser.GameObjects.Graphics;
     cross: Phaser.GameObjects.Text;
+    /** The animal's number in the evidence grid, on a disc at the tile's lower left (null: no number). */
+    tagBack: Phaser.GameObjects.Graphics;
+    tag: Phaser.GameObjects.Text | null;
 }
 
 const cellKey = ([x, y]: readonly [number, number]) => `${x},${y}`;
@@ -47,6 +51,10 @@ export class BoardView {
     private tiles = new Map<number, Tile>();
     private marked = new Set<number>();
     private previewed = new Set<number>();
+    /** The animal picked in the evidence grid, its ring, and the ring's pulse. */
+    private selected: number | null = null;
+    private selectRing: Phaser.GameObjects.Graphics | null = null;
+    private selectPulse: Phaser.Tweens.Tween | null = null;
     /** Gem color -> the texture drawn for it this round (plan 044 faces); default gem_<color>. */
     private faces = new Map<GemType, string>();
 
@@ -78,13 +86,17 @@ export class BoardView {
         this.pinned = new Set(pins.map(pin => cellKey(pin.cell)));
         this.marked.clear();
         this.previewed.clear();
+        this.setSelected(null);
         for (const pin of pins) {
             const back = this.scene.add.graphics().setDepth(5);
             const ring = this.scene.add.graphics().setDepth(7);
             const cross = this.scene.add.text(0, 0, '✕', { fontFamily: 'Arial Black, Arial, sans-serif', color: '#ffffff', stroke: '#b91c1c', strokeThickness: 6 })
                 .setOrigin(0.5).setDepth(8).setVisible(false);
+            const tagBack = this.scene.add.graphics().setDepth(8);
+            const tag = pin.tag === undefined ? null
+                : this.scene.add.text(0, 0, String(pin.tag), { fontFamily: 'Arial Black, Arial, sans-serif', color: '#08110d' }).setOrigin(0.5).setDepth(9);
             const key = `tile_${pin.id}`;
-            const tile: Tile = { pin, back, ring, cross, mask: null, face: this.badge(pin) };
+            const tile: Tile = { pin, back, ring, cross, tagBack, tag, mask: null, face: this.badge(pin) };
             this.tiles.set(pin.id, tile);
             if (this.scene.textures.exists(key)) this.usePhoto(tile, key);
             else if (pin.photo) {
@@ -95,6 +107,28 @@ export class BoardView {
             }
             this.drawTile(tile);
         }
+    }
+
+    /** The animal picked in the evidence grid: its tile wears a blue ring that pulses (steady with reduced motion). */
+    setSelected(id: number | null): void {
+        this.selected = id;
+        this.drawSelection();
+    }
+
+    private drawSelection(): void {
+        const tile = this.selected === null ? undefined : this.tiles.get(this.selected);
+        this.selectPulse?.remove();
+        this.selectPulse = null;
+        if (!tile) {
+            this.selectRing?.clear();
+            return;
+        }
+        const { gemSize } = this.layout;
+        const { x, y } = this.positionOf(...tile.pin.cell);
+        this.selectRing ??= this.scene.add.graphics().setDepth(7);
+        this.selectRing.clear().setAlpha(1).lineStyle(Math.max(3, gemSize * 0.09), 0x6fa8bc, 1).strokeCircle(x, y, gemSize * 0.52);
+        const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!still) this.selectPulse = this.scene.tweens.add({ targets: this.selectRing, alpha: 0.25, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
     /** Ruled-out animals wear a red ring and a cross. */
@@ -127,7 +161,8 @@ export class BoardView {
             if (!tile) continue;
             this.tiles.delete(id);
             this.pinned.delete(cellKey(tile.pin.cell));
-            const parts = [tile.back, tile.face, tile.ring, tile.cross];
+            const parts = [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, ...(tile.tag ? [tile.tag] : [])];
+            if (id === this.selected) this.setSelected(null);
             tile.face.clearMask();
             tile.mask?.destroy();
             hops.push(this.tween({
@@ -202,6 +237,9 @@ export class BoardView {
         this.destroyBoard();
         for (const id of [...this.tiles.keys()]) this.destroyTile(id);
         this.pinned.clear();
+        this.selectPulse?.remove();
+        this.selectRing?.destroy();
+        this.selectRing = null;
     }
 
     /** Tweens the sprites to a new gem size and offset after a resize. */
@@ -209,6 +247,7 @@ export class BoardView {
         this.layout = layout;
         if (this.cursorCell) this.showCursor(...this.cursorCell);
         for (const tile of this.tiles.values()) this.drawTile(tile);
+        this.drawSelection();
         this.forEachSprite((sprite, x, y) => {
             this.stopTweens(sprite);
             this.scene.tweens.add({
@@ -348,6 +387,12 @@ export class BoardView {
         tile.ring.clear().lineStyle(Math.max(3, gemSize * 0.07), marked ? 0xef4444 : 0xf5efe1, 1).strokeCircle(x, y, inner + gemSize * 0.03);
         if (this.previewed.has(tile.pin.id)) tile.ring.lineStyle(Math.max(3, gemSize * 0.08), 0xfde68a, 1).strokeCircle(x, y, radius + gemSize * 0.04);
         tile.cross.setPosition(x + radius * 0.62, y - radius * 0.62).setFontSize(Math.round(gemSize * 0.3)).setVisible(marked);
+        if (tile.tag) {
+            const at = { x: x - radius * 0.66, y: y + radius * 0.66 };
+            tile.tagBack.clear().fillStyle(0xf3f1e8, 1).fillCircle(at.x, at.y, gemSize * 0.17)
+                .lineStyle(Math.max(1.5, gemSize * 0.035), 0x08110d, 1).strokeCircle(at.x, at.y, gemSize * 0.17);
+            tile.tag.setPosition(at.x, at.y).setFontSize(Math.round(gemSize * 0.22));
+        }
     }
 
     /** The fallback face: the animal's badge (an emoji or its initials) on the cream disc. */
@@ -370,7 +415,7 @@ export class BoardView {
         this.tiles.delete(id);
         tile.face.clearMask();
         tile.mask?.destroy();
-        for (const part of [tile.back, tile.face, tile.ring, tile.cross]) part.destroy();
+        for (const part of [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, tile.tag]) part?.destroy();
     }
 
     private positionOf(x: number, y: number): { x: number; y: number } {

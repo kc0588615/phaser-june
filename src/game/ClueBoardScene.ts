@@ -3,12 +3,13 @@
 // reports each explode phase's groups ('gems-matched') and obeys
 // 'clue-board-setup' / 'clue-board-lock'. Plan 044: animals pinned on the board,
 // faces on the gems, and 'clue-board-marks': a marked animal touched by a clear is
-// released (the rules decide the same from the same marks).
+// released (the rules decide the same from the same marks). A tapped tile picks its
+// animal ('clue-board-tile'); the animal picked in the grid pulses ('clue-board-select').
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
 import { BoardModel, type ExplodePhase } from './BoardModel';
 import { BoardView } from './BoardView';
-import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture } from './constants';
+import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
 import { sfx } from './sfx';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
@@ -53,6 +54,10 @@ export class ClueBoardScene extends Phaser.Scene {
         this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
             preview: cell => this.previewReleases(cell),
+            tileTap: ([x, y]) => {
+                const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
+                if (pin) EventBus.emit('clue-board-tile', { id: pin[1] });
+            },
             onMoveResolved: () => {
                 this.reshuffleIfStuck();
                 EventBus.emit('clue-board-settled', undefined);
@@ -69,6 +74,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-lock', this.setLock, this);
         EventBus.on('clue-board-key', this.onKey, this);
         EventBus.on('clue-board-marks', this.onMarks, this);
+        EventBus.on('clue-board-select', this.onSelect, this);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
         // game.destroy() (React unmount, HMR) fires DESTROY, not SHUTDOWN; the display list is already gone by
         // then, so only unsubscribe, or a stale scene answers the next 'clue-board-setup' and crashes.
@@ -98,6 +104,10 @@ export class ClueBoardScene extends Phaser.Scene {
     private onMarks({ marked }: EventPayloads['clue-board-marks']): void {
         this.marked = new Set(marked);
         this.view?.setMarked(marked);
+    }
+
+    private onSelect({ id }: EventPayloads['clue-board-select']): void {
+        this.view?.setSelected(id);
     }
 
     /** The marked animals any swap from this gem would release (the release preview after a tap). */
@@ -149,9 +159,24 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.emit('gems-matched', {
             groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length, ...(group.blast ? { blast: true } : {}) })),
             cascade,
-            ...(this.animals ? { touched: phase.touched, released } : {}),
+            ...(this.animals ? { touched: phase.touched, released, from: this.clearedAt(phase) } : {}),
         });
         return released;
+    }
+
+    /** Where each color cleared this phase (the middle of its cells), in page pixels: the grid's gems fly from there. */
+    private clearedAt(phase: ExplodePhase): Array<{ gemType: GemType; x: number; y: number }> {
+        const rect = this.game.canvas.getBoundingClientRect();
+        const sx = rect.width / this.scale.width;
+        const sy = rect.height / this.scale.height;
+        const { gemSize, offset } = this.layout;
+        const byColor = new Map<GemType, Array<[number, number]>>();
+        for (const group of phase.groups) byColor.set(group.gemType, [...(byColor.get(group.gemType) ?? []), ...group.cells]);
+        return [...byColor].map(([gemType, cells]) => ({
+            gemType,
+            x: rect.left + sx * (offset.x + (cells.reduce((sum, [x]) => sum + x, 0) / cells.length + 0.5) * gemSize),
+            y: rect.top + sy * (offset.y + (cells.reduce((sum, [, y]) => sum + y, 0) / cells.length + 0.5) * gemSize),
+        }));
     }
 
     /** Big text across the middle of the board that floats up and fades. */
@@ -277,6 +302,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.off('clue-board-lock', this.setLock, this);
         EventBus.off('clue-board-key', this.onKey, this);
         EventBus.off('clue-board-marks', this.onMarks, this);
+        EventBus.off('clue-board-select', this.onSelect, this);
         this.scale?.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.view = null;
         this.controller = null;

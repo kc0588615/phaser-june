@@ -1,7 +1,9 @@
 // The sheets over the animal board (plan 044): a suspect's field guide (with Rule
-// out), the witness notes, out of moves (name it for the journal), the round's end
-// (and the trail's), and how to play.
+// out), the witness notes, the menu, out of moves (name it for the journal), the
+// round's end (and the trail's, with the evidence grid replayed), and how to play.
+import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { BookOpen, CircleHelp, Globe2, Volume2, VolumeX } from 'lucide-react';
 import type { AnimalRound, WitnessNote } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
@@ -11,7 +13,7 @@ import { GlossaryText } from '@/components/clueGame/GlossaryText';
 import { WithBlanks } from '@/components/clueGame/LogEntryText';
 import { Sheet } from '@/components/clueGame/MatchSheets';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
-import { SuspectPhoto } from './SuspectRow';
+import { EvidenceGrid, SuspectPhoto } from './EvidenceGrid';
 
 export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v1';
 
@@ -81,6 +83,28 @@ export function NotesSheet({ round, onClose }: { round: AnimalRound; onClose: ()
   );
 }
 
+const MENU_ROW = 'flex h-12 w-full items-center gap-3 rounded-xl border border-white/15 px-3 text-left text-sm font-semibold text-mist active:bg-white/10';
+
+/** The menu behind the grid's corner button: the place and trail, then the globe, the journal, how to play and sound. */
+export function GameMenu({ title, detail, soundOn, onSound, onJournal, onHelp, onClose }: {
+  title: string; detail: string; soundOn: boolean; onSound: () => void; onJournal: () => void; onHelp: () => void; onClose: () => void;
+}) {
+  return (
+    <Sheet title={title} onClose={onClose}>
+      <p className="m-0 mb-3 text-sm text-sage">{detail}</p>
+      <div className="flex flex-col gap-2 pb-1">
+        <Link href="/" className={MENU_ROW}><Globe2 className="h-5 w-5 text-sage" aria-hidden="true" />Back to the globe</Link>
+        <button type="button" onClick={onJournal} className={MENU_ROW} aria-label="Field journal"><BookOpen className="h-5 w-5 text-sage" aria-hidden="true" />Field journal</button>
+        <button type="button" onClick={onHelp} className={MENU_ROW}><CircleHelp className="h-5 w-5 text-sage" aria-hidden="true" />How to play</button>
+        <button type="button" onClick={onSound} className={MENU_ROW} aria-pressed={soundOn} aria-label={soundOn ? 'Sound on. Turn it off' : 'Sound off. Turn it on'}>
+          {soundOn ? <Volume2 className="h-5 w-5 text-sage" aria-hidden="true" /> : <VolumeX className="h-5 w-5 text-sage" aria-hidden="true" />}
+          Sound: {soundOn ? 'on' : 'off'}
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
 export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound; nameOf: (id: number) => string; onName: (id: number | null) => void }) {
   const left = round.suspects.filter(id => !round.released.includes(id));
   return (
@@ -99,8 +123,8 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
 
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
-export function RoundEndSheet({ session, animal, species, nameOf, onNext }: {
-  session: AnimalSession; animal: Animal; species: PoolSpecies | undefined; nameOf: (id: number) => string; onNext: () => void;
+export function RoundEndSheet({ session, animal, species, speciesById, nameOf, onNext }: {
+  session: AnimalSession; animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; nameOf: (id: number) => string; onNext: () => void;
 }) {
   const { round, end, trail } = session;
   if (!end) return null;
@@ -111,11 +135,20 @@ export function RoundEndSheet({ session, animal, species, nameOf, onNext }: {
   return (
     <div className="fixed inset-0 z-[8300] flex items-end justify-center bg-black/70" role="dialog" aria-modal="true" aria-label={`It was the ${animal.name}`}>
       <section className="cm-pop-in flex max-h-[92dvh] w-full max-w-md flex-col overflow-y-auto rounded-t-2xl border border-white/15 bg-surface p-4 pb-[max(16px,env(safe-area-inset-bottom))] text-mist" aria-label={`It was the ${animal.name}`}>
-        <span className="mb-2 block h-44 w-full overflow-hidden rounded-xl bg-white/5"><SuspectPhoto species={species} size={500} /></span>
+        <span className="mb-2 block h-44 w-full shrink-0 overflow-hidden rounded-xl bg-white/5"><SuspectPhoto species={species} size={500} /></span>
         <h2 className="m-0 font-display text-lg font-bold leading-tight">{headline}</h2>
         <p className="m-0 mt-1 text-[13px] text-mist/75">
           {end.outcome === 'found' ? `+${end.points} points · ${round.movesLeft} moves to spare` : 'A heart lost.'}
           {round.named && ` You named the ${nameOf(round.named.id)}: ${round.named.correct ? 'right! It goes in your journal.' : 'not this time.'}`}
+        </p>
+        <h3 className="m-0 mt-3 text-[11px] font-bold uppercase tracking-[.12em] text-sage">How the evidence lined up</h3>
+        <div className="-mx-1 mt-1 shrink-0">
+          <EvidenceGrid round={round} speciesById={speciesById} shown={round.orders.map(order => order.have)} review />
+        </div>
+        <p className="m-0 mt-1 text-[13px] text-mist/75">
+          {round.orders.some(order => order.answer)
+            ? <>A <span className="rounded bg-danger/25 px-1 shadow-[inset_0_0_0_1.5px_rgb(208_122_110/.8)]">red</span> answer doesn&apos;t match the mystery&apos;s, so it rules that animal out.</>
+            : 'No question was answered this time.'}
         </p>
         <p className="m-0 mt-2 text-[12px] italic text-mist/70">{animal.scientificName}</p>
         <p className="m-0 text-[12px] text-mist/70">Animalia › Chordata › {tree.class.latin} › {tree.order.latin} › {tree.family.latin} › {tree.genus}</p>
@@ -146,8 +179,8 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
         <h2 id="animal-how-title" className="m-0 font-display text-lg font-bold">How to play</h2>
         <ol className="m-0 flex list-decimal flex-col gap-2.5 pl-5 text-sm leading-snug text-mist/90">
           <li>Our camera trap caught a blur. It was one of the <b>{rules.suspects} animals</b> on the board. Find out which.</li>
-          <li>Swap gems to line up 3 or more. Each picture gem fills a <b>clue</b> (under the board). A full clue answers its question about the mystery: <b>yes</b> or <b>no</b>.</li>
-          <li>Each animal&apos;s card shows its own answers. Tap a card to read its field guide and <b>Rule it out</b>.</li>
+          <li>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the grid at the top. A full question answers it about the mystery: <b>yes</b> or <b>no</b>.</li>
+          <li>Each animal&apos;s row shows its own answers. Compare them with the mystery&apos;s. Tap an animal (its row, or its numbered tile on the board) to pick it, then <b>Rule it out</b>.</li>
           <li>A ruled-out animal leaves the board when a gem next to it is cleared. Release every look-alike: the last one is your find. <b>Rule out the mystery and it escapes!</b></li>
           <li>Glowing purple <b>witness gems</b> give a note about the mystery and how many of the {rules.suspects} share it.</li>
           <li>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</li>

@@ -21,6 +21,8 @@ export interface BoardHooks {
     onPhase(phase: ExplodePhase, cascade: boolean): number[] | void;
     /** A gem was picked: the pinned animals a swap from it would release (the release preview). */
     preview?(cell: Cell): number[];
+    /** An animal's tile was tapped (plan 044). */
+    tileTap?(cell: Cell): void;
     /** The move and every cascade have settled. */
     onMoveResolved(): void;
     /** What a keyboard action did, in words (for screen readers). */
@@ -81,10 +83,14 @@ export class BoardController {
     }
 
     private onPointerDown(pointer: Phaser.Input.Pointer): void {
-        if (!this.canMove) return;
         const { gemSize, offset } = this.layout;
         const cell: Cell = [Math.floor((pointer.x - offset.x) / gemSize), Math.floor((pointer.y - offset.y) / gemSize)];
-        if (!this.model.onBoard(cell) || this.model.isPinned(cell)) return; // an animal tile is never swapped
+        if (!this.model.onBoard(cell)) return;
+        if (this.model.isPinned(cell)) { // an animal tile is never swapped; tapping it picks the animal, even mid-move
+            if (this.ready) this.hooks.tileTap?.(cell);
+            return;
+        }
+        if (!this.canMove) return;
         if (!this.picked) this.view.hideCursor(); // the keyboard cursor, from earlier keyboard play
         this.press = { cell, pointerX: pointer.x, pointerY: pointer.y };
     }

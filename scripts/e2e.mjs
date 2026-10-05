@@ -1,7 +1,7 @@
 // End-to-end play test. Headless Chrome plays the dev build like a player: the
 // globe's continent list, then rounds of the animal board (plan 044) for one
 // continent at /explore, driven through the real board (window.__cc, dev only) and
-// the real cards and buttons. It checks the rules a player relies on after every
+// the real evidence grid and buttons. It checks the rules a player relies on after every
 // move and writes a repeatable artifact:
 //   e2e-artifacts/<run>/report.json   what was played, every check, errors
 //   e2e-artifacts/<run>/*.png         what the player saw
@@ -169,16 +169,42 @@ async function main() {
     await screenshot('02-board.png');
     const names = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, s.commonName]))));
     const sound = await evaluate(async () => {
+      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+      document.querySelector('button[aria-label="Menu"]')?.click();
+      await wait(250);
       const button = document.querySelector('button[aria-label^="Sound"]');
       if (!button) return null;
       const before = button.getAttribute('aria-pressed');
       button.click();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await wait(100);
       const after = document.querySelector('button[aria-label^="Sound"]').getAttribute('aria-pressed');
       document.querySelector('button[aria-label^="Sound"]').click();
-      return { before, after };
+      await wait(100);
+      [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+      await wait(250);
+      return { before, after, closed: !document.querySelector('[role=dialog]') };
     });
-    check('sound starts off and its button turns it on', sound?.before === 'false' && sound?.after === 'true', JSON.stringify(sound));
+    check('sound starts off and its button in the menu turns it on', sound?.before === 'false' && sound?.after === 'true' && sound?.closed, JSON.stringify(sound));
+    // The evidence grid and the board fit a small phone (iPhone SE in Safari is 375x548): the board keeps at least 210 px.
+    const fit = await evaluate(() => {
+      const grid = document.querySelector('table[aria-label="Evidence"]')?.getBoundingClientRect();
+      const board = document.querySelector('section[aria-label="Game board"]')?.getBoundingClientRect();
+      return grid && board ? { viewport: [innerWidth, innerHeight], grid: Math.round(grid.height), board: [Math.round(board.width), Math.round(board.height)] } : null;
+    });
+    check('the evidence grid leaves the board most of the screen', Boolean(fit) && Math.min(...fit.board) >= Math.min(fit.viewport[0] - 8, fit.viewport[1] - 340), JSON.stringify(fit));
+    // The same on an iPhone SE in Safari (375x548), then back.
+    await page('Emulation.setDeviceMetricsOverride', { width: 375, height: 548, deviceScaleFactor: 2, mobile: true });
+    await sleep(800);
+    const small = await evaluate(() => {
+      const grid = document.querySelector('table[aria-label="Evidence"]')?.getBoundingClientRect();
+      const board = document.querySelector('section[aria-label="Game board"]')?.getBoundingClientRect();
+      return grid && board ? { viewport: [innerWidth, innerHeight], grid: Math.round(grid.height), board: [Math.round(board.width), Math.round(board.height)] } : null;
+    });
+    await screenshot('02-board-375x548.png');
+    check('on a 375x548 phone the board keeps at least 210 px', Boolean(small) && Math.min(...small.board) >= 210, JSON.stringify(small));
+    await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+    await sleep(800);
+    report.layout = { phone: fit, small };
 
     const journalFinds = new Set();
     let previewChecked = false;
@@ -194,31 +220,55 @@ async function main() {
       const corner = ([x, y]) => (x === 0 || x === 6) && (y === 0 || y === 6);
       check(`round ${n}: tiles at least 3 apart and never in a corner`, pins.every(([a]) => !corner(a) && pins.every(([b]) => a === b || Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) >= 3)));
       const screen = await evaluate(() => ({
-        cards: document.querySelectorAll('[aria-label="Suspects"] li[data-suspect]').length,
-        orders: [...document.querySelectorAll('[aria-label="Clue orders"] li')].map(li => li.dataset.tag),
+        rows: [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect]')].map(row => Number(row.dataset.suspect)),
+        columns: [...document.querySelectorAll('table[aria-label="Evidence"] th[data-tag]')].map(th => th.dataset.tag),
+        mystery: document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '',
       }));
-      check(`round ${n}: 5 suspect cards and the 4 clue orders on screen`, screen.cards === 5 && screen.orders.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
+      check(`round ${n}: the evidence grid has a row per suspect and a column per clue`, screen.rows.join() === start.suspects.join() && screen.columns.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
+      check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('Mystery') && !screen.mystery.includes(mysteryName), screen.mystery);
+      if (n === 1) {
+        // Tap an animal's tile: it's picked in the grid (its actions in the status line); tap again to drop it.
+        const tile = await evaluate(async () => {
+          const [[cell, id]] = window.__cc.state().pins;
+          await window.__cc.tap(cell, { input: 'touch' });
+          await new Promise(resolve => setTimeout(resolve, 200));
+          const row = document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] button`);
+          return { cell, id, picked: row?.getAttribute('aria-pressed') === 'true' && Boolean(document.querySelector('button[data-act="rule-out"]')) };
+        });
+        await screenshot('02a-picked.png');
+        const dropped = await evaluate(async cell => {
+          await window.__cc.tap(cell, { input: 'touch' });
+          await new Promise(resolve => setTimeout(resolve, 200));
+          return !document.querySelector('button[data-act="rule-out"]');
+        }, tile.cell);
+        check('tapping an animal\'s tile picks it in the grid; tapping it again drops it', tile.picked && dropped, JSON.stringify({ ...tile, dropped }));
+      }
       const trailBefore = start.trail;
       // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then a name); others play carefully.
       const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : 'careful';
       let state = start;
       let moves = 0;
       while (state.status === 'playing' && moves < MAX_MOVES) {
-        // Rule out, through the real card and its field guide: careful, every suspect the answers and notes so far rule
-        // out; reckless, the mystery itself; idle, nobody.
+        // Rule out, through the real grid (tap the row, then Rule out in the status line): careful, every suspect the
+        // answers and notes so far rule out; reckless, the mystery itself; idle, nobody.
         const toMark = mode === 'careful' ? state.suspects.filter(id => !state.possible.includes(id))
           : mode === 'reckless' ? [state.mysteryId] : [];
         for (const id of toMark.filter(id => !state.marked.includes(id) && !state.released.includes(id))) {
-          const marked = await evaluate(async id => {
+          let marked = await evaluate(async id => {
             const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-            document.querySelector(`[data-suspect="${id}"] button`)?.click();
+            document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] button`)?.click();
             await wait(250);
-            const button = [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Rule out');
-            button?.click();
+            const picked = window.__cc.events(50).filter(e => e.name === 'clue-board-select').at(-1)?.payload?.id ?? null;
+            document.querySelector('button[data-act="rule-out"]')?.click();
             await wait(200);
-            return window.__cc.clue().marked.includes(id);
+            const counter = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '';
+            const clue = window.__cc.clue();
+            return { marked: clue.marked.includes(id), picked, counter, count: clue.marked.length };
           }, id);
-          check(`round ${n}: Rule out in the field guide marks the ${names.get(id)}`, marked);
+          check(`round ${n}: picking the ${names.get(id)}'s row tells the board to pulse its tile`, marked.picked === id, JSON.stringify(marked));
+          check(`round ${n}: Rule out in the status line marks the ${names.get(id)}`, marked.marked);
+          check(`round ${n}: the grid counts the player's own marks`, marked.counter.includes(`${marked.count} ruled out`), marked.counter);
+          marked = marked.marked;
           if (mode === 'reckless') check(`round ${n}: ruling out the mystery doesn't release it by itself`, (await evaluate(() => window.__cc.clue())).status === 'playing');
           if (marked && !markShot) { markShot = true; await sleep(400); await screenshot('02b-marked.png'); }
         }
@@ -255,8 +305,10 @@ async function main() {
           const drag = await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
           await new Promise(resolve => setTimeout(resolve, 150));
           const { pins, view } = cc.state();
-          const orders = [...document.querySelectorAll('[aria-label="Clue orders"] li')].map(li => ({ tag: li.dataset.tag, label: li.getAttribute('aria-label') }));
-          return { counted: drag.counted, timedOut: drag.timedOut, pins, view, orders, clue: cc.clue() };
+          const grid = document.querySelector('table[aria-label="Evidence"]');
+          const orders = [...grid.querySelectorAll('tr[data-mystery] td[data-tag]')].map(td => ({ tag: td.dataset.tag, have: Number(td.dataset.have), answer: td.dataset.answer || null }));
+          const misses = grid.querySelectorAll('[data-miss]').length;
+          return { counted: drag.counted, timedOut: drag.timedOut, pins, view, orders, misses, clue: cc.clue() };
         });
         if (!result) break;
         moves++;
@@ -271,10 +323,11 @@ async function main() {
         check(`round ${n} move ${moves}: tiles never move; released ones are gone`, result.pins.every(([cell, id]) => pins.some(([c, i]) => i === id && c[0] === cell[0] && c[1] === cell[1]))
           && (state.status === 'lost' ? result.pins.length <= left : result.pins.length === left), JSON.stringify({ pins: result.pins, released: state.released }));
         check(`round ${n} move ${moves}: the view shows a tile exactly on each pinned cell`, result.view.every((column, x) => column.every((key, y) => (key === 'tile') === result.pins.some(([[px, py]]) => px === x && py === y))));
-        check(`round ${n} move ${moves}: the clue orders on screen match the rules`, state.orders.every(order => {
-          const tile = result.orders.find(candidate => candidate.tag === order.tag);
-          return tile && (order.answer ? tile.label.includes(`Answer: ${order.answer}`) : tile.label.includes(`${order.have} of`));
+        check(`round ${n} move ${moves}: the grid's Mystery row matches the rules`, state.orders.every(order => {
+          const cell = result.orders.find(candidate => candidate.tag === order.tag);
+          return cell && cell.have === order.have && cell.answer === order.answer;
         }), JSON.stringify(result.orders));
+        check(`round ${n} move ${moves}: during play the grid never points at a mismatch`, result.misses === 0, `${result.misses} cells`);
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
           const notes = await evaluate(async () => {
@@ -318,6 +371,16 @@ async function main() {
       }, 'the round-end card', 10_000);
       check(`round ${n}: the round-end card names the mystery`, reveal.name === mysteryName, reveal.name);
       check(`round ${n}: the round-end card shows the family tree`, reveal.text.includes('Animalia › Chordata'));
+      // The card replays the grid: the mystery named, and red exactly where an earned answer rules a suspect out.
+      const replay = await evaluate(() => {
+        const grid = document.querySelector('table[aria-label="How the evidence lined up"]');
+        if (!grid) return null;
+        const answers = Object.fromEntries([...grid.querySelectorAll('tr[data-mystery] td[data-tag]')].map(td => [td.dataset.tag, td.dataset.answer || null]));
+        const cells = [...grid.querySelectorAll('tr[data-suspect] td[data-tag]')];
+        const wrong = cells.filter(td => td.hasAttribute('data-miss') !== (answers[td.dataset.tag] !== null && (td.dataset.yes === 'true') !== (answers[td.dataset.tag] === 'yes')));
+        return { mystery: grid.querySelector('tr[data-mystery] th')?.textContent ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length };
+      });
+      check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.mystery.includes(mysteryName), JSON.stringify(replay));
       await screenshot(`04-round-${n}-end.png`);
       report.rounds.push({
         round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, suspects: start.suspects.map(id => names.get(id)),
@@ -336,6 +399,8 @@ async function main() {
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {
+      document.querySelector('button[aria-label="Menu"]')?.click();
+      await new Promise(resolve => setTimeout(resolve, 250));
       document.querySelector('button[aria-label="Field journal"]')?.click();
       await new Promise(resolve => setTimeout(resolve, 1200));
       return document.querySelector('[role=dialog] #journal-title')?.nextElementSibling?.textContent ?? '';

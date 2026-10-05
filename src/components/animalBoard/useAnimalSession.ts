@@ -145,7 +145,7 @@ export function useAnimalSession() {
       const species = speciesById.current.get(id);
       return {
         cell: cells[i], id, name: current.book.byId.get(id)?.name ?? 'animal',
-        photo: species?.photo ? photoAt(species.photo.url, 120) : null, label: species ? speciesBadge(species) : '?',
+        photo: species?.photo ? photoAt(species.photo.url, 120) : null, label: species ? speciesBadge(species) : '?', tag: i + 1,
       };
     });
     const faces: Partial<Record<GemType, string>> = { [PEBBLE_GEM]: '' };

@@ -185,7 +185,9 @@ larger. Scores and counters use `tnum`. The Phaser board's canvas text should us
 
 ## Layout
 
-Mobile-first, full-height, no page scroll. 4 px base (4/8/12/16/24). Every tap target is at least 48 px. Screens:
+Mobile-first, full-height, no page scroll. 4 px base (4/8/12/16/24). Every tap target is at least 48 px. One
+exception: the game screen's evidence grid (plan 044) uses 12 px labels and names and 34 px rows, so a 375×548 phone
+keeps a playable board; a whole row is its tap target, and ruling out takes a second tap in the status line. Screens:
 **Globe** (Night, Globe Blue globe, Warm Mist type, Forest Action CTA) · **Match-3** (existing navy board and bright
 gems inside a natural-dark HUD) · **Species/Journal** (forest surfaces, bark/moss details; photos lead) · **Maps**
 (River Blue more prominent) · **Rewards** (Ochre more prominent).

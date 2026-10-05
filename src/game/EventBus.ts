@@ -11,19 +11,25 @@
 //   board -> page  'clue-board-announce'  what a keyboard action did, for screen readers
 //   page  -> board 'clue-board-marks'     the pinned animals the player ruled out (plan 044)
 //   board -> page  'clue-board-settled'   a move and its cascades finished
+//   page  -> board 'clue-board-select'    the animal picked in the evidence grid (its tile pulses)
+//   board -> page  'clue-board-tile'      the player tapped an animal's tile
 import Phaser from 'phaser';
 import type { GemType } from './constants';
 
-/** An animal pinned on the board (plan 044): its cell, id, photo (null: show `label`) and name. */
-export interface BoardPin { cell: [x: number, y: number]; id: number; photo: string | null; label: string; name: string }
+/** An animal pinned on the board (plan 044): its cell, id, photo (null: show `label`), name, and its number in the evidence grid. */
+export interface BoardPin { cell: [x: number, y: number]; id: number; photo: string | null; label: string; name: string; tag?: number }
 
 export interface EventPayloads {
     'current-scene-ready': Phaser.Scene;
     /**
      * Every group cleared in one explode phase (the player's move or a cascade); `blast`: gems a toy cleared outside any
      * match. `touched`: pinned animals with a cleared gem next to them; `released`: the marked ones among them, unpinned.
+     * `from`: where each color cleared, in page (client) pixels, for the gem that flies to the evidence grid (plan 044).
      */
-    'gems-matched': { groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean; touched?: number[]; released?: number[] };
+    'gems-matched': {
+        groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean; touched?: number[]; released?: number[];
+        from?: Array<{ gemType: GemType; x: number; y: number }>;
+    };
     /**
      * `rare`: a gem that never matches by itself and is collected by a match next to it (the note gem). `pins`: animals
      * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox).
@@ -36,6 +42,8 @@ export interface EventPayloads {
     'clue-board-announce': string;
     'clue-board-marks': { marked: number[] };
     'clue-board-settled': undefined;
+    'clue-board-select': { id: number | null };
+    'clue-board-tile': { id: number };
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

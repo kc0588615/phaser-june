@@ -184,6 +184,34 @@ export function shortQuestionText(tag: string): string {
   return SHORT_TEXT[tag] ?? questionText(tag);
 }
 
+// One or two words over a question's column in the evidence grid (plan 044), 8 letters a line at most, keeping the
+// qualifiers (weights, "only", "mostly"). Soft hyphens (\u00ad) let the long words break.
+const COLUMN_LABEL: Record<string, string> = {
+  'size:tiny': 'Tiny <100 g', 'size:small': 'Small 0.1–2 kg', 'size:medium': 'Medium 2–30 kg', 'size:large': 'Large 30–300 kg', 'size:huge': 'Huge 300+ kg',
+  'covering:fur': 'Fur', 'covering:spines': 'Spines', 'covering:scales': 'Scales', 'covering:armor': 'Bony armor', 'covering:shell': 'Shell', 'covering:skin': 'Bare skin',
+  'diet:plants': 'Only plants', 'diet:meat': 'Only meat', 'diet:insects': 'Mostly bugs', 'diet:mixed': 'Plants & animals',
+  'activity:day': 'Day', 'activity:night': 'Night', 'activity:twilight': 'Dawn & dusk', 'activity:any': 'Day & night',
+  'social:alone': 'Alone', 'social:pairs': 'Pairs', 'social:groups': 'Groups',
+  'birth:eggs': 'Lays eggs', 'birth:live': 'Live young',
+  'young:one': '1–2 young', 'young:few': '3–10 young', 'young:many': '10+ young',
+  'lifespan:short': 'Under 5 years', 'lifespan:medium': '5–20 years', 'lifespan:long': '20+ years',
+  'system:terrestrial': 'On land', 'system:freshwater': 'Fresh water', 'system:marine': 'Sea',
+  'habitat:forest': 'Forest', 'habitat:savanna': 'Savanna', 'habitat:shrubland': 'Shrub\u00adland', 'habitat:grassland': 'Grass\u00adland',
+  'habitat:wetlands': 'Wetlands', 'habitat:rocky': 'Rocky places', 'habitat:caves': 'Caves', 'habitat:desert': 'Desert',
+  'habitat:marine': 'Coasts & sea', 'habitat:artificial': 'Farms & towns',
+  'region:east-africa': 'East Africa', 'region:central-africa': 'Central Africa', 'region:north-africa': 'North Africa',
+  'region:southern-africa': 'Southern Africa', 'region:west-africa': 'West Africa', 'region:central-asia': 'Central Asia',
+  'region:east-asia': 'East Asia', 'region:southeast-asia': 'South\u00adeast Asia', 'region:south-asia': 'South Asia', 'region:west-asia': 'Middle East',
+  'region:eastern-europe': 'East Europe', 'region:northern-europe': 'North Europe', 'region:southern-europe': 'South Europe',
+  'region:western-europe': 'West Europe', 'region:caribbean': 'Caribbean', 'region:central-america': 'Central America',
+  'region:usa-canada': 'USA & Canada', 'region:south-america': 'South America', 'region:australia-nz': 'Austra\u00adlia & NZ',
+  'region:melanesia': 'New Guinea', 'region:micronesia': 'Micro\u00adnesia', 'region:polynesia': 'Poly\u00adnesia',
+};
+
+export function columnLabel(tag: string): string {
+  return COLUMN_LABEL[tag] ?? shortQuestionText(tag).replace(/^Lives in (the )?/, '').replace(/\?$/, '');
+}
+
 // ---- Looking animals up ----
 
 export interface Book {
