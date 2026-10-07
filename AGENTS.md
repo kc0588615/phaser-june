@@ -93,6 +93,10 @@ Default five roles: needs-triage, needs-info, ready-for-agent, ready-for-human, 
 
 Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 
+### UI theme (cc)
+
+For UI work, follow `GUI.md` and use graphical-ui, graphical-convert, or graphical-audit (`.agents/skills/`) as appropriate.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
