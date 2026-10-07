@@ -3,31 +3,277 @@
 /* Short screens (small phones, landscape): Clue Match compacts its rail. */
 @custom-variant short (@media (max-height: 740px));
 
-/* Night Field Guide tokens (DESIGN.md). Green = action, blue = place, ochre = discovery, bark = structure.
-   Gem / Red List colours are game data and stay in their own files. */
-@theme {
-  --color-night: #08110d;
-  --color-surface: #151b17;
-  --color-raised: #1b241d;
-  --color-line: #354238;
-  --color-line-strong: #5c6b60;
-  --color-mist: #f3f1e8;
-  --color-sage: #a8b1a4;
-  --color-action: #56754e;
-  --color-leaf: #95bc8b; /* success/yes text: forest green light enough to read (8.2:1) */
-  --color-moss: #71845a;
-  --color-bark: #7a5b44;
-  --color-river: #47788a;
-  --color-globe: #6fa8bc;
-  --color-ochre: #c49a43;
-  --color-danger: #d07a6e;
-  --color-notes: #b27dff;
+/* cc theme (GUI.md, gui/themes/cc.md). Literal values live only here; components use the names.
+   Mode follows the system: light on :root, dark under prefers-color-scheme. */
+:root {
+  color-scheme: light dark;
+
+  --color-none: transparent;
+  --color-1: #00906c;
+  --color-1-transparent: #00906c33;
+  --color-2: #abff5a;
+  --color-2-transparent: #abff5a33;
+  --color-3: #ffd56a;
+  --color-3-transparent: #ffd56a33;
+  --color-4: #123d5c;
+  --color-4-transparent: #123d5c33;
+  --success: #00c853;
+  --success-transparent: #00c85333;
+  --warning: #ffea00;
+  --warning-transparent: #ffea0033;
+  --error: #fc032d;
+  --error-transparent: #fc032d33;
+
+  --neutral-1: #ffffff;
+  --neutral-1-transparent: #ffffff33;
+  --neutral-2: #fcfbfa;
+  --neutral-2-transparent: #fcfbfa33;
+  --neutral-3: #f5f4f1;
+  --neutral-3-transparent: #f5f4f133;
+  --neutral-4: #e9e5df;
+  --neutral-4-transparent: #e9e5df33;
+  --neutral-5: #d2ccbf;
+  --neutral-5-transparent: #d2ccbf33;
+  --neutral-6: #a5a094;
+  --neutral-6-transparent: #a5a09433;
+  --neutral-7: #837e72;
+  --neutral-7-transparent: #837e7233;
+  --neutral-8: #595449;
+  --neutral-8-transparent: #59544933;
+  --neutral-9: #383329;
+  --neutral-9-transparent: #38332933;
+  --neutral-10: #000000;
+  --neutral-10-transparent: #00000033;
+
+  --space-zero: 0px;
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-s: 12px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+
+  --size-xxs: 10px;
+  --line-xxs: 14px;
+  --letter-spacing-xxs: -0.04em;
+  --size-xs: 12px;
+  --line-xs: 16px;
+  --letter-spacing-xs: -0.04em;
+  --size-s: 14px;
+  --line-s: 20px;
+  --letter-spacing-s: -0.04em;
+  --size-m: 16px;
+  --line-m: 24px;
+  --letter-spacing-m: -0.04em;
+  --size-l: 24px;
+  --line-l: 32px;
+  --letter-spacing-l: -0.04em;
+  --size-xl: 36px;
+  --line-xl: 40px;
+  --letter-spacing-xl: -0.04em;
+  --size-xxl: 48px;
+  --line-xxl: 52px;
+  --letter-spacing-xxl: -0.04em;
+
+  --weight-ui-regular: 400;
+  --weight-ui-medium: 700;
+  --weight-ui-heavy: 800;
+  --weight-brand-regular: 400;
+  --weight-brand-medium: 700;
+  --weight-brand-heavy: 800;
+  --weight-editorial-regular: 400;
+  --weight-editorial-medium: 700;
+  --weight-editorial-heavy: 800;
+  --weight-data-regular: 400;
+  --weight-data-medium: 700;
+  --weight-data-heavy: 800;
+
+  --border-none: 0px;
+  --border-s: 0px;
+  --border-m: 0px;
+  --border-l: 0px;
+  --border-default-color: #e9e5df33;
+  --border-shadow-none: 0 0 0 0 transparent;
+  --border-shadow-s: 0 0 0 0 transparent;
+  --border-shadow-m: 0 0 0 0 transparent;
+  --border-shadow-l: 0 0 0 0 transparent;
+
+  --motion-duration: 160ms;
+  --motion-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-large-duration: 280ms;
+  --motion-large-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-popup-scale: 0.96;
+  --motion-press-distance: 1px;
+
+  --option-badge-background: #00906c;
+  --option-badge-foreground: #fcfbfa;
+  --navigation-active-background: #00906c;
+  --navigation-active-foreground: #fcfbfa;
+  --emphasis-icon-background: #ffd56a;
+  --emphasis-icon-foreground: #000000;
+
+  --cte-canvas: #ffffff;
+  --cte-surface: #fcfbfa;
+  --cte-surface-muted: #f5f4f1;
+  --cte-text: #000000;
+  --cte-text-muted: #837e72;
+  --cte-border: #e9e5df33;
+  --cte-accent: #00906c;
+  --cte-accent-text: #fcfbfa;
+  --cte-danger: #fc032d;
+  --cte-focus: #00906c;
 }
 
-/* Fonts come from next/font in _app.tsx, which sets these variables on :root. */
+/* Dark neutrals: a local change from the cc snapshot (gui/themes/cc.md, neutralTone "warm"). Each step keeps
+   cc's lightness (so contrast is unchanged) with a cool green-teal hue (OKLCH h 180) between the board's navy
+   and color-1, so the panels and the game board read as one surface instead of brown over navy. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --neutral-1: #051411;
+    --neutral-1-transparent: #05141133;
+    --neutral-2: #142320;
+    --neutral-2-transparent: #14232033;
+    --neutral-3: #1f2e2b;
+    --neutral-3-transparent: #1f2e2b33;
+    --neutral-4: #30413d;
+    --neutral-4-transparent: #30413d33;
+    --neutral-5: #4a5b57;
+    --neutral-5-transparent: #4a5b5733;
+    --neutral-6: #768884;
+    --neutral-6-transparent: #76888433;
+    --neutral-7: #9dafab;
+    --neutral-7-transparent: #9dafab33;
+    --neutral-8: #c7d1cf;
+    --neutral-8-transparent: #c7d1cf33;
+    --neutral-9: #ecf7f4;
+    --neutral-9-transparent: #ecf7f433;
+    --neutral-10: #ffffff;
+    --neutral-10-transparent: #ffffff33;
+
+    --border-default-color: #30413d33;
+    --option-badge-foreground: #142320;
+    --navigation-active-foreground: #142320;
+
+    --cte-canvas: #051411;
+    --cte-surface: #142320;
+    --cte-surface-muted: #1f2e2b;
+    --cte-text: #ffffff;
+    --cte-text-muted: #9dafab;
+    --cte-border: #30413d33;
+    --cte-accent-text: #142320;
+  }
+}
+
+/* Mode-independent cc tokens. Tailwind emits them under the cc names (static: always) and makes
+   font-ui, rounded-m, shadow-m... Font files are not bundled: until GT Maru and Open Runde are
+   licensed and added, the browser shows the sans-serif fallback. */
+@theme static {
+  --font-*: initial;
+  --font-ui: "GT Maru", sans-serif;
+  --font-brand: "GT Maru", sans-serif;
+  --font-editorial: "GT Maru", sans-serif;
+  --font-data: "Open Runde", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-*: initial;
+  --radius-zero: 0px;
+  --radius-xs: 8px;
+  --radius-s: 16px;
+  --radius-m: 22px;
+  --radius-l: 28px;
+  --radius-xl: 40px;
+  --radius-full: 9999px;
+
+  --shadow-*: initial;
+  --shadow-none: none;
+  --shadow-s: 0px 2px 4px 0px #00000000;
+  --shadow-m: 0px 2px 6px 0px #0000000d, 0px 8px 24px 0px #00000013;
+  --shadow-l: 0px 16px 48px 0px #00000000;
+}
+
+/* Tailwind names for the cc variables above: bg-neutral-2, text-color-1, p-m, gap-xs, text-s... */
 @theme inline {
-  --font-sans: var(--font-atkinson), system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --color-color-1: var(--color-1);
+  --color-color-1-transparent: var(--color-1-transparent);
+  --color-color-2: var(--color-2);
+  --color-color-2-transparent: var(--color-2-transparent);
+  --color-color-3: var(--color-3);
+  --color-color-3-transparent: var(--color-3-transparent);
+  --color-color-4: var(--color-4);
+  --color-color-4-transparent: var(--color-4-transparent);
+  --color-success: var(--success);
+  --color-success-transparent: var(--success-transparent);
+  --color-warning: var(--warning);
+  --color-warning-transparent: var(--warning-transparent);
+  --color-error: var(--error);
+  --color-error-transparent: var(--error-transparent);
+  --color-neutral-1: var(--neutral-1);
+  --color-neutral-1-transparent: var(--neutral-1-transparent);
+  --color-neutral-2: var(--neutral-2);
+  --color-neutral-2-transparent: var(--neutral-2-transparent);
+  --color-neutral-3: var(--neutral-3);
+  --color-neutral-3-transparent: var(--neutral-3-transparent);
+  --color-neutral-4: var(--neutral-4);
+  --color-neutral-4-transparent: var(--neutral-4-transparent);
+  --color-neutral-5: var(--neutral-5);
+  --color-neutral-5-transparent: var(--neutral-5-transparent);
+  --color-neutral-6: var(--neutral-6);
+  --color-neutral-6-transparent: var(--neutral-6-transparent);
+  --color-neutral-7: var(--neutral-7);
+  --color-neutral-7-transparent: var(--neutral-7-transparent);
+  --color-neutral-8: var(--neutral-8);
+  --color-neutral-8-transparent: var(--neutral-8-transparent);
+  --color-neutral-9: var(--neutral-9);
+  --color-neutral-9-transparent: var(--neutral-9-transparent);
+  --color-neutral-10: var(--neutral-10);
+  --color-neutral-10-transparent: var(--neutral-10-transparent);
+  --color-option-badge: var(--option-badge-background);
+  --color-on-option-badge: var(--option-badge-foreground);
+  --color-emphasis-icon: var(--emphasis-icon-background);
+  --color-on-emphasis-icon: var(--emphasis-icon-foreground);
+  /* The witness gem's colour: game data, like the board's gem palette (not a cc role). */
+  --color-notes: #b27dff;
+
+  --spacing-zero: var(--space-zero);
+  --spacing-xxs: var(--space-xxs);
+  --spacing-xs: var(--space-xs);
+  --spacing-s: var(--space-s);
+  --spacing-m: var(--space-m);
+  --spacing-l: var(--space-l);
+  --spacing-xl: var(--space-xl);
+  --spacing-xxl: var(--space-xxl);
+
+  --text-*: initial;
+  --text-xxs: var(--size-xxs);
+  --text-xxs--line-height: var(--line-xxs);
+  --text-xxs--letter-spacing: var(--letter-spacing-xxs);
+  --text-xs: var(--size-xs);
+  --text-xs--line-height: var(--line-xs);
+  --text-xs--letter-spacing: var(--letter-spacing-xs);
+  --text-s: var(--size-s);
+  --text-s--line-height: var(--line-s);
+  --text-s--letter-spacing: var(--letter-spacing-s);
+  --text-m: var(--size-m);
+  --text-m--line-height: var(--line-m);
+  --text-m--letter-spacing: var(--letter-spacing-m);
+  --text-l: var(--size-l);
+  --text-l--line-height: var(--line-l);
+  --text-l--letter-spacing: var(--letter-spacing-l);
+  --text-xl: var(--size-xl);
+  --text-xl--line-height: var(--line-xl);
+  --text-xl--letter-spacing: var(--letter-spacing-xl);
+  --text-xxl: var(--size-xxl);
+  --text-xxl--line-height: var(--line-xxl);
+  --text-xxl--letter-spacing: var(--letter-spacing-xxl);
+
+  /* Every cc font role has the same weights; these use the ui role's. */
+  --font-weight-*: initial;
+  --font-weight-regular: var(--weight-ui-regular);
+  --font-weight-medium: var(--weight-ui-medium);
+  --font-weight-heavy: var(--weight-ui-heavy);
+
+  --default-transition-duration: var(--motion-duration);
+  --default-transition-timing-function: var(--motion-easing);
 }
 
 html, body, #__next {
@@ -38,14 +284,63 @@ html, body, #__next {
 }
 
 body {
-  background: var(--color-night);
-  color: var(--color-mist);
-  font-family: var(--font-sans);
+  background: var(--cte-canvas);
+  color: var(--cte-text);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-ui-regular);
+  font-size: var(--size-s);
+  line-height: var(--line-s);
+  letter-spacing: var(--letter-spacing-s);
 }
 
-:focus-visible { outline: 2px solid var(--color-globe); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--cte-focus); outline-offset: 2px; }
 
-/* Clue Match */
+/* cc Button (gui/themes/cc-components.md#button): one recipe, five variants. Edges are inset shadows;
+   native borders stay zero. Focus keeps the global outline (cc's own focus ring is 0px). */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    border: 0;
+    border-radius: var(--radius-full);
+    padding: var(--space-s) var(--space-l);
+    font-family: var(--font-ui);
+    font-weight: var(--weight-ui-medium);
+    font-size: var(--size-s);
+    line-height: var(--line-s);
+    letter-spacing: var(--letter-spacing-s);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--motion-duration) var(--motion-easing), box-shadow var(--motion-duration) var(--motion-easing), transform var(--motion-duration) var(--motion-easing);
+  }
+  .btn:active:not(:disabled) { transform: translateY(var(--motion-press-distance)); }
+  .btn:disabled { cursor: default; background: var(--neutral-3); color: var(--neutral-6); box-shadow: inset 0 0 0 var(--border-s) var(--neutral-4-transparent); }
+  /* Icon-only: the same S padding all round (a 20px icon makes a 44px target). */
+  .btn-icon { padding: var(--space-s); }
+
+  .btn-primary { background: var(--color-1); color: var(--neutral-1); box-shadow: inset 0 0 0 var(--border-s) var(--color-1-transparent), var(--shadow-none); }
+  .btn-primary:hover:not(:disabled) { box-shadow: inset 0 0 0 var(--border-s) var(--color-1-transparent), var(--shadow-s); }
+
+  .btn-secondary { background: var(--color-1-transparent); color: var(--neutral-10); box-shadow: inset 0 0 0 var(--border-s) var(--neutral-3-transparent), var(--shadow-none); }
+  .btn-secondary:hover:not(:disabled) { box-shadow: inset 0 0 0 var(--border-s) var(--color-1-transparent), var(--shadow-s); }
+
+  /* Outline's 1px edge is a local width in the cc assignment, not a named border step. */
+  .btn-outline { background: var(--color-none); color: var(--neutral-10); box-shadow: inset 0 0 0 1px var(--neutral-4); }
+  .btn-outline:hover:not(:disabled) { background: var(--neutral-3-transparent); }
+  .btn-outline:focus-visible { box-shadow: inset 0 0 0 1px var(--color-1-transparent); }
+  .btn-outline:disabled { background: var(--color-none); color: var(--neutral-6); box-shadow: inset 0 0 0 1px var(--neutral-4-transparent); }
+
+  .btn-ghost { background: var(--color-none); color: var(--neutral-10); }
+  .btn-ghost:hover:not(:disabled), .btn-ghost[aria-pressed="true"] { background: var(--neutral-3-transparent); }
+  .btn-ghost:disabled { background: var(--color-none); }
+
+  .btn-danger { background: var(--error); color: var(--neutral-1); box-shadow: inset 0 0 0 var(--border-s) var(--error-transparent), var(--shadow-none); }
+  .btn-danger:hover:not(:disabled) { box-shadow: inset 0 0 0 var(--border-s) var(--error-transparent), var(--shadow-s); }
+}
+
+/* Clue Match (cm-*, roster-cross: the unrouted 043 game, plus the range map's ping) */
 @keyframes roster-cross-in {
   0% { opacity: 0; transform: scale(1.8) rotate(-12deg); }
   70% { opacity: 1; transform: scale(.9) rotate(3deg); }
@@ -60,11 +355,7 @@ body {
   80% { transform: translateX(4px); }
 }
 @keyframes cm-pop-in {
-  0% { opacity: 0; transform: translateY(12px) scale(.97); }
-  100% { opacity: 1; transform: none; }
-}
-@keyframes cm-feed-in {
-  0% { opacity: 0; transform: translateY(6px); }
+  0% { opacity: 0; transform: translateY(var(--space-s)) scale(var(--motion-popup-scale)); }
   100% { opacity: 1; transform: none; }
 }
 @keyframes cm-range-ping {
@@ -76,26 +367,21 @@ body {
   to { transform: scaleX(0); }
 }
 .cm-shake { animation: cm-shake 380ms ease-in-out both; }
-.cm-pop-in { animation: cm-pop-in 260ms cubic-bezier(.2,.8,.2,1) both; }
-.cm-feed-in { animation: cm-feed-in 220ms ease-out both; }
+.cm-pop-in { animation: cm-pop-in var(--motion-large-duration) var(--motion-large-easing) both; }
 .cm-countdown { transform-origin: left; animation-name: cm-countdown; animation-timing-function: linear; animation-fill-mode: forwards; }
 .cm-range-ping { transform-box: fill-box; transform-origin: center; animation: cm-range-ping 1.6s ease-out infinite; }
 
-/* Evidence grid (plan 044): a column lights up when its answer lands, the Mystery cell's stamp flips in, and a
-   cleared color's gem flies from the board to its column. */
+/* Evidence grid (plan 044): a column lights up when its answer lands and a cleared color's gem flies from the
+   board to its column (game feedback, kept in CSS / WAAPI). Interface motion (sheets, dialogs, popovers, the
+   stamp, progress) is motion/react with cc timings: src/lib/motion.ts. */
 @keyframes ev-lit {
-  from { background-color: rgb(196 154 67 / .5); }
-}
-@keyframes ev-flip {
-  0% { transform: rotateX(90deg) scale(1.3); }
-  100% { transform: none; }
+  from { background-color: var(--color-3); }
 }
 .ev-lit { animation: ev-lit 1.6s ease-out; }
-.ev-flip { animation: ev-flip 500ms cubic-bezier(.2,.9,.3,1.3) both; }
 .ev-fly { position: fixed; z-index: 9000; pointer-events: none; }
 .ev-fly img { display: block; width: 100%; height: 100%; }
 .ev-fly span { position: absolute; transform: translate(-50%, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cm-shake, .cm-pop-in, .cm-feed-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-flip { animation: none; }
+  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit { animation: none; }
 }

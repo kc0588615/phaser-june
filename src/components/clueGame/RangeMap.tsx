@@ -29,7 +29,7 @@ export function RangeMap({ speciesId, name, caption = true }: { speciesId: numbe
     <figure className="m-0">
       <svg
         viewBox={`${x} ${y} ${width} ${height}`}
-        className="block w-full rounded-lg border border-white/10 bg-raised"
+        className="block w-full rounded-xs bg-neutral-3"
         role="img"
         aria-label={range ? `Map of where the ${name} lives` : 'Loading map'}
       >
@@ -47,7 +47,7 @@ export function RangeMap({ speciesId, name, caption = true }: { speciesId: numbe
         )}
       </svg>
       {range && caption && (
-        <figcaption className="mt-0.5 flex justify-between text-[10px] text-mist/45">
+        <figcaption className="mt-xxs flex justify-between text-xxs text-neutral-7">
           <span>Range about {area.format(range.areaKm2)} km²</span>
           <span>Map: IUCN Red List</span>
         </figcaption>

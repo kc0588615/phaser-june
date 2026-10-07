@@ -6,14 +6,14 @@ export const CONTACT_EMAIL = 'privacy@critterconnect.org';
 
 export default function LegalPage({ title, updated, children }: { title: string; updated: string; children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-night px-4 py-10 text-mist">
+    <div className="min-h-screen bg-neutral-1 px-m py-xxl text-m text-neutral-8">
       <Head>
         <title>{`${title} · Critter Connect`}</title>
       </Head>
-      <main className="mx-auto max-w-2xl space-y-4 leading-relaxed [&_h2]:pt-4 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-mist [&_a]:text-leaf [&_a]:underline [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-6">
-        <Link href="/" className="text-sm">← Back to the globe</Link>
-        <h1 className="font-display text-2xl font-bold text-mist">{title}</h1>
-        <p className="text-sm text-sage">Last updated {updated}</p>
+      <main className="mx-auto max-w-2xl space-y-m [&_h2]:pt-m [&_h2]:font-brand [&_h2]:text-m [&_h2]:font-medium [&_h2]:text-neutral-10 [&_a]:text-color-1 [&_a]:underline [&_ul]:list-disc [&_ul]:space-y-xxs [&_ul]:pl-l">
+        <Link href="/" className="text-s">← Back to the globe</Link>
+        <h1 className="font-brand text-l font-heavy text-neutral-10">{title}</h1>
+        <p className="text-s text-neutral-7">Last updated {updated}</p>
         {children}
       </main>
     </div>

@@ -135,6 +135,8 @@ components:
     rounded: "{rounded.lg}"
 ---
 
+> **Superseded in the app by the cc theme: follow [GUI.md](GUI.md).** This file records the earlier Night Field Guide identity (logo rationale, old palette and type).
+
 ## Overview
 
 **Night Field Guide.** Critter Connect is a free wildlife deduction game for grades 6-12: pick a continent on a

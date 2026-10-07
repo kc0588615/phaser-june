@@ -3,24 +3,22 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { ClerkProvider } from '@clerk/nextjs';
-import { Atkinson_Hyperlegible_Next, Bricolage_Grotesque } from 'next/font/google';
+import { MotionConfig } from 'motion/react';
 
-// Next has no fallback metrics for this family (warns on every build), so skip the generated fallback.
-const atkinson = Atkinson_Hyperlegible_Next({ subsets: ['latin'], adjustFontFallback: false, fallback: ['system-ui', 'sans-serif'] });
-const bricolage = Bricolage_Grotesque({ subsets: ['latin'], axes: ['opsz'] });
-
+// cc fonts (GT Maru, Open Runde) are named in globals.css; their files are licensed and added separately.
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ClerkProvider>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#08110D" />
+        {/* cc canvas (neutral-1) per mode; a meta tag can't read the CSS variable. */}
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#051411" />
       </Head>
-      {/* On :root so Clerk's portalled modals get the fonts too. */}
-      <style jsx global>{`
-        :root { --font-atkinson: ${atkinson.style.fontFamily}; --font-bricolage: ${bricolage.style.fontFamily}; }
-      `}</style>
-      <Component {...pageProps} />
+      {/* "user": with reduced motion on, motion/react skips movement and keeps fades. */}
+      <MotionConfig reducedMotion="user">
+        <Component {...pageProps} />
+      </MotionConfig>
     </ClerkProvider>
   );
 }

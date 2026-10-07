@@ -1,5 +1,7 @@
 # Critter Connect — fonts
 
+> Night Field Guide fonts, no longer loaded by the app. The cc theme names GT Maru (ui, brand, editorial) and Open Runde (data); see `GUI.md` and `src/styles/globals.css`.
+
 Font files are not part of this kit. Get them from the source below under their licence.
 
 ## Display: Bricolage Grotesque

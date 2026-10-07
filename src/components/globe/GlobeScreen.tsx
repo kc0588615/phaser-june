@@ -43,23 +43,26 @@ export function GlobeScreen() {
   return (
     <>
       <Head><title>Critter Connect</title></Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_42dvh_minmax(0,1fr)] overflow-hidden bg-night text-mist [grid-template-areas:'top'_'globe'_'panel'] md:grid-cols-[minmax(0,1fr)_420px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'globe_top'_'globe_panel']">
-        <header className="flex min-w-0 items-center gap-2 px-3 py-2 [grid-area:top]">
+      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_42dvh_minmax(0,1fr)] overflow-hidden bg-neutral-1 text-neutral-10 [grid-template-areas:'top'_'globe'_'panel'] md:grid-cols-[minmax(0,1fr)_420px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'globe_top'_'globe_panel']">
+        <header className="flex min-w-0 items-center gap-xs px-s py-xs [grid-area:top]">
           <div className="min-w-0 flex-1">
             <h1 className="m-0 leading-none">
-              {/* eslint-disable-next-line @next/next/no-img-element -- static SVG wordmark */}
-              <img src="/branding/critterconnect-logo.svg" alt="Critter Connect" className="block h-6 w-auto" />
+              {/* The wordmark in the mode's text color (the -light file is the same art with a black wordmark). */}
+              <picture>
+                <source srcSet="/branding/critterconnect-logo-light.svg" media="(prefers-color-scheme: light)" />
+                <img src="/branding/critterconnect-logo.svg" alt="Critter Connect" className="block h-6 w-auto" />
+              </picture>
             </h1>
-            <p className="m-0 truncate text-[11px] text-sage">
+            <p className="m-0 truncate text-xs text-neutral-7">
               {data ? `${foundCount} of ${animals.size} animals found` : 'Pick a place to explore'}
             </p>
           </div>
-          <Link href="/explore/" className="flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 text-[13px] font-semibold text-mist/85 no-underline active:bg-white/10" aria-label="Play with animals from everywhere">
+          <Link href="/explore/" className="btn btn-outline shrink-0" aria-label="Play with animals from everywhere">
             <Shuffle className="h-4 w-4" aria-hidden="true" /> Anywhere
           </Link>
           <Show when="signed-out">
             <SignInButton mode="modal">
-              <button type="button" className="h-11 shrink-0 rounded-full bg-action px-4 text-[13px] font-bold text-mist">Sign in</button>
+              <button type="button" className="btn btn-primary shrink-0">Sign in</button>
             </SignInButton>
           </Show>
           <Show when="signed-in">
@@ -71,9 +74,9 @@ export function GlobeScreen() {
           <Globe places={shown} selected={selected} sightings={sightings} onPick={setSelectedKey} />
         </section>
 
-        <div className="flex min-h-0 flex-col border-t border-white/10 pt-2 [grid-area:panel] md:border-l md:border-t-0">
-          {error && <p className="m-3 rounded-lg border border-danger/50 bg-danger/10 p-2 text-xs text-mist" role="alert">{error}</p>}
-          {!data && !error && <p className="m-3 text-xs text-mist/60">Loading places…</p>}
+        <div className="flex min-h-0 flex-col pt-xs shadow-[inset_0_1px_0_0_var(--neutral-4)] [grid-area:panel] md:shadow-[inset_1px_0_0_0_var(--neutral-4)]">
+          {error && <p className="m-s rounded-xs bg-error-transparent p-xs text-xs text-neutral-10" role="alert">{error}</p>}
+          {!data && !error && <p className="m-s text-xs text-neutral-7">Loading places…</p>}
           {data && selected && (
             <PlaceCard
               key={selected.key}

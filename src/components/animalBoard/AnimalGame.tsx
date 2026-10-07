@@ -6,6 +6,7 @@
 import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Heart, Menu } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
 import type { AnimalLogEntry } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { sightingPoint } from '@/clueGame/places';
@@ -31,14 +32,19 @@ function onBoardKey(event: React.KeyboardEvent): void {
 
 function LogText({ entry, nameOf, count }: { entry: AnimalLogEntry; nameOf: (id: number) => string; count: number }): ReactNode {
   switch (entry.kind) {
-    case 'answer': return <span>{clueFace(entry.tag)} {entry.question} <b className="text-ochre">{entry.answer === 'yes' ? 'Yes.' : 'No.'}</b></span>;
-    case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-mist/60">Fits {entry.note.fits} of {count}.</span></span>;
+    case 'answer': return <span>{clueFace(entry.tag)} {entry.question} <Stamp>{entry.answer === 'yes' ? 'Yes.' : 'No.'}</Stamp></span>;
+    case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} left the board.</span>;
-    case 'escaped': return <span className="text-danger">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
-    case 'found': return <span className="text-leaf">Found it: the {nameOf(entry.id)}!</span>;
+    case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
+    case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
     case 'named': return <span>You named the {nameOf(entry.id)}.</span>;
   }
+}
+
+/** A landed answer: cc's emphasis pair (color-3 with its foreground) in both modes. */
+function Stamp({ children }: { children: ReactNode }) {
+  return <b className="rounded-xs bg-emphasis-icon px-xxs font-heavy text-on-emphasis-icon">{children}</b>;
 }
 
 type Sheet = { kind: 'suspect'; id: number } | { kind: 'notes' } | { kind: 'menu' } | null;
@@ -144,7 +150,7 @@ export function AnimalGame() {
     round.orders.forEach((order, i) => {
       if ((shown[i] ?? 0) === 0 || order.answer || started.current.tags.has(order.tag)) return;
       started.current.tags.add(order.tag);
-      say(<>{clueFace(order.tag)} {order.question} <span className="text-mist/70">Match more of its gems to find out.</span></>);
+      say(<>{clueFace(order.tag)} {order.question} <span className="text-neutral-7">Match more of its gems to find out.</span></>);
     });
   }, [round, roundNo, shown, say]);
 
@@ -152,8 +158,8 @@ export function AnimalGame() {
     const order = round?.orders[i];
     if (!order) return;
     say(<>{clueFace(order.tag)} {order.question} {answerShown(order.tag)
-      ? <b className="text-ochre">{order.answer === 'yes' ? 'Yes.' : 'No.'}</b>
-      : <span className="text-mist/70">{shown[i] ?? 0} of {size} gems.</span>}</>);
+      ? <Stamp>{order.answer === 'yes' ? 'Yes.' : 'No.'}</Stamp>
+      : <span className="text-neutral-7">{shown[i] ?? 0} of {size} gems.</span>}</>);
   }, [round, answerShown, say, shown, size]);
 
   const onSelect = useCallback((id: number) => {
@@ -181,18 +187,18 @@ export function AnimalGame() {
   const pickedSpecies = pick === null ? undefined : speciesById.get(pick);
 
   const corner = (
-    <div className="flex items-center gap-1 pb-1">
-      <button type="button" onClick={() => setSheet({ kind: 'menu' })} aria-label="Menu" className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-sage hover:bg-white/10"><Menu className="h-5 w-5" /></button>
-      <div className="min-w-0 leading-tight">
-        <div className="flex items-center gap-1">
+    <div className="flex items-center gap-xxs pb-xxs">
+      <button type="button" onClick={() => setSheet({ kind: 'menu' })} aria-label="Menu" className="btn btn-ghost btn-icon shrink-0"><Menu className="h-5 w-5" /></button>
+      <div className="min-w-0">
+        <div className="flex items-center gap-xxs">
           {trail && (
-            <span className="flex gap-0.5" role="img" aria-label={`${trail.hearts} of ${rules.hearts} hearts`}>
-              {Array.from({ length: rules.hearts }, (_, i) => <Heart key={i} className={`h-3 w-3 ${i < trail.hearts ? 'fill-danger text-danger' : 'text-mist/25'}`} aria-hidden="true" />)}
+            <span className="flex" role="img" aria-label={`${trail.hearts} of ${rules.hearts} hearts`}>
+              {Array.from({ length: rules.hearts }, (_, i) => <Heart key={i} className={`h-3 w-3 ${i < trail.hearts ? 'fill-error text-error' : 'text-neutral-5'}`} aria-hidden="true" />)}
             </span>
           )}
-          <span className="text-[12px] text-sage" aria-label={`Animal ${inTrail} of ${rules.trailRounds}`}>{inTrail}/{rules.trailRounds}</span>
+          <span className="font-data text-xs tabular-nums text-neutral-7" aria-label={`Animal ${inTrail} of ${rules.trailRounds}`}>{inTrail}/{rules.trailRounds}</span>
         </div>
-        <div className="whitespace-nowrap"><b className="text-base tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-[12px] text-mist/60">moves</span></div>
+        <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">moves</span></div>
       </div>
     </div>
   );
@@ -200,9 +206,9 @@ export function AnimalGame() {
   return (
     <>
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-night text-mist [grid-template-areas:'grid'_'status'_'board'] md:grid-cols-[minmax(0,1fr)_400px] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px]">
+      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-neutral-1 text-neutral-10 [grid-template-areas:'grid'_'status'_'board'] md:grid-cols-[minmax(0,1fr)_400px] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px]">
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
-        <div className="min-w-0 px-1 pt-1 [grid-area:grid] md:px-3 md:pt-3">
+        <div className="min-w-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
             <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onQuestion={onQuestion} corner={corner} />
           ) : (
@@ -210,29 +216,29 @@ export function AnimalGame() {
           )}
         </div>
 
-        <div className="mx-2 my-1.5 flex h-12 min-w-0 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[.04] py-1 pl-2.5 pr-1 [grid-area:status] md:mx-3">
-          {loadError && <p className="m-0 min-w-0 flex-1 text-[13px] text-danger" role="alert">{loadError}</p>}
+        <div className="mx-xs my-xxs flex h-12 min-w-0 items-center gap-xs rounded-full bg-neutral-2 pl-m pr-xxs [grid-area:status] md:mx-s">
+          {loadError && <p className="m-0 min-w-0 flex-1 text-s text-error" role="alert">{loadError}</p>}
           {!loadError && (
-            <p className={pick === null ? 'm-0 line-clamp-2 min-w-0 flex-1 text-[14px] leading-snug' : 'sr-only'} aria-live="polite">
+            <p className={pick === null ? 'm-0 line-clamp-2 min-w-0 flex-1 text-s' : 'sr-only'} aria-live="polite">
               {session ? status : 'Loading animals…'}
             </p>
           )}
           {round && pick !== null && (
             <>
-              <span className="-ml-1.5 block h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white/5"><SuspectPhoto species={pickedSpecies} /></span>
-              <b className="line-clamp-2 min-w-0 flex-1 text-[14px] leading-tight">{round.suspects.indexOf(pick) + 1}: {nameOf(pick)}</b>
-              <button type="button" onClick={() => setSheet({ kind: 'suspect', id: pick })} className="h-10 shrink-0 rounded-lg border border-white/20 px-2.5 text-[13px] font-semibold active:bg-white/10">Field guide</button>
+              <span className="-ml-xs block h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-3"><SuspectPhoto species={pickedSpecies} /></span>
+              <b className="line-clamp-2 min-w-0 flex-1 text-s font-medium">{round.suspects.indexOf(pick) + 1}: {nameOf(pick)}</b>
+              <button type="button" onClick={() => setSheet({ kind: 'suspect', id: pick })} className="btn btn-outline shrink-0">Field guide</button>
               {round.released.includes(pick) ? (
-                <span className="shrink-0 px-1 text-[12px] text-sage">Left the board</span>
+                <span className="shrink-0 px-xxs text-xs text-neutral-7">Left the board</span>
               ) : round.marked.includes(pick) ? (
-                <button type="button" data-act="undo" onClick={() => rule(pick, false)} className="h-10 shrink-0 rounded-lg border border-white/20 px-2.5 text-[13px] font-semibold active:bg-white/10">Undo</button>
+                <button type="button" data-act="undo" onClick={() => rule(pick, false)} className="btn btn-outline shrink-0">Undo</button>
               ) : (
-                <button type="button" data-act="rule-out" onClick={() => rule(pick, true)} className="h-10 shrink-0 rounded-lg bg-danger px-2.5 text-[13px] font-bold text-night active:scale-[.97]">Rule out</button>
+                <button type="button" data-act="rule-out" onClick={() => rule(pick, true)} className="btn btn-danger shrink-0">Rule out</button>
               )}
             </>
           )}
           {round && pick === null && (
-            <button type="button" onClick={() => setSheet({ kind: 'notes' })} className="h-10 shrink-0 rounded-lg border border-notes/50 bg-notes/10 px-3 text-[13px] font-semibold text-mist active:bg-white/10" aria-label={`Witness notes: ${round.notes.length}`}>
+            <button type="button" onClick={() => setSheet({ kind: 'notes' })} className="btn btn-secondary shrink-0 bg-notes/20" aria-label={`Witness notes: ${round.notes.length}`}>
               📓 {round.notes.length}
             </button>
           )}
@@ -244,35 +250,39 @@ export function AnimalGame() {
           aria-describedby="board-keys"
           tabIndex={0}
           onKeyDown={onBoardKey}
-          className="group relative min-h-0 w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-globe"
+          className="group relative min-h-0 w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-color-1"
         >
           <PhaserGame className="absolute inset-0" />
-          <p id="board-keys" className="pointer-events-none absolute inset-x-2 bottom-1 m-0 hidden rounded-md bg-black/75 px-2 py-1 text-center text-[12px] text-mist/90 group-focus-visible:block">
+          <p id="board-keys" className="pointer-events-none absolute inset-x-xs bottom-xxs m-0 hidden rounded-s bg-neutral-10 px-xs py-xxs text-center text-xs font-medium text-neutral-1 shadow-m group-focus-visible:block">
             Arrows move the cursor. Shift + arrows swap its gem that way.
           </p>
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
       </main>
 
-      {session && round && picked && <SuspectSheet animal={picked} species={speciesById.get(picked.id)} round={round} onMark={ruledOut => rule(picked.id, ruledOut)} onClose={() => setSheet(null)} />}
-      {round && sheet?.kind === 'notes' && <NotesSheet round={round} onClose={() => setSheet(null)} />}
-      {sheet?.kind === 'menu' && (
-        <GameMenu
-          title={placeName ?? 'Critter Connect'}
-          detail={trail ? `Animal ${inTrail} of ${rules.trailRounds}${(session?.trailNo ?? 1) > 1 ? ` · trail ${session?.trailNo}` : ''} · Score ${session?.score ?? 0}` : 'Loading animals…'}
-          soundOn={soundOn}
-          onSound={toggleSound}
-          onJournal={() => { setSheet(null); setJournalOpen(true); }}
-          onHelp={() => { setSheet(null); setHelpOpen(true); }}
-          onClose={() => setSheet(null)}
-        />
-      )}
-      {round?.status === 'out-of-moves' && <OutOfMovesSheet round={round} nameOf={nameOf} onName={name} />}
-      {session && end && mystery && !boardBusy && (
-        <RoundEndSheet key={session.roundNo} session={session} animal={mystery} species={speciesById.get(mystery.id)} speciesById={speciesById} nameOf={nameOf} onNext={nextRound} />
-      )}
-      {helpOpen && <AnimalHowToPlay rules={rules} seed={seed} onClose={closeHelp} />}
-      {journalOpen && <JournalSheet pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}
+      {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
+      <AnimatePresence>
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} onMark={ruledOut => rule(picked.id, ruledOut)} onClose={() => setSheet(null)} />}
+        {round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
+        {sheet?.kind === 'menu' && (
+          <GameMenu
+            key="menu"
+            title={placeName ?? 'Critter Connect'}
+            detail={trail ? `Animal ${inTrail} of ${rules.trailRounds}${(session?.trailNo ?? 1) > 1 ? ` · trail ${session?.trailNo}` : ''} · Score ${session?.score ?? 0}` : 'Loading animals…'}
+            soundOn={soundOn}
+            onSound={toggleSound}
+            onJournal={() => { setSheet(null); setJournalOpen(true); }}
+            onHelp={() => { setSheet(null); setHelpOpen(true); }}
+            onClose={() => setSheet(null)}
+          />
+        )}
+        {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
+        {session && end && mystery && !boardBusy && (
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} speciesById={speciesById} nameOf={nameOf} onNext={nextRound} />
+        )}
+        {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
+        {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}
+      </AnimatePresence>
     </>
   );
 }

@@ -7,16 +7,18 @@
 // (the round-end card) names the mystery and marks each earned answer that rules an
 // animal out.
 import { useState, type ReactNode } from 'react';
+import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { columnLabel } from '@/clueGame/questionMatch';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
+import { LARGE, SMALL } from '@/lib/motion';
 import { FaceIcon } from './FaceIcon';
 
 export function SuspectPhoto({ species, size = 120 }: { species: PoolSpecies | undefined; size?: number }) {
   const [failed, setFailed] = useState(false);
-  if (!species?.photo || failed) return <span className="grid h-full w-full place-items-center text-xl" aria-hidden="true">{species ? speciesBadge(species) : '?'}</span>;
+  if (!species?.photo || failed) return <span className="grid h-full w-full place-items-center text-m" aria-hidden="true">{species ? speciesBadge(species) : '?'}</span>;
   // eslint-disable-next-line @next/next/no-img-element -- a small remote Commons thumbnail
   return <img src={photoAt(species.photo.url, size)} alt="" loading="lazy" decoding="async" draggable={false} onError={() => setFailed(true)} className="h-full w-full object-cover" />;
 }
@@ -46,16 +48,16 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
         <tr>
           <td className="p-0 align-bottom">{corner}</td>
           {round.orders.map((order, j) => (
-            <th key={order.tag} scope="col" data-tag={order.tag} className="p-0 align-bottom font-normal">
+            <th key={order.tag} scope="col" data-tag={order.tag} className="p-0 align-bottom font-regular">
               <button
                 type="button"
                 disabled={!onQuestion}
                 onClick={() => onQuestion?.(j)}
                 aria-label={order.question}
-                className="flex w-full flex-col items-center gap-0.5 rounded-lg pb-0.5 enabled:active:bg-white/10"
+                className="flex w-full flex-col items-center gap-xxs rounded-xs pb-xxs transition-colors enabled:hover:bg-neutral-3-transparent enabled:active:bg-neutral-3 short:gap-zero short:pb-zero"
               >
                 <FaceIcon gem={order.gem} face={clueFace(order.tag)} className="h-6 w-6 text-[13px]" />
-                <span className="line-clamp-2 min-h-[2.2em] text-[12px] leading-[1.1] text-sage" lang="en">{columnLabel(order.tag)}</span>
+                <span className="line-clamp-2 min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en">{columnLabel(order.tag)}</span>
               </button>
             </th>
           ))}
@@ -63,16 +65,16 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
       </thead>
       <tbody>
         <tr data-mystery>
-          <th scope="row" className="h-[34px] p-0 text-left font-bold text-ochre">
-            <span className="flex items-center gap-1.5">
+          <th scope="row" className="h-[34px] p-0 text-left font-medium text-neutral-10">
+            <span className="flex items-center gap-xs">
               {review ? (
-                <span className="block h-[30px] w-[30px] shrink-0 overflow-hidden rounded-md bg-white/5"><SuspectPhoto species={mystery} /></span>
+                <span className="block h-[30px] w-[30px] shrink-0 overflow-hidden rounded-xs bg-neutral-3"><SuspectPhoto species={mystery} /></span>
               ) : (
-                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-md border-[1.5px] border-dashed border-ochre/80 bg-ochre/10 text-base font-black" aria-hidden="true">?</span>
+                <span className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-xs bg-emphasis-icon text-m font-heavy text-on-emphasis-icon" aria-hidden="true">?</span>
               )}
-              <span className="min-w-0 text-[13px] leading-tight">
+              <span className="min-w-0 text-s">
                 <span className="line-clamp-1">{review ? mystery?.commonName ?? 'Mystery' : 'Mystery'}</span>
-                {!review && round.marked.length > 0 && <span className="block text-[12px] font-normal text-sage">{round.marked.length} ruled out</span>}
+                {!review && round.marked.length > 0 && <span className="block text-xs font-regular text-neutral-7">{round.marked.length} ruled out</span>}
               </span>
             </span>
           </th>
@@ -85,14 +87,14 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 data-have={order.have}
                 data-answer={order.answer ?? ''}
                 data-flight-target={review ? undefined : order.tag}
-                className={`relative h-[34px] overflow-hidden rounded-md p-0 text-center ${answered[j] ? 'bg-ochre text-night' : 'border-[1.5px] border-dashed border-ochre/70 bg-ochre/[.07] text-ochre'}`}
+                className={`relative h-[34px] overflow-hidden rounded-xs p-0 text-center ${answered[j] ? 'bg-emphasis-icon text-on-emphasis-icon' : 'bg-neutral-4 text-neutral-10'}`}
               >
                 {answered[j] ? (
-                  <span className={`block text-[13px] font-black ${review ? '' : 'ev-flip'}`}>{order.answer === 'yes' ? '✓ YES' : '✗ NO'}</span>
+                  <motion.span className="block text-s font-heavy" initial={review ? false : { rotateX: 90, scale: 1.3 }} animate={{ rotateX: 0, scale: 1 }} transition={LARGE}>{order.answer === 'yes' ? '✓ YES' : '✗ NO'}</motion.span>
                 ) : (
                   <>
-                    {!review && <span className="absolute inset-x-0 bottom-0 bg-ochre/40 transition-[height] duration-200" style={{ height: `${(100 * have) / size}%` }} aria-hidden="true" />}
-                    <span className="relative text-[12px] font-bold tabular-nums">{review ? '?' : `${have}/${size}`}</span>
+                    {!review && <motion.span className="absolute bottom-0 left-0 h-1 bg-color-3" initial={false} animate={{ width: `${(100 * have) / size}%` }} transition={SMALL} aria-hidden="true" />}
+                    <span className="relative font-data text-xs font-medium tabular-nums">{review ? '?' : `${have}/${size}`}</span>
                   </>
                 )}
               </td>
@@ -108,31 +110,31 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
           const wasIt = review && id === round.mysteryId;
           return (
             <tr key={id} data-suspect={id} onClick={onSelect ? () => onSelect(id) : undefined} className={`${released ? 'opacity-30' : ''} ${onSelect ? 'cursor-pointer' : ''}`}>
-              <th scope="row" className={`h-[34px] rounded-md p-0 text-left font-normal ${picked ? 'bg-globe/20 outline outline-2 outline-globe' : wasIt ? 'outline outline-2 outline-ochre' : ''}`}>
+              <th scope="row" className={`h-[34px] rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : wasIt ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
                 <button
                   type="button"
                   disabled={!onSelect}
                   aria-pressed={onSelect ? picked : undefined}
                   aria-label={`${i + 1}: ${name}${released ? ', released' : marked ? ', ruled out' : ''}`}
-                  className="flex w-full items-center gap-1.5 text-left"
+                  className="flex w-full items-center gap-xs text-left"
                 >
-                  <span className={`relative block h-[30px] w-[30px] shrink-0 rounded-md ${marked ? 'outline outline-2 outline-offset-1 outline-danger' : ''}`}>
-                    <span className="block h-full w-full overflow-hidden rounded-md bg-white/5"><SuspectPhoto species={species} /></span>
-                    <i className="absolute -bottom-1 -left-1 grid h-4 w-4 place-items-center rounded-full bg-mist text-[11px] font-black not-italic leading-none text-night ring-2 ring-night" aria-hidden="true">{i + 1}</i>
-                    {marked && <i className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-danger text-[10px] font-black not-italic leading-none text-night" aria-hidden="true">✕</i>}
+                  <span className={`relative block h-[30px] w-[30px] shrink-0 rounded-xs ${marked ? 'outline outline-2 outline-offset-1 outline-error' : ''}`}>
+                    <span className="block h-full w-full overflow-hidden rounded-xs bg-neutral-3"><SuspectPhoto species={species} /></span>
+                    <i className="absolute -bottom-1 -left-1 grid h-4 w-4 place-items-center rounded-full bg-neutral-10 font-data text-xxs font-heavy not-italic leading-none text-neutral-1 ring-2 ring-neutral-1" aria-hidden="true">{i + 1}</i>
+                    {marked && <i className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-error text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕</i>}
                   </span>
-                  <span className={`line-clamp-2 min-w-0 text-[12px] leading-[1.15] [hyphens:auto] ${released ? 'line-through' : ''}`} lang="en">{name}</span>
+                  <span className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''}`} lang="en">{name}</span>
                 </button>
               </th>
               {round.orders.map((order, j) => {
                 const yes = order.row[i];
                 const miss = review && order.answer !== null && yes !== (order.answer === 'yes');
                 const lit = !review && answered[j];
-                const fill = miss ? 'bg-danger/25 shadow-[inset_0_0_0_1.5px_rgb(208_122_110/.8)]' : picked ? 'bg-globe/15' : 'bg-white/[.04]';
+                const fill = miss ? 'bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
-                  <td key={`${order.tag}:${lit}`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} className={`h-[34px] rounded-md p-0 text-center text-[16px] font-black ${fill} ${lit ? 'ev-lit' : ''}`}>
-                    <span aria-hidden="true" className={yes ? 'text-leaf' : 'text-mist/35'}>{yes ? '✓' : '✗'}</span>
+                  <td key={`${order.tag}:${lit}`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} className={`h-[34px] rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
+                    <span aria-hidden="true" className={yes ? 'text-color-1' : 'text-neutral-6'}>{yes ? '✓' : '✗'}</span>
                     <span className="sr-only">{yes ? 'yes' : 'no'}</span>
                   </td>
                 );

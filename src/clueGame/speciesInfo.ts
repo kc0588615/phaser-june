@@ -38,19 +38,19 @@ export const FAMILY_NAMES: Record<string, string> = {
 export interface RedListStatus {
   code: string;
   label: string;
-  /** Tailwind classes for the badge. */
+  /** Tailwind classes for the badge: the Red List's own hues (data, not cc roles), readable in both modes. */
   badge: string;
 }
 
 const RED_LIST: Record<string, Omit<RedListStatus, 'code'>> = {
-  LC: { label: 'Least Concern', badge: 'bg-emerald-400/20 text-emerald-200 border-emerald-300/40' },
-  NT: { label: 'Near Threatened', badge: 'bg-lime-400/20 text-lime-200 border-lime-300/40' },
-  VU: { label: 'Vulnerable', badge: 'bg-amber-400/20 text-amber-200 border-amber-300/40' },
-  EN: { label: 'Endangered', badge: 'bg-orange-500/20 text-orange-200 border-orange-300/40' },
-  CR: { label: 'Critically Endangered', badge: 'bg-rose-500/25 text-rose-200 border-rose-300/50' },
-  EW: { label: 'Extinct in the Wild', badge: 'bg-fuchsia-500/20 text-fuchsia-200 border-fuchsia-300/40' },
-  EX: { label: 'Extinct', badge: 'bg-zinc-500/25 text-zinc-200 border-zinc-300/40' },
-  DD: { label: 'Data Deficient', badge: 'bg-slate-400/20 text-slate-200 border-slate-300/40' },
+  LC: { label: 'Least Concern', badge: 'bg-emerald-400/20 text-emerald-800 dark:text-emerald-200' },
+  NT: { label: 'Near Threatened', badge: 'bg-lime-400/20 text-lime-800 dark:text-lime-200' },
+  VU: { label: 'Vulnerable', badge: 'bg-amber-400/20 text-amber-800 dark:text-amber-200' },
+  EN: { label: 'Endangered', badge: 'bg-orange-500/20 text-orange-800 dark:text-orange-200' },
+  CR: { label: 'Critically Endangered', badge: 'bg-rose-500/25 text-rose-800 dark:text-rose-200' },
+  EW: { label: 'Extinct in the Wild', badge: 'bg-fuchsia-500/20 text-fuchsia-800 dark:text-fuchsia-200' },
+  EX: { label: 'Extinct', badge: 'bg-zinc-500/25 text-zinc-800 dark:text-zinc-200' },
+  DD: { label: 'Data Deficient', badge: 'bg-slate-400/20 text-slate-800 dark:text-slate-200' },
 };
 
 export function redListStatus(code: string | null): RedListStatus | null {
