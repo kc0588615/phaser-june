@@ -1,7 +1,56 @@
 @import "tailwindcss";
 
-/* cc data font (OFL-1.1, public/fonts/open-runde/OFL.txt). Open Runde ships 400-700; cc's heavy (800) uses
-   the 700 file. GT Maru (ui/brand/editorial) is a paid Grilli Type license: add its @font-face here once bought. */
+/* cc fonts, both OFL-1.1 (each folder in public/fonts has its OFL.txt). Nunito stands in for cc's GT Maru (ui, brand,
+   editorial; a paid Grilli Type license): rounded like it, with cc's 400/700/800. Open Runde is cc's data font;
+   it ships 400-700, so heavy (800) uses the 700 file. */
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito/nunito-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito/nunito-latin-ext-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito/nunito-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito/nunito-latin-ext-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito/nunito-latin-800-normal.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/nunito/nunito-latin-ext-800-normal.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
 @font-face {
   font-family: "Open Runde";
   src: url("/fonts/open-runde/OpenRunde-Regular.woff2") format("woff2");
@@ -183,13 +232,12 @@
 }
 
 /* Mode-independent cc tokens. Tailwind emits them under the cc names (static: always) and makes
-   font-ui, rounded-m, shadow-m... Font files are not bundled: until GT Maru and Open Runde are
-   licensed and added, the browser shows the sans-serif fallback. */
+   font-ui, rounded-m, shadow-m... Font families: see the @font-face rules at the top. */
 @theme static {
   --font-*: initial;
-  --font-ui: "GT Maru", sans-serif;
-  --font-brand: "GT Maru", sans-serif;
-  --font-editorial: "GT Maru", sans-serif;
+  --font-ui: "Nunito", sans-serif;
+  --font-brand: "Nunito", sans-serif;
+  --font-editorial: "Nunito", sans-serif;
   --font-data: "Open Runde", -apple-system, BlinkMacSystemFont, sans-serif;
 
   --radius-*: initial;
