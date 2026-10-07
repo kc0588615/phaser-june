@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* cc data font (OFL-1.1, public/fonts/open-runde/OFL.txt). Open Runde ships 400-700; cc's heavy (800) uses
+   the 700 file. GT Maru (ui/brand/editorial) is a paid Grilli Type license: add its @font-face here once bought. */
+@font-face {
+  font-family: "Open Runde";
+  src: url("/fonts/open-runde/OpenRunde-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Open Runde";
+  src: url("/fonts/open-runde/OpenRunde-Bold.woff2") format("woff2");
+  font-weight: 700 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Short screens (small phones, landscape): Clue Match compacts its rail. */
 @custom-variant short (@media (max-height: 740px));
 
