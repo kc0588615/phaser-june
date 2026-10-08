@@ -1,16 +1,3 @@
-<!-- context7 -->
-Use Context7 MCP to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service -- even well-known ones like React, Next.js, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search for library docs.
-
-Do not use for: refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.
-
-## Steps
-
-1. Always start with `resolve-library-id` using the library name and the user's question, unless the user provides an exact library ID in `/org/project` format
-2. Pick the best match (ID format: `/org/project`) by: exact name match, description relevance, code snippet count, source reputation (High/Medium preferred), and benchmark score (higher is better). If results don't look right, try alternate names or queries (e.g., "next.js" not "nextjs", or rephrase the question). Use version-specific IDs when the user mentions a version
-3. `query-docs` with the selected library ID and the user's full question (not single words)
-4. Answer using the fetched docs
-<!-- context7 -->
-
 In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
 
 # AGENTS.md
@@ -27,9 +14,6 @@ Guidance for coding agents in this repo. Keep instructions short; prefer facts o
 ## Important: Prefer Simplicity
 When implementing solutions, prefer the simplest approach that works. Do not over-engineer with excessive fallbacks, complex verification chains, or multi-layer abstractions. If the user asks for something straightforward, implement it straightforwardly. Ask before adding complexity.
 
-## Migration Context
-This project has been through multiple migrations: Supabase -> Prisma/Hetzner -> Drizzle/Hetzner. There should be zero remaining Supabase and Prisma references in the codebase. If you encounter any Supabase or Prisma imports, env vars, or references, flag them for removal. Do not suggest Supabase or Prisma-based solutions.
-
 ## Database Access
 - Codex and Claude Code use the installed `postgres-tunnel` skill for WSL database work.
 - App/runtime traffic uses `DATABASE_URL` through TLS PgBouncer on port 6432.
@@ -39,7 +23,6 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Do not add `?pgbouncer=true` (invalid for `psql`/postgres.js; causes introspection issues).
 - Always use the `DATABASE_URL` from environment, never hardcode connection strings.
 - Credentials, SSH, firewall or deploy work: read `docs/DEPLOY.md#hardening-status-2026-09-26` first (password rotated; SSH keys only; UFW enabled; remaining owner tasks).
-- Always wrap database lookups and external calls in try/catch blocks.
 
 ## Repo Quick Start
 - Install: `npm install`
@@ -47,7 +30,7 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Globe basemaps: `npm run clue:world-map`
 - Build + serve: `npm run build && npm run serve`
 - Typecheck: `npm run typecheck`
-- Lint: `npm run lint` (must exit 0; `react-hooks/set-state-in-effect` is off by design, see `eslint.config.mjs`)
+- Lint: `npm run lint` (eslint + cc theme check `scripts/check-theme.mjs`; must exit 0; `react-hooks/set-state-in-effect` is off by design, see `eslint.config.mjs`)
 - Drizzle: `npm run db:introspect`
 - Env (`.env.local`): `DATABASE_URL`, Clerk keys, `NEXT_PUBLIC_TITILER_BASE_URL` + `NEXT_PUBLIC_COG_URL` (habitat snapshots; optional).
 
@@ -67,6 +50,7 @@ The app is two screens: a globe to pick a continent (`/`) and the game (`/explor
 - `docs/DEPLOY.md`: serving the app from the VPS (`npm run deploy`, Dockerfile, `deploy/`), the `critter_app` role, backups, hardening.
 - `docs/DATABASE_ACCESS.md`: connection routes, tunnel troubleshooting. `docs/SHAPEFILE_BEST_PRACTICES.md`: importing IUCN ranges, `iucn` table gotchas. `docs/DRIZZLE_ORM_GUIDE.md`: Drizzle.
 - `README.md`: start here.
+- `CODING_STANDARDS.md`: judgement rules for review (mechanical ones are in `npm run lint` and CI).
 
 ## Code Style / Safety
 - TypeScript everywhere; use `@/` path alias.
