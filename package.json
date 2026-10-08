@@ -33,7 +33,7 @@
         "docs": "python3 -m http.server 3000 -d docs",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
-        "lint": "eslint src tests scripts",
+        "lint": "eslint src tests scripts --max-warnings 0",
         "test": "node scripts/run-tests.mjs",
         "typecheck:watch": "tsc --noEmit --watch",
         "clean": "rm -rf .next .test-dist",
@@ -41,6 +41,7 @@
         "content": "node scripts/run-typescript.mjs scripts/content.ts",
         "iucn": "node scripts/run-typescript.mjs scripts/iucn.ts",
         "e2e": "node scripts/e2e.mjs",
+        "deploy": "bash deploy/deploy.sh",
         "clue:world-map": "node scripts/run-typescript.mjs scripts/clue-world-map.ts"
     },
     "dependencies": {

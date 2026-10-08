@@ -21,7 +21,7 @@ Guidance for coding agents in this repo. Keep instructions short; prefer facts o
 - ORM: Drizzle (migrated from Prisma, which was migrated from Supabase)
 - Database: PostgreSQL with PostGIS on Hetzner VPS, accessed via PgBouncer with TLS
 - Auth: Clerk
-- Hosting: local Next.js dev server in WSL (frontend), Hetzner VPS (database/services)
+- Hosting: Hetzner VPS (app at play.critterconnect.org, database/services); local `npm run dev` in WSL for development
 - Docs: `README.md`, `docs/` (Markdown)
 
 ## Important: Prefer Simplicity
@@ -52,10 +52,10 @@ This project has been through multiple migrations: Supabase -> Prisma/Hetzner ->
 - Env (`.env.local`): `DATABASE_URL`, Clerk keys, `NEXT_PUBLIC_TITILER_BASE_URL` + `NEXT_PUBLIC_COG_URL` (habitat snapshots; optional).
 
 ## Where Things Live
-The app is two screens: a globe to pick a continent (`/`) and the game (`/explore`, optional `?place=` and `?seed=`; `/clue-match` redirects). Guide: `docs/CLUE_MATCH.md`; design and decisions: `plans/041-gameplay-tactics.md`; terms: `CONTEXT.md`.
+The app is two screens: a globe to pick a continent (`/`) and the game (`/explore`, optional `?place=` and `?seed=`; `/clue-match` redirects). Guide: `docs/CLUE_MATCH.md`; rules: `docs/ANIMAL_BOARD_PAPER.md`; design and decisions: `plans/044-animal-board.md`; terms: `CONTEXT.md`.
 - Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` with TiTiler habitat snapshot). Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
-- Game UI: `src/pages/explore.tsx` -> `src/components/clueGame/` (`MatchGame` shell, `useMatchSession` state + board wiring, `ChargeChips`, `AnimalTiles`, `SpendPanel`, `MatchSheets`, `RevealSheet`, `useJournal` on-device journal, `PhaserGame` board host). Client GETs share `src/lib/getJson.ts` (cached per page load).
-- Rules (pure): `src/clueGame/` (`questionMatch` round rules, `matchSession` score/streak, `questionMatchContent` content -> rules data, `regions`, `gems`; plus glossary, journal, solveReport, speciesInfo, worldMap, and the content checks traits, deduction, validatePool). Balance bot: `scripts/balance-041.ts`.
+- Game UI: `src/pages/explore.tsx` -> `src/components/animalBoard/` (`AnimalGame` shell, `useAnimalSession` state + board wiring, `EvidenceGrid`, `AnimalSheets`, `useShownOrders` gem flight). Shared pieces in `src/components/clueGame/` (`Sheet` drawer, `JournalSheet`, `useJournal` on-device journal, `PhaserGame` board host, `GlossaryText`, `RangeMap`). Client GETs share `src/lib/getJson.ts` (cached per page load).
+- Rules (pure): `src/clueGame/` (`animalBoard` round rules, `animalSession` trail/score/streak, `questionMatch` questions + book, `questionMatchContent` content -> rules data, `regions`, `gems`; plus glossary, journal, solveReport, speciesInfo, worldMap, and the content checks traits, deduction, validatePool). Balance bot: `scripts/balance-044.ts`.
 - Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules incl. toys (pure), `BoardView.ts` sprites + animation, `toyTextures.ts`, `sfx.ts` (synth sounds, off by default), `BoardController.ts` swipe/tap/keyboard swaps, cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `clue-board-key`, `clue-board-announce`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).
 - Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `POST /api/clue-game/solves`, `GET /api/clue-game/journal` (signed-in journal sync). Drizzle `src/db/schema/*` models only the columns the app reads (species, clues, facts, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file). Scripts connect via `scripts/connect.ts`.
 - Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). A signed-in player's `profiles` row is created on their first solve (`src/lib/player.ts`).
@@ -64,7 +64,7 @@ The app is two screens: a globe to pick a continent (`/`) and the game (`/explor
 ## Docs Map
 - `docs/CLUE_MATCH.md`: the game, globe, rules, content workflow, database, practice SQL.
 - `docs/CONTENT_SOURCES.md`: source tiers, tag vocabulary, profile workflow, research access (IUCN, ADW, Wikipedia, Commons photos).
-- `docs/DEPLOY.md`: serving the app from the VPS (Dockerfile, `deploy/`), the `critter_app` role, backups, hardening.
+- `docs/DEPLOY.md`: serving the app from the VPS (`npm run deploy`, Dockerfile, `deploy/`), the `critter_app` role, backups, hardening.
 - `docs/DATABASE_ACCESS.md`: connection routes, tunnel troubleshooting. `docs/SHAPEFILE_BEST_PRACTICES.md`: importing IUCN ranges, `iucn` table gotchas. `docs/DRIZZLE_ORM_GUIDE.md`: Drizzle.
 - `README.md`: start here.
 
@@ -95,7 +95,7 @@ Single-context: root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 
 ### UI theme (cc)
 
-For UI work, follow `GUI.md` and use graphical-ui, graphical-convert, or graphical-audit (`.agents/skills/`) as appropriate.
+For UI work, follow `GUI.md` and use graphical-ui, graphical-convert, or graphical-audit (`.agents/skills/`) as appropriate. All of these, plus `gui/`, are generated by graphicalui.com: the owner updates the theme by pasting an install prompt (`npx shadcn@latest add https://www.graphicalui.com/r/<revision>.json`), so treat them as vendored and keep local decisions in `src/styles/globals.css`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

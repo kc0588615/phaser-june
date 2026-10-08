@@ -32,6 +32,8 @@ The app is its own Compose project (`critter`, in `/opt/critter-connect`). It jo
 
 ## Start and update
 
+From WSL, after pushing `main`: `npm run deploy` (`deploy/deploy.sh`). It needs the VPS key in the SSH agent at `~/.ssh/agent.sock` (the key has a passphrase, so only the owner can load it; the script prints the command). It refuses unless local `main` matches `origin/main` and the VPS checkout is on `main`, then pulls, rebuilds, waits for `critter-app` to be healthy and curls the live routes. By hand on the VPS:
+
 ```sh
 cd /opt/critter-connect
 git pull

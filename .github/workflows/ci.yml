@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      # Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys.
+      - run: npm run build
+        env:
+          DATABASE_URL: postgres://build@127.0.0.1:1/build
+          NEXT_TELEMETRY_DISABLED: 1
