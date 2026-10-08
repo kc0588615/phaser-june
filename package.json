@@ -33,7 +33,7 @@
         "docs": "python3 -m http.server 3000 -d docs",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
-        "lint": "eslint src tests scripts --max-warnings 0",
+        "lint": "eslint src tests scripts --max-warnings 0 && node scripts/check-theme.mjs",
         "test": "node scripts/run-tests.mjs",
         "typecheck:watch": "tsc --noEmit --watch",
         "clean": "rm -rf .next .test-dist",

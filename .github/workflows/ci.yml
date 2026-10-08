@@ -9,13 +9,17 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run lint
+      # Drizzle only: Supabase and Prisma were migrated out (also blocked for agent edits by .claude/hooks/guard-edits.sh).
+      - name: No Supabase/Prisma
+        run: |
+          ! git grep -nIE '@supabase|supabase\.co|@prisma|schema\.prisma' -- src scripts tests db package.json
       - run: npm test
       # Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys.
       - run: npm run build
