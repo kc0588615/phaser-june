@@ -1,6 +1,6 @@
 # Critter Connect: the globe and the game
 
-> On branch `variant/044-animal-board`, `/explore` plays the plan 044 animal board (a graybox: five suspects pinned on the board, clue orders, Rule out and release; plans/044-animal-board.md, Part 2). `npm run e2e` checks that game. The rules below describe the 043 game.
+> `/explore` plays the plan 044 animal board (five suspects pinned on the board, clue orders, Rule out and release; rules in `docs/ANIMAL_BOARD_PAPER.md` and `plans/044-animal-board.md`). `npm run e2e` checks that game. The 043 game's UI is deleted; game rule prose below still describes it.
 
 The app has two screens. (The game was called Clue Match until plan 041; code and tables still say `clue`, players never see the word.)
 
@@ -14,15 +14,15 @@ No sign-in needed; every finished round, solved or lost, is saved to `clue_match
 | Part | Path |
 |---|---|
 | Globe | `src/pages/index.tsx` → `src/components/globe/` (GlobeScreen, Globe, PlaceList, PlaceCard); helpers `src/clueGame/places.ts`; data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`) |
-| Game page | `src/pages/explore.tsx` → `src/components/clueGame/MatchGame.tsx` |
-| Page state + board wiring | `src/components/clueGame/useMatchSession.ts` |
-| UI pieces | `src/components/clueGame/` (TopBar, GemLegend, AnimalTiles, SpendPanel (the out-of-moves panel), MatchSheets, LogEntryText, RevealSheet, RangeMap, JournalSheet, HowToPlay, GlossaryText, PhaserGame) |
-| Rules (pure) | `src/clueGame/questionMatch.ts` (rounds, charges, questions, family tree, field notes, last chance, scoring), `matchSession.ts` (score and streak across rounds), `gems.ts` (gem color ↔ category) |
+| Game page | `src/pages/explore.tsx` → `src/components/animalBoard/AnimalGame.tsx` |
+| Page state + board wiring | `src/components/animalBoard/useAnimalSession.ts` |
+| UI pieces | `src/components/animalBoard/` (EvidenceGrid, AnimalSheets, FaceIcon, useShownOrders); shared in `src/components/clueGame/` (Sheet, JournalSheet, GlossaryText, LogEntryText, RangeMap, SpeciesPortrait, PhaserGame, useJournal) |
+| Rules (pure) | `src/clueGame/animalBoard.ts` (suspects, clue orders, marks, release), `animalSession.ts` (the trail: rounds, hearts, score, streak), `questionMatch.ts` (questions, book, columns), `gems.ts` (gem color ↔ category) |
 | Content → rules data | `src/clueGame/questionMatchContent.ts` (traits, regions, family tree names, field notes with blanks, sources), `regions.ts` (every country → UN region with kid names → continent) |
 | Board | `src/game/`: `ClueBoardScene.ts` (seeded 7×7 board), `BoardModel.ts` (swaps, matches, toys, the rare note gem), `BoardView.ts` (sprites, toy effects), `toyTextures.ts` (toy looks), `sfx.ts` (sounds), `BoardController.ts` (swipe, tap, keyboard, cascade loop) |
 | Data | `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `GET /api/clue-game/range?species=<id>`, `POST /api/clue-game/solves` (checked by `src/clueGame/solveReport.ts`), `GET /api/clue-game/journal` (a signed-in player's solves) |
 | Content | `db/content/` (profiles + source registry, docs/CONTENT_SOURCES.md), `scripts/content.ts` (`npm run content`), `src/clueGame/profiles.ts` (profile → rows) |
-| Balance | `scripts/balance-041.ts` (seeded bot on the real rules and board; `--rules 041-5 --board 5` for the charges game); prototype `src/clueGame/PROTOTYPE-041-question-match.html` (built by `scripts/prototype-041-question-match.ts`) |
+| Balance | `scripts/balance-044.ts` (seeded bot on the real rules and board) |
 | Tests | `tests/clueGame/*`, `tests/game/*`; `npm run e2e` |
 
 ## How it fits together
@@ -36,11 +36,11 @@ flowchart LR
     S[species] --> P
     I[iucn ranges] --> R[clue_match_ranges<br/>materialized view]
   end
-  P[/api/clue-game/pool/] --> A[animalsFromPool<br/>rules data] --> H[useMatchSession<br/>session reducer]
+  P[/api/clue-game/pool/] --> A[animalsFromPool<br/>rules data] --> H[useAnimalSession<br/>session state]
   R --> M[/api/clue-game/range/] --> RM[RangeMap]
   B[ClueBoardScene] -- gems-matched --> H
   H -- clue-board-setup / clue-board-lock --> B
-  H --> UI[gem legend, tiles, sheets, out-of-moves panel, reveal]
+  H --> UI[evidence grid, sheets, round end]
   H -- every round end --> SV[/api/clue-game/solves/]
 ```
 
@@ -123,6 +123,6 @@ The world basemaps (`public/assets/clue-match/world-land.svg` under range maps, 
   - **Round 2 plays carelessly** (spends nothing, guesses the mystery last) to cover wrong guesses and the last chance.
   - **At the end:** the reveal names the mystery with its photo, Red List link, family tree and source links; the journal counts the solves; no console errors or failed requests.
   - **Artifact:** `e2e-artifacts/<run>/report.json` and screenshots. `E2E_PLACE`, `E2E_SEED`, `E2E_ROUNDS` change it.
-- `node scripts/run-typescript.mjs scripts/balance-041.ts`: the seeded balance table (rules 043: careful, who reads the legend, random and worst players; `--rules 041-5`: careful, careful questions with random swaps, random, worst and family-tree-first): solved, first try, on a last chance, narrowed to one, charges earned.
+- `node scripts/run-typescript.mjs scripts/balance-044.ts`: the seeded balance table (careful, reader, guesser, random and oracle players; `--explain N` prints one round).
 - `npm test`: only what a playtest can't see: content checks, solve-report and localStorage parsing, board invariants. Test by playing first (AGENTS.md, Testing).
 - In a dev browser, `window.__cc.clue()` returns the session (rules version, status, mystery, candidates, standing, moves left, charges, notes, family tree steps, score, streak, how the round ended, log tail), `window.__cc.drag(move, { input: 'touch' })` swipes a real move and `window.__cc.tap(cell)` taps. The `playtest` skill (`.claude/skills/playtest/SKILL.md`) lists the invariants to check.

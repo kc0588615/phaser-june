@@ -12,7 +12,7 @@ import type { PoolSpecies } from '@/clueGame/pool';
 import type { Animal } from '@/clueGame/questionMatch';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
 import { WithBlanks } from '@/components/clueGame/LogEntryText';
-import { Sheet } from '@/components/clueGame/MatchSheets';
+import { Sheet } from '@/components/clueGame/Sheet';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
 import { backdropMotion, dialogMotion, drawerUpMotion, useOverlayPresence } from '@/lib/motion';
 import { EvidenceGrid, SuspectPhoto } from './EvidenceGrid';

@@ -68,7 +68,7 @@ Look-alike decoys are the animals sharing the most traits, rare ones weighted mo
 3. New animal: import its range first (`npm run iucn -- find|import`, see `docs/SHAPEFILE_BEST_PRACTICES.md`), then after a build `npm run content -- ranges` (realms and countries from its IUCN polygon, keyed by `iucnId`) and `npm run content -- photos` (look at the result).
 4. `npm run content -- build` (one transaction), then `npm run content -- check`.
 5. If the set of animals or their ranges changed, refresh `clue_match_ranges` and `clue_match_places` (docs/CLUE_MATCH.md).
-6. `npm test` validates every profile and the pool; `node scripts/run-typescript.mjs scripts/balance-041.ts` plays seeded rounds; then play `/explore/?seed=1`.
+6. `npm test` validates every profile and the pool; `node scripts/run-typescript.mjs scripts/balance-044.ts` plays seeded rounds; then play `/explore/?seed=1`.
 
 Copy is for grades 6 to 12: short sentences, no gore, no medical words. Science words stay and get a glossary entry (`src/clueGame/glossary.ts`).
 

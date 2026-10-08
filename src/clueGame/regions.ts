@@ -305,3 +305,15 @@ export function regionOfCountry(code: string): string | null {
 export function countryName(code: string): string | null {
   return BY_CODE.get(code.toUpperCase())?.name ?? null;
 }
+
+/** `?place=continent:africa` plays that continent. Older country links play the country's continent. */
+export function continentOf(key: string | null): ContinentKey | null {
+  if (!key) return null;
+  const [kind, value = ''] = key.split(':');
+  if (kind === 'continent' && value in CONTINENT_NAMES) return value as ContinentKey;
+  if (kind === 'country') {
+    const region = regionOfCountry(value);
+    return region ? REGIONS[region].continent : null;
+  }
+  return null;
+}

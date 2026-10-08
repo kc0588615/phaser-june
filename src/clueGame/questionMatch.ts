@@ -3,8 +3,7 @@
 // next to matches save field notes for a last chance, and the player names the
 // mystery animal within a move budget. Rules 043 (plan 043, `askOnMatch`): a match
 // asks its color's lead question at once instead. Pure: no DOM, no Phaser, no randomness except
-// the rng passed in. Shared by the game, the balance bot (scripts/balance-041.ts) and
-// the prototype (PROTOTYPE-041-question-match.html).
+// the rng passed in. The animal board (animalBoard.ts) builds on its book, questions and columns.
 import type { ContinentKey } from '@/clueGame/regions';
 import { REGIONS } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';

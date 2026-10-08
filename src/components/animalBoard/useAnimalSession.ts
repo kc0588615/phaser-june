@@ -13,14 +13,13 @@ import { MIN_PLACE_ANIMALS, type Place, type PlacesResponse } from '@/clueGame/p
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
 import { makeBook, poolFor, type Animal, type Book } from '@/clueGame/questionMatch';
 import { animalsFromPool } from '@/clueGame/questionMatchContent';
-import type { ContinentKey } from '@/clueGame/regions';
+import { continentOf, type ContinentKey } from '@/clueGame/regions';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
 import { GRID_COLS, GRID_ROWS, type GemType } from '@/game/constants';
 import { EventBus, type BoardPin, type EventPayloads } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
-import { continentOf } from '@/components/clueGame/useMatchSession';
 
 /** `?seed=N` replays a session: same trails, same boards. */
 function sessionSeed(): number {
