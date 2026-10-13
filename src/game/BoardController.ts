@@ -151,6 +151,7 @@ export class BoardController {
             this.cursor = cell;
             this.picked = true;
             this.view.showCursor(...cell);
+            this.view.showReach(this.model.getToys()[cell[0]]?.[cell[1]] === 'bomb' ? cell : null);
             this.view.showPreview(this.hooks.preview?.(cell) ?? []);
         }
     }
@@ -159,6 +160,7 @@ export class BoardController {
         if (!this.picked) return;
         this.picked = false;
         this.view.hideCursor();
+        this.view.showReach(null);
         this.view.clearPreview();
     }
 
@@ -168,6 +170,7 @@ export class BoardController {
         const arrow = ARROWS[key];
         if (arrow && shift) {
             this.picked = false;
+            this.view.showReach(null);
             this.view.showCursor(...this.cursor);
             const [x, y] = this.cursor;
             const to: Cell = [x + arrow[0], y + arrow[1]];
@@ -179,6 +182,7 @@ export class BoardController {
             if (swapped) this.hooks.announce(`Swapped ${WAYS[arrow.join()]}`);
         } else if (arrow) {
             this.picked = false;
+            this.view.showReach(null);
             const [x, y] = this.cursor;
             this.cursor = [clamp(x + arrow[0], GRID_COLS), clamp(y + arrow[1], GRID_ROWS)];
             this.view.showCursor(...this.cursor);

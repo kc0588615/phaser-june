@@ -1,6 +1,7 @@
 // Textures for the toys a big match leaves (BoardModel `Special`), drawn once when the
 // board scene starts: a line gem is its gem with two white bars and arrows along the
-// line it clears, a blast gem its gem in a white ring, and the color gem a disc of
+// line it clears, a blast gem its gem in a burst of eight white spikes (no other piece
+// is that shape; rings mean animals and marks), and the color gem a disc of
 // all five category colors. Same 128px size as the gem icons, so sprites scale alike.
 import Phaser from 'phaser';
 import { KIND_COLOR } from '@/clueGame/gems';
@@ -26,6 +27,18 @@ function drawLine(g: Phaser.GameObjects.Graphics, across: boolean): void {
   }
 }
 
+function drawBurst(g: Phaser.GameObjects.Graphics): void {
+  for (const [color, alpha, grow] of [[0x06121a, 0.55, 4], [0xffffff, 0.95, 0]] as const) {
+    g.fillStyle(color, alpha);
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      const point = (r: number, da: number): [number, number] => [64 + r * Math.cos(a + da), 64 + r * Math.sin(a + da)];
+      const spread = 0.3 + grow * 0.015;
+      g.fillTriangle(...point(61 + grow * 0.75, 0), ...point(40 - grow, -spread), ...point(40 - grow, spread));
+    }
+  }
+}
+
 /**
  * `base`: the texture a toy is drawn on (a round's face, plan 044); `rebuild`: replace toys already drawn (call only
  * when no sprite shows them, between boards).
@@ -40,12 +53,8 @@ export function makeToyTextures(scene: Phaser.Scene, gems: readonly GemType[], b
       if (!texture) continue;
       texture.stamp(base(gem), undefined, SIZE / 2, SIZE / 2);
       const g = scene.make.graphics({}, false);
-      if (special === 'bomb') {
-        g.lineStyle(14, 0x06121a, 0.55).strokeCircle(64, 64, 52);
-        g.lineStyle(8, 0xffffff, 0.95).strokeCircle(64, 64, 52);
-      } else {
-        drawLine(g, special === 'row');
-      }
+      if (special === 'bomb') drawBurst(g);
+      else drawLine(g, special === 'row');
       texture.draw(g, 0, 0);
       g.destroy();
     }

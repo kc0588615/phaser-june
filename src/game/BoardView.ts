@@ -46,6 +46,9 @@ export class BoardView {
     /** Keyboard cursor outline, drawn once the player uses the keyboard. */
     private cursor: Phaser.GameObjects.Graphics | null = null;
     private cursorCell: Cell | null = null;
+    /** The 3×3 a picked blast gem would clear. */
+    private reach: Phaser.GameObjects.Graphics | null = null;
+    private reachCell: Cell | null = null;
     /** Cells holding a pinned animal (no gem sprite there), and each animal's tile. */
     private pinned = new Set<string>();
     private tiles = new Map<number, Tile>();
@@ -246,6 +249,7 @@ export class BoardView {
     setLayout(layout: BoardLayout): void {
         this.layout = layout;
         if (this.cursorCell) this.showCursor(...this.cursorCell);
+        this.showReach(this.reachCell);
         for (const tile of this.tiles.values()) this.drawTile(tile);
         this.drawSelection();
         this.forEachSprite((sprite, x, y) => {
@@ -337,6 +341,23 @@ export class BoardView {
     hideCursor(): void {
         this.cursorCell = null;
         this.cursor?.clear();
+    }
+
+    /** Outlines the square a blast gem at this cell would clear (clipped to the board); null hides it. */
+    showReach(cell: Cell | null): void {
+        this.reachCell = cell;
+        this.reach?.clear();
+        if (!cell) return;
+        this.reach ??= this.scene.add.graphics().setDepth(39);
+        const { gemSize } = this.layout;
+        const [x0, y0] = [Math.max(0, cell[0] - 1), Math.max(0, cell[1] - 1)];
+        const [x1, y1] = [Math.min(this.cols - 1, cell[0] + 1), Math.min(this.rows - 1, cell[1] + 1)];
+        const a = this.positionOf(x0, y0);
+        const b = this.positionOf(x1, y1);
+        const [left, top, w, h] = [a.x - gemSize / 2, a.y - gemSize / 2, b.x - a.x + gemSize, b.y - a.y + gemSize];
+        this.reach
+            .fillStyle(0xffffff, 0.14).fillRoundedRect(left, top, w, h, gemSize * 0.22)
+            .lineStyle(Math.max(2, gemSize * 0.05), 0xffffff, 0.9).strokeRoundedRect(left, top, w, h, gemSize * 0.22);
     }
 
     /** Tweens the sprites at these cells onto their cells. */
