@@ -1,8 +1,10 @@
 // The animal board screen (plans 044, 045). Mobile-first: the evidence grid on top
 // (its corner holds the menu, hearts, moves and witness notes), then the board, which
-// takes the rest. From the md breakpoint the board takes the left and the grid the
-// right. In the grid, an animal's name pill picks it (tap), opens its field guide
-// (hold) and rules it out (slide right). Events are announced to screen readers only.
+// is as tall as the screen is wide, then the status line when the phone is tall
+// enough (globals.css `roomy`); a tall phone's spare height grows the grid's rows.
+// From the md breakpoint the board takes the left, the grid and status the right.
+// In the grid, an animal's name pill picks it (tap), opens its field guide (hold)
+// and rules it out (slide right).
 import Head from 'next/head';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Heart, Menu } from 'lucide-react';
@@ -249,9 +251,9 @@ export function AnimalGame() {
   return (
     <>
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
-      <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden overscroll-none bg-neutral-1 text-neutral-10 [grid-template-areas:'grid'_'board'] md:grid-cols-[minmax(0,1fr)_400px] md:[grid-template-areas:'board_grid'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px]">
+      <main className="flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)] overscroll-none bg-neutral-1 text-neutral-10 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px]">
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
-        <div className="min-w-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
+        <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
             <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} corner={corner} />
           ) : (
@@ -267,7 +269,7 @@ export function AnimalGame() {
           aria-describedby="board-keys"
           tabIndex={0}
           onKeyDown={onBoardKey}
-          className="group relative min-h-0 w-full outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-color-1"
+          className="group relative min-h-0 w-full shrink grow-0 basis-[100vw] outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-color-1"
         >
           <PhaserGame className="absolute inset-0" />
           <p id="board-keys" className="pointer-events-none absolute inset-x-xs bottom-xxs m-0 hidden rounded-s bg-neutral-10 px-xs py-xxs text-center text-xs font-medium text-neutral-1 shadow-m group-focus-visible:block">
@@ -275,6 +277,11 @@ export function AnimalGame() {
           </p>
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
+
+        {/* The live region above announces it; this copy is for the eyes. */}
+        <p className="mx-xs my-xxs hidden h-12 min-w-0 shrink-0 items-center rounded-full bg-neutral-2 px-m text-s [grid-area:status] roomy:flex md:mx-s md:flex" aria-hidden="true">
+          <span className="line-clamp-2">{session ? status : 'Loading animals…'}</span>
+        </p>
       </main>
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}

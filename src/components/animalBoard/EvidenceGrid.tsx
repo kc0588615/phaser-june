@@ -29,8 +29,7 @@ export function SuspectPhoto({ species, size = 120 }: { species: PoolSpecies | u
 const NEXT_PENCIL = { none: 'yes', yes: 'no', no: null } as const;
 /** A press this long on an animal's row is a long press (its field guide); the board's tiles use the same (BoardController). */
 const HOLD_MS = 450;
-/** The photo (the slide's handle), in px. Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
-const PHOTO = 30;
+/** The photo is the slide's handle (`--ev-photo`, globals.css). Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
 const TRACK_SHARE = 0.5;
 const SLIDE_TO_MARK = 0.5;
 
@@ -69,7 +68,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
     if (gesture.current) window.clearTimeout(gesture.current.timer);
     skipClick.current = false; // a gesture that ended without its click (a cancel) mustn't swallow this one
     const box = event.currentTarget.getBoundingClientRect();
-    const next: Gesture = { id, x: event.clientX, y: event.clientY, travel: Math.round((box.width - PHOTO) * TRACK_SHARE), handle: event.clientX - box.left <= PHOTO + 6, timer: 0, mode: 'press' };
+    const photo = event.currentTarget.querySelector('[data-handle]')?.clientWidth ?? 30;
+    const next: Gesture = { id, x: event.clientX, y: event.clientY, travel: Math.round((box.width - photo) * TRACK_SHARE), handle: event.clientX - box.left <= photo + 6, timer: 0, mode: 'press' };
     next.timer = window.setTimeout(() => {
       if (next.mode !== 'press' || !onGuide) return;
       next.mode = 'held';
@@ -145,12 +145,12 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
       </thead>
       <tbody>
         <tr data-mystery>
-          <th scope="row" className="h-[34px] p-0 text-left font-medium text-neutral-10">
+          <th scope="row" className="h-(--ev-row) p-0 text-left font-medium text-neutral-10">
             <span className="flex items-center gap-xs">
               {review ? (
-                <span className="block h-[30px] w-[30px] shrink-0 overflow-hidden rounded-xs bg-neutral-3"><SuspectPhoto species={mystery} /></span>
+                <span className="block h-(--ev-photo) w-(--ev-photo) shrink-0 overflow-hidden rounded-xs bg-neutral-3"><SuspectPhoto species={mystery} /></span>
               ) : (
-                <span className="relative grid h-[30px] w-[30px] shrink-0 place-items-center rounded-xs bg-emphasis-icon text-m font-heavy text-on-emphasis-icon">
+                <span className="relative grid h-(--ev-photo) w-(--ev-photo) shrink-0 place-items-center rounded-xs bg-emphasis-icon text-m font-heavy text-on-emphasis-icon">
                   <span aria-hidden="true">?</span>
                   {/* The player's own marks, on the badge so the row keeps one line (a taller grid would shrink the board). */}
                   {round.marked.length > 0 && <i className="absolute -right-xs -top-xxs grid h-4 min-w-4 place-items-center rounded-full bg-error px-xxs text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕{round.marked.length}</i>}
@@ -171,7 +171,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 data-have={order.have}
                 data-answer={order.answer ?? ''}
                 data-flight-target={review ? undefined : order.tag}
-                className={`relative h-[34px] overflow-hidden rounded-xs p-0 text-center ${answered[j] ? 'bg-emphasis-icon text-on-emphasis-icon' : 'bg-neutral-4 text-neutral-10'}`}
+                className={`relative h-(--ev-row) overflow-hidden rounded-xs p-0 text-center ${answered[j] ? 'bg-emphasis-icon text-on-emphasis-icon' : 'bg-neutral-4 text-neutral-10'}`}
               >
                 {answered[j] ? (
                   <motion.span className="block text-s font-heavy" initial={review ? false : { rotateX: 90, scale: 1.3 }} animate={{ rotateX: 0, scale: 1 }} transition={LARGE}>{order.answer === 'yes' ? '✓ YES' : '✗ NO'}</motion.span>
@@ -197,11 +197,11 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
           const dx = slide?.id === id ? slide.dx : 0;
           return (
             <tr key={id} data-suspect={id} onClick={onSelect ? () => pick(id) : undefined} className={`${released ? 'opacity-30' : ''} ${onSelect ? 'cursor-pointer' : ''}`}>
-              <th scope="row" className={`relative h-[34px] rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : wasIt ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
+              <th scope="row" className={`relative h-(--ev-row) rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : wasIt ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
                 {dx > 0 && (
                   // The slide's track, only while dragging: it fills behind the photo toward the target at the end.
-                  <span aria-hidden="true" style={{ width: (slide?.travel ?? 0) + PHOTO }} className={`absolute inset-y-0 left-0 flex items-center justify-end overflow-hidden rounded-full pr-xs text-s font-heavy ${marked ? 'bg-neutral-3 text-neutral-7' : 'bg-error-transparent text-error'}`}>
-                    <span className={`absolute inset-y-0 left-0 rounded-full ${marked ? 'bg-neutral-5' : 'bg-error'}`} style={{ width: dx + PHOTO }} />
+                  <span aria-hidden="true" style={{ width: `calc(${slide?.travel ?? 0}px + var(--ev-photo))` }} className={`absolute inset-y-0 left-0 flex items-center justify-end overflow-hidden rounded-full pr-xs text-s font-heavy ${marked ? 'bg-neutral-3 text-neutral-7' : 'bg-error-transparent text-error'}`}>
+                    <span className={`absolute inset-y-0 left-0 rounded-full ${marked ? 'bg-neutral-5' : 'bg-error'}`} style={{ width: `calc(${dx}px + var(--ev-photo))` }} />
                     <span className="relative">{marked ? '↩' : '✕'}</span>
                   </span>
                 )}
@@ -226,21 +226,21 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   <span
                     data-handle=""
                     style={{ transform: `translateX(${dx}px)`, transition: dx > 0 ? 'none' : 'transform 160ms ease-out' }}
-                    className={`relative z-10 block h-[30px] w-[30px] shrink-0 rounded-full ${marked ? 'outline outline-2 outline-offset-1 outline-error' : ''} ${hinted === id ? 'ev-nudge' : ''}`}
+                    className={`relative z-10 block h-(--ev-photo) w-(--ev-photo) shrink-0 rounded-full ${marked ? 'outline outline-2 outline-offset-1 outline-error' : ''} ${hinted === id ? 'ev-nudge' : ''}`}
                   >
                     <span className="block h-full w-full overflow-hidden rounded-full bg-neutral-3"><SuspectPhoto species={species} /></span>
                     <i className="absolute -bottom-1 -left-1 grid h-4 w-4 place-items-center rounded-full bg-neutral-10 font-data text-xxs font-heavy not-italic leading-none text-neutral-1 ring-2 ring-neutral-1" aria-hidden="true">{i + 1}</i>
                     {marked && <i className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-error text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕</i>}
                   </span>
                   <span className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''}`} style={dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : undefined} lang="en">{name}</span>
-                  {hinted === id && <span aria-hidden="true" className="ev-hint pointer-events-none absolute inset-y-0 left-[38px] right-0 flex items-center bg-neutral-1 text-xs font-medium text-error">Slide to rule out →</span>}
+                  {hinted === id && <span aria-hidden="true" className="ev-hint pointer-events-none absolute inset-y-0 left-[calc(var(--ev-photo)+8px)] right-0 flex items-center bg-neutral-1 text-xs font-medium text-error">Slide to rule out →</span>}
                 </button>
               </th>
               {round.orders.map((order, j) => {
                 if (!review && !order.seen[i]) {
                   const guess = pencil[`${id}:${order.tag}`];
                   return (
-                    <td key={order.tag} data-tag={order.tag} data-hidden="" data-pencil={guess ?? ''} className={`h-[34px] rounded-xs p-0 text-center ${picked ? 'bg-color-1-transparent' : 'bg-neutral-2'}`}>
+                    <td key={order.tag} data-tag={order.tag} data-hidden="" data-pencil={guess ?? ''} className={`h-(--ev-row) rounded-xs p-0 text-center ${picked ? 'bg-color-1-transparent' : 'bg-neutral-2'}`}>
                       <button
                         type="button"
                         disabled={!onPencil}
@@ -259,7 +259,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 const fill = miss ? 'bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
-                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} className={`h-[34px] rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
+                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} className={`h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
                     <motion.span aria-hidden="true" className={`inline-block ${yes ? 'text-color-1' : 'text-neutral-6'}`} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
                     <span className="sr-only">{yes ? 'yes' : 'no'}</span>
                   </td>

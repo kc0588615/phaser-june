@@ -2,8 +2,8 @@
 // out), the witness notes, the menu, out of moves (name it for the journal), the
 // round's end (and the trail's, with the evidence grid replayed), and how to play.
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { BookOpen, CircleHelp, Globe2, Volume2, VolumeX } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { BookOpen, CircleHelp, Globe2, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound, WitnessNote } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
@@ -15,6 +15,7 @@ import { WithBlanks } from '@/components/clueGame/LogEntryText';
 import { Sheet } from '@/components/clueGame/Sheet';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
 import { backdropMotion, dialogMotion, drawerUpMotion, useOverlayPresence } from '@/lib/motion';
+import { currentTheme, setTheme } from '@/lib/theme';
 import { EvidenceGrid, SuspectPhoto } from './EvidenceGrid';
 
 export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v2';
@@ -122,10 +123,13 @@ export function NotesSheet({ round, onClose }: { round: AnimalRound; onClose: ()
 
 const MENU_ROW = 'btn btn-ghost w-full justify-start px-s';
 
-/** The menu behind the grid's corner button: the place and trail, then the globe, the journal, how to play and sound. */
+/** The menu behind the grid's corner button: the place and trail, then the globe, the journal, how to play, sound and dark mode. */
 export function GameMenu({ title, detail, soundOn, onSound, onJournal, onHelp, onClose }: {
   title: string; detail: string; soundOn: boolean; onSound: () => void; onJournal: () => void; onHelp: () => void; onClose: () => void;
 }) {
+  // The menu only mounts after a tap, so reading <html> here can't mismatch the server render.
+  const [dark, setDark] = useState(() => currentTheme() === 'dark');
+  const toggleDark = () => { setTheme(dark ? 'light' : 'dark'); setDark(!dark); };
   return (
     <Sheet title={title} onClose={onClose}>
       <p className="m-0 mb-s text-s text-neutral-7">{detail}</p>
@@ -136,6 +140,10 @@ export function GameMenu({ title, detail, soundOn, onSound, onJournal, onHelp, o
         <button type="button" onClick={onSound} className={MENU_ROW} aria-pressed={soundOn} aria-label={soundOn ? 'Sound on. Turn it off' : 'Sound off. Turn it on'}>
           {soundOn ? <Volume2 className="h-5 w-5 text-neutral-7" aria-hidden="true" /> : <VolumeX className="h-5 w-5 text-neutral-7" aria-hidden="true" />}
           Sound: {soundOn ? 'on' : 'off'}
+        </button>
+        <button type="button" onClick={toggleDark} className={MENU_ROW} aria-pressed={dark} aria-label={dark ? 'Dark mode on. Turn it off' : 'Dark mode off. Turn it on'}>
+          {dark ? <Moon className="h-5 w-5 text-neutral-7" aria-hidden="true" /> : <Sun className="h-5 w-5 text-neutral-7" aria-hidden="true" />}
+          Dark mode: {dark ? 'on' : 'off'}
         </button>
       </div>
     </Sheet>
@@ -183,7 +191,8 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
           {round.named && ` You named the ${nameOf(round.named.id)}: ${round.named.correct ? 'right! It goes in your journal.' : 'not this time.'}`}
         </p>
         <h3 className={`${LABEL} mt-s`}>How the evidence lined up</h3>
-        <div className="-mx-xxs mt-xxs shrink-0">
+        {/* Compact rows here; the game screen's grow with the phone (globals.css `--ev-row`). */}
+        <div className="-mx-xxs mt-xxs shrink-0 [--ev-photo:30px] [--ev-row:34px]">
           <EvidenceGrid round={round} speciesById={speciesById} shown={round.orders.map(order => order.have)} review />
         </div>
         <p className="m-0 mt-xxs text-s text-neutral-7">

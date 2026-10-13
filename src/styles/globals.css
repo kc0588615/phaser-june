@@ -68,11 +68,28 @@
 
 /* Short screens (small phones, landscape): Clue Match compacts its rail. */
 @custom-variant short (@media (max-height: 740px));
+/* Phones at least twice as tall as wide have room for the status line under the board (game screen). */
+@custom-variant roomy (@media (max-aspect-ratio: 1/2));
+
+/* Game screen, phone layout: the board is as tall as the screen is wide, so a tall phone's spare height goes to the
+   evidence rows: 100dvh - 100vw (board) - 86px (the grid's header and spacing; + 56px status line when `roomy`)
+   - the home bar (<main>'s bottom padding), over 6 rows (5 suspects and the mystery). */
+:root {
+  --ev-reserve: calc(86px + env(safe-area-inset-bottom));
+  --ev-row: clamp(34px, calc((100dvh - 100vw - var(--ev-reserve)) / 6), 48px);
+  --ev-photo: calc(var(--ev-row) - 4px);
+}
+@media (max-aspect-ratio: 1/2) {
+  :root { --ev-reserve: calc(142px + env(safe-area-inset-bottom)); }
+}
+@media (min-width: 48rem) {
+  :root { --ev-row: 34px; }
+}
 
 /* cc theme (GUI.md, gui/themes/cc.md). Literal values live only here; components use the names.
-   Mode follows the system: light on :root, dark under prefers-color-scheme. */
+   Mode: light on :root, dark under [data-theme="dark"] (the menu's pick, else the system's; src/lib/theme.ts). */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
   --color-none: transparent;
   --color-1: #00906c;
@@ -194,41 +211,41 @@
 /* Dark neutrals: a local change from the cc snapshot (gui/themes/cc.md, neutralTone "warm"). Each step keeps
    cc's lightness (so contrast is unchanged) with a cool green-teal hue (OKLCH h 180) between the board's navy
    and color-1, so the panels and the game board read as one surface instead of brown over navy. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --neutral-1: #051411;
-    --neutral-1-transparent: #05141133;
-    --neutral-2: #142320;
-    --neutral-2-transparent: #14232033;
-    --neutral-3: #1f2e2b;
-    --neutral-3-transparent: #1f2e2b33;
-    --neutral-4: #30413d;
-    --neutral-4-transparent: #30413d33;
-    --neutral-5: #4a5b57;
-    --neutral-5-transparent: #4a5b5733;
-    --neutral-6: #768884;
-    --neutral-6-transparent: #76888433;
-    --neutral-7: #9dafab;
-    --neutral-7-transparent: #9dafab33;
-    --neutral-8: #c7d1cf;
-    --neutral-8-transparent: #c7d1cf33;
-    --neutral-9: #ecf7f4;
-    --neutral-9-transparent: #ecf7f433;
-    --neutral-10: #ffffff;
-    --neutral-10-transparent: #ffffff33;
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --neutral-1: #051411;
+  --neutral-1-transparent: #05141133;
+  --neutral-2: #142320;
+  --neutral-2-transparent: #14232033;
+  --neutral-3: #1f2e2b;
+  --neutral-3-transparent: #1f2e2b33;
+  --neutral-4: #30413d;
+  --neutral-4-transparent: #30413d33;
+  --neutral-5: #4a5b57;
+  --neutral-5-transparent: #4a5b5733;
+  --neutral-6: #768884;
+  --neutral-6-transparent: #76888433;
+  --neutral-7: #9dafab;
+  --neutral-7-transparent: #9dafab33;
+  --neutral-8: #c7d1cf;
+  --neutral-8-transparent: #c7d1cf33;
+  --neutral-9: #ecf7f4;
+  --neutral-9-transparent: #ecf7f433;
+  --neutral-10: #ffffff;
+  --neutral-10-transparent: #ffffff33;
 
-    --border-default-color: #30413d33;
-    --option-badge-foreground: #142320;
-    --navigation-active-foreground: #142320;
+  --border-default-color: #30413d33;
+  --option-badge-foreground: #142320;
+  --navigation-active-foreground: #142320;
 
-    --cte-canvas: #051411;
-    --cte-surface: #142320;
-    --cte-surface-muted: #1f2e2b;
-    --cte-text: #ffffff;
-    --cte-text-muted: #9dafab;
-    --cte-border: #30413d33;
-    --cte-accent-text: #142320;
-  }
+  --cte-canvas: #051411;
+  --cte-surface: #142320;
+  --cte-surface-muted: #1f2e2b;
+  --cte-text: #ffffff;
+  --cte-text-muted: #9dafab;
+  --cte-border: #30413d33;
+  --cte-accent-text: #142320;
 }
 
 /* Mode-independent cc tokens. Tailwind emits them under the cc names (static: always) and makes
