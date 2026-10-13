@@ -476,11 +476,22 @@ body {
   12%, 85% { opacity: 1; }
 }
 .ev-hint { animation: ev-hint 3.4s ease-in-out 0.4s both; }
+/* The status line fades in each message it turns to. */
+@keyframes ev-fade {
+  from { opacity: 0; transform: translateY(4px); }
+}
+.ev-fade { animation: ev-fade 240ms ease-out; }
+/* ...and scrolls one too long for its two lines up to its end (--scroll-y, --scroll-ms set inline). */
+@keyframes ev-scroll {
+  to { transform: translateY(var(--scroll-y)); }
+}
+.ev-scroll { animation: ev-scroll var(--scroll-ms) ease-in-out 1.5s both; }
 .ev-fly { position: fixed; z-index: 9000; pointer-events: none; }
 .ev-fly img { display: block; width: 100%; height: 100%; }
 .ev-fly span { position: absolute; transform: translate(-50%, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-flash, .ev-nudge { animation: none; }
+  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-flash, .ev-nudge, .ev-fade { animation: none; }
   .ev-hint { animation: none; opacity: 0; }
+  .ev-scroll { animation-timing-function: step-end; }
 }

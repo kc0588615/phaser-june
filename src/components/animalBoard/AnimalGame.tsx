@@ -6,8 +6,8 @@
 // In the grid, an animal's name pill picks it (tap), opens its field guide (hold)
 // and rules it out (slide right).
 import Head from 'next/head';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Heart, Menu } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Heart, Menu, Pause } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import type { AnimalLogEntry } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
@@ -54,8 +54,106 @@ function Stamp({ children }: { children: ReactNode }) {
 }
 
 type Sheet = { kind: 'suspect'; id: number } | { kind: 'notes' } | { kind: 'menu' } | null;
-/** A passing message in the status line, shown until the next event (`seen`: how many events were showing). */
-interface Hint { text: ReactNode; seen: number; roundNo: number }
+/** A passing message in the status line, shown until the next event (`seen`: how many events were showing; `own`: answers the player's action). */
+interface Hint { id: number; text: ReactNode; seen: number; roundNo: number; own: boolean }
+
+/** Reading time for a status line: 1.5 s to look over plus 0.3 s a word (~200 wpm), 4-8 s; a new one at least 6 s. */
+function dwellMs(text: string, fresh: boolean): number {
+  const ms = Math.min(8000, Math.max(4000, 1500 + 300 * text.split(/\s+/).filter(Boolean).length));
+  return fresh ? Math.max(ms, 6000) : ms;
+}
+
+/** A landed answer or witness note; `key` is its index in the round's log. */
+interface Fact { key: number; node: ReactNode }
+/** What changed `now`: the player's own action or the round's end, a new answer or note, or another event. */
+type NowKind = 'urgent' | 'fact' | 'event';
+
+/**
+ * The status line. New answers and witness notes each get a full turn (a burst queues up),
+ * then they take turns round-robin, each for its reading time. Other events show between
+ * them but never cut a new one short; the player's own actions and the round's end always
+ * show at once. Text too long for two lines scrolls up to its end. A tap pauses; another
+ * resumes and moves on.
+ */
+function StatusTicker({ now, nowKey, nowKind, facts }: { now: ReactNode; nowKey: string; nowKind: NowKind; facts: Fact[] }) {
+  // `key`: the fact showing, or null for `node` (`now` as it was when it came in); `fresh`: held longer.
+  const [at, setAt] = useState<{ key: number | null; fresh: boolean; node?: ReactNode }>({ key: null, fresh: true, node: now });
+  const [paused, setPaused] = useState(false);
+  const [scroll, setScroll] = useState(0);
+  const box = useRef<HTMLSpanElement>(null);
+  const text = useRef<HTMLSpanElement>(null);
+  const seen = useRef(new Set<number>());
+  const last = useRef<number | null>(null);
+  const latest = useRef(facts);
+  useEffect(() => { latest.current = facts; }, [facts]);
+  useEffect(() => { if (at.key !== null) last.current = at.key; }, [at]);
+
+  // The oldest fact not yet shown in full, else the one after the last shown; never the same twice running.
+  const next = useCallback(() => setAt(current => {
+    const all = latest.current;
+    const unseen = all.find(fact => !seen.current.has(fact.key));
+    if (unseen) return { key: unseen.key, fresh: true };
+    if (all.length === 0) return current;
+    const key = all[(all.findIndex(fact => fact.key === last.current) + 1) % all.length].key;
+    return key === current.key ? current : { key, fresh: false };
+  }), []);
+  // Moving on from a fact counts it as read (one cut short by an event comes round again as new).
+  const finish = useCallback(() => {
+    if (at.key !== null) seen.current.add(at.key);
+    next();
+  }, [at.key, next]);
+
+  const shownKey = useRef(nowKey);
+  useEffect(() => {
+    if (shownKey.current === nowKey) return;
+    shownKey.current = nowKey;
+    if (nowKind === 'urgent') { setPaused(false); setAt({ key: null, fresh: true, node: now }); return; }
+    // Paused, or a new answer or note still being read: leave it (new ones queue).
+    if (paused || (at.key !== null && at.fresh)) return;
+    if (nowKind === 'event') setAt({ key: null, fresh: true, node: now });
+    else next();
+  }, [now, nowKey, nowKind, paused, at.key, at.fresh, next]);
+
+  // How far the text showing overflows its two lines.
+  useLayoutEffect(() => setScroll(Math.max(0, (text.current?.offsetHeight ?? 0) - (box.current?.clientHeight ?? 0))), [at.key, nowKey]);
+  const scrollMs = scroll * 50;
+  useEffect(() => {
+    if (paused) return;
+    const read = dwellMs(text.current?.textContent ?? '', at.fresh);
+    const timer = window.setTimeout(finish, scroll ? Math.max(read, 1500 + scrollMs + 2500) : read);
+    return () => window.clearTimeout(timer);
+  }, [at, paused, finish, scroll, scrollMs]);
+
+  const onTap = () => {
+    if (!paused) { setPaused(true); return; }
+    setPaused(false);
+    finish();
+  };
+
+  const index = at.key === null ? -1 : facts.findIndex(fact => fact.key === at.key);
+  return (
+    // The live region announces each event once; this rotating copy is for the eyes, and the button pauses it.
+    <button
+      type="button"
+      aria-pressed={paused}
+      aria-label="Pause the clue line"
+      onClick={onTap}
+      className="mx-xs my-xxs hidden h-12 min-w-0 shrink-0 select-none items-center gap-xs rounded-full bg-neutral-2 px-m text-left text-s [grid-area:status] roomy:flex md:mx-s md:flex"
+    >
+      <span key={index < 0 ? `now-${nowKey}` : `fact-${at.key}`} ref={box} aria-hidden="true" className="ev-fade block max-h-[2lh] min-w-0 grow overflow-hidden">
+        <span ref={text} className={`block ${scroll ? 'ev-scroll' : ''}`} style={scroll ? { '--scroll-y': `-${scroll}px`, '--scroll-ms': `${scrollMs}ms` } as CSSProperties : undefined}>
+          {index < 0 ? at.node : facts[index].node}
+        </span>
+      </span>
+      {(paused || (index >= 0 && facts.length > 1)) && (
+        <span aria-hidden="true" className="flex shrink-0 items-center gap-xxs font-data text-xs tabular-nums text-neutral-7">
+          {index >= 0 && facts.length > 1 && <span className="whitespace-nowrap">Clue {index + 1} of {facts.length}</span>}
+          {paused && <Pause className="h-3 w-3 fill-current" />}
+        </span>
+      )}
+    </button>
+  );
+}
 
 export function AnimalGame() {
   const { session, loadError, seed, rules, pool, place, continent, markSuspect, name, nextRound, pencil } = useAnimalSession();
@@ -161,7 +259,8 @@ export function AnimalGame() {
   }, [session, answerShown]);
 
   const visibleLog = useMemo(() => (round?.log ?? []).filter(entry => entry.kind !== 'answer' || answerShown(entry.tag)), [round, answerShown]);
-  const say = useCallback((text: ReactNode) => setHint({ text, seen: visibleLog.length, roundNo: roundNo ?? 0 }), [visibleLog.length, roundNo]);
+  const hintId = useRef(0);
+  const say = useCallback((text: ReactNode, own = true) => setHint({ id: ++hintId.current, text, seen: visibleLog.length, roundNo: roundNo ?? 0, own }), [visibleLog.length, roundNo]);
 
   // The first gems into a question: say the whole question once, qualifiers and all.
   const started = useRef({ roundNo: 0, tags: new Set<string>() });
@@ -171,7 +270,7 @@ export function AnimalGame() {
     round.orders.forEach((order, i) => {
       if ((shown[i] ?? 0) === 0 || order.answer || started.current.tags.has(order.tag)) return;
       started.current.tags.add(order.tag);
-      say(<>{clueFace(order.tag)} {order.question} <span className="text-neutral-7">Match more of its gems to find out.</span></>);
+      say(<>{clueFace(order.tag)} {order.question} <span className="text-neutral-7">Match more of its gems to find out.</span></>, false);
     });
   }, [round, roundNo, shown, say]);
 
@@ -207,9 +306,15 @@ export function AnimalGame() {
   }, [markSuspect, nameOf, say]);
 
   const latest = visibleLog.at(-1);
-  const status: ReactNode = hint && hint.roundNo === roundNo && hint.seen === visibleLog.length ? hint.text
+  const hinting = hint && hint.roundNo === roundNo && hint.seen === visibleLog.length;
+  const status: ReactNode = hinting ? hint.text
     : latest && round ? <LogText entry={latest} nameOf={nameOf} count={round.suspects.length} />
     : 'Match gems to fill a question in the grid. Clear a color next to an animal to see its answer.';
+  // What the status line takes turns showing: the answers (once their gems land) and witness notes so far.
+  const facts = useMemo<Fact[]>(() => round ? round.log.flatMap((entry, key) => (entry.kind === 'answer' && answerShown(entry.tag)) || entry.kind === 'note'
+    ? [{ key, node: <LogText entry={entry} nameOf={nameOf} count={round.suspects.length} /> }] : []) : [], [round, answerShown, nameOf]);
+  const nowKind: NowKind = hinting ? (hint.own ? 'urgent' : 'event') : latest && ['found', 'escaped', 'out-of-moves', 'named'].includes(latest.kind) ? 'urgent'
+    : latest?.kind === 'answer' || latest?.kind === 'note' ? 'fact' : 'event';
 
   const placeName = continent ? CONTINENT_NAMES[continent] : null;
   const picked = session && sheet?.kind === 'suspect' ? session.book.byId.get(sheet.id) : undefined;
@@ -278,10 +383,7 @@ export function AnimalGame() {
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
 
-        {/* The live region above announces it; this copy is for the eyes. */}
-        <p className="mx-xs my-xxs hidden h-12 min-w-0 shrink-0 items-center rounded-full bg-neutral-2 px-m text-s [grid-area:status] roomy:flex md:mx-s md:flex" aria-hidden="true">
-          <span className="line-clamp-2">{session ? status : 'Loading animals…'}</span>
-        </p>
+        <StatusTicker key={roundNo ?? 0} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} />
       </main>
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
