@@ -13,6 +13,7 @@
 //   board -> page  'clue-board-settled'   a move and its cascades finished
 //   page  -> board 'clue-board-select'    the animal picked in the evidence grid (its tile pulses)
 //   board -> page  'clue-board-tile'      the player tapped an animal's tile
+//   board -> page  'clue-board-tile-hold' the player long-pressed an animal's tile (its field guide)
 import Phaser from 'phaser';
 import type { GemType } from './constants';
 
@@ -28,6 +29,8 @@ export interface EventPayloads {
      */
     'gems-matched': {
         groups: Array<{ gemType: GemType; size: number; blast?: boolean }>; cascade: boolean; touched?: number[]; released?: number[];
+        /** Plan 045: each touched animal with the gem colors cleared next to it (scouting). */
+        nearColors?: Array<[number, GemType[]]>;
         from?: Array<{ gemType: GemType; x: number; y: number }>;
     };
     /**
@@ -44,6 +47,7 @@ export interface EventPayloads {
     'clue-board-settled': undefined;
     'clue-board-select': { id: number | null };
     'clue-board-tile': { id: number };
+    'clue-board-tile-hold': { id: number };
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

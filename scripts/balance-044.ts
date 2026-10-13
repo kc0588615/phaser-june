@@ -6,8 +6,11 @@
 // refills or answers not yet earned, except the oracle, a diagnostic that knows the
 // mystery from the start.
 //   node scripts/run-typescript.mjs scripts/balance-044.ts [--rounds 400] [--seed 44] [--places africa,asia]
-//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,reader,guesser,random,oracle]
+//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,novice,expert,reader,guesser,random,oracle]
 //     [--explain N]   (print round N's suspects, clue table and notes instead)
+//     [--scout on|off] [--knows size,covering]   (plan 045 scouting, on in the rules: suspects' answers start hidden
+//     and a move's clear next to an unmarked tile shows them; careful and reader know the --knows traits on sight,
+//     novice none, expert all)
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -22,8 +25,12 @@ import type { ContinentKey } from '../src/clueGame/regions';
 import { BoardModel, neighborSwaps, type Cell, type Move, type Special } from '../src/game/BoardModel';
 import { hash32, mulberry32, shuffled } from '../src/lib/seededRng';
 
-type Player = 'careful' | 'reader' | 'guesser' | 'random' | 'oracle';
+type Player = 'careful' | 'novice' | 'expert' | 'reader' | 'guesser' | 'random' | 'oracle';
+/** Players who reason from the evidence (and aim, except reader). */
+const THINKERS: readonly Player[] = ['careful', 'novice', 'expert', 'reader'];
 const PLAYER_NOTES: Record<Player, string> = {
+  novice: 'careful, knowing no trait on sight (scouting only)',
+  expert: 'careful, knowing every trait on sight (scouting never needed)',
   careful: 'reasons from answers and notes, marks what they rule out, aims each move (fills useful orders, clears next to marked tiles)',
   reader: 'reasons and marks like careful, but moves at random: what board planning is worth',
   guesser: 'marks four suspects at random at the start, then aims at them: the blind floor',
@@ -51,9 +58,12 @@ const toysOf = (board: BoardModel): Array<[Cell, Special]> =>
 /** How far a cell is from the nearest of these cells (steps up, down, left and right). */
 const distance = ([x, y]: Cell, cells: readonly Cell[]) => cells.reduce((best, [cx, cy]) => Math.min(best, Math.abs(cx - x) + Math.abs(cy - y)), 99);
 
-function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardModel, deal: Deal, player: Player, rng: () => number): Result {
+interface Options { knows: readonly string[] }
+
+function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardModel, deal: Deal, player: Player, rng: () => number, options: Options): Result {
   let state = newAnimalRound(book, rules, { suspects: deal.suspects, mysteryId: deal.mysteryId, place: deal.place });
-  const reasons = player === 'careful' || player === 'reader';
+  const reasons = THINKERS.includes(player);
+  const knows = (tag: string) => player === 'expert' || (player !== 'novice' && options.knows.includes(tag.slice(0, tag.indexOf(':'))));
   if (player === 'guesser') {
     for (const id of shuffled(state.suspects, rng).slice(0, rules.suspects - 1)) state = mark(state, id, true);
   }
@@ -64,7 +74,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
 
   while (state.status === 'playing') {
     if (reasons) {
-      const possible = stillPossible(book, state);
+      const possible = stillPossible(book, state, knows);
       for (const id of state.suspects) if (!possible.includes(id) && !state.released.includes(id) && !state.marked.includes(id)) state = mark(state, id, true);
       if (identifiedAt === null && possible.length === 1) identifiedAt = state.movesUsed;
     }
@@ -74,7 +84,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
       valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
       if (valid.length === 0) { stuck = true; break; }
     }
-    const move = player === 'random' || player === 'reader' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player);
+    const move = player === 'random' || player === 'reader' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player, knows);
     let phase = board.nextPhase(move);
     for (let cascade = false; phase.groups.length > 0; cascade = true) {
       toys += phase.made.length;
@@ -88,8 +98,8 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
     if (state.status === 'playing' && !board.hasAnyValidMove()) board.shuffle();
   }
   if (state.status === 'out-of-moves') {
-    const left = player === 'careful' || player === 'reader' || player === 'oracle'
-      ? stillPossible(book, state)
+    const left = reasons || player === 'oracle'
+      ? stillPossible(book, state, knows)
       : state.suspects.filter(id => !state.released.includes(id));
     state = nameAtTimeout(state, left[Math.floor(rng() * left.length)] ?? null);
   }
@@ -98,21 +108,27 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
 
 /**
  * The aimed move: each valid swap's first clear, tried on the scratch board. Worth: marked tiles it releases, progress
- * on orders whose clue still splits the suspects left (by how many it's sure to rule out), witness gems while notes
- * are left, and clears landing near marked tiles (to set up the next release).
+ * on orders whose clue still splits the suspects left (by how many it's sure to rule out, counting hidden answers
+ * either way), witness gems while notes are left, scouting answers it doesn't know for suspects still possible (more
+ * once the clue is answered), and clears landing near marked tiles (to set up the next release).
  */
-function aim(book: Book, state: AnimalRound, board: BoardModel, scratch: BoardModel, valid: Move[], player: Player): Move {
+function aim(book: Book, state: AnimalRound, board: BoardModel, scratch: BoardModel, valid: Move[], player: Player, knows: (tag: string) => boolean): Move {
   const grid = board.getGrid();
   const toys = toysOf(board);
   const pins = board.pinnedCells();
   const marked = pins.filter(([, id]) => state.marked.includes(id) && !state.released.includes(id));
   const markedIds = new Set(marked.map(([, id]) => id));
-  const possible = player === 'careful' ? stillPossible(book, state) : [];
+  const thinks = THINKERS.includes(player);
+  const possible = thinks ? stillPossible(book, state, knows) : [];
+  const known = (order: AnimalRound['orders'][number], id: number) => order.seen[state.suspects.indexOf(id)] || knows(order.tag);
   const weight = state.orders.map(order => {
-    if (player !== 'careful' || order.answer) return 0;
-    const yes = possible.filter(id => order.row[state.suspects.indexOf(id)]).length;
-    return Math.min(yes, possible.length - yes);
+    if (!thinks || order.answer) return 0;
+    const shown = possible.filter(id => known(order, id));
+    const yes = shown.filter(id => order.row[state.suspects.indexOf(id)]).length;
+    const hidden = possible.length - shown.length;
+    return Math.min(yes + hidden, shown.length - yes + hidden, Math.floor(possible.length / 2));
   });
+  const scoutWorth = state.orders.map(order => (order.answer ? 4 : weight[state.orders.indexOf(order)] > 0 ? 1 : 0));
   let best = valid[0];
   let bestValue = -Infinity;
   for (const move of valid) {
@@ -123,7 +139,13 @@ function aim(book: Book, state: AnimalRound, board: BoardModel, scratch: BoardMo
     state.orders.forEach((order, i) => {
       if (weight[i] > 0) value += 6 * weight[i] * Math.min(report.collected[order.gem] ?? 0, state.rules.orderSize - order.have) / state.rules.orderSize;
     });
-    if (player === 'careful' && state.notesLeft.length > 0) value += report.witness;
+    if (thinks && state.notesLeft.length > 0) value += report.witness;
+    if (thinks && state.rules.scout) {
+      for (const [id, colors] of report.nearColors ?? []) {
+        if (markedIds.has(id) || !possible.includes(id)) continue;
+        state.orders.forEach((order, i) => { if (colors.includes(order.gem) && !known(order, id)) value += scoutWorth[i]; });
+      }
+    }
     for (const [cell] of marked) value += 0.3 * Math.max(0, 3 - distance(cell, phase.cleared));
     if (value > bestValue) { best = move; bestValue = value; }
   }
@@ -145,8 +167,10 @@ async function main() {
     orderSize: Number(arg('order', String(ANIMAL_RULES.orderSize))),
     witnessChance: Number(arg('witness', String(ANIMAL_RULES.witnessChance))),
     starMoves: arg('stars', ANIMAL_RULES.starMoves.join(',')).split(',').map(Number) as AnimalRules['starMoves'],
+    scout: arg('scout', ANIMAL_RULES.scout ? 'on' : 'off') === 'on',
   };
-  const players = arg('players', 'careful,reader,guesser,random,oracle').split(',') as Player[];
+  const options: Options = { knows: arg('knows', 'size,covering').split(',').filter(Boolean) };
+  const players = arg('players', 'careful,novice,expert,reader,guesser,random,oracle').split(',') as Player[];
   const dir = path.join(process.cwd(), 'db/content');
   const profiles = readdirSync(path.join(dir, 'animals')).filter(file => file.endsWith('.json')).sort()
     .map(file => JSON.parse(readFileSync(path.join(dir, 'animals', file), 'utf8')) as AnimalProfile);
@@ -157,10 +181,10 @@ async function main() {
 
   const explain = process.argv.includes('--explain') ? Number(arg('explain', '0')) : null;
   if (explain === null) {
-    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}.`);
+    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
-    console.log('\n| Place | Player | Found | ★★★ | Escaped | Out of moves | Named right at timeout | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Toys | Trail finished | Finds a trail |');
-    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    console.log('\n| Place | Player | Found | ★★★ | Escaped | Out of moves | Named right at timeout | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Trail finished | Finds a trail |');
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   }
 
   const starLines: string[] = [];
@@ -199,7 +223,7 @@ async function main() {
       const rng = mulberry32(hash32(`${player}:${setupSeed}`));
       const results = deals.map(deal => {
         board.newBoard(deal.boardSeed, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance }, deal.pins);
-        return play(book, rules, board, scratch, deal, player, rng);
+        return play(book, rules, board, scratch, deal, player, rng, options);
       });
       const found = results.filter(r => r.state.status === 'found');
       let trail = newTrail(rules);
@@ -217,11 +241,12 @@ async function main() {
         pct(count(r => r.state.lostBy === 'escaped'), n),
         pct(count(r => r.state.lostBy === 'out-of-moves'), n),
         pct(count(r => r.state.named?.correct === true), n),
-        player === 'careful' || player === 'reader' ? pct(count(r => r.identifiedAt !== null), n) : '-',
+        THINKERS.includes(player) ? pct(count(r => r.identifiedAt !== null), n) : '-',
         avg(found.map(r => r.state.movesLeft)),
-        player === 'careful' || player === 'reader' ? avg(found.filter(r => r.identifiedAt !== null).map(r => r.state.movesUsed - r.identifiedAt!)) : '-',
+        THINKERS.includes(player) ? avg(found.filter(r => r.identifiedAt !== null).map(r => r.state.movesUsed - r.identifiedAt!)) : '-',
         avg(results.map(r => r.state.orders.filter(order => order.answer).length)),
         avg(results.map(r => r.state.notes.length)),
+        avg(results.map(r => r.state.orders.reduce((sum, order) => sum + order.seen.filter(Boolean).length, 0))),
         avg(results.map(r => r.toys)),
         `${pct(finished, trails)} of ${trails}`,
         trails ? (trailFinds / trails).toFixed(1) : '-',

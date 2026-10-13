@@ -9,7 +9,7 @@ import type { AnimalRound, WitnessNote } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
-import type { Animal } from '@/clueGame/questionMatch';
+import { prefixOf, type Animal } from '@/clueGame/questionMatch';
 import { GlossaryText } from '@/components/clueGame/GlossaryText';
 import { WithBlanks } from '@/components/clueGame/LogEntryText';
 import { Sheet } from '@/components/clueGame/Sheet';
@@ -17,17 +17,22 @@ import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
 import { backdropMotion, dialogMotion, drawerUpMotion, useOverlayPresence } from '@/lib/motion';
 import { EvidenceGrid, SuspectPhoto } from './EvidenceGrid';
 
-export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v1';
+export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v2';
 
 /** A section label inside a sheet (cc Menu label: XS, medium). */
 const LABEL = 'm-0 text-xs font-medium uppercase text-neutral-7';
 
 const GUIDE: Array<[keyof Animal['guide'], string]> = [['body', 'Body'], ['habits', 'Habits'], ['habitat', 'Habitat'], ['range', 'Range'], ['life', 'Life cycle']];
 
-export function SuspectSheet({ animal, species, round, onMark, onClose }: {
-  animal: Animal; species: PoolSpecies | undefined; round: AnimalRound; onMark: (ruledOut: boolean) => void; onClose: () => void;
+export function SuspectSheet({ animal, species, round, pencil, onPencil, onMark, onClose }: {
+  animal: Animal; species: PoolSpecies | undefined; round: AnimalRound; pencil: Readonly<Record<string, 'yes' | 'no'>>;
+  /** Pencil a guess for a hidden answer (null clears it), right here while reading the guide. */
+  onPencil: (tag: string, value: 'yes' | 'no' | null) => void;
+  onMark: (ruledOut: boolean) => void; onClose: () => void;
 }) {
   const index = round.suspects.indexOf(animal.id);
+  // Plan 045: while playing, the guide keeps quiet about the round's questions (scouting shows those answers).
+  const asked = new Set(round.status === 'playing' ? round.orders.map(order => prefixOf(order.tag)) : []);
   const released = round.released.includes(animal.id);
   const marked = round.marked.includes(animal.id);
   const signs = signsOf(animal.tags);
@@ -36,6 +41,7 @@ export function SuspectSheet({ animal, species, round, onMark, onClose }: {
     <Sheet
       title={animal.name}
       onClose={onClose}
+      modeless
       footer={canMark ? (
         <button type="button" onClick={() => { onMark(!marked); onClose(); }} className={`btn flex-[2] ${marked ? 'btn-outline' : 'btn-danger'}`}>
           {marked ? 'Undo: not ruled out' : 'Rule out'}
@@ -47,13 +53,36 @@ export function SuspectSheet({ animal, species, round, onMark, onClose }: {
       {marked && !released && <p className="m-0 mb-xs text-s font-medium text-error">Ruled out: it leaves the board when a gem next to it is cleared. If it&apos;s the mystery, it escapes!</p>}
       <h3 className={LABEL}>Its answers</h3>
       <ul className="m-0 mb-xs list-none p-0">
-        {round.orders.map(order => (
-          <li key={order.tag} className="flex items-center gap-xs py-xxs text-s shadow-[inset_0_-1px_0_0_var(--neutral-4)]">
-            <span aria-hidden="true">{clueFace(order.tag)}</span>
-            <span className="min-w-0 flex-1">{order.question}</span>
-            <b className={`font-medium ${order.row[index] ? 'text-color-1' : 'text-neutral-7'}`}>{order.row[index] ? 'yes' : 'no'}</b>
-          </li>
-        ))}
+        {round.orders.map(order => {
+          const seen = order.seen[index] || round.status !== 'playing';
+          const guess = pencil[`${animal.id}:${order.tag}`];
+          return (
+            <li key={order.tag} className="flex items-center gap-xs py-xxs text-s shadow-[inset_0_-1px_0_0_var(--neutral-4)]">
+              <span aria-hidden="true">{clueFace(order.tag)}</span>
+              <span className="min-w-0 flex-1">{order.question}</span>
+              {seen
+                ? <b className={`font-medium ${order.row[index] ? 'text-color-1' : 'text-neutral-7'}`}>{order.row[index] ? 'yes' : 'no'}</b>
+                : (
+                  <span className="flex shrink-0 items-center gap-xxs">
+                    <span className="text-xs text-neutral-7">not scouted</span>
+                    {(['yes', 'no'] as const).map(value => (
+                      <button
+                        key={value}
+                        type="button"
+                        data-pencil-guide={value}
+                        aria-pressed={guess === value}
+                        aria-label={`${order.question} Pencil ${value}`}
+                        onClick={() => onPencil(order.tag, guess === value ? null : value)}
+                        className={`rounded-xs px-xs py-xxs text-xs outline-dashed outline-1 -outline-offset-1 ${guess === value ? 'bg-neutral-4 font-medium text-neutral-10 outline-neutral-7' : 'text-neutral-7 outline-neutral-5'}`}
+                      >
+                        {value === 'yes' ? '✓' : '✗'}
+                      </button>
+                    ))}
+                  </span>
+                )}
+            </li>
+          );
+        })}
       </ul>
       {signs.length > 0 && (
         <>
@@ -63,12 +92,15 @@ export function SuspectSheet({ animal, species, round, onMark, onClose }: {
           </p>
         </>
       )}
-      {GUIDE.map(([key, label]) => animal.guide[key].length > 0 && (
-        <section key={key} className="mb-xs">
-          <h3 className={LABEL}>{label}</h3>
-          {animal.guide[key].map(line => <p key={line} className="m-0 mt-xxs text-s text-neutral-8"><GlossaryText text={line} /></p>)}
-        </section>
-      ))}
+      {GUIDE.map(([key, label]) => {
+        const lines = animal.guide[key].filter(line => !line.tags.some(tag => asked.has(prefixOf(tag))));
+        return lines.length > 0 && (
+          <section key={key} className="mb-xs">
+            <h3 className={LABEL}>{label}</h3>
+            {lines.map(line => <p key={line.text} className="m-0 mt-xxs text-s text-neutral-8"><GlossaryText text={line.text} /></p>)}
+          </section>
+        );
+      })}
     </Sheet>
   );
 }
@@ -191,7 +223,8 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
         <ol className="m-0 flex list-decimal flex-col gap-xs pl-l text-s text-neutral-8 [&_b]:font-medium [&_b]:text-neutral-10">
           <li>Our camera trap caught a blur. It was one of the <b>{rules.suspects} animals</b> on the board. Find out which.</li>
           <li>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the grid at the top. A full question answers it about the mystery: <b>yes</b> or <b>no</b>.</li>
-          <li>Each animal&apos;s row shows its own answers. Compare them with the mystery&apos;s. Tap an animal (its row, or its numbered tile on the board) to pick it, then <b>Rule it out</b>.</li>
+          <li>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s tile and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</li>
+          <li>Compare each animal&apos;s answers with the mystery&apos;s. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</li>
           <li>A ruled-out animal leaves the board when a gem next to it is cleared. Release every look-alike: the last one is your find. <b>Rule out the mystery and it escapes!</b></li>
           <li>Glowing purple <b>witness gems</b> give a note about the mystery and how many of the {rules.suspects} share it.</li>
           <li>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</li>

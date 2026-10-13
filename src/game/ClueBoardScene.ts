@@ -4,7 +4,7 @@
 // 'clue-board-setup' / 'clue-board-lock'. Plan 044: animals pinned on the board,
 // faces on the gems, and 'clue-board-marks': a marked animal touched by a clear is
 // released (the rules decide the same from the same marks). A tapped tile picks its
-// animal ('clue-board-tile'); the animal picked in the grid pulses ('clue-board-select').
+// animal ('clue-board-tile', or 'clue-board-tile-hold' for a long press); the animal picked in the grid pulses ('clue-board-select').
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
 import { BoardModel, type ExplodePhase } from './BoardModel';
@@ -57,6 +57,10 @@ export class ClueBoardScene extends Phaser.Scene {
             tileTap: ([x, y]) => {
                 const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
                 if (pin) EventBus.emit('clue-board-tile', { id: pin[1] });
+            },
+            tileHold: ([x, y]) => {
+                const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
+                if (pin) EventBus.emit('clue-board-tile-hold', { id: pin[1] });
             },
             onMoveResolved: () => {
                 this.reshuffleIfStuck();
@@ -159,7 +163,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.emit('gems-matched', {
             groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length, ...(group.blast ? { blast: true } : {}) })),
             cascade,
-            ...(this.animals ? { touched: phase.touched, released, from: this.clearedAt(phase) } : {}),
+            ...(this.animals ? { touched: phase.touched, released, nearColors: phase.nearColors, from: this.clearedAt(phase) } : {}),
         });
         return released;
     }

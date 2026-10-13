@@ -58,6 +58,14 @@ _Avoid_: tag
 The reply to a question: Yes, No or No record.
 _Avoid_: clue
 
+**Scout**:
+Plan 045: a move's own clear of a clue's color next to an unmarked animal's tile shows that animal's answer to that question. Until scouted, a suspect's answers are hidden ("?").
+_Avoid_: reveal, inspect
+
+**Pencil mark**:
+The player's own guess written in a hidden answer (yes or no). The game never checks it during play.
+_Avoid_: note, call
+
 **No record**:
 The answer to a question about a trait the field guide has no record of for the mystery animal. The charge comes back.
 

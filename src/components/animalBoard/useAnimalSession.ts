@@ -111,14 +111,14 @@ export function useAnimalSession() {
 
   useEffect(() => {
     const onSceneReady = () => setSceneGeneration(generation => generation + 1);
-    const onMatched = ({ groups, cascade, released = [] }: EventPayloads['gems-matched']) => {
+    const onMatched = ({ groups, cascade, released = [], nearColors = [] }: EventPayloads['gems-matched']) => {
       const collected: Partial<Record<GemType, number>> = {};
       let witness = 0;
       for (const group of groups) {
         if (group.gemType === WITNESS_GEM) witness += group.size;
         else collected[group.gemType] = (collected[group.gemType] ?? 0) + group.size;
       }
-      dispatch({ type: 'matched', collected, witness, released, cascade });
+      dispatch({ type: 'matched', collected, witness, released, cascade, nearColors });
     };
     const onSettled = () => dispatch({ type: 'settled' });
     EventBus.on('current-scene-ready', onSceneReady);
@@ -171,6 +171,7 @@ export function useAnimalSession() {
 
   const markSuspect = useCallback((id: number, ruledOut: boolean) => dispatch({ type: 'mark', id, ruledOut }), []);
   const name = useCallback((id: number | null) => dispatch({ type: 'name', id }), []);
+  const pencil = useCallback((id: number, tag: string, value: 'yes' | 'no' | null) => dispatch({ type: 'pencil', id, tag, value }), []);
   const nextRound = useCallback(() => {
     const current = sessionRef.current;
     if (!current?.end || !content) return;
@@ -184,6 +185,6 @@ export function useAnimalSession() {
     pool: content?.pool ?? null,
     place: content?.place ?? null,
     continent: content?.continent ?? null,
-    markSuspect, name, nextRound,
+    markSuspect, name, nextRound, pencil,
   };
 }

@@ -1,5 +1,5 @@
 // End-to-end play test. Headless Chrome plays the dev build like a player: the
-// globe's continent list, then rounds of the animal board (plan 044) for one
+// globe's continent list, then rounds of the animal board (plans 044 and 045) for one
 // continent at /explore, driven through the real board (window.__cc, dev only) and
 // the real evidence grid and buttons. It checks the rules a player relies on after every
 // move and writes a repeatable artifact:
@@ -111,7 +111,32 @@ async function main() {
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v1', '1'); } catch {}" });
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v2', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
+    // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: `
+      window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
+      window.__slidePill = async (id, distance, from = 10) => {
+        const pill = window.__pill(id);
+        const r = pill.getBoundingClientRect();
+        const y = r.top + r.height / 2;
+        const at = (type, x) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
+        at('pointerdown', r.left + from);
+        for (let x = 10; x <= distance; x += 10) { at('pointermove', r.left + from + x); await new Promise(res => setTimeout(res, 16)); }
+        at('pointerup', r.left + from + distance);
+        pill.click();
+        await new Promise(res => setTimeout(res, 250));
+      };
+      window.__holdPill = async id => {
+        const pill = window.__pill(id);
+        const r = pill.getBoundingClientRect();
+        const opts = { bubbles: true, clientX: r.left + 20, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+        pill.dispatchEvent(new PointerEvent('pointerdown', opts));
+        await new Promise(res => setTimeout(res, 650));
+        pill.dispatchEvent(new PointerEvent('pointerup', opts));
+        pill.click();
+        await new Promise(res => setTimeout(res, 400));
+      };
+    ` });
 
     const evaluate = async (fn, ...args) => {
       const { result, exceptionDetails } = await page('Runtime.evaluate', { expression: `(${fn})(...${JSON.stringify(args)})`, awaitPromise: true, returnByValue: true });
@@ -232,16 +257,115 @@ async function main() {
           const [[cell, id]] = window.__cc.state().pins;
           await window.__cc.tap(cell, { input: 'touch' });
           await new Promise(resolve => setTimeout(resolve, 200));
-          const row = document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] button`);
-          return { cell, id, picked: row?.getAttribute('aria-pressed') === 'true' && Boolean(document.querySelector('button[data-act="rule-out"]')) };
+          return { cell, id, picked: window.__pill(id)?.getAttribute('aria-pressed') === 'true' };
         });
         await screenshot('02a-picked.png');
-        const dropped = await evaluate(async cell => {
+        const dropped = await evaluate(async ([cell, id]) => {
           await window.__cc.tap(cell, { input: 'touch' });
           await new Promise(resolve => setTimeout(resolve, 200));
-          return !document.querySelector('button[data-act="rule-out"]');
-        }, tile.cell);
+          return window.__pill(id)?.getAttribute('aria-pressed') === 'false';
+        }, [tile.cell, tile.id]);
         check('tapping an animal\'s tile picks it in the grid; tapping it again drops it', tile.picked && dropped, JSON.stringify({ ...tile, dropped }));
+        // Plan 045: every suspect answer starts hidden; tapping one pencils a guess (yes, no, blank) that changes no rule.
+        const pencil = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const grid = document.querySelector('table[aria-label="Evidence"]');
+          const hidden = grid.querySelectorAll('tr[data-suspect] td[data-hidden]').length;
+          const cell = grid.querySelector('tr[data-suspect] td[data-hidden]');
+          const id = Number(cell.closest('tr').dataset.suspect);
+          const tag = cell.dataset.tag;
+          const at = () => grid.querySelector(`tr[data-suspect="${id}"] td[data-tag="${tag}"]`);
+          const before = JSON.stringify({ ...window.__cc.clue(), pencil: null });
+          const steps = [];
+          for (let i = 0; i < 3; i++) { at().querySelector('button').click(); await wait(150); steps.push(at().dataset.pencil); }
+          const clue = window.__cc.clue();
+          return { hidden, steps, same: JSON.stringify({ ...clue, pencil: null }) === before, cleared: Object.keys(clue.pencil).length === 0, stillHidden: at().hasAttribute('data-hidden') };
+        });
+        check('every suspect answer starts hidden', pencil.hidden === 20, `${pencil.hidden} hidden`);
+        check('tapping a hidden answer pencils yes, then no, then blank, and changes no rule', pencil.steps.join() === 'yes,no,' && pencil.same && pencil.cleared && pencil.stillHidden, JSON.stringify(pencil));
+        await screenshot('02a-hidden.png');
+        // The field guide says "not scouted" for each hidden answer.
+        const guide = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect]');
+          await window.__holdPill(row.dataset.suspect);
+          const text = document.querySelector('[role=dialog]')?.innerText ?? '';
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+          await wait(250);
+          return { hidden: row.querySelectorAll('td[data-hidden]').length, notScouted: (text.match(/not scouted/g) ?? []).length };
+        });
+        check('the field guide says "not scouted" for each hidden answer', guide.hidden > 0 && guide.notScouted === guide.hidden, JSON.stringify(guide));
+        // A long press on a row opens its field guide (and doesn't pick it); pencilling there keeps the guide open.
+        const held = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect]');
+          const id = row.dataset.suspect;
+          await window.__holdPill(id);
+          const dialog = document.querySelector('[role=dialog]');
+          const opened = Boolean(dialog) && window.__pill(id).getAttribute('aria-pressed') === 'false';
+          const tag = dialog?.querySelector('button[data-pencil-guide="yes"]') ? [...document.querySelectorAll(`table[aria-label="Evidence"] tr[data-suspect="${id}"] td[data-hidden]`)][0]?.dataset.tag : null;
+          dialog?.querySelector('button[data-pencil-guide="yes"]')?.click();
+          await wait(200);
+          const cell = () => document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] td[data-tag="${tag}"]`);
+          const pencilled = cell()?.dataset.pencil;
+          const stillOpen = Boolean(document.querySelector('[role=dialog]'));
+          document.querySelector('[role=dialog] button[data-pencil-guide="yes"]')?.click(); // again: clears it
+          await wait(200);
+          const cleared = cell()?.dataset.pencil;
+          // The grid stays tappable under the guide: pencil there (the guide stays open), and another row switches the guide.
+          cell()?.querySelector('button')?.click();
+          await wait(200);
+          const gridPencil = cell()?.dataset.pencil;
+          const openAfterGrid = Boolean(document.querySelector('[role=dialog]'));
+          cell()?.querySelector('button')?.click();
+          cell()?.querySelector('button')?.click(); // yes -> no -> blank
+          await wait(200);
+          const other = [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect]')].find(tr => tr.dataset.suspect !== id);
+          other.querySelector('th button').click();
+          await wait(400);
+          const switched = document.querySelector('[role=dialog] h2')?.textContent ?? '';
+          const otherName = other.querySelector('th button').getAttribute('aria-label').replace(/^\d+: /, '').replace(/,.*$/, '');
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+          await wait(300);
+          if (other.querySelector('button[data-pill]').getAttribute('aria-pressed') === 'true') other.querySelector('button[data-pill]').click(); // drop the pick
+          await wait(150);
+          return { opened, tag, pencilled, stillOpen, cleared, gridPencil, openAfterGrid, switched, otherName };
+        });
+        check('a long press on an animal\'s row opens its field guide without picking it', held.opened, JSON.stringify(held));
+        check('pencilling in the field guide marks the grid and keeps the guide open', held.pencilled === 'yes' && held.stillOpen && held.cleared === '', JSON.stringify(held));
+        check('with the field guide open, pencilling in the grid keeps it open', held.gridPencil === 'yes' && held.openAfterGrid, JSON.stringify(held));
+        check('with the field guide open, tapping another row switches the guide to that animal', held.switched === held.otherName, JSON.stringify(held));
+        // A long press on a board tile opens the field guide too.
+        const tileHeld = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const [[cell, id]] = window.__cc.state().pins;
+          await window.__cc.tap(cell, { input: 'touch', holdMs: 700 });
+          await wait(400);
+          const title = document.querySelector('[role=dialog] h2')?.textContent ?? '';
+          const picked = window.__pill(id)?.getAttribute('aria-pressed') === 'true';
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+          await wait(300);
+          return { id, title, picked, held: window.__cc.events(50).some(e => e.name === 'clue-board-tile-hold' && e.payload?.id === id) };
+        });
+        const slid = await evaluate(async () => {
+          const id = window.__cc.clue().suspects[0];
+          const gridHeight = () => Math.round(document.querySelector('table[aria-label="Evidence"]').getBoundingClientRect().height);
+          const before = gridHeight();
+          await window.__slidePill(id, 20);
+          const short = window.__cc.clue().marked.includes(id);
+          await window.__slidePill(id, 90, 60); // from the name, not the photo
+          const fromName = window.__cc.clue().marked.includes(id);
+          if (window.__pill(id).getAttribute('aria-pressed') === 'true') window.__pill(id).click();
+          await window.__slidePill(id, 120);
+          const out = window.__cc.clue().marked.includes(id);
+          const heightOut = gridHeight();
+          await window.__slidePill(id, 120);
+          const back = window.__cc.clue().marked.includes(id);
+          return { short, fromName, out, back, picked: window.__pill(id).getAttribute('aria-pressed'), before, heightOut };
+        });
+        check('ruling an animal out doesn\'t change the grid\'s height (the board keeps its size)', slid.heightOut === slid.before, JSON.stringify(slid));
+        check('dragging an animal\'s photo a little does nothing; from its name, nothing; all the way rules it out; again brings it back', !slid.short && !slid.fromName && slid.out && !slid.back && slid.picked === 'false', JSON.stringify(slid));
+        check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title === names.get(tileHeld.id) && !tileHeld.picked, JSON.stringify(tileHeld));
       }
       const trailBefore = start.trail;
       // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then a name); others play carefully.
@@ -249,24 +373,23 @@ async function main() {
       let state = start;
       let moves = 0;
       while (state.status === 'playing' && moves < MAX_MOVES) {
-        // Rule out, through the real grid (tap the row, then Rule out in the status line): careful, every suspect the
+        // Rule out, through the real grid (tap the name pill, then slide it right): careful, every suspect the
         // answers and notes so far rule out; reckless, the mystery itself; idle, nobody.
         const toMark = mode === 'careful' ? state.suspects.filter(id => !state.possible.includes(id))
           : mode === 'reckless' ? [state.mysteryId] : [];
         for (const id of toMark.filter(id => !state.marked.includes(id) && !state.released.includes(id))) {
           let marked = await evaluate(async id => {
             const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-            document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] button`)?.click();
+            window.__pill(id)?.click();
             await wait(250);
             const picked = window.__cc.events(50).filter(e => e.name === 'clue-board-select').at(-1)?.payload?.id ?? null;
-            document.querySelector('button[data-act="rule-out"]')?.click();
-            await wait(200);
+            await window.__slidePill(id, 120);
             const counter = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '';
             const clue = window.__cc.clue();
             return { marked: clue.marked.includes(id), picked, counter, count: clue.marked.length };
           }, id);
           check(`round ${n}: picking the ${names.get(id)}'s row tells the board to pulse its tile`, marked.picked === id, JSON.stringify(marked));
-          check(`round ${n}: Rule out in the status line marks the ${names.get(id)}`, marked.marked);
+          check(`round ${n}: sliding the ${names.get(id)}'s name right rules it out`, marked.marked);
           check(`round ${n}: the grid counts the player's own marks`, marked.counter.includes(`${marked.count} ruled out`), marked.counter);
           marked = marked.marked;
           if (mode === 'reckless') check(`round ${n}: ruling out the mystery doesn't release it by itself`, (await evaluate(() => window.__cc.clue())).status === 'playing');
@@ -297,23 +420,32 @@ async function main() {
           const clue = cc.clue();
           const live = new Set(clue.marked.filter(id => !clue.released.includes(id)));
           const useful = new Set(clue.orders.filter(order => !order.answer).map(order => order.gem));
+          // What a move's own clear would scout: each unmarked animal's hidden answers for the colors cleared next to it.
+          const scouts = move => cc.nearColorsBy(move).filter(([id]) => !clue.marked.includes(id) && !clue.released.includes(id)).flatMap(([id, colors]) =>
+            clue.orders.filter(order => colors.includes(order.gem) && !order.seen[clue.suspects.indexOf(id)]).map(order => `${id}:${order.tag}`));
           // (Reckless aims at its marked animal, the mystery, the same way: a clear next to it.)
-          const value = move => 10 * cc.touchedBy(move).filter(id => live.has(id)).length + (move.colors.some(color => useful.has(color)) ? 3 : 0) + move.largest;
+          const value = move => 10 * cc.touchedBy(move).filter(id => live.has(id)).length + 2 * scouts(move).length + (move.colors.some(color => useful.has(color)) ? 3 : 0) + move.largest;
           const moves = cc.validMoves();
           if (moves.length === 0) return null;
           const move = moves.reduce((best, candidate) => (value(candidate) > value(best) ? candidate : best));
+          const expected = scouts(move);
           const drag = await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
           await new Promise(resolve => setTimeout(resolve, 150));
           const { pins, view } = cc.state();
           const grid = document.querySelector('table[aria-label="Evidence"]');
           const orders = [...grid.querySelectorAll('tr[data-mystery] td[data-tag]')].map(td => ({ tag: td.dataset.tag, have: Number(td.dataset.have), answer: td.dataset.answer || null }));
           const misses = grid.querySelectorAll('[data-miss]').length;
-          return { counted: drag.counted, timedOut: drag.timedOut, pins, view, orders, misses, clue: cc.clue() };
+          const cells = [...grid.querySelectorAll('tr[data-suspect] td[data-tag]')].map(td => ({
+            id: Number(td.closest('tr').dataset.suspect), tag: td.dataset.tag, hidden: td.hasAttribute('data-hidden'),
+            yes: td.dataset.yes ?? null, said: td.querySelector('.sr-only')?.textContent ?? null,
+          }));
+          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, expected, clue: cc.clue() };
         });
         if (!result) break;
         moves++;
         state = result.clue;
         check(`round ${n} move ${moves}: settles`, !result.timedOut);
+        check(`round ${n} move ${moves}: nothing on screen covers the board`, !result.blocked, result.blocked ?? '');
         if (result.counted) check(`round ${n} move ${moves}: uses exactly one move`, state.movesLeft === before.movesLeft - 1, `${before.movesLeft} -> ${state.movesLeft}`);
         check(`round ${n} move ${moves}: only ruled-out animals leave the board`, state.released.every(id => state.marked.includes(id)), JSON.stringify({ released: state.released, marked: state.marked }));
         check(`round ${n} move ${moves}: the mystery leaves only by escaping, which loses the round`,
@@ -328,16 +460,31 @@ async function main() {
           return cell && cell.have === order.have && cell.answer === order.answer;
         }), JSON.stringify(result.orders));
         check(`round ${n} move ${moves}: during play the grid never points at a mismatch`, result.misses === 0, `${result.misses} cells`);
+        // Plan 045: the move's own clear scouts exactly the hidden answers next to unmarked animals in the colors it
+        // cleared there (cascades scout nothing), and a hidden answer is nowhere in the page.
+        const seenKeys = clue => new Set(clue.orders.flatMap(order => clue.suspects.filter((_id, i) => order.seen[i]).map(id => `${id}:${order.tag}`)));
+        const was = seenKeys(before);
+        const scouted = [...seenKeys(state)].filter(key => !was.has(key)).sort();
+        if (result.counted) check(`round ${n} move ${moves}: the move scouts exactly the answers next to unmarked animals in its colors`, scouted.join() === [...result.expected].sort().join(), JSON.stringify({ scouted, expected: result.expected }));
+        const leaks = result.cells.filter(cell => {
+          const order = state.orders.find(candidate => candidate.tag === cell.tag);
+          const i = state.suspects.indexOf(cell.id);
+          return cell.hidden ? order.seen[i] || cell.yes !== null || /yes|no/.test(cell.said ?? '') : !order.seen[i] || cell.yes !== String(order.row[i]);
+        });
+        check(`round ${n} move ${moves}: the grid shows exactly the scouted answers, and no hidden one`, leaks.length === 0, JSON.stringify(leaks.slice(0, 3)));
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
           const notes = await evaluate(async () => {
-            document.querySelector('button[aria-label^="Witness notes"]')?.click();
+            const book = document.querySelector('button[aria-label^="Witness notes"]');
+            const corner = { inCorner: Boolean(book?.closest('table[aria-label="Evidence"]')), count: book?.querySelector('b')?.textContent ?? null, flash: Boolean(book?.querySelector('.ev-flash')) };
+            book?.click();
             await new Promise(resolve => setTimeout(resolve, 250));
             const text = document.querySelector('[role=dialog]')?.innerText ?? '';
             [...document.querySelectorAll('[role=dialog] button')].find(button => button.textContent === 'Close')?.click();
-            return text;
+            return { text, ...corner };
           });
-          check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of the 5/.test(notes), notes.slice(0, 120));
+          check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of the 5/.test(notes.text), notes.text.slice(0, 120));
+          check(`round ${n}: the witness notes book in the grid's corner counts the notes and flashes`, notes.inCorner && notes.count === String(state.notes) && notes.flash, JSON.stringify({ ...notes, text: undefined }));
           await screenshot('02c-notes.png');
         }
       }
@@ -378,14 +525,14 @@ async function main() {
         const answers = Object.fromEntries([...grid.querySelectorAll('tr[data-mystery] td[data-tag]')].map(td => [td.dataset.tag, td.dataset.answer || null]));
         const cells = [...grid.querySelectorAll('tr[data-suspect] td[data-tag]')];
         const wrong = cells.filter(td => td.hasAttribute('data-miss') !== (answers[td.dataset.tag] !== null && (td.dataset.yes === 'true') !== (answers[td.dataset.tag] === 'yes')));
-        return { mystery: grid.querySelector('tr[data-mystery] th')?.textContent ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length };
+        return { mystery: grid.querySelector('tr[data-mystery] th')?.textContent ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length, hidden: grid.querySelectorAll('[data-hidden]').length };
       });
-      check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.mystery.includes(mysteryName), JSON.stringify(replay));
+      check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.mystery.includes(mysteryName), JSON.stringify(replay));
       await screenshot(`04-round-${n}-end.png`);
       report.rounds.push({
         round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, suspects: start.suspects.map(id => names.get(id)),
         outcome: end?.outcome, lostBy: state.lostBy, stars: end?.stars, points: end?.points, movesUsed: state.movesUsed,
-        answers: state.orders.filter(order => order.answer).length, notes: state.notes, marked: state.marked.length, released: state.released.length,
+        answers: state.orders.filter(order => order.answer).length, notes: state.notes, scouted: state.orders.reduce((sum, order) => sum + order.seen.filter(Boolean).length, 0), marked: state.marked.length, released: state.released.length,
         trail: state.trail, score: state.score,
       });
       console.log(`  round ${n}: ${mysteryName} ${end?.outcome ?? '?'}${state.lostBy ? ` (${state.lostBy})` : ''}, ${state.movesUsed} moves, ${state.orders.filter(order => order.answer).length} answers, ${state.notes} notes, +${end?.points ?? 0}`);

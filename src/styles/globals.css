@@ -443,10 +443,27 @@ body {
   from { background-color: var(--color-3); }
 }
 .ev-lit { animation: ev-lit 1.6s ease-out; }
+/* Plan 045: the witness notes book flashes once when a note comes in. */
+@keyframes ev-flash {
+  30% { transform: scale(1.5); box-shadow: 0 0 0 6px rgb(178 125 255 / 45%); } /* --color-notes; @theme inline leaves no runtime var */
+}
+.ev-flash { animation: ev-flash 0.9s ease-out; }
+/* Plan 045: once, for a new player, the first animal's photo nudges right and says "Slide to rule out". */
+@keyframes ev-nudge {
+  0%, 40%, 80%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(24px); }
+}
+.ev-nudge { animation: ev-nudge 1.6s ease-in-out 0.6s; }
+@keyframes ev-hint {
+  0%, 100% { opacity: 0; }
+  12%, 85% { opacity: 1; }
+}
+.ev-hint { animation: ev-hint 3.4s ease-in-out 0.4s both; }
 .ev-fly { position: fixed; z-index: 9000; pointer-events: none; }
 .ev-fly img { display: block; width: 100%; height: 100%; }
 .ev-fly span { position: absolute; transform: translate(-50%, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit { animation: none; }
+  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-flash, .ev-nudge { animation: none; }
+  .ev-hint { animation: none; opacity: 0; }
 }

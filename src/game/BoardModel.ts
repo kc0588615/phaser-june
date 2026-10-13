@@ -52,12 +52,14 @@ export interface ExplodePhase {
   refills: Array<[column: number, gems: GemType[]]>;
   /** Pinned tiles (their ids) with a run or a cleared gem right next to them (up, down, left or right). */
   touched: number[];
+  /** Each touched tile with the gem colors cleared or matched right next to it (plan 045 scouting). */
+  nearColors: Array<[id: number, colors: GemType[]]>;
 }
 /** Column-major like the grid: the id pinned on each cell, or null. */
 export type Pins = (number | null)[][];
 
 const key = ([x, y]: Cell) => `${x},${y}`;
-const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [] };
+const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [], nearColors: [] };
 const NEAR: ReadonlyArray<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 export function isNeighbor([ax, ay]: Cell, [bx, by]: Cell): boolean {
@@ -216,10 +218,16 @@ export class BoardModel {
     const cleared = [...clearedKeys].map(cellKey => cellKey.split(',').map(Number) as Cell);
     // Tiles touched: a run cell (a toy made in it included) or a cleared gem right next to them.
     const near = new Set([...matched, ...clearedKeys]);
-    const touched = this.pinnedCells().filter(([[x, y]]) => NEAR.some(([dx, dy]) => near.has(`${x + dx},${y + dy}`))).map(([, id]) => id);
+    const nearColors = this.pinnedCells().flatMap(([[x, y], id]): ExplodePhase['nearColors'] => {
+      const cells = NEAR.map(([dx, dy]): Cell => [x + dx, y + dy]).filter(cell => near.has(key(cell)));
+      // A color toy that went off (not part of a run) clears no gem of its own color, so it scouts nothing; it still touches.
+      const colored = cells.filter(cell => matched.has(key(cell)) || this.toys[cell[0]][cell[1]] !== 'color');
+      return cells.length ? [[id, [...new Set(colored.map(([cx, cy]) => this.grid[cx][cy]))]]] : [];
+    });
+    const touched = nearColors.map(([id]) => id);
     for (const toy of made) this.toys[toy.cell[0]][toy.cell[1]] = toy.special;
     const refills = this.collapse(clearedKeys);
-    return { groups, cleared, made, fired, refills, touched };
+    return { groups, cleared, made, fired, refills, touched, nearColors };
   }
 
   /** Drop the gems left in each column past its pinned cells and fill the free cells at the top with new gems. */
@@ -257,6 +265,11 @@ export class BoardModel {
 
   /** The pinned tiles a swap's own clear would touch, without making it (the release preview); none if it isn't a move. */
   previewTouched(move: Move): number[] {
+    return this.previewNearColors(move).map(([id]) => id);
+  }
+
+  /** The same, with the gem colors that clear would clear next to each tile (plan 045 scouting). */
+  previewNearColors(move: Move): ExplodePhase['nearColors'] {
     if (!this.canSwap(move)) return [];
     const copy = new BoardModel(this.width, this.height);
     copy.gemTypes = this.gemTypes;
@@ -265,7 +278,7 @@ export class BoardModel {
     copy.grid = this.getGrid();
     copy.toys = this.getToys();
     copy.pins = this.getPins();
-    return copy.nextPhase(move).touched;
+    return copy.nextPhase(move).nearColors;
   }
 
   /** Whether any swap of two neighbors is a move. */

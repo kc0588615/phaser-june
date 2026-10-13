@@ -49,7 +49,7 @@ const MAX_EVENTS = 200;
 const LOGGED: Record<keyof EventPayloads, true> = {
   'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
   'clue-board-key': true, 'clue-board-announce': true, 'clue-board-marks': true, 'clue-board-settled': true,
-  'clue-board-select': true, 'clue-board-tile': true,
+  'clue-board-select': true, 'clue-board-tile': true, 'clue-board-tile-hold': true,
 };
 
 let scene: DebugScene | null = null;
@@ -140,7 +140,8 @@ function overlayAt(point: { x: number; y: number }): string | null {
   if (hit === requireScene().game.canvas) return null;
   if (!hit) return 'nothing (off-screen)';
   const label = hit.closest('[aria-label], [role=dialog]')?.getAttribute('aria-label');
-  return `${hit.tagName.toLowerCase()}${label ? ` in "${label}"` : ''}`;
+  const parent = hit.parentElement?.className;
+  return `${hit.tagName.toLowerCase()}${label ? ` in "${label}"` : ''}${typeof parent === 'string' && parent ? ` (in .${parent.split(' ').slice(0, 4).join('.')})` : ''}`;
 }
 
 /**
@@ -168,13 +169,13 @@ async function drag(move: Move, { timeoutMs = 15000, input = 'mouse' }: { timeou
 }
 
 /** Tap one cell like a player (press and release in place). Tap a gem, then a neighbor, to swap them. Resolves once the board settles. */
-async function tap([x, y]: Cell, { timeoutMs = 15000, input = 'mouse' }: { timeoutMs?: number; input?: DragInput } = {}) {
+async function tap([x, y]: Cell, { timeoutMs = 15000, input = 'mouse', holdMs = 16 }: { timeoutMs?: number; input?: DragInput; holdMs?: number } = {}) {
   const fire = input === 'touch' ? fireTouch : fireMouse;
   const point = cellCenter(x, y);
   const blocked = overlayAt(point);
   if (blocked) return { blocked, timedOut: false, after: requireScene().debugSnapshot() };
   fire('down', point);
-  await sleep(16);
+  await sleep(holdMs); // hold 500+ on an animal tile: a long press (its field guide)
   fire('up', point);
   await sleep(50);
   const after = await waitIdle(timeoutMs);
@@ -207,6 +208,8 @@ function install(): void {
     validMoves,
     /** Plan 044: the pinned animals a move's first clear would touch (what the release preview uses). */
     touchedBy: (move: Move) => requireScene().debugModel().previewTouched(move),
+    /** Plan 045: the same, with the gem colors cleared next to each tile (what the move would scout). */
+    nearColorsBy: (move: Move) => requireScene().debugModel().previewNearColors(move),
     cellCenter,
     drag,
     tap,

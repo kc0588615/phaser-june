@@ -87,8 +87,8 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
       traitSources[tag] = clue.source;
     }
     // The field guide: family tree lines (never the genus), and every line a question can check.
-    if (section === 'family' && !clue.tags.some(tag => tag.startsWith('genus:'))) guide.family.push(clue.text);
-    else if (section && section !== 'family' && askable.length > 0) guide[section].push(clue.text);
+    if (section === 'family' && !clue.tags.some(tag => tag.startsWith('genus:'))) guide.family.push({ text: clue.text, tags: [] });
+    else if (section && section !== 'family' && askable.length > 0) guide[section].push({ text: clue.text, tags: askable });
   }
 
   const { countries } = input;
@@ -98,7 +98,7 @@ function buildAnimal(input: AnimalInput, warn: (text: string) => void): Animal {
   if (regions.length > 0) {
     traits.region = regions.map(region => `region:${region}`);
     for (const tag of traits.region) traitSources[tag] = redListSource;
-    guide.range.push(`It lives in ${regions.map(region => REGIONS[region].name).join(', ')}.`);
+    guide.range.push({ text: `It lives in ${regions.map(region => REGIONS[region].name).join(', ')}.`, tags: traits.region });
   }
   const continents = [...new Set(regions.map(region => REGIONS[region].continent))] as ContinentKey[];
 

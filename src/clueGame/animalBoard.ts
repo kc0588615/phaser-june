@@ -2,6 +2,8 @@
 // orders, filled by collecting their gems, answer yes/no questions about the
 // mystery; witness gems show its hand-written clues; the player marks suspects
 // "ruled out", and a marked suspect is released when a gem next to it is cleared.
+// Plan 045: the suspects' own answers start hidden; a move's clear of a clue's color
+// next to an unmarked tile shows that animal's answer to it (scouting).
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
 // by the balance bot (scripts/balance-044.ts) and, later, the game.
@@ -29,16 +31,18 @@ export interface AnimalRules {
   starMoves: [two: number, three: number];
   hearts: number;
   trailRounds: number;
+  /** Plan 045: suspects' answers start hidden; a move's own clear (not a cascade) of a clue's color next to an unmarked tile shows that animal's answer. */
+  scout: boolean;
   points: { star: number; moveLeft: number; streakStep: number; streakMax: number };
 }
 
 /**
- * Tuned by the balance bot (plan 044, Part 1): orders of 24 gems and 30 moves make long rounds (a careful player uses
- * about 16-19 moves) where aiming matters (careful finds 94-97%, a player who reasons as well but moves at random
- * 68-78%). Star lines from careful's moves left at the find.
+ * Tuned by the balance bot (plans 044 and 045): with scouting, orders of 20 gems and 30 moves (careful finds 86-92%,
+ * one who knows every trait on sight 96-98%, one who knows none 82-88%, one who reasons but moves at random 61-67%).
+ * Star lines from careful's moves left at the find.
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '044-0', suspects: 5, clues: 4, moves: 30, orderSize: 24, witnessChance: 0.03, starMoves: [6, 13], hearts: 3, trailRounds: 5,
+  version: '045-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -176,11 +180,13 @@ export function tileCells(width: number, height: number, count: number, rng: () 
 /** 'out-of-moves': the moves ran out with look-alikes left; the player may name the animal (journal only), then it's lost. */
 export type AnimalStatus = 'playing' | 'out-of-moves' | 'found' | 'lost';
 
-export interface ClueOrder extends Clue { gem: GemType; have: number; answer: 'yes' | 'no' | null }
+/** `seen`: per suspect, whether its answer shows (always, unless the rules scout). */
+export interface ClueOrder extends Clue { gem: GemType; have: number; answer: 'yes' | 'no' | null; seen: boolean[] }
 
 export type AnimalLogEntry =
   | { kind: 'answer'; tag: string; question: string; answer: 'yes' | 'no' }
   | { kind: 'note'; note: WitnessNote }
+  | { kind: 'scouted'; id: number; tag: string; question: string; yes: boolean }
   | { kind: 'released'; id: number }
   | { kind: 'escaped'; id: number }
   | { kind: 'found'; id: number }
@@ -215,14 +221,20 @@ export function newAnimalRound(book: Book, rules: AnimalRules, { suspects, myste
   if (!deck) throw new Error('No clue deck for these suspects');
   return {
     rules, place, suspects: sorted, mysteryId,
-    orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null })),
+    orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null, seen: sorted.map(() => !rules.scout) })),
     notesLeft: witnessNotes(book, sorted, mysteryId), notes: [],
     marked: [], released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, log: [],
   };
 }
 
 /** What one explode phase of the board did, for the rules. */
-export interface PhaseReport { collected: Partial<Record<GemType, number>>; witness: number; touched: readonly number[] }
+export interface PhaseReport {
+  collected: Partial<Record<GemType, number>>;
+  witness: number;
+  touched: readonly number[];
+  /** Touched tiles with the colors cleared next to them (scouting). */
+  nearColors?: ReadonlyArray<readonly [number, readonly GemType[]]>;
+}
 
 /** A board phase as the rules see it: gems cleared by color (runs and toys' clears alike), witness gems, tiles touched. */
 export function reportOf(phase: ExplodePhase): PhaseReport {
@@ -232,7 +244,7 @@ export function reportOf(phase: ExplodePhase): PhaseReport {
     if (group.gemType === WITNESS_GEM) witness += group.cells.length;
     else collected[group.gemType] = (collected[group.gemType] ?? 0) + group.cells.length;
   }
-  return { collected, witness, touched: phase.touched };
+  return { collected, witness, touched: phase.touched, nearColors: phase.nearColors };
 }
 
 /**
@@ -244,7 +256,16 @@ export function applyPhase(book: Book, state: AnimalRound, report: PhaseReport, 
   if (state.status !== 'playing') return state;
   const log = [...state.log];
   const mysteryTraits = book.traits.get(state.mysteryId)!;
+  // Scouting: the move's own clear shows an unmarked tile's answer to each clue whose color was cleared next to it.
+  const scouted = state.rules.scout && !cascade ? (report.nearColors ?? []).filter(([id]) => !state.marked.includes(id) && !state.released.includes(id)) : [];
   const orders = state.orders.map(order => {
+    const seen = scouted.some(([, colors]) => colors.includes(order.gem))
+      ? state.suspects.map((id, i) => order.seen[i] || scouted.some(([other, colors]) => other === id && colors.includes(order.gem)))
+      : order.seen;
+    if (seen !== order.seen) {
+      state.suspects.forEach((id, i) => { if (seen[i] && !order.seen[i]) log.push({ kind: 'scouted', id, tag: order.tag, question: order.question, yes: order.row[i] }); });
+      order = { ...order, seen };
+    }
     if (order.answer) return order;
     const have = Math.min(state.rules.orderSize, order.have + (report.collected[order.gem] ?? 0));
     if (have < state.rules.orderSize) return { ...order, have };
@@ -299,12 +320,13 @@ export function nameAtTimeout(state: AnimalRound, id: number | null): AnimalRoun
 }
 
 /**
- * The suspects the answers and notes so far leave possible, released ones aside. A reasoning aid for the bot and the
- * tests only: showing it to players would do their reasoning for them.
+ * The suspects the answers and notes so far leave possible, released ones aside, judging only answers that show or that
+ * `knows` (a clue tag the player knows without looking). A reasoning aid for the bot and the tests only: showing it to
+ * players would do their reasoning for them.
  */
-export function stillPossible(book: Book, state: AnimalRound): number[] {
+export function stillPossible(book: Book, state: AnimalRound, knows: (tag: string) => boolean = () => false): number[] {
   return state.suspects.filter((id, i) => !state.released.includes(id)
-    && state.orders.every(order => order.answer === null || order.row[i] === (order.answer === 'yes'))
+    && state.orders.every(order => order.answer === null || !(order.seen[i] || knows(order.tag)) || order.row[i] === (order.answer === 'yes'))
     && state.notes.every(note => note.tags!.every(tag => animal(book, id).tags?.includes(tag))));
 }
 

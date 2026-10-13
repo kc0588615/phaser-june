@@ -7,6 +7,8 @@ const nextConfig = {
     outputFileTracingRoot: path.dirname(fileURLToPath(import.meta.url)),
     trailingSlash: true,
     poweredByHeader: false,
+    // Dev only: open the WSL dev server from Windows by its 172.x address (otherwise Next blocks its live reload and the page keeps reloading).
+    allowedDevOrigins: ['172.*.*.*'],
 
     // The game moved from /clue-match to /explore (plan 041); old links keep their ?place= and ?seed=.
     async redirects() {

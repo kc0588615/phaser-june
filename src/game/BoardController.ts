@@ -23,6 +23,8 @@ export interface BoardHooks {
     preview?(cell: Cell): number[];
     /** An animal's tile was tapped (plan 044). */
     tileTap?(cell: Cell): void;
+    /** An animal's tile was long-pressed (plan 045: its field guide). */
+    tileHold?(cell: Cell): void;
     /** The move and every cascade have settled. */
     onMoveResolved(): void;
     /** What a keyboard action did, in words (for screen readers). */
@@ -33,6 +35,9 @@ const ARROWS: Partial<Record<BoardKey, [dx: number, dy: number]>> = {
     ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
 };
 const WAYS: Record<string, string> = { '-1,0': 'left', '1,0': 'right', '0,-1': 'up', '0,1': 'down' };
+
+/** How long a press on an animal tile lasts before it's a long press (its field guide), in ms. */
+export const HOLD_MS = 450;
 
 /** A pointer pressed on a gem, not yet a swipe or a tap. */
 interface Press {
@@ -48,6 +53,8 @@ export class BoardController {
     locked = false;
     private resolving = false;
     private press: Press | null = null;
+    /** A pointer pressed on an animal tile: a tap when let go, a long press (`held`) once HOLD_MS passes. */
+    private tilePress: { cell: Cell; timer: Phaser.Time.TimerEvent; held: boolean } | null = null;
     /** Keyboard cursor, and the gem a tap picked (outlined the same way). */
     private cursor: Cell = [Math.floor(GRID_COLS / 2), Math.floor(GRID_ROWS / 2)];
     /** The cursor's gem was tapped and waits for a neighbor tap. */
@@ -57,7 +64,7 @@ export class BoardController {
 
     /** Listens to the scene's pointer; Phaser drops the listeners when the scene shuts down. */
     constructor(
-        scene: Phaser.Scene,
+        private readonly scene: Phaser.Scene,
         private readonly model: BoardModel,
         private readonly view: BoardView,
         private layout: BoardLayout,
@@ -79,6 +86,8 @@ export class BoardController {
     resetInput(): void {
         this.board++;
         this.press = null;
+        this.tilePress?.timer.remove();
+        this.tilePress = null;
         this.drop();
     }
 
@@ -87,7 +96,10 @@ export class BoardController {
         const cell: Cell = [Math.floor((pointer.x - offset.x) / gemSize), Math.floor((pointer.y - offset.y) / gemSize)];
         if (!this.model.onBoard(cell)) return;
         if (this.model.isPinned(cell)) { // an animal tile is never swapped; tapping it picks the animal, even mid-move
-            if (this.ready) this.hooks.tileTap?.(cell);
+            if (!this.ready) return;
+            this.tilePress?.timer.remove();
+            const tilePress = { cell, held: false, timer: this.scene.time.delayedCall(HOLD_MS, () => { tilePress.held = true; this.hooks.tileHold?.(cell); }) };
+            this.tilePress = tilePress;
             return;
         }
         if (!this.canMove) return;
@@ -113,8 +125,15 @@ export class BoardController {
         void this.trySwap({ from: press.cell, to });
     }
 
-    /** A press that never became a swipe is a tap. */
+    /** A press that never became a swipe is a tap. On an animal tile, a tap unless it became a long press. */
     private onPointerUp(): void {
+        const tilePress = this.tilePress;
+        if (tilePress) {
+            this.tilePress = null;
+            tilePress.timer.remove();
+            if (!tilePress.held) this.hooks.tileTap?.(tilePress.cell);
+            return;
+        }
         const press = this.press;
         this.press = null;
         if (press && this.canMove) void this.tap(press.cell);

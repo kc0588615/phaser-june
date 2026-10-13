@@ -30,6 +30,8 @@ export interface AnimalSession {
   finds: number;
   /** Mystery ids in play order, so recent ones aren't repeated. */
   history: number[];
+  /** Plan 045: the player's own pencilled answers for hidden cells this round, by `${id}:${tag}`. Never checked during play. */
+  pencil: Record<string, 'yes' | 'no'>;
   end: AnimalRoundEnd | null;
 }
 
@@ -38,11 +40,12 @@ export type AnimalAction =
   | { type: 'next'; round: AnimalRound; boardSeed: number }
   | { type: 'new-trail'; round: AnimalRound; boardSeed: number; trail: Trail }
   /** One explode phase: gems cleared by color, witness gems, and the animals the board released (marked ones touched). */
-  | { type: 'matched'; collected: Partial<Record<GemType, number>>; witness: number; released: number[]; cascade: boolean }
+  | { type: 'matched'; collected: Partial<Record<GemType, number>>; witness: number; released: number[]; cascade: boolean; nearColors?: Array<[number, GemType[]]> }
   /** A move and its cascades finished. */
   | { type: 'settled' }
   | { type: 'mark'; id: number; ruledOut: boolean }
-  | { type: 'name'; id: number | null };
+  | { type: 'name'; id: number | null }
+  | { type: 'pencil'; id: number; tag: string; value: 'yes' | 'no' | null };
 
 /** Score what a rules step did: a finished round scores (or breaks the streak) and moves the trail on. */
 function advance(session: AnimalSession, round: AnimalRound): AnimalSession {
@@ -63,20 +66,20 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
   if (action.type === 'load') {
     return {
       book: action.book, round: action.round, boardSeed: action.boardSeed, trail: action.trail, trailNo: 1, roundNo: 1,
-      score: 0, streak: 0, bestStreak: 0, finds: 0, history: [action.round.mysteryId], end: null,
+      score: 0, streak: 0, bestStreak: 0, finds: 0, history: [action.round.mysteryId], end: null, pencil: {},
     };
   }
   if (!session) return null;
   const { book, round } = session;
   switch (action.type) {
     case 'next':
-      return { ...session, round: action.round, boardSeed: action.boardSeed, roundNo: session.roundNo + 1, history: [...session.history, action.round.mysteryId], end: null };
+      return { ...session, round: action.round, boardSeed: action.boardSeed, roundNo: session.roundNo + 1, history: [...session.history, action.round.mysteryId], end: null, pencil: {} };
     case 'new-trail':
-      return { ...session, round: action.round, boardSeed: action.boardSeed, trail: action.trail, trailNo: session.trailNo + 1, roundNo: session.roundNo + 1, history: [...session.history, action.round.mysteryId], end: null };
+      return { ...session, round: action.round, boardSeed: action.boardSeed, trail: action.trail, trailNo: session.trailNo + 1, roundNo: session.roundNo + 1, history: [...session.history, action.round.mysteryId], end: null, pencil: {} };
     case 'matched': {
       // The board released these because they were marked there; mark them here too, so the two never disagree.
       const marked = action.released.reduce((state, id) => mark(state, id, true), round);
-      const report: PhaseReport = { collected: action.collected, witness: action.witness, touched: action.released };
+      const report: PhaseReport = { collected: action.collected, witness: action.witness, touched: action.released, nearColors: action.nearColors };
       return advance(session, applyPhase(book, marked, report, action.cascade));
     }
     case 'settled':
@@ -85,6 +88,13 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
       return advance(session, mark(round, action.id, action.ruledOut));
     case 'name':
       return advance(session, nameAtTimeout(round, action.id));
+    case 'pencil': {
+      if (round.status !== 'playing') return session;
+      const pencil = { ...session.pencil };
+      if (action.value) pencil[`${action.id}:${action.tag}`] = action.value;
+      else delete pencil[`${action.id}:${action.tag}`];
+      return { ...session, pencil };
+    }
   }
 }
 
@@ -97,7 +107,8 @@ export function animalDebugSummary(session: AnimalSession, seed: number) {
     seed, rulesVersion: round.rules.version, trailNo: session.trailNo, roundNo: session.roundNo, status: round.status, lostBy: round.lostBy,
     mysteryId: round.mysteryId, suspects: round.suspects, marked: round.marked, released: round.released,
     movesLeft: round.movesLeft, movesUsed: round.movesUsed, moves: round.rules.moves,
-    orders: round.orders.map(order => ({ tag: order.tag, gem: order.gem, have: order.have, answer: order.answer })),
+    orders: round.orders.map(order => ({ tag: order.tag, gem: order.gem, have: order.have, answer: order.answer, row: order.row, seen: order.seen })),
+    pencil: session.pencil,
     notes: round.notes.length, possible: stillPossible(session.book, round),
     score: session.score, streak: session.streak, trail: session.trail, end: session.end, logTail: round.log.slice(-5),
   };

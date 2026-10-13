@@ -53,8 +53,8 @@ export interface Animal {
   notes: FieldNote[];
   /** Notes held for the reveal card (too many blanks to read). */
   revealNotes: FieldNote[];
-  /** Field guide lines by category, plus 'family' (class, order, family; never the genus). */
-  guide: Record<ChargeCategory | 'family', string[]>;
+  /** Field guide lines by category, plus 'family' (class, order, family; never the genus), each with the question tags it records. */
+  guide: Record<ChargeCategory | 'family', Array<{ text: string; tags: readonly string[] }>>;
   /** Every tag on its clues, trait tags and open ones like digging_claws (plan 044: what its field guide records). */
   tags?: readonly string[];
 }

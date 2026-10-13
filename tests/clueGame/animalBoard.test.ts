@@ -89,9 +89,12 @@ test('an order answers only when full, and answers the truth', () => {
   state = applyPhase(book, state, { collected: { [first.gem]: 1 }, witness: 0, touched: [] }, true);
   const truth = first.row[state.suspects.indexOf(id('Aardvark'))] ? 'yes' : 'no';
   assert.equal(state.orders[0].answer, truth);
-  // What's still possible: every suspect whose own answer matches the mystery's.
-  assert.deepEqual(stillPossible(book, state), state.suspects.filter((_suspect, i) => first.row[i] === (truth === 'yes')));
-  assert.ok(stillPossible(book, state).includes(id('Aardvark')));
+  // What's still possible to a player who knows every answer: every suspect whose own answer matches the mystery's.
+  // Knowing none (all hidden, nothing scouted), nobody is ruled out yet.
+  const knowsAll = () => true;
+  assert.deepEqual(stillPossible(book, state, knowsAll), state.suspects.filter((_suspect, i) => first.row[i] === (truth === 'yes')));
+  assert.ok(stillPossible(book, state, knowsAll).includes(id('Aardvark')));
+  assert.deepEqual(stillPossible(book, state), state.suspects);
 });
 
 test('only marked tiles are released; the last look-alike released is a find', () => {
