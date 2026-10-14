@@ -2,8 +2,8 @@
 // out), the witness notes, the menu, out of moves (name it for the journal), the
 // round's end (and the trail's, with the evidence grid replayed), and how to play.
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
-import { BookOpen, CircleHelp, Globe2, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { BookOpen, CircleHelp, Globe2, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound, WitnessNote } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
@@ -130,6 +130,15 @@ export function GameMenu({ title, detail, soundOn, onSound, onJournal, onHelp, o
   // The menu only mounts after a tap, so reading <html> here can't mismatch the server render.
   const [dark, setDark] = useState(() => currentTheme() === 'dark');
   const toggleDark = () => { setTheme(dark ? 'light' : 'dark'); setDark(!dark); };
+  // Full screen hides the browser's bars so the board can grow (the layout follows the screen). iPhones can't.
+  const canFull = document.fullscreenEnabled;
+  const [full, setFull] = useState(() => !!document.fullscreenElement);
+  useEffect(() => {
+    const onChange = () => setFull(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+  const toggleFull = () => { (full ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {}); };
   return (
     <Sheet title={title} onClose={onClose}>
       <p className="m-0 mb-s text-s text-neutral-7">{detail}</p>
@@ -145,6 +154,12 @@ export function GameMenu({ title, detail, soundOn, onSound, onJournal, onHelp, o
           {dark ? <Moon className="h-5 w-5 text-neutral-7" aria-hidden="true" /> : <Sun className="h-5 w-5 text-neutral-7" aria-hidden="true" />}
           Dark mode: {dark ? 'on' : 'off'}
         </button>
+        {canFull && (
+          <button type="button" onClick={toggleFull} className={MENU_ROW} aria-pressed={full} aria-label={full ? 'Full screen on. Turn it off' : 'Full screen off. Turn it on'}>
+            {full ? <Minimize className="h-5 w-5 text-neutral-7" aria-hidden="true" /> : <Maximize className="h-5 w-5 text-neutral-7" aria-hidden="true" />}
+            Full screen: {full ? 'on' : 'off'}
+          </button>
+        )}
       </div>
     </Sheet>
   );
