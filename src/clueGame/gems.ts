@@ -1,27 +1,6 @@
-// Which board gem is which Question Match kind (plan 041), and how the HUD shows
-// it. The board only knows gem colors; the rules only know kinds.
+// Which gem icon stood for which Question Match kind (plan 041), for old 043 log entries.
+// The live game (plan 044) gives gems to clue slots, not kinds: see CLUE_GEMS in animalBoard.ts.
 import type { GemType } from '@/game/constants';
-import { CHARGE_CATEGORIES, type GemKind } from '@/clueGame/questionMatch';
+import type { GemKind } from '@/clueGame/questionMatch';
 
 export const GEM_OF: Record<GemKind, GemType> = { body: 'orange', habits: 'yellow', habitat: 'green', range: 'blue', life: 'black', notes: 'purple' };
-
-const KINDS = new Map(Object.entries(GEM_OF).map(([kind, gem]) => [gem, kind as GemKind]));
-
-/** The kind a gem color stands for; null for colors the game doesn't use. */
-export function kindOf(gem: GemType): GemKind | null {
-  return KINDS.get(gem) ?? null;
-}
-
-/** The five colors that match; the note gem never does. */
-export const MATCH_GEMS: GemType[] = CHARGE_CATEGORIES.map(category => GEM_OF[category]);
-
-/** The rare note gem: collected when a match happens next to it. About 1 in 20 new gems. */
-export const NOTE_GEM = { type: GEM_OF.notes, chance: 0.05 };
-
-/** HUD swatches: each gem icon's main color (public/assets/evidence/<gem>.svg). */
-export const KIND_COLOR: Record<GemKind, string> = {
-  body: '#ff8a3d', habits: '#ffd84a', habitat: '#3fcf7c', range: '#4aa6fb', life: '#f66aa6', notes: '#b27dff',
-};
-
-/** Fits a phone chip. */
-export const SHORT_LABEL: Record<GemKind, string> = { body: 'Body', habits: 'Habits', habitat: 'Habitat', range: 'Range', life: 'Life', notes: 'Notes' };

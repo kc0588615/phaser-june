@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
-import { EMOJI_FONT, FACE_GLYPH } from '@/game/faceGlyphs';
+import { faceCss } from '@/game/faceGlyphs';
 import type { GemType } from '@/game/constants';
 
 const FLIGHT_MS = 600;
@@ -25,17 +25,13 @@ function flyGem(from: { x: number; y: number }, target: Element, gem: GemType, f
   img.src = `/assets/evidence/${gem}.svg`;
   img.alt = '';
   el.append(img);
-  const glyph = FACE_GLYPH[gem];
-  const top = `${((glyph?.y ?? 64) / 128) * 100}%`;
-  if (glyph) {
-    const cover = document.createElement('span');
-    const width = `${(glyph.radius / 64) * 100}%`;
-    Object.assign(cover.style, { left: '50%', top, width, height: width, background: glyph.color, borderRadius: '9999px' });
-    el.append(cover);
-  }
+  const css = faceCss(gem, face, 11, 'px');
+  const sticker = document.createElement('span');
+  Object.assign(sticker.style, css.sticker);
+  el.append(sticker);
   const text = document.createElement('span');
   text.textContent = face;
-  Object.assign(text.style, { left: '50%', top, fontFamily: EMOJI_FONT, fontSize: '13px', lineHeight: '1' });
+  Object.assign(text.style, css.face);
   el.append(text);
   document.body.append(el);
   const dx = to.left + to.width / 2 - from.x;

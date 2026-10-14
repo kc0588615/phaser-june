@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- Life cycle: a pink rounded square with a hatching egg. (The file name is the board's color key, not its look.) -->
-  <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff9cc8"/><stop offset="1" stop-color="#ec3f86"/></linearGradient></defs>
-  <rect x="10" y="14" width="108" height="104" rx="28" fill="#8c1449"/>
-  <rect x="10" y="8" width="108" height="104" rx="28" fill="url(#f)" stroke="#8c1449" stroke-width="3"/>
-  <ellipse cx="38" cy="26" rx="17" ry="6.5" transform="rotate(-18 38 26)" fill="#fff" fill-opacity=".45"/>
-  <path d="M64 28c-15 0-24 24-24 42 0 16 10 28 24 28s24-12 24-28c0-18-9-42-24-42Z" transform="translate(0 3)" fill="#a91d5c" fill-opacity=".7"/>
-  <path d="M64 28c-15 0-24 24-24 42 0 16 10 28 24 28s24-12 24-28c0-18-9-42-24-42Z" fill="#fff"/>
-  <path d="m42 68 8-6 7 8 8-9 7 9 8-8 6 5" fill="none" stroke="#d42f76" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- The pebble: a plain grey stone in a rounded square; it asks nothing. (The file name is the board's color key, not its look.) -->
+  <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#c3c8cd"/><stop offset="1" stop-color="#7b838b"/></linearGradient></defs>
+  <rect x="10" y="14" width="108" height="104" rx="28" fill="#3d4349"/>
+  <rect x="10" y="8" width="108" height="104" rx="28" fill="url(#f)" stroke="#3d4349" stroke-width="3"/>
+  <ellipse cx="38" cy="26" rx="17" ry="6.5" transform="rotate(-18 38 26)" fill="#fff" fill-opacity=".4"/>
+  <g fill="#5b636b" fill-opacity=".45"><circle cx="78" cy="58" r="5"/><circle cx="50" cy="80" r="4"/><circle cx="88" cy="88" r="3.5"/></g>
 </svg>

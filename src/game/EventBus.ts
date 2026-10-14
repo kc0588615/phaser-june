@@ -36,11 +36,11 @@ export interface EventPayloads {
         from?: Array<{ gemType: GemType; x: number; y: number }>;
     };
     /**
-     * `rare`: a gem that never matches by itself and is collected by a match next to it (the note gem). `pins`: animals
-     * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox); `board`: a
-     * saved board to resume instead of the seeded one.
+     * `rare`: a gem that never matches by itself and is collected by a match next to it (the witness gem). `pins`: animals
+     * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox); `labels`: what a
+     * screen reader calls each gem color this round; `board`: a saved board to resume instead of the seeded one.
      */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys } };
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys } };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */

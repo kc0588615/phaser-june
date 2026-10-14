@@ -181,8 +181,12 @@ export function useAnimalSession() {
     }).filter(pin => !round.released.includes(pin.id));
     const resumeBoard = boardRef.current?.roundNo === current.roundNo ? boardRef.current : null;
     const faces: Partial<Record<GemType, string>> = { [PEBBLE_GEM]: '' };
-    for (const order of round.orders) faces[order.gem] = clueFace(order.tag);
-    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, board: resumeBoard ?? undefined });
+    const labels: Partial<Record<GemType, string>> = { [PEBBLE_GEM]: 'pebble', [WITNESS_GEM]: 'witness gem' };
+    for (const order of round.orders) {
+      faces[order.gem] = clueFace(order.tag);
+      labels[order.gem] = order.short;
+    }
+    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined });
     EventBus.emit('clue-board-marks', { marked: [] });
   }, [sceneGeneration, roundNo]);
 

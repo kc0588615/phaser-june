@@ -1,13 +1,13 @@
 // Textures for the toys a big match leaves (BoardModel `Special`), drawn once when the
-// board scene starts: a line gem is its gem with two white bars and arrows along the
-// line it clears, a blast gem its gem in a burst of eight white spikes (no other piece
-// is that shape; rings mean animals and marks), and the color gem a disc of
-// all five category colors. Same 128px size as the gem icons, so sprites scale alike.
+// board scene starts: a line gem is its gem with a white arrow at each end of the line
+// it clears, a blast gem its gem in a burst of eight white spikes (no other piece is
+// that shape; rings mean animals and marks), and the color gem a disc of all five
+// matching gems' colors. Arrows and spikes keep to the rim, clear of the gem's face.
+// Same 128px size as the gem icons, so sprites scale alike.
 import Phaser from 'phaser';
-import { KIND_COLOR } from '@/clueGame/gems';
-import { CHARGE_CATEGORIES } from '@/clueGame/questionMatch';
+import { BOARD_GEMS } from '@/clueGame/animalBoard';
 import type { Special } from './BoardModel';
-import { gemTexture, type GemType } from './constants';
+import { GEM_COLOR, gemTexture, type GemType } from './constants';
 
 const SIZE = 128;
 
@@ -18,12 +18,8 @@ function drawLine(g: Phaser.GameObjects.Graphics, across: boolean): void {
   const at = (x: number, y: number): [number, number] => (across ? [x, y] : [y, x]);
   for (const [color, alpha, grow] of [[0x06121a, 0.55, 3], [0xffffff, 0.95, 0]] as const) {
     g.fillStyle(color, alpha);
-    for (const y of [47, 72]) {
-      const [x0, y0] = at(18 - grow, y - grow);
-      g.fillRect(x0, y0, across ? 92 + grow * 2 : 9 + grow * 2, across ? 9 + grow * 2 : 92 + grow * 2);
-    }
-    g.fillTriangle(...at(2 - grow, 64), ...at(20 + grow, 40 - grow), ...at(20 + grow, 88 + grow));
-    g.fillTriangle(...at(126 + grow, 64), ...at(108 - grow, 40 - grow), ...at(108 - grow, 88 + grow));
+    g.fillTriangle(...at(2 - grow, 64), ...at(17 + grow, 36 - grow), ...at(17 + grow, 92 + grow));
+    g.fillTriangle(...at(126 + grow, 64), ...at(111 - grow, 36 - grow), ...at(111 - grow, 92 + grow));
   }
 }
 
@@ -34,7 +30,7 @@ function drawBurst(g: Phaser.GameObjects.Graphics): void {
       const a = (i * Math.PI) / 4;
       const point = (r: number, da: number): [number, number] => [64 + r * Math.cos(a + da), 64 + r * Math.sin(a + da)];
       const spread = 0.3 + grow * 0.015;
-      g.fillTriangle(...point(61 + grow * 0.75, 0), ...point(40 - grow, -spread), ...point(40 - grow, spread));
+      g.fillTriangle(...point(62 + grow * 0.5, 0), ...point(46 - grow, -spread), ...point(46 - grow, spread));
     }
   }
 }
@@ -64,8 +60,8 @@ export function makeToyTextures(scene: Phaser.Scene, gems: readonly GemType[], b
     if (!texture) return;
     const g = scene.make.graphics({}, false);
     g.fillStyle(0x06121a, 1).fillCircle(64, 64, 60);
-    CHARGE_CATEGORIES.forEach((category, i) => {
-      g.fillStyle(Phaser.Display.Color.HexStringToColor(KIND_COLOR[category]).color, 1);
+    BOARD_GEMS.forEach((gem, i) => {
+      g.fillStyle(Phaser.Display.Color.HexStringToColor(GEM_COLOR[gem] ?? '#ffffff').color, 1);
       g.slice(64, 64, 54, Phaser.Math.DegToRad(i * 72 - 90), Phaser.Math.DegToRad((i + 1) * 72 - 90), false);
       g.fillPath();
     });

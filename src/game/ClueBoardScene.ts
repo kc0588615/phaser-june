@@ -10,14 +10,13 @@ import Phaser from 'phaser';
 import { BoardController } from './BoardController';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from './BoardModel';
 import { BoardView, type TilePreview } from './BoardView';
-import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
+import { GEM_COLOR, GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
 import { sfx } from './sfx';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
 import { makeFaceTextures } from './faceTextures';
 import { makeToyTextures } from './toyTextures';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
-import { KIND_COLOR, SHORT_LABEL, kindOf } from '@/clueGame/gems';
 import { DEFAULT_RULES } from '@/clueGame/questionMatch';
 
 export class ClueBoardScene extends Phaser.Scene {
@@ -36,6 +35,10 @@ export class ClueBoardScene extends Phaser.Scene {
     private animals = false;
     /** Plan 045: per animal, the question gems whose answer it still hides. */
     private unscouted = new Map<number, GemType[]>();
+    /** What a screen reader calls each gem this round (its clue's question, the pebble, the witness gem). */
+    private labels: Partial<Record<GemType, string>> = {};
+    private names = new Map<number, string>();
+    private rareGem: GemType | null = null;
     /** Any tap or key on the page (the grid, a field guide) counts as activity for the idle hint, not just the board's. */
     private readonly onPageInput = () => this.controller?.activity();
 
@@ -73,9 +76,10 @@ export class ClueBoardScene extends Phaser.Scene {
                 EventBus.emit('clue-board-settled', { grid: this.model.getGrid(), toys: this.model.getToys() });
             },
             announce: (text, cell) => {
+                const pin = cell && this.model.pinnedCells().find(([[px, py]]) => px === cell[0] && py === cell[1]);
                 const gem = cell ? this.model.getGrid()[cell[0]]?.[cell[1]] : undefined;
-                const kind = gem ? kindOf(gem) : null;
-                EventBus.emit('clue-board-announce', kind ? `${text}: ${kind === 'notes' ? 'note gem' : `${SHORT_LABEL[kind]} gem`}` : text);
+                const label = pin ? this.names.get(pin[1]) : gem ? this.labels[gem] : undefined;
+                EventBus.emit('clue-board-announce', label ? `${text}: ${label}` : text);
             },
         });
 
@@ -97,7 +101,7 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, board }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
         const pinned = pins.map((pin): [Cell, number] => [pin.cell, pin.id]);
@@ -111,6 +115,9 @@ export class ClueBoardScene extends Phaser.Scene {
         if (faceKeys.size > 0) makeToyTextures(this, GEM_TYPES, gem => faceKeys.get(gem) ?? gemTexture(gem), true);
         this.view.setFaces(faceKeys);
         this.view.setRareGem(rare?.type ?? null);
+        this.rareGem = rare?.type ?? null;
+        this.labels = labels;
+        this.names = new Map(pins.map(pin => [pin.id, pin.name]));
         this.marked.clear();
         this.unscouted.clear();
         this.animals = pins.length > 0;
@@ -185,9 +192,9 @@ export class ClueBoardScene extends Phaser.Scene {
         this.chain = cascade ? this.chain + 1 : 1;
         for (const group of phase.groups) {
             if (group.blast) continue; // a toy's clear flashes on its own (BoardView.animateFires)
-            const kind = kindOf(group.gemType);
-            // A note gem group is the notes collected this phase, not a match of its own.
-            this.burst(group.cells, kind ? KIND_COLOR[kind] : '#ffffff', kind === 'notes' ? 0 : group.cells.length);
+            // A rare gem group is the notes collected this phase, not a match of its own.
+            const rare = group.gemType === this.rareGem;
+            this.burst(group.cells, GEM_COLOR[group.gemType] ?? '#ffffff', rare ? 0 : group.cells.length);
         }
         const released = phase.touched.filter(id => this.marked.has(id));
         const big = phase.groups.some(group => !group.blast && group.cells.length >= 4);
@@ -204,8 +211,7 @@ export class ClueBoardScene extends Phaser.Scene {
         const pooled = Math.floor(blasts.reduce((sum, group) => sum + group.cells.length, 0) / DEFAULT_RULES.perBlast);
         if (!this.animals && pooled > 0 && phase.fired.length > 0) {
             const most = blasts.reduce((a, b) => (b.cells.length > a.cells.length ? b : a));
-            const kind = kindOf(most.gemType);
-            this.label(phase.fired[0].cell, `+${pooled} charge${pooled === 1 ? '' : 's'}`, kind ? KIND_COLOR[kind] : '#ffffff');
+            this.label(phase.fired[0].cell, `+${pooled} charge${pooled === 1 ? '' : 's'}`, GEM_COLOR[most.gemType] ?? '#ffffff');
         }
         if (this.chain >= 2) this.callout(`Chain ×${this.chain}!`);
         EventBus.emit('gems-matched', {

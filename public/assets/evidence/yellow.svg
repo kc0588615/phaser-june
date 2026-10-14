@@ -1,13 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- Habits: a yellow triangle with a moon (day or night, what it eats, who it lives with). -->
-  <defs>
-    <linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff07a"/><stop offset="1" stop-color="#ffbf1f"/></linearGradient>
-    <mask id="bite"><rect width="128" height="128" fill="#fff"/><circle cx="75" cy="68" r="16" fill="#000"/></mask>
-  </defs>
+  <!-- Clue gem: a yellow triangle. Its face (the clue's picture) is drawn on it each round. -->
+  <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff07a"/><stop offset="1" stop-color="#ffbf1f"/></linearGradient></defs>
   <polygon points="64,16 114,104 14,104" transform="translate(0 6)" fill="#9a6200" stroke="#9a6200" stroke-width="22" stroke-linejoin="round"/>
   <polygon points="64,16 114,104 14,104" fill="#9a6200" stroke="#9a6200" stroke-width="22" stroke-linejoin="round"/>
   <polygon points="64,16 114,104 14,104" fill="url(#f)" stroke="url(#f)" stroke-width="16" stroke-linejoin="round"/>
   <ellipse cx="47" cy="50" rx="14" ry="5.5" transform="rotate(-60 47 50)" fill="#fff" fill-opacity=".55"/>
-  <circle cx="62" cy="79" r="21" fill="#6b4000" mask="url(#bite)"/>
-  <path d="M86 78l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#6b4000"/>
 </svg>

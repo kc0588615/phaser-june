@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <!-- Body: an orange ball with a paw. -->
+  <!-- Clue gem: an orange ball. Its face (the clue's picture) is drawn on it each round. -->
   <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffb46a"/><stop offset="1" stop-color="#f2661c"/></linearGradient></defs>
   <circle cx="64" cy="66" r="54" fill="#8a2f06"/>
   <circle cx="64" cy="60" r="54" fill="url(#f)" stroke="#8a2f06" stroke-width="3"/>
   <ellipse cx="42" cy="30" rx="20" ry="9" transform="rotate(-32 42 30)" fill="#fff" fill-opacity=".42"/>
-  <g fill="#b3470f" fill-opacity=".7" transform="translate(0 3)"><ellipse cx="64" cy="78" rx="21" ry="17"/><circle cx="40" cy="56" r="9"/><circle cx="53" cy="41" r="9.5"/><circle cx="75" cy="41" r="9.5"/><circle cx="88" cy="56" r="9"/></g>
-  <g fill="#fff"><ellipse cx="64" cy="78" rx="21" ry="17"/><circle cx="40" cy="56" r="9"/><circle cx="53" cy="41" r="9.5"/><circle cx="75" cy="41" r="9.5"/><circle cx="88" cy="56" r="9"/></g>
 </svg>
