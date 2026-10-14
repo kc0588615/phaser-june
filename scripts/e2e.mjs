@@ -604,6 +604,77 @@ async function main() {
     check('the journal counts the animals found (and named right when moves ran out)', journal.startsWith(`${journalFinds.size} of`), `${journal} (expected ${journalFinds.size})`);
     await screenshot('05-journal.png');
 
+    // 4. Resume: a game without ?seed= is saved for the tab; a reload picks it up (marks, pencil, released animals, gems, toys).
+    await goto(`${BASE}/`); // the globe starts the next game fresh
+    await goto(`${BASE}/explore/?place=${encodeURIComponent(place.key)}`);
+    const boardReady = () => window.__cc?.clue?.() && window.__cc.state().ready;
+    await waitFor(boardReady, 'the unseeded board', 60_000);
+    await evaluate(() => window.__cc.speed(4));
+    await sleep(1500);
+    check('coming from the globe starts a new round 1', await evaluate(() => window.__cc.clue().roundNo === 1 && window.__cc.clue().movesLeft === window.__cc.clue().moves));
+    const played = await evaluate(async () => {
+      const cc = window.__cc;
+      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const first = cc.clue();
+      const marked = first.suspects.find(id => id !== first.mysteryId);
+      await window.__slidePill(marked, 120);
+      // Aim at the marked animal until it's released, and make big matches until a toy is on the board (up to 20 moves).
+      const hasToy = () => cc.state().toys.flat().some(Boolean);
+      for (let i = 0; i < 20 && (!cc.clue().released.includes(marked) || !hasToy()) && cc.clue().status === 'playing'; i++) {
+        const moves = cc.validMoves();
+        if (!moves.length) break;
+        const released = cc.clue().released.includes(marked);
+        const move = (!released && moves.find(candidate => cc.touchedBy(candidate).includes(marked)))
+          || moves.reduce((best, candidate) => (candidate.largest > best.largest ? candidate : best));
+        await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
+        await wait(150);
+      }
+      const cell = document.querySelector('table[aria-label="Evidence"] tr[data-suspect] td[data-hidden] button');
+      cell?.click();
+      await wait(400); // the save effect runs
+      const { grid, toys, pins } = cc.state();
+      return { clue: cc.clue(), grid, toys, pins, saved: Boolean(sessionStorage.getItem('cc:explore:game')) };
+    });
+    await screenshot('06-before-reload.png');
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the reload');
+    await waitFor(boardReady, 'the resumed board', 60_000);
+    await sleep(1500);
+    const resumed = await evaluate(() => { const { grid, toys, pins } = window.__cc.state(); return { clue: window.__cc.clue(), grid, toys, pins }; });
+    await screenshot('06-after-reload.png');
+    const toyCount = played.toys.flat().filter(Boolean).length;
+    report.resume = { movesUsed: played.clue.movesUsed, marked: played.clue.marked, released: played.clue.released, pencil: played.clue.pencil, toys: toyCount };
+    check('the game in progress is saved for the tab', played.saved);
+    check('a reload resumes the round: rules, marks, pencil, moves, score', JSON.stringify(resumed.clue) === JSON.stringify(played.clue), JSON.stringify({ before: played.clue.movesLeft, after: resumed.clue.movesLeft }));
+    check('a reload resumes the board: gems and toys', JSON.stringify(resumed.grid) === JSON.stringify(played.grid) && JSON.stringify(resumed.toys) === JSON.stringify(played.toys), `${toyCount} toys`);
+    check('a reload keeps released animals off the board', JSON.stringify(resumed.pins) === JSON.stringify(played.pins), JSON.stringify({ released: played.clue.released, pins: resumed.pins.length }));
+    // Play the round out, then reload on its end card: the journal doesn't count the find twice.
+    await evaluate(() => window.__cc.speed(4));
+    const journalBefore = await evaluate(() => localStorage.getItem('clue-match:journal:v1'));
+    await evaluate(async mysteryName => {
+      const cc = window.__cc;
+      for (let i = 0; i < 40 && cc.clue().status === 'playing'; i++) {
+        const moves = cc.validMoves();
+        if (!moves.length) break;
+        await cc.drag(moves[0], { input: 'touch', timeoutMs: 30_000 });
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+      // Out of moves: name the mystery right, so the journal records it.
+      await new Promise(resolve => setTimeout(resolve, 300));
+      [...(document.querySelector('[aria-label="Out of moves"]')?.querySelectorAll('button') ?? [])].find(b => b.textContent === mysteryName)?.click();
+    }, names.get(resumed.clue.mysteryId));
+    await waitFor(() => window.__cc.clue().end, 'the resumed round to end', 20_000).catch(() => null);
+    await sleep(1000);
+    const ended = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the reload');
+    await waitFor(boardReady, 'the resumed end card', 60_000);
+    await sleep(1500);
+    const afterEnd = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
+    await screenshot('06-end-after-reload.png');
+    check('the resumed round, named right, is written to the journal once', ended.journal !== journalBefore);
+    check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));
+
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));
   } finally {

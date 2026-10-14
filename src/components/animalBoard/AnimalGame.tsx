@@ -156,7 +156,7 @@ function StatusTicker({ now, nowKey, nowKind, facts }: { now: ReactNode; nowKey:
 }
 
 export function AnimalGame() {
-  const { session, loadError, seed, rules, pool, place, continent, markSuspect, name, nextRound, pencil } = useAnimalSession();
+  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil } = useAnimalSession();
   const { journal, records, record } = useJournal();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -222,7 +222,7 @@ export function AnimalGame() {
   const recorded = useRef<number | null>(null);
   const end = session?.end;
   useEffect(() => {
-    if (!session || !end || recorded.current === session.roundNo) return;
+    if (!session || !end || recorded.current === session.roundNo || recordedRound === session.roundNo) return;
     recorded.current = session.roundNo;
     const { round: done } = session;
     if (end.outcome !== 'found' && !done.named?.correct) return;
@@ -231,7 +231,7 @@ export function AnimalGame() {
     const point = place ? sightingPoint(place, species.id) : null;
     const sighting = place && point ? { placeKey: place.key, placeName: place.name, lon: point[0], lat: point[1] } : undefined;
     record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sighting);
-  }, [session, end, speciesById, place, record]);
+  }, [session, end, speciesById, place, record, recordedRound]);
 
   // Which answers the grid shows: an order's answer stamps once its gems have landed.
   const size = rules.orderSize;

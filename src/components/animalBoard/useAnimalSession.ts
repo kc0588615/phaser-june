@@ -1,7 +1,8 @@
 // The animal board page's state (plan 044): loads the pool (and the continent from
 // ?place=), deals each round from the session seed, runs the session reducer, and
 // wires the board over the EventBus (setup with tiles and faces, marks, clears,
-// settled moves, lock, the answers each animal still hides).
+// settled moves, lock, the answers each animal still hides). The game in progress is saved for this tab and
+// resumed on the next load (savedGame.ts).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, newAnimalRound, newTrail, pickSuspectSet, tileCells,
@@ -20,12 +21,13 @@ import { EventBus, type BoardPin, type EventPayloads } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
+import { readSavedGame, writeSavedGame, type SavedBoard } from './savedGame';
 
-/** `?seed=N` replays a session: same trails, same boards. */
-function sessionSeed(): number {
-  if (typeof window === 'undefined') return 1;
+/** `?seed=N` replays a session: same trails, same boards (never saved or resumed). */
+function urlSeed(): number | null {
+  if (typeof window === 'undefined') return null;
   const fromUrl = Number(new URLSearchParams(window.location.search).get('seed'));
-  return Number.isInteger(fromUrl) && fromUrl > 0 && fromUrl <= 0xffff_ffff ? fromUrl : Math.floor(Math.random() * 0xffff_fffe) + 1;
+  return Number.isInteger(fromUrl) && fromUrl > 0 && fromUrl <= 0xffff_ffff ? fromUrl : null;
 }
 
 async function loadPlace(continent: ContinentKey): Promise<Place | null> {
@@ -51,13 +53,20 @@ interface Content {
 interface Dealt { round: AnimalRound; boardSeed: number }
 
 export function useAnimalSession() {
-  const [seed] = useState(sessionSeed);
+  const [replay] = useState(urlSeed);
+  const [saved] = useState(() => (replay || typeof window === 'undefined' ? null : readSavedGame()));
+  const [seed] = useState(() => replay ?? saved?.seed ?? Math.floor(Math.random() * 0xffff_fffe) + 1);
   const [requested] = useState<ContinentKey | null>(() => continentOf(typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('place')));
   const [content, setContent] = useState<Content | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [session, dispatch] = useReducer(animalSessionReducer, null);
   const sessionRef = useRef(session);
   useEffect(() => { sessionRef.current = session; }, [session]);
+  const [board, setBoard] = useState<SavedBoard | null>(null);
+  const boardRef = useRef(board);
+  useEffect(() => { boardRef.current = board; }, [board]);
+  /** A resumed round that had already ended (its journal entry is already written). */
+  const [recordedRound, setRecordedRound] = useState<number | null>(null);
   const rng = useRef(mulberry32(seed));
   const [sceneGeneration, setSceneGeneration] = useState(0);
 
@@ -99,6 +108,16 @@ export function useAnimalSession() {
         }
         const data: Content = { pool, animals, book, place: continent ? place : null, continent, sets };
         setContent(data);
+        const resume = saved && saved.requested === requested && saved.session.round.rules.version === ANIMAL_RULES.version
+          && saved.session.round.suspects.every(id => book.byId.has(id)) ? saved : null;
+        if (resume) {
+          // Later rounds don't replay the uninterrupted session exactly; they just shouldn't repeat round 1's deal.
+          rng.current = mulberry32(hash32(`${seed}:${resume.session.roundNo}`));
+          setBoard(resume.board);
+          if (resume.session.end) setRecordedRound(resume.session.roundNo);
+          dispatch({ type: 'restore', session: { ...resume.session, book } });
+          return;
+        }
         const first = deal(data, 1, []);
         dispatch({ type: 'load', book, ...first, trail: newTrail(ANIMAL_RULES) });
       } catch (error) {
@@ -107,7 +126,7 @@ export function useAnimalSession() {
       }
     })();
     return () => { cancelled = true; };
-  }, [requested, deal]);
+  }, [requested, deal, saved, seed]);
 
   useEffect(() => {
     const onSceneReady = () => setSceneGeneration(generation => generation + 1);
@@ -120,7 +139,10 @@ export function useAnimalSession() {
       }
       dispatch({ type: 'matched', collected, witness, released, cascade, nearColors });
     };
-    const onSettled = () => dispatch({ type: 'settled' });
+    const onSettled = ({ grid, toys }: EventPayloads['clue-board-settled']) => {
+      setBoard({ roundNo: sessionRef.current?.roundNo ?? 0, grid, toys });
+      dispatch({ type: 'settled' });
+    };
     EventBus.on('current-scene-ready', onSceneReady);
     EventBus.on('gems-matched', onMatched);
     EventBus.on('clue-board-settled', onSettled);
@@ -131,7 +153,14 @@ export function useAnimalSession() {
     };
   }, []);
 
-  // A fresh board for every round: the tiles, this round's faces, and no marks.
+  // Save after every change; the board as of its last settled move (a tab closed mid-cascade resumes before that move).
+  useEffect(() => {
+    if (!session || replay) return;
+    const { book: _book, ...rest } = session;
+    writeSavedGame({ v: 1, seed, requested, session: rest, board: board?.roundNo === session.roundNo ? board : null });
+  }, [session, board, seed, requested, replay]);
+
+  // A fresh board for every round: the tiles, this round's faces, and no marks (or the saved board, released animals gone).
   const roundNo = session?.roundNo;
   const speciesById = useRef(new Map<number, PoolSpecies>());
   useEffect(() => { speciesById.current = new Map((content?.pool.species ?? []).map(species => [species.id, species])); }, [content]);
@@ -146,10 +175,11 @@ export function useAnimalSession() {
         cell: cells[i], id, name: current.book.byId.get(id)?.name ?? 'animal',
         photo: species?.photo ? photoAt(species.photo.url, 120) : null, label: species ? speciesBadge(species) : '?', tag: i + 1,
       };
-    });
+    }).filter(pin => !round.released.includes(pin.id));
+    const resumeBoard = boardRef.current?.roundNo === current.roundNo ? boardRef.current : null;
     const faces: Partial<Record<GemType, string>> = { [PEBBLE_GEM]: '' };
     for (const order of round.orders) faces[order.gem] = clueFace(order.tag);
-    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces });
+    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, board: resumeBoard ?? undefined });
     EventBus.emit('clue-board-marks', { marked: [] });
   }, [sceneGeneration, roundNo]);
 
@@ -190,7 +220,7 @@ export function useAnimalSession() {
   }, [content, deal]);
 
   return {
-    session, loadError, seed, rules: ANIMAL_RULES,
+    session, loadError, seed, rules: ANIMAL_RULES, recordedRound,
     pool: content?.pool ?? null,
     place: content?.place ?? null,
     continent: content?.continent ?? null,

@@ -9,6 +9,7 @@ import { SignInButton, Show, UserButton } from '@clerk/nextjs';
 import { MIN_PLACE_ANIMALS, classColor, type PlaceAnimal, type PlacesResponse } from '@/clueGame/places';
 import { useJournal } from '@/components/clueGame/useJournal';
 import { getJson } from '@/lib/getJson';
+import { clearSavedGame } from '@/components/animalBoard/savedGame';
 import { Globe, type GlobeSighting } from './Globe';
 import { PlaceCard } from './PlaceCard';
 import { PlaceList } from './PlaceList';
@@ -19,6 +20,8 @@ export function GlobeScreen() {
   const { journal } = useJournal(data?.places);
   const [error, setError] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  // Play from here always starts a new game; only coming back to /explore resumes one.
+  useEffect(() => clearSavedGame(), []);
 
   useEffect(() => {
     let cancelled = false;

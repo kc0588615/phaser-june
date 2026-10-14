@@ -8,7 +8,7 @@
 // Plan 045: 'clue-board-unscouted' says which answers each animal still hides, for the scouting preview.
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
-import { BoardModel, neighborSwaps, type ExplodePhase, type Move } from './BoardModel';
+import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from './BoardModel';
 import { BoardView, type TilePreview } from './BoardView';
 import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
@@ -70,7 +70,7 @@ export class ClueBoardScene extends Phaser.Scene {
             },
             onMoveResolved: () => {
                 this.reshuffleIfStuck();
-                EventBus.emit('clue-board-settled', undefined);
+                EventBus.emit('clue-board-settled', { grid: this.model.getGrid(), toys: this.model.getToys() });
             },
             announce: (text, cell) => {
                 const gem = cell ? this.model.getGrid()[cell[0]]?.[cell[1]] : undefined;
@@ -97,10 +97,15 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {} }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, board }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
-        this.model.newBoard(seed, allowedGemTypes, rare ?? null, pins.map(pin => [pin.cell, pin.id]));
+        const pinned = pins.map((pin): [Cell, number] => [pin.cell, pin.id]);
+        this.model.newBoard(seed, allowedGemTypes, rare ?? null, pinned);
+        if (board) {
+            const toys = board.toys.flatMap((column, x) => column.flatMap((toy, y): Array<[Cell, Special]> => (toy ? [[[x, y], toy]] : [])));
+            this.model.loadBoard(board.grid, toys, pinned);
+        }
         this.view.destroyBoard();
         const faceKeys = makeFaceTextures(this, faces);
         if (faceKeys.size > 0) makeToyTextures(this, GEM_TYPES, gem => faceKeys.get(gem) ?? gemTexture(gem), true);

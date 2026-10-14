@@ -37,6 +37,8 @@ export interface AnimalSession {
 
 export type AnimalAction =
   | { type: 'load'; book: Book; round: AnimalRound; boardSeed: number; trail: Trail }
+  /** A saved game picked back up (savedGame.ts). */
+  | { type: 'restore'; session: AnimalSession }
   | { type: 'next'; round: AnimalRound; boardSeed: number }
   | { type: 'new-trail'; round: AnimalRound; boardSeed: number; trail: Trail }
   /** One explode phase: gems cleared by color, witness gems, and the animals the board released (marked ones touched). */
@@ -69,6 +71,7 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
       score: 0, streak: 0, bestStreak: 0, finds: 0, history: [action.round.mysteryId], end: null, pencil: {},
     };
   }
+  if (action.type === 'restore') return action.session;
   if (!session) return null;
   const { book, round } = session;
   switch (action.type) {

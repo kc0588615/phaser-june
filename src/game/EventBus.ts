@@ -16,6 +16,7 @@
 //   board -> page  'clue-board-tile-hold' the player long-pressed an animal's tile (its field guide)
 //   page  -> board 'clue-board-unscouted' each animal's question gems whose answer is still hidden (plan 045)
 import Phaser from 'phaser';
+import type { Grid, Toys } from './BoardModel';
 import type { GemType } from './constants';
 
 /** An animal pinned on the board (plan 044): its cell, id, photo (null: show `label`), name, and its number in the evidence grid. */
@@ -36,16 +37,18 @@ export interface EventPayloads {
     };
     /**
      * `rare`: a gem that never matches by itself and is collected by a match next to it (the note gem). `pins`: animals
-     * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox).
+     * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox); `board`: a
+     * saved board to resume instead of the seeded one.
      */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>> };
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys } };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */
     'clue-board-key': { key: BoardKey; shift: boolean };
     'clue-board-announce': string;
     'clue-board-marks': { marked: number[] };
-    'clue-board-settled': undefined;
+    /** The board as it settled (saved so the game can resume). */
+    'clue-board-settled': { grid: Grid; toys: Toys };
     'clue-board-select': { id: number | null };
     'clue-board-tile': { id: number };
     'clue-board-tile-hold': { id: number };
