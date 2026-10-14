@@ -68,9 +68,9 @@
 
 /* Short screens (small phones, landscape): Clue Match compacts its rail. */
 @custom-variant short (@media (max-height: 740px));
-/* Game screen: the status line goes under the board when the height left over from a full-width board fits it plus
-   six 34px rows (142px reserve + 6 * 34). Height, not aspect ratio, so phone browsers with their bars showing qualify. */
-@custom-variant roomy (@media (min-height: calc(100vw + 346px)));
+/* Game screen: the status line goes under the board on any phone at least 560px tall, even when the board has to
+   shrink for it (it carries the answers and hints). Shorter screens (landscape, tiny phones) keep the board's height. */
+@custom-variant roomy (@media (min-height: 560px));
 
 /* Game screen, phone layout: the board is as tall as the screen is wide, so a tall phone's spare height goes to the
    evidence rows: 100dvh - 100vw (board) - 86px (the grid's header and spacing; + 56px status line when `roomy`)
@@ -80,7 +80,7 @@
   --ev-row: clamp(34px, calc((100dvh - 100vw - var(--ev-reserve)) / 6), 48px);
   --ev-photo: calc(var(--ev-row) - 4px);
 }
-@media (min-height: calc(100vw + 346px)) {
+@media (min-height: 560px) {
   :root { --ev-reserve: calc(142px + env(safe-area-inset-bottom)); }
 }
 @media (min-width: 48rem) {
