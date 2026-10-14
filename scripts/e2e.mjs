@@ -234,6 +234,7 @@ async function main() {
     const journalFinds = new Set();
     let previewChecked = false;
     let scoutChecked = false;
+    let hintChecked = false;
     let notesChecked = false;
     let markShot = false;
     for (let n = 1; n <= ROUNDS; n++) {
@@ -437,6 +438,29 @@ async function main() {
             check(`round ${n}: tapping a gem shows the hidden answers its swap would scout, on unmarked animals only`, JSON.stringify(scout.shown) === JSON.stringify(scout.expected) && scout.after.length === 0, JSON.stringify(scout));
           }
         }
+        // Once a run: left idle, the board outlines a swap: one that releases a marked animal if any, else one that scouts, else any; a tap hides it.
+        if (!hintChecked) {
+          const hint = await evaluate(async () => {
+            const cc = window.__cc;
+            for (let i = 0; i < 80 && !cc.state().hint; i++) await new Promise(resolve => setTimeout(resolve, 100));
+            const shown = cc.state().hint;
+            if (!shown) return { shown };
+            const clue = cc.clue();
+            const rank = move => {
+              const near = cc.nearColorsBy(move);
+              return near.some(([id]) => clue.marked.includes(id)) ? 2
+                : near.some(([id, colors]) => colors.some(gem => clue.orders.some(order => order.gem === gem && !order.seen[clue.suspects.indexOf(id)]))) ? 1 : 0;
+            };
+            const valid = cc.validMoves().some(move => JSON.stringify([move.from, move.to]) === JSON.stringify([shown.from, shown.to]));
+            const best = Math.max(...cc.validMoves().map(rank));
+            await cc.tap(shown.from, { input: 'touch' });
+            const after = cc.state().hint;
+            await cc.tap(shown.from, { input: 'touch' });
+            return { shown, valid, rank: rank(shown), best, after };
+          });
+          hintChecked = true;
+          check(`round ${n}: left idle, the board hints the most useful kind of swap, and a tap hides it`, Boolean(hint.shown) && hint.valid && hint.rank === hint.best && hint.after === null, JSON.stringify(hint));
+        }
         const before = state;
         const result = await evaluate(async () => {
           const cc = window.__cc;
@@ -567,6 +591,7 @@ async function main() {
     }
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
+    check('the idle hint was checked at least once', hintChecked);
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {

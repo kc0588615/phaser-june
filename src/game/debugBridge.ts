@@ -30,6 +30,8 @@ export interface DebugBoardSnapshot {
   preview: number[];
   /** Plan 045: the scouting preview, each unmarked animal with the question gems a swap from the picked gem would scout. */
   scout: Array<[number, GemType[]]>;
+  /** The swap the idle hint outlines, or null. */
+  hint: Move | null;
 }
 
 /** What the board scene hands the bridge; typed so field renames fail typecheck. */

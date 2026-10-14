@@ -3,7 +3,8 @@
 // a neighbor. A swap that makes a match is made, then each explode phase (the
 // move's, then every cascade) is reported and animated; any other swap slides
 // back and costs nothing. On the keyboard, arrows move a cursor and Shift+arrows
-// swap its gem that way; Escape drops a tapped gem. Rules live in BoardModel,
+// swap its gem that way; Escape drops a tapped gem. After HINT_MS with no input
+// the board outlines a swap (the idle hint). Rules live in BoardModel,
 // visuals in BoardView; the scene says what a match means.
 import Phaser from 'phaser';
 import { isNeighbor, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
@@ -19,6 +20,8 @@ export interface BoardHooks {
      * to release (plan 044): they hop off once the phase has fallen, and gems drop into their cells.
      */
     onPhase(phase: ExplodePhase, cascade: boolean): number[] | void;
+    /** The swap the idle hint shows; null for none. */
+    hint?(): Move | null;
     /** A gem was picked: the animals a swap from it would release, and the answers it would scout (the preview). */
     preview?(cell: Cell): TilePreview;
     /** An animal's tile was tapped (plan 044). */
@@ -38,6 +41,8 @@ const WAYS: Record<string, string> = { '-1,0': 'left', '1,0': 'right', '0,-1': '
 
 /** How long a press on an animal tile lasts before it's a long press (its field guide), in ms. */
 export const HOLD_MS = 450;
+/** How long the board waits with no input before the idle hint, in ms (owner, 2026-10-13: longer than the genre's ~5 s, since players stop to read the grid). */
+export const HINT_MS = 8000;
 
 /** A pointer pressed on a gem, not yet a swipe or a tap. */
 interface Press {
@@ -61,6 +66,7 @@ export class BoardController {
     private picked = false;
     /** Bumped for each new board, so a move still animating on the old one stops instead of playing on the new one. */
     private board = 0;
+    private hintTimer: Phaser.Time.TimerEvent | null = null;
 
     /** Listens to the scene's pointer; Phaser drops the listeners when the scene shuts down. */
     constructor(
@@ -82,8 +88,19 @@ export class BoardController {
 
     setLayout(layout: BoardLayout): void { this.layout = layout; }
 
+    /** The player did something (or the board changed): hide the idle hint and start its wait again. */
+    activity(): void {
+        this.hintTimer?.remove();
+        this.view.showHint(null);
+        this.hintTimer = this.scene.time.delayedCall(HINT_MS, () => {
+            if (!this.canMove || this.picked || this.press || this.tilePress) this.activity();
+            else this.view.showHint(this.hooks.hint?.() ?? null);
+        });
+    }
+
     /** A new board: forget any press or tapped gem, and stop a move still animating on the old board. */
     resetInput(): void {
+        this.activity();
         this.board++;
         this.press = null;
         this.tilePress?.timer.remove();
@@ -94,6 +111,7 @@ export class BoardController {
     private onPointerDown(pointer: Phaser.Input.Pointer): void {
         const { gemSize, offset } = this.layout;
         const cell: Cell = [Math.floor((pointer.x - offset.x) / gemSize), Math.floor((pointer.y - offset.y) / gemSize)];
+        this.activity();
         if (!this.model.onBoard(cell)) return;
         if (this.model.isPinned(cell)) { // an animal tile is never swapped; tapping it picks the animal, even mid-move
             if (!this.ready) return;
@@ -172,6 +190,7 @@ export class BoardController {
     /** A key pressed on the focused board. */
     async key(key: BoardKey, shift: boolean): Promise<void> {
         if (!this.ready || this.press) return;
+        this.activity();
         const arrow = ARROWS[key];
         if (arrow && shift) {
             this.drop();
@@ -250,6 +269,7 @@ export class BoardController {
             this.view.createBoard(this.model.getGrid(), this.model.getToys());
         } finally {
             this.resolving = false;
+            this.activity();
             this.hooks.onMoveResolved();
         }
     }

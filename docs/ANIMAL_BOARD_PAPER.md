@@ -63,7 +63,7 @@ The core action is **Rule out**, a button in each suspect's field guide. Marking
 
 **Only ruled-out animals can be released.** A ruled-out animal is released, and hops off the board, when any gem next to its tile (up, down, left or right) is cleared, by any means: the player's match, a cascade, or a toy. Unmarked animals are never released, whatever happens around them. Its cell then becomes an ordinary cell that fills with gems.
 
-Before committing a swap, the player can tap a gem: the board outlines in amber every ruled-out animal that a swap from that gem would release. This **release preview** shows consequences, never correctness. The same tap shows, above each unmarked animal, the question gems that swap would scout there (only answers it still hides): the **scouting preview** names the question, never the answer.
+Before committing a swap, the player can tap a gem: the board outlines in amber every ruled-out animal that a swap from that gem would release. This **release preview** shows consequences, never correctness. The same tap shows, above each unmarked animal, the question gems that swap would scout there (only answers it still hides): the **scouting preview** names the question, never the answer. Left idle for 8 seconds, the board outlines one swap (the **idle hint**): one that would release a ruled-out animal if there is one, else one that would scout a hidden answer, else any match. It reads only the board and the player's own marks, never who still fits.
 
 **If the mystery is ruled out and then released, it escapes and the round is lost.** This is the only way to lose a round through play, and it always traces back to a wrong conclusion, never to a stray swipe.
 

@@ -8,7 +8,7 @@
 // Plan 045: 'clue-board-unscouted' says which answers each animal still hides, for the scouting preview.
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
-import { BoardModel, type ExplodePhase } from './BoardModel';
+import { BoardModel, neighborSwaps, type ExplodePhase, type Move } from './BoardModel';
 import { BoardView, type TilePreview } from './BoardView';
 import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
@@ -36,6 +36,8 @@ export class ClueBoardScene extends Phaser.Scene {
     private animals = false;
     /** Plan 045: per animal, the question gems whose answer it still hides. */
     private unscouted = new Map<number, GemType[]>();
+    /** Any tap or key on the page (the grid, a field guide) counts as activity for the idle hint, not just the board's. */
+    private readonly onPageInput = () => this.controller?.activity();
 
     constructor() {
         super(ClueBoardScene.KEY);
@@ -57,6 +59,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
             preview: cell => this.preview(cell),
+            hint: () => this.hint(),
             tileTap: ([x, y]) => {
                 const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
                 if (pin) EventBus.emit('clue-board-tile', { id: pin[1] });
@@ -83,6 +86,8 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-marks', this.onMarks, this);
         EventBus.on('clue-board-select', this.onSelect, this);
         EventBus.on('clue-board-unscouted', this.onUnscouted, this);
+        window.addEventListener('pointerdown', this.onPageInput, true);
+        window.addEventListener('keydown', this.onPageInput, true);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
         // game.destroy() (React unmount, HMR) fires DESTROY, not SHUTDOWN; the display list is already gone by
         // then, so only unsubscribe, or a stale scene answers the next 'clue-board-setup' and crashes.
@@ -114,6 +119,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.marked = new Set(marked);
         this.view?.setMarked(marked);
         this.controller?.refreshPreview();
+        this.controller?.activity();
     }
 
     private onSelect({ id }: EventPayloads['clue-board-select']): void {
@@ -142,8 +148,27 @@ export class ClueBoardScene extends Phaser.Scene {
         return { release: [...release], scout: [...scout].map(([id, gems]) => [id, [...gems]]) };
     }
 
+    /**
+     * The idle hint's swap: one that releases a marked animal, else one that scouts a hidden answer, else any. Judged
+     * from the board and the player's own marks only, never who still fits.
+     */
+    private hint(): Move | null {
+        let best: Move | null = null;
+        let bestRank = -1;
+        for (const move of neighborSwaps(this.model.width, this.model.height)) {
+            if (!this.model.canSwap(move)) continue;
+            const near = this.model.previewNearColors(move);
+            const rank = near.some(([id]) => this.marked.has(id)) ? 2
+                : near.some(([id, colors]) => colors.some(gem => this.unscouted.get(id)?.includes(gem))) ? 1 : 0;
+            if (rank > bestRank) [best, bestRank] = [move, rank];
+            if (rank === 2) break;
+        }
+        return best;
+    }
+
     private setLock({ locked }: EventPayloads['clue-board-lock']): void {
         if (this.controller) this.controller.locked = locked;
+        this.controller?.activity();
     }
 
     private onKey({ key, shift }: EventPayloads['clue-board-key']): void {
@@ -312,6 +337,7 @@ export class ClueBoardScene extends Phaser.Scene {
             pins: this.model.pinnedCells(),
             preview: this.view?.previewIds() ?? [],
             scout: this.view?.scoutPreview() ?? [],
+            hint: this.view?.hintShown() ?? null,
         };
     }
 
@@ -327,6 +353,8 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.off('clue-board-marks', this.onMarks, this);
         EventBus.off('clue-board-select', this.onSelect, this);
         EventBus.off('clue-board-unscouted', this.onUnscouted, this);
+        window.removeEventListener('pointerdown', this.onPageInput, true);
+        window.removeEventListener('keydown', this.onPageInput, true);
         this.scale?.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.view = null;
         this.controller = null;

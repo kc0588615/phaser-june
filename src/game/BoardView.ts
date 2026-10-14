@@ -56,6 +56,10 @@ export class BoardView {
     /** The 3×3 a picked blast gem would clear. */
     private reach: Phaser.GameObjects.Graphics | null = null;
     private reachCell: Cell | null = null;
+    /** The idle hint: a swap outlined after the player has done nothing for a while, and its pulse. */
+    private hint: Phaser.GameObjects.Graphics | null = null;
+    private hintMove: Move | null = null;
+    private hintPulse: Phaser.Tweens.Tween | null = null;
     /** Cells holding a pinned animal (no gem sprite there), and each animal's tile. */
     private pinned = new Set<string>();
     private tiles = new Map<number, Tile>();
@@ -270,6 +274,7 @@ export class BoardView {
         this.layout = layout;
         if (this.cursorCell) this.showCursor(...this.cursorCell);
         this.showReach(this.reachCell);
+        this.showHint(this.hintMove);
         for (const tile of this.tiles.values()) this.drawTile(tile);
         this.drawSelection();
         this.forEachSprite((sprite, x, y) => {
@@ -364,6 +369,30 @@ export class BoardView {
     }
 
     /** Outlines the square a blast gem at this cell would clear (clipped to the board); null hides it. */
+    /** The idle hint: both cells of a swap outlined, pulsing (steady with reduced motion); null hides it. */
+    showHint(move: Move | null): void {
+        this.hintMove = move;
+        this.hintPulse?.remove();
+        this.hintPulse = null;
+        this.hint?.clear();
+        if (!move) return;
+        this.hint ??= this.scene.add.graphics().setDepth(39);
+        const { gemSize } = this.layout;
+        const a = this.positionOf(Math.min(move.from[0], move.to[0]), Math.min(move.from[1], move.to[1]));
+        const b = this.positionOf(Math.max(move.from[0], move.to[0]), Math.max(move.from[1], move.to[1]));
+        const [left, top, w, h] = [a.x - gemSize / 2, a.y - gemSize / 2, b.x - a.x + gemSize, b.y - a.y + gemSize];
+        this.hint.setAlpha(1)
+            .fillStyle(0xfde68a, 0.16).fillRoundedRect(left, top, w, h, gemSize * 0.22)
+            .lineStyle(Math.max(2, gemSize * 0.06), 0xfde68a, 1).strokeRoundedRect(left, top, w, h, gemSize * 0.22);
+        const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!still) this.hintPulse = this.scene.tweens.add({ targets: this.hint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+
+    /** The swap the idle hint outlines (dev bridge). */
+    hintShown(): Move | null {
+        return this.hintMove;
+    }
+
     showReach(cell: Cell | null): void {
         this.reachCell = cell;
         this.reach?.clear();
