@@ -233,6 +233,7 @@ async function main() {
 
     const journalFinds = new Set();
     let previewChecked = false;
+    let scoutChecked = false;
     let notesChecked = false;
     let markShot = false;
     for (let n = 1; n <= ROUNDS; n++) {
@@ -414,6 +415,28 @@ async function main() {
             check(`round ${n}: tapping a gem outlines the marked animals its swap would release`, preview.expected.every(id => preview.shown.includes(id)) && preview.after.length === 0, JSON.stringify(preview));
           }
         }
+        // Once a run: tap a gem whose swap would scout a hidden answer, and see the question gems over that animal only.
+        if (!scoutChecked) {
+          const scout = await evaluate(async () => {
+            const cc = window.__cc;
+            const clue = cc.clue();
+            const hidden = (id, gem) => !clue.marked.includes(id) && clue.orders.some(order => order.gem === gem && !order.seen[clue.suspects.indexOf(id)]);
+            const move = cc.validMoves().find(candidate => cc.nearColorsBy(candidate).some(([id, colors]) => colors.some(gem => hidden(id, gem))));
+            if (!move) return null;
+            const expected = [];
+            for (const to of [[-1, 0], [1, 0], [0, -1], [0, 1]].map(([dx, dy]) => [move.from[0] + dx, move.from[1] + dy])) {
+              for (const [id, colors] of cc.nearColorsBy({ from: move.from, to })) for (const gem of colors) if (hidden(id, gem)) expected.push(`${id}:${gem}`);
+            }
+            await cc.tap(move.from, { input: 'touch' });
+            const shown = cc.state().scout.flatMap(([id, gems]) => gems.map(gem => `${id}:${gem}`));
+            await cc.tap(move.from, { input: 'touch' });
+            return { shown: [...new Set(shown)].sort(), expected: [...new Set(expected)].sort(), after: cc.state().scout };
+          });
+          if (scout) {
+            scoutChecked = true;
+            check(`round ${n}: tapping a gem shows the hidden answers its swap would scout, on unmarked animals only`, JSON.stringify(scout.shown) === JSON.stringify(scout.expected) && scout.after.length === 0, JSON.stringify(scout));
+          }
+        }
         const before = state;
         const result = await evaluate(async () => {
           const cc = window.__cc;
@@ -543,6 +566,7 @@ async function main() {
       }
     }
     check('the release preview was checked at least once', previewChecked);
+    check('the scouting preview was checked at least once', scoutChecked);
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {

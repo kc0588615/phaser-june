@@ -4,6 +4,7 @@
 // they go through the same pointer handlers a player uses. Reads client-visible state
 // only; every entry point is a no-op in production builds.
 import { EventBus, type EventPayloads } from './EventBus';
+import type { GemType } from './constants';
 import { neighborSwaps, type BoardModel, type Cell, type Grid, type Move, type Toys } from './BoardModel';
 
 export interface DebugBoardSnapshot {
@@ -27,6 +28,8 @@ export interface DebugBoardSnapshot {
   /** Plan 044: the animals pinned on the board, [cell, id], and the ones the release preview outlines. */
   pins: Array<[Cell, number]>;
   preview: number[];
+  /** Plan 045: the scouting preview, each unmarked animal with the question gems a swap from the picked gem would scout. */
+  scout: Array<[number, GemType[]]>;
 }
 
 /** What the board scene hands the bridge; typed so field renames fail typecheck. */
@@ -49,7 +52,7 @@ const MAX_EVENTS = 200;
 const LOGGED: Record<keyof EventPayloads, true> = {
   'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
   'clue-board-key': true, 'clue-board-announce': true, 'clue-board-marks': true, 'clue-board-settled': true,
-  'clue-board-select': true, 'clue-board-tile': true, 'clue-board-tile-hold': true,
+  'clue-board-select': true, 'clue-board-tile': true, 'clue-board-tile-hold': true, 'clue-board-unscouted': true,
 };
 
 let scene: DebugScene | null = null;

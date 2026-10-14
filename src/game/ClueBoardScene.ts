@@ -5,10 +5,11 @@
 // faces on the gems, and 'clue-board-marks': a marked animal touched by a clear is
 // released (the rules decide the same from the same marks). A tapped tile picks its
 // animal ('clue-board-tile', or 'clue-board-tile-hold' for a long press); the animal picked in the grid pulses ('clue-board-select').
+// Plan 045: 'clue-board-unscouted' says which answers each animal still hides, for the scouting preview.
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
 import { BoardModel, type ExplodePhase } from './BoardModel';
-import { BoardView } from './BoardView';
+import { BoardView, type TilePreview } from './BoardView';
 import { GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
 import { sfx } from './sfx';
@@ -33,6 +34,8 @@ export class ClueBoardScene extends Phaser.Scene {
     /** Plan 044: the pinned animals the player ruled out, and whether this board has animals at all. */
     private marked = new Set<number>();
     private animals = false;
+    /** Plan 045: per animal, the question gems whose answer it still hides. */
+    private unscouted = new Map<number, GemType[]>();
 
     constructor() {
         super(ClueBoardScene.KEY);
@@ -53,7 +56,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.view = new BoardView(this, GRID_COLS, GRID_ROWS, this.layout);
         this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
-            preview: cell => this.previewReleases(cell),
+            preview: cell => this.preview(cell),
             tileTap: ([x, y]) => {
                 const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
                 if (pin) EventBus.emit('clue-board-tile', { id: pin[1] });
@@ -79,6 +82,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-key', this.onKey, this);
         EventBus.on('clue-board-marks', this.onMarks, this);
         EventBus.on('clue-board-select', this.onSelect, this);
+        EventBus.on('clue-board-unscouted', this.onUnscouted, this);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
         // game.destroy() (React unmount, HMR) fires DESTROY, not SHUTDOWN; the display list is already gone by
         // then, so only unsubscribe, or a stale scene answers the next 'clue-board-setup' and crashes.
@@ -98,6 +102,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.view.setFaces(faceKeys);
         this.view.setRareGem(rare?.type ?? null);
         this.marked.clear();
+        this.unscouted.clear();
         this.animals = pins.length > 0;
         this.controller.resetInput();
         this.view.createTiles(pins);
@@ -108,20 +113,33 @@ export class ClueBoardScene extends Phaser.Scene {
     private onMarks({ marked }: EventPayloads['clue-board-marks']): void {
         this.marked = new Set(marked);
         this.view?.setMarked(marked);
+        this.controller?.refreshPreview();
     }
 
     private onSelect({ id }: EventPayloads['clue-board-select']): void {
         this.view?.setSelected(id);
     }
 
-    /** The marked animals any swap from this gem would release (the release preview after a tap). */
-    private previewReleases([x, y]: [number, number]): number[] {
-        if (this.marked.size === 0) return [];
-        const ids = new Set<number>();
+    private onUnscouted({ unscouted }: EventPayloads['clue-board-unscouted']): void {
+        this.unscouted = new Map(unscouted);
+        this.controller?.refreshPreview();
+    }
+
+    /**
+     * What any swap from this gem would do to the animals (the preview after a tap): the marked ones it would release,
+     * and for each unmarked one the question gems its clear would scout (only answers still hidden; never the answer).
+     */
+    private preview([x, y]: [number, number]): TilePreview {
+        const release = new Set<number>();
+        const scout = new Map<number, Set<GemType>>();
         for (const to of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as Array<[number, number]>) {
-            for (const id of this.model.previewTouched({ from: [x, y], to })) if (this.marked.has(id)) ids.add(id);
+            for (const [id, colors] of this.model.previewNearColors({ from: [x, y], to })) {
+                if (this.marked.has(id)) { release.add(id); continue; }
+                const hidden = colors.filter(gem => this.unscouted.get(id)?.includes(gem));
+                if (hidden.length > 0) scout.set(id, new Set([...(scout.get(id) ?? []), ...hidden]));
+            }
         }
-        return [...ids];
+        return { release: [...release], scout: [...scout].map(([id, gems]) => [id, [...gems]]) };
     }
 
     private setLock({ locked }: EventPayloads['clue-board-lock']): void {
@@ -293,6 +311,7 @@ export class ClueBoardScene extends Phaser.Scene {
             view: this.view?.textureKeys() ?? [],
             pins: this.model.pinnedCells(),
             preview: this.view?.previewIds() ?? [],
+            scout: this.view?.scoutPreview() ?? [],
         };
     }
 
@@ -307,6 +326,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.off('clue-board-key', this.onKey, this);
         EventBus.off('clue-board-marks', this.onMarks, this);
         EventBus.off('clue-board-select', this.onSelect, this);
+        EventBus.off('clue-board-unscouted', this.onUnscouted, this);
         this.scale?.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
         this.view = null;
         this.controller = null;

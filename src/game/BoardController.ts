@@ -8,7 +8,7 @@
 import Phaser from 'phaser';
 import { isNeighbor, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
 import type { BoardKey } from './EventBus';
-import type { BoardView } from './BoardView';
+import type { BoardView, TilePreview } from './BoardView';
 import { sfx } from './sfx';
 import type { BoardLayout } from './squareLayout';
 import { GRID_COLS, GRID_ROWS, SWIPE_THRESHOLD } from './constants';
@@ -19,8 +19,8 @@ export interface BoardHooks {
      * to release (plan 044): they hop off once the phase has fallen, and gems drop into their cells.
      */
     onPhase(phase: ExplodePhase, cascade: boolean): number[] | void;
-    /** A gem was picked: the pinned animals a swap from it would release (the release preview). */
-    preview?(cell: Cell): number[];
+    /** A gem was picked: the animals a swap from it would release, and the answers it would scout (the preview). */
+    preview?(cell: Cell): TilePreview;
     /** An animal's tile was tapped (plan 044). */
     tileTap?(cell: Cell): void;
     /** An animal's tile was long-pressed (plan 045: its field guide). */
@@ -152,8 +152,13 @@ export class BoardController {
             this.picked = true;
             this.view.showCursor(...cell);
             this.view.showReach(this.model.getToys()[cell[0]]?.[cell[1]] === 'bomb' ? cell : null);
-            this.view.showPreview(this.hooks.preview?.(cell) ?? []);
+            this.view.showPreview(this.hooks.preview?.(cell) ?? { release: [], scout: [] });
         }
+    }
+
+    /** Marks or hidden answers changed: redo the preview of the picked gem. */
+    refreshPreview(): void {
+        if (this.picked) this.view.showPreview(this.hooks.preview?.(this.cursor) ?? { release: [], scout: [] });
     }
 
     private drop(): void {
@@ -169,8 +174,7 @@ export class BoardController {
         if (!this.ready || this.press) return;
         const arrow = ARROWS[key];
         if (arrow && shift) {
-            this.picked = false;
-            this.view.showReach(null);
+            this.drop();
             this.view.showCursor(...this.cursor);
             const [x, y] = this.cursor;
             const to: Cell = [x + arrow[0], y + arrow[1]];
@@ -181,8 +185,7 @@ export class BoardController {
             const swapped = await this.trySwap({ from: this.cursor, to });
             if (swapped) this.hooks.announce(`Swapped ${WAYS[arrow.join()]}`);
         } else if (arrow) {
-            this.picked = false;
-            this.view.showReach(null);
+            this.drop();
             const [x, y] = this.cursor;
             this.cursor = [clamp(x + arrow[0], GRID_COLS), clamp(y + arrow[1], GRID_ROWS)];
             this.view.showCursor(...this.cursor);

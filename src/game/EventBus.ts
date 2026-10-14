@@ -14,6 +14,7 @@
 //   page  -> board 'clue-board-select'    the animal picked in the evidence grid (its tile pulses)
 //   board -> page  'clue-board-tile'      the player tapped an animal's tile
 //   board -> page  'clue-board-tile-hold' the player long-pressed an animal's tile (its field guide)
+//   page  -> board 'clue-board-unscouted' each animal's question gems whose answer is still hidden (plan 045)
 import Phaser from 'phaser';
 import type { GemType } from './constants';
 
@@ -48,6 +49,8 @@ export interface EventPayloads {
     'clue-board-select': { id: number | null };
     'clue-board-tile': { id: number };
     'clue-board-tile-hold': { id: number };
+    /** Plan 045: per animal, the gem colors of the questions whose answer it still hides (the scouting preview). */
+    'clue-board-unscouted': { unscouted: Array<[id: number, gems: GemType[]]> };
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

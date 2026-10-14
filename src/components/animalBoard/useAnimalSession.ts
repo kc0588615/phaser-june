@@ -1,7 +1,7 @@
 // The animal board page's state (plan 044): loads the pool (and the continent from
 // ?place=), deals each round from the session seed, runs the session reducer, and
 // wires the board over the EventBus (setup with tiles and faces, marks, clears,
-// settled moves, lock).
+// settled moves, lock, the answers each animal still hides).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, newAnimalRound, newTrail, pickSuspectSet, tileCells,
@@ -159,6 +159,15 @@ export function useAnimalSession() {
     if (sceneGeneration === 0 || !marked) return;
     EventBus.emit('clue-board-marks', { marked });
   }, [sceneGeneration, marked]);
+
+  // The scouting preview needs each animal's still-hidden answers (their questions' gems, never the answers).
+  const orders = session?.round.orders;
+  useEffect(() => {
+    const current = sessionRef.current;
+    if (sceneGeneration === 0 || !orders || !current) return;
+    const unscouted = current.round.suspects.map((id, i): [number, GemType[]] => [id, orders.filter(order => !order.seen[i]).map(order => order.gem)]);
+    EventBus.emit('clue-board-unscouted', { unscouted });
+  }, [sceneGeneration, orders]);
 
   // The board takes moves only while the round is playing.
   const status = session?.round.status;

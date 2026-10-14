@@ -3,7 +3,8 @@
 // BoardController asks BoardModel what happened, then tells this class what to
 // animate. Plan 044: animals pinned on the board are photo tiles in a round frame;
 // gems fall past them; a ruled-out tile wears a red ring, the release preview an
-// amber one, and a released tile hops off. Each tile carries its number from the
+// amber one, the scouting preview (plan 045) the question gems it would show above
+// the tile, and a released tile hops off. Each tile carries its number from the
 // evidence grid, and the animal picked there gets a pulsing blue ring.
 import Phaser from 'phaser';
 import {
@@ -30,7 +31,13 @@ interface Tile {
     /** The animal's number in the evidence grid, on a disc at the tile's lower left (null: no number). */
     tagBack: Phaser.GameObjects.Graphics;
     tag: Phaser.GameObjects.Text | null;
+    /** The scouting preview: the question gems a swap would scout here, on a strip above the photo. */
+    scoutBack: Phaser.GameObjects.Graphics;
+    scout: Phaser.GameObjects.Image[];
 }
+
+/** After a tap: the marked animals a swap from that gem would release, and each unmarked one's question gems it would scout. */
+export interface TilePreview { release: number[]; scout: Array<[id: number, gems: GemType[]]> }
 
 const cellKey = ([x, y]: readonly [number, number]) => `${x},${y}`;
 
@@ -54,6 +61,7 @@ export class BoardView {
     private tiles = new Map<number, Tile>();
     private marked = new Set<number>();
     private previewed = new Set<number>();
+    private scouting = new Map<number, GemType[]>();
     /** The animal picked in the evidence grid, its ring, and the ring's pulse. */
     private selected: number | null = null;
     private selectRing: Phaser.GameObjects.Graphics | null = null;
@@ -89,6 +97,7 @@ export class BoardView {
         this.pinned = new Set(pins.map(pin => cellKey(pin.cell)));
         this.marked.clear();
         this.previewed.clear();
+        this.scouting.clear();
         this.setSelected(null);
         for (const pin of pins) {
             const back = this.scene.add.graphics().setDepth(5);
@@ -99,7 +108,8 @@ export class BoardView {
             const tag = pin.tag === undefined ? null
                 : this.scene.add.text(0, 0, String(pin.tag), { fontFamily: 'Arial Black, Arial, sans-serif', color: '#08110d' }).setOrigin(0.5).setDepth(9);
             const key = `tile_${pin.id}`;
-            const tile: Tile = { pin, back, ring, cross, tagBack, tag, mask: null, face: this.badge(pin) };
+            const scoutBack = this.scene.add.graphics().setDepth(8);
+            const tile: Tile = { pin, back, ring, cross, tagBack, tag, scoutBack, scout: [], mask: null, face: this.badge(pin) };
             this.tiles.set(pin.id, tile);
             if (this.scene.textures.exists(key)) this.usePhoto(tile, key);
             else if (pin.photo) {
@@ -140,10 +150,15 @@ export class BoardView {
         for (const tile of this.tiles.values()) this.drawTile(tile);
     }
 
-    /** The release preview: the marked tiles a swap would release wear an amber ring. */
-    showPreview(ids: readonly number[]): void {
-        this.previewed = new Set(ids);
-        for (const tile of this.tiles.values()) this.drawTile(tile);
+    /** The preview: the marked tiles a swap would release wear an amber ring; the ones it would scout show the question gems. */
+    showPreview({ release, scout }: TilePreview): void {
+        this.previewed = new Set(release);
+        this.scouting = new Map(scout);
+        for (const tile of this.tiles.values()) {
+            for (const icon of tile.scout) icon.destroy();
+            tile.scout = (this.scouting.get(tile.pin.id) ?? []).map(gem => this.scene.add.image(0, 0, this.faces.get(gem) ?? gemTexture(gem)).setDepth(9));
+            this.drawTile(tile);
+        }
     }
 
     /** The animals the release preview outlines (dev bridge). */
@@ -151,9 +166,14 @@ export class BoardView {
         return [...this.previewed];
     }
 
+    /** The scouting preview's animals and gems (dev bridge). */
+    scoutPreview(): Array<[number, GemType[]]> {
+        return [...this.scouting];
+    }
+
     clearPreview(): void {
-        if (this.previewed.size === 0) return;
-        this.showPreview([]);
+        if (this.previewed.size === 0 && this.scouting.size === 0) return;
+        this.showPreview({ release: [], scout: [] });
     }
 
     /** Released animals hop off the board; their cells become ordinary cells. */
@@ -164,7 +184,7 @@ export class BoardView {
             if (!tile) continue;
             this.tiles.delete(id);
             this.pinned.delete(cellKey(tile.pin.cell));
-            const parts = [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, ...(tile.tag ? [tile.tag] : [])];
+            const parts = [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, ...(tile.tag ? [tile.tag] : []), tile.scoutBack, ...tile.scout];
             if (id === this.selected) this.setSelected(null);
             tile.face.clearMask();
             tile.mask?.destroy();
@@ -414,6 +434,16 @@ export class BoardView {
                 .lineStyle(Math.max(1.5, gemSize * 0.035), 0x08110d, 1).strokeCircle(at.x, at.y, gemSize * 0.17);
             tile.tag.setPosition(at.x, at.y).setFontSize(Math.round(gemSize * 0.22));
         }
+        tile.scoutBack.clear();
+        if (tile.scout.length > 0) {
+            const size = gemSize * 0.34;
+            const step = size * 1.05;
+            const top = y - radius * 0.72;
+            const width = step * tile.scout.length + size * 0.25;
+            tile.scoutBack.fillStyle(0x06121a, 0.85).fillRoundedRect(x - width / 2, top - size * 0.62, width, size * 1.24, size * 0.5)
+                .lineStyle(Math.max(1.5, gemSize * 0.035), 0x7dd3fc, 1).strokeRoundedRect(x - width / 2, top - size * 0.62, width, size * 1.24, size * 0.5);
+            tile.scout.forEach((icon, i) => icon.setPosition(x + (i - (tile.scout.length - 1) / 2) * step, top).setScale(icon.width ? size / icon.width : 1));
+        }
     }
 
     /** The fallback face: the animal's badge (an emoji or its initials) on the cream disc. */
@@ -436,7 +466,7 @@ export class BoardView {
         this.tiles.delete(id);
         tile.face.clearMask();
         tile.mask?.destroy();
-        for (const part of [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, tile.tag]) part?.destroy();
+        for (const part of [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, tile.tag, tile.scoutBack, ...tile.scout]) part?.destroy();
     }
 
     private positionOf(x: number, y: number): { x: number; y: number } {
