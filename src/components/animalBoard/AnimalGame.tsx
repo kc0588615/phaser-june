@@ -324,10 +324,12 @@ export function AnimalGame() {
   const pick = round && selected !== null && round.status === 'playing' ? selected : null;
 
   const notes = round?.notes.length ?? 0;
+  // One row when the corner has room; on narrow phones (corner under 9rem) menu + notes on top, the stats below.
   const corner = (
-    <div className="flex items-center gap-xxs pb-xxs">
-      <button type="button" onClick={() => setSheet({ kind: 'menu' })} aria-label="Menu" className="btn btn-ghost btn-icon shrink-0"><Menu className="h-5 w-5" /></button>
-      <div className="min-w-0">
+    <div className="@container">
+    <div className="grid grid-cols-[auto_auto] items-center justify-start gap-xxs pb-xxs [grid-template-areas:'menu_notes'_'stats_stats'] @min-[9rem]:flex">
+      <button type="button" onClick={() => setSheet({ kind: 'menu' })} aria-label="Menu" className="btn btn-ghost btn-icon shrink-0 [grid-area:menu] @max-[9rem]:p-xs"><Menu className="h-5 w-5" /></button>
+      <div className="min-w-0 [grid-area:stats]">
         <div className="flex items-center gap-xxs">
           {trail && (
             <span className="flex" role="img" aria-label={`${trail.hearts} of ${rules.hearts} hearts`}>
@@ -343,13 +345,14 @@ export function AnimalGame() {
           type="button"
           onClick={() => setSheet({ kind: 'notes' })}
           aria-label={`Witness notes: ${notes}`}
-          className={`flex h-8 shrink-0 items-center gap-xxs rounded-full px-xxs text-s ${notes > 0 ? 'bg-notes/20' : 'opacity-50'}`}
+          className={`flex h-8 shrink-0 [grid-area:notes] items-center gap-xxs rounded-full px-xxs text-s ${notes > 0 ? 'bg-notes/20' : 'opacity-50'}`}
         >
           {/* Keyed by the count, so the book flashes once each time a note comes in. */}
           <span key={notes} aria-hidden="true" className={`inline-block rounded-full ${notes > 0 ? 'ev-flash' : ''}`}>📓</span>
           {notes > 0 && <b className="font-data text-xs font-heavy tabular-nums">{notes}</b>}
         </button>
       )}
+    </div>
     </div>
   );
 
