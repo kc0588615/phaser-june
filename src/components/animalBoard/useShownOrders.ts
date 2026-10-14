@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
-import { faceCss } from '@/game/faceGlyphs';
+import { EMOJI_FONT, FACE_Y } from '@/game/faceGlyphs';
 import type { GemType } from '@/game/constants';
 
 const FLIGHT_MS = 600;
@@ -25,13 +25,10 @@ function flyGem(from: { x: number; y: number }, target: Element, gem: GemType, f
   img.src = `/assets/evidence/${gem}.svg`;
   img.alt = '';
   el.append(img);
-  const css = faceCss(gem, face, 11, 'px');
-  const sticker = document.createElement('span');
-  Object.assign(sticker.style, css.sticker);
-  el.append(sticker);
+  const top = `${((FACE_Y[gem] ?? 64) / 128) * 100}%`;
   const text = document.createElement('span');
   text.textContent = face;
-  Object.assign(text.style, css.face);
+  Object.assign(text.style, { left: '50%', top, fontFamily: EMOJI_FONT, fontSize: '13px', lineHeight: '1' });
   el.append(text);
   document.body.append(el);
   const dx = to.left + to.width / 2 - from.x;
