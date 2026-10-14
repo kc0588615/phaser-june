@@ -12,8 +12,6 @@ COPY . .
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
 ARG NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-ARG NEXT_PUBLIC_TITILER_BASE_URL
-ARG NEXT_PUBLIC_COG_URL
 # The build loads route modules but never queries; the real URL comes at run time.
 RUN DATABASE_URL=postgres://build@127.0.0.1:1/build npm run build
 

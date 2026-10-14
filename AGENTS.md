@@ -32,11 +32,11 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 - Typecheck: `npm run typecheck`
 - Lint: `npm run lint` (eslint + cc theme check `scripts/check-theme.mjs`; must exit 0; `react-hooks/set-state-in-effect` is off by design, see `eslint.config.mjs`)
 - Drizzle: `npm run db:introspect`
-- Env (`.env.local`): `DATABASE_URL`, Clerk keys, `NEXT_PUBLIC_TITILER_BASE_URL` + `NEXT_PUBLIC_COG_URL` (habitat snapshots; optional).
+- Env (`.env.local`): `DATABASE_URL`, Clerk keys.
 
 ## Where Things Live
 The app is two screens: a globe to pick a continent (`/`) and the game (`/explore`, optional `?place=` and `?seed=`; `/clue-match` redirects). Guide: `docs/CLUE_MATCH.md`; rules: `docs/ANIMAL_BOARD_PAPER.md`; design and decisions: `plans/044-animal-board.md`; terms: `CONTEXT.md`.
-- Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` with TiTiler habitat snapshot). Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
+- Globe: `src/pages/index.tsx` -> `src/components/globe/` (`GlobeScreen` shell, `Globe` MapLibre globe, `PlaceList`, `PlaceCard` animals + play). Data `GET /api/places`, `/api/places/outline` (`src/lib/places.ts`, `clue_match_places` view). Pure helpers `src/clueGame/places.ts`.
 - Game UI: `src/pages/explore.tsx` -> `src/components/animalBoard/` (`AnimalGame` shell, `useAnimalSession` state + board wiring, `EvidenceGrid`, `AnimalSheets`, `useShownOrders` gem flight). Shared pieces in `src/components/clueGame/` (`Sheet` drawer, `JournalSheet`, `useJournal` on-device journal, `PhaserGame` board host, `GlossaryText`, `RangeMap`). Client GETs share `src/lib/getJson.ts` (cached per page load).
 - Rules (pure): `src/clueGame/` (`animalBoard` round rules, `animalSession` trail/score/streak, `questionMatch` questions + book, `questionMatchContent` content -> rules data, `regions`, `gems`; plus glossary, journal, solveReport, speciesInfo, worldMap, and the content checks traits, deduction, validatePool). Balance bot: `scripts/balance-044.ts`.
 - Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules incl. toys (pure), `BoardView.ts` sprites + animation, `toyTextures.ts`, `sfx.ts` (synth sounds, off by default), `BoardController.ts` swipe/tap/keyboard swaps, cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `clue-board-key`, `clue-board-announce`, `clue-board-unscouted`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).

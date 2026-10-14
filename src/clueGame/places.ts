@@ -101,22 +101,6 @@ export function sightingPoint(place: Pick<Place, 'bbox' | 'center'>, speciesId: 
   return [round(clamp(lon, west, east)), round(clamp(lat, south, north))];
 }
 
-// The habitat-type raster: a Cloud-Optimized GeoTIFF served by TiTiler. Without
-// both env vars the place card skips its habitat picture.
-export const TITILER_BASE_URL = process.env.NEXT_PUBLIC_TITILER_BASE_URL ?? '';
-export const HABITAT_COG_URL = process.env.NEXT_PUBLIC_COG_URL ?? '';
-
-/** TiTiler URL for a PNG of the habitat raster over a place, in its registered `habitat_custom` colors. */
-export function habitatSnapshotUrl(bbox: Place['bbox'], titilerBaseUrl: string, cogUrl: string, maxSize = 512): string {
-  const [west, south, east, north] = bbox;
-  const padX = Math.max(0.2, (east - west) * 0.05);
-  const padY = Math.max(0.2, (north - south) * 0.05);
-  const box = [clamp(west - padX, -180, 180), clamp(south - padY, -85, 85), clamp(east + padX, -180, 180), clamp(north + padY, -85, 85)]
-    .map(value => round(value)).join(',');
-  const params = new URLSearchParams({ url: cogUrl, colormap_name: 'habitat_custom', nodata: '0', max_size: String(maxSize) });
-  return `${titilerBaseUrl.replace(/\/$/, '')}/cog/bbox/${box}.png?${params}`;
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }

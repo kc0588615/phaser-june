@@ -26,7 +26,7 @@ The app is its own Compose project (`critter`, in `/opt/critter-connect`). It jo
    ```
 
 4. **Owner. Settings on the VPS** (repo checked out at `/opt/critter-connect`):
-   - `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN` and the build-time `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `NEXT_PUBLIC_TITILER_BASE_URL` and `NEXT_PUBLIC_COG_URL`.
+   - `.env` (app stack, `/opt/critter-connect/.env`): `APP_DOMAIN` and the build-time `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`.
    - `deploy/app.env` (runtime): copy `deploy/app.env.example` and fill in `DATABASE_URL` (the `critter_app` password), `CLERK_SECRET_KEY` and the public values. `chmod 600 deploy/app.env`.
 5. **Ports 80 and 443.** Caddy needs them to get and renew its certificate. If certbot renews the PgBouncer certificate in standalone mode on port 80, add hooks so it doesn't collide with Caddy: `--pre-hook "docker stop caddy" --post-hook "docker start caddy"` in `/etc/letsencrypt/renewal/<DB_DOMAIN>.conf`.
 

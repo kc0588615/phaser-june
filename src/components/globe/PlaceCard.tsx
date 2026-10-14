@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { ArrowLeft, Play } from 'lucide-react';
-import { motion } from 'motion/react';
-import { HABITAT_COG_URL, TITILER_BASE_URL, groupLabel, habitatSnapshotUrl, type Place, type PlaceAnimal } from '@/clueGame/places';
+import { groupLabel, type Place, type PlaceAnimal } from '@/clueGame/places';
 import { speciesBadge } from '@/clueGame/speciesInfo';
-import { LARGE } from '@/lib/motion';
 
-/** The picked place: who lives there (named once found), its habitats, and the button to play. */
+/** The picked place: who lives there (named once found) and the button to play. */
 export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart }: {
   place: Place;
   animals: PlaceAnimal[];
@@ -23,10 +20,16 @@ export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart
         <button type="button" onClick={onBack} className="btn btn-ghost btn-icon -ml-xs shrink-0" aria-label="Back to all places">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="min-w-0 pt-xxs">
+        <div className="min-w-0 flex-1 pt-xxs">
           <h2 className="m-0 font-brand text-l font-heavy text-neutral-10">{place.name}</h2>
           <p className="m-0 text-xs text-neutral-7">{place.kind === 'continent' ? 'Continent' : groupLabel(place)}</p>
         </div>
+        {/* Phones: play sits by the name, above the fold; wider screens keep it at the bottom. */}
+        {!soon && (
+          <button type="button" onClick={onStart} className="btn btn-primary shrink-0 md:hidden">
+            <Play className="h-4 w-4" aria-hidden="true" /> Explore
+          </button>
+        )}
       </div>
 
       <section aria-label="Animals that live here">
@@ -44,12 +47,10 @@ export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart
         </ul>
       </section>
 
-      {TITILER_BASE_URL && HABITAT_COG_URL && <HabitatSnapshot key={place.key} place={place} />}
-
       {soon ? (
         <p className="mt-auto m-0 rounded-s bg-neutral-2 p-s text-center text-s text-neutral-7">Coming soon: a round needs at least {minAnimals} animals from here, and more are on the way.</p>
       ) : (
-        <button type="button" onClick={onStart} className="btn btn-primary mt-auto w-full shrink-0">
+        <button type="button" onClick={onStart} className="btn btn-primary mt-auto hidden w-full shrink-0 md:inline-flex">
           <Play className="h-4 w-4" aria-hidden="true" /> Explore {place.name}
         </button>
       )}
@@ -57,26 +58,3 @@ export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart
   );
 }
 
-/** The habitat-type raster over the place (rendered by TiTiler; takes a few seconds). */
-function HabitatSnapshot({ place }: { place: Place }) {
-  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
-  if (state === 'failed') return null;
-  return (
-    <figure className="m-0">
-      <div className="relative aspect-[2/1] overflow-hidden rounded-xs bg-neutral-3">
-        {state === 'loading' && <div className="absolute inset-0 grid place-items-center text-xs text-neutral-7">Mapping habitats…</div>}
-        <motion.img
-          src={habitatSnapshotUrl(place.bbox, TITILER_BASE_URL, HABITAT_COG_URL)}
-          alt={`Map of habitat types in ${place.name}`}
-          onLoad={() => setState('ready')}
-          onError={() => setState('failed')}
-          className="h-full w-full object-contain"
-          initial={false}
-          animate={{ opacity: state === 'ready' ? 1 : 0 }}
-          transition={LARGE}
-        />
-      </div>
-      <figcaption className="mt-xxs text-xxs text-neutral-7">Each color is a habitat type, like forest, grassland, desert, wetland or farmland (IUCN habitat map).</figcaption>
-    </figure>
-  );
-}

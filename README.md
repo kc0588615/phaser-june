@@ -14,7 +14,7 @@ npm run e2e          # headless Chrome plays the dev build; artifact in e2e-arti
 npm run typecheck && npm run lint
 ```
 
-`.env.local` needs `DATABASE_URL` and Clerk keys. Habitat pictures on the globe also need `NEXT_PUBLIC_TITILER_BASE_URL` and `NEXT_PUBLIC_COG_URL`.
+`.env.local` needs `DATABASE_URL` and Clerk keys.
 
 ## Where things are
 
