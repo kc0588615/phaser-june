@@ -20,8 +20,14 @@ import Phaser from 'phaser';
 import type { Grid, Toys } from './BoardModel';
 import type { GemType } from './constants';
 
-/** An animal pinned on the board (plan 044): its cell, id, photo (null: show `label`), name, and its number in the evidence grid. */
-export interface BoardPin { cell: [x: number, y: number]; id: number; photo: string | null; label: string; name: string; tag?: number }
+/** How a released animal's card leaves the board (plan 046), from how the animal moves. */
+export type PinExit = 'fly' | 'swim' | 'dig' | 'walk';
+
+/**
+ * An animal pinned on the board (plan 044): its cell, id, photo (null: show `label`), name, its number in the evidence
+ * grid, and how its card leaves when released (default walk).
+ */
+export interface BoardPin { cell: [x: number, y: number]; id: number; photo: string | null; label: string; name: string; tag?: number; exit?: PinExit }
 
 export interface EventPayloads {
     'current-scene-ready': Phaser.Scene;
@@ -40,8 +46,9 @@ export interface EventPayloads {
      * `rare`: a gem that never matches by itself and is collected by a match next to it (the witness gem). `pins`: animals
      * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox); `labels`: what a
      * screen reader calls each gem color this round; `board`: a saved board to resume instead of the seeded one.
+     * `escapes`: the mystery's id, only so its card bolts off if it's released (plan 046); the board decides no rules.
      */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys } };
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */

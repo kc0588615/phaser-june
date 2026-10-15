@@ -106,7 +106,7 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
         const pinned = pins.map((pin): [Cell, number] => [pin.cell, pin.id]);
@@ -127,7 +127,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.unscouted.clear();
         this.animals = pins.length > 0;
         this.controller.resetInput();
-        this.view.createTiles(pins);
+        this.view.createTiles(pins, escapes ?? null);
         this.view.createBoard(this.model.getGrid(), this.model.getToys());
         this.controller.ready = true;
     }
@@ -202,6 +202,12 @@ export class ClueBoardScene extends Phaser.Scene {
             this.burst(group.cells, GEM_COLOR[group.gemType] ?? '#ffffff', rare ? 0 : group.cells.length);
         }
         const released = phase.touched.filter(id => this.marked.has(id));
+        // Plan 046: a card whose answer this move's own clear scouts hops (the rules decide the same: own move, unmarked, still hidden).
+        if (!cascade) {
+            for (const [id, colors] of phase.nearColors) {
+                if (!this.marked.has(id) && colors.some(gem => this.unscouted.get(id)?.includes(gem))) this.view?.peekTile(id);
+            }
+        }
         const big = phase.groups.some(group => !group.blast && group.cells.length >= 4);
         if (phase.fired.length > 0) {
             sfx.blast();

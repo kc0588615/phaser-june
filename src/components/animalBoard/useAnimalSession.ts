@@ -18,11 +18,19 @@ import { continentOf, type ContinentKey } from '@/clueGame/regions';
 import { prefixOf } from '@/clueGame/traits';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
 import { GRID_COLS, GRID_ROWS, type GemType } from '@/game/constants';
-import { EventBus, type BoardPin, type EventPayloads } from '@/game/EventBus';
+import { EventBus, type BoardPin, type EventPayloads, type PinExit } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 import { readSavedGame, writeSavedGame, type SavedBoard } from './savedGame';
+
+/** Plan 046: how a released animal's card leaves the board, from how it moves (its clue tags; bats fly). */
+function exitOf(tags: readonly string[], taxonOrder: string | null): PinExit {
+  if (taxonOrder === 'Chiroptera' || tags.includes('glider')) return 'fly';
+  if (tags.includes('fully_aquatic') || tags.includes('swimmer')) return 'swim';
+  if (tags.includes('burrower')) return 'dig';
+  return 'walk';
+}
 
 /** `?seed=N` replays a session: same trails, same boards (never saved or resumed). */
 function urlSeed(): number | null {
@@ -177,6 +185,7 @@ export function useAnimalSession() {
       return {
         cell: cells[i], id, name: current.book.byId.get(id)?.name ?? 'animal',
         photo: species?.photo ? photoAt(species.photo.url, 120) : null, label: species ? speciesBadge(species) : '?', tag: i + 1,
+        exit: exitOf(current.book.byId.get(id)?.tags ?? [], species?.taxonOrder ?? null),
       };
     }).filter(pin => !round.released.includes(pin.id));
     const resumeBoard = boardRef.current?.roundNo === current.roundNo ? boardRef.current : null;
@@ -186,7 +195,7 @@ export function useAnimalSession() {
       faces[order.gem] = clueFace(order.tag);
       labels[order.gem] = order.short;
     }
-    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined });
+    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined, escapes: round.mysteryId });
     EventBus.emit('clue-board-marks', { marked: [] });
   }, [sceneGeneration, roundNo]);
 

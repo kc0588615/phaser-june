@@ -1,6 +1,6 @@
 # 046: Board feel (pinned animal cards, then the deductions come alive)
 
-On `main`, over 044/045. Written 2026-10-14/15. Steps 1–2 built 2026-10-15 (uncommitted); steps 3–4 next.
+On `main`, over 044/045. Written 2026-10-14/15. Steps 1–2 built 2026-10-15 (0c141511), step 3 built 2026-10-15; step 4 next.
 
 ## Problem
 
@@ -16,9 +16,9 @@ A try at moving a card wiggles it on its pin (no move spent, no pick): swipe a c
 
 `BoardView.drawTile`: one container at the pin (paper, photo cropped with `setCrop`, no mask; number in Patrick Hand on the strip; marker cross; pin; scouting strip), 1.08 × 1.06 cells, tilted by number (`CARD_TILTS`). States are pins and paper, never a ring (an amber ring matched the gem cursor): picked = paper pulses blue; ruled out = red cross + grey photo (`preFX` colour matrix, WebGL); release preview = pin pops up, card hangs and sways; released = pin flies out, card flutters off. Page: `AnimalCard` / `TrapCard` (`AnimalCard.tsx`, `.animal-card` in globals.css).
 
-## 3. Tiles react (next)
+## 3. Tiles react (built)
 
-Neutral peek when scouted (same for yes and no; hop/shake would read as right/wrong); release exits by how the animal moves (fly / swim / walk, from its record); the escaped mystery bolts off with 💨 before the loss card.
+A card whose answer the move's own clear scouts hops (same for yes and no; hop/shake would read as right/wrong), decided in `ClueBoardScene.reportMatches` with the rules' own test. A released card leaves the way its animal moves (`BoardPin.exit`, `exitOf` in useAnimalSession): fly (Chiroptera or `glider`) rises away, swim (`fully_aquatic`/`swimmer`) sinks in ripples, dig (`burrower`) squashes into the board with dust, walk waddles off the nearer side. The escaping mystery bolts off leaving a 💨 (setup's `escapes`: the mystery id, for this animation only). Reduced motion: a fade. Seen in the browser: dig, escape; fly and swim not yet (no such animal in the Africa test round).
 
 ## 4. The mystery's answers come alive (next)
 

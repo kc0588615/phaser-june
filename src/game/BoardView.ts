@@ -8,7 +8,9 @@
 // strip. Picked in the grid, its paper pulses blue; ruled out, a red marker cross and
 // a grey photo; a swap that would release it pops its pin and the card hangs loose;
 // a swap that would scout it (plan 045) shows the question gems on a strip above it.
-// A try at moving a card wiggles it on its pin; a released card flutters off.
+// A try at moving a card wiggles it on its pin; a scouted card hops (the same for any
+// answer); a released card leaves the way its animal moves, and the escaping mystery
+// bolts off.
 import Phaser from 'phaser';
 import {
     CARD_TILTS, gemTexture,
@@ -79,6 +81,8 @@ export class BoardView {
     private marked = new Set<number>();
     private previewed = new Set<number>();
     private scouting = new Map<number, GemType[]>();
+    /** The mystery's id, only so its card bolts off if it's released (an escape). */
+    private escapes: number | null = null;
     /** The animal picked in the evidence grid, and its card's pulse. */
     private selected: number | null = null;
     private selectPulse: Phaser.Tweens.Tween | null = null;
@@ -107,8 +111,9 @@ export class BoardView {
         }));
     }
 
-    /** Cards for the pinned animals, replacing any drawn before. Call before createBoard. */
-    createTiles(pins: readonly BoardPin[]): void {
+    /** Cards for the pinned animals, replacing any drawn before (`escapes`: the mystery). Call before createBoard. */
+    createTiles(pins: readonly BoardPin[], escapes: number | null = null): void {
+        this.escapes = escapes;
         for (const id of [...this.tiles.keys()]) this.destroyTile(id);
         this.pinned = new Set(pins.map(pin => cellKey(pin.cell)));
         this.marked.clear();
@@ -189,9 +194,13 @@ export class BoardView {
         this.showPreview({ release: [], scout: [] });
     }
 
-    /** Released animals' cards come loose: the pin pops out and the card flutters off. Their cells become ordinary cells. */
+    /**
+     * Released animals' cards come loose: the pin pops out and the card leaves the way the animal moves (flies up, sinks
+     * in a ripple, digs down in a puff of dust, or walks off the nearer side); the escaping mystery bolts off in a 💨.
+     * Their cells become ordinary cells.
+     */
     releaseTiles(ids: readonly number[]): Promise<void> {
-        const { gemSize } = this.layout;
+        const g = this.layout.gemSize;
         const leaving: Promise<void>[] = [];
         for (const id of ids) {
             const tile = this.tiles.get(id);
@@ -201,12 +210,67 @@ export class BoardView {
             if (id === this.selected) this.setSelected(null);
             tile.sway?.remove();
             tile.wiggle?.remove();
+            const { x, y } = this.positionOf(...tile.pin.cell);
+            const side = tile.pin.cell[0] < (this.cols - 1) / 2 ? -1 : 1;
+            const offBoard = (side < 0 ? this.layout.offset.x - g : this.layout.offset.x + (this.cols + 1) * g) - x; // to just past the nearer side
+            const exit = reducedMotion() ? 'fade' : id === this.escapes ? 'bolt' : tile.pin.exit ?? 'walk';
+            const fadeLate = { value: 0, ease: 'Expo.easeIn' };
+            const leave: Record<typeof exit, Omit<Phaser.Types.Tweens.TweenBuilderConfig, 'targets'>> = {
+                fade: { alpha: 0, duration: 200 },
+                fly: { x: `+=${g * 0.5 * -side}`, y: `-=${g * 2}`, angle: '-=15', scale: 0.6, alpha: fadeLate, duration: 550, ease: 'Quad.easeIn' },
+                swim: { y: `+=${g * 0.8}`, scaleY: 0.3, alpha: 0, duration: 500, ease: 'Sine.easeIn' },
+                dig: { y: `+=${g}`, scaleY: 0.05, alpha: fadeLate, duration: 450, ease: 'Quad.easeIn' },
+                walk: { x: `+=${offBoard}`, alpha: fadeLate, duration: 700, ease: 'Sine.easeIn' },
+                bolt: { x: `+=${offBoard + side * g * 2}`, alpha: fadeLate, duration: 380, ease: 'Back.easeIn' },
+            };
+            const extras: Phaser.Tweens.Tween[] = [];
+            if (exit === 'walk') extras.push(this.scene.tweens.add({ targets: tile.card, angle: '+=6', duration: 90, yoyo: true, repeat: 2, delay: 100 }));
+            if (exit === 'swim') this.ripple(x, y);
+            if (exit === 'dig') this.dust(x, y + g * 0.45);
+            if (exit === 'bolt') this.puff(x - side * g * 0.55, y);
             leaving.push(Promise.all([
-                this.tween({ targets: tile.pinHead, y: `-=${gemSize * 0.5}`, alpha: 0, duration: 200, ease: 'Quad.easeIn' }),
-                this.tween({ targets: tile.card, x: `+=${gemSize * 0.2}`, y: `+=${gemSize * 0.9}`, angle: '+=35', alpha: 0, delay: 100, duration: 450, ease: 'Quad.easeIn' }),
-            ]).then(() => { tile.card.destroy(); }));
+                this.tween({ targets: tile.pinHead, y: `-=${g * 0.5}`, alpha: 0, duration: 200, ease: 'Quad.easeIn' }),
+                this.tween({ targets: tile.card, delay: 100, ...leave[exit] }),
+            ]).then(() => {
+                for (const extra of extras) extra.remove();
+                tile.card.destroy();
+            }));
         }
         return Promise.all(leaving).then(() => undefined);
+    }
+
+    /** A move's own clear scouted this animal's answer: its card hops, the same for any answer (plan 046). */
+    peekTile(id: number): void {
+        const tile = this.tiles.get(id);
+        if (!tile || reducedMotion()) return;
+        this.scene.tweens.add({
+            targets: tile.card, y: tile.card.y - this.layout.gemSize * 0.14, duration: 130, yoyo: true, ease: 'Quad.easeOut',
+            onComplete: () => { if (this.tiles.get(id) === tile) this.drawTile(tile); },
+        });
+    }
+
+    /** A swimmer's exit: two rings spread where its card was. */
+    private ripple(x: number, y: number): void {
+        const g = this.layout.gemSize;
+        for (const delay of [100, 280]) {
+            const ring = this.scene.add.circle(x, y, g * 0.4).setStrokeStyle(Math.max(2, g * 0.05), 0x7dd3fc).setDepth(4).setScale(0.4).setAlpha(0);
+            this.scene.tweens.add({ targets: ring, scale: 1.5, alpha: { from: 0.9, to: 0 }, delay, duration: 520, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
+        }
+    }
+
+    /** A digger's exit: dust puffs out low on each side. */
+    private dust(x: number, y: number): void {
+        const g = this.layout.gemSize;
+        for (const dx of [-1, -0.5, 0.5, 1]) {
+            const speck = this.scene.add.circle(x + dx * g * 0.2, y, g * 0.09, 0xb08b5a).setDepth(6);
+            this.scene.tweens.add({ targets: speck, x: x + dx * g * 0.6, y: y - g * 0.15, scale: 1.8, alpha: 0, delay: 150, duration: 420, ease: 'Quad.easeOut', onComplete: () => speck.destroy() });
+        }
+    }
+
+    /** The escape's 💨, left behind where the card bolted from. */
+    private puff(x: number, y: number): void {
+        const text = this.scene.add.text(x, y, '💨', { fontSize: `${Math.round(this.layout.gemSize * 0.6)}px` }).setOrigin(0.5).setDepth(4); // behind the card
+        this.scene.tweens.add({ targets: text, scale: { from: 0.6, to: 1.4 }, alpha: { from: 1, to: 0 }, delay: 250, duration: 600, ease: 'Quad.easeOut', onComplete: () => text.destroy() });
     }
 
     /** A try at moving a card (swiped, or a gem swapped into it): it wiggles on its pin. */
