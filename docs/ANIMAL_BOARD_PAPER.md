@@ -43,7 +43,7 @@ The standard match-3 rules apply. Swapping two neighboring gems is a move only i
 
 **Toys** come from big matches: four in a line makes a *line gem* that clears its row or column; an L or T shape makes a *blast gem* that clears the 3×3 around it; five in a line makes a *color gem* that, swapped with any gem, clears every gem of that color. Two toys swapped together go off as one larger clear.
 
-**Animal tiles** are pinned. They never move, never match, and cannot be swapped. Gems fall past them, behind the photo frame. A line gem's clear passes behind a tile without removing it.
+**Animal tiles** are pinned. They never move, never match, and cannot be swapped. Gems fall past them, behind the photo frame. A line gem's clear passes behind a tile without removing it. Since plan 046 each tile is drawn as a paper photo card on a red pin, tilted and a little bigger than its cell, so it doesn't read as a gem; a swipe on it, or a gem swapped into it, wiggles it on its pin.
 
 ### 2.3 Clue orders
 
@@ -59,7 +59,7 @@ After its answer, a clue's gems still match and still count as clears next to an
 
 ### 2.5 Ruling out and releasing
 
-The core action is **Rule out**, a button in each suspect's field guide. Marking is free, instant and reversible until the animal leaves the board. A ruled-out animal wears a red stamp on its card and a red ring on its tile.
+The core action is **Rule out**, a button in each suspect's field guide. Marking is free, instant and reversible until the animal leaves the board. A ruled-out animal's card (on the board and in the grid) gets a red marker cross and a grey photo; when a tapped gem's swap would release it, its pin pops up and the card hangs loose.
 
 **Only ruled-out animals can be released.** A ruled-out animal is released, and hops off the board, when any gem next to its tile (up, down, left or right) is cleared, by any means: the player's match, a cascade, or a toy. Unmarked animals are never released, whatever happens around them. Its cell then becomes an ordinary cell that fills with gems.
 

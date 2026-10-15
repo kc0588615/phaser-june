@@ -2,7 +2,7 @@
 // suspects. A column per clue (its gem as the board draws it, and a short label);
 // the Mystery row, where each clue's gems fill its cell until the answer stamps it;
 // then a row per suspect with that animal's own answers and its number, the same
-// number its board tile wears. Comparing down a column is the player's job: during
+// number its board card wears (plan 046: the same pinned card, AnimalCard). Comparing down a column is the player's job: during
 // play nothing points at a contradiction. Plan 045: a suspect's answer stays "?"
 // until scouted (a move's clear of that clue's color next to its tile); tap a hidden
 // cell to pencil your own guess (yes, no, blank), never checked during play. An
@@ -15,16 +15,9 @@ import type { AnimalRound } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { columnLabel } from '@/clueGame/questionMatch';
-import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
 import { LARGE, SMALL } from '@/lib/motion';
+import { AnimalCard, TrapCard } from './AnimalCard';
 import { FaceIcon } from './FaceIcon';
-
-export function SuspectPhoto({ species, size = 120 }: { species: PoolSpecies | undefined; size?: number }) {
-  const [failed, setFailed] = useState(false);
-  if (!species?.photo || failed) return <span className="grid h-full w-full place-items-center text-m" aria-hidden="true">{species ? speciesBadge(species) : '?'}</span>;
-  // eslint-disable-next-line @next/next/no-img-element -- a small remote Commons thumbnail
-  return <img src={photoAt(species.photo.url, size)} alt="" loading="lazy" decoding="async" draggable={false} onError={() => setFailed(true)} className="h-full w-full object-cover" />;
-}
 
 const NEXT_PENCIL = { none: 'yes', yes: 'no', no: null } as const;
 /** A press this long on an animal's row is a long press (its field guide); the board's tiles use the same (BoardController). */
@@ -147,15 +140,14 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
         <tr data-mystery>
           <th scope="row" className="h-(--ev-row) p-0 text-left font-medium text-neutral-10">
             <span className="flex items-center gap-xs">
-              {review ? (
-                <span className="block h-(--ev-photo) w-(--ev-photo) shrink-0 overflow-hidden rounded-xs bg-neutral-3"><SuspectPhoto species={mystery} /></span>
-              ) : (
-                <span className="relative grid h-(--ev-photo) w-(--ev-photo) shrink-0 place-items-center rounded-xs bg-emphasis-icon text-m font-heavy text-on-emphasis-icon">
-                  <span aria-hidden="true">?</span>
-                  {/* The player's own marks, on the badge so the row keeps one line (a taller grid would shrink the board). */}
-                  {round.marked.length > 0 && <i className="absolute -right-xs -top-xxs grid h-4 min-w-4 place-items-center rounded-full bg-error px-xxs text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕{round.marked.length}</i>}
-                </span>
-              )}
+              <span className="block w-(--ev-photo) shrink-0 text-m">
+                {review ? <AnimalCard species={mystery} /> : (
+                  <TrapCard>
+                    {/* The player's own marks, on the card so the row keeps one line (a taller grid would shrink the board). */}
+                    {round.marked.length > 0 && <i className="absolute -right-xs -top-xxs grid h-4 min-w-4 place-items-center rounded-full bg-error px-xxs text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕{round.marked.length}</i>}
+                  </TrapCard>
+                )}
+              </span>
               <span className="min-w-0 text-s">
                 <span className="line-clamp-1">{review ? mystery?.commonName ?? 'Mystery' : 'Mystery'}</span>
                 {!review && round.marked.length > 0 && <span className="sr-only">{round.marked.length} ruled out</span>}
@@ -226,11 +218,9 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   <span
                     data-handle=""
                     style={{ transform: `translateX(${dx}px)`, transition: dx > 0 ? 'none' : 'transform 160ms ease-out' }}
-                    className={`relative z-10 block h-(--ev-photo) w-(--ev-photo) shrink-0 rounded-full ${marked ? 'outline outline-2 outline-offset-1 outline-error' : ''} ${hinted === id ? 'ev-nudge' : ''}`}
+                    className={`relative z-10 block w-(--ev-photo) shrink-0 ${hinted === id ? 'ev-nudge' : ''}`}
                   >
-                    <span className="block h-full w-full overflow-hidden rounded-full bg-neutral-3"><SuspectPhoto species={species} /></span>
-                    <i className="absolute -bottom-1 -left-1 grid h-4 w-4 place-items-center rounded-full bg-neutral-10 font-data text-xxs font-heavy not-italic leading-none text-neutral-1 ring-2 ring-neutral-1" aria-hidden="true">{i + 1}</i>
-                    {marked && <i className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-error text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕</i>}
+                    <AnimalCard species={species} number={i + 1} marked={marked} picked={picked} />
                   </span>
                   <span className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''}`} style={dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : undefined} lang="en">{name}</span>
                   {hinted === id && <span aria-hidden="true" className="ev-hint pointer-events-none absolute inset-y-0 left-[calc(var(--ev-photo)+8px)] right-0 flex items-center bg-neutral-1 text-xs font-medium text-error">Slide to rule out →</span>}

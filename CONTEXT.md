@@ -23,7 +23,7 @@ The animal the round secretly picked from the suspects; the player must find it.
 _Avoid_: answer, target
 
 **Suspect**:
-One of the 5 animals pinned on the board as photo tiles; the mystery animal is one of them. Players see them as "the animals".
+One of the 5 animals pinned on the board as photo cards (a polaroid on a red pin, plan 046); the mystery animal is one of them. Players see them as "the animals".
 _Avoid_: candidate, option
 
 **Look-alike**:

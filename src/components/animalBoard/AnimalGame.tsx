@@ -262,6 +262,18 @@ export function AnimalGame() {
   const hintId = useRef(0);
   const say = useCallback((text: ReactNode, own = true) => setHint({ id: ++hintId.current, text, seen: visibleLog.length, roundNo: roundNo ?? 0, own }), [visibleLog.length, roundNo]);
 
+  // Plan 046: the first try at moving an animal's card in a round says why it doesn't move.
+  const nudgedRound = useRef(0);
+  useEffect(() => {
+    const onNudge = () => {
+      if (!playing || !roundNo || nudgedRound.current === roundNo) return;
+      nudgedRound.current = roundNo;
+      say('📌 Animals are pinned in place. Swap the gems around them.');
+    };
+    EventBus.on('clue-board-nudge', onNudge);
+    return () => { EventBus.off('clue-board-nudge', onNudge); };
+  }, [playing, roundNo, say]);
+
   // The first gems into a question: say the whole question once, qualifiers and all.
   const started = useRef({ roundNo: 0, tags: new Set<string>() });
   useEffect(() => {
@@ -295,14 +307,14 @@ export function AnimalGame() {
     pencil(id, tag, value);
     if (value && pencilled.current !== roundNo) {
       pencilled.current = roundNo ?? 0;
-      say(<>Pencilled your guess for the {nameOf(id)}. <span className="text-neutral-7">Clear that color next to its tile to see the real answer.</span></>);
+      say(<>Pencilled your guess for the {nameOf(id)}. <span className="text-neutral-7">Clear that color next to its card to see the real answer.</span></>);
     }
   }, [pencil, roundNo, nameOf, say]);
 
   const rule = useCallback((id: number, ruledOut: boolean) => {
     markSuspect(id, ruledOut);
     setSelected(null);
-    say(ruledOut ? `You ruled out the ${nameOf(id)}. Clear a gem next to its tile to release it.` : `The ${nameOf(id)} is back in.`);
+    say(ruledOut ? `You ruled out the ${nameOf(id)}. Clear a gem next to its card to release it.` : `The ${nameOf(id)} is back in.`);
   }, [markSuspect, nameOf, say]);
 
   const latest = visibleLog.at(-1);

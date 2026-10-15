@@ -66,6 +66,15 @@
   font-display: swap;
 }
 
+/* Patrick Hand (OFL-1.1): the handwritten number on each animal's card (board, grid, sheets). Only digits and names. */
+@font-face {
+  font-family: "Patrick Hand";
+  src: url("/fonts/patrick-hand/PatrickHand-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Short screens (small phones, landscape): Clue Match compacts its rail. */
 @custom-variant short (@media (max-height: 740px));
 /* Game screen: the status line goes under the board on any phone at least 560px tall, even when the board has to
@@ -477,6 +486,43 @@ body {
   12%, 85% { opacity: 1; }
 }
 .ev-hint { animation: ev-hint 3.4s ease-in-out 0.4s both; }
+/* Plan 046: an animal's card (AnimalCard.tsx), the board tile's paper polaroid (BoardView.drawTile): paper, photo
+   window, a strip with the number in handwriting, a red pin at the top; tilted by its number. Fills its box's width.
+   The paper is the game's own colour (like the gems), the same in both modes. */
+.animal-card {
+  position: relative; display: flex; flex-direction: column; width: 100%; aspect-ratio: 1.08 / 1.06;
+  padding: 6% 6% 0; box-sizing: border-box; background: #f6f1e4; border-radius: 2px;
+  box-shadow: 1px 2px 3px rgb(0 0 0 / 45%); rotate: var(--tilt, 0deg); transform-origin: 50% 3%; container-type: inline-size;
+}
+.animal-card.is-picked { background: #bfe0ee; }
+.animal-card-photo { display: block; aspect-ratio: 0.95 / 0.69; overflow: hidden; background: #e4ded0; }
+.animal-card.is-out .animal-card-photo { filter: grayscale(1) brightness(0.85); }
+.animal-card-strip {
+  flex: 1; display: grid; place-items: center; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-family: "Patrick Hand", "Comic Sans MS", cursive; font-size: 27cqw; line-height: 1; color: #1b2a2f;
+}
+.animal-card-pin {
+  position: absolute; left: 50%; top: -6%; width: 20%; aspect-ratio: 1; translate: -50% 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff9b9b 0 18%, #d62828 45%, #6e0a0a 100%); box-shadow: 1px 2px 2px rgb(0 0 0 / 55%);
+}
+.animal-card-x { position: absolute; inset: 4% 4% 14%; width: 92%; height: 82%; pointer-events: none; }
+.animal-card-x path { fill: none; stroke: #e0262b; stroke-width: 9; stroke-linecap: round; }
+/* The mystery's card while playing: a camera-trap frame, corner marks and a red recording dot, no photo. */
+.trap-card {
+  position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: 1; border-radius: 3px;
+  background: #10181c; color: #8fb3a8; font-weight: 800; box-shadow: 1px 2px 3px rgb(0 0 0 / 45%);
+}
+.trap-card::before {
+  content: ""; position: absolute; inset: 12%;
+  background:
+    linear-gradient(currentColor, currentColor) top left / 30% 2px, linear-gradient(currentColor, currentColor) top left / 2px 30%,
+    linear-gradient(currentColor, currentColor) top right / 30% 2px, linear-gradient(currentColor, currentColor) top right / 2px 30%,
+    linear-gradient(currentColor, currentColor) bottom left / 30% 2px, linear-gradient(currentColor, currentColor) bottom left / 2px 30%,
+    linear-gradient(currentColor, currentColor) bottom right / 30% 2px, linear-gradient(currentColor, currentColor) bottom right / 2px 30%;
+  background-repeat: no-repeat;
+}
+.trap-card::after { content: ""; position: absolute; top: 14%; right: 16%; width: 12%; aspect-ratio: 1; border-radius: 50%; background: #e0262b; }
+
 /* The status line fades in each message it turns to. */
 @keyframes ev-fade {
   from { opacity: 0; transform: translateY(4px); }

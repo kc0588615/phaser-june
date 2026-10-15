@@ -16,7 +16,8 @@ import { Sheet } from '@/components/clueGame/Sheet';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
 import { backdropMotion, dialogMotion, drawerUpMotion, useOverlayPresence } from '@/lib/motion';
 import { currentTheme, setTheme } from '@/lib/theme';
-import { EvidenceGrid, SuspectPhoto } from './EvidenceGrid';
+import { AnimalCard } from './AnimalCard';
+import { EvidenceGrid } from './EvidenceGrid';
 
 export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v2';
 
@@ -49,7 +50,7 @@ export function SuspectSheet({ animal, species, round, pencil, onPencil, onMark,
         </button>
       ) : undefined}
     >
-      <span className="mb-xs block h-36 w-full overflow-hidden rounded-s bg-neutral-3"><SuspectPhoto species={species} size={330} /></span>
+      <span className="mx-auto mb-s mt-xs block w-36"><AnimalCard species={species} number={index + 1} size={330} marked={marked && !released} /></span>
       {released && <p className="m-0 mb-xs text-s font-medium text-neutral-7">Released: not the mystery.</p>}
       {marked && !released && <p className="m-0 mb-xs text-s font-medium text-error">Ruled out: it leaves the board when a gem next to it is cleared. If it&apos;s the mystery, it escapes!</p>}
       <h3 className={LABEL}>Its answers</h3>
@@ -199,7 +200,7 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
     <div className="fixed inset-0 z-[8300] flex items-end justify-center" {...presence} aria-label={`It was the ${animal.name}`}>
       <motion.div className="absolute inset-0 bg-neutral-10-transparent" aria-hidden="true" {...backdropMotion} />
       <motion.section className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-y-auto rounded-t-m bg-neutral-1 p-l pb-[max(var(--space-l),env(safe-area-inset-bottom))] text-s text-neutral-10 shadow-m" aria-label={`It was the ${animal.name}`} {...drawerUpMotion}>
-        <span className="mb-xs block h-44 w-full shrink-0 overflow-hidden rounded-s bg-neutral-3"><SuspectPhoto species={species} size={500} /></span>
+        <span className="mx-auto mb-s mt-xs block w-48 shrink-0 [&_.animal-card-strip]:text-[16cqw]"><AnimalCard species={species} caption={animal.name} size={330} /></span>
         <h2 className="m-0 text-m font-medium">{headline}</h2>
         <p className="m-0 mt-xxs text-s text-neutral-7">
           {end.outcome === 'found' ? `+${end.points} points · ${round.movesLeft} moves to spare` : 'A heart lost.'}
@@ -247,7 +248,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
         <ol className="m-0 flex list-decimal flex-col gap-xs pl-l text-s text-neutral-8 [&_b]:font-medium [&_b]:text-neutral-10">
           <li>Our camera trap caught a blur. It was one of the <b>{rules.suspects} animals</b> on the board. Find out which.</li>
           <li>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the grid at the top. A full question answers it about the mystery: <b>yes</b> or <b>no</b>.</li>
-          <li>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s tile and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</li>
+          <li>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</li>
           <li>Compare each animal&apos;s answers with the mystery&apos;s. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</li>
           <li>A ruled-out animal leaves the board when a gem next to it is cleared. Release every look-alike: the last one is your find. <b>Rule out the mystery and it escapes!</b></li>
           <li>Glowing purple <b>witness gems</b> give a note about the mystery and how many of the {rules.suspects} share it.</li>

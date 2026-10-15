@@ -5,6 +5,7 @@
 // faces on the gems, and 'clue-board-marks': a marked animal touched by a clear is
 // released (the rules decide the same from the same marks). A tapped tile picks its
 // animal ('clue-board-tile', or 'clue-board-tile-hold' for a long press); the animal picked in the grid pulses ('clue-board-select').
+// Plan 046: a try at moving a card wiggles it and says so ('clue-board-nudge').
 // Plan 045: 'clue-board-unscouted' says which answers each animal still hides, for the scouting preview.
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
@@ -70,6 +71,10 @@ export class ClueBoardScene extends Phaser.Scene {
             tileHold: ([x, y]) => {
                 const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
                 if (pin) EventBus.emit('clue-board-tile-hold', { id: pin[1] });
+            },
+            nudge: ([x, y]) => {
+                const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
+                if (pin) EventBus.emit('clue-board-nudge', { id: pin[1] });
             },
             onMoveResolved: () => {
                 this.reshuffleIfStuck();

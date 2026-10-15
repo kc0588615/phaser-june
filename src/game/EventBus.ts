@@ -15,6 +15,7 @@
 //   board -> page  'clue-board-tile'      the player tapped an animal's tile
 //   board -> page  'clue-board-tile-hold' the player long-pressed an animal's tile (its field guide)
 //   page  -> board 'clue-board-unscouted' each animal's question gems whose answer is still hidden (plan 045)
+//   board -> page  'clue-board-nudge'     the player tried to move an animal's card (it's pinned; plan 046)
 import Phaser from 'phaser';
 import type { Grid, Toys } from './BoardModel';
 import type { GemType } from './constants';
@@ -54,6 +55,8 @@ export interface EventPayloads {
     'clue-board-tile-hold': { id: number };
     /** Plan 045: per animal, the gem colors of the questions whose answer it still hides (the scouting preview). */
     'clue-board-unscouted': { unscouted: Array<[id: number, gems: GemType[]]> };
+    /** Plan 046: a swipe on an animal's card, or a gem swapped into one. The card wiggles on its pin. */
+    'clue-board-nudge': { id: number };
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

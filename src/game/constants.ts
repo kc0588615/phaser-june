@@ -10,6 +10,9 @@ export const GEM_COLOR: Partial<Record<GemType, string>> = {
     orange: '#ff8a3d', yellow: '#ffd84a', green: '#3fcf7c', blue: '#4aa6fb', black: '#a3aab1', purple: '#b27dff',
 };
 
+/** Plan 046: each animal card's tilt in degrees, by its number (board tiles and the page's cards alike). */
+export const CARD_TILTS = [-3, 2.5, -2, 3.5, -2.5] as const;
+
 export const GRID_COLS = 7 as const;
 export const GRID_ROWS = 7 as const;
 

@@ -1,14 +1,17 @@
 // BoardView: the board's sprites and every animation (swaps, swap-backs, toys going
 // off, clears, falling refills, resize tweens). It never decides the rules:
 // BoardController asks BoardModel what happened, then tells this class what to
-// animate. Plan 044: animals pinned on the board are photo tiles in a round frame;
-// gems fall past them; a ruled-out tile wears a red ring, the release preview an
-// amber one, the scouting preview (plan 045) the question gems it would show above
-// the tile, and a released tile hops off. Each tile carries its number from the
-// evidence grid, and the animal picked there gets a pulsing blue ring.
+// animate. Plan 044: animals pinned on the board sit on it as tiles; gems fall past
+// them. Plan 046: each tile is a paper card hung on a pin (one container at the pin,
+// so it swings around it), tilted a little and a bit bigger than its cell, so it
+// never reads as a gem. It carries its number from the evidence grid on its bottom
+// strip. Picked in the grid, its paper pulses blue; ruled out, a red marker cross and
+// a grey photo; a swap that would release it pops its pin and the card hangs loose;
+// a swap that would scout it (plan 045) shows the question gems on a strip above it.
+// A try at moving a card wiggles it on its pin; a released card flutters off.
 import Phaser from 'phaser';
 import {
-    gemTexture,
+    CARD_TILTS, gemTexture,
     TWEEN_DURATION_EXPLODE, TWEEN_DURATION_FALL_BASE, TWEEN_DURATION_FALL_PER_UNIT,
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SWAP, TWEEN_DURATION_LAYOUT_UPDATE,
     type GemType,
@@ -20,26 +23,36 @@ import { toyTexture } from './toyTextures';
 
 type Sprite = Phaser.GameObjects.Sprite;
 
-/** A pinned animal's look: a cream disc, its photo (or a badge) masked round, and a ring for marks and the preview. */
+/** A pinned animal's card (plan 046): one container at the pin holding the paper, photo (or badge), number, marks and scouting strip. */
 interface Tile {
     pin: BoardPin;
-    back: Phaser.GameObjects.Graphics;
+    card: Phaser.GameObjects.Container;
+    /** The card's shadow, paper and photo window. */
+    paper: Phaser.GameObjects.Graphics;
+    /** The paper's blue while the animal is picked in the grid (its alpha pulses). */
+    tint: Phaser.GameObjects.Graphics;
     face: Phaser.GameObjects.Image | Phaser.GameObjects.Text;
-    mask: Phaser.GameObjects.Graphics | null;
-    ring: Phaser.GameObjects.Graphics;
-    cross: Phaser.GameObjects.Text;
-    /** The animal's number in the evidence grid, on a disc at the tile's lower left (null: no number). */
-    tagBack: Phaser.GameObjects.Graphics;
+    /** A ruled-out photo's grey (WebGL only). */
+    grey: Phaser.FX.ColorMatrix | null;
+    /** The animal's number in the evidence grid, handwritten on the bottom strip (null: no number). */
     tag: Phaser.GameObjects.Text | null;
-    /** The scouting preview: the question gems a swap would scout here, on a strip above the photo. */
+    cross: Phaser.GameObjects.Graphics;
+    pinHead: Phaser.GameObjects.Graphics;
+    /** The scouting preview: the question gems a swap would scout here, on a strip above the card. */
     scoutBack: Phaser.GameObjects.Graphics;
     scout: Phaser.GameObjects.Image[];
+    /** The loose card's sway while a swap would release it, and the wiggle of a try at moving it. */
+    sway: Phaser.Tweens.Tween | null;
+    wiggle: Phaser.Tweens.Tween | null;
 }
 
 /** After a tap: the marked animals a swap from that gem would release, and each unmarked one's question gems it would scout. */
 export interface TilePreview { release: number[]; scout: Array<[id: number, gems: GemType[]]> }
 
 const cellKey = ([x, y]: readonly [number, number]) => `${x},${y}`;
+/** The cards' handwriting (globals.css @font-face). */
+const CARD_FONT = '"Patrick Hand", "Comic Sans MS", cursive';
+const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 export class BoardView {
     /** Sprites mirroring the model's grid, [x][y]. */
@@ -66,9 +79,8 @@ export class BoardView {
     private marked = new Set<number>();
     private previewed = new Set<number>();
     private scouting = new Map<number, GemType[]>();
-    /** The animal picked in the evidence grid, its ring, and the ring's pulse. */
+    /** The animal picked in the evidence grid, and its card's pulse. */
     private selected: number | null = null;
-    private selectRing: Phaser.GameObjects.Graphics | null = null;
     private selectPulse: Phaser.Tweens.Tween | null = null;
     /** Gem color -> the texture drawn for it this round (plan 044 faces); default gem_<color>. */
     private faces = new Map<GemType, string>();
@@ -95,7 +107,7 @@ export class BoardView {
         }));
     }
 
-    /** Photo tiles for the pinned animals, replacing any drawn before. Call before createBoard. */
+    /** Cards for the pinned animals, replacing any drawn before. Call before createBoard. */
     createTiles(pins: readonly BoardPin[]): void {
         for (const id of [...this.tiles.keys()]) this.destroyTile(id);
         this.pinned = new Set(pins.map(pin => cellKey(pin.cell)));
@@ -104,16 +116,16 @@ export class BoardView {
         this.scouting.clear();
         this.setSelected(null);
         for (const pin of pins) {
-            const back = this.scene.add.graphics().setDepth(5);
-            const ring = this.scene.add.graphics().setDepth(7);
-            const cross = this.scene.add.text(0, 0, '✕', { fontFamily: 'Arial Black, Arial, sans-serif', color: '#ffffff', stroke: '#b91c1c', strokeThickness: 6 })
-                .setOrigin(0.5).setDepth(8).setVisible(false);
-            const tagBack = this.scene.add.graphics().setDepth(8);
-            const tag = pin.tag === undefined ? null
-                : this.scene.add.text(0, 0, String(pin.tag), { fontFamily: 'Arial Black, Arial, sans-serif', color: '#08110d' }).setOrigin(0.5).setDepth(9);
+            const paper = this.scene.add.graphics();
+            const tint = this.scene.add.graphics().setAlpha(0);
+            const face = this.badge(pin);
+            const tag = pin.tag === undefined ? null : this.scene.add.text(0, 0, String(pin.tag), { fontFamily: CARD_FONT, color: '#1b2a2f' }).setOrigin(0.5);
+            const cross = this.scene.add.graphics();
+            const pinHead = this.scene.add.graphics();
+            const scoutBack = this.scene.add.graphics();
+            const card = this.scene.add.container(0, 0, [paper, tint, face, ...(tag ? [tag] : []), cross, pinHead, scoutBack]).setDepth(5);
             const key = `tile_${pin.id}`;
-            const scoutBack = this.scene.add.graphics().setDepth(8);
-            const tile: Tile = { pin, back, ring, cross, tagBack, tag, scoutBack, scout: [], mask: null, face: this.badge(pin) };
+            const tile: Tile = { pin, card, paper, tint, face, grey: null, tag, cross, pinHead, scoutBack, scout: [], sway: null, wiggle: null };
             this.tiles.set(pin.id, tile);
             if (this.scene.textures.exists(key)) this.usePhoto(tile, key);
             else if (pin.photo) {
@@ -124,43 +136,40 @@ export class BoardView {
             }
             this.drawTile(tile);
         }
+        // A number drawn before the handwriting loaded is in the fallback font: redraw it once it's in.
+        void document.fonts?.load('20px "Patrick Hand"').then(() => { for (const tile of this.tiles.values()) tile.tag?.updateText(); }).catch(() => undefined);
     }
 
-    /** The animal picked in the evidence grid: its tile wears a blue ring that pulses (steady with reduced motion). */
+    /** The animal picked in the evidence grid: its card's paper pulses blue (steady with reduced motion). */
     setSelected(id: number | null): void {
         this.selected = id;
         this.drawSelection();
     }
 
     private drawSelection(): void {
-        const tile = this.selected === null ? undefined : this.tiles.get(this.selected);
         this.selectPulse?.remove();
         this.selectPulse = null;
-        if (!tile) {
-            this.selectRing?.clear();
-            return;
-        }
-        const { gemSize } = this.layout;
-        const { x, y } = this.positionOf(...tile.pin.cell);
-        this.selectRing ??= this.scene.add.graphics().setDepth(7);
-        this.selectRing.clear().setAlpha(1).lineStyle(Math.max(3, gemSize * 0.09), 0x6fa8bc, 1).strokeCircle(x, y, gemSize * 0.52);
-        const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        if (!still) this.selectPulse = this.scene.tweens.add({ targets: this.selectRing, alpha: 0.25, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        for (const tile of this.tiles.values()) tile.tint.setAlpha(0);
+        const tile = this.selected === null ? undefined : this.tiles.get(this.selected);
+        if (!tile) return;
+        tile.tint.setAlpha(1);
+        if (!reducedMotion()) this.selectPulse = this.scene.tweens.add({ targets: tile.tint, alpha: 0.15, duration: 520, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
-    /** Ruled-out animals wear a red ring and a cross. */
+    /** Ruled-out animals' cards get a red marker cross and a grey photo. */
     setMarked(ids: readonly number[]): void {
         this.marked = new Set(ids);
         for (const tile of this.tiles.values()) this.drawTile(tile);
     }
 
-    /** The preview: the marked tiles a swap would release wear an amber ring; the ones it would scout show the question gems. */
+    /** The preview: the marked cards a swap would release hang loose from a popped pin; the ones it would scout show the question gems. */
     showPreview({ release, scout }: TilePreview): void {
         this.previewed = new Set(release);
         this.scouting = new Map(scout);
         for (const tile of this.tiles.values()) {
             for (const icon of tile.scout) icon.destroy();
-            tile.scout = (this.scouting.get(tile.pin.id) ?? []).map(gem => this.scene.add.image(0, 0, this.faces.get(gem) ?? gemTexture(gem)).setDepth(9));
+            tile.scout = (this.scouting.get(tile.pin.id) ?? []).map(gem => this.scene.add.image(0, 0, this.faces.get(gem) ?? gemTexture(gem)));
+            tile.card.add(tile.scout);
             this.drawTile(tile);
         }
     }
@@ -180,23 +189,48 @@ export class BoardView {
         this.showPreview({ release: [], scout: [] });
     }
 
-    /** Released animals hop off the board; their cells become ordinary cells. */
+    /** Released animals' cards come loose: the pin pops out and the card flutters off. Their cells become ordinary cells. */
     releaseTiles(ids: readonly number[]): Promise<void> {
-        const hops: Promise<void>[] = [];
+        const { gemSize } = this.layout;
+        const leaving: Promise<void>[] = [];
         for (const id of ids) {
             const tile = this.tiles.get(id);
             if (!tile) continue;
             this.tiles.delete(id);
             this.pinned.delete(cellKey(tile.pin.cell));
-            const parts = [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, ...(tile.tag ? [tile.tag] : []), tile.scoutBack, ...tile.scout];
             if (id === this.selected) this.setSelected(null);
-            tile.face.clearMask();
-            tile.mask?.destroy();
-            hops.push(this.tween({
-                targets: parts, y: `-=${this.layout.gemSize * 0.9}`, alpha: 0, duration: 420, ease: 'Back.easeIn',
-            }).then(() => { for (const part of parts) part.destroy(); }));
+            tile.sway?.remove();
+            tile.wiggle?.remove();
+            leaving.push(Promise.all([
+                this.tween({ targets: tile.pinHead, y: `-=${gemSize * 0.5}`, alpha: 0, duration: 200, ease: 'Quad.easeIn' }),
+                this.tween({ targets: tile.card, x: `+=${gemSize * 0.2}`, y: `+=${gemSize * 0.9}`, angle: '+=35', alpha: 0, delay: 100, duration: 450, ease: 'Quad.easeIn' }),
+            ]).then(() => { tile.card.destroy(); }));
         }
-        return Promise.all(hops).then(() => undefined);
+        return Promise.all(leaving).then(() => undefined);
+    }
+
+    /** A try at moving a card (swiped, or a gem swapped into it): it wiggles on its pin. */
+    wiggleTile([x, y]: Cell): void {
+        const tile = [...this.tiles.values()].find(({ pin: { cell } }) => cell[0] === x && cell[1] === y);
+        if (!tile || tile.sway || reducedMotion()) return;
+        const tilt = this.tiltOf(tile);
+        tile.wiggle?.remove();
+        tile.wiggle = this.scene.tweens.addCounter({
+            from: 0, to: 1, duration: 420,
+            onUpdate: tween => { const t = tween.getValue() ?? 1; tile.card.setAngle(tilt + 7 * Math.sin(t * Math.PI * 3) * (1 - t)); },
+            onComplete: () => { tile.card.setAngle(tilt); tile.wiggle = null; },
+        });
+    }
+
+    /** A gem swapped into a card bumps it and comes back. */
+    bumpGem([x, y]: Cell, [tx, ty]: Cell): void {
+        const sprite = this.spriteAt(x, y);
+        if (!sprite) return;
+        const home = this.positionOf(x, y);
+        const reach = this.layout.gemSize * 0.3;
+        this.stopTweens(sprite);
+        sprite.setPosition(home.x, home.y); // from home, even when it cuts a bump short
+        void this.tween({ targets: sprite, x: home.x + (tx - x) * reach, y: home.y + (ty - y) * reach, duration: 110, yoyo: true, ease: 'Quad.easeOut' });
     }
 
     /** The gems a big match turned into toys change look, with a small pop. */
@@ -265,8 +299,6 @@ export class BoardView {
         for (const id of [...this.tiles.keys()]) this.destroyTile(id);
         this.pinned.clear();
         this.selectPulse?.remove();
-        this.selectRing?.destroy();
-        this.selectRing = null;
     }
 
     /** Tweens the sprites to a new gem size and offset after a resize. */
@@ -384,8 +416,7 @@ export class BoardView {
         this.hint.setAlpha(1)
             .fillStyle(0xfde68a, 0.16).fillRoundedRect(left, top, w, h, gemSize * 0.22)
             .lineStyle(Math.max(2, gemSize * 0.06), 0xfde68a, 1).strokeRoundedRect(left, top, w, h, gemSize * 0.22);
-        const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        if (!still) this.hintPulse = this.scene.tweens.add({ targets: this.hint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        if (!reducedMotion()) this.hintPulse = this.scene.tweens.add({ targets: this.hint, alpha: 0.3, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
 
     /** The swap the idle hint outlines (dev bridge). */
@@ -439,53 +470,90 @@ export class BoardView {
         this.sprites[x][y] = sprite;
     }
 
-    /** The tile's look at its cell for the current layout, marks and preview. */
+    /** The card at its cell for the current layout, marks and preview. Local coordinates put the pin at 0,0. */
     private drawTile(tile: Tile): void {
-        const { gemSize } = this.layout;
+        const g = this.layout.gemSize;
+        const [w, h, pad, photoH] = [g * 1.08, g * 1.06, g * 0.065, g * 0.69];
+        const photoW = w - 2 * pad;
+        const [left, top] = [-w / 2, -g * 0.035];
+        const corner = g * 0.025;
         const { x, y } = this.positionOf(...tile.pin.cell);
-        const radius = gemSize * 0.46;
-        const inner = radius * 0.84;
-        tile.back.clear().fillStyle(0xf5efe1, 1).fillCircle(x, y, radius);
-        if (tile.face instanceof Phaser.GameObjects.Image) {
-            const scale = Math.max((inner * 2) / tile.face.width, (inner * 2) / tile.face.height);
-            tile.face.setPosition(x, y).setScale(scale);
-            tile.mask?.clear().fillStyle(0xffffff).fillCircle(x, y, inner);
-        } else {
-            tile.face.setPosition(x, y).setFontSize(Math.round(gemSize * 0.42));
-        }
+        tile.card.setPosition(x, y - top - h / 2);
+        tile.paper.clear()
+            .fillStyle(0x000000, 0.18).fillRoundedRect(left + g * 0.01, top + g * 0.035, w + g * 0.02, h + g * 0.02, corner)
+            .fillStyle(0x000000, 0.3).fillRoundedRect(left + g * 0.02, top + g * 0.045, w, h, corner)
+            .fillStyle(0xf6f1e4, 1).fillRoundedRect(left, top, w, h, corner);
+        tile.paper.fillStyle(0xe4ded0, 1).fillRect(left + pad, top + pad, photoW, photoH);
+        tile.tint.clear().fillStyle(0xbfe0ee, 1).fillRoundedRect(left, top, w, h, corner);
+        const photoY = top + pad + photoH / 2;
         const marked = this.marked.has(tile.pin.id);
-        tile.ring.clear().lineStyle(Math.max(3, gemSize * 0.07), marked ? 0xef4444 : 0xf5efe1, 1).strokeCircle(x, y, inner + gemSize * 0.03);
-        if (this.previewed.has(tile.pin.id)) tile.ring.lineStyle(Math.max(3, gemSize * 0.08), 0xfde68a, 1).strokeCircle(x, y, radius + gemSize * 0.04);
-        tile.cross.setPosition(x + radius * 0.62, y - radius * 0.62).setFontSize(Math.round(gemSize * 0.3)).setVisible(marked);
-        if (tile.tag) {
-            const at = { x: x - radius * 0.66, y: y + radius * 0.66 };
-            tile.tagBack.clear().fillStyle(0xf3f1e8, 1).fillCircle(at.x, at.y, gemSize * 0.17)
-                .lineStyle(Math.max(1.5, gemSize * 0.035), 0x08110d, 1).strokeCircle(at.x, at.y, gemSize * 0.17);
-            tile.tag.setPosition(at.x, at.y).setFontSize(Math.round(gemSize * 0.22));
+        if (tile.face instanceof Phaser.GameObjects.Image) {
+            const { width, height } = tile.face.frame;
+            const ratio = photoW / photoH;
+            const cropW = Math.min(width, height * ratio);
+            const cropH = cropW / ratio;
+            tile.face.setCrop((width - cropW) / 2, (height - cropH) / 2, cropW, cropH).setScale(photoW / cropW).setPosition(0, photoY);
+            if (marked && !tile.grey && tile.face.preFX) {
+                tile.grey = tile.face.preFX.addColorMatrix();
+                tile.grey.grayscale(1).brightness(0.85, true);
+            }
+            else if (!marked && tile.grey) { tile.face.preFX?.clear(); tile.grey = null; }
+        } else {
+            tile.face.setPosition(0, photoY).setFontSize(Math.round(g * 0.42));
+        }
+        tile.tag?.setPosition(0, top + pad + photoH + (h - pad - photoH) / 2).setFontSize(Math.round(g * 0.26));
+        const ink = Math.max(3, g * 0.09);
+        const [x0, y0, x1, y1] = [left + w * 0.14, top + h * 0.12, left + w * 0.86, top + h * 0.84];
+        tile.cross.clear().setVisible(marked).lineStyle(ink, 0xe0262b, 1).lineBetween(x0, y0, x1, y1).lineBetween(x1, y0, x0, y1)
+            .fillStyle(0xe0262b, 1).fillCircle(x0, y0, ink / 2).fillCircle(x1, y1, ink / 2).fillCircle(x1, y0, ink / 2).fillCircle(x0, y1, ink / 2);
+        // A swap would release it: the pin pops up, bigger, and the card hangs loose and sways.
+        const loose = this.previewed.has(tile.pin.id);
+        const r = g * (loose ? 0.12 : 0.1);
+        const lift = loose ? -g * 0.1 : 0;
+        tile.pinHead.clear()
+            .fillStyle(0x000000, 0.4).fillCircle(g * (loose ? 0.035 : 0.015), lift + g * (loose ? 0.07 : 0.03), r)
+            .fillStyle(0x6e0a0a, 1).fillCircle(0, lift, r)
+            .fillStyle(0xd62828, 1).fillCircle(-r * 0.12, lift - r * 0.12, r * 0.86)
+            .fillStyle(0xff9b9b, 1).fillCircle(-r * 0.35, lift - r * 0.4, r * 0.28);
+        const angle = this.tiltOf(tile) + (loose ? 8 : 0);
+        if (!loose) {
+            tile.sway?.remove();
+            tile.sway = null;
+            if (!tile.wiggle) tile.card.setAngle(angle);
+        } else if (!tile.sway) {
+            tile.wiggle?.remove();
+            tile.wiggle = null;
+            tile.card.setAngle(angle);
+            if (!reducedMotion()) tile.sway = this.scene.tweens.add({ targets: tile.card, angle: angle + 5, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         }
         tile.scoutBack.clear();
         if (tile.scout.length > 0) {
-            const size = gemSize * 0.34;
+            const size = g * 0.34;
             const step = size * 1.05;
-            const top = y - radius * 0.72;
+            const mid = top - size * 0.3; // over the card's top edge
             const width = step * tile.scout.length + size * 0.25;
-            tile.scoutBack.fillStyle(0x06121a, 0.85).fillRoundedRect(x - width / 2, top - size * 0.62, width, size * 1.24, size * 0.5)
-                .lineStyle(Math.max(1.5, gemSize * 0.035), 0x7dd3fc, 1).strokeRoundedRect(x - width / 2, top - size * 0.62, width, size * 1.24, size * 0.5);
-            tile.scout.forEach((icon, i) => icon.setPosition(x + (i - (tile.scout.length - 1) / 2) * step, top).setScale(icon.width ? size / icon.width : 1));
+            tile.scoutBack.fillStyle(0x06121a, 0.85).fillRoundedRect(-width / 2, mid - size * 0.62, width, size * 1.24, size * 0.5)
+                .lineStyle(Math.max(1.5, g * 0.035), 0x7dd3fc, 1).strokeRoundedRect(-width / 2, mid - size * 0.62, width, size * 1.24, size * 0.5);
+            tile.scout.forEach((icon, i) => icon.setPosition((i - (tile.scout.length - 1) / 2) * step, mid).setScale(icon.width ? size / icon.width : 1));
         }
     }
 
-    /** The fallback face: the animal's badge (an emoji or its initials) on the cream disc. */
-    private badge(pin: BoardPin): Phaser.GameObjects.Text {
-        return this.scene.add.text(0, 0, pin.label, { fontFamily: 'Arial, sans-serif', color: '#06121a' }).setOrigin(0.5).setDepth(6);
+    private tiltOf(tile: Tile): number {
+        return CARD_TILTS[(tile.pin.tag ?? tile.pin.id) % CARD_TILTS.length];
     }
 
-    /** Swap the badge for the loaded photo, masked to a circle. */
+    /** The fallback face: the animal's badge (an emoji or its initials) in the photo window. */
+    private badge(pin: BoardPin): Phaser.GameObjects.Text {
+        return this.scene.add.text(0, 0, pin.label, { fontFamily: 'Arial, sans-serif', color: '#06121a' }).setOrigin(0.5);
+    }
+
+    /** Swap the badge for the loaded photo, cropped to the card's window in drawTile. */
     private usePhoto(tile: Tile, key: string): void {
+        const at = tile.card.getIndex(tile.face);
         tile.face.destroy();
-        tile.face = this.scene.add.image(0, 0, key).setDepth(6);
-        tile.mask = this.scene.make.graphics({}, false);
-        tile.face.setMask(tile.mask.createGeometryMask());
+        tile.face = this.scene.add.image(0, 0, key);
+        tile.card.addAt(tile.face, at);
+        tile.grey = null;
         this.drawTile(tile);
     }
 
@@ -493,9 +561,9 @@ export class BoardView {
         const tile = this.tiles.get(id);
         if (!tile) return;
         this.tiles.delete(id);
-        tile.face.clearMask();
-        tile.mask?.destroy();
-        for (const part of [tile.back, tile.face, tile.ring, tile.cross, tile.tagBack, tile.tag, tile.scoutBack, ...tile.scout]) part?.destroy();
+        tile.sway?.remove();
+        tile.wiggle?.remove();
+        tile.card.destroy(); // and everything on it
     }
 
     private positionOf(x: number, y: number): { x: number; y: number } {

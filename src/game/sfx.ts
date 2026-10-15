@@ -78,6 +78,8 @@ export const sfx = {
   toy(): void { tone(660, { duration: 0.08 }); tone(990, { duration: 0.12, delay: 0.07 }); },
   /** A toy goes off. */
   blast(): void { tone(260, { type: 'sawtooth', duration: 0.22, volume: 0.05, slide: 90 }); },
+  /** An animal's card is pinned: a soft double tick as it wiggles. */
+  pinned(): void { tone(1320, { type: 'triangle', duration: 0.03, volume: 0.04 }); tone(990, { type: 'triangle', duration: 0.04, volume: 0.035, delay: 0.06 }); },
   /** A swap that makes no match slides back. */
   swapBack(): void { tone(180, { duration: 0.06, volume: 0.05 }); },
   /** An answer: up for Yes, down for No (neither one is a mistake). */

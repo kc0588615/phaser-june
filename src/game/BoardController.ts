@@ -4,7 +4,8 @@
 // move's, then every cascade) is reported and animated; any other swap slides
 // back and costs nothing. On the keyboard, arrows move a cursor and Shift+arrows
 // swap its gem that way; Escape drops a tapped gem. After HINT_MS with no input
-// the board outlines a swap (the idle hint). Rules live in BoardModel,
+// the board outlines a swap (the idle hint). Animals' cards never move (plan 046):
+// swiping one, or swapping a gem into one, wiggles it on its pin (a nudge). Rules live in BoardModel,
 // visuals in BoardView; the scene says what a match means.
 import Phaser from 'phaser';
 import { isNeighbor, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
@@ -28,6 +29,8 @@ export interface BoardHooks {
     tileTap?(cell: Cell): void;
     /** An animal's tile was long-pressed (plan 045: its field guide). */
     tileHold?(cell: Cell): void;
+    /** The player tried to move an animal's card (plan 046). */
+    nudge?(cell: Cell): void;
     /** The move and every cascade have settled. */
     onMoveResolved(): void;
     /** What a keyboard action did, in words (for screen readers). */
@@ -58,8 +61,11 @@ export class BoardController {
     locked = false;
     private resolving = false;
     private press: Press | null = null;
-    /** A pointer pressed on an animal tile: a tap when let go, a long press (`held`) once HOLD_MS passes. */
-    private tilePress: { cell: Cell; timer: Phaser.Time.TimerEvent; held: boolean } | null = null;
+    /**
+     * A pointer pressed on an animal tile: a tap when let go, a long press (`held`) once HOLD_MS passes, a nudge once it
+     * moves like a swipe. `swapFrom`: a tapped gem next to it, so letting go is a swap into the card (a nudge), not a tap.
+     */
+    private tilePress: { cell: Cell; timer: Phaser.Time.TimerEvent; held: boolean; nudged: boolean; pointerX: number; pointerY: number; swapFrom: Cell | null } | null = null;
     /** Keyboard cursor, and the gem a tap picked (outlined the same way). */
     private cursor: Cell = [Math.floor(GRID_COLS / 2), Math.floor(GRID_ROWS / 2)];
     /** The cursor's gem was tapped and waits for a neighbor tap. */
@@ -116,7 +122,11 @@ export class BoardController {
         if (this.model.isPinned(cell)) { // an animal tile is never swapped; tapping it picks the animal, even mid-move
             if (!this.ready) return;
             this.tilePress?.timer.remove();
-            const tilePress = { cell, held: false, timer: this.scene.time.delayedCall(HOLD_MS, () => { tilePress.held = true; this.hooks.tileHold?.(cell); }) };
+            const tilePress = {
+                cell, held: false, nudged: false, pointerX: pointer.x, pointerY: pointer.y,
+                swapFrom: this.picked && isNeighbor(this.cursor, cell) ? this.cursor : null, // a tapped gem, then the card next to it
+                timer: this.scene.time.delayedCall(HOLD_MS, () => { tilePress.held = true; this.hooks.tileHold?.(cell); }),
+            };
             this.tilePress = tilePress;
             return;
         }
@@ -125,8 +135,16 @@ export class BoardController {
         this.press = { cell, pointerX: pointer.x, pointerY: pointer.y };
     }
 
-    /** Past the threshold, a press becomes a swipe: swap toward the neighbor that way. */
+    /** Past the threshold, a press becomes a swipe: swap toward the neighbor that way. On a card, a nudge. */
     private onPointerMove(pointer: Phaser.Input.Pointer): void {
+        const tilePress = this.tilePress;
+        if (tilePress && !tilePress.held && !tilePress.nudged && pointer.isDown
+            && Math.max(Math.abs(pointer.x - tilePress.pointerX), Math.abs(pointer.y - tilePress.pointerY)) >= this.layout.gemSize * SWIPE_THRESHOLD) {
+            tilePress.nudged = true; // a swipe, never a tap, even mid-move when it does nothing
+            tilePress.timer.remove();
+            if (this.canMove) this.nudge(tilePress.cell);
+            return;
+        }
         const press = this.press;
         if (!press) return;
         if (!pointer.isDown) {
@@ -143,13 +161,20 @@ export class BoardController {
         void this.trySwap({ from: press.cell, to });
     }
 
-    /** A press that never became a swipe is a tap. On an animal tile, a tap unless it became a long press. */
+    /** A press that never became a swipe is a tap. On an animal tile, a tap unless it became a long press or a nudge (or follows a tapped gem next to it). */
     private onPointerUp(): void {
         const tilePress = this.tilePress;
         if (tilePress) {
             this.tilePress = null;
             tilePress.timer.remove();
-            if (!tilePress.held) this.hooks.tileTap?.(tilePress.cell);
+            if (tilePress.held || tilePress.nudged) return;
+            const from = tilePress.swapFrom;
+            if (from && this.picked && this.canMove && from[0] === this.cursor[0] && from[1] === this.cursor[1]) {
+                this.drop();
+                this.nudge(tilePress.cell, from);
+            } else {
+                this.hooks.tileTap?.(tilePress.cell);
+            }
             return;
         }
         const press = this.press;
@@ -218,8 +243,14 @@ export class BoardController {
     /** Make a swap that matches (or sets a toy off), or show one that doesn't sliding back. True when the move was made. */
     private async trySwap(move: Move): Promise<boolean> {
         if (!this.canMove || !this.model.onBoard(move.to)) return false;
-        if (this.model.isPinned(move.from) || this.model.isPinned(move.to)) {
-            this.hooks.announce('An animal is there');
+        if (this.model.isPinned(move.to)) {
+            this.nudge(move.to, this.model.isPinned(move.from) ? undefined : move.from);
+            this.hooks.announce('Pinned in place', move.to);
+            return false;
+        }
+        if (this.model.isPinned(move.from)) {
+            this.nudge(move.from);
+            this.hooks.announce('Pinned in place', move.from);
             return false;
         }
         if (!this.model.canSwap(move)) {
@@ -235,6 +266,14 @@ export class BoardController {
         }
         await this.resolve(move);
         return true;
+    }
+
+    /** A try at moving an animal's card: it wiggles on its pin, and a gem swapped into it (`from`) bumps back. */
+    private nudge(card: Cell, from?: Cell): void {
+        if (from) this.view.bumpGem(from, card);
+        this.view.wiggleTile(card);
+        sfx.pinned();
+        this.hooks.nudge?.(card);
     }
 
     /** Swap, then animate each explode phase. A new board mid-move (the next round) ends it at the next pause. */
