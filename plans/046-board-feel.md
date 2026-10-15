@@ -1,6 +1,6 @@
 # 046: Board feel (pinned animal cards, then the deductions come alive)
 
-On `main`, over 044/045. Written 2026-10-14/15. Steps 1–2 built 2026-10-15 (0c141511), step 3 built 2026-10-15; step 4 next.
+On `main`, over 044/045. Written 2026-10-14/15. Steps 1–2 built 2026-10-15 (0c141511), step 3 built 2026-10-15 (0169af87, deployed with 1–2); step 4 built 2026-10-15.
 
 ## Problem
 
@@ -20,6 +20,6 @@ A try at moving a card wiggles it on its pin (no move spent, no pick): swipe a c
 
 A card whose answer the move's own clear scouts hops (same for yes and no; hop/shake would read as right/wrong), decided in `ClueBoardScene.reportMatches` with the rules' own test. A released card leaves the way its animal moves (`BoardPin.exit`, `exitOf` in useAnimalSession): fly (Chiroptera or `glider`) rises away, swim (`fully_aquatic`/`swimmer`) sinks in ripples, dig (`burrower`) squashes into the board with dust, walk waddles off the nearer side. The escaping mystery bolts off leaving a 💨 (setup's `escapes`: the mystery id, for this animation only). Reduced motion: a fade. Seen in the browser: dig, escape; fly and swim not yet (no such animal in the Africa test round).
 
-## 4. The mystery's answers come alive (next)
+## 4. The mystery's answers come alive (built)
 
-When an order completes, the page sends the tag and answer; on yes, a cheap emoji effect: `diet:insects` 🐜 march, `activity:night` dusk, `birth:eggs` 🥚 drop, `system:marine`/`freshwater` ripple, `covering:spines` quills. 4–6 effects, still under reduced motion. Only the mystery's own earned answer, so it points and never concludes.
+When the mystery's answer stamps in the grid, the page sends `clue-board-answer` {tag, yes} (AnimalGame, with the answer sound); on Yes the board acts it out for ~2 s with emoji (`src/game/answerEffects.ts`): `diet:insects` 🐜 march along a grid line, `activity:night` dusk + 🌙 + ✨, `activity:day` warm wash + ☀️ rising, `birth:eggs` 🥚 drop and bounce, `system:freshwater`/`system:marine`/`habitat:wetlands` ripples + 💧, `diet:plants` 🍃 drift down. Cosmetic only, input passes through. Reduced motion: the emoji shows in the middle and fades. A resumed round doesn't replay answers already earned (sounds too). Dev bridge `__cc.answer(tag)` plays one. Only the mystery's own earned answer, so it points and never concludes.

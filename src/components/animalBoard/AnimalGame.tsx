@@ -245,7 +245,8 @@ export function AnimalGame() {
   useEffect(() => {
     if (!session) return;
     const { roundNo: current, round: { log, orders } } = session;
-    if (heard.current.roundNo !== current) heard.current = { roundNo: current, logLength: 0, answers: new Set() };
+    // A new round, or this one resumed after a reload: answers already earned don't sound or play again.
+    if (heard.current.roundNo !== current) heard.current = { roundNo: current, logLength: log.length, answers: new Set(orders.filter(order => order.answer !== null).map(order => order.tag)) };
     for (const entry of log.slice(heard.current.logLength)) {
       if (entry.kind === 'found') sfx.solve();
       if (entry.kind === 'escaped') sfx.wrong();
@@ -255,6 +256,7 @@ export function AnimalGame() {
       if (!answerShown(order.tag) || heard.current.answers.has(order.tag)) continue;
       heard.current.answers.add(order.tag);
       sfx.answer(order.answer === 'yes');
+      EventBus.emit('clue-board-answer', { tag: order.tag, yes: order.answer === 'yes' });
     }
   }, [session, answerShown]);
 

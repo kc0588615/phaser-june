@@ -68,3 +68,4 @@ Write `docs/playtests/YYYY-MM-DD-<topic>.md`: what you played (seed, place), the
 | `events(n)` | last n EventBus events |
 | `speed(x)` | animation time scale |
 | `cellCenter(x, y)` | page coordinates of a board cell |
+| `answer(tag)` | plays the board's effect for a Yes to that question (`diet:insects`, `activity:night`, `activity:day`, `birth:eggs`, `system:freshwater`, `system:marine`, `habitat:wetlands`, `diet:plants`; plan 046) |

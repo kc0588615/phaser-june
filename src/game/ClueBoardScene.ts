@@ -5,7 +5,7 @@
 // faces on the gems, and 'clue-board-marks': a marked animal touched by a clear is
 // released (the rules decide the same from the same marks). A tapped tile picks its
 // animal ('clue-board-tile', or 'clue-board-tile-hold' for a long press); the animal picked in the grid pulses ('clue-board-select').
-// Plan 046: a try at moving a card wiggles it and says so ('clue-board-nudge').
+// Plan 046: a try at moving a card wiggles it and says so ('clue-board-nudge'); a Yes about the mystery is acted out ('clue-board-answer').
 // Plan 045: 'clue-board-unscouted' says which answers each animal still hides, for the scouting preview.
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
@@ -17,6 +17,7 @@ import { sfx } from './sfx';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
 import { makeFaceTextures } from './faceTextures';
 import { makeToyTextures } from './toyTextures';
+import { playAnswerEffect } from './answerEffects';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
 import { DEFAULT_RULES } from '@/clueGame/questionMatch';
 
@@ -95,6 +96,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-marks', this.onMarks, this);
         EventBus.on('clue-board-select', this.onSelect, this);
         EventBus.on('clue-board-unscouted', this.onUnscouted, this);
+        EventBus.on('clue-board-answer', this.onAnswer, this);
         window.addEventListener('pointerdown', this.onPageInput, true);
         window.addEventListener('keydown', this.onPageInput, true);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
@@ -146,6 +148,11 @@ export class ClueBoardScene extends Phaser.Scene {
     private onUnscouted({ unscouted }: EventPayloads['clue-board-unscouted']): void {
         this.unscouted = new Map(unscouted);
         this.controller?.refreshPreview();
+    }
+
+    /** Plan 046: a Yes about the mystery, acted out on the board for a moment. */
+    private onAnswer({ tag, yes }: EventPayloads['clue-board-answer']): void {
+        if (yes) playAnswerEffect(this, this.layout, tag);
     }
 
     /**
@@ -375,6 +382,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.off('clue-board-marks', this.onMarks, this);
         EventBus.off('clue-board-select', this.onSelect, this);
         EventBus.off('clue-board-unscouted', this.onUnscouted, this);
+        EventBus.off('clue-board-answer', this.onAnswer, this);
         window.removeEventListener('pointerdown', this.onPageInput, true);
         window.removeEventListener('keydown', this.onPageInput, true);
         this.scale?.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);

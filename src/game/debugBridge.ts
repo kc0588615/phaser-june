@@ -55,7 +55,7 @@ const LOGGED: Record<keyof EventPayloads, true> = {
   'current-scene-ready': true, 'gems-matched': true, 'clue-board-setup': true, 'clue-board-lock': true, 'clue-board-shuffled': true,
   'clue-board-key': true, 'clue-board-announce': true, 'clue-board-marks': true, 'clue-board-settled': true,
   'clue-board-select': true, 'clue-board-tile': true, 'clue-board-tile-hold': true, 'clue-board-unscouted': true,
-  'clue-board-nudge': true,
+  'clue-board-nudge': true, 'clue-board-answer': true,
 };
 
 let scene: DebugScene | null = null;
@@ -222,6 +222,8 @@ function install(): void {
     waitIdle,
     events: (n = 20) => log.slice(-n),
     speed,
+    /** Plan 046: play the board's effect for a Yes to this question (e.g. 'diet:insects'), as if it just landed. */
+    answer: (tag: string) => EventBus.emit('clue-board-answer', { tag, yes: true }),
   };
 }
 
