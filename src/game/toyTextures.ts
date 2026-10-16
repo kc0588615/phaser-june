@@ -2,7 +2,7 @@
 // board scene starts: a line gem is its gem with a white arrow at each end of the line
 // it clears, a blast gem its gem in a burst of eight white spikes (no other piece is
 // that shape; rings mean animals and marks), and the color gem a disc of all five
-// matching gems' colors. Arrows and spikes keep to the rim, clear of the gem's face.
+// matching gems' colors. Arrows and spikes sit on the rim, clear of the gem's face.
 // Same 128px size as the gem icons, so sprites scale alike.
 import Phaser from 'phaser';
 import { BOARD_GEMS } from '@/clueGame/animalBoard';
@@ -16,10 +16,11 @@ export const toyTexture = (gem: GemType, special: Special): string => (special =
 function drawLine(g: Phaser.GameObjects.Graphics, across: boolean): void {
   // Drawn as a row, then flipped for a column.
   const at = (x: number, y: number): [number, number] => (across ? [x, y] : [y, x]);
-  for (const [color, alpha, grow] of [[0x06121a, 0.55, 3], [0xffffff, 0.95, 0]] as const) {
-    g.fillStyle(color, alpha);
-    g.fillTriangle(...at(2 - grow, 64), ...at(17 + grow, 36 - grow), ...at(17 + grow, 92 + grow));
-    g.fillTriangle(...at(126 + grow, 64), ...at(111 - grow, 36 - grow), ...at(111 - grow, 92 + grow));
+  // Tall arrows with a solid outline, so they read as on top of the gem's rim, not tucked under it.
+  for (const [color, grow] of [[0x06121a, 5], [0xffffff, 0]] as const) {
+    g.fillStyle(color, 1);
+    g.fillTriangle(...at(7 - grow, 64), ...at(30 + grow * 0.6, 43 - grow), ...at(30 + grow * 0.6, 85 + grow));
+    g.fillTriangle(...at(121 + grow, 64), ...at(98 - grow * 0.6, 43 - grow), ...at(98 - grow * 0.6, 85 + grow));
   }
 }
 
@@ -51,7 +52,7 @@ export function makeToyTextures(scene: Phaser.Scene, gems: readonly GemType[], b
       const g = scene.make.graphics({}, false);
       if (special === 'bomb') drawBurst(g);
       else drawLine(g, special === 'row');
-      texture.draw(g, 0, 0);
+      texture.draw(g, 0, 0).render();
       g.destroy();
     }
   }
@@ -67,7 +68,7 @@ export function makeToyTextures(scene: Phaser.Scene, gems: readonly GemType[], b
     });
     g.lineStyle(6, 0xffffff, 1).strokeCircle(64, 64, 55);
     g.fillStyle(0xffffff, 1).fillCircle(64, 64, 15);
-    texture.draw(g, 0, 0);
+    texture.draw(g, 0, 0).render();
     g.destroy();
   }
 }

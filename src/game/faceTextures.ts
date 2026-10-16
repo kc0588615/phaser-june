@@ -18,9 +18,9 @@ export function makeFaceTextures(scene: Phaser.Scene, faces: Partial<Record<GemT
         texture.stamp(gemTexture(gem), undefined, 64, 64);
         if (face) {
             const text = scene.make.text({ text: face, style: { fontFamily: EMOJI_FONT, fontSize: '56px' } }, false);
-            texture.draw(text, Math.round(64 - text.width / 2), Math.round((FACE_Y[gem] ?? 64) - text.height / 2));
+            texture.draw(text, Math.round(64 - text.width / 2), Math.round((FACE_Y[gem] ?? 64) - text.height / 2)).render();
             text.destroy();
-        }
+        } else texture.render();
     }
     return keys;
 }

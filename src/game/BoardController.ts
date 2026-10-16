@@ -8,7 +8,7 @@
 // swiping one, or swapping a gem into one, wiggles it on its pin (a nudge). Rules live in BoardModel,
 // visuals in BoardView; the scene says what a match means.
 import Phaser from 'phaser';
-import { isNeighbor, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
+import { isNeighbor, toyMakers, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
 import type { BoardKey } from './EventBus';
 import type { BoardView, TilePreview } from './BoardView';
 import { sfx } from './sfx';
@@ -289,7 +289,7 @@ export class BoardController {
                 const released = this.hooks.onPhase(phase, cascade) ?? [];
                 if (phase.fired.length > 0) await this.view.animateFires(phase.fired);
                 if (replaced()) return;
-                await this.view.animateExplosions(phase.cleared);
+                await this.view.animateExplosions(phase.cleared, toyMakers(phase));
                 if (replaced()) return;
                 this.view.showToys(phase.made);
                 await this.view.animateFalls(phase.refills);

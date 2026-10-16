@@ -247,6 +247,7 @@ async function main() {
     let hintChecked = false;
     let notesChecked = false;
     let markShot = false;
+    let calledShot = false;
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const pins = await evaluate(() => window.__cc.state().pins);
@@ -379,6 +380,12 @@ async function main() {
         check('dragging an animal\'s photo a little does nothing; from its name, nothing; all the way rules it out; again brings it back', !slid.short && !slid.fromName && slid.out && !slid.back && slid.picked === 'false', JSON.stringify(slid));
         check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title === names.get(tileHeld.id) && !tileHeld.picked, JSON.stringify(tileHeld));
       }
+      // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
+      await evaluate(async () => {
+        const cells = [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect] td[data-hidden]')];
+        for (const [i, td] of cells.entries()) for (let tap = 0; tap <= i % 2; tap++) td.querySelector('button').click();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      });
       const trailBefore = start.trail;
       // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then a name); others play carefully.
       const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : 'careful';
@@ -494,9 +501,10 @@ async function main() {
           const misses = grid.querySelectorAll('[data-miss]').length;
           const cells = [...grid.querySelectorAll('tr[data-suspect] td[data-tag]')].map(td => ({
             id: Number(td.closest('tr').dataset.suspect), tag: td.dataset.tag, hidden: td.hasAttribute('data-hidden'),
-            yes: td.dataset.yes ?? null, said: td.querySelector('.sr-only')?.textContent ?? null,
+            yes: td.dataset.yes ?? null, said: td.querySelector('.sr-only')?.textContent ?? null, guess: td.dataset.guess ?? null,
           }));
-          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, expected, clue: cc.clue() };
+          const glimmer = grid.querySelectorAll('[data-guess="right"] .ev-sparkle').length;
+          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, glimmer, expected, clue: cc.clue() };
         });
         if (!result) break;
         moves++;
@@ -529,6 +537,21 @@ async function main() {
           return cell.hidden ? order.seen[i] || cell.yes !== null || /yes|no/.test(cell.said ?? '') : !order.seen[i] || cell.yes !== String(order.row[i]);
         });
         check(`round ${n} move ${moves}: the grid shows exactly the scouted answers, and no hidden one`, leaks.length === 0, JSON.stringify(leaks.slice(0, 3)));
+        // A scouted cell with a pencilled guess says whether it was right (gold check) or wrong; a hidden one says nothing.
+        const misjudged = result.cells.filter(cell => {
+          const order = state.orders.find(candidate => candidate.tag === cell.tag);
+          const guess = state.pencil[`${cell.id}:${cell.tag}`];
+          const expected = cell.hidden || !guess ? null : (guess === 'yes') === order.row[state.suspects.indexOf(cell.id)] ? 'right' : 'wrong';
+          return cell.guess !== expected;
+        });
+        check(`round ${n} move ${moves}: each scouted guess shows right or wrong, and no hidden one does`, misjudged.length === 0, JSON.stringify(misjudged.slice(0, 3)));
+        const calledNow = scouted.filter(key => {
+          const [id, tag] = [Number(key.split(':')[0]), key.slice(key.indexOf(':') + 1)];
+          const guess = state.pencil[key];
+          return guess && (guess === 'yes') === state.orders.find(order => order.tag === tag).row[state.suspects.indexOf(id)];
+        });
+        check(`round ${n} move ${moves}: a right guess just scouted sparkles`, result.glimmer >= calledNow.length, JSON.stringify({ glimmer: result.glimmer, calledNow }));
+        if (calledNow.length > 0 && !calledShot) { calledShot = true; await screenshot('03-called-it.png'); }
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
           const notes = await evaluate(async () => {
@@ -582,9 +605,20 @@ async function main() {
         const answers = Object.fromEntries([...grid.querySelectorAll('tr[data-mystery] td[data-tag]')].map(td => [td.dataset.tag, td.dataset.answer || null]));
         const cells = [...grid.querySelectorAll('tr[data-suspect] td[data-tag]')];
         const wrong = cells.filter(td => td.hasAttribute('data-miss') !== (answers[td.dataset.tag] !== null && (td.dataset.yes === 'true') !== (answers[td.dataset.tag] === 'yes')));
-        return { mystery: grid.querySelector('tr[data-mystery] th')?.textContent ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length, hidden: grid.querySelectorAll('[data-hidden]').length };
+        const clue = window.__cc.clue();
+        const truth = cells.map(td => {
+          const id = Number(td.closest('tr').dataset.suspect);
+          const guess = clue.pencil[`${id}:${td.dataset.tag}`];
+          return { shown: td.dataset.guess ?? null, expected: guess ? ((guess === 'yes') === (td.dataset.yes === 'true') ? 'right' : 'wrong') : null };
+        });
+        const tally = `${truth.filter(cell => cell.expected === 'right').length}/${truth.filter(cell => cell.expected).length}`;
+        return {
+          mystery: grid.querySelector('tr[data-mystery] th')?.textContent ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length, hidden: grid.querySelectorAll('[data-hidden]').length,
+          guessesWrong: truth.filter(cell => cell.shown !== cell.expected).length, tally, shownTally: document.querySelector('[data-guesses]')?.dataset.guesses ?? null,
+        };
       });
       check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.mystery.includes(mysteryName), JSON.stringify(replay));
+      check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
       await screenshot(`04-round-${n}-end.png`);
       report.rounds.push({
         round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, suspects: start.suspects.map(id => names.get(id)),

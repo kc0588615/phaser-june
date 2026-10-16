@@ -84,6 +84,8 @@ export const sfx = {
   swapBack(): void { tone(180, { duration: 0.06, volume: 0.05 }); },
   /** An answer: up for Yes, down for No (neither one is a mistake). */
   answer(yes: boolean): void { tone(yes ? 587 : 494, { duration: 0.1 }); tone(yes ? 880 : 392, { duration: 0.14, delay: 0.09 }); },
+  /** A pencilled guess scouted and right: a bright sparkle. */
+  calledIt(): void { [1319, 1760, 2349].forEach((frequency, i) => tone(frequency, { type: 'triangle', duration: 0.09, volume: 0.06, delay: i * 0.055 })); tone(3136, { duration: 0.3, volume: 0.03, delay: 0.17 }); },
   /** A wrong guess. */
   wrong(): void { tone(220, { type: 'triangle', duration: 0.25, slide: 150 }); },
   /** The mystery is named. */

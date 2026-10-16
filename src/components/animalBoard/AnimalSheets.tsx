@@ -2,8 +2,8 @@
 // out), the witness notes, the menu, out of moves (name it for the journal), the
 // round's end (and the trail's, with the evidence grid replayed), and how to play.
 import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
-import { BookOpen, CircleHelp, Globe2, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { BookOpen, ChevronLeft, ChevronRight, CircleHelp, Globe2, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound, WitnessNote } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
@@ -14,25 +14,40 @@ import { GlossaryText } from '@/components/clueGame/GlossaryText';
 import { WithBlanks } from '@/components/clueGame/LogEntryText';
 import { Sheet } from '@/components/clueGame/Sheet';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
-import { backdropMotion, dialogMotion, drawerUpMotion, useOverlayPresence } from '@/lib/motion';
+import { backdropMotion, dialogMotion, drawerUpMotion, SMALL, useOverlayPresence } from '@/lib/motion';
 import { currentTheme, setTheme } from '@/lib/theme';
-import { AnimalCard } from './AnimalCard';
+import { SuspectPhoto } from './AnimalCard';
 import { EvidenceGrid } from './EvidenceGrid';
 
 export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v2';
 
 /** A section label inside a sheet (cc Menu label: XS, medium). */
 const LABEL = 'm-0 text-xs font-medium uppercase text-neutral-7';
+/** The field guide's and round end's photo: just the picture, no card (the name goes in the title or headline, never on it). */
+const BARE_PHOTO = 'mx-auto mb-s mt-xs block aspect-[4/3] w-64 max-w-full overflow-hidden';
 
 const GUIDE: Array<[keyof Animal['guide'], string]> = [['body', 'Body'], ['habits', 'Habits'], ['habitat', 'Habitat'], ['range', 'Range'], ['life', 'Life cycle']];
 
-export function SuspectSheet({ animal, species, round, pencil, onPencil, onMark, onClose }: {
-  animal: Animal; species: PoolSpecies | undefined; round: AnimalRound; pencil: Readonly<Record<string, 'yes' | 'no'>>;
+/** Horizontal travel (px) that counts as a swipe on the field guide's photo. */
+const SWIPE = 40;
+
+export function SuspectSheet({ animal, species, round, top, pencil, onPencil, onMark, onStep, onClose }: {
+  animal: Animal; species: PoolSpecies | undefined; round: AnimalRound;
+  /** The board's top edge (px from the viewport top): the drawer reaches up to it. */
+  top: number;
+  pencil: Readonly<Record<string, 'yes' | 'no'>>;
   /** Pencil a guess for a hidden answer (null clears it), right here while reading the guide. */
   onPencil: (tag: string, value: 'yes' | 'no' | null) => void;
-  onMark: (ruledOut: boolean) => void; onClose: () => void;
+  onMark: (ruledOut: boolean) => void;
+  /** Flip to the next (1) or previous (-1) animal, wrapping 5 -> 1: arrows beside the photo, or a swipe on it. */
+  onStep: (by: 1 | -1) => void;
+  onClose: () => void;
 }) {
   const index = round.suspects.indexOf(animal.id);
+  // The new photo slides in from the side it was flipped toward.
+  const [dir, setDir] = useState<1 | -1>(1);
+  const step = (by: 1 | -1) => { setDir(by); onStep(by); };
+  const swipe = useRef<{ x: number; y: number } | null>(null);
   // Plan 045: while playing, the guide keeps quiet about the round's questions (scouting shows those answers).
   const asked = new Set(round.status === 'playing' ? round.orders.map(order => prefixOf(order.tag)) : []);
   const released = round.released.includes(animal.id);
@@ -44,13 +59,34 @@ export function SuspectSheet({ animal, species, round, pencil, onPencil, onMark,
       title={animal.name}
       onClose={onClose}
       modeless
+      top={top}
       footer={canMark ? (
         <button type="button" onClick={() => { onMark(!marked); onClose(); }} className={`btn flex-[2] ${marked ? 'btn-outline' : 'btn-danger'}`}>
           {marked ? 'Undo: not ruled out' : 'Rule out'}
         </button>
       ) : undefined}
     >
-      <span className="mx-auto mb-s mt-xs block w-36"><AnimalCard species={species} number={index + 1} size={330} marked={marked && !released} /></span>
+      <div
+        className="flex touch-pan-y select-none items-center gap-xxs"
+        onPointerDown={event => { swipe.current = { x: event.clientX, y: event.clientY }; }}
+        onPointerUp={event => {
+          const start = swipe.current;
+          swipe.current = null;
+          if (!start) return;
+          const dx = event.clientX - start.x;
+          if (Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(event.clientY - start.y)) step(dx < 0 ? 1 : -1);
+        }}
+        onPointerCancel={() => { swipe.current = null; }}
+      >
+        <button type="button" onClick={() => step(-1)} className="btn btn-ghost btn-icon shrink-0" aria-label="Previous animal"><ChevronLeft className="h-6 w-6" /></button>
+        <motion.span key={animal.id} className={BARE_PHOTO} initial={{ opacity: 0, x: dir * 32 }} animate={{ opacity: 1, x: 0 }} transition={SMALL}>
+          <SuspectPhoto species={species} size={500} />
+        </motion.span>
+        <button type="button" onClick={() => step(1)} className="btn btn-ghost btn-icon shrink-0" aria-label="Next animal"><ChevronRight className="h-6 w-6" /></button>
+      </div>
+      <p className="m-0 mb-xs flex justify-center gap-xxs" aria-label={`Animal ${index + 1} of ${round.suspects.length}`}>
+        {round.suspects.map((id, i) => <span key={id} className={`h-2 w-2 rounded-full ${i === index ? 'bg-neutral-8' : 'bg-neutral-4'}`} aria-hidden="true" />)}
+      </p>
       {released && <p className="m-0 mb-xs text-s font-medium text-neutral-7">Released: not the mystery.</p>}
       {marked && !released && <p className="m-0 mb-xs text-s font-medium text-error">Ruled out: it leaves the board when a gem next to it is cleared. If it&apos;s the mystery, it escapes!</p>}
       <h3 className={LABEL}>Its answers</h3>
@@ -193,6 +229,12 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
   const presence = useOverlayPresence();
   if (!end) return null;
   const tree = animal.familyTree;
+  // The player's pencilled guesses, each right or wrong (scouted or not).
+  const guesses = round.suspects.flatMap((id, i) => round.orders.flatMap(order => {
+    const guess = session.pencil[`${id}:${order.tag}`];
+    return guess ? [(guess === 'yes') === order.row[i]] : [];
+  }));
+  const called = guesses.filter(Boolean).length;
   const headline: ReactNode = end.outcome === 'found'
     ? <>Found it: the {animal.name}! <span className="rounded-xs bg-emphasis-icon px-xxs text-on-emphasis-icon">{stars(end.stars)}</span></>
     : end.lostBy === 'escaped' ? <>Oh no! The {animal.name} was the mystery. It escaped!</> : <>Out of moves. It was the {animal.name}.</>;
@@ -200,7 +242,7 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
     <div className="fixed inset-0 z-[8300] flex items-end justify-center" {...presence} aria-label={`It was the ${animal.name}`}>
       <motion.div className="absolute inset-0 bg-neutral-10-transparent" aria-hidden="true" {...backdropMotion} />
       <motion.section className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-y-auto rounded-t-m bg-neutral-1 p-l pb-[max(var(--space-l),env(safe-area-inset-bottom))] text-s text-neutral-10 shadow-m" aria-label={`It was the ${animal.name}`} {...drawerUpMotion}>
-        <span className="mx-auto mb-s mt-xs block w-48 shrink-0 [&_.animal-card-strip]:text-[16cqw]"><AnimalCard species={species} caption={animal.name} size={330} /></span>
+        <span className={`${BARE_PHOTO} shrink-0`}><SuspectPhoto species={species} size={500} /></span>
         <h2 className="m-0 text-m font-medium">{headline}</h2>
         <p className="m-0 mt-xxs text-s text-neutral-7">
           {end.outcome === 'found' ? `+${end.points} points · ${round.movesLeft} moves to spare` : 'A heart lost.'}
@@ -209,13 +251,19 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
         <h3 className={`${LABEL} mt-s`}>How the evidence lined up</h3>
         {/* Compact rows here; the game screen's grow with the phone (globals.css `--ev-row`). */}
         <div className="-mx-xxs mt-xxs shrink-0 [--ev-photo:30px] [--ev-row:34px]">
-          <EvidenceGrid round={round} speciesById={speciesById} shown={round.orders.map(order => order.have)} review />
+          <EvidenceGrid round={round} speciesById={speciesById} shown={round.orders.map(order => order.have)} pencil={session.pencil} review />
         </div>
         <p className="m-0 mt-xxs text-s text-neutral-7">
           {round.orders.some(order => order.answer)
             ? <>A <span className="rounded-xs bg-error-transparent px-xxs font-medium text-neutral-10 shadow-[inset_0_0_0_1.5px_var(--error)]">red</span> answer doesn&apos;t match the mystery&apos;s, so it rules that animal out.</>
             : 'No question was answered this time.'}
         </p>
+        {guesses.length > 0 && (
+          <p className="m-0 mt-xxs text-s text-neutral-7" data-guesses={`${called}/${guesses.length}`}>
+            Your guesses: <b className="font-medium text-neutral-10">{called} of {guesses.length} right</b>{called === guesses.length ? '! ✨' : '.'}{' '}
+            {called < guesses.length && <>A crossed-out mark was a wrong guess.</>}
+          </p>
+        )}
         <p className="m-0 mt-xs text-xs italic text-neutral-7">{animal.scientificName}</p>
         <p className="m-0 text-xs text-neutral-7">Animalia › Chordata › {tree.class.latin} › {tree.order.latin} › {tree.family.latin} › {tree.genus}</p>
         {animal.notes.length + animal.revealNotes.length > 0 && (
@@ -248,7 +296,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
         <ol className="m-0 flex list-decimal flex-col gap-xs pl-l text-s text-neutral-8 [&_b]:font-medium [&_b]:text-neutral-10">
           <li>Our camera trap caught a blur. It was one of the <b>{rules.suspects} animals</b> on the board. Find out which.</li>
           <li>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the grid at the top. A full question answers it about the mystery: <b>yes</b> or <b>no</b>.</li>
-          <li>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</li>
+          <li>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</li>
           <li>Compare each animal&apos;s answers with the mystery&apos;s. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</li>
           <li>A ruled-out animal leaves the board when a gem next to it is cleared. Release every look-alike: the last one is your find. <b>Rule out the mystery and it escapes!</b></li>
           <li>Glowing purple <b>witness gems</b> give a note about the mystery and how many of the {rules.suspects} share it.</li>

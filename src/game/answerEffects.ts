@@ -10,6 +10,7 @@ import Phaser from 'phaser';
 import { EMOJI_FONT } from './faceGlyphs';
 import type { BoardLayout } from './squareLayout';
 import { GRID_COLS, GRID_ROWS } from './constants';
+import { reducedMotion } from './motion';
 
 /** The board's box in scene pixels. */
 interface Box { left: number; top: number; width: number; height: number; g: number }
@@ -105,7 +106,7 @@ export function playAnswerEffect(scene: Phaser.Scene, layout: BoardLayout, tag: 
     if (!entry) return;
     const { gemSize: g, offset } = layout;
     const box: Box = { left: offset.x, top: offset.y, width: GRID_COLS * g, height: GRID_ROWS * g, g };
-    const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const still = reducedMotion();
     if (!still) {
         entry[0](scene, box);
         return;

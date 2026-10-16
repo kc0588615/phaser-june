@@ -1,20 +1,20 @@
 // The bottom drawer every game sheet sits in (cc Drawer): backdrop, title with an X, scrolling body, footer with Close.
 // `modeless`: no backdrop and a shorter drawer, so the page above stays visible and tappable (the field guide over
-// the evidence grid, plan 045); X, Close or Escape closes it.
+// the evidence grid, plan 045); X, Close or Escape closes it. `top`: a modeless drawer reaches up to this y (px).
 import { useId, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { backdropMotion, drawerUpMotion, useOverlayPresence } from '@/lib/motion';
 import { useEscapeKey } from './useEscapeKey';
 
-export function Sheet({ title, onClose, children, footer, modeless = false }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; modeless?: boolean }) {
+export function Sheet({ title, onClose, children, footer, modeless = false, top }: { title: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; modeless?: boolean; top?: number }) {
   useEscapeKey(onClose);
   const titleId = useId();
   const presence = useOverlayPresence();
   return (
     <div className={`fixed inset-0 z-[8200] flex items-end justify-center ${modeless ? 'pointer-events-none' : ''}`} {...presence} {...(modeless ? { 'aria-modal': false } : {})} aria-labelledby={titleId} onClick={modeless ? undefined : onClose}>
       {!modeless && <motion.div className="absolute inset-0 bg-neutral-10-transparent" aria-hidden="true" {...backdropMotion} />}
-      <motion.div className={`pointer-events-auto relative flex w-full max-w-md flex-col rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m ${modeless ? 'max-h-[60dvh]' : 'max-h-[85dvh]'}`} onClick={event => event.stopPropagation()} {...drawerUpMotion}>
+      <motion.div className={`pointer-events-auto relative flex w-full max-w-md flex-col rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m ${modeless ? 'max-h-[60dvh]' : 'max-h-[85dvh]'}`} style={modeless && top !== undefined ? { maxHeight: `calc(100dvh - ${top}px)` } : undefined} onClick={event => event.stopPropagation()} {...drawerUpMotion}>
         <div className="flex items-start gap-xs pl-l pr-s pt-s">
           <h2 id={titleId} className="m-0 min-w-0 flex-1 pt-s text-m font-medium">{title}</h2>
           <button type="button" onClick={onClose} className="btn btn-ghost btn-icon shrink-0" aria-label="Close">

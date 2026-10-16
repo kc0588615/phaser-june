@@ -30,7 +30,7 @@ export interface AnimalSession {
   finds: number;
   /** Mystery ids in play order, so recent ones aren't repeated. */
   history: number[];
-  /** Plan 045: the player's own pencilled answers for hidden cells this round, by `${id}:${tag}`. Never checked during play. */
+  /** Plan 045: the player's own pencilled answers for hidden cells this round, by `${id}:${tag}`. Never read by the rules; kept once scouted, so the grid can show a guess was right or wrong. */
   pencil: Record<string, 'yes' | 'no'>;
   end: AnimalRoundEnd | null;
 }

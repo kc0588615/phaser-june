@@ -22,6 +22,8 @@ export const gemTexture = (type: GemType): string => `gem_${type}`;
 // Animation durations, in milliseconds (kept quick: a board that makes you wait feels slow).
 export const TWEEN_DURATION_SWAP = 120;
 export const TWEEN_DURATION_EXPLODE = 150;
+/** Gems flying into the toy their match made. */
+export const TWEEN_DURATION_GATHER = 180;
 export const TWEEN_DURATION_FALL_BASE = 150;
 /** Extra ms per pixel fallen. */
 export const TWEEN_DURATION_FALL_PER_UNIT = 0.4;

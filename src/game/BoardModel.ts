@@ -79,6 +79,28 @@ export function neighborSwaps(width: number, height: number): Move[] {
 }
 
 /** Apply a swap to any column-major grid (gems here, sprites in BoardView), in place. */
+/** The cleared gems of the runs that made each toy this phase ("x,y" -> the toy's cell): they gather into it. */
+export function toyMakers({ groups, made, cleared }: ExplodePhase): Map<string, Cell> {
+  const gone = new Set(cleared.map(key));
+  const into = new Map<string, Cell>();
+  for (const toy of made) {
+    // The toy's shape: its run plus any same-color run crossing it (an L or T), never a blast's cells.
+    const runs = groups.filter(group => !group.blast && group.gemType === toy.gemType);
+    const shape = new Set([key(toy.cell)]);
+    for (let grew = true; grew;) {
+      grew = false;
+      for (const run of runs) {
+        if (run.cells.some(cell => shape.has(key(cell))) && run.cells.some(cell => !shape.has(key(cell)))) {
+          for (const cell of run.cells) shape.add(key(cell));
+          grew = true;
+        }
+      }
+    }
+    for (const cellKey of shape) if (gone.has(cellKey) && !into.has(cellKey)) into.set(cellKey, toy.cell);
+  }
+  return into;
+}
+
 export function applySwap<T>(grid: T[][], { from: [ax, ay], to: [bx, by] }: Move): void {
   [grid[ax][ay], grid[bx][by]] = [grid[bx][by], grid[ax][ay]];
 }

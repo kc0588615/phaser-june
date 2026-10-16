@@ -14,6 +14,7 @@ import { BoardView, type TilePreview } from './BoardView';
 import { GEM_COLOR, GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
 import { EventBus, type EventPayloads } from './EventBus';
 import { sfx } from './sfx';
+import { reducedMotion } from './motion';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
 import { makeFaceTextures } from './faceTextures';
 import { makeToyTextures } from './toyTextures';
@@ -29,6 +30,8 @@ export class ClueBoardScene extends Phaser.Scene {
     private controller: BoardController | null = null;
     private layout: BoardLayout = { gemSize: 64, offset: { x: 0, y: 0 } };
     private backdrop: Phaser.GameObjects.Graphics | null = null;
+    /** Shards that fly off cleared gems, tinted per burst (one shared emitter, capped). */
+    private sparks: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
     private seed: number | null = null;
     /** Explode phases so far in this move: 1 for the move's own matches, then each cascade. */
     private chain = 0;
@@ -60,6 +63,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.layout = squareBoardLayout(this.scale.width, this.scale.height, GRID_COLS, GRID_ROWS);
         this.backdrop = this.add.graphics().setDepth(-1);
         this.drawBackdrop();
+        this.sparks = this.makeSparks();
         this.view = new BoardView(this, GRID_COLS, GRID_ROWS, this.layout);
         this.controller = new BoardController(this, this.model, this.view, this.layout, {
             onPhase: (phase, cascade) => this.reportMatches(phase, cascade),
@@ -118,6 +122,7 @@ export class ClueBoardScene extends Phaser.Scene {
             this.model.loadBoard(board.grid, toys, pinned);
         }
         this.view.destroyBoard();
+        this.sparks?.killAll();
         const faceKeys = makeFaceTextures(this, faces);
         if (faceKeys.size > 0) makeToyTextures(this, GEM_TYPES, gem => faceKeys.get(gem) ?? gemTexture(gem), true);
         this.view.setFaces(faceKeys);
@@ -218,8 +223,8 @@ export class ClueBoardScene extends Phaser.Scene {
         const big = phase.groups.some(group => !group.blast && group.cells.length >= 4);
         if (phase.fired.length > 0) {
             sfx.blast();
-            this.cameras.main.shake(180, 0.008);
-        } else if (big) {
+            if (!reducedMotion()) this.cameras.main.shake(180, 0.008);
+        } else if (big && !reducedMotion()) {
             this.cameras.main.shake(120, 0.004);
         }
         sfx.pop(this.chain);
@@ -264,27 +269,51 @@ export class ClueBoardScene extends Phaser.Scene {
             color: '#fde68a',
             stroke: '#06121a',
             strokeThickness: Math.max(4, Math.round(gemSize * 0.1)),
-        }).setOrigin(0.5).setDepth(70).setScale(0.5);
-        this.tweens.add({ targets: label, scale: 1, duration: 160, ease: 'Back.easeOut' });
-        this.tweens.add({ targets: label, y: label.y - gemSize * 0.8, alpha: 0, delay: 380, duration: 520, ease: 'Cubic.easeIn', onComplete: () => label.destroy() });
+        }).setOrigin(0.5).setDepth(70);
+        const still = reducedMotion(); // fades in place
+        if (!still) {
+            label.setScale(0.5);
+            this.tweens.add({ targets: label, scale: 1, duration: 160, ease: 'Back.easeOut' });
+        }
+        this.tweens.add({ targets: label, y: label.y - (still ? 0 : gemSize * 0.8), alpha: 0, delay: 380, duration: 520, ease: 'Cubic.easeIn', onComplete: () => label.destroy() });
     }
 
-    /** A colored ring where a group cleared; bigger matches ring wider and call out their charges. `size` 0: collected notes. */
+    /** The burst emitter: diamond shards that fly out, spin and shrink; sized from the board's current gem size. */
+    private makeSparks(): Phaser.GameObjects.Particles.ParticleEmitter {
+        if (!this.textures.exists('spark')) {
+            this.make.graphics({}, false).fillStyle(0xffffff, 1)
+                .fillTriangle(12, 0, 24, 12, 0, 12).fillTriangle(0, 12, 24, 12, 12, 24)
+                .generateTexture('spark', 24, 24).destroy();
+        }
+        const scale = () => (this.layout.gemSize * 0.3) / 24;
+        return this.add.particles(0, 0, 'spark', {
+            emitting: false,
+            maxAliveParticles: 40,
+            lifespan: { min: 300, max: 450 },
+            speed: { onEmit: () => this.layout.gemSize * Phaser.Math.FloatBetween(1.5, 3.5) },
+            scale: { onEmit: scale, onUpdate: (_particle, _key, t) => scale() * (1 - t) },
+            rotate: { min: 0, max: 360 },
+            alpha: { start: 1, end: 0 },
+        }).setDepth(3); // over the gems, under the cards
+    }
+
+    /**
+     * Shards of the group's color fly off each cleared cell; bigger matches and chains throw more. Bigger matches call
+     * out their charges. `size` 0: collected notes. Reduced motion: a ring that fades in place instead.
+     */
     private burst(cells: Array<[number, number]>, color: string, size: number): void {
         const { gemSize, offset } = this.layout;
         const cx = offset.x + (cells.reduce((sum, [x]) => sum + x, 0) / cells.length + 0.5) * gemSize;
         const cy = offset.y + (cells.reduce((sum, [, y]) => sum + y, 0) / cells.length + 0.5) * gemSize;
-        const ring = this.add.circle(cx, cy, gemSize * 0.4)
-            .setStrokeStyle(Math.max(3, gemSize * 0.08), Phaser.Display.Color.HexStringToColor(color).color)
-            .setDepth(50);
-        this.tweens.add({
-            targets: ring,
-            scale: 1.6 + 0.3 * Math.max(0, size - 3),
-            alpha: 0,
-            duration: 420,
-            ease: 'Cubic.easeOut',
-            onComplete: () => ring.destroy(),
-        });
+        const tint = Phaser.Display.Color.HexStringToColor(color).color;
+        if (reducedMotion()) {
+            const ring = this.add.circle(cx, cy, gemSize * 0.4).setStrokeStyle(Math.max(3, gemSize * 0.08), tint).setDepth(50);
+            this.tweens.add({ targets: ring, alpha: 0, duration: 420, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
+        } else if (this.sparks) {
+            const each = (size >= 5 ? 5 : size === 4 ? 4 : 3) + Math.min(this.chain - 1, 2);
+            this.sparks.setParticleTint(tint);
+            for (const [x, y] of cells) this.sparks.explode(each, offset.x + (x + 0.5) * gemSize, offset.y + (y + 0.5) * gemSize);
+        }
 
         // Only the bigger matches call their charges out (Rules.perMatch: 3, 4, 5 or more); the animal board has no charges.
         const charges = size >= 5 ? DEFAULT_RULES.perMatch[2] : size === 4 ? DEFAULT_RULES.perMatch[1] : 0;
@@ -307,11 +336,15 @@ export class ClueBoardScene extends Phaser.Scene {
             color: color,
             stroke: '#06121a',
             strokeThickness: Math.max(3, Math.round(gemSize * 0.08)),
-        }).setOrigin(0.5).setDepth(60).setScale(0.6);
-        this.tweens.add({ targets: label, scale: 1, duration: 160, ease: 'Back.easeOut' });
+        }).setOrigin(0.5).setDepth(60);
+        const still = reducedMotion(); // fades in place
+        if (!still) {
+            label.setScale(0.6);
+            this.tweens.add({ targets: label, scale: 1, duration: 160, ease: 'Back.easeOut' });
+        }
         this.tweens.add({
             targets: label,
-            y: cy - gemSize * 0.9,
+            y: still ? cy : cy - gemSize * 0.9,
             alpha: 0,
             delay: 420,
             duration: 700,

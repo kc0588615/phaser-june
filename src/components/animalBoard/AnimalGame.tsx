@@ -35,10 +35,23 @@ function onBoardKey(event: React.KeyboardEvent): void {
   EventBus.emit('clue-board-key', { key: event.key as BoardKey, shift: event.shiftKey });
 }
 
-function LogText({ entry, nameOf, count }: { entry: AnimalLogEntry; nameOf: (id: number) => string; count: number }): ReactNode {
+type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
+const NO_REVEAL: ReadonlySet<string> = new Set();
+/** How long a just-scouted guess sparkles (or shows crossed out) in the grid; the sparkle runs 3 s. */
+const REVEAL_MS = 3100;
+
+function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry; nameOf: (id: number) => string; count: number; pencil?: Pencil }): ReactNode {
   switch (entry.kind) {
     case 'answer': return <span>{clueFace(entry.tag)} {entry.question} <Stamp>{entry.answer === 'yes' ? 'Yes.' : 'No.'}</Stamp></span>;
-    case 'scouted': return <span>🔍 The {nameOf(entry.id)}: {clueFace(entry.tag)} {entry.question} <b className="font-medium">{entry.yes ? 'Yes.' : 'No.'}</b></span>;
+    case 'scouted': {
+      const guess = pencil[`${entry.id}:${entry.tag}`];
+      return (
+        <span>
+          🔍 The {nameOf(entry.id)}: {clueFace(entry.tag)} {entry.question} <b className="font-medium">{entry.yes ? 'Yes.' : 'No.'}</b>
+          {guess && ((guess === 'yes') === entry.yes ? <> <Stamp>You called it! ✨</Stamp></> : <span className="text-neutral-7"> You guessed {guess === 'yes' ? 'Yes' : 'No'}.</span>)}
+        </span>
+      );
+    }
     case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} left the board.</span>;
     case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
@@ -166,6 +179,24 @@ export function AnimalGame() {
   const [selected, setSelected] = useState<number | null>(null);
   const [hint, setHint] = useState<Hint | null>(null);
   const [boardBusy, setBoardBusy] = useState(false);
+  // Pencilled cells just scouted, for the grid's one-time sparkle (or crossed-out guess).
+  const [reveal, setReveal] = useState(NO_REVEAL);
+  useEffect(() => {
+    if (reveal.size === 0) return;
+    const timer = window.setTimeout(() => setReveal(NO_REVEAL), REVEAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [reveal]);
+  // The field guide's drawer reaches up to the board's top edge (the grid above stays visible).
+  const board = useRef<HTMLElement>(null);
+  const [boardTop, setBoardTop] = useState(0);
+  const guideOpen = sheet?.kind === 'suspect';
+  useLayoutEffect(() => {
+    if (!guideOpen) return;
+    const measure = () => setBoardTop(board.current?.getBoundingClientRect().top ?? 0);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [guideOpen]);
   useEffect(() => setSoundOnState(isSoundOn()), []);
   useEffect(() => wakeOnFirstGesture(), []);
   const toggleSound = useCallback(() => { setSoundOn(!soundOn); setSoundOnState(!soundOn); }, [soundOn]);
@@ -240,17 +271,26 @@ export function AnimalGame() {
     return i >= 0 && round?.orders[i].answer !== null && (shown[i] ?? 0) >= size;
   }, [round, shown, size]);
 
-  // Sounds: an answer when its stamp lands; a find or an escape when it happens.
+  // Sounds: an answer when its stamp lands; a find or an escape when it happens; a sparkle when a scouted guess was right.
   const heard = useRef({ roundNo: 0, logLength: 0, answers: new Set<string>() });
   useEffect(() => {
     if (!session) return;
-    const { roundNo: current, round: { log, orders } } = session;
+    const { roundNo: current, round: { log, orders }, pencil: guesses } = session;
     // A new round, or this one resumed after a reload: answers already earned don't sound or play again.
     if (heard.current.roundNo !== current) heard.current = { roundNo: current, logLength: log.length, answers: new Set(orders.filter(order => order.answer !== null).map(order => order.tag)) };
+    const guessed: string[] = [];
+    let called = false;
     for (const entry of log.slice(heard.current.logLength)) {
       if (entry.kind === 'found') sfx.solve();
       if (entry.kind === 'escaped') sfx.wrong();
+      const guess = entry.kind === 'scouted' ? guesses[`${entry.id}:${entry.tag}`] : undefined;
+      if (entry.kind === 'scouted' && guess) {
+        guessed.push(`${entry.id}:${entry.tag}`);
+        if ((guess === 'yes') === entry.yes) called = true;
+      }
     }
+    if (called) sfx.calledIt();
+    if (guessed.length > 0) setReveal(new Set(guessed));
     heard.current.logLength = log.length;
     for (const order of orders) {
       if (!answerShown(order.tag) || heard.current.answers.has(order.tag)) continue;
@@ -303,6 +343,15 @@ export function AnimalGame() {
     setSelected(current => (current === id ? null : id));
   }, [round?.status, sheet?.kind]);
 
+  // The field guide's arrows and swipe flip through the animals in order, wrapping around (and pick that row, like onSelect).
+  const onStep = useCallback((by: 1 | -1) => {
+    if (!round || sheet?.kind !== 'suspect') return;
+    const { suspects } = round;
+    const id = suspects[(suspects.indexOf(sheet.id) + by + suspects.length) % suspects.length];
+    setSheet({ kind: 'suspect', id });
+    if (round.status === 'playing') setSelected(id);
+  }, [round, sheet]);
+
   // Pencil a guess in a hidden cell; the first time a round, say what it is (and isn't).
   const pencilled = useRef(0);
   const onPencil = useCallback((id: number, tag: string, value: 'yes' | 'no' | null) => {
@@ -322,7 +371,7 @@ export function AnimalGame() {
   const latest = visibleLog.at(-1);
   const hinting = hint && hint.roundNo === roundNo && hint.seen === visibleLog.length;
   const status: ReactNode = hinting ? hint.text
-    : latest && round ? <LogText entry={latest} nameOf={nameOf} count={round.suspects.length} />
+    : latest && session && round ? <LogText entry={latest} nameOf={nameOf} count={round.suspects.length} pencil={session.pencil} />
     : 'Match gems to fill a question in the grid. Clear a color next to an animal to see its answer.';
   // What the status line takes turns showing: the answers (once their gems land) and witness notes so far.
   const facts = useMemo<Fact[]>(() => round ? round.log.flatMap((entry, key) => (entry.kind === 'answer' && answerShown(entry.tag)) || entry.kind === 'note'
@@ -377,7 +426,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} reveal={reveal} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
@@ -386,6 +435,7 @@ export function AnimalGame() {
         </div>
 
         <section
+          ref={board}
           role="application"
           aria-label="Game board"
           aria-describedby="board-keys"
@@ -405,7 +455,7 @@ export function AnimalGame() {
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
-        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} onMark={ruledOut => rule(picked.id, ruledOut)} onClose={() => setSheet(null)} />}
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardTop} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} onMark={ruledOut => rule(picked.id, ruledOut)} onStep={onStep} onClose={() => setSheet(null)} />}
         {round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu

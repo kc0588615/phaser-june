@@ -6,7 +6,7 @@ On `main`, over 044/045. Written 2026-10-14/15. Steps 1–2 built 2026-10-15 (0c
 
 Player feedback: the round photo tiles are mistaken for gems, so players try to move them. A tile was a cream disc with a picture, the same size and slot as the orange ball gem with its emoji. A swipe on a tile then counted as a tap and picked the animal (blue pulsing ring), which looked like "gem picked, now swap". A gem swiped into a tile only told the screen reader. Owner rejected 3D totems (a column of stuff means nothing here); picked a card.
 
-Owner decisions 2026-10-15 (prototype https://claude.ai/artifact/REyA4s853PoCm9nUxZAfSZ): number in the polaroid strip; the same card in the grid, field guide and round-end card; the mystery is an empty camera-trap card while playing (a photo, even blurred, lets a player match it to a suspect without reading a clue).
+Owner decisions 2026-10-15 (prototype https://claude.ai/artifact/REyA4s853PoCm9nUxZAfSZ): number in the polaroid strip (changed same day: number on a paper tag at the photo's top right, photo grows into the strip's space; the strip took too much room on the board); the same card in the grid, field guide and round-end card (later: field guide and round end show the bare photo, no card; the name lives in the title/headline, never on the photo, where long names got cut off); the mystery is an empty camera-trap card while playing (a photo, even blurred, lets a player match it to a suspect without reading a clue).
 
 ## 1. Nudge (built)
 
@@ -14,7 +14,7 @@ A try at moving a card wiggles it on its pin (no move spent, no pick): swipe a c
 
 ## 2. The card (built)
 
-`BoardView.drawTile`: one container at the pin (paper, photo cropped with `setCrop`, no mask; number in Patrick Hand on the strip; marker cross; pin; scouting strip), 1.08 × 1.06 cells, tilted by number (`CARD_TILTS`). States are pins and paper, never a ring (an amber ring matched the gem cursor): picked = paper pulses blue; ruled out = red cross + grey photo (`preFX` colour matrix, WebGL); release preview = pin pops up, card hangs and sways; released = pin flies out, card flutters off. Page: `AnimalCard` / `TrapCard` (`AnimalCard.tsx`, `.animal-card` in globals.css).
+`BoardView.drawTile`: one container at the pin (paper, photo cropped with `setCrop`, no mask; number in Patrick Hand on a round paper tag at the photo's top right, photo fills the card above a thin lip; marker cross; pin; scouting strip), 1.08 × 1.06 cells, tilted by number (`CARD_TILTS`). States are pins and paper, never a ring (an amber ring matched the gem cursor): picked = paper pulses blue; ruled out = red cross + grey photo (`preFX` colour matrix, WebGL); release preview = pin pops up, card hangs and sways; released = pin flies out, card flutters off. Page: `AnimalCard` / `TrapCard` (`AnimalCard.tsx`, `.animal-card` in globals.css).
 
 ## 3. Tiles react (built)
 

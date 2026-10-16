@@ -5,7 +5,9 @@
 // number its board card wears (plan 046: the same pinned card, AnimalCard). Comparing down a column is the player's job: during
 // play nothing points at a contradiction. Plan 045: a suspect's answer stays "?"
 // until scouted (a move's clear of that clue's color next to its tile); tap a hidden
-// cell to pencil your own guess (yes, no, blank), never checked during play. An
+// cell to pencil your own guess (yes, no, blank). Once scouted, a right guess's cell sparkles
+// for a moment and a wrong one shows the guess crossed out (the answer is showing by then, so
+// this concludes nothing); the round-end card marks every guess. An
 // animal's name: tap to pick it (its tile pulses), hold for its field guide, drag its
 // photo right across the name to rule it out (again to undo). `review` (the round-end card) shows
 // every answer, names the mystery and marks each earned answer that rules an animal out.
@@ -20,6 +22,7 @@ import { AnimalCard, TrapCard } from './AnimalCard';
 import { FaceIcon } from './FaceIcon';
 
 const NEXT_PENCIL = { none: 'yes', yes: 'no', no: null } as const;
+const NONE: ReadonlySet<string> = new Set();
 /** A press this long on an animal's row is a long press (its field guide); the board's tiles use the same (BoardController). */
 const HOLD_MS = 450;
 /** The photo is the slide's handle (`--ev-photo`, globals.css). Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
@@ -32,7 +35,7 @@ const SLIDE_TO_MARK = 0.5;
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, pencil = {}, onPencil, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, pencil = {}, onPencil, reveal = NONE, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
@@ -49,6 +52,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   /** The player's pencilled answers for hidden cells, by `${id}:${tag}`; `onPencil` sets the next one. */
   pencil?: Readonly<Record<string, 'yes' | 'no'>>;
   onPencil?: (id: number, tag: string, value: 'yes' | 'no' | null) => void;
+  /** Pencilled cells (`${id}:${tag}`) just scouted: a right guess sparkles, a wrong one shows, a ruled-out card wiggles. */
+  reveal?: ReadonlySet<string>;
   /** The top-left cell, over the animals' names. */
   corner?: ReactNode;
   review?: boolean;
@@ -187,6 +192,11 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
           const canSlide = Boolean(onMark) && !released;
           // (The photo slides; the track behind it shows only while dragging.)
           const dx = slide?.id === id ? slide.dx : 0;
+          const missed = (order: AnimalRound['orders'][number]) => {
+            const guess = pencil[`${id}:${order.tag}`];
+            return Boolean(guess) && (guess === 'yes') !== order.row[i];
+          };
+          const wiggle = marked && round.orders.some(order => reveal.has(`${id}:${order.tag}`) && missed(order));
           return (
             <tr key={id} data-suspect={id} onClick={onSelect ? () => pick(id) : undefined} className={`${released ? 'opacity-30' : ''} ${onSelect ? 'cursor-pointer' : ''}`}>
               <th scope="row" className={`relative h-(--ev-row) rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : wasIt ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
@@ -218,7 +228,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   <span
                     data-handle=""
                     style={{ transform: `translateX(${dx}px)`, transition: dx > 0 ? 'none' : 'transform 160ms ease-out' }}
-                    className={`relative z-10 block w-(--ev-photo) shrink-0 ${hinted === id ? 'ev-nudge' : ''}`}
+                    className={`relative z-10 block w-(--ev-photo) shrink-0 ${hinted === id ? 'ev-nudge' : ''} ${wiggle ? 'ev-wiggle' : ''}`}
                   >
                     <AnimalCard species={species} number={i + 1} marked={marked} picked={picked} />
                   </span>
@@ -244,14 +254,19 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   );
                 }
                 const yes = order.row[i];
+                const guess = pencil[`${id}:${order.tag}`];
+                const called = guess !== undefined && !missed(order);
+                const fresh = !review && reveal.has(`${id}:${order.tag}`);
                 const miss = review && order.answer !== null && yes !== (order.answer === 'yes');
                 const lit = !review && answered[j];
                 const fill = miss ? 'bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
-                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} className={`h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
-                    <motion.span aria-hidden="true" className={`inline-block ${yes ? 'text-color-1' : 'text-neutral-6'}`} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
-                    <span className="sr-only">{yes ? 'yes' : 'no'}</span>
+                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} className={`relative h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
+                    {called && fresh && <span aria-hidden="true" className="ev-sparkle" />}
+                    <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'}`} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
+                    <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}</span>
+                    {guess && !called && (review || fresh) && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
                   </td>
                 );
               })}
