@@ -81,9 +81,19 @@ async function main() {
   } catch (error) {
     throw new Error(`The dev server isn't answering at ${BASE} (${error.message}). Start it with \`npm run dev\`.`);
   }
+  const [load] = os.loadavg();
+  if (load > os.cpus().length) console.log(`WARN load ${load.toFixed(0)} on ${os.cpus().length} cores: expect timeouts. Look for stray Chrome (ps -eo pcpu,args --sort=-pcpu | head)`);
   mkdirSync(outDir, { recursive: true });
   const profileDir = mkdtempSync(path.join(os.tmpdir(), 'cc-e2e-'));
   const { chrome, endpoint } = launchChrome(profileDir);
+  // A killed run (timeout, Ctrl-C) would otherwise orphan Chrome and slow every later run.
+  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+    process.once(signal, () => {
+      chrome.kill('SIGKILL');
+      rmSync(profileDir, { recursive: true, force: true });
+      process.exit(130);
+    });
+  }
   let browser;
   try {
     browser = connect(await endpoint);
@@ -695,6 +705,7 @@ main()
     mkdirSync(outDir, { recursive: true });
     writeFileSync(path.join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
     const failed = report.checks.filter(result => !result.ok);
+    for (const result of failed.slice(0, 5)) console.log(`  FAIL ${result.name}`);
     console.log(`${report.checks.length - failed.length}/${report.checks.length} checks passed. Artifact: ${path.relative(process.cwd(), outDir)}/`);
     process.exitCode = failed.length ? 1 : 0;
   });
