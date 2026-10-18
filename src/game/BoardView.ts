@@ -10,7 +10,8 @@
 // a swap that would scout it (plan 045) shows the question gems on a strip above it.
 // A try at moving a card wiggles it on its pin; a scouted card hops (the same for any
 // answer); a released card leaves the way its animal moves, and the escaping mystery
-// bolts off.
+// bolts off. Plan 047: a marked card steps a cell the way its animal moves (hops up,
+// dips down, waddles sideways) and the gem it passes takes its old cell.
 import Phaser from 'phaser';
 import {
     CARD_TILTS, gemTexture,
@@ -241,6 +242,45 @@ export class BoardView {
             }));
         }
         return Promise.all(leaving).then(() => undefined);
+    }
+
+    /**
+     * A marked card steps to a neighboring cell (plan 047); the gem there slides into the cell it left. Fliers hop in an
+     * arc, diggers and swimmers dip, walkers waddle; reduced motion slides.
+     */
+    stepTile(id: number, to: Cell): Promise<void> {
+        const tile = this.tiles.get(id);
+        if (!tile) return Promise.resolve();
+        const from = tile.pin.cell;
+        const sprite = this.spriteAt(...to);
+        this.sprites[from[0]][from[1]] = sprite;
+        this.sprites[to[0]][to[1]] = null;
+        this.pinned.delete(cellKey(from));
+        this.pinned.add(cellKey(to));
+        tile.pin = { ...tile.pin, cell: to };
+        const g = this.layout.gemSize;
+        const start = { x: tile.card.x, y: tile.card.y };
+        const end = this.cardPosition(to);
+        const exit = reducedMotion() ? null : tile.pin.exit ?? 'walk';
+        // How far off the straight line the card rides, through the step (t from 0 to 1).
+        const lift = (t: number) => (exit === 'fly' ? -g * 0.35 * Math.sin(t * Math.PI)
+            : exit === 'walk' ? -g * 0.08 * Math.abs(Math.sin(t * Math.PI * 2))
+            : exit ? g * 0.12 * Math.sin(t * Math.PI) : 0);
+        const tilt = this.tiltOf(tile);
+        const moves: Promise<void>[] = [this.tween({
+            targets: { t: 0 }, t: 1, duration: 420, ease: 'Sine.easeInOut',
+            onUpdate: (tween: Phaser.Tweens.Tween) => {
+                const t = tween.progress;
+                tile.card.setPosition(start.x + (end.x - start.x) * t, start.y + (end.y - start.y) * t + lift(t));
+                if (exit === 'walk' && !tile.sway) tile.card.setAngle(tilt + 6 * Math.sin(t * Math.PI * 2));
+                if ((exit === 'dig' || exit === 'swim') && !tile.sway) tile.card.setScale(1, 1 - 0.12 * Math.sin(t * Math.PI));
+            },
+        }).then(() => { if (this.tiles.get(id) === tile) { tile.card.setScale(1); this.drawTile(tile); } })];
+        if (sprite) {
+            this.stopTweens(sprite);
+            moves.push(this.tween({ targets: sprite, ...this.positionOf(...from), duration: 420, ease: 'Sine.easeInOut' }));
+        }
+        return Promise.all(moves).then(() => undefined);
     }
 
     /** A move's own clear scouted this animal's answer: its card hops, the same for any answer (plan 046). */
@@ -560,8 +600,8 @@ export class BoardView {
         const photoW = w - 2 * pad;
         const [left, top] = [-w / 2, -g * 0.035];
         const corner = g * 0.025;
-        const { x, y } = this.positionOf(...tile.pin.cell);
-        tile.card.setPosition(x, y - top - h / 2);
+        const { x, y } = this.cardPosition(tile.pin.cell);
+        tile.card.setPosition(x, y);
         tile.paper.clear()
             .fillStyle(0x000000, 0.18).fillRoundedRect(left + g * 0.01, top + g * 0.035, w + g * 0.02, h + g * 0.02, corner)
             .fillStyle(0x000000, 0.3).fillRoundedRect(left + g * 0.02, top + g * 0.045, w, h, corner)
@@ -630,6 +670,13 @@ export class BoardView {
                 .lineStyle(Math.max(1.5, g * 0.035), 0x7dd3fc, 1).strokeRoundedRect(-width / 2, mid - size * 0.62, width, size * 1.24, size * 0.5);
             tile.scout.forEach((icon, i) => icon.setPosition((i - (tile.scout.length - 1) / 2) * step, mid).setScale(icon.width ? size / icon.width : 1));
         }
+    }
+
+    /** Where a card at this cell hangs: its pin, a little above the cell's middle. */
+    private cardPosition(cell: Cell): { x: number; y: number } {
+        const g = this.layout.gemSize;
+        const { x, y } = this.positionOf(...cell);
+        return { x, y: y + g * 0.035 - (g * 1.06) / 2 };
     }
 
     private tiltOf(tile: Tile): number {

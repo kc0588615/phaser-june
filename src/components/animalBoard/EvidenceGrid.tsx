@@ -11,7 +11,12 @@
 // animal's name: tap to pick it (its tile pulses), hold for its field guide, drag its
 // photo right across the name to rule it out (again to undo). `review` (the round-end card) shows
 // every answer, names the mystery and marks each earned answer that rules an animal out.
+// The Mystery's cell opens the witness notes (every note is about the mystery): it counts
+// them, pulses when one comes in, and is where a collected witness gem flies.
+// Hold any answer cell to highlight it (gold, "this one matters"); its column's gem glows so the
+// player remembers which gem to go for. Like pencil, the player's own mark: the rules never read it.
 import { useRef, useState, type ReactNode } from 'react';
+import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
@@ -25,6 +30,8 @@ const NEXT_PENCIL = { none: 'yes', yes: 'no', no: null } as const;
 const NONE: ReadonlySet<string> = new Set();
 /** A press this long on an animal's row is a long press (its field guide); the board's tiles use the same (BoardController). */
 const HOLD_MS = 450;
+/** Holding an answer cell this long highlights it: longer than a name's hold, so a slow tap never highlights by mistake. */
+const HIGHLIGHT_MS = 1000;
 /** The photo is the slide's handle (`--ev-photo`, globals.css). Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
 const TRACK_SHARE = 0.5;
 const SLIDE_TO_MARK = 0.5;
@@ -35,7 +42,7 @@ const SLIDE_TO_MARK = 0.5;
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, pencil = {}, onPencil, reveal = NONE, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
@@ -49,9 +56,14 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   /** Once, for a new player: the first animal's photo nudges right and says "Slide to rule out". */
   slideHint?: boolean;
   onQuestion?: (index: number) => void;
+  /** The Mystery's cell: open the witness notes. */
+  onNotes?: () => void;
   /** The player's pencilled answers for hidden cells, by `${id}:${tag}`; `onPencil` sets the next one. */
   pencil?: Readonly<Record<string, 'yes' | 'no'>>;
   onPencil?: (id: number, tag: string, value: 'yes' | 'no' | null) => void;
+  /** The player's highlighted cells, by `${id}:${tag}`; a long press on a cell toggles one. */
+  highlight?: readonly string[];
+  onHighlight?: (id: number, tag: string) => void;
   /** Pencilled cells (`${id}:${tag}`) just scouted: a right guess sparkles, a wrong one shows, a ruled-out card wiggles. */
   reveal?: ReadonlySet<string>;
   /** The top-left cell, over the animals' names. */
@@ -107,6 +119,32 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
     gesture.current = null;
     setSlide(null);
   };
+  // A long press on an answer cell highlights it; the click that ends it doesn't also pencil or pick.
+  const cellHold = useRef<{ x: number; y: number; timer: number; held: boolean } | null>(null);
+  const cellPress = (event: React.PointerEvent, id: number, tag: string) => {
+    if (cellHold.current) window.clearTimeout(cellHold.current.timer);
+    const hold = { x: event.clientX, y: event.clientY, timer: 0, held: false };
+    hold.timer = window.setTimeout(() => { hold.held = true; onHighlight?.(id, tag); }, HIGHLIGHT_MS);
+    cellHold.current = hold;
+  };
+  const cellMove = (event: React.PointerEvent) => {
+    const hold = cellHold.current;
+    if (hold && !hold.held && Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > 10) { window.clearTimeout(hold.timer); cellHold.current = null; }
+  };
+  const cellEnd = () => { if (cellHold.current && !cellHold.current.held) { window.clearTimeout(cellHold.current.timer); cellHold.current = null; } };
+  const cellClick = (event: React.MouseEvent) => {
+    if (!cellHold.current?.held) return;
+    cellHold.current = null;
+    event.stopPropagation();
+  };
+  const holdCell = (id: number, tag: string) => onHighlight ? {
+    onPointerDown: (event: React.PointerEvent) => cellPress(event, id, tag),
+    onPointerMove: cellMove, onPointerUp: cellEnd, onPointerCancel: cellEnd, onPointerLeave: cellEnd,
+    onClickCapture: cellClick,
+    onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
+  } : {};
+  const highlighted = new Set(highlight);
+  const glowing = new Set(highlight.map(key => key.slice(key.indexOf(':') + 1)));
   const pick = (id: number) => {
     if (skipClick.current) { skipClick.current = false; return; }
     onSelect?.(id);
@@ -114,6 +152,13 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   const hinted = slideHint ? round.suspects.find(id => !round.marked.includes(id) && !round.released.includes(id)) : undefined;
   const size = round.rules.orderSize;
   const mystery = speciesById.get(round.mysteryId);
+  const notes = round.notes.length;
+  const trapCard = (
+    <TrapCard>
+      {/* The player's own marks, on the card so the row keeps one line (a taller grid would shrink the board). */}
+      {round.marked.length > 0 && <i className="absolute -right-xs -top-xxs grid h-4 min-w-4 place-items-center rounded-full bg-error px-xxs text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕{round.marked.length}</i>}
+    </TrapCard>
+  );
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   return (
     <table aria-label={review ? 'How the evidence lined up' : 'Evidence'} className="w-full table-fixed border-separate [border-spacing:3px_2px]">
@@ -134,7 +179,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 aria-label={order.question}
                 className="flex w-full flex-col items-center gap-xxs rounded-xs pb-xxs transition-colors enabled:hover:bg-neutral-3-transparent enabled:active:bg-neutral-3 short:gap-zero short:pb-zero"
               >
-                <FaceIcon gem={order.gem} face={clueFace(order.tag)} className="h-6 w-6 text-[13px]" />
+                <FaceIcon gem={order.gem} face={clueFace(order.tag)} className={`h-6 w-6 text-[13px] ${!review && glowing.has(order.tag) ? 'ev-glow' : ''}`} />
                 <span className="line-clamp-2 min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en">{columnLabel(order.tag)}</span>
               </button>
             </th>
@@ -144,20 +189,32 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
       <tbody>
         <tr data-mystery>
           <th scope="row" className="h-(--ev-row) p-0 text-left font-medium text-neutral-10">
-            <span className="flex items-center gap-xs">
-              <span className="block w-(--ev-photo) shrink-0 text-m">
-                {review ? <AnimalCard species={mystery} /> : (
-                  <TrapCard>
-                    {/* The player's own marks, on the card so the row keeps one line (a taller grid would shrink the board). */}
-                    {round.marked.length > 0 && <i className="absolute -right-xs -top-xxs grid h-4 min-w-4 place-items-center rounded-full bg-error px-xxs text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕{round.marked.length}</i>}
-                  </TrapCard>
-                )}
+            {review || !onNotes ? (
+              <span className="flex items-center gap-xs">
+                <span className="block w-(--ev-photo) shrink-0 text-m">{review ? <AnimalCard species={mystery} /> : trapCard}</span>
+                <span className="line-clamp-1 min-w-0 text-s">{review ? mystery?.commonName ?? 'Mystery' : 'Mystery'}</span>
               </span>
-              <span className="min-w-0 text-s">
-                <span className="line-clamp-1">{review ? mystery?.commonName ?? 'Mystery' : 'Mystery'}</span>
-                {!review && round.marked.length > 0 && <span className="sr-only">{round.marked.length} ruled out</span>}
-              </span>
-            </span>
+            ) : (
+              <button
+                type="button"
+                onClick={onNotes}
+                data-flight-target="notes"
+                data-notes={notes}
+                aria-label={`Mystery${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
+                className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
+              >
+                {/* Keyed by the count, so the cell pulses once each time a note comes in. */}
+                {notes > 0 && <span key={notes} className="ev-pulse pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
+                <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="line-clamp-1 text-s">Mystery</span>
+                  <span className={`flex items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
+                    <NotebookPen className={`h-3 w-3 shrink-0 ${notes > 0 ? 'text-notes' : ''}`} aria-hidden="true" />
+                    {notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}` : 'No notes yet'}
+                  </span>
+                </span>
+              </button>
+            )}
           </th>
           {round.orders.map((order, j) => {
             const have = Math.min(shown[j] ?? 0, size);
@@ -239,14 +296,15 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
               {round.orders.map((order, j) => {
                 if (!review && !order.seen[i]) {
                   const guess = pencil[`${id}:${order.tag}`];
+                  const starred = highlighted.has(`${id}:${order.tag}`);
                   return (
-                    <td key={order.tag} data-tag={order.tag} data-hidden="" data-pencil={guess ?? ''} className={`h-(--ev-row) rounded-xs p-0 text-center ${picked ? 'bg-color-1-transparent' : 'bg-neutral-2'}`}>
+                    <td key={order.tag} data-tag={order.tag} data-hidden="" data-pencil={guess ?? ''} data-highlight={starred || undefined} {...holdCell(id, order.tag)} className={`h-(--ev-row) select-none rounded-xs p-0 text-center [-webkit-touch-callout:none] ${starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-2'}`}>
                       <button
                         type="button"
                         disabled={!onPencil}
                         onClick={event => { event.stopPropagation(); onPencil?.(id, order.tag, NEXT_PENCIL[guess ?? 'none']); }}
-                        aria-label={`${name}, ${columnLabel(order.tag)}: not scouted${guess ? `, your guess ${guess}` : ''}. Tap to pencil a guess.`}
-                        className={`h-full w-full rounded-xs outline-dashed outline-1 -outline-offset-2 outline-neutral-5 enabled:active:bg-neutral-3 ${guess ? 'text-m font-regular text-neutral-7' : 'font-data text-s text-neutral-6'}`}
+                        aria-label={`${name}, ${columnLabel(order.tag)}: not scouted${guess ? `, your guess ${guess}` : ''}${starred ? ', highlighted' : ''}. Tap to pencil a guess, hold to highlight.`}
+                        className={`h-full w-full rounded-xs outline-dashed outline-1 -outline-offset-2 outline-neutral-5 ${starred ? '' : 'enabled:active:bg-neutral-3'} ${guess ? 'text-m font-regular text-neutral-7' : 'font-data text-s text-neutral-6'}`}
                       >
                         <span aria-hidden="true">{guess === 'yes' ? '✓' : guess === 'no' ? '✗' : '?'}</span>
                       </button>
@@ -259,13 +317,14 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 const fresh = !review && reveal.has(`${id}:${order.tag}`);
                 const miss = review && order.answer !== null && yes !== (order.answer === 'yes');
                 const lit = !review && answered[j];
-                const fill = miss ? 'bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
+                const starred = !review && highlighted.has(`${id}:${order.tag}`);
+                const fill = miss ? 'bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]' : starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
-                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} className={`relative h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
+                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} data-highlight={starred || undefined} {...(review ? {} : holdCell(id, order.tag))} className={`relative h-(--ev-row) select-none rounded-xs p-0 text-center text-m font-heavy [-webkit-touch-callout:none] ${fill} ${lit ? 'ev-lit' : ''}`}>
                     {called && fresh && <span aria-hidden="true" className="ev-sparkle" />}
                     <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'}`} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
-                    <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}</span>
+                    <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}{starred && ', highlighted'}</span>
                     {guess && !called && (review || fresh) && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
                   </td>
                 );

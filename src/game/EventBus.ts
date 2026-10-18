@@ -17,8 +17,10 @@
 //   page  -> board 'clue-board-unscouted' each animal's question gems whose answer is still hidden (plan 045)
 //   board -> page  'clue-board-nudge'     the player tried to move an animal's card (it's pinned; plan 046)
 //   page  -> board 'clue-board-answer'    the mystery's answer to a question just landed in the grid (plan 046)
+//   board -> page  'clue-board-walked'    a ruled-out animal walked off the edge (plan 047)
 import Phaser from 'phaser';
-import type { Grid, Toys } from './BoardModel';
+import type { Heading } from '@/clueGame/animalBoard';
+import type { Cell, Grid, Toys } from './BoardModel';
 import type { GemType } from './constants';
 
 /** How a released animal's card leaves the board (plan 046), from how the animal moves. */
@@ -48,16 +50,18 @@ export interface EventPayloads {
      * pinned on the board; `faces`: a picture (emoji) drawn on each gem color this round (plan 044 graybox); `labels`: what a
      * screen reader calls each gem color this round; `board`: a saved board to resume instead of the seeded one.
      * `escapes`: the mystery's id, only so its card bolts off if it's released (plan 046); the board decides no rules.
+     * `wander` (plan 047): marked animals step after each move; `toy`: a release by the move's own run leaves a line toy.
      */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number };
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number; wander?: { toy: boolean } };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */
     'clue-board-key': { key: BoardKey; shift: boolean };
     'clue-board-announce': string;
-    'clue-board-marks': { marked: number[] };
-    /** The board as it settled (saved so the game can resume). */
-    'clue-board-settled': { grid: Grid; toys: Toys };
+    /** `headings` (plan 047): the way each marked animal walks. */
+    'clue-board-marks': { marked: number[]; headings?: Partial<Record<number, Heading>> };
+    /** The board as it settled, with where the animals stand (saved so the game can resume). */
+    'clue-board-settled': { grid: Grid; toys: Toys; pins: Array<[Cell, number]> };
     'clue-board-select': { id: number | null };
     'clue-board-tile': { id: number };
     'clue-board-tile-hold': { id: number };
@@ -67,6 +71,8 @@ export interface EventPayloads {
     'clue-board-nudge': { id: number };
     /** Plan 046: the mystery's answer to a question just stamped in the grid; on Yes the board acts it out (answerEffects.ts). */
     'clue-board-answer': { tag: string; yes: boolean };
+    /** Plan 047: a marked animal stepped off the board's edge (released, or the mystery escapes). */
+    'clue-board-walked': { id: number };
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

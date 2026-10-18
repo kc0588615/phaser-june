@@ -7,12 +7,14 @@
 // animal ('clue-board-tile', or 'clue-board-tile-hold' for a long press); the animal picked in the grid pulses ('clue-board-select').
 // Plan 046: a try at moving a card wiggles it and says so ('clue-board-nudge'); a Yes about the mystery is acted out ('clue-board-answer').
 // Plan 045: 'clue-board-unscouted' says which answers each animal still hides, for the scouting preview.
+// Plan 047: marked animals walk the way the marks say ('clue-board-marks' headings) and step off the edge
+// ('clue-board-walked'); a release by the move's own run earns a line toy on the freed cell.
 import Phaser from 'phaser';
 import { BoardController } from './BoardController';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from './BoardModel';
 import { BoardView, type TilePreview } from './BoardView';
 import { GEM_COLOR, GEM_TYPES, GRID_COLS, GRID_ROWS, gemTexture, type GemType } from './constants';
-import { EventBus, type EventPayloads } from './EventBus';
+import { EventBus, type EventPayloads, type PinExit } from './EventBus';
 import { sfx } from './sfx';
 import { reducedMotion } from './motion';
 import { squareBoardLayout, type BoardLayout } from './squareLayout';
@@ -21,6 +23,9 @@ import { makeToyTextures } from './toyTextures';
 import { playAnswerEffect } from './answerEffects';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
 import { DEFAULT_RULES } from '@/clueGame/questionMatch';
+import { HEADING_STEP, rewardToy, walkers, type Heading } from '@/clueGame/animalBoard';
+
+const TRAVEL_VERB: Record<PinExit, string> = { fly: 'flies', swim: 'swims', dig: 'digs', walk: 'walks' };
 
 export class ClueBoardScene extends Phaser.Scene {
     static readonly KEY = 'ClueBoard';
@@ -38,6 +43,12 @@ export class ClueBoardScene extends Phaser.Scene {
     /** Plan 044: the pinned animals the player ruled out, and whether this board has animals at all. */
     private marked = new Set<number>();
     private animals = false;
+    /** Plan 047: whether marked animals walk, and earn reward toys; how and which way each goes; this move's toys and step words. */
+    private wander: { toy: boolean } | null = null;
+    private travels = new Map<number, PinExit>();
+    private headings: Partial<Record<number, Heading>> = {};
+    private earned: Array<[Cell, Special, name: string]> = [];
+    private steps: string[] = [];
     /** Plan 045: per animal, the question gems whose answer it still hides. */
     private unscouted = new Map<number, GemType[]>();
     /** What a screen reader calls each gem this round (its clue's question, the pebble, the witness gem). */
@@ -81,9 +92,26 @@ export class ClueBoardScene extends Phaser.Scene {
                 const pin = this.model.pinnedCells().find(([[px, py]]) => px === x && py === y);
                 if (pin) EventBus.emit('clue-board-nudge', { id: pin[1] });
             },
+            walkers: () => (this.wander
+                ? walkers({ marked: [...this.marked], released: [], headings: this.headings }, this.model.pinnedCells(), this.model.width, this.model.height)
+                    .map(([id, heading]) => [id, HEADING_STEP[heading]])
+                : []),
+            stepped: (id, kind) => {
+                const name = this.names.get(id) ?? 'animal';
+                if (kind === 'left') EventBus.emit('clue-board-walked', { id });
+                if (kind !== 'blocked') this.steps.push(kind === 'left' ? `${name} wandered off` : `${name} ${TRAVEL_VERB[this.travels.get(id) ?? 'walk']} ${this.headings[id]}`);
+            },
+            rewards: () => this.earned.map(([cell, special]) => [cell, special]),
+            rewarded: placed => {
+                const gifts = this.earned.filter(([[x, y]]) => placed.some(([[px, py]]) => px === x && py === y)).map(([, , name]) => `The ${name} left you a line gem`);
+                const lines = [...this.steps, ...gifts];
+                if (lines.length > 0) EventBus.emit('clue-board-announce', lines.join('. '));
+                this.steps = [];
+                this.earned = [];
+            },
             onMoveResolved: () => {
                 this.reshuffleIfStuck();
-                EventBus.emit('clue-board-settled', { grid: this.model.getGrid(), toys: this.model.getToys() });
+                EventBus.emit('clue-board-settled', { grid: this.model.getGrid(), toys: this.model.getToys(), pins: this.model.pinnedCells() });
             },
             announce: (text, cell) => {
                 const pin = cell && this.model.pinnedCells().find(([[px, py]]) => px === cell[0] && py === cell[1]);
@@ -112,7 +140,7 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes, wander }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
         const pinned = pins.map((pin): [Cell, number] => [pin.cell, pin.id]);
@@ -130,7 +158,12 @@ export class ClueBoardScene extends Phaser.Scene {
         this.rareGem = rare?.type ?? null;
         this.labels = labels;
         this.names = new Map(pins.map(pin => [pin.id, pin.name]));
+        this.travels = new Map(pins.map(pin => [pin.id, pin.exit ?? 'walk']));
         this.marked.clear();
+        this.wander = wander ?? null;
+        this.headings = {};
+        this.earned = [];
+        this.steps = [];
         this.unscouted.clear();
         this.animals = pins.length > 0;
         this.controller.resetInput();
@@ -139,8 +172,9 @@ export class ClueBoardScene extends Phaser.Scene {
         this.controller.ready = true;
     }
 
-    private onMarks({ marked }: EventPayloads['clue-board-marks']): void {
+    private onMarks({ marked, headings = {} }: EventPayloads['clue-board-marks']): void {
         this.marked = new Set(marked);
+        this.headings = headings;
         this.view?.setMarked(marked);
         this.controller?.refreshPreview();
         this.controller?.activity();
@@ -214,6 +248,12 @@ export class ClueBoardScene extends Phaser.Scene {
             this.burst(group.cells, GEM_COLOR[group.gemType] ?? '#ffffff', rare ? 0 : group.cells.length);
         }
         const released = phase.touched.filter(id => this.marked.has(id));
+        // Plan 047: a release by the move's own run (not a toy's clear) earns a line toy where the card was, put down once the move settles.
+        if (!cascade && this.wander?.toy) {
+            for (const [cell, id] of this.model.pinnedCells()) {
+                if (released.includes(id) && phase.runTouched.includes(id)) this.earned.push([cell, rewardToy(this.headings[id] ?? 'left'), this.names.get(id) ?? 'animal']);
+            }
+        }
         // Plan 046: a card whose answer this move's own clear scouts hops (the rules decide the same: own move, unmarked, still hidden).
         if (!cascade) {
             for (const [id, colors] of phase.nearColors) {

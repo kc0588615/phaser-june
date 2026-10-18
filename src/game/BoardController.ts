@@ -4,11 +4,13 @@
 // move's, then every cascade) is reported and animated; any other swap slides
 // back and costs nothing. On the keyboard, arrows move a cursor and Shift+arrows
 // swap its gem that way; Escape drops a tapped gem. After HINT_MS with no input
-// the board outlines a swap (the idle hint). Animals' cards never move (plan 046):
-// swiping one, or swapping a gem into one, wiggles it on its pin (a nudge). Rules live in BoardModel,
-// visuals in BoardView; the scene says what a match means.
+// the board outlines a swap (the idle hint). The player never moves an animal's card
+// (plan 046): swiping one, or swapping a gem into one, wiggles it on its pin (a nudge).
+// Plan 047: after the move settles, the marked cards the scene names step one cell
+// each (each step settling before the next), then reward toys go down. Rules live in
+// BoardModel, visuals in BoardView; the scene says what a match means.
 import Phaser from 'phaser';
-import { isNeighbor, toyMakers, type BoardModel, type Cell, type ExplodePhase, type Move } from './BoardModel';
+import { isNeighbor, toyMakers, type BoardModel, type Cell, type ExplodePhase, type Move, type Special } from './BoardModel';
 import type { BoardKey } from './EventBus';
 import type { BoardView, TilePreview } from './BoardView';
 import { sfx } from './sfx';
@@ -31,6 +33,14 @@ export interface BoardHooks {
     tileHold?(cell: Cell): void;
     /** The player tried to move an animal's card (plan 046). */
     nudge?(cell: Cell): void;
+    /** Plan 047: the marked cards to step after the move, in order, each with its step. */
+    walkers?(): Array<[id: number, step: readonly [dx: number, dy: number]]>;
+    /** Plan 047: a card's step was taken, blocked by another card, or took it off the edge (it's unpinned). */
+    stepped?(id: number, kind: 'moved' | 'blocked' | 'left'): void;
+    /** Plan 047: once the steps are done, the reward toys to put down. */
+    rewards?(): Array<[Cell, Special]>;
+    /** Plan 047: the move's steps are done and these rewards went down (a card or witness gem on the cell blocks one). */
+    rewarded?(placed: Array<[Cell, Special]>): void;
     /** The move and every cascade have settled. */
     onMoveResolved(): void;
     /** What a keyboard action did, in words (for screen readers). */
@@ -276,7 +286,11 @@ export class BoardController {
         this.hooks.nudge?.(card);
     }
 
-    /** Swap, then animate each explode phase. A new board mid-move (the next round) ends it at the next pause. */
+    /**
+     * Swap, then animate each explode phase; then (plan 047) each marked card steps and its cascades settle, and reward
+     * toys go down. A new board mid-move (the next round) ends it at the next pause; a lock (the round ended) skips the
+     * steps left.
+     */
     private async resolve(move: Move): Promise<void> {
         this.resolving = true;
         const board = this.board;
@@ -284,25 +298,28 @@ export class BoardController {
         try {
             await this.view.animateSwap(move);
             if (replaced()) return;
-            let phase = this.model.nextPhase(move);
-            for (let cascade = false; phase.cleared.length > 0; cascade = true) {
-                const released = this.hooks.onPhase(phase, cascade) ?? [];
-                if (phase.fired.length > 0) await this.view.animateFires(phase.fired);
-                if (replaced()) return;
-                await this.view.animateExplosions(phase.cleared, toyMakers(phase));
-                if (replaced()) return;
-                this.view.showToys(phase.made);
-                await this.view.animateFalls(phase.refills);
-                if (replaced()) return;
-                if (released.length > 0) {
-                    const refills = this.model.unpin(released);
-                    await this.view.releaseTiles(released);
+            if (!await this.settle(this.model.nextPhase(move), false, replaced)) return;
+            for (const [id, step] of this.hooks.walkers?.() ?? []) {
+                if (this.locked) break;
+                const from = this.model.pinnedCells().find(([, other]) => other === id)?.[0];
+                if (!from) continue; // released earlier this move
+                const result = this.model.stepPin(id, step);
+                this.hooks.stepped?.(id, result.kind);
+                if (result.kind === 'blocked') continue;
+                if (result.kind === 'left') {
+                    await this.view.releaseTiles([id]);
                     if (replaced()) return;
-                    await this.view.animateFalls(refills);
-                    if (replaced()) return;
+                    await this.view.animateFalls(result.refills);
+                } else {
+                    await this.view.stepTile(id, [from[0] + step[0], from[1] + step[1]]);
                 }
-                phase = this.model.nextPhase();
+                if (replaced()) return;
+                if (!await this.settle(this.model.nextPhase(), true, replaced)) return;
             }
+            const rewards = (this.hooks.rewards?.() ?? []).filter(([cell, special]) => this.model.placeToy(cell, special));
+            const grid = this.model.getGrid();
+            this.view.showToys(rewards.map(([cell, special]) => ({ cell, special, gemType: grid[cell[0]][cell[1]] })));
+            this.hooks.rewarded?.(rewards);
         } catch (error) {
             console.error('[BoardController] Move failed; redrawing the board:', error);
             this.view.createBoard(this.model.getGrid(), this.model.getToys());
@@ -311,6 +328,29 @@ export class BoardController {
             this.activity();
             this.hooks.onMoveResolved();
         }
+    }
+
+    /** Animate a phase and its cascades (`cascade`: the first is one too). False when a new board replaced this one. */
+    private async settle(first: ExplodePhase, cascade: boolean, replaced: () => boolean): Promise<boolean> {
+        for (let phase = first; phase.cleared.length > 0; cascade = true) {
+            const released = this.hooks.onPhase(phase, cascade) ?? [];
+            if (phase.fired.length > 0) await this.view.animateFires(phase.fired);
+            if (replaced()) return false;
+            await this.view.animateExplosions(phase.cleared, toyMakers(phase));
+            if (replaced()) return false;
+            this.view.showToys(phase.made);
+            await this.view.animateFalls(phase.refills);
+            if (replaced()) return false;
+            if (released.length > 0) {
+                const refills = this.model.unpin(released);
+                await this.view.releaseTiles(released);
+                if (replaced()) return false;
+                await this.view.animateFalls(refills);
+                if (replaced()) return false;
+            }
+            phase = this.model.nextPhase();
+        }
+        return true;
     }
 }
 

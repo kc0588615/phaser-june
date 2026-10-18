@@ -98,15 +98,19 @@ A hand-written, sourced detail about the mystery animal, with words that would n
 _Avoid_: field note, clue, fun note, hint
 
 **Rule out**:
-The player's mark on a suspect they believe isn't the mystery animal. Free, and undone the same way until the suspect is released.
+The player's mark on a suspect they believe isn't the mystery animal. Free, and undone the same way until the suspect is released; undoing it stops its wander.
 _Avoid_: cross out, eliminate
 
 **Release**:
-A ruled-out suspect leaving the board because a gem next to it was cleared. Only ruled-out suspects can be released.
+A ruled-out suspect leaving the board because a gem next to it was cleared, or because it wandered off the edge. Only ruled-out suspects can be released. A release by the player's own match leaves a line gem in its place.
 _Avoid_: remove, clear
 
+**Wander**:
+A ruled-out suspect stepping one cell toward the edge after each move, the way it travels (fliers up, diggers and swimmers down, walkers to the nearer side); stepping off the edge releases it.
+_Avoid_: drift, roam
+
 **Escape**:
-Releasing the mystery animal: the round is lost.
+Releasing the mystery animal, by a clear or by its wander: the round is lost.
 
 **Find**:
 Releasing every look-alike, so the last suspect left is the mystery animal: the round is won.

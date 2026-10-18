@@ -5,9 +5,10 @@
 //
 // Pinned tiles (plan 044): an animal can sit on a cell. A pinned cell holds no gem
 // (its grid value is ignored), never matches, can't be swapped, isn't cleared by
-// toys and never moves; gems fall past it. Each phase reports the tiles it touched
-// (a run, or a cleared gem, right next to them); the rules decide what that does.
-// With no pins, every behavior is the one the tests pin for 041/043.
+// toys and moves only when the rules step it (plan 047); gems fall past it. Each
+// phase reports the tiles it touched (a run, or a cleared gem, right next to them);
+// the rules decide what that does. With no pins, every behavior is the one the tests
+// pin for 041/043.
 import { GEM_TYPES, type GemType } from './constants';
 import { mulberry32, shuffled } from '@/lib/seededRng';
 
@@ -54,12 +55,14 @@ export interface ExplodePhase {
   touched: number[];
   /** Each touched tile with the gem colors cleared or matched right next to it (plan 045 scouting). */
   nearColors: Array<[id: number, colors: GemType[]]>;
+  /** The touched tiles with a run cell right next to them (not only a toy's clear): plan 047's toy reward. */
+  runTouched: number[];
 }
 /** Column-major like the grid: the id pinned on each cell, or null. */
 export type Pins = (number | null)[][];
 
 const key = ([x, y]: Cell) => `${x},${y}`;
-const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [], nearColors: [] };
+const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [], nearColors: [], runTouched: [] };
 const NEAR: ReadonlyArray<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 export function isNeighbor([ax, ay]: Cell, [bx, by]: Cell): boolean {
@@ -164,6 +167,32 @@ export class BoardModel {
     return freed.size ? this.collapse(freed) : [];
   }
 
+  /**
+   * Step a pinned tile one cell (plan 047): it swaps places with the gem there, which moves into its old cell with any
+   * toy riding it (never set off). Blocked by another tile; off the edge it's unpinned and its column fills. Matches
+   * the step makes are left for `nextPhase()`.
+   */
+  stepPin(id: number, [dx, dy]: readonly [number, number]): { kind: 'moved' | 'blocked' } | { kind: 'left'; refills: ExplodePhase['refills'] } {
+    const from = this.pinnedCells().find(([, other]) => other === id)?.[0];
+    if (!from) return { kind: 'blocked' };
+    const to: Cell = [from[0] + dx, from[1] + dy];
+    if (!this.onBoard(to)) return { kind: 'left', refills: this.unpin([id]) };
+    if (this.isPinned(to)) return { kind: 'blocked' };
+    this.grid[from[0]][from[1]] = this.grid[to[0]][to[1]];
+    this.toys[from[0]][from[1]] = this.toys[to[0]][to[1]];
+    this.toys[to[0]][to[1]] = null;
+    this.pins[to[0]][to[1]] = id;
+    this.pins[from[0]][from[1]] = null;
+    return { kind: 'moved' };
+  }
+
+  /** Put a toy on the gem in a cell (plan 047's reward); not on a tile or a rare gem. Whether it was put. */
+  placeToy([x, y]: Cell, special: Special): boolean {
+    if (!this.onBoard([x, y]) || this.isPinned([x, y]) || this.grid[x][y] === this.rare?.type) return false;
+    this.toys[x][y] = special;
+    return true;
+  }
+
   getGrid(): Grid {
     return this.grid.map(column => [...column]);
   }
@@ -247,9 +276,10 @@ export class BoardModel {
       return cells.length ? [[id, [...new Set(colored.map(([cx, cy]) => this.grid[cx][cy]))]]] : [];
     });
     const touched = nearColors.map(([id]) => id);
+    const runTouched = this.pinnedCells().filter(([[x, y]]) => NEAR.some(([dx, dy]) => matched.has(key([x + dx, y + dy])))).map(([, id]) => id);
     for (const toy of made) this.toys[toy.cell[0]][toy.cell[1]] = toy.special;
     const refills = this.collapse(clearedKeys);
-    return { groups, cleared, made, fired, refills, touched, nearColors };
+    return { groups, cleared, made, fired, refills, touched, nearColors, runTouched };
   }
 
   /** Drop the gems left in each column past its pinned cells and fill the free cells at the top with new gems. */

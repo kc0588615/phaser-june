@@ -11,18 +11,20 @@
 //     [--scout on|off] [--knows size,covering]   (plan 045 scouting, on in the rules: suspects' answers start hidden
 //     and a move's clear next to an unmarked tile shows them; careful and reader know the --knows traits on sight,
 //     novice none, expert all)
+//     [--wander on|off] [--toy on|off]   (plan 047, on in the rules: marked tiles step to the edge each move and leave;
+//     --toy: a release by the player's own run leaves a line toy; follows --wander unless set. 045-0: --wander off)
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  ANIMAL_RULES, BOARD_GEMS, WITNESS_GEM, applyPhase, endOfMove, mark, nameAtTimeout, newAnimalRound, newTrail, pickSuspectSet, reportOf,
-  starsFor, stillPossible, tileCells, trailAfter, trailFinished,
+  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameAtTimeout, newAnimalRound, newTrail,
+  pickSuspectSet, reportOf, rewardToy, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
   type AnimalRound, type AnimalRules, type PhaseReport,
 } from '../src/clueGame/animalBoard';
 import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
 import { makeBook, poolFor, type Book } from '../src/clueGame/questionMatch';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import type { ContinentKey } from '../src/clueGame/regions';
-import { BoardModel, neighborSwaps, type Cell, type Move, type Special } from '../src/game/BoardModel';
+import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from '../src/game/BoardModel';
 import { hash32, mulberry32, shuffled } from '../src/lib/seededRng';
 
 type Player = 'careful' | 'novice' | 'expert' | 'reader' | 'guesser' | 'random' | 'oracle';
@@ -50,6 +52,11 @@ interface Result {
   identifiedAt: number | null;
   toys: number;
   stuck: boolean;
+  /** Plan 047: steps a tile couldn't take, tiles that walked off, reward toys put down, releases by a toy's clear (not a run). */
+  blocked: number;
+  walked: number;
+  rewards: number;
+  toyReleases: number;
 }
 
 const toysOf = (board: BoardModel): Array<[Cell, Special]> =>
@@ -64,18 +71,42 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
   let state = newAnimalRound(book, rules, { suspects: deal.suspects, mysteryId: deal.mysteryId, place: deal.place });
   const reasons = THINKERS.includes(player);
   const knows = (tag: string) => player === 'expert' || (player !== 'novice' && options.knows.includes(tag.slice(0, tag.indexOf(':'))));
+  // Marking fixes the way a tile walks, from where it stands now (plan 047).
+  const markOut = (id: number) => {
+    const cell = board.pinnedCells().find(([, other]) => other === id)![0];
+    state = mark(state, id, true, rules.wander ? headingOf(travelOf(book.byId.get(id)!), cell, board.width) : undefined);
+  };
   if (player === 'guesser') {
-    for (const id of shuffled(state.suspects, rng).slice(0, rules.suspects - 1)) state = mark(state, id, true);
+    for (const id of shuffled(state.suspects, rng).slice(0, rules.suspects - 1)) markOut(id);
   }
-  if (player === 'oracle') for (const id of state.suspects) if (id !== state.mysteryId) state = mark(state, id, true);
+  if (player === 'oracle') for (const id of state.suspects) if (id !== state.mysteryId) markOut(id);
   let identifiedAt: number | null = null;
   let toys = 0;
   let stuck = false;
+  let blocked = 0, walked = 0, rewards = 0, toyReleases = 0;
+  const earned: Array<[Cell, Special]> = [];
+
+  /** A phase and its cascades. `own`: the first is the player's swap (scouts, uses the move, earns reward toys). */
+  const resolve = (first: ExplodePhase, own: boolean) => {
+    let phase = first;
+    for (let cascade = !own; phase.groups.length > 0; cascade = true) {
+      toys += phase.made.length;
+      const before = state.released;
+      const cells = new Map(board.pinnedCells().map(([cell, id]) => [id, cell]));
+      state = applyPhase(book, state, reportOf(phase), cascade);
+      if (state.status !== 'playing') return;
+      const newly = state.released.filter(id => !before.includes(id));
+      toyReleases += newly.filter(id => !phase.runTouched.includes(id)).length;
+      if (!cascade && rules.wanderToy) for (const id of newly) if (phase.runTouched.includes(id)) earned.push([cells.get(id)!, rewardToy(state.headings[id] ?? 'left')]);
+      board.unpin(newly);
+      phase = board.nextPhase();
+    }
+  };
 
   while (state.status === 'playing') {
     if (reasons) {
       const possible = stillPossible(book, state, knows);
-      for (const id of state.suspects) if (!possible.includes(id) && !state.released.includes(id) && !state.marked.includes(id)) state = mark(state, id, true);
+      for (const id of state.suspects) if (!possible.includes(id) && !state.released.includes(id) && !state.marked.includes(id)) markOut(id);
       if (identifiedAt === null && possible.length === 1) identifiedAt = state.movesUsed;
     }
     let valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
@@ -85,15 +116,18 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
       if (valid.length === 0) { stuck = true; break; }
     }
     const move = player === 'random' || player === 'reader' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player, knows);
-    let phase = board.nextPhase(move);
-    for (let cascade = false; phase.groups.length > 0; cascade = true) {
-      toys += phase.made.length;
-      const before = state.released.length;
-      state = applyPhase(book, state, reportOf(phase), cascade);
-      if (state.status !== 'playing') break;
-      board.unpin(state.released.slice(before));
-      phase = board.nextPhase();
+    resolve(board.nextPhase(move), true);
+    // Plan 047: each marked tile tries one step, in order; each step settles (walk-off refill, cascades) before the next.
+    if (rules.wander) {
+      for (const [id, heading] of walkers(state, board.pinnedCells(), board.width, board.height)) {
+        if (state.status !== 'playing') break;
+        const step = board.stepPin(id, HEADING_STEP[heading]);
+        if (step.kind === 'blocked') { blocked++; continue; }
+        if (step.kind === 'left') { walked++; state = walkOff(state, id); }
+        if (state.status === 'playing') resolve(board.nextPhase(), false);
+      }
     }
+    for (const [cell, special] of earned.splice(0)) if (state.status === 'playing' && board.placeToy(cell, special)) rewards++;
     state = endOfMove(state);
     if (state.status === 'playing' && !board.hasAnyValidMove()) board.shuffle();
   }
@@ -103,7 +137,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
       : state.suspects.filter(id => !state.released.includes(id));
     state = nameAtTimeout(state, left[Math.floor(rng() * left.length)] ?? null);
   }
-  return { state, identifiedAt, toys, stuck };
+  return { state, identifiedAt, toys, stuck, blocked, walked, rewards, toyReleases };
 }
 
 /**
@@ -146,7 +180,8 @@ function aim(book: Book, state: AnimalRound, board: BoardModel, scratch: BoardMo
         state.orders.forEach((order, i) => { if (colors.includes(order.gem) && !known(order, id)) value += scoutWorth[i]; });
       }
     }
-    for (const [cell] of marked) value += 0.3 * Math.max(0, 3 - distance(cell, phase.cleared));
+    // Clears landing near marked tiles set up the next release; with wander they walk off anyway.
+    if (!state.rules.wander) for (const [cell] of marked) value += 0.3 * Math.max(0, 3 - distance(cell, phase.cleared));
     if (value > bestValue) { best = move; bestValue = value; }
   }
   return best;
@@ -168,7 +203,9 @@ async function main() {
     witnessChance: Number(arg('witness', String(ANIMAL_RULES.witnessChance))),
     starMoves: arg('stars', ANIMAL_RULES.starMoves.join(',')).split(',').map(Number) as AnimalRules['starMoves'],
     scout: arg('scout', ANIMAL_RULES.scout ? 'on' : 'off') === 'on',
+    wander: arg('wander', ANIMAL_RULES.wander ? 'on' : 'off') === 'on',
   };
+  rules.wanderToy = arg('toy', rules.wander ? 'on' : 'off') === 'on';
   const options: Options = { knows: arg('knows', 'size,covering').split(',').filter(Boolean) };
   const players = arg('players', 'careful,novice,expert,reader,guesser,random,oracle').split(',') as Player[];
   const dir = path.join(process.cwd(), 'db/content');
@@ -181,10 +218,10 @@ async function main() {
 
   const explain = process.argv.includes('--explain') ? Number(arg('explain', '0')) : null;
   if (explain === null) {
-    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}.`);
+    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
-    console.log('\n| Place | Player | Found | ★★★ | Escaped | Out of moves | Named right at timeout | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Trail finished | Finds a trail |');
-    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    console.log('\n| Place | Player | Found | ★★★ | Escaped | Out of moves | Named right at timeout | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail |');
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   }
 
   const starLines: string[] = [];
@@ -220,10 +257,10 @@ async function main() {
       const board = new BoardModel(size, size);
       const scratch = new BoardModel(size, size);
       scratch.newBoard(1, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance });
-      const rng = mulberry32(hash32(`${player}:${setupSeed}`));
-      const results = deals.map(deal => {
+      const results = deals.map((deal, r) => {
         board.newBoard(deal.boardSeed, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance }, deal.pins);
-        return play(book, rules, board, scratch, deal, player, rng, options);
+        // Seeded per deal, so runs under different rules pair up round by round.
+        return play(book, rules, board, scratch, deal, player, mulberry32(hash32(`${player}:${setupSeed}:${r}`)), options);
       });
       const found = results.filter(r => r.state.status === 'found');
       let trail = newTrail(rules);
@@ -248,6 +285,11 @@ async function main() {
         avg(results.map(r => r.state.notes.length)),
         avg(results.map(r => r.state.orders.reduce((sum, order) => sum + order.seen.filter(Boolean).length, 0))),
         avg(results.map(r => r.toys)),
+        avg(results.map(r => r.toyReleases)),
+        avg(results.map(r => r.walked)),
+        avg(results.map(r => r.blocked)),
+        avg(results.map(r => r.rewards)),
+        THINKERS.includes(player) ? pct(count(r => r.identifiedAt !== null && r.state.lostBy === 'out-of-moves'), n) : '-',
         `${pct(finished, trails)} of ${trails}`,
         trails ? (trailFinds / trails).toFixed(1) : '-',
       ].join(' | ') + (count(r => r.stuck) ? ` (stuck ${count(r => r.stuck)})` : '') + ' |');

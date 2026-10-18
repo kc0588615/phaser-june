@@ -1,8 +1,9 @@
 // The animal board screen (plans 044, 045). Mobile-first: the evidence grid on top
-// (its corner holds the menu, hearts, moves and witness notes), then the board, which
+// (its corner holds the menu, hearts and moves; its Mystery cell, the witness notes), then the board, which
 // is as tall as the screen is wide, then the status line when the phone is tall
 // enough (globals.css `roomy`); a tall phone's spare height grows the grid's rows.
-// From the md breakpoint the board takes the left, the grid and status the right.
+// From the md breakpoint the board takes the left, the grid and status the right; from
+// lg the witness notes fill the space below them (no notes drawer there).
 // In the grid, an animal's name pill picks it (tap), opens its field guide (hold)
 // and rules it out (slide right).
 import Head from 'next/head';
@@ -14,12 +15,13 @@ import { clueFace } from '@/clueGame/clueFaces';
 import { sightingPoint } from '@/clueGame/places';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
 import { EventBus, type BoardKey } from '@/game/EventBus';
+import { reducedMotion } from '@/game/motion';
 import { isSoundOn, setSoundOn, sfx, wakeOnFirstGesture } from '@/game/sfx';
 import { JournalSheet } from '@/components/clueGame/JournalSheet';
 import { WithBlanks } from '@/components/clueGame/LogEntryText';
 import { PhaserGame } from '@/components/clueGame/PhaserGame';
 import { useJournal } from '@/components/clueGame/useJournal';
-import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesSheet, OutOfMovesSheet, RoundEndSheet, SuspectSheet } from './AnimalSheets';
+import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesList, NotesSheet, OutOfMovesSheet, RoundEndSheet, SuspectSheet } from './AnimalSheets';
 import { EvidenceGrid } from './EvidenceGrid';
 import { useAnimalSession } from './useAnimalSession';
 import { useShownOrders } from './useShownOrders';
@@ -53,7 +55,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
       );
     }
     case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
-    case 'released': return <span>The {nameOf(entry.id)} left the board.</span>;
+    case 'released': return <span>The {nameOf(entry.id)} {entry.walked ? 'wandered off' : 'left'} the board.</span>;
     case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
@@ -64,6 +66,21 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
 /** A landed answer: cc's emphasis pair (color-3 with its foreground) in both modes. */
 function Stamp({ children }: { children: ReactNode }) {
   return <b className="rounded-xs bg-emphasis-icon px-xxs font-heavy text-on-emphasis-icon">{children}</b>;
+}
+
+/** Tailwind's lg breakpoint: the witness notes sit beside the board instead of in a drawer. */
+const WIDE = '(min-width: 64rem)';
+
+function useWide(): boolean {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia(WIDE);
+    const onChange = () => setWide(query.matches);
+    onChange();
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+  return wide;
 }
 
 type Sheet = { kind: 'suspect'; id: number } | { kind: 'notes' } | { kind: 'menu' } | null;
@@ -169,7 +186,7 @@ function StatusTicker({ now, nowKey, nowKind, facts }: { now: ReactNode; nowKey:
 }
 
 export function AnimalGame() {
-  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil } = useAnimalSession();
+  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight } = useAnimalSession();
   const { journal, records, record } = useJournal();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -177,6 +194,7 @@ export function AnimalGame() {
   const [boardStatus, setBoardStatus] = useState('');
   const [soundOn, setSoundOnState] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
+  const wide = useWide();
   const [hint, setHint] = useState<Hint | null>(null);
   const [boardBusy, setBoardBusy] = useState(false);
   // Pencilled cells just scouted, for the grid's one-time sparkle (or crossed-out guess).
@@ -365,7 +383,7 @@ export function AnimalGame() {
   const rule = useCallback((id: number, ruledOut: boolean) => {
     markSuspect(id, ruledOut);
     setSelected(null);
-    say(ruledOut ? `You ruled out the ${nameOf(id)}. Clear a gem next to its card to release it.` : `The ${nameOf(id)} is back in.`);
+    say(ruledOut ? `You ruled out the ${nameOf(id)}. It will wander off the board, or clear a gem next to its card to release it now.` : `The ${nameOf(id)} is back in.`);
   }, [markSuspect, nameOf, say]);
 
   const latest = visibleLog.at(-1);
@@ -386,13 +404,23 @@ export function AnimalGame() {
   const inTrail = trail ? Math.min(rules.trailRounds, trail.rounds + (session?.end ? 0 : 1)) : 0;
   const pick = round && selected !== null && round.status === 'playing' ? selected : null;
 
-  const notes = round?.notes.length ?? 0;
-  // One row when the corner has room; on narrow phones (corner under 9rem) menu + notes on top, the stats below.
+  // The Mystery cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
+  const sideNotes = useRef<HTMLElement>(null);
+  const openNotes = () => {
+    if (!wide) { setSheet({ kind: 'notes' }); return; }
+    const newest = sideNotes.current?.querySelector<HTMLElement>('li:last-child');
+    if (!newest) return;
+    newest.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    newest.classList.remove('ev-pulse');
+    void newest.offsetWidth; // restart the pulse
+    newest.classList.add('ev-pulse');
+  };
+  // On narrow phones (corner under 9rem) the stats wrap under the menu.
   const corner = (
     <div className="@container">
-    <div className="grid grid-cols-[auto_auto] items-center justify-start gap-xxs pb-xxs [grid-template-areas:'menu_notes'_'stats_stats'] @min-[9rem]:flex">
-      <button type="button" onClick={() => setSheet({ kind: 'menu' })} aria-label="Menu" className="btn btn-ghost btn-icon shrink-0 [grid-area:menu] @max-[9rem]:p-xs"><Menu className="h-5 w-5" /></button>
-      <div className="min-w-0 [grid-area:stats]">
+    <div className="flex flex-wrap items-center gap-xxs pb-xxs">
+      <button type="button" onClick={() => setSheet({ kind: 'menu' })} aria-label="Menu" className="btn btn-ghost btn-icon shrink-0 @max-[9rem]:p-xs"><Menu className="h-5 w-5" /></button>
+      <div className="min-w-0">
         <div className="flex items-center gap-xxs">
           {trail && (
             <span className="flex" role="img" aria-label={`${trail.hearts} of ${rules.hearts} hearts`}>
@@ -403,18 +431,6 @@ export function AnimalGame() {
         </div>
         <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">moves</span></div>
       </div>
-      {round && (
-        <button
-          type="button"
-          onClick={() => setSheet({ kind: 'notes' })}
-          aria-label={`Witness notes: ${notes}`}
-          className={`flex h-8 shrink-0 [grid-area:notes] items-center gap-xxs rounded-full px-xxs text-s ${notes > 0 ? 'bg-notes/20' : 'opacity-50'}`}
-        >
-          {/* Keyed by the count, so the book flashes once each time a note comes in. */}
-          <span key={notes} aria-hidden="true" className={`inline-block rounded-full ${notes > 0 ? 'ev-flash' : ''}`}>📓</span>
-          {notes > 0 && <b className="font-data text-xs font-heavy tabular-nums">{notes}</b>}
-        </button>
-      )}
     </div>
     </div>
   );
@@ -422,11 +438,11 @@ export function AnimalGame() {
   return (
     <>
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
-      <main className="flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)] overscroll-none bg-neutral-1 text-neutral-10 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px]">
+      <main className="flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)] overscroll-none bg-neutral-1 text-neutral-10 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px] lg:[grid-template-areas:'board_grid'_'board_status'_'board_side']">
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} reveal={reveal} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} onNotes={openNotes} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
@@ -451,17 +467,24 @@ export function AnimalGame() {
         </section>
 
         <StatusTicker key={roundNo ?? 0} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} />
+
+        {wide && round && (
+          <section ref={sideNotes} aria-labelledby="side-notes" className="min-h-0 overflow-y-auto overscroll-contain px-m pb-m pt-xs [grid-area:side]">
+            <h2 id="side-notes" className="m-0 mb-xs text-xs font-medium uppercase text-neutral-7">📓 Witness notes</h2>
+            <NotesList round={round} />
+          </section>
+        )}
       </main>
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
         {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardTop} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} onMark={ruledOut => rule(picked.id, ruledOut)} onStep={onStep} onClose={() => setSheet(null)} />}
-        {round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
+        {!wide && round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu
             key="menu"
             title={placeName ?? 'Critter Connect'}
-            detail={trail ? `Animal ${inTrail} of ${rules.trailRounds}${(session?.trailNo ?? 1) > 1 ? ` · trail ${session?.trailNo}` : ''} · Score ${session?.score ?? 0}` : 'Loading animals…'}
+            stats={trail ? [['Animal', `${inTrail} of ${rules.trailRounds}`], ['Trail', session?.trailNo ?? 1], ['Score', session?.score ?? 0]] : null}
             soundOn={soundOn}
             onSound={toggleSound}
             onJournal={() => { setSheet(null); setJournalOpen(true); }}

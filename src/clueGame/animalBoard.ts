@@ -4,10 +4,12 @@
 // "ruled out", and a marked suspect is released when a gem next to it is cleared.
 // Plan 045: the suspects' own answers start hidden; a move's clear of a clue's color
 // next to an unmarked tile shows that animal's answer to it (scouting).
+// Plan 047 (behind `wander`): marked suspects step toward the edge each move by how
+// they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
 // by the balance bot (scripts/balance-044.ts) and, later, the game.
-import type { Cell, ExplodePhase } from '@/game/BoardModel';
+import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
 import {
   FAMILY_TREE_RANKS, PREFIX_CATEGORY, likeness, prefixOf, questionText, shortQuestionText,
@@ -33,16 +35,20 @@ export interface AnimalRules {
   trailRounds: number;
   /** Plan 045: suspects' answers start hidden; a move's own clear (not a cascade) of a clue's color next to an unmarked tile shows that animal's answer. */
   scout: boolean;
+  /** Plan 047: after each move, marked suspects step one cell (`headings`) and leave off the edge; found is decided at the move's end. */
+  wander: boolean;
+  /** Plan 047: a release by a run of the player's own swap leaves a line toy on the freed cell, after the move settles. */
+  wanderToy: boolean;
   points: { star: number; moveLeft: number; streakStep: number; streakMax: number };
 }
 
 /**
- * Tuned by the balance bot (plans 044 and 045): with scouting, orders of 20 gems and 30 moves (careful finds 86-92%,
- * one who knows every trait on sight 96-98%, one who knows none 82-88%, one who reasons but moves at random 61-67%).
- * Star lines from careful's moves left at the find.
+ * Tuned by the balance bot (plans 044, 045 and 047): with scouting, wandering and reward toys, orders of 20 gems and
+ * 30 moves (careful finds 91-95%, one who knows every trait on sight 100%, one who knows none 87-92%, one who reasons
+ * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '045-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true,
+  version: '047-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -175,6 +181,40 @@ export function tileCells(width: number, height: number, count: number, rng: () 
   return null;
 }
 
+// ---- Wandering (plan 047) ----
+
+/** How an animal moves (plan 046 exits, plan 047 steps): from its clue tags; bats fly. */
+export type Travel = 'fly' | 'swim' | 'dig' | 'walk';
+export type Heading = 'up' | 'down' | 'left' | 'right';
+export const HEADING_STEP: Record<Heading, readonly [dx: number, dy: number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+
+export function travelOf(animal: Pick<Animal, 'tags' | 'familyTree'>): Travel {
+  const tags = animal.tags ?? [];
+  if (animal.familyTree.order.latin === 'Chiroptera' || tags.includes('glider')) return 'fly';
+  if (tags.includes('fully_aquatic') || tags.includes('swimmer')) return 'swim';
+  if (tags.includes('burrower')) return 'dig';
+  return 'walk';
+}
+
+/** Which way a marked card walks: fliers up, diggers and swimmers down, walkers to the nearer side (the middle goes right, as plan 046's exits). */
+export function headingOf(travel: Travel, [x]: Cell, width: number): Heading {
+  if (travel === 'fly') return 'up';
+  if (travel === 'swim' || travel === 'dig') return 'down';
+  return x < (width - 1) / 2 ? 'left' : 'right';
+}
+
+/** The marked suspects on the board that step this move, nearest their edge first (ties by id), so followers aren't blocked. */
+export function walkers(state: Pick<AnimalRound, 'marked' | 'released' | 'headings'>, pins: ReadonlyArray<[Cell, number]>, width: number, height: number): Array<[id: number, heading: Heading]> {
+  const edge: Record<Heading, (cell: Cell) => number> = { up: ([, y]) => y, down: ([, y]) => height - 1 - y, left: ([x]) => x, right: ([x]) => width - 1 - x };
+  return pins.flatMap(([cell, id]) => {
+    const heading = state.headings?.[id];
+    return heading && state.marked.includes(id) && !state.released.includes(id) ? [{ id, heading, far: edge[heading](cell) }] : [];
+  }).sort((a, b) => a.far - b.far || a.id - b.id).map(({ id, heading }): [number, Heading] => [id, heading]);
+}
+
+/** The reward toy: a line gem along the way the animal walked. */
+export const rewardToy = (heading: Heading): Special => (heading === 'up' || heading === 'down' ? 'column' : 'row');
+
 // ---- A round ----
 
 /** 'out-of-moves': the moves ran out with look-alikes left; the player may name the animal (journal only), then it's lost. */
@@ -187,7 +227,7 @@ export type AnimalLogEntry =
   | { kind: 'answer'; tag: string; question: string; answer: 'yes' | 'no' }
   | { kind: 'note'; note: WitnessNote }
   | { kind: 'scouted'; id: number; tag: string; question: string; yes: boolean }
-  | { kind: 'released'; id: number }
+  | { kind: 'released'; id: number; walked?: true }
   | { kind: 'escaped'; id: number }
   | { kind: 'found'; id: number }
   | { kind: 'out-of-moves' }
@@ -204,6 +244,8 @@ export interface AnimalRound {
   notesLeft: WitnessNote[];
   notes: WitnessNote[];
   marked: number[];
+  /** Plan 047: the way each marked suspect walks, fixed when it was marked. */
+  headings: Partial<Record<number, Heading>>;
   released: number[];
   movesLeft: number;
   movesUsed: number;
@@ -223,7 +265,7 @@ export function newAnimalRound(book: Book, rules: AnimalRules, { suspects, myste
     rules, place, suspects: sorted, mysteryId,
     orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null, seen: sorted.map(() => !rules.scout) })),
     notesLeft: witnessNotes(book, sorted, mysteryId), notes: [],
-    marked: [], released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, log: [],
+    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, log: [],
   };
 }
 
@@ -250,7 +292,8 @@ export function reportOf(phase: ExplodePhase): PhaseReport {
 /**
  * One explode phase: the move's own clear (cascade false, uses a move) or a cascade. Collected gems fill their orders
  * (a full order stamps its answer), witness gems show the next notes, and marked tiles touched are released. If the
- * mystery is among them it escapes and the round is lost, even when the same clear released every look-alike.
+ * mystery is among them it escapes and the round is lost, even when the same clear released every look-alike. With
+ * wander the escape is decided in `endOfMove`, so the rest of the move (steps, rewards) still plays out.
  */
 export function applyPhase(book: Book, state: AnimalRound, report: PhaseReport, cascade: boolean): AnimalRound {
   if (state.status !== 'playing') return state;
@@ -285,12 +328,14 @@ export function applyPhase(book: Book, state: AnimalRound, report: PhaseReport, 
   let status: AnimalStatus = state.status;
   let lostBy = state.lostBy;
   if (newly.includes(state.mysteryId)) {
-    status = 'lost';
-    lostBy = 'escaped';
+    if (!state.rules.wander) {
+      status = 'lost';
+      lostBy = 'escaped';
+    }
     log.push({ kind: 'escaped', id: state.mysteryId });
   } else {
     for (const id of newly) log.push({ kind: 'released', id });
-    if (released.length === state.suspects.length - 1) {
+    if (!state.rules.wander && released.length === state.suspects.length - 1) {
       status = 'found';
       log.push({ kind: 'found', id: state.mysteryId });
     }
@@ -299,17 +344,37 @@ export function applyPhase(book: Book, state: AnimalRound, report: PhaseReport, 
   return { ...state, orders, notesLeft, notes, released, status, lostBy, movesLeft: state.movesLeft - used, movesUsed: state.movesUsed + used, log };
 }
 
-/** After a move and its cascades have settled: out of moves with look-alikes left, the round waits for a name. */
+/** A marked suspect walked off the edge (plan 047): released, or the mystery escapes (decided in `endOfMove`). */
+export function walkOff(state: AnimalRound, id: number): AnimalRound {
+  if (state.status !== 'playing' || !state.marked.includes(id) || state.released.includes(id)) return state;
+  if (id === state.mysteryId) return { ...state, released: [...state.released, id], log: [...state.log, { kind: 'escaped', id }] };
+  return { ...state, released: [...state.released, id], log: [...state.log, { kind: 'released', id, walked: true }] };
+}
+
+/**
+ * After a move, its cascades (and, with wander, its steps) have settled. With wander the round is decided here, once:
+ * the mystery gone is an escape, even when every look-alike went too; else every look-alike gone is found. Then out of
+ * moves with look-alikes left, the round waits for a name.
+ */
 export function endOfMove(state: AnimalRound): AnimalRound {
+  if (state.status === 'playing' && state.rules.wander && state.released.includes(state.mysteryId)) {
+    return { ...state, status: 'lost', lostBy: 'escaped' };
+  }
+  if (state.status === 'playing' && state.rules.wander && state.released.length === state.suspects.length - 1) {
+    return { ...state, status: 'found', log: [...state.log, { kind: 'found', id: state.mysteryId }] };
+  }
   if (state.status !== 'playing' || state.movesLeft > 0) return state;
   return { ...state, status: 'out-of-moves', log: [...state.log, { kind: 'out-of-moves' }] };
 }
 
-/** Mark a suspect "ruled out" (or clear the mark). Only marked suspects can be released. */
-export function mark(state: AnimalRound, id: number, ruledOut: boolean): AnimalRound {
+/** Mark a suspect "ruled out" (or clear the mark). Only marked suspects can be released. `heading`: the way it walks (plan 047). */
+export function mark(state: AnimalRound, id: number, ruledOut: boolean, heading?: Heading): AnimalRound {
   if (state.status !== 'playing' || !state.suspects.includes(id) || state.released.includes(id)) return state;
   const marked = state.marked.filter(other => other !== id);
-  return { ...state, marked: ruledOut ? [...marked, id] : marked };
+  const headings = { ...state.headings };
+  if (!ruledOut) delete headings[id];
+  else if (heading) headings[id] = heading;
+  return { ...state, marked: ruledOut ? [...marked, id] : marked, headings };
 }
 
 /** Out of moves: name an animal still on the board. A right name goes in the journal; the round is lost either way. */

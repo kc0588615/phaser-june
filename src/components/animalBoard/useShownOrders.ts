@@ -2,10 +2,11 @@
 // match's gems the moment it clears, a beat before the board animates it, so the
 // grid trails them: each color cleared sends one gem flying from the board to its
 // column's Mystery cell, and the count catches up when it lands, or once the board
-// settles. The answer stamps when the count looks full. Reduced motion: no flight,
+// settles. The answer stamps when the count looks full. A collected witness gem flies to the
+// Mystery cell (the witness notes). Reduced motion: no flight,
 // no lag. The rules' own counts stay on the cell (data-have) for tests.
 import { useEffect, useRef, useState } from 'react';
-import type { AnimalRound } from '@/clueGame/animalBoard';
+import { WITNESS_GEM, type AnimalRound } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { EventBus, type EventPayloads } from '@/game/EventBus';
 import { EMOJI_FONT, FACE_Y } from '@/game/faceGlyphs';
@@ -63,6 +64,11 @@ export function useShownOrders(round: AnimalRound | undefined, roundNo: number |
       const current = roundRef.current;
       if (!current || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
       for (const point of from) {
+        if (point.gemType === WITNESS_GEM) {
+          const notes = document.querySelector('[data-flight-target="notes"]');
+          if (notes) void flyGem(point, notes, WITNESS_GEM, '');
+          continue;
+        }
         const i = current.orders.findIndex(order => order.gem === point.gemType);
         if (i < 0 || (shownRef.current[i] ?? 0) >= current.rules.orderSize) continue;
         const order = current.orders[i];

@@ -6,8 +6,8 @@ import type { Grid, Toys } from '@/game/BoardModel';
 
 const KEY = 'cc:explore:game';
 
-/** The board after the last settled move of round `roundNo`. */
-export interface SavedBoard { roundNo: number; grid: Grid; toys: Toys }
+/** The board after the last settled move of round `roundNo`; `pins`: where the animals stand now (plan 047: they walk). */
+export interface SavedBoard { roundNo: number; grid: Grid; toys: Toys; pins: Array<[cell: [x: number, y: number], id: number]> }
 
 export interface SavedGame {
   v: 1;

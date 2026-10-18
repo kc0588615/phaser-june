@@ -207,15 +207,15 @@ async function main() {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
       document.querySelector('button[aria-label="Menu"]')?.click();
       await wait(250);
-      const button = document.querySelector('button[aria-label^="Sound"]');
-      if (!button) return null;
-      const before = button.getAttribute('aria-pressed');
-      button.click();
+      const soundSwitch = () => [...document.querySelectorAll('[role=switch]')].find(b => b.textContent === 'Sound');
+      if (!soundSwitch()) return null;
+      const before = soundSwitch().getAttribute('aria-checked');
+      soundSwitch().click();
       await wait(100);
-      const after = document.querySelector('button[aria-label^="Sound"]').getAttribute('aria-pressed');
-      document.querySelector('button[aria-label^="Sound"]').click();
+      const after = soundSwitch().getAttribute('aria-checked');
+      soundSwitch().click();
       await wait(100);
-      [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+      [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
       await wait(250);
       return { before, after, closed: !document.querySelector('[role=dialog]') };
     });
@@ -296,18 +296,47 @@ async function main() {
         });
         check('every suspect answer starts hidden', pencil.hidden === 20, `${pencil.hidden} hidden`);
         check('tapping a hidden answer pencils yes, then no, then blank, and changes no rule', pencil.steps.join() === 'yes,no,' && pencil.same && pencil.cleared && pencil.stillHidden, JSON.stringify(pencil));
+        // Holding an answer cell highlights it (no pencil) and its column's gem glows; holding again clears both.
+        const highlight = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const grid = document.querySelector('table[aria-label="Evidence"]');
+          const first = grid.querySelector('tr[data-suspect] td[data-hidden]');
+          const id = first.closest('tr').dataset.suspect;
+          const tag = first.dataset.tag;
+          const at = () => grid.querySelector(`tr[data-suspect="${id}"] td[data-tag="${tag}"]`);
+          const glow = () => Boolean(grid.querySelector(`th[data-tag="${tag}"] .ev-glow`));
+          const hold = async () => {
+            const button = at().querySelector('button');
+            const r = button.getBoundingClientRect();
+            const opts = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+            button.dispatchEvent(new PointerEvent('pointerdown', opts));
+            await wait(1150);
+            const during = at().hasAttribute('data-highlight');
+            button.dispatchEvent(new PointerEvent('pointerup', opts));
+            button.click();
+            await wait(200);
+            return during;
+          };
+          const during = await hold();
+          const on = { during, cell: at().dataset.highlight === 'true', glow: glow(), pencil: at().dataset.pencil, state: window.__cc.clue().highlight.join() };
+          await hold();
+          return { on, off: { cell: at().hasAttribute('data-highlight'), glow: glow(), pencil: at().dataset.pencil, state: window.__cc.clue().highlight.length }, key: `${id}:${tag}` };
+        });
+        check('holding an answer cell highlights it (before release) and glows its gem (no pencil); holding again clears it',
+          highlight.on.during && highlight.on.cell && highlight.on.glow && highlight.on.pencil === '' && highlight.on.state === highlight.key && !highlight.off.cell && !highlight.off.glow && highlight.off.pencil === '' && highlight.off.state === 0,
+          JSON.stringify(highlight));
         await screenshot('02a-hidden.png');
-        // The field guide says "not scouted" for each hidden answer.
+        // The field guide offers a pencil mark for each hidden answer.
         const guide = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect]');
           await window.__holdPill(row.dataset.suspect);
-          const text = document.querySelector('[role=dialog]')?.innerText ?? '';
-          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+          const notScouted = document.querySelectorAll('[role=dialog] button[data-pencil-guide="yes"]').length;
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await wait(250);
-          return { hidden: row.querySelectorAll('td[data-hidden]').length, notScouted: (text.match(/not scouted/g) ?? []).length };
+          return { hidden: row.querySelectorAll('td[data-hidden]').length, notScouted };
         });
-        check('the field guide says "not scouted" for each hidden answer', guide.hidden > 0 && guide.notScouted === guide.hidden, JSON.stringify(guide));
+        check('the field guide offers a pencil mark for each hidden answer', guide.hidden > 0 && guide.notScouted === guide.hidden, JSON.stringify(guide));
         // A long press on a row opens its field guide (and doesn't pick it); pencilling there keeps the guide open.
         const held = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -338,7 +367,7 @@ async function main() {
           await wait(400);
           const switched = document.querySelector('[role=dialog] h2')?.textContent ?? '';
           const otherName = other.querySelector('th button').getAttribute('aria-label').replace(/^\d+: /, '').replace(/,.*$/, '');
-          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await wait(300);
           if (other.querySelector('button[data-pill]').getAttribute('aria-pressed') === 'true') other.querySelector('button[data-pill]').click(); // drop the pick
           await wait(150);
@@ -347,7 +376,7 @@ async function main() {
         check('a long press on an animal\'s row opens its field guide without picking it', held.opened, JSON.stringify(held));
         check('pencilling in the field guide marks the grid and keeps the guide open', held.pencilled === 'yes' && held.stillOpen && held.cleared === '', JSON.stringify(held));
         check('with the field guide open, pencilling in the grid keeps it open', held.gridPencil === 'yes' && held.openAfterGrid, JSON.stringify(held));
-        check('with the field guide open, tapping another row switches the guide to that animal', held.switched === held.otherName, JSON.stringify(held));
+        check('with the field guide open, tapping another row switches the guide to that animal', held.switched.endsWith(held.otherName), JSON.stringify(held));
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -356,7 +385,7 @@ async function main() {
           await wait(400);
           const title = document.querySelector('[role=dialog] h2')?.textContent ?? '';
           const picked = window.__pill(id)?.getAttribute('aria-pressed') === 'true';
-          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Close')?.click();
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await wait(300);
           return { id, title, picked, held: window.__cc.events(50).some(e => e.name === 'clue-board-tile-hold' && e.payload?.id === id) };
         });
@@ -378,7 +407,7 @@ async function main() {
         });
         check('ruling an animal out doesn\'t change the grid\'s height (the board keeps its size)', slid.heightOut === slid.before, JSON.stringify(slid));
         check('dragging an animal\'s photo a little does nothing; from its name, nothing; all the way rules it out; again brings it back', !slid.short && !slid.fromName && slid.out && !slid.back && slid.picked === 'false', JSON.stringify(slid));
-        check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title === names.get(tileHeld.id) && !tileHeld.picked, JSON.stringify(tileHeld));
+        check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title?.endsWith(names.get(tileHeld.id)) && !tileHeld.picked, JSON.stringify(tileHeld));
       }
       // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
       await evaluate(async () => {
@@ -391,6 +420,7 @@ async function main() {
       const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : 'careful';
       let state = start;
       let moves = 0;
+      let pinsBefore = pins;
       while (state.status === 'playing' && moves < MAX_MOVES) {
         // Rule out, through the real grid (tap the name pill, then slide it right): careful, every suspect the
         // answers and notes so far rule out; reckless, the mystery itself; idle, nobody.
@@ -403,7 +433,8 @@ async function main() {
             await wait(250);
             const picked = window.__cc.events(50).filter(e => e.name === 'clue-board-select').at(-1)?.payload?.id ?? null;
             await window.__slidePill(id, 120);
-            const counter = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '';
+            const cell = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th');
+            const counter = cell?.querySelector('button')?.getAttribute('aria-label') ?? cell?.textContent ?? '';
             const clue = window.__cc.clue();
             return { marked: clue.marked.includes(id), picked, counter, count: clue.marked.length };
           }, id);
@@ -515,10 +546,22 @@ async function main() {
         check(`round ${n} move ${moves}: only ruled-out animals leave the board`, state.released.every(id => state.marked.includes(id)), JSON.stringify({ released: state.released, marked: state.marked }));
         check(`round ${n} move ${moves}: the mystery leaves only by escaping, which loses the round`,
           !state.released.includes(state.mysteryId) || (state.status === 'lost' && state.lostBy === 'escaped'));
-        // After an escape the board may release more marked animals in the move's last cascades; the round is over by then.
-        const left = 5 - state.released.length;
-        check(`round ${n} move ${moves}: tiles never move; released ones are gone`, result.pins.every(([cell, id]) => pins.some(([c, i]) => i === id && c[0] === cell[0] && c[1] === cell[1]))
-          && (state.status === 'lost' ? result.pins.length <= left : result.pins.length === left), JSON.stringify({ pins: result.pins, released: state.released }));
+        // Plan 047: an escape is decided once the move is done, so every release in it (steps too) is counted.
+        check(`round ${n} move ${moves}: released animals are gone from the board`, result.pins.length === 5 - state.released.length, JSON.stringify({ pins: result.pins, released: state.released }));
+        // Plan 047: an unmarked card never moves; a marked one still on the board took one step its way (or waited behind another card).
+        const STEP = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+        const cellOf = (list, id) => list.find(([, other]) => other === id)?.[0];
+        const strays = result.pins.filter(([cell, id]) => {
+          const was = cellOf(pinsBefore, id);
+          if (!before.marked.includes(id)) return cell[0] !== was[0] || cell[1] !== was[1];
+          const [dx, dy] = STEP[before.headings[id]];
+          const stepped = cell[0] === was[0] + dx && cell[1] === was[1] + dy;
+          const waited = cell[0] === was[0] && cell[1] === was[1]
+            && [...pinsBefore, ...result.pins].some(([[x, y], other]) => other !== id && x === was[0] + dx && y === was[1] + dy);
+          return !stepped && !waited;
+        });
+        check(`round ${n} move ${moves}: unmarked cards stay put; marked ones step one cell their way (or wait behind a card)`, strays.length === 0, JSON.stringify({ strays, before: pinsBefore, headings: before.headings }));
+        pinsBefore = result.pins;
         check(`round ${n} move ${moves}: the view shows a tile exactly on each pinned cell`, result.view.every((column, x) => column.every((key, y) => (key === 'tile') === result.pins.some(([[px, py]]) => px === x && py === y))));
         check(`round ${n} move ${moves}: the grid's Mystery row matches the rules`, state.orders.every(order => {
           const cell = result.orders.find(candidate => candidate.tag === order.tag);
@@ -555,16 +598,16 @@ async function main() {
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
           const notes = await evaluate(async () => {
-            const book = document.querySelector('button[aria-label^="Witness notes"]');
-            const corner = { inCorner: Boolean(book?.closest('table[aria-label="Evidence"]')), count: book?.querySelector('b')?.textContent ?? null, flash: Boolean(book?.querySelector('.ev-flash')) };
+            const book = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] button[data-flight-target="notes"]');
+            const corner = { inRow: Boolean(book), count: book?.dataset.notes ?? null, label: book?.getAttribute('aria-label') ?? '', flash: Boolean(book?.querySelector('.ev-pulse')) };
             book?.click();
             await new Promise(resolve => setTimeout(resolve, 250));
             const text = document.querySelector('[role=dialog]')?.innerText ?? '';
-            [...document.querySelectorAll('[role=dialog] button')].find(button => button.textContent === 'Close')?.click();
+            [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
             return { text, ...corner };
           });
-          check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of the 5/.test(notes.text), notes.text.slice(0, 120));
-          check(`round ${n}: the witness notes book in the grid's corner counts the notes and flashes`, notes.inCorner && notes.count === String(state.notes) && notes.flash, JSON.stringify({ ...notes, text: undefined }));
+          check(`round ${n}: a witness note says how many of the 5 field guides agree`, /of 5\s+field guides say this too/.test(notes.text), notes.text.slice(0, 120));
+          check(`round ${n}: the Mystery cell opens the witness notes, counts them and pulses`, notes.inRow && notes.count === String(state.notes) && notes.label.includes(`${state.notes} witness note`) && notes.flash, JSON.stringify({ ...notes, text: undefined }));
           await screenshot('02c-notes.png');
         }
       }
@@ -575,7 +618,7 @@ async function main() {
         const named = await evaluate(async pickName => {
           const sheet = document.querySelector('[aria-label="Out of moves"]');
           const buttons = [...(sheet?.querySelectorAll('button') ?? [])];
-          (buttons.find(b => b.textContent === pickName) ?? buttons[0])?.click();
+          (buttons.find(b => b.textContent.endsWith(pickName)) ?? buttons[0])?.click();
           await new Promise(resolve => setTimeout(resolve, 300));
           return { sheet: Boolean(sheet), clue: window.__cc.clue() };
         }, pickName);
@@ -641,7 +684,7 @@ async function main() {
     const journal = await evaluate(async () => {
       document.querySelector('button[aria-label="Menu"]')?.click();
       await new Promise(resolve => setTimeout(resolve, 250));
-      document.querySelector('button[aria-label="Field journal"]')?.click();
+      [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Field journal')?.click();
       await new Promise(resolve => setTimeout(resolve, 1200));
       return document.querySelector('[role=dialog] #journal-title')?.nextElementSibling?.textContent ?? '';
     });
@@ -673,11 +716,32 @@ async function main() {
         await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
         await wait(150);
       }
+      // Plan 047: rule out another look-alike and play one move, so a card stands where it walked to.
+      // A card whose first step stays on the board (one on an edge walking out would just leave).
+      const STEP = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+      let walker = null;
+      for (const id of cc.clue().suspects.filter(other => other !== first.mysteryId && !cc.clue().released.includes(other) && !cc.clue().marked.includes(other))) {
+        if (cc.clue().status !== 'playing') break;
+        await window.__slidePill(id, 120);
+        const [x, y] = cc.state().pins.find(([, other]) => other === id)[0];
+        const [dx, dy] = STEP[cc.clue().headings[id]];
+        if (x + dx >= 0 && x + dx < 7 && y + dy >= 0 && y + dy < 7) { walker = id; break; }
+        await window.__slidePill(id, 120); // back
+      }
+      let walked = null;
+      if (walker) {
+        const from = cc.state().pins.find(([, id]) => id === walker)?.[0];
+        const moves = cc.validMoves().filter(candidate => !cc.touchedBy(candidate).includes(walker));
+        if (moves.length) await cc.drag(moves[0], { input: 'touch', timeoutMs: 30_000 });
+        await wait(150);
+        const to = cc.state().pins.find(([, id]) => id === walker)?.[0] ?? null;
+        walked = { id: walker, from, to };
+      }
       const cell = document.querySelector('table[aria-label="Evidence"] tr[data-suspect] td[data-hidden] button');
       cell?.click();
       await wait(400); // the save effect runs
       const { grid, toys, pins } = cc.state();
-      return { clue: cc.clue(), grid, toys, pins, saved: Boolean(sessionStorage.getItem('cc:explore:game')) };
+      return { clue: cc.clue(), grid, toys, pins, walked, saved: Boolean(sessionStorage.getItem('cc:explore:game')) };
     });
     await screenshot('06-before-reload.png');
     await page('Page.reload');
@@ -692,6 +756,9 @@ async function main() {
     check('a reload resumes the round: rules, marks, pencil, moves, score', JSON.stringify(resumed.clue) === JSON.stringify(played.clue), JSON.stringify({ before: played.clue.movesLeft, after: resumed.clue.movesLeft }));
     check('a reload resumes the board: gems and toys', JSON.stringify(resumed.grid) === JSON.stringify(played.grid) && JSON.stringify(resumed.toys) === JSON.stringify(played.toys), `${toyCount} toys`);
     check('a reload keeps released animals off the board', JSON.stringify(resumed.pins) === JSON.stringify(played.pins), JSON.stringify({ released: played.clue.released, pins: resumed.pins.length }));
+    const { walked } = played;
+    check('a card that walked stays where it walked to after a reload (plan 047)', Boolean(walked?.to) && JSON.stringify(walked.to) !== JSON.stringify(walked.from)
+      && JSON.stringify(resumed.pins.find(([, id]) => id === walked.id)?.[0]) === JSON.stringify(walked.to), JSON.stringify(walked));
     // Play the round out, then reload on its end card: the journal doesn't count the find twice.
     await evaluate(() => window.__cc.speed(4));
     const journalBefore = await evaluate(() => localStorage.getItem('clue-match:journal:v1'));
@@ -705,7 +772,7 @@ async function main() {
       }
       // Out of moves: name the mystery right, so the journal records it.
       await new Promise(resolve => setTimeout(resolve, 300));
-      [...(document.querySelector('[aria-label="Out of moves"]')?.querySelectorAll('button') ?? [])].find(b => b.textContent === mysteryName)?.click();
+      [...(document.querySelector('[aria-label="Out of moves"]')?.querySelectorAll('button') ?? [])].find(b => b.textContent.endsWith(mysteryName))?.click();
     }, names.get(resumed.clue.mysteryId));
     await waitFor(() => window.__cc.clue().end, 'the resumed round to end', 20_000).catch(() => null);
     await sleep(1000);

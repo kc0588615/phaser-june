@@ -1,11 +1,11 @@
 // The animal board page's state (plan 044): loads the pool (and the continent from
 // ?place=), deals each round from the session seed, runs the session reducer, and
 // wires the board over the EventBus (setup with tiles and faces, marks, clears,
-// settled moves, lock, the answers each animal still hides). The game in progress is saved for this tab and
-// resumed on the next load (savedGame.ts).
+// settled moves, lock, the answers each animal still hides; plan 047: which way marked animals walk, and the ones
+// that walked off). The game in progress is saved for this tab between moves and resumed on the next load (savedGame.ts).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
-  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, newAnimalRound, newTrail, pickSuspectSet, tileCells,
+  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, headingOf, newAnimalRound, newTrail, pickSuspectSet, tileCells, travelOf,
   type AnimalRound,
 } from '@/clueGame/animalBoard';
 import { animalDebugSummary, animalSessionReducer } from '@/clueGame/animalSession';
@@ -18,19 +18,11 @@ import { continentOf, type ContinentKey } from '@/clueGame/regions';
 import { prefixOf } from '@/clueGame/traits';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
 import { GRID_COLS, GRID_ROWS, type GemType } from '@/game/constants';
-import { EventBus, type BoardPin, type EventPayloads, type PinExit } from '@/game/EventBus';
+import { EventBus, type BoardPin, type EventPayloads } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 import { readSavedGame, writeSavedGame, type SavedBoard } from './savedGame';
-
-/** Plan 046: how a released animal's card leaves the board, from how it moves (its clue tags; bats fly). */
-function exitOf(tags: readonly string[], taxonOrder: string | null): PinExit {
-  if (taxonOrder === 'Chiroptera' || tags.includes('glider')) return 'fly';
-  if (tags.includes('fully_aquatic') || tags.includes('swimmer')) return 'swim';
-  if (tags.includes('burrower')) return 'dig';
-  return 'walk';
-}
 
 /** `?seed=N` replays a session: same trails, same boards (never saved or resumed). */
 function urlSeed(): number | null {
@@ -77,6 +69,8 @@ export function useAnimalSession() {
   /** A resumed round that had already ended (its journal entry is already written). */
   const [recordedRound, setRecordedRound] = useState<number | null>(null);
   const rng = useRef(mulberry32(seed));
+  /** A move is playing out on the board (its first clear came in, it hasn't settled): nothing is saved meanwhile. */
+  const moving = useRef(false);
   const [sceneGeneration, setSceneGeneration] = useState(0);
 
   /** A round: a random seed animal's set, a mystery uniformly among it (not a recent one), a board from the set alone. */
@@ -148,25 +142,31 @@ export function useAnimalSession() {
         if (group.gemType === WITNESS_GEM) witness += group.size;
         else collected[group.gemType] = (collected[group.gemType] ?? 0) + group.size;
       }
+      if (!cascade) moving.current = true;
       dispatch({ type: 'matched', collected, witness, released, cascade, nearColors });
     };
-    const onSettled = ({ grid, toys }: EventPayloads['clue-board-settled']) => {
-      setBoard({ roundNo: sessionRef.current?.roundNo ?? 0, grid, toys });
+    const onWalked = ({ id }: EventPayloads['clue-board-walked']) => dispatch({ type: 'walked', id });
+    const onSettled = ({ grid, toys, pins }: EventPayloads['clue-board-settled']) => {
+      moving.current = false;
+      setBoard({ roundNo: sessionRef.current?.roundNo ?? 0, grid, toys, pins });
       dispatch({ type: 'settled' });
     };
     EventBus.on('current-scene-ready', onSceneReady);
     EventBus.on('gems-matched', onMatched);
+    EventBus.on('clue-board-walked', onWalked);
     EventBus.on('clue-board-settled', onSettled);
     return () => {
       EventBus.off('current-scene-ready', onSceneReady);
       EventBus.off('gems-matched', onMatched);
+      EventBus.off('clue-board-walked', onWalked);
       EventBus.off('clue-board-settled', onSettled);
     };
   }, []);
 
-  // Save after every change; the board as of its last settled move (a tab closed mid-cascade resumes before that move).
+  // Save after every change between moves (marks too), with the board as it settled: a tab closed mid-move resumes
+  // before that move, rules and board alike.
   useEffect(() => {
-    if (!session || replay) return;
+    if (!session || replay || moving.current) return;
     const { book: _book, ...rest } = session;
     writeSavedGame({ v: 1, seed, requested, session: rest, board: board?.roundNo === session.roundNo ? board : null });
   }, [session, board, seed, requested, replay]);
@@ -179,32 +179,37 @@ export function useAnimalSession() {
     const current = sessionRef.current;
     if (sceneGeneration === 0 || !roundNo || !current) return;
     const { round, boardSeed } = current;
-    const cells = tileCells(GRID_COLS, GRID_ROWS, round.suspects.length, mulberry32(boardSeed))!;
+    const resumeBoard = boardRef.current?.roundNo === current.roundNo ? boardRef.current : null;
+    // A resumed board has the animals where they walked to (plan 047); a fresh one where the deal put them.
+    const dealt = tileCells(GRID_COLS, GRID_ROWS, round.suspects.length, mulberry32(boardSeed))!;
+    const cells = round.suspects.map((id, i) => resumeBoard?.pins?.find(([, other]) => other === id)?.[0] ?? dealt[i]);
     const pins: BoardPin[] = round.suspects.map((id, i) => {
       const species = speciesById.current.get(id);
+      const animal = current.book.byId.get(id);
       return {
-        cell: cells[i], id, name: current.book.byId.get(id)?.name ?? 'animal',
+        cell: cells[i], id, name: animal?.name ?? 'animal',
         photo: species?.photo ? photoAt(species.photo.url, 120) : null, label: species ? speciesBadge(species) : '?', tag: i + 1,
-        exit: exitOf(current.book.byId.get(id)?.tags ?? [], species?.taxonOrder ?? null),
+        exit: animal ? travelOf(animal) : 'walk',
       };
     }).filter(pin => !round.released.includes(pin.id));
-    const resumeBoard = boardRef.current?.roundNo === current.roundNo ? boardRef.current : null;
     const faces: Partial<Record<GemType, string>> = { [PEBBLE_GEM]: '' };
     const labels: Partial<Record<GemType, string>> = { [PEBBLE_GEM]: 'pebble', [WITNESS_GEM]: 'witness gem' };
     for (const order of round.orders) {
       faces[order.gem] = clueFace(order.tag);
       labels[order.gem] = order.short;
     }
-    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined, escapes: round.mysteryId });
+    EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined, escapes: round.mysteryId,
+      ...(round.rules.wander ? { wander: { toy: round.rules.wanderToy } } : {}) });
     EventBus.emit('clue-board-marks', { marked: [] });
   }, [sceneGeneration, roundNo]);
 
-  // The board releases what the rules have marked.
+  // The board releases what the rules have marked, and walks them the way they were marked to (plan 047).
   const marked = session?.round.marked;
+  const headings = session?.round.headings;
   useEffect(() => {
     if (sceneGeneration === 0 || !marked) return;
-    EventBus.emit('clue-board-marks', { marked });
-  }, [sceneGeneration, marked]);
+    EventBus.emit('clue-board-marks', { marked, headings });
+  }, [sceneGeneration, marked, headings]);
 
   // The scouting preview needs each animal's still-hidden answers (their questions' gems, never the answers).
   const orders = session?.round.orders;
@@ -224,9 +229,18 @@ export function useAnimalSession() {
 
   useEffect(() => setDebugClueSource(() => sessionRef.current ? animalDebugSummary(sessionRef.current, seed) : null), [seed]);
 
-  const markSuspect = useCallback((id: number, ruledOut: boolean) => dispatch({ type: 'mark', id, ruledOut }), []);
+  /** Ruling out fixes the way the card walks, from where it stands (an unmarked card stands where the last move left it). */
+  const markSuspect = useCallback((id: number, ruledOut: boolean) => {
+    const current = sessionRef.current;
+    const animal = current?.book.byId.get(id);
+    if (!current || !animal || !ruledOut || !current.round.rules.wander) { dispatch({ type: 'mark', id, ruledOut }); return; }
+    const settled = boardRef.current?.roundNo === current.roundNo ? boardRef.current.pins?.find(([, other]) => other === id)?.[0] : undefined;
+    const cell = settled ?? tileCells(GRID_COLS, GRID_ROWS, current.round.suspects.length, mulberry32(current.boardSeed))![current.round.suspects.indexOf(id)];
+    dispatch({ type: 'mark', id, ruledOut, heading: headingOf(travelOf(animal), cell, GRID_COLS) });
+  }, []);
   const name = useCallback((id: number | null) => dispatch({ type: 'name', id }), []);
   const pencil = useCallback((id: number, tag: string, value: 'yes' | 'no' | null) => dispatch({ type: 'pencil', id, tag, value }), []);
+  const highlight = useCallback((id: number, tag: string) => dispatch({ type: 'highlight', id, tag }), []);
   const nextRound = useCallback(() => {
     const current = sessionRef.current;
     if (!current?.end || !content) return;
@@ -240,6 +254,6 @@ export function useAnimalSession() {
     pool: content?.pool ?? null,
     place: content?.place ?? null,
     continent: content?.continent ?? null,
-    markSuspect, name, nextRound, pencil,
+    markSuspect, name, nextRound, pencil, highlight,
   };
 }

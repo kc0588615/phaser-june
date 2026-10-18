@@ -105,13 +105,16 @@ test('only marked tiles are released; the last look-alike released is a find', (
   state = touch(state, [id('Okapi'), id('Aardvark')]); // the Aardvark isn't marked
   assert.deepEqual(state.released, [id('Okapi')]);
   state = touch(state, [id('Black Rhinoceros'), id('Hirola'), id('Giant Pangolin')], true);
-  assert.equal(state.status, 'found');
+  assert.equal(state.status, 'playing'); // plan 047: decided once the move (and its steps) settle
+  assert.equal(endOfMove(state).status, 'found');
 });
 
 test('releasing the mystery loses the round, even in the clear that releases every look-alike, and nothing changes after', () => {
   let state = round('Aardvark');
   for (const suspect of africa) state = mark(state, suspect, true);
   state = touch(state, africa);
+  assert.equal(state.status, 'playing'); // plan 047: decided once the move (and its steps) settle
+  state = endOfMove(state);
   assert.equal(state.status, 'lost');
   assert.equal(state.lostBy, 'escaped');
   const after = touch(state, africa, true);

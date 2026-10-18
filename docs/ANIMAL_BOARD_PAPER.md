@@ -4,6 +4,8 @@
 
 > **Rules 045-0 (2026-10-11) change §2.3–2.4:** orders need 20 gems, stars at 8 and 14 moves left, and each suspect's own answers start hidden. A move's own clear of a clue's color next to an unmarked tile *scouts* that animal's answer (cascades don't); players may pencil their own guesses; the field guide hides its lines about the round's four questions until the round ends. Bot results and why: `plans/045-scout-the-suspects.md`.
 
+> **Rules 047-0 (2026-10-17) change §2.2, §2.5–2.6, §3 and §4.5–4.6:** a ruled-out animal *wanders*, one cell toward the edge after each move, and leaves the board when it steps off; a clear next to it still releases it at once, and a release by the player's own match leaves a line gem. A ruled-out mystery that walks off escapes. Bot results and why: `plans/047-wander.md`.
+
 ## Abstract
 
 Critter Connect is a phone-first match-3 game for grades 6 to 12 about real animals. In the animal board design, a mystery animal hides among five look-alike suspects that sit on the game board as photo tiles. Matching picture gems fills four clue orders; a full order answers one yes/no question about the mystery. The answers never eliminate anyone on their own. The player compares each suspect's own traits with the answers, marks the ones that cannot be the mystery, and then clears gems next to those tiles to release them from the board. Releasing every look-alike finds the mystery; marking the mystery by mistake lets it escape and loses the round. Earlier versions let the game do the reasoning and could be won by matching at random 70 to 90 percent of the time. In this design a simulated player who never reasons finds nothing, a player who marks at random wins about one round in five, and a careful player wins 95 to 97 percent. The paper explains the rules in full, describes strategies at the level of individual moves and whole sessions, and weighs the design's educational strengths against its risks.
@@ -43,7 +45,7 @@ The standard match-3 rules apply. Swapping two neighboring gems is a move only i
 
 **Toys** come from big matches: four in a line makes a *line gem* that clears its row or column; an L or T shape makes a *blast gem* that clears the 3×3 around it; five in a line makes a *color gem* that, swapped with any gem, clears every gem of that color. Two toys swapped together go off as one larger clear.
 
-**Animal tiles** are pinned. They never move, never match, and cannot be swapped. Gems fall past them, behind the photo frame. A line gem's clear passes behind a tile without removing it. Since plan 046 each tile is drawn as a paper photo card on a red pin, tilted and a little bigger than its cell, so it doesn't read as a gem; a swipe on it, or a gem swapped into it, wiggles it on its pin.
+**Animal tiles** are pinned. They never match and cannot be swapped, and an unmarked one never moves (a ruled-out one wanders, §2.5). Gems fall past them, behind the photo frame. A line gem's clear passes behind a tile without removing it. Since plan 046 each tile is drawn as a paper photo card on a red pin, tilted and a little bigger than its cell, so it doesn't read as a gem; a swipe on it, or a gem swapped into it, wiggles it on its pin.
 
 ### 2.3 Clue orders
 
@@ -55,7 +57,7 @@ After its answer, a clue's gems still match and still count as clears next to an
 
 - **Answer chips on each suspect card.** Each card shows that animal's own answer to each of the four clues, as the clue's picture with a check or a cross. This is a small truth table: five rows of animals, four columns of clues.
 - **The field guide.** Tapping a card opens the animal's field guide: its answers written out, its **signs** (short phrases from its record such as "digging claws" or "raids termite mounds"), and the written descriptions of its body, habits, habitat, range and life cycle.
-- **Witness notes.** Each witness gem collected shows one hand-written clue from the mystery's own profile, with any word that would name it blanked out, and a count: "It digs into ant nests and termite mounds with its strong, spade-like claws. *The field guides of 2 of the 5 say this too.*" Only notes that fit two to four of the suspects are used, so a single note never names the animal. Working out *which* suspects fit is the player's job, by comparing the note with the signs.
+- **Witness notes.** Each witness gem collected shows one hand-written clue from the mystery's own profile, with any word that would name it blanked out, and a count: "It digs into ant nests and termite mounds with its strong, spade-like claws. *2 of 5 field guides say this too.*" Only notes that fit two to four of the suspects are used, so a single note never names the animal. Working out *which* suspects fit is the player's job, by comparing the note with the signs.
 
 ### 2.5 Ruling out and releasing
 
@@ -63,14 +65,20 @@ The core action is **Rule out**, a button in each suspect's field guide. Marking
 
 **Only ruled-out animals can be released.** A ruled-out animal is released, and hops off the board, when any gem next to its tile (up, down, left or right) is cleared, by any means: the player's match, a cascade, or a toy. Unmarked animals are never released, whatever happens around them. Its cell then becomes an ordinary cell that fills with gems.
 
+**Ruled-out animals wander** (047-0). After each move, every ruled-out animal still on the board steps one cell toward the edge, the way it travels: fliers (bats, gliders) up, diggers and swimmers down, walkers to the nearer side (the middle column goes right). The way is fixed when it is ruled out. A step swaps the card with the gem in that cell (a toy there just moves); a card in the way makes it wait a move. Stepping off the edge releases it. Steps go one card at a time, nearest the edge first, and each settles before the next; their cascades release but never scout. Taking the mark back stops the walk where the card stands. Every ruled-out card walks the same way, mystery or not, so the walk says nothing about who the mystery is.
+
+**A release by the player's own match leaves a line gem** where the card was, along the way it travelled (a column for up and down, a row for left and right), put down once the move has settled. Cascades, toys and walking off give none, and a card or witness gem on that cell by then blocks it.
+
 Before committing a swap, the player can tap a gem: the board outlines in amber every ruled-out animal that a swap from that gem would release. This **release preview** shows consequences, never correctness. The same tap shows, above each unmarked animal, the question gems that swap would scout there (only answers it still hides): the **scouting preview** names the question, never the answer. Left idle for 8 seconds, the board outlines one swap (the **idle hint**): one that would release a ruled-out animal if there is one, else one that would scout a hidden answer, else any match. It reads only the board and the player's own marks, never who still fits.
 
-**If the mystery is ruled out and then released, it escapes and the round is lost.** This is the only way to lose a round through play, and it always traces back to a wrong conclusion, never to a stray swipe.
+**If the mystery is ruled out and then released, or walks off the edge, it escapes and the round is lost.** The walk gives time to notice a wrong mark and take it back; a clear next to it does not. This is the only way to lose a round through play, and it always traces back to a wrong conclusion, never to a stray swipe.
 
 ### 2.6 Winning, losing and scoring
 
 - **Found:** every look-alike has been released; the last animal on the board is the mystery.
-- **Escaped:** the mystery was ruled out and released. Lost.
+- **Escaped:** the mystery was ruled out and released, or walked off. Lost.
+
+With wander, the round is decided once a move, its cascades and its steps have all settled: an escape beats a find, which beats running out of moves. Steps still happen on move 30.
 - **Out of moves:** after 30 moves with look-alikes still on the board, the round is lost. The player may still name the animal; a right name is recorded in the journal, but it saves no heart and earns no star. (A blind guess among five wins one time in five no matter what happens on the board, so naming cannot be what wins a round.)
 
 A find earns stars by the moves left: ★ for a find, ★★ with 6 or more moves left, ★★★ with 13 or more. Points are 50 per star, 10 per move left, and a streak bonus of 10 per find in a row (up to 100).
@@ -101,7 +109,7 @@ A good round might go like this:
 
 1. The player chases the fur order, a strong clue. After several moves, "Covered in fur? **Yes.**" The Pangolin (scales) and the Rhino (bare skin) cannot be the mystery. The player rules them out.
 2. Ordinary play continues. Clears next to the two marked tiles release them, some from the player's matches, some from cascades.
-3. A witness gem is collected: "It digs into ant nests and termite mounds with its strong, spade-like claws. The field guides of 2 of the 5 say this too." The signs show *digging claws* and *raids termite mounds* only on the Aardvark and the Pangolin. The Pangolin is already out, so it must be the Aardvark. The player rules out the Okapi and the Hirola.
+3. A witness gem is collected: "It digs into ant nests and termite mounds with its strong, spade-like claws. 2 of 5 field guides say this too." The signs show *digging claws* and *raids termite mounds* only on the Aardvark and the Pangolin. The Pangolin is already out, so it must be the Aardvark. The player rules out the Okapi and the Hirola.
 4. The player aims clears next to those two tiles. When the last one leaves, the Aardvark is found.
 
 The danger in this round is a hasty mark. A player who, right after the fur answer, rules out the Okapi and the Hirola on a hunch is right this time; had the mystery been the Hirola, releasing it would have lost the round.
@@ -127,6 +135,8 @@ The design closes off every way to win without reasoning.
 | Oracle (diagnostic) | knows the answer from the start | 99 to 100% |
 
 Two results matter for learning. First, the gap between Reader and Careful (15 to 27 points) shows that board skill matters on its own: knowing the answer is not enough without the moves to act on it. Second, the Oracle shows every round can be won within the moves, so a loss is never the board's fault. A careful player uses about 16 to 19 of the 30 moves and identifies the mystery about two moves before finding it, so most of a round is spent gathering evidence, not grinding out releases.
+
+**With wander (047-0)** (Africa / Asia, 400 rounds each, setup seed 44, against 045-0 on the same deals): Careful finds 95 / 91% (was 91 / 84%), Reader 85 / 78% (was 71 / 59%), Guesser stays at 18%, Expert and Oracle 100%. No careful player runs out of moves once they know the answer (was 3 to 4%), and the find comes about 1.4 moves after identifying the mystery (was about 2). The cost: the Reader/Careful gap halves to 10 to 13 points, because random movers no longer need luck to release, so board skill now shows more in stars (careful ★★★ 67 / 46%, was 54 / 38%) than in finds. Careful still releases mostly by aiming: about 2.4 releases a round by its own match, 0.7 by walking off. Details: `plans/047-wander.md`.
 
 ## 4. Strategies of play
 
@@ -157,13 +167,15 @@ Witness notes are strong evidence: a note narrows the field to the two to four s
 This is the heart of the game, and the only way to lose a round through play.
 
 - Rule out a suspect when **its own answer contradicts a stamped answer**, or when it **does not fit a witness note** (the mystery always fits its own notes).
-- Never rule out on a hunch, a photo, or a name that "feels" wrong. A wrong mark is harmless until the tile is released, and then it costs the round.
+- Never rule out on a hunch, a photo, or a name that "feels" wrong. A wrong mark is harmless until the tile is released or walks off the edge, and then it costs the round.
 - Combine evidence. Each answer and each note leaves a set of possible suspects; the mystery is in the overlap of all of them.
-- Undo is free. If you are unsure about a mark, take it back before a clear reaches that tile.
+- Undo is free. If you are unsure about a mark, take it back before a clear reaches that tile or it walks off; taking it back stops the walk.
 
 ### 4.6 Release efficiently
 
 - Once an animal is ruled out, every clear next to its tile releases it, including cascades and toys. You do not have to release it with your own match.
+- You don't have to release it at all: it wanders off by itself, a cell a move. A card near its edge is gone in a move or two; a walker needs at most 4, and a flier in the bottom row (or a digger in the top row) 7. Spend moves on evidence and let the walk finish the job.
+- Releasing it with **your own match** is worth a little more: it leaves a line gem where the card was, which can clear the next clue's gems or release another card.
 - **Tap before you swap** to see the release preview when you want to be sure which tiles a move will reach.
 - A **line gem** fired along a row or column clears every gem in it, and releases every ruled-out animal next to any of those gems. A **blast gem** does the same for its 3×3.
 - Releasing early has a small cost and a benefit: the freed cell becomes playable, which opens up the board.
@@ -181,7 +193,7 @@ Three hearts across five rounds allow two losses. With a heart to spare, a playe
 - Matching whatever is available instead of the clue you need.
 - Ruling out the "odd one out" by looks.
 - Treating a weak clue's "no" as if it ruled out more than one animal.
-- Forgetting that cascades release ruled-out animals too, so a careless mark can be punished by a move you did not aim.
+- Forgetting that cascades release ruled-out animals too, and that ruled-out animals walk off on their own, so a careless mark can be punished by a move you did not aim.
 - Ignoring witness gems.
 
 ## 5. Educational analysis
