@@ -215,13 +215,14 @@ step 2 from WSL through the tunnel. To refresh the copy later, repeat 1–2.
    node "$HOME/.agents/skills/postgres-tunnel/scripts/psql-tunnel.mjs" -f deploy/db/dev-role.sql
    ```
 
-3. Once only, PgBouncer: in `/opt/postgis/docker-compose.yml` replace the
-   `pgbouncer` service's `DATABASE_URL` with `DATABASE_URLS` as in the repo
-   copy (keep the server's host and password), then recreate it; `restart`
-   keeps the old config:
+3. Once only (done 2026-10-19, backup `docker-compose.yml.bak-20261019`),
+   PgBouncer: in `/opt/postgis/docker-compose.yml` replace the `pgbouncer`
+   service's `DATABASE_URL` with `DATABASE_URLS` as in the repo copy, then
+   recreate it. `restart` keeps the old config; `--no-deps` keeps compose from
+   recreating `postgis` too (its config changed since it last started):
 
    ```bash
-   cd /opt/postgis && docker compose up -d pgbouncer
+   cd /opt/postgis && docker compose up -d --no-deps pgbouncer
    docker exec pgbouncer grep -A3 '^\[databases\]' /etc/pgbouncer/pgbouncer.ini
    # phaser_june = host=db port=5432 auth_user=postgres
    # phaser_june_dev = host=db port=5432 auth_user=postgres
