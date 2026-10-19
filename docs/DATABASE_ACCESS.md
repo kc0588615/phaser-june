@@ -170,6 +170,74 @@ and `./scripts/db` still work: they use `DATABASE_URL` through PgBouncer.
 Content builds, range imports and `REFRESH MATERIALIZED VIEW CONCURRENTLY`
 (about 2.5 minutes for `clue_match_places`) all ran that way on 2026-09-29.
 
+## Agents on the Oracle VPS
+
+Agents on the Oracle box use PgBouncer (`db.critterconnect.org:6432`, TLS) with
+role `critter_dev` on database `phaser_june_dev`, a copy of prod without
+player identities. No tunnel, no `CLUE_USE_TUNNEL`, no `postgres` password
+there. E2e and content builds write to the copy, never to prod. Port 55432 and
+the `postgres-tunnel` skill are WSL-only. How the VPS itself runs lives in its
+ops repo.
+
+`.env.local` there holds only:
+
+```text
+DATABASE_URL=postgres://critter_dev:<password>@db.critterconnect.org:6432/phaser_june_dev?sslmode=require
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...   # Clerk dev instance
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=...
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=...
+```
+
+The role's login was set 2026-10-18; its password is only in the VPS
+`.env.local` (rotate: `\password critter_dev`). The live app connects as
+`critter_app` straight to the db container, not through PgBouncer (seen
+2026-10-18 from its client address), so a PgBouncer restart doesn't touch it.
+
+### Runbook
+
+Steps 1 and 3 run on the Hetzner host (`pg_dump` 17 lives in the container),
+step 2 from WSL through the tunnel. To refresh the copy later, repeat 1–2.
+
+1. Copy prod:
+
+   ```bash
+   docker exec postgis dropdb -U postgres --if-exists phaser_june_dev
+   docker exec postgis createdb -U postgres phaser_june_dev
+   docker exec postgis sh -c 'pg_dump -U postgres phaser_june | psql -q -v ON_ERROR_STOP=1 -U postgres -d phaser_june_dev'
+   ```
+
+2. `deploy/db/dev-role.sql`: removes player identities from the copy, hands it
+   to `critter_dev`, grants prod's connecting roles explicitly, then closes prod
+   to PUBLIC.
+
+   ```bash
+   node "$HOME/.agents/skills/postgres-tunnel/scripts/psql-tunnel.mjs" -f deploy/db/dev-role.sql
+   ```
+
+3. Once only, PgBouncer: in `/opt/postgis/docker-compose.yml` replace the
+   `pgbouncer` service's `DATABASE_URL` with `DATABASE_URLS` as in the repo
+   copy (keep the server's host and password), then recreate it; `restart`
+   keeps the old config:
+
+   ```bash
+   cd /opt/postgis && docker compose up -d pgbouncer
+   docker exec pgbouncer grep -A3 '^\[databases\]' /etc/pgbouncer/pgbouncer.ini
+   # phaser_june = host=db port=5432 auth_user=postgres
+   # phaser_june_dev = host=db port=5432 auth_user=postgres
+   ```
+
+4. Checks:
+
+   ```bash
+   # live game: 200, and the round loads at https://play.critterconnect.org/explore
+   curl -s -o /dev/null -w '%{http_code}\n' https://play.critterconnect.org/api/clue-game/pool/
+   # on the Oracle box, from the repo: critter_dev reaches the copy...
+   ./scripts/db "select current_database(), current_user, count(*) from species;"
+   # ...but not prod (expect: permission denied for database "phaser_june")
+   DATABASE_URL=$(sed -n 's#^DATABASE_URL=\(.*\)/phaser_june_dev#\1/phaser_june#p' .env.local) ./scripts/db "select 1;"
+   ```
+
 ## Windows/QGIS
 
 Windows/QGIS uses its own Windows-local tunnel on port 5433. WSL agents must

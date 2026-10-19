@@ -32,7 +32,10 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-phaser_june}"
+      # One [databases] entry per URL: prod, and the VPS agents' copy
+      # (docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps). Other roles log in via
+      # auth_user. The ini is written only on a fresh container: `up -d`, not `restart`.
+      DATABASE_URLS: "postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-phaser_june},postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/phaser_june_dev"
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 1000
       DEFAULT_POOL_SIZE: 20
