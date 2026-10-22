@@ -1,5 +1,5 @@
 // The animal board screen (plans 044, 045). Mobile-first: the evidence grid on top
-// (its corner holds the menu, hearts and moves; its Mystery cell, the witness notes), then the board, which
+// (its corner holds the menu, hearts and moves; its Camera cell, the witness notes), then the board, which
 // is as tall as the screen is wide, then the status line when the phone is tall
 // enough (globals.css `roomy`); a tall phone's spare height grows the grid's rows.
 // From the md breakpoint the board takes the left, the grid and status the right; from
@@ -56,7 +56,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
     }
     case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} {entry.walked ? 'wandered off' : 'left'} the board.</span>;
-    case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the mystery. It escaped!</span>;
+    case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one the camera saw. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
     case 'named': return <span>You named the {nameOf(entry.id)}.</span>;
@@ -390,7 +390,8 @@ export function AnimalGame() {
   const hinting = hint && hint.roundNo === roundNo && hint.seen === visibleLog.length;
   const status: ReactNode = hinting ? hint.text
     : latest && session && round ? <LogText entry={latest} nameOf={nameOf} count={round.suspects.length} pencil={session.pencil} />
-    : 'Match gems to fill a question in the grid. Clear a color next to an animal to see its answer.';
+    : round ? `The camera caught one of these ${round.suspects.length} animals. Which one? Match gems to find out.`
+    : 'Match gems to fill in what the camera saw.';
   // What the status line takes turns showing: the answers (once their gems land) and witness notes so far.
   const facts = useMemo<Fact[]>(() => round ? round.log.flatMap((entry, key) => (entry.kind === 'answer' && answerShown(entry.tag)) || entry.kind === 'note'
     ? [{ key, node: <LogText entry={entry} nameOf={nameOf} count={round.suspects.length} /> }] : []) : [], [round, answerShown, nameOf]);
@@ -404,7 +405,12 @@ export function AnimalGame() {
   const inTrail = trail ? Math.min(rules.trailRounds, trail.rounds + (session?.end ? 0 : 1)) : 0;
   const pick = round && selected !== null && round.status === 'playing' ? selected : null;
 
-  // The Mystery cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
+  // Round over: the grid's Camera row slides onto the mystery's row first, then the round-end card opens.
+  const [landed, setLanded] = useState(0);
+  const onLanded = useCallback(() => setLanded(roundNo ?? 0), [roundNo]);
+  const landOn = round && end && !boardBusy ? round.mysteryId : null;
+
+  // The Camera cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
   const sideNotes = useRef<HTMLElement>(null);
   const openNotes = () => {
     if (!wide) { setSheet({ kind: 'notes' }); return; }
@@ -442,7 +448,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} onNotes={openNotes} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} onNotes={openNotes} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
@@ -493,7 +499,7 @@ export function AnimalGame() {
           />
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
-        {session && end && mystery && !boardBusy && (
+        {session && end && mystery && !boardBusy && landed === session.roundNo && (
           <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} speciesById={speciesById} nameOf={nameOf} onNext={nextRound} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}

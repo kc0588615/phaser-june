@@ -1,6 +1,7 @@
 // The sheets over the animal board (plan 044): a suspect's field guide (with Rule
 // out), the witness notes, the menu, out of moves (name it for the journal), the
-// round's end (and the trail's, with the evidence grid replayed), and how to play.
+// round's end (and the trail's, with the evidence grid replayed), and how to play (with a worked
+// comparison on made-up answers, never the live round's). Players see the mystery as "the one the camera saw".
 import Link from 'next/link';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen } from 'lucide-react';
@@ -17,10 +18,10 @@ import { PhotoCredit } from '@/components/clueGame/SpeciesPortrait';
 import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
 import { backdropMotion, dialogMotion, drawerUpMotion, SMALL, useOverlayPresence } from '@/lib/motion';
 import { currentTheme, setTheme } from '@/lib/theme';
-import { SuspectPhoto } from './AnimalCard';
+import { SuspectPhoto, TrapCard } from './AnimalCard';
 import { EvidenceGrid } from './EvidenceGrid';
 
-export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v2';
+export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v3';
 
 /** A section label inside a sheet (cc Menu label: XS, medium). */
 const LABEL = 'm-0 text-xs font-medium uppercase text-neutral-7';
@@ -87,13 +88,13 @@ export function SuspectSheet({ animal, species, round, top, pencil, onPencil, on
       {marked && !released && (
         <p className={`${NOTICE} mb-s bg-error-transparent`} role="status">
           <Ban className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
-          <span><b className="font-medium">Ruled out:</b> it wanders a step toward the edge each move, or leaves at once when a gem next to it is cleared. If it&apos;s the mystery, it escapes! Bring it back to stop it.</span>
+          <span><b className="font-medium">Ruled out:</b> it wanders a step toward the edge each move, or leaves at once when a gem next to it is cleared. If it&apos;s the one the camera saw, it escapes! Bring it back to stop it.</span>
         </p>
       )}
       {released && (
         <p className={`${NOTICE} mb-s bg-neutral-3`} role="status">
           <ArrowUpRight className="mt-xxs h-4 w-4 shrink-0 text-neutral-7" aria-hidden="true" />
-          <span><b className="font-medium">Released:</b> not the mystery.</span>
+          <span><b className="font-medium">Released:</b> not the one the camera saw.</span>
         </p>
       )}
       <div className="flex gap-s">
@@ -183,7 +184,7 @@ export function NotesSheet({ round, onClose }: { round: AnimalRound; onClose: ()
     <Sheet
       title={<>Witness notes <span className="font-data text-neutral-7">{round.notes.length}</span></>}
       before={<span className="grid h-9 w-9 shrink-0 place-items-center rounded-xs bg-notes/15 text-notes" aria-hidden="true"><NotebookPen className="h-5 w-5" /></span>}
-      detail={<p className="m-0 text-xs text-neutral-7">What witnesses saw the mystery do or have</p>}
+      detail={<p className="m-0 text-xs text-neutral-7">What witnesses saw the camera&apos;s animal do or have</p>}
       onClose={onClose}
     >
       <NotesList round={round} />
@@ -198,7 +199,7 @@ export function NotesList({ round }: { round: AnimalRound }) {
     return (
       <p className="m-0 flex items-start gap-s rounded-s p-m text-s text-neutral-8 outline-dashed outline-1 -outline-offset-1 outline-neutral-5">
         <Gem className="h-6 w-6 shrink-0 text-notes" aria-hidden="true" />
-        <span>Match next to a glowing <b className="font-medium text-neutral-10">purple witness gem</b> to get a note about the mystery: something it does or has, and how many of the {count} animals share it.</span>
+        <span>Match next to a glowing <b className="font-medium text-neutral-10">purple witness gem</b> to get a note about the camera&apos;s animal: something it does or has, and how many of the {count} animals share it.</span>
       </p>
     );
   }
@@ -336,7 +337,9 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
     return guess ? [(guess === 'yes') === order.row[i]] : [];
   }));
   const called = guesses.filter(Boolean).length;
-  const [kicker, lead] = found ? ['Found it!', null] : end.lostBy === 'escaped' ? ['It escaped!', 'Oh no! The mystery was the'] : ['Out of moves', 'It was the'];
+  const kicker = found ? 'Found it!' : end.lostBy === 'escaped' ? 'It escaped!' : 'Out of moves';
+  // By its number on the board and in the grid: the camera's animal was one of the five all along.
+  const lead = `The camera saw #${round.suspects.indexOf(round.mysteryId) + 1}, the`;
   const notes = [...animal.notes, ...animal.revealNotes];
   const tabs: Array<['evidence' | 'notes', ReactNode]> = [['evidence', 'The evidence'], ['notes', <>Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data text-xs">{notes.length}</span></>]];
   const shown = notes.length > 0 ? tab : 'evidence';
@@ -359,7 +362,7 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
                 <span className={`text-xs font-heavy uppercase ${found ? 'text-color-1' : 'text-error'}`}>{kicker}</span>
                 {found && <span className="rounded-xs bg-emphasis-icon px-xxs text-xs text-on-emphasis-icon" role="img" aria-label={`${end.stars} of 3 stars`}>{stars(end.stars)}</span>}
               </p>
-              {lead && <p className="m-0 text-xs text-neutral-7">{lead}</p>}
+              <p className="m-0 text-xs text-neutral-7">{lead}</p>
               <h2 className="m-0 text-l font-heavy [text-wrap:balance]">{animal.name}</h2>
               <p className="m-0 text-s italic text-neutral-7">{animal.scientificName}</p>
             </div>
@@ -400,7 +403,7 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
                 {round.orders.some(order => order.answer) ? (
                   <li className="flex items-center gap-xs">
                     <span className="h-3.5 w-5 shrink-0 rounded-xs bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]" aria-hidden="true" />
-                    A red answer doesn&apos;t match the mystery&apos;s, so it rules that animal out.
+                    A red answer doesn&apos;t match what the camera saw, so it rules that animal out.
                   </li>
                 ) : <li>No question was answered this time.</li>}
                 {called < guesses.length && (
@@ -452,16 +455,46 @@ function Stat({ label, value, plain = false, ...rest }: { label: string; value: 
   );
 }
 
+/** How to play, step 1: one column of a made-up grid, and the player decides whether animal 2 can be the camera's. */
+function CompareExample() {
+  const [pick, setPick] = useState<'yes' | 'no' | null>(null);
+  return (
+    <span className="mt-xs flex flex-col gap-xs rounded-s bg-neutral-2 p-s">
+      <span className="grid grid-cols-[1fr_64px] items-center gap-x-xs gap-y-xxs text-neutral-10" aria-label="Example: the camera saw yes, active at night. Animal 2: no." role="img">
+        <span />
+        <span className="text-center text-xs text-neutral-7">🌙 Night?</span>
+        <span className="flex items-center gap-xs"><span className="block w-7 shrink-0"><TrapCard /></span>Camera saw</span>
+        <span className="rounded-xs bg-emphasis-icon py-xxs text-center text-s font-heavy text-on-emphasis-icon">✓ YES</span>
+        <span className="flex items-center gap-xs"><span className={`${TILE} h-7 w-7 font-data text-s`}>2</span>Animal 2</span>
+        <span className="rounded-xs bg-neutral-3 py-xxs text-center text-m font-heavy text-neutral-6">✗</span>
+      </span>
+      <span>Can animal 2 be the one the camera saw?</span>
+      <span className="flex gap-xs">
+        {(['yes', 'no'] as const).map(answer => (
+          <button key={answer} type="button" onClick={() => setPick(answer)} aria-pressed={pick === answer} className={`btn flex-1 ${pick === answer ? 'btn-primary' : 'btn-outline'}`}>{answer === 'yes' ? 'Yes' : 'No'}</button>
+        ))}
+      </span>
+      {pick && (
+        <span role="status" className={pick === 'no' ? 'text-neutral-10' : 'text-error'}>
+          {pick === 'no'
+            ? <><b>Right!</b> The camera saw a night animal, and animal 2 isn&apos;t one. Rule it out.</>
+            : <>Look again: in the 🌙 column the camera says <b>YES</b> and animal 2 says <b>NO</b>. They don&apos;t match, so it isn&apos;t the one.</>}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['rules']; seed: number; onClose: () => void }) {
   useEscapeKey(onClose);
   const presence = useOverlayPresence();
   const steps: ReactNode[] = [
-    <>Our camera trap caught a blur. It was one of the <b>{rules.suspects} animals</b> on the board. Find out which.</>,
-    <>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the grid at the top. A full question answers it about the mystery: <b>yes</b> or <b>no</b>.</>,
+    <>Our camera trap caught one of the <b>{rules.suspects} animals</b> on the board, not a new one. Which one? In the grid, the top row, <b>Camera saw</b>, is what the camera found out; the rows under it are the {rules.suspects} animals. Try one:<CompareExample /></>,
+    <>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the Camera saw row. A full question answers it: <b>yes</b> or <b>no</b>.</>,
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold any answer to <b>highlight</b> it: its gem glows up top, so you remember which gem to go for. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
-    <>Compare each animal&apos;s answers with the mystery&apos;s. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</>,
-    <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the mystery and it escapes!</b></>,
-    <>Glowing purple <b>witness gems</b> give a note about the mystery and how many of the {rules.suspects} share it.</>,
+    <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</>,
+    <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one the camera saw and it escapes!</b></>,
+    <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,
     <>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</>,
   ];
   return (

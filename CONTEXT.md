@@ -19,7 +19,7 @@ One mystery animal to find, from the first move until it is found, escapes, or t
 _Avoid_: level, case, puzzle
 
 **Mystery animal**:
-The animal the round secretly picked from the suspects; the player must find it.
+The animal the round secretly picked from the suspects; the player must find it. Players see it as "the one the camera saw" (the grid's "Camera saw" row), never as a sixth animal: playtesters read "Mystery" as one.
 _Avoid_: answer, target
 
 **Suspect**:
