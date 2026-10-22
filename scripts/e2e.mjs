@@ -121,7 +121,7 @@ async function main() {
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v2', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v3', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
     // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
     await page('Page.addScriptToEvaluateOnNewDocument', { source: `
       window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
@@ -263,7 +263,7 @@ async function main() {
         mystery: document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '',
       }));
       check(`round ${n}: the evidence grid has a row per suspect and a column per clue`, screen.rows.join() === start.suspects.join() && screen.columns.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
-      check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('Mystery') && !screen.mystery.includes(mysteryName), screen.mystery);
+      check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('Camera saw') && !screen.mystery.includes(mysteryName), screen.mystery);
       if (n === 1) {
         // Tap an animal's tile: it's picked in the grid (its actions in the status line); tap again to drop it.
         const tile = await evaluate(async () => {
@@ -436,11 +436,13 @@ async function main() {
             const cell = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th');
             const counter = cell?.querySelector('button')?.getAttribute('aria-label') ?? cell?.textContent ?? '';
             const clue = window.__cc.clue();
-            return { marked: clue.marked.includes(id), picked, counter, count: clue.marked.length };
+            const dim = Number(getComputedStyle(document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] td`)).opacity);
+            return { marked: clue.marked.includes(id), picked, counter, count: clue.marked.length, dim };
           }, id);
           check(`round ${n}: picking the ${names.get(id)}'s row tells the board to pulse its tile`, marked.picked === id, JSON.stringify(marked));
           check(`round ${n}: sliding the ${names.get(id)}'s name right rules it out`, marked.marked);
           check(`round ${n}: the grid counts the player's own marks`, marked.counter.includes(`${marked.count} ruled out`), marked.counter);
+          check(`round ${n}: a ruled-out animal's row dims`, marked.dim < 1, String(marked.dim));
           marked = marked.marked;
           if (mode === 'reckless') check(`round ${n}: ruling out the mystery doesn't release it by itself`, (await evaluate(() => window.__cc.clue())).status === 'playing');
           if (marked && !markShot) { markShot = true; await sleep(400); await screenshot('02b-marked.png'); }
@@ -635,13 +637,19 @@ async function main() {
         : state.trail.hearts === trailBefore.hearts - 1, JSON.stringify({ before: trailBefore, after: state.trail }));
       const namedRight = state.logTail.some(entry => entry.kind === 'named' && entry.correct);
       if (end?.outcome === 'found' || namedRight) journalFinds.add(start.mysteryId);
+      // The Camera row slides onto the mystery's row and lights it, before the card opens.
+      await waitFor(() => document.querySelector('table[aria-label="Evidence"] tr[data-match]') && true, 'the Camera row landing', 10_000);
+      await screenshot(`04-round-${n}-landed.png`);
       const reveal = await waitFor(() => {
         const sheet = document.querySelector('section[aria-label^="It was the"]');
         return sheet ? { name: sheet.getAttribute('aria-label').replace('It was the ', ''), text: sheet.innerText } : null;
       }, 'the round-end card', 10_000);
       check(`round ${n}: the round-end card names the mystery`, reveal.name === mysteryName, reveal.name);
+      const landed = await evaluate(id => Boolean(document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"][data-match]`)), start.mysteryId);
+      check(`round ${n}: before the card, the grid's Camera row lands on the mystery's own row`, landed);
+      check(`round ${n}: the round-end card says the camera saw that animal's number`, reveal.text.includes(`The camera saw #${start.suspects.indexOf(start.mysteryId) + 1}`), reveal.text.slice(0, 120));
       check(`round ${n}: the round-end card shows the family tree`, reveal.text.includes('Animalia › Chordata'));
-      // The card replays the grid: the mystery named, and red exactly where an earned answer rules a suspect out.
+      // The card replays the grid: the mystery's row outlined, and red exactly where an earned answer rules a suspect out.
       const replay = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]');
         if (!grid) return null;
@@ -656,11 +664,11 @@ async function main() {
         });
         const tally = `${truth.filter(cell => cell.expected === 'right').length}/${truth.filter(cell => cell.expected).length}`;
         return {
-          mystery: grid.querySelector('tr[data-mystery] th')?.textContent ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length, hidden: grid.querySelectorAll('[data-hidden]').length,
+          match: grid.querySelector('tr[data-match]')?.dataset.suspect ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length, hidden: grid.querySelectorAll('[data-hidden]').length,
           guessesWrong: truth.filter(cell => cell.shown !== cell.expected).length, tally, shownTally: document.querySelector('[data-guesses]')?.dataset.guesses ?? null,
         };
       });
-      check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.mystery.includes(mysteryName), JSON.stringify(replay));
+      check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.match === String(start.mysteryId), JSON.stringify(replay));
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
       await screenshot(`04-round-${n}-end.png`);
       report.rounds.push({

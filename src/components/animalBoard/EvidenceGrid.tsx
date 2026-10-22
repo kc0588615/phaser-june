@@ -10,12 +10,15 @@
 // this concludes nothing); the round-end card marks every guess. An
 // animal's name: tap to pick it (its tile pulses), hold for its field guide, drag its
 // photo right across the name to rule it out (again to undo). `review` (the round-end card) shows
-// every answer, names the mystery and marks each earned answer that rules an animal out.
-// The Mystery's cell opens the witness notes (every note is about the mystery): it counts
+// every answer, outlines the mystery's own row and marks each earned answer that rules an animal out.
+// The Camera cell opens the witness notes (every note is about the mystery): it counts
 // them, pulses when one comes in, and is where a collected witness gem flies.
 // Hold any answer cell to highlight it (gold, "this one matters"); its column's gem glows so the
 // player remembers which gem to go for. Like pencil, the player's own mark: the rules never read it.
-import { useRef, useState, type ReactNode } from 'react';
+// Players see the mystery as "the one the camera saw" (its row: "Camera saw"), so it doesn't read as a sixth
+// animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the Camera row
+// slides down onto the mystery's own row, fades into it and the row lights up, then `onLanded`.
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
@@ -32,6 +35,8 @@ const NONE: ReadonlySet<string> = new Set();
 const HOLD_MS = 450;
 /** Holding an answer cell this long highlights it: longer than a name's hold, so a slow tap never highlights by mistake. */
 const HIGHLIGHT_MS = 1000;
+/** After the Camera row lands, how long its match shows before `onLanded`. */
+const LANDED_MS = 900;
 /** The photo is the slide's handle (`--ev-photo`, globals.css). Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
 const TRACK_SHARE = 0.5;
 const SLIDE_TO_MARK = 0.5;
@@ -42,7 +47,7 @@ const SLIDE_TO_MARK = 0.5;
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
@@ -66,6 +71,9 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   onHighlight?: (id: number, tag: string) => void;
   /** Pencilled cells (`${id}:${tag}`) just scouted: a right guess sparkles, a wrong one shows, a ruled-out card wiggles. */
   reveal?: ReadonlySet<string>;
+  /** The round is over: the Camera row slides onto this animal's row (the mystery's), then `onLanded`. */
+  landOn?: number | null;
+  onLanded?: () => void;
   /** The top-left cell, over the animals' names. */
   corner?: ReactNode;
   review?: boolean;
@@ -151,7 +159,6 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   };
   const hinted = slideHint ? round.suspects.find(id => !round.marked.includes(id) && !round.released.includes(id)) : undefined;
   const size = round.rules.orderSize;
-  const mystery = speciesById.get(round.mysteryId);
   const notes = round.notes.length;
   const trapCard = (
     <TrapCard>
@@ -160,6 +167,23 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
     </TrapCard>
   );
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
+  // The end-of-round slide: how far down the mystery's row is, then whether the Camera row has arrived there.
+  const cameraRow = useRef<HTMLTableRowElement>(null);
+  const [landing, setLanding] = useState<{ id: number; dy: number } | null>(null);
+  const [matched, setMatched] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    if (landOn === null) { setLanding(null); setMatched(null); return; }
+    const from = cameraRow.current?.getBoundingClientRect().top;
+    const to = cameraRow.current?.parentElement?.querySelector(`tr[data-suspect="${landOn}"]`)?.getBoundingClientRect().top;
+    const dy = from === undefined || to === undefined ? 0 : to - from;
+    setLanding({ id: landOn, dy });
+    if (dy === 0) setMatched(landOn); // nothing to slide (no row found): match at once, so the card still opens
+  }, [landOn]);
+  useLayoutEffect(() => {
+    if (matched === null) return;
+    const timer = window.setTimeout(() => onLanded?.(), LANDED_MS);
+    return () => window.clearTimeout(timer);
+  }, [matched, onLanded]);
   return (
     <table aria-label={review ? 'How the evidence lined up' : 'Evidence'} className="w-full table-fixed border-separate [border-spacing:3px_2px]">
       {onMark && <caption className="sr-only">Drag an animal&apos;s photo right across its name, or press the right arrow on it, to rule it out (left arrow: back in). Hold it, or press Shift and Enter, for its field guide.</caption>}
@@ -187,12 +211,20 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
         </tr>
       </thead>
       <tbody>
-        <tr data-mystery>
+        <motion.tr
+          ref={cameraRow}
+          data-mystery
+          className="relative z-20"
+          initial={false}
+          animate={landing ? { y: landing.dy, opacity: matched === null ? 1 : 0 } : { y: 0, opacity: 1 }}
+          transition={{ y: { type: 'tween', duration: 0.8, ease: 'easeInOut' }, opacity: LARGE }}
+          onAnimationComplete={() => { if (landing && matched === null) setMatched(landing.id); }}
+        >
           <th scope="row" className="h-(--ev-row) p-0 text-left font-medium text-neutral-10">
             {review || !onNotes ? (
               <span className="flex items-center gap-xs">
-                <span className="block w-(--ev-photo) shrink-0 text-m">{review ? <AnimalCard species={mystery} /> : trapCard}</span>
-                <span className="line-clamp-1 min-w-0 text-s">{review ? mystery?.commonName ?? 'Mystery' : 'Mystery'}</span>
+                <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
+                <span className="line-clamp-1 min-w-0 text-s">Camera saw</span>
               </span>
             ) : (
               <button
@@ -200,17 +232,18 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 onClick={onNotes}
                 data-flight-target="notes"
                 data-notes={notes}
-                aria-label={`Mystery${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
+                aria-label={`Camera saw: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
                 className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
               >
                 {/* Keyed by the count, so the cell pulses once each time a note comes in. */}
                 {notes > 0 && <span key={notes} className="ev-pulse pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
                 <span className="flex min-w-0 flex-col">
-                  <span className="line-clamp-1 text-s">Mystery</span>
+                  <span className="line-clamp-1 text-s">Camera saw</span>
+                  {/* Until the first note: which animals the camera's one is among (a fixed count, never who still fits). */}
                   <span className={`flex items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
-                    <NotebookPen className={`h-3 w-3 shrink-0 ${notes > 0 ? 'text-notes' : ''}`} aria-hidden="true" />
-                    {notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}` : 'No notes yet'}
+                    {notes > 0 ? <NotebookPen className="h-3 w-3 shrink-0 text-notes" aria-hidden="true" /> : null}
+                    {notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}` : `One of these ${round.suspects.length} ↓`}
                   </span>
                 </span>
               </button>
@@ -238,14 +271,14 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
               </td>
             );
           })}
-        </tr>
+        </motion.tr>
         {round.suspects.map((id, i) => {
           const species = speciesById.get(id);
           const name = species?.commonName ?? 'animal';
-          const released = round.released.includes(id) && !review; // the replay keeps every row readable
+          const released = round.released.includes(id) && !review && matched !== id; // the replay (and the landed match) keeps the row readable
           const marked = round.marked.includes(id) && !released;
           const picked = selected === id;
-          const wasIt = review && id === round.mysteryId;
+          const wasIt = (review && id === round.mysteryId) || matched === id;
           const canSlide = Boolean(onMark) && !released;
           // (The photo slides; the track behind it shows only while dragging.)
           const dx = slide?.id === id ? slide.dx : 0;
@@ -255,7 +288,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
           };
           const wiggle = marked && round.orders.some(order => reveal.has(`${id}:${order.tag}`) && missed(order));
           return (
-            <tr key={id} data-suspect={id} onClick={onSelect ? () => pick(id) : undefined} className={`${released ? 'opacity-30' : ''} ${onSelect ? 'cursor-pointer' : ''}`}>
+            <tr key={id} data-suspect={id} onClick={onSelect ? () => pick(id) : undefined} data-match={wasIt || undefined} className={`${released ? 'opacity-30' : marked && !review && !wasIt ? '[&>td]:opacity-50 [&_[data-name]]:opacity-50' : ''} ${onSelect ? 'cursor-pointer' : ''}`}>
               <th scope="row" className={`relative h-(--ev-row) rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : wasIt ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
                 {dx > 0 && (
                   // The slide's track, only while dragging: it fills behind the photo toward the target at the end.
@@ -289,7 +322,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   >
                     <AnimalCard species={species} number={i + 1} marked={marked} picked={picked} />
                   </span>
-                  <span className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''}`} style={dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : undefined} lang="en">{name}</span>
+                  <span data-name="" className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''}`} style={dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : undefined} lang="en">{name}</span>
                   {hinted === id && <span aria-hidden="true" className="ev-hint pointer-events-none absolute inset-y-0 left-[calc(var(--ev-photo)+8px)] right-0 flex items-center bg-neutral-1 text-xs font-medium text-error">Slide to rule out →</span>}
                 </button>
               </th>
