@@ -82,15 +82,15 @@
 @custom-variant roomy (@media (min-height: 560px));
 
 /* Game screen, phone layout: the board is as tall as the screen is wide, so a tall phone's spare height goes to the
-   evidence rows: 100dvh - 100vw (board) - 86px (the grid's header and spacing; + 56px status line when `roomy`)
+   evidence rows: 100dvh - 100vw (board) - 92px (the grid's header, spacing and the Camera row's divider; + 56px status line when `roomy`)
    - the home bar (<main>'s bottom padding), over 6 rows (5 suspects and the mystery). */
 :root {
-  --ev-reserve: calc(86px + env(safe-area-inset-bottom));
+  --ev-reserve: calc(92px + env(safe-area-inset-bottom));
   --ev-row: clamp(34px, calc((100dvh - 100vw - var(--ev-reserve)) / 6), 48px);
   --ev-photo: calc(var(--ev-row) - 4px);
 }
 @media (min-height: 560px) {
-  :root { --ev-reserve: calc(142px + env(safe-area-inset-bottom)); }
+  :root { --ev-reserve: calc(148px + env(safe-area-inset-bottom)); }
 }
 @media (min-width: 48rem) {
   :root { --ev-row: 34px; }

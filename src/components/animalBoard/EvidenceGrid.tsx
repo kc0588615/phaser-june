@@ -160,12 +160,9 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   const hinted = slideHint ? round.suspects.find(id => !round.marked.includes(id) && !round.released.includes(id)) : undefined;
   const size = round.rules.orderSize;
   const notes = round.notes.length;
-  const trapCard = (
-    <TrapCard>
-      {/* The player's own marks, on the card so the row keeps one line (a taller grid would shrink the board). */}
-      {round.marked.length > 0 && <i className="absolute -right-xs -top-xxs grid h-4 min-w-4 place-items-center rounded-full bg-error px-xxs text-xxs font-heavy not-italic leading-none text-neutral-1" aria-hidden="true">✕{round.marked.length}</i>}
-    </TrapCard>
-  );
+  const trapCard = <TrapCard />;
+  // The player's own marks, in the Camera row's label (red like the cards' crosses).
+  const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   // The end-of-round slide: how far down the mystery's row is, then whether the Camera row has arrived there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
@@ -224,7 +221,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
             {review || !onNotes ? (
               <span className="flex items-center gap-xs">
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
-                <span className="line-clamp-1 min-w-0 text-s">Camera saw</span>
+                <span className="whitespace-nowrap text-s">Camera saw</span>
+                {markCount}
               </span>
             ) : (
               <button
@@ -239,11 +237,12 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 {notes > 0 && <span key={notes} className="ev-pulse pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
                 <span className="flex min-w-0 flex-col">
-                  <span className="line-clamp-1 text-s">Camera saw</span>
+                  <span className="whitespace-nowrap text-s">Camera saw</span>
                   {/* Until the first note: which animals the camera's one is among (a fixed count, never who still fits). */}
                   <span className={`flex items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
                     {notes > 0 ? <NotebookPen className="h-3 w-3 shrink-0 text-notes" aria-hidden="true" /> : null}
                     {notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}` : `One of these ${round.suspects.length} ↓`}
+                    {markCount}
                   </span>
                 </span>
               </button>
@@ -272,6 +271,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
             );
           })}
         </motion.tr>
+        {/* Sets the Camera row apart from the animals it's one of (globals.css counts its height in --ev-reserve). */}
+        <tr aria-hidden="true"><td colSpan={round.orders.length + 1} className="h-1 p-0"><div className="h-px bg-neutral-4" /></td></tr>
         {round.suspects.map((id, i) => {
           const species = speciesById.get(id);
           const name = species?.commonName ?? 'animal';
