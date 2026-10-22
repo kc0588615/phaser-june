@@ -239,9 +239,9 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 <span className="flex min-w-0 flex-col">
                   <span className="whitespace-nowrap text-s">Camera saw</span>
                   {/* Until the first note: which animals the camera's one is among (a fixed count, never who still fits). */}
-                  <span className={`flex items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
+                  <span className={`flex min-w-0 items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
                     {notes > 0 ? <NotebookPen className="h-3 w-3 shrink-0 text-notes" aria-hidden="true" /> : null}
-                    {notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}` : `One of these ${round.suspects.length} ↓`}
+                    <span className="min-w-0 truncate">{notes > 0 ? `${notes} note${notes === 1 ? '' : 's'}` : `One of these ${round.suspects.length} ↓`}</span>
                     {markCount}
                   </span>
                 </span>
