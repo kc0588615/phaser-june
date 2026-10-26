@@ -361,14 +361,11 @@ export function AnimalGame() {
     setSelected(current => (current === id ? null : id));
   }, [round?.status, sheet?.kind]);
 
-  // The field guide's arrows and swipe flip through the animals in order, wrapping around (and pick that row, like onSelect).
-  const onStep = useCallback((by: 1 | -1) => {
-    if (!round || sheet?.kind !== 'suspect') return;
-    const { suspects } = round;
-    const id = suspects[(suspects.indexOf(sheet.id) + by + suspects.length) % suspects.length];
+  // The field guide's arrows, swipe and numbers switch it to another animal (and pick that row, like onSelect).
+  const onShowGuide = useCallback((id: number) => {
     setSheet({ kind: 'suspect', id });
-    if (round.status === 'playing') setSelected(id);
-  }, [round, sheet]);
+    if (round?.status === 'playing') setSelected(id);
+  }, [round?.status]);
 
   // Pencil a guess in a hidden cell; the first time a round, say what it is (and isn't).
   const pencilled = useRef(0);
@@ -484,7 +481,7 @@ export function AnimalGame() {
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
-        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardTop} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} onMark={ruledOut => rule(picked.id, ruledOut)} onStep={onStep} onClose={() => setSheet(null)} />}
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardTop} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onShow={onShowGuide} onClose={() => setSheet(null)} />}
         {!wide && round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu

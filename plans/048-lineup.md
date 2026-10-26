@@ -1,6 +1,6 @@
 # 048: The lineup (swipe the field guide; order that means something)
 
-On `main`, over 044–047. Written 2026-10-18. Not started; owner go needed before step 2.
+On `main`, over 044–047. Written 2026-10-18. Step 0 built 2026-10-25 (uncommitted); owner go needed before step 2.
 
 ## Problem
 
@@ -25,7 +25,7 @@ Not yet: Red List status (most animals LC, ties everywhere), family (groups, not
 
 ## Steps
 
-0. **Swipe the top of the sheet (UI only, no rules change).** Swipe area = header + photo/Signs row; not the answers list (vertical scroll, pencil buttons). Content follows the finger (`motion` `drag="x"`, elastic, axis lock after ~10px, `touch-pan-y`); flip on release past ~25% of the width or a flick over ~400 px/s, else spring back. Neighbour photos peek 12–16px at both sides. Dots become 5 number tiles you can tap to jump. Arrows stay beside the title (44px) and show the neighbour's number (`‹ 2`, `4 ›`); ←/→ flip while the sheet is open. One-time nudge on the first open (content slides ~16px and back, on-device flag, try/catch). Reduced motion: no drag-follow animation, instant flip. E2E: a drag past the threshold flips, a short drag and a vertical scroll don't, a pencil tap never flips, tile tap jumps.
+0. **Swipe the top of the sheet (UI only, no rules change).** Swipe area = header + photo/Signs row; not the answers list (vertical scroll, pencil buttons). Content follows the finger (`motion` `drag="x"`, elastic, axis lock after ~10px, `touch-pan-y`); flip on release past ~25% of the width or a flick over ~400 px/s, else spring back. Neighbour photos peek 12–16px at both sides. Dots become 5 number tiles you can tap to jump. Arrows stay beside the title (44px); ←/→ flip while focus is in the sheet (not window-wide: the board takes arrows). Built: the title row swipes by trigger (no follow), the photo/Signs row follows the finger; arrows skip the neighbour's number (the tiles right under show it). One-time nudge on the first open (content slides ~16px and back, on-device flag, try/catch). Reduced motion: no drag-follow animation, instant flip. E2E: a drag past the threshold flips, a short drag and a vertical scroll don't, a pencil tap never flips, tile tap jumps.
 1. **Lineup sort.** Pool (`src/lib/cluePool.ts`) carries `areaKm2` and `lat` per species, so sorting needs no extra fetches. A "Line up by: board · range size · north" control in the sheet; the strip and swipes follow it; each tile shows its fact in kid words (a bar for range size, "farther north" arrow), never raw km². Choice kept per round. Pure helper `lineupOf(suspects, key, pool)` in `src/clueGame/`, ties by number.
 2. **Rank notes, pure, behind a flag.** `AnimalRules.rankNotes` (off in 047-0). `witnessNotes` also offers comparisons to a named other suspect ("bigger range than animal 3's", "lives farther north than animal 2"), kept only when 2 ≤ fits < 5 and the referent isn't the mystery. Skip pairs whose values are within ~10% (too close to call fairly). Notes sources: IUCN range data (tier already in `sources.json`).
 3. **Bot.** `scripts/balance-044.ts` with `--rank on` against 047-0, same deals and seeds. Report win rate for each player type, Reader/Careful gap, guesser, how often a rank note shows a round, and moves from identified to found. Careful reads rank notes like any note. Owner go/no-go.

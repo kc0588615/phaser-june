@@ -377,6 +377,50 @@ async function main() {
         check('pencilling in the field guide marks the grid and keeps the guide open', held.pencilled === 'yes' && held.stillOpen && held.cleared === '', JSON.stringify(held));
         check('with the field guide open, pencilling in the grid keeps it open', held.gridPencil === 'yes' && held.openAfterGrid, JSON.stringify(held));
         check('with the field guide open, tapping another row switches the guide to that animal', held.switched.endsWith(held.otherName), JSON.stringify(held));
+        // Plan 048: the field guide's photo row follows a sideways drag and flips past a quarter of its width; a short or
+        // up-and-down drag doesn't; its numbers, a swipe on its title row and ←/→ switch animals too; neighbours' photos peek.
+        const flip = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const heights = new Set();
+          const current = () => {
+            heights.add(Math.round(document.querySelector('[role=dialog] h2').closest('.rounded-t-m').getBoundingClientRect().height));
+            return Number(document.querySelector('[role=dialog] [data-guide-number][aria-current]')?.dataset.guideNumber);
+          };
+          const drag = async (el, dx, dy = 0, stepMs = 16) => {
+            const r = el.getBoundingClientRect();
+            const x0 = r.left + r.width / 2, y0 = r.top + 30, steps = 10;
+            const at = (type, f) => (type === 'pointerdown' ? el : window).dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x0 + dx * f, clientY: y0 + dy * f, pointerId: 7, pointerType: 'touch', isPrimary: true }));
+            at('pointerdown', 0);
+            for (let i = 1; i <= steps; i++) { at('pointermove', i / steps); await wait(stepMs); }
+            el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: x0 + dx, clientY: y0 + dy, pointerId: 7, pointerType: 'touch', isPrimary: true }));
+            window.dispatchEvent(new PointerEvent('pointerup', { clientX: x0 + dx, clientY: y0 + dy, pointerId: 7, pointerType: 'touch', isPrimary: true }));
+            await wait(450);
+          };
+          await window.__holdPill(document.querySelector('table[aria-label="Evidence"] tr[data-suspect]').dataset.suspect);
+          const row = () => document.querySelector('[role=dialog] [data-guide-swipe]');
+          const header = () => document.querySelector('[role=dialog] h2').parentElement.parentElement;
+          const result = { start: current(), peeks: row()?.querySelectorAll('[aria-hidden="true"] img').length ?? 0 };
+          await drag(row(), -15, 0, 60); result.short = current();
+          await drag(row(), -20, 160, 30); result.vertical = current();
+          await drag(row(), -160); result.left = current();
+          await drag(row(), 160); result.right = current();
+          document.querySelector('[role=dialog] [data-guide-number="4"]').click(); await wait(300); result.tapped = current();
+          await drag(header(), 120); result.header = current();
+          document.querySelector('[role=dialog] [data-guide-number][aria-current]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await wait(300); result.key = current();
+          document.querySelector('[role=dialog] [data-guide-number="5"]').click(); await wait(300);
+          document.querySelector('[role=dialog] [data-guide-number="5"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await wait(300); result.wrapped = current();
+          result.heights = [...heights];
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+          await wait(300);
+          const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
+          if (pressed) pressed.click(); // drop the pick the guide made
+          await wait(150);
+          return result;
+        });
+        check('field guide: a short or up-and-down drag of the photo row doesn\'t flip; a long one flips next/previous', flip.start === 1 && flip.short === 1 && flip.vertical === 1 && flip.left === 2 && flip.right === 1, JSON.stringify(flip));
+        check('field guide: its numbers jump, a swipe on the title row flips, ←/→ flip and wrap 5 -> 1', flip.tapped === 4 && flip.header === 3 && flip.key === 4 && flip.wrapped === 1, JSON.stringify(flip));
+        check('field guide: both neighbours\' photos peek at the sides', flip.peeks === 2, JSON.stringify(flip));
+        check('field guide: the drawer keeps one height while flipping through all 5', flip.heights.length === 1, JSON.stringify(flip));
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));

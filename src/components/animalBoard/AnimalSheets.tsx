@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen } from 'lucide-react';
-import { motion } from 'motion/react';
+import { animate, motion, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
@@ -33,26 +33,51 @@ const ROW_LINE = 'shadow-[inset_0_-1px_0_0_var(--neutral-4)]';
 
 const GUIDE: Array<[keyof Animal['guide'], string]> = [['body', 'Body'], ['habits', 'Habits'], ['habitat', 'Habitat'], ['range', 'Range'], ['life', 'Life cycle']];
 
-/** Horizontal travel (px) that counts as a swipe on the field guide's photo. */
+/** Horizontal travel (px) that counts as a swipe on the field guide's title row. */
 const SWIPE = 40;
+/** Set once the field guide has nudged sideways, to show it swipes (plan 048). */
+const GUIDE_SWIPE_HINT_KEY = 'critter-connect:guide-swipe-hint:v1';
 
-export function SuspectSheet({ animal, species, round, top, pencil, onPencil, onMark, onStep, onClose }: {
-  animal: Animal; species: PoolSpecies | undefined; round: AnimalRound;
+export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onShow, onClose }: {
+  animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; round: AnimalRound;
   /** The board's top edge (px from the viewport top): the drawer reaches up to it. */
   top: number;
   pencil: Readonly<Record<string, 'yes' | 'no'>>;
   /** Pencil a guess for a hidden answer (null clears it), right here while reading the guide. */
   onPencil: (tag: string, value: 'yes' | 'no' | null) => void;
   onMark: (ruledOut: boolean) => void;
-  /** Flip to the next (1) or previous (-1) animal, wrapping 5 -> 1: arrows beside the name, or a swipe on the photo. */
-  onStep: (by: 1 | -1) => void;
+  /** Show another animal's guide: arrows, ←/→, a swipe (wrapping 5 -> 1), or its number. */
+  onShow: (id: number) => void;
   onClose: () => void;
 }) {
-  const index = round.suspects.indexOf(animal.id);
+  const { suspects } = round;
+  const index = suspects.indexOf(animal.id);
+  const at = (by: number) => suspects[(index + by + suspects.length) % suspects.length];
   // The new photo slides in from the side it was flipped toward.
   const [dir, setDir] = useState<1 | -1>(1);
-  const step = (by: 1 | -1) => { setDir(by); onStep(by); };
+  const show = (id: number, by: 1 | -1) => { setDir(by); onShow(id); };
+  const step = (by: 1 | -1) => show(at(by), by);
   const swipe = useRef<{ x: number; y: number } | null>(null);
+  // Plan 048: the photo row follows the finger; a drag past a quarter of its width (or a flick) flips.
+  const x = useMotionValue(0);
+  const dragged = useRef(false);
+  const row = useRef<HTMLDivElement>(null);
+  const onDragEnd = (_event: unknown, info: PanInfo) => {
+    const width = row.current?.offsetWidth ?? 300;
+    const dx = info.offset.x;
+    if (Math.abs(dx) > width / 4 || (Math.abs(info.velocity.x) > 400 && Math.abs(dx) > SWIPE / 2)) step(dx < 0 ? 1 : -1);
+  };
+  // Once ever: nudge the row sideways so the next photo peeks out further.
+  const reduce = useReducedMotion();
+  useEffect(() => {
+    if (reduce) return;
+    try {
+      if (window.localStorage.getItem(GUIDE_SWIPE_HINT_KEY)) return;
+      window.localStorage.setItem(GUIDE_SWIPE_HINT_KEY, '1');
+    } catch { return; }
+    const nudge = animate(x, [0, -24, 0], { duration: 0.7, delay: 0.5, ease: 'easeInOut' });
+    return () => nudge.stop();
+  }, [reduce, x]);
   // Plan 045: while playing, the guide keeps quiet about the round's questions (scouting shows those answers).
   const asked = new Set(round.status === 'playing' ? round.orders.map(order => prefixOf(order.tag)) : []);
   const released = round.released.includes(animal.id);
@@ -71,10 +96,39 @@ export function SuspectSheet({ animal, species, round, top, pencil, onPencil, on
       before={<button type="button" onClick={() => step(-1)} className="btn btn-ghost btn-icon shrink-0" aria-label="Previous animal"><ChevronLeft className="h-5 w-5" /></button>}
       after={<button type="button" onClick={() => step(1)} className="btn btn-ghost btn-icon shrink-0" aria-label="Next animal"><ChevronRight className="h-5 w-5" /></button>}
       detail={(
-        <span className="flex gap-xxs" aria-label={`Animal ${index + 1} of ${round.suspects.length}`} role="img">
-          {round.suspects.map((id, i) => <span key={id} className={`h-1.5 rounded-full ${i === index ? 'w-4 bg-neutral-10' : 'w-1.5 bg-neutral-4'}`} />)}
+        <span className="flex gap-xxs" role="group" aria-label={`Animal ${index + 1} of ${suspects.length}`}>
+          {suspects.map((id, i) => (
+            <button
+              key={id}
+              type="button"
+              data-guide-number={i + 1}
+              aria-label={`Animal ${i + 1}`}
+              aria-current={i === index || undefined}
+              onClick={() => { if (i !== index) show(id, i > index ? 1 : -1); }}
+              className={`h-6 w-6 rounded-xs font-data text-xs ${i === index ? 'bg-neutral-10 text-neutral-1' : 'bg-neutral-3 text-neutral-8'}`}
+            >
+              {i + 1}
+            </button>
+          ))}
         </span>
       )}
+      headerProps={{
+        className: 'touch-pan-y',
+        onPointerDown: event => { swipe.current = { x: event.clientX, y: event.clientY }; },
+        onPointerUp: event => {
+          const start = swipe.current;
+          swipe.current = null;
+          if (!start) return;
+          const dx = event.clientX - start.x;
+          if (Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(event.clientY - start.y)) step(dx < 0 ? 1 : -1);
+        },
+        onPointerCancel: () => { swipe.current = null; },
+      }}
+      onKeyDown={event => {
+        if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        event.preventDefault();
+        step(event.key === 'ArrowLeft' ? -1 : 1);
+      }}
       onClose={onClose}
       modeless
       top={top}
@@ -97,20 +151,25 @@ export function SuspectSheet({ animal, species, round, top, pencil, onPencil, on
           <span><b className="font-medium">Released:</b> not the one the camera saw.</span>
         </p>
       )}
-      <div className="flex gap-s">
+      <motion.div
+        ref={row}
+        data-guide-swipe
+        className="relative flex select-none gap-s"
+        style={{ x }}
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.5}
+        onPointerDownCapture={() => { dragged.current = false; }}
+        onDragStart={() => { dragged.current = true; }}
+        onDragEnd={onDragEnd}
+        onClickCapture={event => { if (dragged.current) { event.preventDefault(); event.stopPropagation(); } }}
+      >
+        {/* The neighbours' photos peek in from the sheet's edges: there is more to either side. */}
+        <GuidePeek species={speciesById.get(at(-1))} side="left" />
+        <GuidePeek species={speciesById.get(at(1))} side="right" />
         <figure className="m-0 flex w-36 shrink-0 flex-col gap-xxs">
-          <span
-            className="block aspect-[4/3] touch-pan-y select-none overflow-hidden rounded-xs bg-neutral-3"
-            onPointerDown={event => { swipe.current = { x: event.clientX, y: event.clientY }; }}
-            onPointerUp={event => {
-              const start = swipe.current;
-              swipe.current = null;
-              if (!start) return;
-              const dx = event.clientX - start.x;
-              if (Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(event.clientY - start.y)) step(dx < 0 ? 1 : -1);
-            }}
-            onPointerCancel={() => { swipe.current = null; }}
-          >
+          <span className="block aspect-[4/3] overflow-hidden rounded-xs bg-neutral-3">
             <motion.span key={animal.id} className={`block h-full w-full ${marked || released ? 'grayscale' : ''}`} initial={{ opacity: 0, x: dir * 32 }} animate={{ opacity: 1, x: 0 }} transition={SMALL}>
               <SuspectPhoto species={species} size={330} />
             </motion.span>
@@ -125,7 +184,7 @@ export function SuspectSheet({ animal, species, round, top, pencil, onPencil, on
             </ul>
           </div>
         )}
-      </div>
+      </motion.div>
       <div className="mt-m flex items-baseline justify-between gap-xs">
         <h3 className={LABEL}>Its answers</h3>
         {round.orders.some((_, i) => !isSeen(i)) && <span className="text-xxs text-neutral-7">Pencil a guess where you haven&apos;t scouted</span>}
@@ -176,6 +235,15 @@ export function SuspectSheet({ animal, species, round, top, pencil, onPencil, on
         </dl>
       )}
     </Sheet>
+  );
+}
+
+/** A sliver of the previous (left) or next (right) animal's photo, in the sheet's side padding. */
+function GuidePeek({ species, side }: { species: PoolSpecies | undefined; side: 'left' | 'right' }) {
+  return (
+    <span className={`pointer-events-none absolute top-0 aspect-[1/9] w-3 overflow-hidden bg-neutral-3 opacity-70 ${side === 'left' ? '-left-6 rounded-r-xs' : '-right-6 rounded-l-xs'}`} aria-hidden="true">
+      <span className={`absolute inset-y-0 w-36 ${side === 'left' ? 'right-0' : 'left-0'}`}><SuspectPhoto species={species} size={120} /></span>
+    </span>
   );
 }
 
