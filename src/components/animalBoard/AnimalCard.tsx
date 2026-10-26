@@ -5,6 +5,7 @@
 // playing is a camera-trap frame with no photo (`TrapCard`): a photo, even blurred,
 // would let a player match it to a suspect without reading a clue.
 import { useState, type CSSProperties, type ReactNode } from 'react';
+import { Camera } from 'lucide-react';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { photoAt, speciesBadge } from '@/clueGame/speciesInfo';
 import { CARD_TILTS } from '@/game/constants';
@@ -35,11 +36,11 @@ export function AnimalCard({ species, number, size, marked = false, picked = fal
   );
 }
 
-/** The mystery's card while playing: an empty camera-trap frame. `children`: what sits on it (the player's own mark count). */
+/** The mystery's card while playing: a camera-trap frame with a camera, not a "?" (a "?" card read as a sixth animal). `children`: what sits on it (the player's own mark count). */
 export function TrapCard({ children }: { children?: ReactNode }) {
   return (
     <span className="trap-card">
-      <span aria-hidden="true">?</span>
+      <Camera className="h-1/2 w-1/2" aria-hidden="true" />
       {children}
     </span>
   );

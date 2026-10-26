@@ -40,7 +40,7 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
           <motion.div className="h-full rounded-full bg-color-1" initial={false} animate={{ width: `${playable.length ? (100 * found.length) / playable.length : 0}%` }} transition={LARGE} />
         </div>
         <ul className="m-0 flex min-h-0 flex-1 list-none flex-col gap-xs overflow-y-auto p-m">
-          {found.length === 0 && <li className="p-m text-center text-s text-neutral-7">Identify a mystery animal to start your journal.</li>}
+          {found.length === 0 && <li className="p-m text-center text-s text-neutral-7">Find the animal the camera saw to start your journal.</li>}
           {found.map(species => {
             const entry = journal[species.scientificName];
             const status = redListStatus(species.conservationCode);
