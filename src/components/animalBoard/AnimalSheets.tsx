@@ -3,9 +3,9 @@
 // round's end (and the trail's, with the evidence grid replayed), and how to play (with a worked
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one the camera saw".
 import Link from 'next/link';
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen } from 'lucide-react';
-import { animate, motion, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
+import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
@@ -37,6 +37,9 @@ const GUIDE: Array<[keyof Animal['guide'], string]> = [['body', 'Body'], ['habit
 const SWIPE = 40;
 /** Set once the field guide has nudged sideways, to show it swipes (plan 048). */
 const GUIDE_SWIPE_HINT_KEY = 'critter-connect:guide-swipe-hint:v1';
+/** How long each page of a long sign list shows before the next takes its turn. */
+const SIGN_PAGE_MS = 5000;
+const CHIP = 'rounded-xs bg-neutral-3 px-xs text-xs font-medium text-neutral-8';
 
 export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onShow, onClose }: {
   animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; round: AnimalRound;
@@ -82,7 +85,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
   const asked = new Set(round.status === 'playing' ? round.orders.map(order => prefixOf(order.tag)) : []);
   const released = round.released.includes(animal.id);
   const marked = round.marked.includes(animal.id);
-  const signs = signsOf(animal.tags);
+  const signs = useMemo(() => signsOf(animal.tags), [animal.tags]);
   const canMark = round.status === 'playing' && !released;
   const isSeen = (i: number) => round.orders[i].seen[index] || round.status !== 'playing';
   const guides = GUIDE.flatMap(([key, label]) => {
@@ -91,7 +94,9 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
   });
   return (
     <Sheet
-      title={<><span className={`${TILE} h-6 w-6 font-data text-s`} aria-hidden="true">{index + 1}</span>{animal.name}</>}
+      // At least two lines tall so the body doesn't jump between short and long names; never clipped (grades 6-12 must
+      // read it whole). No number badge: the number tiles under it already show which animal this is.
+      title={<span data-guide-name className="flex min-h-[2lh] items-center">{animal.name}</span>}
       center
       before={<button type="button" onClick={() => step(-1)} className="btn btn-ghost btn-icon shrink-0" aria-label="Previous animal"><ChevronLeft className="h-5 w-5" /></button>}
       after={<button type="button" onClick={() => step(1)} className="btn btn-ghost btn-icon shrink-0" aria-label="Next animal"><ChevronRight className="h-5 w-5" /></button>}
@@ -176,14 +181,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
           </span>
           {species?.photo && <figcaption className="truncate text-xxs"><PhotoCredit photo={species.photo} /></figcaption>}
         </figure>
-        {signs.length > 0 && (
-          <div className="flex min-w-0 flex-col gap-xxs">
-            <h3 className={LABEL}>Signs</h3>
-            <ul className="m-0 flex list-none flex-wrap gap-xxs p-0">
-              {signs.map(sign => <li key={sign} className="rounded-xs bg-neutral-3 px-xs py-xxs text-xs font-medium text-neutral-8">{sign}</li>)}
-            </ul>
-          </div>
-        )}
+        {signs.length > 0 && <GuideSigns key={animal.id} signs={signs} />}
       </motion.div>
       <div className="mt-m flex items-baseline justify-between gap-xs">
         <h3 className={LABEL}>Its answers</h3>
@@ -235,6 +233,76 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
         </dl>
       )}
     </Sheet>
+  );
+}
+
+/**
+ * An animal's signs beside its photo, never taller than it: a list that doesn't fit is cut into pages (whole rows of the
+ * full list, laid out in a hidden copy) that take turns on their own. A tap pauses; another resumes and moves on (like the
+ * status line). Screen readers get the whole list.
+ */
+function GuideSigns({ signs }: { signs: string[] }) {
+  const box = useRef<HTMLDivElement>(null);
+  const all = useRef<HTMLUListElement>(null);
+  const [pages, setPages] = useState([signs]);
+  const [page, setPage] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useLayoutEffect(() => {
+    const split = () => {
+      const height = box.current?.clientHeight ?? 0;
+      const chips = [...(all.current?.children ?? [])] as HTMLElement[];
+      if (!height || chips.length === 0) return;
+      const next: string[][] = [];
+      let top = 0;
+      chips.forEach((chip, i) => {
+        if (next.length === 0 || chip.offsetTop + chip.offsetHeight - top > height) { next.push([]); top = chip.offsetTop; }
+        next[next.length - 1].push(signs[i]);
+      });
+      setPages(next);
+      setPage(0);
+    };
+    split();
+    const observer = new ResizeObserver(split);
+    if (box.current) observer.observe(box.current);
+    if (all.current) observer.observe(all.current);
+    return () => observer.disconnect();
+  }, [signs]);
+  const turn = () => setPage(at => (at + 1) % pages.length);
+  useEffect(() => {
+    if (pages.length < 2 || paused) return;
+    const timer = window.setInterval(() => setPage(at => (at + 1) % pages.length), SIGN_PAGE_MS);
+    return () => window.clearInterval(timer);
+  }, [pages, paused]);
+  const list = 'm-0 flex list-none flex-wrap content-start gap-xxs p-0';
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-xxs">
+      <h3 className={`${LABEL} flex items-center gap-xxs`}>
+        Signs
+        {pages.length > 1 && <span className="font-data" aria-hidden="true">{page + 1}/{pages.length}</span>}
+        {paused && <Pause className="h-3 w-3 fill-current" aria-hidden="true" />}
+      </h3>
+      {/* The lists sit out of flow, so the photo alone sets the row's height. */}
+      <div ref={box} className="relative flex-1 overflow-hidden" data-guide-signs={pages.length}>
+        <ul ref={all} className={`${list} invisible absolute inset-x-0 top-0`} aria-hidden="true">
+          {signs.map(sign => <li key={sign} className={CHIP}>{sign}</li>)}
+        </ul>
+        <AnimatePresence initial={false} mode="wait">
+          <motion.ul key={page} className={`${list} absolute inset-0`} aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={SMALL}>
+            {(pages[page] ?? signs).map(sign => <li key={sign} className={CHIP}>{sign}</li>)}
+          </motion.ul>
+        </AnimatePresence>
+        <ul className="sr-only">{signs.map(sign => <li key={sign}>{sign}</li>)}</ul>
+        {pages.length > 1 && (
+          <button
+            type="button"
+            aria-pressed={paused}
+            aria-label="Pause the signs"
+            onClick={() => { if (paused) turn(); setPaused(!paused); }}
+            className="absolute inset-0"
+          />
+        )}
+      </div>
+    </div>
   );
 }
 

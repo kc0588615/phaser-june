@@ -382,8 +382,16 @@ async function main() {
         const flip = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const heights = new Set();
+          const overflow = [];
           const current = () => {
-            heights.add(Math.round(document.querySelector('[role=dialog] h2').closest('.rounded-t-m').getBoundingClientRect().height));
+            const h2 = document.querySelector('[role=dialog] h2');
+            // drawer height / top of the scrolling body (the photo row sits at its top)
+            heights.add(`${Math.round(h2.closest('.rounded-t-m').getBoundingClientRect().height)}/${Math.round(header().nextElementSibling.getBoundingClientRect().top)}`);
+            // A long sign list takes turns in pages beside the photo; the page showing must fit there.
+            const signs = document.querySelector('[role=dialog] [data-guide-signs]');
+            const chips = [...(signs?.querySelector('ul.inset-0')?.children ?? [])];
+            // ...and a short last page keeps its chips one line tall (not stretched to fill the space).
+            if (chips.some(chip => chip.getBoundingClientRect().bottom > signs.getBoundingClientRect().bottom + 1 || chip.getBoundingClientRect().height > 2 * parseFloat(getComputedStyle(chip).lineHeight))) overflow.push(h2.textContent);
             return Number(document.querySelector('[role=dialog] [data-guide-number][aria-current]')?.dataset.guideNumber);
           };
           const drag = async (el, dx, dy = 0, stepMs = 16) => {
@@ -410,6 +418,32 @@ async function main() {
           document.querySelector('[role=dialog] [data-guide-number="5"]').click(); await wait(300);
           document.querySelector('[role=dialog] [data-guide-number="5"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await wait(300); result.wrapped = current();
           result.heights = [...heights];
+          result.overflow = overflow;
+          // Signs in pages take turns on their own; a tap pauses them, another resumes and moves on.
+          const signs = () => document.querySelector('[role=dialog] [data-guide-signs]');
+          // A smaller photo leaves room for fewer signs, so this animal's split into pages (as a long list would).
+          const figure = row().querySelector('figure');
+          figure.style.width = '32px';
+          await wait(300);
+          if (Number(signs()?.dataset.guideSigns) > 1) {
+            const counter = () => signs().previousElementSibling.textContent;
+            const pause = () => signs().querySelector('button[aria-label="Pause the signs"]');
+            const tap = el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); el.click(); };
+            const first = counter();
+            await wait(5600);
+            const turned = counter();
+            tap(pause()); await wait(5600);
+            const held = counter(), pressed = pause().getAttribute('aria-pressed');
+            tap(pause()); await wait(600);
+            result.signPages = { first, turned, held, pressed, resumed: counter(), unpressed: pause().getAttribute('aria-pressed') };
+          }
+          figure.style.width = '';
+          // The longest name in the content (30 chars) fits whole without moving the body.
+          const name = document.querySelector('[role=dialog] [data-guide-name]');
+          name.textContent = 'Yangtze Giant Softshell Turtle';
+          current();
+          result.longName = { lines: Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)), clipped: name.scrollWidth > name.clientWidth || name.scrollHeight > name.clientHeight || header().scrollWidth > header().clientWidth };
+          result.heights = [...heights];
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await wait(300);
           const pressed = document.querySelector('table[aria-label="Evidence"] button[data-pill][aria-pressed="true"]');
@@ -420,7 +454,11 @@ async function main() {
         check('field guide: a short or up-and-down drag of the photo row doesn\'t flip; a long one flips next/previous', flip.start === 1 && flip.short === 1 && flip.vertical === 1 && flip.left === 2 && flip.right === 1, JSON.stringify(flip));
         check('field guide: its numbers jump, a swipe on the title row flips, ←/→ flip and wrap 5 -> 1', flip.tapped === 4 && flip.header === 3 && flip.key === 4 && flip.wrapped === 1, JSON.stringify(flip));
         check('field guide: both neighbours\' photos peek at the sides', flip.peeks === 2, JSON.stringify(flip));
-        check('field guide: the drawer keeps one height while flipping through all 5', flip.heights.length === 1, JSON.stringify(flip));
+        check('field guide: the drawer keeps one height and its photo row one place through all 5 and the longest name', flip.heights.length === 1, JSON.stringify(flip));
+        check('field guide: the signs showing fit beside the photo, chips one line tall', flip.overflow.length === 0, JSON.stringify(flip));
+        { const p = flip.signPages;
+          check('field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on', p && p.turned !== p.first && p.held === p.turned && p.pressed === 'true' && p.resumed !== p.held && p.unpressed === 'false', JSON.stringify(p ?? 'signs never split into pages')); }
+        check('field guide: the longest name shows whole on two lines', flip.longName.lines === 2 && !flip.longName.clipped, JSON.stringify(flip));
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
