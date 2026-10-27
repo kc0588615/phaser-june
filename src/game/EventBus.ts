@@ -52,7 +52,7 @@ export interface EventPayloads {
      * `escapes`: the mystery's id, only so its card bolts off if it's released (plan 046); the board decides no rules.
      * `wander` (plan 047): marked animals step after each move; `toy`: a release by the move's own run leaves a line toy.
      */
-    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number; wander?: { toy: boolean } };
+    'clue-board-setup': { seed: number; allowedGemTypes: GemType[]; rare?: { type: GemType; chance: number }; pins?: BoardPin[]; faces?: Partial<Record<GemType, string>>; labels?: Partial<Record<GemType, string>>; board?: { grid: Grid; toys: Toys }; escapes?: number; wander?: { toy: boolean }; toyScout?: boolean };
     'clue-board-lock': { locked: boolean };
     'clue-board-shuffled': undefined;
     /** Arrows move the cursor; with Shift they swap its gem that way; Escape drops a tapped gem. */

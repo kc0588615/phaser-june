@@ -69,6 +69,15 @@ Bot on the final rules (seed 4401) matches the picked row: careful 92/86, novice
 - Bot: `--scout on|off` (default from the rules), `--knows`; players novice and expert.
 - E2E (`npm run e2e`, seed 7): 567/567 (with long press, the photo slide, pencilling in the guide and the grid under it, the corner notes book, and nothing covering the board on any move). New checks: all 20 answers start hidden; pencil cycles yes/no/blank and changes no rule; the field guide says "not scouted" per hidden answer; each move scouts exactly the answers next to unmarked animals in its own clear's colors; the grid shows exactly the scouted answers and no hidden one; the round-end card has no hidden cell.
 
+## Toy scouting (2026-10-27, rules 047-1)
+
+Owner picked it from a sim of three options (bot, 1000 rounds, Africa/Asia): toys scouting in cascades with the next-to rule changed nothing; "wide" (each tile a toy reaches sees every color it cleared) gave careful 98/96, novice 96/95: too easy, hard to explain; "own color" (below) is mild and says in one line.
+
+- Rule: a line or blast gem (or a cross/5×5 combo) going off in the move's own clear shows its own gem's color to every tile next to a cell it cleared; a color gem already shows the color it clears. Cascades still don't scout. Touches and releases unchanged.
+- Code: `AnimalRules.toyScout` (on), `BoardModel.toyScout` adds the color into `nearColors` (so preview, idle hint, card hop and bot follow), set from `clue-board-setup`; bot `--toyscout on|off`; test 20 in `tests/game/boardModel.test.ts`.
+- Bot, off -> on: careful 95/91 -> 96/92, novice 92/86 -> 93/89, reader 83/76 -> 84/78, expert 100/100, guesser 19; answers seen +0.5; moves left at the find and star lines unchanged.
+- E2E 736/736 (the walk-and-reload check now retries another card when a cascade releases its walker).
+
 ## Next
 
 1. `playtest` on a phone viewport: do kids pencil, does scouting read as a choice, how long are rounds.

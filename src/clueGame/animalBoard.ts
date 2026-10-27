@@ -3,7 +3,8 @@
 // mystery; witness gems show its hand-written clues; the player marks suspects
 // "ruled out", and a marked suspect is released when a gem next to it is cleared.
 // Plan 045: the suspects' own answers start hidden; a move's clear of a clue's color
-// next to an unmarked tile shows that animal's answer to it (scouting).
+// next to an unmarked tile shows that animal's answer to it (scouting). Rules 047-1
+// (`toyScout`): a line or blast gem in that clear also shows its own color to every tile it reaches.
 // Plan 047 (behind `wander`): marked suspects step toward the edge each move by how
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
@@ -39,16 +40,18 @@ export interface AnimalRules {
   wander: boolean;
   /** Plan 047: a release by a run of the player's own swap leaves a line toy on the freed cell, after the move settles. */
   wanderToy: boolean;
+  /** Rules 047-1: a line or blast gem going off in the move's own clear scouts its own color on every unmarked tile its clear reaches. */
+  toyScout: boolean;
   points: { star: number; moveLeft: number; streakStep: number; streakMax: number };
 }
 
 /**
- * Tuned by the balance bot (plans 044, 045 and 047): with scouting, wandering and reward toys, orders of 20 gems and
+ * Tuned by the balance bot (plans 044, 045 and 047; toy scouting 047-1 adds 1-3 points): with scouting, wandering and reward toys, orders of 20 gems and
  * 30 moves (careful finds 91-95%, one who knows every trait on sight 100%, one who knows none 87-92%, one who reasons
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '047-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true,
+  version: '047-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 

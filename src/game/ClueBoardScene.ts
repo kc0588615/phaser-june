@@ -140,11 +140,12 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes, wander }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes, wander, toyScout }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
         const pinned = pins.map((pin): [Cell, number] => [pin.cell, pin.id]);
         this.model.newBoard(seed, allowedGemTypes, rare ?? null, pinned);
+        this.model.toyScout = toyScout ?? false;
         if (board) {
             const toys = board.toys.flatMap((column, x) => column.flatMap((toy, y): Array<[Cell, Special]> => (toy ? [[[x, y], toy]] : [])));
             this.model.loadBoard(board.grid, toys, pinned);

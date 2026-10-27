@@ -86,7 +86,7 @@ A short phrase from a suspect's field guide about something it does or has (digg
 _Avoid_: tag, hint
 
 **Scout**:
-Showing a suspect's own answer to a question by clearing that question's clue gem next to its tile. Until scouted, a suspect's answers are hidden ("?").
+Showing a suspect's own answer to a question by clearing that question's clue gem next to its tile. Until scouted, a suspect's answers are hidden ("?"). A line or blast gem whose clear reaches the tile also scouts its own color there (rules 047-1).
 _Avoid_: reveal, inspect
 
 **Pencil mark**:

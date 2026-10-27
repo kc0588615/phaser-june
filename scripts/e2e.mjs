@@ -809,17 +809,19 @@ async function main() {
       // Plan 047: rule out another look-alike and play one move, so a card stands where it walked to.
       // A card whose first step stays on the board (one on an edge walking out would just leave).
       const STEP = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
-      let walker = null;
-      for (const id of cc.clue().suspects.filter(other => other !== first.mysteryId && !cc.clue().released.includes(other) && !cc.clue().marked.includes(other))) {
-        if (cc.clue().status !== 'playing') break;
-        await window.__slidePill(id, 120);
-        const [x, y] = cc.state().pins.find(([, other]) => other === id)[0];
-        const [dx, dy] = STEP[cc.clue().headings[id]];
-        if (x + dx >= 0 && x + dx < 7 && y + dy >= 0 && y + dy < 7) { walker = id; break; }
-        await window.__slidePill(id, 120); // back
-      }
+      // A cascade after its step can release it before the reload; then try another card (up to 3).
       let walked = null;
-      if (walker) {
+      for (let tries = 0; tries < 3 && !walked?.to; tries++) {
+        let walker = null;
+        for (const id of cc.clue().suspects.filter(other => other !== first.mysteryId && !cc.clue().released.includes(other) && !cc.clue().marked.includes(other))) {
+          if (cc.clue().status !== 'playing') break;
+          await window.__slidePill(id, 120);
+          const [x, y] = cc.state().pins.find(([, other]) => other === id)[0];
+          const [dx, dy] = STEP[cc.clue().headings[id]];
+          if (x + dx >= 0 && x + dx < 7 && y + dy >= 0 && y + dy < 7) { walker = id; break; }
+          await window.__slidePill(id, 120); // back
+        }
+        if (!walker) break;
         const from = cc.state().pins.find(([, id]) => id === walker)?.[0];
         const moves = cc.validMoves().filter(candidate => !cc.touchedBy(candidate).includes(walker));
         if (moves.length) await cc.drag(moves[0], { input: 'touch', timeoutMs: 30_000 });

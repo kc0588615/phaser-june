@@ -26,6 +26,10 @@
 // 17. A toy's clear removes a tile, or a line stops at it instead of passing behind.
 // 18. `touched` misses a tile next to a run or a cleared gem, or names one that wasn't.
 // 19. Gems don't fall past a tile, or unpinning leaves a hole.
+//
+// Toy scouting (rules 047-1). The ways it could break:
+// 20. A line or blast gem whose clear reaches a tile doesn't show the toy's own color there, shows it with
+//     `toyScout` off, shows it on a tile the clear didn't reach, or changes which tiles are `touched`.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Grid, type Move, type Special } from '@/game/BoardModel';
@@ -345,6 +349,45 @@ test('a run touches the tile next to it, not one further off', () => {
   const phase = model.nextPhase({ from: [2, 2], to: [2, 3] });
   assert.equal(phase.made.length, 1); // the straight 4; its toy cell counts as next to the tile too
   assert.deepEqual(phase.touched, [3]);
+});
+
+test('with toyScout, a line gem shows its own color to the tiles its clear reaches, and touches no more', () => {
+  const rows = [
+    'G B G B K',
+    'B K O K G',
+    'K G O B Y',
+    'G B Y O K',
+    'B G K G B',
+  ];
+  const play = (toyScout: boolean) => {
+    const model = board(rows, [[[2, 2], 'row']], [[[4, 2], 7], [[0, 0], 8]]);
+    model.toyScout = toyScout;
+    const preview = model.previewNearColors({ from: [2, 3], to: [3, 3] });
+    return { preview, phase: model.nextPhase({ from: [2, 3], to: [3, 3] }) };
+  };
+  const off = play(false);
+  const on = play(true);
+  assert.deepEqual(off.phase.nearColors, [[7, ['blue']]]); // only the gem cleared right next to it
+  assert.deepEqual(on.phase.nearColors, [[7, ['blue', 'orange']]]); // plus the orange line gem's color; tile 8 not reached
+  assert.deepEqual(on.preview, on.phase.nearColors);
+  assert.deepEqual(on.phase.touched, off.phase.touched);
+});
+
+test('with toyScout, a toy made this phase next to a tile (not cleared) carries no other toy\'s color there', () => {
+  const model = board([
+    'G B Y G B',
+    'G O O B O',
+    'Y B B O Y',
+    'B G Y B G',
+    'G Y G Y B',
+  ], [[[2, 2], 'bomb']], [[[3, 0], 7]]);
+  model.toyScout = true;
+  const move: Move = { from: [3, 2], to: [3, 1] };
+  const preview = model.previewNearColors(move);
+  const phase = model.nextPhase(move);
+  assert.ok(phase.made.some(toy => toy.cell[0] === 3 && toy.cell[1] === 1)); // the orange line gem stays next to the tile
+  assert.deepEqual(phase.nearColors, [[7, ['orange']]]); // not the blue blast gem's color
+  assert.deepEqual(preview, phase.nearColors);
 });
 
 test('gems fall past a pinned tile; unpinning fills its cell from above', () => {

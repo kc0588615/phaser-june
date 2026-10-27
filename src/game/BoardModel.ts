@@ -62,6 +62,7 @@ export interface ExplodePhase {
 export type Pins = (number | null)[][];
 
 const key = ([x, y]: Cell) => `${x},${y}`;
+const has = (cells: readonly Cell[], [x, y]: Cell) => cells.some(([cx, cy]) => cx === x && cy === y);
 const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [], nearColors: [], runTouched: [] };
 const NEAR: ReadonlyArray<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
@@ -116,6 +117,8 @@ export class BoardModel {
   private rng: () => number = Math.random;
   private rare: RareGem | null = null;
   private moves = 0;
+  /** Rules 047-1: a line or blast gem's clear shows its own gem's color to every tile it reaches (in `nearColors`). */
+  toyScout = false;
 
   constructor(readonly width: number, readonly height: number) {}
 
@@ -273,7 +276,12 @@ export class BoardModel {
       const cells = NEAR.map(([dx, dy]): Cell => [x + dx, y + dy]).filter(cell => near.has(key(cell)));
       // A color toy that went off (not part of a run) clears no gem of its own color, so it scouts nothing; it still touches.
       const colored = cells.filter(cell => matched.has(key(cell)) || this.toys[cell[0]][cell[1]] !== 'color');
-      return cells.length ? [[id, [...new Set(colored.map(([cx, cy]) => this.grid[cx][cy]))]]] : [];
+      const colors = new Set(colored.map(([cx, cy]) => this.grid[cx][cy]));
+      // Toy scouting: a color gem's clear already shows its color; a line or blast gem adds its own.
+      if (this.toyScout) {
+        for (const fire of fired) if (fire.special !== 'color' && [fire.cell, ...fire.cells].some(cell => clearedKeys.has(key(cell)) && has(cells, cell))) colors.add(this.grid[fire.cell[0]][fire.cell[1]]);
+      }
+      return cells.length ? [[id, [...colors]]] : [];
     });
     const touched = nearColors.map(([id]) => id);
     const runTouched = this.pinnedCells().filter(([[x, y]]) => NEAR.some(([dx, dy]) => matched.has(key([x + dx, y + dy])))).map(([, id]) => id);
@@ -326,6 +334,7 @@ export class BoardModel {
     const copy = new BoardModel(this.width, this.height);
     copy.gemTypes = this.gemTypes;
     copy.rare = this.rare;
+    copy.toyScout = this.toyScout;
     copy.rng = () => 0; // the refill doesn't change what the first clear touches
     copy.grid = this.getGrid();
     copy.toys = this.getToys();

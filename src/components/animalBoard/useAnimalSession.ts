@@ -199,7 +199,7 @@ export function useAnimalSession() {
       labels[order.gem] = order.short;
     }
     EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined, escapes: round.mysteryId,
-      ...(round.rules.wander ? { wander: { toy: round.rules.wanderToy } } : {}) });
+      ...(round.rules.wander ? { wander: { toy: round.rules.wanderToy } } : {}), ...(round.rules.toyScout ? { toyScout: true } : {}) });
     EventBus.emit('clue-board-marks', { marked: [] });
   }, [sceneGeneration, roundNo]);
 

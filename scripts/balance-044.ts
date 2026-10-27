@@ -13,6 +13,7 @@
 //     novice none, expert all)
 //     [--wander on|off] [--toy on|off]   (plan 047, on in the rules: marked tiles step to the edge each move and leave;
 //     --toy: a release by the player's own run leaves a line toy; follows --wander unless set. 045-0: --wander off)
+//     [--toyscout on|off]   (rules 047-1, on in the rules: a line or blast gem in the move's own clear scouts its color)
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -206,6 +207,7 @@ async function main() {
     wander: arg('wander', ANIMAL_RULES.wander ? 'on' : 'off') === 'on',
   };
   rules.wanderToy = arg('toy', rules.wander ? 'on' : 'off') === 'on';
+  rules.toyScout = arg('toyscout', ANIMAL_RULES.toyScout ? 'on' : 'off') === 'on';
   const options: Options = { knows: arg('knows', 'size,covering').split(',').filter(Boolean) };
   const players = arg('players', 'careful,novice,expert,reader,guesser,random,oracle').split(',') as Player[];
   const dir = path.join(process.cwd(), 'db/content');
@@ -218,7 +220,7 @@ async function main() {
 
   const explain = process.argv.includes('--explain') ? Number(arg('explain', '0')) : null;
   if (explain === null) {
-    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}.`);
+    console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}${rules.toyScout ? ', toy scouting' : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
     console.log('\n| Place | Player | Found | ★★★ | Escaped | Out of moves | Named right at timeout | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail |');
     console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
@@ -256,6 +258,7 @@ async function main() {
     for (const player of players) {
       const board = new BoardModel(size, size);
       const scratch = new BoardModel(size, size);
+      board.toyScout = scratch.toyScout = rules.toyScout;
       scratch.newBoard(1, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance });
       const results = deals.map((deal, r) => {
         board.newBoard(deal.boardSeed, BOARD_GEMS, { type: WITNESS_GEM, chance: rules.witnessChance }, deal.pins);
