@@ -880,7 +880,7 @@ By section:
   - `gh issue comment <issue> --body "Plan PR: #<pr>"`.
   - Check: `gh pr view <pr> --json state,isDraft,baseRefName,headRefName,body` → OPEN, not draft, `main` ← `agent/cc-landing-plan`, body has `#<issue>`; `gh pr diff <pr> --name-only` lists only `plans/`.
 
-- [ ] S9. **Astra code review MUST-FIX 1: Vercel rollback.** In `plans/051-landing-page.md` §10 owner steps: step 6 keeps both domains on the old Vercel project during the rollback week (Vercel serves nothing once DNS moves); one week after step 3, remove both domains, then delete the project. Rollback line: restore the two DNS records; works only while the domains are still on Vercel. Mirror in `plans/051-build-brief.md` if it restates step 6.
+- [x] S9. **Astra code review MUST-FIX 1: Vercel rollback.** In `plans/051-landing-page.md` §10 owner steps: step 6 keeps both domains on the old Vercel project during the rollback week (Vercel serves nothing once DNS moves); one week after step 3, remove both domains, then delete the project. Rollback line: restore the two DNS records; works only while the domains are still on Vercel. Mirror in `plans/051-build-brief.md` if it restates step 6.
   - Check: `grep -n -i vercel plans/051-*.md`: no step removes domains before the week ends; rollback names the precondition. PR #35 updated by push.
 
 ### Risks
@@ -957,5 +957,5 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 06:40 UTC: S7. origin/main still `acffc179`. `A/checks/paths.sh` (backticked paths + md links in both 051 docs, brace expansion, bare names by unique basename, New list from build brief): exit 0, 89 OK, 51 NEW, 0 MISSING; `paths.txt` + `README.txt` in `A/checks/`. All 19 cited line ranges read by eye, match. Counts (76; 50/15/11; iucn 76, adw 65; licences) match 051. Claim rows spot-checked (privacy.tsx, paper §5.1/§5.3, CONTEXT.md). Copy grep: rule/never-claim/evidence hits only. No doc changes needed. typecheck, lint pass.
 - 06:58 UTC: S8. origin/main still `acffc179` (rebase no-op); paths.sh exit 0, 0 MISSING; pushed. PR #35 (OPEN, not draft, main ← agent/cc-landing-plan, body Refs #34, site map, coming soon, 4 defaults, both verdicts, Release: no); diff `plans/` only (9 files). Issue #34 commented "Plan PR: #35". typecheck, lint pass.
 
-- 06:43 UTC: Astra code review (`--code origin/main`). APPROVE_WITH_CHANGES, 1 MUST-FIX (051 §10 step 6 removes Vercel domains, breaks DNS rollback) accepted → S9; 2 SHOULD-CONSIDER → Summary. Plan-only change. typecheck, lint pass.
+- 06:43 UTC: Astra code review (`--code origin/main`). APPROVE_WITH_CHANGES, 1 MUST-FIX (051 §10 step 6 removes Vercel domains, breaks DNS rollback) accepted → S9; 2 SHOULD-CONSIDER → Summary. Plan-only change. typecheck, lint pass.- 06:44 UTC: S9. 051 §10 step 6: domains stay on Vercel through rollback week, removed + project deleted one week after step 3; rollback names precondition (domains still on Vercel). Build brief doesn't restate step 6, no change. vercel grep ok. typecheck, lint pass.
 ## Summary

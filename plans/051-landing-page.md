@@ -353,8 +353,8 @@ Proven on 2026-10-28 in `/tmp`: an entry CSS that `@import`s `globals.css` compi
   3. Namecheap → critterconnect.org → Advanced DNS: `@` A from `216.198.79.1` to `178.156.159.183`; `www` CNAME to `critterconnect.org.`. Leave MX (email forwarding, carries `privacy@`), TXT (SPF) and `clerk` alone.
   4. On the VPS, `docker restart caddy` to request the certificates now.
   5. `bash deploy/check.sh`: every line `OK`, apex included.
-  6. **Vercel:** remove both domains from the old project now; **delete the project one week after step 3** (H2 answer 2c; its environment holds a Clerk dev key, `pk_test`).
-  - Rollback: restore the two DNS records (possible during that week). A bad site build: `git revert`, `npm run deploy`.
+  6. **Vercel:** leave both domains on the old project for the rollback week (once DNS moves it serves nothing). **One week after step 3**, remove both domains, then delete the project (H2 answer 2c; its environment holds a Clerk dev key, `pk_test`).
+  - Rollback: restore the two DNS records. Works only while both domains are still on the Vercel project, i.e. during that week. A bad site build: `git revert`, `npm run deploy`.
 - **Old links:** `www.*` 308 to the apex; `/` gets the new front page (the old site had only `/`); `/explore*`, `/login*`, `/clue-match*`, `/api/*` 308 to `play.` with path and query; anything else the 404 page with Play.
 
 ## 11. Basics
