@@ -97,7 +97,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -105,6 +105,12 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+2026-10-28, worktree at `ddc609a3` (origin/main `acffc179`), Node 24.21.
+- Install: `node_modules` present, `npm ls` clean. Migrate: n/a (no migration history; DB is the shared dev copy and this mission never writes to it).
+- `npm run typecheck`: pass. `npm run lint`: pass (exit 0). `npm test`: 47/47 pass.
+- `npm run e2e` (dev server on :3100, Playwright Chromium 1208 via a `--no-sandbox` wrapper in /tmp since Ubuntu 24.04's AppArmor blocks Chrome's sandbox; `/usr/bin/google-chrome` doesn't exist here): **523/574, run twice, same result**. Not caused by this mission (no code changed). First failure is the time-based "holding an answer cell" check (`scripts/e2e.mjs` ~l.315, 1150 ms hold, `during:false`); after it, the field guide's photo (`AnimalSheets.tsx:178`) covers the board, so every move is refused (`nothing on screen covers the board` x45) and round 1 never ends ("Timed out waiting for the Camera row landing"). Likely slow 2-CPU ARM + swiftshader in dev mode; owner's WSL run on the same commit reports 738/738. Artifact: `/srv/critter-ai/agent-state/missions/cc-landing-plan/baseline-e2e/` (report.json, screenshots, e2e.log). Reproduce: `npx next dev -p 3100` then `E2E_BASE_URL=http://localhost:3100 CHROME_PATH=<chrome --no-sandbox wrapper> npm run e2e`.
+- For this mission (plans only), the bar is typecheck + lint; the globe and board render correctly for screenshots (see `02a-picked.png`).
 
 ## Architecture
 
@@ -125,5 +131,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 05:12 UTC: Baseline. typecheck, lint pass; unit 47/47; e2e 523/574 on VPS (pre-existing timing failure, see Baseline).
 
 ## Summary
