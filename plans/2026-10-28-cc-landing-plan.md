@@ -831,7 +831,7 @@ By section:
 
 `A` = `/srv/critter-ai/agent-state/missions/cc-landing-plan`. Line refs and counts are as of origin/main `acffc179`. Every step: repo changes only under `plans/`; scripts and notes go in `A`, never the repo; ends with `npm run typecheck` + `npm run lint` passing, a Log line, commit, push. The source for both 051 docs is the Architecture above, with **Decisions** and **Revision notes (owner answers, H2)** winning over anything older (`src/site/`, not `public/site/` or `SiteLayout`; no Clerk; the operator; 5–10 minutes).
 
-- [ ] S1. **Plan screenshots** (riskiest: external sites, the old one can vanish any day).
+- [x] S1. **Plan screenshots** (riskiest: external sites, the old one can vanish any day).
   - Script `A/research/shots/shoot.mjs`, using the CDP pattern of `A/research/live-play/scrollcheck.mjs`: spawn `~/.cache/ms-playwright/chromium-1208/chrome-linux/chrome --headless=new --no-sandbox`, light mode (`Emulation.setEmulatedMedia`, `prefers-color-scheme: light`), DPR 1, wait for load + `document.fonts.ready` + 8 s. Args: url, width, height, out.
   - Shots, PNG, to `A/research/shots/`, then copy to `plans/051-landing-page/`:
     - `old-site-390.png` (390×844), `old-site-1440.png` (1440×900): `https://critterconnect.org/` (follows the 307 to www). Save its rendered title + meta description to `A/research/old-site/rendered.txt`.
@@ -932,5 +932,6 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 05:48 UTC: Revision. architect resolved MUST-FIX: .dockerignore `*.png` root-only (live /branding png 200), kept + check.sh verifies og.png on both hosts; LegalPage takes shared link/text roles; axe-core declared devDep 4.11.0. SC items accepted (check.sh both hosts, retry-safe Caddy apply, Clerk bundle stated). Plan-only change.
 - 06:12 UTC: Owner answers (H2) picked up into Decisions, H2 closed. architect redesigned for (b): `src/site/` React pages rendered to static HTML by `scripts/site.mjs` (esbuild+postcss+Tailwind, CSS imports globals.css), served by a Caddy image built with the Caddyfile + site; primary button bg `#008663` (4.58:1, light only); `--space-xxxl: 64px`; no new blocking questions. typecheck, lint pass.
 - 06:18 UTC: Steps. planner wrote S1–S8 (plan shots from live sites, comparables notes, 051 in 2 parts, issue+README row, build brief, paths check, rebase+PR) + 10-check Verification; count cmd tested (76 animals). typecheck, lint pass.
+- 06:23 UTC: S1. 5 live PNGs (old-site 390/1440, globe 390, board seed=1 Africa 390/1440, How-to-play closed via "Let's play", no moves/no DB writes) in `plans/051-landing-page/` (1.1 MB); sizes ok, each opened: rendered, light, no dev badge. Script + README in `A/research/shots/`; old-site title/desc in `A/research/old-site/rendered.txt`. typecheck, lint pass.
 
 ## Summary
