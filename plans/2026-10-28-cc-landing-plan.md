@@ -874,7 +874,7 @@ By section:
   - Recompute counts (Verification 4) and compare with 051.
   - Fix every MISSING path, stale line ref, wrong count, or claim without evidence.
   - Check: `bash A/checks/paths.sh > A/checks/paths.txt` exits 0; the copy grep (Verification 7) shows only rule or never-claim hits.
-- [ ] S8. **Rebase and open the PR.**
+- [x] S8. **Rebase and open the PR.**
   - `git fetch origin && git rebase origin/main` (on a `plans/README.md` conflict keep main's rows, re-add 051); re-run `A/checks/paths.sh`; `git push --force-with-lease`.
   - `gh pr create --base main --head agent/cc-landing-plan --title "Plan 051: website at critterconnect.org (plan + build brief)" --body-file <tmp>`. Body: what's in it (2 docs, 5 images, README row); site map ≤ 5 lines; coming-soon items; the 4 defaults the owner can overturn; both review verdicts; `Refs #<issue>` (not "Closes": the issue stays open for the build); "Release: no. The owner merges; the build mission starts from `plans/051-build-brief.md`."; the session's attribution line.
   - `gh issue comment <issue> --body "Plan PR: #<pr>"`.
@@ -940,5 +940,6 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 06:36 UTC: S5. Created label `needs-triage`; issue #34 "Plan 051: website at critterconnect.org" (OPEN, needs-triage; links to 051 docs on branch, owner's 2 decisions, build ends as PR). `plans/README.md` 051 row after 049 (6 cells, names #34); 051 header names #34. typecheck, lint pass.
 - 06:38 UTC: S6. `plans/051-build-brief.md` (template headings exact; slug cc-website; Goal/Why/Scope New-Changed-Deleted/DoD incl. e2e:site, Taste lint+inspect --allow still-page 1440/768/390, audit, speed, caddy validate, CI caddy image, artifacts `missions/cc-website/`, PR Refs #34 never merges/deploys; Notes: 051 = design, deltas only, plan PNGs reference only, skill pins, CHROME_PATH wrapper, no Docker, ~6 units). Checks: headings match template; all 25 Changed/Deleted/cited paths exist; no TODO/TBD/placeholder; esbuild 0.19.12 + axe-core 4.11.0 in lockfile. typecheck, lint pass.
 - 06:40 UTC: S7. origin/main still `acffc179`. `A/checks/paths.sh` (backticked paths + md links in both 051 docs, brace expansion, bare names by unique basename, New list from build brief): exit 0, 89 OK, 51 NEW, 0 MISSING; `paths.txt` + `README.txt` in `A/checks/`. All 19 cited line ranges read by eye, match. Counts (76; 50/15/11; iucn 76, adw 65; licences) match 051. Claim rows spot-checked (privacy.tsx, paper §5.1/§5.3, CONTEXT.md). Copy grep: rule/never-claim/evidence hits only. No doc changes needed. typecheck, lint pass.
+- 06:58 UTC: S8. origin/main still `acffc179` (rebase no-op); paths.sh exit 0, 0 MISSING; pushed. PR #35 (OPEN, not draft, main ← agent/cc-landing-plan, body Refs #34, site map, coming soon, 4 defaults, both verdicts, Release: no); diff `plans/` only (9 files). Issue #34 commented "Plan PR: #35". typecheck, lint pass.
 
 ## Summary
