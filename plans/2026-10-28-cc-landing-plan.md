@@ -100,7 +100,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -444,6 +444,17 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. Production packaging excludes the proposed PNG assets: `.dockerignore` excludes `*.png`, so `public/site/og.png` and the optional app icon will not ship. Include these assets in the deployment contract and verify their availability from the packaged application.
+
+SHOULD-CONSIDER:
+1. Test both hostnames through Caddy, including redirects and Clerk exclusion. Direct `/home/` checks bypass the central routing boundary.
+2. Make Caddy configuration application retry-safe. Detecting only changes in the latest pull can miss an unapplied configuration after a failed deployment.
+3. Declare axe-core as a direct development dependency if it becomes a required verification tool.
+4. Treat future class results as a separate architectural decision. A replay seed identifies a puzzle, not a class or an authorized results viewer.
+
 ## Revision notes
 
 ## Steps
@@ -461,5 +472,6 @@ SHOULD-CONSIDER:
 - 05:12 UTC: Baseline. typecheck, lint pass; unit 47/47; e2e 523/574 on VPS (pre-existing timing failure, see Baseline).
 - 05:36 UTC: Architecture. architect wrote findings (9) + target design: option (a) Next app w/ host rewrite, site = `/`, `/teachers/`, `/privacy`, `/terms` in SiteLayout; 9 owner questions (1, 2 block). Research in artifacts folder. typecheck, lint pass.
 - 05:41 UTC: Fable review. APPROVE_WITH_CHANGES, 3 MUST-FIX (.dockerignore drops og.png; LegalPage contrast vs axe gate; axe-core undeclared dep). Plan-only change.
+- 05:43 UTC: Astra review. APPROVE_WITH_CHANGES, 1 MUST-FIX (.dockerignore drops PNGs, same as Fable #1); 4 SHOULD-CONSIDER. Plan-only change.
 
 ## Summary
