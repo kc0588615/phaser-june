@@ -2,7 +2,7 @@
 mission: cc-landing-plan
 project: critter-connect
 branch: agent/cc-landing-plan
-status: active
+status: done
 started: 2026-10-28 05:06 UTC
 ---
 
@@ -956,6 +956,28 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 06:38 UTC: S6. `plans/051-build-brief.md` (template headings exact; slug cc-website; Goal/Why/Scope New-Changed-Deleted/DoD incl. e2e:site, Taste lint+inspect --allow still-page 1440/768/390, audit, speed, caddy validate, CI caddy image, artifacts `missions/cc-website/`, PR Refs #34 never merges/deploys; Notes: 051 = design, deltas only, plan PNGs reference only, skill pins, CHROME_PATH wrapper, no Docker, ~6 units). Checks: headings match template; all 25 Changed/Deleted/cited paths exist; no TODO/TBD/placeholder; esbuild 0.19.12 + axe-core 4.11.0 in lockfile. typecheck, lint pass.
 - 06:40 UTC: S7. origin/main still `acffc179`. `A/checks/paths.sh` (backticked paths + md links in both 051 docs, brace expansion, bare names by unique basename, New list from build brief): exit 0, 89 OK, 51 NEW, 0 MISSING; `paths.txt` + `README.txt` in `A/checks/`. All 19 cited line ranges read by eye, match. Counts (76; 50/15/11; iucn 76, adw 65; licences) match 051. Claim rows spot-checked (privacy.tsx, paper §5.1/§5.3, CONTEXT.md). Copy grep: rule/never-claim/evidence hits only. No doc changes needed. typecheck, lint pass.
 - 06:58 UTC: S8. origin/main still `acffc179` (rebase no-op); paths.sh exit 0, 0 MISSING; pushed. PR #35 (OPEN, not draft, main ← agent/cc-landing-plan, body Refs #34, site map, coming soon, 4 defaults, both verdicts, Release: no); diff `plans/` only (9 files). Issue #34 commented "Plan PR: #35". typecheck, lint pass.
+- 06:43 UTC: Astra code review (`--code origin/main`). APPROVE_WITH_CHANGES, 1 MUST-FIX (051 §10 step 6 removes Vercel domains, breaks DNS rollback) accepted → S9; 2 SHOULD-CONSIDER → Summary. Plan-only change. typecheck, lint pass.
+- 06:44 UTC: S9. 051 §10 step 6: domains stay on Vercel through rollback week, removed + project deleted one week after step 3; rollback names precondition (domains still on Vercel). Build brief doesn't restate step 6, no change. vercel grep ok. typecheck, lint pass.
+- 06:46 UTC: Final Verification. 10/10 checks pass (see Summary); artifact `A/final-check/`; Summary written, PR #35 body updated, status done. typecheck, lint pass.
 
-- 06:43 UTC: Astra code review (`--code origin/main`). APPROVE_WITH_CHANGES, 1 MUST-FIX (051 §10 step 6 removes Vercel domains, breaks DNS rollback) accepted → S9; 2 SHOULD-CONSIDER → Summary. Plan-only change. typecheck, lint pass.- 06:44 UTC: S9. 051 §10 step 6: domains stay on Vercel through rollback week, removed + project deleted one week after step 3; rollback names precondition (domains still on Vercel). Build brief doesn't restate step 6, no change. vercel grep ok. typecheck, lint pass.
 ## Summary
+
+Plans only (no app code): `plans/051-landing-page.md` (the site plan), `plans/051-build-brief.md` (brief for the build mission, slug `cc-website`), 5 reference shots in `plans/051-landing-page/`, README row. PR #35 (Refs issue #34), never merged by this mission.
+
+**Site map** (static build from `src/site/`, served by Hetzner Caddy; owner's option b):
+- `/`: what the game is in one screen; one primary button **Start playing** → play.critterconnect.org; a mid-page band routes teachers on.
+- `/teachers/`: what students do in a round, what they practice (paper §5, honestly), class use + class link maker, privacy, sources and limits, coming later, FAQ.
+- `/privacy/`, `/terms/`: moved from the game, served on both hosts; `404.html` → play.
+- `www` + old game paths 308; Vercel keeps both domains through the rollback week, then they're removed and the project deleted.
+
+**Coming soon** (only on `/teachers/`, each "Not available yet:"): printable teacher guide; standards map ("maps onto" NGSS, never "aligned to"); class results from a class link, per animal, no names (own plan first). Not shown: rosters, class codes, per-student reasoning.
+
+**Skills and cc**: `GUI.md` + cc tokens binding, applied with graphical-ui, checked by graphical-audit. Taste = composition only (inventory, sections, copy, its gate `--allow still-page` at 1440/768/390); art direction, tokens, found pictures, motion skipped. elaya Part A = intake, two layouts, copy rules; Part B unused. Two owner-approved theme additions: light primary fill `#008663` (4.58:1), `--space-xxxl: 64px`.
+
+**Open questions**: none blocking (H2 answered 1–9). Four defaults to overturn in the PR: darker fill also on the game's buttons; `play.` serves teacher + legal pages too; site/Caddyfile change briefly restarts `caddy`; terms' date moves with the operator sentence.
+
+**Reviews**: architecture Fable APPROVE_WITH_CHANGES (3 MUST-FIX), Astra APPROVE_WITH_CHANGES (1 MUST-FIX), all resolved, then redesigned for (b) per owner (H2). Code review Astra APPROVE_WITH_CHANGES: MUST-FIX (Vercel rollback) fixed in S9. SHOULD-CONSIDER, for the owner and the build mission: (1) add a two-session E2E that the class link gives identical starting animals and boards across independent loads; (2) test the 404 status through Caddy, since Python's preview serves `/404.html` with 200.
+
+**Verification**: all 10 checks pass (diff `plans/` only, 9 files; typecheck + lint exit 0; paths 89 OK / 51 NEW / 0 MISSING; counts 76 = 50/15/11, IUCN 76, ADW 65 match 051; 5 PNGs at stated sizes, opened; DoD fully mapped; copy grep rule-only hits, 15 headlines ≤ 31 chars; issue #34 OPEN `needs-triage`, PR #35 OPEN unmerged `main` ← branch, `plans/` only; no blocking questions, handoff has none open). Artifact: `/srv/critter-ai/agent-state/missions/cc-landing-plan/final-check/` (one `.txt` per check, `README.txt` with commands). No E2E run: no app code changed (Baseline E2E state unchanged).
+
+**Owner next**: review and merge PR #35, then relabel issue #34 `ready-for-agent` and start the build per `plans/051-build-brief.md`.
