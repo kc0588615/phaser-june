@@ -1,5 +1,5 @@
 // Home: pick a continent on the globe (from the list, or by tapping its dot), see
-// who lives there, then explore it. Found animals glow on the globe.
+// who lives there, then explore it. Found animals' ranges light up the globe.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -10,7 +10,8 @@ import { MIN_PLACE_ANIMALS, classColor, type PlaceAnimal, type PlacesResponse } 
 import { useJournal } from '@/components/clueGame/useJournal';
 import { getJson } from '@/lib/getJson';
 import { clearSavedGame } from '@/components/animalBoard/savedGame';
-import { Globe, type GlobeSighting } from './Globe';
+import { speciesBadge } from '@/clueGame/speciesInfo';
+import { Globe, type GlobeAnimal } from './Globe';
 import { PlaceCard } from './PlaceCard';
 import { PlaceList } from './PlaceList';
 
@@ -39,8 +40,8 @@ export function GlobeScreen() {
   const selected = data?.places.find(place => place.key === selectedKey) ?? null;
   // Rounds draw from a whole continent (plan 041); countries and wildlife areas are too small a pool.
   const shown = useMemo(() => (data?.places ?? []).filter(place => place.kind === 'continent'), [data]);
-  const sightings = useMemo<GlobeSighting[]>(() => Object.values(journal).flatMap(entry =>
-    (entry.sightings ?? []).map(sighting => ({ lon: sighting.lon, lat: sighting.lat, color: classColor(entry.className), name: entry.commonName }))), [journal]);
+  const found = useMemo<GlobeAnimal[]>(() => [...animals.values()].filter(isFound)
+    .map(animal => ({ id: animal.id, badge: speciesBadge(animal), color: classColor(animal.className) })), [animals, isFound]);
   const foundCount = Object.keys(journal).length;
 
   return (
@@ -74,7 +75,7 @@ export function GlobeScreen() {
         </header>
 
         <section className="relative [grid-area:globe]" aria-label="Globe">
-          <Globe places={shown} selected={selected} sightings={sightings} onPick={setSelectedKey} />
+          <Globe places={shown} selected={selected} found={found} onPick={setSelectedKey} />
         </section>
 
         <div className="flex min-h-0 flex-col pt-xs shadow-[inset_0_1px_0_0_var(--neutral-4)] [grid-area:panel] md:shadow-[inset_1px_0_0_0_var(--neutral-4)]">

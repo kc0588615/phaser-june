@@ -896,6 +896,14 @@ async function main() {
     check('the resumed round, named right, is written to the journal once', ended.journal !== journalBefore);
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));
 
+    // Back on the globe: each animal found has its range drawn and an emoji marker.
+    await goto(`${BASE}/`);
+    const found = Object.keys(JSON.parse(afterEnd.journal ?? '{}')).length;
+    const markers = await waitFor(n => document.querySelectorAll('.maplibregl-marker').length >= n && document.querySelectorAll('.maplibregl-marker').length, 'the globe markers', 30_000, found).catch(() => 0);
+    check('the globe marks each animal found', found > 0 && markers === found, `${markers} markers, ${found} in the journal`);
+    await sleep(1500);
+    await screenshot('07-globe-found.png');
+
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));
   } finally {

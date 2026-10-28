@@ -1,17 +1,19 @@
 // The home globe (MapLibre, globe projection). Shows land, a dot per place in
-// the current list, the picked place's outline, and a glowing marker for each
-// animal the player found. Tapping a dot picks that place; picking flies there.
+// the current list, the picked place's outline, and for each animal the player
+// found its range, tinted by animal group, with an emoji marker inside it. Ranges
+// stack, so the more found somewhere, the brighter it gets. Tapping a dot picks
+// that place; picking flies there.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl';
+import type { GeoJSONSource, Map as MapLibreMap, Marker, StyleSpecification } from 'maplibre-gl';
 import type { Place } from '@/clueGame/places';
 import { WORLD_LAND_GEOJSON_URL } from '@/clueGame/worldMap';
 import { getJson } from '@/lib/getJson';
 
-export interface GlobeSighting {
-  lon: number;
-  lat: number;
+export interface GlobeAnimal {
+  id: number;
+  /** Emoji (or initials) on the marker. */
+  badge: string;
   color: string;
-  name: string;
 }
 
 const EMPTY: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
@@ -35,13 +37,16 @@ const STYLE: StyleSpecification = {
     graticule: { type: 'geojson', data: GRATICULE },
     selected: { type: 'geojson', data: EMPTY },
     places: { type: 'geojson', data: EMPTY },
-    sightings: { type: 'geojson', data: EMPTY },
+    ranges: { type: 'geojson', data: EMPTY },
   },
   layers: [
     { id: 'ocean', type: 'background', paint: { 'background-color': '#0b1a1f' } },
     { id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': '#1f3d47' } },
     { id: 'graticule', type: 'line', source: 'graticule', paint: { 'line-color': '#47788a', 'line-width': 0.6, 'line-opacity': 0.45 } },
     { id: 'land-edge', type: 'line', source: 'land', paint: { 'line-color': '#47788a', 'line-width': 0.6 } },
+    { id: 'ranges', type: 'fill', source: 'ranges', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.25 } },
+    // Small ranges are slivers at globe zoom; the edge keeps them readable.
+    { id: 'ranges-edge', type: 'line', source: 'ranges', paint: { 'line-color': ['get', 'color'], 'line-width': 0.8, 'line-opacity': 0.6 } },
     { id: 'selected-fill', type: 'fill', source: 'selected', paint: { 'fill-color': '#6fa8bc', 'fill-opacity': 0.2 } },
     { id: 'selected-line', type: 'line', source: 'selected', paint: { 'line-color': '#a9cfdc', 'line-width': 1.6 } },
     {
@@ -54,9 +59,6 @@ const STYLE: StyleSpecification = {
         'circle-stroke-width': 1.5,
       },
     },
-    { id: 'sighting-glow', type: 'circle', source: 'sightings', paint: { 'circle-radius': 18, 'circle-color': ['get', 'color'], 'circle-blur': 0.9, 'circle-opacity': 0.7 } },
-    { id: 'sighting-ring', type: 'circle', source: 'sightings', paint: { 'circle-radius': 8, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': ['get', 'color'], 'circle-stroke-width': 1.5, 'circle-stroke-opacity': 0.9 } },
-    { id: 'sighting-core', type: 'circle', source: 'sightings', paint: { 'circle-radius': 4.5, 'circle-color': ['get', 'color'], 'circle-stroke-color': '#f3f1e8', 'circle-stroke-width': 1.5 } },
   ],
   sky: {
     'sky-color': '#08110d',
@@ -67,17 +69,25 @@ const STYLE: StyleSpecification = {
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function Globe({ places, selected, sightings, onPick }: {
+function markerElement(animal: GlobeAnimal): HTMLElement {
+  const element = document.createElement('div');
+  element.className = 'pointer-events-none grid h-7 w-7 place-items-center rounded-full border-2 bg-neutral-1 text-s leading-none';
+  element.style.borderColor = animal.color;
+  element.textContent = animal.badge;
+  element.setAttribute('aria-hidden', 'true');
+  return element;
+}
+
+export function Globe({ places, selected, found, onPick }: {
   places: Place[];
   selected: Place | null;
-  sightings: GlobeSighting[];
+  found: GlobeAnimal[];
   onPick: (key: string) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const libRef = useRef<typeof import('maplibre-gl') | null>(null);
   const spinning = useRef(true);
-  // The pulse repaints the map every frame, so it runs only while there are markers to pulse.
-  const hasSightings = useRef(false);
   const onPickRef = useRef(onPick);
   useEffect(() => { onPickRef.current = onPick; }, [onPick]);
   // True once the style has loaded, so the data effects below can draw.
@@ -91,6 +101,7 @@ export function Globe({ places, selected, sightings, onPick }: {
     (async () => {
       const maplibregl = await import('maplibre-gl');
       if (cancelled || !container.current) return;
+      libRef.current = maplibregl;
       // v6 finds its worker from import.meta.url, which the bundler rewrites; point at the emitted file.
       maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).href);
       const map = new maplibregl.Map({
@@ -116,16 +127,6 @@ export function Globe({ places, selected, sightings, onPick }: {
           frame = requestAnimationFrame(spin);
         };
         frame = requestAnimationFrame(spin);
-        // Discovery markers breathe.
-        const start = performance.now();
-        const pulse = (now: number) => {
-          if (cancelled) return;
-          if (!reducedMotion() && hasSightings.current && map.getLayer('sighting-glow')) {
-            map.setPaintProperty('sighting-glow', 'circle-radius', 16 + 6 * Math.sin((now - start) / 450));
-          }
-          requestAnimationFrame(pulse);
-        };
-        requestAnimationFrame(pulse);
       });
       map.on('click', 'places', event => {
         const key = event.features?.[0]?.properties?.key;
@@ -155,17 +156,38 @@ export function Globe({ places, selected, sightings, onPick }: {
   }, [places, selected, ready]);
 
   useEffect(() => {
-    hasSightings.current = sightings.length > 0;
-    const source = mapRef.current?.getSource<GeoJSONSource>('sightings');
-    source?.setData({
-      type: 'FeatureCollection',
-      features: sightings.map(sighting => ({
-        type: 'Feature',
-        properties: { color: sighting.color, name: sighting.name },
-        geometry: { type: 'Point', coordinates: [sighting.lon, sighting.lat] },
-      })),
-    });
-  }, [sightings, ready]);
+    const map = mapRef.current;
+    const maplibregl = libRef.current;
+    if (!map || !maplibregl || !ready) return;
+    const source = map.getSource<GeoJSONSource>('ranges');
+    if (found.length === 0) {
+      source?.setData(EMPTY);
+      return;
+    }
+    const byId = new Map(found.map(animal => [animal.id, animal]));
+    const ids = [...byId.keys()].sort((a, b) => a - b).join(',');
+    let current = true;
+    const markers: Marker[] = [];
+    getJson<GeoJSON.FeatureCollection>(`/api/clue-game/ranges/?species=${ids}`)
+      .then(ranges => {
+        if (!current) return;
+        source?.setData({
+          ...ranges,
+          features: ranges.features.map(feature => ({ ...feature, properties: { ...feature.properties, color: byId.get(feature.properties?.speciesId)?.color } })),
+        });
+        for (const { properties } of ranges.features) {
+          const animal = byId.get(properties?.speciesId);
+          if (!animal) continue;
+          // Hidden, not dimmed, on the far side of the globe.
+          markers.push(new maplibregl.Marker({ element: markerElement(animal), opacityWhenCovered: '0' }).setLngLat([properties?.lon, properties?.lat]).addTo(map));
+        }
+      })
+      .catch(error => console.error('[Globe] Failed to load ranges:', error));
+    return () => {
+      current = false;
+      markers.forEach(marker => marker.remove());
+    };
+  }, [found, ready]);
 
   useEffect(() => {
     const map = mapRef.current;

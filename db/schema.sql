@@ -141,7 +141,8 @@ CREATE INDEX ix_clue_match_solves_place ON clue_match_solves (place_key) WHERE p
 -- flipped as ST_AsSVG writes it), so the game never runs geometry at request
 -- time. The range is the extant range (IUCN presence 1-3), or the historical
 -- range for an extinct species. Specks under 0.05 square degrees are dropped (the
--- largest part always stays) and bigger ranges are simplified more. lon/lat is a
+-- largest part always stays) and bigger ranges are simplified more. geojson is
+-- the same shape for the globe (SVG can't tell holes from parts). lon/lat is a
 -- point inside the largest part, for a marker.
 --
 -- Refresh after range or clue changes (~10 s):
@@ -170,13 +171,17 @@ WITH playable AS (
          (array_agg(part ORDER BY area DESC))[1] AS main_part
   FROM parts
   GROUP BY species_id
+), simple AS (
+  SELECT species_id, main_part, ST_SimplifyPreserveTopology(geom, LEAST(0.3, GREATEST(0.01, sqrt(ST_Area(geom)) / 30))) AS geom
+  FROM shapes
 )
 SELECT sh.species_id,
-       ST_AsSVG(ST_SimplifyPreserveTopology(sh.geom, LEAST(0.3, GREATEST(0.01, sqrt(ST_Area(sh.geom)) / 30))), 0, 1) AS svg_path,
+       ST_AsSVG(sh.geom, 0, 1) AS svg_path,
+       ST_AsGeoJSON(sh.geom, 1) AS geojson,
        round(ST_X(ST_PointOnSurface(sh.main_part))::numeric, 2)::float8 AS lon,
        round(ST_Y(ST_PointOnSurface(sh.main_part))::numeric, 2)::float8 AS lat,
        round(ST_Area(m.geom::geography) / 1e6)::bigint AS area_km2
-FROM shapes sh
+FROM simple sh
 JOIN merged m USING (species_id);
 
 -- Unique, so the view can refresh CONCURRENTLY (readers keep the old rows meanwhile).
