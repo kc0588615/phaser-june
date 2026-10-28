@@ -99,7 +99,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -422,6 +422,26 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 
 ## Architecture review (Fable)
 
+Checked 2026-10-28 against the worktree. Findings 1–9 verified: `globals.css:371-376` lock + `LegalPage` with no scroll container; `ClerkProvider` at `_app.tsx:11`, matcher at `proxy.ts:8`; `#00906c` on white = 4.03:1 (recomputed); `inspect.mjs:231` honours `--allow still-page`; `docker-compose.app.yml:33` single-file bind mount + `deploy.sh:33` plain `up -d` (inode claim correct); paper §5.3 #11 "Rounds are not saved" vs `CLUE_MATCH.md:10`; `README.md:3` "12 look-alikes"/"charges"; `terms.tsx` names no operator; logo hexes (`#000`/`#6FA8BC` served vs `#121f19`/`#47788a` master). Counts: 76 profiles = Mammalia 50 / Amphibia 15 / Reptilia 11; IUCN 76, ADW 65; licences 24 BY-SA 4.0, 18 BY-SA 3.0, 9 BY 2.0, 8 PD, 2 none. `ANIMAL_RULES` = 5/4/30/20/3 hearts/5 rounds. Next 16: `matchHas` anchors the host regex (`^…$`) and strips the port, so `has`/`missing` host rules won't catch `play.`; proxy matcher goes through the same path. `Dockerfile` `COPY . .` includes `db/content`, so build-time `getStaticProps` reads work. Design covers every item in the Brief's definition of done; comparables remain a Step as noted.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **`.dockerignore` excludes `*.png` (and `plans`).** `public/site/og.png` and any copied `docs/brand/logo/app-icon-512.png` never reach the image: `og:image` 404s in production and the build's own check wouldn't see it (it runs outside Docker). Fix in section 8: either add `!public/site/*.png` to `.dockerignore` (and list `.dockerignore` under Changed) or ship `og.jpg`. Don't make it WebP: several scrapers reject WebP og images. Screenshot WebPs under `src/components/site/shots/` are unaffected.
+2. **Legal pages will fail the design's own axe gate.** `LegalPage.tsx:13` sets `[&_a]:text-color-1` (4.03:1 on white) and `text-neutral-7` for "Last updated" (12px-class contrast, same family as the chip in finding 3). Section 3 says "the text is unchanged" and section 9 expects 0 violations except the primary-button gap. Either apply the shared link/secondary-text roles (neutral-10 underlined, neutral-8) to `LegalPage` when it moves into `SiteLayout`, or list these as exceptions. Pick one in the plan.
+3. **axe-core is an undeclared, transitive dependency** (`eslint-config-next → eslint-plugin-jsx-a11y → axe-core@4.11`), while the build brief says "no new npm dependencies". A future `eslint-config-next` bump can remove it silently and the e2e stage breaks for an unrelated reason. Either declare `axe-core` as a devDependency and allow that one exception in the brief's Scope, or drop axe and keep the hand-written checks. Don't import from a hoisted path you don't own.
+
+MISSED:
+- Finding 2's fix as stated ("`_app` renders them without `ClerkProvider`") doesn't remove `@clerk/nextjs` from the shared `_app` chunk; the static import still ships ~80 KB gz of Clerk React to site pages (section 8's table admits this, finding 2 doesn't). Only the `clerk.critterconnect.org` scripts go away. Say so in 051, or load `ClerkProvider` via `next/dynamic` only when the page isn't a site page.
+- First `npm run deploy` after merge (before DNS moves): the new apex curls in `deploy.sh` will print 000. The script doesn't fail on them, but the owner's steps should say that's expected until step 3, or the apex curls should be added only in the owner's post-DNS check.
+
+SHOULD-CONSIDER:
+- `maplibre-gl.css` move to the globe component: fine, but it's game code; keep it in the build's Scope "In" list explicitly or drop it (the brief's Out says "game rules and UI except LegalPage").
+- Section 4 "{N} real animals" from content files vs the DB the game serves: they can diverge until `npm run content -- build` runs. Note it as a known drift source; counting from content is still the right call.
+- `shots.ts` recording "animal ids visible" per shot is manual bookkeeping; acceptable, but say the build verifies it once by eye, otherwise credits silently go stale when a shot is retaken.
+- Caddy: the apex block will log ACME failures until DNS moves; mention `docker logs caddy` noise is expected in the owner's steps so they don't roll back on it.
+- Questions 3/4/6/7/8/9 have defaults; keep only 1–2 in the handoff file as planned, so the owner's phone isn't paged for defaults.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -440,5 +460,6 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 
 - 05:12 UTC: Baseline. typecheck, lint pass; unit 47/47; e2e 523/574 on VPS (pre-existing timing failure, see Baseline).
 - 05:36 UTC: Architecture. architect wrote findings (9) + target design: option (a) Next app w/ host rewrite, site = `/`, `/teachers/`, `/privacy`, `/terms` in SiteLayout; 9 owner questions (1, 2 block). Research in artifacts folder. typecheck, lint pass.
+- 05:41 UTC: Fable review. APPROVE_WITH_CHANGES, 3 MUST-FIX (.dockerignore drops og.png; LegalPage contrast vs axe gate; axe-core undeclared dep). Plan-only change.
 
 ## Summary
