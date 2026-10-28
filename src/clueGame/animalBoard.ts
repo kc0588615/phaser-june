@@ -20,6 +20,8 @@ import { clueFace } from '@/clueGame/clueFaces';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
 import { hash32 } from '@/lib/seededRng';
 
+// A new rule flag the board needs travels ANIMAL_RULES -> useAnimalSession (`clue-board-setup`, typed in EventBus)
+// -> ClueBoardScene -> BoardModel; the bot (scripts/balance-044.ts) sets its own. Bumping `version` drops saved games.
 export interface AnimalRules {
   /** Saved with every round (clue_match_solves.rules_version). */
   version: string;

@@ -5,12 +5,13 @@
 // move and writes a repeatable artifact:
 //   e2e-artifacts/<run>/report.json   what was played, every check, errors
 //   e2e-artifacts/<run>/*.png         what the player saw
+//   (the newest 10 runs are kept)
 // Same seed and place, same mysteries and boards.
 //
 //   npm run dev        (in another terminal)
 //   npm run e2e        env: E2E_BASE_URL, E2E_SEED (7), E2E_ROUNDS (3), E2E_PLACE (a place key), CHROME_PATH
 import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -23,8 +24,22 @@ const MAX_MOVES = 45;
 const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-seed${SEED}`;
 const outDir = path.join(process.cwd(), 'e2e-artifacts', runId);
 const report = { base: BASE, seed: SEED, place: null, viewport: '390x844 mobile touch', startedAt: new Date().toISOString(), rounds: [], checks: [], consoleErrors: [], failedRequests: [], screenshots: [] };
-const check = (name, ok, detail = '') => { report.checks.push({ name, ok: Boolean(ok), ...(detail ? { detail } : {}) }); if (!ok) console.log(`  FAIL ${name}${detail ? `: ${detail}` : ''}`); };
+// A kind of check: its name without numbers ("round 1 move 40: ..." -> "round N move N: ..."). One FAIL line per kind.
+const kind = name => name.replace(/\d+/g, 'N');
+const failKinds = new Set();
+const check = (name, ok, detail = '') => {
+  report.checks.push({ name, ok: Boolean(ok), ...(detail ? { detail } : {}) });
+  if (!ok && !failKinds.has(kind(name))) { failKinds.add(kind(name)); console.log(`  FAIL ${name}${detail ? `: ${detail}` : ''}`); }
+};
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const KEEP_RUNS = 10;
+
+/** Keeps the newest KEEP_RUNS runs in e2e-artifacts/ (run names sort by time). */
+function pruneArtifacts() {
+  const root = path.dirname(outDir);
+  const runs = readdirSync(root, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => entry.name).sort();
+  for (const run of runs.slice(0, -KEEP_RUNS)) rmSync(path.join(root, run), { recursive: true, force: true });
+}
 
 /** A minimal Chrome DevTools Protocol client over the browser's WebSocket. */
 function connect(url) {
@@ -463,13 +478,15 @@ async function main() {
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const [[cell, id]] = window.__cc.state().pins;
+          // Waits on what's on screen, not a fixed time: a busy machine opens the guide late, after a Close click.
+          const until = async (ok, ms = 3000) => { for (const end = Date.now() + ms; !ok() && Date.now() < end;) await wait(50); return ok(); };
           await window.__cc.tap(cell, { input: 'touch', holdMs: 700 });
-          await wait(400);
+          await until(() => document.querySelector('[role=dialog] h2')?.textContent);
           const title = document.querySelector('[role=dialog] h2')?.textContent ?? '';
           const picked = window.__pill(id)?.getAttribute('aria-pressed') === 'true';
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
-          await wait(300);
-          return { id, title, picked, held: window.__cc.events(50).some(e => e.name === 'clue-board-tile-hold' && e.payload?.id === id) };
+          const closed = await until(() => !document.querySelector('[role=dialog]'));
+          return { id, title, picked, closed, held: window.__cc.events(50).some(e => e.name === 'clue-board-tile-hold' && e.payload?.id === id) };
         });
         const slid = await evaluate(async () => {
           const id = window.__cc.clue().suspects[0];
@@ -490,6 +507,7 @@ async function main() {
         check('ruling an animal out doesn\'t change the grid\'s height (the board keeps its size)', slid.heightOut === slid.before, JSON.stringify(slid));
         check('dragging an animal\'s photo a little does nothing; from its name, nothing; all the way rules it out; again brings it back', !slid.short && !slid.fromName && slid.out && !slid.back && slid.picked === 'false', JSON.stringify(slid));
         check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title?.endsWith(names.get(tileHeld.id)) && !tileHeld.picked, JSON.stringify(tileHeld));
+        check('its Close button closes that field guide (it would cover the board)', tileHeld.closed, JSON.stringify(tileHeld));
       }
       // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
       await evaluate(async () => {
@@ -898,7 +916,10 @@ main()
     mkdirSync(outDir, { recursive: true });
     writeFileSync(path.join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
     const failed = report.checks.filter(result => !result.ok);
-    for (const result of failed.slice(0, 5)) console.log(`  FAIL ${result.name}`);
+    const kinds = Map.groupBy(failed, result => kind(result.name));
+    if (failed.length) console.log(`First failure: ${failed[0].name}${failed[0].detail ? `\n  ${failed[0].detail}` : ''}`);
+    for (const [, results] of [...kinds].slice(0, 8)) console.log(`  FAIL ${results[0].name}${results.length > 1 ? ` (x${results.length})` : ''}`);
+    pruneArtifacts();
     console.log(`${report.checks.length - failed.length}/${report.checks.length} checks passed. Artifact: ${path.relative(process.cwd(), outDir)}/`);
     process.exitCode = failed.length ? 1 : 0;
   });
