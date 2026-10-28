@@ -840,7 +840,7 @@ By section:
   - No DB writes: load + screenshot only. Never move a gem or finish a round (a finished round POSTs `/api/clue-game/solves`). No dev server.
   - `A/research/shots/README.txt`: date, URL, size, command and clicks per shot.
   - Check: 5 files; `file plans/051-landing-page/*.png` shows PNG at the sizes above; each opened with Read: rendered (not blank, not a loader), light mode, no dev badge or error overlay; folder ≤ 3 MB (else re-encode with the repo's installed `sharp`, `palette: true`).
-- [ ] S2. **Comparables** (Brief rule: 3–5 educational games with a teacher audience, patterns only).
+- [x] S2. **Comparables** (Brief rule: 3–5 educational games with a teacher audience, patterns only).
   - Source: the raw HTML in `A/research/comparables/` (PhET, Zooniverse, iCivics + `/teachers`, Gimkit, Legends of Learning). If a page is only a client-render shell, take a headless shot with S1's script into the same folder.
   - Write `A/research/comparables/notes.md`: per site, URL + date; how it routes students vs teachers; above the fold; accounts, privacy, cost; FAQ; proof. Then "Taken into 051" (each pattern tied to a 051 section) and "Not taken" (why: e.g. logos, testimonials, numbers we don't have).
   - Check: 3–5 sites, ≥ 3 patterns each; no copied sentence or layout (spot-check against the HTML).
@@ -933,5 +933,6 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 06:12 UTC: Owner answers (H2) picked up into Decisions, H2 closed. architect redesigned for (b): `src/site/` React pages rendered to static HTML by `scripts/site.mjs` (esbuild+postcss+Tailwind, CSS imports globals.css), served by a Caddy image built with the Caddyfile + site; primary button bg `#008663` (4.58:1, light only); `--space-xxxl: 64px`; no new blocking questions. typecheck, lint pass.
 - 06:18 UTC: Steps. planner wrote S1–S8 (plan shots from live sites, comparables notes, 051 in 2 parts, issue+README row, build brief, paths check, rebase+PR) + 10-check Verification; count cmd tested (76 animals). typecheck, lint pass.
 - 06:23 UTC: S1. 5 live PNGs (old-site 390/1440, globe 390, board seed=1 Africa 390/1440, How-to-play closed via "Let's play", no moves/no DB writes) in `plans/051-landing-page/` (1.1 MB); sizes ok, each opened: rendered, light, no dev badge. Script + README in `A/research/shots/`; old-site title/desc in `A/research/old-site/rendered.txt`. typecheck, lint pass.
+- 06:41 UTC: S2. Comparables: 5 sites (PhET, Zooniverse, iCivics, Gimkit, Legends of Learning) rendered headless (text + 1440 shot in `A/research/comparables/rendered/`; iCivics raw fetch was a Cloudflare block, headless ok); `notes.md`: per-site routing/fold/accounts/FAQ/proof, 9 patterns taken (each tied to an Arch §3 section; all confirm the design, two sharpen it: /teachers/ §4 class-use as separate items, §8 FAQ visible not collapsed), 8 not taken (logos, testimonials, counters, "aligned", popups...). Paraphrase only. typecheck, lint pass.
 
 ## Summary
