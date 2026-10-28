@@ -76,6 +76,8 @@ export function Globe({ places, selected, sightings, onPick }: {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const spinning = useRef(true);
+  // The pulse repaints the map every frame, so it runs only while there are markers to pulse.
+  const hasSightings = useRef(false);
   const onPickRef = useRef(onPick);
   useEffect(() => { onPickRef.current = onPick; }, [onPick]);
   // True once the style has loaded, so the data effects below can draw.
@@ -87,8 +89,10 @@ export function Globe({ places, selected, sightings, onPick }: {
     let frame = 0;
     spinning.current = !reducedMotion();
     (async () => {
-      const maplibregl = (await import('maplibre-gl')).default;
+      const maplibregl = await import('maplibre-gl');
       if (cancelled || !container.current) return;
+      // v6 finds its worker from import.meta.url, which the bundler rewrites; point at the emitted file.
+      maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).href);
       const map = new maplibregl.Map({
         container: container.current,
         style: STYLE,
@@ -116,7 +120,7 @@ export function Globe({ places, selected, sightings, onPick }: {
         const start = performance.now();
         const pulse = (now: number) => {
           if (cancelled) return;
-          if (!reducedMotion() && map.getLayer('sighting-glow')) {
+          if (!reducedMotion() && hasSightings.current && map.getLayer('sighting-glow')) {
             map.setPaintProperty('sighting-glow', 'circle-radius', 16 + 6 * Math.sin((now - start) / 450));
           }
           requestAnimationFrame(pulse);
@@ -151,6 +155,7 @@ export function Globe({ places, selected, sightings, onPick }: {
   }, [places, selected, ready]);
 
   useEffect(() => {
+    hasSightings.current = sightings.length > 0;
     const source = mapRef.current?.getSource<GeoJSONSource>('sightings');
     source?.setData({
       type: 'FeatureCollection',
