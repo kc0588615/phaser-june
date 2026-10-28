@@ -439,6 +439,6 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 ## Log
 
 - 05:12 UTC: Baseline. typecheck, lint pass; unit 47/47; e2e 523/574 on VPS (pre-existing timing failure, see Baseline).
-- 05:45 UTC: Architecture. architect wrote findings (9) + target design: option (a) Next app w/ host rewrite, site = `/`, `/teachers/`, `/privacy`, `/terms` in SiteLayout; 9 owner questions (1, 2 block). Research in artifacts folder. typecheck, lint pass.
+- 05:36 UTC: Architecture. architect wrote findings (9) + target design: option (a) Next app w/ host rewrite, site = `/`, `/teachers/`, `/privacy`, `/terms` in SiteLayout; 9 owner questions (1, 2 block). Research in artifacts folder. typecheck, lint pass.
 
 ## Summary
