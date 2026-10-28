@@ -101,7 +101,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -119,10 +119,10 @@ Written 2026-10-28 by the architect. It settles what `plans/051-landing-page.md`
 ### Findings (ranked by impact)
 
 1. **`/privacy` and `/terms` can't be scrolled.** `src/styles/globals.css:371-376` sets `html, body, #__next { height: 100%; overflow: hidden }` for the full-screen game. `LegalPage` (`src/components/LegalPage.tsx:9`) has no scroll container of its own. Checked on live `play.critterconnect.org/privacy/` at 390×844 (`research/live-play/scrollcheck.mjs`): the content ends at 1516px, the document is only 844px tall, and both a wheel and a touch swipe leave `scrollY` at 0. On a phone, readers never reach "Players under 13", "Deleting your data" or "Changes". This is a bug, and the site will send teachers to that page. Taste's inspector also measures window scroll (`inspect.mjs:140`), so it would see a single screen. **Fix (build):** document pages opt out of the lock. They share one layout (`SiteLayout`) whose root carries `data-doc-page`. One globals.css rule, `html:has([data-doc-page])` (plus its `body` and `#__next`), sets `height: auto; overflow: visible`. `LegalPage` renders inside `SiteLayout`. The game's screens are untouched.
-2. **Every page loads Clerk, even pages with no sign-in.** `ClerkProvider` wraps every page (`src/pages/_app.tsx:11`), and Clerk middleware runs on every route (`src/proxy.ts:8`). Live `/privacy/` loads about 200 KB gz of first-party JS and CSS, about 80 KB of which is Clerk React. On top of that it loads `clerk.browser.js` (84 KB gz) and `ui.browser.js` (46 KB gz) from `clerk.critterconnect.org`. That breaks separation of concerns, and it would cost the site's speed target. The privacy page also doesn't say that signed-out visitors load Clerk (owner question 6). **Fix:** site pages declare a static `site` flag. `_app` renders them without `ClerkProvider`; site code uses no Clerk hooks. The `proxy.ts` matcher gains `missing: [{ type: 'host', value: 'critterconnect\\.org' }]`, which Next 16 supports (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`, "has/missing"). Minor, same area: `_app.tsx:1` imports `maplibre-gl.css` for every page (about 10 KB gz). Move it to the globe component.
-3. **cc's light-mode accent fails WCAG AA contrast.** These are theme values. `#ffffff` on `color-1 #00906c` (the `.btn-primary` label) is 4.03:1. `color-1` as text on white is 4.03:1. `--cte-text-muted #837e72` on white is 4.04:1. The globe's "coming soon" chip (`src/components/globe/PlaceList.tsx:34`, neutral-7 on neutral-3, 12px) is 3.68:1. AA needs 4.5:1 for text this size. Dark mode passes (4.67:1). Per GUI.md this is a gap, not something to patch, so it goes to the owner (question 3). The site avoids it where existing tokens allow: links in neutral-10 with an underline, secondary text in neutral-8 (7.5:1), and no "coming soon" chip. The primary button label is the one exception left.
+2. **Every page loads Clerk, even pages with no sign-in.** `ClerkProvider` wraps every page (`src/pages/_app.tsx:11`), and Clerk middleware runs on every route (`src/proxy.ts:8`). Live `/privacy/` loads about 200 KB gz of first-party JS and CSS, about 80 KB of which is Clerk React. On top of that it loads `clerk.browser.js` (84 KB gz) and `ui.browser.js` (46 KB gz) from `clerk.critterconnect.org`. That breaks separation of concerns, and it would cost the site's speed target. The privacy page also doesn't say that signed-out visitors load Clerk (owner question 6). **Fix:** site pages declare a static `site` flag. `_app` renders them without `ClerkProvider`; site code uses no Clerk hooks. The `proxy.ts` matcher gains `missing: [{ type: 'host', value: 'critterconnect\\.org' }]`, which Next 16 supports (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`, "has/missing"). **What the fix removes:** Clerk's remote scripts (130 KB gz), its API calls and, on the apex, the middleware. **What stays:** `_app` still imports `@clerk/nextjs`, so about 80 KB gz of Clerk React stays in the shared chunk on site pages. That's accepted, because the speed budget (section 9) counts it and holds. 051 says so. Minor, same area: `_app.tsx:1` imports `maplibre-gl.css` for every page (about 10 KB gz). Move it to `src/components/globe/Globe.tsx`, the only maplibre user; Next documents importing a third-party component's CSS inside the component. This is game code, so it's listed in the build's Scope In.
+3. **cc's light-mode accent fails WCAG AA contrast.** These are theme values. `#ffffff` on `color-1 #00906c` (the `.btn-primary` label) is 4.03:1. `color-1` as text on white is 4.03:1. `--cte-text-muted #837e72` on white is 4.04:1. The globe's "coming soon" chip (`src/components/globe/PlaceList.tsx:34`, neutral-7 on neutral-3, 12px) is 3.68:1. AA needs 4.5:1 for text this size. Dark mode passes (4.67:1). Per GUI.md this is a gap, not something to patch, so it goes to the owner (question 3). The site avoids it where existing tokens allow: links in neutral-10 with an underline, secondary text in neutral-8 (7.5:1), and no "coming soon" chip. That includes `LegalPage`, which today colours links `color-1` (`LegalPage.tsx:13`, 4.03:1) and "Last updated" `neutral-7` (`:16`, `#837e72`, 4.04:1). The primary button label is the one exception left.
 4. **Taste v2 fails a cc page on rules the brief and GUI.md settle.** The current skill is `skills/taste-skill/SKILL.md`, named `design-taste-frontend`, v2.1.5, commit `12af471f62`. The brief's "design-taste-frontend" is the skill's name, not its folder. The inspector **fails** a page with fewer than 8 moving elements (`still-page`, `inspect.mjs:231-234`), but the brief says Taste adds no motion. Taste's laws also want display type around 8vw and section gaps of 120–240px, while cc tops out at text `xxl` 48px and space `xxl` 48px. Its `draw.mjs` is the art-direction step (directions, type, palette, motion, scenes); even with `--keep palette,type` it still deals type sizes, motion and scenes, so the build skips it. **Fix:** the build passes `--allow still-page` only. A large real screenshot satisfies `focal-point` (a picture holding at least 30% of the first screen, `rules.mjs:131`). The spacing and size gaps go to the owner (question 4). The elaya path is as the brief says (`skills/landing-page-design/SKILL.md`, last changed `a2735a3eaf`, 2026-10-26, which credits Taste).
-5. **`deploy.sh` never applies Caddyfile edits.** The Caddyfile is a single-file bind mount (`deploy/docker-compose.app.yml:33`). `git pull` gives it a new inode, the running container keeps the old one, and `compose up -d` (`deploy/deploy.sh:33`) doesn't recreate an unchanged `caddy` service. So the site block would ship but never be applied. **Fix:** when `deploy/Caddyfile` changed in the pull, `deploy.sh` runs `$compose up -d --force-recreate --no-deps caddy`. It also curls the site routes.
+5. **`deploy.sh` never applies Caddyfile edits.** The Caddyfile is a single-file bind mount (`deploy/docker-compose.app.yml:33`). `git pull` gives it a new inode, the running container keeps the old one, and `compose up -d` (`deploy/deploy.sh:33`) doesn't recreate an unchanged `caddy` service. So the site block would ship but never be applied. **Fix:** `deploy.sh` compares what the container sees with the checkout: `docker exec caddy cat /etc/caddy/Caddyfile | cmp -s - deploy/Caddyfile || $compose up -d --force-recreate --no-deps caddy`. The old inode holds the old text, so the two differ. This keeps no state, so a deploy that failed after the pull still applies the file next time. Then it runs `deploy/check.sh` on both hosts (section 8).
 6. **The old site is a stale Vercel build of this app.** `critterconnect.org` returns 307 to `www`. Its title is "Critter Connect" and its description is "Explore biodiversity through map-based expeditions." It loads a Clerk **development** instance (`pk_test`, `clean-lynx-72.clerk.accounts.dev`) in public. DNS is at Namecheap (`dns1/2.registrar-servers.com`): apex A `216.198.79.1` (Vercel, TTL 1799 s), `www` CNAME `5ed334e8d7ea0cd8.vercel-dns-017.com`, `play` A `178.156.159.183`. MX (Namecheap email forwarding, which carries `privacy@`), the SPF TXT and the `clerk` CNAME must stay untouched. `pk_live` decodes to `clerk.critterconnect.org`, so the production Clerk instance's root is `critterconnect.org`. Clerk needs nothing new for the site.
 7. **Stale or missing facts the copy must not repeat.** `docs/ANIMAL_BOARD_PAPER.md:241` (§5.3 item 11) says "Rounds are not saved in this build". In fact every finished round is saved with its `session_seed` (`db/schema.sql`, `clue_match_solves`; `docs/CLUE_MATCH.md`; `privacy.tsx`). `README.md:3` still says "12 look-alikes" and "charges". `terms.tsx` names no operator: it only says "we" and `privacy@critterconnect.org`. Owner questions 5 and 9.
 8. **Screenshot sources have traps.** Dev-mode shots show Next's dev-tools badge (the "N" bottom-left in `baseline-e2e/01-globe.png` and `02a-picked.png`). `window.__cc` exists only in dev (`src/game/debugBridge.ts:51`). On the VPS, e2e never finishes round 1 (Baseline: 523/574), so it doesn't produce the round-end card or journal shots. The design below works around both.
@@ -199,7 +199,7 @@ No separate student page (the front page is the student page), no "how it works"
 | 8 | Questions teachers ask | FAQ, visible plain Q&A (good for answer engines) | Is it free? Do students need accounts? What grades? What devices? Can the whole class get the same animals? Can I see my students' results? Is the information accurate? Does it work offline? (No.) | none |
 | 9 | Final call | | "Try a round, then share a class link" · **Play a round yourself** | none |
 
-Legal pages: `LegalPage` inside `SiteLayout`. The text is unchanged. "← Back to the globe" is dropped, because the header's logo and Play button cover it on both hosts.
+Legal pages: `LegalPage` inside `SiteLayout`. The words are unchanged; the styling moves to the shared roles above. Running text becomes neutral-10. Links become neutral-10 with an underline (drops `[&_a]:text-color-1`). "Last updated" becomes neutral-8 (drops `text-neutral-7`). Its `<main>` becomes `<article>`, because `SiteLayout` owns `<main>` and axe flags a duplicate. Its `<Head>` title and the `min-h-screen bg-neutral-1` wrapper go to `SiteLayout`. "← Back to the globe" is dropped, because the header's logo and Play button cover it on both hosts.
 
 #### 4. Claims and evidence
 
@@ -211,7 +211,7 @@ Legal pages: `LegalPage` inside `SiteLayout`. The text is unchanged. "← Back t
 | Answers never rule anyone out by themselves; the player compares and rules out; a wrong rule-out lets it escape | `CONTEXT.md` (Answer, Rule out, Escape); paper Abstract |
 | Matching without reasoning finds nothing; careful play finds over 90% (simulated players) | paper Abstract and §6; `plans/047-wander.md`; the paper header for 047-1 (careful 96/92%) |
 | Finds glow on the globe and go in the Field Journal; the round-end card has the family tree, range map and sources | `README.md`; `docs/CLUE_MATCH.md` (Globe); paper §5.2 #5 |
-| {N} animals ({mammals}/{amphibians}/{reptiles}), today 76 (50/15/11) | `db/content/animals/*.json`, counted at build |
+| {N} animals ({mammals}/{amphibians}/{reptiles}), today 76 (50/15/11) | `db/content/animals/*.json`, counted at build. Known drift: the game serves the DB, which lags the content until the owner runs `npm run content -- build` after a content PR. Counting from the content is still right: it's what the repo vouches for. |
 | Facts from the IUCN Red List (all 76), Animal Diversity Web (65) and others in ranked tiers | `db/content/sources.json`; each profile's `sources` |
 | Photos from Wikimedia Commons, credited; maps use IUCN and other credited sources | `terms.tsx` "Photos and content"; profile `photo` fields |
 | The skills practised; the NGSS mapping; "does not claim to teach these on its own" | paper §5.1 |
@@ -231,7 +231,7 @@ Legal pages: `LegalPage` inside `SiteLayout`. The text is unchanged. "← Back t
 |---|---|---|---|
 | Teacher guide (printable: a round walkthrough, §5.5 activities, a worksheet for debriefing an escape) | writing only | none | **Yes** |
 | Standards map (NGSS practices and ideas per activity) | writing plus an expert's review; wording must stay "maps onto" | none | **Yes** |
-| Class results from a class link: per animal, how many rounds were found or escaped, with no names | a read-only view over `clue_match_solves` by `session_seed`, which is already stored; large random seeds so classes don't collide | no new personal data, but rounds get a new use (now "to see which puzzles are too easy"), so the privacy page needs a sentence; flag for the owner | **Yes, labelled**, if the owner agrees |
+| Class results from a class link: per animal, how many rounds were found or escaped, with no names | its own plan first. A seed names a puzzle, not a class or a viewer: anyone holding the link could read the results, and strangers on the same seed add to them. It needs a class key separate from the seed and a rule for who may view. Data: `clue_match_solves` already stores `session_seed` | no new personal data, but rounds get a new use (now "to see which puzzles are too easy"), so the privacy page needs a sentence; flag for the owner | **Yes, labelled**, if the owner agrees |
 | Class codes and rosters | teacher accounts, a class table, student join codes or nicknames, Clerk organisations or our own | links play to identifiable students under 13: contradicts "We don't ask for your name or email"; COPPA, FERPA and district agreements | **No** |
 | Seeing each student's reasoning (§5.3 #11, §5.4) | rosters plus recording marks with the evidence at the time | same as rosters, and more data per student | **No** |
 
@@ -272,9 +272,9 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 | `field-guide`, `grid-marked`, `witness-note`, `round-end`, `journal`, `globe-found` | a guide open; answers plus a rule-out; a note; the round-end card; the journal; finds glowing | 390×844 @2x | `npm run e2e` on dev :3100 with `E2E_SEED`/`E2E_PLACE`, after two small `scripts/e2e.mjs` edits: `screenshot()` removes `nextjs-portal` first, and a `02d-field-guide.png` shot while the guide is open (~l.345). If the VPS run stops before the round ends (Baseline), finish the seeded round in the dev browser with `window.__cc` (the playtest skill) and the same badge removal. | `/`, `/teachers/` |
 | `old-site` | critterconnect.org before the switch | 390, 1440 | **this mission**, headless Chrome | plan folder only |
 
-- **Shot list:** `src/components/site/shots.ts` records each shot's file, alt text, seed, place and the animal ids visible. The build stores the shots in `src/components/site/shots/`, as WebP converted with the `sharp` already installed.
+- **Shot list:** `src/components/site/shots.ts` records each shot's file, alt text, seed, place and the animal ids visible. The ids are copied from the `report.json` of the e2e run that took the shot, or from the `__cc` session, and checked by eye whenever a shot is retaken, so the credits stay right. The build stores the shots in `src/components/site/shots/`, as WebP converted with the `sharp` already installed.
 - **Plan folder** (`plans/051-landing-page/`, this mission, at most 5 images): `old-site-390.png` and `old-site-1440.png`, plus `globe.png`, `board-phone.png` and `board-1440.png` taken from the **live** play site (production, so no dev badge and no DB writes). They illustrate the plan; the build retakes all of them from the game as it is then.
-- **Logos:** the served `public/branding/critterconnect-logo{,-light}.svg` and `public/favicon.svg`. `docs/brand/logo/app-icon-512.png` is copied to public only if an icon is needed.
+- **Logos:** the served `public/branding/critterconnect-logo{,-light}.svg` and `public/favicon.svg`. `docs/brand/logo/app-icon-512.png` is copied to `public/site/` only if an icon is needed. PNGs under `public/` ship: `.dockerignore`'s `*.png` matches root-level files only (Docker patterns don't cross `/` without `**`). Proof: live `play.critterconnect.org/branding/critterconnect-oauth-logo.png` returns 200 `image/png`, and that file was added after `.dockerignore` (404b15f8 after 47433479). `og.png` stays a PNG, not WebP, because some link scrapers reject WebP.
 - **Photo credits:** Commons photos keep their own licences (today 24 CC BY-SA 4.0, 18 CC BY-SA 3.0, 9 CC BY 2.0, 8 public domain, and others; 2 animals have none). `getStaticProps` reads the visible animals' `photo.credit/license/page` from the content and prints one line per photo in the page footer. To read the content, it uses `readProfiles`, moved from `scripts/content.ts:23` to `src/lib/contentProfiles.ts` so both share it. Where seeds allow, prefer shots whose animals are CC0, public domain or CC BY. Whether BY-SA photos inside screenshots are fine is the owner's question (6).
 
 #### 8. Hosting and shipping
@@ -292,7 +292,7 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 
 **Recommendation: (a).** One app, one deploy, and reuse instead of copies. With Clerk opted out, the JS that remains is fine for prerendered pages. This is owner question 1.
 
-- **Source:** in phaser-june. New: `src/pages/home.tsx`, `src/pages/teachers.tsx`, `src/components/site/{SiteLayout,ClassLink,Credits}.tsx`, `shots.ts`, `shots/`, `src/lib/contentProfiles.ts`, `public/robots.txt`, `public/sitemap.xml`, `public/site/og.png`. Changed: `_app.tsx` (the site flag), `proxy.ts` (`missing` host), `next.config.mjs` (the rewrite), `globals.css` (the `data-doc-page` rule only), `LegalPage.tsx`, `scripts/content.ts`, `scripts/e2e.mjs`, `deploy/Caddyfile`, `deploy/deploy.sh`, `docs/DEPLOY.md` (a site section) and the `AGENTS.md` "Where things live" line.
+- **Source:** in phaser-june. New: `src/pages/home.tsx`, `src/pages/teachers.tsx`, `src/components/site/{SiteLayout,ClassLink,Credits}.tsx`, `shots.ts`, `shots/`, `src/lib/contentProfiles.ts`, `public/robots.txt`, `public/sitemap.xml`, `public/site/og.png`, `deploy/check.sh`. Changed: `_app.tsx` (the site flag; the maplibre CSS import leaves), `src/components/globe/Globe.tsx` (the maplibre CSS import arrives), `proxy.ts` (`missing` host), `next.config.mjs` (the rewrite), `globals.css` (the `data-doc-page` rule only), `LegalPage.tsx` (shared roles, section 3), `scripts/content.ts`, `scripts/e2e.mjs`, `package.json` and `package-lock.json` (the `axe-core` devDependency, section 9), `deploy/Caddyfile`, `deploy/deploy.sh`, `docs/DEPLOY.md` (a site section) and the `AGENTS.md` "Where things live" line. `.dockerignore` is unchanged (section 7).
 - **Output:** part of `next build`; `/home` and `/teachers` are listed as static.
 - **Caddy, next to the game's block** (the domain is hardcoded like `deploy.sh`'s, so a missing variable can't break the game's block):
   ```
@@ -317,13 +317,21 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
   	redir https://critterconnect.org{uri} 308
   }
   ```
-- **`deploy.sh`:** recreate caddy when the Caddyfile changed (finding 5), and add `https://play.critterconnect.org/home/`, `https://critterconnect.org/` and `/teachers/` to the curl loop.
+  The block above passes `caddy validate` (Caddy 2.11.7 on the Oracle VPS, `APP_DOMAIN=play.critterconnect.org`, checked 2026-10-28). The build re-runs that on its final `deploy/Caddyfile`.
+- **`deploy.sh`:** after the health wait, it recreates caddy when the mounted file differs from the checkout (finding 5). Then it runs `deploy/check.sh` instead of its inline curl loop, and exits non-zero if a check fails.
+- **`deploy/check.sh`** (new; one list of checks, run by `deploy.sh` and by the owner after the DNS move). Each line prints `OK` or `BAD` with the route and what was expected, and the script exits 1 on any `BAD`:
+  - `play.`: today's 4 routes return 200, plus `/home/`, `/teachers/` and `/privacy/`. `/site/og.png` returns 200 `image/png`, which proves the asset is in the packaged app. The `/home/` HTML has no `clerk.browser.js`.
+  - The apex, only once `getent hosts critterconnect.org` resolves to the same IP as `play.` (otherwise it prints one line, `critterconnect.org: DNS not moved yet, skipped`, so there's no `000` noise before step 3):
+    - `/` returns 200 with the apex canonical, no `clerk.browser.js` and no `x-clerk-auth-status` header (the middleware was skipped);
+    - `/teachers/`, `/privacy/` and `/site/og.png` return 200;
+    - `/explore/` and `/api/places/` return 308 to `https://play.critterconnect.org/…`;
+    - `www.critterconnect.org/teachers/` returns 308 to `https://critterconnect.org/teachers/`.
 - **Owner's steps after merging the build PR:**
   1. Optionally, a day before: lower the TTL of `@` and `www` to 300 at Namecheap.
-  2. `npm run deploy` from WSL. The site serves on `play.critterconnect.org/home/` at once; Caddy's certificate request for the apex fails until DNS moves, which is harmless.
+  2. `npm run deploy` from WSL. The site serves on `play.critterconnect.org/home/` at once, and `check.sh` skips the apex. Until step 4, `docker logs caddy` shows ACME errors for `critterconnect.org` and `www`. That's expected and harmless, not a reason to roll back.
   3. Namecheap → critterconnect.org → Advanced DNS: set `@` A from `216.198.79.1` to `178.156.159.183`, and `www` CNAME to `critterconnect.org.`. Leave MX, TXT and `clerk` alone.
   4. On the VPS, `docker restart caddy` to request the certificates now.
-  5. Check the apex, `www` (it should redirect to the apex) and `/explore/` (it should redirect to play).
+  5. From WSL, `bash deploy/check.sh`: every line `OK`, the apex included.
   6. In Vercel, remove both domains from the old project. Delete the project after a one-week rollback window (its environment holds a Clerk dev key; question 2c).
   - Rollback: restore the two DNS records.
 - **Old links:** `www.*` → 308 to the apex. `/` gets the new front page; `/privacy/` and `/terms/` are served; `/explore/` and `/login/` → 308 to `play.`. The title "Critter Connect" and the description "Explore biodiversity through map-based expeditions." become the new per-page titles and descriptions (section 9).
@@ -332,14 +340,15 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 
 - **Accessibility:**
   - Targets: WCAG 2.1 AA; one h1; landmarks and a skip link; visible focus (the existing `:focus-visible` outline); keyboard reach in reading order; alt text on every screenshot; no text under 14px.
-  - Checks: a new **site stage at the start of `scripts/e2e.mjs`**, at 390×844 and 1440×900, for each of `/home/`, `/teachers/`, `/privacy/` and `/terms/`. It runs axe-core from `node_modules/axe-core/axe.min.js` (4.11, already installed through `eslint-config-next`, so nothing new to install) for tags wcag2a, wcag2aa, wcag21a and wcag21aa, expecting 0 violations except the listed cc gap (question 3).
+  - Checks: a new **site stage at the start of `scripts/e2e.mjs`**, at 390×844 and 1440×900, for each of `/home/`, `/teachers/`, `/privacy/` and `/terms/`. It runs axe-core for tags wcag2a, wcag2aa, wcag21a and wcag21aa, expecting 0 violations except the primary button label (question 3; the legal pages' link and date colours are fixed in section 3, not excepted).
+  - axe-core becomes a declared devDependency pinned to the `4.11.0` already in the lockfile (`npm install -D --prefer-offline axe-core@4.11.0`). Today it arrives only through `eslint-config-next → eslint-plugin-jsx-a11y`, which a future bump could remove. `e2e.mjs` loads it with `createRequire(import.meta.url).resolve('axe-core/axe.min.js')` and injects it over CDP. The run image's `npm ci --omit=dev` leaves it out, so production doesn't change.
   - The same stage also checks: the document scrolls to the footer (finding 1), there's one h1, the title, description and canonical are present, the Play links point at `play.`, there's no Clerk script, the page has no console errors, and the class link gives the same round-1 animals on two fresh loads. It saves `00-site-*.png`.
 - **Speed:**
-  - Targets, on the production build at 390 with 4× CPU slowdown and Slow 4G (1.6 Mbps, 150 ms): LCP ≤ 2.5 s and CLS ≤ 0.1 on `/home/` and `/teachers/`; at most 500 KB transferred on first load at 390; no requests to Clerk, Phaser or MapLibre.
+  - Targets, on the production build at 390 with 4× CPU slowdown and Slow 4G (1.6 Mbps, 150 ms): LCP ≤ 2.5 s and CLS ≤ 0.1 on `/home/` and `/teachers/`; at most 500 KB transferred on first load at 390, counting the roughly 80 KB gz of Clerk React in `_app` (finding 2); no requests to `clerk.critterconnect.org` and no Phaser or MapLibre chunks.
   - Check: the build measures once with a short CDP script kept in its artifacts folder, with the command recorded.
 - **SEO:**
   - Targets: a title and description for each page (proposed: "Critter Connect: a free animal deduction game for grades 6–12", and "Critter Connect for teachers: free, no student accounts"); a canonical `https://critterconnect.org/…`; og and twitter tags with `og.png`; `lang="en"` (already there); `robots.txt` with a `Sitemap:` line; `sitemap.xml` listing the 4 apex URLs.
-  - Checks: the e2e site stage, plus `curl -H 'Host: critterconnect.org' http://127.0.0.1:3100/` on the production build, which must return the front page with its canonical.
+  - Checks: the e2e site stage, plus `curl -H 'Host: critterconnect.org' http://127.0.0.1:3100/` on the production build, which must return the front page with its canonical. After the deploy, `deploy/check.sh` repeats the host checks through Caddy (section 8).
 
 #### 10. The two deliverables
 
@@ -360,7 +369,7 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 - **`plans/051-build-brief.md`**, in the form of `/srv/critter-ai/ops/templates/mission-brief.md`:
   - **Goal:** the website pages, routing, Caddy and deploy changes, screenshots, credits and checks, delivered as a PR.
   - **Why.**
-  - **Scope.** In: the files in section 8. Out: game rules and UI except `LegalPage`, `gui/` and GUI.md and any theme values, new npm dependencies, Clerk settings, deploying, DNS, Vercel, and DB writes beyond e2e's normal round saves to the dev copy.
+  - **Scope.** In: the files in section 8, including the one-line maplibre CSS move from `_app.tsx` to `Globe.tsx`. Out: game rules and UI except `LegalPage` and that import; `gui/`, GUI.md and any theme values; new npm dependencies, except `axe-core@4.11.0` as a devDependency; Clerk settings; deploying, DNS and Vercel; DB writes beyond e2e's normal round saves to the dev copy.
   - **Definition of done:**
     - typecheck, lint and `npm test` pass;
     - `npm run build`, with both pages static;
@@ -368,6 +377,7 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
     - Taste: `lint.mjs` clean, and `inspect.mjs` with 0 FAIL at 1440, 768 and 390 on the production build, every screenshot opened, and the critique written;
     - the graphical-audit report;
     - axe, the speed numbers and the Host-header curl;
+    - `caddy validate` passes on `deploy/Caddyfile`, and `bash -n` passes on `deploy/deploy.sh` and `deploy/check.sh`;
     - artifacts in `/srv/critter-ai/agent-state/missions/<build-slug>/`;
     - a PR linked to the 051 issue; it never merges or deploys;
     - a Summary with the owner's steps from section 8.
@@ -376,13 +386,14 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
     - the skills are installed pinned, outside the repo, in the build's artifacts folder: Taste `12af471f62` (2.4 MB) and elaya `ded7efc9d5`;
     - `CHROME_PATH` points to a `--no-sandbox` wrapper around `~/.cache/ms-playwright/chromium-1208/chrome-linux/chrome`, because AppArmor blocks Chrome's sandbox and Taste's launcher doesn't pass `--no-sandbox`;
     - `inspect.mjs --out <artifacts>/taste-inspect`;
+    - site PNGs live under `public/site/`, never at the repo root, because `.dockerignore`'s `*.png` drops root-level PNGs;
     - a Taste run takes about 30–45 minutes and a few hundred thousand tokens per page, so the build planner splits the work into about 6 units: infrastructure, shots and credits, `/`, `/teachers/`, legal pages and the e2e site stage, then checks and the audit.
 - **`plans/README.md` row:** `| 051 | Website at critterconnect.org: front page + /teachers in the cc theme, served by the game's Next app | High | M | owner: hosting option, coming-soon list | Planned 2026-10-28 (agent/cc-landing-plan): plan + build brief, PR for review |`
 
 #### 11. Questions for the owner (questions 1 and 2 block the build and go in the handoff file; the rest have defaults)
 
 1. **[Blocks]** Hosting: (a) pages in the game's Next app (recommended), or (b) a separate static build?
-2. **[Blocks]** Coming soon: show the teacher guide, the standards map and class results by class link (no names), each labelled "not available yet", and leave out rosters and student accounts? (b) Showing class results would need one sentence added to the privacy page later; agree? (c) Delete the Vercel project after a one-week rollback window?
+2. **[Blocks]** Coming soon: show the teacher guide, the standards map and class results by class link (no names), each labelled "not available yet", and leave out rosters and student accounts? (b) Building class results later needs its own plan (a class key apart from the seed, who may view the results) and one sentence on the privacy page; agree? (c) Delete the Vercel project after a one-week rollback window?
 3. cc's light-mode accent is 4.0:1 (AA needs 4.5:1) on the primary button label. Will you adjust the theme on graphicalui.com, or should the build ship it as a listed exception? Default: a listed exception.
 4. Taste against cc: no motion layer (`--allow still-page`); h1 stays at cc `xxl` (48px) with a large screenshot leading; section gaps use cc's largest step (48px) unless you add a larger spacing step. Default: as written.
 5. Who is the operator ("we") for the footer and the terms? `terms.tsx` names none, and schools usually ask.
@@ -419,6 +430,11 @@ Each item shown is a list row that starts with "Not available yet:", under a hea
 - Reusing the globe's "coming soon" chip: it is 3.68:1 at 12px.
 - Removing the global scroll lock: it would risk the game's full-screen behaviour; an opt-out is contained.
 - Vendoring Taste into `.agents/skills/`: 2.4 MB for two scripts.
+- `next/dynamic` for `ClerkProvider`: it saves about 80 KB gz on the site pages, but every game page would wait for an extra auth chunk before hydrating, and the site meets its budget without it.
+- A `!public/site/*.png` negation in `.dockerignore`, or `og.jpg`: not needed, since `*.png` matches root-level files only (section 7).
+- Hand-written checks instead of axe: they would re-implement WCAG rules that axe already has.
+- Force-recreating caddy on every deploy: it drops connections each time, and before DNS moves it restarts the ACME retries for the apex. The `cmp` recreates only when the file changed.
+- Mounting a directory and running `caddy reload`: it avoids downtime, but it would expose `deploy/app.env` to Caddy or mean moving files, all for rare Caddyfile changes.
 
 ## Architecture review (Fable)
 
@@ -457,6 +473,26 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+2026-10-28, architect. One round. Sections refer to the Architecture above.
+
+MUST-FIX:
+- **Fable 1 / Astra 1 (`.dockerignore` drops PNGs): wrong as stated, but its verification part is taken.** Docker patterns don't cross `/`, so `*.png` matches root-level files only. Proof: live `/branding/critterconnect-oauth-logo.png` returns 200 `image/png`, and it was added (404b15f8) after `.dockerignore` (47433479). `.dockerignore` stays as it is. Taken: `deploy/check.sh` requests `/site/og.png` from the packaged app on both hosts and expects 200 `image/png`. `og.png` stays a PNG, not WebP. The brief's Notes keep site PNGs under `public/site/`. (Section 7 Logos; section 8 Source, check.sh; section 10 Notes; Rejected.)
+- **Fable 2 (LegalPage contrast): fixed, not excepted.** Verified at `LegalPage.tsx:13` (`[&_a]:text-color-1`, 4.03:1) and `:16` (`text-neutral-7`, 4.04:1). `LegalPage` takes the shared roles (neutral-10 underlined links, neutral-8 "Last updated", neutral-10 text), `<main>` becomes `<article>`, and Head and the ground move to `SiteLayout`. The axe exceptions are only the primary label. (Finding 3; section 3, Legal pages; section 9.)
+- **Fable 3 (axe-core transitive): declared as a devDependency**, pinned to the lockfile's `4.11.0` and loaded via `createRequire().resolve`. The run image leaves it out. The brief's Scope Out allows this one exception. (Section 8 Changed; section 9; section 10 Scope; Rejected: hand-written checks.)
+
+Other items:
+- Fable MISSED, Clerk React in `_app`: stated honestly. About 80 KB gz stays and the speed budget counts it; `next/dynamic` is rejected. (Finding 2; section 9 Speed; Rejected.)
+- Fable MISSED, apex curls print 000 before DNS: `check.sh` skips the apex until it resolves to the VPS, and the owner runs it after DNS moves (step 5). (Section 8.)
+- Astra SC1, both hosts through Caddy: accepted. `check.sh` covers play. and the apex, the redirects, and Clerk exclusion (no `clerk.browser.js`, no `x-clerk-auth-status`). The build also runs `caddy validate`; the proposed block already passes on Caddy 2.11.7. (Section 8; section 10 DoD.)
+- Astra SC2, retry-safe Caddy apply: accepted. The `cmp` of the container's file against the checkout replaces "changed in this pull". (Finding 5; section 8.)
+- Astra SC3, axe as a devDependency: accepted (Fable 3).
+- Astra SC4, class results need their own design: accepted. The coming-soon row and question 2b say a seed is not a class or a viewer. (Section 5; section 11.)
+- Fable SC, maplibre CSS is game code: kept, listed in Scope In; Next documents importing a third-party component's CSS in the component. (Finding 2; section 10.)
+- Fable SC, content-vs-DB count drift: noted in the claims table. (Section 4.)
+- Fable SC, `shots.ts` animal ids: copied from the run's `report.json` and checked by eye on retake. (Section 7.)
+- Fable SC, ACME log noise: added to owner step 2. (Section 8.)
+- Fable SC, only blocking questions in the handoff: already the design (section 11 heading); no change.
+
 ## Steps
 
 ## Verification
@@ -473,5 +509,6 @@ SHOULD-CONSIDER:
 - 05:36 UTC: Architecture. architect wrote findings (9) + target design: option (a) Next app w/ host rewrite, site = `/`, `/teachers/`, `/privacy`, `/terms` in SiteLayout; 9 owner questions (1, 2 block). Research in artifacts folder. typecheck, lint pass.
 - 05:41 UTC: Fable review. APPROVE_WITH_CHANGES, 3 MUST-FIX (.dockerignore drops og.png; LegalPage contrast vs axe gate; axe-core undeclared dep). Plan-only change.
 - 05:43 UTC: Astra review. APPROVE_WITH_CHANGES, 1 MUST-FIX (.dockerignore drops PNGs, same as Fable #1); 4 SHOULD-CONSIDER. Plan-only change.
+- 05:48 UTC: Revision. architect resolved MUST-FIX: .dockerignore `*.png` root-only (live /branding png 200), kept + check.sh verifies og.png on both hosts; LegalPage takes shared link/text roles; axe-core declared devDep 4.11.0. SC items accepted (check.sh both hosts, retry-safe Caddy apply, Clerk bundle stated). Plan-only change.
 
 ## Summary
