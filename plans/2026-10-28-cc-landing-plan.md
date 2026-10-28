@@ -856,6 +856,6 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 05:41 UTC: Fable review. APPROVE_WITH_CHANGES, 3 MUST-FIX (.dockerignore drops og.png; LegalPage contrast vs axe gate; axe-core undeclared dep). Plan-only change.
 - 05:43 UTC: Astra review. APPROVE_WITH_CHANGES, 1 MUST-FIX (.dockerignore drops PNGs, same as Fable #1); 4 SHOULD-CONSIDER. Plan-only change.
 - 05:48 UTC: Revision. architect resolved MUST-FIX: .dockerignore `*.png` root-only (live /branding png 200), kept + check.sh verifies og.png on both hosts; LegalPage takes shared link/text roles; axe-core declared devDep 4.11.0. SC items accepted (check.sh both hosts, retry-safe Caddy apply, Clerk bundle stated). Plan-only change.
-- 06:15 UTC: Owner answers (H2) picked up into Decisions, H2 closed. architect redesigned for (b): `src/site/` React pages rendered to static HTML by `scripts/site.mjs` (esbuild+postcss+Tailwind, CSS imports globals.css), served by a Caddy image built with the Caddyfile + site; primary button bg `#008663` (4.58:1, light only); `--space-xxxl: 64px`; no new blocking questions. typecheck, lint pass.
+- 06:12 UTC: Owner answers (H2) picked up into Decisions, H2 closed. architect redesigned for (b): `src/site/` React pages rendered to static HTML by `scripts/site.mjs` (esbuild+postcss+Tailwind, CSS imports globals.css), served by a Caddy image built with the Caddyfile + site; primary button bg `#008663` (4.58:1, light only); `--space-xxxl: 64px`; no new blocking questions. typecheck, lint pass.
 
 ## Summary
