@@ -1,6 +1,6 @@
 # 051: Website at critterconnect.org
 
-Status: planned. The owner reviews it as a PR; the build starts from [`051-build-brief.md`](051-build-brief.md) once the issue is relabelled `ready-for-agent`.
+Status: planned. The owner reviews it as a PR; the build starts from [`051-build-brief.md`](051-build-brief.md) once issue #34 is relabelled `ready-for-agent`.
 Written by mission [`2026-10-28-cc-landing-plan.md`](2026-10-28-cc-landing-plan.md) (findings, reviews, owner answers H2, decisions). Line refs as of origin/main `acffc179`.
 
 critterconnect.org still serves an old Vercel build of this app ("Explore biodiversity through map-based expeditions", a game that no longer exists). This plan replaces it with a small static site for two audiences, students and teachers, built from this repo's cc theme and served by the Hetzner Caddy next to the game.
