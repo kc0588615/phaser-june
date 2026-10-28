@@ -103,7 +103,7 @@ Out:
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [x] Owner answers (H2): `architect` redesigns for option (b) static build and folds in answers 2–9 (no new review round; owner's decision)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -829,7 +829,81 @@ By section:
 
 ## Steps
 
+`A` = `/srv/critter-ai/agent-state/missions/cc-landing-plan`. Line refs and counts are as of origin/main `acffc179`. Every step: repo changes only under `plans/`; scripts and notes go in `A`, never the repo; ends with `npm run typecheck` + `npm run lint` passing, a Log line, commit, push. The source for both 051 docs is the Architecture above, with **Decisions** and **Revision notes (owner answers, H2)** winning over anything older (`src/site/`, not `public/site/` or `SiteLayout`; no Clerk; the operator; 5–10 minutes).
+
+- [ ] S1. **Plan screenshots** (riskiest: external sites, the old one can vanish any day).
+  - Script `A/research/shots/shoot.mjs`, using the CDP pattern of `A/research/live-play/scrollcheck.mjs`: spawn `~/.cache/ms-playwright/chromium-1208/chrome-linux/chrome --headless=new --no-sandbox`, light mode (`Emulation.setEmulatedMedia`, `prefers-color-scheme: light`), DPR 1, wait for load + `document.fonts.ready` + 8 s. Args: url, width, height, out.
+  - Shots, PNG, to `A/research/shots/`, then copy to `plans/051-landing-page/`:
+    - `old-site-390.png` (390×844), `old-site-1440.png` (1440×900): `https://critterconnect.org/` (follows the 307 to www). Save its rendered title + meta description to `A/research/old-site/rendered.txt`.
+    - `globe.png` (390×844): `https://play.critterconnect.org/`.
+    - `board-phone.png` (390×844), `board-1440.png` (1440×900): `https://play.critterconnect.org/explore/?seed=1&place=continent:africa`, round start. If a how-to-play sheet covers the board, close it; nothing else.
+  - No DB writes: load + screenshot only. Never move a gem or finish a round (a finished round POSTs `/api/clue-game/solves`). No dev server.
+  - `A/research/shots/README.txt`: date, URL, size, command and clicks per shot.
+  - Check: 5 files; `file plans/051-landing-page/*.png` shows PNG at the sizes above; each opened with Read: rendered (not blank, not a loader), light mode, no dev badge or error overlay; folder ≤ 3 MB (else re-encode with the repo's installed `sharp`, `palette: true`).
+- [ ] S2. **Comparables** (Brief rule: 3–5 educational games with a teacher audience, patterns only).
+  - Source: the raw HTML in `A/research/comparables/` (PhET, Zooniverse, iCivics + `/teachers`, Gimkit, Legends of Learning). If a page is only a client-render shell, take a headless shot with S1's script into the same folder.
+  - Write `A/research/comparables/notes.md`: per site, URL + date; how it routes students vs teachers; above the fold; accounts, privacy, cost; FAQ; proof. Then "Taken into 051" (each pattern tied to a 051 section) and "Not taken" (why: e.g. logos, testimonials, numbers we don't have).
+  - Check: 3–5 sites, ≥ 3 patterns each; no copied sentence or layout (spot-check against the HTML).
+- [ ] S3. **`plans/051-landing-page.md`, part 1**: header + sections 2–6 (Architecture §10 order).
+  - Header: title, status (planned; owner reviews via PR), links to this mission plan and `plans/051-build-brief.md`, "line refs as of origin/main `<sha>`".
+  - 2 Audiences and jobs (Arch §1). 3 Site map and routing (§2). 4 Pages (§3: shared roles, `Layout`, the `/` and `/teachers/` tables with full copy outlines, legal pages, 404). 5 Claims and evidence, never-claim list, copy rules (§4). 6 Coming soon (§5).
+  - Images as relative links, e.g. `051-landing-page/board-phone.png`. Comparables (S2) only where they change a line.
+  - Check against Brief DoD bullets "Audiences and their jobs", "Site map", "Claims and evidence", "Coming soon" (tick list in the Log line): every claim row names a repo location; player copy never says "mystery"; headlines ≤ 32 characters (counted); teacher lines name what students do; every coming-soon item shown starts "Not available yet".
+- [ ] S4. **`plans/051-landing-page.md`, part 2**: sections 7–12, then section 1 Summary at the top.
+  - 7 Skill intake (§6): Taste's inputs; elaya A1 answered **once per audience** (student, teacher): purpose, audience + objections, proof + assets, constraints; each answer with its evidence path, or marked "owner's".
+  - 8 Skills and the cc theme (§6): per page and section, the cc components and roles, light + dark; Taste steps used and skipped, inspector `--allow still-page` only; elaya Part A items taken; theme gaps = the two owner-approved changes (`--button-primary-background` `#008663`, 4.58:1, light only; `--space-xxxl: 64px`), no others.
+  - 9 Assets (§7): one table of every named shot (globe, board, field guide, round-end card, journal, plus hero-board, grid-marked, witness-note, globe-found, old-site) with "in plan folder now" vs "build takes". Plan PNGs are reference only: the build retakes every site shot from the game as it is then, into `src/site/shots/*.webp` (they need seeds, animal ids and credits). Logos; photo credits.
+  - 10 Hosting and shipping (§8): (a) vs (b) and the owner's choice (b); build approach vs the two alternatives; source, build, preview, guards; Docker stages, compose, the Caddyfile; `deploy.sh` + `deploy/check.sh`; owner's steps 1–6 + rollback; Vercel project; old links. Re-read `docs/DEPLOY.md` and `deploy/` while writing.
+  - 11 Basics (§9): a11y, speed, SEO targets, checked at 390 and 1440; old title and description → new.
+  - 12 Questions for the owner: numbered; H2 answers 1–9, one line each; the 4 defaults (§11). A new blocking question also goes in `/srv/critter-ai/handoff/critter-connect.md` (next free H number).
+  - 1 Summary: site map ≤ 5 lines, coming-soon items, how the skills fit cc, open questions.
+  - Check against Brief DoD bullets "Skill intake", "How the skills and the cc theme fit together" (all 4 sub-bullets), "Assets", "Hosting and shipping" (every item named there), "Basics", "Questions for the owner", and the Summary bullet. Whole doc stays a few pages (aim ≤ 500 lines; cut repetition, not facts).
+- [ ] S5. **GitHub issue + README row.**
+  - The triage labels don't exist on kc0588615/phaser-june yet (`gh label list`: GitHub defaults only). Create `needs-triage` (`gh label create needs-triage --description "Maintainer needs to evaluate this issue"`) and use it: the owner reviews the plan PR, then relabels `ready-for-agent` to start the build. Record under Decisions.
+  - `gh issue create --title "Plan 051: website at critterconnect.org" --label needs-triage --body-file <tmp>`. Body: goal in 2 lines; links to both 051 docs on branch `agent/cc-landing-plan`; what the owner decides (review the PR, GO for the build); the build ends as a PR and never merges or deploys.
+  - `plans/README.md`: the 051 row from Arch §10 after 049, status naming `#<issue>`.
+  - Check: `gh issue view <n> --json state,labels` → OPEN, `needs-triage`; the row has the header's 6 cells.
+- [ ] S6. **`plans/051-build-brief.md`.**
+  - Form of `/srv/critter-ai/ops/templates/mission-brief.md`, headings exactly: `# Mission brief: …`, `## Goal`, `## Why`, `## Scope` (In/Out), `## Definition of done`, `## Decision rules`, `## Notes`. No template comment block. First line under the title: how to start it (copy to `/srv/critter-ai/agent-state/missions/briefs/YYYY-MM-DD-cc-website.md`, then `mission start critter-connect <that file>`).
+  - Content from Arch §10: files New / Changed / Deleted; routes (`/`, `/teachers/`, `/privacy/`, `/terms/`, `404.html`; apex and `play.`); every check in its DoD, including Taste `lint.mjs` and `inspect.mjs --allow still-page` at 1440, 768 and 390 on `/` and `/teachers/` via `npm run site:serve`; artifacts in `/srv/critter-ai/agent-state/missions/cc-website/`; ends as a PR linked to `#<issue>`, never merges or deploys.
+  - Notes add: 051 is the design, so the build's architect checks it against the repo at start and records only deltas; plan PNGs are reference only (S4); skill pins, `CHROME_PATH` wrapper, no Docker on the VPS, Taste's time and token cost, about 6 units.
+  - Check against the Brief DoD bullet for the build brief (real files and routes; checks incl. Taste at three widths; where artifacts go; ends as a PR): `grep '^#' plans/051-build-brief.md` matches the template; every Changed and Deleted path exists (`test -e`); `grep -nE 'TODO|TBD|<[a-z-]+>'` finds nothing unintended.
+- [ ] S7. **Check both 051 docs against the repo.**
+  - `git fetch origin`. If origin/main moved past `acffc179`, read `git diff --stat acffc179 origin/main` for files and counts 051 cites.
+  - Write `A/checks/paths.sh`: pull every backticked repo path and markdown link target from `plans/051-*.md`; strip `:line` suffixes; expand `{a,b}`; check each exists (`git cat-file -e origin/main:<path>`, or the working tree for `plans/`). Paths in the build brief's New list print `NEW`; any other missing path prints `MISSING`, exit 1. For each `file:N[-M]`, print the cited lines (`git show origin/main:<file> | sed -n`) to read by eye.
+  - Recompute counts (Verification 4) and compare with 051.
+  - Fix every MISSING path, stale line ref, wrong count, or claim without evidence.
+  - Check: `bash A/checks/paths.sh > A/checks/paths.txt` exits 0; the copy grep (Verification 7) shows only rule or never-claim hits.
+- [ ] S8. **Rebase and open the PR.**
+  - `git fetch origin && git rebase origin/main` (on a `plans/README.md` conflict keep main's rows, re-add 051); re-run `A/checks/paths.sh`; `git push --force-with-lease`.
+  - `gh pr create --base main --head agent/cc-landing-plan --title "Plan 051: website at critterconnect.org (plan + build brief)" --body-file <tmp>`. Body: what's in it (2 docs, 5 images, README row); site map ≤ 5 lines; coming-soon items; the 4 defaults the owner can overturn; both review verdicts; `Refs #<issue>` (not "Closes": the issue stays open for the build); "Release: no. The owner merges; the build mission starts from `plans/051-build-brief.md`."; the session's attribution line.
+  - `gh issue comment <issue> --body "Plan PR: #<pr>"`.
+  - Check: `gh pr view <pr> --json state,isDraft,baseRefName,headRefName,body` → OPEN, not draft, `main` ← `agent/cc-landing-plan`, body has `#<issue>`; `gh pr diff <pr> --name-only` lists only `plans/`.
+
+### Risks
+
+- Old site changes or goes before S1: then 051 says so and uses `A/research/old-site/index.html` + `headers.txt`.
+- Live `play.` may run a different build than origin/main (owner deploys from WSL): plan images are labelled "live, <date>", reference only.
+- Swiftshader leaves the globe or board blank: wait longer; else use `A/baseline-e2e/01-globe.png` / `02a-picked.png` with the dev badge cropped, and say so in 051.
+- origin/main moves (counts, line refs, README rows): S7 re-checks, S8 rebases.
+- `gh` auth or API failure: handoff item, carry on with doc steps; `MISSION_BLOCKED` only if S5/S8 are all that's left.
+- The field guide, round-end and journal shots are not taken here: they need a finished round, which writes to the dev DB (Brief Out). The build takes them (Arch §7).
+
 ## Verification
+
+No app code changes, so no E2E run: the diff is `plans/` only, and typecheck + lint guard the tree (Baseline's E2E state is unchanged by this mission). The repeatable artifact is the final check run below, saved to `A/final-check/` (one `.txt` per check, plus `README.txt` with each command). Run from the repo root at the final step (after the Astra code review).
+
+1. **Diff scope:** `git fetch origin && git diff --name-only origin/main...HEAD` lists only `plans/2026-10-28-cc-landing-plan.md`, `plans/051-landing-page.md`, `plans/051-build-brief.md`, `plans/051-landing-page/*.png` (≤ 5), `plans/README.md`.
+2. **Tree:** `npm run typecheck` and `npm run lint` exit 0.
+3. **Paths:** `bash A/checks/paths.sh` exits 0 (no `MISSING`; `NEW` only for the build brief's New files); cited lines read by eye.
+4. **Counts** match 051:
+   `node -e 'const fs=require("fs"),d="db/content/animals",p=fs.readdirSync(d).filter(f=>f.endsWith(".json")).map(f=>JSON.parse(fs.readFileSync(d+"/"+f))),n=k=>p.reduce((m,x)=>(m[k(x)]=(m[k(x)]||0)+1,m),{});console.log(p.length,n(x=>x.taxonomy.class),"iucn",p.filter(x=>x.sources?.iucn).length,"adw",p.filter(x=>x.sources?.adw).length,n(x=>x.photo?.license??"none"))'`
+5. **Images:** `file plans/051-landing-page/*.png` shows 5 PNGs at the stated sizes; every image link in 051 resolves (in 3); each opened by eye.
+6. **DoD coverage:** `A/final-check/dod.txt` maps each Brief DoD bullet (and sub-bullet) to the 051 or build-brief heading that covers it; none uncovered. 051 has the 12 sections in Arch §10 order; the build brief's headings match the template and it names the files, routes, checks (Taste at 1440/768/390), artifacts folder, and PR-only ending.
+7. **Copy rules:** `grep -n -i -E 'mystery|aligned to|12 look-alikes|charges|boosts engagement|COPPA|FERPA|rounds are not saved' plans/051-*.md`: every hit is a rule or never-claim, not copy. Every coming-soon item shown starts "Not available yet"; headlines ≤ 32 characters.
+8. **GitHub:** `gh issue view <issue> --json state,labels` → OPEN, `needs-triage`. `gh pr view <pr> --json state,mergedAt,baseRefName,headRefName,body` → OPEN, not merged, `main` ← `agent/cc-landing-plan`, body has `#<issue>`. `gh pr diff <pr> --name-only` → only `plans/`.
+9. **Handoff:** every blocking question in 051 §12 is also an item in `/srv/critter-ai/handoff/critter-connect.md` (expected: none).
+10. **Summary** (this plan's `## Summary` and 051 §1): site map ≤ 5 lines, coming-soon items, how the skills fit cc, open questions (the 4 defaults). Then `gh pr edit <pr> --body-file` so the PR body carries the same Summary.
 
 ## Code review (Astra)
 
@@ -857,5 +931,6 @@ Owner's answers to questions 1–9 (handoff H2, 2026-10-28; picked up 2026-10-28
 - 05:43 UTC: Astra review. APPROVE_WITH_CHANGES, 1 MUST-FIX (.dockerignore drops PNGs, same as Fable #1); 4 SHOULD-CONSIDER. Plan-only change.
 - 05:48 UTC: Revision. architect resolved MUST-FIX: .dockerignore `*.png` root-only (live /branding png 200), kept + check.sh verifies og.png on both hosts; LegalPage takes shared link/text roles; axe-core declared devDep 4.11.0. SC items accepted (check.sh both hosts, retry-safe Caddy apply, Clerk bundle stated). Plan-only change.
 - 06:12 UTC: Owner answers (H2) picked up into Decisions, H2 closed. architect redesigned for (b): `src/site/` React pages rendered to static HTML by `scripts/site.mjs` (esbuild+postcss+Tailwind, CSS imports globals.css), served by a Caddy image built with the Caddyfile + site; primary button bg `#008663` (4.58:1, light only); `--space-xxxl: 64px`; no new blocking questions. typecheck, lint pass.
+- 06:18 UTC: Steps. planner wrote S1–S8 (plan shots from live sites, comparables notes, 051 in 2 parts, issue+README row, build brief, paths check, rebase+PR) + 10-check Verification; count cmd tested (76 animals). typecheck, lint pass.
 
 ## Summary
