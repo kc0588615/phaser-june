@@ -197,6 +197,7 @@ async function testPage(browser, page, viewport, mode) {
   await tab.evaluate(() => { // the shot shows the page, not the last focus or a field's selected text
     document.activeElement?.blur();
     for (const field of document.querySelectorAll('input')) field.setSelectionRange(0, 0);
+    getSelection().removeAllRanges(); // Tab into the field selected its text; the document range outlives the blur
     window.scrollTo(0, 0);
   });
   const { cssContentSize } = await tab.page('Page.getLayoutMetrics');
