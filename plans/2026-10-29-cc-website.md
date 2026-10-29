@@ -134,7 +134,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -391,7 +391,296 @@ No MUST-FIX from either review, so no architect round. The lead folds these smal
 
 ## Steps
 
+2026-10-29, planner. Design = 051 as changed by Architecture (D1-D7, A1-A6) and Revision notes R1-R9. Steps cite it; they don't restate it.
+
+Every step:
+- One fresh session.
+- Ends with `npm run typecheck` and `npm run lint` at exit 0, then commit and push, then a Log line.
+- `A=/srv/critter-ai/agent-state/missions/cc-website`. Chrome: `CHROME_PATH=$A/bin/chrome`. Each artifact dir gets a `COMMAND.txt` with the command that reproduces it.
+- Ports: 3100 for `next dev`/`next start`, 3101 for `site:serve` (or the Caddy https port in the Caddy run), 3102 for the Caddy run's stub. Check `ss -ltn` first. Run heavy jobs (builds, e2e, Taste) one at a time.
+- "No new failure kinds" = Verification V4's compare against the baseline.
+- (P) marks a planner call. Record each one under Decisions when its step lands.
+
+Order vs the brief's 6 units:
+- Infrastructure is split in two (S1 build, S5 shipping).
+- `e2e:site` moves up to S2 (E2E first: pages get axe and the 051 §11 checks while they're built).
+- Shipping comes after `/`, because CI's `/srv/site/index.html` check needs `index.html`.
+- The CI grep guard lands with the legal deletion, because it fails on `terms.tsx:30` until then.
+
+- [ ] S1. Site build foundation, shared modules, guards; draft PR.
+  - Shared modules (051 §4 Layout, §9; A1):
+    - `src/lib/theme.ts` exports the theme-color pair, and `src/pages/_app.tsx` imports it.
+    - `src/components/Wordmark.tsx`: the same two `<img>` in a fragment (A1), keeping both `eslint-disable-next-line @next/next/no-img-element` comments (R7). `GlobeScreen.tsx:55-58` uses it.
+    - `src/lib/contentProfiles.ts` gets `readProfiles` from `scripts/content.ts:23`, which imports it from there.
+  - Guards:
+    - `scripts/check-theme.mjs`: `src/site` in `ROOTS`; `_app.tsx` out of `HEX_ALLOWED`.
+    - `eslint.config.mjs`: `no-restricted-imports` (`next`, `next/*`, `@clerk/*`) on `src/site/**` plus `Wordmark.tsx`, `theme.ts` and `contentProfiles.ts`.
+    - (P) For `src/site/**` only, turn off the `@next/next/*` rules: the site is plain HTML, not a Next app. Lint fails without this: `no-html-link-for-pages` errors on `<a href="/">`, and `no-head-element`, `no-css-tags` and `no-img-element` warn under `--max-warnings 0`.
+  - `package.json`:
+    - scripts `site:build` (`node scripts/site.mjs`) and `site:serve` (051 §10 Preview);
+    - devDeps via Architecture Risks "lockfile": `npm install -D -E --offline esbuild@0.19.12 axe-core@4.11.0`, then `npm ci`; `git diff package-lock.json` touches only the root devDependencies.
+  - `src/site/`:
+    - `config.ts`: `SITE_URL`, `PLAY_URL`, `CONTACT_EMAIL`, `OPERATOR`, and the page list (only pages that exist). `LegalPage.tsx:5` keeps its own copy of the email until S7 deletes it.
+    - `Layout.tsx`: 051 §4 Layout. The og/twitter image tags wait for `og.png` (S3).
+    - `site.css`: 051 §10's source line, then the A1 block with R4's comment.
+    - `render.tsx`, and `pages/NotFound.tsx` with 051 §4's 404 copy.
+  - `scripts/site.mjs`: 051 §10 Build, minus shots/og (S3) and the inline client bundle (S6).
+    - Hash = content sha256 prefix. File lists sorted. No dates, no randomness.
+  - `.github/workflows/ci.yml`: `- run: npm run site:build` after `npm test`.
+  - Push, then `gh pr create --draft --base main`.
+    - Title "Website at critterconnect.org (plan 051)".
+    - Body "Refs #34. WIP: mission cc-website, plan plans/2026-10-29-cc-website.md". No bare `@`-names.
+    - Opening it now means CI runs on every push.
+  - Check:
+    - typecheck, lint, `npm test` 47/47, `npm run build`;
+    - `npm run site:build` twice, then `diff -r` is empty;
+    - `out/site/404.html` has no `<script src`;
+    - game e2e (dev :3100) ≥ 523/574 with no new failure kinds, and the globe shows the wordmark in light and dark;
+    - CI `check` is green on the draft PR (ignore the old Vercel check).
+
+- [ ] S2. CDP module, `e2e:site`, game e2e shot edits.
+  - `scripts/cdp.mjs` gets `connect` and `launchChrome` from `scripts/e2e.mjs:45-90`; Chrome comes from `CHROME_PATH`.
+  - `scripts/e2e.mjs` imports `cdp.mjs`. `screenshot()` removes `nextjs-portal` first. Add a `02d-field-guide.png` shot while the guide is open (~l.343-354; 051 §9).
+  - New `scripts/e2e-site.mjs` and the `e2e:site` script (051 §11). `E2E_SITE_URL` defaults to `http://localhost:3101`.
+    - Coverage:
+      - `PAGES`: a constant that S4, S6 and S7 each extend, plus `/404.html`;
+      - 390×844 and 1440×900;
+      - light and dark. Dark = emulated `prefers-color-scheme: dark`, then assert `data-theme="dark"`.
+    - Checks:
+      - one h1, landmarks, and the skip link first in Tab order (focus moves to `<main>`);
+      - visible `:focus-visible`; alt on every `<img>`; no text under 14px; the document scrolls to the footer;
+      - title and description from config, the exact apex canonical, og/twitter tags;
+      - Play links absolute to `https://play.critterconnect.org/`;
+      - no `<script src`, same-origin requests only, no console errors;
+      - axe-core (`createRequire(...).resolve('axe-core/axe.min.js')`), wcag2a/2aa/21a/21aa, 0 violations;
+      - A1's `.btn-primary` fill: `rgb(0, 134, 99)` light, `rgb(0, 144, 108)` dark;
+      - `robots.txt` has `Sitemap:`, and `sitemap.xml`'s URLs equal `PAGES` as apex URLs.
+    - Output: `site-<page>-<width>-<mode>.png` and `e2e-artifacts/<run>-site/report.json`. Exit 1 on any FAIL.
+    - Non-vacuity: FAIL if a page isn't 200, axe returns no `passes`, or a page ran 0 checks.
+  - Check:
+    - typecheck, lint;
+    - `site:build`, `site:serve`, then `npm run e2e:site` passes on `/404.html` (4 shots);
+    - probe once, not committed: a low-contrast token on NotFound's text makes axe FAIL; revert it;
+    - game e2e (dev :3100) ≥ 523/574 with no new failure kinds; `02d-field-guide.png` is present if the run reaches the guide; no dev badge in any shot;
+    - copy the runs to `$A/e2e-site/` and `$A/game-e2e/`.
+
+- [ ] S3. Shots, credits, `og.png` (051 §9; Brief Notes).
+  - Tooling stays outside the repo, in `$A/shots/`:
+    - `take.mjs` imports the repo's `scripts/cdp.mjs`; it takes viewport, DPR and URL and writes a PNG;
+    - `convert.mjs` uses the installed `sharp` for WebP, and crops `og.png` to 1200×630 PNG.
+  - Round-start shots, from the production build (`npm run build && npx next start -p 3100`): `globe`, `board-phone` (seed 1, Africa), `hero-board` (1440×900, the basis for `og.png`).
+  - The other shots, from seeded dev e2e (`E2E_SEED`, `E2E_PLACE`, :3100):
+    - `field-guide` (02d), `grid-marked` (02b), `witness-note` (02c);
+    - `round-end`, `journal`, `globe-found` (04-round-1-end, 05-journal, 07-globe-found).
+    - If the VPS run stops before a round ends, finish the same seeded round in the dev browser with `window.__cc` (`.claude/skills/playtest`).
+    - Prefer seeds whose visible animals have public-domain or CC BY photos.
+    - The only DB writes are e2e's normal round saves to the dev copy.
+  - Repo:
+    - `src/site/shots/*.webp`, `src/site/og.png`;
+    - `src/site/shots.ts`: file, width, height, alt, seed, place, and visible animal ids from `report.json` or `__cc`, checked by eye;
+    - `render.tsx` prints a credit line per photo in each page's footer, through `readProfiles`. It validates every shot's ids, used or not, and the build fails on an unknown id;
+    - `site.mjs` copies shots and `og.png` to `/site/`, hashed;
+    - `Layout.tsx` gets `og:image`/`twitter:image` as the absolute apex URL, and `e2e-site.mjs` checks both, plus the local file at 200 `image/png`.
+  - Check:
+    - typecheck, lint; `site:build` twice, `diff -r` empty; e2e:site passes;
+    - probe: a bogus id in `shots.ts` fails the build; revert it;
+    - every shot opened by eye: light mode, no dev badge, no sheet covering the board unless that's the shot;
+    - record WebP sizes. The hero should be ≲ 150 KB, to fit 300 KB on first load;
+    - raw PNGs and run reports go in `$A/shots/`.
+
+- [ ] S4. `/` with Taste (051 §4 front page, §5, §7, §8).
+  - Install the skills pinned, in a new empty `$A/skills/`. Never run anything with cwd inside them.
+    - `git clone https://github.com/Leonxlnx/taste-skill $A/skills/taste && git -C $A/skills/taste checkout 12af471f62`
+    - `git clone https://github.com/elayadesign/ai-design-skills $A/skills/elaya && git -C $A/skills/elaya checkout ded7efc9d5`
+    - `$A/skills/SOURCES.txt`: the pins and each repo's HEAD. If HEAD is past the pin, use the pin and note the newer version under Decisions.
+    - If Taste's scripts need npm packages, install them under `$A/skills/` only. If that fails, add a handoff item and use the e2e:site screenshots as the look check.
+  - `src/site/pages/Home.tsx`:
+    - sections 1-6 as 051 §4's table, roles as §4's shared roles and §8's rows;
+    - hero `<picture>` with `fetchpriority="high"`, the rest lazy;
+    - {N} counted in `render.tsx` (76 today);
+    - `config.ts` entry with §11's title and description; `e2e-site.mjs` `PAGES` gains `/`.
+  - Method:
+    - graphical-ui while building; GUI.md and the cc tokens bind.
+    - Taste: only the steps 051 §8 lists as Used (1, 2, 4, 5, 6.2-6.9, 8 with ≤ 3 critique rounds, 10); skip what §8 skips. elaya: Part A as §8.
+    - 051 §4's copy is the default. Taste may only tighten wording within §5's rules: claims from §5's table only, no never-claims. Record any changed line under Decisions.
+    - A clash with GUI.md becomes a handoff item with 051's default, and the build goes on with the default.
+  - Speed tooling, `$A/speed/speed.mjs` (imports the repo's `scripts/cdp.mjs`):
+    - 390×844 mobile, DPR 2; CPU 4×; Slow 4G (150 ms, 1.6 Mbps down, 750 kbps up); cache off, fresh profile;
+    - LCP and CLS from buffered PerformanceObservers; bytes = the sum of `Network.loadingFinished.encodedDataLength`;
+    - writes `results.json`.
+  - Check:
+    - typecheck, lint; `site:build` + `site:serve`; e2e:site passes (`/`, 404);
+    - `node $A/skills/taste/skills/taste-skill/scripts/lint.mjs src/site` is clean;
+    - `CHROME_PATH=$A/bin/chrome node $A/skills/taste/skills/taste-skill/scripts/inspect.mjs http://localhost:3101/ --allow still-page --out $A/taste-inspect/home` at 1440, 768 and 390 (exact flags per the pinned SKILL.md): 0 FAIL;
+    - every inspect screenshot opened by eye; critique in `$A/taste-critique-home.md`;
+    - speed on `/`: LCP ≤ 2.5 s, CLS ≤ 0.1, ≤ 300 KB.
+
+- [ ] S5. Shipping: Docker, compose, Caddy, `check.sh`, `deploy.sh`, CI, docs.
+  - `Dockerfile`: 051 §10 "Into Caddy's image".
+    - Stages: `deps`; `build` FROM deps, unchanged from `ARG` on; `site`; `caddy` FROM `caddy:2` with `deploy/Caddyfile` and `/app/out/site` → `/srv/site`; `run` last.
+    - Confirm the context keeps `db/content`, `public/`, `src/site/shots/*.webp` and `src/site/og.png` (`*.png` matches the root only). `.dockerignore` stays unchanged.
+  - `deploy/docker-compose.app.yml`: `app.build.target: run`; caddy becomes `build: { context: ., target: caddy }`, and the Caddyfile bind mount goes (051 §10).
+  - `deploy/Caddyfile`: 051 §10's `(common)` plus A2's blocks; `www` gets `import common` (R3).
+  - `deploy/check.sh` (new): A3 with R2, R8 and R9. Write Failure modes' check.sh list into the plan before the code.
+    - (P) Hosts come from env `PLAY`, `APEX` and `WWW`, defaulting to the real names; expected URLs are built from them.
+    - (P) `CHECK_CONNECT=<ip:port>`, for the local run only, adds `curl -k --connect-to ::<ip:port>` and skips the DNS guard.
+  - `deploy/deploy.sh`: A3's two changes (the remote `docker exec caddy test -f /srv/site/index.html` after the health wait; ll.43-45 become `bash deploy/check.sh`).
+  - `ci.yml`, after `site:build`:
+    - `docker build --target caddy -t cc-caddy .`
+    - `docker run --rm -e APP_DOMAIN=play.critterconnect.org cc-caddy sh -c 'caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && test -f /srv/site/index.html'`
+  - Docs:
+    - `docs/DEPLOY.md`: a website section (build, image, hosts, `check.sh` and `--strict`) and the caddy row in "What runs where" (apex and www too);
+    - `AGENTS.md`: a "Website" line in Where Things Live; `:11` Hosting names critterconnect.org;
+    - `README.md:3`: current rules, "the one the camera saw"; no mystery, 12 look-alikes or charges;
+    - a dated note under paper §5.3 item 11: rounds are saved with `session_seed`.
+  - Caddy harness, outside the repo in `$A/caddy-run/`:
+    - `run.sh` derives `Caddyfile.test` from `deploy/Caddyfile`:
+      - global options `{ admin off; http_port 3100; https_port 3101; local_certs; skip_install_trust }`;
+      - hosts `play.test`, `critterconnect.test`, `www.critterconnect.test`;
+      - `app:8080` → `127.0.0.1:3102`; `/srv/site` → a copy of `out/site`;
+      - Caddy's XDG dirs under `$A/caddy-run/`.
+    - `stub.mjs` on :3102 returns 404 for `/privacy/`, `/terms/` and `/teachers/` and 200 otherwise. It sets `X-Stub`, nosniff and Referrer-Policy.
+    - It asserts:
+      - A2's play. expectations: everything reaches the stub (`X-Stub`), nothing comes from files;
+      - 051 §10's local results: apex files, the 404 page, 308s keeping the query, `/site/*` immutable, each security header once.
+    - Then it runs `check.sh` with `PLAY=play.test APEX=critterconnect.test WWW=www.critterconnect.test CHECK_CONNECT=127.0.0.1:3101`: all OK. With the stub stopped: play. lines BAD, exit 1.
+  - Check:
+    - typecheck, lint;
+    - `APP_DOMAIN=play.critterconnect.org caddy validate --config deploy/Caddyfile --adapter caddyfile`;
+    - `bash -n deploy/deploy.sh deploy/check.sh`;
+    - `bash $A/caddy-run/run.sh` → `$A/caddy-run/results.txt`;
+    - live probe before any deploy, `bash deploy/check.sh`: exit 1, BAD only on play. `/privacy/` and `/terms/` (the live game still has them), apex and www SKIP with R2's hint; `--strict` also turns the SKIPs into BAD;
+    - CI green on the PR, including the docker build, validate and `index.html` steps.
+
+- [ ] S6. `/teachers/` with Taste and the class link.
+  - `src/site/pages/Teachers.tsx`:
+    - sections 1-9 as 051 §4's table; claims only from §5; §8 roles;
+    - §6's three rows verbatim under "Coming later: not available yet";
+    - the FAQ as visible Q&A.
+  - `ClassLink.tsx` + `classLink.client.ts` (051 §4 row 4):
+    - the seed comes from `crypto.getRandomValues`, in 1…4294967295;
+    - a read-only cc Text field, Copy as `.btn-secondary`, an `aria-live` "Copied";
+    - a fixed example link without JS.
+  - `site.mjs` bundles the client inline (esbuild, minified) into `/teachers/` only. The two inline scripts total < 2 KB.
+  - `config.ts` entry with §11's title and description.
+  - `e2e-site.mjs`: `PAGES` gains `/teachers/`, plus §11's class-link checks:
+    - two loads give two different valid links;
+    - Copy fills the clipboard (permission granted over CDP), and the live region says "Copied";
+    - with JS off, the fixed example shows.
+  - Method: as S4, with Taste on `/teachers/`.
+  - Check:
+    - typecheck, lint; `site:build` twice, `diff -r` empty; e2e:site passes (`/`, `/teachers/`, 404);
+    - Taste lint clean; inspect `--allow still-page` at 1440, 768 and 390 on `/teachers/` → `$A/taste-inspect/teachers`, 0 FAIL;
+    - screenshots opened by eye; critique in `$A/taste-critique-teachers.md`;
+    - speed on `/teachers/` within budget.
+
+- [ ] S7. Legal pages to the site, game legal pages deleted, `check-game-css`, 051 updated.
+  - `src/site/LegalArticle.tsx` (051 §4 Legal pages), `pages/Privacy.tsx`, `pages/Terms.tsx`:
+    - today's text, moved, with the words unchanged except two things in the terms: the Haunted Pavement LLC operator sentence, and "Last updated" as a literal date, this session's (D7);
+    - `next/link` becomes `<a href="/privacy/">`;
+    - config entries; `PAGES` gains both; the sitemap has the 4 apex URLs.
+  - Delete `src/pages/privacy.tsx`, `src/pages/terms.tsx` and `src/components/LegalPage.tsx` (A2). `rg` confirms nothing else uses them.
+  - `ci.yml`: the grep guard after "No Supabase/Prisma" (A2), with R6's comment.
+  - `scripts/check-game-css.mjs`: A1 with R1 and R5. Write Failure modes' check-game-css list into the plan first. Commit before running it.
+  - `docs/DEPLOY.md`: the website section names `check-game-css`.
+  - `plans/051-landing-page.md`: per A6 (header, §1, §3, §4, §5/§7 evidence, §8 gaps 1-2, §10, §11, §12). Under this plan's Decisions: A2, A3, A4, D7 and every (P).
+  - Check:
+    - typecheck, lint, `npm test`;
+    - `npm run build`: the routes are `/`, `/explore` and `/login` only;
+    - the grep guard run locally: exit 0;
+    - `git diff --no-index --word-diff` of the old text (`git show origin/main:src/pages/{privacy,terms}.tsx`) against the new shows only markup, the operator sentence, the date and the link → `$A/legal-diff.txt`;
+    - `node scripts/check-game-css.mjs origin/main $A/game-css`: exit 0, and the dropped files are exactly the 3;
+    - the Failure modes probes behave as listed;
+    - e2e:site passes on all 5 pages;
+    - game e2e ≥ 523/574 with no new failure kinds, and dev `/privacy/` gives a 404.
+
+- [ ] S8. Final pass, audit, PR ready (the last step before Verification).
+  - Run V1-V11 once on the final tree and fix failures. If a fix is big, add a new item before this one.
+    - Rerun Taste inspect on both pages, because the footer changed in S7.
+  - graphical-audit change review of `git diff origin/main...HEAD` → `$A/audit.md`. It lists the two site-only additions as intentional local changes.
+  - `git fetch origin && git rebase origin/main`. If that moved commits, rerun typecheck, lint, `site:build` and e2e:site, then `git push --force-with-lease`; otherwise a plain `git push`.
+  - `gh pr edit` the body, then `gh pr ready`. The body:
+    - `Refs #34`; what changed.
+    - D3: "every game link to privacy, terms or teachers: none in the repo"; sign-in passes no legal URLs.
+    - The exact claim (A1 + R1): "the game's stylesheet, compiled from the game's own sources, is byte-identical to origin/main's, minus the deleted legal pages' own utilities". Plus D2's note on the real Next CSS.
+    - Owner steps A4 1-3, with step 3 as `bash deploy/check.sh --strict`; then A2's Clerk dashboard and Google Auth Platform items. Rollback: `git revert` + `npm run deploy`.
+    - The failing "Vercel" check comes from the deleted project; ignore it.
+    - The owner runs the full game e2e on WSL (the VPS shows 523-524/574, a known timing failure).
+    - Artifact paths, both review verdicts, the (P) decisions. No bare `@`-names.
+    - Never merge or deploy.
+  - Check: typecheck, lint; `gh pr view --json isDraft,body` shows not draft and `Refs #34`; `gh pr checks` is green except the old Vercel check.
+
 ## Verification
+
+Run in order on the final, pushed tree, E2E first. `A=/srv/critter-ai/agent-state/missions/cc-website`.
+- Before starting: `git status` is clean, and `ss -ltn | grep -E ':310[0-2]'` shows nothing.
+- One server at a time.
+- Each artifact dir gets a `COMMAND.txt`.
+
+1. **V1 e2e:site.**
+   - Run: `npm run site:build`, `npm run site:serve` (background, :3101), then `E2E_SITE_URL=http://localhost:3101 CHROME_PATH=$A/bin/chrome npm run e2e:site`.
+   - Must show:
+     - exit 0, and `report.json` has 0 FAIL;
+     - axe 0 violations on 5 pages (`/`, `/teachers/`, `/privacy/`, `/terms/`, `/404.html`) × 390×844 and 1440×900 × light and dark = 20 screenshots;
+     - every 051 §11 check, the fill `rgb(0, 134, 99)`/`rgb(0, 144, 108)`, the class-link checks, and robots plus a sitemap of 4 apex URLs.
+   - Artifact: copy `e2e-artifacts/<run>-site/` to `$A/e2e-site/`. Open every screenshot by eye.
+2. **V2 Taste**, on the same server:
+   - `node $A/skills/taste/skills/taste-skill/scripts/lint.mjs src/site` is clean → `$A/taste-lint.txt`;
+   - `inspect.mjs --allow still-page` on `/` and `/teachers/` at 1440, 768 and 390: 0 FAIL → `$A/taste-inspect/{home,teachers}/`;
+   - screenshots opened by eye; `$A/taste-critique-{home,teachers}.md` present.
+3. **V3 Speed.** `node $A/speed/speed.mjs http://localhost:3101/ http://localhost:3101/teachers/`.
+   - Each page: LCP ≤ 2500 ms, CLS ≤ 0.1, ≤ 307200 bytes → `$A/speed/results.json`.
+   - The python server doesn't compress, so the numbers are conservative. If only the bytes go over, rerun through the Caddy run (gzip/zstd) and record both.
+   - Stop the server.
+4. **V4 Game e2e.**
+   - Run: `npx next dev -p 3100` (background), then `E2E_BASE_URL=http://localhost:3100 CHROME_PATH=$A/bin/chrome npm run e2e`.
+   - Must show:
+     - ≥ 523/574;
+     - no failing check kind (`kind()` = name without digits, as in `e2e.mjs`) outside the union of the two baseline runs' kinds (`$A/baseline-e2e/*/report.json`), computed by a node one-liner → `$A/game-e2e/compare.txt`. On a new kind, rerun once (timing); if it persists, fix it;
+     - the run is in `$A/game-e2e/<run>/`.
+   - Stop the server. The owner confirms the full pass on WSL.
+5. **V5 Game CSS.** `node scripts/check-game-css.mjs origin/main $A/game-css`: exit 0, equal sha256, and the dropped base files are exactly `src/pages/privacy.tsx`, `src/pages/terms.tsx` and `src/components/LegalPage.tsx`.
+6. **V6 Grep guards.** Run ci.yml's legal-link guard (A2) and its Supabase/Prisma guard locally: no output, exit 0 → `$A/checks/grep.txt`.
+7. **V7 Deterministic build.** `npm run site:build && rm -rf /tmp/cc-site-a && cp -r out/site /tmp/cc-site-a && npm run site:build && diff -r /tmp/cc-site-a out/site`: no output, exit 0 → `$A/checks/site-diff.txt`.
+8. **V8 Static checks.** `npm run typecheck`, `npm run lint`, `npm test` (47/47, no new tests) and `npm run build` (`DATABASE_URL=postgres://build@127.0.0.1:1/build`, as CI): all exit 0. The build's routes are `/`, `/explore` and `/login`, with no `/privacy` or `/terms`. Logs → `$A/checks/`.
+9. **V9 Caddy.**
+   - `APP_DOMAIN=play.critterconnect.org caddy validate --config deploy/Caddyfile --adapter caddyfile` prints "Valid configuration".
+   - `bash $A/caddy-run/run.sh`: every assertion OK, `check.sh` all OK under `CHECK_CONNECT`, and the stub-down probe BAD with exit 1 → `$A/caddy-run/results.txt`.
+10. **V10 Shell.**
+    - `bash -n deploy/deploy.sh && bash -n deploy/check.sh`: exit 0.
+    - Live, pre-deploy, `bash deploy/check.sh; echo $?`: BAD only on play. `/privacy/` and `/terms/`, apex and www SKIP with R2's hint, exit 1.
+    - `bash deploy/check.sh --strict`: the SKIPs become BAD.
+    - → `$A/checks/check-live.txt`.
+11. **V11 graphical-audit.** `$A/audit.md` lists exactly the two site-only additions (A1) as intentional local changes, and no other theme drift.
+12. **V12 CI.** `gh pr checks <n>`: the `check` job is green (lint, both grep guards, test, `site:build`, build, `docker build --target caddy`, `caddy validate` + `/srv/site/index.html`). Ignore the old "Vercel" check.
+13. **V13 Artifacts.**
+    - `$A/` holds: `e2e-site/`, `game-e2e/`, `taste-inspect/`, the taste critiques and lint, `speed/`, `game-css/`, `checks/`, `caddy-run/`, `audit.md`, `shots/`, `skills/SOURCES.txt` and `legal-diff.txt`, each with its command.
+    - The Summary lists them.
+
+## Failure modes
+
+Only the two check scripts are tested in isolation (the site and the game are covered by E2E). Each failure mode needs a guard in the code and, where marked, a probe run once.
+
+**`scripts/check-game-css.mjs`** (before S7's code):
+1. Stale base. Guard (R5): `git fetch -q origin main`; exit 1 if the fetch fails.
+2. The script tests committed HEAD, not the disk. Guard: exit 1 if `git status --porcelain -- src` isn't empty.
+3. Vacuous equality: both sides compile the same tree (wrong `base`, or Tailwind scanning the real repo through cwd or a symlink). Guard: `base` = each temp tree, with the temp dirs under `os.tmpdir()`. Probe: base = an older commit whose game styles differ (the parent of the last commit that changed a `src/` class or `globals.css`) must exit 1 and print a diff.
+4. The allowance is too wide. Guard: print the dropped base files (R1); against origin/main they must be exactly the 3 legal files.
+5. The script misses a game stylesheet. Probe: `rg -n "\.css['\"]" src` finds only `_app.tsx:1-2` (`maplibre-gl.css` from node_modules, unchanged, and `globals.css`).
+6. Nondeterminism. Probe: two runs give the same sha256.
+7. Errors pass silently. Guard: no catch-and-continue; any git or compile error exits non-zero. Probe: base `no-such-ref` exits 1.
+8. Slow or leaky. Guard: remove the temp dirs in `finally`. Probe: the run takes < 10 s.
+
+**`deploy/check.sh`** (before S5's code; probed by the Caddy run, its stub-down run and the live pre-deploy run):
+1. A refused connection or TLS failure (`000`) passes. Guard: compare exact status codes. curl exit 35/60 → BAD with A3's certificate hint.
+2. A followed redirect hides the 308. Guard: never `-L`; check the code and the exact `%{redirect_url}`, query included.
+3. It stops at the first failure. Guard: no `set -e` around the curls; collect every line, then exit 1 at the end on any BAD.
+4. The trailing slash fools the 404 check (`/privacy` 308s). Guard: request the slash forms (D4).
+5. Vacuous `/site/` check. Guard: BAD if no `/site/` URL is found. Extract from `href`, `src` and every `srcset` candidate.
+6. The wrong page passes. Guards: the canonical equals the exact apex URL for that path; the 404 must contain the 404 page's heading (not Caddy's empty 404); Content-Type is compared by prefix (R8).
+7. The DNS guard misreads. Guard: the first `getent ahostsv4` IPv4 compared with play.'s; unresolved = SKIP with R2's text; `--strict` turns SKIP into BAD (R9).
+8. The test hook leaks into production. Guard: `CHECK_CONNECT` is unset by default and `deploy.sh` never sets it; `-k` applies only under it.
+9. Syntax. Probe: `bash -n`.
 
 ## Code review (Astra)
 
@@ -400,6 +689,7 @@ No MUST-FIX from either review, so no architect round. The lead folds these smal
 ## Decisions
 
 - 2026-10-29 (Revision): Astra SC1 (rendered game style check) and SC3 (keep old hashed site assets) rejected; reasons under Revision notes.
+- 2026-10-29 (Steps): 8 steps, not the brief's 6: infra split (S1 build, S5 shipping); `e2e:site` early (S2) so pages get axe as built; shipping after `/` (CI's index.html check); grep guard with legal deletion (S7); draft PR opened in S1 so CI runs per push. Other (P) calls recorded when their step lands.
 - 2026-10-29 (Architecture): both theme additions (site-only darker primary fill, `--space-xxxl`) live in `src/site/site.css`, not `src/styles/globals.css`. Brief's scope listed `globals.css`; addendum item 1 (game theme stays exactly as is, byte-for-byte proof) wins. Proof: new `scripts/check-game-css.mjs` compiles game CSS on origin/main vs HEAD, must match.
 
 ## Log
@@ -409,5 +699,6 @@ No MUST-FIX from either review, so no architect round. The lead folds these smal
 - 2026-10-29 11:34 UTC: Fable review. APPROVE, 0 MUST-FIX; 3 missed items + 5 SHOULD-CONSIDER for revision. No code changed.
 - 2026-10-29 11:35 UTC: Astra review. APPROVE, 0 MUST-FIX; 3 SHOULD-CONSIDER (rendered game style check, strict post-DNS check.sh, keep old hashed assets). No code changed.
 - 2026-10-29 11:36 UTC: Revision. No MUST-FIX, no architect round; 9 small review items accepted (R1-R9) and 2 Astra SC rejected, under Revision notes. No code changed.
+- 2026-10-29 11:50 UTC: Steps. planner wrote S1-S8, Verification V1-V13, Failure modes (check-game-css, check.sh). No code changed.
 
 ## Summary
