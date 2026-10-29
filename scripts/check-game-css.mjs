@@ -26,7 +26,10 @@ function fail(message) {
 /** `ref`'s src/ in a fresh temp dir, minus `drop`, with the repo's node_modules linked in for Tailwind's imports. */
 function tree(ref, drop) {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'cc-game-css-'));
-  execFileSync('tar', ['-x', '-C', dir], { input: execFileSync('git', ['archive', ref, 'src'], { cwd: root }) });
+  const archive = path.join(dir, 'src.tar');
+  git('archive', '-o', archive, ref, 'src');
+  execFileSync('tar', ['-xf', archive, '-C', dir]);
+  rmSync(archive);
   for (const file of drop) rmSync(path.join(dir, file), { recursive: true, force: true });
   symlinkSync(path.join(root, 'node_modules'), path.join(dir, 'node_modules'));
   return dir;
