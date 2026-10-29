@@ -133,7 +133,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -372,6 +372,23 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+No MUST-FIX from either review, so no architect round. The lead folds these small items into the design; the planner puts them in Steps.
+
+**Accepted:**
+- R1 (Fable missed 1): `check-game-css` prints the base files it dropped; the PR claim adds "minus the deleted legal pages' own utilities".
+- R2 (Fable missed 2): `check.sh`'s SKIP line adds `check: dig +short critterconnect.org @1.1.1.1; a cached answer needs a few minutes or ipconfig /flushdns`.
+- R3 (Fable missed 3): the `www` block gets `import common`.
+- R4 (Fable SC1): `site.css` comment: the dark fill is deliberately the game's `--color-1`.
+- R5 (Fable SC2): `check-game-css` runs `git fetch -q origin main` first when base is `origin/main`, and fails loudly if the fetch fails.
+- R6 (Fable SC3): one-line comment in `ci.yml` on the grep guard (play.-relative legal/teacher links only).
+- R7 (Fable SC4): `Wordmark` keeps both `eslint-disable-next-line @next/next/no-img-element` comments.
+- R8 (Fable SC5): `check.sh` compares `Content-Type` prefixes (`text/css`, `image/webp`, `image/png`).
+- R9 (Astra SC2): `check.sh --strict` turns every SKIP into BAD (exit 1). A4 owner step 3 runs `bash deploy/check.sh --strict`; `deploy.sh` keeps the non-strict run (DNS may not have moved yet).
+
+**Rejected:**
+- Astra SC1 (rendered game style check): already weighed under Rejected alternatives (computed-style snapshots: flaky, slow, same conclusion). The extra utilities from the site's sources are unused, so they can't change a rendered game style; the existing game e2e still runs against the real build's CSS.
+- Astra SC3 (keep old hashed site assets across deploys): the site is static, small pages; an open page that misses a lazy screenshot after a deploy is fixed by reload. Keeping old assets needs a persistent volume or a merge step in the caddy image: complexity for a cosmetic edge case (KISS).
+
 ## Steps
 
 ## Verification
@@ -382,6 +399,7 @@ SHOULD-CONSIDER:
 
 ## Decisions
 
+- 2026-10-29 (Revision): Astra SC1 (rendered game style check) and SC3 (keep old hashed site assets) rejected; reasons under Revision notes.
 - 2026-10-29 (Architecture): both theme additions (site-only darker primary fill, `--space-xxxl`) live in `src/site/site.css`, not `src/styles/globals.css`. Brief's scope listed `globals.css`; addendum item 1 (game theme stays exactly as is, byte-for-byte proof) wins. Proof: new `scripts/check-game-css.mjs` compiles game CSS on origin/main vs HEAD, must match.
 
 ## Log
@@ -390,5 +408,6 @@ SHOULD-CONSIDER:
 - 2026-10-29 11:30 UTC: Architecture. architect wrote findings (051 matches repo; no game links to legal pages; Tailwind scans whole repo) and target design incl. addendum (site-only tokens, check-game-css proof, host split, check.sh 3 hosts, no Vercel rollback). No code changed.
 - 2026-10-29 11:34 UTC: Fable review. APPROVE, 0 MUST-FIX; 3 missed items + 5 SHOULD-CONSIDER for revision. No code changed.
 - 2026-10-29 11:35 UTC: Astra review. APPROVE, 0 MUST-FIX; 3 SHOULD-CONSIDER (rendered game style check, strict post-DNS check.sh, keep old hashed assets). No code changed.
+- 2026-10-29 11:36 UTC: Revision. No MUST-FIX, no architect round; 9 small review items accepted (R1-R9) and 2 Astra SC rejected, under Revision notes. No code changed.
 
 ## Summary
