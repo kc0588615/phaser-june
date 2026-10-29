@@ -438,7 +438,7 @@ Order vs the brief's 6 units:
     - game e2e (dev :3100) ≥ 523/574 with no new failure kinds, and the globe shows the wordmark in light and dark;
     - CI `check` is green on the draft PR (ignore the old Vercel check).
 
-- [ ] S2. CDP module, `e2e:site`, game e2e shot edits.
+- [x] S2. CDP module, `e2e:site`, game e2e shot edits.
   - `scripts/cdp.mjs` gets `connect` and `launchChrome` from `scripts/e2e.mjs:45-90`; Chrome comes from `CHROME_PATH`.
   - `scripts/e2e.mjs` imports `cdp.mjs`. `screenshot()` removes `nextjs-portal` first. Add a `02d-field-guide.png` shot while the guide is open (~l.343-354; 051 §9).
   - New `scripts/e2e-site.mjs` and the `e2e:site` script (051 §11). `E2E_SITE_URL` defaults to `http://localhost:3101`.
@@ -695,6 +695,9 @@ Only the two check scripts are tested in isolation (the site and the game are co
 - 2026-10-29 (S1): `src/lib/contentProfiles.ts` also exports `CONTENT_DIR`/`ANIMALS_DIR`, which `scripts/content.ts` still needs for `writeProfile` and `sources.json` (one definition of the paths).
 - 2026-10-29 (S1): globals.css's `body` rule is unlayered, so it beats utilities on `<body>` (ground, text color, 14px). The site keeps that rule for ground and color (cte-canvas/cte-text = neutral-1/neutral-10) and sets `text-m` on `<main>` and the header link instead. Header wordmark link is `min-w-0` (it shrinks, as on the globe) so header stays one row at 390.
 - 2026-10-29 (S1): `npm install --offline` failed (ENOTCACHED); used `--prefer-offline` with the same pins. `package-lock.json` diff is the 2 root devDependency lines only.
+- 2026-10-29 (S2): `e2e:site` takes its page list from `src/site/config.ts` `PAGES` (esbuild-transformed, imported), not a hand-kept constant, so S4/S6/S7 extend it by adding config entries; title/description/canonical expectations come from the same entries. `cdp.mjs` also takes `startBrowser` (profile, signal cleanup) and `openPage` (`evaluate`, `waitFor`) from `e2e.mjs`, shared by both tests.
+- 2026-10-29 (S2): the dev badge is hidden by a `nextjs-portal { display: none }` style added for each shot and removed after, not by removing the element: Next re-adds a removed `<nextjs-portal>` (probed), and the badge stays during checks so behaviour is unchanged.
+- 2026-10-29 (S2): `e2e:site` checks per page × size × mode: 200, data-theme, lang, title/description, canonical (or noindex for the 404), og/twitter, one h1, one header/main/footer, alt, no text < 14px, Play links, primary fill, skip link first and moving focus to `<main>`, every Tab stop in DOM order with `:focus-visible` and a ring, scroll to footer, axe, same-origin, no console errors/failed requests; once per run: no `<script src`, robots `Sitemap:`, sitemap = indexed pages. Shots are full-page.
 - 2026-10-29 (Architecture): both theme additions (site-only darker primary fill, `--space-xxxl`) live in `src/site/site.css`, not `src/styles/globals.css`. Brief's scope listed `globals.css`; addendum item 1 (game theme stays exactly as is, byte-for-byte proof) wins. Proof: new `scripts/check-game-css.mjs` compiles game CSS on origin/main vs HEAD, must match.
 
 ## Log
@@ -706,5 +709,6 @@ Only the two check scripts are tested in isolation (the site and the game are co
 - 2026-10-29 11:36 UTC: Revision. No MUST-FIX, no architect round; 9 small review items accepted (R1-R9) and 2 Astra SC rejected, under Revision notes. No code changed.
 - 2026-10-29 11:50 UTC: Steps. planner wrote S1-S8, Verification V1-V13, Failure modes (check-game-css, check.sh). No code changed.
 - 2026-10-29 11:58 UTC: S1. Site build (`site:build`/`site:serve`, `src/site/` config, Layout, NotFound, render, site.css with the 2 site-only additions), Wordmark/THEME_COLORS/contentProfiles shared, ESLint + check-theme guards (probed), devDeps declared, CI `site:build`. typecheck, lint, 47/47, build pass; site build deterministic (`diff -r` empty), 404 has no `<script src`; game e2e 523/574, 0 new failure kinds; globe wordmark right in light/dark. Draft PR #36, CI `check` green (old Vercel check fails, ignored). Artifacts `$A/checks/s1/`, `$A/game-e2e/s1/`.
+- 2026-10-29 12:12 UTC: S2. `scripts/cdp.mjs` (CDP client, Chrome launch, startBrowser, openPage) shared by `e2e.mjs` and new `e2e-site.mjs` (`npm run e2e:site`); game shots hide the dev badge; `02d-field-guide.png` added. typecheck, lint pass; e2e:site 84/84 on /404.html (4 shots, checked by eye); probe: neutral-6 text on 404 -> axe color-contrast FAIL, exit 1, reverted; game e2e 523/574, 0 new failure kinds, 02d present, no badge in shots. Artifacts `$A/e2e-site/s2/`, `$A/game-e2e/s2/`.
 
 ## Summary
