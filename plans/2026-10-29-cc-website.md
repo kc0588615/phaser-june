@@ -2,7 +2,7 @@
 mission: cc-website
 project: critter-connect
 branch: agent/cc-website
-status: active
+status: done
 started: 2026-10-29 11:06 UTC
 ---
 
@@ -766,7 +766,27 @@ Triage: MUST-FIX 1 accepted (real: curl reports `%{http_code}` 200 even on exit 
 - 2026-10-29 13:40 UTC: S8. V1-V11 on the final tree: e2e:site 444/444 (fix: shots clear the document selection; teachers shots no longer show the class link highlighted; 16/20 shots byte-equal to S7, 4 changed checked by eye); Taste lint 0/0, inspect 0 FAIL both pages (2 WARN defended); speed `/` LCP 1560 ms 232 KB, `/teachers/` 1512 ms 286 KB, CLS 0.0005; game e2e 524/574, 0 new kinds, dev `/privacy/` `/terms/` 404; check-game-css exit 0 (sha256 equal, dropped exactly 3); grep guards exit 0; site build deterministic; typecheck, lint, 47/47, build (routes `/`, `/explore`, `/login`); caddy validate + Caddy run 105 OK, app-down exit 1; `bash -n`, live check.sh as expected pre-deploy; graphical-audit 0 drift, 2 site-only additions intentional. No rebase needed. PR #36 body written, marked ready; CI `check` green. Artifacts `$A/e2e-site/final/`, `$A/game-e2e/final/`, `$A/checks/final/`, `$A/taste-inspect/`, `$A/speed/results.json`, `$A/caddy-run/results.txt`, `$A/audit.md`.
 - 2026-10-29 13:24 UTC: Code review (Astra). APPROVE_WITH_CHANGES; MUST-FIX 1 (check.sh passes cut-off transfers) accepted, added as S9; 2 SHOULD-CONSIDER to Summary. No code changed.
 - 2026-10-29 13:29 UTC: S9. `check.sh` `fetched` needs curl exit 0, else BAD "transfer failed (curl exit N, HTTP code)" (35/60 keep cert hint). Probe `$A/cutoff-probe/` (stub: 200 then cut/stall): before 5 cut/stalled lines OK, after all 17 BAD, exit 1. Caddy run all OK + stub-down BAD exit 1; live check unchanged (`$A/checks/check-live.txt`); bash -n, typecheck, lint pass. PR body updated.
+- 2026-10-29 13:36 UTC: Final Verification V1-V13 on `3e534ee5`, all pass (e2e:site 444/444, Taste 0 FAIL, speed OK, game e2e 524/574 0 new kinds, game CSS identical, guards, deterministic build, typecheck/lint/47/47/build, Caddy run 105 OK, live check.sh as designed, audit 0 drift, CI green). Summary written, handoff H3 (merge, deploy, DNS), status done. Artifacts `$A/*/verify/`.
 
 ## Summary
 
-Astra code review SHOULD-CONSIDER, for the owner: (1) `e2e:site` tests only the granted-clipboard Copy path, not a denied clipboard; (2) run the full game e2e on WSL (VPS shows 524/574, known timing failure).
+**Built** (PR #36, `Refs #34`, ready, not merged): critterconnect.org as a static site from `src/site/` (`npm run site:build` -> `out/site`): `/`, `/teachers/` (with the class link), `/privacy/`, `/terms/` (moved from the game, operator sentence, Oct 29 date), `/404.html`; 9 game shots + `og.png`, per-page Commons photo credits; served by a new caddy image stage (`Dockerfile` `caddy`, `deploy/Caddyfile`: apex site, `www` 308, old game paths 308 to `play.`); `deploy/check.sh` checks play., apex and www (DNS guard, `--strict`, cut-off transfers BAD); `deploy.sh` runs it. Game: legal pages deleted (no game links to them, CI guard), stylesheet byte-identical to origin/main minus those pages (`scripts/check-game-css.mjs`). Shared `scripts/cdp.mjs` for both E2E suites. Docs: DEPLOY "The website", AGENTS, README, 051.
+
+**Final Verification** (2026-10-29, HEAD `3e534ee5`, all pass):
+- V1 e2e:site 444/444, 5 pages × 2 sizes × light/dark, axe 0, 20 shots by eye -> `$A/e2e-site/verify/` (also `e2e-artifacts/2026-10-29T13-28-23-261Z-site/`).
+- V2 Taste lint 0/0; inspect 0 FAIL on `/` and `/teachers/` at 1440/768/390 (2 WARN defended: `palette-cream` = cc tokens, `no-footage` = no motion by brief) -> `$A/taste-lint.txt`, `$A/taste-inspect/{home,teachers}/`, critiques `$A/taste-critique-{home,teachers}.md`.
+- V3 speed (390, 4× CPU, Slow 4G, uncompressed): `/` LCP 1560 ms, CLS 0.0005, 232 KB; `/teachers/` 1520 ms, 0.0005, 286 KB -> `$A/speed/results.json`.
+- V4 game e2e 524/574, 0 new failure kinds vs baseline (known VPS round-1 timing failure); dev `/privacy/` `/terms/` 404 -> `$A/game-e2e/verify/`.
+- V5 check-game-css exit 0, sha256 equal, dropped exactly the 3 legal files -> `$A/game-css/`, `$A/checks/verify/game-css.txt`.
+- V6 grep guards exit 0; V7 site build deterministic; V8 typecheck, lint, 47/47, build (routes `/`, `/explore`, `/login`) -> `$A/checks/verify/`.
+- V9 `caddy validate` OK; Caddy run 105 OK, app-down probe BAD exit 1 -> `$A/caddy-run/results.txt`. Cut-off probe -> `$A/cutoff-probe/`.
+- V10 `bash -n` OK; live pre-deploy check.sh: BAD only play. `/privacy/` `/terms/` (still served by today's game), apex/www SKIP (DNS), `--strict` BAD, exit 1, as designed -> `$A/checks/check-live.txt`.
+- V11 graphical-audit 0 drift, 2 site-only additions intentional -> `$A/audit.md` (no style file changed since).
+- V12 CI `check` green on `3e534ee5` (old Vercel check fails; ignored, project deleted).
+- V13 every artifact dir has its COMMAND.txt; also `$A/shots/`, `$A/skills/SOURCES.txt`, `$A/legal-diff.txt`. `$A=/srv/critter-ai/agent-state/missions/cc-website`.
+
+**Reviews:** architecture Fable APPROVE, Astra APPROVE (0 MUST-FIX each); code review Astra APPROVE_WITH_CHANGES, its MUST-FIX fixed in S9.
+
+**Astra code review SHOULD-CONSIDER, for the owner:** (1) `e2e:site` tests only the granted-clipboard Copy path, not a denied clipboard; (2) run the full game e2e on WSL (VPS shows 524/574, known timing failure).
+
+**Owner's steps** (handoff H3; 051 §10): 1. merge PR #36; `npm run deploy` (play. OK, apex/www SKIP, ACME errors expected until DNS). 2. Namecheap: `@` A -> `178.156.159.183`, `www` CNAME -> `critterconnect.org.`; leave play, clerk, mail, db. 3. After propagation `bash deploy/check.sh --strict`: all OK. 4-5. Clerk Terms/Privacy URLs and Google Auth Platform branding links to `https://critterconnect.org/`, `/privacy/`, `/terms/`. Rollback: `git revert`, `npm run deploy`; no DNS rollback (Vercel gone).
