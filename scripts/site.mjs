@@ -1,4 +1,5 @@
-// Website build (plan 051 §10): src/site -> out/site, static files for critterconnect.org (pages, stylesheet, shots, og.png).
+// Website build (plan 051 §10): src/site -> out/site, static files for critterconnect.org (pages, stylesheet, shots, og.png,
+// /teachers/' inline class link script).
 // `npm run site:build`; preview with `npm run site:serve`. Deterministic: same sources, same bytes.
 //
 // Not run through scripts/run-typescript.mjs: Tailwind's native modules can't be bundled, so this calls
@@ -38,6 +39,20 @@ async function compileCss() {
   return result.css;
 }
 
+/** The class link maker's browser code (src/site/classLink.client.ts), minified for /teachers/ to inline. */
+async function bundleClient() {
+  const { outputFiles } = await build({
+    entryPoints: [path.join(siteDir, 'classLink.client.ts')],
+    bundle: true,
+    minify: true,
+    format: 'iife',
+    target: 'es2020',
+    write: false,
+    logLevel: 'warning',
+  });
+  return outputFiles[0].text.trim();
+}
+
 /** Bundles src/site/render.tsx for Node and returns its renderSite(). */
 async function loadRenderer() {
   const tempDir = mkdtempSync(path.join(os.tmpdir(), 'cc-site-'));
@@ -68,7 +83,8 @@ const shots = Object.fromEntries(readdirSync(shotsDir).filter(file => file.endsW
   .map(file => [file, writeHashed(file, readFileSync(path.join(shotsDir, file)))]));
 const ogImage = writeHashed('og.png', readFileSync(path.join(siteDir, 'og.png')));
 const renderSite = await loadRenderer();
-for (const { file, content } of await renderSite({ stylesheet, ogImage, shots })) writeOut(file, content);
+const classLinkScript = await bundleClient();
+for (const { file, content } of await renderSite({ stylesheet, ogImage, shots, classLinkScript })) writeOut(file, content);
 
 // The game's served fonts, wordmarks and favicon, at the same paths (globals.css names /fonts/...).
 cpSync(path.join(root, 'public/fonts'), path.join(outDir, 'fonts'), { recursive: true });

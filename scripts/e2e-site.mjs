@@ -2,7 +2,8 @@
 // (src/site -> out/site) on a phone and a desktop, in light and dark, and checks what a visitor and a
 // search engine get: axe-core WCAG 2.1 AA with no exceptions, one h1, landmarks, the skip link and
 // keyboard focus, no small text, scrolling to the footer, meta tags from src/site/config.ts (og.png served), Play links,
-// the site-only button fill, no script files, same-origin requests only, no console errors.
+// the site-only button fill, no script files and < 2 KB of inline script, same-origin requests only, no console errors;
+// and /teachers/' class link (a random seed per load, Copy, the example without JS).
 // Repeatable artifact:
 //   e2e-artifacts/<run>-site/report.json               every check, per page, size and mode
 //   e2e-artifacts/<run>-site/site-<page>-<width>-<mode>.png   each page in full
@@ -31,7 +32,7 @@ const AXE_SOURCE = readFileSync(createRequire(import.meta.url).resolve('axe-core
 // The page list and its words come from the site's own config (plain TS with no imports), so the test
 // can't drift from the build. Every page there is tested.
 const config = await import(`data:text/javascript,${encodeURIComponent((await transform(readFileSync(path.join(root, 'src/site/config.ts'), 'utf8'), { loader: 'ts', format: 'esm' })).code)}`);
-const { OG_IMAGE, PAGES, PLAY_URL, SITE_URL } = config;
+const { CLASS_LINK_EXAMPLE_SEED, OG_IMAGE, PAGES, PLAY_URL, SITE_URL, classLinkUrl } = config;
 // The share picture: the hashed og.png on the apex (scripts/site.mjs).
 const OG_URL = new RegExp(`^${SITE_URL.replace(/[.]/g, '\\.')}/site/og\\.[0-9a-f]{10}\\.png$`);
 const pages = Object.values(PAGES);
@@ -45,6 +46,9 @@ const check = (name, ok, detail = '') => {
   if (!ok) console.log(`  FAIL ${name}${detail ? `: ${detail}` : ''}`);
 };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+// plan 051 §11: the theme script and the class link's, together.
+const INLINE_SCRIPT_MAX = 2048;
+const CLASS_LINK = new RegExp(`^${classLinkUrl(0).replace(/0$/, '').replace(/[.?/]/g, '\\$&')}(\\d+)$`);
 
 /** Everything a test reads from one rendered page, gathered in the page. */
 function readPage() {
@@ -190,7 +194,11 @@ async function testPage(browser, page, viewport, mode) {
   });
   check(`${name}: every picture loads`, pictures.broken.length === 0, pictures.broken.length ? pictures.broken.join(', ') : `${pictures.count} pictures`);
 
-  await tab.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); }); // the shot shows the page, not the last focus
+  await tab.evaluate(() => { // the shot shows the page, not the last focus or a field's selected text
+    document.activeElement?.blur();
+    for (const field of document.querySelectorAll('input')) field.setSelectionRange(0, 0);
+    window.scrollTo(0, 0);
+  });
   const { cssContentSize } = await tab.page('Page.getLayoutMetrics');
   const { data } = await tab.page('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width: viewport.width, height: Math.ceil(cssContentSize.height), scale: 1 } });
   const shot = `site-${slug(page)}-${viewport.width}-${mode}.png`;
@@ -203,6 +211,51 @@ async function testPage(browser, page, viewport, mode) {
   check(`${name}: no console errors or failed requests`, errors.length === 0, errors.slice(0, 3).join(' | '));
   if (report.checks.length === before) check(`${name}: ran its checks`, false);
   await browser.send('Target.closeTarget', { targetId: tab.targetId });
+}
+
+/** Opens /teachers/ in a fresh tab (JS on or off) and returns the tab with the class link's field, Copy and live line. */
+async function openClassLink(browser, { javascript = true } = {}) {
+  const tab = await openPage(browser);
+  await tab.page('Page.enable');
+  await tab.page('Emulation.setFocusEmulationEnabled', { enabled: true }); // the clipboard needs a focused page
+  if (!javascript) await tab.page('Emulation.setScriptExecutionDisabled', { value: true });
+  await tab.page('Page.navigate', { url: `${BASE}${PAGES.teachers.path}` });
+  await tab.waitFor(() => document.readyState === 'complete' && document.getElementById('class-link'), 'the class link');
+  const read = () => tab.evaluate(() => {
+    const copy = document.getElementById('class-link-copy');
+    return { value: document.getElementById('class-link').value, copyShown: Boolean(copy?.getClientRects().length), status: document.getElementById('class-link-status').textContent };
+  });
+  return { tab, read, close: () => browser.send('Target.closeTarget', { targetId: tab.targetId }) };
+}
+
+/** plan 051 §11: two loads give two different valid links; Copy fills the clipboard and says "Copied"; without JS the example shows. */
+async function testClassLink(browser) {
+  const seeds = [];
+  for (let load = 0; load < 2; load++) {
+    const { read, close } = await openClassLink(browser);
+    const { value } = await read();
+    const seed = Number(CLASS_LINK.exec(value)?.[1]);
+    check(`class link, load ${load + 1}: a link to a seed in 1…4294967295`, Number.isInteger(seed) && seed >= 1 && seed <= 0xffff_ffff, value);
+    seeds.push(value);
+    await close();
+  }
+  check('class link: two loads give two different links', seeds[0] !== seeds[1], seeds.join(' | '));
+
+  const { tab, read, close } = await openClassLink(browser);
+  await browser.send('Browser.grantPermissions', { origin: new URL(BASE).origin, permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'] });
+  const before = await read();
+  check('class link: Copy shows with JS', before.copyShown && before.status === '', JSON.stringify(before));
+  const box = await tab.evaluate(() => { const copy = document.getElementById('class-link-copy'); copy.scrollIntoView({ block: 'center' }); const r = copy.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  for (const type of ['mousePressed', 'mouseReleased']) await tab.page('Input.dispatchMouseEvent', { type, ...box, button: 'left', clickCount: 1 });
+  const status = await tab.waitFor(() => document.getElementById('class-link-status').textContent, 'the live line', 3000).catch(() => '');
+  const clipboard = await tab.evaluate(() => navigator.clipboard.readText());
+  check('class link: Copy fills the clipboard and the live line says "Copied"', status === 'Copied' && clipboard === before.value, JSON.stringify({ status, clipboard }));
+  await close();
+
+  const noJs = await openClassLink(browser, { javascript: false });
+  const shown = await noJs.read();
+  check('class link: without JS, the fixed example and no Copy', shown.value === classLinkUrl(CLASS_LINK_EXAMPLE_SEED) && !shown.copyShown, JSON.stringify(shown));
+  await noJs.close();
 }
 
 async function main() {
@@ -220,6 +273,8 @@ async function main() {
     const html = await response.text();
     check(`${page.path}: served (200)`, response.status === 200, `${response.status}`);
     check(`${page.path}: no <script src`, !/<script[^>]*\ssrc\s*=/i.test(html));
+    const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].reduce((sum, match) => sum + Buffer.byteLength(match[1]), 0);
+    check(`${page.path}: inline scripts under ${INLINE_SCRIPT_MAX} bytes`, inline > 0 && inline < INLINE_SCRIPT_MAX, `${inline} bytes`);
   }
   // The share picture is served here as a 1200x630 PNG (its size from the PNG header).
   const ogTag = (await (await fetch(`${BASE}${pages[0].path}`)).text()).match(/<meta property="og:image" content="([^"]+)"/)?.[1] ?? '';
@@ -242,6 +297,7 @@ async function main() {
         for (const mode of MODES) await testPage(browser, page, viewport, mode);
       }
     }
+    await testClassLink(browser);
   } finally {
     await close();
   }

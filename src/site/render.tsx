@@ -8,21 +8,24 @@ import { PAGES, SITE_URL, type SitePage } from './config';
 import Layout, { type PhotoCredit } from './Layout';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import Teachers from './pages/Teachers';
 import { SHOTS, type ShotImage, type ShotName } from './shots';
 
 export type SiteFile = { file: string; content: string };
-/** URL paths of the hashed files scripts/site.mjs wrote: the stylesheet, og.png and each file in src/site/shots/. */
-export type SiteAssets = { stylesheet: string; ogImage: string; shots: Record<string, string> };
+/** URL paths of the hashed files scripts/site.mjs wrote: the stylesheet, og.png and each file in src/site/shots/;
+ * plus classLink.client.ts bundled and minified, which /teachers/ inlines. */
+export type SiteAssets = { stylesheet: string; ogImage: string; shots: Record<string, string>; classLinkScript: string };
 /** The animals in db/content/animals (plan 051 §5: counted at build, never typed in): the total and each class, largest first. */
 export type AnimalCount = { total: number; classes: Array<{ name: string; count: number }> };
 /** A page gets only the shots its route lists, so the footer credits every photo it shows. */
-export type PageProps = { shots: Partial<Record<ShotName, ShotImage>>; animals: AnimalCount };
+export type PageProps = { shots: Partial<Record<ShotName, ShotImage>>; animals: AnimalCount; classLinkScript: string };
 
 /** Plural names for the taxonomic classes in the content; a class missing here fails the build. */
 const CLASS_NAMES: Record<string, string> = { Mammalia: 'mammals', Amphibia: 'amphibians', Reptilia: 'reptiles', Aves: 'birds' };
 
 const ROUTES: Array<{ page: SitePage; Page: ComponentType<PageProps>; shots: ShotName[] }> = [
   { page: PAGES.home, Page: Home, shots: ['heroBoard', 'boardPhone', 'globe', 'fieldGuide', 'globeFound', 'journal', 'roundEnd'] },
+  { page: PAGES.teachers, Page: Teachers, shots: ['gridMarked', 'fieldGuide', 'witnessNote', 'roundEnd', 'journal'] },
   { page: PAGES.notFound, Page: NotFound, shots: [] },
 ];
 
@@ -70,7 +73,7 @@ export async function renderSite(assets: SiteAssets): Promise<SiteFile[]> {
     const pageCredits = [...new Map(shots.flatMap(name => credits[name]).map(credit => [credit.id, credit])).values()];
     const pageShots = Object.fromEntries(shots.map(name => [name, images[name]]));
     const html = renderToStaticMarkup(
-      <Layout page={page} stylesheet={assets.stylesheet} ogImage={assets.ogImage} credits={pageCredits}><Page shots={pageShots} animals={animals} /></Layout>,
+      <Layout page={page} stylesheet={assets.stylesheet} ogImage={assets.ogImage} credits={pageCredits}><Page shots={pageShots} animals={animals} classLinkScript={assets.classLinkScript} /></Layout>,
     );
     return { file: page.file, content: `<!DOCTYPE html>${html}\n` };
   });
