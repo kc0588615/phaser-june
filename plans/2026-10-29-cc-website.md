@@ -129,7 +129,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -137,6 +137,12 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+2026-10-29, worktree at `e61fb53e` (origin/main `0bbbeb0e`), Node 24.21.
+- Install: `npm ci` clean (npm's install-script gate skipped postinstalls; esbuild, Tailwind oxide arm64 still load). Migrate: n/a (no migration history; DB is the shared dev copy).
+- `npm run typecheck`: pass. `npm run lint`: exit 0. `npm test`: 47/47. `npm run build`: pass (pages `/`, `/explore`, `/login`, `/privacy`, `/terms`).
+- `npm run e2e` (dev server :3100, Playwright Chromium 1208 via `--no-sandbox` wrapper `/srv/critter-ai/agent-state/missions/cc-website/bin/chrome`), run twice: **524/574** then **523/574**. Same known VPS timing failure as cc-landing-plan's baseline (523/574): time-based hold check / tap-scout check fails, then the field guide photo covers the board (`nothing on screen covers the board` x45), round 1 never ends. Not code; owner's WSL run is the full-pass reference. This is the bar for "no new failures".
+- Artifacts: `/srv/critter-ai/agent-state/missions/cc-website/baseline-e2e/` (both runs' report.json + screenshots, logs, build and test logs). Reproduce: `npx next dev -p 3100`, then `E2E_BASE_URL=http://localhost:3100 CHROME_PATH=/srv/critter-ai/agent-state/missions/cc-website/bin/chrome npm run e2e`.
 
 ## Architecture
 
@@ -157,5 +163,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 ## Decisions
 
 ## Log
+
+- 2026-10-29 11:14 UTC: Baseline. typecheck, lint, 47/47 unit, build pass; game e2e 524/574 and 523/574 (known VPS timing failure, matches prior baseline).
 
 ## Summary
