@@ -1,4 +1,4 @@
-// Website build (plan 051 §10): src/site -> out/site, static files for critterconnect.org.
+// Website build (plan 051 §10): src/site -> out/site, static files for critterconnect.org (pages, stylesheet, shots, og.png).
 // `npm run site:build`; preview with `npm run site:serve`. Deterministic: same sources, same bytes.
 //
 // Not run through scripts/run-typescript.mjs: Tailwind's native modules can't be bundled, so this calls
@@ -7,7 +7,7 @@ import { build } from 'esbuild';
 import postcss from 'postcss';
 import tailwind from '@tailwindcss/postcss';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
@@ -62,8 +62,13 @@ rmSync(outDir, { recursive: true, force: true });
 mkdirSync(path.join(outDir, 'site'), { recursive: true });
 
 const stylesheet = writeHashed('site.css', await compileCss());
+// The game's screenshots (src/site/shots.ts) and the share picture, hashed like the stylesheet.
+const shotsDir = path.join(siteDir, 'shots');
+const shots = Object.fromEntries(readdirSync(shotsDir).filter(file => file.endsWith('.webp')).sort()
+  .map(file => [file, writeHashed(file, readFileSync(path.join(shotsDir, file)))]));
+const ogImage = writeHashed('og.png', readFileSync(path.join(siteDir, 'og.png')));
 const renderSite = await loadRenderer();
-for (const { file, content } of renderSite({ stylesheet })) writeOut(file, content);
+for (const { file, content } of await renderSite({ stylesheet, ogImage, shots })) writeOut(file, content);
 
 // The game's served fonts, wordmarks and favicon, at the same paths (globals.css names /fonts/...).
 cpSync(path.join(root, 'public/fonts'), path.join(outDir, 'fonts'), { recursive: true });

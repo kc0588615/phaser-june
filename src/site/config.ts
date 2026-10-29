@@ -5,6 +5,8 @@ export const SITE_URL = 'https://critterconnect.org';
 export const PLAY_URL = 'https://play.critterconnect.org/';
 export const CONTACT_EMAIL = 'privacy@critterconnect.org';
 export const OPERATOR = 'Haunted Pavement LLC';
+/** The share picture: src/site/og.png, the game at 1200x630 (a round start, seed 1, Africa; see shots.ts). PNG, as some scrapers reject WebP. */
+export const OG_IMAGE = { width: 1200, height: 630, alt: 'A round of Critter Connect: five animal cards pinned on a board of gems, the evidence grid beside it' };
 
 export type SitePage = {
   /** URL path on the apex. */

@@ -1,7 +1,7 @@
 // End-to-end test of the website (plan 051 §11): headless Chrome opens every page of the served build
 // (src/site -> out/site) on a phone and a desktop, in light and dark, and checks what a visitor and a
 // search engine get: axe-core WCAG 2.1 AA with no exceptions, one h1, landmarks, the skip link and
-// keyboard focus, no small text, scrolling to the footer, meta tags from src/site/config.ts, Play links,
+// keyboard focus, no small text, scrolling to the footer, meta tags from src/site/config.ts (og.png served), Play links,
 // the site-only button fill, no script files, same-origin requests only, no console errors.
 // Repeatable artifact:
 //   e2e-artifacts/<run>-site/report.json               every check, per page, size and mode
@@ -31,7 +31,9 @@ const AXE_SOURCE = readFileSync(createRequire(import.meta.url).resolve('axe-core
 // The page list and its words come from the site's own config (plain TS with no imports), so the test
 // can't drift from the build. Every page there is tested.
 const config = await import(`data:text/javascript,${encodeURIComponent((await transform(readFileSync(path.join(root, 'src/site/config.ts'), 'utf8'), { loader: 'ts', format: 'esm' })).code)}`);
-const { PAGES, PLAY_URL, SITE_URL } = config;
+const { OG_IMAGE, PAGES, PLAY_URL, SITE_URL } = config;
+// The share picture: the hashed og.png on the apex (scripts/site.mjs).
+const OG_URL = new RegExp(`^${SITE_URL.replace(/[.]/g, '\\.')}/site/og\\.[0-9a-f]{10}\\.png$`);
 const pages = Object.values(PAGES);
 const slug = page => page.path === '/' ? 'home' : page.path.replace(/\.html$/, '').replace(/^\/|\/$/g, '');
 
@@ -135,9 +137,14 @@ async function testPage(browser, page, viewport, mode) {
   check(`${name}: ${page.indexed ? 'the exact apex canonical' : 'noindex and no canonical'}`,
     page.indexed ? shown.canonical.length === 1 && shown.canonical[0] === url && shown.robots === null : shown.canonical.length === 0 && shown.robots === 'noindex',
     JSON.stringify({ canonical: shown.canonical, robots: shown.robots }));
-  const og = { 'og:type': 'website', 'og:site_name': 'Critter Connect', 'og:title': page.title, 'og:description': page.description, ...(page.indexed ? { 'og:url': url } : {}) };
-  check(`${name}: og tags`, JSON.stringify(shown.og) === JSON.stringify(og), JSON.stringify(shown.og));
-  check(`${name}: twitter tags`, Boolean(shown.twitter['twitter:card']) && shown.twitter['twitter:title'] === page.title && shown.twitter['twitter:description'] === page.description, JSON.stringify(shown.twitter));
+  const image = shown.og['og:image'] ?? '';
+  const og = {
+    'og:type': 'website', 'og:site_name': 'Critter Connect', 'og:title': page.title, 'og:description': page.description, ...(page.indexed ? { 'og:url': url } : {}),
+    'og:image': image, 'og:image:type': 'image/png', 'og:image:width': String(OG_IMAGE.width), 'og:image:height': String(OG_IMAGE.height), 'og:image:alt': OG_IMAGE.alt,
+  };
+  check(`${name}: og tags, og:image the apex og.png`, OG_URL.test(image) && JSON.stringify(shown.og) === JSON.stringify(og), JSON.stringify(shown.og));
+  const twitter = { 'twitter:card': 'summary_large_image', 'twitter:title': page.title, 'twitter:description': page.description, 'twitter:image': image, 'twitter:image:alt': OG_IMAGE.alt };
+  check(`${name}: twitter tags, the same image`, JSON.stringify(shown.twitter) === JSON.stringify(twitter), JSON.stringify(shown.twitter));
   check(`${name}: one h1`, shown.h1 === 1, `${shown.h1}`);
   check(`${name}: one header, main and footer`, Object.values(shown.landmarks).every(count => count === 1), JSON.stringify(shown.landmarks));
   check(`${name}: alt on every image`, shown.noAlt.length === 0, shown.noAlt.join(', '));
@@ -204,6 +211,13 @@ async function main() {
     check(`${page.path}: served (200)`, response.status === 200, `${response.status}`);
     check(`${page.path}: no <script src`, !/<script[^>]*\ssrc\s*=/i.test(html));
   }
+  // The share picture is served here as a 1200x630 PNG (its size from the PNG header).
+  const ogTag = (await (await fetch(`${BASE}${pages[0].path}`)).text()).match(/<meta property="og:image" content="([^"]+)"/)?.[1] ?? '';
+  const ogResponse = OG_URL.test(ogTag) ? await fetch(`${BASE}${new URL(ogTag).pathname}`) : null;
+  const png = ogResponse?.ok ? Buffer.from(await ogResponse.arrayBuffer()) : Buffer.alloc(0);
+  const ogSize = png.length > 24 && png.toString('latin1', 1, 4) === 'PNG' ? [png.readUInt32BE(16), png.readUInt32BE(20)] : null;
+  check('og.png is served here: 200, image/png, its tagged size', ogResponse?.status === 200 && ogResponse.headers.get('content-type')?.startsWith('image/png') && ogSize?.join('x') === `${OG_IMAGE.width}x${OG_IMAGE.height}`,
+    JSON.stringify({ ogTag, status: ogResponse?.status ?? null, type: ogResponse?.headers.get('content-type') ?? null, size: ogSize }));
   const robots = await (await fetch(`${BASE}/robots.txt`)).text();
   check('robots.txt names the sitemap', robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`), robots);
   const sitemap = await (await fetch(`${BASE}/sitemap.xml`)).text();
