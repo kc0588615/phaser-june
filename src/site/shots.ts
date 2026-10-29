@@ -62,3 +62,5 @@ export const SHOTS = {
 } satisfies Record<string, Shot>;
 
 export type ShotName = keyof typeof SHOTS;
+/** A shot as a page shows it: its record plus its hashed URL (render.tsx). */
+export type ShotImage = Shot & { src: string };

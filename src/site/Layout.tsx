@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 import Wordmark from '@/components/Wordmark';
 import { THEME_COLORS, THEME_SCRIPT } from '@/lib/theme';
 import { CONTACT_EMAIL, OG_IMAGE, OPERATOR, PLAY_URL, SITE_URL, type SitePage } from './config';
-
-const LINK = 'text-neutral-10 underline';
+import { LINK } from './roles';
 
 /** A photo shown in the page's screenshots, credited in its footer (plan 051 §9): the profile's Commons credit. */
 export type PhotoCredit = { id: number; name: string; credit: string; license: string; page: string };

@@ -180,6 +180,16 @@ async function testPage(browser, page, viewport, mode) {
   }, AXE_TAGS);
   check(`${name}: axe ${AXE_TAGS.join('/')} finds no violations`, axe.passes > 0 && axe.violations.length === 0, axe.violations.length ? JSON.stringify(axe.violations) : `${axe.passes} rules passed`);
 
+  // Every picture loads (lazy ones too, so the full-page shot shows them); a broken one fails here.
+  const pictures = await tab.evaluate(async () => {
+    const images = [...document.images];
+    for (const image of images) image.loading = 'eager';
+    const broken = [];
+    for (const image of images) await image.decode().catch(() => broken.push(image.currentSrc || image.src));
+    return { count: images.length, broken };
+  });
+  check(`${name}: every picture loads`, pictures.broken.length === 0, pictures.broken.length ? pictures.broken.join(', ') : `${pictures.count} pictures`);
+
   await tab.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); }); // the shot shows the page, not the last focus
   const { cssContentSize } = await tab.page('Page.getLayoutMetrics');
   const { data } = await tab.page('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width: viewport.width, height: Math.ceil(cssContentSize.height), scale: 1 } });
