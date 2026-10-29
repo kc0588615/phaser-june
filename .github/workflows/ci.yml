@@ -21,6 +21,8 @@ jobs:
         run: |
           ! git grep -nIE '@supabase|supabase\.co|@prisma|schema\.prisma' -- src scripts tests db package.json
       - run: npm test
+      # The website (plan 051): static files for critterconnect.org.
+      - run: npm run site:build
       # Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys.
       - run: npm run build
         env:

@@ -6,9 +6,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-const ROOTS = ['src/components', 'src/pages'];
-// Map paint (MapLibre/SVG range map) and the browser theme-color meta take literal colours.
-const HEX_ALLOWED = new Set(['src/components/globe/Globe.tsx', 'src/components/clueGame/RangeMap.tsx', 'src/pages/_app.tsx']);
+const ROOTS = ['src/components', 'src/pages', 'src/site'];
+// Map paint (MapLibre/SVG range map) takes literal colours.
+const HEX_ALLOWED = new Set(['src/components/globe/Globe.tsx', 'src/components/clueGame/RangeMap.tsx']);
 
 const COLOR_UTIL = '(?:bg|text|border|ring|outline|fill|stroke|from|via|to|decoration|divide|placeholder|caret|accent|shadow)';
 const RULES = [

@@ -407,7 +407,7 @@ Order vs the brief's 6 units:
 - Shipping comes after `/`, because CI's `/srv/site/index.html` check needs `index.html`.
 - The CI grep guard lands with the legal deletion, because it fails on `terms.tsx:30` until then.
 
-- [ ] S1. Site build foundation, shared modules, guards; draft PR.
+- [x] S1. Site build foundation, shared modules, guards; draft PR.
   - Shared modules (051 §4 Layout, §9; A1):
     - `src/lib/theme.ts` exports the theme-color pair, and `src/pages/_app.tsx` imports it.
     - `src/components/Wordmark.tsx`: the same two `<img>` in a fragment (A1), keeping both `eslint-disable-next-line @next/next/no-img-element` comments (R7). `GlobeScreen.tsx:55-58` uses it.
@@ -690,6 +690,11 @@ Only the two check scripts are tested in isolation (the site and the game are co
 
 - 2026-10-29 (Revision): Astra SC1 (rendered game style check) and SC3 (keep old hashed site assets) rejected; reasons under Revision notes.
 - 2026-10-29 (Steps): 8 steps, not the brief's 6: infra split (S1 build, S5 shipping); `e2e:site` early (S2) so pages get axe as built; shipping after `/` (CI's index.html check); grep guard with legal deletion (S7); draft PR opened in S1 so CI runs per push. Other (P) calls recorded when their step lands.
+- 2026-10-29 (S1, P): `@next/next/*` rules off for `src/site/**`, listed from the plugin itself in `eslint.config.mjs` (not hand-enumerated), so new Next rules stay off there too.
+- 2026-10-29 (S1): the 404 has `robots noindex` and no canonical or `og:url` (`SitePage.indexed: false`); it isn't in the sitemap. S2's canonical check skips it. `twitter:card` is `summary` until S3 adds `og.png` and switches it to `summary_large_image`.
+- 2026-10-29 (S1): `src/lib/contentProfiles.ts` also exports `CONTENT_DIR`/`ANIMALS_DIR`, which `scripts/content.ts` still needs for `writeProfile` and `sources.json` (one definition of the paths).
+- 2026-10-29 (S1): globals.css's `body` rule is unlayered, so it beats utilities on `<body>` (ground, text color, 14px). The site keeps that rule for ground and color (cte-canvas/cte-text = neutral-1/neutral-10) and sets `text-m` on `<main>` and the header link instead. Header wordmark link is `min-w-0` (it shrinks, as on the globe) so header stays one row at 390.
+- 2026-10-29 (S1): `npm install --offline` failed (ENOTCACHED); used `--prefer-offline` with the same pins. `package-lock.json` diff is the 2 root devDependency lines only.
 - 2026-10-29 (Architecture): both theme additions (site-only darker primary fill, `--space-xxxl`) live in `src/site/site.css`, not `src/styles/globals.css`. Brief's scope listed `globals.css`; addendum item 1 (game theme stays exactly as is, byte-for-byte proof) wins. Proof: new `scripts/check-game-css.mjs` compiles game CSS on origin/main vs HEAD, must match.
 
 ## Log
@@ -700,5 +705,6 @@ Only the two check scripts are tested in isolation (the site and the game are co
 - 2026-10-29 11:35 UTC: Astra review. APPROVE, 0 MUST-FIX; 3 SHOULD-CONSIDER (rendered game style check, strict post-DNS check.sh, keep old hashed assets). No code changed.
 - 2026-10-29 11:36 UTC: Revision. No MUST-FIX, no architect round; 9 small review items accepted (R1-R9) and 2 Astra SC rejected, under Revision notes. No code changed.
 - 2026-10-29 11:50 UTC: Steps. planner wrote S1-S8, Verification V1-V13, Failure modes (check-game-css, check.sh). No code changed.
+- 2026-10-29 11:58 UTC: S1. Site build (`site:build`/`site:serve`, `src/site/` config, Layout, NotFound, render, site.css with the 2 site-only additions), Wordmark/THEME_COLORS/contentProfiles shared, ESLint + check-theme guards (probed), devDeps declared, CI `site:build`. typecheck, lint, 47/47, build pass; site build deterministic (`diff -r` empty), 404 has no `<script src`; game e2e 523/574, 0 new failure kinds; globe wordmark right in light/dark. Artifacts `$A/checks/s1/`, `$A/game-e2e/s1/`.
 
 ## Summary
