@@ -130,7 +130,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -145,6 +145,199 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 - Artifacts: `/srv/critter-ai/agent-state/missions/cc-website/baseline-e2e/` (both runs' report.json + screenshots, logs, build and test logs). Reproduce: `npx next dev -p 3100`, then `E2E_BASE_URL=http://localhost:3100 CHROME_PATH=/srv/critter-ai/agent-state/missions/cc-website/bin/chrome npm run e2e`.
 
 ## Architecture
+
+2026-10-29, architect. I checked the repo at `78845f09`. Its code equals origin/main `0bbbeb0e`, and no code has changed since 051's line refs at `acffc179` (`git diff --stat acffc179 0bbbeb0e` shows only `plans/`). 051 is the design. This section records only the repo deltas and the addendum's changes.
+
+### Findings
+
+**051 still matches the repo.** Verified:
+- `globals.css:371-376` scroll lock
+- `_app.tsx:11` ClerkProvider; `_app.tsx:15-16` theme-color hexes, and `check-theme.mjs:11` lists `_app.tsx` in `HEX_ALLOWED`
+- `GlobeScreen.tsx:55-58` wordmark pair
+- `LegalPage.tsx:5`, `:13`, `:16`
+- `scripts/content.ts:23` `readProfiles`
+- `scripts/e2e.mjs:45-90` CDP client and launcher; the field-guide shot point is around l.343-354
+- `docker-compose.app.yml:33` single-file Caddyfile mount
+- `deploy.sh:43-45` curl loop
+- `ci.yml`: one `check` job, no Docker step
+- `ANIMAL_RULES` at `animalBoard.ts:56`; `useAnimalSession.ts:28-31`; `CLUE_MATCH.md:10`, `:23`, `:98`
+- lockfile: esbuild 0.19.12 and axe-core 4.11.0, dev and transitive only (via drizzle-kit and jsx-a11y); sharp 0.35.4 optional via next
+- `.dockerignore`'s `*.png` matches root-level files only
+
+**Deltas vs 051 (repo facts):**
+- **D1. The button token doesn't exist yet.** There is no `--button-primary-background` today. `.btn-primary` reads `--color-1` directly (`globals.css:415`), with a `--neutral-1` label. Under the addendum the token is new and lives only in the site (A1).
+- **D2. Tailwind scans the whole repo for the game.** `globals.css:1` is a bare `@import "tailwindcss"`, and `postcss.config.js` sets no `base`. So the game's Next CSS picks up candidates from every file that isn't gitignored: `src/site/**`, and today already `plans/**`, `docs/**` and `scripts/**`. The game's built CSS will therefore gain site-only utilities. No game element uses them, but comparing the two `next build` CSS files can never come out byte-equal. Proven in `/tmp` today:
+  - compiling `globals.css` over `git archive HEAD src` alone takes 0.2 s and gives the same bytes twice;
+  - deleting the 3 legal files removes only LegalPage's own utilities (`max-w-2xl`, `space-y-m`, `py-xxl`, the `[&_h2]`/`[&_a]`/`[&_ul]` set), plus their `--container-2xl`, `--tw-space-y-reverse` and `@property` lines.
+- **D3. Nothing in the game links to privacy, terms or teachers.** I searched with `rg -i "privacy|/terms|teachers"` across `src/`, `next.config.mjs`, `scripts/`, `tests/`, `public/`, `deploy/` and `.github/`, and checked every `href`/`<Link`/`router.push` in `src/`. The complete list:
+  - `src/pages/terms.tsx:30`: `<Link href="/privacy">`. It moves to the site as `<a href="/privacy/">`, served on the apex.
+  - `src/pages/privacy.tsx:53` and `terms.tsx:35`: `mailto:${CONTACT_EMAIL}`. These move too.
+  - `src/pages/login.tsx:6` `<SignIn routing="hash" />` and `_app.tsx:11` `<ClerkProvider>` pass no legal URLs (no `termsPageUrl`/`privacyPageUrl`). Any Terms/Privacy link on the sign-in screen comes from the Clerk dashboard, which is the owner's.
+  - `public/branding/critterconnect-oauth-logo.png` shows a Google OAuth consent screen exists. Its home, privacy and terms links are outside the repo (owner).
+  - `docs/DEPLOY.md:119` is a dated record (2026-09-26) that `/privacy/` and `/terms/` returned 200. It's history; leave it.
+
+  So "every game link → absolute apex URL" has no targets in the repo. The work is: delete the pages, add a guard, and list the owner steps.
+- **D4. play. adds trailing slashes.** `next.config.mjs:8` sets `trailingSlash: true`, so play.'s `/privacy` 308s to `/privacy/` and then gets Next's 404. `check.sh` requests the slash forms.
+- **D5. DNS today** (`dig`, 2026-10-29):
+  - apex: A `216.198.79.1`
+  - `www`: CNAME `5ed334e8d7ea0cd8.vercel-dns-017.com.`
+  - `play`: A `178.156.159.183`
+  - no AAAA on any of the three, no CAA, NS `registrar-servers.com`
+
+  So the www step changes a CNAME, and there's no stale AAAA to break ACME.
+- **D6. The pre-DNS proof is gone.** 051 proved the site files live through `play.` before DNS moved. With the clean split that isn't possible, and HTTPS on the apex can't work before DNS either (no certificate). A container-level check replaces it (A3).
+- **D7. The terms' date is a literal.** "Last updated" is a fixed date in `Terms.tsx`: the day the operator sentence lands. It is never computed at build time, because 051 §10 requires a deterministic build with "no dates".
+
+**Code in scope vs the owner's rules.** These are real, and 051 already fixes them:
+- `deploy.sh:43-45` prints status codes but never fails, which breaks fail fast. `check.sh` exits 1 instead.
+- `docker-compose.app.yml:33`'s single-file bind mount means Caddyfile edits never reach a running container. The Caddyfile gets baked into the image.
+- `_app.tsx:15-16` keeps its hexes outside `theme.ts`, which is why it's in `HEX_ALLOWED`. `theme.ts` will export them.
+- `scripts/content.ts:23`'s private `readProfiles` is needed by the site too (DRY). It moves to `src/lib/contentProfiles.ts`.
+- `scripts/e2e.mjs:45-90`'s CDP client is needed by `e2e:site`. It moves to `scripts/cdp.mjs`.
+- `LegalPage.tsx:5` keeps a constant in a component module, and `:13`/`:16` use low-contrast roles. The file is deleted.
+- `run-tests.mjs:4-5` says esbuild is a devDependency, but it's only transitive. 051 declares it.
+
+New finding:
+- The site imports 3 modules from outside `src/site/`: `src/components/Wordmark.tsx`, `src/lib/theme.ts` and `src/lib/contentProfiles.ts`. 051's `no-restricted-imports` guard covers only `src/site/**`. Extend the guard's `files` to those 3, so everything the site bundles stays free of Next and Clerk.
+
+Fine as is: `theme.ts`, `check-theme.mjs`, `.dockerignore`, 051's Dockerfile stages and compose change, and the CI shape. `check-theme.mjs` scans only `.tsx?` files, so token definitions in `site.css` don't trip it.
+
+### Target design (deltas only; the rest is 051 as written)
+
+**A1. Site-only green, and the spacing step with it** (addendum 1)
+- `src/styles/globals.css` stays **unchanged**. Both approved additions go in `src/site/site.css`, right after `@import "../styles/globals.css"`:
+  ```css
+  /* Site-only cc additions (plan 051 §8, H2 answers 3-4; owner 2026-10-29: the game's theme stays as it is). */
+  :root { --button-primary-background: #008663; --space-xxxl: 64px; }   /* white label 4.58:1 (AA) */
+  :root[data-theme="dark"] { --button-primary-background: var(--color-1); }   /* #00906c, label 4.67:1 */
+  @theme inline { --spacing-xxxl: var(--space-xxxl); }
+  @layer components { .btn-primary { background: var(--button-primary-background); } }
+  ```
+  - The override sits inside `@layer components`, not unlayered, so `.btn:disabled` (0,2,0) and utilities still beat it, exactly as in the game.
+  - With no JS there's no `data-theme`, so the light value applies.
+- **Why the spacing step moves too.** The addendum says "the theme the game uses stay exactly as they are", and `xxxl` has no use in the game. Keeping `globals.css` untouched makes the game's stylesheet byte-identical, so the proof is a plain equality. It's the same scale step defined where it's used, not a parallel scale (`gui/theme-contract.md`). This is a delta from the brief's Scope line for `globals.css`.
+- **Proof: new `scripts/check-game-css.mjs`** (~40 lines). Run it in Verification and keep the artifact; it stays out of CI.
+  - Usage: `node scripts/check-game-css.mjs [base=origin/main] [outDir]`. It compares base against `HEAD`, so commit first.
+  - For each ref, `git archive <ref> src` into a temp dir, drop `src/site/`, and symlink `node_modules`. From base, also drop the files `HEAD` deleted (the 3 legal files: pages the game no longer has).
+  - Compile each tree's `src/styles/globals.css` with postcss and `@tailwindcss/postcss({ base: <tree>, optimize: { minify: true } })`. That's the plugin Next uses, minified like the production CSS, so comments don't count.
+  - Write both CSS files and their sha256 to `outDir`. Exit 0 only if they're byte-identical; otherwise print the diff and exit 1.
+  - Don't weaken the check. If a new comment word in a game file adds a utility, reword the comment.
+  - `Wordmark` must return the same two `<img>` (same attributes and classes, a fragment with no wrapper) inside GlobeScreen's existing `<h1>`, so the game's DOM doesn't change either. `maplibre-gl.css` (`_app.tsx:1`) is unchanged.
+  - Claim it exactly in the PR: "the game's stylesheet, compiled from the game's own sources, is byte-identical to origin/main's". Note D2: the real Next CSS can also carry unused utilities that `src/site/` and the plans mention, as plans already cause today.
+- **`e2e:site` adds** a check that `.btn-primary`'s computed `background-color` is `rgb(0, 134, 99)` in light and `rgb(0, 144, 108)` in dark. axe's contrast rule backs this up.
+
+**A2. Clean host split** (addendum 2)
+- **Delete** `src/pages/privacy.tsx`, `src/pages/terms.tsx` and `src/components/LegalPage.tsx`; nothing else imports them. `CONTACT_EMAIL` moves to `src/site/config.ts`.
+  - The legal text lives once, in `src/site/pages/{Privacy,Terms}.tsx`, with the words unchanged apart from the operator sentence and date (051 §4, D7).
+  - No redirect and no Caddy rule: play.'s old paths get Next's 404.
+  - The `npm run build` route list loses `/privacy` and `/terms`.
+- **`deploy/Caddyfile`** replaces 051 §10's. `(common)` is unchanged. The `(site)` snippet is inlined because only the apex uses it now:
+  ```
+  # The game only (plan 051 §10; owner 2026-10-29: clean split, no site paths on play.).
+  {$APP_DOMAIN} {
+  	import common
+  	reverse_proxy app:8080
+  }
+  # The website: static files built into the caddy image (Dockerfile, stage caddy).
+  critterconnect.org {
+  	import common
+  	@game path /explore /explore/* /login /login/* /clue-match /clue-match/* /api/*
+  	redir @game https://{$APP_DOMAIN}{uri} 308
+  	root * /srv/site
+  	header /site/* Cache-Control "public, max-age=31536000, immutable"
+  	file_server
+  	handle_errors 404 {
+  		rewrite * /404.html
+  		file_server
+  	}
+  }
+  www.critterconnect.org {
+  	redir https://critterconnect.org{uri} 308
+  }
+  ```
+  - New expectations for the local `*.test` run: on play., `/`, `/explore/`, `/privacy/`, `/teachers/` and `/site/x` all reach the stub upstream, and none come from files.
+  - The stub upstream sets nosniff and Referrer-Policy, to re-prove that each security header comes back once.
+- **Guard for game links.** A CI step goes right after "No Supabase/Prisma" (`ci.yml:20-22`), in the same pattern. CODING_STANDARDS says fixed patterns belong in a check:
+  `! git grep -nIE "(['\"\`(]|play\.critterconnect\.org)/(privacy|terms|teachers)\b" -- src ':!src/site'`
+  - Verification runs it locally too.
+  - It also fails on a comment, by design: reword the comment.
+- **Site links** stay root-relative on the apex. Play and the class link stay absolute to `play.`. The canonical is the apex, now the only host.
+- **The PR** lists D3 as "every game link to privacy, terms or teachers: none in the repo". Its owner steps outside the repo, done after `check.sh` passes:
+  - **Clerk dashboard** (production instance): set any Terms/Privacy URL (legal consent, Account Portal or component links) to `https://critterconnect.org/terms/` and `https://critterconnect.org/privacy/`. If none is set, nothing to do.
+  - **Google Cloud → Google Auth Platform → Branding** (Google sign-in's consent screen): set the home page to `https://critterconnect.org/`, privacy to `https://critterconnect.org/privacy/` and terms to `https://critterconnect.org/terms/`, if they name `play.`.
+
+**A3. `deploy/check.sh` checks both hosts** (replaces 051 §10's check.sh bullet; addendum 2)
+- Hosts are `PLAY`, `APEX`, `WWW`. Each line prints `OK|BAD|SKIP <url> <expected>`, and the script exits 1 on any `BAD`.
+- **play.** (always):
+  - `/`, `/explore/`, `/api/places/`, `/api/clue-game/pool/` return 200;
+  - `/privacy/`, `/terms/`, `/teachers/` return 404.
+- **apex**, only if `getent ahostsv4 critterconnect.org` equals play.'s IPv4. Otherwise one line: `SKIP critterconnect.org: DNS not moved yet`.
+  - `/`, `/teachers/`, `/privacy/`, `/terms/` return 200 with `<link rel="canonical" href="https://critterconnect.org/…">` and no `<script src`;
+  - every `/site/…` URL in `/` and `/teachers/` returns 200 with its type (CSS, WebP, PNG);
+  - `/robots.txt` and `/sitemap.xml` return 200;
+  - `/nope/` returns 404 with the 404 page's heading;
+  - `/explore/?seed=1` and `/api/places/` 308 to `https://play.critterconnect.org/…`, keeping the query;
+  - a TLS failure prints `BAD … certificate not issued yet: wait a few minutes or run docker restart caddy on the VPS, then rerun`.
+- **www**, with the same DNS guard: `/teachers/` 308s to `https://critterconnect.org/teachers/`.
+- **`deploy.sh` changes:**
+  - Lines 43-45 become `bash deploy/check.sh`; `set -e` then fails the deploy on any BAD.
+  - The remote part gains one line after the health wait (D6): `docker exec caddy test -f /srv/site/index.html`. It fails the deploy if the new caddy image isn't live.
+
+**A4. Vercel is already deleted** (addendum 3). This replaces 051 §10's "Owner's steps" and "Rollback". The PR's owner steps:
+1. `npm run deploy`. `check.sh` prints the play. lines OK and the apex and www lines SKIP. `docker logs caddy` shows ACME errors for the apex and www until step 2; that's expected.
+2. Namecheap → critterconnect.org → Advanced DNS:
+   - `@` A: from `216.198.79.1` to `178.156.159.183`;
+   - `www`: from CNAME `5ed334e8d7ea0cd8.vercel-dns-017.com.` to CNAME `critterconnect.org.`, or A `178.156.159.183`;
+   - leave `play`, `clerk`, mail (MX, SPF TXT) and `db` untouched.
+3. Once DNS has propagated, `bash deploy/check.sh`: every line OK, none SKIP.
+
+Then the Clerk and Google items (A2).
+- Dropped from 051: the TTL pre-step, the `docker restart caddy` step (it survives only as `check.sh`'s hint), the Vercel rollback week and the DNS rollback.
+- Rollback is now `git revert` plus `npm run deploy`.
+- The PR's failing "Vercel" check comes from the old project; ignore it.
+
+**A5. Defaults 3 and 4 stand** (addendum 4). `caddy` is recreated only when its image changes (051's compose `build: target caddy`). The terms' date is per D7.
+
+**A6. What the PR changes in 051** (the addendum: update 051 in the same PR):
+- **Header:** Status.
+- **§1:** legal pages on the apex only; Vercel deleted; the two additions site-only; defaults 1-2 overturned on 2026-10-29, 3-4 stand.
+- **§3:** the "Both hosts" bullet becomes the addendum's host table. The "Links" bullet loses "both hosts" and the wordmark-on-play note.
+- **§4:** the "Actions" row (fill site-only). "Legal pages": the old play. URLs return 404, no redirect, and the game keeps no legal page.
+- **§5 and §7 evidence:** `src/pages/{privacy,terms}.tsx` becomes `src/site/pages/{Privacy,Terms}.tsx`.
+- **§8 theme gaps 1-2:** both now in `site.css`, the game unchanged, proven by `check-game-css`. This replaces "applies to every light-mode `.btn-primary`, the game's too".
+- **§10:** the Caddyfile, local results, `check.sh`, the `deploy.sh` remote line, owner steps and rollback; Guards gains the grep step and `check-game-css`.
+- **§11:** "apex canonical on both hosts" becomes "apex canonical"; add the fill check.
+- **§12:** answer 2(c) is superseded (Vercel deleted 2026-10-29); update the defaults list.
+
+**Scope deltas for the planner:**
+- `globals.css` is no longer changed.
+- New file: `scripts/check-game-css.mjs`.
+- `ci.yml` gains the grep step.
+- The ESLint site guard's `files` adds the 3 shared modules.
+- `docs/DEPLOY.md`'s website section names `check.sh`'s hosts and `check-game-css`.
+- `AGENTS.md:11` ("Hosting") also names the site at critterconnect.org.
+
+**Decisions to record:** A1 to A4 and D7, under Decisions, as the addendum asks.
+
+### Rejected alternatives
+- **Green as a site-named token in `globals.css`:** it ships the value in the game's CSS, and the game's stylesheet would no longer be identical.
+- **`--space-xxxl` in `globals.css`, as the brief wrote it:** it adds a variable the game never uses to the game's CSS, and the proof would need an allowance. The addendum keeps the game's theme as it is.
+- **Diffing the two `next build` CSS files:** it takes two full builds, and Tailwind's repo-wide scan (D2) means the files are never byte-equal.
+- **Computed-style snapshots of running game pages (main vs branch):** two servers, the database and animation timing make it flaky and slow, for the same conclusion.
+- **`@source not "../site"` in `globals.css`:** `site.css` imports `globals.css`, so it would hide the site's own classes.
+- **ESLint `no-restricted-syntax` for game links:** esquery regexes can't contain `/`. `git grep` in CI is the repo's existing pattern.
+- **New Privacy/Terms links in the game menu:** game UI is out of scope, and nothing linked there before.
+- **`curl --resolve` apex check before DNS:** no certificate exists before DNS moves. The container file check replaces it.
+- **`check-game-css` in CI:** it fails by design on any PR that changes the game's styles. It's a per-PR proof for site changes.
+
+### Risks
+- **Legal pages briefly exist nowhere** between step 1 and DNS propagation: play.'s pages are gone and the apex isn't live yet. Clerk and Google links 404 in that window. The owner accepted this (no redirect, and the apex is already down). Do steps 1-3 in one sitting.
+- **Certificates.** Caddy retries ACME with backoff, so the apex and www certificates usually arrive within minutes of DNS. If they don't, `check.sh` shows BAD with the restart hint.
+- **Google consent screen.** If its privacy URL still points to play. (now a 404), Google can flag the app's branding. The owner should update it right after step 3.
+- **Real Next CSS carries extra unused utilities** from `src/site/` (D2). That's harmless, but the PR must phrase the claim as A1 does.
+- **The lockfile.** Declaring esbuild and axe-core must touch only the root `devDependencies` in `package-lock.json`. Use `npm install -D -E --offline esbuild@0.19.12 axe-core@4.11.0`, then `npm ci`, then check that `git diff package-lock.json` is that small.
+- **Hetzner build memory.** BuildKit may run the `site` and `build` stages in parallel. The site build is small, so the risk is low; the existing 2 GB swap covers it.
+- **The game e2e baseline** is 523-524/574 on the VPS (known timing failure). "No new failures" is judged against it; the owner runs the full pass on WSL.
 
 ## Architecture review (Fable)
 
@@ -162,8 +355,11 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 
 ## Decisions
 
+- 2026-10-29 (Architecture): both theme additions (site-only darker primary fill, `--space-xxxl`) live in `src/site/site.css`, not `src/styles/globals.css`. Brief's scope listed `globals.css`; addendum item 1 (game theme stays exactly as is, byte-for-byte proof) wins. Proof: new `scripts/check-game-css.mjs` compiles game CSS on origin/main vs HEAD, must match.
+
 ## Log
 
 - 2026-10-29 11:14 UTC: Baseline. typecheck, lint, 47/47 unit, build pass; game e2e 524/574 and 523/574 (known VPS timing failure, matches prior baseline).
+- 2026-10-29 11:35 UTC: Architecture. architect wrote findings (051 matches repo; no game links to legal pages; Tailwind scans whole repo) and target design incl. addendum (site-only tokens, check-game-css proof, host split, check.sh 3 hosts, no Vercel rollback). No code changed.
 
 ## Summary
