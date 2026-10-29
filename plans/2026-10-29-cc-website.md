@@ -131,7 +131,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -341,6 +341,24 @@ Then the Clerk and Google items (A2).
 
 ## Architecture review (Fable)
 
+2026-10-29, Fable. Checked every cited line against the worktree at `dd1e6b69` (code = origin/main `0bbbeb0e`): `globals.css` (`.btn-primary` reads `--color-1` at l.415; `--color-1: #00906c` defined once, so dark = light value; dark is `[data-theme="dark"]` only, no `prefers-color-scheme`), `postcss.config.js` (no `base`), `next.config.mjs:8` `trailingSlash`, `deploy/Caddyfile`, `docker-compose.app.yml:33` bind mount, `deploy.sh:43-45` non-failing curl loop, `Dockerfile` (one `build` stage, `run` last), `ci.yml` (one job, no Docker), `check-theme.mjs` (`.tsx?` only, `_app.tsx` in `HEX_ALLOWED`), `eslint.config.mjs`, `_app.tsx`, `_document.tsx`, `login.tsx`, `LegalPage.tsx`, `terms.tsx:30`, `scripts/e2e.mjs:45-90`, `scripts/content.ts:23`, `.dockerignore`, `@tailwindcss/postcss` 4.1.11 (`base` and `optimize.minify` options exist). `rg` over `src scripts public deploy .github tests next.config.mjs` confirms D3: the only legal-path link is `terms.tsx:30`, which is deleted. Findings D1-D7 are accurate. The design follows the addendum (site-only green, clean host split, no redirect, no Vercel rollback) and stays small.
+
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+MISSED:
+1. `check-game-css` drops the 3 deleted legal files from the base side, so the proof is "game CSS, excluding the pages the game no longer has". Correct, but the PR claim in A1 must say so ("minus the deleted legal pages' own utilities"), and the script should print which base files it dropped, so a reader can see the allowance is only those 3.
+2. `check.sh`'s apex guard uses the local resolver (`getent`). From WSL the Windows resolver can keep the old Vercel A record for its TTL after Namecheap changes, so step 3 can print SKIP although DNS has moved. The SKIP line should say how to tell (`dig +short critterconnect.org @1.1.1.1`) and that a cached answer needs a few minutes or `ipconfig /flushdns`.
+3. The `www` block has no `import common`, so its 308 carries no HSTS or security headers (inherited from 051). One `import common` line fixes it; harmless to leave, but it is the only host without them.
+
+SHOULD-CONSIDER:
+1. `site.css`: the dark override `:root[data-theme="dark"] { --button-primary-background: var(--color-1) }` is correct (dark `--color-1` is `#00906c`), but comment that the dark value is deliberately the game's own, so a future dark `--color-1` change moves the site with it.
+2. `check-game-css` relies on `git archive origin/main`; have the script `git fetch -q origin main` first (or fail loudly if the ref is stale) so the proof isn't against an old base.
+3. The CI grep guard also matches `clerk.com/legal/privacy`-style paths only if a quote or `(` precedes `/privacy`; it doesn't today, and that's right. Add a one-line comment in `ci.yml` saying the guard is for play.-relative legal/teacher links, so nobody "fixes" it to match bare words.
+4. Keep `Wordmark`'s two `eslint-disable-next-line @next/next/no-img-element` comments with the `<img>`s when they move, or the site build's lint and the game's lint diverge.
+5. A3's apex `/site/…` type check: compare `Content-Type` prefixes (`text/css`, `image/webp`, `image/png`) rather than exact strings; Caddy adds `; charset=utf-8` to CSS.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -361,5 +379,6 @@ Then the Clerk and Google items (A2).
 
 - 2026-10-29 11:14 UTC: Baseline. typecheck, lint, 47/47 unit, build pass; game e2e 524/574 and 523/574 (known VPS timing failure, matches prior baseline).
 - 2026-10-29 11:30 UTC: Architecture. architect wrote findings (051 matches repo; no game links to legal pages; Tailwind scans whole repo) and target design incl. addendum (site-only tokens, check-game-css proof, host split, check.sh 3 hosts, no Vercel rollback). No code changed.
+- 2026-10-29 11:34 UTC: Fable review. APPROVE, 0 MUST-FIX; 3 missed items + 5 SHOULD-CONSIDER for revision. No code changed.
 
 ## Summary
