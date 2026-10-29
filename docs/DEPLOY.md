@@ -59,6 +59,8 @@ critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by 
 
 - **DNS** (Namecheap): `@` A and `www` (CNAME to the apex, or A) point at this VPS, like `play`. Caddy gets each host's certificate once its DNS points here.
 - **`deploy/check.sh`** checks all three hosts and prints `OK`, `BAD` or `SKIP` per line; it exits 1 on any `BAD`. play. always: the game's routes 200, `/privacy/`, `/terms/` and `/teachers/` 404. The apex and www only once their DNS points at play.'s IP (`SKIP` before that): the pages with their canonical and no `<script src`, every `/site/` file with its type, `robots.txt`, `sitemap.xml`, the 404 page, the 308s. `deploy.sh` runs it after every deploy; run `bash deploy/check.sh --strict` (a `SKIP` is `BAD`) after a DNS change. A TLS failure means the certificate isn't issued yet: wait a few minutes or `docker restart caddy`, then rerun.
+- **The game's styles stay the game's.** The site's two cc additions (the darker light-mode primary fill, `--space-xxxl`) live in `src/site/site.css`, never in `globals.css`. `node scripts/check-game-css.mjs [base] [outDir]` (commit first) compiles the game's stylesheet from the game's own sources at `base` (default `origin/main`) and at `HEAD` and fails unless they're byte-identical; run it on a PR that changes the site. Not in CI: it fails by design on a PR that changes the game's styles.
+- **Legal pages** (`/privacy/`, `/terms/`) exist only on the site; CI's "No game links to site pages" step fails on a play.-relative link to them or to `/teachers/` from `src/` outside `src/site/`.
 
 ## Backups
 
