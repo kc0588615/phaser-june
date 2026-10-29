@@ -8,7 +8,7 @@ Guidance for coding agents in this repo. Keep instructions short; prefer facts o
 - ORM: Drizzle (migrated from Prisma, which was migrated from Supabase)
 - Database: PostgreSQL with PostGIS on Hetzner VPS, accessed via PgBouncer with TLS
 - Auth: Clerk
-- Hosting: Hetzner VPS (app at play.critterconnect.org, database/services); local `npm run dev` in WSL for development
+- Hosting: Hetzner VPS (game at play.critterconnect.org, website at critterconnect.org, database/services); local `npm run dev` in WSL for development
 - Docs: `README.md`, `docs/` (Markdown)
 
 ## Important: Prefer Simplicity
@@ -49,6 +49,7 @@ The app is two screens: a globe to pick a continent (`/`) and the game (`/explor
 - Rules (pure): `src/clueGame/` (`animalBoard` round rules, `animalSession` trail/score/streak, `questionMatch` questions + book, `questionMatchContent` content -> rules data, `regions`, `gems`; plus glossary, journal, solveReport, speciesInfo, worldMap, and the content checks traits, deduction, validatePool). Balance bot (gameplay sim, rule experiments): `scripts/balance-044.ts`.
 - Board: `src/game/` (flat). `main.ts` boots `ClueBoardScene.ts` (loads gem SVGs, reports matches). `BoardModel.ts` rules incl. toys (pure), `BoardView.ts` sprites + animation, `toyTextures.ts`, `sfx.ts` (synth sounds, off by default), `BoardController.ts` swipe/tap/keyboard swaps, cascade loop. React <-> Phaser only via typed `EventBus.ts` (`gems-matched`, `clue-board-setup`, `clue-board-lock`, `clue-board-shuffled`, `clue-board-key`, `clue-board-announce`, `clue-board-unscouted`, `current-scene-ready`). Dev bridge `window.__cc` (`debugBridge.ts`).
 - Data: `GET /api/clue-game/pool` (`src/lib/cluePool.ts`), `/api/clue-game/range`, `/api/clue-game/ranges` (globe), `POST /api/clue-game/solves`, `GET /api/clue-game/journal` (signed-in journal sync). Drizzle `src/db/schema/*` models only the columns the app reads (species, clues, facts, profiles, clue_match_solves); the old expedition tables still exist in Postgres, unmodelled. Schema baseline `db/schema.sql` (no migration history; change the DB, then update the file). Scripts connect via `scripts/connect.ts`.
+- Website (critterconnect.org, plan 051): `src/site/` (pages, `Layout`, `config.ts`, shots) -> static HTML via `npm run site:build` (`scripts/site.mjs`, out/site), preview `npm run site:serve` (:3101), test `npm run e2e:site`. No Next or Clerk there (ESLint guard). Served from the caddy image (`Dockerfile` stage `caddy`, `deploy/Caddyfile`); `deploy/check.sh` checks both hosts. Guide `docs/DEPLOY.md#the-website`.
 - Auth: Clerk (`src/pages/_app.tsx`, `src/proxy.ts`). A signed-in player's `profiles` row is created on their first solve (`src/lib/player.ts`).
 - Content: profiles in `db/content/animals/*.json`, tiered sources `db/content/sources.json` (guide `docs/CONTENT_SOURCES.md`). `npm run content -- preview|build|check|ranges|photos`; never hand-edit content rows. New animal's range: `npm run iucn -- find|import` (IUCN shapefiles in `~/data/iucn/shp`). Practice SQL: `db/analysis/clue-match/`.
 

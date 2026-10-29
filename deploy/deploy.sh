@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy origin/main to the VPS: pull, rebuild the app container, wait for healthy, check the live routes.
+# Deploy origin/main to the VPS: pull, rebuild the app and caddy containers, wait for healthy, check the live hosts.
 # Usage: npm run deploy   (push first; env DEPLOY_HOST, default root@play.critterconnect.org)
 set -euo pipefail
 DOMAIN=play.critterconnect.org
@@ -38,8 +38,9 @@ for _ in $(seq 1 30); do
 done
 echo "critter-app: $status"
 [ "$status" = healthy ]
+# The website's files live in the caddy image (plan 051 §10): fail if the running caddy predates them.
+docker exec caddy test -f /srv/site/index.html || { echo "caddy has no /srv/site/index.html: is the caddy image built from this checkout?" >&2; exit 1; }
 REMOTE
 
-for route in / /explore/ /api/places/ /api/clue-game/pool/; do
-  echo "$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "https://$DOMAIN$route") $route"
-done
+# play. now, the apex and www once DNS points here (they SKIP until then).
+bash "$(dirname "$0")/check.sh"

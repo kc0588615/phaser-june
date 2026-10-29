@@ -23,6 +23,9 @@ jobs:
       - run: npm test
       # The website (plan 051): static files for critterconnect.org.
       - run: npm run site:build
+      # Its Caddy image (Docker isn't on the agents' VPS, so CI proves it): the Caddyfile is valid and the site is in.
+      - run: docker build --target caddy -t cc-caddy .
+      - run: docker run --rm -e APP_DOMAIN=play.critterconnect.org cc-caddy sh -c 'caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile && test -f /srv/site/index.html'
       # Typecheck + production build. The build loads route modules but never queries, and needs no Clerk keys.
       - run: npm run build
         env:

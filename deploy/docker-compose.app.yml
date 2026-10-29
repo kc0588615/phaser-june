@@ -8,6 +8,7 @@ services:
   app:
     build:
       context: .
+      target: run
       args:
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     container_name: critter-app
@@ -19,9 +20,13 @@ services:
       - backend
       - web
 
-  # Automatic HTTPS (Let's Encrypt) for APP_DOMAIN, proxying to the app.
+  # Automatic HTTPS (Let's Encrypt) for APP_DOMAIN, proxying to the app, and the website at
+  # critterconnect.org (plan 051 §10). Its image holds deploy/Caddyfile and the site's files (Dockerfile,
+  # stage caddy), so `up -d` recreates it only when either changed.
   caddy:
-    image: caddy:2
+    build:
+      context: .
+      target: caddy
     container_name: caddy
     restart: unless-stopped
     environment:
@@ -30,7 +35,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

@@ -9,7 +9,7 @@ Today the app runs as `npm run dev` in WSL against the Hetzner database. This is
 | `db` (PostGIS 17) | `/opt/postgis/docker-compose.yml` (server copy of `docker-compose.yml`, plus `postgres-mcp`) | internal network only |
 | `pgbouncer` (TLS, port 6432) | `/opt/postgis/docker-compose.yml` | public, for dev machines and QGIS |
 | `app` (Next.js, `Dockerfile`) | `deploy/docker-compose.app.yml` | internal, port 8080 |
-| `caddy` (HTTPS for `APP_DOMAIN`) | `deploy/docker-compose.app.yml` | public, ports 80 and 443 |
+| `caddy` (HTTPS: the game at `APP_DOMAIN`, the website at `critterconnect.org`, `www` redirects to it) | `deploy/docker-compose.app.yml`, image built from `Dockerfile` stage `caddy` | public, ports 80 and 443 |
 
 The app is its own Compose project (`critter`, in `/opt/critter-connect`). It joins the database stack's `postgis_backend` network and reaches Postgres as `db`, so deploying the app never restarts the database.
 
@@ -32,7 +32,7 @@ The app is its own Compose project (`critter`, in `/opt/critter-connect`). It jo
 
 ## Start and update
 
-From WSL, after pushing `main`: `npm run deploy` (`deploy/deploy.sh`). It needs the VPS key in the SSH agent at `~/.ssh/agent.sock` (the key has a passphrase, so only the owner can load it; the script prints the command). It refuses unless local `main` matches `origin/main` and the VPS checkout is on `main`, then pulls, rebuilds, waits for `critter-app` to be healthy and curls the live routes. By hand on the VPS:
+From WSL, after pushing `main`: `npm run deploy` (`deploy/deploy.sh`). It needs the VPS key in the SSH agent at `~/.ssh/agent.sock` (the key has a passphrase, so only the owner can load it; the script prints the command). It refuses unless local `main` matches `origin/main` and the VPS checkout is on `main`, then pulls, rebuilds, waits for `critter-app` to be healthy, checks that `caddy` has the website's files and runs `deploy/check.sh` (see [The website](#the-website)); any failure fails the deploy. By hand on the VPS:
 
 ```sh
 cd /opt/critter-connect
@@ -43,6 +43,22 @@ curl -fsS https://$APP_DOMAIN/api/places/ > /dev/null && echo ok
 ```
 
 Roll back with `git checkout <previous commit>` and the same `up -d --build`. Content changes don't need a redeploy: `npm run content -- build` from a dev machine updates the database, which the app reads live.
+
+## The website
+
+critterconnect.org is a static site (plan 051): `src/site/` rendered to HTML by `npm run site:build` into `out/site/` (no Next, Clerk or other framework script). Preview with `npm run site:serve` (http://localhost:3101), test with `npm run e2e:site`.
+
+- **Image.** The `Dockerfile`'s `site` stage builds it, and the `caddy` stage copies `deploy/Caddyfile` and the files (to `/srv/site`) into Caddy's image. A deploy rebuilds that image, and `up -d` recreates `caddy` only when the Caddyfile or the site changed. Nothing is bind-mounted: edit the Caddyfile in the repo and deploy.
+- **Hosts** (`deploy/Caddyfile`):
+
+  | Host | Serves |
+  |---|---|
+  | `APP_DOMAIN` (`play.critterconnect.org`) | the game only; no website pages, so its old `/privacy/` and `/terms/` are the game's 404 |
+  | `critterconnect.org` | the site's pages, `/site/*` (hashed, cached for a year), the 404 page; the game's old paths (`/explore*`, `/login*`, `/clue-match*`, `/api/*`) 308 to `APP_DOMAIN` |
+  | `www.critterconnect.org` | 308 to the apex |
+
+- **DNS** (Namecheap): `@` A and `www` (CNAME to the apex, or A) point at this VPS, like `play`. Caddy gets each host's certificate once its DNS points here.
+- **`deploy/check.sh`** checks all three hosts and prints `OK`, `BAD` or `SKIP` per line; it exits 1 on any `BAD`. play. always: the game's routes 200, `/privacy/`, `/terms/` and `/teachers/` 404. The apex and www only once their DNS points at play.'s IP (`SKIP` before that): the pages with their canonical and no `<script src`, every `/site/` file with its type, `robots.txt`, `sitemap.xml`, the 404 page, the 308s. `deploy.sh` runs it after every deploy; run `bash deploy/check.sh --strict` (a `SKIP` is `BAD`) after a DNS change. A TLS failure means the certificate isn't issued yet: wait a few minutes or `docker restart caddy`, then rerun.
 
 ## Backups
 
