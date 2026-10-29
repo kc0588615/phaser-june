@@ -609,6 +609,11 @@ Order vs the brief's 6 units:
     - Artifact paths, both review verdicts, the (P) decisions. No bare `@`-names.
     - Never merge or deploy.
   - Check: typecheck, lint; `gh pr view --json isDraft,body` shows not draft and `Refs #34`; `gh pr checks` is green except the old Vercel check.
+- [ ] S9. Astra code review MUST-FIX 1: `deploy/check.sh` passes a cut-off transfer.
+  - `fetched` accepts any non-000 code, so a curl timeout (28) or partial file (18) after `HTTP 200` prints OK. Fix: `fetched` returns true only when `curl_exit` is 0; 35/60 keep the cert hint; any other nonzero exit is BAD with the exit and the code (e.g. "transfer failed (curl exit 28, HTTP 200)").
+  - Probe first: a local stub that sends `200` headers then stalls or closes early, check.sh pointed at it via `CHECK_CONNECT`; expect BAD and exit 1. Revert any probe-only change.
+  - Rerun the Caddy run (V9 part) and live `bash deploy/check.sh` (pre-deploy result unchanged); `bash -n`; typecheck, lint.
+  - PR #36 body: add the Astra code review verdict and this fix.
 
 ## Verification
 
@@ -684,6 +689,21 @@ Only the two check scripts are tested in isolation (the site and the game are co
 
 ## Code review (Astra)
 
+2026-10-29, `astra-review --code origin/main` on `2abdf31e`, exit 0.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. `deploy/check.sh:48`: Accepts any non-`000` HTTP status despite a nonzero curl exit. A truncated response or timeout after HTTP 200 can report `OK`, allowing deployment checks to pass with incomplete assets. Require `curl_exit == 0` before validating status/body; test interrupted transfers.
+
+SHOULD-CONSIDER:
+
+1. `scripts/e2e-site.mjs:246`: Test clipboard denial too; currently only the granted-permission path exercises Copy.
+2. Complete the planned WSL game E2E confirmation. Existing final artifact records 524/574 passing with the known timeout; site artifact passes 444/444.
+
+Triage: MUST-FIX 1 accepted (real: curl reports `%{http_code}` 200 even on exit 28/18) -> S9. SHOULD-CONSIDER 1-2 -> Summary, for the owner.
+
 ## Release
 
 ## Decisions
@@ -725,6 +745,7 @@ Only the two check scripts are tested in isolation (the site and the game are co
 - 2026-10-29 (S7): no (P) calls in S7. 051 updated per A6; its §10 Caddyfile block replaced by a description pointing at `deploy/Caddyfile` (one copy).
 - 2026-10-29 (S8): e2e:site shots also call `getSelection().removeAllRanges()`: the tab walk selected the class link field, and blur + `setSelectionRange(0,0)` left the document range, so S6/S7 teachers shots showed the link highlighted (the S6 decision claimed otherwise). No rebase needed (branch already on origin/main `0bbbeb0e`). Audit notes, not drift: theme-color hex pair in `theme.ts` (pre-existing, moved); `FRAME` merges with band grounds (by design, S4).
 - 2026-10-29 (Architecture): both theme additions (site-only darker primary fill, `--space-xxxl`) live in `src/site/site.css`, not `src/styles/globals.css`. Brief's scope listed `globals.css`; addendum item 1 (game theme stays exactly as is, byte-for-byte proof) wins. Proof: new `scripts/check-game-css.mjs` compiles game CSS on origin/main vs HEAD, must match.
+- 2026-10-29 (Code review): Astra MUST-FIX 1 accepted as S9. SHOULD-CONSIDER not done, left for the owner: a denied clipboard already selects the link and says so (S6 design), and the WSL game e2e is the owner's run (PR body).
 
 ## Log
 
@@ -742,5 +763,8 @@ Only the two check scripts are tested in isolation (the site and the game are co
 - 2026-10-29 12:58 UTC: S6. `/teachers/` (`pages/Teachers.tsx`, 9 sections per 051 §4, 5 shots, §6's three rows verbatim, FAQ as visible Q&A) with `ClassLink.tsx` + `classLink.client.ts` (random seed via `crypto.getRandomValues`, Copy, live "Copied", fixed example without JS), bundled inline by `site.mjs`; `e2e:site` gains `/teachers/`, class link checks and the inline script budget. typecheck, lint pass; site build deterministic (`diff -r` empty); e2e:site 270/270 (`/`, `/teachers/`, 404; 12 shots, checked by eye); Taste lint 0/0, inspect `--allow still-page` 0 FAIL at 1440/768/390 (2 WARN defended), critique 3 rounds; speed `/teachers/` LCP 1544 ms, CLS 0.0005, 284 KB (`/` 231 KB). Artifacts `$A/e2e-site/s6/`, `$A/taste-inspect/teachers/`, `$A/taste-critique-teachers.md`, `$A/taste-lint.txt`, `$A/speed/results.json`, `$A/checks/s6/`.
 - 2026-10-29 13:30 UTC: S7. Legal pages moved to `src/site/pages/{Privacy,Terms}.tsx` + `LegalArticle.tsx` (terms: operator sentence, Oct 29 date, `<a href="/privacy/">`); game's 3 legal files deleted; CI grep guard; `scripts/check-game-css.mjs`; DEPLOY.md and 051 (A6) updated. typecheck, lint, 47/47, build (routes `/`, `/explore`, `/login`); grep guards exit 0 (probe: a `'/privacy'` caught); legal diff = markup, operator sentence, date, link; check-game-css exit 0, sha256 equal, dropped exactly the 3 files, FM1/2/3/7 exit 1, deterministic, < 1 s, no temp left; site build deterministic, sitemap 4 apex URLs; e2e:site 444/444 (5 pages, 20 shots, legal shots checked by eye); dev `/privacy/` `/terms/` 404; game e2e 524/574, 0 new failure kinds. Artifacts `$A/game-css/`, `$A/legal-diff.txt`, `$A/checks/s7/`, `$A/e2e-site/s7/`, `$A/game-e2e/s7/`.
 - 2026-10-29 13:40 UTC: S8. V1-V11 on the final tree: e2e:site 444/444 (fix: shots clear the document selection; teachers shots no longer show the class link highlighted; 16/20 shots byte-equal to S7, 4 changed checked by eye); Taste lint 0/0, inspect 0 FAIL both pages (2 WARN defended); speed `/` LCP 1560 ms 232 KB, `/teachers/` 1512 ms 286 KB, CLS 0.0005; game e2e 524/574, 0 new kinds, dev `/privacy/` `/terms/` 404; check-game-css exit 0 (sha256 equal, dropped exactly 3); grep guards exit 0; site build deterministic; typecheck, lint, 47/47, build (routes `/`, `/explore`, `/login`); caddy validate + Caddy run 105 OK, app-down exit 1; `bash -n`, live check.sh as expected pre-deploy; graphical-audit 0 drift, 2 site-only additions intentional. No rebase needed. PR #36 body written, marked ready; CI `check` green. Artifacts `$A/e2e-site/final/`, `$A/game-e2e/final/`, `$A/checks/final/`, `$A/taste-inspect/`, `$A/speed/results.json`, `$A/caddy-run/results.txt`, `$A/audit.md`.
+- 2026-10-29 13:55 UTC: Code review (Astra). APPROVE_WITH_CHANGES; MUST-FIX 1 (check.sh passes cut-off transfers) accepted, added as S9; 2 SHOULD-CONSIDER to Summary. No code changed.
 
 ## Summary
+
+Astra code review SHOULD-CONSIDER, for the owner: (1) `e2e:site` tests only the granted-clipboard Copy path, not a denied clipboard; (2) run the full game e2e on WSL (VPS shows 524/574, known timing failure).
