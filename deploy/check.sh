@@ -43,12 +43,13 @@ fetch() {
   { read -r code; read -r type; read -r location; } <<<"$out"
 }
 
-# fetched <url> <expected>: true if the last fetch got an HTTP answer; otherwise reports BAD.
+# fetched <url> <expected>: true if the last fetch got a whole HTTP answer; otherwise reports BAD.
 fetched() {
-  [ "$code" != 000 ] && return 0
+  [ "$curl_exit" = 0 ] && return 0
   case $curl_exit in
     35|60) bad "$1" "$2" "$CERT_HINT" ;;
-    *) bad "$1" "$2" "no answer (curl exit $curl_exit)" ;;
+    *) if [ "$code" = 000 ]; then bad "$1" "$2" "no answer (curl exit $curl_exit)"
+       else bad "$1" "$2" "transfer failed (curl exit $curl_exit, HTTP $code)"; fi ;;
   esac
   return 1
 }
