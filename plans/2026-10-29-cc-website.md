@@ -132,7 +132,7 @@ This addendum is part of the brief. Where it differs from the brief or from plan
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -361,6 +361,15 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+1. The isolated CSS comparison proves only the filtered build matches. Add a focused check of rendered game styles; the production Tailwind scan still includes site sources.
+2. Give `deploy/check.sh` a strict post-DNS mode that fails on SKIP, so an incomplete cutover cannot report success.
+3. Preserve prior hashed assets briefly across deployments; otherwise an already-open page can request a lazy-loaded screenshot removed by the new Caddy image.
+
 ## Revision notes
 
 ## Steps
@@ -380,5 +389,6 @@ SHOULD-CONSIDER:
 - 2026-10-29 11:14 UTC: Baseline. typecheck, lint, 47/47 unit, build pass; game e2e 524/574 and 523/574 (known VPS timing failure, matches prior baseline).
 - 2026-10-29 11:30 UTC: Architecture. architect wrote findings (051 matches repo; no game links to legal pages; Tailwind scans whole repo) and target design incl. addendum (site-only tokens, check-game-css proof, host split, check.sh 3 hosts, no Vercel rollback). No code changed.
 - 2026-10-29 11:34 UTC: Fable review. APPROVE, 0 MUST-FIX; 3 missed items + 5 SHOULD-CONSIDER for revision. No code changed.
+- 2026-10-29 11:35 UTC: Astra review. APPROVE, 0 MUST-FIX; 3 SHOULD-CONSIDER (rendered game style check, strict post-DNS check.sh, keep old hashed assets). No code changed.
 
 ## Summary
