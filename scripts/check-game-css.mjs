@@ -23,9 +23,12 @@ function fail(message) {
   process.exit(1);
 }
 
-/** `ref`'s src/ in a fresh temp dir, minus `drop`, with the repo's node_modules linked in for Tailwind's imports. */
+const dirs = [];
+
+/** `ref`'s src/ in a fresh temp dir (removed at the end), minus `drop`, with the repo's node_modules linked in for Tailwind's imports. */
 function tree(ref, drop) {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'cc-game-css-'));
+  dirs.push(dir);
   const archive = path.join(dir, 'src.tar');
   git('archive', '-o', archive, ref, 'src');
   execFileSync('tar', ['-xf', archive, '-C', dir]);
@@ -58,11 +61,8 @@ try {
 const deleted = git('diff', '--name-only', '--no-renames', '--diff-filter=D', base, 'HEAD', '--', 'src').split('\n').filter(Boolean);
 console.log(`base ${base}, dropped from base (deleted in HEAD): ${deleted.length ? deleted.join(', ') : 'none'}`);
 
-const dirs = [];
 try {
-  dirs.push(tree(base, deleted));
-  dirs.push(tree('HEAD', ['src/site']));
-  const [baseCss, headCss] = await Promise.all(dirs.map(compile));
+  const [baseCss, headCss] = await Promise.all([tree(base, deleted), tree('HEAD', ['src/site'])].map(compile));
   mkdirSync(outDir, { recursive: true });
   const sums = [['base', baseCss], ['head', headCss]].map(([name, css]) => {
     writeFileSync(path.join(outDir, `${name}.css`), css);
