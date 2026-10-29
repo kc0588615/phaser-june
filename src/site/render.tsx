@@ -8,7 +8,9 @@ import { PAGES, SITE_URL, type SitePage } from './config';
 import Layout, { type PhotoCredit } from './Layout';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import Privacy from './pages/Privacy';
 import Teachers from './pages/Teachers';
+import Terms from './pages/Terms';
 import { SHOTS, type ShotImage, type ShotName } from './shots';
 
 export type SiteFile = { file: string; content: string };
@@ -26,6 +28,8 @@ const CLASS_NAMES: Record<string, string> = { Mammalia: 'mammals', Amphibia: 'am
 const ROUTES: Array<{ page: SitePage; Page: ComponentType<PageProps>; shots: ShotName[] }> = [
   { page: PAGES.home, Page: Home, shots: ['heroBoard', 'boardPhone', 'globe', 'fieldGuide', 'globeFound', 'journal', 'roundEnd'] },
   { page: PAGES.teachers, Page: Teachers, shots: ['gridMarked', 'fieldGuide', 'witnessNote', 'roundEnd', 'journal'] },
+  { page: PAGES.privacy, Page: Privacy, shots: [] },
+  { page: PAGES.terms, Page: Terms, shots: [] },
   { page: PAGES.notFound, Page: NotFound, shots: [] },
 ];
 

@@ -38,6 +38,20 @@ export const PAGES = {
     description: 'What students do in a round, what they practice, student privacy, and how to give a class the same animals.',
     indexed: true,
   },
+  privacy: {
+    path: '/privacy/',
+    file: 'privacy/index.html',
+    title: 'Privacy Policy · Critter Connect',
+    description: 'What Critter Connect keeps if you sign in, what stays on your device, and how to delete it. No ads, no tracking.',
+    indexed: true,
+  },
+  terms: {
+    path: '/terms/',
+    file: 'terms/index.html',
+    title: 'Terms of Service · Critter Connect',
+    description: `The short terms for playing Critter Connect, a free animal deduction game run by ${OPERATOR}.`,
+    indexed: true,
+  },
   notFound: {
     path: '/404.html',
     file: '404.html',
