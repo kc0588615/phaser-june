@@ -205,7 +205,7 @@ async function main() {
         mystery: document.querySelector('table[aria-label="Evidence"] tr[data-mystery] th')?.textContent ?? '',
       }));
       check(`round ${n}: the evidence grid has a row per suspect and a column per clue`, screen.rows.join() === start.suspects.join() && screen.columns.join() === start.orders.map(order => order.tag).join(), JSON.stringify(screen));
-      check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('Camera saw') && !screen.mystery.includes(mysteryName), screen.mystery);
+      check(`round ${n}: the grid doesn't name the mystery while it's hidden`, screen.mystery.includes('On camera') && !screen.mystery.includes(mysteryName), screen.mystery);
       if (n === 1) {
         // Tap an animal's tile: it's picked in the grid (its actions in the status line); tap again to drop it.
         const tile = await evaluate(async () => {

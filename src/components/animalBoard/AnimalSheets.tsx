@@ -1,7 +1,7 @@
 // The sheets over the animal board (plan 044): a suspect's field guide (with Rule
 // out), the witness notes, the menu, out of moves (name it for the journal), the
 // round's end (and the trail's, with the evidence grid replayed), and how to play (with a worked
-// comparison on made-up answers, never the live round's). Players see the mystery as "the one the camera saw".
+// comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
@@ -147,13 +147,13 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       {marked && !released && (
         <p className={`${NOTICE} mb-s bg-error-transparent`} role="status">
           <Ban className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
-          <span><b className="font-medium">Ruled out:</b> it wanders a step toward the edge each move, or leaves at once when a gem next to it is cleared. If it&apos;s the one the camera saw, it escapes! Bring it back to stop it.</span>
+          <span><b className="font-medium">Ruled out:</b> it wanders a step toward the edge each move, or leaves at once when a gem next to it is cleared. If it&apos;s the one caught on camera, it escapes! Bring it back to stop it.</span>
         </p>
       )}
       {released && (
         <p className={`${NOTICE} mb-s bg-neutral-3`} role="status">
           <ArrowUpRight className="mt-xxs h-4 w-4 shrink-0 text-neutral-7" aria-hidden="true" />
-          <span><b className="font-medium">Released:</b> not the one the camera saw.</span>
+          <span><b className="font-medium">Released:</b> not the one caught on camera.</span>
         </p>
       )}
       <motion.div
@@ -596,15 +596,15 @@ function CompareExample() {
   const [pick, setPick] = useState<'yes' | 'no' | null>(null);
   return (
     <span className="mt-xs flex flex-col gap-xs rounded-s bg-neutral-2 p-s">
-      <span className="grid grid-cols-[1fr_64px] items-center gap-x-xs gap-y-xxs text-neutral-10" aria-label="Example: the camera saw yes, active at night. Animal 2: no." role="img">
+      <span className="grid grid-cols-[1fr_64px] items-center gap-x-xs gap-y-xxs text-neutral-10" aria-label="Example: on camera, yes, active at night. Animal 2: no." role="img">
         <span />
         <span className="text-center text-xs text-neutral-7">🌙 Night?</span>
-        <span className="flex items-center gap-xs"><span className="block w-7 shrink-0"><TrapCard /></span>Camera saw</span>
+        <span className="flex items-center gap-xs"><span className="block w-7 shrink-0"><TrapCard /></span>On camera</span>
         <span className="rounded-xs bg-emphasis-icon py-xxs text-center text-s font-heavy text-on-emphasis-icon">✓ YES</span>
         <span className="flex items-center gap-xs"><span className={`${TILE} h-7 w-7 font-data text-s`}>2</span>Animal 2</span>
         <span className="rounded-xs bg-neutral-3 py-xxs text-center text-m font-heavy text-neutral-6">✗</span>
       </span>
-      <span>Can animal 2 be the one the camera saw?</span>
+      <span>Can animal 2 be the one caught on camera?</span>
       <span className="flex gap-xs">
         {(['yes', 'no'] as const).map(answer => (
           <button key={answer} type="button" onClick={() => setPick(answer)} aria-pressed={pick === answer} className={`btn flex-1 ${pick === answer ? 'btn-primary' : 'btn-outline'}`}>{answer === 'yes' ? 'Yes' : 'No'}</button>
@@ -625,11 +625,11 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
   useEscapeKey(onClose);
   const presence = useOverlayPresence();
   const steps: ReactNode[] = [
-    <>Our camera trap caught one of the <b>{rules.suspects} animals</b> on the board, not a new one. Which one? In the grid, the top row, <b>Camera saw</b>, is what the camera found out; the rows under it are the {rules.suspects} animals. Try one:<CompareExample /></>,
-    <>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the Camera saw row. A full question answers it: <b>yes</b> or <b>no</b>.</>,
+    <>Your trail camera caught a blurry shot last night. Only the <b>{rules.suspects} animals</b> on the board live here, so it&apos;s one of them. Which one? In the grid, the top row, <b>On camera</b>, is what the camera found out; the rows under it are the {rules.suspects} animals. Try one:<CompareExample /></>,
+    <>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the On camera row. A full question answers it: <b>yes</b> or <b>no</b>.</>,
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold any answer to <b>highlight</b> it: its gem glows up top, so you remember which gem to go for. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
     <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</>,
-    <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one the camera saw and it escapes!</b></>,
+    <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
     <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,
     <>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</>,
   ];

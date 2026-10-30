@@ -15,7 +15,7 @@
 // them, pulses when one comes in, and is where a collected witness gem flies.
 // Hold any answer cell to highlight it (gold, "this one matters"); its column's gem glows so the
 // player remembers which gem to go for. Like pencil, the player's own mark: the rules never read it.
-// Players see the mystery as "the one the camera saw" (its row: "Camera saw"), so it doesn't read as a sixth
+// Players see the mystery as "the one caught on camera" (its row: "On camera"), so it doesn't read as a sixth
 // animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the Camera row
 // slides down onto the mystery's own row, fades into it and the row lights up, then `onLanded`.
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -221,7 +221,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
             {review || !onNotes ? (
               <span className="flex items-center gap-xs">
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
-                <span className="whitespace-nowrap text-s">Camera saw</span>
+                <span className="whitespace-nowrap text-s">On camera</span>
                 {markCount}
               </span>
             ) : (
@@ -230,14 +230,14 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 onClick={onNotes}
                 data-flight-target="notes"
                 data-notes={notes}
-                aria-label={`Camera saw: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
+                aria-label={`On camera: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
                 className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
               >
                 {/* Keyed by the count, so the cell pulses once each time a note comes in. */}
                 {notes > 0 && <span key={notes} className="ev-pulse pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
                 <span className="flex min-w-0 flex-col">
-                  <span className="whitespace-nowrap text-s">Camera saw</span>
+                  <span className="whitespace-nowrap text-s">On camera</span>
                   {/* Until the first note: which animals the camera's one is among (a fixed count, never who still fits). */}
                   <span className={`flex min-w-0 items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
                     {notes > 0 ? <NotebookPen className="h-3 w-3 shrink-0 text-notes" aria-hidden="true" /> : null}

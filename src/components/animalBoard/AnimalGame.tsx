@@ -56,7 +56,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
     }
     case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} {entry.walked ? 'wandered off' : 'left'} the board.</span>;
-    case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one the camera saw. It escaped!</span>;
+    case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one caught on camera. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
     case 'named': return <span>You named the {nameOf(entry.id)}.</span>;

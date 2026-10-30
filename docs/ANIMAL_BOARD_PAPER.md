@@ -33,7 +33,7 @@ The project owner set a clear goal: winning should require thinking, and random 
 3. **The mystery.** One of the five is chosen at random.
 4. **The board.** A 7×7 grid. The five suspects are pinned to cells at least three steps apart and never in a corner. Every other cell holds a gem.
 
-The five suspect cards sit above the board. How to play frames each round with a neutral prompt that hints at nothing: "Our camera trap caught a blur. It was one of the 5 animals on the board."
+The five suspect cards sit above the board. How to play frames each round with a neutral prompt that hints at nothing: "Your trail camera caught a blurry shot last night. Only the 5 animals on the board live here, so it's one of them."
 
 ### 2.2 The board
 
