@@ -387,7 +387,7 @@ export function AnimalGame() {
   const hinting = hint && hint.roundNo === roundNo && hint.seen === visibleLog.length;
   const status: ReactNode = hinting ? hint.text
     : latest && session && round ? <LogText entry={latest} nameOf={nameOf} count={round.suspects.length} pencil={session.pencil} />
-    : round ? `The camera caught one of these ${round.suspects.length} animals. Which one? Match gems to find out.`
+    : round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.`
     : 'Match gems to fill in what the camera saw.';
   // What the status line takes turns showing: the answers (once their gems land) and witness notes so far.
   const facts = useMemo<Fact[]>(() => round ? round.log.flatMap((entry, key) => (entry.kind === 'answer' && answerShown(entry.tag)) || entry.kind === 'note'
