@@ -74,7 +74,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -158,6 +158,15 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+1. Preserve the pool response with capture artifacts; seeds alone cannot reproduce screenshots after dev database changes.
+2. Reconcile hash verification with unchanged-image allowance: require URLs matching current asset bytes; reject old hashes only for changed assets.
+3. Explicitly document inclusion of `og.png` and retention of lowercase “camera saw” in the PR’s scope.
+
 ## Revision notes
 
 ## Steps
@@ -176,5 +185,7 @@ SHOULD-CONSIDER:
 - 2026-10-30 05:20 UTC: Architecture (architect). No repo code changes; scripts copied to mission dir, retake on :3106, adds og.png to scope, DOM-text check replaces OCR (no tesseract). Plan-only; no checks needed.
 
 - 2026-10-30 05:35 UTC: Fable review (architecture-reviewer): APPROVE, 0 MUST-FIX, 4 SHOULD-CONSIDER (play before start, case rule in PR, globe hash, theme in compare.txt). Plan-only; no checks needed.
+
+- 2026-10-30 05:50 UTC: Astra review: APPROVE, 0 MUST-FIX, 3 SHOULD-CONSIDER (save pool response, hash check vs unchanged shots, og.png + lowercase in PR). Plan-only; no checks needed.
 
 ## Summary
