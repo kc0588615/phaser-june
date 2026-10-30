@@ -2,7 +2,7 @@
 mission: site-shots-on-camera
 project: critter-connect
 branch: agent/site-shots-on-camera
-status: active
+status: done
 started: 2026-10-30 04:55 UTC
 ---
 
@@ -283,5 +283,14 @@ SHOULD-CONSIDER: none
 - 2026-10-30 07:25 UTC: S3. convert.mjs -> 7 WebP + og.png changed, globe + globe-found byte-identical (Decision). contact.png + eye-check.txt: all 10 PASS (On camera, new opener, same animals/photos, alt true). shots.ts header -> 2026-10-30, 368be9e3, og.png, new retake path. Verify: typecheck, lint, site:build pass; compare.mjs exit 0 (boards, wording, files, build); no "Camera saw" in out/site; diff = shots + og + shots.ts + plan.
 - 2026-10-30 07:45 UTC: S4. origin/main = 368be9e3, rebase no-op. typecheck, lint, site:build pass; compare.mjs exit 0 (104 PASS, 0 FAIL); e2e:site on :3105 444/444, 20 screenshots -> $M/e2e-s4/ (baseline/e2e-site removed). PR https://github.com/kc0588615/phaser-june/pull/38 (Closes #37), body in $M/pr-body.md. git status clean.
 - 2026-10-30 08:00 UTC: Code review (Astra, `--code origin/main`): APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Review-only; no checks needed.
+- 2026-10-30 05:35 UTC: Final Verification on 6a5609a0 (origin/main still 368be9e3). typecheck, lint, site:build pass; compare.mjs exit 0 (104 PASS, 0 FAIL); no "Camera saw" in out/site; e2e:site on :3105 444/444, 20 screenshots -> $M/e2e-site/; home + teachers (390/1440 light) and contact.png viewed: new shots, "On camera". Summary written, status done.
 
 ## Summary
+
+Issue #37 done in PR https://github.com/kc0588615/phaser-june/pull/38 (`Closes #37`; never merged here, owner merges and deploys).
+
+- **Retaken** from origin/main `368be9e3`, same seeds/rounds/photos/viewports (boards equal the old run): 7 WebP + `src/site/og.png` changed ("On camera" row, new opener); `globe.webp` and `globe-found.webp` byte-identical (no wording on those screens). Alt text, photos and credits unchanged (all still true by eye). `shots.ts` header: 2026-10-30, `368be9e3`, og.png, new retake path.
+- **Verification** (final commit): typecheck, lint, site:build pass; `compare.mjs` 104 PASS / 0 FAIL (boards, wording, sizes, built hashes); no "Camera saw" in `out/site`; e2e:site 444/444, 20 screenshots.
+- **Reviews:** Fable APPROVE, Astra architecture APPROVE, Astra code APPROVE (0 MUST-FIX each).
+- **Artifacts** (`/srv/critter-ai/agent-state/missions/site-shots-on-camera/`): `e2e-site/` (report.json + page screenshots; `e2e-site.log`), `shots/contact.png` (old top, new bottom), `compare.txt`, `eye-check.txt`, `raw/`, `old/`, `COMMAND.txt` (reproduce). `e2e-s4/` = S4 run.
+- **Owner:** merge #38, then `npm run deploy` from WSL (also ships game wording `e999e86f`, `1118173b`). Follow-up, out of scope: lowercase game copy "camera saw" at `AnimalSheets.tsx:478` and `:542` (round-end + journal text).
