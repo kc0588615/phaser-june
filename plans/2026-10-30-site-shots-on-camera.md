@@ -71,7 +71,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -79,6 +79,14 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+2026-10-30, worktree at `40a95b02` (origin/main `368be9e3`), Node 24.21.
+- Install: `npm ci` clean (install-script gate skipped postinstalls, as in cc-website). Migrate: n/a (no migration history; DB is shared dev copy; this mission touches no data).
+- `npm run typecheck`: pass. `npm run lint`: exit 0. `npm test`: 47/47. `npm run site:build`: pass.
+- `npm run e2e:site` (built site on :3105, `CHROME_PATH=/srv/critter-ai/agent-state/missions/cc-website/bin/chrome`): **444/444**, 20 screenshots.
+- `grep -r "Camera saw" out/site`: no hits in HTML already (copy fixed in `368be9e3`); only the shot images still show it.
+- Game `npm run e2e` not run: mission changes only `src/site/shots*`, which the game never loads; known VPS baseline is 524/574 (cc-website plan).
+- Artifacts: `/srv/critter-ai/agent-state/missions/site-shots-on-camera/baseline/` (logs, `e2e-site/` report.json + screenshots). Reproduce: `npm run site:build && python3 -m http.server 3105 -b 127.0.0.1 -d out/site`, then `E2E_SITE_URL=http://localhost:3105 CHROME_PATH=/srv/critter-ai/agent-state/missions/cc-website/bin/chrome npm run e2e:site`.
 
 ## Architecture
 
@@ -99,5 +107,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-10-30 05:00 UTC: Baseline. typecheck/lint pass, unit 47/47, site:build ok, e2e:site 444/444 on :3105. Handoff H3 (done) closed; its owner leftovers (Vercel, Clerk/Google branding, WSL pull) moved to H4. No effect on scope.
 
 ## Summary
