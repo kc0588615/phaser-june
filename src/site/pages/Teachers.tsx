@@ -58,11 +58,11 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
         <div className="flex flex-col gap-m">
           <h2 id="round" className={H2}>What students do in a round</h2>
           <ul className={`${LIST} ${MEASURE}`}>
-            <li>Five look-alike animals sit on the board. One of them is the one the camera saw.</li>
+            <li>Five look-alike animals sit on the board. One of them was caught on camera.</li>
             <li>They have 30 moves. Four yes-or-no questions ask about the camera&apos;s animal; matching 20 of a question&apos;s gems answers it.</li>
             <li>Clearing a question&apos;s gems next to an animal&apos;s card scouts that animal&apos;s own answer.</li>
             <li>The answers never rule anyone out by themselves. Students compare them with each animal&apos;s field guide and rule out the ones that can&apos;t be it, then clear gems next to them to release them.</li>
-            <li>Rule out the one the camera saw by mistake, and it escapes: the round is lost and costs a heart. A trail is 5 rounds with 3 hearts.</li>
+            <li>Rule out the one caught on camera by mistake, and it escapes: the round is lost and costs a heart. A trail is 5 rounds with 3 hearts.</li>
             <li>The round-end card shows the full record: the family tree, the range map and the sources.</li>
           </ul>
         </div>

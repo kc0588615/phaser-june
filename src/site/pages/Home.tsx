@@ -22,7 +22,7 @@ export default function Home({ shots, animals }: PageProps) {
     <>
       <Section labelledBy="hero" className="flex flex-col gap-xl">
         <div className="grid gap-m md:grid-cols-2 md:items-end md:gap-xl">
-          <h1 id="hero" className={H1}>Find the animal the camera saw</h1>
+          <h1 id="hero" className={H1}>Find the animal caught on camera</h1>
           <div className="flex flex-col items-start gap-m">
             <p className={MEASURE}>A free game about real animals for grades 6–12. Match gems to answer yes-or-no questions, then rule out the look-alikes until one is left.</p>
             <div className="flex flex-wrap items-center gap-x-m gap-y-xs">
@@ -46,7 +46,7 @@ export default function Home({ shots, animals }: PageProps) {
         <ol className="grid gap-xl md:grid-cols-3">
           <li className="flex flex-col gap-s">
             <h3 className={H3}>Pick a continent</h3>
-            <p>You get five look-alike animals from there. One of them is the one the camera saw.</p>
+            <p>You get five look-alike animals from there. One of them was caught on camera.</p>
             <Screenshot shot={globe} crop={TOP} />
           </li>
           <li className="flex flex-col gap-s">

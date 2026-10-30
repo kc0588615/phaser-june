@@ -28,7 +28,7 @@ export const PAGES = {
     path: '/',
     file: 'index.html',
     title: 'Critter Connect: a free animal deduction game for grades 6–12',
-    description: 'Find the animal the camera saw. Match gems to answer questions, then rule out the look-alikes. Free, no account.',
+    description: 'Find the animal caught on camera. Match gems to answer questions, then rule out the look-alikes. Free, no account.',
     indexed: true,
   },
   teachers: {
