@@ -73,7 +73,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -142,6 +142,20 @@ No repo code changes. Repo diff: `src/site/shots/*.webp` (those whose bytes chan
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE
+
+Checked: `shots.ts`, `config.ts:12`, `site.mjs:22-27,80-87`, `render.tsx:53-68`, `AnimalSheets.tsx:478,542`, `AnimalGame.tsx:390`, `EvidenceGrid.tsx:224,240`, `$A/shots/{take,convert}.mjs`, `COMMAND.txt`, `raw/start.json`, `cdp.mjs` (`--remote-debugging-port=0`, no fixed port), `git diff 0bbbeb0e origin/main` on game/content paths (copy + Wordmark/theme-color refactors only; no rules, board or content changes). All seven findings are accurate; og.png (finding 1) is a real omission from the brief and the fix is in scope by the brief's Why. The design adds no repo code, keeps seeds/ports/sizes, and every check is repeatable from `compare.txt` + the raw JSON.
+
+MUST-FIX: none
+
+MISSED: none
+
+SHOULD-CONSIDER:
+1. Run `play` (dev server) before `build`+`start`, as the old run did (raw timestamps: play 12:19-12:20, start 12:21-12:22). Avoids `next dev` and a fresh production `.next` in the same dir back to back; same result, one fewer thing to reason about.
+2. Finding 2: the brief's eye check says "no Camera saw" without a case rule; the case-sensitive reading is right (the row label is the thing renamed), but say so in the PR body next to the two lowercase strings so the owner isn't surprised by the round-end shot.
+3. Finding 6: `globe`/`globe-found` are MapLibre renders with a 3 s sleep, so byte-identity is unlikely anyway; don't spend time on it, just record what happened.
+4. In `compare.txt`, also note each shot's `theme` field from the JSON (`light`), since light mode is in the eye check and the old JSON already records it.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -160,5 +174,7 @@ No repo code changes. Repo diff: `src/site/shots/*.webp` (those whose bytes chan
 
 - 2026-10-30 05:00 UTC: Baseline. typecheck/lint pass, unit 47/47, site:build ok, e2e:site 444/444 on :3105. Handoff H3 (done) closed; its owner leftovers (Vercel, Clerk/Google branding, WSL pull) moved to H4. No effect on scope.
 - 2026-10-30 05:20 UTC: Architecture (architect). No repo code changes; scripts copied to mission dir, retake on :3106, adds og.png to scope, DOM-text check replaces OCR (no tesseract). Plan-only; no checks needed.
+
+- 2026-10-30 05:35 UTC: Fable review (architecture-reviewer): APPROVE, 0 MUST-FIX, 4 SHOULD-CONSIDER (play before start, case rule in PR, globe hash, theme in compare.txt). Plan-only; no checks needed.
 
 ## Summary
