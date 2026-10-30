@@ -1,6 +1,6 @@
 # 051: Website at critterconnect.org
 
-Status: planned. The owner reviews it as a PR; the build starts from [`051-build-brief.md`](051-build-brief.md) once issue #34 is relabelled `ready-for-agent`.
+Status: built by mission [`2026-10-29-cc-website.md`](2026-10-29-cc-website.md) (PR #36). The owner's 2026-10-29 decisions on the PR #35 defaults are folded in below: the darker fill and `--space-xxxl` are site-only, `play.` serves the game only, and the Vercel project is already deleted.
 Written by mission [`2026-10-28-cc-landing-plan.md`](2026-10-28-cc-landing-plan.md) (findings, reviews, owner answers H2, decisions). Line refs as of origin/main `acffc179`.
 
 critterconnect.org still serves an old Vercel build of this app ("Explore biodiversity through map-based expeditions", a game that no longer exists). This plan replaces it with a small static site for two audiences, students and teachers, built from this repo's cc theme and served by the Hetzner Caddy next to the game.
@@ -14,14 +14,14 @@ critterconnect.org still serves an old Vercel build of this app ("Explore biodiv
 **Site map** (a static build from `src/site/`, served by the Hetzner Caddy; §3, §10):
 - `/`: what the game is in one screen; one primary button, **Start playing** → `play.critterconnect.org`; a mid-page band routes teachers on.
 - `/teachers/`: what students do in a round, what they practice (honestly, paper §5), class use with a class link maker, student privacy, sources and limits, coming later, FAQ.
-- `/privacy/`, `/terms/`: moved from the game, now scrollable, served on both hosts; `404.html` sends people to play.
-- `www` and old game paths 308 to the right place; the Vercel project is deleted a week after DNS moves.
+- `/privacy/`, `/terms/`: moved from the game, now scrollable, on the apex only (the game keeps no legal page); `404.html` sends people to play.
+- `www` and old game paths 308 to the right place. The Vercel project is deleted (owner, 2026-10-29): no rollback to it.
 
 **Coming soon** (only on `/teachers/`, each row "Not available yet:"; §6): a printable teacher guide; a standards map ("maps onto" NGSS, never "aligned to"); class results from a class link, per animal, no names (needs its own plan). Not shown: rosters, class codes, per-student reasoning.
 
-**Skills and cc** (§8): `GUI.md` and the cc tokens are binding, applied with graphical-ui and checked by graphical-audit. Taste shapes composition only (inventory, argument, idea, copy, sections, its gate with `--allow still-page` at 1440/768/390); its art direction, tokens, found pictures and motion are skipped. elaya's Part A gives the intake, the two layouts and the copy rules; Part B is not used. Two owner-approved theme additions: light primary fill `#008663` (4.58:1) and `--space-xxxl: 64px`.
+**Skills and cc** (§8): `GUI.md` and the cc tokens are binding, applied with graphical-ui and checked by graphical-audit. Taste shapes composition only (inventory, argument, idea, copy, sections, its gate with `--allow still-page` at 1440/768/390); its art direction, tokens, found pictures and motion are skipped. elaya's Part A gives the intake, the two layouts and the copy rules; Part B is not used. Two owner-approved theme additions, both site-only in `src/site/site.css` (the game's theme is unchanged): light primary fill `#008663` (4.58:1) and `--space-xxxl: 64px`.
 
-**Open questions** (§12): none blocking; H2 answered the nine. Four defaults the owner can overturn in the PR: the darker fill also applies to the game's buttons; `play.` serves the teacher and legal pages too; a site or Caddyfile change briefly restarts `caddy`; the terms' date moves with the operator sentence.
+**Open questions** (§12): none; H2 answered the nine. Of the four defaults, the owner overturned 1 and 2 on 2026-10-29 (the darker fill is site-only; `play.` serves the game only); 3 and 4 stand (a site or Caddyfile change briefly restarts `caddy`; the terms' date moves with the operator sentence).
 
 ## 2. Audiences and their jobs
 
@@ -40,12 +40,19 @@ critterconnect.org still serves an old Vercel build of this app ("Explore biodiv
 |---|---|---|---|---|---|
 | `/` | `src/site/pages/Home.tsx` → `index.html` | both | say what it is in one screen; route students to play and teachers to `/teachers/` | Play | the front door |
 | `/teachers/` | `src/site/pages/Teachers.tsx` → `teachers/index.html` | teachers | everything a teacher needs to decide: the round in specifics, skills, class use, privacy, sources and limits, coming later, FAQ | Play a round yourself (plus the class link) | teacher content would bury the student path on `/` |
-| `/privacy/`, `/terms/` | `src/site/pages/{Privacy,Terms}.tsx`, moved from `src/pages/` → `privacy/index.html`, `terms/index.html` | both | the legal text, now scrollable (today it can't be scrolled on a phone: `globals.css:371-376`) | none | required; already exist |
+| `/privacy/`, `/terms/` | `src/site/pages/{Privacy,Terms}.tsx`, moved from `src/pages/` → `privacy/index.html`, `terms/index.html` | both (on the apex) | the legal text, now scrollable (today it can't be scrolled on a phone: `globals.css:371-376`) | none | required; already exist |
 | any other path | `src/site/pages/NotFound.tsx` → `404.html` | both | send a lost visitor on | Play | people type the old domain's paths by hand |
 
 - **Not pages:** no student page (`/` is it), no "how it works" page (a section on `/`), no "sources" page (a section on `/teachers/`). None would have an action of its own.
-- **Both hosts:** `play.` also serves `/teachers/`, `/privacy/` and `/terms/`, the same files (section 10). The legal URLs don't change, and `/teachers/` can be checked live before DNS moves. Every page carries its apex canonical, so the `play.` copies don't compete in search.
-- **Links:** between site pages, plain root-relative `<a>` (`/teachers/`), which work on both hosts and in the local preview. On `play.` the wordmark's `/` is the game's globe, which suits that host. Play links are absolute: `https://play.critterconnect.org/`.
+- **Hosts** (owner, 2026-10-29: a clean split):
+
+  | Host | Serves |
+  |---|---|
+  | `play.critterconnect.org` | the game only; its old `/privacy/` and `/terms/` are the game's 404 (no redirect) |
+  | `critterconnect.org` | the site: `/`, `/teachers/`, `/privacy/`, `/terms/`, and its 404 |
+  | `www.critterconnect.org` | 308 to the apex |
+
+- **Links:** between site pages, plain root-relative `<a>` (`/teachers/`), which work on the apex and in the local preview. Play links are absolute: `https://play.critterconnect.org/`. Nothing in the game links to the site's pages (CI's "No game links to site pages" step).
 
 ## 4. Pages
 
@@ -59,7 +66,7 @@ critterconnect.org still serves an old Vercel build of this app ("Explore biodiv
 | h2, h3 | `font-brand` heavy, `l`; h3 `m` |
 | Running text | `font-ui` regular `m` (16/24) in `neutral-10`; secondary text `neutral-8`. Never cte-text-muted (4.04:1). |
 | Small text | `s` (14/20): footer, credits, the line under a button. Nothing at `xs`/`xxs`. |
-| Actions | `.btn .btn-primary` (at most one per section; light fill `#008663`, section 8), `.btn-secondary`; no `.btn-outline` |
+| Actions | `.btn .btn-primary` (at most one per section; light fill `#008663` on the site only, section 8), `.btn-secondary`; no `.btn-outline` |
 | Links | `neutral-10`, underlined |
 | Screenshots | `<img>` with `width`/`height` from `shots.ts` (no layout shift), or `<picture>` for the hero's phone and desktop crops; content-hashed files under `/site/`; radius `m`; hero `fetchpriority="high"`, the rest `loading="lazy" decoding="async"` |
 | Fonts | Nunito. Open Runde only for tabular numerals, if any. Patrick Hand not used (it's the cards' handwriting). |
@@ -105,8 +112,8 @@ What the hero and steps show today (live play site, 2026-10-28, reference only; 
 
 ### Legal pages
 
-- `src/site/pages/Privacy.tsx` and `Terms.tsx` are today's `src/pages/privacy.tsx` and `terms.tsx`, moved; the old files and `src/components/LegalPage.tsx` are deleted. Nothing in the game links to them (`rg -i privacy src` finds only those three files); the URLs keep working through Caddy. Dev preview: `npm run site:serve`.
-- Privacy words unchanged. Terms gain one sentence naming Haunted Pavement LLC as the operator, the "we", so their "Last updated" becomes the build's date; their `next/link` becomes `<a href="/privacy/">`.
+- `src/site/pages/Privacy.tsx` and `Terms.tsx` are the game's old `src/site/pages/Privacy.tsx` and `terms.tsx`, moved; the old files and `src/components/LegalPage.tsx` are deleted, and the game keeps no legal page, component or text. Nothing in the game linked to them. The old `play.` URLs return the game's 404, with no redirect (owner, 2026-10-29). Dev preview: `npm run site:serve`.
+- Privacy words unchanged. Terms gain one sentence naming Haunted Pavement LLC as the operator, the "we", so their "Last updated" becomes that sentence's date (a literal, October 29, 2026; the build has no dates); their `next/link` becomes `<a href="/privacy/">`.
 - `LegalPage` becomes `src/site/LegalArticle.tsx` with the shared roles (h1; "Last updated" in neutral-8; text and underlined links in neutral-10, replacing `LegalPage.tsx:13` colour-1 links and `:16` neutral-7, both 4.03–4.04:1), inside an `<article>`. The layout owns `<main>`, the title and the ground. "← Back to the globe" goes: the header's wordmark and Play cover it.
 
 ### 404
@@ -117,7 +124,7 @@ What the hero and steps show today (live play site, 2026-10-28, reference only; 
 
 | Claim | Where it's true |
 |---|---|
-| Free; plays without an account; no ads, tracking cookies or analytics | `src/pages/terms.tsx` "The game"; `src/pages/privacy.tsx` intro and "What we don't do" |
+| Free; plays without an account; no ads, tracking cookies or analytics | `src/site/pages/Terms.tsx` "The game"; `src/site/pages/Privacy.tsx` intro and "What we don't do" |
 | For grades 6–12 | `README.md:3`; `docs/ANIMAL_BOARD_PAPER.md` Abstract |
 | Five look-alikes, one the camera saw; 30 moves; 4 questions × 20 gems; trail of 5 rounds with 3 hearts | `CONTEXT.md` (Suspect, Mystery animal, Question, Trail); `ANIMAL_RULES` in `src/clueGame/animalBoard.ts:56` |
 | About 5–10 minutes a round | the owner's playtests (H2 answer 7; `plans/2026-10-28-cc-landing-plan.md` Decisions) |
@@ -127,12 +134,12 @@ What the hero and steps show today (live play site, 2026-10-28, reference only; 
 | {N} animals, today 76 (50 mammals, 15 amphibians, 11 reptiles) | `db/content/animals/*.json`, counted by `src/site/render.tsx` at build. Known drift: the game serves the DB, which lags content until the owner runs `npm run content -- build`; the repo's content is still what we vouch for. |
 | No continent count | continents come only from the DB (`clue_match_places` view), which a static build can't read, so the copy names no number |
 | Facts from the IUCN Red List (all 76), Animal Diversity Web (65) and others in ranked tiers | `db/content/sources.json`; each profile's `sources` |
-| Photos from Wikimedia Commons, credited; maps use IUCN and other credited sources | `src/pages/terms.tsx` "Photos and content"; profile `photo` fields |
+| Photos from Wikimedia Commons, credited; maps use IUCN and other credited sources | `src/site/pages/Terms.tsx` "Photos and content"; profile `photo` fields |
 | The skills practised; "maps onto" NGSS practices and MS-LS4-2; "does not claim to teach these on its own" | paper §5.1 |
 | Limits (categories, "no record", pictures, teachers can't see reasoning) | paper §5.3 #3, #4, #5, #11 |
 | Classroom ideas | paper §5.5 |
 | One link gives the class the same animals and boards | `docs/CLUE_MATCH.md:10` ("`?seed=N` replays a session exactly"); `src/components/animalBoard/useAnimalSession.ts:28-31` (integers 1…4294967295) |
-| Privacy facts (no name or email, journal in the browser, rounds saved without a link to the player, under 13) | `src/pages/privacy.tsx` sections |
+| Privacy facts (no name or email, journal in the browser, rounds saved without a link to the player, under 13) | `src/site/pages/Privacy.tsx` sections |
 | Sound starts off; the board plays with a keyboard | `docs/CLUE_MATCH.md:98` ("Once a run"), `:23` (`BoardController.ts` keyboard) |
 | Runs in a browser, nothing to install, phones and computers | a web app; desktop rules at 48rem in `src/styles/globals.css`; the build shows it at 390 and 1440 |
 | Made by Haunted Pavement LLC | the owner (H2 answer 5; `plans/2026-10-28-cc-landing-plan.md` Decisions); the terms after the build |
@@ -202,10 +209,10 @@ The owner confirmed this list (H2 answer 2). On `/teachers/` §7, under the head
 | A1 | Student | Teacher | Evidence |
 |---|---|---|---|
 | Purpose: the one action, the offer, a conversion | Play. The offer: a free round, now, no account. Conversion: a click to `play.` | Play a round yourself, then copy a class link. Offer: a free classroom activity, no setup. Conversion: a click to `play.`, or Copy. | §2, §3 |
-| Audience and objections | grades 6–12. "Is it fun?" "Do I need an account?" "Does it work on my phone?" | grades 6–12 science teachers. "What do students actually do?" "What do they learn?" "How long?" "What student data?" "Cost and setup?" "Is it accurate?" "Can I see results?" | `README.md:3`; paper §5; `privacy.tsx` |
-| What they know on arrival; traffic source | usually nothing, or a teacher's link | often the old domain or a search | traffic numbers are **the owner's**: no analytics, by policy (`privacy.tsx`) |
+| Audience and objections | grades 6–12. "Is it fun?" "Do I need an account?" "Does it work on my phone?" | grades 6–12 science teachers. "What do students actually do?" "What do they learn?" "How long?" "What student data?" "Cost and setup?" "Is it accurate?" "Can I see results?" | `README.md:3`; paper §5; `Privacy.tsx` |
+| What they know on arrival; traffic source | usually nothing, or a teacher's link | often the old domain or a search | traffic numbers are **the owner's**: no analytics, by policy (`Privacy.tsx`) |
 | Proof and assets | real screenshots; "free, no account, no ads" | screenshots; {N} sourced animals; source tiers; the paper's honest limits; simulated-player results. No logos, testimonials or users: none exist, none invented. | §5, §9 |
-| Guarantees, risk reversal | free, no account | free, no student accounts, nothing to install | `terms.tsx`, `privacy.tsx` |
+| Guarantees, risk reversal | free, no account | free, no student accounts, nothing to install | `Terms.tsx`, `Privacy.tsx` |
 | Constraints | plain, short, outdoor and tech words; phone first | plain and specific; desktop first, phone works | Brief decision rules; GUI.md |
 | Design direction | the cc theme, fixed | same | `GUI.md`, `gui/themes/cc.md` |
 
@@ -248,10 +255,10 @@ The only mode-specific value is the primary fill: light `#008663`, dark `#00906c
 - Part B (fonts, scales, radii, motion, nav, B11) is not used.
 
 **Theme gaps, settled by the owner (H2 answers 3 and 4):**
-1. `--button-primary-background`: light `#008663` (white label 4.58:1; `#00906c` gives 4.03:1, AA needs 4.5:1), dark stays `#00906c` (label 4.67:1). Same OKLCH hue and chroma. It applies to every light-mode `.btn-primary`, the game's too, so the two don't drift (default 1, §12).
+1. `--button-primary-background`: light `#008663` (white label 4.58:1; `#00906c` gives 4.03:1, AA needs 4.5:1), dark stays `#00906c` (label 4.67:1). Same OKLCH hue and chroma. Site-only (owner, 2026-10-29, overturning default 1): the game's buttons keep `--color-1`.
 2. `--space-xxxl: 64px` with `--spacing-xxxl`, the next step on cc's 4px scale, used only as section padding `py-xxl md:py-xxxl`. The h1 stays `xxl` 48px, led by a large real screenshot (Taste's `focal-point`: a picture ≥ 30% of the first screen).
 
-Each carries a comment in `globals.css` citing plan 051 and H2; graphical-audit reports them as intentional local changes. No other gap was found. A new one goes to the handoff file with a default, as GUI.md says.
+Both live in `src/site/site.css`, with a comment citing plan 051 and H2; `globals.css` is unchanged. `scripts/check-game-css.mjs` proves the game's stylesheet, compiled from the game's own sources, is byte-identical to origin/main's (minus the deleted legal pages' own utilities). graphical-audit reports them as intentional local changes. No other gap was found. A new one goes to the handoff file with a default, as GUI.md says.
 
 ## 9. Assets
 
@@ -301,60 +308,19 @@ Proven on 2026-10-28 in `/tmp`: an entry CSS that `@import`s `globals.css` compi
 - **Preview:** `npm run site:serve` = `python3 -m http.server 3101 -b 127.0.0.1 -d out/site` (like `npm run docs`). Preview, `e2e:site` and Taste all use it.
 - **Guards:** `eslint.config.mjs` `no-restricted-imports` in `src/site/**` (`next`, `next/*`, `@clerk/*`); `check-theme.mjs` adds `src/site` to `ROOTS`, and `_app.tsx` leaves `HEX_ALLOWED` once its hexes move to `src/lib/theme.ts`; CI (`.github/workflows/ci.yml`) runs `npm run site:build`, `docker build --target caddy`, then `caddy validate` and a check for `/srv/site/index.html` inside that image (Docker isn't on the agents' VPS, so CI is where the image is proven); `tsc` already covers `src/site`.
 - **Into Caddy's image** (`Dockerfile`): the first stage's `npm ci` + `COPY . .` become `deps`; `build` (unchanged from `ARG` on) and a new `site` stage (`npm run site:build`, no Clerk key needed) start `FROM deps`; a new `caddy` stage `FROM caddy:2` copies `deploy/Caddyfile` and `/app/out/site` to `/srv/site`; `run` stays last. `deploy/docker-compose.app.yml`: `app.build.target: run`; `caddy` swaps `image: caddy:2` for `build: { context: ., target: caddy }` and drops the Caddyfile bind mount (today's single-file mount, `:33`, is why Caddyfile edits never apply). `deploy.sh`'s `build -q` and `up -d` then recreate `caddy` only when its image changed, with no script state.
-- **`deploy/Caddyfile`** (the apex is hardcoded, so a missing variable can't break the game's block; validated on Caddy 2.11.7 and behaviour-tested locally with `*.test` hosts, a stub upstream and a scratch site, 2026-10-28):
-  ```
-  (common) {
-  	encode zstd gzip
-  	header {
-  		Strict-Transport-Security "max-age=31536000"
-  		X-Content-Type-Options nosniff
-  		Referrer-Policy strict-origin-when-cross-origin
-  		-Server
-  	}
-  }
-  # The website (plan 051): static files built into the caddy image (Dockerfile, stage caddy).
-  (site) {
-  	root * /srv/site
-  	header /site/* Cache-Control "public, max-age=31536000, immutable"
-  	file_server
-  }
-  {$APP_DOMAIN} {
-  	import common
-  	@site path /teachers /teachers/* /privacy /privacy/* /terms /terms/* /site/*
-  	handle @site {
-  		import site
-  	}
-  	handle {
-  		reverse_proxy app:8080
-  	}
-  }
-  critterconnect.org {
-  	import common
-  	@game path /explore /explore/* /login /login/* /clue-match /clue-match/* /api/*
-  	redir @game https://{$APP_DOMAIN}{uri} 308
-  	import site
-  	handle_errors 404 {
-  		rewrite * /404.html
-  		file_server
-  	}
-  }
-  www.critterconnect.org {
-  	redir https://critterconnect.org{uri} 308
-  }
-  ```
-  Local results: apex `/`, `/teachers/`, `/privacy/` 200, `/teachers` 308 to `/teachers/`, `/nope/` 404 with `404.html`; `/explore/?seed=5` and `/api/places/` 308 to `play.` with the query kept; on `play.`, `/` and `/explore/` reach the app while the site paths come from files; `www` 308 to the apex; `/site/*` immutable; security headers once each. `handle_errors` can't sit inside `handle`, so the 404 page is apex-only.
-- **`deploy/deploy.sh`:** the remote part is unchanged (pull, `build -q`, `up -d`, health wait). The local curl loop after it becomes `bash deploy/check.sh`, and the deploy exits non-zero if that fails.
-- **`deploy/check.sh`** (new; prints `OK`/`BAD` per line, exits 1 on any `BAD`):
-  - `play.`: today's four routes 200; `/teachers/`, `/privacy/`, `/terms/` 200 and linking `/site/site.`; every `/site/…` URL in `/teachers/` 200 with its type (the images are in the image before DNS moves).
-  - apex, only once `getent hosts critterconnect.org` resolves to `play.`'s IP (else one line: "DNS not moved yet, skipped"): the four pages 200 with the apex canonical and no `<script src`; every `/site/…` URL in `/` 200; `robots.txt`, `sitemap.xml` 200; `/nope/` 404; `/explore/?seed=1`, `/api/places/` 308 to `play.`; `www…/teachers/` 308 to the apex.
-- **Owner's steps after merging the build PR** (from WSL, as `docs/DEPLOY.md` "Start and update"):
-  1. Optional, a day before: Namecheap TTL of `@` and `www` to 300.
-  2. `npm run deploy`. `play.` serves `/teachers/`, `/privacy/`, `/terms/` from the site at once; `check.sh` skips the apex. Until step 4, `docker logs caddy` shows ACME errors for the apex and `www`: expected, not a reason to roll back. Do step 3 the same day.
-  3. Namecheap → critterconnect.org → Advanced DNS: `@` A from `216.198.79.1` to `178.156.159.183`; `www` CNAME to `critterconnect.org.`. Leave MX (email forwarding, carries `privacy@`), TXT (SPF) and `clerk` alone.
-  4. On the VPS, `docker restart caddy` to request the certificates now.
-  5. `bash deploy/check.sh`: every line `OK`, apex included.
-  6. **Vercel:** leave both domains on the old project for the rollback week (once DNS moves it serves nothing). **One week after step 3**, remove both domains, then delete the project (H2 answer 2c; its environment holds a Clerk dev key, `pk_test`).
-  - Rollback: restore the two DNS records. Works only while both domains are still on the Vercel project, i.e. during that week. A bad site build: `git revert`, `npm run deploy`.
+- **`deploy/Caddyfile`** (the apex is hardcoded, so a missing variable can't break the game's block): `(common)` (zstd/gzip, HSTS, nosniff, Referrer-Policy, no `Server`) on every host; `{$APP_DOMAIN}` only `reverse_proxy app:8080`; `critterconnect.org` 308s the game's old paths (`/explore*`, `/login*`, `/clue-match*`, `/api/*`) to `play.`, serves `/srv/site` with `/site/*` immutable, and its `handle_errors 404` serves `404.html` (importing `common` again, as error routes skip the site's); `www` 308s to the apex. Validated on Caddy 2.11.7 and behaviour-tested locally with `*.test` hosts, a stub upstream and the built site: apex `/`, `/teachers/`, `/privacy/`, `/terms/` 200, `/teachers` 308 to `/teachers/`, `/nope/` 404 with `404.html`; `/explore/?seed=5` and `/api/places/` 308 to `play.` with the query kept; on `play.`, `/`, `/explore/`, `/privacy/`, `/teachers/` and `/site/x` all reach the upstream; `www` 308 to the apex; security headers once each.
+- **`deploy/deploy.sh`:** the remote part adds `docker exec caddy test -f /srv/site/index.html` after the health wait (the new caddy image is live). The local curl loop after it becomes `bash deploy/check.sh`, and the deploy exits non-zero if that fails.
+- **`deploy/check.sh`** (new; prints `OK`/`BAD`/`SKIP` per line, exits 1 on any `BAD`; `--strict` makes a `SKIP` `BAD`; details in `docs/DEPLOY.md` "The website"):
+  - `play.`: `/`, `/explore/`, `/api/places/`, `/api/clue-game/pool/` 200; `/privacy/`, `/terms/`, `/teachers/` 404.
+  - apex, only once `getent ahostsv4 critterconnect.org` equals `play.`'s IPv4 (else one `SKIP` line with how to check DNS): the four pages 200 with the apex canonical and no `<script src`; every `/site/…` URL in `/` and `/teachers/` 200 with its type; `robots.txt`, `sitemap.xml` 200; `/nope/` 404 with the 404 page's heading; `/explore/?seed=1`, `/api/places/` 308 to `play.`, query kept; a TLS failure says the certificate isn't issued yet.
+  - `www`, with the same DNS guard: `/teachers/` 308 to the apex.
+- **Guards, added by the build:** CI's "No game links to site pages" `git grep` step; `scripts/check-game-css.mjs`, run per site PR (not in CI: it fails by design on a PR that changes the game's styles).
+- **Owner's steps after merging the build PR** (from WSL, as `docs/DEPLOY.md` "Start and update"; the Vercel project is already deleted, 2026-10-29, so critterconnect.org shows an error until step 2):
+  1. `npm run deploy`. `check.sh` prints the `play.` lines OK and the apex and `www` lines SKIP. `docker logs caddy` shows ACME errors for the apex and `www` until step 2: expected. Do steps 1-3 in one sitting.
+  2. Namecheap → critterconnect.org → Advanced DNS: `@` A from `216.198.79.1` to `178.156.159.183`; `www` from CNAME `5ed334e8d7ea0cd8.vercel-dns-017.com.` to CNAME `critterconnect.org.` (or A `178.156.159.183`). Leave `play`, `clerk`, mail (MX, SPF TXT) and `db` alone.
+  3. Once DNS has propagated, `bash deploy/check.sh --strict`: every line `OK`.
+  - Then, outside the repo: any Terms/Privacy URL in the Clerk dashboard, and the Google Auth Platform branding's home, privacy and terms links, to `https://critterconnect.org/`, `/privacy/`, `/terms/`.
+  - Rollback: `git revert`, `npm run deploy`. There is no DNS rollback (Vercel is gone).
 - **Old links:** `www.*` 308 to the apex; `/` gets the new front page (the old site had only `/`); `/explore*`, `/login*`, `/clue-match*`, `/api/*` 308 to `play.` with path and query; anything else the 404 page with Play.
 
 ## 11. Basics
@@ -363,7 +329,8 @@ Checked by `scripts/e2e-site.mjs` (`npm run e2e:site`, `E2E_SITE_URL` default `h
 
 - **Accessibility:** WCAG 2.1 AA. axe-core (declared devDependency, pinned `4.11.0`, loaded with `createRequire(...).resolve('axe-core/axe.min.js')`, never shipped) for wcag2a/2aa/21a/21aa: **0 violations, no exceptions**. Plus: one h1; landmarks and a skip link; visible focus (the existing `:focus-visible`); keyboard order; alt on every shot; no text under 14px; the document scrolls to the footer.
 - **Speed** (390, 4× CPU slowdown, Slow 4G 1.6 Mbps/150 ms, `/` and `/teachers/`): LCP ≤ 2.5 s, CLS ≤ 0.1; ≤ 300 KB on first load (about 6 KB gz CSS, 49 KB Nunito in three weights, wordmarks, hero WebP); no JS beyond two inline scripts (< 2 KB); no `<script src`; no requests to other hosts; no console errors. Measured once by a short CDP script in the build's artifacts.
-- **SEO:** a title and description per page, from `config.ts`; `lang="en"`; apex canonical on both hosts; og and twitter tags with an absolute apex `og.png`; `robots.txt` with `Sitemap:`; `sitemap.xml` with the 4 apex URLs; the 404 answers 404. Checked by `e2e:site`, then through Caddy by `deploy/check.sh`.
+- **SEO:** a title and description per page, from `config.ts`; `lang="en"`; apex canonical; og and twitter tags with an absolute apex `og.png`; `robots.txt` with `Sitemap:`; `sitemap.xml` with the 4 apex URLs; the 404 answers 404. Checked by `e2e:site`, then through Caddy by `deploy/check.sh`.
+- **The primary fill:** `.btn-primary`'s computed background is `rgb(0, 134, 99)` in light and `rgb(0, 144, 108)` in dark (site only).
 - **The class link:** two loads give two different `https://play.critterconnect.org/explore/?seed=N` links (N integer, 1…4294967295); Copy fills the clipboard and the live region says "Copied"; with JS off the fixed example shows. That a seed replays the same round is already `npm run e2e`'s check.
 - **Old title and description → new:**
 
@@ -378,7 +345,7 @@ Checked by `scripts/e2e-site.mjs` (`npm run e2e:site`, `E2E_SITE_URL` default `h
 
 **Answered** (handoff H2, 2026-10-28):
 1. Hosting: (b), a separate static build served by the Hetzner Caddy; theme imported, never copied; no Clerk.
-2. Coming soon: teacher guide, standards map ("maps onto"), class results by class link with no names, each "not available yet"; no rosters or student accounts. (b) The privacy page gains one sentence when class results are built. (c) Delete the Vercel project a week after the DNS move.
+2. Coming soon: teacher guide, standards map ("maps onto"), class results by class link with no names, each "not available yet"; no rosters or student accounts. (b) The privacy page gains one sentence when class results are built. (c) Delete the Vercel project a week after the DNS move. Superseded 2026-10-29: the owner deleted it at once (no rollback week).
 3. Contrast: darken the primary fill only, to pass AA: `#008663`, 4.58:1, light mode.
 4. Spacing: add one step, `--space-xxxl: 64px`; h1 stays `xxl` with a large screenshot; no motion.
 5. Operator: Haunted Pavement LLC, in the footer and the terms.
@@ -387,8 +354,8 @@ Checked by `scripts/e2e-site.mjs` (`npm run e2e:site`, `E2E_SITE_URL` default `h
 8. Brand: light-mode screenshots; the served light wordmark.
 9. Stale docs: the build fixes `README.md:3` and dates a note under paper §5.3 item 11.
 
-**Defaults the redesign set**, none blocking (so none is in the handoff file); overturn any in the PR:
-1. The darker primary fill applies to every light-mode `.btn-primary`, the game's included.
-2. `play.` also serves `/teachers/`, `/privacy/` and `/terms/`: the same files, with the apex canonical.
+**Defaults the redesign set** (owner's answers on PR #35, 2026-10-29: 1 and 2 overturned, 3 and 4 stand):
+1. ~~The darker primary fill applies to every light-mode `.btn-primary`, the game's included.~~ Overturned: site-only; the game's theme stays as it is.
+2. ~~`play.` also serves `/teachers/`, `/privacy/` and `/terms/`: the same files, with the apex canonical.~~ Overturned: `play.` serves the game only; the legal pages exist once, on the apex.
 3. A deploy that changes the Caddyfile or the site recreates the `caddy` container: a few seconds' blip for the game, only then.
 4. The terms' "Last updated" moves to the build's date, because the operator sentence changes them.

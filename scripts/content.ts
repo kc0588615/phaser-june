@@ -7,26 +7,19 @@
 //   npm run content -- photos   a Wikimedia Commons photo for profiles without one
 //   npm run content -- preview [name]   the clues and facts profiles make, and their problems
 // CLUE_USE_TUNNEL=1 connects through the agent SSH tunnel (127.0.0.1:55432).
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import type postgres from 'postgres';
 import { buildCluePool } from '../src/lib/cluePool';
 import { validatePool } from '../src/clueGame/validatePool';
 import { checkProfile, contentRowsFromProfiles, type AnimalProfile, type ContentSource } from '../src/clueGame/profiles';
+import { ANIMALS_DIR, CONTENT_DIR, readProfiles } from '../src/lib/contentProfiles';
 import { connect, run } from './connect';
 import { findPhoto } from './photos';
 
-const DIR = path.join(process.cwd(), 'db/content');
-const ANIMALS = path.join(DIR, 'animals');
-
-async function readProfiles(): Promise<Array<{ file: string; profile: AnimalProfile }>> {
-  const files = (await readdir(ANIMALS)).filter(file => file.endsWith('.json')).sort();
-  return Promise.all(files.map(async file => ({ file, profile: JSON.parse(await readFile(path.join(ANIMALS, file), 'utf8')) as AnimalProfile })));
-}
-
 async function writeProfile(file: string, profile: AnimalProfile): Promise<void> {
-  await writeFile(path.join(ANIMALS, file), `${JSON.stringify(profile, null, 2)}\n`);
+  await writeFile(path.join(ANIMALS_DIR, file), `${JSON.stringify(profile, null, 2)}\n`);
 }
 
 /** Insert or update rows by id. */
@@ -81,7 +74,7 @@ run(async () => {
   if (!['build', 'check', 'ranges', 'photos', 'preview'].includes(mode)) throw new Error('Choose build, check, ranges, photos or preview.');
 
   if (mode === 'preview') {
-    const sources = JSON.parse(await readFile(path.join(DIR, 'sources.json'), 'utf8')) as ContentSource[];
+    const sources = JSON.parse(await readFile(path.join(CONTENT_DIR, 'sources.json'), 'utf8')) as ContentSource[];
     const profiles = (await readProfiles()).map(entry => entry.profile).filter(profile => !filter || profile.commonName.toLowerCase().includes(filter.toLowerCase()));
     const rows = contentRowsFromProfiles(profiles);
     for (const profile of profiles) {
@@ -130,7 +123,7 @@ run(async () => {
       return;
     }
 
-    const sources = JSON.parse(await readFile(path.join(DIR, 'sources.json'), 'utf8')) as ContentSource[];
+    const sources = JSON.parse(await readFile(path.join(CONTENT_DIR, 'sources.json'), 'utf8')) as ContentSource[];
     const profiles = (await readProfiles()).map(entry => entry.profile);
     const problems = profiles.flatMap(profile => checkProfile(profile, sources).map(problem => `${profile.commonName}: ${problem}`));
     if (problems.length) throw new Error(`Fix the profiles first:\n${problems.join('\n')}`);

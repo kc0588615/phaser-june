@@ -1,10 +1,10 @@
-import Link from 'next/link';
-import LegalPage, { CONTACT_EMAIL } from '@/components/LegalPage';
+import { CONTACT_EMAIL, OPERATOR } from '../config';
+import LegalArticle from '../LegalArticle';
 
-export default function TermsPage() {
+export default function Terms() {
   return (
-    <LegalPage title="Terms of Service" updated="September 26, 2026">
-      <p>By playing Critter Connect you agree to these terms. They are short on purpose.</p>
+    <LegalArticle title="Terms of Service" updated="October 29, 2026">
+      <p>By playing Critter Connect you agree to these terms. They are short on purpose. Critter Connect is run by {OPERATOR}, the &ldquo;we&rdquo; in these terms.</p>
 
       <h2>The game</h2>
       <ul>
@@ -27,13 +27,13 @@ export default function TermsPage() {
 
       <h2>Privacy</h2>
       <p>
-        See the <Link href="/privacy">Privacy Policy</Link> for what we keep and how to delete it.
+        See the <a href="/privacy/">Privacy Policy</a> for what we keep and how to delete it.
       </p>
 
       <h2>Contact</h2>
       <p>
         Questions: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
       </p>
-    </LegalPage>
+    </LegalArticle>
   );
 }

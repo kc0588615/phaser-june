@@ -1,0 +1,14 @@
+/* The website's stylesheet (plan 051 §10): the game's cc theme, imported, never copied. scripts/site.mjs
+   compiles it with Tailwind scanning src/site only, plus the shared wordmark. */
+@import "../styles/globals.css";
+@source "../components/Wordmark.tsx";
+
+/* The game locks the page to the screen (globals.css); the site's pages scroll. */
+html, body { height: auto; overflow: visible; }
+
+/* Site-only cc additions (plan 051 §8, H2 answers 3-4; owner 2026-10-29: the game's theme stays as it is). */
+:root { --button-primary-background: #008663; --space-xxxl: 64px; }   /* white label 4.58:1 (AA) */
+/* Dark is deliberately the game's own --color-1 (#00906c, label 4.67:1), so it moves with the game's dark theme. */
+:root[data-theme="dark"] { --button-primary-background: var(--color-1); }
+@theme inline { --spacing-xxxl: var(--space-xxxl); }
+@layer components { .btn-primary { background: var(--button-primary-background); } }

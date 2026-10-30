@@ -240,6 +240,8 @@ These map onto widely used science-education practices, notably *analyzing and i
 10. **The family tree moved out of play.** Taxonomy is now learned only on the round-end card, which a hurried player can skip.
 11. **Teachers cannot yet see the reasoning.** Rounds are not saved in this build, and even when saved, the data will show marks and outcomes, not the reasoning behind them.
 
+    *Update (2026-10-29):* rounds are saved now. Every finished round, found or lost, goes to `clue_match_solves` with its `session_seed` (`db/schema.sql`). The rest of this item stands: the data shows marks and outcomes, not the reasoning.
+
 ### 5.4 Mitigations and design recommendations
 
 | Risk | Recommendation |

@@ -8,6 +8,7 @@ import { Shuffle } from 'lucide-react';
 import { SignInButton, Show, UserButton } from '@clerk/nextjs';
 import { MIN_PLACE_ANIMALS, classColor, type PlaceAnimal, type PlacesResponse } from '@/clueGame/places';
 import { useJournal } from '@/components/clueGame/useJournal';
+import Wordmark from '@/components/Wordmark';
 import { getJson } from '@/lib/getJson';
 import { clearSavedGame } from '@/components/animalBoard/savedGame';
 import { speciesBadge } from '@/clueGame/speciesInfo';
@@ -50,13 +51,7 @@ export function GlobeScreen() {
       <main className="grid h-dvh grid-cols-[minmax(0,1fr)] grid-rows-[auto_42dvh_minmax(0,1fr)] overflow-hidden bg-neutral-1 text-neutral-10 [grid-template-areas:'top'_'globe'_'panel'] md:grid-cols-[minmax(0,1fr)_420px] md:grid-rows-[auto_minmax(0,1fr)] md:[grid-template-areas:'globe_top'_'globe_panel']">
         <header className="flex min-w-0 items-center gap-xs px-s py-xs [grid-area:top]">
           <div className="min-w-0 flex-1">
-            <h1 className="m-0 leading-none">
-              {/* The wordmark in the mode's text color (the -light file is the same art with a black wordmark); dark: is [data-theme]. */}
-              {/* eslint-disable-next-line @next/next/no-img-element -- static SVG wordmark */}
-              <img src="/branding/critterconnect-logo-light.svg" alt="Critter Connect" className="block h-6 w-auto dark:hidden" />
-              {/* eslint-disable-next-line @next/next/no-img-element -- static SVG wordmark */}
-              <img src="/branding/critterconnect-logo.svg" alt="Critter Connect" className="hidden h-6 w-auto dark:block" />
-            </h1>
+            <h1 className="m-0 leading-none"><Wordmark /></h1>
             <p className="m-0 truncate text-xs text-neutral-7">
               {data ? `${foundCount} of ${animals.size} animals found` : 'Pick a place to explore'}
             </p>

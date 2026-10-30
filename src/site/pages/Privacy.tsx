@@ -1,8 +1,9 @@
-import LegalPage, { CONTACT_EMAIL } from '@/components/LegalPage';
+import { CONTACT_EMAIL } from '../config';
+import LegalArticle from '../LegalArticle';
 
-export default function PrivacyPage() {
+export default function Privacy() {
   return (
-    <LegalPage title="Privacy Policy" updated="September 26, 2026">
+    <LegalArticle title="Privacy Policy" updated="September 26, 2026">
       <p>
         Critter Connect is a free game about real animals. You can play without an account. This page explains what we
         keep if you do sign in, and what stays on your own device.
@@ -56,6 +57,6 @@ export default function PrivacyPage() {
 
       <h2>Changes</h2>
       <p>If this policy changes, we will update the date at the top of this page.</p>
-    </LegalPage>
+    </LegalArticle>
   );
 }

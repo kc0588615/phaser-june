@@ -10,15 +10,14 @@
 //
 //   npm run dev        (in another terminal)
 //   npm run e2e        env: E2E_BASE_URL, E2E_SEED (7), E2E_ROUNDS (3), E2E_PLACE (a place key), CHROME_PATH
-import { spawn } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { openPage, startBrowser } from './cdp.mjs';
 
 const BASE = (process.env.E2E_BASE_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const SEED = Number(process.env.E2E_SEED ?? 7);
 const ROUNDS = Number(process.env.E2E_ROUNDS ?? 3);
-const CHROME = process.env.CHROME_PATH ?? '/usr/bin/google-chrome';
 const MAX_MOVES = 45;
 
 const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-seed${SEED}`;
@@ -41,54 +40,6 @@ function pruneArtifacts() {
   for (const run of runs.slice(0, -KEEP_RUNS)) rmSync(path.join(root, run), { recursive: true, force: true });
 }
 
-/** A minimal Chrome DevTools Protocol client over the browser's WebSocket. */
-function connect(url) {
-  const ws = new WebSocket(url);
-  let nextId = 0;
-  const pending = new Map();
-  const listeners = [];
-  ws.onmessage = ({ data }) => {
-    const message = JSON.parse(data);
-    const waiting = message.id && pending.get(message.id);
-    if (waiting) {
-      pending.delete(message.id);
-      if (message.error) waiting.reject(new Error(`${waiting.method}: ${message.error.message}`));
-      else waiting.resolve(message.result);
-    } else {
-      for (const listener of listeners) listener(message);
-    }
-  };
-  return {
-    opened: new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = () => reject(new Error(`Could not connect to ${url}`)); }),
-    send: (method, params = {}, sessionId) => new Promise((resolve, reject) => {
-      const id = ++nextId;
-      pending.set(id, { resolve, reject, method });
-      ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
-    }),
-    on: listener => listeners.push(listener),
-    close: () => ws.close(),
-  };
-}
-
-function launchChrome(profileDir) {
-  const chrome = spawn(CHROME, [
-    '--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check',
-    '--enable-unsafe-swiftshader', '--mute-audio', 'about:blank',
-  ], { stdio: ['ignore', 'ignore', 'pipe'] });
-  const endpoint = new Promise((resolve, reject) => {
-    let output = '';
-    chrome.stderr.on('data', chunk => {
-      output += chunk;
-      const match = output.match(/DevTools listening on (ws:\/\/\S+)/);
-      if (match) resolve(match[1]);
-    });
-    chrome.on('error', reject);
-    chrome.on('exit', code => reject(new Error(`Chrome exited early (code ${code})`)));
-    setTimeout(() => reject(new Error('Chrome did not start in 20 s')), 20_000);
-  });
-  return { chrome, endpoint };
-}
-
 async function main() {
   try {
     const response = await fetch(`${BASE}/api/places/`);
@@ -99,23 +50,9 @@ async function main() {
   const [load] = os.loadavg();
   if (load > os.cpus().length) console.log(`WARN load ${load.toFixed(0)} on ${os.cpus().length} cores: expect timeouts. Look for stray Chrome (ps -eo pcpu,args --sort=-pcpu | head)`);
   mkdirSync(outDir, { recursive: true });
-  const profileDir = mkdtempSync(path.join(os.tmpdir(), 'cc-e2e-'));
-  const { chrome, endpoint } = launchChrome(profileDir);
-  // A killed run (timeout, Ctrl-C) would otherwise orphan Chrome and slow every later run.
-  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
-    process.once(signal, () => {
-      chrome.kill('SIGKILL');
-      rmSync(profileDir, { recursive: true, force: true });
-      process.exit(130);
-    });
-  }
-  let browser;
+  const { browser, close } = await startBrowser();
   try {
-    browser = connect(await endpoint);
-    await browser.opened;
-    const { targetId } = await browser.send('Target.createTarget', { url: 'about:blank' });
-    const { sessionId } = await browser.send('Target.attachToTarget', { targetId, flatten: true });
-    const page = (method, params) => browser.send(method, params, sessionId);
+    const { sessionId, page, evaluate, waitFor } = await openPage(browser);
 
     browser.on(message => {
       if (message.sessionId !== sessionId) return;
@@ -163,20 +100,6 @@ async function main() {
       };
     ` });
 
-    const evaluate = async (fn, ...args) => {
-      const { result, exceptionDetails } = await page('Runtime.evaluate', { expression: `(${fn})(...${JSON.stringify(args)})`, awaitPromise: true, returnByValue: true });
-      if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
-      return result.value;
-    };
-    const waitFor = async (fn, what, timeoutMs = 30_000, ...args) => {
-      const start = Date.now();
-      while (Date.now() - start < timeoutMs) {
-        const value = await evaluate(fn, ...args).catch(() => null);
-        if (value) return value;
-        await sleep(250);
-      }
-      throw new Error(`Timed out waiting for ${what}`);
-    };
     const goto = async url => {
       await page('Page.navigate', { url });
       await waitFor(() => document.readyState === 'complete', `${url} to load`);
@@ -192,7 +115,11 @@ async function main() {
       return !tile || tile.tag !== row.tag || (row.text && !tile.text.includes(row.text));
     }).map(row => ({ want: row, shown: shown.find(candidate => candidate.category === row.category) ?? null }));
     const screenshot = async name => {
+      // The dev build's Next badge isn't the game: hide it for the shot (the site uses these, plan 051 §9).
+      // Next re-adds a removed <nextjs-portal>, so a style hides it, and goes after the shot.
+      await evaluate(() => document.head.insertAdjacentHTML('beforeend', '<style id="e2e-no-badge">nextjs-portal { display: none !important; }</style>'));
       const { data } = await page('Page.captureScreenshot', { format: 'png' });
+      await evaluate(() => document.getElementById('e2e-no-badge')?.remove());
       writeFileSync(path.join(outDir, name), Buffer.from(data, 'base64'));
       report.screenshots.push(name);
     };
@@ -343,13 +270,16 @@ async function main() {
         await screenshot('02a-hidden.png');
         // The field guide offers a pencil mark for each hidden answer.
         const guide = await evaluate(async () => {
-          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect]');
           await window.__holdPill(row.dataset.suspect);
           const notScouted = document.querySelectorAll('[role=dialog] button[data-pencil-guide="yes"]').length;
-          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
-          await wait(250);
           return { hidden: row.querySelectorAll('td[data-hidden]').length, notScouted };
+        });
+        await sleep(1000); // its photo loads
+        await screenshot('02d-field-guide.png');
+        await evaluate(async () => {
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+          await new Promise(resolve => setTimeout(resolve, 250));
         });
         check('the field guide offers a pencil mark for each hidden answer', guide.hidden > 0 && guide.notScouted === guide.hidden, JSON.stringify(guide));
         // A long press on a row opens its field guide (and doesn't pick it); pencilling there keeps the guide open.
@@ -907,10 +837,7 @@ async function main() {
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));
   } finally {
-    browser?.close();
-    chrome.kill();
-    await sleep(300);
-    rmSync(profileDir, { recursive: true, force: true });
+    await close();
   }
 }
 

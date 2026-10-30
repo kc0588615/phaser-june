@@ -1,6 +1,6 @@
 # Critter Connect
 
-An educational animal game for grades 6–12. Pick a continent on a globe, then find the mystery animal among 12 look-alikes: match gems on a small board to earn charges (body, habits, habitat, range, life cycle), set off the toys big matches leave, spend charges on yes/no questions that cross animals out, climb its family tree, and collect rare note gems for a last chance. Every animal you find glows on the globe and goes in your Field Journal.
+An educational animal game for grades 6–12. Pick a continent on a globe, then find the animal the camera saw among five look-alikes pinned on a small board: match gems to fill clue orders that answer yes/no questions, set off the toys big matches leave, rule look-alikes out in the evidence grid and release them from the board. Every animal you find glows on the globe and goes in your Field Journal; the round-end card shows its family tree, range map and sources.
 
 Next.js 16 (pages + API routes), Phaser 3 (the board), MapLibre GL (the globe), Drizzle + PostgreSQL/PostGIS (content, ranges, places), Clerk (sign-in).
 
