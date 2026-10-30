@@ -200,7 +200,7 @@ Shared: cwd = worktree root. `A=/srv/critter-ai/agent-state/missions/cc-website`
   - `git status`: plan only (F7 if not).
   - Verify: `$M/shots/raw/` has 10 PNGs, `start.json`, `play.json`, `pool-play.json`, `pool-start.json`, `places-play.json`; `cmp $M/shots/raw/pool-play.json $M/shots/raw/pool-start.json` (if it differs, `diff <(jq -S . …) <(jq -S . …)`: order only = fine, data = Decision); `node $M/shots/compare.mjs $M/shots/raw`: boards + wording PASS (files/build still show the old files: unchanged, PASS). Board differs → F2; throw → F3.
 
-- [ ] S3. Convert into the repo, contact sheet, eye check, `shots.ts` header, commit.
+- [x] S3. Convert into the repo, contact sheet, eye check, `shots.ts` header, commit.
   - `node $M/shots/convert.mjs $M/shots/raw 2>&1 | tee $M/shots/convert.log` (9 `src/site/shots/*.webp` + `src/site/og.png`); `node $M/shots/contact.mjs $M/shots/old $M/shots/contact.png`.
   - Eye check (Read full size, each new `$M/shots/raw/<f>.png` beside `$A/shots/raw/<f>.png`): row label "On camera", new opener on the 3 round-start shots, same animals and photos (credits), light mode, no dev badge/overlay, nothing cut off; each `shots.ts` alt still true, esp. `fieldGuide` (Aye-aye), `gridMarked` (size answer no, Okapi ruled out), `witnessNote` (quote, "2 of 5"), `roundEnd`, `journal` ("2 of 76", Aye-aye + Aardvark), `globeFound` ("2 found"). Then `contact.png`. One line per file → `$M/shots/eye-check.txt`.
   - `src/site/shots.ts` header: "Taken 2026-10-30 from the game at origin/main `$B`", "globe, board-phone and hero-board (and src/site/og.png) from the production build", last line "Retake: take.mjs and convert.mjs in the site-shots-on-camera mission's artifacts (shots/, COMMAND.txt), then check every shot by eye." Change alt / `photos` / `ROUND_1` only where the eye check or F2 requires.
@@ -254,6 +254,11 @@ F10. **Dialog shot's DOM text lacks `On camera`** although the grid shows (sheet
 
 ## Decisions
 
+- **og.png retaken** with the production-build shots (finding 1): it's every page's share picture and showed "Camera saw" + the old opener (`config.ts:12` ties it to shots.ts). Header names it.
+- **"Camera saw" check is case-sensitive** (the row label is what was renamed). Lowercase game copy `AnimalSheets.tsx:478` ("The camera saw #1, the", round-end and journal text) and `:542` (round-end legend "what the camera saw") stays: game copy is out of scope; PR names both as an owner follow-up.
+- **Unchanged files (F8):** `globe.webp` (22d18d99d9) and `globe-found.webp` (2777d9d121) are byte-identical to the old: no changed copy on those screens, same data, deterministic render. Kept as is; their URLs don't change.
+- Boards equal the old run (S2 compare): no F2 change; `ROUND_1`, `photos` and alt text unchanged (all still true by eye).
+
 ## Log
 
 - 2026-10-30 05:00 UTC: Baseline. typecheck/lint pass, unit 47/47, site:build ok, e2e:site 444/444 on :3105. Handoff H3 (done) closed; its owner leftovers (Vercel, Clerk/Google branding, WSL pull) moved to H4. No effect on scope.
@@ -268,5 +273,6 @@ F10. **Dialog shot's DOM text lacks `On camera`** although the grid shows (sheet
 - 2026-10-30 06:15 UTC: Steps (planner): S1 kit in $M/shots (take+text, convert, contact, compare, COMMAND), S2 retake on :3106 play then start + pool saves, S3 convert/eye check/shots.ts header/commit, S4 rebase/checks/PR. Verification + F0-F10 failure modes. Plan-only; no checks needed.
 - 2026-10-30 06:35 UTC: S1. origin/main unmoved (B=368be9e3, no rebase). Kit in $M/shots/: take.mjs (+`text`, ports 3106; diff = that + comments), convert.mjs verbatim, contact.mjs, compare.mjs (repo esbuild/sharp via createRequire), COMMAND.txt, old/ (10 files from 368be9e3, = shipped bytes). Verify: node --check ok; site:build ok; compare vs old raw: boards PASS, wording 10 FAIL "no page text" (expected), files all UNCHANGED + sizes PASS, build PASS; negative test (bad id/theme/round/missing PNG/"Camera saw"/no text/no out/site) all FAIL as F0 wants; contact smoke rows identical, deleted. git status clean.
 - 2026-10-30 07:00 UTC: S2. Retake on :3106, play then start. `next dev -H 127.0.0.1` failed (Next 16 proxies `localhost` to its worker: ECONNRESET), so both servers bound `-H localhost` (still loopback); COMMAND.txt updated. take.mjs play + start exit 0, 10 PNGs + JSON; pool-play = pool-start (cmp). compare.mjs vs new raw: boards all PASS (same ids, rounds 25/5 moves, notes 0/3, light), wording all PASS (lowercase "camera saw" noted in round-end and journal: game copy), files still old (S3 converts), build PASS. git status: plan only.
+- 2026-10-30 07:25 UTC: S3. convert.mjs -> 7 WebP + og.png changed, globe + globe-found byte-identical (Decision). contact.png + eye-check.txt: all 10 PASS (On camera, new opener, same animals/photos, alt true). shots.ts header -> 2026-10-30, 368be9e3, og.png, new retake path. Verify: typecheck, lint, site:build pass; compare.mjs exit 0 (boards, wording, files, build); no "Camera saw" in out/site; diff = shots + og + shots.ts + plan.
 
 ## Summary

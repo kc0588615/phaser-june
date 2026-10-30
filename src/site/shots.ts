@@ -1,8 +1,10 @@
-// Screenshots of the game on the website (plan 051 §9), in src/site/shots/ as WebP. Taken 2026-10-29 from the game at
-// origin/main 0bbbeb0e, light mode: globe, board-phone and hero-board from the production build; the rest from a dev
-// build, the seeded trail played through window.__cc. `photos`: the animals (profile ids) whose photos show in the
-// shot; each page's footer credits them (render.tsx), and the build fails on an id with no profile or photo.
-// Retake: the take.mjs and convert.mjs in the cc-website mission's artifacts (shots/), then check every shot by eye.
+// Screenshots of the game on the website (plan 051 §9), in src/site/shots/ as WebP. Taken 2026-10-30 from the game at
+// origin/main 368be9e3, light mode: globe, board-phone and hero-board (and src/site/og.png) from the production build;
+// the rest from a dev build, the seeded trail played through window.__cc. `photos`: the animals (profile ids) whose
+// photos show in the shot; each page's footer credits them (render.tsx), and the build fails on an id with no profile
+// or photo.
+// Retake: take.mjs and convert.mjs in the site-shots-on-camera mission's artifacts (shots/, COMMAND.txt), then check
+// every shot by eye.
 
 export type Shot = {
   file: string;
