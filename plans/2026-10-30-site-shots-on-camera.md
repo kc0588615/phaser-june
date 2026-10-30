@@ -250,6 +250,12 @@ F10. **Dialog shot's DOM text lacks `On camera`** although the grid shows (sheet
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER: none
+
 ## Release
 
 ## Decisions
@@ -276,5 +282,6 @@ F10. **Dialog shot's DOM text lacks `On camera`** although the grid shows (sheet
 - 2026-10-30 07:00 UTC: S2. Retake on :3106, play then start. `next dev -H 127.0.0.1` failed (Next 16 proxies `localhost` to its worker: ECONNRESET), so both servers bound `-H localhost` (still loopback); COMMAND.txt updated. take.mjs play + start exit 0, 10 PNGs + JSON; pool-play = pool-start (cmp). compare.mjs vs new raw: boards all PASS (same ids, rounds 25/5 moves, notes 0/3, light), wording all PASS (lowercase "camera saw" noted in round-end and journal: game copy), files still old (S3 converts), build PASS. git status: plan only.
 - 2026-10-30 07:25 UTC: S3. convert.mjs -> 7 WebP + og.png changed, globe + globe-found byte-identical (Decision). contact.png + eye-check.txt: all 10 PASS (On camera, new opener, same animals/photos, alt true). shots.ts header -> 2026-10-30, 368be9e3, og.png, new retake path. Verify: typecheck, lint, site:build pass; compare.mjs exit 0 (boards, wording, files, build); no "Camera saw" in out/site; diff = shots + og + shots.ts + plan.
 - 2026-10-30 07:45 UTC: S4. origin/main = 368be9e3, rebase no-op. typecheck, lint, site:build pass; compare.mjs exit 0 (104 PASS, 0 FAIL); e2e:site on :3105 444/444, 20 screenshots -> $M/e2e-s4/ (baseline/e2e-site removed). PR https://github.com/kc0588615/phaser-june/pull/38 (Closes #37), body in $M/pr-body.md. git status clean.
+- 2026-10-30 08:00 UTC: Code review (Astra, `--code origin/main`): APPROVE, 0 MUST-FIX, 0 SHOULD-CONSIDER. Review-only; no checks needed.
 
 ## Summary
