@@ -75,7 +75,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -169,6 +169,14 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+None needed: Fable and Astra both APPROVE, 0 MUST-FIX; architect not re-run. SHOULD-CONSIDER items adopted for the Steps (no design change):
+- Fable 1: run `play` (dev server) before `build` + `start`, as the old run did.
+- Fable 2, Astra 3: PR body names og.png's inclusion and the two lowercase "camera saw" strings (`AnimalSheets.tsx:478,542`, game copy, out of scope) as a possible follow-up; the "Camera saw" check is case-sensitive.
+- Fable 3: globe hashes: just record what happened.
+- Fable 4: `compare.txt` also lists each shot's `theme`.
+- Astra 1: save `/api/clue-game/pool` responses used by the run (seed 1, `continent:africa`) to `$M/shots/raw/pool-*.json`.
+- Astra 2: hash check = every referenced `/site/*.{webp,png}` name matches its current file's sha256[0:10]; no old hash referenced for a changed asset; unchanged assets listed under Decisions.
+
 ## Steps
 
 ## Verification
@@ -187,5 +195,7 @@ SHOULD-CONSIDER:
 - 2026-10-30 05:35 UTC: Fable review (architecture-reviewer): APPROVE, 0 MUST-FIX, 4 SHOULD-CONSIDER (play before start, case rule in PR, globe hash, theme in compare.txt). Plan-only; no checks needed.
 
 - 2026-10-30 05:50 UTC: Astra review: APPROVE, 0 MUST-FIX, 3 SHOULD-CONSIDER (save pool response, hash check vs unchanged shots, og.png + lowercase in PR). Plan-only; no checks needed.
+
+- 2026-10-30 06:00 UTC: Revision: none needed (both reviews APPROVE, 0 MUST-FIX); 6 SHOULD-CONSIDER items adopted into Revision notes for Steps. Plan-only; no checks needed.
 
 ## Summary
