@@ -76,7 +76,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none): none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -179,7 +179,74 @@ None needed: Fable and Astra both APPROVE, 0 MUST-FIX; architect not re-run. SHO
 
 ## Steps
 
+Shared: cwd = worktree root. `A=/srv/critter-ai/agent-state/missions/cc-website`, `M=/srv/critter-ai/agent-state/missions/site-shots-on-camera`, `CHROME_PATH=$A/bin/chrome`. `SHOTS="globe board-phone hero-board field-guide grid-marked witness-note round-end journal globe-found"` (+ `og`). Heavy jobs one at a time. Never 3100/3101: game server **3106**, built site **3105**; `ss -ltn | grep -E ':310[56] '` must be empty before binding (else F1). Wait for a server: `timeout 180 bash -c 'until curl -sf -o /dev/null http://localhost:<port>/; do sleep 2; done'`. Stop one: `fuser -k <port>/tcp`, then `ss -ltn` clear.
+
+- [ ] S1. Fresh base + retake kit in `$M/shots/` (no repo change).
+  - `git fetch origin`. If `git log --oneline 368be9e3..origin/main` is non-empty: `git rebase origin/main` (plan-only commits), `npm ci` if `package-lock.json` changed, `git push --force-with-lease`; `git log --stat 368be9e3..origin/main -- src/components src/game src/clueGame src/app src/pages src/lib src/styles db/content scripts/cdp.mjs` empty or copy-only, else Decisions. `B=$(git rev-parse --short=8 $(git merge-base HEAD origin/main))` → Log.
+  - `mkdir -p $M/shots/raw $M/shots/old && cp $A/shots/take.mjs $A/shots/convert.mjs $M/shots/`. `take.mjs`: `shot()` also stores `text: await evaluate(() => document.body.innerText)` in `record.shots[name]`; usage comments 3100 → 3106. `convert.mjs` verbatim.
+  - Old shipped files: `for f in $SHOTS; do git show $B:src/site/shots/$f.webp > $M/shots/old/$f.webp; done; git show $B:src/site/og.png > $M/shots/old/og.png`.
+  - `$M/shots/contact.mjs` (repo sharp via `createRequire`, as `convert.mjs`): `node $M/shots/contact.mjs <oldDir> <out.png>`; top row `<oldDir>/<f>.webp` + `og.png`, bottom row the repo's `src/site/shots/<f>.webp` + `src/site/og.png`; columns `$SHOTS` then og, each scaled to 600 px high.
+  - `$M/shots/compare.mjs` (`node $M/shots/compare.mjs <newRawDir>`; prints 4 sections, PASS/FAIL per line, exit 1 on any FAIL; must fail on everything listed in F0):
+    1. **boards** vs `$A/shots/raw/{start,play}.json`: per shot `ids`, `theme` (= `light`); per round `suspects`, `mysteryId`, `outcome`, `movesUsed`, `notes`.
+    2. **wording** (case-sensitive): no shot's `text` has `Camera saw` (missing/empty `text` = FAIL); `board-phone hero-board og field-guide grid-marked witness-note round-end` have `On camera`; `board-phone hero-board og` have `Which of these 5 was caught on camera?`; lists (not FAIL) shots with lowercase `camera saw`.
+    3. **files** (9 WebP + og.png): old/new sha256[0:10], KB, changed/unchanged (unchanged = listed, not FAIL); new pixel size = `shots.ts` width/height (load `shots.ts` via esbuild `transform`, as `scripts/e2e-site.mjs` loads `config.ts`), og 1200×630.
+    4. **build**: every `/site/<name>.<hash>.(webp|png)` in `out/site/**/*.html` has hash = sha256[0:10] of current `src/site/shots/<name>` / `src/site/og.png`; no old hash of a changed file referenced or in `out/site/site/`; `Camera saw` in no `out/site` file.
+  - `$M/shots/COMMAND.txt`: base `$B`, ports, the S2 and S3 commands in order (play before start), pool files, column order of `contact.png`.
+  - Verify: `node --check` each `.mjs`; `diff -u $A/shots/take.mjs $M/shots/take.mjs` = `text` field + comments only; `npm run site:build && node $M/shots/compare.mjs $A/shots/raw`: boards PASS, wording FAIL "no text" (expected: fails loud on the old shots), files all unchanged, build PASS (old copies = shipped bytes); `node $M/shots/contact.mjs $M/shots/old /tmp/contact-smoke.png`, look at it (rows identical), delete it; `git status`: plan only.
+
+- [ ] S2. Retake raw shots on :3106 (play, then start), save pool responses, check boards + wording.
+  - Play (dev): `nohup npx next dev -p 3106 -H 127.0.0.1 > $M/shots/next-dev.log 2>&1 &`; wait on :3106; `curl -sf http://localhost:3106/api/clue-game/pool/ -o $M/shots/raw/pool-play.json && curl -sf http://localhost:3106/api/places/ -o $M/shots/raw/places-play.json` (the deal reads both, `useAnimalSession.ts:36,95`); `CHROME_PATH=$A/bin/chrome node $M/shots/take.mjs play http://localhost:3106 $M/shots/raw 2>&1 | tee $M/shots/play.log`; stop :3106.
+  - Start (production): `npm run build 2>&1 | tee $M/shots/build.log`; `nohup npx next start -p 3106 -H 127.0.0.1 > $M/shots/next-start.log 2>&1 &`; wait; `curl -sf http://localhost:3106/api/clue-game/pool/ -o $M/shots/raw/pool-start.json`; `CHROME_PATH=$A/bin/chrome node $M/shots/take.mjs start http://localhost:3106 $M/shots/raw 2>&1 | tee $M/shots/start.log`; stop :3106.
+  - `git status`: plan only (F7 if not).
+  - Verify: `$M/shots/raw/` has 10 PNGs, `start.json`, `play.json`, `pool-play.json`, `pool-start.json`, `places-play.json`; `cmp $M/shots/raw/pool-play.json $M/shots/raw/pool-start.json` (if it differs, `diff <(jq -S . …) <(jq -S . …)`: order only = fine, data = Decision); `node $M/shots/compare.mjs $M/shots/raw`: boards + wording PASS (files/build still show the old files: unchanged, PASS). Board differs → F2; throw → F3.
+
+- [ ] S3. Convert into the repo, contact sheet, eye check, `shots.ts` header, commit.
+  - `node $M/shots/convert.mjs $M/shots/raw 2>&1 | tee $M/shots/convert.log` (9 `src/site/shots/*.webp` + `src/site/og.png`); `node $M/shots/contact.mjs $M/shots/old $M/shots/contact.png`.
+  - Eye check (Read full size, each new `$M/shots/raw/<f>.png` beside `$A/shots/raw/<f>.png`): row label "On camera", new opener on the 3 round-start shots, same animals and photos (credits), light mode, no dev badge/overlay, nothing cut off; each `shots.ts` alt still true, esp. `fieldGuide` (Aye-aye), `gridMarked` (size answer no, Okapi ruled out), `witnessNote` (quote, "2 of 5"), `roundEnd`, `journal` ("2 of 76", Aye-aye + Aardvark), `globeFound` ("2 found"). Then `contact.png`. One line per file → `$M/shots/eye-check.txt`.
+  - `src/site/shots.ts` header: "Taken 2026-10-30 from the game at origin/main `$B`", "globe, board-phone and hero-board (and src/site/og.png) from the production build", last line "Retake: take.mjs and convert.mjs in the site-shots-on-camera mission's artifacts (shots/, COMMAND.txt), then check every shot by eye." Change alt / `photos` / `ROUND_1` only where the eye check or F2 requires.
+  - Decisions: og.png retaken (`config.ts:12`, finding 1); "Camera saw" check is case-sensitive, lowercase `AnimalSheets.tsx:478,542` in round-end kept (game copy out of scope; owner follow-up); each unchanged file + reason (F8); any F2 change.
+  - Verify: `npm run typecheck`, `npm run lint`, `npm run site:build`, `node $M/shots/compare.mjs $M/shots/raw > $M/shots/compare.txt` exit 0 (all 4 sections); `git diff --stat`: only `src/site/shots/*.webp`, `src/site/og.png`, `src/site/shots.ts`, plan. Commit `site shots: retake after "On camera" rename (#37)` with the plan; push.
+
+- [ ] S4. Rebase on fresh origin/main, re-run checks, push, open the PR (never merge).
+  - `git fetch origin && git rebase origin/main`. If origin/main moved past `$B`: `git diff --stat $B origin/main -- src/components src/game src/clueGame src/app src/pages src/lib src/styles db/content public`; anything that changes a shot's screen → don't open the PR, add steps "S2–S3 again" before this one, stop (F9). Else note under Decisions (shots stay "at `$B`").
+  - Re-run: `npm run typecheck`, `npm run lint`, `npm run site:build`, `node $M/shots/compare.mjs $M/shots/raw > $M/shots/compare.txt` (exit 0); `nohup python3 -m http.server 3105 -b 127.0.0.1 -d out/site > $M/serve.log 2>&1 &`; `E2E_SITE_URL=http://localhost:3105 CHROME_PATH=$A/bin/chrome npm run e2e:site 2>&1 | tee $M/e2e-s4.log` (444/444); `mv "$(ls -td e2e-artifacts/*-site | head -1)" $M/e2e-s4`; `rm -rf $M/baseline/e2e-site` (older intermediate; keep baseline logs); stop :3105.
+  - `git push --force-with-lease origin agent/site-shots-on-camera` (plain push if the rebase was a no-op).
+  - `$M/pr-body.md`: `Closes #37`; shot table (file, old → new hash, KB old → new, what changed, from `compare.txt` + `eye-check.txt`); og.png retaken and why; check is case-sensitive, lowercase "camera saw" at `AnimalSheets.tsx:478` and `:542` (round-end shot) left as an owner follow-up (game copy, out of scope); unchanged files if any; checks + e2e:site count; VPS artifacts (`$M/shots/contact.png`, `compare.txt`, `eye-check.txt`, `COMMAND.txt`, `raw/`, `e2e-s4/`); deploy: owner runs `npm run deploy` from WSL after merging, which also ships the game wording in `e999e86f` and `1118173b`; session's PR attribution line last. `gh pr create --base main --head agent/site-shots-on-camera --title 'site: retake screenshots after "On camera" rename' --body-file $M/pr-body.md` (`gh pr edit --body-file` if one exists).
+  - Verify: `gh pr view --json url,state,body` open, has `Closes #37`; `git log --oneline origin/main..HEAD` = plan + shots commits only; `git status` clean.
+
 ## Verification
+
+Final run on the final commit (after the code review), cwd = worktree root, ports and one-job rule as in Steps.
+
+1. **Static:** `npm run typecheck` pass, `npm run lint` exit 0, `npm run site:build` pass. (`npm test` and game `npm run e2e` not needed: no game or rules code changes; Baseline 47/47, 524/574 known.)
+2. **Shots (DoD grep check):** `node $M/shots/compare.mjs $M/shots/raw > $M/shots/compare.txt`, exit 0: boards equal the old run (or each difference under Decisions, F2), all `light`; no shot's DOM text has `Camera saw`, board shots have `On camera`, round-start shots have the new opener; each file's size = `shots.ts`; each changed file has a new hash, the build references only current-bytes hashes, no old hash of a changed file in `out/site`; `grep -rl "Camera saw" out/site` empty. `$M/shots/eye-check.txt` covers all 10 files.
+3. **E2E (artifact):** `nohup python3 -m http.server 3105 -b 127.0.0.1 -d out/site > $M/serve.log 2>&1 &`; `E2E_SITE_URL=http://localhost:3105 CHROME_PATH=$A/bin/chrome npm run e2e:site 2>&1 | tee $M/e2e-site.log` → `444/444 checks passed, 20 screenshots`; `mv "$(ls -td e2e-artifacts/*-site | head -1)" $M/e2e-site` (report.json + page screenshots; the brief's named folder, never deleted). Open `site-home-390-light.png`, `site-home-1440-light.png`, `site-teachers-390-light.png`, `site-teachers-1440-light.png`: the new shots show, no "Camera saw". Stop :3105.
+4. **Contact sheet:** `node $M/shots/contact.mjs $M/shots/old $M/shots/contact.png` from the final repo files; look at it.
+5. **Artifacts** in `$M`: `shots/` (`raw/` PNG + JSON + pool/places, `old/`, `contact.png`, `compare.txt`, `eye-check.txt`, `COMMAND.txt`, logs), `e2e-site/`. At most two E2E folders (`e2e-s4/`, `e2e-site/`). Reproduce: `$M/shots/COMMAND.txt`; same seed + same pool = same boards.
+
+## Failure modes
+
+F0. **`compare.mjs` must FAIL on** (written before it; S1's smoke covers the no-text path): any of the 10 PNG/JSON entries missing; `text` missing or empty; `Camera saw` in a shot's text or in `out/site`; `On camera` / opener missing where expected; any id, round field or theme differing; new pixel size ≠ `shots.ts`; a built reference whose hash ≠ current bytes; an old hash of a changed file referenced or present; `out/site` missing.
+
+F1. **Port busy** (3105/3106): `ss -ltnp`; our stale server → `fuser -k`; someone else's → next free port ≥ 3107 for either, recorded in Log and `COMMAND.txt`. Never 3100/3101; never change repo defaults.
+
+F2. **Seed gives a different board** (boards FAIL): compare `pool-play.json` size with the old run (journal's "of 76"); keep seed 1, `continent:africa` (rule 5); update `ROUND_1`, each shot's `photos` and alt text to the new run (credits follow via `render.tsx`); Decision with old → new ids.
+
+F3. **`take.mjs` throws** (`round N ended …`, `no witness note in 4 rounds`, a `waitFor` timeout): rerun that mode once (server warm). `the board (dev build?)` timeout in play → not the dev server or `__cc` missing. Still throws with the same board → read the log and last screenshot; don't change game code or the pipeline beyond the `text` field; handoff item if it's a game regression.
+
+F4. **Dev DB unreachable** (pool/places `curl` fails, 500 in `next-dev.log`): `.env.local` present, `psql "$DATABASE_URL" -c 'select 1'`; retry once; persistent → handoff item (owner's DB), `MISSION_BLOCKED` only if nothing else can proceed.
+
+F5. **Stale/wrong build** (start shots show a dev badge or old wording → wording FAIL): `rm -rf .next && npm run build`, retake `start`.
+
+F6. **Chrome won't start:** `$A/bin/chrome --version`; the wrapper adds `--no-sandbox`; don't install another browser.
+
+F7. **Tracked files changed by `next dev`/`build`** (e.g. `AGENTS.md`): `git checkout -- <file>` (out of scope); note in Log.
+
+F8. **A file's hash didn't change** (likely none: globe shots are MapLibre renders): correct result; list under Decisions; never re-encode to force one.
+
+F9. **origin/main moves with screen-affecting changes before the PR:** S4's diff check → retake (S2–S3) so shots match the merged code.
+
+F10. **Dialog shot's DOM text lacks `On camera`** although the grid shows (sheet hides it from `innerText`): eye check decides; narrow `compare.mjs`'s expected set for that shot with the reason under Decisions.
 
 ## Code review (Astra)
 
@@ -197,5 +264,7 @@ None needed: Fable and Astra both APPROVE, 0 MUST-FIX; architect not re-run. SHO
 - 2026-10-30 05:50 UTC: Astra review: APPROVE, 0 MUST-FIX, 3 SHOULD-CONSIDER (save pool response, hash check vs unchanged shots, og.png + lowercase in PR). Plan-only; no checks needed.
 
 - 2026-10-30 06:00 UTC: Revision: none needed (both reviews APPROVE, 0 MUST-FIX); 6 SHOULD-CONSIDER items adopted into Revision notes for Steps. Plan-only; no checks needed.
+
+- 2026-10-30 06:15 UTC: Steps (planner): S1 kit in $M/shots (take+text, convert, contact, compare, COMMAND), S2 retake on :3106 play then start + pool saves, S3 convert/eye check/shots.ts header/commit, S4 rebase/checks/PR. Verification + F0-F10 failure modes. Plan-only; no checks needed.
 
 ## Summary
