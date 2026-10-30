@@ -181,7 +181,7 @@ None needed: Fable and Astra both APPROVE, 0 MUST-FIX; architect not re-run. SHO
 
 Shared: cwd = worktree root. `A=/srv/critter-ai/agent-state/missions/cc-website`, `M=/srv/critter-ai/agent-state/missions/site-shots-on-camera`, `CHROME_PATH=$A/bin/chrome`. `SHOTS="globe board-phone hero-board field-guide grid-marked witness-note round-end journal globe-found"` (+ `og`). Heavy jobs one at a time. Never 3100/3101: game server **3106**, built site **3105**; `ss -ltn | grep -E ':310[56] '` must be empty before binding (else F1). Wait for a server: `timeout 180 bash -c 'until curl -sf -o /dev/null http://localhost:<port>/; do sleep 2; done'`. Stop one: `fuser -k <port>/tcp`, then `ss -ltn` clear.
 
-- [ ] S1. Fresh base + retake kit in `$M/shots/` (no repo change).
+- [x] S1. Fresh base + retake kit in `$M/shots/` (no repo change).
   - `git fetch origin`. If `git log --oneline 368be9e3..origin/main` is non-empty: `git rebase origin/main` (plan-only commits), `npm ci` if `package-lock.json` changed, `git push --force-with-lease`; `git log --stat 368be9e3..origin/main -- src/components src/game src/clueGame src/app src/pages src/lib src/styles db/content scripts/cdp.mjs` empty or copy-only, else Decisions. `B=$(git rev-parse --short=8 $(git merge-base HEAD origin/main))` → Log.
   - `mkdir -p $M/shots/raw $M/shots/old && cp $A/shots/take.mjs $A/shots/convert.mjs $M/shots/`. `take.mjs`: `shot()` also stores `text: await evaluate(() => document.body.innerText)` in `record.shots[name]`; usage comments 3100 → 3106. `convert.mjs` verbatim.
   - Old shipped files: `for f in $SHOTS; do git show $B:src/site/shots/$f.webp > $M/shots/old/$f.webp; done; git show $B:src/site/og.png > $M/shots/old/og.png`.
@@ -266,5 +266,6 @@ F10. **Dialog shot's DOM text lacks `On camera`** although the grid shows (sheet
 - 2026-10-30 06:00 UTC: Revision: none needed (both reviews APPROVE, 0 MUST-FIX); 6 SHOULD-CONSIDER items adopted into Revision notes for Steps. Plan-only; no checks needed.
 
 - 2026-10-30 06:15 UTC: Steps (planner): S1 kit in $M/shots (take+text, convert, contact, compare, COMMAND), S2 retake on :3106 play then start + pool saves, S3 convert/eye check/shots.ts header/commit, S4 rebase/checks/PR. Verification + F0-F10 failure modes. Plan-only; no checks needed.
+- 2026-10-30 06:35 UTC: S1. origin/main unmoved (B=368be9e3, no rebase). Kit in $M/shots/: take.mjs (+`text`, ports 3106; diff = that + comments), convert.mjs verbatim, contact.mjs, compare.mjs (repo esbuild/sharp via createRequire), COMMAND.txt, old/ (10 files from 368be9e3, = shipped bytes). Verify: node --check ok; site:build ok; compare vs old raw: boards PASS, wording 10 FAIL "no page text" (expected), files all UNCHANGED + sizes PASS, build PASS; negative test (bad id/theme/round/missing PNG/"Camera saw"/no text/no out/site) all FAIL as F0 wants; contact smoke rows identical, deleted. git status clean.
 
 ## Summary
