@@ -46,6 +46,8 @@ export class ClueBoardScene extends Phaser.Scene {
     /** Plan 047: whether marked animals walk, and earn reward toys; how and which way each goes; this move's toys and step words. */
     private wander: { toy: boolean } | null = null;
     private double = 0;
+    /** Gems each clue order still needs, as of the last move (rules 053-1). */
+    private room: Partial<Record<GemType, number>> = {};
     private travels = new Map<number, PinExit>();
     private headings: Partial<Record<number, Heading>> = {};
     private earned: Array<[Cell, Special, name: string]> = [];
@@ -193,8 +195,9 @@ export class ClueBoardScene extends Phaser.Scene {
         this.view?.setGlow(all, near);
     }
 
-    private onUnscouted({ unscouted }: EventPayloads['clue-board-unscouted']): void {
+    private onUnscouted({ unscouted, room = {} }: EventPayloads['clue-board-unscouted']): void {
         this.unscouted = new Map(unscouted);
+        this.room = room;
         this.controller?.refreshPreview();
     }
 
@@ -291,10 +294,13 @@ export class ClueBoardScene extends Phaser.Scene {
         if (double.length > 0) {
             this.callout('Double!');
             sfx.toy();
-            // One label per clue color, on its run's middle cell: an L or T is two runs of one color, but its order gets the bonus once.
+            // One label per clue color, on its run's middle cell (an L or T is two runs of one color, but its order gets the
+            // bonus once), showing only what fits after this clear's own gems of that color; a full order shows none.
             for (const gem of double.filter(gem => CLUE_GEMS.includes(gem))) {
+                const collected = phase.groups.reduce((sum, group) => sum + (group.gemType === gem ? group.cells.length : 0), 0);
+                const added = Math.min(this.double, Math.max(0, (this.room[gem] ?? this.double) - collected));
                 const cells = phase.groups.find(group => !group.blast && group.gemType === gem)!.cells;
-                this.label(cells[Math.floor(cells.length / 2)], `+${this.double}`, GEM_COLOR[gem] ?? '#ffffff');
+                if (added > 0) this.label(cells[Math.floor(cells.length / 2)], `+${added}`, GEM_COLOR[gem] ?? '#ffffff');
             }
         }
         EventBus.emit('gems-matched', {

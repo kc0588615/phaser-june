@@ -14,7 +14,7 @@
 //   page  -> board 'clue-board-select'    the animal picked in the evidence grid (its tile pulses)
 //   board -> page  'clue-board-tile'      the player tapped an animal's tile
 //   board -> page  'clue-board-tile-hold' the player long-pressed an animal's tile (its field guide)
-//   page  -> board 'clue-board-unscouted' each animal's question gems whose answer is still hidden (plan 045)
+//   page  -> board 'clue-board-unscouted' each animal's question gems whose answer is still hidden (plan 045); each order's gems still needed (053-1)
 //   board -> page  'clue-board-nudge'     the player tried to move an animal's card (it's pinned; plan 046)
 //   page  -> board 'clue-board-answer'    the mystery's answer to a question just landed in the grid (plan 046)
 //   board -> page  'clue-board-walked'    a ruled-out animal walked off the edge (plan 047)
@@ -69,7 +69,8 @@ export interface EventPayloads {
     'clue-board-tile': { id: number };
     'clue-board-tile-hold': { id: number };
     /** Plan 045: per animal, the gem colors of the questions whose answer it still hides (the scouting preview). */
-    'clue-board-unscouted': { unscouted: Array<[id: number, gems: GemType[]]> };
+    /** `room`: gems each clue order still needs, so a double's "+N" shows only what it adds (rules 053-1). */
+    'clue-board-unscouted': { unscouted: Array<[id: number, gems: GemType[]]>; room?: Partial<Record<GemType, number>> };
     /** Plan 046: a swipe on an animal's card, or a gem swapped into one. The card wiggles on its pin. */
     'clue-board-nudge': { id: number };
     /** Plan 046: the mystery's answer to a question just stamped in the grid; on Yes the board acts it out (answerEffects.ts). */

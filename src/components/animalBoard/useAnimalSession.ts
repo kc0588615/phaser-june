@@ -224,7 +224,8 @@ export function useAnimalSession() {
     const current = sessionRef.current;
     if (sceneGeneration === 0 || !orders || !current) return;
     const unscouted = current.round.suspects.map((id, i): [number, GemType[]] => [id, orders.filter(order => !order.seen[i]).map(order => order.gem)]);
-    EventBus.emit('clue-board-unscouted', { unscouted });
+    const room = Object.fromEntries(orders.map(order => [order.gem, current.round.rules.orderSize - order.have]));
+    EventBus.emit('clue-board-unscouted', { unscouted, room });
   }, [sceneGeneration, orders]);
 
   // Highlighted gems glow on the board: a held question gem's color everywhere, a held cell's next to its animal.
