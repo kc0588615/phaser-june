@@ -549,6 +549,15 @@ body {
   12%, 85% { opacity: 1; }
 }
 .ev-hint { animation: ev-hint 3.4s ease-in-out 0.4s both; }
+/* A just-scouted answer and its animal's name, and the Camera row's count as a gem lands: the text shows its gem's
+   color (--flash, a gradient: several gems make a rainbow) for a moment, then fades back to its own (EvidenceGrid). */
+.ev-flash {
+  background-image: var(--flash); -webkit-background-clip: text; background-clip: text;
+  animation: ev-flash 1.8s ease-in;
+}
+@keyframes ev-flash {
+  0%, 55% { color: transparent; filter: drop-shadow(0 0 2px rgb(0 0 0 / 35%)); }
+}
 /* Plan 046: an animal's card (AnimalCard.tsx), the board tile's paper polaroid (BoardView.drawTile): paper, photo
    window filling it with the number in handwriting on a paper tag at its top right, a red pin at the top; tilted by its number. Fills its box's width.
    The paper is the game's own colour (like the gems), the same in both modes. */
@@ -604,7 +613,7 @@ body {
 .ev-fly span { position: absolute; transform: translate(-50%, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-pulse, .ev-nudge, .ev-fade, .ev-sparkle, .ev-missed.is-fresh, .ev-wiggle, .ev-glow, .ev-highlight, .ev-unread { animation: none; }
+  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-pulse, .ev-nudge, .ev-fade, .ev-sparkle, .ev-missed.is-fresh, .ev-wiggle, .ev-glow, .ev-highlight, .ev-unread, .ev-flash { animation: none; }
   .ev-sparkle::before, .ev-sparkle::after { display: none; }
   .ev-hint { animation: none; opacity: 0; }
   .ev-scroll { animation-timing-function: step-end; }

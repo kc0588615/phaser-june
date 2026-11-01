@@ -19,7 +19,7 @@
 // Players see the mystery as "the one caught on camera" (its row: "On camera"), so it doesn't read as a sixth
 // animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the mystery's own row
 // rises into the Camera row, which becomes that animal (its slot closes up), then `onLanded`. `review` keeps it so (plan 052).
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
@@ -27,12 +27,18 @@ import { liveHighlights } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { columnLabel } from '@/clueGame/questionMatch';
+import { GEM_TEXT_COLOR, type GemType } from '@/game/constants';
 import { LARGE, SMALL } from '@/lib/motion';
 import { AnimalCard, TrapCard } from './AnimalCard';
 import { FaceIcon } from './FaceIcon';
 
 const NEXT_PENCIL = { none: 'yes', yes: 'no', no: null } as const;
 const NONE: ReadonlySet<string> = new Set();
+/** `ev-flash` (globals.css): text that flashes these gems' colors (several: a rainbow across them), then back to its own. */
+const flashStyle = (gems: readonly GemType[]): CSSProperties => {
+  const colors = gems.map(gem => GEM_TEXT_COLOR[gem] ?? 'gray');
+  return { '--flash': `linear-gradient(90deg, ${(colors.length === 1 ? [colors[0], colors[0]] : colors).join(', ')})` } as CSSProperties;
+};
 /** A press this long on an animal's row is a long press (its field guide); the board's tiles use the same (BoardController). */
 const HOLD_MS = 450;
 /** Holding an answer cell this long highlights it: longer than a name's hold, so a slow tap never highlights by mistake. */
@@ -49,11 +55,13 @@ const SLIDE_TO_MARK = 0.5;
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, landed = [], selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
   shown: readonly number[];
+  /** Gems each order has had fly in this round: the count flashes its gem's color with each. */
+  landed?: readonly number[];
   selected?: number | null;
   onSelect?: (id: number) => void;
   /** A long press on an animal's row: open its field guide. */
@@ -71,7 +79,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   /** The player's highlights, by `${id}:${tag}` (a cell) or `*:${tag}` (a question's gem); a long press toggles one (id null: the gem). */
   highlight?: readonly string[];
   onHighlight?: (id: number | null, tag: string) => void;
-  /** Pencilled cells (`${id}:${tag}`) just scouted: a right guess sparkles, a wrong one shows, a ruled-out card wiggles. */
+  /** Cells (`${id}:${tag}`) just scouted: the answer and the animal's name flash the clue's gem color; a right guess sparkles, a wrong one shows, a ruled-out card wiggles. */
   reveal?: ReadonlySet<string>;
   /** The round is over: the Camera row slides onto this animal's row (the mystery's), then `onLanded`. */
   landOn?: number | null;
@@ -268,7 +276,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 ) : (
                   <>
                     {!review && <motion.span className="absolute bottom-0 left-0 h-1 bg-color-3" initial={false} animate={{ width: `${(100 * have) / size}%` }} transition={SMALL} aria-hidden="true" />}
-                    <span className="relative font-data text-xs font-medium tabular-nums">{review ? '?' : `${have}/${size}`}</span>
+                    {/* Keyed by the gems that flew in, so it flashes its gem's color as each lands (not on a reload). */}
+                    <span key={landed[j] ?? 0} className={`relative font-data text-xs font-medium tabular-nums ${!review && landed[j] ? 'ev-flash' : ''}`} style={!review && landed[j] ? flashStyle([order.gem]) : undefined}>{review ? '?' : `${have}/${size}`}</span>
                   </>
                 )}
                 {/* A wrong guess pencilled on the risen animal's row stays marked here. */}
@@ -300,6 +309,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
             return Boolean(guess) && (guess === 'yes') !== order.row[i];
           };
           const wiggle = marked && round.orders.some(order => reveal.has(`${id}:${order.tag}`) && missed(order));
+          const flashGems = review ? [] : round.orders.filter(order => reveal.has(`${id}:${order.tag}`)).map(order => order.gem);
           return (
             <motion.tr
               key={id}
@@ -346,7 +356,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   >
                     <AnimalCard species={species} number={i + 1} marked={marked} picked={picked} />
                   </span>
-                  <span data-name="" className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''}`} style={dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : undefined} lang="en">{name}</span>
+                  {/* Keyed by its flash, so a later move's scouting flashes it again. */}
+                  <span key={flashGems.join()} data-name="" className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''} ${flashGems.length > 0 ? 'ev-flash' : ''}`} style={{ ...(flashGems.length > 0 ? flashStyle(flashGems) : {}), ...(dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : {}) }} lang="en">{name}</span>
                   {hinted === id && <span aria-hidden="true" className="ev-hint pointer-events-none absolute inset-y-0 left-[calc(var(--ev-photo)+8px)] right-0 flex items-center bg-neutral-1 text-xs font-medium text-error">Slide to rule out →</span>}
                 </button>
               </th>
@@ -379,7 +390,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
                   <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} className={`relative h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
                     {called && fresh && <span aria-hidden="true" className="ev-sparkle" />}
-                    <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'}`} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
+                    <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'} ${fresh ? 'ev-flash' : ''}`} style={fresh ? flashStyle([order.gem]) : undefined} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
                     <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}</span>
                     {guess && !called && (review || fresh) && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
                   </td>

@@ -2,7 +2,7 @@
 // match's gems the moment it clears, a beat before the board animates it, so the
 // grid trails them: each color cleared sends one gem flying from the board to its
 // column's Mystery cell, and the count catches up when it lands, or once the board
-// settles. The answer stamps when the count looks full. A collected witness gem flies to the
+// settles (`landed` counts the gems that flew in, per order: the grid flashes the count). The answer stamps when the count looks full. A collected witness gem flies to the
 // Mystery cell (the witness notes). Reduced motion: no flight,
 // no lag. The rules' own counts stay on the cell (data-have) for tests.
 import { useEffect, useRef, useState } from 'react';
@@ -42,8 +42,9 @@ function flyGem(from: { x: number; y: number }, target: Element, gem: GemType, f
   return animation.finished.then(() => el.remove(), () => el.remove());
 }
 
-export function useShownOrders(round: AnimalRound | undefined, roundNo: number | undefined): number[] {
+export function useShownOrders(round: AnimalRound | undefined, roundNo: number | undefined): { shown: number[]; landed: number[] } {
   const [shown, setShown] = useState<number[]>([]);
+  const [landed, setLanded] = useState<number[]>([]);
   const [still, setStill] = useState(false);
   const roundRef = useRef(round);
   const shownRef = useRef(shown);
@@ -54,7 +55,7 @@ export function useShownOrders(round: AnimalRound | undefined, roundNo: number |
   }, []);
 
   // Each round starts from the rules' counts (none).
-  useEffect(() => setShown(roundRef.current?.orders.map(order => order.have) ?? []), [roundNo]);
+  useEffect(() => { setShown(roundRef.current?.orders.map(order => order.have) ?? []); setLanded([]); }, [roundNo]);
 
   useEffect(() => {
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -73,7 +74,10 @@ export function useShownOrders(round: AnimalRound | undefined, roundNo: number |
         if (i < 0 || (shownRef.current[i] ?? 0) >= current.rules.orderSize) continue;
         const order = current.orders[i];
         const target = document.querySelector(`[data-flight-target="${order.tag}"]`);
-        if (target) void flyGem(point, target, order.gem, clueFace(order.tag)).then(() => catchUp(i));
+        if (target) void flyGem(point, target, order.gem, clueFace(order.tag)).then(() => {
+          catchUp(i);
+          setLanded(before => Object.assign([...before], { [i]: (before[i] ?? 0) + 1 }));
+        });
       }
     };
     // Whatever didn't fly (or is still flying) shows once the move is over.
@@ -87,6 +91,6 @@ export function useShownOrders(round: AnimalRound | undefined, roundNo: number |
     };
   }, []);
 
-  if (!round) return [];
-  return still ? round.orders.map(order => order.have) : round.orders.map((order, i) => Math.min(shown[i] ?? 0, order.have));
+  if (!round) return { shown: [], landed };
+  return { shown: still ? round.orders.map(order => order.have) : round.orders.map((order, i) => Math.min(shown[i] ?? 0, order.have)), landed };
 }

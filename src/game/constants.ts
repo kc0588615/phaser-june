@@ -9,6 +9,8 @@ export type GemType = typeof GEM_TYPES[number];
 export const GEM_COLOR: Partial<Record<GemType, string>> = {
     orange: '#ff8a3d', yellow: '#ffd84a', green: '#3fcf7c', blue: '#4aa6fb', black: '#a3aab1', purple: '#b27dff',
 };
+/** The same colors as text flashing on the page's grid: the yellow darkened so it reads on the light theme. */
+export const GEM_TEXT_COLOR: Partial<Record<GemType, string>> = { ...GEM_COLOR, yellow: '#b08400' };
 
 /** Plan 046: each animal card's tilt in degrees, by its number (board tiles and the page's cards alike). */
 export const CARD_TILTS = [-3, 2.5, -2, 3.5, -2.5] as const;

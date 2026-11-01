@@ -203,7 +203,7 @@ export function AnimalGame() {
   const wide = useWide();
   const [hint, setHint] = useState<Hint | null>(null);
   const [boardBusy, setBoardBusy] = useState(false);
-  // Pencilled cells just scouted, for the grid's one-time sparkle (or crossed-out guess).
+  // Cells just scouted, for the grid's one-time gem-color flash (and a pencilled one's sparkle or crossed-out guess).
   const [reveal, setReveal] = useState(NO_REVEAL);
   useEffect(() => {
     if (reveal.size === 0) return;
@@ -277,7 +277,7 @@ export function AnimalGame() {
   const nameOf = useCallback((id: number) => session?.book.byId.get(id)?.name ?? 'animal', [session?.book]);
   const round = session?.round;
   const roundNo = session?.roundNo;
-  const shown = useShownOrders(round, roundNo);
+  const { shown, landed: gemsLanded } = useShownOrders(round, roundNo);
   useEffect(() => { setSheet(null); setSelected(null); setHint(null); setBoardBusy(false); }, [roundNo]);
   useEffect(() => { EventBus.emit('clue-board-select', { id: selected }); }, [selected, roundNo]);
 
@@ -309,20 +309,23 @@ export function AnimalGame() {
     if (!session) return;
     const { roundNo: current, round: { log, orders }, pencil: guesses } = session;
     // A new round, or this one resumed after a reload: answers already earned don't sound or play again.
-    if (heard.current.roundNo !== current) heard.current = { roundNo: current, logLength: log.length, answers: new Set(orders.filter(order => order.answer !== null).map(order => order.tag)) };
-    const guessed: string[] = [];
+    if (heard.current.roundNo !== current) {
+      heard.current = { roundNo: current, logLength: log.length, answers: new Set(orders.filter(order => order.answer !== null).map(order => order.tag)) };
+      setReveal(NO_REVEAL);
+    }
+    const scouted: string[] = [];
     let called = false;
     for (const entry of log.slice(heard.current.logLength)) {
       if (entry.kind === 'found') sfx.solve();
       if (entry.kind === 'escaped' || (entry.kind === 'named' && !entry.correct)) sfx.wrong();
-      const guess = entry.kind === 'scouted' ? guesses[`${entry.id}:${entry.tag}`] : undefined;
-      if (entry.kind === 'scouted' && guess) {
-        guessed.push(`${entry.id}:${entry.tag}`);
-        if ((guess === 'yes') === entry.yes) called = true;
-      }
+      if (entry.kind !== 'scouted') continue;
+      scouted.push(`${entry.id}:${entry.tag}`);
+      const guess = guesses[`${entry.id}:${entry.tag}`];
+      if (guess && (guess === 'yes') === entry.yes) called = true;
     }
     if (called) sfx.calledIt();
-    if (guessed.length > 0) setReveal(new Set(guessed));
+    // Added to, so a quick next move doesn't cut the last one's flash short.
+    if (scouted.length > 0) setReveal(before => new Set([...before, ...scouted]));
     heard.current.logLength = log.length;
     for (const order of orders) {
       if (!answerShown(order.tag) || heard.current.answers.has(order.tag)) continue;
@@ -462,7 +465,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} landed={gemsLanded} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
