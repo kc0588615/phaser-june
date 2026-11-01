@@ -72,7 +72,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -235,6 +235,25 @@ A byte-identical shot (globe was, at 368be9e3) keeps its hash: record it as reta
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+Checked against the code. F1 holds: the client's only sender is `getJson` (`src/lib/getJson.ts:8`); no `sendBeacon`/XHR/`method:` anywhere under `src` outside `src/app/api`; `plans/044-animal-board.md:138` says the POST was never rebuilt. The brief's "each round adds to `clue_match_solves`" is stale; the report rounds + before/after count design is right. F2's table is accurate: key is `v4` (`AnimalSheets.tsx:23`, `e2e.mjs:76`); round-end is `section[aria-labelledby="end-title"]` (`AnimalSheets.tsx:544`); `drag` returns `blocked` (`debugBridge.ts:164`) and `take.mjs:139` discards it; `.ev-flash` 1.8 s (`globals.css:591`), `REVEAL_MS` 3100 (`AnimalGame.tsx:43`); `onNext` refocuses the board (`AnimalGame.tsx:531`). Still-valid selectors confirmed (`EvidenceGrid.tsx:204`, `AnimalSheets.tsx:657, :731`). F7 holds: `import('sharp')` resolves 0.35.4 from `node_modules/sharp`; not in `package.json`, only as `next`'s optional dep in the lockfile (`package-lock.json:6767`); the Dockerfile's `npm ci` (`:10`) would break on an unlockable add. F3's proofs check out: RoundEndSheet has tree + notes, no `RangeMap`/`SourceLine` (`AnimalSheets.tsx:503-662`; `RangeMap` only in `JournalSheet.tsx:66`; `SourceLine` has no importer); guide hides asked prefixes while playing (`AnimalSheets.tsx:86, :96`); `nameIt` (`animalBoard.ts:405`) and random 20% (`plans/053-name-it.md:17, :25`); `AnimalCard.tsx` renders no `PhotoCredit`; auto rule-out defaults off (`autoRuleOut.ts:5`). Target design is as simple as the goal allows: three files, one npm script, defaults clear of 3100/3101/8080, `SHOTS_DIR` default gitignored (`.gitignore:63`). Release section matches the brief's rules (pin to base, retake once only on a visible change, content build not needed: Dockerfile `:21-27`).
+
+MUST-FIX:
+1. **`Teachers.tsx:78` edit contradicts keeping `:143`.** Both rest on the same premise ("no record" ≠ "no"). The plan deletes it at `:78` and keeps it at `:143` as true (`animalBoard.ts:167`: a note fits only if the guide records every tag, so an unrecorded trait is real in play; `traits.ts:11`). The wording "No record" being unrendered (`LogEntryText.tsx:53`) doesn't make `:78` false. Brief: correct only what's false, fewest edits. Drop the `:78` edit (or treat both lines the same way; don't split them).
+2. **`Teachers.tsx:128` replacement still reads as "results are saved".** "Results saved under an account are kept, and the Field Journal reads them back" tells a teacher the game stores results under the account, which is the F1 falsity being fixed. True today: nothing is saved (`getJson.ts:8` only; `journal/route.ts` reads the 188 old rows). Reword to what the game does now, e.g. drop the bullet or "The game doesn't save results today; the Field Journal stays in the browser", and let the handoff (F4) decide the restore. Same check on `:120`: "never linked" is fine.
+
+MISSED:
+- `Home.tsx:80` → "credited in each field guide and on the round-end card" omits the journal, which also credits (`JournalSheet.tsx:70`). Either add it or use a shorter form that stays true ("credited in the game").
+- Otherwise none; the findings cover the code paths that matter.
+
+SHOULD-CONSIDER:
+1. `Teachers.tsx:87`: "about one round in five, by naming an animal blind" is the bot's number for a random player who names when moves run out (`053:17`). Smaller and safer: "finds about one round in five" and leave the mechanism out.
+2. `run.mjs` `start` mode: `npm run build` runs `typecheck` too (`package.json:31`); fine, but say so in the usage line so a retake isn't mistaken for a hang.
+3. `take.mjs` how-to: clicking "Let's play" (`AnimalSheets.tsx:731`) is right; also assert the dialog is gone before every board shot (the plan's `shot()` guard on `#animal-how-title` covers it; keep it).
+4. `<mode>.json` `text: body.innerText` is the only "Camera saw" check for shots besides eye; make the grep case-sensitive as planned and also list the lowercase hits so the Summary's out-of-scope note is backed by data.
+5. The `before/after` `clue_match_solves` count: two read-only queries total; don't add a per-run one to the script, keep it a mission step (the repo script shouldn't touch the DB).
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -253,5 +272,6 @@ A byte-identical shot (globe was, at 368be9e3) keeps its hash: record it as reta
 
 - 2026-11-01 23:24 UTC: Baseline. typecheck, lint, unit 48/48, site:build, e2e:site 444/444 pass; full game E2E skipped per brief.
 - 2026-11-01 23:39 UTC: Architecture written. Lead confirmed by grep that no client POSTs a solve (F1). 12 false copy statements, take.mjs breaks found, design `npm run site:shots`. No code changed; typecheck/lint n/a.
+- 2026-11-01 23:43 UTC: Fable review: APPROVE_WITH_CHANGES, 2 must-fix (`Teachers.tsx:78`, `:128` edits), for Revision. No code changed; typecheck/lint n/a.
 
 ## Summary
