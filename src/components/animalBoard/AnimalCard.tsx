@@ -13,8 +13,9 @@ import { CARD_TILTS } from '@/game/constants';
 export function SuspectPhoto({ species, size = 120 }: { species: PoolSpecies | undefined; size?: number }) {
   const [failed, setFailed] = useState(false);
   if (!species?.photo || failed) return <span className="grid h-full w-full place-items-center text-m" aria-hidden="true">{species ? speciesBadge(species) : '?'}</span>;
+  // Crop toward the top: in a tall photo the head sits high, and a centre crop cuts it off.
   // eslint-disable-next-line @next/next/no-img-element -- a small remote Commons thumbnail
-  return <img src={photoAt(species.photo.url, size)} alt="" loading="lazy" decoding="async" draggable={false} onError={() => setFailed(true)} className="h-full w-full object-cover" />;
+  return <img src={photoAt(species.photo.url, size)} alt="" loading="lazy" decoding="async" draggable={false} onError={() => setFailed(true)} className="h-full w-full object-cover object-[50%_25%]" />;
 }
 
 /** `number`: the animal's number this round (also picks its tilt). */
