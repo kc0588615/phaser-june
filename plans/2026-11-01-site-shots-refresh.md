@@ -73,7 +73,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -256,6 +256,15 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+1. Record the actual capture commit after any rebase-triggered retake; retaining `1a781de4` would misidentify newer screenshots.
+2. Validate capture manifests before conversion so partial reruns cannot silently combine screenshots from different commits, seeds or places.
+3. Record the live content pool’s hash alongside the commit: code and seed alone cannot reproduce deals when database content changes.
+
 ## Revision notes
 
 ## Steps
@@ -273,5 +282,6 @@ SHOULD-CONSIDER:
 - 2026-11-01 23:24 UTC: Baseline. typecheck, lint, unit 48/48, site:build, e2e:site 444/444 pass; full game E2E skipped per brief.
 - 2026-11-01 23:39 UTC: Architecture written. Lead confirmed by grep that no client POSTs a solve (F1). 12 false copy statements, take.mjs breaks found, design `npm run site:shots`. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:43 UTC: Fable review: APPROVE_WITH_CHANGES, 2 must-fix (`Teachers.tsx:78`, `:128` edits), for Revision. No code changed; typecheck/lint n/a.
+- 2026-11-01 23:44 UTC: Astra review: APPROVE, no must-fix, 3 should-consider. No code changed; typecheck/lint n/a.
 
 ## Summary
