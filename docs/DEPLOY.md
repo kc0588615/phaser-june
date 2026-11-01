@@ -32,7 +32,7 @@ The app is its own Compose project (`critter`, in `/opt/critter-connect`). It jo
 
 ## Start and update
 
-From WSL, after pushing `main`: `npm run deploy` (`deploy/deploy.sh`). It needs the VPS key in the SSH agent at `~/.ssh/agent.sock` (the key has a passphrase, so only the owner can load it; the script prints the command). It refuses unless local `main` matches `origin/main` and the VPS checkout is on `main`, then pulls, rebuilds, waits for `critter-app` to be healthy, checks that `caddy` has the website's files and runs `deploy/check.sh` (see [The website](#the-website)); any failure fails the deploy. By hand on the VPS:
+After pushing `main`: `npm run deploy` (`deploy/deploy.sh`), from WSL or from the Oracle VPS (`deploy critter-connect`, which runs this script from a clean copy of `origin/main`). SSH uses a no-passphrase deploy key, `~/.ssh/critter-deploy`, named in `~/.ssh/config`, so nobody has to unlock anything. It refuses if local `main` has unpushed commits or the VPS checkout isn't on `main`, then pulls, rebuilds, waits for `critter-app` to be healthy, checks that `caddy` has the website's files and runs `deploy/check.sh` (see [The website](#the-website)); any failure fails the deploy. By hand on the VPS:
 
 ```sh
 cd /opt/critter-connect

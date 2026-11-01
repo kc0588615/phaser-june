@@ -29,7 +29,8 @@ GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle 
 - Agent work: one issue (`ready-for-agent`) per branch `agent/<slug>`, cut from fresh `origin/main`; rebase on `origin/main` before the PR; push and open a PR via `gh`; the owner merges. GO comes only from the owner.
 - One area per branch at a time (e.g. one agent in `src/game/` board rules) so PRs merge clean.
 - Push before you stop, WIP included (as a branch).
-- Owner only, from WSL: `npm run deploy` (ships `origin/main`) and the prod content build (`npm run content -- build`) after a content PR merges.
+- Deploying: `npm run deploy` ships `origin/main`. Agents may run it without asking (owner, 2026-11-01), from WSL or as `deploy critter-connect` on the Oracle VPS, unless the owner has paused that work.
+- Owner only, from WSL: the prod content build (`npm run content -- build`) after a content PR merges.
 - VPS DB is the dev copy `phaser_june_dev` (role `critter_dev`); writes there never reach prod. Route, refresh: `docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps`.
 
 ## Repo Quick Start
