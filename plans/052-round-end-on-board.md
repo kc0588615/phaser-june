@@ -10,7 +10,7 @@ The round-end card (`RoundEndSheet`, `src/components/animalBoard/AnimalSheets.ts
 
 Reuse what players already know: the field guide drawer (`SuspectSheet`, `top` prop) rises only to the board's top edge. The round-end card does the same.
 
-1. **The live grid becomes the replay.** After the Camera row lands on the mystery's row, the game's own `EvidenceGrid` switches to `review` (every answer shown, red where an answer rules an animal out, the mystery's row outlined, wrong guesses crossed out). The Camera row slides back up to show its answers. Taps on the grid are off while reviewing.
+1. **The live grid becomes the replay.** The mystery's row rises into the Camera row, which becomes that animal (card, number, name; its own answer under unasked questions), and its old slot closes up. Then the game's own `EvidenceGrid` switches to `review` (every answer shown, red fill where an answer rules an animal out, no outline, wrong guesses crossed out). Taps on the grid are off while reviewing.
 2. **The card covers the gem board only.** No copy of the grid, no tabs. Body: photo + name (bigger, pops in with the stars on a find), family tree, points and moves to spare ("+310 16/30 moves") beside the stars on a find, guesses right as a small line under the photo (owner 2026-10-31: "80% smaller"), the grid key, then field notes as a plain list. Footer: Next animal / New trail, no divider; the notes fade out under it.
 3. **Header fix:** "1 moves" -> "1 move".
 

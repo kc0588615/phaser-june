@@ -206,14 +206,18 @@ export function AnimalGame() {
   }, [reveal]);
   // The field guide's and round end's drawers reach up to the board's top edge (the grid above stays visible).
   const board = useRef<HTMLElement>(null);
+  const gridBox = useRef<HTMLDivElement>(null);
   const [boardTop, setBoardTop] = useState(0);
   const drawerUp = sheet?.kind === 'suspect' || Boolean(session?.end);
   useLayoutEffect(() => {
     if (!drawerUp) return;
     const measure = () => setBoardTop(board.current?.getBoundingClientRect().top ?? 0);
     measure();
+    // The grid above can change height (round end: the mystery's row rises into the Camera row), moving the board.
+    const grid = new ResizeObserver(measure);
+    if (gridBox.current) grid.observe(gridBox.current);
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    return () => { grid.disconnect(); window.removeEventListener('resize', measure); };
   }, [drawerUp]);
   useEffect(() => setSoundOnState(isSoundOn()), []);
   useEffect(() => wakeOnFirstGesture(), []);
@@ -445,7 +449,7 @@ export function AnimalGame() {
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
       <main className="flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)] overscroll-none bg-neutral-1 text-neutral-10 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px] lg:[grid-template-areas:'board_grid'_'board_status'_'board_side']">
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
-        <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
+        <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
             <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
