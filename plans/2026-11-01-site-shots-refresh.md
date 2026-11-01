@@ -70,7 +70,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -78,6 +78,13 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+Base commit `bc8438d1` (mission start; on `main` at `1a781de4`). Node 24.21 (repo's `engines` says 22.x). No schema change, no migration history (`db/schema.sql`), nothing to migrate.
+
+- `npm run typecheck`: pass. `npm run lint`: pass. `npm test`: 48/48 pass. `npm run site:build`: pass.
+- `npm run e2e:site` (served on 3105, `CHROME_PATH=/srv/critter-ai/agent-state/missions/cc-website/bin/chrome`): 444/444, 20 screenshots, `e2e-artifacts/2026-11-01T23-23-17-903Z-site/`.
+- `npm run e2e` (full game): not run, on the brief's order (writes many rounds to the live database; known VPS result 524/574, a timing failure).
+- Logs: `/srv/critter-ai/agent-state/missions/site-shots-refresh/baseline/`.
 
 ## Architecture
 
@@ -98,5 +105,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-01 23:24 UTC: Baseline. typecheck, lint, unit 48/48, site:build, e2e:site 444/444 pass; full game E2E skipped per brief.
 
 ## Summary
