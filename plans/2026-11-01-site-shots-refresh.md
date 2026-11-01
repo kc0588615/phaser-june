@@ -74,7 +74,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -88,7 +88,7 @@ Base commit `bc8438d1` (mission start; on `main` at `1a781de4`). Node 24.21 (rep
 
 ## Architecture
 
-Base: `origin/main 1a781de4` (`bc8438d1` adds only this plan). Evidence beyond reading code: seed 1 deal computed offline with the repo's own rules; one public `GET play.critterconnect.org/api/clue-game/pool/`; one `BEGIN READ ONLY` count on `clue_match_solves`. Nothing written.
+Base: `origin/main 1a781de4` (`bc8438d1` adds only this plan). Evidence beyond reading code: seed 1 deal computed offline with the repo's own rules; one public `GET play.critterconnect.org/api/clue-game/pool/`; two `BEGIN READ ONLY` counts on `clue_match_solves`. Nothing written.
 
 ### Findings, by impact
 
@@ -129,16 +129,17 @@ Deck in round 1 unchanged: size:large, activity:day, habitat:savanna, region:eas
 | `Teachers.tsx:30` | "…the IUCN Red List first, and each round-end card lists its sources. Traits…" → "…the IUCN Red List first. Traits…" | same; `SourceLine` has no caller |
 | `Teachers.tsx:139` | delete "Every source is on the round-end card." | same |
 | `Teachers.tsx:97` | "The round-end card has everything needed." → "The grid and the round-end card have everything needed." | answers are in the replay grid outside the card (`AnimalSheets.tsx:536-537`, `EvidenceGrid.tsx:204`); notes in the card (`:532`) |
-| `Teachers.tsx:87` | "one who matches without reasoning finds nothing" → "one who matches without reasoning finds about one round in five, by naming an animal blind" | `nameIt` (`animalBoard.ts:405`); `plans/053-name-it.md:17, :25`; paper `:11`. "Over 90%" stays: careful 98/97% (`053:22`) |
+| `Teachers.tsx:87` | "one who matches without reasoning finds nothing" → "one who matches without reasoning finds about one round in five" | `nameIt` (`animalBoard.ts:405`); `plans/053-name-it.md:17, :25`; paper `:11`. Leaving out how keeps it true, so the brief's rule says no feature mention. "Over 90%" stays: careful 98/97% (`053:22`) |
 | `Teachers.tsx:64` | "Students compare them with each animal's field guide and rule out the ones that can't be it, then clear gems next to them to release them." → "Students compare each animal's scouted answers with the camera's and rule out the ones that can't be it. A ruled-out animal wanders off the board, or clearing a gem next to it releases it at once." | While playing, the guide hides the round's question traits (`AnimalSheets.tsx:86, :96`, `clueFaces.ts:37`); comparison is in the grid (`AnimalSheets.tsx:711`); wander on (`animalBoard.ts:59, :368`) |
 | `Home.tsx:59` | "Check each animal's field guide against the answers. Rule out the wrong one and it escapes." → "Compare each animal's answers with the camera's. Rule out the one caught on camera and it escapes." | same; wording from `AnimalSheets.tsx:712` |
-| `Teachers.tsx:78` | "…"mostly" isn't "only", and "no record" isn't "no"." → "…"mostly" isn't "only"." | No question can have a missing record (`animalBoard.ts:97`); "No record" exists only in `LogEntryText.tsx:53`, unrendered (only `WithBlanks` is imported). Limits at `:30`, `:143` stay true (`animalBoard.ts:167`) |
-| `Home.tsx:80` | "credited on every card" → "credited in each field guide and on the round-end card" | credits at `AnimalSheets.tsx:203, :576`; pinned cards have none (`AnimalCard.tsx`) |
+| `Home.tsx:80` | "credited on every card" → "credited in the game" | credits in the guide and round end (`AnimalSheets.tsx:203, :576`) and journal (`JournalSheet.tsx:70`); pinned cards have none (`AnimalCard.tsx`) |
 | `Teachers.tsx:24` | "Signing in is optional; it keeps a player's Field Journal on more than one device." → "Signing in is optional." | F1 |
-| `Teachers.tsx:120` | "Finished rounds are saved with no link to the player." → "Rounds played without signing in are never linked to the player." | F1; true whether or not the owner restores the save |
-| `Teachers.tsx:128` | "The game keeps the player's results, to sync their Field Journal between devices." → "Results saved under an account are kept, and the Field Journal reads them back." | F1; `journal/route.ts`; same |
+| `Teachers.tsx:120` | delete "Finished rounds are saved with no link to the player." | F1: no round is saved. Any rewording ("never linked") still implies a stored round. `:118-119` already say no name is asked and where the journal lives |
+| `Teachers.tsx:128` | delete "The game keeps the player's results, to sync their Field Journal between devices." | F1: new results aren't kept; `journal/route.ts` only reads old rows. "Nothing is saved" would contradict the policy `:133` links to until F4 is answered, so silence, not a new claim |
 
 True, no edit:
+- **"No record" isn't "no" (`:30, :78, :143`), all three stay:** an open trait a record lacks proves nothing (`traits.ts:11`), and a note counts only the guides that record its tags, "N of 5 field guides say this too" (`animalBoard.ts:167`, `AnimalSheets.tsx:373`). So a guide's silence is still there to read. The literal phrase is unrendered (`LogEntryText.tsx:53`, only `WithBlanks` imported) and questions skip missing records (`animalBoard.ts:97`), but neither makes these false.
+- **Deletion (`:129`):** old results remain, 23 rows under 3 accounts (read-only count), and Clerk holds the account.
 - **Rules:** five look-alikes, four questions, 20 gems, 30 moves, 5 rounds, 3 hearts: `animalBoard.ts:59` (`Home:27, :49, :54, :68`, `Teachers:61, :62, :65, :77`). Double: "matching 20 answers it" still holds, the counter still reads n/20 (`EvidenceGrid.tsx:298`), and the +2 needs no mention.
 - **Answers never rule anyone out (`Teachers:64`):** true by default; auto rule-out is opt-in (`useAnimalSession.ts:76, :273-276`).
 - **Scouting (`:63`):** `animalBoard.ts:322`. **Escape and heart (`:65`, `Home:59`):** `:368-383, :464`. **One left (`Home:27`):** `:379`.
@@ -152,7 +153,7 @@ True, no edit:
 - **Not provable from code, unchanged:** 5–10 minutes (owner's playtests, `plans/051-landing-page.md:130`); NGSS mapping (paper §5.1); sources tiers (`db/content/sources.json`).
 - No "mystery" and no "Camera saw" anywhere in `src/site`.
 
-**F4. Privacy and Terms look untrue: handoff, no edit.** `Privacy.tsx:19, :29` (rounds and results saved, sync: F1); `Terms.tsx:13` ("sources shown on each reveal card"). One item asks: restore the game's save (game work, makes Privacy true again) or have the policy rewritten?
+**F4. Privacy and Terms look untrue: handoff, no edit.** `Privacy.tsx:19, :29` (rounds and results saved, sync: F1); `Terms.tsx:13` ("sources shown on each reveal card"). One item asks: restore the game's save (game work, makes Privacy true again) or have the policy rewritten? Until answered, the policy overstates what's kept, the safer direction. If the save returns, the bullets deleted at `Teachers.tsx:120, :128` and the clause at `:24` return with it.
 
 **F5. `shots.ts`.**
 - **Consumption:** `alt` → `Screenshot.tsx:14`, `Home.tsx:38`, `Teachers.tsx:51`. `photos` → `photoCredits` (`render.tsx:53-60`), merged per route (`:77`) into each footer (`Layout.tsx`); the build throws on an id with no profile or photo. `seed`, `place`, `round` have no reader: documentation only. Width and height go to `<img>` against layout shift.
@@ -185,7 +186,7 @@ scripts/shots/run.mjs      entry: steps, servers, order. No browser code.
 scripts/shots/take.mjs     moved; take({ mode, base, outDir }): drives Chrome, writes <shot>.png + <mode>.json.
 scripts/shots/convert.mjs  moved; convert(rawDir): raw PNG -> src/site/shots/*.webp, src/site/og.png.
 package.json               "site:shots": "node scripts/shots/run.mjs"
-src/site/shots.ts          header: date, origin/main 1a781de4, "Retake: npm run site:shots, then check every shot by eye".
+src/site/shots.ts          header: date, origin/main <commit>, pool <hash> (both from the manifests), "Retake: npm run site:shots, then check every shot by eye".
 ```
 
 ```
@@ -200,11 +201,11 @@ npm run site:shots -- convert   # any subset, same order
 | `SHOTS_DIR` | `e2e-artifacts/shots-raw` (gitignored) | Raw PNGs, JSON, server logs. Mission points it at its state folder |
 | `SHOT_SEED`, `SHOT_PLACE` | `1`, `continent:africa` | As today |
 
-**`run.mjs`.** `play`: spawn `npx next dev -p $PORT -H localhost` detached, cwd root, log to `SHOTS_DIR`; poll `/` up to 180 s; `take`; kill the process group. `start`: `npm run build`, then `npx next start` the same way. `-H localhost` is required: next dev 16 bound to 127.0.0.1 fails its proxying (on-camera `COMMAND.txt`). Any failure kills the server and exits non-zero. About 60 lines.
+**`run.mjs`.** `play`: spawn `npx next dev -p $PORT -H localhost` detached, cwd root, log to `SHOTS_DIR`; poll `/` up to 180 s; `take`; kill the process group. `start`: `npm run build` with inherited stdio (npm echoes its typecheck and build steps, so a retake doesn't look hung), then `npx next start` the same way. `-H localhost` is required: next dev 16 bound to 127.0.0.1 fails its proxying (on-camera `COMMAND.txt`). Any failure kills the server and exits non-zero. About 60 lines.
 
-**`take.mjs`.** The F2 fixes, plus `<mode>.json` gains `commit` and, per shot, `{ ids, theme, text (body.innerText), board (rect), clue (__cc.clue() or null) }`. `shot()` throws if `#animal-how-title` or `.ev-hint` is present or the theme isn't light. Track POSTs to `${base}/api/` with `Network.requestWillBeSent` (pattern: `e2e-site.mjs:118-127`) into `record.writes`; print `rounds played: N, API writes: M`. Keep the slide-hint pre-seed. Pill helpers stay a local copy: sharing them means editing `e2e.mjs`, out of scope and not runnable here.
+**`take.mjs`.** The F2 fixes, plus `<mode>.json` gains `commit` (`git merge-base HEAD origin/main`: the game's commit, so plan and script commits on a branch don't count and a rebase moves it), `pool` (first 10 hex of the sha256 of `GET ${base}/api/clue-game/pool/`, the bytes the deal reads) and, per shot, `{ ids, theme, text (body.innerText), board (rect), clue (__cc.clue() or null) }`. `shot()` throws if `#animal-how-title` or `.ev-hint` is present or the theme isn't light. Track POSTs to `${base}/api/` with `Network.requestWillBeSent` (pattern: `e2e-site.mjs:118-127`) into `record.writes`; print `rounds played: N, API writes: M`. Keep the slide-hint pre-seed. Pill helpers stay a local copy: sharing them means editing `e2e.mjs`, out of scope and not runnable here.
 
-**`convert.mjs`.** Names and sizes come from `SHOTS` in `shots.ts` and `OG_IMAGE` in `config.ts` via esbuild `transform` (the `e2e-site.mjs:34` one-liner), not a third list. Throw if a raw PNG is missing or its pixels differ from the record. Same encode settings.
+**`convert.mjs`.** Names and sizes come from `SHOTS` in `shots.ts` and `OG_IMAGE` in `config.ts` via esbuild `transform` (the `e2e-site.mjs:34` one-liner), not a third list. Before encoding anything, read `play.json` and `start.json`. Throw if their `commit`, `pool`, `seed` or `place` differ, or if a wanted shot is in neither's `shots`; `take` writes its manifest in `finally`, so this also catches a failed run's partial record. Throw if a raw PNG is missing or its pixels differ from the record. Same encode settings.
 
 **Rounds on the live DB.** Only `play` plays: stops at the first witness note's round, cap 4. `start` plays none and sends only GETs. Report rounds per run from `play.json`, `writes` (expected `[]`), and `clue_match_solves` count read only before and after (expected 188 → 188 unless the owner ships a save).
 
@@ -214,6 +215,7 @@ for f in src/site/shots/*.webp src/site/og.png; do n=$(basename $f); new=$(sha25
   echo "$n $old -> $new"; grep -rqF "/site/${n%.*}.$new.${n##*.}" out/site --include='*.html' || echo "MISSING $n"; [ "$old" = "$new" ] || ! grep -rqF "$old" out/site --include='*.html' || echo "STALE $n"; done
 ! grep -rF 'Camera saw' out/site                 # site
 ! grep -lF 'Camera saw' "$SHOTS_DIR"/*.json      # shots: case-sensitive, DOM text, then eye check
+jq -r '.mode as $m | .shots | to_entries[] | select(.value.text | test("camera saw"; "i")) | "\($m) \(.key)"' "$SHOTS_DIR"/*.json   # any case: the list for the Summary
 ```
 A byte-identical shot (globe was, at 368be9e3) keeps its hash: record it as retaken and unchanged. Lowercase "The camera saw #1" on the round-end shot is game copy (`AnimalSheets.tsx:581`), out of scope. Live: same `grep` on `curl` of `/` and `/teachers/`.
 
@@ -222,13 +224,13 @@ A byte-identical shot (globe was, at 368be9e3) keeps its hash: record it as reta
 **Release.**
 - **Production content build: not needed.** No `db/content` change. The caddy image bakes `out/site` from the repo with no database (Dockerfile `:21-27`, `render.tsx:72`). Live pool matches profiles today.
 - **`.dockerignore`:** `*.png` matches root only; `src/site/og.png` is copied, and CI proves the image.
-- **Rebase rule:** `git diff --stat 1a781de4 origin/main -- src/components src/game src/clueGame src/pages src/styles public db/content`. Retake once, by `npm run site:shots`, only if a commit visibly changes a shot; otherwise record it in the Summary. Shots and header stay pinned to `1a781de4`. A content build by the owner can change deals: same rule.
+- **Rebase rule:** `git diff --stat 1a781de4 origin/main -- src/components src/game src/clueGame src/pages src/styles public db/content`. Retake once, by `npm run site:shots`, only if a commit visibly changes a shot; otherwise record it in the Summary. Shots and header stay pinned to `1a781de4`, unless that retake runs: then the header takes `commit` and `pool` from its manifests. The hash loop still compares with `1a781de4`. A content build by the owner can change deals, so compare the manifest's `pool` with `curl -s https://play.critterconnect.org/api/clue-game/pool/ | sha256sum | cut -c1-10`: same rule.
 - **Next dev side effects:** after the run, `git status` must show only the scripts, shots, `og.png`, `shots.ts` and pages. Restore anything else (for example `tsconfig.json`).
 
 **For the Summary, out of scope:**
 - Game saves nothing since plan 044; route, `parseSolveReport` and `LogEntryText`'s `SourceLine` are dead (F1, F4). Stale: `docs/CLUE_MATCH.md:10, :24, :45, :74`, `src/proxy.ts:3`, `~/AGENTS.md`'s "add rows".
 - No per-fact sources anywhere in the game now, only the Red List link (`JournalSheet.tsx:60-64`). Paper `:228, :268` still claims them, which is where the false copy came from.
-- Lowercase "camera saw": `AnimalGame.tsx:414`, `AnimalSheets.tsx:581, :696`, `JournalSheet.tsx:43`.
+- Lowercase "camera saw": `AnimalGame.tsx:414`, `AnimalSheets.tsx:581, :696`, `JournalSheet.tsx:43`, plus the shots the `jq` line lists.
 - `animalBoard.ts:54-56` comment understates careful (91-95%, now 97-98%).
 - `e2e.mjs:76` hard-codes the how-to key and duplicates the pill helpers.
 - VPS `.env.local` has `?pgbouncer=true`, which `AGENTS.md` says not to add. App strips it (`src/db/index.ts:10-14`); `psql` rejects it.
@@ -267,6 +269,16 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+- **Fable MUST-FIX 1 (`Teachers.tsx:78` vs `:143`), resolved:** dropped the `:78` edit. `:30, :78, :143` all stay, as none is false (`traits.ts:11`, `animalBoard.ts:167`, `AnimalSheets.tsx:373`).
+- **Fable MUST-FIX 2 (`:128`, re-read `:120`), resolved:** delete both bullets. Any rewording still implies a stored round, and "nothing is saved" would contradict the linked policy until F4 is answered. `:129` stays true (23 old rows under 3 accounts).
+- **Fable MISSED (`Home.tsx:80`), resolved:** "credited in the game", true of guide, round end and journal.
+- **Fable SHOULD-CONSIDER 1 (`:87`), adopted:** mechanism removed. The sentence is true without it, and the brief limits feature mentions.
+- **Fable SHOULD-CONSIDER 2 (build runs typecheck), adopted differently:** `npm run build` inherits stdio, so progress shows and no usage text is needed.
+- **Fable SHOULD-CONSIDER 4 (lowercase hits), adopted:** one `jq` line among the mission's checks, no repo code.
+- **Astra SHOULD-CONSIDER 1 (capture commit), adopted:** manifest `commit` is the merge-base with `origin/main`; a retake's header takes it, replacing the fixed pin.
+- **Astra SHOULD-CONSIDER 2 (validate manifests), adopted:** a few lines in `convert.mjs`. Partial reruns are a designed path and `SHOTS_DIR` persists, so mixing was possible.
+- **Astra SHOULD-CONSIDER 3 (pool hash), adopted:** one line in `take.mjs`, one field in convert's check, one token in the header. The on-camera run already saved the pool by hand; its two copies hash the same, so no false alarm is expected.
+
 ## Steps
 
 ## Verification
@@ -283,5 +295,6 @@ SHOULD-CONSIDER:
 - 2026-11-01 23:39 UTC: Architecture written. Lead confirmed by grep that no client POSTs a solve (F1). 12 false copy statements, take.mjs breaks found, design `npm run site:shots`. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:43 UTC: Fable review: APPROVE_WITH_CHANGES, 2 must-fix (`Teachers.tsx:78`, `:128` edits), for Revision. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:44 UTC: Astra review: APPROVE, no must-fix, 3 should-consider. No code changed; typecheck/lint n/a.
+- 2026-11-01 23:49 UTC: Revision. Fable's 2 must-fix and 1 missed resolved (`Teachers.tsx:78` kept, `:120` and `:128` deleted, `Home.tsx:80` reworded); 6 should-consider adopted, 1 in a different form. Lead checked the diff against `Teachers.tsx`. No code changed; typecheck/lint n/a.
 
 ## Summary
