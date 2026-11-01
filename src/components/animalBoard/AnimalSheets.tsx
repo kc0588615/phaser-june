@@ -489,11 +489,10 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
             {/* The round's numbers stack under the photo, beside the name (plan 052). */}
             <div className="flex w-36 shrink-0 flex-col gap-xs">
               <motion.span className="block aspect-[4/3] overflow-hidden rounded-xs bg-neutral-3" {...pop(0.25)}><SuspectPhoto species={species} size={330} /></motion.span>
-              <dl className="m-0 flex flex-col">
-                <Stat label="points" value={`+${end.points}`} row />
+              {(found || guesses.length > 0) && <dl className="m-0 flex flex-col">
                 {found && <Stat label={round.movesLeft === 1 ? 'move to spare' : 'moves to spare'} value={round.movesLeft} row />}
                 {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
-              </dl>
+              </dl>}
             </div>
             <div className="flex min-w-0 flex-col gap-xxs">
               <p className="m-0 flex items-center gap-xs">
@@ -503,6 +502,8 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
                     {[0, 1, 2].map(i => <motion.span key={i} className="inline-block" aria-hidden="true" {...(i < end.stars ? pop(0.5 + i * 0.18) : {})}>{i < end.stars ? '★' : '☆'}</motion.span>)}
                   </span>
                 )}
+                {/* The reward reads together: stars, then points (a loss always scores 0, so it shows none). */}
+                {found && <motion.span className="font-data text-s font-heavy text-color-1" aria-label={`${end.points} points`} {...pop(0.5 + end.stars * 0.18)}>+{end.points}</motion.span>}
               </p>
               <p className="m-0 text-xs text-neutral-7">{lead}</p>
               <h2 className="m-0 text-xl font-heavy [text-wrap:balance]">{animal.name}</h2>
@@ -551,7 +552,9 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
           )}
         </div>
         </div>
-        <div className="flex shrink-0 flex-col gap-s px-l pb-[max(var(--space-l),env(safe-area-inset-bottom))] pt-s shadow-[inset_0_1px_0_0_var(--neutral-4)]">
+        <div className="relative flex shrink-0 flex-col gap-s px-l pb-[max(var(--space-l),env(safe-area-inset-bottom))] pt-xs">
+          {/* No divider: the notes fade out under the button, so it sits on the card. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-full h-l bg-linear-to-t from-neutral-1 to-transparent" aria-hidden="true" />
           {trail.over && (
             <div className="flex items-center justify-between gap-s rounded-s bg-color-3-transparent px-s py-xs">
               <div className="flex flex-col">
