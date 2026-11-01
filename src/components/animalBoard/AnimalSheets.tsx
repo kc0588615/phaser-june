@@ -485,8 +485,16 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-l pb-s pt-l">
         {/* Its own box, so the scroller doesn't squeeze its rows (the stats' overflow-hidden would shrink to nothing). */}
         <div className="flex flex-col gap-s">
-          <div className="flex items-center gap-s">
-            <motion.span className="block aspect-[4/3] w-36 shrink-0 overflow-hidden rounded-xs bg-neutral-3" {...pop(0.25)}><SuspectPhoto species={species} size={330} /></motion.span>
+          <div className="flex items-start gap-s">
+            {/* The round's numbers stack under the photo, beside the name (plan 052). */}
+            <div className="flex w-36 shrink-0 flex-col gap-xs">
+              <motion.span className="block aspect-[4/3] overflow-hidden rounded-xs bg-neutral-3" {...pop(0.25)}><SuspectPhoto species={species} size={330} /></motion.span>
+              <dl className="m-0 flex flex-col">
+                <Stat label="points" value={`+${end.points}`} row />
+                {found && <Stat label={round.movesLeft === 1 ? 'move to spare' : 'moves to spare'} value={round.movesLeft} row />}
+                {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
+              </dl>
+            </div>
             <div className="flex min-w-0 flex-col gap-xxs">
               <p className="m-0 flex items-center gap-xs">
                 <span className={`text-xs font-heavy uppercase ${found ? 'text-color-1' : 'text-error'}`}>{kicker}</span>
@@ -505,11 +513,6 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
             <ListTree className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>Animalia › Chordata › {tree.class.latin} › {tree.order.latin} › {tree.family.latin} › <span className="text-neutral-10">{tree.genus}</span></span>
           </p>
-          <dl className="m-0 grid auto-cols-fr grid-flow-col gap-px overflow-hidden rounded-s bg-neutral-4">
-            <Stat label="points" value={`+${end.points}`} />
-            {found && <Stat label="moves to spare" value={round.movesLeft} />}
-            {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} />}
-          </dl>
           {!found && (
             <p className={`${NOTICE} bg-error-transparent`}>
               <HeartCrack className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
@@ -556,8 +559,8 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
                 <span className="text-xs text-neutral-7">Trail {session.trailNo} total</span>
               </div>
               <dl className="m-0 flex gap-m text-center">
-                <Stat label="finds" value={`${trail.finds}/${trail.rounds}`} plain />
-                <Stat label="score" value={session.score} plain />
+                <Stat label="finds" value={`${trail.finds}/${trail.rounds}`} />
+                <Stat label="score" value={session.score} />
               </dl>
             </div>
           )}
@@ -568,12 +571,12 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
   );
 }
 
-/** A number over its label (round end). `plain`: no cell of its own. */
-function Stat({ label, value, plain = false, ...rest }: { label: string; value: ReactNode; plain?: boolean; 'data-guesses'?: string }) {
+/** A number over its label (the trail total), or before it on one small line (`row`, the round-end card). */
+function Stat({ label, value, row = false, ...rest }: { label: string; value: ReactNode; row?: boolean; 'data-guesses'?: string }) {
   return (
-    <div className={`flex flex-col ${plain ? '' : 'bg-neutral-3 px-s py-xxs'}`} {...rest}>
+    <div className={`flex ${row ? 'items-baseline gap-xxs' : 'flex-col'}`} {...rest}>
       <dt className="text-xs text-neutral-7">{label}</dt>
-      <dd className="order-first m-0 font-data text-m font-heavy">{value}</dd>
+      <dd className={`order-first m-0 font-data font-heavy ${row ? 'text-s' : 'text-m'}`}>{value}</dd>
     </div>
   );
 }
