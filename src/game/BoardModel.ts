@@ -64,7 +64,8 @@ export type Pins = (number | null)[][];
 const key = ([x, y]: Cell) => `${x},${y}`;
 const has = (cells: readonly Cell[], [x, y]: Cell) => cells.some(([cx, cy]) => cx === x && cy === y);
 const NONE: ExplodePhase = { groups: [], cleared: [], made: [], fired: [], refills: [], touched: [], nearColors: [], runTouched: [] };
-const NEAR: ReadonlyArray<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+/** A tile's neighbors: a gem cleared in one of these cells is "next to" it. */
+export const NEAR: ReadonlyArray<[number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 export function isNeighbor([ax, ay]: Cell, [bx, by]: Cell): boolean {
   return Math.abs(ax - bx) + Math.abs(ay - by) === 1;

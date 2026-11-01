@@ -18,6 +18,7 @@
 //   board -> page  'clue-board-nudge'     the player tried to move an animal's card (it's pinned; plan 046)
 //   page  -> board 'clue-board-answer'    the mystery's answer to a question just landed in the grid (plan 046)
 //   board -> page  'clue-board-walked'    a ruled-out animal walked off the edge (plan 047)
+//   page  -> board 'clue-board-highlight' gems to glow: a held column's color board-wide, a held cell's next to its animal
 import Phaser from 'phaser';
 import type { Heading } from '@/clueGame/animalBoard';
 import type { Cell, Grid, Toys } from './BoardModel';
@@ -73,6 +74,8 @@ export interface EventPayloads {
     'clue-board-answer': { tag: string; yes: boolean };
     /** Plan 047: a marked animal stepped off the board's edge (released, or the mystery escapes). */
     'clue-board-walked': { id: number };
+    /** `all`: colors that glow everywhere; `near`: per animal, colors that glow only next to its card. */
+    'clue-board-highlight': { all: GemType[]; near: Array<[id: number, gems: GemType[]]> };
 }
 
 export type BoardKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Escape';

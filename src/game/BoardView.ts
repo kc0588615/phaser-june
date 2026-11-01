@@ -19,7 +19,7 @@ import {
     TWEEN_DURATION_FALL_MAX, TWEEN_DURATION_SWAP, TWEEN_DURATION_LAYOUT_UPDATE,
     type GemType,
 } from './constants';
-import { applySwap, type Cell, type ExplodePhase, type Fire, type Grid, type Move, type Special, type Toy, type Toys } from './BoardModel';
+import { applySwap, NEAR, type Cell, type ExplodePhase, type Fire, type Grid, type Move, type Special, type Toy, type Toys } from './BoardModel';
 import type { BoardPin } from './EventBus';
 import type { BoardLayout } from './squareLayout';
 import { toyTexture } from './toyTextures';
@@ -59,6 +59,8 @@ const cellKey = ([x, y]: readonly [number, number]) => `${x},${y}`;
 const CARD_FONT = '"Patrick Hand", "Comic Sans MS", cursive';
 /** The picked animal's color, the evidence grid's (--color-1 in globals.css). */
 const PICKED = 0x00906c;
+/** A highlighted question's gems glow this purple (--color-notes, the grid's .ev-highlight). */
+const HIGHLIGHT = 0xb27dff;
 
 export class BoardView {
     /** Sprites mirroring the model's grid, [x][y]. */
@@ -92,6 +94,11 @@ export class BoardView {
     private selectPulse: Phaser.Tweens.Tween | null = null;
     /** Gem color -> the texture drawn for it this round (plan 044 faces); default gem_<color>. */
     private faces = new Map<GemType, string>();
+    /** Gems of questions highlighted in the grid glow purple and pulse, like the grid's highlight (see setGlow). */
+    private glowAll = new Set<GemType>();
+    private glowNear = new Map<number, Set<GemType>>();
+    private glows = new Map<Sprite, Phaser.Filters.Glow>();
+    private glowPulse: Phaser.Tweens.Tween | null = null;
 
     constructor(private readonly scene: Phaser.Scene, private readonly cols: number, private readonly rows: number, private layout: BoardLayout) {
         this.group = scene.add.group();
@@ -104,6 +111,44 @@ export class BoardView {
 
     setFaces(faces: ReadonlyMap<GemType, string>): void {
         this.faces = new Map(faces);
+    }
+
+    /** `all`: these colors glow everywhere (a column held); `near`: per animal, these glow only next to its card (a cell held). */
+    setGlow(all: readonly GemType[], near: ReadonlyArray<[id: number, gems: GemType[]]>): void {
+        this.glowAll = new Set(all);
+        this.glowNear = new Map(near.map(([id, gems]) => [id, new Set(gems)]));
+        this.refreshGlow();
+    }
+
+    /** Re-checks every gem's glow (cards and gems move, so call it once a move settles). */
+    refreshGlow(): void {
+        this.sprites.forEach((column, x) => column.forEach((sprite, y) => { if (sprite?.active) this.applyGlow(sprite, x, y); }));
+    }
+
+    /** Filters are WebGL only; on a canvas renderer the highlighted gems just don't glow. */
+    private applyGlow(sprite: Sprite, x: number, y: number): void {
+        const gem = sprite.getData('gem') as GemType;
+        const want = this.glowAll.has(gem) || (this.glowNear.size > 0 && NEAR.some(([dx, dy]) => {
+            const tile = [...this.tiles.values()].find(({ pin }) => pin.cell[0] === x + dx && pin.cell[1] === y + dy);
+            return tile !== undefined && this.glowNear.get(tile.pin.id)?.has(gem) === true;
+        }));
+        const glow = this.glows.get(sprite);
+        if (want && !glow) {
+            const added = sprite.enableFilters().filters?.internal.addGlow(HIGHLIGHT, 6, 0, 1, false, 10, 12);
+            if (!added) return;
+            this.glows.set(sprite, added);
+            sprite.once(Phaser.GameObjects.Events.DESTROY, () => this.glows.delete(sprite));
+            if (!this.glowPulse && !reducedMotion()) {
+                const beat = { strength: 6 };
+                this.glowPulse = this.scene.tweens.add({
+                    targets: beat, strength: 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+                    onUpdate: () => { for (const g of this.glows.values()) g.outerStrength = beat.strength; },
+                });
+            }
+        } else if (!want && glow) {
+            sprite.filters?.internal.remove(glow);
+            this.glows.delete(sprite);
+        }
     }
 
     /** A sprite for every gem (with its toy, if any), replacing any board already drawn. Pinned cells get none. */
@@ -409,6 +454,8 @@ export class BoardView {
         for (const id of [...this.tiles.keys()]) this.destroyTile(id);
         this.pinned.clear();
         this.selectPulse?.remove();
+        this.glowPulse?.remove();
+        this.glowPulse = null;
     }
 
     /** Tweens the sprites to a new gem size and offset after a resize. */
@@ -590,6 +637,8 @@ export class BoardView {
         sprite.setScale(this.scaleFor(sprite)).setAlpha(startY === undefined ? 1 : 0);
         // Filters are WebGL only; on a canvas renderer the note gem just doesn't glow.
         if (gem === this.rareGem) sprite.enableFilters().filters?.internal.addGlow(0xf3e8ff, 6, 0, 1, false, 10, 12);
+        sprite.setData('gem', gem);
+        this.applyGlow(sprite, x, y);
         this.sprites[x][y] = sprite;
     }
 

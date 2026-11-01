@@ -8,7 +8,7 @@ import {
   ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, headingOf, newAnimalRound, newTrail, pickSuspectSet, tileCells, travelOf,
   type AnimalRound,
 } from '@/clueGame/animalBoard';
-import { animalDebugSummary, animalSessionReducer } from '@/clueGame/animalSession';
+import { animalDebugSummary, animalSessionReducer, liveHighlights } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import { MIN_PLACE_ANIMALS, type Place, type PlacesResponse } from '@/clueGame/places';
 import type { CluePool, PoolSpecies } from '@/clueGame/pool';
@@ -220,6 +220,23 @@ export function useAnimalSession() {
     EventBus.emit('clue-board-unscouted', { unscouted });
   }, [sceneGeneration, orders]);
 
+  // Highlighted gems glow on the board: a held question gem's color everywhere, a held cell's next to its animal.
+  const round = session?.round;
+  const highlights = session?.highlight;
+  useEffect(() => {
+    if (sceneGeneration === 0 || !round || !highlights) return;
+    const all: GemType[] = [];
+    const near = new Map<number, GemType[]>();
+    for (const key of liveHighlights(round, highlights)) {
+      const at = key.indexOf(':');
+      const gem = round.orders.find(order => order.tag === key.slice(at + 1))?.gem;
+      if (!gem) continue;
+      if (key.slice(0, at) === '*') all.push(gem);
+      else { const id = Number(key.slice(0, at)); near.set(id, [...(near.get(id) ?? []), gem]); }
+    }
+    EventBus.emit('clue-board-highlight', { all, near: [...near] });
+  }, [sceneGeneration, round, highlights]);
+
   // The board takes moves only while the round is playing.
   const status = session?.round.status;
   useEffect(() => {
@@ -240,7 +257,7 @@ export function useAnimalSession() {
   }, []);
   const name = useCallback((id: number | null) => dispatch({ type: 'name', id }), []);
   const pencil = useCallback((id: number, tag: string, value: 'yes' | 'no' | null) => dispatch({ type: 'pencil', id, tag, value }), []);
-  const highlight = useCallback((id: number, tag: string) => dispatch({ type: 'highlight', id, tag }), []);
+  const highlight = useCallback((id: number | null, tag: string) => dispatch({ type: 'highlight', id, tag }), []);
   const nextRound = useCallback(() => {
     const current = sessionRef.current;
     if (!current?.end || !content) return;

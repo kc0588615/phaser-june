@@ -111,6 +111,7 @@ export class ClueBoardScene extends Phaser.Scene {
             },
             onMoveResolved: () => {
                 this.reshuffleIfStuck();
+                this.view?.refreshGlow(); // gems and cards moved
                 EventBus.emit('clue-board-settled', { grid: this.model.getGrid(), toys: this.model.getToys(), pins: this.model.pinnedCells() });
             },
             announce: (text, cell) => {
@@ -129,6 +130,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.on('clue-board-select', this.onSelect, this);
         EventBus.on('clue-board-unscouted', this.onUnscouted, this);
         EventBus.on('clue-board-answer', this.onAnswer, this);
+        EventBus.on('clue-board-highlight', this.onHighlight, this);
         window.addEventListener('pointerdown', this.onPageInput, true);
         window.addEventListener('keydown', this.onPageInput, true);
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
@@ -183,6 +185,10 @@ export class ClueBoardScene extends Phaser.Scene {
 
     private onSelect({ id }: EventPayloads['clue-board-select']): void {
         this.view?.setSelected(id);
+    }
+
+    private onHighlight({ all, near }: EventPayloads['clue-board-highlight']): void {
+        this.view?.setGlow(all, near);
     }
 
     private onUnscouted({ unscouted }: EventPayloads['clue-board-unscouted']): void {
@@ -455,6 +461,7 @@ export class ClueBoardScene extends Phaser.Scene {
         EventBus.off('clue-board-key', this.onKey, this);
         EventBus.off('clue-board-marks', this.onMarks, this);
         EventBus.off('clue-board-select', this.onSelect, this);
+        EventBus.off('clue-board-highlight', this.onHighlight, this);
         EventBus.off('clue-board-unscouted', this.onUnscouted, this);
         EventBus.off('clue-board-answer', this.onAnswer, this);
         window.removeEventListener('pointerdown', this.onPageInput, true);

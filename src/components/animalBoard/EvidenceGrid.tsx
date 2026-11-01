@@ -13,8 +13,9 @@
 // every answer, outlines the mystery's own row and marks each earned answer that rules an animal out.
 // The Camera cell opens the witness notes (every note is about the mystery): it counts
 // them, pulses when one comes in, and is where a collected witness gem flies.
-// Hold any answer cell to highlight it (gold, "this one matters"); its column's gem glows so the
-// player remembers which gem to go for. Like pencil, the player's own mark: the rules never read it.
+// Hold a hidden answer cell to highlight it (purple, "this one matters"): its gems next to that animal's card glow on the
+// board until it's scouted. Hold a question's gem up top: all its gems glow until the answer lands. A ruled-out animal's
+// cells take no pencil or highlight. Like pencil, the player's own mark: the rules never read it (liveHighlights).
 // Players see the mystery as "the one caught on camera" (its row: "On camera"), so it doesn't read as a sixth
 // animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the mystery's own row
 // rises into the Camera row, which becomes that animal (its slot closes up), then `onLanded`. `review` keeps it so (plan 052).
@@ -22,6 +23,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
+import { liveHighlights } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { columnLabel } from '@/clueGame/questionMatch';
@@ -66,9 +68,9 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   /** The player's pencilled answers for hidden cells, by `${id}:${tag}`; `onPencil` sets the next one. */
   pencil?: Readonly<Record<string, 'yes' | 'no'>>;
   onPencil?: (id: number, tag: string, value: 'yes' | 'no' | null) => void;
-  /** The player's highlighted cells, by `${id}:${tag}`; a long press on a cell toggles one. */
+  /** The player's highlights, by `${id}:${tag}` (a cell) or `*:${tag}` (a question's gem); a long press toggles one (id null: the gem). */
   highlight?: readonly string[];
-  onHighlight?: (id: number, tag: string) => void;
+  onHighlight?: (id: number | null, tag: string) => void;
   /** Pencilled cells (`${id}:${tag}`) just scouted: a right guess sparkles, a wrong one shows, a ruled-out card wiggles. */
   reveal?: ReadonlySet<string>;
   /** The round is over: the Camera row slides onto this animal's row (the mystery's), then `onLanded`. */
@@ -129,7 +131,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   };
   // A long press on an answer cell highlights it; the click that ends it doesn't also pencil or pick.
   const cellHold = useRef<{ x: number; y: number; timer: number; held: boolean } | null>(null);
-  const cellPress = (event: React.PointerEvent, id: number, tag: string) => {
+  const cellPress = (event: React.PointerEvent, id: number | null, tag: string) => {
     if (cellHold.current) window.clearTimeout(cellHold.current.timer);
     const hold = { x: event.clientX, y: event.clientY, timer: 0, held: false };
     hold.timer = window.setTimeout(() => { hold.held = true; onHighlight?.(id, tag); }, HIGHLIGHT_MS);
@@ -145,14 +147,13 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
     cellHold.current = null;
     event.stopPropagation();
   };
-  const holdCell = (id: number, tag: string) => onHighlight ? {
+  const holdCell = (id: number | null, tag: string) => onHighlight ? {
     onPointerDown: (event: React.PointerEvent) => cellPress(event, id, tag),
     onPointerMove: cellMove, onPointerUp: cellEnd, onPointerCancel: cellEnd, onPointerLeave: cellEnd,
     onClickCapture: cellClick,
     onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
   } : {};
-  const highlighted = new Set(highlight);
-  const glowing = new Set(highlight.map(key => key.slice(key.indexOf(':') + 1)));
+  const highlighted = new Set(liveHighlights(round, highlight));
   const pick = (id: number) => {
     if (skipClick.current) { skipClick.current = false; return; }
     onSelect?.(id);
@@ -194,15 +195,15 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
         <tr>
           <td className="p-0 align-bottom">{corner}</td>
           {round.orders.map((order, j) => (
-            <th key={order.tag} scope="col" data-tag={order.tag} className="p-0 align-bottom font-regular">
+            <th key={order.tag} scope="col" data-tag={order.tag} data-highlight={highlighted.has(`*:${order.tag}`) || undefined} {...(order.answer === null ? holdCell(null, order.tag) : {})} className="select-none p-0 align-bottom font-regular [-webkit-touch-callout:none]">
               <button
                 type="button"
                 disabled={!onQuestion}
                 onClick={() => onQuestion?.(j)}
-                aria-label={order.question}
-                className="flex w-full flex-col items-center gap-xxs rounded-xs pb-xxs transition-colors enabled:hover:bg-neutral-3-transparent enabled:active:bg-neutral-3 short:gap-zero short:pb-zero"
+                aria-label={`${order.question}${highlighted.has(`*:${order.tag}`) ? ', highlighted' : ''}`}
+                className={`flex w-full flex-col items-center gap-xxs rounded-xs pb-xxs transition-colors short:gap-zero short:pb-zero ${highlighted.has(`*:${order.tag}`) ? 'ev-highlight' : 'enabled:hover:bg-neutral-3-transparent enabled:active:bg-neutral-3'}`}
               >
-                <FaceIcon gem={order.gem} face={clueFace(order.tag)} className={`h-6 w-6 text-[13px] ${!review && glowing.has(order.tag) ? 'ev-glow' : ''}`} />
+                <FaceIcon gem={order.gem} face={clueFace(order.tag)} className={`h-6 w-6 text-[13px] ${highlighted.has(`*:${order.tag}`) ? 'ev-glow' : ''}`} />
                 <span className="line-clamp-2 min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en">{columnLabel(order.tag)}</span>
               </button>
             </th>
@@ -291,6 +292,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
           const marked = round.marked.includes(id) && !released;
           const picked = selected === id;
           const canSlide = Boolean(onMark) && !released;
+          const out = round.marked.includes(id); // ruled out (or released): its cells take no pencil or highlight
           // (The photo slides; the track behind it shows only while dragging.)
           const dx = slide?.id === id ? slide.dx : 0;
           const missed = (order: AnimalRound['orders'][number]) => {
@@ -353,12 +355,12 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   const guess = pencil[`${id}:${order.tag}`];
                   const starred = highlighted.has(`${id}:${order.tag}`);
                   return (
-                    <td key={order.tag} data-tag={order.tag} data-hidden="" data-pencil={guess ?? ''} data-highlight={starred || undefined} {...holdCell(id, order.tag)} className={`h-(--ev-row) select-none rounded-xs p-0 text-center [-webkit-touch-callout:none] ${starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-2'}`}>
+                    <td key={order.tag} data-tag={order.tag} data-hidden="" data-pencil={guess ?? ''} data-highlight={starred || undefined} {...(out ? {} : holdCell(id, order.tag))} className={`h-(--ev-row) select-none rounded-xs p-0 text-center [-webkit-touch-callout:none] ${starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-2'}`}>
                       <button
                         type="button"
-                        disabled={!onPencil}
+                        disabled={!onPencil || out}
                         onClick={event => { event.stopPropagation(); onPencil?.(id, order.tag, NEXT_PENCIL[guess ?? 'none']); }}
-                        aria-label={`${name}, ${columnLabel(order.tag)}: not scouted${guess ? `, your guess ${guess}` : ''}${starred ? ', highlighted' : ''}. Tap to pencil a guess, hold to highlight.`}
+                        aria-label={`${name}, ${columnLabel(order.tag)}: not scouted${guess ? `, your guess ${guess}` : ''}${starred ? ', highlighted' : ''}${out ? '' : '. Tap to pencil a guess, hold to highlight.'}`}
                         className={`h-full w-full rounded-xs outline-dashed outline-1 -outline-offset-2 outline-neutral-5 ${starred ? '' : 'enabled:active:bg-neutral-3'} ${guess ? 'text-m font-regular text-neutral-7' : 'font-data text-s text-neutral-6'}`}
                       >
                         <span aria-hidden="true">{guess === 'yes' ? '✓' : guess === 'no' ? '✗' : '?'}</span>
@@ -372,14 +374,13 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 const fresh = !review && reveal.has(`${id}:${order.tag}`);
                 const miss = review && order.answer !== null && yes !== (order.answer === 'yes');
                 const lit = !review && answered[j];
-                const starred = !review && highlighted.has(`${id}:${order.tag}`);
-                const fill = miss ? 'bg-error-transparent' : starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
+                const fill = miss ? 'bg-error-transparent' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
-                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} data-highlight={starred || undefined} {...(review ? {} : holdCell(id, order.tag))} className={`relative h-(--ev-row) select-none rounded-xs p-0 text-center text-m font-heavy [-webkit-touch-callout:none] ${fill} ${lit ? 'ev-lit' : ''}`}>
+                  <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} className={`relative h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
                     {called && fresh && <span aria-hidden="true" className="ev-sparkle" />}
                     <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'}`} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
-                    <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}{starred && ', highlighted'}</span>
+                    <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}</span>
                     {guess && !called && (review || fresh) && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
                   </td>
                 );

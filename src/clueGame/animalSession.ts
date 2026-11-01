@@ -32,7 +32,7 @@ export interface AnimalSession {
   history: number[];
   /** Plan 045: the player's own pencilled answers for hidden cells this round, by `${id}:${tag}`. Never read by the rules; kept once scouted, so the grid can show a guess was right or wrong. */
   pencil: Record<string, 'yes' | 'no'>;
-  /** The player's own highlighted cells this round, by `${id}:${tag}` (a long press: "this one matters"). Never read by the rules. */
+  /** The player's own highlights this round (a long press: "this one matters"): cells by `${id}:${tag}`, question gems by `*:${tag}`. Never read by the rules; see `liveHighlights`. */
   highlight: string[];
   end: AnimalRoundEnd | null;
 }
@@ -53,8 +53,8 @@ export type AnimalAction =
   | { type: 'mark'; id: number; ruledOut: boolean; heading?: Heading }
   | { type: 'name'; id: number | null }
   | { type: 'pencil'; id: number; tag: string; value: 'yes' | 'no' | null }
-  /** Toggle a cell's highlight. */
-  | { type: 'highlight'; id: number; tag: string };
+  /** Toggle a cell's highlight (`id` null: the question's gem, its whole column). */
+  | { type: 'highlight'; id: number | null; tag: string };
 
 /** Score what a rules step did: a finished round scores (or breaks the streak) and moves the trail on. */
 function advance(session: AnimalSession, round: AnimalRound): AnimalSession {
@@ -102,7 +102,7 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
     case 'name':
       return advance(session, nameAtTimeout(round, action.id));
     case 'pencil': {
-      if (round.status !== 'playing') return session;
+      if (round.status !== 'playing' || round.marked.includes(action.id)) return session;
       const pencil = { ...session.pencil };
       if (action.value) pencil[`${action.id}:${action.tag}`] = action.value;
       else delete pencil[`${action.id}:${action.tag}`];
@@ -110,7 +110,8 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
     }
     case 'highlight': {
       if (round.status !== 'playing') return session;
-      const key = `${action.id}:${action.tag}`;
+      const key = `${action.id ?? '*'}:${action.tag}`;
+      if (!session.highlight.includes(key) && !live(round, key)) return session;
       const highlight = session.highlight.includes(key) ? session.highlight.filter(other => other !== key) : [...session.highlight, key];
       return { ...session, highlight };
     }
@@ -118,6 +119,22 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
 }
 
 export const startTrail = newTrail;
+
+/** Whether a highlight still means something: a cell until its animal is ruled out or its answer scouted; a question gem until the mystery's answer lands. */
+function live(round: AnimalRound, key: string): boolean {
+  const at = key.indexOf(':');
+  const order = round.orders.find(other => other.tag === key.slice(at + 1));
+  if (!order) return false;
+  if (key.slice(0, at) === '*') return order.answer === null;
+  const id = Number(key.slice(0, at));
+  const i = round.suspects.indexOf(id);
+  return i >= 0 && !order.seen[i] && !round.marked.includes(id);
+}
+
+/** The highlights to show (the grid's purple, the board's glowing gems); the rest wait in `highlight` (an animal ruled back in shows its own again). */
+export function liveHighlights(round: AnimalRound, highlight: readonly string[]): string[] {
+  return round.status === 'playing' ? highlight.filter(key => live(round, key)) : [];
+}
 
 /** A JSON-safe summary for the dev bridge (window.__cc.clue()) and playtests. `possible` is for checks only, never shown. */
 export function animalDebugSummary(session: AnimalSession, seed: number) {
