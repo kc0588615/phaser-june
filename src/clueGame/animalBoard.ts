@@ -45,16 +45,18 @@ export interface AnimalRules {
   wanderToy: boolean;
   /** Rules 047-1: a line or blast gem going off in the move's own clear scouts its own color on every unmarked tile its clear reaches. */
   toyScout: boolean;
+  /** Rules 053-1: a move whose own clear has runs of two colors (both swapped gems matched) adds this many gems to each clue order it hit. 0: off. */
+  doubleBonus: number;
   points: { star: number; moveLeft: number; streakStep: number; streakMax: number };
 }
 
 /**
- * Tuned by the balance bot (plans 044, 045 and 047; toy scouting 047-1 adds 1-3 points): with scouting, wandering and reward toys, orders of 20 gems and
+ * Tuned by the balance bot (plans 044, 045 and 047; toy scouting 047-1 adds 1-3 points; the double 053-1 adds 0.6-0.8 moves left at the find): with scouting, wandering and reward toys, orders of 20 gems and
  * 30 moves (careful finds 91-95%, one who knows every trait on sight 100%, one who knows none 87-92%, one who reasons
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '053-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true,
+  version: '053-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -283,6 +285,14 @@ export interface PhaseReport {
   touched: readonly number[];
   /** Touched tiles with the colors cleared next to them (scouting). */
   nearColors?: ReadonlyArray<readonly [number, readonly GemType[]]>;
+  /** A double's run colors (`doubleOf`), else none. */
+  double?: readonly GemType[];
+}
+
+/** A double: the colors of a phase's runs (toys' clears and witness gems aside) when there are two or more, else none. */
+export function doubleOf(groups: ReadonlyArray<{ gemType: GemType; blast?: boolean }>): GemType[] {
+  const colors = [...new Set(groups.filter(group => !group.blast && group.gemType !== WITNESS_GEM).map(group => group.gemType))];
+  return colors.length >= 2 ? colors : [];
 }
 
 /** A board phase as the rules see it: gems cleared by color (runs and toys' clears alike), witness gems, tiles touched. */
@@ -293,7 +303,7 @@ export function reportOf(phase: ExplodePhase): PhaseReport {
     if (group.gemType === WITNESS_GEM) witness += group.cells.length;
     else collected[group.gemType] = (collected[group.gemType] ?? 0) + group.cells.length;
   }
-  return { collected, witness, touched: phase.touched, nearColors: phase.nearColors };
+  return { collected, witness, touched: phase.touched, nearColors: phase.nearColors, double: doubleOf(phase.groups) };
 }
 
 /**
@@ -307,6 +317,8 @@ export function applyPhase(book: Book, state: AnimalRound, report: PhaseReport, 
   const log = [...state.log];
   const mysteryTraits = book.traits.get(state.mysteryId)!;
   // Scouting: the move's own clear shows an unmarked tile's answer to each clue whose color was cleared next to it.
+  // Rules 053-1: a double (the move's own clear, runs of two colors) adds its bonus to each clue order it hit.
+  const double = !cascade && state.rules.doubleBonus > 0 ? report.double ?? [] : [];
   const scouted = state.rules.scout && !cascade ? (report.nearColors ?? []).filter(([id]) => !state.marked.includes(id) && !state.released.includes(id)) : [];
   const orders = state.orders.map(order => {
     const seen = scouted.some(([, colors]) => colors.includes(order.gem))
@@ -317,7 +329,8 @@ export function applyPhase(book: Book, state: AnimalRound, report: PhaseReport, 
       order = { ...order, seen };
     }
     if (order.answer) return order;
-    const have = Math.min(state.rules.orderSize, order.have + (report.collected[order.gem] ?? 0));
+    const bonus = double.includes(order.gem) ? state.rules.doubleBonus : 0;
+    const have = Math.min(state.rules.orderSize, order.have + (report.collected[order.gem] ?? 0) + bonus);
     if (have < state.rules.orderSize) return { ...order, have };
     const answer = mysteryTraits.get(prefixOf(order.tag))!.has(order.tag) ? 'yes' as const : 'no' as const;
     log.push({ kind: 'answer', tag: order.tag, question: order.question, answer });

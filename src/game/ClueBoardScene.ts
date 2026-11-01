@@ -23,7 +23,7 @@ import { makeToyTextures } from './toyTextures';
 import { playAnswerEffect } from './answerEffects';
 import { attachDebugScene, detachDebugScene, type DebugBoardSnapshot } from './debugBridge';
 import { DEFAULT_RULES } from '@/clueGame/questionMatch';
-import { HEADING_STEP, rewardToy, walkers, type Heading } from '@/clueGame/animalBoard';
+import { CLUE_GEMS, HEADING_STEP, doubleOf, rewardToy, walkers, type Heading } from '@/clueGame/animalBoard';
 
 const TRAVEL_VERB: Record<PinExit, string> = { fly: 'flies', swim: 'swims', dig: 'digs', walk: 'walks' };
 
@@ -45,6 +45,7 @@ export class ClueBoardScene extends Phaser.Scene {
     private animals = false;
     /** Plan 047: whether marked animals walk, and earn reward toys; how and which way each goes; this move's toys and step words. */
     private wander: { toy: boolean } | null = null;
+    private double = 0;
     private travels = new Map<number, PinExit>();
     private headings: Partial<Record<number, Heading>> = {};
     private earned: Array<[Cell, Special, name: string]> = [];
@@ -142,7 +143,7 @@ export class ClueBoardScene extends Phaser.Scene {
         attachDebugScene(this);
     }
 
-    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes, wander, toyScout }: EventPayloads['clue-board-setup']): void {
+    private setupBoard({ seed, allowedGemTypes, rare, pins = [], faces = {}, labels = {}, board, escapes, wander, toyScout, double }: EventPayloads['clue-board-setup']): void {
         if (!this.view || !this.controller) return;
         this.seed = seed;
         const pinned = pins.map((pin): [Cell, number] => [pin.cell, pin.id]);
@@ -164,6 +165,7 @@ export class ClueBoardScene extends Phaser.Scene {
         this.travels = new Map(pins.map(pin => [pin.id, pin.exit ?? 'walk']));
         this.marked.clear();
         this.wander = wander ?? null;
+        this.double = double ?? 0;
         this.headings = {};
         this.earned = [];
         this.steps = [];
@@ -284,6 +286,17 @@ export class ClueBoardScene extends Phaser.Scene {
             this.label(phase.fired[0].cell, `+${pooled} charge${pooled === 1 ? '' : 's'}`, GEM_COLOR[most.gemType] ?? '#ffffff');
         }
         if (this.chain >= 2) this.callout(`Chain ×${this.chain}!`);
+        // Rules 053-1: both swapped gems matched; each clue run shows its bonus (the rules add the same).
+        const double = cascade || !this.double ? [] : doubleOf(phase.groups);
+        if (double.length > 0) {
+            this.callout('Double!');
+            sfx.toy();
+            // One label per clue color, on its run's middle cell: an L or T is two runs of one color, but its order gets the bonus once.
+            for (const gem of double.filter(gem => CLUE_GEMS.includes(gem))) {
+                const cells = phase.groups.find(group => !group.blast && group.gemType === gem)!.cells;
+                this.label(cells[Math.floor(cells.length / 2)], `+${this.double}`, GEM_COLOR[gem] ?? '#ffffff');
+            }
+        }
         EventBus.emit('gems-matched', {
             groups: phase.groups.map(group => ({ gemType: group.gemType, size: group.cells.length, ...(group.blast ? { blast: true } : {}) })),
             cascade,

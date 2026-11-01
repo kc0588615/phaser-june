@@ -44,7 +44,7 @@ export type AnimalAction =
   | { type: 'next'; round: AnimalRound; boardSeed: number }
   | { type: 'new-trail'; round: AnimalRound; boardSeed: number; trail: Trail }
   /** One explode phase: gems cleared by color, witness gems, and the animals the board released (marked ones touched). */
-  | { type: 'matched'; collected: Partial<Record<GemType, number>>; witness: number; released: number[]; cascade: boolean; nearColors?: Array<[number, GemType[]]> }
+  | { type: 'matched'; collected: Partial<Record<GemType, number>>; witness: number; released: number[]; cascade: boolean; nearColors?: Array<[number, GemType[]]>; double?: GemType[] }
   /** A move and its cascades finished. */
   | { type: 'settled' }
   /** Plan 047: a marked animal walked off the board's edge. */
@@ -90,7 +90,7 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
     case 'matched': {
       // The board released these because they were marked there; mark them here too, so the two never disagree.
       const marked = action.released.reduce((state, id) => mark(state, id, true), round);
-      const report: PhaseReport = { collected: action.collected, witness: action.witness, touched: action.released, nearColors: action.nearColors };
+      const report: PhaseReport = { collected: action.collected, witness: action.witness, touched: action.released, nearColors: action.nearColors, double: action.double };
       return advance(session, applyPhase(book, marked, report, action.cascade));
     }
     case 'settled':

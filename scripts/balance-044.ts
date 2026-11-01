@@ -14,6 +14,7 @@
 //     [--wander on|off] [--toy on|off]   (plan 047, on in the rules: marked tiles step to the edge each move and leave;
 //     --toy: a release by the player's own run leaves a line toy; follows --wander unless set. 045-0: --wander off)
 //     [--toyscout on|off]   (rules 047-1, on in the rules: a line or blast gem in the move's own clear scouts its color)
+//     [--double N]   (rules 053-1, 2 in the rules: a move whose own runs are two colors adds N gems to each clue order hit; 0 off)
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -172,7 +173,7 @@ function aim(book: Book, state: AnimalRound, board: BoardModel, scratch: BoardMo
     const report: PhaseReport = reportOf(phase);
     let value = 5 * report.touched.filter(id => markedIds.has(id)).length;
     state.orders.forEach((order, i) => {
-      if (weight[i] > 0) value += 6 * weight[i] * Math.min(report.collected[order.gem] ?? 0, state.rules.orderSize - order.have) / state.rules.orderSize;
+      if (weight[i] > 0) value += 6 * weight[i] * Math.min((report.collected[order.gem] ?? 0) + (report.double?.includes(order.gem) ? state.rules.doubleBonus : 0), state.rules.orderSize - order.have) / state.rules.orderSize;
     });
     if (thinks && state.notesLeft.length > 0) value += report.witness;
     if (thinks && state.rules.scout) {
@@ -210,6 +211,7 @@ async function main() {
   };
   rules.wanderToy = arg('toy', rules.wander ? 'on' : 'off') === 'on';
   rules.toyScout = arg('toyscout', ANIMAL_RULES.toyScout ? 'on' : 'off') === 'on';
+  rules.doubleBonus = Number(arg('double', String(ANIMAL_RULES.doubleBonus)));
   const options: Options = { knows: arg('knows', 'size,covering').split(',').filter(Boolean) };
   const players = arg('players', 'careful,novice,expert,reader,guesser,random,oracle').split(',') as Player[];
   const dir = path.join(process.cwd(), 'db/content');

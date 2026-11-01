@@ -5,7 +5,7 @@
 // that walked off). The game in progress is saved for this tab between moves and resumed on the next load (savedGame.ts).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
-  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, headingOf, newAnimalRound, newTrail, pickSuspectSet, shownMismatch, shownMismatches, tileCells, travelOf,
+  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, doubleOf, headingOf, newAnimalRound, newTrail, pickSuspectSet, shownMismatch, shownMismatches, tileCells, travelOf,
   type AnimalRound,
 } from '@/clueGame/animalBoard';
 import { animalDebugSummary, animalSessionReducer, liveHighlights } from '@/clueGame/animalSession';
@@ -149,7 +149,7 @@ export function useAnimalSession() {
         else collected[group.gemType] = (collected[group.gemType] ?? 0) + group.size;
       }
       if (!cascade) moving.current = true;
-      dispatch({ type: 'matched', collected, witness, released, cascade, nearColors });
+      dispatch({ type: 'matched', collected, witness, released, cascade, nearColors, double: doubleOf(groups) });
     };
     const onWalked = ({ id }: EventPayloads['clue-board-walked']) => dispatch({ type: 'walked', id });
     const onSettled = ({ grid, toys, pins }: EventPayloads['clue-board-settled']) => {
@@ -205,7 +205,8 @@ export function useAnimalSession() {
       labels[order.gem] = order.short;
     }
     EventBus.emit('clue-board-setup', { seed: boardSeed, allowedGemTypes: [...BOARD_GEMS], rare: { type: WITNESS_GEM, chance: round.rules.witnessChance }, pins, faces, labels, board: resumeBoard ?? undefined, escapes: round.mysteryId,
-      ...(round.rules.wander ? { wander: { toy: round.rules.wanderToy } } : {}), ...(round.rules.toyScout ? { toyScout: true } : {}) });
+      ...(round.rules.wander ? { wander: { toy: round.rules.wanderToy } } : {}), ...(round.rules.toyScout ? { toyScout: true } : {}),
+      ...(round.rules.doubleBonus > 0 ? { double: round.rules.doubleBonus } : {}) });
     EventBus.emit('clue-board-marks', { marked: [] });
   }, [sceneGeneration, roundNo]);
 
