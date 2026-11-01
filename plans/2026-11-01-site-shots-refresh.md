@@ -422,6 +422,6 @@ Must show: three 200s, no `OLD`.
 - 2026-11-01 23:43 UTC: Fable review: APPROVE_WITH_CHANGES, 2 must-fix (`Teachers.tsx:78`, `:128` edits), for Revision. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:44 UTC: Astra review: APPROVE, no must-fix, 3 should-consider. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:49 UTC: Revision. Fable's 2 must-fix and 1 missed resolved (`Teachers.tsx:78` kept, `:120` and `:128` deleted, `Home.tsx:80` reworded); 6 should-consider adopted, 1 in a different form. Lead checked the diff against `Teachers.tsx`. No code changed; typecheck/lint n/a.
-- 2026-11-01 23:58 UTC: Steps. Planner wrote S1-S6 and Verification. Planner printed the live DB password to its tool output while testing a count; H6 added, nothing in git. No code changed; typecheck/lint n/a.
+- 2026-11-01 23:55 UTC: Steps. Planner wrote S1-S6 and Verification. Planner printed the live DB password to its tool output while testing a count; H6 added, nothing in git. No code changed; typecheck/lint n/a.
 
 ## Summary
