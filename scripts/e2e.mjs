@@ -668,18 +668,18 @@ async function main() {
       const namedRight = state.logTail.some(entry => entry.kind === 'named' && entry.correct);
       if (end?.outcome === 'found' || namedRight) journalFinds.add(start.mysteryId);
       // The Camera row slides onto the mystery's row and lights it, before the card opens.
-      await waitFor(() => document.querySelector('table[aria-label="Evidence"] tr[data-match]') && true, 'the Camera row landing', 10_000);
+      await waitFor(() => document.querySelector('table tr[data-match]') && true, 'the Camera row landing', 10_000);
       await screenshot(`04-round-${n}-landed.png`);
       const reveal = await waitFor(() => {
         const sheet = document.querySelector('section[aria-label^="It was the"]');
         return sheet ? { name: sheet.getAttribute('aria-label').replace('It was the ', ''), text: sheet.innerText } : null;
       }, 'the round-end card', 10_000);
       check(`round ${n}: the round-end card names the mystery`, reveal.name === mysteryName, reveal.name);
-      const landed = await evaluate(id => Boolean(document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"][data-match]`)), start.mysteryId);
+      const landed = await evaluate(id => Boolean(document.querySelector(`table tr[data-suspect="${id}"][data-match]`)), start.mysteryId);
       check(`round ${n}: before the card, the grid's Camera row lands on the mystery's own row`, landed);
       check(`round ${n}: the round-end card says the camera saw that animal's number`, reveal.text.includes(`The camera saw #${start.suspects.indexOf(start.mysteryId) + 1}`), reveal.text.slice(0, 120));
       check(`round ${n}: the round-end card shows the family tree`, reveal.text.includes('Animalia › Chordata'));
-      // The card replays the grid: the mystery's row outlined, and red exactly where an earned answer rules a suspect out.
+      // The game's own grid turns into the replay (plan 052): the mystery's row outlined, and red exactly where an earned answer rules a suspect out.
       const replay = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]');
         if (!grid) return null;
@@ -700,6 +700,13 @@ async function main() {
       });
       check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.match === String(start.mysteryId), JSON.stringify(replay));
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
+      const below = await evaluate(() => {
+        const grid = document.querySelector('table[aria-label="How the evidence lined up"]')?.getBoundingClientRect();
+        const card = document.querySelector('section[aria-label^="It was the"]')?.getBoundingClientRect();
+        return grid && card ? { gridBottom: Math.round(grid.bottom), cardTop: Math.round(card.top) } : null;
+      });
+      check(`round ${n}: the round-end card covers the board only, the replay grid stays in view`, Boolean(below) && below.cardTop >= below.gridBottom - 1, JSON.stringify(below));
+      await sleep(1500); // the Camera row slides back up and the photo pops in
       await screenshot(`04-round-${n}-end.png`);
       report.rounds.push({
         round: start.roundNo, mysteryId: start.mysteryId, mystery: mysteryName, suspects: start.suspects.map(id => names.get(id)),

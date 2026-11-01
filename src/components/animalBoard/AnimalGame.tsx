@@ -204,17 +204,17 @@ export function AnimalGame() {
     const timer = window.setTimeout(() => setReveal(NO_REVEAL), REVEAL_MS);
     return () => window.clearTimeout(timer);
   }, [reveal]);
-  // The field guide's drawer reaches up to the board's top edge (the grid above stays visible).
+  // The field guide's and round end's drawers reach up to the board's top edge (the grid above stays visible).
   const board = useRef<HTMLElement>(null);
   const [boardTop, setBoardTop] = useState(0);
-  const guideOpen = sheet?.kind === 'suspect';
+  const drawerUp = sheet?.kind === 'suspect' || Boolean(session?.end);
   useLayoutEffect(() => {
-    if (!guideOpen) return;
+    if (!drawerUp) return;
     const measure = () => setBoardTop(board.current?.getBoundingClientRect().top ?? 0);
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [guideOpen]);
+  }, [drawerUp]);
   useEffect(() => setSoundOnState(isSoundOn()), []);
   useEffect(() => wakeOnFirstGesture(), []);
   const toggleSound = useCallback(() => { setSoundOn(!soundOn); setSoundOnState(!soundOn); }, [soundOn]);
@@ -402,10 +402,12 @@ export function AnimalGame() {
   const inTrail = trail ? Math.min(rules.trailRounds, trail.rounds + (session?.end ? 0 : 1)) : 0;
   const pick = round && selected !== null && round.status === 'playing' ? selected : null;
 
-  // Round over: the grid's Camera row slides onto the mystery's row first, then the round-end card opens.
+  // Round over: the grid's Camera row slides onto the mystery's row first, then the round-end card opens
+  // over the board and the grid itself turns into the replay (plan 052; the Camera row slides back up).
   const [landed, setLanded] = useState(0);
   const onLanded = useCallback(() => setLanded(roundNo ?? 0), [roundNo]);
-  const landOn = round && end && !boardBusy ? round.mysteryId : null;
+  const reviewing = Boolean(end) && !boardBusy && landed === roundNo;
+  const landOn = round && end && !boardBusy && !reviewing ? round.mysteryId : null;
 
   // The Camera cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
   const sideNotes = useRef<HTMLElement>(null);
@@ -432,7 +434,7 @@ export function AnimalGame() {
           )}
           <span className="font-data text-xs tabular-nums text-neutral-7" aria-label={`Animal ${inTrail} of ${rules.trailRounds}`}>{inTrail}/{rules.trailRounds}</span>
         </div>
-        <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">moves</span></div>
+        <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">{round?.movesLeft === 1 ? 'move' : 'moves'}</span></div>
       </div>
     </div>
     </div>
@@ -445,7 +447,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} onNotes={openNotes} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
@@ -496,8 +498,8 @@ export function AnimalGame() {
           />
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
-        {session && end && mystery && !boardBusy && landed === session.roundNo && (
-          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} speciesById={speciesById} nameOf={nameOf} onNext={nextRound} />
+        {session && mystery && reviewing && (
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} top={boardTop} nameOf={nameOf} onNext={nextRound} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
         {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}

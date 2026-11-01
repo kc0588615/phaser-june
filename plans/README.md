@@ -17,5 +17,6 @@ Plans 006–039 covered the expedition game and were deleted with it on 2026-09-
 | 049 | critwire: open curated species data at critwire.com (Parquet/CSV/JSON, IUCN id crosswalk only), dogfooded by CC's content build | Medium | L | new repo `kc0588615/critwire`, Oracle VPS PostGIS | Planned 2026-10-18 from owner grilling; moved to `kc0588615/critwire` `plans/001-mvp.md`; scaffold pushed (d747e08); CC side is step 4 |
 | 050 | Ah-ha: explain wrong guesses and the camera's answers at round end, kid-word family tree, journal family patterns + exceptions, "met before" mark | High | M | 047-1 | Planned 2026-10-27; not started; owner go per step |
 | 051 | Website at critterconnect.org: front page + /teachers in the cc theme, a static build (src/site) served by the Hetzner Caddy | High | M | owner answers (H2, done) | Planned 2026-10-28 (agent/cc-landing-plan, #34): plan + build brief, PR for review |
+| 052 | Round end on the board: the card covers the gem board only, the live grid turns into the replay, no tabs, field notes as the card body | Med | S | none | Built 2026-10-31 (agent/round-end-on-board), PR for review |
 
 ## Dependency notes
