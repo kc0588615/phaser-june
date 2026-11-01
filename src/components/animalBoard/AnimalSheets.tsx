@@ -184,7 +184,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       </motion.div>
       <div className="mt-m flex items-baseline justify-between gap-xs">
         <h3 className={LABEL}>Its answers</h3>
-        {round.orders.some((_, i) => !isSeen(i)) && <span className="text-xxs text-neutral-7">Pencil a guess where you haven&apos;t scouted</span>}
+        {!marked && round.orders.some((_, i) => !isSeen(i)) && <span className="text-xxs text-neutral-7">Pencil a guess where you haven&apos;t scouted</span>}
       </div>
       <ul className="m-0 mb-m list-none p-0">
         {round.orders.map((order, i) => {
@@ -205,10 +205,11 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
                       key={value}
                       type="button"
                       data-pencil-guide={value}
+                      disabled={marked} // a ruled-out animal takes no pencil (animalSession)
                       aria-pressed={guess === value}
                       aria-label={`${order.question} Pencil ${value}`}
                       onClick={() => onPencil(order.tag, guess === value ? null : value)}
-                      className={`pencil-mark h-9 rounded-xs text-m outline-dashed outline-1 -outline-offset-1 ${guess === value ? 'bg-neutral-4 text-neutral-10 outline-neutral-7' : 'text-neutral-7 outline-neutral-5'}`}
+                      className={`pencil-mark h-9 rounded-xs text-m outline-dashed disabled:opacity-50 outline-1 -outline-offset-1 ${guess === value ? 'bg-neutral-4 text-neutral-10 outline-neutral-7' : 'text-neutral-7 outline-neutral-5'}`}
                     >
                       {value}
                     </button>

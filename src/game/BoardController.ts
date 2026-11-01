@@ -271,6 +271,7 @@ export class BoardController {
             } finally {
                 this.resolving = false;
             }
+            this.view.refreshGlow(); // a highlight set mid-swap lit the swapped gems
             this.hooks.announce('No match that way');
             return false;
         }

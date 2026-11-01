@@ -195,7 +195,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
         <tr>
           <td className="p-0 align-bottom">{corner}</td>
           {round.orders.map((order, j) => (
-            <th key={order.tag} scope="col" data-tag={order.tag} data-highlight={highlighted.has(`*:${order.tag}`) || undefined} {...(order.answer === null ? holdCell(null, order.tag) : {})} className="select-none p-0 align-bottom font-regular [-webkit-touch-callout:none]">
+            <th key={order.tag} scope="col" data-tag={order.tag} data-highlight={highlighted.has(`*:${order.tag}`) || undefined} {...holdCell(null, order.tag)} className="select-none p-0 align-bottom font-regular [-webkit-touch-callout:none]">
               <button
                 type="button"
                 disabled={!onQuestion}

@@ -238,7 +238,7 @@ async function main() {
         });
         check('every suspect answer starts hidden', pencil.hidden === 20, `${pencil.hidden} hidden`);
         check('tapping a hidden answer pencils yes, then no, then blank, and changes no rule', pencil.steps.join() === 'yes,no,' && pencil.same && pencil.cleared && pencil.stillHidden, JSON.stringify(pencil));
-        // Holding an answer cell highlights it (no pencil) and its column's gem glows; holding again clears both.
+        // Holding an answer cell highlights it (no pencil) and glows its gem on the board next to that animal only; holding again clears both.
         const highlight = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
           const grid = document.querySelector('table[aria-label="Evidence"]');
@@ -246,7 +246,13 @@ async function main() {
           const id = first.closest('tr').dataset.suspect;
           const tag = first.dataset.tag;
           const at = () => grid.querySelector(`tr[data-suspect="${id}"] td[data-tag="${tag}"]`);
-          const glow = () => Boolean(grid.querySelector(`th[data-tag="${tag}"] .ev-glow`));
+          const gem = window.__cc.clue().orders.find(order => order.tag === tag).gem;
+          // The board's last glow: this gem next to this animal only, nothing board-wide (the header gem stays plain).
+          const glow = () => {
+            const last = window.__cc.events(200).filter(e => e.name === 'clue-board-highlight').at(-1)?.payload;
+            const near = last?.near.find(([other]) => String(other) === id)?.[1] ?? [];
+            return { near: near.includes(gem), all: (last?.all.length ?? 0) > 0, header: Boolean(grid.querySelector(`th[data-tag="${tag}"] .ev-glow`)) };
+          };
           const hold = async () => {
             const button = at().querySelector('button');
             const r = button.getBoundingClientRect();
@@ -265,8 +271,33 @@ async function main() {
           return { on, off: { cell: at().hasAttribute('data-highlight'), glow: glow(), pencil: at().dataset.pencil, state: window.__cc.clue().highlight.length }, key: `${id}:${tag}` };
         });
         check('holding an answer cell highlights it (before release) and glows its gem (no pencil); holding again clears it',
-          highlight.on.during && highlight.on.cell && highlight.on.glow && highlight.on.pencil === '' && highlight.on.state === highlight.key && !highlight.off.cell && !highlight.off.glow && highlight.off.pencil === '' && highlight.off.state === 0,
+          highlight.on.during && highlight.on.cell && highlight.on.glow.near && !highlight.on.glow.all && !highlight.on.glow.header && highlight.on.pencil === '' && highlight.on.state === highlight.key
+            && !highlight.off.cell && !highlight.off.glow.near && highlight.off.pencil === '' && highlight.off.state === 0,
           JSON.stringify(highlight));
+        // Holding a question's gem up top highlights it and glows its gem board-wide; holding again clears it (opens no sheet).
+        const column = await evaluate(async () => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const head = document.querySelector('table[aria-label="Evidence"] thead th[data-tag]');
+          const tag = head.dataset.tag;
+          const gem = window.__cc.clue().orders.find(order => order.tag === tag).gem;
+          const all = () => (window.__cc.events(200).filter(e => e.name === 'clue-board-highlight').at(-1)?.payload.all ?? []).includes(gem);
+          const hold = async () => {
+            const button = head.querySelector('button');
+            const r = button.getBoundingClientRect();
+            const opts = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+            button.dispatchEvent(new PointerEvent('pointerdown', opts));
+            await wait(1150);
+            button.dispatchEvent(new PointerEvent('pointerup', opts));
+            button.click();
+            await wait(200);
+          };
+          await hold();
+          const on = { head: head.dataset.highlight === 'true', glow: Boolean(head.querySelector('.ev-glow')), all: all(), sheet: document.querySelectorAll('[role=dialog]').length };
+          await hold();
+          return { on, off: { head: head.hasAttribute('data-highlight'), all: all(), state: window.__cc.clue().highlight.length } };
+        });
+        check('holding a question gem highlights it and glows its gems board-wide (no sheet); holding again clears it',
+          column.on.head && column.on.glow && column.on.all && column.on.sheet === 0 && !column.off.head && !column.off.all && column.off.state === 0, JSON.stringify(column));
         await screenshot('02a-hidden.png');
         // The field guide offers a pencil mark for each hidden answer.
         const guide = await evaluate(async () => {
