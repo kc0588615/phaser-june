@@ -89,7 +89,7 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
               </details>
             </li>
           )}
-          {found.length > 0 && <li className="pb-xs text-center text-xxs text-neutral-6">Range maps: IUCN Red List</li>}
+          {found.length > 0 && <li className="pb-xs text-center text-xxs text-neutral-7">Range maps: IUCN Red List</li>}
         </ul>
       </motion.div>
     </div>

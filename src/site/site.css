@@ -6,9 +6,7 @@
 /* The game locks the page to the screen (globals.css); the site's pages scroll. */
 html, body { height: auto; overflow: visible; }
 
-/* Site-only cc additions (plan 051 §8, H2 answers 3-4; owner 2026-10-29: the game's theme stays as it is). */
-:root { --button-primary-background: #008663; --space-xxxl: 64px; }   /* white label 4.58:1 (AA) */
-/* Dark is deliberately the game's own --color-1 (#00906c, label 4.67:1), so it moves with the game's dark theme. */
-:root[data-theme="dark"] { --button-primary-background: var(--color-1); }
+/* Site-only cc additions (plan 051 §8). The primary button needs no override since the game's WCAG pass
+   (2026-11-01): --color-1 takes a white label at 5.48:1 in light and a dark one at 7.06:1 in dark. */
+:root { --space-xxxl: 64px; }
 @theme inline { --spacing-xxxl: var(--space-xxxl); }
-@layer components { .btn-primary { background: var(--button-primary-background); } }

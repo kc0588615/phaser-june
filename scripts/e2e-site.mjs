@@ -24,8 +24,8 @@ const VIEWPORTS = [
   { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false },
 ];
 const MODES = ['light', 'dark'];
-// The site-only primary fill (src/site/site.css; plan 051 §8, owner 2026-10-29), white label at AA.
-const PRIMARY_FILL = { light: 'rgb(0, 134, 99)', dark: 'rgb(0, 144, 108)' };
+// The primary fill: the game's --color-1 since its WCAG pass (2026-11-01; white label 5.48:1 light, dark label 7.06:1 dark).
+const PRIMARY_FILL = { light: 'rgb(0, 120, 90)', dark: 'rgb(31, 179, 138)' };
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 const AXE_SOURCE = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 

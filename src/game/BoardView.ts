@@ -57,7 +57,8 @@ export interface TilePreview { release: number[]; scout: Array<[id: number, gems
 const cellKey = ([x, y]: readonly [number, number]) => `${x},${y}`;
 /** The cards' handwriting (globals.css @font-face). */
 const CARD_FONT = '"Patrick Hand", "Comic Sans MS", cursive';
-/** The picked animal's color, the evidence grid's (--color-1 in globals.css). */
+/** The picked animal's color: the cc green before its WCAG change, kept apart from --color-1 (globals.css) on purpose.
+ *  On the board's 0x0d2830 panel it's 3.82:1; light mode's darker --color-1 (#00785a) would drop to 2.81. */
 const PICKED = 0x00906c;
 /** A highlighted question's gems glow this purple (--color-notes, the grid's .ev-highlight). */
 const HIGHLIGHT = 0xb27dff;
@@ -115,9 +116,24 @@ export class BoardView {
 
     /** `all`: these colors glow everywhere (a column held); `near`: per animal, these glow only next to its card (a cell held). */
     setGlow(all: readonly GemType[], near: ReadonlyArray<[id: number, gems: GemType[]]>): void {
+        const added = all.some(gem => !this.glowAll.has(gem)) || near.some(([id, gems]) => gems.some(gem => !this.glowNear.get(id)?.has(gem)));
         this.glowAll = new Set(all);
         this.glowNear = new Map(near.map(([id, gems]) => [id, new Set(gems)]));
         this.refreshGlow();
+        if (added) this.pulseGlow();
+    }
+
+    /** A new highlight beats three times (about 5 s), then the glow holds still (WCAG 2.2.2, like the grid's ev-highlight). */
+    private pulseGlow(): void {
+        this.glowPulse?.remove();
+        this.glowPulse = null;
+        if (reducedMotion()) return;
+        const beat = { strength: 6 };
+        this.glowPulse = this.scene.tweens.add({
+            targets: beat, strength: 2, duration: 900, yoyo: true, repeat: 2, ease: 'Sine.easeInOut',
+            onUpdate: () => { for (const g of this.glows.values()) g.outerStrength = beat.strength; },
+            onComplete: () => { this.glowPulse = null; },
+        });
     }
 
     /** Re-checks every gem's glow (cards and gems move, so call it once a move settles). */
@@ -138,13 +154,6 @@ export class BoardView {
             if (!added) return;
             this.glows.set(sprite, added);
             sprite.once(Phaser.GameObjects.Events.DESTROY, () => this.glows.delete(sprite));
-            if (!this.glowPulse && !reducedMotion()) {
-                const beat = { strength: 6 };
-                this.glowPulse = this.scene.tweens.add({
-                    targets: beat, strength: 2, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-                    onUpdate: () => { for (const g of this.glows.values()) g.outerStrength = beat.strength; },
-                });
-            }
         } else if (!want && glow) {
             sprite.filters?.internal.remove(glow);
             this.glows.delete(sprite);

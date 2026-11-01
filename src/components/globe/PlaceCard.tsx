@@ -42,7 +42,7 @@ export function PlaceCard({ place, animals, isFound, minAnimals, onBack, onStart
               <span aria-hidden="true">{speciesBadge(animal)}</span>{animal.commonName}
             </li>
           ) : (
-            <li key={animal.id} className="grid h-7 w-7 place-items-center rounded-full bg-neutral-3 text-xs font-medium text-neutral-6" aria-label="An animal you haven't found yet">?</li>
+            <li key={animal.id} className="grid h-7 w-7 place-items-center rounded-full bg-neutral-3 text-xs font-medium text-neutral-7" aria-label="An animal you haven't found yet">?</li>
           ))}
         </ul>
       </section>

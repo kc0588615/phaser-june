@@ -28,7 +28,7 @@ export function PlaceList({ places, minAnimals, selectedKey, foundIn, onPick }: 
                 aria-pressed={selected}
                 className={`flex min-h-12 w-full items-center gap-xs rounded-s px-s py-xs text-left transition-colors ${selected ? 'bg-neutral-3' : 'bg-neutral-2 hover:bg-neutral-3'}`}
               >
-                <span className={`min-w-0 flex-1 truncate text-s font-medium ${soon ? 'text-neutral-6' : 'text-neutral-10'}`}>{place.name}</span>
+                <span className={`min-w-0 flex-1 truncate text-s font-medium ${soon ? 'text-neutral-7' : 'text-neutral-10'}`}>{place.name}</span>
                 {found > 0 && <span className="shrink-0 rounded-full bg-option-badge px-xs py-xxs text-xs font-medium text-on-option-badge">{found} found</span>}
                 {soon
                   ? <span className="shrink-0 rounded-full bg-neutral-3 px-xs py-xxs text-xs text-neutral-7">coming soon</span>

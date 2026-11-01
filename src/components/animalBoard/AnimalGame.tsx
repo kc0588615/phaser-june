@@ -21,7 +21,7 @@ import { JournalSheet } from '@/components/clueGame/JournalSheet';
 import { WithBlanks } from '@/components/clueGame/LogEntryText';
 import { PhaserGame } from '@/components/clueGame/PhaserGame';
 import { useJournal } from '@/components/clueGame/useJournal';
-import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesList, NotesSheet, OutOfMovesSheet, RoundEndSheet, SuspectSheet } from './AnimalSheets';
+import { ANIMAL_HOW_TO_KEY, AnimalHowToPlay, GameMenu, NotesList, NotesSheet, OutOfMovesSheet, RoundEndSheet, roundEndAnnouncement, SuspectSheet } from './AnimalSheets';
 import { EvidenceGrid } from './EvidenceGrid';
 import { useAnimalSession } from './useAnimalSession';
 import { useShownOrders } from './useShownOrders';
@@ -97,6 +97,8 @@ function dwellMs(text: string, fresh: boolean): number {
 interface Fact { key: number; node: ReactNode; note?: boolean }
 /** What changed `now`: the player's own action or the round's end, a new answer or note, or another event. */
 type NowKind = 'urgent' | 'fact' | 'event';
+/** The board's keys: its description, and shown while it has keyboard focus (the status line, or under the grid). */
+const BOARD_KEYS_HINT = 'Arrows move the cursor. Shift + arrows swap its gem that way.';
 
 /**
  * The status line. New answers and witness notes each get a full turn (a burst queues up),
@@ -105,7 +107,7 @@ type NowKind = 'urgent' | 'fact' | 'event';
  * show at once. Text too long for two lines scrolls up to its end. A tap pauses; another
  * resumes and moves on.
  */
-function StatusTicker({ now, nowKey, nowKind, facts, idle }: { now: ReactNode; nowKey: string; nowKind: NowKind; facts: Fact[]; idle: ReactNode }) {
+function StatusTicker({ now, nowKey, nowKind, facts, idle, keys = false }: { now: ReactNode; nowKey: string; nowKind: NowKind; facts: Fact[]; idle: ReactNode; keys?: boolean }) {
   // `key`: the fact showing, or null for `node` (`now` as it was when it came in); `fresh`: held longer.
   const [at, setAt] = useState<{ key: number | null; fresh: boolean; node?: ReactNode }>({ key: null, fresh: true, node: now });
   const [paused, setPaused] = useState(false);
@@ -150,14 +152,15 @@ function StatusTicker({ now, nowKey, nowKind, facts, idle }: { now: ReactNode; n
   }, [now, nowKey, nowKind, paused, at.key, at.fresh, next]);
 
   // How far the text showing overflows its two lines.
-  useLayoutEffect(() => setScroll(Math.max(0, (text.current?.offsetHeight ?? 0) - (box.current?.clientHeight ?? 0))), [at.key, nowKey]);
+  useLayoutEffect(() => setScroll(Math.max(0, (text.current?.offsetHeight ?? 0) - (box.current?.clientHeight ?? 0))), [at.key, nowKey, keys]);
   const scrollMs = scroll * 50;
+  // Held while the board's keys show; after, the line showing gets its full turn again.
   useEffect(() => {
-    if (paused) return;
+    if (paused || keys) return;
     const read = dwellMs(text.current?.textContent ?? '', at.fresh);
     const timer = window.setTimeout(finish, scroll ? Math.max(read, 1500 + scrollMs + 2500) : read);
     return () => window.clearTimeout(timer);
-  }, [at, paused, finish, scroll, scrollMs]);
+  }, [at, paused, keys, finish, scroll, scrollMs]);
 
   const onTap = () => {
     if (!paused) { setPaused(true); return; }
@@ -176,12 +179,12 @@ function StatusTicker({ now, nowKey, nowKind, facts, idle }: { now: ReactNode; n
       // A witness note shows on the notes' purple, like the notes list.
       className={`mx-xs my-xxs hidden h-12 min-w-0 shrink-0 select-none items-center gap-xs rounded-full px-m text-left text-s transition-colors [grid-area:status] roomy:flex md:mx-s md:flex ${index >= 0 && facts[index].note ? 'bg-notes/20 outline outline-1 -outline-offset-1 outline-notes/40 dark:bg-notes/25' : 'bg-neutral-2'}`}
     >
-      <span key={index < 0 ? `now-${nowKey}` : `fact-${at.key}`} ref={box} aria-hidden="true" className="ev-fade block max-h-[2lh] min-w-0 grow overflow-hidden">
+      <span key={keys ? 'keys' : index < 0 ? `now-${nowKey}` : `fact-${at.key}`} ref={box} aria-hidden="true" className="ev-fade block max-h-[2lh] min-w-0 grow overflow-hidden">
         <span ref={text} className={`block ${scroll ? 'ev-scroll' : ''}`} style={scroll ? { '--scroll-y': `-${scroll}px`, '--scroll-ms': `${scrollMs}ms` } as CSSProperties : undefined}>
-          {index < 0 ? at.node : facts[index].node}
+          {keys ? <span className="font-medium">{BOARD_KEYS_HINT}</span> : index < 0 ? at.node : facts[index].node}
         </span>
       </span>
-      {(paused || (index >= 0 && facts.length > 1)) && (
+      {!keys && (paused || (index >= 0 && facts.length > 1)) && (
         <span aria-hidden="true" className="flex shrink-0 items-center gap-xxs font-data text-xs tabular-nums text-neutral-7">
           {index >= 0 && facts.length > 1 && <span className="whitespace-nowrap">Clue {index + 1} of {facts.length}</span>}
           {paused && <Pause className="h-3 w-3 fill-current" />}
@@ -198,6 +201,8 @@ export function AnimalGame() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [journalOpen, setJournalOpen] = useState(false);
   const [boardStatus, setBoardStatus] = useState('');
+  // The board has keyboard focus: its keys show in the status line (not over the gems, WCAG 1.4.13).
+  const [boardFocus, setBoardFocus] = useState(false);
   const [soundOn, setSoundOnState] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const wide = useWide();
@@ -447,10 +452,10 @@ export function AnimalGame() {
         <div className="flex items-center gap-xxs">
           {trail && (
             <span className="flex" role="img" aria-label={`${trail.hearts} of ${rules.hearts} hearts`}>
-              {Array.from({ length: rules.hearts }, (_, i) => <Heart key={i} className={`h-3 w-3 ${i < trail.hearts ? 'fill-error text-error' : 'text-neutral-5'}`} aria-hidden="true" />)}
+              {Array.from({ length: rules.hearts }, (_, i) => <Heart key={i} className={`h-3 w-3 ${i < trail.hearts ? 'fill-error text-error' : 'text-control-edge'}`} aria-hidden="true" />)}
             </span>
           )}
-          <span className="font-data text-xs tabular-nums text-neutral-7" aria-label={`Animal ${inTrail} of ${rules.trailRounds}`}>{inTrail}/{rules.trailRounds}</span>
+          <span className="font-data text-xs tabular-nums text-neutral-7" role="img" aria-label={`Animal ${inTrail} of ${rules.trailRounds}`}>{inTrail}/{rules.trailRounds}</span>
         </div>
         <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">{round?.movesLeft === 1 ? 'move' : 'moves'}</span></div>
       </div>
@@ -470,7 +475,11 @@ export function AnimalGame() {
             <div className="flex items-center">{corner}</div>
           )}
           {loadError && <p className="m-0 px-xs py-xxs text-s text-error" role="alert">{loadError}</p>}
+          {/* Where the status line is hidden (short screens), the board's keys show here while it has keyboard focus. */}
+          {boardFocus && <p className="m-0 px-xs py-xxs text-s font-medium roomy:hidden md:hidden" aria-hidden="true">{BOARD_KEYS_HINT}</p>}
           <p className="sr-only" aria-live="polite">{session ? status : 'Loading animals…'}</p>
+          {/* Mounted before the round-end card, so its result is read out once as the card opens. */}
+          <p className="sr-only" aria-live="polite">{session && mystery && reviewing ? roundEndAnnouncement(session, mystery) : ''}</p>
         </div>
 
         <section
@@ -480,16 +489,16 @@ export function AnimalGame() {
           aria-describedby="board-keys"
           tabIndex={0}
           onKeyDown={onBoardKey}
-          className="group relative min-h-0 w-full shrink grow-0 basis-[100vw] outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-color-1"
+          onFocus={event => setBoardFocus(event.currentTarget.matches(':focus-visible'))}
+          onBlur={() => setBoardFocus(false)}
+          className="relative min-h-0 w-full shrink grow-0 basis-[100vw] outline-none [grid-area:board] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-color-1"
         >
           <PhaserGame className="absolute inset-0" />
-          <p id="board-keys" className="pointer-events-none absolute inset-x-xs bottom-xxs m-0 hidden rounded-s bg-neutral-10 px-xs py-xxs text-center text-xs font-medium text-neutral-1 shadow-m group-focus-visible:block">
-            Arrows move the cursor. Shift + arrows swap its gem that way.
-          </p>
+          <p id="board-keys" className="sr-only">{BOARD_KEYS_HINT}</p>
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
 
-        <StatusTicker key={roundNo ?? 0} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
+        <StatusTicker key={roundNo ?? 0} keys={boardFocus} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
 
         {wide && round && (
           <section ref={sideNotes} aria-labelledby="side-notes" className="min-h-0 overflow-y-auto overscroll-contain px-m pb-m pt-xs [grid-area:side]">
@@ -519,7 +528,7 @@ export function AnimalGame() {
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
         {session && mystery && reviewing && (
-          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={nextRound} />
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={() => { nextRound(); board.current?.focus({ preventScroll: true }); }} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
         {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}

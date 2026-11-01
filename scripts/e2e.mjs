@@ -179,9 +179,21 @@ async function main() {
     });
     await screenshot('02-board-375x548.png');
     check('on a 375x548 phone the board keeps at least 210 px', Boolean(small) && Math.min(...small.board) >= 210, JSON.stringify(small));
+    // 338px wide and under (`narrow`, globals.css): the grid drops the names, so wrapped text can't stretch its rows.
+    await page('Emulation.setDeviceMetricsOverride', { width: 320, height: 720, deviceScaleFactor: 2, mobile: true });
+    await sleep(800);
+    const narrow = await evaluate(() => {
+      const grid = document.querySelector('table[aria-label="Evidence"]');
+      const board = document.querySelector('section[aria-label="Game board"]')?.getBoundingClientRect();
+      const rows = [...(grid?.querySelectorAll('tr[data-mystery], tr[data-suspect]') ?? [])].map(row => Math.round(row.getBoundingClientRect().height));
+      const names = [...(grid?.querySelectorAll('[data-name]') ?? [])].filter(name => name.getClientRects().length > 0).length;
+      return grid && board ? { viewport: [innerWidth, innerHeight], rows, names, board: [Math.round(board.width), Math.round(board.height)] } : null;
+    });
+    await screenshot('02-board-320x720.png');
+    check('on a 320px-wide phone the grid hides names, its rows keep one height and the board keeps at least 280 px', Boolean(narrow) && narrow.names === 0 && Math.max(...narrow.rows) - Math.min(...narrow.rows) <= 1 && Math.min(...narrow.board) >= 280, JSON.stringify(narrow));
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await sleep(800);
-    report.layout = { phone: fit, small };
+    report.layout = { phone: fit, small, narrow };
 
     const journalFinds = new Set();
     let previewChecked = false;
@@ -769,10 +781,11 @@ async function main() {
       await waitFor(() => document.querySelector('table tr[data-mystery][data-match]') && true, 'the mystery rising into the Camera row', 10_000);
       await screenshot(`04-round-${n}-landed.png`);
       const reveal = await waitFor(() => {
-        const sheet = document.querySelector('section[aria-label^="It was the"]');
-        return sheet ? { name: sheet.getAttribute('aria-label').replace('It was the ', ''), text: sheet.innerText } : null;
+        const sheet = document.querySelector('section[aria-labelledby="end-title"]');
+        return sheet ? { name: sheet.querySelector('#end-title > :last-child')?.textContent ?? '', text: sheet.innerText.replace(/\s+/g, ' '), focused: document.activeElement?.id ?? '' } : null;
       }, 'the round-end card', 10_000);
       check(`round ${n}: the round-end card names the mystery`, reveal.name === mysteryName, reveal.name);
+      check(`round ${n}: focus moves to the round-end card's name`, reveal.focused === 'end-title', reveal.focused);
       const landed = await evaluate(id => ({ camera: document.querySelector('table tr[data-mystery]')?.dataset.match ?? null, ownRow: Boolean(document.querySelector(`table tr[data-suspect="${id}"]`)) }), start.mysteryId);
       check(`round ${n}: the mystery's row rises into the Camera row (the Camera row is that animal, its own row gone)`, landed.camera === String(start.mysteryId) && !landed.ownRow, JSON.stringify(landed));
       check(`round ${n}: the round-end card says the camera saw that animal's number`, reveal.text.includes(`The camera saw #${start.suspects.indexOf(start.mysteryId) + 1}`), reveal.text.slice(0, 120));
@@ -805,7 +818,7 @@ async function main() {
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
       const below = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]')?.getBoundingClientRect();
-        const card = document.querySelector('section[aria-label^="It was the"]')?.getBoundingClientRect();
+        const card = document.querySelector('section[aria-labelledby="end-title"]')?.getBoundingClientRect();
         return grid && card ? { gridBottom: Math.round(grid.bottom), cardTop: Math.round(card.top) } : null;
       });
       check(`round ${n}: the round-end card covers the board only, the replay grid stays in view`, Boolean(below) && below.cardTop >= below.gridBottom - 1, JSON.stringify(below));

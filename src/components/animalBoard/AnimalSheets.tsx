@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
-import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
+import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
@@ -231,7 +231,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
                       aria-pressed={guess === value}
                       aria-label={`${order.question} Pencil ${value}`}
                       onClick={() => onPencil(order.tag, guess === value ? null : value)}
-                      className={`pencil-mark h-9 rounded-xs text-m outline-dashed disabled:opacity-50 outline-1 -outline-offset-1 ${guess === value ? 'bg-neutral-4 text-neutral-10 outline-neutral-7' : 'text-neutral-7 outline-neutral-5'}`}
+                      className={`pencil-mark h-9 rounded-xs text-m outline-dashed disabled:opacity-50 outline-1 -outline-offset-1 ${guess === value ? 'bg-neutral-4 text-neutral-10 outline-neutral-7' : 'text-neutral-7 outline-control-edge'}`}
                     >
                       {value}
                     </button>
@@ -482,6 +482,24 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
   );
 }
 
+/** The round-end card's headline: how the round ended. */
+function endKicker({ round, end }: AnimalSession): string {
+  if (end?.outcome === 'found') return round.named ? 'Named it!' : 'Found it!';
+  return end?.lostBy === 'escaped' ? 'It escaped!' : end?.lostBy === 'wrong-name' ? 'Wrong animal' : 'Out of moves';
+}
+
+/** Read out once as the round-end card opens (AnimalGame's live region, there before the card mounts). */
+export function roundEndAnnouncement(session: AnimalSession, animal: Animal): string {
+  const { end } = session;
+  if (!end) return '';
+  return end.outcome === 'found'
+    ? `${endKicker(session)} ${animal.name}. ${end.stars} of 3 stars, ${end.points} points.`
+    : `${endKicker(session)} It was the ${animal.name}. You lost a heart.`;
+}
+
+/** A grid-key swatch: a cell of the replay grid, small, with the answered cells' edge. */
+const SWATCH = 'h-5 w-7 shrink-0 rounded-xs shadow-[inset_0_0_0_1px_var(--control-edge)]';
+
 export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }: {
   session: AnimalSession; animal: Animal; species: PoolSpecies | undefined;
   /** The board's box (px, viewport): the card covers the board only, so the grid (above, or beside on desktop) shows the replay (plan 052). */
@@ -489,7 +507,18 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
   nameOf: (id: number) => string; onNext: () => void;
 }) {
   const { round, end, trail } = session;
-  const presence = useOverlayPresence();
+  const present = useIsPresent();
+  // Focus moves to the name as the card opens (the grid it came from stops taking input). On a narrow phone the name
+  // sits under the photo, so the card scrolls it into view; only the card scrolls (preventScroll keeps the page still).
+  const title = useRef<HTMLHeadingElement>(null);
+  const details = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const heading = title.current, scroller = details.current;
+    if (!heading || !scroller) return;
+    heading.focus({ preventScroll: true });
+    const bottom = heading.getBoundingClientRect().bottom - scroller.getBoundingClientRect().top + scroller.scrollTop;
+    if (bottom > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = bottom - scroller.clientHeight;
+  }, []);
   if (!end) return null;
   const tree = animal.familyTree;
   const found = end.outcome === 'found';
@@ -499,92 +528,109 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
     return guess ? [(guess === 'yes') === order.row[i]] : [];
   }));
   const called = guesses.filter(Boolean).length;
-  const kicker = found ? (round.named ? 'Named it!' : 'Found it!') : end.lostBy === 'escaped' ? 'It escaped!' : end.lostBy === 'wrong-name' ? 'Wrong animal' : 'Out of moves';
-  // By its number on the board and in the grid: the camera's animal was one of the five all along.
-  const lead = `The camera saw #${round.suspects.indexOf(round.mysteryId) + 1}, the`;
+  const answered = round.orders.some(order => order.answer);
   const notes = [...animal.notes, ...animal.revealNotes];
   // A find pops the photo in, then fills the stars one by one (MotionConfig turns this off for reduced motion).
   const pop = (delay: number) => (found ? { initial: { opacity: 0, scale: 0.6 }, animate: { opacity: 1, scale: 1 }, transition: { type: 'spring' as const, stiffness: 420, damping: 18, delay } } : {});
   return (
-    // Under the menu, help and journal (z 8100+), which stay reachable from the grid's corner. Not modal: the replay grid
-    // outside it is part of the reading. The presence style (exit: taps pass through) merges with the board's box.
+    // Under the menu, help and journal (z 8100+), which stay reachable from the grid's corner. Not a dialog: the replay
+    // grid outside it is part of the reading. Animating out, it's hidden and lets taps through (like useOverlayPresence).
     <div
       className="fixed bottom-0 z-[8000] flex items-end justify-center"
-      {...presence}
-      aria-modal={false}
-      style={{ top: box.top, left: box.left, width: box.width || '100%', ...('style' in presence ? presence.style : {}) }}
-      aria-label={`It was the ${animal.name}`}
+      aria-hidden={present ? undefined : true}
+      style={{ top: box.top, left: box.left, width: box.width || '100%', pointerEvents: present ? undefined : 'none' }}
     >
       <motion.div className="absolute inset-0 bg-neutral-10-transparent" aria-hidden="true" {...backdropMotion} />
-      <motion.section className="relative flex h-full w-full max-w-md flex-col rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m" aria-label={`It was the ${animal.name}`} {...drawerUpMotion}>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-l pb-s pt-l">
-        {/* Its own box, so the scroller doesn't squeeze its rows (the stats' overflow-hidden would shrink to nothing). */}
-        <div className="flex flex-col gap-s">
-          <div className="flex items-start gap-s">
-            {/* The round's numbers stack under the photo, beside the name (plan 052). */}
-            <div className="flex w-36 shrink-0 flex-col gap-xs">
+      <motion.section className="relative flex h-full w-full max-w-md flex-col rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m" aria-labelledby="end-title" {...drawerUpMotion}>
+        {/* Focusable, so a keyboard can scroll to the notes; the padding keeps what scrolls into view clear of the footer's fade. */}
+        <div ref={details} tabIndex={0} role="region" aria-label="Round details" className="min-h-0 flex-1 scroll-pb-xl overflow-y-auto overscroll-contain rounded-t-m px-l pb-s pt-l outline-none! focus-visible:shadow-[inset_0_0_0_2px_var(--color-1)]">
+        {/* Its own box, so the scroller doesn't squeeze its rows. */}
+        <div className="flex flex-col gap-m">
+          {/* The reward reads together: stars, points, moves to spare (a loss always scores 0, so it shows none). */}
+          <p className="m-0 flex flex-wrap items-center gap-xs">
+            <span className={`text-s font-heavy uppercase tracking-[0.02em] ${found ? 'text-color-1' : 'text-error'}`}>{endKicker(session)}</span>
+            {found && (
+              <span className="flex rounded-xs bg-emphasis-icon px-xs text-m tracking-[0.08em] text-on-emphasis-icon">
+                {[0, 1, 2].map(i => <motion.span key={i} className="inline-block" aria-hidden="true" {...(i < end.stars ? pop(0.5 + i * 0.18) : {})}>{i < end.stars ? '★' : '☆'}</motion.span>)}
+                <span className="sr-only">{end.stars} of 3 stars</span>
+              </span>
+            )}
+            {found && (
+              <motion.span className="flex items-baseline gap-xxs whitespace-nowrap" {...pop(0.5 + end.stars * 0.18)}>
+                <b className="font-data text-m font-heavy text-color-1">+{end.points}</b>
+                <span className="text-s text-neutral-7">points</span>
+              </motion.span>
+            )}
+            {/* A find by name earns nothing for moves left (plan 053), so it shows none. */}
+            {found && !round.named && (
+              <span className="flex items-baseline gap-xxs whitespace-nowrap">
+                <b className="font-data text-m font-heavy">{round.movesLeft}/{round.rules.moves}</b>
+                <span className="text-s text-neutral-7">moves to spare</span>
+              </span>
+            )}
+          </p>
+          {/* The name drops under the photo when there's no room beside it (320px phones). */}
+          <div className="flex flex-wrap items-start gap-m">
+            <figure className="m-0 flex w-36 shrink-0 flex-col gap-xxs">
               <motion.span className="block aspect-[4/3] overflow-hidden rounded-xs bg-neutral-3" {...pop(0.25)}><SuspectPhoto species={species} size={330} /></motion.span>
-              {guesses.length > 0 && <dl className="m-0 flex flex-col">
-                {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
+              {species?.photo && <figcaption className="text-xs [overflow-wrap:anywhere]"><PhotoCredit photo={species.photo} /></figcaption>}
+            </figure>
+            <div className="flex min-w-[200px] flex-1 flex-col gap-xxs">
+              {/* By its number on the board and in the grid: the camera's animal was one of the five all along. */}
+              <h2 id="end-title" ref={title} tabIndex={-1} className="m-0 flex flex-col outline-none!">
+                <span className="text-s font-regular text-neutral-7">The camera saw #{round.suspects.indexOf(round.mysteryId) + 1}</span>
+                <span className="text-xl font-heavy [text-wrap:balance] [overflow-wrap:anywhere]">{animal.name}</span>
+              </h2>
+              <p className="m-0 text-m italic text-neutral-7" lang="la">{animal.scientificName}</p>
+              {guesses.length > 0 && <dl className="m-0 mt-xxs flex flex-col">
+                <Stat label="pencil guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />
               </dl>}
             </div>
-            <div className="flex min-w-0 flex-col gap-xxs">
-              <p className="m-0 flex flex-wrap items-center gap-xs">
-                <span className={`text-xs font-heavy uppercase ${found ? 'text-color-1' : 'text-error'}`}>{kicker}</span>
-                {found && (
-                  <span className="flex rounded-xs bg-emphasis-icon px-xxs text-xs text-on-emphasis-icon" role="img" aria-label={`${end.stars} of 3 stars`}>
-                    {[0, 1, 2].map(i => <motion.span key={i} className="inline-block" aria-hidden="true" {...(i < end.stars ? pop(0.5 + i * 0.18) : {})}>{i < end.stars ? '★' : '☆'}</motion.span>)}
-                  </span>
-                )}
-                {/* The reward reads together: stars, points, moves to spare (a loss always scores 0, so it shows none). */}
-                {/* Points and moves wrap as one, so they stay side by side on a narrow phone. */}
-                {found && (
-                  <span className="flex items-baseline gap-xs whitespace-nowrap">
-                    <motion.span className="font-data text-s font-heavy text-color-1" aria-label={`${end.points} points`} {...pop(0.5 + end.stars * 0.18)}>+{end.points}</motion.span>
-                    {/* A find by name earns nothing for moves left (plan 053), so it shows none. */}
-                    {!round.named && <span className="text-xs text-neutral-7" aria-label={`${round.movesLeft} of ${round.rules.moves} moves to spare`}><b className="font-data text-s font-heavy text-neutral-10">{round.movesLeft}/{round.rules.moves}</b> moves</span>}
-                  </span>
-                )}
-              </p>
-              <p className="m-0 text-xs text-neutral-7">{lead}</p>
-              <h2 className="m-0 text-xl font-heavy [text-wrap:balance]">{animal.name}</h2>
-              <p className="m-0 text-s italic text-neutral-7">{animal.scientificName}</p>
-            </div>
           </div>
-          <p className="m-0 flex items-center gap-xs text-xs text-neutral-7">
-            <ListTree className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>Animalia › Chordata › {tree.class.latin} › {tree.order.latin} › {tree.family.latin} › <span className="text-neutral-10">{tree.genus}</span></span>
-          </p>
+          <div className="flex items-start gap-xs text-neutral-7">
+            <ListTree className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <ol aria-label="Family tree" className="m-0 flex list-none flex-wrap gap-x-xxs p-0 text-s">
+              {['Animalia', 'Chordata', tree.class.latin, tree.order.latin, tree.family.latin].map(rank => <li key={rank}>{rank} <span aria-hidden="true">›</span></li>)}
+              <li className="font-medium text-neutral-10">{tree.genus}</li>
+            </ol>
+          </div>
           {!found && (
             <p className={`${NOTICE} bg-error-transparent`}>
               <HeartCrack className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
               <span>You lost a heart.{round.named && ` You named the ${nameOf(round.named.id)}.`}</span>
             </p>
           )}
-          {/* The key to the replay in the grid above. */}
-          <ul className="m-0 flex list-none flex-col gap-xxs p-0 text-xs text-neutral-7" aria-label="Grid key">
-            {round.orders.some(order => order.answer) ? (
-              <li className="flex items-center gap-xs">
-                <span className="h-3.5 w-5 shrink-0 rounded-xs ev-clash ev-stripes" aria-hidden="true" />
-                Red in the grid above doesn&apos;t match what the camera saw, so it rules that animal out.
-              </li>
-            ) : <li>No question was answered this time.</li>}
-            {called < guesses.length && (
-              <li className="flex items-center gap-xs">
-                <span className="ev-missed grid w-5 shrink-0 place-items-center" aria-hidden="true">✓</span>
-                A crossed-out mark was a wrong guess.
-              </li>
-            )}
-          </ul>
+          {/* The key to the replay in the grid above: one row per kind of cell it shows. */}
+          <section aria-labelledby="end-key" className="flex flex-col gap-xs rounded-s bg-neutral-2 px-m py-s">
+            <h3 id="end-key" className={`${LABEL} tracking-[0.04em]`}>Reading the grid above</h3>
+            <ul className="m-0 flex list-none flex-col gap-xs p-0 text-s text-neutral-8">
+              {answered ? (
+                <>
+                  <li className="flex items-center gap-s"><span className={`${SWATCH} ev-match`} aria-hidden="true" />Same answer as the camera</li>
+                  <li className="flex items-center gap-s">
+                    <span className={`${SWATCH} ev-clash ev-stripes`} aria-hidden="true" />
+                    <span><b className="font-medium text-neutral-10">Striped red:</b> a different answer, so that animal is ruled out</span>
+                  </li>
+                  {round.orders.some(order => !order.answer) && <li className="flex items-center gap-s"><span className={`${SWATCH} bg-neutral-3`} aria-hidden="true" />Never asked this round</li>}
+                </>
+              ) : <li>No question was answered this time.</li>}
+              {called < guesses.length && (
+                <li className="flex items-center gap-s">
+                  <span className="ev-missed grid h-5 w-7 shrink-0 place-items-center text-s!" aria-hidden="true">✓</span>
+                  Crossed out: your pencil guess was wrong
+                </li>
+              )}
+            </ul>
+          </section>
           {notes.length > 0 && (
             <section aria-labelledby="end-notes">
-              <h3 id="end-notes" className="m-0 mb-xs flex items-center gap-xs text-xs font-medium uppercase text-neutral-7">
-                Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data normal-case">{notes.length}</span>
+              <h3 id="end-notes" className={`${LABEL} mb-xs flex items-center gap-xs tracking-[0.04em]`}>
+                Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data normal-case text-neutral-10">{notes.length}</span>
               </h3>
-              <ul className="m-0 flex list-none flex-col gap-xs p-0">
+              <ul className="m-0 flex list-none flex-col gap-s p-0">
                 {notes.map((note, index) => (
-                  <li key={index} className="flex gap-xs text-s text-neutral-8">
-                    <span className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-5" aria-hidden="true" />
+                  <li key={index} className="flex gap-s text-m text-neutral-8">
+                    <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-6" aria-hidden="true" />
                     <span>{note.full ?? note.text}</span>
                   </li>
                 ))}
@@ -608,19 +654,19 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
               </dl>
             </div>
           )}
-          <button type="button" onClick={onNext} className="btn btn-primary w-full">{trail.over ? 'New trail' : 'Next animal'}</button>
+          <button type="button" onClick={onNext} className="btn btn-primary min-h-xxl w-full text-m">{trail.over ? 'New trail' : 'Next animal'}</button>
         </div>
       </motion.section>
     </div>
   );
 }
 
-/** A number over its label (the trail total), or before it on one small line (`row`, the round-end card). */
+/** A number over its label (the trail total), or before it on one line (`row`, the round-end card). */
 function Stat({ label, value, row = false, ...rest }: { label: string; value: ReactNode; row?: boolean; 'data-guesses'?: string }) {
   return (
     <div className={`flex ${row ? 'items-baseline gap-xxs' : 'flex-col'}`} {...rest}>
-      <dt className="text-xs text-neutral-7">{label}</dt>
-      <dd className={`order-first m-0 font-data font-heavy ${row ? 'text-s' : 'text-m'}`}>{value}</dd>
+      <dt className={`${row ? 'text-s' : 'text-xs'} text-neutral-7`}>{label}</dt>
+      <dd className="order-first m-0 font-data text-m font-heavy">{value}</dd>
     </div>
   );
 }
@@ -636,7 +682,7 @@ function CompareExample() {
         <span className="flex items-center gap-xs"><span className="block w-7 shrink-0"><TrapCard /></span>On camera</span>
         <span className="rounded-xs bg-emphasis-icon py-xxs text-center text-s font-heavy text-on-emphasis-icon">✓ YES</span>
         <span className="flex items-center gap-xs"><span className={`${TILE} h-7 w-7 font-data text-s`}>2</span>Animal 2</span>
-        <span className="rounded-xs bg-neutral-3 py-xxs text-center text-m font-heavy text-neutral-6">✗</span>
+        <span className="rounded-xs bg-neutral-3 py-xxs text-center text-m font-heavy text-neutral-7">✗</span>
       </span>
       <span>Can animal 2 be the one caught on camera?</span>
       <span className="flex gap-xs">
@@ -683,7 +729,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
         </ol>
         <div className="flex flex-col gap-xs">
           <button type="button" onClick={onClose} className="btn btn-primary">Let&apos;s play</button>
-          <p className="m-0 text-center text-xxs text-neutral-6">Seed {seed} · add ?seed={seed} to the address to replay these animals</p>
+          <p className="m-0 text-center text-xxs text-neutral-7">Seed {seed} · add ?seed={seed} to the address to replay these animals</p>
         </div>
       </motion.div>
     </div>
