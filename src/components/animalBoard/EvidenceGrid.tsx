@@ -7,10 +7,11 @@
 // until scouted (a move's clear of that clue's color next to its tile); tap a hidden
 // cell to pencil your own guess (yes, no, blank). Once scouted, a right guess's cell sparkles
 // for a moment and a wrong one shows the guess crossed out (the answer is showing by then, so
-// this concludes nothing); the round-end card marks every guess. An
+// this concludes nothing). An
 // animal's name: tap to pick it (its tile pulses), hold for its field guide, drag its
 // photo right across the name to rule it out (again to undo). `review` (the round-end card) shows
-// every answer, outlines the mystery's own row and marks each earned answer that rules an animal out.
+// every answer, outlines the mystery's own row; from the slide on, cells drop their ✓/✗: green where an animal's
+// answer matches the mystery's, red where not (the Camera row says YES/NO).
 // The Camera cell opens the witness notes (every note is about the mystery): it counts
 // them, pulses when one comes in, and is where a collected witness gem flies.
 // Hold a hidden answer cell to highlight it (purple, "this one matters"): its gems next to that animal's card glow on the
@@ -187,6 +188,10 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
   }, [landOn]);
   // Which animal the Camera row shows: the replay's, or the one that just rose into it.
   const revealed = review ? round.mysteryId : matched;
+  // From the slide on: no ✓/✗ marks. An answered column's cells go green (same as the camera's animal) or red
+  // (striped, so it isn't color alone), under the camera's YES (green) or NO (red); unanswered columns stay grey.
+  const done = review || landing !== null;
+  const truth = (order: AnimalRound['orders'][number]) => order.row[round.suspects.indexOf(round.mysteryId)];
   useLayoutEffect(() => {
     if (matched === null) return;
     const timer = window.setTimeout(() => onLanded?.(), LANDED_MS);
@@ -266,13 +271,14 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                 data-have={order.have}
                 data-answer={order.answer ?? ''}
                 data-flight-target={review ? undefined : order.tag}
-                className={`relative h-(--ev-row) overflow-hidden rounded-xs p-0 text-center ${answered[j] ? 'bg-emphasis-icon text-on-emphasis-icon' : 'bg-neutral-4 text-neutral-10'}`}
+                className={`relative h-(--ev-row) overflow-hidden rounded-xs p-0 text-center ${answered[j] ? (done ? (order.answer === 'yes' ? 'ev-match' : 'ev-clash') : 'bg-emphasis-icon text-on-emphasis-icon') : 'bg-neutral-4 text-neutral-10'}`}
               >
                 {answered[j] ? (
-                  <motion.span className="block text-s font-heavy" initial={review ? false : { rotateX: 90, scale: 1.3 }} animate={{ rotateX: 0, scale: 1 }} transition={LARGE}>{order.answer === 'yes' ? '✓ YES' : '✗ NO'}</motion.span>
+                  // Keyed: otherwise React reuses the progress bar's motion.span (and its width) for the answer.
+                  <motion.span key="answer" className="block text-s font-heavy" initial={review ? false : { rotateX: 90, scale: 1.3 }} animate={{ rotateX: 0, scale: 1 }} transition={LARGE}>{done ? (order.answer === 'yes' ? 'YES' : 'NO') : order.answer === 'yes' ? '✓ YES' : '✗ NO'}</motion.span>
                 ) : revealed !== null ? (
                   // Unasked, so the camera never said: the risen animal's own answer.
-                  <span className={`text-m font-heavy ${order.row[round.suspects.indexOf(revealed)] ? 'text-color-1' : 'text-neutral-6'}`}>{order.row[round.suspects.indexOf(revealed)] ? '✓' : '✗'}</span>
+                  <span className="text-s font-heavy text-neutral-8">{order.row[round.suspects.indexOf(revealed)] ? 'YES' : 'NO'}</span>
                 ) : (
                   <>
                     {!review && <motion.span className="absolute bottom-0 left-0 h-1 bg-color-3" initial={false} animate={{ width: `${(100 * have) / size}%` }} transition={SMALL} aria-hidden="true" />}
@@ -280,12 +286,6 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                     <span key={landed[j] ?? 0} className={`relative font-data text-xs font-medium tabular-nums ${!review && landed[j] ? 'ev-flash' : ''}`} style={!review && landed[j] ? flashStyle([order.gem]) : undefined}>{review ? '?' : `${have}/${size}`}</span>
                   </>
                 )}
-                {/* A wrong guess pencilled on the risen animal's row stays marked here. */}
-                {revealed !== null && (() => {
-                  const guess = pencil[`${revealed}:${order.tag}`];
-                  return guess && (guess === 'yes') !== order.row[round.suspects.indexOf(revealed)]
-                    ? <span aria-hidden="true" className="ev-missed absolute right-xxs top-px">{guess === 'yes' ? '✓' : '✗'}</span> : null;
-                })()}
               </td>
             );
           })}
@@ -362,7 +362,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                 </button>
               </th>
               {round.orders.map((order, j) => {
-                if (!review && !order.seen[i]) {
+                if (!done && !order.seen[i]) {
                   const guess = pencil[`${id}:${order.tag}`];
                   const starred = highlighted.has(`${id}:${order.tag}`);
                   return (
@@ -382,17 +382,17 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                 const yes = order.row[i];
                 const guess = pencil[`${id}:${order.tag}`];
                 const called = guess !== undefined && !missed(order);
-                const fresh = !review && reveal.has(`${id}:${order.tag}`);
+                const fresh = !done && reveal.has(`${id}:${order.tag}`);
                 const miss = review && order.answer !== null && yes !== (order.answer === 'yes');
-                const lit = !review && answered[j];
-                const fill = miss ? 'bg-error-transparent' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
+                const lit = !done && answered[j];
+                const fill = done ? (!answered[j] ? 'bg-neutral-3' : yes === truth(order) ? 'ev-match' : 'ev-clash ev-stripes') : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
                   <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} className={`relative h-(--ev-row) rounded-xs p-0 text-center text-m font-heavy ${fill} ${lit ? 'ev-lit' : ''}`}>
                     {called && fresh && <span aria-hidden="true" className="ev-sparkle" />}
-                    <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'} ${fresh ? 'ev-flash' : ''}`} style={fresh ? flashStyle([order.gem]) : undefined} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>
+                    {!done && <motion.span aria-hidden="true" className={`relative inline-block ${yes ? 'text-color-1' : 'text-neutral-6'} ${fresh ? 'ev-flash' : ''}`} style={fresh ? flashStyle([order.gem]) : undefined} initial={review ? false : { scale: 1.6 }} animate={{ scale: 1 }} transition={LARGE}>{yes ? '✓' : '✗'}</motion.span>}
                     <span className="sr-only">{yes ? 'yes' : 'no'}{guess && (called ? ', you called it' : `, you guessed ${guess}`)}</span>
-                    {guess && !called && (review || fresh) && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
+                    {guess && !called && fresh && <span aria-hidden="true" className={`ev-missed absolute right-xxs top-px ${fresh ? 'is-fresh' : ''}`}>{guess === 'yes' ? '✓' : '✗'}</span>}
                   </td>
                 );
               })}

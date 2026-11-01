@@ -46,7 +46,7 @@ Invariants to check each move (`npm run e2e` checks these too):
 - During play the grid never names the mystery or points at a mismatch; its Camera saw row (`tr[data-mystery]`) shows only earned answers (`orders[].answer`). At round end that row slides onto the mystery's own row (`tr[data-match]`) before the card opens.
 - Ruling out the mystery doesn't release it by itself; tapping a gem outlines the marked animals its swap would release.
 - Out of moves: the name sheet shows and the round is lost even when named right (a right name still goes in the journal).
-- The round-end card names the mystery, replays the grid (red where an earned answer rules an animal out) and shows the family tree; the trail moves on (a find, or one heart less).
+- The round-end card names the mystery, replays the grid (no ✓/✗: answered columns green where a cell matches the camera, red and striped where not, unanswered ones grey; the Camera row's YES green, NO red) and shows the family tree; the trail moves on (a find, or one heart less).
 - With `?place=`, a find adds a sighting for that continent to the journal.
 - No page scroll: `document.documentElement.scrollHeight === innerHeight`; every button at least 44px; on a 375×548 phone the board keeps at least 210 px.
 

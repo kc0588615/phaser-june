@@ -565,7 +565,7 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
           <ul className="m-0 flex list-none flex-col gap-xxs p-0 text-xs text-neutral-7" aria-label="Grid key">
             {round.orders.some(order => order.answer) ? (
               <li className="flex items-center gap-xs">
-                <span className="h-3.5 w-5 shrink-0 rounded-xs bg-error-transparent" aria-hidden="true" />
+                <span className="h-3.5 w-5 shrink-0 rounded-xs ev-clash ev-stripes" aria-hidden="true" />
                 Red in the grid above doesn&apos;t match what the camera saw, so it rules that animal out.
               </li>
             ) : <li>No question was answered this time.</li>}

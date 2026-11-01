@@ -470,6 +470,11 @@ body {
   from { background-color: var(--color-3); }
 }
 .ev-lit { animation: ev-lit 1.6s ease-out; }
+/* Round end: two-tone cells, a light square with darker text of the same hue (dark mode: a dim square, lighter text).
+   Green = same as the camera's animal / YES, red = not / NO; a suspect's red cell is also striped (not color alone). */
+.ev-match { background-color: color-mix(in oklab, var(--color-1) 26%, var(--neutral-1)); color: color-mix(in oklab, var(--color-1) 85%, var(--neutral-10)); }
+.ev-clash { background-color: color-mix(in oklab, var(--error) 18%, var(--neutral-1)); color: color-mix(in oklab, var(--error) 75%, var(--neutral-10)); }
+.ev-stripes { background-image: repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in oklab, var(--error) 22%, transparent) 6px 8px); }
 /* The Mystery cell (the witness notes) pulses once when a note comes in; on desktop, the newest note when the cell is tapped. */
 @keyframes ev-pulse {
   30% { box-shadow: 0 0 0 4px rgb(178 125 255 / 55%); } /* --color-notes; @theme inline leaves no runtime var */
