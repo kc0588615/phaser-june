@@ -489,21 +489,26 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
             {/* The round's numbers stack under the photo, beside the name (plan 052). */}
             <div className="flex w-36 shrink-0 flex-col gap-xs">
               <motion.span className="block aspect-[4/3] overflow-hidden rounded-xs bg-neutral-3" {...pop(0.25)}><SuspectPhoto species={species} size={330} /></motion.span>
-              {(found || guesses.length > 0) && <dl className="m-0 flex flex-col">
-                {found && <Stat label={round.movesLeft === 1 ? 'move to spare' : 'moves to spare'} value={round.movesLeft} row />}
+              {guesses.length > 0 && <dl className="m-0 flex flex-col">
                 {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
               </dl>}
             </div>
             <div className="flex min-w-0 flex-col gap-xxs">
-              <p className="m-0 flex items-center gap-xs">
+              <p className="m-0 flex flex-wrap items-center gap-xs">
                 <span className={`text-xs font-heavy uppercase ${found ? 'text-color-1' : 'text-error'}`}>{kicker}</span>
                 {found && (
                   <span className="flex rounded-xs bg-emphasis-icon px-xxs text-xs text-on-emphasis-icon" role="img" aria-label={`${end.stars} of 3 stars`}>
                     {[0, 1, 2].map(i => <motion.span key={i} className="inline-block" aria-hidden="true" {...(i < end.stars ? pop(0.5 + i * 0.18) : {})}>{i < end.stars ? '★' : '☆'}</motion.span>)}
                   </span>
                 )}
-                {/* The reward reads together: stars, then points (a loss always scores 0, so it shows none). */}
-                {found && <motion.span className="font-data text-s font-heavy text-color-1" aria-label={`${end.points} points`} {...pop(0.5 + end.stars * 0.18)}>+{end.points}</motion.span>}
+                {/* The reward reads together: stars, points, moves to spare (a loss always scores 0, so it shows none). */}
+                {/* Points and moves wrap as one, so they stay side by side on a narrow phone. */}
+                {found && (
+                  <span className="flex items-baseline gap-xs whitespace-nowrap">
+                    <motion.span className="font-data text-s font-heavy text-color-1" aria-label={`${end.points} points`} {...pop(0.5 + end.stars * 0.18)}>+{end.points}</motion.span>
+                    <span className="text-xs text-neutral-7" aria-label={`${round.movesLeft} of ${round.rules.moves} moves to spare`}><b className="font-data text-s font-heavy text-neutral-10">{round.movesLeft}/{round.rules.moves}</b> moves</span>
+                  </span>
+                )}
               </p>
               <p className="m-0 text-xs text-neutral-7">{lead}</p>
               <h2 className="m-0 text-xl font-heavy [text-wrap:balance]">{animal.name}</h2>
