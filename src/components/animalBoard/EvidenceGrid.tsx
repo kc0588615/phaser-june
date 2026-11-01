@@ -49,7 +49,7 @@ const SLIDE_TO_MARK = 0.5;
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, unread = 0, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
@@ -65,6 +65,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   onQuestion?: (index: number) => void;
   /** The Mystery's cell: open the witness notes. */
   onNotes?: () => void;
+  /** Notes the player hasn't opened yet: the cell glows purple and says to tap it. */
+  unread?: number;
   /** The player's pencilled answers for hidden cells, by `${id}:${tag}`; `onPencil` sets the next one. */
   pencil?: Readonly<Record<string, 'yes' | 'no'>>;
   onPencil?: (id: number, tag: string, value: 'yes' | 'no' | null) => void;
@@ -231,8 +233,9 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 onClick={onNotes}
                 data-flight-target="notes"
                 data-notes={notes}
-                aria-label={`On camera: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
-                className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
+                aria-label={`On camera: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}${unread > 0 ? `, ${unread} new` : ''}: open them` : 'No witness notes yet'}`}
+                data-unread={unread}
+                className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${unread > 0 ? 'ev-unread outline-notes' : notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
               >
                 {/* Keyed by the count, so the cell pulses once each time a note comes in. */}
                 {notes > 0 && <span key={notes} className="ev-pulse pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
@@ -242,7 +245,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   {/* Until the first note: which animals the camera's one is among (a fixed count, never who still fits). */}
                   <span className={`flex min-w-0 items-center gap-xxs whitespace-nowrap text-xxs font-medium ${notes > 0 ? 'text-neutral-8' : 'text-neutral-6'}`}>
                     {notes > 0 ? <NotebookPen className="h-3 w-3 shrink-0 text-notes" aria-hidden="true" /> : null}
-                    <span className="min-w-0 truncate">{notes > 0 ? `${notes} note${notes === 1 ? '' : 's'}` : `One of these ${round.suspects.length} ↓`}</span>
+                    <span className="min-w-0 truncate">{unread > 0 ? 'New note! Tap' : notes > 0 ? `${notes} note${notes === 1 ? '' : 's'}` : `One of these ${round.suspects.length} ↓`}</span>
                     {markCount}
                   </span>
                 </span>

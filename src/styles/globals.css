@@ -529,6 +529,11 @@ body {
 @keyframes ev-highlight {
   50% { box-shadow: inset 0 0 0 2px #b27dff, 0 0 1px #b27dff, 0 0 3px rgb(178 125 255 / 40%); }
 }
+/* The Camera cell with a witness note not yet opened: purple, breathing until tapped. */
+.ev-unread { background-color: rgb(178 125 255 / 22%); animation: ev-unread 1.2s ease-in-out infinite; }
+@keyframes ev-unread {
+  50% { background-color: rgb(178 125 255 / 40%); box-shadow: 0 0 0 3px rgb(178 125 255 / 45%), 0 0 10px rgb(178 125 255 / 60%); }
+}
 .ev-glow { filter: drop-shadow(0 0 3px #b27dff) drop-shadow(0 0 6px rgb(178 125 255 / 70%)); animation: ev-glow 1.8s ease-in-out infinite; }
 @keyframes ev-glow {
   50% { filter: drop-shadow(0 0 1px #b27dff) drop-shadow(0 0 3px rgb(178 125 255 / 40%)); }
@@ -599,7 +604,7 @@ body {
 .ev-fly span { position: absolute; transform: translate(-50%, -50%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-pulse, .ev-nudge, .ev-fade, .ev-sparkle, .ev-missed.is-fresh, .ev-wiggle, .ev-glow, .ev-highlight { animation: none; }
+  .cm-shake, .cm-pop-in, .cm-range-ping, .roster-cross, .ev-lit, .ev-pulse, .ev-nudge, .ev-fade, .ev-sparkle, .ev-missed.is-fresh, .ev-wiggle, .ev-glow, .ev-highlight, .ev-unread { animation: none; }
   .ev-sparkle::before, .ev-sparkle::after { display: none; }
   .ev-hint { animation: none; opacity: 0; }
   .ev-scroll { animation-timing-function: step-end; }

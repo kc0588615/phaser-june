@@ -8,7 +8,7 @@
 // and rules it out (slide right).
 import Head from 'next/head';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Heart, Menu, Pause } from 'lucide-react';
+import { Heart, Menu, NotebookPen, Pause } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import type { AnimalLogEntry } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
@@ -54,7 +54,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
         </span>
       );
     }
-    case 'note': return <span>📓 <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
+    case 'note': return <span><NotebookPen className="inline h-4 w-4 align-[-3px] text-notes" aria-hidden="true" /> <WithBlanks text={entry.note.text} /> <span className="text-neutral-7">Fits {entry.note.fits} of {count}.</span></span>;
     case 'released': return <span>The {nameOf(entry.id)} {entry.walked ? 'wandered off' : 'left'} the board.</span>;
     case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one caught on camera. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
@@ -94,7 +94,7 @@ function dwellMs(text: string, fresh: boolean): number {
 }
 
 /** A landed answer or witness note; `key` is its index in the round's log. */
-interface Fact { key: number; node: ReactNode }
+interface Fact { key: number; node: ReactNode; note?: boolean }
 /** What changed `now`: the player's own action or the round's end, a new answer or note, or another event. */
 type NowKind = 'urgent' | 'fact' | 'event';
 
@@ -105,7 +105,7 @@ type NowKind = 'urgent' | 'fact' | 'event';
  * show at once. Text too long for two lines scrolls up to its end. A tap pauses; another
  * resumes and moves on.
  */
-function StatusTicker({ now, nowKey, nowKind, facts }: { now: ReactNode; nowKey: string; nowKind: NowKind; facts: Fact[] }) {
+function StatusTicker({ now, nowKey, nowKind, facts, idle }: { now: ReactNode; nowKey: string; nowKind: NowKind; facts: Fact[]; idle: ReactNode }) {
   // `key`: the fact showing, or null for `node` (`now` as it was when it came in); `fresh`: held longer.
   const [at, setAt] = useState<{ key: number | null; fresh: boolean; node?: ReactNode }>({ key: null, fresh: true, node: now });
   const [paused, setPaused] = useState(false);
@@ -116,16 +116,21 @@ function StatusTicker({ now, nowKey, nowKind, facts }: { now: ReactNode; nowKey:
   const last = useRef<number | null>(null);
   const latest = useRef(facts);
   useEffect(() => { latest.current = facts; }, [facts]);
+  // Between the last fact and the first: the latest event, or the round's prompt when that's a fact already.
+  const between = useRef<ReactNode>(idle);
+  useEffect(() => { between.current = nowKind === 'fact' ? idle : now; }, [now, nowKind, idle]);
   useEffect(() => { if (at.key !== null) last.current = at.key; }, [at]);
 
-  // The oldest fact not yet shown in full, else the one after the last shown; never the same twice running.
+  // The oldest fact not yet shown in full, else the one after the last shown, with the `between` line after the
+  // last fact: always a new state, so the rotation never stops (even on a lone fact).
   const next = useCallback(() => setAt(current => {
     const all = latest.current;
     const unseen = all.find(fact => !seen.current.has(fact.key));
     if (unseen) return { key: unseen.key, fresh: true };
     if (all.length === 0) return current;
-    const key = all[(all.findIndex(fact => fact.key === last.current) + 1) % all.length].key;
-    return key === current.key ? current : { key, fresh: false };
+    const index = all.findIndex(fact => fact.key === last.current);
+    if (current.key !== null && index === all.length - 1) return { key: null, fresh: false, node: between.current };
+    return { key: all[(index + 1) % all.length].key, fresh: false };
   }), []);
   // Moving on from a fact counts it as read (one cut short by an event comes round again as new).
   const finish = useCallback(() => {
@@ -168,7 +173,8 @@ function StatusTicker({ now, nowKey, nowKind, facts }: { now: ReactNode; nowKey:
       aria-pressed={paused}
       aria-label="Pause the clue line"
       onClick={onTap}
-      className="mx-xs my-xxs hidden h-12 min-w-0 shrink-0 select-none items-center gap-xs rounded-full bg-neutral-2 px-m text-left text-s [grid-area:status] roomy:flex md:mx-s md:flex"
+      // A witness note shows on the notes' purple, like the notes list.
+      className={`mx-xs my-xxs hidden h-12 min-w-0 shrink-0 select-none items-center gap-xs rounded-full px-m text-left text-s transition-colors [grid-area:status] roomy:flex md:mx-s md:flex ${index >= 0 && facts[index].note ? 'bg-notes/20 outline outline-1 -outline-offset-1 outline-notes/40 dark:bg-notes/25' : 'bg-neutral-2'}`}
     >
       <span key={index < 0 ? `now-${nowKey}` : `fact-${at.key}`} ref={box} aria-hidden="true" className="ev-fade block max-h-[2lh] min-w-0 grow overflow-hidden">
         <span ref={text} className={`block ${scroll ? 'ev-scroll' : ''}`} style={scroll ? { '--scroll-y': `-${scroll}px`, '--scroll-ms': `${scrollMs}ms` } as CSSProperties : undefined}>
@@ -399,7 +405,7 @@ export function AnimalGame() {
     : 'Match gems to fill in what the camera saw.';
   // What the status line takes turns showing: the answers (once their gems land) and witness notes so far.
   const facts = useMemo<Fact[]>(() => round ? round.log.flatMap((entry, key) => (entry.kind === 'answer' && answerShown(entry.tag)) || entry.kind === 'note'
-    ? [{ key, node: <LogText entry={entry} nameOf={nameOf} count={round.suspects.length} /> }] : []) : [], [round, answerShown, nameOf]);
+    ? [{ key, node: <LogText entry={entry} nameOf={nameOf} count={round.suspects.length} />, note: entry.kind === 'note' }] : []) : [], [round, answerShown, nameOf]);
   const nowKind: NowKind = hinting ? (hint.own ? 'urgent' : 'event') : latest && ['found', 'escaped', 'out-of-moves', 'named'].includes(latest.kind) ? 'urgent'
     : latest?.kind === 'answer' || latest?.kind === 'note' ? 'fact' : 'event';
 
@@ -419,7 +425,11 @@ export function AnimalGame() {
 
   // The Camera cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
   const sideNotes = useRef<HTMLElement>(null);
+  // Notes opened so far this round; any past that make the Camera cell glow until it's tapped.
+  const [notesRead, setNotesRead] = useState({ roundNo: 0, count: 0 });
+  const unread = round && !end ? round.notes.length - (notesRead.roundNo === roundNo ? notesRead.count : 0) : 0;
   const openNotes = () => {
+    if (round && roundNo) setNotesRead({ roundNo, count: round.notes.length });
     if (!wide) { setSheet({ kind: 'notes' }); return; }
     const newest = sideNotes.current?.querySelector<HTMLElement>('li:last-child');
     if (!newest) return;
@@ -455,7 +465,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} unread={unread} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
@@ -479,7 +489,7 @@ export function AnimalGame() {
           <p className="sr-only" aria-live="polite">{boardStatus}</p>
         </section>
 
-        <StatusTicker key={roundNo ?? 0} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} />
+        <StatusTicker key={roundNo ?? 0} now={session ? status : 'Loading animals…'} nowKey={hinting ? `h${hint.id}` : `l${visibleLog.length}`} nowKind={nowKind} facts={facts} idle={round ? `Which of these ${round.suspects.length} was caught on camera? Match gems to find out.` : ''} />
 
         {wide && round && (
           <section ref={sideNotes} aria-labelledby="side-notes" className="min-h-0 overflow-y-auto overscroll-contain px-m pb-m pt-xs [grid-area:side]">
