@@ -31,7 +31,7 @@ GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle 
 - Push before you stop, WIP included (as a branch).
 - Deploying: `npm run deploy` ships `origin/main`. Agents may run it without asking (owner, 2026-11-01), from WSL or as `deploy critter-connect` on the Oracle VPS, unless the owner has paused that work.
 - Owner only, from WSL: the prod content build (`npm run content -- build`) after a content PR merges.
-- VPS DB is the dev copy `phaser_june_dev` (role `critter_dev`); writes there never reach prod. Route, refresh: `docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps`.
+- VPS DB is the live `phaser_june` (owner, 2026-11-01), as in WSL, so writes reach real players. Before a schema change or bulk write, take a fresh dump (`deploy/backup/pg-backup.sh` on the server). Route: `docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps`.
 
 ## Repo Quick Start
 - Install: `npm install`
