@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 # Deploy origin/main to the VPS: pull, rebuild the app and caddy containers, wait for healthy, check the live hosts.
 # Usage: npm run deploy   (push first; env DEPLOY_HOST, default root@play.critterconnect.org)
+# SSH uses ~/.ssh/critter-deploy (no passphrase, set in ~/.ssh/config), so no one has to unlock anything.
 set -euo pipefail
 DOMAIN=play.critterconnect.org
 HOST=${DEPLOY_HOST:-root@$DOMAIN}
 export SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-$HOME/.ssh/agent.sock}
 
-if ! ssh-add -l >/dev/null 2>&1; then
-  echo "No SSH key loaded (agent $SSH_AUTH_SOCK). The VPS key has a passphrase; the owner loads it in their own terminal:" >&2
-  echo "  rm -f ~/.ssh/agent.sock; eval \"\$(ssh-agent -a ~/.ssh/agent.sock)\"; ssh-add ~/.ssh/hetzner-vps" >&2
+if ! ssh -o BatchMode=yes -o ConnectTimeout=15 "$HOST" true; then
+  echo "Can't reach $HOST over SSH. Agents need ~/.ssh/critter-deploy and a Host entry in ~/.ssh/config (docs/DEPLOY.md)." >&2
   exit 1
 fi
 
 git fetch -q origin main
-if [ "$(git rev-parse main)" != "$(git rev-parse origin/main)" ]; then
-  echo "Local main differs from origin/main; push (or pull) first. The VPS deploys origin/main." >&2
+# The VPS deploys origin/main, so a local main that is behind (or a dirty tree) doesn't matter. Only unpushed commits would be left out.
+if [ -n "$(git rev-list origin/main..main 2>/dev/null)" ]; then
+  echo "Local main has commits that aren't on origin/main; push them first. The VPS deploys origin/main." >&2
   exit 1
 fi
 
