@@ -75,7 +75,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -281,13 +281,139 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+One step per session. Run everything from the worktree root; heavy jobs one at a time. Line numbers in the Architecture are the base's: find by text if a step has moved them.
+
+**Setup, every session:**
+```
+M=/srv/critter-ai/agent-state/missions/site-shots-refresh
+export CHROME_PATH=/srv/critter-ai/agent-state/missions/cc-website/bin/chrome SHOTS_DIR=$M/shots/raw
+ss -ltn | grep -E ':(3105|3106)\b'   # must print nothing. 3106 busy: SHOTS_PORT=3107 or higher. Never 3100 or 3101
+```
+
+**Site check** (must exit 0, all checks pass, 20 screenshots):
+```
+npm run typecheck && npm run lint && npm run site:build
+python3 -m http.server 3105 -b 127.0.0.1 -d out/site > $M/serve.log 2>&1 & S=$!
+E2E_SITE_URL=http://localhost:3105 npm run e2e:site; R=$?; kill $S; [ $R = 0 ]
+```
+Then keep one intermediate run (disk): `L=$(ls -td e2e-artifacts/*-site | head -1); rm -rf $M/e2e-s[0-9]*; mv "$L" $M/e2e-s<n>; rm -rf e2e-artifacts/*-site`.
+
+**Rows count** (read only; twice in the mission, both in S2):
+```
+U=$(sed -n 's/^DATABASE_URL=//p' .env.local | tr -d "\"'" | sed -E 's/[?&]pgbouncer=true//')
+printf 'BEGIN READ ONLY;\nSELECT count(*) FROM clue_match_solves;\nCOMMIT;\n' | psql "$U" -qAt
+```
+Never `source .env.local`: its URL has an unquoted `&`, so the shell backgrounds it and prints the password. Never echo `$U`.
+
+- [ ] S1. **Move and fix the scripts; prove them with no rounds played.** Files: new `scripts/shots/run.mjs`, `take.mjs`, `convert.mjs`; `package.json` (the `site:shots` script only, no lockfile change). Copy `take.mjs` and `convert.mjs` from `/srv/critter-ai/agent-state/missions/cc-website/shots/` (F2's line numbers are that `take.mjs`'s; the originals stay). Apply every F2 row, then Target design (`run.mjs`, `take.mjs`, `convert.mjs`, env table, manifest fields). F7: plain `sharp` import, no new dependency. Check the port before the build, so a busy port fails at once. No `src/site` change. Check:
+  - typecheck, lint.
+  - `npm run site:shots -- start`: exit 0; `$SHOTS_DIR` has `globe`, `board-phone`, `hero-board`, `og` PNGs and `start.json`; `jq '{commit, pool, writes, themes: [.shots[].theme]}' $SHOTS_DIR/start.json` shows commit `1a781de4…`, a 10-hex pool, `writes: []`, all `light`. View `hero-board.png`: no how-to dialog. `ss -ltn` shows 3106 free afterwards.
+  - `npm run site:shots -- convert`: non-zero (no `play.json`); `git status --short src/site` empty.
+  - `python3 -m http.server 3107 -b 127.0.0.1 >/dev/null 2>&1 & H=$!; SHOTS_PORT=3107 npm run site:shots -- start; echo $?; kill $H`: non-zero at once.
+  - `git status --short`: only the S1 files; restore anything else (e.g. `tsconfig.json`, `next-env.d.ts`).
+- [ ] S2. **Retake.** Files: `src/site/shots/*.webp`, `src/site/og.png`; `scripts/shots/take.mjs` only if a scripted step needs adapting (Brief's decision rules; record why under **Decisions**). Do:
+  ```
+  rm -rf $SHOTS_DIR; mkdir -p $M/shots/old
+  # Rows count: "before <n>" into $M/db-counts.txt
+  npm run site:shots 2>&1 | tee -a $M/shots/retake.log   # on a failed run: fix, rerun with the same tee -a; every run's rounds count
+  # Rows count: "after <n>" into $M/db-counts.txt
+  for f in src/site/shots/*.webp src/site/og.png; do git show 1a781de4:$f > $M/shots/old/$(basename $f); done
+  cp /srv/critter-ai/agent-state/missions/site-shots-on-camera/shots/contact.mjs $M/shots/contact.mjs   # adapt only if a shot name changed
+  node $M/shots/contact.mjs $M/shots/old $M/shots/contact.png
+  ```
+  Check:
+  - Site check (`$M/e2e-s2`).
+  - Hash loop (Architecture, **Hashes**), `| tee $M/hash-check.txt`: no `MISSING`, no `STALE`.
+  - `jq '{commit, pool, writes, rounds: (.rounds | length)}' $SHOTS_DIR/play.json`: commit `1a781de4…`, `writes: []`, about 2 rounds, cap 4. `grep 'rounds played' $M/shots/retake.log` is the mission's total.
+  - Counts: 188 → 188 expected. A difference means the owner shipped a save: record it under **Decisions**.
+  - `git status --short`: only the shots, `og.png` and any `take.mjs` fix; restore anything else.
+- [ ] S3. **Make `shots.ts` true, by eye.** Files: `src/site/shots.ts`; `src/site/config.ts` (`OG_IMAGE.alt`, only if false). View all 10 PNGs in `$SHOTS_DIR` against their alts, with the manifests' `ids`, `text` and `clue`. Apply F5: the header (Target design: date, `origin/main <commit>`, `pool <hash>`, from the manifests), the `fieldGuide` and `heroBoard` alts, and F5's re-verify list; `photos` must equal the animals shown. A shot that's plainly wrong (mid-flash, stray UI): fix `take.mjs`, then `npm run site:shots -- play convert 2>&1 | tee -a $M/shots/retake.log` (or `start convert`), and rerun the hash loop and contact sheet. Write `$M/shots/eye-check.txt`, one line per shot: alt true, `photos` match, no "Camera saw". Check:
+  - typecheck, lint, `npm run site:build` (fails on a bad photo id).
+  - `grep -cF 'a board of gems with five animal cards pinned on it' out/site/index.html` ≥ 1; the header's commit and pool equal `jq -r '.commit[:8], .pool' $SHOTS_DIR/play.json`.
+- [ ] S4. **Crops.** Files: `src/site/pages/Home.tsx`, `src/site/pages/Teachers.tsx` (class strings and the comment at `Teachers.tsx:40-42` only). Go through F6 row by row. `board` in the manifests is CSS px: `boardTop` for `Teachers.tsx:52` is grid-marked's in `play.json`, for `Home.tsx:39` board-phone's in `start.json`. The rest by eye. Keep classes literal so Tailwind sees them. Check: Site check (`$M/e2e-s4`), then view `site-home-*-light.png` and `site-teachers-*-light.png` at 390 and 1440 (crop with `sharp` if a full page is too small to read): each image shows F6's "Must show", and nothing is cut mid-element.
+- [ ] S5. **Copy.** Files: `src/site/pages/Teachers.tsx`, `src/site/pages/Home.tsx`. Apply F3's 11 rows, using the exact "after" text, and touch no other words. If an edit must differ, record before, after and why under **Decisions**. Check: Site check (`$M/e2e-s5`); view `site-teachers-1440-light.png` where the bullets went; then, printing nothing:
+  ```
+  for s in 'the full record' 'each round-end card lists' 'Every source is on' 'The round-end card has everything needed' 'finds nothing' 'then clear gems next to them' 'Check each animal' 'credited on every card' 'on more than one device' 'Finished rounds are saved' 'to sync their Field Journal' 'mystery' 'Camera saw'; do grep -lF "$s" out/site/index.html out/site/teachers/index.html; done
+  ```
+  (Privacy keeps "Finished rounds are saved": F4.)
+- [ ] S6. **Handoff for F4.** File: `/srv/critter-ai/handoff/critter-connect.md` (outside git), under `## Open`, above `## Closed`. Use the next free number (H7 unless taken; H6 is the password item, see **Decisions**). Add this item, unindented:
+  ```
+  ### H7 · Privacy and Terms no longer match the game: restore the save, or rewrite them?
+  Status: waiting on you
+  From: site-shots-refresh · <today, UTC>
+  Blocks: nothing yet
+
+  **Why:** The game has saved no rounds since plan 044 (nothing sends `POST /api/clue-game/solves`; newest row 2026-10-01) and shows no per-fact sources. So Privacy's "Finished rounds are saved…" and "Our database keeps… your game results", and Terms' "sources shown on each reveal card", overstate what happens. The mission left both pages alone, since overstating what's kept is the safer direction, and removed the same claims from the Teachers page.
+
+  **Steps:**
+  1. Read https://critterconnect.org/privacy/ (`src/site/pages/Privacy.tsx:19, :29`) and https://critterconnect.org/terms/ (`src/site/pages/Terms.tsx:13`).
+  2. Decide the save. Restore it: game work, Privacy is true again, and what this mission removed at `Teachers.tsx:24, :120, :128` comes back (plan `plans/2026-11-01-site-shots-refresh.md`, F3, F4). Or rewrite: an agent edits Privacy to say new rounds aren't kept and old results remain (23 rows under 3 accounts).
+  3. Decide the Terms line. Reword it (the game now shows only a Red List link, in the journal), or bring per-fact sources back (game work).
+
+  **Your reply:**
+  - Save: restore, or rewrite the policy
+  - Terms line: reword, or bring sources back
+  ```
+  Check: `grep -c '^### H7 ' /srv/critter-ai/handoff/critter-connect.md` is 1, and the item sits above `## Closed` with `Status: waiting on you`. Typecheck and lint (no repo change expected, so they must still pass).
+
 ## Verification
+
+Runs on the final commit, after the Astra code review, with the Steps' Setup. No retake unless a check below demands it. Full game E2E not run (Brief): the shots' own play-through is `npm run site:shots`.
+
+**E2E first.**
+1. `git status --short` empty (`check-game-css` reads what's committed).
+2. Site check, then `rm -rf $M/e2e-s[0-9]* $M/e2e-site; mv "$(ls -td e2e-artifacts/*-site | head -1)" $M/e2e-site`. Scenario: every page in `config.ts`, phone and desktop, light and dark (axe, one h1, landmarks, meta tags and `og.png` served, Play links, class link, no console errors, same-origin only). Must show: typecheck, lint and site:build exit 0; all checks pass; 20 screenshots. Baseline was 444/444; explain any count change.
+
+**Then:**
+3. Hash loop (Architecture, **Hashes**), `| tee $M/hash-check.txt`: no `MISSING`, no `STALE`; a same hash only for a byte-identical shot (record it as retaken, unchanged).
+4. The Architecture's three "Camera saw" lines: first two print nothing; the `jq` list goes in the Summary.
+5. `node scripts/check-game-css.mjs "$(git merge-base HEAD origin/main)" 2>&1 | tee $M/check-game-css.log`: exit 0. The merge-base keeps an owner's style commit on `main` from failing it before the rebase; after the rebase it's the new base.
+6. Only allowed files changed; prints nothing:
+   ```
+   git diff --name-only "$(git merge-base HEAD origin/main)" HEAD | grep -vE '^(plans/|scripts/shots/|package\.json$|src/site/(shots/[^/]+\.webp|og\.png|shots\.ts|config\.ts|pages/(Home|Teachers)\.tsx)$)'
+   ```
+   And `git status --short` still empty (no Next side effects left behind).
+7. S5's fragment loop prints nothing. The `shots.ts` header's commit and pool equal both manifests'.
+8. `$M/shots/eye-check.txt` has all 10 shots and matches the final `shots.ts`; redo the line of any shot or alt changed since S3. Rerun `node $M/shots/contact.mjs $M/shots/old $M/shots/contact.png` and view it: old row over new, 10 columns.
+9. `$M/db-counts.txt` has before and after (no new read). Total rounds: `grep 'rounds played' $M/shots/retake.log`.
+
+**Artifacts,** all in `$M` (`/srv/critter-ai/agent-state/missions/site-shots-refresh/`):
+- Brief's two: `shots/contact.png` and `e2e-site/report.json` (plus its screenshots).
+- Evidence: `shots/raw/` (PNGs, `play.json`, `start.json`), `shots/eye-check.txt`, `shots/retake.log`, `hash-check.txt`, `db-counts.txt`, `check-game-css.log`.
+
+**To reproduce:** Setup, `npm run site:shots`, then Site check. Same `pool` hash in `play.json` means same deals.
+
+**PR body and Summary.** Write `$M/pr-body.md` in the shape of `/srv/critter-ai/agent-state/missions/site-shots-on-camera/pr-body.md`; the release opens the PR with it. Both give, per the Definition of done:
+- `Closes #37`; the base commit.
+- The shot list, before → after (hash and KB, from `hash-check.txt`; what changed).
+- Every copy change before → after with its proof (F3, plus any in **Decisions**).
+- Rounds played on the live database and rows added.
+- Production content build: not needed unless `db/content` changed (Architecture, **Release**).
+
+The Summary also carries the Architecture's "For the Summary, out of scope" list and the `jq` list.
+
+**Release smoke** (for `## Release`; the rebase rule is in the Architecture's **Release**):
+```
+for p in / /teachers/; do curl -sfL -o /tmp/live.html -w "$p %{http_code}\n" "https://critterconnect.org$p"
+  grep -oE '/site/[a-zA-Z0-9-]+\.[0-9a-f]{10}\.(webp|png)' /tmp/live.html | sort -u | while read -r u; do h=${u%.*}; h=${h##*.}; grep -qF " -> $h" $M/hash-check.txt || echo "OLD $u"; done; done
+curl -sfL -o /dev/null -w 'play %{http_code}\n' https://play.critterconnect.org/
+```
+Must show: three 200s, no `OLD`.
+
+**Risks / open questions**
+- **`play` is first run for real in S2,** since S1 plays nothing. F2 says the move path may differ; the Brief's decision rules cover it. A timing failure with critwire missions on the same 2 CPUs: rerun once, and the rounds still count.
+- **The pool can change mid-mission** if the owner runs a content build. `convert.mjs` refuses mixed manifests; a change after S3 falls under the Architecture's rebase rule.
+- **Disk:** 9.1 GB free, shared. Site check keeps one intermediate `e2e-s*`. Check `df -h /` if a build fails.
+- **Shot text checks are DOM text plus eye:** no OCR here (F7).
+- No open questions for the owner beyond H6 (password) and H7 (Privacy/Terms); neither blocks anything.
 
 ## Code review (Astra)
 
 ## Release
 
 ## Decisions
+
+- **Password exposure (H6), 2026-11-01:** at the Steps stage the planner ran `. ./.env.local` to test the row count, and the shell printed the live `DATABASE_URL`, with its password, into that subagent's tool output. Checked by file name only: one transcript on the VPS holds it, not git, the plan or the mission's state folder. Rotation is the owner's call (live server, WSL, QGIS), so H6 asks; the mission goes on. Plan's **Rows count** now reads the URL with `sed`, and says never to source that file. Privacy/Terms item moved to H7.
 
 ## Log
 
@@ -296,5 +422,6 @@ SHOULD-CONSIDER:
 - 2026-11-01 23:43 UTC: Fable review: APPROVE_WITH_CHANGES, 2 must-fix (`Teachers.tsx:78`, `:128` edits), for Revision. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:44 UTC: Astra review: APPROVE, no must-fix, 3 should-consider. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:49 UTC: Revision. Fable's 2 must-fix and 1 missed resolved (`Teachers.tsx:78` kept, `:120` and `:128` deleted, `Home.tsx:80` reworded); 6 should-consider adopted, 1 in a different form. Lead checked the diff against `Teachers.tsx`. No code changed; typecheck/lint n/a.
+- 2026-11-01 23:58 UTC: Steps. Planner wrote S1-S6 and Verification. Planner printed the live DB password to its tool output while testing a count; H6 added, nothing in git. No code changed; typecheck/lint n/a.
 
 ## Summary
