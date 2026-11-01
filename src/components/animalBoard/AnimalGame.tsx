@@ -207,11 +207,15 @@ export function AnimalGame() {
   // The field guide's and round end's drawers reach up to the board's top edge (the grid above stays visible).
   const board = useRef<HTMLElement>(null);
   const gridBox = useRef<HTMLDivElement>(null);
-  const [boardTop, setBoardTop] = useState(0);
+  // The board's box: its top for both drawers; the round-end card also keeps to its left and width (desktop: the grid is beside it).
+  const [boardBox, setBoardBox] = useState({ top: 0, left: 0, width: 0 });
   const drawerUp = sheet?.kind === 'suspect' || Boolean(session?.end);
   useLayoutEffect(() => {
     if (!drawerUp) return;
-    const measure = () => setBoardTop(board.current?.getBoundingClientRect().top ?? 0);
+    const measure = () => {
+      const box = board.current?.getBoundingClientRect();
+      setBoardBox(box ? { top: box.top, left: box.left, width: box.width } : { top: 0, left: 0, width: window.innerWidth });
+    };
     measure();
     // The grid above can change height (round end: the mystery's row rises into the Camera row), moving the board.
     const grid = new ResizeObserver(measure);
@@ -487,7 +491,7 @@ export function AnimalGame() {
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
-        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardTop} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onShow={onShowGuide} onClose={() => setSheet(null)} />}
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardBox.top} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onShow={onShowGuide} onClose={() => setSheet(null)} />}
         {!wide && round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu
@@ -503,7 +507,7 @@ export function AnimalGame() {
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
         {session && mystery && reviewing && (
-          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} top={boardTop} nameOf={nameOf} onNext={nextRound} />
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={nextRound} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
         {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}

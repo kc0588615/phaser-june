@@ -455,10 +455,10 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
   );
 }
 
-export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }: {
+export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }: {
   session: AnimalSession; animal: Animal; species: PoolSpecies | undefined;
-  /** The board's top edge (px from the viewport top): the card covers the board, the grid above shows the replay (plan 052). */
-  top: number;
+  /** The board's box (px, viewport): the card covers the board only, so the grid (above, or beside on desktop) shows the replay (plan 052). */
+  box: { top: number; left: number; width: number };
   nameOf: (id: number) => string; onNext: () => void;
 }) {
   const { round, end, trail } = session;
@@ -479,7 +479,15 @@ export function RoundEndSheet({ session, animal, species, top, nameOf, onNext }:
   // A find pops the photo in, then fills the stars one by one (MotionConfig turns this off for reduced motion).
   const pop = (delay: number) => (found ? { initial: { opacity: 0, scale: 0.6 }, animate: { opacity: 1, scale: 1 }, transition: { type: 'spring' as const, stiffness: 420, damping: 18, delay } } : {});
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[8300] flex items-end justify-center" style={{ top }} {...presence} aria-label={`It was the ${animal.name}`}>
+    // Under the menu, help and journal (z 8100+), which stay reachable from the grid's corner. Not modal: the replay grid
+    // outside it is part of the reading. The presence style (exit: taps pass through) merges with the board's box.
+    <div
+      className="fixed bottom-0 z-[8000] flex items-end justify-center"
+      {...presence}
+      aria-modal={false}
+      style={{ top: box.top, left: box.left, width: box.width || '100%', ...('style' in presence ? presence.style : {}) }}
+      aria-label={`It was the ${animal.name}`}
+    >
       <motion.div className="absolute inset-0 bg-neutral-10-transparent" aria-hidden="true" {...backdropMotion} />
       <motion.section className="relative flex h-full w-full max-w-md flex-col rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m" aria-label={`It was the ${animal.name}`} {...drawerUpMotion}>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-l pb-s pt-l">
