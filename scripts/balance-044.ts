@@ -17,7 +17,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameAtTimeout, newAnimalRound, newTrail,
+  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameIt, newAnimalRound, newTrail,
   pickSuspectSet, reportOf, rewardToy, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
   type AnimalRound, type AnimalRules, type PhaseReport,
 } from '../src/clueGame/animalBoard';
@@ -37,7 +37,7 @@ const PLAYER_NOTES: Record<Player, string> = {
   careful: 'reasons from answers and notes, marks what they rule out, aims each move (fills useful orders, clears next to marked tiles)',
   reader: 'reasons and marks like careful, but moves at random: what board planning is worth',
   guesser: 'marks four suspects at random at the start, then aims at them: the blind floor',
-  random: 'random moves, never marks (0 finds by rule); names at random when moves run out',
+  random: 'random moves, never marks (finds only by naming); names at random when moves run out (053: a right name finds it)',
   oracle: 'diagnostic: knows the mystery, marks the look-alikes at once, aims like careful: is a finish possible in the moves?',
 };
 
@@ -136,7 +136,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
     const left = reasons || player === 'oracle'
       ? stillPossible(book, state, knows)
       : state.suspects.filter(id => !state.released.includes(id));
-    state = nameAtTimeout(state, left[Math.floor(rng() * left.length)] ?? null);
+    state = nameIt(state, left[Math.floor(rng() * left.length)] ?? null);
   }
   return { state, identifiedAt, toys, stuck, blocked, walked, rewards, toyReleases };
 }
@@ -192,6 +192,8 @@ const pct = (n: number, of: number) => (of ? `${Math.round((100 * n) / of)}%` : 
 /** A 95% interval half-width, in percentage points. */
 const pm = (n: number, of: number) => { const p = n / of; return `±${Math.round(196 * Math.sqrt((p * (1 - p)) / of))}`; };
 const avg = (values: number[]) => (values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : '-');
+/** The round reached its last move undecided (then named right, wrong, or skipped). */
+const ranOut = (state: AnimalRound) => state.log.some(entry => entry.kind === 'out-of-moves');
 
 async function main() {
   const rounds = Number(arg('rounds', '400'));
@@ -222,7 +224,7 @@ async function main() {
   if (explain === null) {
     console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}${rules.toyScout ? ', toy scouting' : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
-    console.log('\n| Place | Player | Found | ★★★ | Escaped | Out of moves | Named right at timeout | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail |');
+    console.log('\n| Place | Player | Found | ★★★ | Escaped | Ran out of moves | Named right at timeout (a find, 053) | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail |');
     console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   }
 
@@ -279,7 +281,7 @@ async function main() {
         `${pct(found.length, n)} ${pm(found.length, n)}`,
         pct(count(r => starsFor(r.state) === 3), n),
         pct(count(r => r.state.lostBy === 'escaped'), n),
-        pct(count(r => r.state.lostBy === 'out-of-moves'), n),
+        pct(count(r => ranOut(r.state)), n),
         pct(count(r => r.state.named?.correct === true), n),
         THINKERS.includes(player) ? pct(count(r => r.identifiedAt !== null), n) : '-',
         avg(found.map(r => r.state.movesLeft)),
@@ -292,7 +294,7 @@ async function main() {
         avg(results.map(r => r.walked)),
         avg(results.map(r => r.blocked)),
         avg(results.map(r => r.rewards)),
-        THINKERS.includes(player) ? pct(count(r => r.identifiedAt !== null && r.state.lostBy === 'out-of-moves'), n) : '-',
+        THINKERS.includes(player) ? pct(count(r => r.identifiedAt !== null && ranOut(r.state)), n) : '-',
         `${pct(finished, trails)} of ${trails}`,
         trails ? (trailFinds / trails).toFixed(1) : '-',
       ].join(' | ') + (count(r => r.stuck) ? ` (stuck ${count(r => r.stuck)})` : '') + ' |');

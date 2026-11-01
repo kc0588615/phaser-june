@@ -73,7 +73,7 @@ async function main() {
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v3', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v4', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
     // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
     await page('Page.addScriptToEvaluateOnNewDocument', { source: `
       window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
@@ -477,11 +477,31 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, 200));
       });
       const trailBefore = start.trail;
-      // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then a name); others play carefully.
+      // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then names it: a find); others play carefully.
       const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : 'careful';
       let state = start;
       let moves = 0;
       let pinsBefore = pins;
+      // Plan 053: the field guide's "It's this one!" asks first; Back leaves the round playing.
+      if (mode === 'idle') {
+        const asked = await evaluate(async id => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          await window.__holdPill(id);
+          const dialog = document.querySelector('[role=dialog]');
+          dialog?.querySelector('button[data-name-it]')?.click();
+          await wait(200);
+          const confirm = document.querySelector('[role=dialog] [data-name-confirm]');
+          const text = confirm?.innerText ?? '';
+          [...(confirm?.querySelectorAll('button') ?? [])].find(button => button.textContent === 'Back')?.click();
+          await wait(200);
+          const back = Boolean(document.querySelector('[role=dialog] button[data-name-it]'));
+          [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
+          await wait(200);
+          return { button: Boolean(dialog), text, back, status: window.__cc.clue().status };
+        }, start.suspects.find(id => id !== start.mysteryId));
+        check(`round ${n}: "It's this one!" asks first, warning it's one try`, /One try only/.test(asked.text), JSON.stringify(asked));
+        check(`round ${n}: Back keeps the round playing, nobody named`, asked.back && asked.status === 'playing', JSON.stringify(asked));
+      }
       while (state.status === 'playing' && moves < MAX_MOVES) {
         // Rule out, through the real grid (tap the name pill, then slide it right): careful, every suspect the
         // answers and notes so far rule out; reckless, the mystery itself; idle, nobody.
@@ -674,7 +694,7 @@ async function main() {
           await screenshot('02c-notes.png');
         }
       }
-      // Out of moves: the round is lost; naming one only fills the journal.
+      // Out of moves: a last name. Right finds it (one star, no heart lost).
       if (state.status === 'out-of-moves') {
         await screenshot(`03-round-${n}-out-of-moves.png`);
         const pickName = names.get(mode === 'idle' ? state.mysteryId : state.possible[0]);
@@ -687,17 +707,18 @@ async function main() {
         }, pickName);
         check(`round ${n}: out of moves, the name sheet shows`, named.sheet);
         state = named.clue;
-        check(`round ${n}: out of moves loses the round, even named right`, state.status === 'lost' && state.lostBy === 'out-of-moves', `${state.status} ${state.lostBy}`);
+        const right = state.logTail.some(entry => entry.kind === 'named' && entry.correct);
+        check(`round ${n}: out of moves, a right name finds it, with one star`, !right || (state.status === 'found' && state.end?.stars === 1), `${state.status} ${state.end?.stars}`);
+        check(`round ${n}: out of moves, a wrong name loses the round`, right || (state.status === 'lost' && state.lostBy === 'wrong-name'), `${state.status} ${state.lostBy}`);
       }
       const end = state.end;
       check(`round ${n}: the round ends`, Boolean(end), state.status);
       if (mode === 'reckless') check(`round ${n}: releasing the ruled-out mystery loses the round (it escapes)`, state.status === 'lost' && state.lostBy === 'escaped', `${state.status} ${state.lostBy}`);
-      if (mode === 'idle') check(`round ${n}: with nobody ruled out, nothing leaves and the moves run out`, state.released.length === 0 && state.lostBy === 'out-of-moves', JSON.stringify({ released: state.released, lostBy: state.lostBy }));
+      if (mode === 'idle') check(`round ${n}: with nobody ruled out, nothing leaves, the moves run out, and naming it right finds it`, state.released.length === 0 && state.movesLeft === 0 && state.status === 'found', JSON.stringify({ released: state.released, status: state.status }));
       check(`round ${n}: the trail moves on: a find, or one heart less`, end?.outcome === 'found'
         ? state.trail.finds === trailBefore.finds + 1 && state.trail.hearts === trailBefore.hearts
         : state.trail.hearts === trailBefore.hearts - 1, JSON.stringify({ before: trailBefore, after: state.trail }));
-      const namedRight = state.logTail.some(entry => entry.kind === 'named' && entry.correct);
-      if (end?.outcome === 'found' || namedRight) journalFinds.add(start.mysteryId);
+      if (end?.outcome === 'found') journalFinds.add(start.mysteryId);
       // The mystery's row rises into the Camera row, which becomes that animal, before the card opens.
       await waitFor(() => document.querySelector('table tr[data-mystery][data-match]') && true, 'the mystery rising into the Camera row', 10_000);
       await screenshot(`04-round-${n}-landed.png`);
@@ -769,7 +790,7 @@ async function main() {
       await new Promise(resolve => setTimeout(resolve, 1200));
       return document.querySelector('[role=dialog] #journal-title')?.nextElementSibling?.textContent ?? '';
     });
-    check('the journal counts the animals found (and named right when moves ran out)', journal.startsWith(`${journalFinds.size} of`), `${journal} (expected ${journalFinds.size})`);
+    check('the journal counts the animals found (by release or by name)', journal.startsWith(`${journalFinds.size} of`), `${journal} (expected ${journalFinds.size})`);
     await screenshot('05-journal.png');
 
     // 4. Resume: a game without ?seed= is saved for the tab; a reload picks it up (marks, pencil, released animals, gems, toys).

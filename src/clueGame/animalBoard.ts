@@ -8,7 +8,8 @@
 // Plan 047 (behind `wander`): marked suspects step toward the edge each move by how
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
-// escapes. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
+// escapes. Plan 053: the player may name the mystery once a round, any time (even out
+// of moves): right is a find (one star), wrong loses the round. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
 // by the balance bot (scripts/balance-044.ts) and, later, the game.
 import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
@@ -53,7 +54,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '047-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true,
+  version: '053-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -222,7 +223,7 @@ export const rewardToy = (heading: Heading): Special => (heading === 'up' || hea
 
 // ---- A round ----
 
-/** 'out-of-moves': the moves ran out with look-alikes left; the player may name the animal (journal only), then it's lost. */
+/** 'out-of-moves': the moves ran out with look-alikes left; the player may still name the animal (a right name finds it), else it's lost. */
 export type AnimalStatus = 'playing' | 'out-of-moves' | 'found' | 'lost';
 
 /** `seen`: per suspect, whether its answer shows (always, unless the rules scout). */
@@ -255,8 +256,9 @@ export interface AnimalRound {
   movesLeft: number;
   movesUsed: number;
   status: AnimalStatus;
-  lostBy: 'escaped' | 'out-of-moves' | null;
-  /** The name given when moves ran out (journal only). */
+  /** 'wrong-name': the player named a look-alike (plan 053). */
+  lostBy: 'escaped' | 'out-of-moves' | 'wrong-name' | null;
+  /** The player's one name this round (plan 053): right finds the mystery, wrong loses the round. */
   named: { id: number; correct: boolean } | null;
   log: AnimalLogEntry[];
 }
@@ -382,11 +384,21 @@ export function mark(state: AnimalRound, id: number, ruledOut: boolean, heading?
   return { ...state, marked: ruledOut ? [...marked, id] : marked, headings };
 }
 
-/** Out of moves: name an animal still on the board. A right name goes in the journal; the round is lost either way. */
-export function nameAtTimeout(state: AnimalRound, id: number | null): AnimalRound {
-  if (state.status !== 'out-of-moves') return state;
-  const named = id !== null && state.suspects.includes(id) && !state.released.includes(id) ? { id, correct: id === state.mysteryId } : null;
-  return { ...state, status: 'lost', lostBy: 'out-of-moves', named, log: named ? [...state.log, { kind: 'named', ...named }] : state.log };
+/**
+ * Plan 053: name the mystery, once, any time the round is undecided (out of moves too). A right name finds it, a wrong
+ * one loses the round. Out of moves, `null` (skip) loses it. Ignored while a move's own end is pending (the mystery or
+ * every look-alike already gone, decided at `endOfMove`), so a name never overrides what the board did.
+ */
+export function nameIt(state: AnimalRound, id: number | null): AnimalRound {
+  if (state.status !== 'playing' && state.status !== 'out-of-moves') return state;
+  if (state.status === 'playing' && (id === null || state.released.includes(state.mysteryId) || state.released.length === state.suspects.length - 1)) return state;
+  if (id === null) return { ...state, status: 'lost', lostBy: 'out-of-moves' };
+  if (!state.suspects.includes(id) || state.released.includes(id)) return state;
+  const named = { id, correct: id === state.mysteryId };
+  const log = [...state.log, { kind: 'named' as const, ...named }];
+  return named.correct
+    ? { ...state, status: 'found', named, log: [...log, { kind: 'found', id }] }
+    : { ...state, status: 'lost', lostBy: 'wrong-name', named, log };
 }
 
 /**
@@ -400,17 +412,19 @@ export function stillPossible(book: Book, state: AnimalRound, knows: (tag: strin
     && state.notes.every(note => note.tags!.every(tag => animal(book, id).tags?.includes(tag))));
 }
 
+/** A find's stars by moves left; a find by name earns one (plan 053: a lucky early name mustn't pay like board play). */
 export function starsFor(state: AnimalRound): number {
   if (state.status !== 'found') return 0;
+  if (state.named) return 1;
   const [two, three] = state.rules.starMoves;
   return 1 + (state.movesLeft >= two ? 1 : 0) + (state.movesLeft >= three ? 1 : 0);
 }
 
-/** Points for a found round; `streak` is the finds in a row before this one. */
+/** Points for a found round; `streak` is the finds in a row before this one. A find by name earns nothing for moves left. */
 export function scoreRound(state: AnimalRound, streak: number): number {
   const p = state.rules.points;
   if (state.status !== 'found') return 0;
-  return starsFor(state) * p.star + state.movesLeft * p.moveLeft + Math.min(p.streakMax, streak * p.streakStep);
+  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep);
 }
 
 // ---- The trail ----

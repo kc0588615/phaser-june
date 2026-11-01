@@ -113,11 +113,15 @@ _Avoid_: drift, roam
 Releasing the mystery animal, by a clear or by its wander: the round is lost.
 
 **Find**:
-Releasing every look-alike, so the last suspect left is the mystery animal: the round is won.
+Releasing every look-alike, so the last suspect left is the mystery animal, or naming it right: the round is won.
 _Avoid_: solve, catch, guess
 
+**Name it**:
+The player's one try per round to say which suspect is the mystery animal ("It's this one!" in its field guide), any time, even out of moves. Right is a find worth one star; wrong loses the round.
+_Avoid_: guess (that's a pencil mark), call, accuse
+
 **Out of moves**:
-The moves ran out with more than one suspect left: the round is lost. The player may still name the animal, which counts only for the journal.
+The moves ran out with more than one suspect left. The player may still name the animal (a right name is a find); otherwise the round is lost.
 _Avoid_: forced guess, timeout
 
 ### Rewards and records

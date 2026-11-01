@@ -18,5 +18,6 @@ Plans 006–039 covered the expedition game and were deleted with it on 2026-09-
 | 050 | Ah-ha: explain wrong guesses and the camera's answers at round end, kid-word family tree, journal family patterns + exceptions, "met before" mark | High | M | 047-1 | Planned 2026-10-27; not started; owner go per step |
 | 051 | Website at critterconnect.org: front page + /teachers in the cc theme, a static build (src/site) served by the Hetzner Caddy | High | M | owner answers (H2, done) | Planned 2026-10-28 (agent/cc-landing-plan, #34): plan + build brief, PR for review |
 | 052 | Round end on the board: the card covers the gem board only, the live grid turns into the replay, no tabs, field notes as the card body | Med | S | none | Built 2026-10-31 (agent/round-end-on-board), PR for review |
+| 053 | Name it: one name a round, any time (out of moves too); right is a find worth ★, wrong loses the round | High | S | none | Owner decision 2026-10-31; built (rules 053-0), uncommitted |
 
 ## Dependency notes

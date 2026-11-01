@@ -59,7 +59,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
     case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one caught on camera. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
-    case 'named': return <span>You named the {nameOf(entry.id)}.</span>;
+    case 'named': return entry.correct ? <span>You named the {nameOf(entry.id)}.</span> : <span className="font-medium text-error">You named the {nameOf(entry.id)}. It wasn&apos;t the one caught on camera!</span>;
   }
 }
 
@@ -275,14 +275,14 @@ export function AnimalGame() {
   useEffect(() => { setSheet(null); setSelected(null); setHint(null); setBoardBusy(false); }, [roundNo]);
   useEffect(() => { EventBus.emit('clue-board-select', { id: selected }); }, [selected, roundNo]);
 
-  // Record each finished round once in the journal: a find, or a right name when moves ran out.
+  // Record each finished round once in the journal: every find (by release or by name).
   const recorded = useRef<number | null>(null);
   const end = session?.end;
   useEffect(() => {
     if (!session || !end || recorded.current === session.roundNo || recordedRound === session.roundNo) return;
     recorded.current = session.roundNo;
     const { round: done } = session;
-    if (end.outcome !== 'found' && !done.named?.correct) return;
+    if (end.outcome !== 'found') return;
     const species = speciesById.get(done.mysteryId);
     if (!species) return;
     const point = place ? sightingPoint(place, species.id) : null;
@@ -308,7 +308,7 @@ export function AnimalGame() {
     let called = false;
     for (const entry of log.slice(heard.current.logLength)) {
       if (entry.kind === 'found') sfx.solve();
-      if (entry.kind === 'escaped') sfx.wrong();
+      if (entry.kind === 'escaped' || (entry.kind === 'named' && !entry.correct)) sfx.wrong();
       const guess = entry.kind === 'scouted' ? guesses[`${entry.id}:${entry.tag}`] : undefined;
       if (entry.kind === 'scouted' && guess) {
         guessed.push(`${entry.id}:${entry.tag}`);
@@ -491,7 +491,7 @@ export function AnimalGame() {
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
-        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardBox.top} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onShow={onShowGuide} onClose={() => setSheet(null)} />}
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardBox.top} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onName={() => { name(picked.id); setSheet(null); }} onShow={onShowGuide} onClose={() => setSheet(null)} />}
         {!wide && round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu

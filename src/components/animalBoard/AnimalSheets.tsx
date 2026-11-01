@@ -1,10 +1,10 @@
 // The sheets over the animal board (plan 044): a suspect's field guide (with Rule
-// out), the witness notes, the menu, out of moves (name it for the journal), the
+// out, and plan 053's one name), the witness notes, the menu, out of moves (a last name), the
 // round's end over the board (and the trail's; the grid above replays the evidence, plan 052), and how to play (with a worked
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
+import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
 import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
@@ -20,7 +20,7 @@ import { backdropMotion, dialogMotion, drawerUpMotion, SMALL, useOverlayPresence
 import { currentTheme, setTheme } from '@/lib/theme';
 import { SuspectPhoto, TrapCard } from './AnimalCard';
 
-export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v3';
+export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v4';
 
 /** A section label inside a sheet (cc Menu label: XS, medium). */
 const LABEL = 'm-0 text-xs font-medium uppercase text-neutral-7';
@@ -40,7 +40,7 @@ const GUIDE_SWIPE_HINT_KEY = 'critter-connect:guide-swipe-hint:v1';
 const SIGN_PAGE_MS = 5000;
 const CHIP = 'rounded-xs bg-neutral-3 px-xs text-xs font-medium text-neutral-8';
 
-export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onShow, onClose }: {
+export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onName, onShow, onClose }: {
   animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; round: AnimalRound;
   /** The board's top edge (px from the viewport top): the drawer reaches up to it. */
   top: number;
@@ -48,6 +48,8 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
   /** Pencil a guess for a hidden answer (null clears it), right here while reading the guide. */
   onPencil: (tag: string, value: 'yes' | 'no' | null) => void;
   onMark: (ruledOut: boolean) => void;
+  /** Plan 053: name this animal as the one caught on camera (once a round; right finds it, wrong loses the round). */
+  onName: () => void;
   /** Show another animal's guide: arrows, ←/→, a swipe (wrapping 5 -> 1), or its number. */
   onShow: (id: number) => void;
   onClose: () => void;
@@ -86,6 +88,9 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
   const marked = round.marked.includes(animal.id);
   const signs = useMemo(() => signsOf(animal.tags), [animal.tags]);
   const canMark = round.status === 'playing' && !released;
+  // Naming asks twice: one try, and a wrong one loses the round. A new animal's guide, or one ruled out from the grid, starts unasked.
+  const [confirming, setConfirming] = useState(false);
+  useEffect(() => setConfirming(false), [animal.id, marked]);
   const isSeen = (i: number) => round.orders[i].seen[index] || round.status !== 'playing';
   const guides = GUIDE.flatMap(([key, label]) => {
     const lines = animal.guide[key].filter(line => !line.tags.some(tag => asked.has(prefixOf(tag))));
@@ -136,12 +141,29 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       onClose={onClose}
       modeless
       top={top}
-      footer={canMark ? (
-        <button type="button" onClick={() => { onMark(!marked); onClose(); }} className={`btn flex-1 ${marked ? 'btn-outline' : 'btn-danger'}`}>
-          {!marked && <Ban className="h-5 w-5" aria-hidden="true" />}
-          {marked ? 'Undo: not ruled out' : 'Rule out'}
-        </button>
-      ) : undefined}
+      footer={!canMark ? undefined : confirming ? (
+        <div className="flex flex-1 flex-col gap-xs" data-name-confirm>
+          <p className="m-0 text-s text-neutral-8" role="status"><b className="font-medium text-neutral-10">One try only.</b> Right, and you find it (★). Wrong, and the round is lost.</p>
+          <div className="flex gap-xs">
+            {/* Focus lands here: the button that opened the ask is gone. */}
+            <button type="button" onClick={() => setConfirming(false)} className="btn btn-outline flex-1" autoFocus>Back</button>
+            <button type="button" onClick={onName} className="btn btn-primary flex-1">Yes, it&apos;s this one</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <button type="button" onClick={() => { onMark(!marked); onClose(); }} className={`btn flex-1 ${marked ? 'btn-outline' : 'btn-danger'}`}>
+            {!marked && <Ban className="h-5 w-5" aria-hidden="true" />}
+            {marked ? 'Undo: not ruled out' : 'Rule out'}
+          </button>
+          {!marked && (
+            <button type="button" onClick={() => setConfirming(true)} className="btn btn-primary flex-1" data-name-it>
+              <Camera className="h-5 w-5" aria-hidden="true" />
+              It&apos;s this one!
+            </button>
+          )}
+        </>
+      )}
     >
       {marked && !released && (
         <p className={`${NOTICE} mb-s bg-error-transparent`} role="status">
@@ -436,7 +458,7 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-s bg-error-transparent text-error" aria-hidden="true"><HeartCrack className="h-6 w-6" /></span>
           <div>
             <h2 className="m-0 text-m font-medium">Out of moves!</h2>
-            <p className="m-0 mt-xxs text-s text-neutral-7">The round is lost, and so is a heart. <b className="font-medium text-neutral-10">Which one was it?</b> A right name still goes in your journal.</p>
+            <p className="m-0 mt-xxs text-s text-neutral-7"><b className="font-medium text-neutral-10">Which one was it?</b> Name it right and you find it (★). Wrong, or skip, and you lose a heart.</p>
           </div>
         </div>
         <ul className="m-0 mt-m flex list-none flex-col gap-xs p-0" aria-label="Animals still on the board">
@@ -473,7 +495,7 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
     return guess ? [(guess === 'yes') === order.row[i]] : [];
   }));
   const called = guesses.filter(Boolean).length;
-  const kicker = found ? 'Found it!' : end.lostBy === 'escaped' ? 'It escaped!' : 'Out of moves';
+  const kicker = found ? (round.named ? 'Named it!' : 'Found it!') : end.lostBy === 'escaped' ? 'It escaped!' : end.lostBy === 'wrong-name' ? 'Wrong animal' : 'Out of moves';
   // By its number on the board and in the grid: the camera's animal was one of the five all along.
   const lead = `The camera saw #${round.suspects.indexOf(round.mysteryId) + 1}, the`;
   const notes = [...animal.notes, ...animal.revealNotes];
@@ -515,7 +537,8 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
                 {found && (
                   <span className="flex items-baseline gap-xs whitespace-nowrap">
                     <motion.span className="font-data text-s font-heavy text-color-1" aria-label={`${end.points} points`} {...pop(0.5 + end.stars * 0.18)}>+{end.points}</motion.span>
-                    <span className="text-xs text-neutral-7" aria-label={`${round.movesLeft} of ${round.rules.moves} moves to spare`}><b className="font-data text-s font-heavy text-neutral-10">{round.movesLeft}/{round.rules.moves}</b> moves</span>
+                    {/* A find by name earns nothing for moves left (plan 053), so it shows none. */}
+                    {!round.named && <span className="text-xs text-neutral-7" aria-label={`${round.movesLeft} of ${round.rules.moves} moves to spare`}><b className="font-data text-s font-heavy text-neutral-10">{round.movesLeft}/{round.rules.moves}</b> moves</span>}
                   </span>
                 )}
               </p>
@@ -531,7 +554,7 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
           {!found && (
             <p className={`${NOTICE} bg-error-transparent`}>
               <HeartCrack className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
-              <span>You lost a heart.{round.named && ` You named the ${nameOf(round.named.id)}: ${round.named.correct ? 'right! It goes in your journal.' : 'not this time.'}`}</span>
+              <span>You lost a heart.{round.named && ` You named the ${nameOf(round.named.id)}.`}</span>
             </p>
           )}
           {/* The key to the replay in the grid above. */}
@@ -637,6 +660,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold a <b>?</b> to <b>highlight</b> it: that gem glows next to the animal&apos;s card on the board until you scout it. Hold a gem up top and every gem of it glows until its answer comes in. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
     <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</>,
     <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
+    <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round.</>,
     <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,
     <>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</>,
   ];

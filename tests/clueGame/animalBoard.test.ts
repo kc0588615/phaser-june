@@ -11,8 +11,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ANIMAL_RULES, applyPhase, dealClues, endOfMove, fullTable, mark, nameAtTimeout, newAnimalRound, newTrail, pickSuspectSet,
-  stillPossible, tellsApart, tileCells, trailAfter, trailFinished, witnessNotes, type AnimalRound,
+  ANIMAL_RULES, applyPhase, dealClues, endOfMove, fullTable, mark, nameIt, newAnimalRound, newTrail, pickSuspectSet,
+  scoreRound, starsFor, stillPossible, tellsApart, tileCells, trailAfter, trailFinished, witnessNotes, type AnimalRound,
 } from '@/clueGame/animalBoard';
 import { makeBook, poolFor } from '@/clueGame/questionMatch';
 import { animalsFromProfiles } from '@/clueGame/questionMatchContent';
@@ -126,14 +126,27 @@ test('releasing the mystery loses the round, even in the clear that releases eve
   assert.ok(trail.over && !trailFinished(ANIMAL_RULES, trail));
 });
 
-test('out of moves, a right name goes in the journal but the round is lost', () => {
+test('out of moves, a right name finds it with one star', () => {
   let state = { ...round('Aardvark'), movesLeft: 1 };
   state = touch(state, []);
   state = endOfMove(state);
   assert.equal(state.status, 'out-of-moves');
-  state = nameAtTimeout(state, id('Aardvark'));
-  assert.equal(state.status, 'lost');
+  state = nameIt(state, id('Aardvark'));
+  assert.equal(state.status, 'found');
   assert.deepEqual(state.named, { id: id('Aardvark'), correct: true });
+  assert.equal(starsFor(state), 1);
+});
+
+test('one name any time: right finds (one star, no points for moves left), wrong loses, and a second name changes nothing', () => {
+  const right = nameIt(round('Aardvark'), id('Aardvark'));
+  assert.equal(right.status, 'found');
+  assert.equal(starsFor(right), 1);
+  assert.equal(scoreRound(right, 0), ANIMAL_RULES.points.star);
+  const wrong = nameIt(round('Aardvark'), id('Okapi'));
+  assert.equal(wrong.status, 'lost');
+  assert.equal(wrong.lostBy, 'wrong-name');
+  assert.equal(nameIt(wrong, id('Aardvark')), wrong);
+  assert.equal(nameIt(round('Aardvark'), null).status, 'playing');
 });
 
 test('every place has full-table questions for its sets', () => {

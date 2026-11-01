@@ -2,7 +2,7 @@
 // streak. A pure reducer over the round rules in animalBoard.ts; the page owns the
 // RNG (it deals each round) and the board (it reports clears and releases).
 import {
-  applyPhase, endOfMove, mark, nameAtTimeout, newTrail, scoreRound, starsFor, stillPossible, trailAfter, walkOff,
+  applyPhase, endOfMove, mark, nameIt, newTrail, scoreRound, starsFor, stillPossible, trailAfter, walkOff,
   type AnimalRound, type Heading, type PhaseReport, type Trail,
 } from '@/clueGame/animalBoard';
 import type { GemType } from '@/game/constants';
@@ -51,6 +51,7 @@ export type AnimalAction =
   | { type: 'walked'; id: number }
   /** `heading`: the way it walks once ruled out (plan 047). */
   | { type: 'mark'; id: number; ruledOut: boolean; heading?: Heading }
+  /** Plan 053: name the mystery (once; any time, or out of moves). `null`: skip, out of moves only. */
   | { type: 'name'; id: number | null }
   | { type: 'pencil'; id: number; tag: string; value: 'yes' | 'no' | null }
   /** Toggle a cell's highlight (`id` null: the question's gem, its whole column). */
@@ -100,7 +101,7 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
     case 'mark':
       return advance(session, mark(round, action.id, action.ruledOut, action.heading));
     case 'name':
-      return advance(session, nameAtTimeout(round, action.id));
+      return advance(session, nameIt(round, action.id));
     case 'pencil': {
       if (round.status !== 'playing' || round.marked.includes(action.id)) return session;
       const pencil = { ...session.pencil };

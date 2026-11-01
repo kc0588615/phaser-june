@@ -8,6 +8,8 @@
 
 > **Rules 047-1 (2026-10-27) change §2.3–2.4:** *toy scouting*: a line or blast gem going off in the move's own clear also shows its own color to every unmarked animal its clear reaches (a color gem already shows the color it clears). Bot (1000 rounds, Africa/Asia): careful 95/91% -> 96/92%, novice 92/86% -> 93/89%, about 0.5 more answers seen a round; star lines unchanged. Details: `plans/045-scout-the-suspects.md`.
 
+> **Rules 053-0 (2026-10-31) change §2.6 and §3:** the player may **name the mystery once a round, any time**, out of moves too ("It's this one!" in its field guide, asked twice). A right name is a find worth ★ (50 points plus the streak, nothing for moves left); a wrong one loses the round and a heart. So a blind name wins one time in five, the same floor as marking at random, and the random player now finds about one round in five (by naming at the end). Owner decision; plan `plans/053-name-it.md`.
+
 ## Abstract
 
 Critter Connect is a phone-first match-3 game for grades 6 to 12 about real animals. In the animal board design, a mystery animal hides among five look-alike suspects that sit on the game board as photo tiles. Matching picture gems fills four clue orders; a full order answers one yes/no question about the mystery. The answers never eliminate anyone on their own. The player compares each suspect's own traits with the answers, marks the ones that cannot be the mystery, and then clears gems next to those tiles to release them from the board. Releasing every look-alike finds the mystery; marking the mystery by mistake lets it escape and loses the round. Earlier versions let the game do the reasoning and could be won by matching at random 70 to 90 percent of the time. In this design a simulated player who never reasons finds nothing, a player who marks at random wins about one round in five, and a careful player wins 95 to 97 percent. The paper explains the rules in full, describes strategies at the level of individual moves and whole sessions, and weighs the design's educational strengths against its risks.
@@ -81,7 +83,7 @@ Before committing a swap, the player can tap a gem: the board outlines in amber 
 - **Escaped:** the mystery was ruled out and released, or walked off. Lost.
 
 With wander, the round is decided once a move, its cascades and its steps have all settled: an escape beats a find, which beats running out of moves. Steps still happen on move 30.
-- **Out of moves:** after 30 moves with look-alikes still on the board, the round is lost. The player may still name the animal; a right name is recorded in the journal, but it saves no heart and earns no star. (A blind guess among five wins one time in five no matter what happens on the board, so naming cannot be what wins a round.)
+- **Out of moves:** after 30 moves with look-alikes still on the board, the round is lost unless the player names the animal right (053-0: a find worth ★; a wrong name or a skip loses the round).
 
 A find earns stars by the moves left: ★ for a find, ★★ with 6 or more moves left, ★★★ with 13 or more. Points are 50 per star, 10 per move left, and a streak bonus of 10 per find in a row (up to 100).
 
@@ -188,7 +190,7 @@ Stars reward finding the mystery with moves to spare (13 or more for ★★★).
 
 ### 4.8 Managing the trail
 
-Three hearts across five rounds allow two losses. With a heart to spare, a player can afford to finish a round slightly late; with one heart left, every mark should be certain. If the moves run out, name your best candidate: a right name still goes in the journal.
+Three hearts across five rounds allow two losses. With a heart to spare, a player can afford to finish a round slightly late; with one heart left, every mark should be certain. Naming is one try a round: right is a find, but only ★, so releasing earns more when there are moves for it. If the moves run out, name your best candidate: a right name still saves the heart.
 
 ### 4.9 Common mistakes
 
