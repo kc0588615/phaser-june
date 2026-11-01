@@ -412,6 +412,20 @@ export function stillPossible(book: Book, state: AnimalRound, knows: (tag: strin
     && state.notes.every(note => note.tags!.every(tag => animal(book, id).tags?.includes(tag))));
 }
 
+/**
+ * Auto rule-out (opt-in setting): whether a suspect's own shown answer differs from a shown camera answer. Reads only
+ * cells both showing, never hidden ones or notes; the mystery never mismatches.
+ */
+export function shownMismatch(state: AnimalRound, id: number): boolean {
+  const i = state.suspects.indexOf(id);
+  return i >= 0 && state.orders.some(order => order.answer !== null && order.seen[i] && order.row[i] !== (order.answer === 'yes'));
+}
+
+/** Auto rule-out: the unmarked suspects on the board with a shown mismatch. */
+export function shownMismatches(state: AnimalRound): number[] {
+  return state.suspects.filter(id => !state.marked.includes(id) && !state.released.includes(id) && shownMismatch(state, id));
+}
+
 /** A find's stars by moves left; a find by name earns one (plan 053: a lucky early name mustn't pay like board play). */
 export function starsFor(state: AnimalRound): number {
   if (state.status !== 'found') return 0;

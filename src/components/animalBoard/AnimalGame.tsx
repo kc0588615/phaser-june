@@ -192,7 +192,7 @@ function StatusTicker({ now, nowKey, nowKind, facts, idle }: { now: ReactNode; n
 }
 
 export function AnimalGame() {
-  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight } = useAnimalSession();
+  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut } = useAnimalSession();
   const { journal, records, record } = useJournal();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -392,9 +392,10 @@ export function AnimalGame() {
   }, [pencil, roundNo, nameOf, say]);
 
   const rule = useCallback((id: number, ruledOut: boolean) => {
-    markSuspect(id, ruledOut);
+    const changed = markSuspect(id, ruledOut);
     setSelected(null);
-    say(ruledOut ? `You ruled out the ${nameOf(id)}. It will wander off the board, or clear a gem next to its card to release it now.` : `The ${nameOf(id)} is back in.`);
+    say(ruledOut ? `You ruled out the ${nameOf(id)}. It will wander off the board, or clear a gem next to its card to release it now.`
+      : changed ? `The ${nameOf(id)} is back in.` : `Auto rule-out is on: the ${nameOf(id)} has an answer that doesn't match the camera's, so it stays out.`);
   }, [markSuspect, nameOf, say]);
 
   const latest = visibleLog.at(-1);
@@ -506,6 +507,8 @@ export function AnimalGame() {
             stats={trail ? [['Animal', `${inTrail} of ${rules.trailRounds}`], ['Trail', session?.trailNo ?? 1], ['Score', session?.score ?? 0]] : null}
             soundOn={soundOn}
             onSound={toggleSound}
+            autoRuleOut={autoRuleOut}
+            onAutoRuleOut={toggleAutoRuleOut}
             onJournal={() => { setSheet(null); setJournalOpen(true); }}
             onHelp={() => { setSheet(null); setHelpOpen(true); }}
             onClose={() => setSheet(null)}

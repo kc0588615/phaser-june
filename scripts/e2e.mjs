@@ -17,7 +17,7 @@ import { openPage, startBrowser } from './cdp.mjs';
 
 const BASE = (process.env.E2E_BASE_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const SEED = Number(process.env.E2E_SEED ?? 7);
-const ROUNDS = Number(process.env.E2E_ROUNDS ?? 3);
+const ROUNDS = Number(process.env.E2E_ROUNDS ?? 4);
 const MAX_MOVES = 45;
 
 const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-seed${SEED}`;
@@ -190,6 +190,7 @@ async function main() {
     let notesChecked = false;
     let markShot = false;
     let calledShot = false;
+    let autoBackChecked = false;
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const pins = await evaluate(() => window.__cc.state().pins);
@@ -477,8 +478,27 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, 200));
       });
       const trailBefore = start.trail;
-      // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then names it: a find); others play carefully.
-      const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : 'careful';
+      // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then names it: a find);
+      // round 4 turns on Auto rule-out and marks nothing itself; others play carefully.
+      const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : n === 4 ? 'auto' : 'careful';
+      // The menu's Auto rule-out switch (on for the auto round, off after it).
+      const autoSwitch = on => evaluate(async on => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        document.querySelector('button[aria-label="Menu"]')?.click();
+        await wait(250);
+        const button = [...document.querySelectorAll('[role=switch]')].find(b => b.textContent === 'Auto rule-out');
+        const before = button?.getAttribute('aria-checked') ?? null;
+        if (button && (before === 'true') !== on) button.click();
+        await wait(100);
+        const after = button?.getAttribute('aria-checked') ?? null;
+        [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+        await wait(250);
+        return { before, after };
+      }, on);
+      if (mode === 'auto') {
+        const toggled = await autoSwitch(true);
+        check(`round ${n}: Auto rule-out starts off and its menu switch turns it on`, toggled.before === 'false' && toggled.after === 'true', JSON.stringify(toggled));
+      }
       let state = start;
       let moves = 0;
       let pinsBefore = pins;
@@ -651,6 +671,26 @@ async function main() {
           return cell && cell.have === order.have && cell.answer === order.answer;
         }), JSON.stringify(result.orders));
         check(`round ${n} move ${moves}: during play the grid never points at a mismatch`, result.misses === 0, `${result.misses} cells`);
+        // Auto rule-out: after the move, every suspect whose shown answer differs from a shown camera answer is marked, and
+        // nobody else is (the player marked nobody); off, the game marks nobody.
+        const shownMiss = state.suspects.filter((id, i) => state.orders.some(order => order.answer && order.seen[i] && order.row[i] !== (order.answer === 'yes')));
+        if (mode === 'auto' && state.status === 'playing') check(`round ${n} move ${moves}: auto rule-out marks exactly the animals a shown answer rules out`, state.marked.slice().sort().join() === shownMiss.slice().sort().join(), JSON.stringify({ marked: state.marked, shownMiss }));
+        if (mode === 'auto') check(`round ${n} move ${moves}: auto rule-out never marks the mystery`, !state.marked.includes(state.mysteryId));
+        // Ruling an auto-marked animal back in: it stays out (it still doesn't match), and the game says why.
+        const back = state.marked.find(id => !state.released.includes(id));
+        if (mode === 'auto' && !autoBackChecked && state.status === 'playing' && back !== undefined) {
+          autoBackChecked = true;
+          const again = await evaluate(async id => {
+            const since = Date.now();
+            await window.__slidePill(id, 120);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const flicker = window.__cc.events(1e6).some(e => e.at >= since && e.name === 'clue-board-marks' && !e.payload.marked.includes(id));
+            return { marked: window.__cc.clue().marked.includes(id), flicker, said: document.body.innerText.includes('Auto rule-out is on') };
+          }, back);
+          check(`round ${n}: with Auto rule-out, an animal ruled back in stays out (never unmarked on the board) and the game says why`, again.marked && !again.flicker && again.said, JSON.stringify({ back, ...again }));
+          state = await evaluate(() => window.__cc.clue());
+        }
+        if (mode === 'idle') check(`round ${n} move ${moves}: with Auto rule-out off, the game marks nobody`, state.marked.length === 0, JSON.stringify(state.marked));
         // Plan 045: the move's own clear scouts exactly the hidden answers next to unmarked animals in the colors it
         // cleared there (cascades scout nothing), and a hidden answer is nowhere in the page.
         const seenKeys = clue => new Set(clue.orders.flatMap(order => clue.suspects.filter((_id, i) => order.seen[i]).map(id => `${id}:${order.tag}`)));
@@ -714,6 +754,12 @@ async function main() {
       const end = state.end;
       check(`round ${n}: the round ends`, Boolean(end), state.status);
       if (mode === 'reckless') check(`round ${n}: releasing the ruled-out mystery loses the round (it escapes)`, state.status === 'lost' && state.lostBy === 'escaped', `${state.status} ${state.lostBy}`);
+      if (mode === 'auto') check(`round ${n}: the rule-back-in check ran`, autoBackChecked);
+      if (mode === 'auto') {
+        check(`round ${n}: with Auto rule-out, the mystery never escapes`, state.lostBy !== 'escaped', `${state.status} ${state.lostBy}`);
+        const toggled = await autoSwitch(false);
+        check(`round ${n}: the Auto rule-out switch turns back off`, toggled.before === 'true' && toggled.after === 'false', JSON.stringify(toggled));
+      }
       if (mode === 'idle') check(`round ${n}: with nobody ruled out, nothing leaves, the moves run out, and naming it right finds it`, state.released.length === 0 && state.movesLeft === 0 && state.status === 'found', JSON.stringify({ released: state.released, status: state.status }));
       check(`round ${n}: the trail moves on: a find, or one heart less`, end?.outcome === 'found'
         ? state.trail.finds === trailBefore.finds + 1 && state.trail.hearts === trailBefore.hearts

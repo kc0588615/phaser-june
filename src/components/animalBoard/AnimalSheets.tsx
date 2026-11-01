@@ -401,12 +401,15 @@ function SwitchRow({ label, on, onToggle }: { label: string; on: boolean; onTogg
   );
 }
 
-/** The menu behind the grid's corner button: the place and trail, then the globe, the journal, how to play, sound and dark mode. */
-export function GameMenu({ title, stats, soundOn, onSound, onJournal, onHelp, onClose }: {
+/** The menu behind the grid's corner button: the place and trail, then the globe, the journal, how to play, sound, auto rule-out and dark mode. */
+export function GameMenu({ title, stats, soundOn, onSound, autoRuleOut, onAutoRuleOut, onJournal, onHelp, onClose }: {
   title: string;
   /** Where the trail stands ([label, value]); null while loading. */
   stats: Array<[string, string | number]> | null;
-  soundOn: boolean; onSound: () => void; onJournal: () => void; onHelp: () => void; onClose: () => void;
+  soundOn: boolean; onSound: () => void;
+  /** Opt-in: the game rules out animals whose shown answer doesn't match the camera's. */
+  autoRuleOut: boolean; onAutoRuleOut: () => void;
+  onJournal: () => void; onHelp: () => void; onClose: () => void;
 }) {
   // The menu only mounts after a tap, so reading <html> here can't mismatch the server render.
   const [dark, setDark] = useState(() => currentTheme() === 'dark');
@@ -440,6 +443,7 @@ export function GameMenu({ title, stats, soundOn, onSound, onJournal, onHelp, on
       </nav>
       <ul className={`${GROUP} mt-s`} aria-label="Settings">
         <SwitchRow label="Sound" on={soundOn} onToggle={onSound} />
+        <SwitchRow label="Auto rule-out" on={autoRuleOut} onToggle={onAutoRuleOut} />
         <SwitchRow label="Dark mode" on={dark} onToggle={toggleDark} />
         {canFull && <SwitchRow label="Full screen" on={full} onToggle={toggleFull} />}
       </ul>
@@ -659,7 +663,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
     <>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the On camera row. A full question answers it: <b>yes</b> or <b>no</b>.</>,
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold a <b>?</b> to <b>highlight</b> it: that gem glows next to the animal&apos;s card on the board until you scout it. Hold a gem up top and every gem of it glows until its answer comes in. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
     <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</>,
-    <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
+    <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it, unless Auto rule-out in the menu is on and it doesn&apos;t match). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
     <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round.</>,
     <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,
     <>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</>,

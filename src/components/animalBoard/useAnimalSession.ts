@@ -5,7 +5,7 @@
 // that walked off). The game in progress is saved for this tab between moves and resumed on the next load (savedGame.ts).
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
-  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, headingOf, newAnimalRound, newTrail, pickSuspectSet, tileCells, travelOf,
+  ANIMAL_RULES, BOARD_GEMS, PEBBLE_GEM, WITNESS_GEM, headingOf, newAnimalRound, newTrail, pickSuspectSet, shownMismatch, shownMismatches, tileCells, travelOf,
   type AnimalRound,
 } from '@/clueGame/animalBoard';
 import { animalDebugSummary, animalSessionReducer, liveHighlights } from '@/clueGame/animalSession';
@@ -22,6 +22,7 @@ import { EventBus, type BoardPin, type EventPayloads } from '@/game/EventBus';
 import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
+import { isAutoRuleOutOn, setAutoRuleOutOn } from './autoRuleOut';
 import { readSavedGame, writeSavedGame, type SavedBoard } from './savedGame';
 
 /** `?seed=N` replays a session: same trails, same boards (never saved or resumed). */
@@ -72,6 +73,11 @@ export function useAnimalSession() {
   /** A move is playing out on the board (its first clear came in, it hasn't settled): nothing is saved meanwhile. */
   const moving = useRef(false);
   const [sceneGeneration, setSceneGeneration] = useState(0);
+  const [autoRuleOut, setAutoRuleOut] = useState(false);
+  useEffect(() => setAutoRuleOut(isAutoRuleOutOn()), []);
+  const toggleAutoRuleOut = useCallback(() => { setAutoRuleOutOn(!autoRuleOut); setAutoRuleOut(!autoRuleOut); }, [autoRuleOut]);
+  const autoRef = useRef(autoRuleOut);
+  useEffect(() => { autoRef.current = autoRuleOut; }, [autoRuleOut]);
 
   /** A round: a random seed animal's set, a mystery uniformly among it (not a recent one), a board from the set alone. */
   const deal = useCallback((data: Content, roundNo: number, recent: readonly number[]): Dealt => {
@@ -246,15 +252,26 @@ export function useAnimalSession() {
 
   useEffect(() => setDebugClueSource(() => sessionRef.current ? animalDebugSummary(sessionRef.current, seed) : null), [seed]);
 
-  /** Ruling out fixes the way the card walks, from where it stands (an unmarked card stands where the last move left it). */
-  const markSuspect = useCallback((id: number, ruledOut: boolean) => {
+  /**
+   * Ruling out fixes the way the card walks, from where it stands (an unmarked card stands where the last move left it).
+   * False when nothing changed: with Auto rule-out on, an animal with a shown mismatch can't be ruled back in.
+   */
+  const markSuspect = useCallback((id: number, ruledOut: boolean): boolean => {
     const current = sessionRef.current;
     const animal = current?.book.byId.get(id);
-    if (!current || !animal || !ruledOut || !current.round.rules.wander) { dispatch({ type: 'mark', id, ruledOut }); return; }
+    if (!ruledOut && autoRef.current && current && shownMismatch(current.round, id)) return false;
+    if (!current || !animal || !ruledOut || !current.round.rules.wander) { dispatch({ type: 'mark', id, ruledOut }); return true; }
     const settled = boardRef.current?.roundNo === current.roundNo ? boardRef.current.pins?.find(([, other]) => other === id)?.[0] : undefined;
     const cell = settled ?? tileCells(GRID_COLS, GRID_ROWS, current.round.suspects.length, mulberry32(current.boardSeed))![current.round.suspects.indexOf(id)];
     dispatch({ type: 'mark', id, ruledOut, heading: headingOf(travelOf(animal), cell, GRID_COLS) });
+    return true;
   }, []);
+  // Auto rule-out (opt-in): between moves, mark every suspect whose shown answer differs from a shown camera answer.
+  // `board` is set on every settle (the session often isn't), so this runs once each move is done.
+  useEffect(() => {
+    if (!autoRuleOut || !session || moving.current || session.round.status !== 'playing') return;
+    for (const id of shownMismatches(session.round)) markSuspect(id, true);
+  }, [autoRuleOut, session, board, markSuspect]);
   const name = useCallback((id: number | null) => dispatch({ type: 'name', id }), []);
   const pencil = useCallback((id: number, tag: string, value: 'yes' | 'no' | null) => dispatch({ type: 'pencil', id, tag, value }), []);
   const highlight = useCallback((id: number | null, tag: string) => dispatch({ type: 'highlight', id, tag }), []);
@@ -271,6 +288,6 @@ export function useAnimalSession() {
     pool: content?.pool ?? null,
     place: content?.place ?? null,
     continent: content?.continent ?? null,
-    markSuspect, name, nextRound, pencil, highlight,
+    markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut,
   };
 }
