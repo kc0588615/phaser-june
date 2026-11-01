@@ -235,10 +235,10 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 data-notes={notes}
                 aria-label={`On camera: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}${unread > 0 ? `, ${unread} new` : ''}: open them` : 'No witness notes yet'}`}
                 data-unread={unread}
-                className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${unread > 0 ? 'ev-unread outline-notes' : notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
+                className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left outline outline-[1.5px] -outline-offset-[1.5px] ${unread > 0 ? 'bg-notes/20 outline-notes' : notes > 0 ? 'bg-notes/10 outline-notes/60' : 'outline-neutral-4'}`}
               >
-                {/* Keyed by the count, so the cell pulses once each time a note comes in. */}
-                {notes > 0 && <span key={notes} className="ev-pulse pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
+                {/* Keyed by the count, so the cell pulses for 3 s each time a note comes in. */}
+                {notes > 0 && <span key={notes} className="ev-unread pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
                 <span className="flex min-w-0 flex-col">
                   <span className="whitespace-nowrap text-s">On camera</span>

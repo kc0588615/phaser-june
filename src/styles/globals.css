@@ -529,10 +529,10 @@ body {
 @keyframes ev-highlight {
   50% { box-shadow: inset 0 0 0 2px #b27dff, 0 0 1px #b27dff, 0 0 3px rgb(178 125 255 / 40%); }
 }
-/* The Camera cell with a witness note not yet opened: purple, breathing until tapped. */
-.ev-unread { background-color: rgb(178 125 255 / 22%); animation: ev-unread 1.2s ease-in-out infinite; }
+/* The Camera cell when a witness note comes in: three purple pulses (3 s), then still. */
+.ev-unread { animation: ev-unread 1s ease-in-out 3; }
 @keyframes ev-unread {
-  50% { background-color: rgb(178 125 255 / 40%); box-shadow: 0 0 0 3px rgb(178 125 255 / 45%), 0 0 10px rgb(178 125 255 / 60%); }
+  50% { background-color: rgb(178 125 255 / 25%); box-shadow: 0 0 0 3px rgb(178 125 255 / 45%), 0 0 10px rgb(178 125 255 / 60%); }
 }
 .ev-glow { filter: drop-shadow(0 0 3px #b27dff) drop-shadow(0 0 6px rgb(178 125 255 / 70%)); animation: ev-glow 1.8s ease-in-out infinite; }
 @keyframes ev-glow {
