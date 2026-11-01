@@ -425,11 +425,7 @@ export function AnimalGame() {
 
   // The Camera cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
   const sideNotes = useRef<HTMLElement>(null);
-  // Notes opened so far this round; any past that make the Camera cell glow until it's tapped.
-  const [notesRead, setNotesRead] = useState({ roundNo: 0, count: 0 });
-  const unread = round && !end ? round.notes.length - (notesRead.roundNo === roundNo ? notesRead.count : 0) : 0;
   const openNotes = () => {
-    if (round && roundNo) setNotesRead({ roundNo, count: round.notes.length });
     if (!wide) { setSheet({ kind: 'notes' }); return; }
     const newest = sideNotes.current?.querySelector<HTMLElement>('li:last-child');
     if (!newest) return;
@@ -465,7 +461,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} unread={unread} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
