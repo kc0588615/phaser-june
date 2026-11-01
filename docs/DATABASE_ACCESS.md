@@ -172,10 +172,15 @@ Content builds, range imports and `REFRESH MATERIALIZED VIEW CONCURRENTLY`
 
 ## Agents on the Oracle VPS
 
-Agents on the Oracle box use PgBouncer (`db.critterconnect.org:6432`, TLS) with
-role `critter_dev` on database `phaser_june_dev`, a copy of prod without
-player identities. No tunnel, no `CLUE_USE_TUNNEL`, no `postgres` password
-there. E2e and content builds write to the copy, never to prod. Port 55432 and
+**Since 2026-11-01 (owner's decision), agents on the Oracle box use the live
+`phaser_june` as `postgres`, through PgBouncer (`db.critterconnect.org:6432`, TLS).**
+Writes reach real players, and e2e runs add rounds to `clue_match_solves`. Backups
+run nightly; take a fresh dump (`deploy/backup/pg-backup.sh` on the server) before a
+schema change or bulk write.
+
+The rest of this section describes the scrubbed copy they used before: role
+`critter_dev` on database `phaser_june_dev`, which still exists. It has no player
+identities, and its settings are kept on the Oracle box if agents go back to it. Port 55432 and
 the `postgres-tunnel` skill are WSL-only. How the VPS itself runs lives in its
 ops repo.
 
