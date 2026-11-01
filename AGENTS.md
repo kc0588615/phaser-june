@@ -26,7 +26,7 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 
 ## Two Machines (WSL + Oracle VPS)
 GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle VPS clone (`/srv/critter-ai/critter-connect`); only pushed work exists on the other machine.
-- Agent work: one issue (`ready-for-agent`) per branch `agent/<slug>`, cut from fresh `origin/main`; rebase on `origin/main` before the PR; push and open a PR via `gh`; the owner merges. GO comes only from the owner.
+- Agent work: one issue (`ready-for-agent`) per branch `agent/<slug>`, cut from fresh `origin/main`; rebase on `origin/main` before the PR; push and open a PR via `gh`; the owner merges, except that a mission on the VPS merges its own PR at its end once every check passes (owner, 2026-11-01). GO comes only from the owner.
 - One area per branch at a time (e.g. one agent in `src/game/` board rules) so PRs merge clean.
 - Push before you stop, WIP included (as a branch).
 - Owner only, from WSL: `npm run deploy` (ships `origin/main`) and the prod content build (`npm run content -- build`) after a content PR merges.
