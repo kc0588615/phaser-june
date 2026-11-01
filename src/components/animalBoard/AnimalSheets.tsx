@@ -1,9 +1,9 @@
 // The sheets over the animal board (plan 044): a suspect's field guide (with Rule
 // out), the witness notes, the menu, out of moves (name it for the journal), the
-// round's end (and the trail's, with the evidence grid replayed), and how to play (with a worked
+// round's end over the board (and the trail's; the grid above replays the evidence, plan 052), and how to play (with a worked
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowUpRight, Ban, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
 import { animate, AnimatePresence, motion, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
@@ -19,7 +19,6 @@ import { useEscapeKey } from '@/components/clueGame/useEscapeKey';
 import { backdropMotion, dialogMotion, drawerUpMotion, SMALL, useOverlayPresence } from '@/lib/motion';
 import { currentTheme, setTheme } from '@/lib/theme';
 import { SuspectPhoto, TrapCard } from './AnimalCard';
-import { EvidenceGrid } from './EvidenceGrid';
 
 export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v3';
 
@@ -456,14 +455,14 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
   );
 }
 
-const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
-
-export function RoundEndSheet({ session, animal, species, speciesById, nameOf, onNext }: {
-  session: AnimalSession; animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; nameOf: (id: number) => string; onNext: () => void;
+export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }: {
+  session: AnimalSession; animal: Animal; species: PoolSpecies | undefined;
+  /** The board's box (px, viewport): the card covers the board only, so the grid (above, or beside on desktop) shows the replay (plan 052). */
+  box: { top: number; left: number; width: number };
+  nameOf: (id: number) => string; onNext: () => void;
 }) {
   const { round, end, trail } = session;
   const presence = useOverlayPresence();
-  const [tab, setTab] = useState<'evidence' | 'notes'>('evidence');
   if (!end) return null;
   const tree = animal.familyTree;
   const found = end.outcome === 'found';
@@ -477,29 +476,50 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
   // By its number on the board and in the grid: the camera's animal was one of the five all along.
   const lead = `The camera saw #${round.suspects.indexOf(round.mysteryId) + 1}, the`;
   const notes = [...animal.notes, ...animal.revealNotes];
-  const tabs: Array<['evidence' | 'notes', ReactNode]> = [['evidence', 'The evidence'], ['notes', <>Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data text-xs">{notes.length}</span></>]];
-  const shown = notes.length > 0 ? tab : 'evidence';
-  // Two tabs, so either arrow moves to the other one (roving focus).
-  const tabKeys = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    const other = shown === 'evidence' ? 'notes' : 'evidence';
-    setTab(other);
-    document.getElementById(`end-tab-${other}`)?.focus();
-  };
+  // A find pops the photo in, then fills the stars one by one (MotionConfig turns this off for reduced motion).
+  const pop = (delay: number) => (found ? { initial: { opacity: 0, scale: 0.6 }, animate: { opacity: 1, scale: 1 }, transition: { type: 'spring' as const, stiffness: 420, damping: 18, delay } } : {});
   return (
-    <div className="fixed inset-0 z-[8300] flex items-end justify-center" {...presence} aria-label={`It was the ${animal.name}`}>
+    // Under the menu, help and journal (z 8100+), which stay reachable from the grid's corner. Not modal: the replay grid
+    // outside it is part of the reading. The presence style (exit: taps pass through) merges with the board's box.
+    <div
+      className="fixed bottom-0 z-[8000] flex items-end justify-center"
+      {...presence}
+      aria-modal={false}
+      style={{ top: box.top, left: box.left, width: box.width || '100%', ...('style' in presence ? presence.style : {}) }}
+      aria-label={`It was the ${animal.name}`}
+    >
       <motion.div className="absolute inset-0 bg-neutral-10-transparent" aria-hidden="true" {...backdropMotion} />
-      <motion.section className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-y-auto overscroll-contain rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m" aria-label={`It was the ${animal.name}`} {...drawerUpMotion}>
-        <div className="flex shrink-0 flex-col gap-s px-l pt-l">
-          <div className="flex items-center gap-s">
-            <span className="block aspect-[4/3] w-32 shrink-0 overflow-hidden rounded-xs bg-neutral-3"><SuspectPhoto species={species} size={330} /></span>
+      <motion.section className="relative flex h-full w-full max-w-md flex-col rounded-t-m bg-neutral-1 text-s text-neutral-10 shadow-m" aria-label={`It was the ${animal.name}`} {...drawerUpMotion}>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-l pb-s pt-l">
+        {/* Its own box, so the scroller doesn't squeeze its rows (the stats' overflow-hidden would shrink to nothing). */}
+        <div className="flex flex-col gap-s">
+          <div className="flex items-start gap-s">
+            {/* The round's numbers stack under the photo, beside the name (plan 052). */}
+            <div className="flex w-36 shrink-0 flex-col gap-xs">
+              <motion.span className="block aspect-[4/3] overflow-hidden rounded-xs bg-neutral-3" {...pop(0.25)}><SuspectPhoto species={species} size={330} /></motion.span>
+              {guesses.length > 0 && <dl className="m-0 flex flex-col">
+                {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
+              </dl>}
+            </div>
             <div className="flex min-w-0 flex-col gap-xxs">
-              <p className="m-0 flex items-center gap-xs">
+              <p className="m-0 flex flex-wrap items-center gap-xs">
                 <span className={`text-xs font-heavy uppercase ${found ? 'text-color-1' : 'text-error'}`}>{kicker}</span>
-                {found && <span className="rounded-xs bg-emphasis-icon px-xxs text-xs text-on-emphasis-icon" role="img" aria-label={`${end.stars} of 3 stars`}>{stars(end.stars)}</span>}
+                {found && (
+                  <span className="flex rounded-xs bg-emphasis-icon px-xxs text-xs text-on-emphasis-icon" role="img" aria-label={`${end.stars} of 3 stars`}>
+                    {[0, 1, 2].map(i => <motion.span key={i} className="inline-block" aria-hidden="true" {...(i < end.stars ? pop(0.5 + i * 0.18) : {})}>{i < end.stars ? '★' : '☆'}</motion.span>)}
+                  </span>
+                )}
+                {/* The reward reads together: stars, points, moves to spare (a loss always scores 0, so it shows none). */}
+                {/* Points and moves wrap as one, so they stay side by side on a narrow phone. */}
+                {found && (
+                  <span className="flex items-baseline gap-xs whitespace-nowrap">
+                    <motion.span className="font-data text-s font-heavy text-color-1" aria-label={`${end.points} points`} {...pop(0.5 + end.stars * 0.18)}>+{end.points}</motion.span>
+                    <span className="text-xs text-neutral-7" aria-label={`${round.movesLeft} of ${round.rules.moves} moves to spare`}><b className="font-data text-s font-heavy text-neutral-10">{round.movesLeft}/{round.rules.moves}</b> moves</span>
+                  </span>
+                )}
               </p>
               <p className="m-0 text-xs text-neutral-7">{lead}</p>
-              <h2 className="m-0 text-l font-heavy [text-wrap:balance]">{animal.name}</h2>
+              <h2 className="m-0 text-xl font-heavy [text-wrap:balance]">{animal.name}</h2>
               <p className="m-0 text-s italic text-neutral-7">{animal.scientificName}</p>
             </div>
           </div>
@@ -507,61 +527,47 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
             <ListTree className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>Animalia › Chordata › {tree.class.latin} › {tree.order.latin} › {tree.family.latin} › <span className="text-neutral-10">{tree.genus}</span></span>
           </p>
-          <dl className="m-0 grid auto-cols-fr grid-flow-col gap-px overflow-hidden rounded-s bg-neutral-4">
-            <Stat label="points" value={`+${end.points}`} />
-            {found && <Stat label="moves to spare" value={round.movesLeft} />}
-            {guesses.length > 0 && <Stat label="guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} />}
-          </dl>
           {!found && (
             <p className={`${NOTICE} bg-error-transparent`}>
               <HeartCrack className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
               <span>You lost a heart.{round.named && ` You named the ${nameOf(round.named.id)}: ${round.named.correct ? 'right! It goes in your journal.' : 'not this time.'}`}</span>
             </p>
           )}
+          {/* The key to the replay in the grid above. */}
+          <ul className="m-0 flex list-none flex-col gap-xxs p-0 text-xs text-neutral-7" aria-label="Grid key">
+            {round.orders.some(order => order.answer) ? (
+              <li className="flex items-center gap-xs">
+                <span className="h-3.5 w-5 shrink-0 rounded-xs bg-error-transparent" aria-hidden="true" />
+                Red in the grid above doesn&apos;t match what the camera saw, so it rules that animal out.
+              </li>
+            ) : <li>No question was answered this time.</li>}
+            {called < guesses.length && (
+              <li className="flex items-center gap-xs">
+                <span className="ev-missed grid w-5 shrink-0 place-items-center" aria-hidden="true">✓</span>
+                A crossed-out mark was a wrong guess.
+              </li>
+            )}
+          </ul>
           {notes.length > 0 && (
-            <div role="tablist" aria-label="Round details" className="grid grid-cols-2 gap-xxs rounded-m bg-neutral-3 p-xxs">
-              {tabs.map(([key, label]) => (
-                <button key={key} type="button" role="tab" id={`end-tab-${key}`} aria-selected={shown === key} aria-controls="end-panel" tabIndex={shown === key ? 0 : -1} onClick={() => setTab(key)} onKeyDown={tabKeys} className={`flex items-center justify-center gap-xs rounded-s px-s py-xs text-s font-medium ${shown === key ? 'bg-neutral-1 text-neutral-10' : 'text-neutral-7 hover:text-neutral-10'}`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div id="end-panel" role={notes.length > 0 ? 'tabpanel' : undefined} aria-labelledby={notes.length > 0 ? `end-tab-${shown}` : undefined} tabIndex={notes.length > 0 ? 0 : undefined} className="min-h-40 flex-1 overflow-y-auto overscroll-contain px-l py-s">
-          {shown === 'evidence' ? (
-            <>
-              {/* Compact rows here; the game screen's grow with the phone (globals.css `--ev-row`). */}
-              <div className="-mx-xxs [--ev-photo:30px] [--ev-row:34px]">
-                <EvidenceGrid round={round} speciesById={speciesById} shown={round.orders.map(order => order.have)} pencil={session.pencil} review />
-              </div>
-              <ul className="m-0 mt-xs flex list-none flex-col gap-xxs p-0 text-xs text-neutral-7">
-                {round.orders.some(order => order.answer) ? (
-                  <li className="flex items-center gap-xs">
-                    <span className="h-3.5 w-5 shrink-0 rounded-xs bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]" aria-hidden="true" />
-                    A red answer doesn&apos;t match what the camera saw, so it rules that animal out.
+            <section aria-labelledby="end-notes">
+              <h3 id="end-notes" className="m-0 mb-xs flex items-center gap-xs text-xs font-medium uppercase text-neutral-7">
+                Field notes <span className="rounded-full bg-color-1-transparent px-xs font-data normal-case">{notes.length}</span>
+              </h3>
+              <ul className="m-0 flex list-none flex-col gap-xs p-0">
+                {notes.map((note, index) => (
+                  <li key={index} className="flex gap-xs text-s text-neutral-8">
+                    <span className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-5" aria-hidden="true" />
+                    <span>{note.full ?? note.text}</span>
                   </li>
-                ) : <li>No question was answered this time.</li>}
-                {called < guesses.length && (
-                  <li className="flex items-center gap-xs">
-                    <span className="ev-missed grid w-5 shrink-0 place-items-center" aria-hidden="true">✓</span>
-                    A crossed-out mark was a wrong guess.
-                  </li>
-                )}
+                ))}
               </ul>
-            </>
-          ) : (
-            <ul className="m-0 flex list-none flex-col gap-xs p-0">
-              {notes.map((note, index) => (
-                <li key={index} className="flex gap-xs text-s text-neutral-8">
-                  <span className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-5" aria-hidden="true" />
-                  <span>{note.full ?? note.text}</span>
-                </li>
-              ))}
-            </ul>
+            </section>
           )}
         </div>
-        <div className="flex shrink-0 flex-col gap-s px-l pb-[max(var(--space-l),env(safe-area-inset-bottom))] pt-s shadow-[inset_0_1px_0_0_var(--neutral-4)]">
+        </div>
+        <div className="relative flex shrink-0 flex-col gap-s px-l pb-[max(var(--space-l),env(safe-area-inset-bottom))] pt-xs">
+          {/* No divider: the notes fade out under the button, so it sits on the card. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-full h-l bg-linear-to-t from-neutral-1 to-transparent" aria-hidden="true" />
           {trail.over && (
             <div className="flex items-center justify-between gap-s rounded-s bg-color-3-transparent px-s py-xs">
               <div className="flex flex-col">
@@ -569,8 +575,8 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
                 <span className="text-xs text-neutral-7">Trail {session.trailNo} total</span>
               </div>
               <dl className="m-0 flex gap-m text-center">
-                <Stat label="finds" value={`${trail.finds}/${trail.rounds}`} plain />
-                <Stat label="score" value={session.score} plain />
+                <Stat label="finds" value={`${trail.finds}/${trail.rounds}`} />
+                <Stat label="score" value={session.score} />
               </dl>
             </div>
           )}
@@ -581,12 +587,12 @@ export function RoundEndSheet({ session, animal, species, speciesById, nameOf, o
   );
 }
 
-/** A number over its label (round end). `plain`: no cell of its own. */
-function Stat({ label, value, plain = false, ...rest }: { label: string; value: ReactNode; plain?: boolean; 'data-guesses'?: string }) {
+/** A number over its label (the trail total), or before it on one small line (`row`, the round-end card). */
+function Stat({ label, value, row = false, ...rest }: { label: string; value: ReactNode; row?: boolean; 'data-guesses'?: string }) {
   return (
-    <div className={`flex flex-col ${plain ? '' : 'bg-neutral-3 px-s py-xs'}`} {...rest}>
+    <div className={`flex ${row ? 'items-baseline gap-xxs' : 'flex-col'}`} {...rest}>
       <dt className="text-xs text-neutral-7">{label}</dt>
-      <dd className={`order-first m-0 font-data font-heavy ${plain ? 'text-m' : 'text-l'}`}>{value}</dd>
+      <dd className={`order-first m-0 font-data font-heavy ${row ? 'text-s' : 'text-m'}`}>{value}</dd>
     </div>
   );
 }

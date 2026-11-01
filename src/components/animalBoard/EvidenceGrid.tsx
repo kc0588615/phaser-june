@@ -16,8 +16,8 @@
 // Hold any answer cell to highlight it (gold, "this one matters"); its column's gem glows so the
 // player remembers which gem to go for. Like pencil, the player's own mark: the rules never read it.
 // Players see the mystery as "the one caught on camera" (its row: "On camera"), so it doesn't read as a sixth
-// animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the Camera row
-// slides down onto the mystery's own row, fades into it and the row lights up, then `onLanded`.
+// animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the mystery's own row
+// rises into the Camera row, which becomes that animal (its slot closes up), then `onLanded`. `review` keeps it so (plan 052).
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -35,7 +35,7 @@ const NONE: ReadonlySet<string> = new Set();
 const HOLD_MS = 450;
 /** Holding an answer cell this long highlights it: longer than a name's hold, so a slow tap never highlights by mistake. */
 const HIGHLIGHT_MS = 1000;
-/** After the Camera row lands, how long its match shows before `onLanded`. */
+/** After the mystery's row reaches the Camera row, how long its match shows before `onLanded`. */
 const LANDED_MS = 900;
 /** The photo is the slide's handle (`--ev-photo`, globals.css). Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
 const TRACK_SHARE = 0.5;
@@ -164,7 +164,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
   // The player's own marks, in the Camera row's label (red like the cards' crosses).
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
-  // The end-of-round slide: how far down the mystery's row is, then whether the Camera row has arrived there.
+  // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
   const [landing, setLanding] = useState<{ id: number; dy: number } | null>(null);
   const [matched, setMatched] = useState<number | null>(null);
@@ -176,6 +176,8 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
     setLanding({ id: landOn, dy });
     if (dy === 0) setMatched(landOn); // nothing to slide (no row found): match at once, so the card still opens
   }, [landOn]);
+  // Which animal the Camera row shows: the replay's, or the one that just rose into it.
+  const revealed = review ? round.mysteryId : matched;
   useLayoutEffect(() => {
     if (matched === null) return;
     const timer = window.setTimeout(() => onLanded?.(), LANDED_MS);
@@ -208,17 +210,15 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
         </tr>
       </thead>
       <tbody>
-        <motion.tr
-          ref={cameraRow}
-          data-mystery
-          className="relative z-20"
-          initial={false}
-          animate={landing ? { y: landing.dy, opacity: matched === null ? 1 : 0 } : { y: 0, opacity: 1 }}
-          transition={{ y: { type: 'tween', duration: 0.8, ease: 'easeInOut' }, opacity: LARGE }}
-          onAnimationComplete={() => { if (landing && matched === null) setMatched(landing.id); }}
-        >
-          <th scope="row" className="h-(--ev-row) p-0 text-left font-medium text-neutral-10">
-            {review || !onNotes ? (
+        <tr ref={cameraRow} data-mystery data-match={revealed ?? undefined}>
+          <th scope="row" className={`h-(--ev-row) p-0 text-left font-medium text-neutral-10 ${revealed !== null ? 'rounded-xs bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
+            {revealed !== null ? (
+              // The Camera row is now the animal the camera caught: its card, number and name.
+              <span className="flex items-center gap-xs">
+                <span className="block w-(--ev-photo) shrink-0"><AnimalCard species={speciesById.get(revealed)} number={round.suspects.indexOf(revealed) + 1} /></span>
+                <span className="line-clamp-2 min-w-0 text-xs [hyphens:auto]" lang="en"><span className="sr-only">On camera: </span>{speciesById.get(revealed)?.commonName ?? 'animal'}</span>
+              </span>
+            ) : review || !onNotes ? (
               <span className="flex items-center gap-xs">
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
                 <span className="whitespace-nowrap text-s">On camera</span>
@@ -261,25 +261,35 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
               >
                 {answered[j] ? (
                   <motion.span className="block text-s font-heavy" initial={review ? false : { rotateX: 90, scale: 1.3 }} animate={{ rotateX: 0, scale: 1 }} transition={LARGE}>{order.answer === 'yes' ? '✓ YES' : '✗ NO'}</motion.span>
+                ) : revealed !== null ? (
+                  // Unasked, so the camera never said: the risen animal's own answer.
+                  <span className={`text-m font-heavy ${order.row[round.suspects.indexOf(revealed)] ? 'text-color-1' : 'text-neutral-6'}`}>{order.row[round.suspects.indexOf(revealed)] ? '✓' : '✗'}</span>
                 ) : (
                   <>
                     {!review && <motion.span className="absolute bottom-0 left-0 h-1 bg-color-3" initial={false} animate={{ width: `${(100 * have) / size}%` }} transition={SMALL} aria-hidden="true" />}
                     <span className="relative font-data text-xs font-medium tabular-nums">{review ? '?' : `${have}/${size}`}</span>
                   </>
                 )}
+                {/* A wrong guess pencilled on the risen animal's row stays marked here. */}
+                {revealed !== null && (() => {
+                  const guess = pencil[`${revealed}:${order.tag}`];
+                  return guess && (guess === 'yes') !== order.row[round.suspects.indexOf(revealed)]
+                    ? <span aria-hidden="true" className="ev-missed absolute right-xxs top-px">{guess === 'yes' ? '✓' : '✗'}</span> : null;
+                })()}
               </td>
             );
           })}
-        </motion.tr>
+        </tr>
         {/* Sets the Camera row apart from the animals it's one of (globals.css counts its height in --ev-reserve). */}
         <tr aria-hidden="true"><td colSpan={round.orders.length + 1} className="h-1 p-0"><div className="h-px bg-neutral-4" /></td></tr>
         {round.suspects.map((id, i) => {
+          if (id === revealed) return null; // risen into the Camera row
           const species = speciesById.get(id);
           const name = species?.commonName ?? 'animal';
-          const released = round.released.includes(id) && !review && matched !== id; // the replay (and the landed match) keeps the row readable
+          const rising = landing?.id === id;
+          const released = round.released.includes(id) && !review && !rising; // the rising row stays readable
           const marked = round.marked.includes(id) && !released;
           const picked = selected === id;
-          const wasIt = (review && id === round.mysteryId) || matched === id;
           const canSlide = Boolean(onMark) && !released;
           // (The photo slides; the track behind it shows only while dragging.)
           const dx = slide?.id === id ? slide.dx : 0;
@@ -289,8 +299,19 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
           };
           const wiggle = marked && round.orders.some(order => reveal.has(`${id}:${order.tag}`) && missed(order));
           return (
-            <tr key={id} data-suspect={id} onClick={onSelect ? () => pick(id) : undefined} data-match={wasIt || undefined} className={`${released ? 'opacity-30' : marked && !review && !wasIt ? '[&>td]:opacity-50 [&_[data-name]]:opacity-50' : ''} ${onSelect ? 'cursor-pointer' : ''}`}>
-              <th scope="row" className={`relative h-(--ev-row) rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : wasIt ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
+            <motion.tr
+              key={id}
+              data-suspect={id}
+              onClick={onSelect ? () => pick(id) : undefined}
+              // The rows below the risen one close the gap; the rising row slides up over the Camera row.
+              layout={rising ? undefined : 'position'}
+              initial={false}
+              animate={rising ? { y: -landing.dy } : { y: 0 }}
+              transition={{ y: { type: 'tween', duration: 0.8, ease: 'easeInOut' }, layout: LARGE }}
+              onAnimationComplete={() => { if (rising && matched === null) setMatched(id); }}
+              className={`${rising ? 'relative z-30' : ''} ${released ? 'opacity-30' : marked && !review && !rising ? '[&>td]:opacity-50 [&_[data-name]]:opacity-50' : ''} ${onSelect ? 'cursor-pointer' : ''}`}
+            >
+              <th scope="row" className={`relative h-(--ev-row) rounded-xs p-0 text-left font-regular ${picked ? 'bg-color-1-transparent outline outline-2 outline-color-1' : rising ? 'bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
                 {dx > 0 && (
                   // The slide's track, only while dragging: it fills behind the photo toward the target at the end.
                   <span aria-hidden="true" style={{ width: `calc(${slide?.travel ?? 0}px + var(--ev-photo))` }} className={`absolute inset-y-0 left-0 flex items-center justify-end overflow-hidden rounded-full pr-xs text-s font-heavy ${marked ? 'bg-neutral-3 text-neutral-7' : 'bg-error-transparent text-error'}`}>
@@ -352,7 +373,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                 const miss = review && order.answer !== null && yes !== (order.answer === 'yes');
                 const lit = !review && answered[j];
                 const starred = !review && highlighted.has(`${id}:${order.tag}`);
-                const fill = miss ? 'bg-error-transparent shadow-[inset_0_0_0_1.5px_var(--error)]' : starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
+                const fill = miss ? 'bg-error-transparent' : starred ? 'ev-highlight' : picked ? 'bg-color-1-transparent' : 'bg-neutral-3';
                 return (
                   // Keyed by the answer showing, so the cell remounts and lights up once when it lands.
                   <td key={`${order.tag}:${lit}:seen`} data-tag={order.tag} data-yes={yes} data-miss={miss || undefined} data-guess={guess ? (called ? 'right' : 'wrong') : undefined} data-highlight={starred || undefined} {...(review ? {} : holdCell(id, order.tag))} className={`relative h-(--ev-row) select-none rounded-xs p-0 text-center text-m font-heavy [-webkit-touch-callout:none] ${fill} ${lit ? 'ev-lit' : ''}`}>
@@ -363,7 +384,7 @@ export function EvidenceGrid({ round, speciesById, shown, selected = null, onSel
                   </td>
                 );
               })}
-            </tr>
+            </motion.tr>
           );
         })}
       </tbody>

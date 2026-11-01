@@ -204,17 +204,25 @@ export function AnimalGame() {
     const timer = window.setTimeout(() => setReveal(NO_REVEAL), REVEAL_MS);
     return () => window.clearTimeout(timer);
   }, [reveal]);
-  // The field guide's drawer reaches up to the board's top edge (the grid above stays visible).
+  // The field guide's and round end's drawers reach up to the board's top edge (the grid above stays visible).
   const board = useRef<HTMLElement>(null);
-  const [boardTop, setBoardTop] = useState(0);
-  const guideOpen = sheet?.kind === 'suspect';
+  const gridBox = useRef<HTMLDivElement>(null);
+  // The board's box: its top for both drawers; the round-end card also keeps to its left and width (desktop: the grid is beside it).
+  const [boardBox, setBoardBox] = useState({ top: 0, left: 0, width: 0 });
+  const drawerUp = sheet?.kind === 'suspect' || Boolean(session?.end);
   useLayoutEffect(() => {
-    if (!guideOpen) return;
-    const measure = () => setBoardTop(board.current?.getBoundingClientRect().top ?? 0);
+    if (!drawerUp) return;
+    const measure = () => {
+      const box = board.current?.getBoundingClientRect();
+      setBoardBox(box ? { top: box.top, left: box.left, width: box.width } : { top: 0, left: 0, width: window.innerWidth });
+    };
     measure();
+    // The grid above can change height (round end: the mystery's row rises into the Camera row), moving the board.
+    const grid = new ResizeObserver(measure);
+    if (gridBox.current) grid.observe(gridBox.current);
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [guideOpen]);
+    return () => { grid.disconnect(); window.removeEventListener('resize', measure); };
+  }, [drawerUp]);
   useEffect(() => setSoundOnState(isSoundOn()), []);
   useEffect(() => wakeOnFirstGesture(), []);
   const toggleSound = useCallback(() => { setSoundOn(!soundOn); setSoundOnState(!soundOn); }, [soundOn]);
@@ -402,10 +410,12 @@ export function AnimalGame() {
   const inTrail = trail ? Math.min(rules.trailRounds, trail.rounds + (session?.end ? 0 : 1)) : 0;
   const pick = round && selected !== null && round.status === 'playing' ? selected : null;
 
-  // Round over: the grid's Camera row slides onto the mystery's row first, then the round-end card opens.
+  // Round over: the grid's Camera row slides onto the mystery's row first, then the round-end card opens
+  // over the board and the grid itself turns into the replay (plan 052; the Camera row slides back up).
   const [landed, setLanded] = useState(0);
   const onLanded = useCallback(() => setLanded(roundNo ?? 0), [roundNo]);
-  const landOn = round && end && !boardBusy ? round.mysteryId : null;
+  const reviewing = Boolean(end) && !boardBusy && landed === roundNo;
+  const landOn = round && end && !boardBusy && !reviewing ? round.mysteryId : null;
 
   // The Camera cell opens the notes: a drawer on phones; on desktop they're already beside the board, so it shows the newest.
   const sideNotes = useRef<HTMLElement>(null);
@@ -432,7 +442,7 @@ export function AnimalGame() {
           )}
           <span className="font-data text-xs tabular-nums text-neutral-7" aria-label={`Animal ${inTrail} of ${rules.trailRounds}`}>{inTrail}/{rules.trailRounds}</span>
         </div>
-        <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">moves</span></div>
+        <div className="whitespace-nowrap"><b className="font-data text-m font-heavy tabular-nums">{round?.movesLeft ?? 0}</b> <span className="text-xs text-neutral-7">{round?.movesLeft === 1 ? 'move' : 'moves'}</span></div>
       </div>
     </div>
     </div>
@@ -443,9 +453,9 @@ export function AnimalGame() {
       <Head><title>{placeName ? `${placeName} · Critter Connect` : 'Critter Connect'}</title></Head>
       <main className="flex h-dvh flex-col overflow-hidden pb-[env(safe-area-inset-bottom)] overscroll-none bg-neutral-1 text-neutral-10 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_minmax(0,1fr)] md:[grid-template-areas:'board_grid'_'board_status'_'board_.'] lg:grid-cols-[minmax(0,1fr)_460px] lg:[grid-template-areas:'board_grid'_'board_status'_'board_side']">
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
-        <div className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
+        <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={onSelect} onGuide={id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={onQuestion} onNotes={openNotes} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
@@ -481,7 +491,7 @@ export function AnimalGame() {
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
-        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardTop} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onShow={onShowGuide} onClose={() => setSheet(null)} />}
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardBox.top} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onShow={onShowGuide} onClose={() => setSheet(null)} />}
         {!wide && round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu
@@ -496,8 +506,8 @@ export function AnimalGame() {
           />
         )}
         {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
-        {session && end && mystery && !boardBusy && landed === session.roundNo && (
-          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} speciesById={speciesById} nameOf={nameOf} onNext={nextRound} />
+        {session && mystery && reviewing && (
+          <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={nextRound} />
         )}
         {helpOpen && <AnimalHowToPlay key="help" rules={rules} seed={seed} onClose={closeHelp} />}
         {journalOpen && <JournalSheet key="journal" pool={pool} journal={journal} records={records} onClose={() => setJournalOpen(false)} />}
