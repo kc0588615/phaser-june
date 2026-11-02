@@ -458,7 +458,7 @@ Result: done
 - 2026-11-02 00:19 UTC: S7. `run.mjs` signal exit deferred so `cdp.mjs` cleanup runs. SIGTERM on `start` in scratch dir: exit 130, no Chrome of this run, no new profile dir, 3106 free; no rounds played. typecheck, lint pass.
 - 2026-11-02 00:22 UTC: S8. `take()` removes its manifest before any capture. SIGTERM on `start` in a scratch copy after `globe.png` was rewritten: exit 130, `start.json` gone, `convert` exits 1 (ENOENT), `src/site` unchanged, 3106 free, no Chrome or profile left; no rounds played. typecheck, lint pass.
 - 2026-11-02 00:24 UTC: Final Verification. typecheck, lint, site:build exit 0; e2e:site 444/444, 20 screenshots (`e2e-site/`). Hash loop clean, all 10 changed. No "Camera saw" in site or shot text. Only allowed files changed; fragment loop clean; header = manifests; eye-check current; contact sheet viewed. Repo's `check-game-css` exits 1 (its own flaw, see Decisions); with `src/site` out of both sides, byte-identical. origin/main still 1a781de4, live pool unchanged. Summary and `pr-body.md` written; status done.
-- 2026-11-02 00:35 UTC: Release. Verification re-run on `89afb5ac` (e2e:site 444/444), PR #43 CI pass, merged `1a602a8c`, `deploy critter-connect` exit 0 (check.sh 37 OK, 0 BAD). Smoke: `/`, `/teachers/`, play 200, no old hash. Result: done.
+- 2026-11-02 00:33 UTC: Release. Verification re-run on `89afb5ac` (e2e:site 444/444), PR #43 CI pass, merged `1a602a8c`, `deploy critter-connect` exit 0 (check.sh 37 OK, 0 BAD). Smoke: `/`, `/teachers/`, play 200, no old hash. Result: done.
 
 ## Summary
 
