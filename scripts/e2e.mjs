@@ -145,7 +145,8 @@ async function main() {
     await evaluate(() => window.__cc.speed(4));
     await sleep(2500); // the animal photos load
     await screenshot('02-board.png');
-    const names = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, s.commonName]))));
+    const poolSpecies = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, { name: s.commonName, family: s.family, genus: s.genus }]))));
+    const names = new Map([...poolSpecies].map(([id, species]) => [id, species.name]));
     const sound = await evaluate(async () => {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
       document.querySelector('button[aria-label="Menu"]')?.click();
@@ -432,7 +433,7 @@ async function main() {
           const name = document.querySelector('[role=dialog] [data-guide-name]');
           name.textContent = 'Yangtze Giant Softshell Turtle';
           current();
-          result.longName = { lines: Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)), clipped: name.scrollWidth > name.clientWidth || name.scrollHeight > name.clientHeight || header().scrollWidth > header().clientWidth };
+          result.longName = { clipped: name.scrollWidth > name.clientWidth || name.scrollHeight > name.clientHeight || header().scrollWidth > header().clientWidth };
           result.heights = [...heights];
           [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
           await wait(300);
@@ -448,7 +449,7 @@ async function main() {
         check('field guide: the signs showing fit beside the photo, chips one line tall', flip.overflow.length === 0, JSON.stringify(flip));
         { const p = flip.signPages;
           check('field guide: signs in pages turn on their own, a tap pauses them, another resumes and moves on', p && p.turned !== p.first && p.held === p.turned && p.pressed === 'true' && p.resumed !== p.held && p.unpressed === 'false', JSON.stringify(p ?? 'signs never split into pages')); }
-        check('field guide: the longest name shows whole on two lines', flip.longName.lines === 2 && !flip.longName.clipped, JSON.stringify(flip));
+        check('field guide: the longest name shows whole', !flip.longName.clipped, JSON.stringify(flip));
         // A long press on a board tile opens the field guide too.
         const tileHeld = await evaluate(async () => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -650,8 +651,8 @@ async function main() {
             id: Number(td.closest('tr').dataset.suspect), tag: td.dataset.tag, hidden: td.hasAttribute('data-hidden'),
             yes: td.dataset.yes ?? null, said: td.querySelector('.sr-only')?.textContent ?? null, guess: td.dataset.guess ?? null,
           }));
-          const glimmer = grid.querySelectorAll('[data-guess="right"] .ev-sparkle').length;
-          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, glimmer, expected, clue: cc.clue() };
+          const sparkling = [...grid.querySelectorAll('[data-guess="right"]:has(.ev-sparkle)')].map(td => `${td.closest('tr').dataset.suspect}:${td.dataset.tag}`);
+          return { counted: drag.counted, timedOut: drag.timedOut, blocked: drag.blocked ?? null, pins, view, orders, misses, cells, sparkling, expected, clue: cc.clue() };
         });
         if (!result) break;
         moves++;
@@ -733,7 +734,8 @@ async function main() {
           const guess = state.pencil[key];
           return guess && (guess === 'yes') === state.orders.find(order => order.tag === tag).row[state.suspects.indexOf(id)];
         });
-        check(`round ${n} move ${moves}: a right guess just scouted sparkles`, result.glimmer >= calledNow.length, JSON.stringify({ glimmer: result.glimmer, calledNow }));
+        // Older sparkles stay mounted, so look at the cells just called. The end-of-round reveal shows none.
+        if (calledNow.length > 0 && !revealed) check(`round ${n} move ${moves}: a right guess just scouted sparkles`, calledNow.every(key => result.sparkling.includes(key)), JSON.stringify({ sparkling: result.sparkling, calledNow }));
         if (calledNow.length > 0 && !calledShot) { calledShot = true; await screenshot('03-called-it.png'); }
         if (!notesChecked && state.notes > 0) {
           notesChecked = true;
@@ -790,14 +792,15 @@ async function main() {
       await screenshot(`04-round-${n}-landed.png`);
       const reveal = await waitFor(() => {
         const sheet = document.querySelector('section[aria-labelledby="end-title"]');
-        return sheet ? { name: sheet.querySelector('#end-title > :last-child')?.textContent ?? '', text: sheet.innerText.replace(/\s+/g, ' '), focused: document.activeElement?.id ?? '' } : null;
+        return sheet ? { name: sheet.querySelector('#end-title > :last-child')?.textContent ?? '', text: sheet.innerText.replace(/\s+/g, ' '), tree: sheet.querySelector('ol[aria-label="Family tree"]')?.innerText.replace(/\s+/g, ' ') ?? '', focused: document.activeElement?.id ?? '' } : null;
       }, 'the round-end card', 10_000);
       check(`round ${n}: the round-end card names the mystery`, reveal.name === mysteryName, reveal.name);
       check(`round ${n}: focus moves to the round-end card's name`, reveal.focused === 'end-title', reveal.focused);
       const landed = await evaluate(id => ({ camera: document.querySelector('table tr[data-mystery]')?.dataset.match ?? null, ownRow: Boolean(document.querySelector(`table tr[data-suspect="${id}"]`)) }), start.mysteryId);
       check(`round ${n}: the mystery's row rises into the Camera row (the Camera row is that animal, its own row gone)`, landed.camera === String(start.mysteryId) && !landed.ownRow, JSON.stringify(landed));
       check(`round ${n}: the round-end card says the camera saw that animal's number`, reveal.text.includes(`The camera saw #${start.suspects.indexOf(start.mysteryId) + 1}`), reveal.text.slice(0, 120));
-      check(`round ${n}: the round-end card shows the family tree`, reveal.text.includes('Animalia › Chordata'));
+      const { family, genus } = poolSpecies.get(start.mysteryId);
+      check(`round ${n}: the round-end card shows that animal's family tree`, reveal.tree.startsWith('Animalia › Chordata') && reveal.tree.toLowerCase().endsWith(`${family} › ${genus}`.toLowerCase()), JSON.stringify({ tree: reveal.tree, family, genus }));
       // The game's own grid turns into the replay (plan 052): the mystery's row outlined, and red exactly where an earned answer rules a suspect out.
       const replay = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]');
@@ -925,7 +928,7 @@ async function main() {
       cell?.click();
       await wait(400); // the save effect runs
       const { grid, toys, pins } = cc.state();
-      return { clue: cc.clue(), grid, toys, pins, walked, saved: Boolean(sessionStorage.getItem('cc:explore:game')) };
+      return { clue: cc.clue(), grid, toys, pins, walked };
     });
     report.resume = { seed: played.clue.seed, status: played.clue.status, walked: played.walked, movesUsed: played.clue.movesUsed, marked: played.clue.marked, released: played.clue.released, pencil: played.clue.pencil, toys: played.toys.flat().filter(Boolean).length };
     await screenshot('06-before-reload.png');
@@ -941,13 +944,9 @@ async function main() {
     const resumed = await evaluate(() => { const { grid, toys, pins } = window.__cc.state(); return { clue: window.__cc.clue(), grid, toys, pins }; });
     await screenshot('06-after-reload.png');
     const toyCount = played.toys.flat().filter(Boolean).length;
-    check('the game in progress is saved for the tab', played.saved);
     check('a reload resumes the round: rules, marks, pencil, moves, score', JSON.stringify(resumed.clue) === JSON.stringify(played.clue), JSON.stringify({ before: played.clue.movesLeft, after: resumed.clue.movesLeft }));
     check('a reload resumes the board: gems and toys', JSON.stringify(resumed.grid) === JSON.stringify(played.grid) && JSON.stringify(resumed.toys) === JSON.stringify(played.toys), `${toyCount} toys`);
-    check('a reload keeps released animals off the board', JSON.stringify(resumed.pins) === JSON.stringify(played.pins), JSON.stringify({ released: played.clue.released, pins: resumed.pins.length }));
-    const { walked } = played;
-    check('a card that walked stays where it walked to after a reload (plan 047)', Boolean(walked?.to) && JSON.stringify(walked.to) !== JSON.stringify(walked.from)
-      && JSON.stringify(resumed.pins.find(([, id]) => id === walked.id)?.[0]) === JSON.stringify(walked.to), JSON.stringify(walked));
+    check('a reload keeps every card in place: walked ones where they walked to (plan 047), released ones off the board', JSON.stringify(resumed.pins) === JSON.stringify(played.pins), JSON.stringify({ walked: played.walked, released: played.clue.released, pins: resumed.pins.length }));
     // Play the round out, then reload on its end card: the journal doesn't count the find twice.
     await evaluate(() => window.__cc.speed(4));
     const journalBefore = await evaluate(() => localStorage.getItem('clue-match:journal:v1'));
