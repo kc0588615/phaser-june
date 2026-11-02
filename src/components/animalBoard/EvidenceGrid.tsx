@@ -49,6 +49,15 @@ const LANDED_MS = 900;
 /** The photo is the slide's handle (`--ev-photo`, globals.css). Its track runs half the name's width; drag it halfway along to rule the animal out (or back in). */
 const TRACK_SHARE = 0.5;
 const SLIDE_TO_MARK = 0.5;
+/** An animal's name in the grid; at `narrow` widths (globals.css) its words' first letters, the full name kept for screen readers. */
+function GridName({ name }: { name: string }) {
+  return (
+    <>
+      <span className="narrow:sr-only">{name}</span>
+      <span className="hidden whitespace-nowrap narrow:inline" aria-hidden="true">{name.split(/[\s-]+/).map(word => word[0]).join('').toUpperCase()}</span>
+    </>
+  );
+}
 
 /**
  * A press on an animal's name: still a tap, a long press (`held`), a slide (only from the photo, `handle`), or a
@@ -173,9 +182,6 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
   const trapCard = <TrapCard />;
   // The player's own marks, in the Camera row's label (red like the cards' crosses).
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
-  // While playing, the count's place is kept from the start (invisible at 0): the label wraps (never clips), so the
-  // first mark mustn't reflow it and change the grid's height under the board.
-  const markSlot = <span className={`shrink-0 font-heavy text-error ${round.marked.length > 0 ? '' : 'invisible'}`} aria-hidden="true">✕{Math.max(1, round.marked.length)}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
@@ -201,7 +207,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
     return () => window.clearTimeout(timer);
   }, [matched, onLanded]);
   return (
-    <table aria-label={review ? 'How the evidence lined up' : 'Evidence'} className="w-full table-fixed border-separate [border-spacing:3px_2px]">
+    <table aria-label={review ? 'How the evidence lined up' : 'Evidence'} className="ev-grid w-full table-fixed border-separate [border-spacing:3px_2px]">
       {onMark && <caption className="sr-only">Drag an animal&apos;s photo right across its name, or press the right arrow on it, to rule it out (left arrow: back in). Hold it, or press Shift and Enter, for its field guide. Press H on an answer cell or a question to highlight it.</caption>}
       <colgroup>
         <col />
@@ -226,7 +232,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                 className={`flex w-full flex-col items-center gap-xxs rounded-xs pb-xxs transition-colors short:gap-zero short:pb-zero ${highlighted.has(`*:${order.tag}`) ? 'ev-highlight' : 'enabled:hover:bg-neutral-3-transparent enabled:active:bg-neutral-3'}`}
               >
                 <FaceIcon gem={order.gem} face={clueFace(order.tag)} className={`h-6 w-6 text-[13px] ${highlighted.has(`*:${order.tag}`) ? 'ev-glow' : ''}`} />
-                <span className="min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en">{columnLabel(order.tag)}</span>
+                <span className="line-clamp-2 min-h-[calc(2*var(--line-xs))] text-xs text-neutral-7 short:min-h-[calc(2*var(--line-xxs))] short:text-xxs" lang="en">{columnLabel(order.tag)}</span>
               </button>
             </th>
           ))}
@@ -239,12 +245,12 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
               // The Camera row is now the animal the camera caught: its card, number and name.
               <span className="flex items-center gap-xs">
                 <span className="block w-(--ev-photo) shrink-0"><AnimalCard species={speciesById.get(revealed)} number={round.suspects.indexOf(revealed) + 1} /></span>
-                <span className="min-w-0 text-xs narrow:sr-only [hyphens:auto] [overflow-wrap:anywhere]" lang="en"><span className="sr-only">On camera: </span>{speciesById.get(revealed)?.commonName ?? 'animal'}</span>
+                <span className="line-clamp-2 min-w-0 text-xs [hyphens:auto]" lang="en"><span className="sr-only">On camera: </span><GridName name={speciesById.get(revealed)?.commonName ?? 'animal'} /></span>
               </span>
             ) : review || !onNotes ? (
               <span className="flex items-center gap-xs">
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
-                <span className="text-s narrow:sr-only">On camera</span>
+                <span className="whitespace-nowrap text-s narrow:sr-only">On camera</span>
                 {markCount}
               </span>
             ) : (
@@ -254,21 +260,21 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                 data-flight-target="notes"
                 data-notes={notes}
                 aria-label={`On camera: one of these ${round.suspects.length} animals${round.marked.length > 0 ? `, ${round.marked.length} ruled out` : ''}. ${notes > 0 ? `${notes} witness note${notes === 1 ? '' : 's'}: open them` : 'No witness notes yet'}`}
-                className={`relative flex min-h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left narrow:gap-xxs outline outline-[1.5px] -outline-offset-[1.5px] outline-control-edge ${notes > 0 ? 'bg-notes/10' : ''}`}
+                className={`relative flex h-(--ev-row) w-full items-center gap-xs rounded-xs pl-xxs text-left narrow:gap-xxs outline outline-[1.5px] -outline-offset-[1.5px] outline-control-edge ${notes > 0 ? 'bg-notes/10' : ''}`}
               >
                 {/* Keyed by the count, so the cell pulses for 3 s each time a note comes in. */}
                 {notes > 0 && <span key={notes} className="ev-unread pointer-events-none absolute inset-0 rounded-xs" aria-hidden="true" />}
                 <span className="block w-(--ev-photo) shrink-0 text-m">{trapCard}</span>
                 <span className="flex min-w-0 flex-col">
                   {/* `narrow` (globals.css): no room for words beside the card, so only the counts (the button's label has it all). */}
-                  <span className="text-s narrow:hidden">On camera</span>
+                  <span className="whitespace-nowrap text-s narrow:hidden">On camera</span>
                   {/* Until the first note: which animals the camera's one is among (a fixed count, never who still fits). */}
-                  <span className="flex min-w-0 flex-wrap items-center gap-x-xxs text-xs font-medium text-neutral-8">
+                  <span className="flex min-w-0 items-center gap-xxs whitespace-nowrap text-xxs font-medium text-neutral-8">
                     {notes > 0 ? <NotebookPen className="h-3 w-3 shrink-0 text-notes" aria-hidden="true" /> : null}
                     {notes > 0
-                      ? <span className="min-w-0">{notes}<span className="narrow:hidden"> note{notes === 1 ? '' : 's'}</span></span>
+                      ? <span className="min-w-0 truncate">{notes}<span className="narrow:hidden"> note{notes === 1 ? '' : 's'}</span></span>
                       : <span className="min-w-0 narrow:hidden">One of {round.suspects.length} ↓</span>}
-                    {markSlot}
+                    {markCount}
                   </span>
                 </span>
               </button>
@@ -369,7 +375,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
                     <AnimalCard species={species} number={i + 1} marked={marked} picked={picked} />
                   </span>
                   {/* Keyed by its flash, so a later move's scouting flashes it again. */}
-                  <span key={flashGems.join()} data-name="" className={`min-w-0 text-xs narrow:hidden [hyphens:auto] [overflow-wrap:anywhere] ${released ? 'line-through' : ''} ${flashGems.length > 0 ? 'ev-flash' : ''}`} style={{ ...(flashGems.length > 0 ? flashStyle(flashGems) : {}), ...(dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : {}) }} lang="en">{name}</span>
+                  <span key={flashGems.join()} data-name="" className={`line-clamp-2 min-w-0 text-xs [hyphens:auto] ${released ? 'line-through' : ''} ${flashGems.length > 0 ? 'ev-flash' : ''}`} style={{ ...(flashGems.length > 0 ? flashStyle(flashGems) : {}), ...(dx > 0 ? { opacity: Math.max(0.15, 1 - dx / 80) } : {}) }} lang="en"><GridName name={name} /></span>
                   {hinted === id && <span aria-hidden="true" className="ev-hint pointer-events-none absolute inset-y-0 left-[calc(var(--ev-photo)+8px)] right-0 flex items-center bg-neutral-1 text-xs font-medium text-error narrow:right-auto narrow:w-max narrow:pr-xs">Slide to rule out →</span>}
                 </button>
               </th>
