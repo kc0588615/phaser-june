@@ -356,6 +356,9 @@ Never `source .env.local`: its URL has an unquoted `&`, so the shell backgrounds
   ```
   Check: `grep -c '^### H7 ' /srv/critter-ai/handoff/critter-connect.md` is 1, and the item sits above `## Closed` with `Status: waiting on you`. Typecheck and lint (no repo change expected, so they must still pass).
 
+- [ ] S7. **Astra MUST-FIX 1: a signal leaves Chrome behind.** File: `scripts/shots/run.mjs:42`. Its handler registers first and calls `process.exit(130)` at once, so `cdp.mjs`'s later handler (kills Chrome, removes the profile) never runs. Defer the exit: `process.on(signal, () => setImmediate(() => process.exit(130)))`, with a one-line comment why. Listeners run in one synchronous emit, so `cdp.mjs`'s runs and exits when a browser is up; with none, the deferred exit fires; `run.mjs`'s `exit` handler still kills the server. No `cdp.mjs` change. Check, in a scratch dir so the real shots stay put: `SHOTS_DIR=/tmp/shots-sig SHOTS_PORT=3106 node scripts/shots/run.mjs start` in the background; once `/tmp/shots-sig/globe.png` exists, `kill -TERM` the node pid. Then: exit 130, no Chrome with this run's profile (`pgrep -af chrome` empty of it, no new `/tmp/cc-e2e-*` profile dir left), nothing on 3106. `start` plays no rounds. Typecheck and lint. `rm -rf /tmp/shots-sig`.
+- [ ] S8. **Astra MUST-FIX 2: a killed rerun passes `convert`.** File: `scripts/shots/take.mjs`. The manifest is written only in `finally`, which a kill skips, so the old manifest vouches for partly overwritten PNGs. At the top of `take()`, before any capture: `rmSync(path.join(outDir, `${mode}.json`), { force: true })` (import `rmSync`). Check, on a copy so the real shots stay put: `cp -r $SHOTS_DIR /tmp/shots-kill`, `SHOTS_DIR=/tmp/shots-kill node scripts/shots/run.mjs start` in the background, `kill -TERM` its node pid once `globe.png` is newer than the copy. Then `start.json` is gone, `SHOTS_DIR=/tmp/shots-kill node scripts/shots/run.mjs convert` exits non-zero, and `git status --short` shows no change in `src/site/`. Typecheck and lint. `rm -rf /tmp/shots-kill`.
+
 ## Verification
 
 Runs on the final commit, after the Astra code review, with the Steps' Setup. No retake unless a check below demands it. Full game E2E not run (Brief): the shots' own play-through is `npm run site:shots`.
@@ -409,12 +412,22 @@ Must show: three 200s, no `OLD`.
 
 ## Code review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. `scripts/shots/run.mjs:42` — Immediate `process.exit(130)` prevents the later signal handlers in `cdp.mjs` from cleaning up Chrome. SIGTERM leaves the browser and temporary profile behind. Coordinate browser/server cleanup before exiting.
+2. `scripts/shots/take.mjs:223` — Manifests are replaced only in `finally`, while PNGs are overwritten throughout capture. An interrupted rerun leaves old manifests validating partially replaced images; `convert` accepts them because dimensions still match. Invalidate the previous manifest before writing any captures.
+
+SHOULD-CONSIDER:
+1. `scripts/shots/take.mjs:81` — Check `naturalWidth > 0` alongside `img.complete`; failed image downloads also report complete and can silently produce missing-photo screenshots.
+
 ## Release
 
 ## Decisions
 
 - **Password exposure (H6), 2026-11-01:** at the Steps stage the planner ran `. ./.env.local` to test the row count, and the shell printed the live `DATABASE_URL`, with its password, into that subagent's tool output. Checked by file name only: one transcript on the VPS holds it, not git, the plan or the mission's state folder. Rotation is the owner's call (live server, WSL, QGIS), so H6 asks; the mission goes on. Plan's **Rows count** now reads the URL with `sed`, and says never to source that file. Privacy/Terms item moved to H7.
 - **Crops (S4):** `Home.tsx:55` is `object-bottom`, not a tuned %: the only crop with the whole board and the whole hint sentence; 70% cut the bottom gem row and a card, 86% cut the sentence. One grid row shows (Indri), still "part of grid". `Home.tsx:39` stays 84% (`760/908` = 83.7%; board top 380 in `start.json`). Journal crop shows only the Aye-aye; the alt names both finds, true of the shot file, left as is (same since base).
+- **Astra code review (2026-11-02):** both MUST-FIX items are real, checked against the code: S7 (`run.mjs` handler registers before `cdp.mjs`'s and exits first), S8 (`finally` doesn't run on a kill; `convert`'s `check` only compares dimensions). The SHOULD-CONSIDER goes in the Summary, unchanged in code.
 
 ## Log
 
@@ -430,5 +443,8 @@ Must show: three 200s, no `OLD`.
 - 2026-11-02 00:13 UTC: S4. Crops: `Teachers.tsx` hero `md:aspect-[780/760]` + comment (board top 380), round-end `object-[50%_70%]` on both pages, `Home.tsx:55` `object-bottom`; other crops already fit. typecheck, lint, site:build pass; e2e:site 444/444, 20 screenshots (`e2e-s4`). Home and Teachers viewed at 390 and 1440: every crop shows F6's must-show.
 - 2026-11-02 00:14 UTC: S5. Applied F3's 11 copy rows verbatim (`Teachers.tsx` 9, `Home.tsx` 2). typecheck, lint, site:build pass; e2e:site 444/444, 20 screenshots (`e2e-s5`). Teachers 1440 viewed where the bullets went: both privacy lists read clean. Stale-fragment loop prints nothing.
 - 2026-11-02 00:15 UTC: S6. Handoff H7 added (Privacy/Terms vs game), above `## Closed`, `waiting on you`; line refs and no-client-POST rechecked. typecheck, lint pass; no repo change but this plan.
+- 2026-11-02 00:18 UTC: Astra code review: APPROVE_WITH_CHANGES, 2 must-fix, both real, added as S7 and S8; 1 should-consider for the Summary. No code changed; typecheck/lint n/a.
 
 ## Summary
+
+Astra's should-consider, not done: `scripts/shots/take.mjs:81` `imagesLoaded` checks `img.complete` only, and a failed image download also reports complete, so a missing photo could reach a shot unnoticed (this retake's shots were checked by eye). Adding `naturalWidth > 0` would catch it.
