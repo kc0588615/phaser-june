@@ -56,7 +56,7 @@ export default function Home({ shots, animals }: PageProps) {
           </li>
           <li className="flex flex-col gap-s">
             <h3 className={H3}>Rule out the look-alikes</h3>
-            <p>Check each animal&apos;s field guide against the answers. Rule out the wrong one and it escapes.</p>
+            <p>Compare each animal&apos;s answers with the camera&apos;s. Rule out the one caught on camera and it escapes.</p>
             <Screenshot shot={fieldGuide} crop={`${CROP} object-bottom`} />
           </li>
         </ol>
@@ -77,7 +77,7 @@ export default function Home({ shots, animals }: PageProps) {
         <Screenshot shot={roundEnd} crop={`${CROP} object-[50%_70%]`} />
         <div className="flex flex-col gap-m md:order-first">
           <h2 id="animals" className={H2}>{animals.total} real animals, all sourced</h2>
-          <p className={MEASURE}>Facts from the IUCN Red List, Animal Diversity Web and other ranked sources. Photos from Wikimedia Commons, credited on every card.</p>
+          <p className={MEASURE}>Facts from the IUCN Red List, Animal Diversity Web and other ranked sources. Photos from Wikimedia Commons, credited in the game.</p>
           <p className={MEASURE}>So far {listClasses(animals)}.</p>
         </div>
       </Section>
