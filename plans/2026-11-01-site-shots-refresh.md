@@ -336,7 +336,7 @@ Never `source .env.local`: its URL has an unquoted `&`, so the shell backgrounds
   for s in 'the full record' 'each round-end card lists' 'Every source is on' 'The round-end card has everything needed' 'finds nothing' 'then clear gems next to them' 'Check each animal' 'credited on every card' 'on more than one device' 'Finished rounds are saved' 'to sync their Field Journal' 'mystery' 'Camera saw'; do grep -lF "$s" out/site/index.html out/site/teachers/index.html; done
   ```
   (Privacy keeps "Finished rounds are saved": F4.)
-- [ ] S6. **Handoff for F4.** File: `/srv/critter-ai/handoff/critter-connect.md` (outside git), under `## Open`, above `## Closed`. Use the next free number (H7 unless taken; H6 is the password item, see **Decisions**). Add this item, unindented:
+- [x] S6. **Handoff for F4.** File: `/srv/critter-ai/handoff/critter-connect.md` (outside git), under `## Open`, above `## Closed`. Use the next free number (H7 unless taken; H6 is the password item, see **Decisions**). Add this item, unindented:
   ```
   ### H7 · Privacy and Terms no longer match the game: restore the save, or rewrite them?
   Status: waiting on you
@@ -429,5 +429,6 @@ Must show: three 200s, no `OLD`.
 - 2026-11-02 00:09 UTC: S3. Viewed all 10 shots against alts and manifests; no retake. `shots.ts` header (2026-11-02, 1a781de4, pool 2207354486, `npm run site:shots`); `fieldGuide`, `heroBoard`, `roundEnd` alts reworded; other alts, `photos`, `ROUND_1`, `OG_IMAGE.alt` already true. typecheck, lint, site:build pass; new hero alt in `out/site/index.html`; header matches manifest. `eye-check.txt` written.
 - 2026-11-02 00:13 UTC: S4. Crops: `Teachers.tsx` hero `md:aspect-[780/760]` + comment (board top 380), round-end `object-[50%_70%]` on both pages, `Home.tsx:55` `object-bottom`; other crops already fit. typecheck, lint, site:build pass; e2e:site 444/444, 20 screenshots (`e2e-s4`). Home and Teachers viewed at 390 and 1440: every crop shows F6's must-show.
 - 2026-11-02 00:14 UTC: S5. Applied F3's 11 copy rows verbatim (`Teachers.tsx` 9, `Home.tsx` 2). typecheck, lint, site:build pass; e2e:site 444/444, 20 screenshots (`e2e-s5`). Teachers 1440 viewed where the bullets went: both privacy lists read clean. Stale-fragment loop prints nothing.
+- 2026-11-02 00:15 UTC: S6. Handoff H7 added (Privacy/Terms vs game), above `## Closed`, `waiting on you`; line refs and no-client-POST rechecked. typecheck, lint pass; no repo change but this plan.
 
 ## Summary
