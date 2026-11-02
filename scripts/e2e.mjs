@@ -180,7 +180,7 @@ async function main() {
     });
     await screenshot('02-board-375x548.png');
     check('on a 375x548 phone the board keeps at least 210 px', Boolean(small) && Math.min(...small.board) >= 210, JSON.stringify(small));
-    // 338px wide and under (`narrow`, globals.css): the grid shows initials for the names, fitting beside the cards.
+    // 351px wide and under (`narrow`, globals.css): the grid shows initials for the names, fitting beside the cards.
     await page('Emulation.setDeviceMetricsOverride', { width: 320, height: 720, deviceScaleFactor: 2, mobile: true });
     await sleep(800);
     const narrow = await evaluate(() => {

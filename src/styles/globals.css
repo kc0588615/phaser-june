@@ -80,9 +80,9 @@
 /* Game screen: the status line goes under the board on any phone at least 560px tall, even when the board has to
    shrink for it (it carries the answers and hints). Shorter screens (landscape, tiny phones) keep the board's height. */
 @custom-variant roomy (@media (min-height: 560px));
-/* Game screen, 338px wide and under: the evidence grid shows the animals' initials for their names (the full name
+/* Game screen, 351px wide and under: the evidence grid shows the animals' initials for their names (the full name
    is still in each row's label and field guide), and the Camera cell only its counts: no room for words beside the cards. */
-@custom-variant narrow (@media (max-width: 338px));
+@custom-variant narrow (@media (max-width: 351px));
 
 /* Game screen, phone layout: the board is as tall as the screen is wide, so a tall phone's spare height goes to the
    evidence rows: 100dvh - 100vw (board) - 92px (the grid's header, spacing and the Camera row's divider; + 56px status line when `roomy`)
