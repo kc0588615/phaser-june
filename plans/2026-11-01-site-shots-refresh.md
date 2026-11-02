@@ -424,6 +424,15 @@ SHOULD-CONSIDER:
 
 ## Release
 
+- **PR:** https://github.com/kc0588615/phaser-june/pull/43, CI pass (2m48s). Rebase was a no-op: `origin/main` still `1a781de4`, so no retake (live pool `2207354486` = manifests). #37 closed.
+- **Verification re-run on `89afb5ac`:** typecheck, lint, site:build exit 0; `e2e:site` 444/444, 20 screenshots; hash loop, "Camera saw", allowed files, fragment loop, header = manifests all clean; contact sheet viewed. Repo's `check-game-css` still exit 1 (its own flaw, confirmed in the source: `tree(base, deleted)` keeps `src/site`, HEAD drops it); with `src/site` out of both sides, byte-identical (Decisions).
+- **Merge commit:** `1a602a8c037a28dfc6d2c3c700d6cf50250e282c`.
+- **Deploy's last line:** `deploy critter-connect: live at https://critterconnect.org`. `deploy/check.sh` 37 OK, 0 BAD, 0 SKIP; `critter-app: healthy`. First real run of this path; no server change by hand.
+- **Smoke:** `/` 200, `/teachers/` 200, play 200, `play/explore/` 200, `play/api/clue-game/pool/` 200. No `OLD` hash, no "Camera saw" on either page. New copy live on both pages.
+- **Logs:** `/srv/critter-ai/agent-state/missions/site-shots-refresh/deploy.log`, `release-smoke.txt`.
+
+Result: done
+
 ## Decisions
 
 - **Password exposure (H6), 2026-11-01:** at the Steps stage the planner ran `. ./.env.local` to test the row count, and the shell printed the live `DATABASE_URL`, with its password, into that subagent's tool output. Checked by file name only: one transcript on the VPS holds it, not git, the plan or the mission's state folder. Rotation is the owner's call (live server, WSL, QGIS), so H6 asks; the mission goes on. Plan's **Rows count** now reads the URL with `sed`, and says never to source that file. Privacy/Terms item moved to H7.
@@ -449,10 +458,11 @@ SHOULD-CONSIDER:
 - 2026-11-02 00:19 UTC: S7. `run.mjs` signal exit deferred so `cdp.mjs` cleanup runs. SIGTERM on `start` in scratch dir: exit 130, no Chrome of this run, no new profile dir, 3106 free; no rounds played. typecheck, lint pass.
 - 2026-11-02 00:22 UTC: S8. `take()` removes its manifest before any capture. SIGTERM on `start` in a scratch copy after `globe.png` was rewritten: exit 130, `start.json` gone, `convert` exits 1 (ENOENT), `src/site` unchanged, 3106 free, no Chrome or profile left; no rounds played. typecheck, lint pass.
 - 2026-11-02 00:24 UTC: Final Verification. typecheck, lint, site:build exit 0; e2e:site 444/444, 20 screenshots (`e2e-site/`). Hash loop clean, all 10 changed. No "Camera saw" in site or shot text. Only allowed files changed; fragment loop clean; header = manifests; eye-check current; contact sheet viewed. Repo's `check-game-css` exits 1 (its own flaw, see Decisions); with `src/site` out of both sides, byte-identical. origin/main still 1a781de4, live pool unchanged. Summary and `pr-body.md` written; status done.
+- 2026-11-02 00:35 UTC: Release. Verification re-run on `89afb5ac` (e2e:site 444/444), PR #43 CI pass, merged `1a602a8c`, `deploy critter-connect` exit 0 (check.sh 37 OK, 0 BAD). Smoke: `/`, `/teachers/`, play 200, no old hash. Result: done.
 
 ## Summary
 
-Done, ready for release. PR body: `/srv/critter-ai/agent-state/missions/site-shots-refresh/pr-body.md`.
+Done and live: PR #43 merged (`1a602a8c`), deployed, smoke clean (`## Release`). PR body: `/srv/critter-ai/agent-state/missions/site-shots-refresh/pr-body.md`.
 
 **Base:** `1a781de4` (origin/main; still the tip at final Verification), pool `2207354486`, same as live. No retake needed by the rebase rule so far.
 
