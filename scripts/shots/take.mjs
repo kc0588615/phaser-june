@@ -5,7 +5,7 @@
 // the deal reads), the rounds played, any API writes, and per shot its animals, theme, page text, board rect and round state.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openPage, startBrowser } from '../cdp.mjs';
@@ -24,6 +24,8 @@ async function poolHash(base) {
 }
 
 export async function take({ mode, base, outDir }) {
+  // Written only when capture ends, so a kill must not leave the old manifest vouching for overwritten PNGs.
+  rmSync(path.join(outDir, `${mode}.json`), { force: true });
   const commit = execFileSync('git', ['merge-base', 'HEAD', 'origin/main'], { cwd: root, encoding: 'utf8' }).trim();
   const pool = await poolHash(base);
   const { browser, close } = await startBrowser();
