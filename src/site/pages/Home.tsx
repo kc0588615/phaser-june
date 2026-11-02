@@ -52,7 +52,7 @@ export default function Home({ shots, animals }: PageProps) {
           <li className="flex flex-col gap-s">
             <h3 className={H3}>Match gems to answer questions</h3>
             <p>Each yes-or-no question fills with 20 matching gems. You have 30 moves a round.</p>
-            <Screenshot shot={boardPhone} crop={`${CROP} object-[50%_70%]`} />
+            <Screenshot shot={boardPhone} crop={`${CROP} object-bottom`} />
           </li>
           <li className="flex flex-col gap-s">
             <h3 className={H3}>Rule out the look-alikes</h3>
@@ -74,7 +74,7 @@ export default function Home({ shots, animals }: PageProps) {
       </Section>
 
       <Section band labelledBy="animals" className="grid gap-xl md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:items-center">
-        <Screenshot shot={roundEnd} crop={`${CROP} object-[50%_40%]`} />
+        <Screenshot shot={roundEnd} crop={`${CROP} object-[50%_70%]`} />
         <div className="flex flex-col gap-m md:order-first">
           <h2 id="animals" className={H2}>{animals.total} real animals, all sourced</h2>
           <p className={MEASURE}>Facts from the IUCN Red List, Animal Diversity Web and other ranked sources. Photos from Wikimedia Commons, credited on every card.</p>

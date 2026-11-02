@@ -39,7 +39,7 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
     <>
       {/* On a computer (64rem) the shot leads beside the words (Taste focal-point: a picture of at least a
           third of the first screen); narrower, it goes under them, so the headline keeps two lines. From 48rem the crop is
-          the evidence grid exactly (the top 750 of the shot's 780x1688 px), ending at the board's edge. */}
+          the evidence grid exactly (the top 760 of the shot's 780x1688 px), ending at the board's edge. */}
       <Section labelledBy="hero" className="grid gap-xl lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-center">
         <div className="flex flex-col items-start gap-m">
           <h1 id="hero" className={H1}>A deduction game for science</h1>
@@ -49,7 +49,7 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
         <div className={FRAME}>
           <img
             src={gridMarked.src} width={gridMarked.width} height={gridMarked.height} alt={gridMarked.alt} {...LEAD_IMAGE}
-            className={`block h-auto w-full rounded-m ${CROP} object-top md:aspect-[780/750]`}
+            className={`block h-auto w-full rounded-m ${CROP} object-top md:aspect-[780/760]`}
           />
         </div>
       </Section>
@@ -105,7 +105,7 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
             <ClassLink script={classLinkScript} />
           </div>
         </div>
-        <Screenshot shot={roundEnd} crop={`${CROP} object-[50%_40%]`} />
+        <Screenshot shot={roundEnd} crop={`${CROP} object-[50%_70%]`} />
       </Section>
 
       <Section labelledBy="privacy" className="flex flex-col gap-l">
