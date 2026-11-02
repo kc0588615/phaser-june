@@ -1,8 +1,8 @@
-// Screenshots of the game on the website (plan 051 §9), in src/site/shots/ as WebP. Taken 2026-10-29 from the game at
-// origin/main 0bbbeb0e, light mode: globe, board-phone and hero-board from the production build; the rest from a dev
-// build, the seeded trail played through window.__cc. `photos`: the animals (profile ids) whose photos show in the
-// shot; each page's footer credits them (render.tsx), and the build fails on an id with no profile or photo.
-// Retake: the take.mjs and convert.mjs in the cc-website mission's artifacts (shots/), then check every shot by eye.
+// Screenshots of the game on the website (plan 051 §9), in src/site/shots/ as WebP. Taken 2026-11-02 from the game at
+// origin/main 1a781de4, pool 2207354486, light mode: globe, board-phone and hero-board from the production build; the
+// rest from a dev build, the seeded trail played through window.__cc. `photos`: the animals (profile ids) whose photos
+// show in the shot; each page's footer credits them (render.tsx), and the build fails on an id with no profile or photo.
+// Retake: npm run site:shots, then check every shot by eye.
 
 export type Shot = {
   file: string;
@@ -33,11 +33,11 @@ export const SHOTS = {
   },
   heroBoard: {
     file: 'hero-board.webp', width: 1440, height: 900, ...AFRICA, round: 1, photos: ROUND_1,
-    alt: 'A round on a computer: the board of gems with five animal cards pinned on it, the evidence grid beside it',
+    alt: 'A round: a board of gems with five animal cards pinned on it',
   },
   fieldGuide: {
     file: 'field-guide.webp', ...PHONE, ...AFRICA, round: 1, photos: ROUND_1,
-    alt: 'The Aye-aye\'s field guide, open over the grid: its photo, its signs and its answers to the questions',
+    alt: 'The Aye-aye\'s field guide, open over the grid: its photo, its signs and the questions still to scout',
   },
   gridMarked: {
     file: 'grid-marked.webp', ...PHONE, ...AFRICA, round: 1, photos: ROUND_1,
@@ -49,7 +49,7 @@ export const SHOTS = {
   },
   roundEnd: {
     file: 'round-end.webp', ...PHONE, ...AFRICA, round: 1, photos: ROUND_1,
-    alt: 'The round-end card: found it, the Aye-aye, with its family tree and the evidence lined up',
+    alt: 'The round-end card: found it, the Aye-aye, with its family tree, under the grid showing which answers differ from the camera\'s',
   },
   journal: {
     file: 'journal.webp', ...PHONE, ...AFRICA, round: null, photos: [23, 57],
