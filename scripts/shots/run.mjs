@@ -39,7 +39,8 @@ const killGroup = (server, signal) => {
 
 let running = null;
 process.on('exit', () => { if (running) killGroup(running, 'SIGKILL'); });
-for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, () => process.exit(130));
+// Deferred so cdp.mjs's later signal handler (kills Chrome, removes its profile) runs first.
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, () => setImmediate(() => process.exit(130)));
 
 async function waitUp(server, logName) {
   const deadline = Date.now() + UP_TIMEOUT_MS;
