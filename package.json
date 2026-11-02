@@ -33,6 +33,7 @@
         "docs": "python3 -m http.server 3000 -d docs",
         "site:build": "node scripts/site.mjs",
         "site:serve": "python3 -m http.server 3101 -b 127.0.0.1 -d out/site",
+        "site:shots": "node scripts/shots/run.mjs",
         "start": "npm run build && npm run serve",
         "typecheck": "tsc --noEmit",
         "lint": "eslint src tests scripts --max-warnings 0 && node scripts/check-theme.mjs",

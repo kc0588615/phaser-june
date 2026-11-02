@@ -305,7 +305,7 @@ printf 'BEGIN READ ONLY;\nSELECT count(*) FROM clue_match_solves;\nCOMMIT;\n' | 
 ```
 Never `source .env.local`: its URL has an unquoted `&`, so the shell backgrounds it and prints the password. Never echo `$U`.
 
-- [ ] S1. **Move and fix the scripts; prove them with no rounds played.** Files: new `scripts/shots/run.mjs`, `take.mjs`, `convert.mjs`; `package.json` (the `site:shots` script only, no lockfile change). Copy `take.mjs` and `convert.mjs` from `/srv/critter-ai/agent-state/missions/cc-website/shots/` (F2's line numbers are that `take.mjs`'s; the originals stay). Apply every F2 row, then Target design (`run.mjs`, `take.mjs`, `convert.mjs`, env table, manifest fields). F7: plain `sharp` import, no new dependency. Check the port before the build, so a busy port fails at once. No `src/site` change. Check:
+- [x] S1. **Move and fix the scripts; prove them with no rounds played.** Files: new `scripts/shots/run.mjs`, `take.mjs`, `convert.mjs`; `package.json` (the `site:shots` script only, no lockfile change). Copy `take.mjs` and `convert.mjs` from `/srv/critter-ai/agent-state/missions/cc-website/shots/` (F2's line numbers are that `take.mjs`'s; the originals stay). Apply every F2 row, then Target design (`run.mjs`, `take.mjs`, `convert.mjs`, env table, manifest fields). F7: plain `sharp` import, no new dependency. Check the port before the build, so a busy port fails at once. No `src/site` change. Check:
   - typecheck, lint.
   - `npm run site:shots -- start`: exit 0; `$SHOTS_DIR` has `globe`, `board-phone`, `hero-board`, `og` PNGs and `start.json`; `jq '{commit, pool, writes, themes: [.shots[].theme]}' $SHOTS_DIR/start.json` shows commit `1a781de4…`, a 10-hex pool, `writes: []`, all `light`. View `hero-board.png`: no how-to dialog. `ss -ltn` shows 3106 free afterwards.
   - `npm run site:shots -- convert`: non-zero (no `play.json`); `git status --short src/site` empty.
@@ -423,5 +423,6 @@ Must show: three 200s, no `OLD`.
 - 2026-11-01 23:44 UTC: Astra review: APPROVE, no must-fix, 3 should-consider. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:49 UTC: Revision. Fable's 2 must-fix and 1 missed resolved (`Teachers.tsx:78` kept, `:120` and `:128` deleted, `Home.tsx:80` reworded); 6 should-consider adopted, 1 in a different form. Lead checked the diff against `Teachers.tsx`. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:55 UTC: Steps. Planner wrote S1-S6 and Verification. Planner printed the live DB password to its tool output while testing a count; H6 added, nothing in git. No code changed; typecheck/lint n/a.
+- 2026-11-02 00:01 UTC: S1. Moved take/convert to `scripts/shots/` with `run.mjs`, `npm run site:shots`; F2 fixes, manifests. typecheck, lint pass; `start` exit 0 (4 shots, commit 1a781de4, pool 2207354486, writes [], all light, no how-to, 3106 free after); `convert` refuses with no play.json, src/site untouched; busy port fails at once. No rounds played.
 
 ## Summary
