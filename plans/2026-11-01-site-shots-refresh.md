@@ -2,7 +2,7 @@
 mission: site-shots-refresh
 project: critter-connect
 branch: agent/site-shots-refresh
-status: active
+status: done
 started: 2026-11-01 23:22 UTC
 ---
 
@@ -371,6 +371,7 @@ Runs on the final commit, after the Astra code review, with the Steps' Setup. No
 3. Hash loop (Architecture, **Hashes**), `| tee $M/hash-check.txt`: no `MISSING`, no `STALE`; a same hash only for a byte-identical shot (record it as retaken, unchanged).
 4. The Architecture's three "Camera saw" lines: first two print nothing; the `jq` list goes in the Summary.
 5. `node scripts/check-game-css.mjs "$(git merge-base HEAD origin/main)" 2>&1 | tee $M/check-game-css.log`: exit 0. The merge-base keeps an owner's style commit on `main` from failing it before the rebase; after the rebase it's the new base.
+   **Changed at final Verification (see Decisions):** the repo script fails on every branch, so the check is `node --input-type=module - "$(git merge-base HEAD origin/main)" /tmp/cc-game-css-fixed < /srv/critter-ai/agent-state/missions/site-shots-refresh/check-game-css.both-sides.mjs`, from the worktree root: exit 0, byte-identical. Run the repo script too, for the record.
 6. Only allowed files changed; prints nothing:
    ```
    git diff --name-only "$(git merge-base HEAD origin/main)" HEAD | grep -vE '^(plans/|scripts/shots/|package\.json$|src/site/(shots/[^/]+\.webp|og\.png|shots\.ts|config\.ts|pages/(Home|Teachers)\.tsx)$)'
@@ -428,6 +429,7 @@ SHOULD-CONSIDER:
 - **Password exposure (H6), 2026-11-01:** at the Steps stage the planner ran `. ./.env.local` to test the row count, and the shell printed the live `DATABASE_URL`, with its password, into that subagent's tool output. Checked by file name only: one transcript on the VPS holds it, not git, the plan or the mission's state folder. Rotation is the owner's call (live server, WSL, QGIS), so H6 asks; the mission goes on. Plan's **Rows count** now reads the URL with `sed`, and says never to source that file. Privacy/Terms item moved to H7.
 - **Crops (S4):** `Home.tsx:55` is `object-bottom`, not a tuned %: the only crop with the whole board and the whole hint sentence; 70% cut the bottom gem row and a card, 86% cut the sentence. One grid row shows (Indri), still "part of grid". `Home.tsx:39` stays 84% (`760/908` = 83.7%; board top 380 in `start.json`). Journal crop shows only the Aye-aye; the alt names both finds, true of the shot file, left as is (same since base).
 - **Astra code review (2026-11-02):** both MUST-FIX items are real, checked against the code: S7 (`run.mjs` handler registers before `cdp.mjs`'s and exits first), S8 (`finally` doesn't run on a kill; `convert`'s `check` only compares dimensions). The SHOULD-CONSIDER goes in the Summary, unchanged in code.
+- **`check-game-css` (final Verification):** Verification's step 5 fails, exit 1, and the fault is the check's, not this branch's. `scripts/check-game-css.mjs` compiles the base with `src/site` and HEAD without it, written before the site reached `main`. Control, same logic with HEAD replaced by the base, so no branch change: exit 1, same two hashes. With `src/site` out of both sides: exit 0, byte-identical (`0630ca48…`, 52396 bytes). `git diff` of `src` outside `src/site` is empty. So step 5 is met in intent, not as written. The script is left unfixed: outside the Brief's scope and step 6's allowed files. Reported in the Summary and PR. Evidence: `check-game-css.log`, `check-game-css.both-sides.mjs` in the state folder.
 
 ## Log
 
@@ -446,7 +448,71 @@ SHOULD-CONSIDER:
 - 2026-11-02 00:18 UTC: Astra code review: APPROVE_WITH_CHANGES, 2 must-fix, both real, added as S7 and S8; 1 should-consider for the Summary. No code changed; typecheck/lint n/a.
 - 2026-11-02 00:19 UTC: S7. `run.mjs` signal exit deferred so `cdp.mjs` cleanup runs. SIGTERM on `start` in scratch dir: exit 130, no Chrome of this run, no new profile dir, 3106 free; no rounds played. typecheck, lint pass.
 - 2026-11-02 00:22 UTC: S8. `take()` removes its manifest before any capture. SIGTERM on `start` in a scratch copy after `globe.png` was rewritten: exit 130, `start.json` gone, `convert` exits 1 (ENOENT), `src/site` unchanged, 3106 free, no Chrome or profile left; no rounds played. typecheck, lint pass.
+- 2026-11-02 00:24 UTC: Final Verification. typecheck, lint, site:build exit 0; e2e:site 444/444, 20 screenshots (`e2e-site/`). Hash loop clean, all 10 changed. No "Camera saw" in site or shot text. Only allowed files changed; fragment loop clean; header = manifests; eye-check current; contact sheet viewed. Repo's `check-game-css` exits 1 (its own flaw, see Decisions); with `src/site` out of both sides, byte-identical. origin/main still 1a781de4, live pool unchanged. Summary and `pr-body.md` written; status done.
 
 ## Summary
+
+Done, ready for release. PR body: `/srv/critter-ai/agent-state/missions/site-shots-refresh/pr-body.md`.
+
+**Base:** `1a781de4` (origin/main; still the tip at final Verification), pool `2207354486`, same as live. No retake needed by the rebase rule so far.
+
+**Verification (final commit):** typecheck, lint, site:build exit 0. `e2e:site` 444/444, 20 screenshots. Hash loop clean, no "Camera saw" in `out/site` or shot text (case-sensitive), every shot checked by eye. **Not as written:** Verification step 5, `scripts/check-game-css.mjs`, exits 1 on this branch, and on any branch: it keeps `src/site` in the base and drops it from HEAD. Run with `src/site` out of both sides, the game's stylesheet is byte-identical (Decisions). Full game E2E not run (Brief).
+
+**Artifacts** in `/srv/critter-ai/agent-state/missions/site-shots-refresh/`: `shots/contact.png`, `e2e-site/report.json` + screenshots, `shots/raw/`, `shots/eye-check.txt`, `shots/retake.log`, `hash-check.txt`, `db-counts.txt`, `check-game-css.log`. Reproduce: Steps' Setup, `npm run site:shots`, then Site check.
+
+**Live database:** 2 rounds played, 0 API writes, `clue_match_solves` 188 → 188.
+
+**Production content build:** not needed. No `db/content` change; the site image bakes `out/site` with no database.
+
+### Shots
+
+| File | Old → new hash | KB | What changed |
+|---|---|---|---|
+| globe.webp | 22d18d99d9 → cea5338469 | 30 → 31 | Same view, re-rendered; no game copy on screen |
+| board-phone.webp | 99a0cf755b → a642766bbb | 93 → 96 | "On camera" row, new opener, new grid cells |
+| hero-board.webp | 5acfa0bf7c → f595333063 | 88 → 90 | Same changes, desktop |
+| field-guide.webp | d856843b5e → a84c9b5c6c | 77 → 86 | "On camera" row, new guide buttons ("It's this one!") |
+| grid-marked.webp | 0f17a5c718 → 31e346ca09 | 91 → 95 | "On camera" row, new notes and marks |
+| witness-note.webp | bdd4c545c8 → 7a10b8a14a | 78 → 82 | "On camera" row |
+| round-end.webp | 2a44fde426 → e3744f20ba | 62 → 92 | Round end now on the board: replay grid above the card |
+| journal.webp | 30b1f42e0f → 17a817ffe1 | 79 → 75 | Current journal text |
+| globe-found.webp | 2777d9d121 → a99605a364 | 35 → 35 | Same view, re-rendered |
+| og.png | 37a7c2b1ac → 39381c1050 | 95 → 94 | "On camera" row, new opener |
+
+Crops: `Teachers.tsx` hero `md:aspect-[780/750]` → `[780/760]`; round-end `object-[50%_40%]` → `[50%_70%]` on both pages; `Home.tsx` board-phone `object-[50%_70%]` → `object-bottom`.
+
+### Copy changes
+
+| Where | Before → after | Proof |
+|---|---|---|
+| `Teachers.tsx` FAQ, accounts | "Signing in is optional; it keeps a player's Field Journal on more than one device." → "Signing in is optional." | No client sends a solve: only `getJson` fetches (`src/lib/getJson.ts:8`); `POST /api/clue-game/solves` has no caller; `useJournal.ts:42` only reads old solves |
+| `Teachers.tsx` FAQ, accuracy | "…the IUCN Red List first, and each round-end card lists its sources. Traits…" → "…the IUCN Red List first. Traits…" | `RoundEndSheet` (`AnimalSheets.tsx:503-662`) has no sources; `SourceLine` has no caller |
+| `Teachers.tsx` how it works | "Students compare them with each animal's field guide and rule out the ones that can't be it, then clear gems next to them to release them." → "Students compare each animal's scouted answers with the camera's and rule out the ones that can't be it. A ruled-out animal wanders off the board, or clearing a gem next to it releases it at once." | Guide hides the round's question traits while playing (`AnimalSheets.tsx:86, :96`, `clueFaces.ts:37`); comparison is in the grid (`AnimalSheets.tsx:711`); wander on (`animalBoard.ts:59, :368`) |
+| `Teachers.tsx` how it works | "The round-end card shows the full record: the family tree, the range map and the sources." → "The round-end card shows the family tree and the animal's field notes, and the grid above it replays the evidence." | Tree `AnimalSheets.tsx:590-596`, notes `:625-639`; `RangeMap` only in `JournalSheet.tsx:66` |
+| `Teachers.tsx` evidence | "one who matches without reasoning finds nothing" → "one who matches without reasoning finds about one round in five" | `nameIt` (`animalBoard.ts:405`); `plans/053-name-it.md:17, :25` |
+| `Teachers.tsx` tips | "The round-end card has everything needed." → "The grid and the round-end card have everything needed." | Answers are in the replay grid outside the card (`AnimalSheets.tsx:536-537`, `EvidenceGrid.tsx:204`) |
+| `Teachers.tsx` privacy | deleted "Finished rounds are saved with no link to the player." | No round is saved (as the first row) |
+| `Teachers.tsx` privacy | deleted "The game keeps the player's results, to sync their Field Journal between devices." | New results aren't kept; `journal/route.ts` only reads old rows |
+| `Teachers.tsx` sources | deleted "Every source is on the round-end card." | As the second row |
+| `Home.tsx` how it works | "Check each animal's field guide against the answers. Rule out the wrong one and it escapes." → "Compare each animal's answers with the camera's. Rule out the one caught on camera and it escapes." | As the third row; wording from `AnimalSheets.tsx:712` |
+| `Home.tsx` sources | "credited on every card" → "credited in the game" | Credits in guide and round end (`AnimalSheets.tsx:203, :576`) and journal (`JournalSheet.tsx:70`); pinned cards have none (`AnimalCard.tsx`) |
+
+Alt text, in `src/site/shots.ts`:
+- `heroBoard`: "A round on a computer: the board of gems with five animal cards pinned on it, the evidence grid beside it" → "A round: a board of gems with five animal cards pinned on it". The phone `<picture>` crop shows no grid.
+- `fieldGuide`: "…its signs and its answers to the questions" → "…its signs and the questions still to scout". At round start nothing is answered.
+- `roundEnd`: "…with its family tree and the evidence lined up" → "…with its family tree, under the grid showing which answers differ from the camera's". The evidence moved onto the board.
+- `ROUND_1`, `OG_IMAGE.alt`, photo credits, other alts: re-checked by eye, already true, no edit.
+
+### Out of scope, noticed
+
+- **`scripts/check-game-css.mjs` fails on every branch** since the site reached `main`. Fix: `tree(base, [...deleted, 'src/site'])`.
+- Game saves nothing since plan 044; the route, `parseSolveReport` and `LogEntryText`'s `SourceLine` are dead. Stale: `docs/CLUE_MATCH.md:10, :24, :45, :74`, `src/proxy.ts:3`, `~/AGENTS.md`'s "add rows". Privacy and Terms: H7.
+- No per-fact sources anywhere in the game now, only the Red List link (`JournalSheet.tsx:60-64`). Paper `:228, :268` still claims them.
+- Lowercase "camera saw": `AnimalGame.tsx:414`, `AnimalSheets.tsx:581, :696`, `JournalSheet.tsx:43`. In shot text (`jq`): play round-end, play journal. Journal's is in the DOM under the sheet, not visible.
+- `animalBoard.ts:54-56` comment understates careful (91-95%, now 97-98%).
+- `e2e.mjs:76` hard-codes the how-to key and duplicates the pill helpers.
+- VPS `.env.local` has `?pgbouncer=true`, which `AGENTS.md` says not to add. App strips it (`src/db/index.ts:10-14`); `psql` rejects it.
+
+**Waiting on the owner, blocking nothing:** H6 (rotate the live DB password), H7 (Privacy/Terms), H4 (older).
 
 Astra's should-consider, not done: `scripts/shots/take.mjs:81` `imagesLoaded` checks `img.complete` only, and a failed image download also reports complete, so a missing photo could reach a shot unnoticed (this retake's shots were checked by eye). Adding `naturalWidth > 0` would catch it.
