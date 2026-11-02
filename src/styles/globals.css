@@ -80,8 +80,8 @@
 /* Game screen: the status line goes under the board on any phone at least 560px tall, even when the board has to
    shrink for it (it carries the answers and hints). Shorter screens (landscape, tiny phones) keep the board's height. */
 @custom-variant roomy (@media (min-height: 560px));
-/* Game screen, 338px wide and under: the evidence grid drops the animals' names (their numbered photo cards stay;
-   the name is still in each row's label and field guide), so wrapped names don't stretch its rows and squeeze the board. */
+/* Game screen, 338px wide and under: the evidence grid shows the animals' initials for their names (the full name
+   is still in each row's label and field guide), and the Camera cell only its counts: no room for words beside the cards. */
 @custom-variant narrow (@media (max-width: 338px));
 
 /* Game screen, phone layout: the board is as tall as the screen is wide, so a tall phone's spare height goes to the
@@ -496,6 +496,9 @@ body {
 @keyframes ev-lit {
   from { background-color: var(--color-3); }
 }
+/* The grid keeps cc's tight letter spacing (owner, 2026-11-01): the wider steps above wrap its names and corner, which
+   clips names and squeezes the board. */
+.ev-grid { --letter-spacing-xxs: -0.04em; --letter-spacing-xs: -0.04em; --letter-spacing-s: -0.04em; --letter-spacing-m: -0.04em; }
 .ev-lit { animation: ev-lit 1.6s ease-out; }
 /* Round end: two-tone cells, a light square with darker text of the same hue (dark mode: a dim square, lighter text).
    Green = same as the camera's animal / YES, red = not / NO; a suspect's red cell is also striped (not color alone).

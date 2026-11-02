@@ -6,10 +6,10 @@
 //   e2e-artifacts/<run>/report.json   what was played, every check, errors
 //   e2e-artifacts/<run>/*.png         what the player saw
 //   (the newest 10 runs are kept)
-// Same seed and place, same mysteries and boards.
+// Same seed and place, same mysteries and boards. Resume uses its own fixed seed.
 //
 //   npm run dev        (in another terminal)
-//   npm run e2e        env: E2E_BASE_URL, E2E_SEED (7), E2E_ROUNDS (3), E2E_PLACE (a place key), CHROME_PATH
+//   npm run e2e        env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), CHROME_PATH
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -17,6 +17,7 @@ import { openPage, startBrowser } from './cdp.mjs';
 
 const BASE = (process.env.E2E_BASE_URL ?? 'http://localhost:8080').replace(/\/$/, '');
 const SEED = Number(process.env.E2E_SEED ?? 7);
+const RESUME_SEED = Number(process.env.E2E_RESUME_SEED ?? 7);
 const ROUNDS = Number(process.env.E2E_ROUNDS ?? 4);
 const MAX_MOVES = 45;
 
@@ -179,18 +180,18 @@ async function main() {
     });
     await screenshot('02-board-375x548.png');
     check('on a 375x548 phone the board keeps at least 210 px', Boolean(small) && Math.min(...small.board) >= 210, JSON.stringify(small));
-    // 338px wide and under (`narrow`, globals.css): the grid drops the names, so wrapped text can't stretch its rows.
+    // 338px wide and under (`narrow`, globals.css): the grid shows initials for the names, fitting beside the cards.
     await page('Emulation.setDeviceMetricsOverride', { width: 320, height: 720, deviceScaleFactor: 2, mobile: true });
     await sleep(800);
     const narrow = await evaluate(() => {
       const grid = document.querySelector('table[aria-label="Evidence"]');
       const board = document.querySelector('section[aria-label="Game board"]')?.getBoundingClientRect();
       const rows = [...(grid?.querySelectorAll('tr[data-mystery], tr[data-suspect]') ?? [])].map(row => Math.round(row.getBoundingClientRect().height));
-      const names = [...(grid?.querySelectorAll('[data-name]') ?? [])].filter(name => name.getClientRects().length > 0).length;
-      return grid && board ? { viewport: [innerWidth, innerHeight], rows, names, board: [Math.round(board.width), Math.round(board.height)] } : null;
+      const initials = [...(grid?.querySelectorAll('[data-name] [aria-hidden]') ?? [])].map(name => ({ text: name.textContent, shown: name.getClientRects().length > 0, fits: name.parentElement.scrollWidth <= name.parentElement.clientWidth }));
+      return grid && board ? { viewport: [innerWidth, innerHeight], rows, initials, board: [Math.round(board.width), Math.round(board.height)] } : null;
     });
     await screenshot('02-board-320x720.png');
-    check('on a 320px-wide phone the grid hides names, its rows keep one height and the board keeps at least 280 px', Boolean(narrow) && narrow.names === 0 && Math.max(...narrow.rows) - Math.min(...narrow.rows) <= 1 && Math.min(...narrow.board) >= 280, JSON.stringify(narrow));
+    check('on a 320px-wide phone the grid shows names as initials that fit, its rows keep one height and the board keeps at least 280 px', Boolean(narrow) && narrow.initials.length === 5 && narrow.initials.every(name => name.shown && name.fits && name.text) && Math.max(...narrow.rows) - Math.min(...narrow.rows) <= 1 && Math.min(...narrow.board) >= 280, JSON.stringify(narrow));
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await sleep(800);
     report.layout = { phone: fit, small, narrow };
@@ -709,12 +710,16 @@ async function main() {
         const was = seenKeys(before);
         const scouted = [...seenKeys(state)].filter(key => !was.has(key)).sort();
         if (result.counted) check(`round ${n} move ${moves}: the move scouts exactly the answers next to unmarked animals in its colors`, scouted.join() === [...result.expected].sort().join(), JSON.stringify({ scouted, expected: result.expected }));
+        // Found/lost starts the answer reveal immediately, before the end card opens.
+        // Out of moves still allows naming, so its unscouted answers must stay hidden.
+        const revealed = state.status === 'found' || state.status === 'lost';
         const leaks = result.cells.filter(cell => {
           const order = state.orders.find(candidate => candidate.tag === cell.tag);
           const i = state.suspects.indexOf(cell.id);
-          return cell.hidden ? order.seen[i] || cell.yes !== null || /yes|no/.test(cell.said ?? '') : !order.seen[i] || cell.yes !== String(order.row[i]);
+          const visible = revealed || order.seen[i];
+          return cell.hidden ? visible || cell.yes !== null || /yes|no/.test(cell.said ?? '') : !visible || cell.yes !== String(order.row[i]);
         });
-        check(`round ${n} move ${moves}: the grid shows exactly the scouted answers, and no hidden one`, leaks.length === 0, JSON.stringify(leaks.slice(0, 3)));
+        check(`round ${n} move ${moves}: ${revealed ? 'the ended round reveals the answers' : 'the grid shows exactly the scouted answers, and no hidden one'}`, result.cells.length > 0 && leaks.length === 0, JSON.stringify({ status: state.status, leaks: leaks.slice(0, 3) }));
         // A scouted cell with a pencilled guess says whether it was right (gold check) or wrong; a hidden one says nothing.
         const misjudged = result.cells.filter(cell => {
           const order = state.orders.find(candidate => candidate.tag === cell.tag);
@@ -734,7 +739,10 @@ async function main() {
           notesChecked = true;
           const notes = await evaluate(async () => {
             const book = document.querySelector('table[aria-label="Evidence"] tr[data-mystery] button[data-flight-target="notes"]');
-            const corner = { inRow: Boolean(book), count: book?.dataset.notes ?? null, label: book?.getAttribute('aria-label') ?? '', flash: Boolean(book?.querySelector('.ev-pulse')) };
+            const pulse = book?.querySelector('.ev-unread')?.getAnimations().find(animation => animation.animationName === 'ev-unread');
+            const at = pulse?.currentTime;
+            await new Promise(resolve => setTimeout(resolve, 80));
+            const corner = { inRow: Boolean(book), count: book?.dataset.notes ?? null, label: book?.getAttribute('aria-label') ?? '', flash: pulse?.playState === 'running' && pulse.currentTime > at };
             book?.click();
             await new Promise(resolve => setTimeout(resolve, 250));
             const text = document.querySelector('[role=dialog]')?.innerText ?? '';
@@ -857,9 +865,22 @@ async function main() {
     await goto(`${BASE}/explore/?place=${encodeURIComponent(place.key)}`);
     const boardReady = () => window.__cc?.clue?.() && window.__cc.state().ready;
     await waitFor(boardReady, 'the unseeded board', 60_000);
+    check('coming from the globe starts a new round 1', await evaluate(() => window.__cc.clue().roundNo === 1 && window.__cc.clue().movesLeft === window.__cc.clue().moves));
+    // URL seeds disable saving. Bootstrap a repeatable fresh deal through the saved seed instead:
+    // a different requested place discards the saved round, while retaining its seed.
+    await waitFor(() => sessionStorage.getItem('cc:explore:game'), 'the initial save');
+    await evaluate(seed => {
+      const saved = JSON.parse(sessionStorage.getItem('cc:explore:game'));
+      saved.seed = seed;
+      saved.requested = null;
+      sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
+    }, RESUME_SEED);
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the resume fixture reload');
+    await waitFor(boardReady, 'the repeatable resume board', 60_000);
     await evaluate(() => window.__cc.speed(4));
     await sleep(1500);
-    check('coming from the globe starts a new round 1', await evaluate(() => window.__cc.clue().roundNo === 1 && window.__cc.clue().movesLeft === window.__cc.clue().moves));
+    check('the resume fixture starts a fresh round with its fixed seed', await evaluate(seed => window.__cc.clue().seed === seed && window.__cc.clue().movesUsed === 0, RESUME_SEED));
     const played = await evaluate(async () => {
       const cc = window.__cc;
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -906,7 +927,13 @@ async function main() {
       const { grid, toys, pins } = cc.state();
       return { clue: cc.clue(), grid, toys, pins, walked, saved: Boolean(sessionStorage.getItem('cc:explore:game')) };
     });
+    report.resume = { seed: played.clue.seed, status: played.clue.status, walked: played.walked, movesUsed: played.clue.movesUsed, marked: played.clue.marked, released: played.clue.released, pencil: played.clue.pencil, toys: played.toys.flat().filter(Boolean).length };
     await screenshot('06-before-reload.png');
+    // A released walker is a setup failure, not a persistence bug. Retrying on random boards
+    // used to release every look-alike and win before the journal baseline was captured.
+    const readyToResume = played.clue.status === 'playing' && played.walked?.to && JSON.stringify(played.walked.to) !== JSON.stringify(played.walked.from);
+    check('the resume setup leaves a walked card in a playing round', readyToResume, JSON.stringify(report.resume));
+    if (!readyToResume) throw new Error(`Resume setup failed (seed ${played.clue.seed}); see report.resume`);
     await page('Page.reload');
     await waitFor(() => document.readyState === 'complete', 'the reload');
     await waitFor(boardReady, 'the resumed board', 60_000);
@@ -914,7 +941,6 @@ async function main() {
     const resumed = await evaluate(() => { const { grid, toys, pins } = window.__cc.state(); return { clue: window.__cc.clue(), grid, toys, pins }; });
     await screenshot('06-after-reload.png');
     const toyCount = played.toys.flat().filter(Boolean).length;
-    report.resume = { movesUsed: played.clue.movesUsed, marked: played.clue.marked, released: played.clue.released, pencil: played.clue.pencil, toys: toyCount };
     check('the game in progress is saved for the tab', played.saved);
     check('a reload resumes the round: rules, marks, pencil, moves, score', JSON.stringify(resumed.clue) === JSON.stringify(played.clue), JSON.stringify({ before: played.clue.movesLeft, after: resumed.clue.movesLeft }));
     check('a reload resumes the board: gems and toys', JSON.stringify(resumed.grid) === JSON.stringify(played.grid) && JSON.stringify(resumed.toys) === JSON.stringify(played.toys), `${toyCount} toys`);
@@ -925,7 +951,7 @@ async function main() {
     // Play the round out, then reload on its end card: the journal doesn't count the find twice.
     await evaluate(() => window.__cc.speed(4));
     const journalBefore = await evaluate(() => localStorage.getItem('clue-match:journal:v1'));
-    await evaluate(async mysteryName => {
+    await evaluate(async () => {
       const cc = window.__cc;
       for (let i = 0; i < 40 && cc.clue().status === 'playing'; i++) {
         const moves = cc.validMoves();
@@ -933,11 +959,13 @@ async function main() {
         await cc.drag(moves[0], { input: 'touch', timeoutMs: 30_000 });
         await new Promise(resolve => setTimeout(resolve, 150));
       }
-      // Out of moves: name the mystery right, so the journal records it.
-      await new Promise(resolve => setTimeout(resolve, 300));
-      [...(document.querySelector('[aria-label="Out of moves"]')?.querySelectorAll('button') ?? [])].find(b => b.textContent.endsWith(mysteryName))?.click();
-    }, names.get(resumed.clue.mysteryId));
-    await waitFor(() => window.__cc.clue().end, 'the resumed round to end', 20_000).catch(() => null);
+      if (cc.clue().status !== 'out-of-moves') throw new Error(`Expected resumed round out of moves, got ${cc.clue().status}`);
+    });
+    // Wait for the actual choice, not a guessed animation delay; a missing choice must fail here.
+    const mysteryName = names.get(resumed.clue.mysteryId);
+    await waitFor(name => [...(document.querySelector('[aria-label="Out of moves"]')?.querySelectorAll('button') ?? [])].some(b => b.textContent.endsWith(name)), 'the resumed round name choice', 20_000, mysteryName);
+    await evaluate(name => [...document.querySelector('[aria-label="Out of moves"]').querySelectorAll('button')].find(b => b.textContent.endsWith(name)).click(), mysteryName);
+    await waitFor(() => window.__cc.clue().end, 'the resumed round to end', 20_000);
     await sleep(1000);
     const ended = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
     await page('Page.reload');
@@ -946,7 +974,8 @@ async function main() {
     await sleep(1500);
     const afterEnd = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
     await screenshot('06-end-after-reload.png');
-    check('the resumed round, named right, is written to the journal once', ended.journal !== journalBefore);
+    const solves = raw => Object.values(JSON.parse(raw ?? '{}')).find(entry => entry.commonName === mysteryName)?.timesSolved ?? 0;
+    check('the resumed round, named right, is written to the journal once', ended.end?.outcome === 'found' && solves(ended.journal) === solves(journalBefore) + 1, JSON.stringify({ mysteryName, before: solves(journalBefore), after: solves(ended.journal), outcome: ended.end?.outcome }));
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));
 
     // Back on the globe: each animal found has its range drawn and an emoji marker.
