@@ -311,7 +311,7 @@ Never `source .env.local`: its URL has an unquoted `&`, so the shell backgrounds
   - `npm run site:shots -- convert`: non-zero (no `play.json`); `git status --short src/site` empty.
   - `python3 -m http.server 3107 -b 127.0.0.1 >/dev/null 2>&1 & H=$!; SHOTS_PORT=3107 npm run site:shots -- start; echo $?; kill $H`: non-zero at once.
   - `git status --short`: only the S1 files; restore anything else (e.g. `tsconfig.json`, `next-env.d.ts`).
-- [ ] S2. **Retake.** Files: `src/site/shots/*.webp`, `src/site/og.png`; `scripts/shots/take.mjs` only if a scripted step needs adapting (Brief's decision rules; record why under **Decisions**). Do:
+- [x] S2. **Retake.** Files: `src/site/shots/*.webp`, `src/site/og.png`; `scripts/shots/take.mjs` only if a scripted step needs adapting (Brief's decision rules; record why under **Decisions**). Do:
   ```
   rm -rf $SHOTS_DIR; mkdir -p $M/shots/old
   # Rows count: "before <n>" into $M/db-counts.txt
@@ -424,5 +424,6 @@ Must show: three 200s, no `OLD`.
 - 2026-11-01 23:49 UTC: Revision. Fable's 2 must-fix and 1 missed resolved (`Teachers.tsx:78` kept, `:120` and `:128` deleted, `Home.tsx:80` reworded); 6 should-consider adopted, 1 in a different form. Lead checked the diff against `Teachers.tsx`. No code changed; typecheck/lint n/a.
 - 2026-11-01 23:55 UTC: Steps. Planner wrote S1-S6 and Verification. Planner printed the live DB password to its tool output while testing a count; H6 added, nothing in git. No code changed; typecheck/lint n/a.
 - 2026-11-02 00:01 UTC: S1. Moved take/convert to `scripts/shots/` with `run.mjs`, `npm run site:shots`; F2 fixes, manifests. typecheck, lint pass; `start` exit 0 (4 shots, commit 1a781de4, pool 2207354486, writes [], all light, no how-to, 3106 free after); `convert` refuses with no play.json, src/site untouched; busy port fails at once. No rounds played.
+- 2026-11-02 00:07 UTC: S2. Retook all 10 shots from 1a781de4 (pool 2207354486), `take.mjs` unchanged. 2 rounds played, 0 API writes, `clue_match_solves` 188 -> 188. typecheck, lint, site:build pass; e2e:site 444/444, 20 screenshots (`e2e-s2`); hash loop: all 10 changed, no MISSING, no STALE. Contact sheet viewed; shot-by-shot eye check is S3.
 
 ## Summary
