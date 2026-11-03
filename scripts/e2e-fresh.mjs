@@ -8,7 +8,22 @@ import { createServer } from 'node:net';
 const DIR = '.next-e2e';
 const LOG = `${DIR}/server.log`;
 const UP_TIMEOUT_MS = 180_000;
+const STOP_TIMEOUT_MS = 5_000;
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/** A child in its own process group, so stopping it takes what it started too (next-server, Chrome). */
+function startGroup(command, args, options) {
+  const child = spawn(command, args, { ...options, detached: true });
+  return { pid: child.pid, exited: new Promise(resolve => { child.once('exit', code => resolve(code ?? 1)); child.once('error', () => resolve(1)); }) };
+}
+
+/** Asks the group to stop, then makes sure. */
+async function stopGroup({ pid, exited }) {
+  const signal = name => { try { process.kill(-pid, name); } catch { /* already gone */ } };
+  signal('SIGTERM');
+  await Promise.race([exited, sleep(STOP_TIMEOUT_MS)]);
+  signal('SIGKILL');
+}
 
 const port = await new Promise((resolve, reject) => {
   const probe = createServer().once('error', reject).listen(0, () => {
@@ -20,18 +35,21 @@ const base = `http://localhost:${port}`;
 
 mkdirSync(DIR, { recursive: true });
 const log = openSync(LOG, 'w');
-// Its own process group, so stopping it takes next-server too.
-const server = spawn('node_modules/.bin/next', ['dev', '-p', String(port)], { env: { ...process.env, NEXT_DIST_DIR: DIR }, stdio: ['ignore', log, log], detached: true });
-const exited = new Promise(resolve => server.once('exit', resolve));
-const stop = () => { try { process.kill(-server.pid); } catch { /* already gone */ } };
-for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => { stop(); process.exit(1); });
+const groups = [startGroup('node_modules/.bin/next', ['dev', '-p', String(port)], { env: { ...process.env, NEXT_DIST_DIR: DIR }, stdio: ['ignore', log, log] })];
+const [server] = groups;
+for (const name of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.once(name, async () => {
+    await Promise.all(groups.map(stopGroup));
+    process.exit(1);
+  });
+}
 
-/** Resolves once the path answers 200; compiling a page on first request can take a while. */
+/** Resolves once the path answers 200 by the deadline; compiling a page on first request can take a while. */
 async function warm(pathname, deadline) {
   while (Date.now() < deadline) {
-    const answered = await fetch(`${base}${pathname}`).then(response => response.ok, () => false);
+    const answered = await fetch(`${base}${pathname}`, { signal: AbortSignal.timeout(deadline - Date.now()) }).then(response => response.ok, () => false);
     if (answered) return true;
-    const gone = await Promise.race([exited.then(() => true), sleep(1000).then(() => false)]);
+    const gone = await Promise.race([server.exited.then(() => true), sleep(1000).then(() => false)]);
     if (gone) return false;
   }
   return false;
@@ -43,11 +61,12 @@ try {
   for (const pathname of ['/api/places/', '/', '/explore/', '/api/clue-game/pool/']) {
     if (!await warm(pathname, deadline)) throw new Error(`the dev server never answered ${pathname}. ${LOG} ends:\n${readFileSync(LOG, 'utf8').slice(-1500)}`);
   }
-  const run = spawn(process.execPath, ['scripts/e2e.mjs'], { env: { ...process.env, E2E_BASE_URL: base }, stdio: 'inherit' });
-  code = await new Promise(resolve => run.once('exit', exitCode => resolve(exitCode ?? 1)));
+  const run = startGroup(process.execPath, ['scripts/e2e.mjs'], { env: { ...process.env, E2E_BASE_URL: base }, stdio: 'inherit' });
+  groups.push(run);
+  code = await run.exited;
 } catch (error) {
   console.error(`e2e:fresh: ${error.message}`);
 } finally {
-  stop();
+  await stopGroup(server);
 }
 process.exit(code);
