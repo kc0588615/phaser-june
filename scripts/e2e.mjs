@@ -9,7 +9,7 @@
 // Same seed and place, same mysteries and boards. Resume uses its own fixed seed.
 //
 //   npm run e2e:fresh  starts its own dev server (scripts/e2e-fresh.mjs)
-//   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), CHROME_PATH
+//   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), E2E_CPU_THROTTLE (slow Chrome down N times, like a CI runner), CHROME_PATH
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -54,6 +54,7 @@ async function main() {
   const { browser, close } = await startBrowser();
   try {
     const { sessionId, page, evaluate, waitFor } = await openPage(browser);
+    if (process.env.E2E_CPU_THROTTLE) await page('Emulation.setCPUThrottlingRate', { rate: Number(process.env.E2E_CPU_THROTTLE) });
 
     browser.on(message => {
       if (message.sessionId !== sessionId) return;
@@ -84,7 +85,8 @@ async function main() {
         const y = r.top + r.height / 2;
         const at = (type, x) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
         at('pointerdown', r.left + from);
-        for (let x = 10; x <= distance; x += 10) { at('pointermove', r.left + from + x); await new Promise(res => setTimeout(res, 16)); }
+        // No waits between the moves: on a slow machine they would outlast the row's hold timer and make a long press.
+        for (let x = 10; x <= distance; x += 10) at('pointermove', r.left + from + x);
         at('pointerup', r.left + from + distance);
         pill.click();
         await new Promise(res => setTimeout(res, 250));
