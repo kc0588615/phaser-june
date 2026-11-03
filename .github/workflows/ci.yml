@@ -38,7 +38,7 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
 
   # Plays the game in headless Chrome. It writes rounds to clue_match_solves, so it uses the scrubbed copy
-  # phaser_june_dev, never the live database (docs/DATABASE_ACCESS.md). Needs no Clerk keys.
+  # phaser_june_dev, never the live database (docs/DATABASE_ACCESS.md). Next dev needs both keys of Clerk's dev instance.
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -52,6 +52,8 @@ jobs:
       - run: npm run e2e:fresh
         env:
           DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.E2E_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
           NEXT_TELEMETRY_DISABLED: 1
       - uses: actions/upload-artifact@v4
         if: always()

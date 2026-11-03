@@ -179,7 +179,8 @@ run nightly; take a fresh dump (`deploy/backup/pg-backup.sh` on the server) befo
 schema change or bulk write.
 
 CI's e2e job connects to the copy below as `critter_dev` (GitHub secret
-`E2E_DATABASE_URL`), so a schema change the app reads must reach `phaser_june_dev`
+`E2E_DATABASE_URL`, plus Clerk's dev instance keys `E2E_CLERK_PUBLISHABLE_KEY` and
+`E2E_CLERK_SECRET_KEY`), so a schema change the app reads must reach `phaser_june_dev`
 too, or that job goes red. The refresh steps are below.
 
 The rest of this section describes the scrubbed copy they used before: role
