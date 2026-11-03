@@ -84,6 +84,7 @@ async function main() {
         const r = pill.getBoundingClientRect();
         const y = r.top + r.height / 2;
         const at = (type, x) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
+        await new Promise(res => setTimeout(res, 200)); // the row catches up with a mark just made
         at('pointerdown', r.left + from);
         // No waits between the moves: on a slow machine they would outlast the row's hold timer and make a long press.
         for (let x = 10; x <= distance; x += 10) at('pointermove', r.left + from + x);
