@@ -36,3 +36,29 @@ jobs:
         env:
           DATABASE_URL: postgres://build@127.0.0.1:1/build
           NEXT_TELEMETRY_DISABLED: 1
+
+  # Plays the game in headless Chrome. It writes rounds to clue_match_solves, so it uses the scrubbed copy
+  # phaser_june_dev, never the live database (docs/DATABASE_ACCESS.md). Needs no Clerk keys.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run e2e:fresh
+        env:
+          DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          NEXT_TELEMETRY_DISABLED: 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e
+          path: |
+            e2e-artifacts/
+            .next-e2e/server.log
+          include-hidden-files: true
+          retention-days: 7

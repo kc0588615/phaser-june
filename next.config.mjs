@@ -3,6 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // e2e:fresh runs its own dev server beside `npm run dev`: a separate output directory, so its own lock.
+    distDir: process.env.NEXT_DIST_DIR || '.next',
     // A package-lock.json in a parent directory would otherwise be taken as the workspace root.
     outputFileTracingRoot: path.dirname(fileURLToPath(import.meta.url)),
     trailingSlash: true,

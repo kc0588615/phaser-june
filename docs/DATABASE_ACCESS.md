@@ -178,6 +178,10 @@ Writes reach real players, and e2e runs add rounds to `clue_match_solves`. Backu
 run nightly; take a fresh dump (`deploy/backup/pg-backup.sh` on the server) before a
 schema change or bulk write.
 
+CI's e2e job connects to the copy below as `critter_dev` (GitHub secret
+`E2E_DATABASE_URL`), so a schema change the app reads must reach `phaser_june_dev`
+too, or that job goes red. The refresh steps are below.
+
 The rest of this section describes the scrubbed copy they used before: role
 `critter_dev` on database `phaser_june_dev`, which still exists. It has no player
 identities, and its settings are kept on the Oracle box if agents go back to it. Port 55432 and

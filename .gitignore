@@ -12,6 +12,7 @@
 
 # next.js
 /.next/
+/.next-e2e/
 /out/
 
 # production
@@ -61,3 +62,6 @@ CLAUDE.md
 
 # e2e runs (npm run e2e)
 /e2e-artifacts/
+
+# working notes passed between agents and the owner
+/hand-offs/
