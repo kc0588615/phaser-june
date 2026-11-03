@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Typecheck and lint before a push, for every agent and shell (installed by `npm install`, package.json `prepare`).
+npm run -s typecheck && npm run -s lint && exit 0
+echo "pre-push: fix the above. A WIP branch that doesn't pass yet: git push --no-verify" >&2
+exit 1

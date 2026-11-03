@@ -8,8 +8,8 @@
 //   (the newest 10 runs are kept)
 // Same seed and place, same mysteries and boards. Resume uses its own fixed seed.
 //
-//   npm run dev        (in another terminal)
-//   npm run e2e        env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), CHROME_PATH
+//   npm run e2e:fresh  starts its own dev server (scripts/e2e-fresh.mjs)
+//   npm run e2e        against a running `npm run dev`. env: E2E_BASE_URL, E2E_SEED (7), E2E_RESUME_SEED (7), E2E_ROUNDS (4), E2E_PLACE (a place key), E2E_CPU_THROTTLE (slow Chrome down N times, like a CI runner), CHROME_PATH
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -54,6 +54,7 @@ async function main() {
   const { browser, close } = await startBrowser();
   try {
     const { sessionId, page, evaluate, waitFor } = await openPage(browser);
+    if (process.env.E2E_CPU_THROTTLE) await page('Emulation.setCPUThrottlingRate', { rate: Number(process.env.E2E_CPU_THROTTLE) });
 
     browser.on(message => {
       if (message.sessionId !== sessionId) return;
@@ -83,8 +84,10 @@ async function main() {
         const r = pill.getBoundingClientRect();
         const y = r.top + r.height / 2;
         const at = (type, x) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
+        await new Promise(res => setTimeout(res, 200)); // the row catches up with a mark just made
         at('pointerdown', r.left + from);
-        for (let x = 10; x <= distance; x += 10) { at('pointermove', r.left + from + x); await new Promise(res => setTimeout(res, 16)); }
+        // No waits between the moves: on a slow machine they would outlast the row's hold timer and make a long press.
+        for (let x = 10; x <= distance; x += 10) at('pointermove', r.left + from + x);
         at('pointerup', r.left + from + distance);
         pill.click();
         await new Promise(res => setTimeout(res, 250));
@@ -193,9 +196,24 @@ async function main() {
     });
     await screenshot('02-board-320x720.png');
     check('on a 320px-wide phone the grid shows names as initials that fit, its rows keep one height and the board keeps at least 280 px', Boolean(narrow) && narrow.initials.length === 5 && narrow.initials.every(name => name.shown && name.fits && name.text) && Math.max(...narrow.rows) - Math.min(...narrow.rows) <= 1 && Math.min(...narrow.board) >= 280, JSON.stringify(narrow));
+    // Board size beats grid reflow (owner, PR #44): the grid can't squeeze the gems. Floors measured 2026-11-02, the same on seeds 7, 11, 23.
+    const sizes = [];
+    for (const [width, height, floor] of [[320, 720, 40], [340, 720, 46], [351, 720, 47], [352, 720, 48], [360, 740, 49], [375, 548, 35], [375, 667, 44], [390, 844, 53]]) {
+      await page('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 2, mobile: true });
+      await sleep(800);
+      const size = await evaluate(() => {
+        const [left, right] = [window.__cc.cellCenter(0, 0), window.__cc.cellCenter(1, 0)];
+        const grid = document.querySelector('table[aria-label="Evidence"]');
+        const rows = [...grid.querySelectorAll('tr[data-mystery], tr[data-suspect]')].map(row => row.getBoundingClientRect().height);
+        const camera = grid.querySelector('tr[data-mystery] button');
+        return { gem: Math.round(right.x - left.x), rowSpread: Math.max(...rows) - Math.min(...rows), cameraClip: camera.scrollWidth - camera.clientWidth };
+      });
+      sizes.push({ viewport: [width, height], floor, ...size });
+      check(`at ${width}x${height} the gems stay at least ${floor} px, the grid's rows one height and "On camera" unclipped`, size.gem >= floor && size.rowSpread <= 1 && size.cameraClip <= 0, JSON.stringify(size));
+    }
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await sleep(800);
-    report.layout = { phone: fit, small, narrow };
+    report.layout = { phone: fit, small, narrow, sizes };
 
     const journalFinds = new Set();
     let previewChecked = false;
