@@ -3,7 +3,6 @@
 // moves. Moves are synthetic mouse or touch swipes (or taps) on the canvas, so
 // they go through the same pointer handlers a player uses. Reads client-visible state
 // only; every entry point is a no-op in production builds.
-import { HOLD_MS } from './BoardController';
 import { EventBus, type EventPayloads } from './EventBus';
 import type { GemType } from './constants';
 import { neighborSwaps, type BoardModel, type Cell, type Grid, type Move, type Toys } from './BoardModel';
@@ -152,16 +151,6 @@ function overlayAt(point: { x: number; y: number }): string | null {
 }
 
 /**
- * Stops the game clock from press to release. This bridge releases on a timer, which a slow machine's frames can
- * outrun, so the game's hold timer would turn a quick tap or swipe into a long press. A player's release doesn't wait on one.
- */
-function freezeClock(): () => void {
-  const clock = requireScene().time;
-  clock.paused = true;
-  return () => { clock.paused = false; };
-}
-
-/**
  * Swipe like a player: press on `move.from`, move in steps to `move.to`, release,
  * with the mouse or (`input: 'touch'`) a finger. Resolves once the board settles.
  * A swap that makes no match slides back and uses no move. Refuses (`blocked`)
@@ -174,14 +163,12 @@ async function drag(move: Move, { timeoutMs = 15000, input = 'mouse' }: { timeou
   const b = cellCenter(...move.to);
   const blocked = overlayAt(a);
   if (blocked) return { move, counted: false, movesUsed: before.movesUsed, timedOut: false, blocked, after: before };
-  const thaw = freezeClock();
   fire('down', a);
   for (let step = 1; step <= 6; step++) {
     await sleep(16);
     fire('move', { x: a.x + (b.x - a.x) * step / 6, y: a.y + (b.y - a.y) * step / 6 });
   }
   fire('up', b);
-  thaw();
   await sleep(50);
   const after = await waitIdle(timeoutMs);
   return { move, counted: after.movesUsed > before.movesUsed, movesUsed: after.movesUsed, timedOut: after.timedOut, blocked: null, after };
@@ -193,21 +180,17 @@ async function tap([x, y]: Cell, { timeoutMs = 15000, input = 'mouse', holdMs = 
   const point = cellCenter(x, y);
   const blocked = overlayAt(point);
   if (blocked) return { blocked, timedOut: false, after: requireScene().debugSnapshot() };
-  const thaw = holdMs < HOLD_MS ? freezeClock() : () => {};
   fire('down', point);
   await sleep(holdMs); // hold 500+ on an animal tile: a long press (its field guide)
   fire('up', point);
-  thaw();
   await sleep(50);
   const after = await waitIdle(timeoutMs);
   return { blocked: null, timedOut: after.timedOut, after };
 }
 
-/** Scale animation speed (1 = normal). Pausing resets the clock to 1. */
+/** Scale animation speed (1 = normal). The game clock stays real: it times input (long press, idle hint), so a test sees a player's timing. */
 function speed(scale: number): number {
-  const s = requireScene();
-  s.tweens.timeScale = scale;
-  s.time.timeScale = scale;
+  requireScene().tweens.timeScale = scale;
   return scale;
 }
 

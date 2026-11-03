@@ -20,10 +20,11 @@ const SEED = Number(process.env.E2E_SEED ?? 7);
 const RESUME_SEED = Number(process.env.E2E_RESUME_SEED ?? 7);
 const ROUNDS = Number(process.env.E2E_ROUNDS ?? 4);
 const MAX_MOVES = 45;
+const CPU_THROTTLE = Number(process.env.E2E_CPU_THROTTLE ?? 1);
 
 const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-seed${SEED}`;
 const outDir = path.join(process.cwd(), 'e2e-artifacts', runId);
-const report = { base: BASE, seed: SEED, place: null, viewport: '390x844 mobile touch', startedAt: new Date().toISOString(), rounds: [], checks: [], consoleErrors: [], failedRequests: [], screenshots: [] };
+const report = { base: BASE, seed: SEED, cpuThrottle: CPU_THROTTLE, place: null, viewport: '390x844 mobile touch', startedAt: new Date().toISOString(), rounds: [], checks: [], consoleErrors: [], failedRequests: [], screenshots: [] };
 // A kind of check: its name without numbers ("round 1 move 40: ..." -> "round N move N: ..."). One FAIL line per kind.
 const kind = name => name.replace(/\d+/g, 'N');
 const failKinds = new Set();
@@ -54,7 +55,7 @@ async function main() {
   const { browser, close } = await startBrowser();
   try {
     const { sessionId, page, evaluate, waitFor } = await openPage(browser);
-    if (process.env.E2E_CPU_THROTTLE) await page('Emulation.setCPUThrottlingRate', { rate: Number(process.env.E2E_CPU_THROTTLE) });
+    if (CPU_THROTTLE > 1) await page('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE });
 
     browser.on(message => {
       if (message.sessionId !== sessionId) return;
@@ -81,16 +82,28 @@ async function main() {
       window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
       window.__slidePill = async (id, distance, from = 10) => {
         const pill = window.__pill(id);
+        const frame = () => new Promise(res => requestAnimationFrame(res));
+        // The row reads the slide's direction from its own mark, so wait until it shows a mark just made.
+        const showsOut = () => /, (ruled out|released)$/.test(pill.getAttribute('aria-label'));
+        for (let i = 0; i < 100 && showsOut() !== window.__cc.clue().marked.includes(id); i++) await new Promise(res => setTimeout(res, 50));
         const r = pill.getBoundingClientRect();
         const y = r.top + r.height / 2;
         const at = (type, x) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
-        await new Promise(res => setTimeout(res, 200)); // the row catches up with a mark just made
+        const handle = pill.querySelector('[data-handle]');
+        const overPhoto = from <= handle.clientWidth;
         at('pointerdown', r.left + from);
-        // No waits between the moves: on a slow machine they would outlast the row's hold timer and make a long press.
-        for (let x = 10; x <= distance; x += 10) at('pointermove', r.left + from + x);
+        // Over the photo, passing 10 px starts the slide and ends the hold timer, so the rest spans painted frames.
+        // From the name it stays a press, kept to one turn: a press this long on a slow machine would be a long press.
+        for (let x = 10; x <= distance; x += 10) {
+          at('pointermove', r.left + from + x);
+          if (overPhoto && x >= 20) await frame();
+        }
+        if (overPhoto) await frame();
+        const dragged = { moved: parseFloat(handle.style.transform.replace('translateX(', '')) || 0, track: Boolean(pill.parentElement.querySelector(':scope > span[aria-hidden]')) };
         at('pointerup', r.left + from + distance);
         pill.click();
         await new Promise(res => setTimeout(res, 250));
+        return dragged;
       };
       window.__holdPill = async id => {
         const pill = window.__pill(id);
@@ -491,13 +504,14 @@ async function main() {
           await window.__slidePill(id, 90, 60); // from the name, not the photo
           const fromName = window.__cc.clue().marked.includes(id);
           if (window.__pill(id).getAttribute('aria-pressed') === 'true') window.__pill(id).click();
-          await window.__slidePill(id, 120);
+          const dragged = await window.__slidePill(id, 120);
           const out = window.__cc.clue().marked.includes(id);
           const heightOut = gridHeight();
           await window.__slidePill(id, 120);
           const back = window.__cc.clue().marked.includes(id);
-          return { short, fromName, out, back, picked: window.__pill(id).getAttribute('aria-pressed'), before, heightOut };
+          return { short, fromName, out, back, dragged, picked: window.__pill(id).getAttribute('aria-pressed'), before, heightOut };
         });
+        check('while dragged, an animal\'s photo follows the finger over its track', slid.dragged?.moved > 10 && slid.dragged?.track, JSON.stringify(slid.dragged));
         check('ruling an animal out doesn\'t change the grid\'s height (the board keeps its size)', slid.heightOut === slid.before, JSON.stringify(slid));
         check('dragging an animal\'s photo a little does nothing; from its name, nothing; all the way rules it out; again brings it back', !slid.short && !slid.fromName && slid.out && !slid.back && slid.picked === 'false', JSON.stringify(slid));
         check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title?.endsWith(names.get(tileHeld.id)) && !tileHeld.picked, JSON.stringify(tileHeld));
@@ -625,7 +639,7 @@ async function main() {
         if (!hintChecked) {
           const hint = await evaluate(async () => {
             const cc = window.__cc;
-            for (let i = 0; i < 80 && !cc.state().hint; i++) await new Promise(resolve => setTimeout(resolve, 100));
+            for (let i = 0; i < 200 && !cc.state().hint; i++) await new Promise(resolve => setTimeout(resolve, 100)); // HINT_MS is 8 s
             const shown = cc.state().hint;
             if (!shown) return { shown };
             const clue = cc.clue();
