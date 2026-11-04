@@ -27,6 +27,7 @@ When implementing solutions, prefer the simplest approach that works. Do not ove
 ## Two Machines (WSL + Oracle VPS)
 GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle VPS clone (`/srv/critter-ai/critter-connect`); only pushed work exists on the other machine.
 - Agent work: one issue (`ready-for-agent`) per branch `agent/<slug>`, cut from fresh `origin/main`; rebase on `origin/main` before the PR; push and open a PR via `gh`; the owner merges, except that once every check passes a mission on the VPS merges its own PR at its end, and a chat session the owner is typing to may merge without asking, unless the owner has paused or held that work (owner, 2026-11-01). GO comes only from the owner.
+- A Markdown-only PR has no checks because CI skips it; that doesn't block merging.
 - One area per branch at a time (e.g. one agent in `src/game/` board rules) so PRs merge clean.
 - Push before you stop, WIP included (as a branch).
 - Before reading or changing code, run `git fetch origin --prune`. If it fails, say freshness is unverified.
@@ -75,7 +76,7 @@ The app is two screens: a globe to pick a continent (`/`) and the game (`/explor
 - Never write unit tests after you write code.
 - Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
 - If you must test a system in isolation, first write down all the ways it could fail, then write the code.
-- E2E here: `npm run e2e:fresh` (headless Chrome plays globe → continent → game rounds at /explore on its own dev server, beside any `npm run dev`; checks invariants every move; artifact `e2e-artifacts/<run>/report.json` + screenshots, same seed = same run; CI runs it on every PR against the scrubbed copy `phaser_june_dev`, so a schema change reaches that copy too), and the `playtest` skill for judgment calls (report in `docs/playtests/`). `npm test` keeps only unit tests for failures a playtest can't see (content checks, input/storage parsing, board invariants); game balance is the bot's job.
+- E2E here: `npm run e2e:fresh` (headless Chrome plays globe → continent → game rounds at /explore on its own dev server, beside any `npm run dev`; checks invariants every move; artifact `e2e-artifacts/<run>/report.json` + screenshots, same seed = same run; CI runs it on every PR that changes more than Markdown, against the scrubbed copy `phaser_june_dev`, so a schema change reaches that copy too), and the `playtest` skill for judgment calls (report in `docs/playtests/`). `npm test` keeps only unit tests for failures a playtest can't see (content checks, input/storage parsing, board invariants); game balance is the bot's job.
 
 ## Agent skills
 
