@@ -21,8 +21,8 @@
 // Players see the mystery as "the one caught on camera" (its row: "On camera"), so it doesn't read as a sixth
 // animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the mystery's own row
 // rises into the Camera row, which becomes that animal (its slot closes up), then `onLanded`. `review` keeps it so (plan 052).
-// The order freezes when the round ends, so that row rises from where the player last saw it; `review` lists the cards by number.
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+// The order freezes when the round ends, so that row rises from where the player last saw it, and `review` keeps it (`endedOrder`: a reload's copy).
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
@@ -69,7 +69,7 @@ function GridName({ name }: { name: string }) {
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = false, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = false, endedOrder, onRowOrder, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
@@ -78,6 +78,10 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
   landed?: readonly number[];
   /** A move is playing out on the board: the rows wait for it. */
   busy?: boolean;
+  /** A resumed round that had already ended: the rows as it ended, drawn from the start. */
+  endedOrder?: readonly number[];
+  /** The rows' order, each time it changes. */
+  onRowOrder?: (ids: number[]) => void;
   selected?: number | null;
   onSelect?: (id: number) => void;
   /** A long press on an animal's row: open its field guide. */
@@ -190,7 +194,8 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   const flying = round.orders.some((order, j) => (shown[j] ?? 0) < order.have);
-  const { drawn, body, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null);
+  const { drawn, body, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null, endedOrder);
+  useEffect(() => onRowOrder?.(drawn), [drawn, onRowOrder]);
   // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
   const [landing, setLanding] = useState<{ id: number; dy: number } | null>(null);
@@ -318,7 +323,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
         </tr>
         {/* Sets the Camera row apart from the animals it's one of (globals.css counts its height in --ev-reserve). */}
         <tr aria-hidden="true"><td colSpan={round.orders.length + 1} className="h-1 p-0"><div className="h-px bg-neutral-4" /></td></tr>
-        {(review ? round.suspects : drawn).map(id => {
+        {drawn.map(id => {
           if (id === revealed) return null; // risen into the Camera row
           const i = round.suspects.indexOf(id); // the card's own place, not the row's: every order's answers and the number go by it
           const species = speciesById.get(id);
@@ -342,8 +347,8 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
               key={id}
               data-suspect={id}
               onClick={onSelect ? () => pick(id) : undefined}
-              // The rows below the risen one close the gap, and the replay's rows go back to the cards' order; the rising
-              // row slides up over the Camera row. (During play rows slide by useRowOrder, so `layout` waits for these.)
+              // The rows below the risen one close the gap; the rising row slides up over the Camera row. (During play rows
+              // slide by useRowOrder, so `layout` waits for these.)
               layout={rising ? undefined : 'position'}
               layoutDependency={`${revealed}:${review}`}
               initial={false}

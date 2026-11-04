@@ -161,6 +161,13 @@ async function main() {
         for (let i = 0; i < 80 && window.__gridFlying(); i++) await new Promise(res => setTimeout(res, 50));
         for (let i = 0; i < 2; i++) await new Promise(res => requestAnimationFrame(res));
       };
+      // The rows on the last frame the grid was live, and the rows of the round-end replay.
+      window.__reviewRows = () => [...document.querySelectorAll('table[aria-label="How the evidence lined up"] tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+      (function trackLiveRows() {
+        const grid = document.querySelector('table[aria-label="Evidence"]');
+        if (grid) window.__lastLiveRows = [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+        requestAnimationFrame(trackLiveRows);
+      })();
       // Every re-order from here until stopped, and whether gems were still flying when it came.
       window.__watchRows = () => {
         const changes = [];
@@ -295,7 +302,7 @@ async function main() {
     let calledShot = false;
     let autoBackChecked = false;
     // Which of the sort's rules this run really saw decide two rows (real boards, so a run must meet each).
-    const sortSaw = { contradiction: false, matches: false, tie: false, ruledOut: false, hiddenWouldMove: false, frozenOutOfOrder: false };
+    const sortSaw = { contradiction: false, matches: false, tie: false, ruledOut: false, hiddenWouldMove: false, frozenOutOfOrder: false, reviewOutOfOrder: false };
     const noteSort = ({ rows, facts }) => {
       const place = id => rows.indexOf(id);
       for (const a of facts) for (const b of facts) {
@@ -1182,7 +1189,9 @@ async function main() {
         };
       });
       check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.match === String(start.mysteryId), JSON.stringify(replay));
-      check(`round ${n}: the round-end card keeps the cards' order`, Boolean(replay) && sameList(replay.rows, start.suspects.filter(id => id !== start.mysteryId)), JSON.stringify({ rows: replay?.rows, suspects: start.suspects }));
+      const lastLive = (await evaluate(() => window.__lastLiveRows)).filter(id => id !== start.mysteryId);
+      check(`round ${n}: the round-end card keeps the order the grid last showed live`, Boolean(replay) && sameList(replay.rows, lastLive), JSON.stringify({ rows: replay?.rows, lastLive }));
+      if (!sameList(lastLive, start.suspects.filter(id => id !== start.mysteryId))) sortSaw.reviewOutOfOrder = true;
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
       const below = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]')?.getBoundingClientRect();
@@ -1215,6 +1224,7 @@ async function main() {
     check('the sort: a run sees a ruled-out animal sit below a higher-numbered one', sortSaw.ruledOut, JSON.stringify(sortSaw));
     check('the sort: a run reaches a board where hidden answers would change the order, and they don\'t', sortSaw.hiddenWouldMove, JSON.stringify(sortSaw));
     check('the sort: a run freezes a sorted order at a round\'s end', sortSaw.frozenOutOfOrder, JSON.stringify(sortSaw));
+    check('the sort: a run sees a round-end card keep a sorted order', sortSaw.reviewOutOfOrder, JSON.stringify(sortSaw));
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {
@@ -1333,12 +1343,31 @@ async function main() {
     await waitFor(() => window.__cc.clue().end, 'the resumed round to end', 20_000);
     await sleep(1000);
     const ended = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
+    const replayRows = () => waitFor(() => { const rows = window.__reviewRows(); return rows.length > 0 && rows; }, 'the round-end replay', 20_000);
+    const savedRowOrder = () => evaluate(() => JSON.parse(sessionStorage.getItem('cc:explore:game'))?.rowOrder?.ids ?? []);
+    const beforeEndReload = await replayRows();
+    const withoutMystery = rows => rows.filter(id => id !== resumed.clue.mysteryId);
+    check('the round-end order is saved with the game', sameList(withoutMystery(await savedRowOrder()), beforeEndReload), JSON.stringify({ saved: await savedRowOrder(), shown: beforeEndReload }));
     await page('Page.reload');
     await waitFor(() => document.readyState === 'complete', 'the reload');
     await waitFor(boardReady, 'the resumed end card', 60_000);
     await sleep(1500);
     const afterEnd = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
     await screenshot('06-end-after-reload.png');
+    const afterEndReload = await replayRows();
+    check('a reload on the round-end card keeps the order on screen', sameList(afterEndReload, beforeEndReload), JSON.stringify({ before: beforeEndReload, after: afterEndReload }));
+    // The saved order is what draws it, not the same order worked out again: a reversed save shows reversed.
+    await evaluate(() => {
+      const saved = JSON.parse(sessionStorage.getItem('cc:explore:game'));
+      saved.rowOrder?.ids.reverse();
+      sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
+    });
+    const reversed = withoutMystery(await savedRowOrder());
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the reload');
+    await waitFor(boardReady, 'the resumed end card', 60_000);
+    const fromSave = await replayRows();
+    check('a reload draws the round-end order from the save', reversed.length > 0 && sameList(fromSave, reversed), JSON.stringify({ reversed, shown: fromSave }));
     const solves = raw => Object.values(JSON.parse(raw ?? '{}')).find(entry => entry.commonName === mysteryName)?.timesSolved ?? 0;
     check('the resumed round, named right, is written to the journal once', ended.end?.outcome === 'found' && solves(ended.journal) === solves(journalBefore) + 1, JSON.stringify({ mysteryName, before: solves(journalBefore), after: solves(ended.journal), outcome: ended.end?.outcome }));
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));

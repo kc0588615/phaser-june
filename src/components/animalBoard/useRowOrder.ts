@@ -5,8 +5,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as Reac
 import { reducedMotion } from '@/game/motion';
 import { LARGE_WEB } from '@/lib/motion';
 
-export function useRowOrder(live: number[], hold: boolean) {
-  const [drawn, setDrawn] = useState(live);
+export function useRowOrder(live: number[], hold: boolean, start: readonly number[] = live) {
+  const [drawn, setDrawn] = useState(() => [...start]);
   const [pressed, setPressed] = useState(false);
   const fingers = useRef(new Set<number>());
   const body = useRef<HTMLTableSectionElement>(null);

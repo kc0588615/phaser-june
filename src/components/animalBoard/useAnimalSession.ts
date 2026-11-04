@@ -23,7 +23,7 @@ import { setDebugClueSource } from '@/game/debugBridge';
 import { getJson } from '@/lib/getJson';
 import { hash32, mulberry32 } from '@/lib/seededRng';
 import { isAutoRuleOutOn, setAutoRuleOutOn } from './autoRuleOut';
-import { readSavedGame, writeSavedGame, type SavedBoard } from './savedGame';
+import { readSavedGame, writeSavedGame, type SavedBoard, type SavedRowOrder } from './savedGame';
 
 /** `?seed=N` replays a session: same trails, same boards (never saved or resumed). */
 function urlSeed(): number | null {
@@ -65,6 +65,7 @@ export function useAnimalSession() {
   const sessionRef = useRef(session);
   useEffect(() => { sessionRef.current = session; }, [session]);
   const [board, setBoard] = useState<SavedBoard | null>(null);
+  const [rowOrder, setRowOrder] = useState<SavedRowOrder | null>(null);
   const boardRef = useRef(board);
   useEffect(() => { boardRef.current = board; }, [board]);
   /** A resumed round that had already ended (its journal entry is already written). */
@@ -125,6 +126,7 @@ export function useAnimalSession() {
           // Later rounds don't replay the uninterrupted session exactly; they just shouldn't repeat round 1's deal.
           rng.current = mulberry32(hash32(`${seed}:${resume.session.roundNo}`));
           setBoard(resume.board);
+          setRowOrder(resume.rowOrder ?? null);
           if (resume.session.end) setRecordedRound(resume.session.roundNo);
           dispatch({ type: 'restore', session: { ...resume.session, book } });
           return;
@@ -174,8 +176,8 @@ export function useAnimalSession() {
   useEffect(() => {
     if (!session || replay || moving.current) return;
     const { book: _book, ...rest } = session;
-    writeSavedGame({ v: 1, seed, requested, session: rest, board: board?.roundNo === session.roundNo ? board : null });
-  }, [session, board, seed, requested, replay]);
+    writeSavedGame({ v: 1, seed, requested, session: rest, board: board?.roundNo === session.roundNo ? board : null, rowOrder });
+  }, [session, board, rowOrder, seed, requested, replay]);
 
   // A fresh board for every round: the tiles, this round's faces, and no marks (or the saved board, released animals gone).
   const roundNo = session?.roundNo;
@@ -290,6 +292,6 @@ export function useAnimalSession() {
     pool: content?.pool ?? null,
     place: content?.place ?? null,
     continent: content?.continent ?? null,
-    markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut,
+    markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder,
   };
 }
