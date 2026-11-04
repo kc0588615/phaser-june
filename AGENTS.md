@@ -33,7 +33,7 @@ GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle 
 - New work: branch from `origin/main`. Clean `main`: `git pull --ff-only`. Questions about the latest code: read `origin/main`, not the checkout, if they differ.
 - Existing branch: keep its work and compare it with `origin/main`; bring updates in on purpose. Never plain `git pull` on it, and never reset or force-push just to catch up.
 - Say which branch and commit you're working from.
-- Deploying: `npm run deploy` ships `origin/main`. `curl https://play.critterconnect.org/version.txt` says which commit is live; no SSH needed. Agents may run it without asking (owner, 2026-11-01), from WSL or as `deploy critter-connect` on the Oracle VPS, unless the owner has paused that work.
+- Deploying: `npm run deploy` ships `origin/main`. `curl https://play.critterconnect.org/version.txt` says which commit is live; no SSH needed. The stamp trails `origin/main` when newer commits skip the game; `git diff --stat <stamp> origin/main` shows whether a deploy is due. Agents may deploy without asking (owner, 2026-11-01), from WSL or as `deploy critter-connect` on the Oracle VPS, unless the owner has paused that work.
 - Owner only, from WSL: the prod content build (`npm run content -- build`) after a content PR merges.
 - VPS DB is the live `phaser_june` (owner, 2026-11-01), as in WSL, so writes reach real players. Before a schema change or bulk write, take a fresh dump (`deploy/backup/pg-backup.sh` on the server). Route: `docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps`.
 
