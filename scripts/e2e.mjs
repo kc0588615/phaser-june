@@ -161,11 +161,15 @@ async function main() {
         for (let i = 0; i < 80 && window.__gridFlying(); i++) await new Promise(res => setTimeout(res, 50));
         for (let i = 0; i < 2; i++) await new Promise(res => requestAnimationFrame(res));
       };
-      // The rows on the last frame the grid was live, and the rows of the round-end replay.
+      // The rows on the last frame the grid was live, on the frame the mystery's row began to rise, and of the round-end replay.
       window.__reviewRows = () => [...document.querySelectorAll('table[aria-label="How the evidence lined up"] tr[data-suspect]')].map(row => Number(row.dataset.suspect));
       (function trackLiveRows() {
         const grid = document.querySelector('table[aria-label="Evidence"]');
-        if (grid) window.__lastLiveRows = [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+        if (grid) {
+          window.__lastLiveRows = [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+          if (!grid.querySelector('tr[data-suspect].z-30, tr[data-mystery][data-match]')) window.__endRows = null;
+          else window.__endRows ??= window.__lastLiveRows;
+        }
         requestAnimationFrame(trackLiveRows);
       })();
       // Every re-order from here until stopped, and whether gems were still flying when it came.
@@ -302,7 +306,7 @@ async function main() {
     let calledShot = false;
     let autoBackChecked = false;
     // Which of the sort's rules this run really saw decide two rows (real boards, so a run must meet each).
-    const sortSaw = { contradiction: false, matches: false, tie: false, ruledOut: false, hiddenWouldMove: false, frozenOutOfOrder: false, reviewOutOfOrder: false };
+    const sortSaw = { contradiction: false, matches: false, tie: false, ruledOut: false, hiddenWouldMove: false, frozenOutOfOrder: false };
     const noteSort = ({ rows, facts }) => {
       const place = id => rows.indexOf(id);
       for (const a of facts) for (const b of facts) {
@@ -830,7 +834,6 @@ async function main() {
       });
       check(`round ${n}: a pencil guess in every hidden answer moves no row`, sameList(pencilled.before, pencilled.after), JSON.stringify(pencilled));
       const gridSize = { height: pencilled.height, board: pencilled.board };
-      let lastRows = pencilled.after;
       const trailBefore = start.trail;
       // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then names it: a find);
       // round 4 turns on Auto rule-out and marks nothing itself; others play carefully.
@@ -1006,7 +1009,6 @@ async function main() {
           return { changes, settledAt, ...window.__gridFacts() };
         });
         check(`round ${n} move ${moves}: no row moves until the move has settled and its gems have landed`, rest.changes.every(change => !change.flying && (rest.settledAt === null || change.at >= rest.settledAt)), JSON.stringify({ settledAt: rest.settledAt, changes: rest.changes }));
-        if (rest.rows) lastRows = rest.rows;
         if (rest.rows && (state.status === 'playing' || state.status === 'out-of-moves')) {
           noteSort(rest);
           check(`round ${n} move ${moves}: the rows sort by what shows: ruled out below, no contradiction above, more matches higher, then the card's number`, sameList(rest.rows, sortFacts(rest.facts)), JSON.stringify({ rows: rest.rows, facts: rest.facts }));
@@ -1146,11 +1148,6 @@ async function main() {
       if (end?.outcome === 'found') journalFinds.add(start.mysteryId);
       // The mystery's row rises into the Camera row, which becomes that animal, before the card opens.
       await waitFor(() => document.querySelector('table tr[data-mystery][data-match]') && true, 'the mystery rising into the Camera row', 10_000);
-      // The order froze when the round ended: the mystery's row rose from where the player last saw it.
-      const frozen = await evaluate(() => ({ playing: Boolean(document.querySelector('table[aria-label="Evidence"]')), rows: [...document.querySelectorAll('table tr[data-suspect]')].map(row => Number(row.dataset.suspect)) }));
-      const lastSeen = lastRows.filter(id => id !== start.mysteryId);
-      if (frozen.playing) check(`round ${n}: the order freezes when the round ends`, sameList(frozen.rows, lastSeen), JSON.stringify({ frozen: frozen.rows, lastSeen }));
-      if (frozen.playing && !sameList(lastSeen, start.suspects.filter(id => id !== start.mysteryId))) sortSaw.frozenOutOfOrder = true;
       await screenshot(`04-round-${n}-landed.png`);
       const reveal = await waitFor(() => {
         const sheet = document.querySelector('section[aria-labelledby="end-title"]');
@@ -1189,9 +1186,12 @@ async function main() {
         };
       });
       check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.match === String(start.mysteryId), JSON.stringify(replay));
-      const lastLive = (await evaluate(() => window.__lastLiveRows)).filter(id => id !== start.mysteryId);
-      check(`round ${n}: the round-end card keeps the order the grid last showed live`, Boolean(replay) && sameList(replay.rows, lastLive), JSON.stringify({ rows: replay?.rows, lastLive }));
-      if (!sameList(lastLive, start.suspects.filter(id => id !== start.mysteryId))) sortSaw.reviewOutOfOrder = true;
+      // The order froze when the mystery's row began to rise, and stayed through the rise and onto the round-end card.
+      const rowsAt = await evaluate(() => ({ end: window.__endRows, last: window.__lastLiveRows }));
+      const endRows = (rowsAt.end ?? []).filter(id => id !== start.mysteryId);
+      check(`round ${n}: the order freezes when the round ends`, rowsAt.end !== null && sameList(rowsAt.last.filter(id => id !== start.mysteryId), endRows), JSON.stringify(rowsAt));
+      check(`round ${n}: the round-end card keeps the order the round ended on`, Boolean(replay) && rowsAt.end !== null && sameList(replay.rows, endRows), JSON.stringify({ rows: replay?.rows, endRows }));
+      if (rowsAt.end !== null && !sameList(endRows, start.suspects.filter(id => id !== start.mysteryId))) sortSaw.frozenOutOfOrder = true;
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
       const below = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]')?.getBoundingClientRect();
@@ -1224,7 +1224,6 @@ async function main() {
     check('the sort: a run sees a ruled-out animal sit below a higher-numbered one', sortSaw.ruledOut, JSON.stringify(sortSaw));
     check('the sort: a run reaches a board where hidden answers would change the order, and they don\'t', sortSaw.hiddenWouldMove, JSON.stringify(sortSaw));
     check('the sort: a run freezes a sorted order at a round\'s end', sortSaw.frozenOutOfOrder, JSON.stringify(sortSaw));
-    check('the sort: a run sees a round-end card keep a sorted order', sortSaw.reviewOutOfOrder, JSON.stringify(sortSaw));
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {
@@ -1379,6 +1378,48 @@ async function main() {
     check('the globe marks each animal found', found > 0 && markers === found, `${markers} markers, ${found} in the journal`);
     await sleep(1500);
     await screenshot('07-globe-found.png');
+
+    // A round that ends with rows mid-slide, or with a finger holding a slide paused: the mystery's row still rises
+    // straight from its real slot into the Camera row. A wrong name ends it, so the journal and globe above stand.
+    for (const paused of [false, true]) {
+      await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);
+      await waitFor(boardReady, 'a fresh board', 60_000);
+      await sleep(1500);
+      const rise = await evaluate(async paused => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+        const { mysteryId, suspects } = window.__cc.clue();
+        const top = window.__rows()[0];
+        const moved = top === mysteryId ? mysteryId : top; // ruling out the top row moves the mystery's row either way
+        const wrong = suspects.find(id => id !== mysteryId && id !== moved);
+        await window.__holdPill(wrong);
+        document.querySelector('[role=dialog] button[data-name-it]')?.click();
+        await wait(200);
+        const yes = [...(document.querySelector('[role=dialog] [data-name-confirm]')?.querySelectorAll('button') ?? [])].find(button => button.textContent !== 'Back');
+        const mysteryRow = () => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + mysteryId + '"]');
+        window.__keyMark(moved, true);
+        await frame();
+        await frame();
+        const finger = { bubbles: true, pointerId: 77, pointerType: 'touch' };
+        if (paused) { mysteryRow().querySelector('td').dispatchEvent(new PointerEvent('pointerdown', finger)); await frame(); }
+        const slide = mysteryRow().getAnimations().find(animation => animation.effect?.getKeyframes().some(keyframe => keyframe.transform?.startsWith('translateY')))?.playState ?? null;
+        yes?.click();
+        const tops = [];
+        for (let i = 0; i < 400 && !document.querySelector('tr[data-mystery][data-match]'); i++) {
+          const row = mysteryRow();
+          if (row?.classList.contains('z-30')) tops.push(Math.round(row.getBoundingClientRect().top * 10) / 10);
+          await frame();
+        }
+        const camera = Math.round(document.querySelector('tr[data-mystery]').getBoundingClientRect().top * 10) / 10;
+        if (paused) window.dispatchEvent(new PointerEvent('pointerup', finger));
+        return { slide, camera, tops: tops.filter((_top, i) => i < 3 || i % 8 === 0 || i === tops.length - 1), rose: tops.length > 5, neverDown: tops.every((value, i) => i === 0 || value <= tops[i - 1] + 1), end: tops.at(-1) ?? null };
+      }, paused);
+      // 12 px: the last frame sampled comes just before the rise lands. A slide in the way left it 56 px off or more.
+      const label = paused ? 'held paused' : 'sliding';
+      check(`the sort: this test catches the rows ${label} as the round ends`, rise.slide === (paused ? 'paused' : 'running'), JSON.stringify(rise));
+      check(`the sort: a round ending with rows ${label}: the mystery's row rises, never dropping first`, rise.rose && rise.neverDown, JSON.stringify(rise));
+      check(`the sort: a round ending with rows ${label}: the mystery's row ends at the Camera row`, rise.end !== null && Math.abs(rise.end - rise.camera) <= 12, JSON.stringify(rise));
+    }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));

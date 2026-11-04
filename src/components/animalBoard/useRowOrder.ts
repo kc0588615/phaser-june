@@ -5,7 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as Reac
 import { reducedMotion } from '@/game/motion';
 import { LARGE_WEB } from '@/lib/motion';
 
-export function useRowOrder(live: number[], hold: boolean, start: readonly number[] = live) {
+export function useRowOrder(live: number[], hold: boolean, ended: boolean, start: readonly number[] = live) {
   const [drawn, setDrawn] = useState(() => [...start]);
   const [pressed, setPressed] = useState(false);
   const fingers = useRef(new Set<number>());
@@ -55,5 +55,11 @@ export function useRowOrder(live: number[], hold: boolean, start: readonly numbe
       return dy === 0 ? [] : [row.animate({ transform: [`translateY(${dy}px)`, 'none'] }, LARGE_WEB)];
     });
   }, [drawn]);
+  // The round is over: rows stand in their places at once, even a paused one, or a slide would override the mystery's rise.
+  useLayoutEffect(() => {
+    if (!ended) return;
+    for (const slide of slides.current) slide.cancel();
+    slides.current = [];
+  }, [ended]);
   return { drawn, body, onPointerDownCapture };
 }

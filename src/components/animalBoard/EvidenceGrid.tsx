@@ -194,7 +194,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   const flying = round.orders.some((order, j) => (shown[j] ?? 0) < order.have);
-  const { drawn, body, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null, endedOrder);
+  const { drawn, body, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null, landOn !== null, endedOrder);
   useEffect(() => onRowOrder?.(drawn), [drawn, onRowOrder]);
   // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
