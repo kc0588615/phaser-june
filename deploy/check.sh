@@ -3,7 +3,7 @@
 # redirects to the apex. Prints OK|BAD|SKIP per line and exits 1 on any BAD. Run by deploy/deploy.sh;
 # the apex and www are skipped until their DNS points at play.'s server.
 # Usage: bash deploy/check.sh [--strict]   (--strict: a SKIP is BAD; run it once DNS has moved)
-# Env: PLAY, APEX, WWW override the host names. CHECK_CONNECT=<ip:port> is for a local Caddy test only:
+# Env: EXPECT_COMMIT is the commit play./version.txt must report (deploy.sh sets it). PLAY, APEX, WWW override the host names. CHECK_CONNECT=<ip:port> is for a local Caddy test only:
 # every request goes there, its local certificate is accepted and the DNS guard is skipped.
 set -uo pipefail
 
@@ -106,6 +106,7 @@ moved() {
 # play.: the game, and no website pages.
 for path in / /explore/ /api/places/ /api/clue-game/pool/; do expect "https://$PLAY$path" 200; done
 for path in /privacy/ /terms/ /teachers/; do expect "https://$PLAY$path" 404; done
+expect "https://$PLAY/version.txt" 200 "${EXPECT_COMMIT:-}"
 
 # The apex: the website, the 404 page, and the game's old paths sent to play.
 if moved "$APEX"; then
