@@ -29,6 +29,7 @@ if [ "$branch" != main ]; then
 fi
 git pull -q --ff-only origin main
 echo "deploying $(git log --oneline -1)"
+export GIT_COMMIT=$(git rev-parse HEAD)
 compose="docker compose -f deploy/docker-compose.app.yml --project-directory ."
 $compose build -q
 $compose up -d
@@ -43,5 +44,8 @@ echo "critter-app: $status"
 docker exec caddy test -f /srv/site/index.html || { echo "caddy has no /srv/site/index.html: is the caddy image built from this checkout?" >&2; exit 1; }
 REMOTE
 
+# What the server just built: check.sh fails unless the live game reports this commit.
+EXPECT_COMMIT=$(ssh -o BatchMode=yes "$HOST" git -C /opt/critter-connect rev-parse HEAD)
+export EXPECT_COMMIT
 # play. now, the apex and www once DNS points here (they SKIP until then).
 bash "$(dirname "$0")/check.sh"

@@ -34,6 +34,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
 COPY next.config.mjs ./
+# The commit this image was built from, served at /version.txt (deploy/deploy.sh passes it, deploy/check.sh reads it back).
+ARG GIT_COMMIT=unknown
+RUN echo "$GIT_COMMIT" > public/version.txt
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD node -e "fetch('http://127.0.0.1:8080/api/places/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"

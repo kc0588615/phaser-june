@@ -11,6 +11,7 @@ services:
       target: run
       args:
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     container_name: critter-app
     restart: unless-stopped
     env_file: deploy/app.env
