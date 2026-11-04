@@ -29,6 +29,10 @@ GitHub `origin` is the hub between the owner's WSL clone and the agents' Oracle 
 - Agent work: one issue (`ready-for-agent`) per branch `agent/<slug>`, cut from fresh `origin/main`; rebase on `origin/main` before the PR; push and open a PR via `gh`; the owner merges, except that once every check passes a mission on the VPS merges its own PR at its end, and a chat session the owner is typing to may merge without asking, unless the owner has paused or held that work (owner, 2026-11-01). GO comes only from the owner.
 - One area per branch at a time (e.g. one agent in `src/game/` board rules) so PRs merge clean.
 - Push before you stop, WIP included (as a branch).
+- Before reading or changing code, run `git fetch origin --prune`. If it fails, say freshness is unverified.
+- New work: branch from `origin/main`. Clean `main`: `git pull --ff-only`. Questions about the latest code: read `origin/main`, not the checkout, if they differ.
+- Existing branch: keep its work and compare it with `origin/main`; bring updates in on purpose. Never plain `git pull` on it, and never reset or force-push just to catch up.
+- Say which branch and commit you're working from.
 - Deploying: `npm run deploy` ships `origin/main`. `curl https://play.critterconnect.org/version.txt` says which commit is live; no SSH needed. Agents may run it without asking (owner, 2026-11-01), from WSL or as `deploy critter-connect` on the Oracle VPS, unless the owner has paused that work.
 - Owner only, from WSL: the prod content build (`npm run content -- build`) after a content PR merges.
 - VPS DB is the live `phaser_june` (owner, 2026-11-01), as in WSL, so writes reach real players. Before a schema change or bulk write, take a fresh dump (`deploy/backup/pg-backup.sh` on the server). Route: `docs/DATABASE_ACCESS.md#agents-on-the-oracle-vps`.
