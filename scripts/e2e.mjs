@@ -120,6 +120,8 @@ async function main() {
         pill.click();
         await new Promise(res => setTimeout(res, 400));
       };
+      // Polls instead of a fixed wait: a loaded machine runs a hold's timer late, and a finger lifted before it fires is a tap.
+      window.__until = async (ok, ms = 4000) => { for (const end = Date.now() + ms; !ok() && Date.now() < end;) await new Promise(res => setTimeout(res, 30)); return ok(); };
       // The live sort: the rows as drawn, and what the screen shows for each animal (the Camera row's stamped answers, the
       // scouted cells, never data-answer or the rules' row). \`cheat\` is what knowing the hidden cells would give.
       window.__rows = () => [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect]')].map(row => Number(row.dataset.suspect));
@@ -374,11 +376,13 @@ async function main() {
             const button = at().querySelector('button');
             const r = button.getBoundingClientRect();
             const opts = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+            const was = at().hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerdown', opts));
-            await wait(1150);
+            await window.__until(() => at().hasAttribute('data-highlight') !== was);
             const during = at().hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerup', opts));
             button.click();
+            await window.__until(() => window.__cc.clue().highlight.length === (was ? 0 : 1));
             await wait(200);
             return during;
           };
@@ -402,10 +406,12 @@ async function main() {
             const button = head.querySelector('button');
             const r = button.getBoundingClientRect();
             const opts = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+            const was = head.hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerdown', opts));
-            await wait(1150);
+            await window.__until(() => head.hasAttribute('data-highlight') !== was);
             button.dispatchEvent(new PointerEvent('pointerup', opts));
             button.click();
+            await window.__until(() => window.__cc.clue().highlight.length === (was ? 0 : 1));
             await wait(200);
           };
           await hold();
@@ -592,7 +598,7 @@ async function main() {
         const [a, b, c, d, e] = start.suspects;
         const sorting = await evaluate(async ([a, b, c, name]) => {
           const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-          const MOVE_MS = 500; // a row's layout animation and a margin
+          const MOVE_MS = 500; // a row's slide and a margin
           const rows = window.__rows;
           const rowOf = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"]');
           const tops = () => rows().map(id => rowOf(id).getBoundingClientRect().top);
@@ -628,8 +634,9 @@ async function main() {
             const button = at().querySelector('button');
             const r = button.getBoundingClientRect();
             const opts = { bubbles: true, clientX: r.left + 5, clientY: r.top + 5, pointerId: 1, pointerType: 'touch' };
+            const was = at().hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerdown', opts));
-            await wait(1150);
+            await window.__until(() => at().hasAttribute('data-highlight') !== was);
             button.dispatchEvent(new PointerEvent('pointerup', opts));
             button.click();
             await wait(200);
@@ -688,7 +695,7 @@ async function main() {
         const card = start.suspects;
         check('the sort: ties keep the cards\' order at the start', sameList(sorting.start, card), JSON.stringify(sorting.start));
         check('the sort: a ruled-out animal sinks below the others, keeping its number and the keyboard\'s focus', sameList(sorting.oneOut.rows, [b, c, d, e, a]) && sorting.oneOut.focusKept && sorting.oneOut.inOrderOnScreen && sorting.oneOut.label.startsWith('1: ') && sorting.oneOut.card === '1', JSON.stringify(sorting.oneOut));
-        check('the sort: a row moves with its layout animation', sorting.oneOut.slid, JSON.stringify(sorting.oneOut));
+        check('the sort: a row slides to its new place', sorting.oneOut.slid, JSON.stringify(sorting.oneOut));
         check('the sort: two ruled out sit by number under the others', sameList(sorting.twoOut, [c, d, e, a, b]), JSON.stringify(sorting.twoOut));
         check('the sort: taking a mark back returns the row to its place', sameList(sorting.back, card), JSON.stringify(sorting.back));
         { const m = sorting.moved;
@@ -728,6 +735,83 @@ async function main() {
         const tapped = await liftState(c);
         check('the sort: a quick tap picks the animal under the finger, though the rows re-order as it lifts', sameList(tapped.rows, [a, c, d, e, b]) && tapped.picked === 'true' && !tapped.guide, JSON.stringify(tapped));
         await closeAndUnmark(b, c);
+        await sleep(300);
+        // A press that lands while the rows are still sliding: the row stops under the finger, and lifting finishes the move.
+        const midPress = await evaluate(async ([a, c]) => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+          const rowOf = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"]');
+          const top = id => rowOf(id).getBoundingClientRect().top;
+          for (let tries = 0; tries < 5; tries++) {
+            const from = top(c);
+            const to = from - (rowOf(c).getBoundingClientRect().height + 2); // the slot above: a's sinking lifts c one row
+            window.__keyMark(a, true);
+            let mid = false;
+            for (const end = Date.now() + 300; Date.now() < end && !mid;) {
+              await frame();
+              mid = top(c) < from - 1 && top(c) > to + 1;
+            }
+            if (!mid) { window.__keyMark(a, false); await wait(600); continue; }
+            const pill = window.__pill(c);
+            const box = pill.getBoundingClientRect();
+            const at = (type, x, y) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
+            const [x, y] = [box.left + 60, box.top + box.height / 2];
+            at('pointerdown', x, y);
+            const pressedAt = top(c);
+            const tops = [];
+            for (const end = Date.now() + 350; Date.now() < end;) { await frame(); tops.push(top(c)); }
+            at('pointerup', x, y);
+            await wait(700);
+            const after = top(c);
+            [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
+            const rows = window.__rows();
+            window.__keyMark(a, false);
+            await wait(600);
+            return { tries, from, to, pressedAt, drift: Math.max(...tops.map(value => Math.abs(value - pressedAt))), after, rows, back: top(c) };
+          }
+          return null;
+        }, [a, c]);
+        check('the sort: a press during a row\'s slide stops it under the finger, and lifting finishes the move', Boolean(midPress) && midPress.drift <= 1 && Math.abs(midPress.after - midPress.to) <= 1 && sameList(midPress.rows, [b, c, d, e, a]) && Math.abs(midPress.back - midPress.from) <= 1, JSON.stringify(midPress));
+        // A real click on a row that a waiting re-order moves in the DOM (taking a's mark back puts a first, so React re-inserts
+        // every other row): the order applies after the click, which still lands on what was pressed.
+        const clickWithReorderWaiting = async (where, type) => {
+          await evaluate(async id => { window.__keyMark(id, true); await new Promise(resolve => setTimeout(resolve, 500)); }, a);
+          const spot = await evaluate(where => {
+            const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + where.id + '"]');
+            const el = where.cell ? row.querySelector('td[data-hidden] button') : row.querySelector('button[data-pill]');
+            const r = el.getBoundingClientRect();
+            return { x: r.left + (where.cell ? r.width / 2 : 60), y: r.top + r.height / 2, tag: row.querySelector('td[data-hidden]')?.dataset.tag };
+          }, where);
+          await evaluate(id => window.addEventListener('pointerdown', () => window.__keyMark(id, false), { once: true }), a);
+          const point = { x: spot.x, y: spot.y };
+          await Promise.all(type === 'touch' ? [
+            page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...point, id: 1 }] }),
+            page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }),
+          ] : [
+            page('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', buttons: 1, clickCount: 1 }),
+            page('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', buttons: 0, clickCount: 1 }),
+          ]);
+          await sleep(800);
+          return evaluate(({ id, tag }) => ({
+            rows: window.__rows(), picked: window.__pill(id).getAttribute('aria-pressed'), guide: document.querySelector('[role=dialog] h2')?.textContent ?? null,
+            pencil: document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"]')?.dataset.pencil ?? null, tag,
+          }), { id: where.id, tag: spot.tag });
+        };
+        const dropPick = id => evaluate(async id => { if (window.__pill(id).getAttribute('aria-pressed') === 'true') window.__pill(id).click(); await new Promise(resolve => setTimeout(resolve, 200)); }, id);
+        const mouseName = await clickWithReorderWaiting({ id: c }, 'mouse');
+        check('the sort: a mouse click on a name that a waiting re-order moves still picks that animal', sameList(mouseName.rows, card) && mouseName.picked === 'true' && !mouseName.guide, JSON.stringify(mouseName));
+        await dropPick(c);
+        const mouseCell = await clickWithReorderWaiting({ id: d, cell: true }, 'mouse');
+        check('the sort: a mouse click on a hidden cell that a waiting re-order moves still pencils it', sameList(mouseCell.rows, card) && mouseCell.pencil === 'yes', JSON.stringify(mouseCell));
+        await evaluate(async ({ id, tag }) => {
+          for (let i = 0; i < 2; i++) {
+            document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"] button').click();
+            await new Promise(resolve => setTimeout(resolve, 150));
+          }
+        }, { id: d, tag: mouseCell.tag });
+        const touchName = await clickWithReorderWaiting({ id: e }, 'touch');
+        check('the sort: a quick tap on a name that a waiting re-order moves still picks that animal', sameList(touchName.rows, card) && touchName.picked === 'true' && !touchName.guide, JSON.stringify(touchName));
+        await dropPick(e);
       }
       // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
       const pencilled = await evaluate(async () => {
@@ -920,7 +1004,7 @@ async function main() {
           noteSort(rest);
           check(`round ${n} move ${moves}: the rows sort by what shows: ruled out below, no contradiction above, more matches higher, then the card's number`, sameList(rest.rows, sortFacts(rest.facts)), JSON.stringify({ rows: rest.rows, facts: rest.facts }));
           check(`round ${n} move ${moves}: every row keeps its animal's number`, rest.numbers.every(row => row.card === row.want && row.label === row.want), JSON.stringify(rest.numbers));
-          // (Out of moves, the grid's controls turn off and it's 2 px shorter, whatever the order; the board keeps its size.)
+          // (Out of moves the grid is 2 px shorter whatever the order: its sr-only <caption> goes with onMark, and a caption adds one border-spacing to the table's height. The board keeps its size.)
           check(`round ${n} move ${moves}: sorting keeps the grid's height and the board's size`, (state.status !== 'playing' || rest.height === gridSize.height) && sameList(rest.board, gridSize.board), JSON.stringify({ was: gridSize, now: { height: rest.height, board: rest.board } }));
         }
         check(`round ${n} move ${moves}: settles`, !result.timedOut);

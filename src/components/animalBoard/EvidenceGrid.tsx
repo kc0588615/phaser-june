@@ -190,7 +190,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   const flying = round.orders.some((order, j) => (shown[j] ?? 0) < order.have);
-  const { drawn, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null);
+  const { drawn, body, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null);
   // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
   const [landing, setLanding] = useState<{ id: number; dy: number } | null>(null);
@@ -246,7 +246,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
           ))}
         </tr>
       </thead>
-      <tbody onPointerDownCapture={onPointerDownCapture}>
+      <tbody ref={body} onPointerDownCapture={onPointerDownCapture}>
         <tr ref={cameraRow} data-mystery data-match={revealed ?? undefined}>
           <th scope="row" className={`h-(--ev-row) p-0 text-left font-medium text-neutral-10 ${revealed !== null ? 'rounded-xs bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
             {revealed !== null ? (
@@ -342,8 +342,10 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
               key={id}
               data-suspect={id}
               onClick={onSelect ? () => pick(id) : undefined}
-              // The rows below the risen one close the gap; the rising row slides up over the Camera row.
+              // The rows below the risen one close the gap, and the replay's rows go back to the cards' order; the rising
+              // row slides up over the Camera row. (During play rows slide by useRowOrder, so `layout` waits for these.)
               layout={rising ? undefined : 'position'}
+              layoutDependency={`${revealed}:${review}`}
               initial={false}
               animate={rising ? { y: -landing.dy } : { y: 0 }}
               transition={{ y: { type: 'tween', duration: 0.8, ease: 'easeInOut' }, layout: LARGE }}

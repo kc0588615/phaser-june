@@ -7,6 +7,8 @@ const POPUP_SCALE = 0.96;
 
 export const SMALL: Transition = { type: 'tween', duration: 0.16, ease: EASE };
 export const LARGE: Transition = { type: 'tween', duration: 0.28, ease: EASE };
+/** LARGE for the browser's own `element.animate`. */
+export const LARGE_WEB: KeyframeAnimationOptions = { duration: 280, easing: `cubic-bezier(${EASE.join()})` };
 
 /** Spread onto motion elements: enter, exit and timing together. */
 export const backdropMotion = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: LARGE };
