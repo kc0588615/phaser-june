@@ -470,7 +470,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} landed={gemsLanded} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid key={session.roundNo} round={round} speciesById={speciesById} shown={shown} landed={gemsLanded} busy={boardBusy} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}
