@@ -34,6 +34,11 @@ const check = (name, ok, detail = '') => {
 };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const KEEP_RUNS = 10;
+/** The grid's sort, from `rows` facts (window.__gridFacts): out below; no contradiction above any; more matches higher; then the card's number. */
+const sortFacts = (facts, view = fact => fact) => [...facts]
+  .sort((a, b) => a.out - b.out || view(a).contradicted - view(b).contradicted || view(b).matches - view(a).matches || a.number - b.number)
+  .map(fact => fact.id);
+const sameList = (a, b) => a.join() === b.join();
 
 /** Keeps the newest KEEP_RUNS runs in e2e-artifacts/ (run names sort by time). */
 function pruneArtifacts() {
@@ -114,6 +119,77 @@ async function main() {
         pill.dispatchEvent(new PointerEvent('pointerup', opts));
         pill.click();
         await new Promise(res => setTimeout(res, 400));
+      };
+      // Polls instead of a fixed wait: a loaded machine runs a hold's timer late, and a finger lifted before it fires is a tap.
+      window.__until = async (ok, ms = 4000) => { for (const end = Date.now() + ms; !ok() && Date.now() < end;) await new Promise(res => setTimeout(res, 30)); return ok(); };
+      // The live sort: the rows as drawn, and what the screen shows for each animal (the Camera row's stamped answers, the
+      // scouted cells, never data-answer or the rules' row). \`cheat\` is what knowing the hidden cells would give.
+      window.__rows = () => [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+      window.__keyMark = (id, ruledOut) => window.__pill(id).dispatchEvent(new KeyboardEvent('keydown', { key: ruledOut ? 'ArrowRight' : 'ArrowLeft', bubbles: true }));
+      window.__gridFlying = () => [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-mystery] td[data-tag]')].some(td => (td.dataset.answer ? !/YES|NO/.test(td.textContent) : !td.textContent.startsWith(td.dataset.have + '/')));
+      window.__gridFacts = () => {
+        const grid = document.querySelector('table[aria-label="Evidence"]');
+        if (!grid) return null;
+        const clue = window.__cc.clue();
+        const camera = Object.fromEntries([...grid.querySelectorAll('tr[data-mystery] td[data-tag]')].map(td => [td.dataset.tag, /YES/.test(td.textContent) ? 'yes' : /NO/.test(td.textContent) ? 'no' : null]));
+        const rows = window.__rows();
+        const facts = clue.suspects.flatMap((id, number) => {
+          const row = grid.querySelector('tr[data-suspect="' + id + '"]');
+          if (!row) return [];
+          const seen = { matches: 0, contradicted: false };
+          const cheat = { matches: 0, contradicted: false };
+          for (const order of clue.orders) {
+            const answer = camera[order.tag];
+            if (!answer) continue;
+            const tally = (to, same) => { if (same) to.matches++; else to.contradicted = true; };
+            tally(cheat, order.row[number] === (answer === 'yes'));
+            const td = row.querySelector('td[data-tag="' + order.tag + '"]');
+            if (!td.hasAttribute('data-hidden')) tally(seen, (td.dataset.yes === 'true') === (answer === 'yes'));
+          }
+          return [{ id, number, out: clue.marked.includes(id) || clue.released.includes(id), ...seen, cheat }];
+        });
+        // The number a row wears, on its card and in its name, against the animal's place in the rules.
+        const numbers = rows.map(id => {
+          const pill = window.__pill(id);
+          return { id, want: clue.suspects.indexOf(id) + 1, card: Number(pill.querySelector('.animal-card-num')?.textContent), label: Number(pill.getAttribute('aria-label').split(':')[0]) };
+        });
+        const board = document.querySelector('section[aria-label="Game board"]')?.getBoundingClientRect();
+        return { rows, facts, numbers, height: Math.round(grid.getBoundingClientRect().height), board: board ? [Math.round(board.width), Math.round(board.height)] : null };
+      };
+      // Waits out the gems in flight, so the grid has shown all a move did.
+      window.__gridRest = async () => {
+        for (let i = 0; i < 80 && window.__gridFlying(); i++) await new Promise(res => setTimeout(res, 50));
+        for (let i = 0; i < 2; i++) await new Promise(res => requestAnimationFrame(res));
+      };
+      // The rows on the last frame the grid was live, on the frame before the mystery's row began to rise, whether any frame since differs, and of the round-end replay.
+      window.__reviewRows = () => [...document.querySelectorAll('table[aria-label="How the evidence lined up"] tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+      (function trackLiveRows() {
+        const grid = document.querySelector('table[aria-label="Evidence"]');
+        if (grid) {
+          const rows = [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+          if (!grid.querySelector('tr[data-suspect].z-30, tr[data-mystery][data-match]')) {
+            window.__endRows = null;
+            window.__movedInRise = false;
+          } else {
+            window.__endRows ??= window.__lastLiveRows ?? rows; // the frame before the rise (a reload can open on the rise)
+            const inBoth = (list, other) => list.filter(id => other.includes(id)).join();
+            if (inBoth(rows, window.__endRows) !== inBoth(window.__endRows, rows)) window.__movedInRise = true;
+          }
+          window.__lastLiveRows = rows;
+        }
+        requestAnimationFrame(trackLiveRows);
+      })();
+      // Every re-order from here until stopped, and whether gems were still flying when it came.
+      window.__watchRows = () => {
+        const changes = [];
+        let last = window.__rows().join();
+        const observer = new MutationObserver(() => {
+          const now = window.__rows().join();
+          if (now !== last) changes.push({ at: Date.now(), flying: window.__gridFlying(), from: last, to: now });
+          last = now;
+        });
+        observer.observe(document.querySelector('table[aria-label="Evidence"] tbody'), { childList: true });
+        window.__stopWatchingRows = () => { observer.disconnect(); return changes; };
       };
     ` });
 
@@ -236,6 +312,21 @@ async function main() {
     let markShot = false;
     let calledShot = false;
     let autoBackChecked = false;
+    // Which of the sort's rules this run really saw decide two rows (real boards, so a run must meet each).
+    const sortSaw = { contradiction: false, matches: false, tie: false, ruledOut: false, hiddenWouldMove: false, frozenOutOfOrder: false };
+    const noteSort = ({ rows, facts }) => {
+      const place = id => rows.indexOf(id);
+      for (const a of facts) for (const b of facts) {
+        if (a.number >= b.number) continue; // a has the lower number, so it'd be above b if nothing else decided
+        const flipped = place(a.id) > place(b.id);
+        if (flipped && a.out && !b.out) sortSaw.ruledOut = true;
+        if (a.out || b.out) continue;
+        if (flipped && a.contradicted && !b.contradicted) sortSaw.contradiction = true;
+        if (flipped && a.contradicted === b.contradicted && b.matches > a.matches) sortSaw.matches = true;
+        if (!flipped && a.contradicted === b.contradicted && a.matches === b.matches && a.matches > 0) sortSaw.tie = true;
+      }
+      if (!sameList(sortFacts(facts), sortFacts(facts, fact => fact.cheat))) sortSaw.hiddenWouldMove = true;
+    };
     for (let n = 1; n <= ROUNDS; n++) {
       const start = await evaluate(() => window.__cc.clue());
       const pins = await evaluate(() => window.__cc.state().pins);
@@ -303,11 +394,13 @@ async function main() {
             const button = at().querySelector('button');
             const r = button.getBoundingClientRect();
             const opts = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+            const was = at().hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerdown', opts));
-            await wait(1150);
+            await window.__until(() => at().hasAttribute('data-highlight') !== was);
             const during = at().hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerup', opts));
             button.click();
+            await window.__until(() => window.__cc.clue().highlight.length === (was ? 0 : 1));
             await wait(200);
             return during;
           };
@@ -331,10 +424,12 @@ async function main() {
             const button = head.querySelector('button');
             const r = button.getBoundingClientRect();
             const opts = { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, pointerId: 1, pointerType: 'touch' };
+            const was = head.hasAttribute('data-highlight');
             button.dispatchEvent(new PointerEvent('pointerdown', opts));
-            await wait(1150);
+            await window.__until(() => head.hasAttribute('data-highlight') !== was);
             button.dispatchEvent(new PointerEvent('pointerup', opts));
             button.click();
+            await window.__until(() => window.__cc.clue().highlight.length === (was ? 0 : 1));
             await wait(200);
           };
           await hold();
@@ -516,13 +611,236 @@ async function main() {
         check('dragging an animal\'s photo a little does nothing; from its name, nothing; all the way rules it out; again brings it back', !slid.short && !slid.fromName && slid.out && !slid.back && slid.picked === 'false', JSON.stringify(slid));
         check('a long press on a board tile opens that animal\'s field guide without picking it', tileHeld.held && tileHeld.title?.endsWith(names.get(tileHeld.id)) && !tileHeld.picked, JSON.stringify(tileHeld));
         check('its Close button closes that field guide (it would cover the board)', tileHeld.closed, JSON.stringify(tileHeld));
+        // The live sort, on the real grid. Ruling out through the keyboard is what changes the order here: it needs no
+        // finger, so a finger can be down elsewhere while it happens.
+        const [a, b, c, d, e] = start.suspects;
+        const sorting = await evaluate(async ([a, b, c, name]) => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const MOVE_MS = 500; // a row's slide and a margin
+          const rows = window.__rows;
+          const rowOf = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"]');
+          const tops = () => rows().map(id => rowOf(id).getBoundingClientRect().top);
+          const result = { start: rows() };
+          // Ruled out sinks, with its animation, its number and the keyboard's focus; a second sits below by number; both come back.
+          window.__pill(a).focus();
+          const pillA = window.__pill(a);
+          window.__keyMark(a, true);
+          let slid = false;
+          for (const end = Date.now() + 300; Date.now() < end;) { await new Promise(resolve => requestAnimationFrame(resolve)); if (getComputedStyle(rowOf(a)).transform !== 'none') slid = true; }
+          await wait(MOVE_MS);
+          const atRest = tops();
+          result.oneOut = { rows: rows(), slid, focusKept: document.activeElement === pillA && pillA.isConnected, inOrderOnScreen: atRest.every((top, i) => i === 0 || top > atRest[i - 1]), label: pillA.getAttribute('aria-label'), card: pillA.querySelector('.animal-card-num')?.textContent };
+          window.__keyMark(b, true);
+          await wait(MOVE_MS);
+          result.twoOut = rows();
+          window.__keyMark(b, false);
+          await wait(MOVE_MS);
+          // b now sits on a's old row. Everything still works on a row that moved.
+          const cell = () => rowOf(b).querySelector('td[data-hidden]');
+          const tag = cell().dataset.tag;
+          const at = () => rowOf(b).querySelector('td[data-tag="' + tag + '"]');
+          const before = rows();
+          at().querySelector('button').click();
+          await wait(200);
+          result.moved = { first: before[0], pencil: at().dataset.pencil, afterPencil: rows() };
+          at().querySelector('button').click();
+          await wait(100);
+          at().querySelector('button').click();
+          await wait(200);
+          result.moved.pencilCleared = at().dataset.pencil;
+          const hold = async () => {
+            const button = at().querySelector('button');
+            const r = button.getBoundingClientRect();
+            const opts = { bubbles: true, clientX: r.left + 5, clientY: r.top + 5, pointerId: 1, pointerType: 'touch' };
+            const was = at().hasAttribute('data-highlight');
+            button.dispatchEvent(new PointerEvent('pointerdown', opts));
+            await window.__until(() => at().hasAttribute('data-highlight') !== was);
+            button.dispatchEvent(new PointerEvent('pointerup', opts));
+            button.click();
+            await wait(200);
+          };
+          await hold();
+          result.moved.highlight = at().dataset.highlight === 'true';
+          await hold();
+          result.moved.highlightCleared = !at().hasAttribute('data-highlight');
+          at().querySelector('button').dispatchEvent(new KeyboardEvent('keydown', { key: 'h', bubbles: true }));
+          await wait(150);
+          result.moved.keyHighlight = at().dataset.highlight === 'true';
+          at().querySelector('button').dispatchEvent(new KeyboardEvent('keydown', { key: 'h', bubbles: true }));
+          await wait(150);
+          await window.__holdPill(b);
+          result.moved.guide = { title: document.querySelector('[role=dialog] h2')?.textContent ?? '', number: document.querySelector('[role=dialog] [data-guide-number][aria-current]')?.dataset.guideNumber ?? null, wanted: name };
+          [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
+          await wait(300);
+          result.moved.rows = rows();
+          window.__keyMark(a, false);
+          await wait(MOVE_MS);
+          result.back = rows();
+          // A finger down on another row holds the order until it lifts: a long press on a name, a photo slide, a hold on a cell.
+          const fingerOn = async (press, lift, heldMs) => {
+            const before = rows();
+            press();
+            await wait(50);
+            window.__keyMark(b, true);
+            await wait(heldMs);
+            const held = rows();
+            lift();
+            await wait(MOVE_MS);
+            const after = rows();
+            window.__keyMark(b, false);
+            await wait(MOVE_MS);
+            return { before, held, after, back: rows() };
+          };
+          const pill = window.__pill(c);
+          const box = pill.getBoundingClientRect();
+          const pointer = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
+          const midY = box.top + box.height / 2;
+          result.name = await fingerOn(() => pointer(pill, 'pointerdown', box.left + 60, midY), () => pointer(pill, 'pointerup', box.left + 60, midY), 650);
+          [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
+          await wait(300);
+          const slidePill = window.__pill(c);
+          const slideBox = slidePill.getBoundingClientRect();
+          result.slide = await fingerOn(() => {
+            pointer(slidePill, 'pointerdown', slideBox.left + 10, slideBox.top + slideBox.height / 2);
+            pointer(slidePill, 'pointermove', slideBox.left + 26, slideBox.top + slideBox.height / 2); // short of ruling it out
+          }, () => pointer(slidePill, 'pointerup', slideBox.left + 26, slideBox.top + slideBox.height / 2), 200);
+          const hidden = rowOf(c).querySelector('td[data-hidden] button');
+          const hiddenBox = hidden.getBoundingClientRect();
+          result.cell = await fingerOn(() => pointer(hidden, 'pointerdown', hiddenBox.left + 5, hiddenBox.top + 5), () => pointer(hidden, 'pointerup', hiddenBox.left + 5, hiddenBox.top + 5), 200);
+          result.marked = window.__cc.clue().marked;
+          return result;
+        }, [a, b, c, names.get(b)]);
+        const card = start.suspects;
+        check('the sort: ties keep the cards\' order at the start', sameList(sorting.start, card), JSON.stringify(sorting.start));
+        check('the sort: a ruled-out animal sinks below the others, keeping its number and the keyboard\'s focus', sameList(sorting.oneOut.rows, [b, c, d, e, a]) && sorting.oneOut.focusKept && sorting.oneOut.inOrderOnScreen && sorting.oneOut.label.startsWith('1: ') && sorting.oneOut.card === '1', JSON.stringify(sorting.oneOut));
+        check('the sort: a row slides to its new place', sorting.oneOut.slid, JSON.stringify(sorting.oneOut));
+        check('the sort: two ruled out sit by number under the others', sameList(sorting.twoOut, [c, d, e, a, b]), JSON.stringify(sorting.twoOut));
+        check('the sort: taking a mark back returns the row to its place', sameList(sorting.back, card), JSON.stringify(sorting.back));
+        { const m = sorting.moved;
+          check('a moved row still pencils, and a pencil guess moves no row', m.first === b && m.pencil === 'yes' && m.pencilCleared === '' && sameList(m.afterPencil, [b, c, d, e, a]), JSON.stringify(m));
+          check('a moved row still highlights (hold, and H), which moves no row', m.highlight && m.highlightCleared && m.keyHighlight && sameList(m.rows, [b, c, d, e, a]), JSON.stringify(m));
+          check('a moved row still opens its own field guide, on its own number', m.guide.title.endsWith(m.guide.wanted) && m.guide.number === '2', JSON.stringify(m.guide)); }
+        for (const [what, seen] of [['a long press on a name', sorting.name], ['a photo slide', sorting.slide], ['a hold on a cell', sorting.cell]]) {
+          check(`the sort: ${what} holds the order until the finger lifts, then applies it`, sameList(seen.held, seen.before) && sameList(seen.after, [a, c, d, e, b]) && sameList(seen.back, card), JSON.stringify(seen));
+        }
+        check('the sort tests leave nobody ruled out', sorting.marked.length === 0, JSON.stringify(sorting.marked));
+        // A real finger (the browser's own touch, not a dispatched event). A long hold: the row stays under it, its guide opens, and lifting applies the order.
+        const closeAndUnmark = async (bid, cid) => evaluate(async ([bid, cid]) => {
+          [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
+          if (window.__pill(cid).getAttribute('aria-pressed') === 'true') window.__pill(cid).click();
+          window.__keyMark(bid, false);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }, [bid, cid]);
+        const liftState = id => evaluate(id => ({ rows: window.__rows(), picked: window.__pill(id).getAttribute('aria-pressed'), guide: document.querySelector('[role=dialog] h2')?.textContent ?? null }), id);
+        const point = await evaluate(id => { const r = window.__pill(id).getBoundingClientRect(); return { x: r.left + 60, y: r.top + r.height / 2 }; }, c);
+        await page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...point, id: 1 }] });
+        await evaluate(id => window.__keyMark(id, true), b);
+        await sleep(700);
+        const underFinger = await evaluate(() => window.__rows());
+        await page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+        await sleep(600);
+        const heldUp = await liftState(c);
+        check('the sort: under a real finger\'s long hold the row stays, its guide opens, and lifting applies the order', sameList(underFinger, card) && sameList(heldUp.rows, [a, c, d, e, b]) && heldUp.guide?.endsWith(names.get(c)), JSON.stringify({ underFinger, heldUp }));
+        await closeAndUnmark(b, c);
+        await sleep(300);
+        // A quick tap with a new order waiting (it comes while the finger is down, and applies on the lift): the tap must still pick the animal under the finger.
+        await evaluate(id => window.addEventListener('pointerdown', () => window.__keyMark(id, true), { once: true }), b);
+        await Promise.all([
+          page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...point, id: 1 }] }),
+          page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }),
+        ]);
+        await sleep(800);
+        const tapped = await liftState(c);
+        check('the sort: a quick tap picks the animal under the finger, though the rows re-order as it lifts', sameList(tapped.rows, [a, c, d, e, b]) && tapped.picked === 'true' && !tapped.guide, JSON.stringify(tapped));
+        await closeAndUnmark(b, c);
+        await sleep(300);
+        // A press that lands while the rows are still sliding: the row stops under the finger, and lifting finishes the move.
+        const midPress = await evaluate(async ([a, c]) => {
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+          const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+          const rowOf = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"]');
+          const top = id => rowOf(id).getBoundingClientRect().top;
+          for (let tries = 0; tries < 5; tries++) {
+            const from = top(c);
+            const to = from - (rowOf(c).getBoundingClientRect().height + 2); // the slot above: a's sinking lifts c one row
+            window.__keyMark(a, true);
+            let mid = false;
+            for (const end = Date.now() + 300; Date.now() < end && !mid;) {
+              await frame();
+              mid = top(c) < from - 1 && top(c) > to + 1;
+            }
+            if (!mid) { window.__keyMark(a, false); await wait(600); continue; }
+            const pill = window.__pill(c);
+            const box = pill.getBoundingClientRect();
+            const at = (type, x, y) => pill.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'touch' }));
+            const [x, y] = [box.left + 60, box.top + box.height / 2];
+            at('pointerdown', x, y);
+            const pressedAt = top(c);
+            const tops = [];
+            for (const end = Date.now() + 350; Date.now() < end;) { await frame(); tops.push(top(c)); }
+            at('pointerup', x, y);
+            await wait(700);
+            const after = top(c);
+            [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click();
+            const rows = window.__rows();
+            window.__keyMark(a, false);
+            await wait(600);
+            return { tries, from, to, pressedAt, drift: Math.max(...tops.map(value => Math.abs(value - pressedAt))), after, rows, back: top(c) };
+          }
+          return null;
+        }, [a, c]);
+        check('the sort: a press during a row\'s slide stops it under the finger, and lifting finishes the move', Boolean(midPress) && midPress.drift <= 1 && Math.abs(midPress.after - midPress.to) <= 1 && sameList(midPress.rows, [b, c, d, e, a]) && Math.abs(midPress.back - midPress.from) <= 1, JSON.stringify(midPress));
+        // A real click on a row that a waiting re-order moves in the DOM (taking a's mark back puts a first, so React re-inserts
+        // every other row): the order applies after the click, which still lands on what was pressed.
+        const clickWithReorderWaiting = async (where, type) => {
+          await evaluate(async id => { window.__keyMark(id, true); await new Promise(resolve => setTimeout(resolve, 500)); }, a);
+          const spot = await evaluate(where => {
+            const row = document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + where.id + '"]');
+            const el = where.cell ? row.querySelector('td[data-hidden] button') : row.querySelector('button[data-pill]');
+            const r = el.getBoundingClientRect();
+            return { x: r.left + (where.cell ? r.width / 2 : 60), y: r.top + r.height / 2, tag: row.querySelector('td[data-hidden]')?.dataset.tag };
+          }, where);
+          await evaluate(id => window.addEventListener('pointerdown', () => window.__keyMark(id, false), { once: true }), a);
+          const point = { x: spot.x, y: spot.y };
+          await Promise.all(type === 'touch' ? [
+            page('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...point, id: 1 }] }),
+            page('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }),
+          ] : [
+            page('Input.dispatchMouseEvent', { type: 'mousePressed', ...point, button: 'left', buttons: 1, clickCount: 1 }),
+            page('Input.dispatchMouseEvent', { type: 'mouseReleased', ...point, button: 'left', buttons: 0, clickCount: 1 }),
+          ]);
+          await sleep(800);
+          return evaluate(({ id, tag }) => ({
+            rows: window.__rows(), picked: window.__pill(id).getAttribute('aria-pressed'), guide: document.querySelector('[role=dialog] h2')?.textContent ?? null,
+            pencil: document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"]')?.dataset.pencil ?? null, tag,
+          }), { id: where.id, tag: spot.tag });
+        };
+        const dropPick = id => evaluate(async id => { if (window.__pill(id).getAttribute('aria-pressed') === 'true') window.__pill(id).click(); await new Promise(resolve => setTimeout(resolve, 200)); }, id);
+        const mouseName = await clickWithReorderWaiting({ id: c }, 'mouse');
+        check('the sort: a mouse click on a name that a waiting re-order moves still picks that animal', sameList(mouseName.rows, card) && mouseName.picked === 'true' && !mouseName.guide, JSON.stringify(mouseName));
+        await dropPick(c);
+        const mouseCell = await clickWithReorderWaiting({ id: d, cell: true }, 'mouse');
+        check('the sort: a mouse click on a hidden cell that a waiting re-order moves still pencils it', sameList(mouseCell.rows, card) && mouseCell.pencil === 'yes', JSON.stringify(mouseCell));
+        await evaluate(async ({ id, tag }) => {
+          for (let i = 0; i < 2; i++) {
+            document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] td[data-tag="' + tag + '"] button').click();
+            await new Promise(resolve => setTimeout(resolve, 150));
+          }
+        }, { id: d, tag: mouseCell.tag });
+        const touchName = await clickWithReorderWaiting({ id: e }, 'touch');
+        check('the sort: a quick tap on a name that a waiting re-order moves still picks that animal', sameList(touchName.rows, card) && touchName.picked === 'true' && !touchName.guide, JSON.stringify(touchName));
+        await dropPick(e);
       }
       // Pencil a guess in every hidden answer (yes, no, yes, ...), so scouting shows right and wrong guesses.
-      await evaluate(async () => {
+      const pencilled = await evaluate(async () => {
+        const before = window.__rows();
         const cells = [...document.querySelectorAll('table[aria-label="Evidence"] tr[data-suspect] td[data-hidden]')];
         for (const [i, td] of cells.entries()) for (let tap = 0; tap <= i % 2; tap++) td.querySelector('button').click();
         await new Promise(resolve => setTimeout(resolve, 200));
+        return { before, after: window.__rows(), ...window.__gridFacts() };
       });
+      check(`round ${n}: a pencil guess in every hidden answer moves no row`, sameList(pencilled.before, pencilled.after), JSON.stringify(pencilled));
+      const gridSize = { height: pencilled.height, board: pencilled.board };
       const trailBefore = start.trail;
       // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then names it: a find);
       // round 4 turns on Auto rule-out and marks nothing itself; others play carefully.
@@ -673,6 +991,8 @@ async function main() {
           if (moves.length === 0) return null;
           const move = moves.reduce((best, candidate) => (value(candidate) > value(best) ? candidate : best));
           const expected = scouts(move);
+          window.__watchRows();
+          window.__dragStart = Date.now();
           const drag = await cc.drag(move, { input: 'touch', timeoutMs: 30_000 });
           await new Promise(resolve => setTimeout(resolve, 150));
           const { pins, view } = cc.state();
@@ -689,6 +1009,20 @@ async function main() {
         if (!result) break;
         moves++;
         state = result.clue;
+        const rest = await evaluate(async () => {
+          await window.__gridRest();
+          const changes = window.__stopWatchingRows();
+          const settledAt = window.__cc.events(1e6).filter(e => e.name === 'clue-board-settled' && e.at >= window.__dragStart).at(0)?.at ?? null;
+          return { changes, settledAt, ...window.__gridFacts() };
+        });
+        check(`round ${n} move ${moves}: no row moves until the move has settled and its gems have landed`, rest.changes.every(change => !change.flying && (rest.settledAt === null || change.at >= rest.settledAt)), JSON.stringify({ settledAt: rest.settledAt, changes: rest.changes }));
+        if (rest.rows && (state.status === 'playing' || state.status === 'out-of-moves')) {
+          noteSort(rest);
+          check(`round ${n} move ${moves}: the rows sort by what shows: ruled out below, no contradiction above, more matches higher, then the card's number`, sameList(rest.rows, sortFacts(rest.facts)), JSON.stringify({ rows: rest.rows, facts: rest.facts }));
+          check(`round ${n} move ${moves}: every row keeps its animal's number`, rest.numbers.every(row => row.card === row.want && row.label === row.want), JSON.stringify(rest.numbers));
+          // (Out of moves the grid is 2 px shorter whatever the order: its sr-only <caption> goes with onMark, and a caption adds one border-spacing to the table's height. The board keeps its size.)
+          check(`round ${n} move ${moves}: sorting keeps the grid's height and the board's size`, (state.status !== 'playing' || rest.height === gridSize.height) && sameList(rest.board, gridSize.board), JSON.stringify({ was: gridSize, now: { height: rest.height, board: rest.board } }));
+        }
         check(`round ${n} move ${moves}: settles`, !result.timedOut);
         check(`round ${n} move ${moves}: nothing on screen covers the board`, !result.blocked, result.blocked ?? '');
         if (result.counted) check(`round ${n} move ${moves}: uses exactly one move`, state.movesLeft === before.movesLeft - 1, `${before.movesLeft} -> ${state.movesLeft}`);
@@ -716,7 +1050,7 @@ async function main() {
           const cell = result.orders.find(candidate => candidate.tag === order.tag);
           return cell && cell.have === order.have && cell.answer === order.answer;
         }), JSON.stringify(result.orders));
-        check(`round ${n} move ${moves}: during play the grid never points at a mismatch`, result.misses === 0, `${result.misses} cells`);
+        check(`round ${n} move ${moves}: during play no cell is marked as a mismatch`, result.misses === 0, `${result.misses} cells`);
         // Auto rule-out: after the move, every suspect whose shown answer differs from a shown camera answer is marked, and
         // nobody else is (the player marked nobody); off, the game marks nobody.
         const shownMiss = state.suspects.filter((id, i) => state.orders.some(order => order.answer && order.seen[i] && order.row[i] !== (order.answer === 'yes')));
@@ -855,9 +1189,16 @@ async function main() {
         return {
           match: grid.querySelector('tr[data-mystery]')?.dataset.match ?? '', misses: grid.querySelectorAll('[data-miss]').length, wrong: wrong.length, hidden: grid.querySelectorAll('[data-hidden]').length,
           guessesWrong: truth.filter(cell => cell.shown !== cell.expected).length, tally, shownTally: document.querySelector('[data-guesses]')?.dataset.guesses ?? null,
+          rows: [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect)),
         };
       });
       check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.match === String(start.mysteryId), JSON.stringify(replay));
+      // The order froze when the mystery's row began to rise, and stayed through the rise and onto the round-end card.
+      const rowsAt = await evaluate(() => ({ end: window.__endRows, last: window.__lastLiveRows, moved: window.__movedInRise }));
+      const endRows = (rowsAt.end ?? []).filter(id => id !== start.mysteryId);
+      check(`round ${n}: the order freezes when the round ends`, rowsAt.end !== null && !rowsAt.moved && sameList(rowsAt.last.filter(id => id !== start.mysteryId), endRows), JSON.stringify(rowsAt));
+      check(`round ${n}: the round-end card keeps the order the round ended on`, Boolean(replay) && rowsAt.end !== null && sameList(replay.rows, endRows), JSON.stringify({ rows: replay?.rows, endRows }));
+      if (rowsAt.end !== null && !sameList(endRows, start.suspects.filter(id => id !== start.mysteryId))) sortSaw.frozenOutOfOrder = true;
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
       const below = await evaluate(() => {
         const grid = document.querySelector('table[aria-label="How the evidence lined up"]')?.getBoundingClientRect();
@@ -883,6 +1224,13 @@ async function main() {
     check('the release preview was checked at least once', previewChecked);
     check('the scouting preview was checked at least once', scoutChecked);
     check('the idle hint was checked at least once', hintChecked);
+    report.sortSaw = sortSaw;
+    check('the sort: a run sees a contradiction sink an animal below a higher-numbered one', sortSaw.contradiction, JSON.stringify(sortSaw));
+    check('the sort: a run sees more matches lift an animal above a lower-numbered one', sortSaw.matches, JSON.stringify(sortSaw));
+    check('the sort: a run sees a tie (same matches, none contradicted) kept in the cards\' order', sortSaw.tie, JSON.stringify(sortSaw));
+    check('the sort: a run sees a ruled-out animal sit below a higher-numbered one', sortSaw.ruledOut, JSON.stringify(sortSaw));
+    check('the sort: a run reaches a board where hidden answers would change the order, and they don\'t', sortSaw.hiddenWouldMove, JSON.stringify(sortSaw));
+    check('the sort: a run freezes a sorted order at a round\'s end', sortSaw.frozenOutOfOrder, JSON.stringify(sortSaw));
 
     // 3. The Field Journal lists the finds (and right names at the end of moves).
     const journal = await evaluate(async () => {
@@ -975,6 +1323,8 @@ async function main() {
     await sleep(1500);
     const resumed = await evaluate(() => { const { grid, toys, pins } = window.__cc.state(); return { clue: window.__cc.clue(), grid, toys, pins }; });
     await screenshot('06-after-reload.png');
+    const resumedRows = await evaluate(async () => { await window.__gridRest(); return window.__gridFacts(); });
+    check('a reload draws the rows sorted, by the same rule', sameList(resumedRows.rows, sortFacts(resumedRows.facts)) && resumedRows.numbers.every(row => row.card === row.want && row.label === row.want), JSON.stringify(resumedRows));
     const toyCount = played.toys.flat().filter(Boolean).length;
     check('a reload resumes the round: rules, marks, pencil, moves, score', JSON.stringify(resumed.clue) === JSON.stringify(played.clue), JSON.stringify({ before: played.clue.movesLeft, after: resumed.clue.movesLeft }));
     check('a reload resumes the board: gems and toys', JSON.stringify(resumed.grid) === JSON.stringify(played.grid) && JSON.stringify(resumed.toys) === JSON.stringify(played.toys), `${toyCount} toys`);
@@ -999,12 +1349,31 @@ async function main() {
     await waitFor(() => window.__cc.clue().end, 'the resumed round to end', 20_000);
     await sleep(1000);
     const ended = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
+    const replayRows = () => waitFor(() => { const rows = window.__reviewRows(); return rows.length > 0 && rows; }, 'the round-end replay', 20_000);
+    const savedRowOrder = () => evaluate(() => JSON.parse(sessionStorage.getItem('cc:explore:game'))?.rowOrder?.ids ?? []);
+    const beforeEndReload = await replayRows();
+    const withoutMystery = rows => rows.filter(id => id !== resumed.clue.mysteryId);
+    check('the round-end order is saved with the game', sameList(withoutMystery(await savedRowOrder()), beforeEndReload), JSON.stringify({ saved: await savedRowOrder(), shown: beforeEndReload }));
     await page('Page.reload');
     await waitFor(() => document.readyState === 'complete', 'the reload');
     await waitFor(boardReady, 'the resumed end card', 60_000);
     await sleep(1500);
     const afterEnd = await evaluate(() => ({ end: window.__cc.clue().end, journal: localStorage.getItem('clue-match:journal:v1') }));
     await screenshot('06-end-after-reload.png');
+    const afterEndReload = await replayRows();
+    check('a reload on the round-end card keeps the order on screen', sameList(afterEndReload, beforeEndReload), JSON.stringify({ before: beforeEndReload, after: afterEndReload }));
+    // The saved order is what draws it, not the same order worked out again: a reversed save shows reversed.
+    await evaluate(() => {
+      const saved = JSON.parse(sessionStorage.getItem('cc:explore:game'));
+      saved.rowOrder?.ids.reverse();
+      sessionStorage.setItem('cc:explore:game', JSON.stringify(saved));
+    });
+    const reversed = withoutMystery(await savedRowOrder());
+    await page('Page.reload');
+    await waitFor(() => document.readyState === 'complete', 'the reload');
+    await waitFor(boardReady, 'the resumed end card', 60_000);
+    const fromSave = await replayRows();
+    check('a reload draws the round-end order from the save', reversed.length > 0 && sameList(fromSave, reversed), JSON.stringify({ reversed, shown: fromSave }));
     const solves = raw => Object.values(JSON.parse(raw ?? '{}')).find(entry => entry.commonName === mysteryName)?.timesSolved ?? 0;
     check('the resumed round, named right, is written to the journal once', ended.end?.outcome === 'found' && solves(ended.journal) === solves(journalBefore) + 1, JSON.stringify({ mysteryName, before: solves(journalBefore), after: solves(ended.journal), outcome: ended.end?.outcome }));
     check('a reload on the round-end card resumes it without writing the journal again', Boolean(ended.end) && JSON.stringify(afterEnd.end) === JSON.stringify(ended.end) && afterEnd.journal === ended.journal, JSON.stringify({ ended: ended.end?.outcome ?? null, after: afterEnd.end?.outcome ?? null, sameJournal: afterEnd.journal === ended.journal }));
@@ -1016,6 +1385,60 @@ async function main() {
     check('the globe marks each animal found', found > 0 && markers === found, `${markers} markers, ${found} in the journal`);
     await sleep(1500);
     await screenshot('07-globe-found.png');
+
+    // A round that ends with rows mid-slide, a finger holding a slide paused, or a press just after the end: the row's
+    // slide finishes where it was going, with no jump, and only then does it rise from its real slot into the Camera row.
+    // A wrong name ends it, so the journal and globe above stand.
+    for (const [label, ending] of [['sliding', 'running'], ['held paused', 'paused'], ['pressed just after the end', 'late']]) {
+      await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);
+      await waitFor(boardReady, 'a fresh board', 60_000);
+      await sleep(1500);
+      const rise = await evaluate(async ending => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
+        const { mysteryId, suspects } = window.__cc.clue();
+        const rows = window.__rows();
+        const moved = rows.at(-1) === mysteryId ? rows[0] : mysteryId; // ruling out the mystery sinks its row the furthest
+        const wrong = suspects.find(id => id !== mysteryId && id !== moved);
+        await window.__holdPill(wrong);
+        document.querySelector('[role=dialog] button[data-name-it]')?.click();
+        await wait(200);
+        const yes = [...(document.querySelector('[role=dialog] [data-name-confirm]')?.querySelectorAll('button') ?? [])].find(button => button.textContent !== 'Back');
+        const mysteryRow = () => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + mysteryId + '"]');
+        window.__keyMark(moved, true);
+        await frame();
+        await frame();
+        const finger = { bubbles: true, pointerId: 77, pointerType: 'touch' };
+        const press = () => mysteryRow().querySelector('td').dispatchEvent(new PointerEvent('pointerdown', finger));
+        if (ending === 'paused') { press(); await frame(); }
+        const slide = mysteryRow().getAnimations().find(animation => animation.effect?.getKeyframes().some(keyframe => keyframe.transform?.startsWith('translateY')));
+        const before = slide?.playState ?? null;
+        const samples = [];
+        const sample = () => {
+          const row = mysteryRow();
+          if (row) samples.push({ top: row.getBoundingClientRect().top, rising: row.classList.contains('z-30') });
+        };
+        sample();
+        yes?.click();
+        if (ending === 'late') { await frame(); press(); }
+        let atRise = null;
+        for (let i = 0; i < 400 && !document.querySelector('tr[data-mystery][data-match]'); i++) {
+          await frame();
+          sample();
+          if (atRise === null && samples.at(-1)?.rising) atRise = slide?.playState ?? null;
+        }
+        const camera = document.querySelector('tr[data-mystery]').getBoundingClientRect().top;
+        window.dispatchEvent(new PointerEvent('pointerup', finger));
+        const rising = samples.filter(now => now.rising);
+        const tops = samples.map(now => Math.round(now.top));
+        return { before, atRise, camera: Math.round(camera), tops: tops.filter((_top, i) => i < 4 || i % 8 === 0 || i === tops.length - 1), rose: rising.length > 5, neverDown: rising.every((now, i) => i === 0 || now.top <= rising[i - 1].top + 1), end: Math.round(rising.at(-1)?.top ?? -1), matched: Boolean(document.querySelector('tr[data-mystery][data-match]')) };
+      }, ending);
+      check(`the sort: this test catches the rows ${label} as the round ends`, rise.before === (ending === 'paused' ? 'paused' : 'running'), JSON.stringify(rise));
+      check(`the sort: a round ending with rows ${label}: the slide finishes, not cut short, before the rise starts`, rise.atRise === 'finished', JSON.stringify(rise));
+      check(`the sort: a round ending with rows ${label}: the mystery's row rises without dropping`, rise.rose && rise.neverDown, JSON.stringify(rise));
+      // 12 px: the last frame sampled comes just before the rise lands.
+      check(`the sort: a round ending with rows ${label}: the mystery's row ends at the Camera row`, rise.matched && Math.abs(rise.end - rise.camera) <= 12, JSON.stringify(rise));
+    }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
     check('no failed requests', report.failedRequests.length === 0, report.failedRequests.slice(0, 3).join(' | '));

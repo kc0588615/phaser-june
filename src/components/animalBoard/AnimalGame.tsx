@@ -195,7 +195,7 @@ function StatusTicker({ now, nowKey, nowKind, facts, idle, keys = false }: { now
 }
 
 export function AnimalGame() {
-  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut } = useAnimalSession();
+  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder } = useAnimalSession();
   const { journal, records, record } = useJournal();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -429,6 +429,7 @@ export function AnimalGame() {
   // over the board and the grid itself turns into the replay (plan 052; the Camera row slides back up).
   const [landed, setLanded] = useState(0);
   const onLanded = useCallback(() => setLanded(roundNo ?? 0), [roundNo]);
+  const onRowOrder = useCallback((ids: number[]) => setRowOrder({ roundNo: roundNo ?? 0, ids }), [roundNo, setRowOrder]);
   const reviewing = Boolean(end) && !boardBusy && landed === roundNo;
   const landOn = round && end && !boardBusy && !reviewing ? round.mysteryId : null;
 
@@ -470,7 +471,7 @@ export function AnimalGame() {
         <h1 className="sr-only">{placeName ?? 'Critter Connect'}</h1>
         <div ref={gridBox} className="min-w-0 shrink-0 px-xxs pt-xxs [grid-area:grid] md:px-s md:pt-s">
           {session && round ? (
-            <EvidenceGrid round={round} speciesById={speciesById} shown={shown} landed={gemsLanded} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
+            <EvidenceGrid key={session.roundNo} round={round} speciesById={speciesById} shown={shown} landed={gemsLanded} busy={boardBusy} endedOrder={end && rowOrder && rowOrder.roundNo === roundNo ? rowOrder.ids : undefined} onRowOrder={onRowOrder} selected={pick} onSelect={reviewing ? undefined : onSelect} onGuide={reviewing ? undefined : id => setSheet({ kind: 'suspect', id })} onMark={round.status === 'playing' ? rule : undefined} slideHint={slideHint && session.roundNo === 1} onQuestion={reviewing ? undefined : onQuestion} onNotes={reviewing ? undefined : openNotes} review={reviewing} pencil={session.pencil} onPencil={round.status === 'playing' ? onPencil : undefined} highlight={session.highlight} onHighlight={round.status === 'playing' ? highlight : undefined} reveal={reveal} landOn={landOn} onLanded={onLanded} corner={corner} />
           ) : (
             <div className="flex items-center">{corner}</div>
           )}

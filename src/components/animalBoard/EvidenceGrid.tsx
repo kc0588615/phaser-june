@@ -2,8 +2,9 @@
 // suspects. A column per clue (its gem as the board draws it, and a short label);
 // the Mystery row, where each clue's gems fill its cell until the answer stamps it;
 // then a row per suspect with that animal's own answers and its number, the same
-// number its board card wears (plan 046: the same pinned card, AnimalCard). Comparing down a column is the player's job: during
-// play nothing points at a contradiction. Plan 045: a suspect's answer stays "?"
+// number its board card wears (plan 046: the same pinned card, AnimalCard). During play the rows re-order themselves, likeliest
+// first (suspectOrder, from what's showing only; useRowOrder, once a move settles and never under a finger): no cell points at a
+// contradiction, but its row sinks. The number stays the animal's wherever its row goes. Plan 045: a suspect's answer stays "?"
 // until scouted (a move's clear of that clue's color next to its tile); tap a hidden
 // cell to pencil your own guess (yes, no, blank). Once scouted, a right guess's cell sparkles
 // for a moment and a wrong one shows the guess crossed out (the answer is showing by then, so
@@ -20,7 +21,8 @@
 // Players see the mystery as "the one caught on camera" (its row: "On camera"), so it doesn't read as a sixth
 // animal; a ruled-out animal's row dims (the player's own mark). `landOn` (the round is over): the mystery's own row
 // rises into the Camera row, which becomes that animal (its slot closes up), then `onLanded`. `review` keeps it so (plan 052).
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+// The order freezes when the round ends, so that row rises from where the player last saw it, and `review` keeps it (`endedOrder`: a reload's copy).
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { motion } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
@@ -28,10 +30,12 @@ import { liveHighlights } from '@/clueGame/animalSession';
 import { clueFace } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
 import { columnLabel } from '@/clueGame/questionMatch';
+import { suspectOrder } from '@/clueGame/suspectOrder';
 import { GEM_TEXT_COLOR, type GemType } from '@/game/constants';
 import { LARGE, SMALL } from '@/lib/motion';
 import { AnimalCard, TrapCard } from './AnimalCard';
 import { FaceIcon } from './FaceIcon';
+import { useRowOrder } from './useRowOrder';
 
 const NEXT_PENCIL = { none: 'yes', yes: 'no', no: null } as const;
 const NONE: ReadonlySet<string> = new Set();
@@ -65,13 +69,19 @@ function GridName({ name }: { name: string }) {
  */
 interface Gesture { id: number; x: number; y: number; travel: number; handle: boolean; timer: number; mode: 'press' | 'held' | 'slide' | 'scroll' }
 
-export function EvidenceGrid({ round, speciesById, shown, landed = [], selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
+export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = false, endedOrder, onRowOrder, selected = null, onSelect, onGuide, onMark, slideHint = false, onQuestion, onNotes, pencil = {}, onPencil, highlight = [], onHighlight, reveal = NONE, landOn = null, onLanded, corner, review = false }: {
   round: AnimalRound;
   speciesById: Map<number, PoolSpecies>;
   /** Gems each order shows as collected (the grid trails the rules while gems fly); an answer shows once its order looks full. */
   shown: readonly number[];
   /** Gems each order has had fly in this round: the count flashes its gem's color with each. */
   landed?: readonly number[];
+  /** A move is playing out on the board: the rows wait for it. */
+  busy?: boolean;
+  /** A resumed round that had already ended: the rows as it ended, drawn from the start. */
+  endedOrder?: readonly number[];
+  /** The rows' order, each time it changes. */
+  onRowOrder?: (ids: number[]) => void;
   selected?: number | null;
   onSelect?: (id: number) => void;
   /** A long press on an animal's row: open its field guide. */
@@ -183,18 +193,22 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
   // The player's own marks, in the Camera row's label (red like the cards' crosses).
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
+  const flying = round.orders.some((order, j) => (shown[j] ?? 0) < order.have);
+  const { drawn, body, standing, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null, landOn !== null, endedOrder);
+  useEffect(() => onRowOrder?.(drawn), [drawn, onRowOrder]);
   // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
   const [landing, setLanding] = useState<{ id: number; dy: number } | null>(null);
   const [matched, setMatched] = useState<number | null>(null);
   useLayoutEffect(() => {
     if (landOn === null) { setLanding(null); setMatched(null); return; }
+    if (!standing) return; // rows still sliding: measure where the row ends up
     const from = cameraRow.current?.getBoundingClientRect().top;
     const to = cameraRow.current?.parentElement?.querySelector(`tr[data-suspect="${landOn}"]`)?.getBoundingClientRect().top;
     const dy = from === undefined || to === undefined ? 0 : to - from;
     setLanding({ id: landOn, dy });
     if (dy === 0) setMatched(landOn); // nothing to slide (no row found): match at once, so the card still opens
-  }, [landOn]);
+  }, [landOn, standing]);
   // Which animal the Camera row shows: the replay's, or the one that just rose into it.
   const revealed = review ? round.mysteryId : matched;
   // From the slide on: no ✓/✗ marks. An answered column's cells go green (same as the camera's animal) or red
@@ -238,7 +252,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
           ))}
         </tr>
       </thead>
-      <tbody>
+      <tbody ref={body} onPointerDownCapture={onPointerDownCapture}>
         <tr ref={cameraRow} data-mystery data-match={revealed ?? undefined}>
           <th scope="row" className={`h-(--ev-row) p-0 text-left font-medium text-neutral-10 ${revealed !== null ? 'rounded-xs bg-color-3-transparent outline outline-2 outline-color-3' : ''}`}>
             {revealed !== null ? (
@@ -310,8 +324,9 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
         </tr>
         {/* Sets the Camera row apart from the animals it's one of (globals.css counts its height in --ev-reserve). */}
         <tr aria-hidden="true"><td colSpan={round.orders.length + 1} className="h-1 p-0"><div className="h-px bg-neutral-4" /></td></tr>
-        {round.suspects.map((id, i) => {
+        {drawn.map(id => {
           if (id === revealed) return null; // risen into the Camera row
+          const i = round.suspects.indexOf(id); // the card's own place, not the row's: every order's answers and the number go by it
           const species = speciesById.get(id);
           const name = species?.commonName ?? 'animal';
           const rising = landing?.id === id;
@@ -333,8 +348,10 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], selected 
               key={id}
               data-suspect={id}
               onClick={onSelect ? () => pick(id) : undefined}
-              // The rows below the risen one close the gap; the rising row slides up over the Camera row.
+              // The rows below the risen one close the gap; the rising row slides up over the Camera row. (During play rows
+              // slide by useRowOrder, so `layout` waits for these.)
               layout={rising ? undefined : 'position'}
+              layoutDependency={`${revealed}:${review}`}
               initial={false}
               animate={rising ? { y: -landing.dy } : { y: 0 }}
               transition={{ y: { type: 'tween', duration: 0.8, ease: 'easeInOut' }, layout: LARGE }}

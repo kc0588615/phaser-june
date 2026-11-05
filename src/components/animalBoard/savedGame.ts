@@ -9,12 +9,16 @@ const KEY = 'cc:explore:game';
 /** The board after the last settled move of round `roundNo`; `pins`: where the animals stand now (plan 047: they walk). */
 export interface SavedBoard { roundNo: number; grid: Grid; toys: Toys; pins: Array<[cell: [x: number, y: number], id: number]> }
 
+export interface SavedRowOrder { roundNo: number; ids: number[] }
+
 export interface SavedGame {
   v: 1;
   seed: number;
   requested: ContinentKey | null;
   session: Omit<AnimalSession, 'book'>;
   board: SavedBoard | null;
+  /** The evidence grid's rows as last drawn, so a reload on the round-end card shows the order the round ended on. */
+  rowOrder?: SavedRowOrder | null;
 }
 
 export function readSavedGame(): SavedGame | null {
