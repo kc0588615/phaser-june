@@ -14,7 +14,7 @@ export function useRowOrder(live: number[], hold: boolean, ended: boolean, start
   const onPointerDownCapture = (event: ReactPointerEvent) => {
     fingers.current.add(event.pointerId);
     setPressed(true);
-    for (const slide of slides.current) if (slide.playState === 'running') slide.pause();
+    if (!ended) for (const slide of slides.current) if (slide.playState === 'running') slide.pause();
   };
   // On the window, so a finger that slid off its row (or whose button captured it) still counts as lifted. In a timer, so
   // this lift's click lands first: Chromium drops a mouse click whose pressed row has been re-inserted.
@@ -55,11 +55,16 @@ export function useRowOrder(live: number[], hold: boolean, ended: boolean, start
       return dy === 0 ? [] : [row.animate({ transform: [`translateY(${dy}px)`, 'none'] }, LARGE_WEB)];
     });
   }, [drawn]);
-  // The round is over: rows stand in their places at once, even a paused one, or a slide would override the mystery's rise.
+  // The round is over: any slide finishes first, even a paused one, so the mystery's rise starts from where its row stands.
+  const [standing, setStanding] = useState(false);
   useLayoutEffect(() => {
-    if (!ended) return;
-    for (const slide of slides.current) slide.cancel();
-    slides.current = [];
+    if (!ended) { setStanding(false); return; }
+    const moving = slides.current.filter(slide => slide.playState === 'running' || slide.playState === 'paused');
+    if (moving.length === 0) { setStanding(true); return; }
+    let current = true;
+    for (const slide of moving) slide.play();
+    void Promise.allSettled(moving.map(slide => slide.finished)).then(() => { if (current) setStanding(true); });
+    return () => { current = false; };
   }, [ended]);
-  return { drawn, body, onPointerDownCapture };
+  return { drawn, body, standing, onPointerDownCapture };
 }

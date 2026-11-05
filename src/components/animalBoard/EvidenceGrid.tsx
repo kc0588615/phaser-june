@@ -194,7 +194,7 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
   const markCount = round.marked.length > 0 && <span className="shrink-0 font-heavy text-error" aria-hidden="true">✕{round.marked.length}</span>;
   const answered = round.orders.map((order, j) => order.answer !== null && (review || (shown[j] ?? 0) >= size));
   const flying = round.orders.some((order, j) => (shown[j] ?? 0) < order.have);
-  const { drawn, body, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null, landOn !== null, endedOrder);
+  const { drawn, body, standing, onPointerDownCapture } = useRowOrder(suspectOrder(round, answered), busy || flying || review || landOn !== null, landOn !== null, endedOrder);
   useEffect(() => onRowOrder?.(drawn), [drawn, onRowOrder]);
   // The end-of-round slide: how far below the Camera row the mystery's row is, then whether it has risen there.
   const cameraRow = useRef<HTMLTableRowElement>(null);
@@ -202,12 +202,13 @@ export function EvidenceGrid({ round, speciesById, shown, landed = [], busy = fa
   const [matched, setMatched] = useState<number | null>(null);
   useLayoutEffect(() => {
     if (landOn === null) { setLanding(null); setMatched(null); return; }
+    if (!standing) return; // rows still sliding: measure where the row ends up
     const from = cameraRow.current?.getBoundingClientRect().top;
     const to = cameraRow.current?.parentElement?.querySelector(`tr[data-suspect="${landOn}"]`)?.getBoundingClientRect().top;
     const dy = from === undefined || to === undefined ? 0 : to - from;
     setLanding({ id: landOn, dy });
     if (dy === 0) setMatched(landOn); // nothing to slide (no row found): match at once, so the card still opens
-  }, [landOn]);
+  }, [landOn, standing]);
   // Which animal the Camera row shows: the replay's, or the one that just rose into it.
   const revealed = review ? round.mysteryId : matched;
   // From the slide on: no ✓/✗ marks. An answered column's cells go green (same as the camera's animal) or red

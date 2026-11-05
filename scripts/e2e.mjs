@@ -161,14 +161,21 @@ async function main() {
         for (let i = 0; i < 80 && window.__gridFlying(); i++) await new Promise(res => setTimeout(res, 50));
         for (let i = 0; i < 2; i++) await new Promise(res => requestAnimationFrame(res));
       };
-      // The rows on the last frame the grid was live, on the frame the mystery's row began to rise, and of the round-end replay.
+      // The rows on the last frame the grid was live, on the frame before the mystery's row began to rise, whether any frame since differs, and of the round-end replay.
       window.__reviewRows = () => [...document.querySelectorAll('table[aria-label="How the evidence lined up"] tr[data-suspect]')].map(row => Number(row.dataset.suspect));
       (function trackLiveRows() {
         const grid = document.querySelector('table[aria-label="Evidence"]');
         if (grid) {
-          window.__lastLiveRows = [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect));
-          if (!grid.querySelector('tr[data-suspect].z-30, tr[data-mystery][data-match]')) window.__endRows = null;
-          else window.__endRows ??= window.__lastLiveRows;
+          const rows = [...grid.querySelectorAll('tr[data-suspect]')].map(row => Number(row.dataset.suspect));
+          if (!grid.querySelector('tr[data-suspect].z-30, tr[data-mystery][data-match]')) {
+            window.__endRows = null;
+            window.__movedInRise = false;
+          } else {
+            window.__endRows ??= window.__lastLiveRows ?? rows; // the frame before the rise (a reload can open on the rise)
+            const inBoth = (list, other) => list.filter(id => other.includes(id)).join();
+            if (inBoth(rows, window.__endRows) !== inBoth(window.__endRows, rows)) window.__movedInRise = true;
+          }
+          window.__lastLiveRows = rows;
         }
         requestAnimationFrame(trackLiveRows);
       })();
@@ -1187,9 +1194,9 @@ async function main() {
       });
       check(`round ${n}: the round-end card replays the grid, red where an earned answer rules an animal out`, Boolean(replay) && replay.wrong === 0 && replay.hidden === 0 && replay.match === String(start.mysteryId), JSON.stringify(replay));
       // The order froze when the mystery's row began to rise, and stayed through the rise and onto the round-end card.
-      const rowsAt = await evaluate(() => ({ end: window.__endRows, last: window.__lastLiveRows }));
+      const rowsAt = await evaluate(() => ({ end: window.__endRows, last: window.__lastLiveRows, moved: window.__movedInRise }));
       const endRows = (rowsAt.end ?? []).filter(id => id !== start.mysteryId);
-      check(`round ${n}: the order freezes when the round ends`, rowsAt.end !== null && sameList(rowsAt.last.filter(id => id !== start.mysteryId), endRows), JSON.stringify(rowsAt));
+      check(`round ${n}: the order freezes when the round ends`, rowsAt.end !== null && !rowsAt.moved && sameList(rowsAt.last.filter(id => id !== start.mysteryId), endRows), JSON.stringify(rowsAt));
       check(`round ${n}: the round-end card keeps the order the round ended on`, Boolean(replay) && rowsAt.end !== null && sameList(replay.rows, endRows), JSON.stringify({ rows: replay?.rows, endRows }));
       if (rowsAt.end !== null && !sameList(endRows, start.suspects.filter(id => id !== start.mysteryId))) sortSaw.frozenOutOfOrder = true;
       check(`round ${n}: the round-end card marks every guess right or wrong and counts them`, Boolean(replay) && replay.guessesWrong === 0 && replay.tally === replay.shownTally, JSON.stringify(replay));
@@ -1379,18 +1386,19 @@ async function main() {
     await sleep(1500);
     await screenshot('07-globe-found.png');
 
-    // A round that ends with rows mid-slide, or with a finger holding a slide paused: the mystery's row still rises
-    // straight from its real slot into the Camera row. A wrong name ends it, so the journal and globe above stand.
-    for (const paused of [false, true]) {
+    // A round that ends with rows mid-slide, a finger holding a slide paused, or a press just after the end: the row's
+    // slide finishes where it was going, with no jump, and only then does it rise from its real slot into the Camera row.
+    // A wrong name ends it, so the journal and globe above stand.
+    for (const [label, ending] of [['sliding', 'running'], ['held paused', 'paused'], ['pressed just after the end', 'late']]) {
       await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);
       await waitFor(boardReady, 'a fresh board', 60_000);
       await sleep(1500);
-      const rise = await evaluate(async paused => {
+      const rise = await evaluate(async ending => {
         const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         const frame = () => new Promise(resolve => requestAnimationFrame(resolve));
         const { mysteryId, suspects } = window.__cc.clue();
-        const top = window.__rows()[0];
-        const moved = top === mysteryId ? mysteryId : top; // ruling out the top row moves the mystery's row either way
+        const rows = window.__rows();
+        const moved = rows.at(-1) === mysteryId ? rows[0] : mysteryId; // ruling out the mystery sinks its row the furthest
         const wrong = suspects.find(id => id !== mysteryId && id !== moved);
         await window.__holdPill(wrong);
         document.querySelector('[role=dialog] button[data-name-it]')?.click();
@@ -1401,24 +1409,35 @@ async function main() {
         await frame();
         await frame();
         const finger = { bubbles: true, pointerId: 77, pointerType: 'touch' };
-        if (paused) { mysteryRow().querySelector('td').dispatchEvent(new PointerEvent('pointerdown', finger)); await frame(); }
-        const slide = mysteryRow().getAnimations().find(animation => animation.effect?.getKeyframes().some(keyframe => keyframe.transform?.startsWith('translateY')))?.playState ?? null;
-        yes?.click();
-        const tops = [];
-        for (let i = 0; i < 400 && !document.querySelector('tr[data-mystery][data-match]'); i++) {
+        const press = () => mysteryRow().querySelector('td').dispatchEvent(new PointerEvent('pointerdown', finger));
+        if (ending === 'paused') { press(); await frame(); }
+        const slide = mysteryRow().getAnimations().find(animation => animation.effect?.getKeyframes().some(keyframe => keyframe.transform?.startsWith('translateY')));
+        const before = slide?.playState ?? null;
+        const samples = [];
+        const sample = () => {
           const row = mysteryRow();
-          if (row?.classList.contains('z-30')) tops.push(Math.round(row.getBoundingClientRect().top * 10) / 10);
+          if (row) samples.push({ top: row.getBoundingClientRect().top, rising: row.classList.contains('z-30') });
+        };
+        sample();
+        yes?.click();
+        if (ending === 'late') { await frame(); press(); }
+        let atRise = null;
+        for (let i = 0; i < 400 && !document.querySelector('tr[data-mystery][data-match]'); i++) {
           await frame();
+          sample();
+          if (atRise === null && samples.at(-1)?.rising) atRise = slide?.playState ?? null;
         }
-        const camera = Math.round(document.querySelector('tr[data-mystery]').getBoundingClientRect().top * 10) / 10;
-        if (paused) window.dispatchEvent(new PointerEvent('pointerup', finger));
-        return { slide, camera, tops: tops.filter((_top, i) => i < 3 || i % 8 === 0 || i === tops.length - 1), rose: tops.length > 5, neverDown: tops.every((value, i) => i === 0 || value <= tops[i - 1] + 1), end: tops.at(-1) ?? null };
-      }, paused);
-      // 12 px: the last frame sampled comes just before the rise lands. A slide in the way left it 56 px off or more.
-      const label = paused ? 'held paused' : 'sliding';
-      check(`the sort: this test catches the rows ${label} as the round ends`, rise.slide === (paused ? 'paused' : 'running'), JSON.stringify(rise));
-      check(`the sort: a round ending with rows ${label}: the mystery's row rises, never dropping first`, rise.rose && rise.neverDown, JSON.stringify(rise));
-      check(`the sort: a round ending with rows ${label}: the mystery's row ends at the Camera row`, rise.end !== null && Math.abs(rise.end - rise.camera) <= 12, JSON.stringify(rise));
+        const camera = document.querySelector('tr[data-mystery]').getBoundingClientRect().top;
+        window.dispatchEvent(new PointerEvent('pointerup', finger));
+        const rising = samples.filter(now => now.rising);
+        const tops = samples.map(now => Math.round(now.top));
+        return { before, atRise, camera: Math.round(camera), tops: tops.filter((_top, i) => i < 4 || i % 8 === 0 || i === tops.length - 1), rose: rising.length > 5, neverDown: rising.every((now, i) => i === 0 || now.top <= rising[i - 1].top + 1), end: Math.round(rising.at(-1)?.top ?? -1), matched: Boolean(document.querySelector('tr[data-mystery][data-match]')) };
+      }, ending);
+      check(`the sort: this test catches the rows ${label} as the round ends`, rise.before === (ending === 'paused' ? 'paused' : 'running'), JSON.stringify(rise));
+      check(`the sort: a round ending with rows ${label}: the slide finishes, not cut short, before the rise starts`, rise.atRise === 'finished', JSON.stringify(rise));
+      check(`the sort: a round ending with rows ${label}: the mystery's row rises without dropping`, rise.rose && rise.neverDown, JSON.stringify(rise));
+      // 12 px: the last frame sampled comes just before the rise lands.
+      check(`the sort: a round ending with rows ${label}: the mystery's row ends at the Camera row`, rise.matched && Math.abs(rise.end - rise.camera) <= 12, JSON.stringify(rise));
     }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
