@@ -70,7 +70,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -85,6 +85,107 @@ From `7370579c` (= `origin/main` `094da493` + mission start), 2026-11-06 06:30 U
 - E2E needs Chrome without its sandbox here (AppArmor): `CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule-out-default/bin/chrome` (wrapper: Playwright chromium-1208 `--no-sandbox`). Plain `npm run e2e:fresh` fails (`/usr/bin/google-chrome ENOENT`).
 
 ## Architecture
+
+Read on `agent/auto-rule-out-default` at `c6793a53` (= `origin/main` `094da493` + mission files).
+
+### Findings
+
+1. **Default is off** (`src/components/animalBoard/autoRuleOut.ts:5`): `getItem(KEY) === 'on'`, `catch { return false; }`. Null, garbage and blocked storage all read as off. This is the change itself. The writer (`:9`) only ever writes `'on'` or `'off'`, so `!== 'off'` gives the brief's table exactly: `'off'` gives off; `'on'`, null and a throw give on.
+2. **Initial state is read late** (`useAnimalSession.ts:77-78`): `useState(false)`, then an effect. There is no hydration to protect: `/explore` loads `AnimalGame` with `dynamic(..., { ssr: false })` (`src/pages/explore.tsx:4-7`; Next 16.3.6 pages router, where `ssr: false` means client only). `useAnimalSession` has no other caller (`AnimalGame.tsx:198`), and it already reads browser storage in lazy initializers (`:58-61`). A wrong first value also can't reach a move:
+   - `session` is null until the async pool load dispatches (`:64`, `:102`, `:131`, `:135`), and the marking effect returns on `!session` (`:276`).
+   - The switch only renders while the menu is open (`AnimalGame.tsx:516`; comment at `AnimalSheets.tsx:414`).
+
+   So the effect is safe today, but only because of ordering. A lazy initializer makes it correct by construction, and it is one line shorter.
+3. **The E2E relies on the default.** `autoSwitch` is defined inside the round loop (`scripts/e2e.mjs:849-861`), and only the auto round calls it. It asserts "starts off" (`:864`) and turns the switch back off (`:1148-1149`). Rounds 1-3 and the resume and rise sections (`:1246+`, `:1392+`) run off only because nothing was ever stored. `:1073` ("with Auto rule-out off, the game marks nobody") would fail under the new default. The run's Chrome profile is new each time (`scripts/cdp.mjs:60-62`, `mkdtemp`), so the first `/explore` load (`e2e.mjs:235`) is a true "nothing stored" load. The injected script (`:84`) only writes the how-to and slide-hint keys.
+4. **Copy that becomes false** (target text in the table below): `Teachers.tsx:64`, `:96`; `docs/CLUE_MATCH.md:54`, `:96`, `:98`; `CONTEXT.md:73`; how-to step `AnimalSheets.tsx:711`; and the comments `autoRuleOut.ts:1`, `AnimalSheets.tsx:410`, `useAnimalSession.ts:273`, `src/clueGame/animalBoard.ts:429` (a fourth "opt-in" comment the brief didn't list).
+
+   Checked and still true, so no edit:
+   - `AnimalSheets.tsx:712`: its parenthetical already covers both states.
+   - `AnimalGame.tsx:406`.
+   - `AnimalSheets.tsx:612` (the replay legend).
+   - `Home.tsx:27`, `:58-59`; `Teachers.tsx:46`. Students still compare and rule out, and Auto rule-out never marks the mystery (`animalBoard.ts:430`).
+   - The slide hint (`EvidenceGrid.tsx:91`).
+   - `src/site/config.ts:31`.
+   - Privacy and Terms are out of scope.
+5. **Site shots:** none shows the menu or the switch. The gameplay shots were taken with the switch off (`scripts/shots/take.mjs` never sets the key, and the default was off). `grid-marked.webp` now shows a state the new default can't produce: camera "Large" ✗ NO, the Chimpanzee's scouted ✓ is still unmarked, and the Okapi was ruled out by hand ("You ruled out the Okapi"). With the switch on, the game would have marked both after the move.
+   - `board-phone`, `hero-board` and `field-guide` are taken before any answer shows, so they are unaffected.
+   - `witness-note` and `round-end` come after the careful player has marked everything the answers rule out, which is what Auto rule-out would mark anyway. Check them by eye for the Summary.
+   - Don't retake (per the brief).
+6. **No other code assumes the default.** `npm test` (`tests/clueGame`, `tests/game`), `scripts/balance-044.ts` and `scripts/e2e-site.mjs` never reference the setting (rg). Plans mention it only in `plans/2026-11-01-site-shots-refresh.md:57,:144`, a historical record, so leave it.
+
+### Target design
+
+**`autoRuleOut.ts`** (the only behavior change):
+```ts
+// Auto rule-out setting: on unless the player turned it off (a stored 'off' wins; blocked storage: on); kept on this device.
+export function isAutoRuleOutOn(): boolean {
+  try { return window.localStorage.getItem(KEY) !== 'off'; } catch { return true; }
+}
+```
+- Same key. Never migrate or rewrite stored values.
+- `setAutoRuleOutOn` stays as it is.
+
+**`useAnimalSession.ts:77-78`** becomes one line, with the effect deleted:
+```ts
+const [autoRuleOut, setAutoRuleOut] = useState(isAutoRuleOutOn); // client only (explore.tsx: ssr: false)
+```
+- `autoRef = useRef(autoRuleOut)` (`:80`) now starts correct too.
+- The `:273` comment drops "(opt-in)".
+- Nothing else in the hook changes.
+
+**`scripts/e2e.mjs`:**
+- **Hoist the helper.** Move `autoSwitch(on)` out of the round loop to just after the `screenshot` helper (`:218`), and use it everywhere (DRY). Two changes to it:
+  - It opens the menu only if the switch isn't showing yet, so it also works on a menu already open for a screenshot.
+  - It also returns `storedBefore` and `storedAfter`: `localStorage.getItem('critter-connect:auto-rule-out:v1')` before and after the click.
+- **Add a load helper.** A small `loadBoard()` wraps `:236-238` (waitFor board ready with 5 pins, `__cc.speed(4)`, photo wait). Use it at `:236` and after each reload below.
+- **New "once a run" block** right after the sound check (`:258`), on the seeded first load, before any move. A `?seed=` game is never saved (`useAnimalSession.ts:59`, `:177`), so a reload re-deals the same round 1.
+  1. Open the menu and `screenshot('02-menu-fresh-profile.png')`. Then `autoSwitch(false)`. Check: "a new profile (nothing stored) starts with Auto rule-out on, and its switch turns it off and stores 'off'". That means `storedBefore === null && before === 'true' && after === 'false' && storedAfter === 'off'`.
+  2. `Page.reload`, `loadBoard()`, `autoSwitch(true)`. Check: "a stored 'off' starts off after a reload, and the switch turns it back on". That means `storedBefore === 'off' && before === 'false' && after === 'true' && storedAfter === 'on'`.
+  3. `Page.reload`, `loadBoard()`, `autoSwitch(false)`. Check: "a stored 'on' starts on after a reload". That means `storedBefore === 'on' && before === 'true'`. It leaves the switch off, so round 1's pre-loop grid tests run as they did at baseline.
+  - Cost: two board loads plus about 0.6 s per round, roughly 15-20 s on a 7-minute run.
+- **Every round sets it on purpose.** Replace `:862-865` with `const set = await autoSwitch(mode === 'auto')` and the check `round ${n}: Auto rule-out set ${on|off} through the menu for this round` (`set.after === String(mode === 'auto')`).
+- **Keep `:1146-1150`.** The auto round still turns the switch back off. Add a comment there: the resume and rise sections run with it off, and every non-auto round has set it off.
+- **Artifact.** The suite writes `e2e-artifacts/<run>/` as before. The Verification copies `report.json`, the console log and the PNGs (including `02-menu-fresh-profile.png`) to `/srv/critter-ai/agent-state/missions/auto-rule-out-default/final-e2e/`, with no traces.
+
+**Release smoke** (live, fresh profile; a one-off command, nothing committed):
+- Script: `node` + `scripts/cdp.mjs` (`startBrowser`/`openPage`) opens `https://play.critterconnect.org/explore/?place=continent:africa`.
+- A new player sees how-to-play first (`AnimalGame.tsx:263`): close it, then open the Menu. Read the `[role=switch]` "Auto rule-out" `aria-checked` (it must be `'true'`) and screenshot it into the mission folder.
+- Loading the page writes nothing to the DB.
+
+**Copy** (smallest true edit for a new player with default settings):
+
+| Where | Before | After |
+|---|---|---|
+| `autoRuleOut.ts:1` | `off until the player turns it on; kept on this device.` | as in the code above |
+| `useAnimalSession.ts:273` | `// Auto rule-out (opt-in): between moves, …` | `// Auto rule-out (on unless the player turned it off): between moves, …` |
+| `AnimalSheets.tsx:410` | `/** Opt-in: the game rules out animals …` | `/** On by default: the game rules out animals …` |
+| `src/clueGame/animalBoard.ts:429` | `* Auto rule-out (opt-in setting): whether …` | `* Auto rule-out (a menu setting, on by default): whether …` |
+| `AnimalSheets.tsx:711` (how-to step 4) | `… across its name (drag again to bring it back).` | append: ` After each move, <b>Auto rule-out</b> rules out every animal with a shown answer that doesn&apos;t match; turn it off in the menu to do it all yourself.` (`:712` unchanged) |
+| `Teachers.tsx:64` | `The answers never rule anyone out by themselves. Students compare … can't be it. A ruled-out animal …` | `Students compare each animal's scouted answers with the camera's and rule out the ones that can't be it. After each move, Auto rule-out (on unless it's turned off in the game's menu) rules out any animal whose scouted answer differs from the camera's. A ruled-out animal …` (rest unchanged) |
+| `Teachers.tsx:96` | `One student plays; the other has to agree to every rule-out.` | `One student plays with Auto rule-out off (in the game's menu); the other has to agree to every rule-out.` |
+| `docs/CLUE_MATCH.md:54` | `(menu switch, off by default, kept on the device)` | `(menu switch, on by default, kept on the device; a stored "off" wins)` |
+| `docs/CLUE_MATCH.md:96` | `Round 4 turns on Auto rule-out, marks nobody itself, and checks each move … (never the mystery).` | `Each round sets Auto rule-out through the menu: on in round 4, which marks nobody itself and checks each move that exactly the animals a shown answer rules out are marked (never the mystery); off in the others.` |
+| `docs/CLUE_MATCH.md:98` (Once a run) | `sound starts off and the menu's button turns it on;` | add after it: `a new profile starts with Auto rule-out on (02-menu-fresh-profile.png), its switch turns it off and on, and a stored "off" or "on" survives a reload;` |
+| `CONTEXT.md:73` | `…; answers never rule anything out by themselves.` | `…; an answer rules nothing out by itself: the player rules a suspect out, or Auto rule-out (a menu setting, on by default) does once its shown answer differs from the camera's.` |
+
+There is no content change, so no production content build is needed. Teachers.tsx changes, so the Verification adds `npm run site:build` + `npm run e2e:site` to typecheck, lint, `npm run build`, `npm test` and `npm run e2e:fresh`.
+
+### Rejected alternatives
+
+- **Keep `useState(false)` + effect:** safe today only because the async load comes later (F2). Correct by construction is simpler.
+- **`useState(true)` + keep the effect:** two sources of truth, and a stored-'off' player renders on first.
+- **`useSyncExternalStore` over localStorage:** machinery for a one-tab setting with a single writer.
+- **New key `v2`, or rewriting null to `'on'`:** forbidden by the brief and unnecessary, since null already means "no choice".
+- **Set the key via `addScriptToEvaluateOnNewDocument`:** it runs on every load, so it would overwrite the switch's choice and void the reload and fresh-profile checks.
+- **A second Chrome profile for the fresh check:** the run's own profile is already fresh at its first load, and a second launch adds cost.
+- **Do the persistence checks on the resume section's existing reloads:** they depend on the round count, and no existing load has 'on' stored.
+
+### Risks
+
+- **Existing players who never touched the switch now get it on.** Intended: null means no choice.
+- **`docs/ANIMAL_BOARD_PAPER.md`** (`:27-29`, §4.5) argues the player makes every rule-out and that random play wins 0%. With the switch on by default, random play that scouts answers gets the look-alikes marked, and they wander off by themselves. Those claims now hold only with the switch off. The paper is a 044-0 design record and out of scope, so don't edit it; say so in the Summary for the owner.
+- **A future `npm run site:shots`** plays with the new default. `take.mjs`'s grid-marked trigger (the player's own slide, `:158-165`) may fire later or differently. That belongs to the owner's set-aside retake; mention it in the Summary.
+- **E2E block reloads:** call `loadBoard()` after each one (`speed(4)` is page state). Canceled photo requests are already ignored (`e2e.mjs:74`). CI's PR e2e runs the same block and adds no DB writes.
 
 ## Architecture review (Fable)
 
@@ -105,5 +206,6 @@ From `7370579c` (= `origin/main` `094da493` + mission start), 2026-11-06 06:30 U
 ## Log
 
 - 2026-11-06 06:38 UTC · Baseline: typecheck, lint, 48/48 unit, E2E 1473/1473 pass.
+- 2026-11-06 06:46 UTC · Architecture: `architect` wrote findings + target design (default `!== 'off'`, lazy `useState`, e2e once-a-run persistence block, 11 copy lines). Plan-only, no code; no checks needed.
 
 ## Summary
