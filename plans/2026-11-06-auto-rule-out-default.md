@@ -69,7 +69,7 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [ ] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
@@ -77,6 +77,12 @@ Out:
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
+
+From `7370579c` (= `origin/main` `094da493` + mission start), 2026-11-06 06:30 UTC.
+- `npm install`: ok. Migrate: n/a (no migration history; `db/schema.sql` baseline, live `phaser_june`, no schema change in scope).
+- `npm run typecheck`: exit 0. `npm run lint`: exit 0. `npm test`: 48/48 pass.
+- `npm run e2e:fresh`: **1473/1473** checks, 4 rounds (seed 7), 6m57s. Artifact: `/srv/critter-ai/agent-state/missions/auto-rule-out-default/baseline-e2e/` (report.json, screenshots, e2e.log, COMMAND.txt).
+- E2E needs Chrome without its sandbox here (AppArmor): `CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule-out-default/bin/chrome` (wrapper: Playwright chromium-1208 `--no-sandbox`). Plain `npm run e2e:fresh` fails (`/usr/bin/google-chrome ENOENT`).
 
 ## Architecture
 
@@ -97,5 +103,7 @@ Out:
 ## Decisions
 
 ## Log
+
+- 2026-11-06 06:38 UTC · Baseline: typecheck, lint, 48/48 unit, E2E 1473/1473 pass.
 
 ## Summary
