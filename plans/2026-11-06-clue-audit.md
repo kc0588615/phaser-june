@@ -178,7 +178,7 @@ Shared for every step:
     - List the "reads everything, still guesses wrong" cases both ways. Example: the ferret's note "Farms and towns have replaced much of the grassland…", while it doesn't hold the tag.
   - Done: 76 `iucn-habitat` rows (pass, finding, flag or couldnt-check with the fallback named); the holders table is complete.
 
-- [ ] S4 · Source checks: size, lifespan, young (all 76; 189 values, 6 without a note; missing: size 9, lifespan 17, young 13).
+- [x] S4 · Source checks: size, lifespan, young (all 76; 189 values, 6 without a note; missing: size 9, lifespan 17, young 13).
   - Cache each trait's cited page (`traits.<p>.url` or `sources[key]`) under `sources/<key>/<id>.*`:
     - ADW: `curl` works (sections `physical_description`, `reproduction`, `lifespan_longevity`; keep ~7,000 chars each);
     - Wikipedia: the API with a User-Agent;
@@ -309,6 +309,9 @@ Skipped: research mission, no code.
 - S3: IUCN route = headless Chrome (`STATE/bin/chrome --dump-dom`) on `details/<taxon>/0` then `/species/<taxon>/<assessment>/pdf`; parallel-search MCP isn't available in mission sessions. Turtles' `iucnId` is the shapefile `id_no` (live `iucn` table confirms the species), so the fetch uses the cited URL's taxon. Not a finding.
 - S3: habitat kinds aren't askable (only `habitat:<class>`), so kind gaps are info in the habitat row's evidence, never findings.
 - S3: Farms & towns holder buckets: really (IUCN Suitable arable/pasture/gardens/urban, or text says so) = pass; marginal only, or cut forest/canals only = `unfair`; plantations only (true for the full question, not the label) or canals inside a city = `unclear`. Non-holders whose game notes or IUCN text put them on farms = `unfair`; purple frog (same IUCN rows as holders, game reads "no") = `unclear`. Chimp's IUCN-text "farmland" is `unfair`, not `wrong`, because IUCN's own table disagrees.
+- S4: size/young straddlers are `unfair` when under 2/3 of the source range sits in the held bin, else pass with the overlap noted (wild dog 18–36 kg, 67%, is the borderline pass). Young with a typical litter of 2 to 3 (tiger, cheetah) or an average in the other bin (maned wolf) is `unfair`. Lifespan: `long` animals whose note leads with a wild/typical figure inside 5–20 are `unfair` (tiger, okapi, Grévy's zebra, jaguar, panda, cheetah); `lifespan:short` has no holder, so short-side edges (dyeing frog wild 4–6) pass. Notes giving generation length, maturity or gestation are `unclear`.
+- S4: the plan said every straddler is `unfair`; minor ones (top or bottom value only) pass instead, because a careful player reading the note answers as the game does. Maned wolf's note "about 3 on average" is `wrong` (ADW, its cited source, gives 2).
+- S4: AmphibiaWeb unreachable (curl, Chrome, WebFetch time out) and Britannica 403 everywhere: search excerpts, ADW and Wikipedia used instead; Wallace's flying frog size `couldnt-check`.
 
 ## Log
 
@@ -317,5 +320,6 @@ Skipped: research mission, no code.
 - 2026-11-06 08:25 UTC: S1. inventory (76 animals, 3 no-country warnings) + mechanical.py: 1,075 rows (875 pass, 74 no-record, 126 flags: 23 straddle, 81 note-value, 22 cross); all 189 numeric parses hand-checked, 0 misreads. Live DB = files (76 species, 2,430 clues, 437 facts, 0 diff; same 20 artificial holders). Coverage: 76 animals, 0 missing. Report skeleton + Method.
 - 2026-11-06 08:35 UTC: S2. trace (code 9 sites, 20 content files/45 kinds, 0 tests/docs/site; removal trap in isHandWrittenClue); deals: 141 seed decks, F&T dealt in 36 (25.5%; world 26.5%, NA 100%), 2nd most dealt tag; without it 0 seeds lost, 8 world frog seeds gain a set (68→76), 5 NA sets where only F&T splits the two sloths, 28 decks where it is the only split of a pair; rules: 21 rule rows (2 unfair, 12 unclear, 7 pass); 20 deal rows. findings.csv 1,116 rows.
 - 2026-11-06 08:59 UTC: S3. IUCN loaded for 76/76 (headless Chrome; turtles via URL taxon). Habitat: 67 exact, 7 text-supported extras, 1 unclear (giant otter marine), purple frog artificial unclear; systems 76 pass; taxonomy 304 pass. Holders: 9 really, 5 marginal only, 6 plantations/cut forest/canals only (8 unfair, 3 unclear); non-holders 4 unfair + 1 unclear. 481 rows upserted, findings.csv 1,597. `out/s3-farms.md`, photos viewed (none shows farms/towns).
+- 2026-11-06 09:57 UTC: S4. 228 cells judged against cited sources (+ADW): source-value 181 pass, 7 finding, 39 no-record (7 documented for the species by ADW), 1 couldnt-check; with note/straddle rows 30 findings (1 wrong, 15 unfair, 14 unclear); all 54 S1 flags on size/lifespan/young closed. findings.csv 1,828 rows. Sources cached: 65 ADW, 18 others; AmphibiaWeb/Britannica blocked.
 
 ## Summary
