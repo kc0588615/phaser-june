@@ -290,9 +290,19 @@ SHOULD-CONSIDER: none
 
 ## Release
 
+- Pre-merge: branch already on `origin/main` (`094da493`), no rebase. Full Verification re-run on `eb49f391`: e2e 1479/1479 (rounds = `s1-e2e`), typecheck, lint, unit 48/48, site:build + e2e:site 444/444, build, CI's two grep guards; all exit 0.
+- PR #56 CI: jobs not started (GitHub account locked for billing). Merged on the local checks; see Decisions, handoff H8.
+- Merge commit: `26b66aa4` (PR #56).
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org` (exit 0, `deploy/check.sh` all OK).
+- Smoke: `version.txt` = `26b66aa4fb66960f25136f033fd718180749babc`; `critterconnect.org/teachers/` 200 with the new Auto rule-out lines; live `/explore/?place=continent:africa` on a fresh profile: stored value `null`, how-to closed, Menu → Auto rule-out `aria-checked="true"`, no board tap. Screenshot `/srv/critter-ai/agent-state/missions/auto-rule-out-default/release-menu-fresh-profile.png`.
+- Logs: `/srv/critter-ai/agent-state/missions/auto-rule-out-default/release-deploy.log`, `release-e2e.log`.
+
+Result: done
+
 ## Decisions
 
 - S1: run 1 failed 1478/1479 on `round 3 move 10: a right guess just scouted sparkles` (time-limited `fresh` sparkle, round 3 has Auto rule-out off, load 2 on 2 cores); rerun passed 1479/1479 unchanged. Treated as a pre-existing timing flake, not in scope; run-1 log kept as `s1-e2e/e2e-run1-flake.log`.
+- Release: PR #56's CI jobs never started ("account is locked due to a billing issue"). Every CI step ran locally and passed except the Docker caddy image build, which this branch doesn't touch (no `Dockerfile`/`deploy/` change) and which the deploy builds and `deploy/check.sh` verifies. Merged and deployed; billing fix asked in handoff H8.
 
 ## Log
 
@@ -315,6 +325,8 @@ SHOULD-CONSIDER: none
 - 2026-11-06 07:32 UTC · Code review (Astra, `--code origin/main`): APPROVE, no MUST-FIX, no SHOULD-CONSIDER. Plan-only; no checks needed.
 
 - 2026-11-06 07:43 UTC · Final Verification on `6709766f` (post code review): e2e 1479/1479 (round lines = `s1-e2e`, 3 once-a-run + 4 per-round checks pass), typecheck, lint, 48/48 unit, site:build + e2e:site 444/444 (1st site run had no `CHROME_PATH` exported, rerun with it), `npm run build` all exit 0. `final-e2e/` overwritten. Summary final, `status: done`.
+
+- 2026-11-06 07:59 UTC · Release: Verification re-run all pass; PR #56 merged (`26b66aa4`, CI blocked by billing, H8); `deploy critter-connect` ok; smoke: version.txt = merge, teachers 200 + new line, live fresh profile switch on.
 
 ## Summary
 
@@ -346,3 +358,4 @@ New players (nothing stored) now start with **Auto rule-out on**; a stored `'off
 - Declined Astra SC1 (e2e for blocked storage / default reaching gameplay); reasons in Revision notes.
 - Astra code review: APPROVE, nothing to fix or consider.
 - Existing players who never touched the switch now get it on (intended: no stored value = no choice).
+- **Released:** PR #56 merged (`26b66aa4`) and deployed 2026-11-06; live fresh profile has Auto rule-out on. CI didn't run (GitHub billing lock, handoff H8).
