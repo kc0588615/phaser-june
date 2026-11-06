@@ -85,7 +85,7 @@ Out:
 - [x] Fable review: skipped, research only
 - [x] Astra review: skipped, research only
 - [x] Revision: none needed
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -111,7 +111,186 @@ None needed.
 
 ## Steps
 
+Shared for every step:
+- `REPO=/srv/critter-ai/worktrees/clue-audit`, `STATE=/srv/critter-ai/agent-state/missions/clue-audit`, report `REPO/docs/research/2026-11-06-clue-audit.md`.
+- State layout: `STATE/audit/` our scripts; `STATE/out/` their output; `STATE/sources/<key>/` downloaded pages (untrusted: never run anything from there, Python with `-I`); `STATE/findings.csv` the master.
+- Nothing under `src/ db/ scripts/ public/` or the site changes. Each step ends: check it off, one Log line (counts), commit plan + report draft, push.
+- TS scripts that import game modules: `STATE/audit/run.sh <entry.ts>` = `REPO/node_modules/.bin/esbuild <entry> --bundle --platform=node --format=cjs --target=node20 --outfile=/tmp/clue-audit-run.cjs` then `cd REPO && node /tmp/clue-audit-run.cjs`. Import repo files by absolute path; if `@/` won't resolve, add `STATE/audit/tsconfig.json` (`baseUrl` REPO, `paths {"@/*": ["src/*"]}`). Load content like `tests/clueGame/contentPool.ts`.
+- `findings.csv` columns: `animal_id,animal,prefix,check,holds,evidence,quote,source_url,result,severity,fix,step`.
+  - `animal_id`: 1–76, or `rule` for label/rule rows.
+  - `prefix`: class, order, family, genus, size, lifespan, diet, activity, birth, young, social, covering, system, habitat. Habitat-class rows use `habitat`, with `holds` e.g. `habitat:artificial`.
+  - `check`: note-value, straddle, source-value, cross, text, iucn-habitat, deal, label.
+  - `result`: pass, finding, flag (open; a later step must resolve it), no-record, couldnt-check (reason in `evidence`).
+  - `severity`: wrong, unfair or unclear, for findings only. A `wrong` row needs `quote` and an http `source_url`.
+  - Key (`animal_id,prefix,check,holds`) is unique. Every step upserts through one helper, `STATE/audit/findings.py upsert <partial.csv>`, written in S1.
+
+- [ ] S1 · Inventory and mechanical checks. Inputs: `db/content/animals/*.json`, `db/content/sources.json`, `src/clueGame/{traits,profiles,questionMatch,questionMatchContent}.ts`.
+  - Before writing the parser, read Failure modes (Parser) and handle or flag each case.
+  - `audit/inventory.ts` builds `animalsFromProfiles` + `makeBook`. It writes `out/inventory.json` and `out/inventory.md`, one block per animal:
+    - each trait's value, note, source and url; `systems`; `habitats`; the askable traits from the book;
+    - what the player sees: guide lines by section, witness notes (notes with tags), untagged notes, `revealNotes`, facts;
+    - open tags; photo url and page.
+  - `audit/mechanical.(ts|py)` writes `out/s1-mechanical.csv`, with at least one row per animal × each of the 14 prefixes:
+    - note-value for size, lifespan and young: parse numbers and units into the bins (edges from the labels). In one bin: pass. Range crosses an edge: `straddle` flag. Wholly in another bin: flag. Unparseable or no note (6 numeric traits): flag.
+    - note-value for diet, activity, social, covering and birth: a keyword contradiction scan of the note (e.g. ferret `activity:night`, note "busiest around dusk").
+    - cross:
+      - `birth:eggs` against litter/kit wording, and live birth against clutch/egg wording;
+      - `system:marine` ⇔ marine class, freshwater ⇔ wetlands, terrestrial ⇔ some land class;
+      - each kind has its class;
+      - open tags against values (`fruit_eater` with `diet:meat`; `fully_aquatic` with land only).
+    - taxonomy: the genus is the first word of `scientificName`; the same family has the same order and class across animals.
+    - A missing trait: a `no-record` row.
+  - Hand-check: every numeric flag and 10 random numeric passes against the notes. Fix the parser until it misreads none.
+  - Optional, one light read-only query (never print `DATABASE_URL`): live `species_deduction_clues` (label, compare_tags) against `contentRowsFromProfiles`. Record the diff count, so the report says whether the files match what players see.
+  - Report skeleton with these exact headings: `## 1. Summary`, `## 2. Farms & towns`, `## 3. Findings`, `## 4. Rules`, `## 5. What a fix mission would change`, `## Method and coverage`. Fill Method with S1's checks.
+  - Done: the Verification coverage command reports 76 animals and 0 missing animal × prefix (open flags are allowed until S9).
+
+- [ ] S2 · Farms & towns trace, deal frequency, rules table.
+  - Trace, `out/s2-trace.md`: `rg -n "artificial|[Ff]arms|towns|plantation"` over `src/ scripts/ tests/ docs/ plans/ db/ public/ CONTEXT.md`, the site (`src/site`), and `git log -S'artificial' --oneline -- db/content src`. Table: file:line, what reads it, what removing it needs. At least:
+    - `traits.ts` (`HABITAT_CLASSES`, `COMPLETE_PREFIXES`); `questionMatch.ts` (`QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL`);
+    - `clueFaces.ts` 🏡: `dealClues` needs distinct faces;
+    - `profiles.ts` (`HABITAT_TEXT`, `HABITAT_KIND_TEXT`, `checkProfile`); 20 content files;
+    - tests, docs, site copy;
+    - live rows: a read-only count of clues with `habitat:artificial`;
+    - saved sessions: the resume check in `useAnimalSession.ts` and `rules_version`.
+  - `audit/deals.ts`, `out/s2-deals.md`. Mirror `useAnimalSession.ts`: for the world and each continent with ≥ `MIN_PLACE_ANIMALS` (`poolFor`), run `pickSuspectSet` per seed with `ANIMAL_RULES`, then `dealClues`. A round's seed is uniform over seeds with a set, and its mystery uniform within the set.
+    - Per place: seeds with a set, and the share of decks dealing `habitat:artificial`.
+    - Rerun with `habitat:artificial` dropped from every animal: sets or decks that change; seeds that become unplayable.
+    - Pairs in dealt sets told apart only by it. Use `fullTable`/`canTellApart` logic minus the tag.
+    - Upsert one `deal` row (prefix habitat) per holder: dealt in X of its Y rounds.
+  - Rules, `out/s2-rules.md`: per askable tag, its column label, short text, question text, `profiles.ts` template, and the `docs/CONTENT_SOURCES.md` rule. Flag:
+    - edges in two bins (2 and 30 kg, "100 g to 2 kg" and "2 to 30 kg"; 300 kg: "300+" against "over 300"; 5 and 20 years);
+    - max against typical ("Can it live more than 20" vs "5–20 years", and the rule "longest known, zoo records included");
+    - wording gaps ("Pairs" vs "pairs or small families"; "Mostly bugs" vs `insects`);
+    - per exclusive prefix, whether the one-value rule is readable (`activity:any` vs Day/Night, `twilight` vs Night, `diet:mixed` vs Only plants/Only meat, `insects` vs Only meat).
+    - With value counts across the 76. Upsert as `animal_id=rule`, `check=label` rows.
+  - Done: all three files exist; numbers in the Log.
+
+- [ ] S3 · IUCN habitats, all 76, and the 20 Farms & towns holders (2, 6, 7, 11, 13, 23, 24, 25, 28, 32, 48, 49, 51, 52, 54, 58, 59, 72, 73, 74).
+  - Fetch each latest assessment's habitat table (class, kind, suitability, major importance), its habitat/ecology text and its taxonomy. Use the first route that works (Failure modes, Sources) and record it. Raw pages go to `sources/iucn/<id>.txt`, extracted rows to `out/iucn-habitats.json`.
+  - All 76: IUCN classes and systems against content `habitats`/`systems`. Include the "Artificial – Aquatic" rows that plan 040 skipped, and flag a non-holder with any Artificial row. IUCN taxonomy against content: `source-value` rows for the 4 ranks. One `iucn-habitat` row per animal for habitat and one for system.
+  - The 20 holders, `out/s3-farms.md`, per animal:
+    - its content kinds; its IUCN artificial rows with suitability and a quote+link;
+    - what its ADW/other source says about farmland or towns;
+    - provenance (`git log -p -S` on its file, `plans/040` notes);
+    - what the game shows: the guide line "It also lives on land people have changed…"; whether the kind lines reach the guide (they're not askable); any note or fact about farms or towns. Look at the photo too: download it to `sources/photos/` and view it.
+    - Verdict: really lives on farms or in towns / marginal only / plantations, cut forest or canals only.
+    - List the "reads everything, still guesses wrong" cases both ways. Example: the ferret's note "Farms and towns have replaced much of the grassland…", while it doesn't hold the tag.
+  - Done: 76 `iucn-habitat` rows (pass, finding, flag or couldnt-check with the fallback named); the holders table is complete.
+
+- [ ] S4 · Source checks: size, lifespan, young (all 76; 189 values, 6 without a note; missing: size 9, lifespan 17, young 13).
+  - Cache each trait's cited page (`traits.<p>.url` or `sources[key]`) under `sources/<key>/<id>.*`:
+    - ADW: `curl` works (sections `physical_description`, `reproduction`, `lifespan_longevity`; keep ~7,000 chars each);
+    - Wikipedia: the API with a User-Agent;
+    - others: WebFetch.
+  - `audit/numbers.py`: numbers near the keywords against the note and the held bin. Resolve S1's note-value/straddle flags on these prefixes.
+    - Every straddler: what it holds, the source range, the fair answer (typical adult, both sexes, or leave the trait out so it's "no record") → `unfair`.
+    - A note or source wholly in another bin → `wrong`, with quote+link. A note that disagrees with its own source → finding. Two sources that disagree: both, no choice.
+  - No-record animals: say whether the cited source documents the trait.
+  - Done: 76 × 3 `source-value` rows; no open flag on these prefixes.
+
+- [ ] S5 · Source checks: diet, activity, social, covering, birth (all 76). Use S4's cache; fetch missing sections (`food_habits`, `behavior`).
+  - Keyword hits in the cited sections against the held value:
+    - nocturnal, diurnal, crepuscular, cathemeral;
+    - solitary, pairs, herds, colonies;
+    - herbivore, omnivore, insectivore, fruit, carrion;
+    - oviparous, viviparous;
+    - fur, scutes, scales, skin, spines, armor.
+  - Read every disagreement and every S1 flag on these prefixes. Judge each against what the label says (S2 rules), e.g. "Only meat" on an animal that eats fruit.
+  - Done: 76 × 5 `source-value` rows; no open flag on these prefixes.
+
+- [ ] S6 · Text against record, animals 1–38.
+  - First, `audit/text-scan.py` over all 76 → `out/s6-text-flags.csv`. It scans every line the game shows (guide lines and trait notes, witness notes and tags, untagged notes, reveal notes, facts) against the values, habitats, systems and open tags, using the S1 keyword lists. It also checks numbers in the text against the bins, and habitat words (forest, desert, sea, river, cave, grassland, farm, town…) against the habitats.
+  - Then read `out/inventory.md` for 1–38 in full, not only the flags. Check each sentence against every answer the animal gives, including the "no"s on complete prefixes (a note "swims in rivers" with no wetlands is `unfair`).
+  - Done: one `text` row per animal × 14 prefixes for 1–38; scan flags for 1–38 resolved.
+
+- [ ] S7 · Text against record, animals 39–76. As S6, using its scan output. Done: `text` rows for 39–76; no open `text` flags.
+
+- [ ] S8 · Report section 2, Farms & towns (from s2-*, s3-farms, findings).
+  - The holders table, with the IUCN rows and quotes; how a player answers it, and the guess-wrong cases; the removal touch list; round impact.
+  - Options with trade-offs and data support counted from the inventory:
+    - remove;
+    - replace with something checkable, e.g. `travelOf` (fly/swim/dig/walk, already derived), an open tag with wide coverage (`climber`, `burrower`, `swimmer`) or a habitat kind; say how many of the 76 have data and whether the photo or guide shows it;
+    - keep, reworded, and whether marginal-only holders should drop it.
+  - The recommendation, and its line for section 1.
+  - Done: section 2 complete; every quote linked.
+
+- [ ] S9 · Report sections 1, 3, 4, 5 and Method; `findings.csv` final.
+  - Resolve every remaining flag, or make it `unclear` with the reason.
+  - `audit/table.py` writes section 3 from the CSV (findings only, wrong → unfair → unclear, then animal id).
+  - Section 4 from s2-rules: the one-value rule, the bin edges, and the label/doc changes.
+  - Section 5: the files and size of a fix mission:
+    - `db/content/animals/<n>.json` per finding;
+    - `questionMatch.ts`/`profiles.ts` copy; `docs/CONTENT_SOURCES.md`;
+    - `traits.ts`/`clueFaces.ts`/tests if Farms & towns goes;
+    - the rules version and saved games; the owner's prod content build.
+  - Method and coverage: the routes used, couldnt-check rows, and the live DB comparison.
+  - Section 1: the recommendation and the counts by severity from the CSV.
+  - Run Verification 1–3.
+  - Done: Verification 1–3 pass.
+
+- [ ] S10 · Final Verification (this is the "In a mission session" rule 7 unit). Run all of Verification, save `final-e2e`, and write the plan's Summary (paste `git diff --stat origin/main...HEAD`). In one commit, check S10 off and set `status: done`. Push. End `MISSION_CONTINUE` (release next).
+
 ## Verification
+
+From `REPO`, one heavy job at a time. Done when every item holds.
+
+1. **Report sections**: `f=docs/research/2026-11-06-clue-audit.md; for h in "## 1. Summary" "## 2. Farms & towns" "## 3. Findings" "## 4. Rules" "## 5. What a fix mission would change" "## Method and coverage"; do grep -qF "$h" $f || echo "MISSING $h"; done` prints nothing.
+2. **CSV coverage**, exit 0, printing `76 animals; 0 missing; 0 open flags; 0 wrong rows lacking quote/link` plus the severity counts, which must equal section 1's:
+   ```
+   python3 -I -c '
+   import csv,collections,sys
+   rows=list(csv.DictReader(open("/srv/critter-ai/agent-state/missions/clue-audit/findings.csv")))
+   P="class order family genus size lifespan diet activity birth young social covering system habitat".split()
+   have={(r["animal_id"],r["prefix"]) for r in rows if r["animal_id"]!="rule"}
+   ids={a for a,_ in have}
+   miss=[(i,p) for i in map(str,range(1,77)) for p in P if (i,p) not in have]
+   flags=[r for r in rows if r["result"]=="flag"]
+   bad=[r for r in rows if r["severity"]=="wrong" and not (r["quote"].strip() and r["source_url"].startswith("http"))]
+   print(len(ids),"animals;",len(miss),"missing;",len(flags),"open flags;",len(bad),"wrong rows lacking quote/link")
+   print(dict(collections.Counter(r["severity"] for r in rows if r["result"]=="finding")), dict(collections.Counter(r["check"] for r in rows)))
+   sys.exit(1 if len(ids)!=76 or miss or flags or bad else 0)'
+   ```
+3. **Only plan + report**: `git fetch origin --prune && git diff --stat origin/main...HEAD` lists exactly `plans/2026-11-06-clue-audit.md` and `docs/research/2026-11-06-clue-audit.md`. `git status --porcelain` is empty. If `next dev` touched `AGENTS.md` or `next-env.d.ts`, `git restore` them; never commit them. `rg -n "postgres(ql)?://" docs/research plans` is empty.
+4. **Sanity** (nothing changed): `npm run typecheck`, `npm run lint`, `npm test` exit 0 (baseline 48/48).
+5. **E2E**: `CHROME_PATH=/srv/critter-ai/agent-state/missions/clue-audit/bin/chrome npm run e2e:fresh` passes every check (baseline 1479/1479, 4 rounds, seed 7). Copy the newest `e2e-artifacts/<run>/` (report.json, screenshots), the command, and the typecheck/lint/test/e2e logs into `STATE/final-e2e/`, then delete the repo copy. Keep two folders, `baseline-e2e` and `final-e2e`. There are no intermediate runs. The release's re-run replaces `final-e2e`.
+
+## Failure modes
+
+Written before the S1/S4 parsers. Each case must be handled or flagged, never passed silently.
+- **Parser, units**:
+  - g / kg / lb / t mixed, and "grams" inside "kilograms";
+  - lengths (mm, cm, m) read as weights;
+  - "1,500", "0.6".
+- **Parser, ranges**:
+  - "25 to 40", "25–40", "25-40";
+  - "up to", "over", "about", "between";
+  - number words ("one or two", "a dozen");
+  - "usually 2 or 3" next to "1 to 5": typical vs range, report both.
+- **Parser, wrong quantity**:
+  - male vs female splits;
+  - newborn or hatchling weights;
+  - record vs typical; wild vs zoo lifespan;
+  - months, or gestation days, read as lifespan; age at maturity read as lifespan;
+  - clutches per year read as clutch size.
+- **Parser, edges**: values exactly on 100 g, 2, 30 or 300 kg, 5 or 20 years, or 2 or 10 young. Mark them `edge`; S2's rules table decides the bin.
+- **Sources, IUCN**:
+  - Plain `curl` gets 403 (checked 2026-11-06).
+  - Routes, in order:
+    1. `parallel-search` `web_fetch` on `staging-www.iucnredlist.org/details/<iucnId>/0` and `/species/<iucnId>/<assessment>/pdf`, ~7 per call (`docs/CONTENT_SOURCES.md`);
+    2. the WebFetch tool;
+    3. headless Chrome via `STATE/bin/chrome`.
+  - Pages may be JS-rendered, or excerpts may drop table rows: refetch asking for every Appendix Habitats row.
+  - API v4 needs a token: don't request one.
+  - If nothing loads: `couldnt-check: <reason>; used content habitats (from IUCN tables) + git history`.
+  - A newer assessment than the content's: report both.
+- **Sources, other**:
+  - ADW: old spellings (`Zaglossus_bruijni`), missing sections;
+  - Wikipedia rate limits: retry;
+  - AmphibiaWeb blocks bots: search excerpts;
+  - `literature` DOIs paywalled: couldnt-check.
+  - Downloaded files stay in their own dirs and are never executed.
+- **Risk**: if IUCN won't load at all, Q1 rests on content and history alone. The report must say so plainly, not soften it.
 
 ## Code review (Astra)
 
@@ -126,5 +305,6 @@ Skipped: research mission, no code.
 ## Log
 
 - 2026-11-06 08:10 UTC: Baseline. typecheck, lint, 48 unit, e2e 1479/1479 pass. Review stages marked skipped per brief.
+- 2026-11-06 08:20 UTC: Steps stage. planner wrote S1–S10, Verification (5 checks), Failure modes. No code; nothing to run.
 
 ## Summary
