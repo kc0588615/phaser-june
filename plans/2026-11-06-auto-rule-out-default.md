@@ -72,7 +72,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -207,6 +207,14 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER:
+
+1. Extend E2E coverage to blocked storage and gameplay before changing the fresh-profile default. Current additions verify switch state and persistence; these cases would verify the default reaches gameplay.
+
 ## Revision notes
 
 ## Steps
@@ -224,5 +232,7 @@ SHOULD-CONSIDER:
 - 2026-11-06 06:38 UTC · Baseline: typecheck, lint, 48/48 unit, E2E 1473/1473 pass.
 - 2026-11-06 06:46 UTC · Architecture: `architect` wrote findings + target design (default `!== 'off'`, lazy `useState`, e2e once-a-run persistence block, 11 copy lines). Plan-only, no code; no checks needed.
 - 2026-11-06 06:48 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (`loadBoard()` must wait for the new document after `Page.reload`). Plan-only; no checks needed.
+
+- 2026-11-06 06:58 UTC · Astra review: APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (e2e: blocked storage + default reaching gameplay). Plan-only; no checks needed.
 
 ## Summary
