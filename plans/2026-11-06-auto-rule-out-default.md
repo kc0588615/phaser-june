@@ -74,7 +74,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -229,7 +229,56 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+All E2E runs: `export CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule-out-default/bin/chrome` first (Baseline). Heavy jobs one at a time.
+
+- [ ] S1. **Default on + E2E sets it on purpose.** Code and suite in one step, so the suite is never red between sessions (`:864` and `:1073` fail under the new default alone).
+  - `src/components/animalBoard/autoRuleOut.ts:1,5`: comment and `isAutoRuleOutOn` per Target design (`!== 'off'`, `catch { return true; }`). Key and `setAutoRuleOutOn` unchanged.
+  - `src/components/animalBoard/useAnimalSession.ts:77-78`: `useState(isAutoRuleOutOn)`, delete the effect. `:273` comment per the Copy table.
+  - `scripts/e2e.mjs`, per Target design:
+    - Hoist `autoSwitch` to after `screenshot` (`:218`): opens the menu only if the switch isn't showing, returns `{ before, after, storedBefore, storedAfter }`. Delete the in-loop copy (`:848-861`).
+    - `loadBoard()` = `goto(seeded URL)` + `:236-238`; replaces `:235-238`.
+    - Once-a-run block after `:258`: three checks (fresh on → off + `'off'` stored, with `02-menu-fresh-profile.png` taken with the menu open first; reload → stored `'off'` starts off → on + `'on'` stored; reload → stored `'on'` starts on, left off). Detail = `JSON.stringify` of the result.
+    - `:862-865`: per-round `autoSwitch(mode === 'auto')` + check `round ${n}: Auto rule-out set on|off through the menu for this round`.
+    - `:1146-1150`: keep; add the comment.
+  - Verify: `npm run typecheck`, `npm run lint`, `npm run e2e:fresh`. All checks pass, expected **1479** (1473 − 1 replaced + 3 once-a-run + 4 per-round); explain any other count in the Log. The four round lines in the console match `baseline-e2e/e2e.log` (same seed; rounds 1-3 still off). Open `02-menu-fresh-profile.png`: the Auto rule-out switch shows on.
+  - Artifact: copy the run's `report.json`, `*.png`, the console log (`e2e.log`) and `COMMAND.txt` (command + commit + seed) to `/srv/critter-ai/agent-state/missions/auto-rule-out-default/s1-e2e/`. Delete `baseline-e2e/` (disk rule; its numbers stay under Baseline).
+- [ ] S2. **Copy and docs** (text only; no behavior change). Exact text from the Copy table:
+  - `src/components/animalBoard/AnimalSheets.tsx:410` (comment), `:711` (how-to step 4 sentence; `:712` unchanged).
+  - `src/clueGame/animalBoard.ts:429` (comment).
+  - `src/site/pages/Teachers.tsx:64`, `:96`.
+  - `docs/CLUE_MATCH.md:54`, `:96`, `:98`; `CONTEXT.md:73`.
+  - Stale-copy scan: `rg -n -i "opt-in|off by default|off until|never rule|rule anything out" src docs CONTEXT.md scripts --glob '!docs/playtests/**'`. Allowed leftovers (not about Auto rule-out, or out of scope): `profiles.ts:41`, `CONTENT_SOURCES.md:25`, `traits.ts:13`, `questionMatch.ts:518`, `sfx.ts:2` (sound), `ANIMAL_BOARD_PAPER.md`. Anything else: fix it here.
+  - Verify: `npm run typecheck`, `npm run lint`; `npm run site:build`, then the site E2E (Verification item 5) passes. No `e2e:fresh` here: the suite skips how-to (`e2e.mjs:84`) and no game behavior changed; S3 runs it.
+- [ ] S3. **Full Verification** (below) on the branch head. Save the artifact to `final-e2e/`. Check by eye, for the Summary: `02-menu-fresh-profile.png` shows the switch on; `src/site/shots/witness-note.webp` and `round-end.webp` are consistent with either setting (F5). Draft the Summary: every copy/doc line changed, before → after (from `git diff origin/main`); no production content build needed; `grid-marked.webp` shows a non-default state (F5), not retaken; `docs/ANIMAL_BOARD_PAPER.md` claims now hold only with the switch off (Risks); a future `site:shots` plays with the new default (Risks); Astra SC1 declined (Revision notes).
+
 ## Verification
+
+E2E first. From `/srv/critter-ai/worktrees/auto-rule-out-default`, with `CHROME_PATH` exported as above, in order, one at a time; each must exit 0:
+
+1. `npm run e2e:fresh`: every check passes (expected 1479). Must include:
+   - `a new profile (nothing stored) starts with Auto rule-out on, and its switch turns it off and stores 'off'`
+   - `a stored 'off' starts off after a reload, and the switch turns it back on`
+   - `a stored 'on' starts on after a reload`
+   - `round 1..4: Auto rule-out set off|off|off|on through the menu for this round`
+   - unchanged: `:1073` (off: the game marks nobody), round 4's auto-marking checks, `the Auto rule-out switch turns back off`, resume and rise sections.
+   - Same seed (7) = same run; the four round lines match `s1-e2e/e2e.log`.
+2. `npm run typecheck`
+3. `npm run lint`
+4. `npm test` (48/48; no new unit tests)
+5. `npm run site:build && (python3 -m http.server 3101 -b 127.0.0.1 -d out/site >/tmp/auto-rule-out-site.log 2>&1 & echo $! >/tmp/auto-rule-out-site.pid) && npm run e2e:site; kill "$(cat /tmp/auto-rule-out-site.pid)"`: all site checks pass (Teachers page changed).
+6. `npm run build`
+
+No Failure modes section: nothing is tested in isolation.
+
+**Artifact:** `/srv/critter-ai/agent-state/missions/auto-rule-out-default/final-e2e/`: `report.json`, `*.png` (incl. `02-menu-fresh-profile.png`), `e2e.log` (console + `time`), `COMMAND.txt`. No traces, no HTML report. Keep only `s1-e2e/` and `final-e2e/` there. Reproduce:
+`CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule-out-default/bin/chrome npm run e2e:fresh   # commit <sha>, seed 7`
+The post-code-review final run (mission step 7) repeats 1-6 on the final commit and overwrites `final-e2e/`.
+
+**Release smoke** (the Release unit, after `gh pr merge` + `deploy critter-connect`; nothing committed, no DB writes):
+- `curl -s https://play.critterconnect.org/version.txt` reports the merge commit.
+- `curl -s https://critterconnect.org/teachers/` returns 200 and contains the new `Auto rule-out` line (`Teachers.tsx:64`).
+- One-off `node` script in `/tmp` using `scripts/cdp.mjs` (`startBrowser`/`openPage`, fresh profile, `CHROME_PATH` as above) opens `https://play.critterconnect.org/explore/?place=continent:africa`. Close how-to, then open the Menu before any board tap (Fable SC4). Read the `[role=switch]` "Auto rule-out" `aria-checked`: must be `'true'`. Screenshot to `/srv/critter-ai/agent-state/missions/auto-rule-out-default/release-menu-fresh-profile.png`.
+- Record all three under `## Release`.
 
 ## Code review (Astra)
 
@@ -246,5 +295,7 @@ SHOULD-CONSIDER:
 - 2026-11-06 06:51 UTC · Astra review: APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (e2e: blocked storage + default reaching gameplay). Plan-only; no checks needed.
 
 - 2026-11-06 06:56 UTC · Revision: `architect` fixed Fable MUST-FIX (`loadBoard()` = `goto(seeded URL)`, no `Page.reload` in new block; CDP probe confirmed). Adopted Fable SC1/3/4/5; declined SC2, Astra SC1 (reasons in Revision notes). Plan-only; no checks needed.
+
+- 2026-11-06 06:59 UTC · Steps: `planner` wrote S1 (default + e2e), S2 (copy/docs), S3 (full Verification) and Verification/release smoke. Plan-only; no checks needed.
 
 ## Summary
