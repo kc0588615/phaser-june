@@ -249,7 +249,7 @@ All E2E runs: `export CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule
   - `docs/CLUE_MATCH.md:54`, `:96`, `:98`; `CONTEXT.md:73`.
   - Stale-copy scan: `rg -n -i "opt-in|off by default|off until|never rule|rule anything out" src docs CONTEXT.md scripts --glob '!docs/playtests/**'`. Allowed leftovers (not about Auto rule-out, or out of scope): `profiles.ts:41`, `CONTENT_SOURCES.md:25`, `traits.ts:13`, `questionMatch.ts:518`, `sfx.ts:2` (sound), `ANIMAL_BOARD_PAPER.md`. Anything else: fix it here.
   - Verify: `npm run typecheck`, `npm run lint`; `npm run site:build`, then the site E2E (Verification item 5) passes. No `e2e:fresh` here: the suite skips how-to (`e2e.mjs:84`) and no game behavior changed; S3 runs it.
-- [ ] S3. **Full Verification** (below) on the branch head. Save the artifact to `final-e2e/`. Check by eye, for the Summary: `02-menu-fresh-profile.png` shows the switch on; `src/site/shots/witness-note.webp` and `round-end.webp` are consistent with either setting (F5). Draft the Summary: every copy/doc line changed, before → after (from `git diff origin/main`); no production content build needed; `grid-marked.webp` shows a non-default state (F5), not retaken; `docs/ANIMAL_BOARD_PAPER.md` claims now hold only with the switch off (Risks); a future `site:shots` plays with the new default (Risks); Astra SC1 declined (Revision notes).
+- [x] S3. **Full Verification** (below) on the branch head. Save the artifact to `final-e2e/`. Check by eye, for the Summary: `02-menu-fresh-profile.png` shows the switch on; `src/site/shots/witness-note.webp` and `round-end.webp` are consistent with either setting (F5). Draft the Summary: every copy/doc line changed, before → after (from `git diff origin/main`); no production content build needed; `grid-marked.webp` shows a non-default state (F5), not retaken; `docs/ANIMAL_BOARD_PAPER.md` claims now hold only with the switch off (Risks); a future `site:shots` plays with the new default (Risks); Astra SC1 declined (Revision notes).
 
 ## Verification
 
@@ -304,4 +304,34 @@ The post-code-review final run (mission step 7) repeats 1-6 on the final commit 
 
 - 2026-11-06 07:20 UTC · S2: copy/docs per Copy table (AnimalSheets 410/711, animalBoard 429, Teachers 64/96, CLUE_MATCH 54/96/98, CONTEXT 73). Stale scan: only allowed leftovers. typecheck, lint ok; site:build ok, e2e:site 444/444; built teachers page has new line.
 
+- 2026-11-06 07:31 UTC · S3: full Verification on `2206eafa`: e2e 1479/1479 (round lines = `s1-e2e`; 3 once-a-run + 4 per-round checks pass), typecheck, lint, 48/48 unit, site:build + e2e:site 444/444, `npm run build` all exit 0. `02-menu-fresh-profile.png` shows switch on; `witness-note.webp`/`round-end.webp` fit either setting. Artifact `final-e2e/`. Summary drafted.
+
 ## Summary
+
+
+Draft (S3; finalised after code review). New players (nothing stored) now start with **Auto rule-out on**; a stored `'off'` or `'on'` wins; blocked storage → on. Same key `critter-connect:auto-rule-out:v1`, nothing migrated.
+
+**Code:** `autoRuleOut.ts` (`getItem(KEY) !== 'off'`, `catch → true`); `useAnimalSession.ts` (lazy `useState(isAutoRuleOutOn)`, effect removed, so no first move with it off; `/explore` is `ssr: false`, no hydration path). `scripts/e2e.mjs`: once-a-run fresh-on / stored-off / stored-on checks across reloads, and every round sets the switch through the menu.
+
+**Copy/doc lines changed (before → after):**
+- `AnimalSheets.tsx:410` (comment): "Opt-in: the game rules out…" → "On by default: the game rules out…"
+- `AnimalSheets.tsx:711` (How to play, step 4): appended "After each move, **Auto rule-out** rules out every animal with a shown answer that doesn't match; turn it off in the menu to do it all yourself."
+- `animalBoard.ts:429` (comment): "Auto rule-out (opt-in setting)" → "Auto rule-out (a menu setting, on by default)"
+- `useAnimalSession.ts:273` (comment): "(opt-in)" → "(on unless the player turned it off)"
+- `autoRuleOut.ts:1` (comment): now says on by default, a stored 'off' wins.
+- `Teachers.tsx:64`: "The answers never rule anyone out by themselves. Students compare…" → "Students compare… After each move, Auto rule-out (on unless it's turned off in the game's menu) rules out any animal whose scouted answer differs from the camera's. A ruled-out animal…"
+- `Teachers.tsx:96`: "One student plays; the other…" → "One student plays with Auto rule-out off (in the game's menu); the other…"
+- `docs/CLUE_MATCH.md:54`: "(menu switch, off by default, kept on the device)" → "(menu switch, on by default, kept on the device; a stored "off" wins)"
+- `docs/CLUE_MATCH.md:96`: "Round 4 turns on Auto rule-out, …" → "Each round sets Auto rule-out through the menu: on in round 4, …; off in the others."
+- `docs/CLUE_MATCH.md:98`: added "a new profile starts with Auto rule-out on (02-menu-fresh-profile.png), its switch turns it off and on, and a stored "off" or "on" survives a reload;"
+- `CONTEXT.md:73`: "answers never rule anything out by themselves." → "an answer rules nothing out by itself: the player does, or Auto rule-out (on by default) does when a suspect's shown answer differs from the camera's."
+
+**Verification:** e2e 1479/1479 (was 1473; +3 once-a-run, +4 per-round, −1 replaced), typecheck, lint, unit 48/48, e2e:site 444/444, build. Artifact `/srv/critter-ai/agent-state/missions/auto-rule-out-default/final-e2e/` (`02-menu-fresh-profile.png` shows switch on; `COMMAND.txt` reproduces).
+
+**For the owner:**
+- No production content build needed (no content change).
+- Site shots not retaken (set aside): `grid-marked.webp` now shows a non-default state (player-marked Okapi beside an unmarked, mismatching Chimpanzee, which the new default would mark); `witness-note.webp` and `round-end.webp` fit either setting.
+- A future `npm run site:shots` plays with the new default; `take.mjs`'s grid-marked trigger (player's own slide) may fire differently.
+- `docs/ANIMAL_BOARD_PAPER.md` (§4.5, `:27-29`: the player makes every rule-out; random play wins 0%) now holds only with the switch off. Design record, not edited.
+- Declined Astra SC1 (e2e for blocked storage / default reaching gameplay); reasons in Revision notes.
+- Existing players who never touched the switch now get it on (intended: no stored value = no choice).
