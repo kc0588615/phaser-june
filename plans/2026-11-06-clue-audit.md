@@ -124,7 +124,7 @@ Shared for every step:
   - `severity`: wrong, unfair or unclear, for findings only. A `wrong` row needs `quote` and an http `source_url`.
   - Key (`animal_id,prefix,check,holds`) is unique. Every step upserts through one helper, `STATE/audit/findings.py upsert <partial.csv>`, written in S1.
 
-- [ ] S1 · Inventory and mechanical checks. Inputs: `db/content/animals/*.json`, `db/content/sources.json`, `src/clueGame/{traits,profiles,questionMatch,questionMatchContent}.ts`.
+- [x] S1 · Inventory and mechanical checks. Inputs: `db/content/animals/*.json`, `db/content/sources.json`, `src/clueGame/{traits,profiles,questionMatch,questionMatchContent}.ts`.
   - Before writing the parser, read Failure modes (Parser) and handle or flag each case.
   - `audit/inventory.ts` builds `animalsFromProfiles` + `makeBook`. It writes `out/inventory.json` and `out/inventory.md`, one block per animal:
     - each trait's value, note, source and url; `systems`; `habitats`; the askable traits from the book;
@@ -301,10 +301,13 @@ Skipped: research mission, no code.
 ## Decisions
 
 - Architecture, Fable, Astra (plan and code) and Revision stages skipped: brief says no architecture/code review stages, skip Astra.
+- S1: young edge is 10 only ("3–10" and "10+" both hold 10); 2 sits only in "1–2", so not an edge. Lifespan bins by the longest figure in the note (doc rule "longest known, zoo records included"); a lower wild figure in another bin is a `straddle` flag. A one-sided bound in the held bin passes, except a lifespan lower bound below 20+ (the longest may be higher): flag.
+- S1: no-record rows use `check=note-value`, `result=no-record` (the plan's check list has no `no-record` check).
 
 ## Log
 
 - 2026-11-06 08:10 UTC: Baseline. typecheck, lint, 48 unit, e2e 1479/1479 pass. Review stages marked skipped per brief.
 - 2026-11-06 08:20 UTC: Steps stage. planner wrote S1–S10, Verification (5 checks), Failure modes. No code; nothing to run.
+- 2026-11-06 08:30 UTC: S1. inventory (76 animals, 3 no-country warnings) + mechanical.py: 1,075 rows (875 pass, 74 no-record, 126 flags: 23 straddle, 81 note-value, 22 cross); all 189 numeric parses hand-checked, 0 misreads. Live DB = files (76 species, 2,430 clues, 437 facts, 0 diff; same 20 artificial holders). Coverage: 76 animals, 0 missing. Report skeleton + Method.
 
 ## Summary
