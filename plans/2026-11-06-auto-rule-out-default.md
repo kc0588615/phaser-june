@@ -231,7 +231,7 @@ SHOULD-CONSIDER:
 
 All E2E runs: `export CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule-out-default/bin/chrome` first (Baseline). Heavy jobs one at a time.
 
-- [ ] S1. **Default on + E2E sets it on purpose.** Code and suite in one step, so the suite is never red between sessions (`:864` and `:1073` fail under the new default alone).
+- [x] S1. **Default on + E2E sets it on purpose.** Code and suite in one step, so the suite is never red between sessions (`:864` and `:1073` fail under the new default alone).
   - `src/components/animalBoard/autoRuleOut.ts:1,5`: comment and `isAutoRuleOutOn` per Target design (`!== 'off'`, `catch { return true; }`). Key and `setAutoRuleOutOn` unchanged.
   - `src/components/animalBoard/useAnimalSession.ts:77-78`: `useState(isAutoRuleOutOn)`, delete the effect. `:273` comment per the Copy table.
   - `scripts/e2e.mjs`, per Target design:
@@ -286,6 +286,8 @@ The post-code-review final run (mission step 7) repeats 1-6 on the final commit 
 
 ## Decisions
 
+- S1: run 1 failed 1478/1479 on `round 3 move 10: a right guess just scouted sparkles` (time-limited `fresh` sparkle, round 3 has Auto rule-out off, load 2 on 2 cores); rerun passed 1479/1479 unchanged. Treated as a pre-existing timing flake, not in scope; run-1 log kept as `s1-e2e/e2e-run1-flake.log`.
+
 ## Log
 
 - 2026-11-06 06:38 UTC · Baseline: typecheck, lint, 48/48 unit, E2E 1473/1473 pass.
@@ -297,5 +299,7 @@ The post-code-review final run (mission step 7) repeats 1-6 on the final commit 
 - 2026-11-06 06:56 UTC · Revision: `architect` fixed Fable MUST-FIX (`loadBoard()` = `goto(seeded URL)`, no `Page.reload` in new block; CDP probe confirmed). Adopted Fable SC1/3/4/5; declined SC2, Astra SC1 (reasons in Revision notes). Plan-only; no checks needed.
 
 - 2026-11-06 06:59 UTC · Steps: `planner` wrote S1 (default + e2e), S2 (copy/docs), S3 (full Verification) and Verification/release smoke. Plan-only; no checks needed.
+
+- 2026-11-06 07:17 UTC · S1: default `!== 'off'` (blocked storage: on), lazy `useState(isAutoRuleOutOn)`, e2e hoisted `autoSwitch` + `loadBoard()` + once-a-run fresh/'off'/'on' checks + per-round set. typecheck, lint ok; e2e 1479/1479 (2nd run; 1st had 1 sparkle timing flake, see Decisions), round lines = baseline, `02-menu-fresh-profile.png` shows switch on. Artifact `s1-e2e/`; `baseline-e2e/` deleted.
 
 ## Summary

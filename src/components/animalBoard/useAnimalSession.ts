@@ -74,8 +74,7 @@ export function useAnimalSession() {
   /** A move is playing out on the board (its first clear came in, it hasn't settled): nothing is saved meanwhile. */
   const moving = useRef(false);
   const [sceneGeneration, setSceneGeneration] = useState(0);
-  const [autoRuleOut, setAutoRuleOut] = useState(false);
-  useEffect(() => setAutoRuleOut(isAutoRuleOutOn()), []);
+  const [autoRuleOut, setAutoRuleOut] = useState(isAutoRuleOutOn); // client only (explore.tsx: ssr: false)
   const toggleAutoRuleOut = useCallback(() => { setAutoRuleOutOn(!autoRuleOut); setAutoRuleOut(!autoRuleOut); }, [autoRuleOut]);
   const autoRef = useRef(autoRuleOut);
   useEffect(() => { autoRef.current = autoRuleOut; }, [autoRuleOut]);
@@ -270,7 +269,7 @@ export function useAnimalSession() {
     dispatch({ type: 'mark', id, ruledOut, heading: headingOf(travelOf(animal), cell, GRID_COLS) });
     return true;
   }, []);
-  // Auto rule-out (opt-in): between moves, mark every suspect whose shown answer differs from a shown camera answer.
+  // Auto rule-out (on unless the player turned it off): between moves, mark every suspect whose shown answer differs from a shown camera answer.
   // `board` is set on every settle (the session often isn't), so this runs once each move is done.
   useEffect(() => {
     if (!autoRuleOut || !session || moving.current || session.round.status !== 'playing') return;
