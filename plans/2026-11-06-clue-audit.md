@@ -199,7 +199,7 @@ Shared for every step:
   - Read every disagreement and every S1 flag on these prefixes. Judge each against what the label says (S2 rules), e.g. "Only meat" on an animal that eats fruit.
   - Done: 76 × 5 `source-value` rows; no open flag on these prefixes.
 
-- [ ] S6 · Text against record, animals 1–38.
+- [x] S6 · Text against record, animals 1–38.
   - First, `audit/text-scan.py` over all 76 → `out/s6-text-flags.csv`. It scans every line the game shows (guide lines and trait notes, witness notes and tags, untagged notes, reveal notes, facts) against the values, habitats, systems and open tags, using the S1 keyword lists. It also checks numbers in the text against the bins, and habitat words (forest, desert, sea, river, cave, grassland, farm, town…) against the habitats.
   - Then read `out/inventory.md` for 1–38 in full, not only the flags. Check each sentence against every answer the animal gives, including the "no"s on complete prefixes (a note "swims in rivers" with no wetlands is `unfair`).
   - Done: one `text` row per animal × 14 prefixes for 1–38; scan flags for 1–38 resolved.
@@ -315,6 +315,7 @@ Skipped: research mission, no code.
 - S5: diet "Only plants" holders whose cited source names animal food are `unfair` (doc rule has no "only"); meat holders the source says eat mostly small invertebrates are `unfair` (2, 10), invertebrate-plus-vertebrate eaters pass; Pairs vs groups judged on the Pairs question's "pairs or small families" (42, 49, 61, 73 `unfair`). One finding per issue: it sits on `source-value` when the value is at issue, on `note-value` when only the note's wording misleads; the other row passes with a pointer.
 - S5: default `source-value` rows quote the first source sentence naming the held value (`s5_rows.py`); all were read, 14 noisy quotes replaced by hand. Covering and birth pass on class when no source sentence describes them.
 - S5: the 21 open `system`/`habitat` cross flags from S1 aren't on S5's prefixes; S9 resolves them (or S6/S7 where they're text).
+- S6: a shown line saying the animal lives in a habitat it answers no to is `unfair`; threats, name/taxonomy words and what young or eggs do pass. Rocks: living/resting/climbing among rocks reads as Rocky places, stream-bed rocks for eggs, tadpoles or toes don't. Swimming isn't living in fresh water. S6 closed the 7 S1 cross flags on tags (`fully_aquatic` 10, 17 unfair; `coastal_dunes` 14, 32 unfair; `swimmer` 25, 28, 30 pass); the other 14 (systems vs habitat classes) stay S9's. A trait already found on note-value/source-value gets no second text finding; the text row points to it.
 
 ## Log
 
@@ -325,5 +326,6 @@ Skipped: research mission, no code.
 - 2026-11-06 08:59 UTC: S3. IUCN loaded for 76/76 (headless Chrome; turtles via URL taxon). Habitat: 67 exact, 7 text-supported extras, 1 unclear (giant otter marine), purple frog artificial unclear; systems 76 pass; taxonomy 304 pass. Holders: 9 really, 5 marginal only, 6 plantations/cut forest/canals only (8 unfair, 3 unclear); non-holders 4 unfair + 1 unclear. 481 rows upserted, findings.csv 1,597. `out/s3-farms.md`, photos viewed (none shows farms/towns).
 - 2026-11-06 09:57 UTC: S4. 228 cells judged against cited sources (+ADW): source-value 181 pass, 7 finding, 39 no-record (7 documented for the species by ADW), 1 couldnt-check; with note/straddle rows 30 findings (1 wrong, 15 unfair, 14 unclear); all 54 S1 flags on size/lifespan/young closed. findings.csv 1,828 rows. Sources cached: 65 ADW, 18 others; AmphibiaWeb/Britannica blocked.
 - 2026-11-06 10:09 UTC: S5. 380 cells (76 × diet, activity, social, covering, birth) judged against cited sources (+ADW/IUCN/Wikipedia): source-value 321 pass, 23 finding, 35 no-record, 1 couldnt-check; with note-value/cross rows 30 findings (18 unfair, 12 unclear); all 52 S1 flags on these prefixes closed. findings.csv 2,208 rows. Open flags left: 21 system/habitat cross (S9).
+- 2026-11-06 10:40 UTC: S6. text_scan.py over all 76 (394 leads; 217 for 1–38), animals 1–38 read in full: 532 text rows (462 pass, 60 no-record, 9 unfair, 1 unclear), 7 S1 tag cross flags closed (4 unfair, 3 pass). Findings mostly habitat no's the text contradicts (rocks 4, 11, 27; coast 13, 30; savanna 20; desert 32, 37; town 18; woodland 31). findings.csv 2,740 rows; open flags 14 (S9).
 
 ## Summary
