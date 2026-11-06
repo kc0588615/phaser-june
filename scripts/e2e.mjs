@@ -216,6 +216,27 @@ async function main() {
       writeFileSync(path.join(outDir, name), Buffer.from(data, 'base64'));
       report.screenshots.push(name);
     };
+    // The menu's Auto rule-out switch, set to `on` (opens the menu unless it's already open, then closes it),
+    // with what was stored on the device before and after.
+    const autoSwitch = on => evaluate(async on => {
+      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+      const KEY = 'critter-connect:auto-rule-out:v1';
+      const find = () => [...document.querySelectorAll('[role=switch]')].find(b => b.textContent === 'Auto rule-out');
+      const storedBefore = localStorage.getItem(KEY);
+      if (!find()) {
+        document.querySelector('button[aria-label="Menu"]')?.click();
+        await wait(250);
+      }
+      const button = find();
+      const before = button?.getAttribute('aria-checked') ?? null;
+      if (button && (before === 'true') !== on) button.click();
+      await wait(100);
+      const after = button?.getAttribute('aria-checked') ?? null;
+      const storedAfter = localStorage.getItem(KEY);
+      [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
+      await wait(250);
+      return { before, after, storedBefore, storedAfter };
+    }, on);
 
     // 1. Globe: the continent list loads; pick the continent to play (the one with the most animals).
     await goto(`${BASE}/`);
@@ -232,10 +253,14 @@ async function main() {
     await screenshot('01-globe.png');
 
     // 2. The animal board for that continent (plan 044).
-    await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(place.key)}`);
-    await waitFor(() => window.__cc?.clue?.() && window.__cc.state().ready && window.__cc.state().pins.length === 5, 'the animal board (window.__cc; is this a dev build?)', 60_000);
-    await evaluate(() => window.__cc.speed(4));
-    await sleep(2500); // the animal photos load
+    // A ?seed= game is never saved, so each load deals the same round 1 afresh (localStorage carries over).
+    const loadBoard = async () => {
+      await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(place.key)}`);
+      await waitFor(() => window.__cc?.clue?.() && window.__cc.state().ready && window.__cc.state().pins.length === 5, 'the animal board (window.__cc; is this a dev build?)', 60_000);
+      await evaluate(() => window.__cc.speed(4));
+      await sleep(2500); // the animal photos load
+    };
+    await loadBoard();
     await screenshot('02-board.png');
     const poolSpecies = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, { name: s.commonName, family: s.family, genus: s.genus }]))));
     const names = new Map([...poolSpecies].map(([id, species]) => [id, species.name]));
@@ -256,6 +281,20 @@ async function main() {
       return { before, after, closed: !document.querySelector('[role=dialog]') };
     });
     check('sound starts off and its button in the menu turns it on', sound?.before === 'false' && sound?.after === 'true' && sound?.closed, JSON.stringify(sound));
+    // Auto rule-out is on unless the player turned it off: this run's Chrome profile is new, so nothing is stored yet.
+    await evaluate(async () => {
+      document.querySelector('button[aria-label="Menu"]')?.click();
+      await new Promise(resolve => setTimeout(resolve, 250));
+    });
+    await screenshot('02-menu-fresh-profile.png');
+    const fresh = await autoSwitch(false);
+    check(`a new profile (nothing stored) starts with Auto rule-out on, and its switch turns it off and stores 'off'`, fresh.storedBefore === null && fresh.before === 'true' && fresh.after === 'false' && fresh.storedAfter === 'off', JSON.stringify(fresh));
+    await loadBoard();
+    const storedOff = await autoSwitch(true);
+    check(`a stored 'off' starts off after a reload, and the switch turns it back on`, storedOff.storedBefore === 'off' && storedOff.before === 'false' && storedOff.after === 'true' && storedOff.storedAfter === 'on', JSON.stringify(storedOff));
+    await loadBoard();
+    const storedOn = await autoSwitch(false); // left off: round 1's grid checks below run as before
+    check(`a stored 'on' starts on after a reload`, storedOn.storedBefore === 'on' && storedOn.before === 'true', JSON.stringify(storedOn));
     // The evidence grid and the board fit a small phone (iPhone SE in Safari is 375x548): the board keeps at least 210 px.
     const fit = await evaluate(() => {
       const grid = document.querySelector('table[aria-label="Evidence"]')?.getBoundingClientRect();
@@ -845,24 +884,9 @@ async function main() {
       // Round 2 rules out the mystery (an escape); round 3 rules out nothing (out of moves, then names it: a find);
       // round 4 turns on Auto rule-out and marks nothing itself; others play carefully.
       const mode = n === 2 ? 'reckless' : n === 3 ? 'idle' : n === 4 ? 'auto' : 'careful';
-      // The menu's Auto rule-out switch (on for the auto round, off after it).
-      const autoSwitch = on => evaluate(async on => {
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-        document.querySelector('button[aria-label="Menu"]')?.click();
-        await wait(250);
-        const button = [...document.querySelectorAll('[role=switch]')].find(b => b.textContent === 'Auto rule-out');
-        const before = button?.getAttribute('aria-checked') ?? null;
-        if (button && (before === 'true') !== on) button.click();
-        await wait(100);
-        const after = button?.getAttribute('aria-checked') ?? null;
-        [...document.querySelectorAll('[role=dialog] button')].find(b => b.getAttribute('aria-label') === 'Close')?.click();
-        await wait(250);
-        return { before, after };
-      }, on);
-      if (mode === 'auto') {
-        const toggled = await autoSwitch(true);
-        check(`round ${n}: Auto rule-out starts off and its menu switch turns it on`, toggled.before === 'false' && toggled.after === 'true', JSON.stringify(toggled));
-      }
+      // Each round sets Auto rule-out through the menu on purpose (on for the auto round only), not by the default.
+      const set = await autoSwitch(mode === 'auto');
+      check(`round ${n}: Auto rule-out set ${mode === 'auto' ? 'on' : 'off'} through the menu for this round`, set.after === String(mode === 'auto'), JSON.stringify(set));
       let state = start;
       let moves = 0;
       let pinsBefore = pins;
@@ -1145,6 +1169,7 @@ async function main() {
       if (mode === 'auto') check(`round ${n}: the rule-back-in check ran`, autoBackChecked);
       if (mode === 'auto') {
         check(`round ${n}: with Auto rule-out, the mystery never escapes`, state.lostBy !== 'escaped', `${state.status} ${state.lostBy}`);
+        // Back off: the resume and rise sections below run with it off (every other round set it off too).
         const toggled = await autoSwitch(false);
         check(`round ${n}: the Auto rule-out switch turns back off`, toggled.before === 'true' && toggled.after === 'false', JSON.stringify(toggled));
       }

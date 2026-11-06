@@ -426,7 +426,7 @@ export function stillPossible(book: Book, state: AnimalRound, knows: (tag: strin
 }
 
 /**
- * Auto rule-out (opt-in setting): whether a suspect's own shown answer differs from a shown camera answer. Reads only
+ * Auto rule-out (a menu setting, on by default): whether a suspect's own shown answer differs from a shown camera answer. Reads only
  * cells both showing, never hidden ones or notes; the mystery never mismatches.
  */
 export function shownMismatch(state: AnimalRound, id: number): boolean {
