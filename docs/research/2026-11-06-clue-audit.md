@@ -8,7 +8,97 @@ To be written (S9).
 
 ## 2. Farms & towns
 
-To be written (S8).
+**Recommendation: remove it.** Of the 20 animals that answer yes, 11 do so on a link a player wouldn't call "lives on farms or in towns" (cut forest, man-made ponds and canals, or land IUCN itself rates marginal), and 6 animals that answer no have a game line or IUCN entry that puts them on farms, in a city or in canals. Nothing a player can see answers it except one generic field-guide line. Removing it loses no playable round (8 world seeds gain one) and touches about 9 code sites, 20 content files and the rules version. A stricter, reworded version is possible (option C) but keeps most of the problem. 18 findings below are about this clue: 13 `unfair`, 5 `unclear`.
+
+### What it is and where it came from
+
+- Column "Farms & towns", legend "Lives on farms or in towns?", question "Does it also live on farms, plantations or in towns?" ([`questionMatch.ts:152,171,200`](../../src/clueGame/questionMatch.ts)), gem picture 🏡 ([`clueFaces.ts:15`](../../src/clueGame/clueFaces.ts)). The yes-animals get one field-guide line: "It also lives on land people have changed, like farms, plantations or towns." ([`profiles.ts:93`](../../src/clueGame/profiles.ts)). Four wordings, each wider than the last.
+- It is IUCN's habitat class 14/15, "Artificial/Terrestrial" plus "Artificial/Aquatic", copied into content with the rule "IUCN habitat classes and level-2 kinds, marginal ones included" (`docs/CONTENT_SOURCES.md:24`, plan 040). It was never designed as a question: it became askable when every `habitat:` tag did (plans 041–044). IUCN's "Artificial" covers arable land, pasture, plantations, rural gardens, urban areas, **heavily degraded former forest**, and man-made **ponds, canals, reservoirs and ditches**.
+- The content rule says to skip Artificial/Aquatic rows, but three holders hold it only through them (2, 73, 74), and the purple frog (16) has the same kind of rows as the Goliath frog (11) yet answers no. The rule was applied unevenly.
+
+### The 20 animals that answer yes
+
+Each holder's latest IUCN assessment, read 2026-11-06 (habitat table with suitability, and its Habitat and Ecology text). Verdict: **really** = IUCN rates it Suitable on farmland, pasture, gardens or towns, or its text says it lives there; **marginal** = every Artificial row is Marginal; **cut forest / water / plantations** = only those rows are Suitable.
+
+| Animal | IUCN Artificial rows (suitability) | IUCN text | Verdict | Severity |
+|---|---|---|---|---|
+| 7 Hairy frog | arable, plantations, degraded forest (all Suitable) | "in secondary forest and agricultural habitats, including tea plantations" ([IUCN 2017](https://www.iucnredlist.org/species/54443/18361006)) | really | pass |
+| 13 Madagascar tomato frog | arable, plantations, gardens, urban, degraded forest, ponds, ditches (all Suitable) | "secondary vegetation, degraded scrub, and highly disturbed urban areas" ([IUCN 2017](https://www.iucnredlist.org/species/6937/84159360)) | really | pass |
+| 24 Sunda pangolin | gardens, degraded forest (Suitable, major); arable, pasture, plantations, urban, ditches (Marginal) | "cultivated areas – including oil palm and rubber plantations – including and near human settlements" ([IUCN 2019](https://www.iucnredlist.org/species/12763/123584856)) | really | pass |
+| 48 Tasmanian devil | arable, pasture (Marginal) | "in forestry plantations and pasture" ([IUCN 2008](https://www.iucnredlist.org/species/40540/10331066)) | really (text) | pass |
+| 49 Hispaniolan solenodon | arable, pasture, degraded forest (Suitable); plantations (Marginal) | "as well as around crops and areas of pasture" ([IUCN 2020](https://www.iucnredlist.org/species/20321/22327218)) | really | pass |
+| 51 Jaguar | pasture, plantations (Suitable); arable, degraded forest (Marginal) | "and finally arable lowland pastures" ([IUCN 2018](https://www.iucnredlist.org/species/15953/123791436)) | really | pass |
+| 54 Brown-throated sloth | plantations (Suitable) | "vegetation fragments in urban areas" ([IUCN 2022](https://www.iucnredlist.org/species/3038/210442893)); game: "It even lives in trees in town squares, city parks and cacao plantations." ([content](../../db/content/animals/54-brown-throated-sloth.json)) | really | pass |
+| 58 Cheetah | pasture (Suitable, major) | "on Namibian farmlands" ([IUCN 2024](https://www.iucnredlist.org/species/219/259025524)) | really | pass |
+| 72 Maned wolf | arable, pasture (Suitable) | "recorded in the exotic eucalyptus, pine, soybean and sunflower plantations" ([IUCN 2016](https://www.iucnredlist.org/species/4819/88135664)) | really | pass |
+| 11 Goliath frog | degraded forest (Marginal) | "now only found deep in undisturbed forest away from villages" ([IUCN 2019](https://www.iucnredlist.org/species/5263/96062132)) | marginal | unfair |
+| 23 Aye-aye | plantations, gardens (Marginal) | "cultivated areas, which are considered marginal, unsuitable, habitats" ([IUCN 2020](https://www.iucnredlist.org/species/6302/115560793)) | marginal | unfair |
+| 28 Asian elephant | plantations, degraded forest (Marginal) | "in addition to cultivated and secondary forests or scrublands" ([IUCN 2020](https://www.iucnredlist.org/species/7140/45818198)) | marginal | unfair |
+| 32 De Winton's golden mole | urban (Marginal) | table only: "14.5 Artificial/Terrestrial - Urban Areas - Marginal" ([IUCN 2015](https://www.iucnredlist.org/species/5748/21287143)) | marginal | unfair |
+| 59 Indian pangolin | plantations, degraded forest (Marginal) | "degraded habitat, including in close proximity to villages" ([IUCN 2019](https://www.iucnredlist.org/species/12761/123583998)) | marginal | unfair |
+| 2 Spiny softshell turtle | ponds, canals (Suitable); irrigated land (Marginal) | "ponds, sloughs, bayous, ditches, canals, impoundments" ([IUCN 2024](https://www.iucnredlist.org/species/163451/161722123)) | water only | unfair |
+| 6 Red-eyed tree frog | degraded forest (Suitable) | "even very heavily degraded areas as long as there is tree cover close to ponds" ([IUCN 2020](https://www.iucnredlist.org/species/55290/3028059)) | cut forest only | unfair |
+| 73 Giant otter | "15 Artificial/Aquatic" (Unknown) | "also use agricultural channels … and the reservoirs of dams" ([IUCN 2023](https://www.iucnredlist.org/species/18711/244867206)) | water only | unfair |
+| 25 Tiger | degraded forest (Suitable, major); plantations, gardens (Marginal) | "can adapt to use human-created habitats (such as sugarcane and oil palm plantations)" ([IUCN 2022](https://www.iucnredlist.org/species/15955/214862019)) | plantations (marginal) | unclear |
+| 52 Giant anteater | plantations (Suitable) | table only: "14.3 Artificial/Terrestrial - Plantations - Suitable" ([IUCN 2025](https://www.iucnredlist.org/species/14224/210444314)); content also lists `urban`, which IUCN doesn't | plantations only | unclear |
+| 74 Axolotl | water storage, canals (Suitable) | "deep-water lakes (both natural and artificial canals)" ([IUCN 2020](https://www.iucnredlist.org/species/1095/53947343)); game: "It lives only in the canals and lakes of Xochimilco and Chalco, inside ____ City." ([content](../../db/content/animals/74-axolotl.json)) | canals in a city | unclear |
+
+Totals: 9 really, 5 marginal only, 6 cut forest, water or plantations only. Tiger and giant anteater are true for the question's "plantations" but not for the "Farms & towns" label; the axolotl lives inside Mexico City, but in its canals.
+
+### How a player is meant to answer it
+
+Only from the generic guide line on the holder's own field guide (and Auto rule-out applies it for them). Nothing else is tied to the tag:
+- **Photo:** all 20 holders' photos were viewed (`out/s3-holder-photos.png`). None shows a farm, plantation or town.
+- **Kind lines** ("It also lives in farm fields.", "…in towns or cities.", "…tropical forest that has been heavily cut.", "…ponds, canals or reservoirs people have made."; [`profiles.ts:139-145`](../../src/clueGame/profiles.ts)) would say *why* an animal holds it, but kinds aren't askable, so they never reach the field guide.
+- **Witness notes:** two hand-written notes say it (13, 54, tag `town_dweller`), but a witness note shows only when two suspects share its tag, and no dealt set holds both.
+- **Threat lines:** over 20 animals have lines like "forests are cleared for farms" ([content](../../db/content/animals/07-hairy-frog.json)), which correctly read as no, but put the label's words in front of the player all the time.
+
+**Reads everything, still answers no (the answer is yes):** 11 Goliath frog (its only farm line is a threat: "New roads to plantations make its rivers easier for hunters to reach." ([content](../../db/content/animals/11-goliath-frog.json))); 6 red-eyed tree frog ("It lives in trees near ponds." ([content](../../db/content/animals/06-red-eyed-tree-frog.json))); 2 spiny softshell turtle and 73 giant otter (river animals, with only dams and boats as threats); 23 aye-aye, 28 Asian elephant, 59 Indian pangolin (nothing in the game mentions farms or towns); 32 De Winton's golden mole ("It has only ever been found near the town of Port Nolloth" reads as a place name; [content](../../db/content/animals/32-de-wintons-golden-mole.json)); 52 giant anteater (its farm line is a threat: "farms replacing its grasslands and forests"; [content](../../db/content/animals/52-giant-anteater.json)).
+
+**Reads everything, still answers yes (the answer is no):**
+- 63 Temminck's pangolin: "Electric fences on farms are a growing danger to it across its range." ([content](../../db/content/animals/63-temmincks-pangolin.json)); IUCN: "It occurs widely on well-managed livestock farms" ([IUCN 2019](https://www.iucnredlist.org/species/12765/123585768)). `unfair`.
+- 65 African wild dog: "it often wanders out of parks into farmland, snares and busy roads" ([content](../../db/content/animals/65-african-wild-dog.json)). `unfair`.
+- 71 Andean bear: "Bears that raid farmers' corn are sometimes shot." ([content](../../db/content/animals/71-andean-bear.json)). `unfair`.
+- 18 Yangtze giant softshell turtle: a fact shown in the round, "A giant turtle lived for decades in Hoan Kiem Lake in the middle of Hanoi, Vietnam" ([content](../../db/content/animals/18-yangtze-giant-softshell-turtle.json)). `unfair`.
+- 56 Chimpanzee: nothing in the game, but IUCN's text lists "farmland" among its habitats ([IUCN](https://www.iucnredlist.org/species/15933/129038584)) and many players know chimps raid crops. `unfair`.
+- 16 Purple frog: IUCN rates canals and ditches Suitable ([IUCN](https://www.iucnredlist.org/species/58051/166098621)), the same kind of row that makes 2, 73 and 74 yes. `unclear` (rule applied unevenly; the game's own line, "farms clearing its forest", points to no).
+- Near misses, not findings: 41 and 64 elephants ("Farms, roads and towns spreading into its forests" ([content](../../db/content/animals/41-african-forest-elephant.json)), "Farms and towns taking its land" ([content](../../db/content/animals/64-african-savanna-elephant.json))) answer no while 28 Asian elephant answers yes on Marginal rows alone; 26 black-footed ferret "lives in prairie dog towns" ([content](../../db/content/animals/26-black-footed-ferret.json)).
+
+### How rounds use it
+
+From dealing every seed the way the game does (rules `053-1`; the world and the four continents with 12+ animals; `out/s2-deals.md`):
+- It is the **second most dealt question in the game**: in 36 of 141 seed decks (25.5%), after only "Large 30–300 kg" (39). World 26.5%, North America **100%** (13 of 13), South America 14%, Asia 10%, Africa 4%.
+- In 28 dealt rounds it is the only one of the four clues that tells some pair of suspects apart, so a player who misreads it for one of those two can't separate them from the clues alone. Examples: red-eyed tree frog / coastal tailed frog, the two sloths (30 / 54), De Winton's golden mole / golden-rumped sengi, axolotl / hellbender, spiny softshell / hellbender.
+- In 5 North American sets the two sloths (30 pygmy three-toed, 54 brown-throated) differ on nothing else in their whole record.
+- **Without it:** no seed loses its round. 8 world seeds that have no playable set today gain one (68 → 76 of 76), because the greedy suspect picker no longer lets in a frog that only Farms & towns separates. 3 world sets, 1 African and 5 North American sets change (the two sloths no longer share a set); 31 more decks change their four questions.
+
+### What removing it touches
+
+Full list with line numbers in `out/s2-trace.md`.
+- **Code (9 sites):** `traits.ts:27` (`HABITAT_CLASSES`, which `COMPLETE_PREFIXES` spreads); `questionMatch.ts:152,171,200` (question, legend, column); `clueFaces.ts:15` (🏡); `profiles.ts:93` (guide line) and `profiles.ts:139-145` (7 kind lines).
+- **Trap:** `artificial` must leave `COMPLETE_PREFIXES` in the same change as the 45 `artificial:<kind>` entries leave the content and the live rows. Otherwise `isHandWrittenClue` (`profiles.ts:291`) stops seeing kind lines as generated, and "It also lives in towns or cities." turns up as a witness note.
+- **Content:** `artificial` and its kinds out of 20 files' `habitats` (no animal is left without a habitat class). `npm run content -- check` fails loudly on any file still listing it.
+- **Live rows:** 20 `habitat:artificial` and 45 kind rows in `species_deduction_clues` go with the owner's prod content build. `clue_match_solves` stores no clue tags, so past results need nothing.
+- **Rules version:** bump `ANIMAL_RULES.version` (`animalBoard.ts:58`, now `053-1`), because decks change, so solve stats stay separable. Saved games would already restart safely (the resume check compares every saved row).
+- **No tests, docs or site copy** name it. `docs/CONTENT_SOURCES.md:24,47` (the IUCN-class rule) should say the class is skipped. The balance bot's numbers in plans 044/047/053 were measured with it.
+
+### Options
+
+**A. Remove it (recommended).** The trade-offs:
+- For: ends 18 findings at once; no round lost, 8 gained; small, mechanical change; nothing a player can see is lost, because the clue had no visible tell.
+- Against: Habitat drops from 10 questions to 9, and North America loses the clue it deals in every round, so its decks shift to other questions (all 13 seeds still play). The farm-and-town threat lines stay, but they then mislead nobody, because there's no question to misread them against.
+
+**B. Replace it with something a player can check.** Nothing in the current data is ready. The data support for each candidate, counted across the 76:
+- *How it moves* (`travelOf`: fly, swim, dig, walk). It is already derived, for the cards' exit animation, but it isn't a fact: "walk" is the default when no tag says otherwise (43), and "swim" (14) puts the tiger, the Asian elephant and the jaguar beside the axolotl, and overlaps the Fresh water question (`system:freshwater`: 8 of the 14 hold it).
+- *Lives in trees.* The best candidate: players can often see it, and it's natural to ask. The open tag `tree_dweller` is on 11 animals (5, 6, 23, 30, 35, 40, 43, 45, 54, 61, 71), and 9 of their photos show the animal in a tree (40 orangutan and 71 Andean bear are on the ground; `out/s8-tree-photos.png`). But the tags were written only where a note needed one: the golden snub-nosed monkey (34) and Sunda pangolin (24) are tagged only `climber`, `climber` also covers rock-climbing turtles (4, 15) and climbing jaguars and bears, and the chimpanzee has neither. A question treats a missing tag as no, so this needs a new trait researched for all 76, with a written rule (sleeps in trees? feeds in trees?) and a guide line. That is a content mission of its own, not a swap.
+- *Burrows* (`burrower`, 18 animals): the same coverage problem (tagged only where a note needed it), and photos rarely show it.
+- *A habitat kind* (plantations, pasture…): the same IUCN data, so the same problem, and kinds aren't checkable either.
+
+**C. Keep it, reworded, with strict holders.** Make the four wordings one, e.g. column "Farms & towns", question "Does it live on farms, ranches or in towns?" and the guide line saying the same. Hold it only where IUCN rates farmland, pasture, gardens or towns Suitable, or its text says the animal lives there: the 9 "really" holders, plus the giant anteater if "plantations" stays in the question, plus the two non-holders IUCN puts on farms (56 chimpanzee, 63 Temminck's pangolin). That is 12 holders. 10 drop it (2, 6, 11, 23, 25, 28, 32, 59, 73, 74).
+- For: answers become true in the plain sense; dealt in 39 of 149 seed decks (26%; world 27 of 76, North America 7 of 13), and no seed is lost (`audit/s8_strict.ts`, `out/s8-strict.json`).
+- Against: still no visible tell (no photo shows it), so the player still depends on one guide line; it needs a written rule in `docs/CONTENT_SOURCES.md` and a judgment per animal; 16 content files change (10 drop it, 2 add it, 52 loses the `urban` kind IUCN doesn't support, and 18, 65 and 71's lines are reworded), against 20 for removal; and every future animal needs the same judgment. Without strict holders (rewording alone), the 11 marginal and water-only yeses stay.
+
+**Line for section 1:** Remove Farms & towns. It is IUCN's "Artificial" habitat class (cut forest, canals and marginal land included), not something a player can check: 11 of its 20 yes-animals don't plainly live on farms or in towns, 6 no-animals have game lines or IUCN entries that say they do, and no photo shows it. Removing it loses no round. If the owner wants to keep it, option C (one wording, 12 strict holders) is the fair version.
 
 ## 3. Findings
 
