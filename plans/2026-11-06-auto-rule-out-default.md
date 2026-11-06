@@ -282,6 +282,12 @@ The post-code-review final run (mission step 7) repeats 1-6 on the final commit 
 
 ## Code review (Astra)
 
+VERDICT: APPROVE
+
+MUST-FIX: none
+
+SHOULD-CONSIDER: none
+
 ## Release
 
 ## Decisions
@@ -305,6 +311,8 @@ The post-code-review final run (mission step 7) repeats 1-6 on the final commit 
 - 2026-11-06 07:20 UTC · S2: copy/docs per Copy table (AnimalSheets 410/711, animalBoard 429, Teachers 64/96, CLUE_MATCH 54/96/98, CONTEXT 73). Stale scan: only allowed leftovers. typecheck, lint ok; site:build ok, e2e:site 444/444; built teachers page has new line.
 
 - 2026-11-06 07:31 UTC · S3: full Verification on `2206eafa`: e2e 1479/1479 (round lines = `s1-e2e`; 3 once-a-run + 4 per-round checks pass), typecheck, lint, 48/48 unit, site:build + e2e:site 444/444, `npm run build` all exit 0. `02-menu-fresh-profile.png` shows switch on; `witness-note.webp`/`round-end.webp` fit either setting. Artifact `final-e2e/`. Summary drafted.
+
+- 2026-11-06 07:32 UTC · Code review (Astra, `--code origin/main`): APPROVE, no MUST-FIX, no SHOULD-CONSIDER. Plan-only; no checks needed.
 
 ## Summary
 
@@ -334,4 +342,5 @@ Draft (S3; finalised after code review). New players (nothing stored) now start 
 - A future `npm run site:shots` plays with the new default; `take.mjs`'s grid-marked trigger (player's own slide) may fire differently.
 - `docs/ANIMAL_BOARD_PAPER.md` (§4.5, `:27-29`: the player makes every rule-out; random play wins 0%) now holds only with the switch off. Design record, not edited.
 - Declined Astra SC1 (e2e for blocked storage / default reaching gameplay); reasons in Revision notes.
+- Astra code review: APPROVE, nothing to fix or consider.
 - Existing players who never touched the switch now get it on (intended: no stored value = no choice).
