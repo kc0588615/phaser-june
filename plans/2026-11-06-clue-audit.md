@@ -166,7 +166,7 @@ Shared for every step:
     - With value counts across the 76. Upsert as `animal_id=rule`, `check=label` rows.
   - Done: all three files exist; numbers in the Log.
 
-- [ ] S3 · IUCN habitats, all 76, and the 20 Farms & towns holders (2, 6, 7, 11, 13, 23, 24, 25, 28, 32, 48, 49, 51, 52, 54, 58, 59, 72, 73, 74).
+- [x] S3 · IUCN habitats, all 76, and the 20 Farms & towns holders (2, 6, 7, 11, 13, 23, 24, 25, 28, 32, 48, 49, 51, 52, 54, 58, 59, 72, 73, 74).
   - Fetch each latest assessment's habitat table (class, kind, suitability, major importance), its habitat/ecology text and its taxonomy. Use the first route that works (Failure modes, Sources) and record it. Raw pages go to `sources/iucn/<id>.txt`, extracted rows to `out/iucn-habitats.json`.
   - All 76: IUCN classes and systems against content `habitats`/`systems`. Include the "Artificial – Aquatic" rows that plan 040 skipped, and flag a non-holder with any Artificial row. IUCN taxonomy against content: `source-value` rows for the 4 ranks. One `iucn-habitat` row per animal for habitat and one for system.
   - The 20 holders, `out/s3-farms.md`, per animal:
@@ -306,6 +306,9 @@ Skipped: research mission, no code.
 - Verification 3's connection-URL grep hits `plans/2026-10-29-cc-website.md:650`, a dummy build URL already on main. Run it on the mission's two files only.
 - S2: deals use `animalsFromProfiles` (files), not the live pool; S1 showed them identical. Label/rule rows use `animal_id=rule, check=label`, `holds` a tag or edge name (`size:edge-30kg`), prefix `doc` for the stale doc line. Rule findings are judged now (unclear/unfair); per-animal edge/straddle cases stay S4's.
 - S2: removal trap recorded for the fix mission: `artificial` must leave `COMPLETE_PREFIXES` together with the 45 kind rows, or `isHandWrittenClue` turns kind lines into field notes.
+- S3: IUCN route = headless Chrome (`STATE/bin/chrome --dump-dom`) on `details/<taxon>/0` then `/species/<taxon>/<assessment>/pdf`; parallel-search MCP isn't available in mission sessions. Turtles' `iucnId` is the shapefile `id_no` (live `iucn` table confirms the species), so the fetch uses the cited URL's taxon. Not a finding.
+- S3: habitat kinds aren't askable (only `habitat:<class>`), so kind gaps are info in the habitat row's evidence, never findings.
+- S3: Farms & towns holder buckets: really (IUCN Suitable arable/pasture/gardens/urban, or text says so) = pass; marginal only, or cut forest/canals only = `unfair`; plantations only (true for the full question, not the label) or canals inside a city = `unclear`. Non-holders whose game notes or IUCN text put them on farms = `unfair`; purple frog (same IUCN rows as holders, game reads "no") = `unclear`. Chimp's IUCN-text "farmland" is `unfair`, not `wrong`, because IUCN's own table disagrees.
 
 ## Log
 
@@ -313,5 +316,6 @@ Skipped: research mission, no code.
 - 2026-11-06 08:20 UTC: Steps stage. planner wrote S1–S10, Verification (5 checks), Failure modes. No code; nothing to run.
 - 2026-11-06 08:25 UTC: S1. inventory (76 animals, 3 no-country warnings) + mechanical.py: 1,075 rows (875 pass, 74 no-record, 126 flags: 23 straddle, 81 note-value, 22 cross); all 189 numeric parses hand-checked, 0 misreads. Live DB = files (76 species, 2,430 clues, 437 facts, 0 diff; same 20 artificial holders). Coverage: 76 animals, 0 missing. Report skeleton + Method.
 - 2026-11-06 08:35 UTC: S2. trace (code 9 sites, 20 content files/45 kinds, 0 tests/docs/site; removal trap in isHandWrittenClue); deals: 141 seed decks, F&T dealt in 36 (25.5%; world 26.5%, NA 100%), 2nd most dealt tag; without it 0 seeds lost, 8 world frog seeds gain a set (68→76), 5 NA sets where only F&T splits the two sloths, 28 decks where it is the only split of a pair; rules: 21 rule rows (2 unfair, 12 unclear, 7 pass); 20 deal rows. findings.csv 1,116 rows.
+- 2026-11-06 08:59 UTC: S3. IUCN loaded for 76/76 (headless Chrome; turtles via URL taxon). Habitat: 67 exact, 7 text-supported extras, 1 unclear (giant otter marine), purple frog artificial unclear; systems 76 pass; taxonomy 304 pass. Holders: 9 really, 5 marginal only, 6 plantations/cut forest/canals only (8 unfair, 3 unclear); non-holders 4 unfair + 1 unclear. 481 rows upserted, findings.csv 1,597. `out/s3-farms.md`, photos viewed (none shows farms/towns).
 
 ## Summary
