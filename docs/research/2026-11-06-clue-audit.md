@@ -35,3 +35,5 @@ Every check has a row in `findings.csv` (`/srv/critter-ai/agent-state/missions/c
 - Missing traits are `no-record` rows: size 9, lifespan 17, young 13, diet 1, activity 14, social 20; birth and covering are recorded for all 76.
 
 S1 left 126 open flags (23 straddles, 81 note-value flags, 22 cross-check flags). Later steps resolve each against the cited sources.
+
+**Farms & towns trace, deals and rules (S2).** Every read of `habitat:artificial` in code, content, tests, docs, the site and git history (`out/s2-trace.md`). Rounds were dealt as the game deals them (`audit/deals.ts`, mirroring `useAnimalSession`: the world and every continent with at least 12 animals, each animal as a seed, `pickSuspectSet` then `dealClues` with rules `053-1`), once as is and once with the tag removed from every animal (`out/s2-deals.md`): 141 seed decks across 5 places. The rules table (`out/s2-rules.md`, `out/s2-rules-table.md`, `audit/rules.ts`) sets each askable tag's column label, legend, question and field guide line beside the content rule, with value counts across the 76; label and rule problems are `rule` rows in `findings.csv`.

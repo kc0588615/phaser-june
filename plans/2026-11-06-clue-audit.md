@@ -145,7 +145,7 @@ Shared for every step:
   - Report skeleton with these exact headings: `## 1. Summary`, `## 2. Farms & towns`, `## 3. Findings`, `## 4. Rules`, `## 5. What a fix mission would change`, `## Method and coverage`. Fill Method with S1's checks.
   - Done: the Verification coverage command reports 76 animals and 0 missing animal × prefix (open flags are allowed until S9).
 
-- [ ] S2 · Farms & towns trace, deal frequency, rules table.
+- [x] S2 · Farms & towns trace, deal frequency, rules table.
   - Trace, `out/s2-trace.md`: `rg -n "artificial|[Ff]arms|towns|plantation"` over `src/ scripts/ tests/ docs/ plans/ db/ public/ CONTEXT.md`, the site (`src/site`), and `git log -S'artificial' --oneline -- db/content src`. Table: file:line, what reads it, what removing it needs. At least:
     - `traits.ts` (`HABITAT_CLASSES`, `COMPLETE_PREFIXES`); `questionMatch.ts` (`QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL`);
     - `clueFaces.ts` 🏡: `dealClues` needs distinct faces;
@@ -304,11 +304,14 @@ Skipped: research mission, no code.
 - S1: young edge is 10 only ("3–10" and "10+" both hold 10); 2 sits only in "1–2", so not an edge. Lifespan bins by the longest figure in the note (doc rule "longest known, zoo records included"); a lower wild figure in another bin is a `straddle` flag. A one-sided bound in the held bin passes, except a lifespan lower bound below 20+ (the longest may be higher): flag.
 - S1: no-record rows use `check=note-value`, `result=no-record` (the plan's check list has no `no-record` check).
 - Verification 3's `rg postgres://` hits `plans/2026-10-29-cc-website.md:650`, a dummy build URL already on main. Run it on the mission's two files only.
+- S2: deals use `animalsFromProfiles` (files), not the live pool; S1 showed them identical. Label/rule rows use `animal_id=rule, check=label`, `holds` a tag or edge name (`size:edge-30kg`), prefix `doc` for the stale doc line. Rule findings are judged now (unclear/unfair); per-animal edge/straddle cases stay S4's.
+- S2: removal trap recorded for the fix mission: `artificial` must leave `COMPLETE_PREFIXES` together with the 45 kind rows, or `isHandWrittenClue` turns kind lines into field notes.
 
 ## Log
 
 - 2026-11-06 08:10 UTC: Baseline. typecheck, lint, 48 unit, e2e 1479/1479 pass. Review stages marked skipped per brief.
 - 2026-11-06 08:20 UTC: Steps stage. planner wrote S1–S10, Verification (5 checks), Failure modes. No code; nothing to run.
 - 2026-11-06 08:25 UTC: S1. inventory (76 animals, 3 no-country warnings) + mechanical.py: 1,075 rows (875 pass, 74 no-record, 126 flags: 23 straddle, 81 note-value, 22 cross); all 189 numeric parses hand-checked, 0 misreads. Live DB = files (76 species, 2,430 clues, 437 facts, 0 diff; same 20 artificial holders). Coverage: 76 animals, 0 missing. Report skeleton + Method.
+- 2026-11-06 08:35 UTC: S2. trace (code 9 sites, 20 content files/45 kinds, 0 tests/docs/site; removal trap in isHandWrittenClue); deals: 141 seed decks, F&T dealt in 36 (25.5%; world 26.5%, NA 100%), 2nd most dealt tag; without it 0 seeds lost, 8 world frog seeds gain a set (68→76), 5 NA sets where only F&T splits the two sloths, 28 decks where it is the only split of a pair; rules: 21 rule rows (2 unfair, 12 unclear, 7 pass); 20 deal rows. findings.csv 1,116 rows.
 
 ## Summary
