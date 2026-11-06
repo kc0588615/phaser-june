@@ -2,7 +2,7 @@
 mission: auto-rule-out-default
 project: critter-connect
 branch: agent/auto-rule-out-default
-status: active
+status: done
 started: 2026-11-06 06:27 UTC
 ---
 
@@ -314,10 +314,12 @@ SHOULD-CONSIDER: none
 
 - 2026-11-06 07:32 UTC · Code review (Astra, `--code origin/main`): APPROVE, no MUST-FIX, no SHOULD-CONSIDER. Plan-only; no checks needed.
 
+- 2026-11-06 07:43 UTC · Final Verification on `6709766f` (post code review): e2e 1479/1479 (round lines = `s1-e2e`, 3 once-a-run + 4 per-round checks pass), typecheck, lint, 48/48 unit, site:build + e2e:site 444/444 (1st site run had no `CHROME_PATH` exported, rerun with it), `npm run build` all exit 0. `final-e2e/` overwritten. Summary final, `status: done`.
+
 ## Summary
 
 
-Draft (S3; finalised after code review). New players (nothing stored) now start with **Auto rule-out on**; a stored `'off'` or `'on'` wins; blocked storage → on. Same key `critter-connect:auto-rule-out:v1`, nothing migrated.
+New players (nothing stored) now start with **Auto rule-out on**; a stored `'off'` or `'on'` wins; blocked storage → on. Same key `critter-connect:auto-rule-out:v1`, nothing migrated.
 
 **Code:** `autoRuleOut.ts` (`getItem(KEY) !== 'off'`, `catch → true`); `useAnimalSession.ts` (lazy `useState(isAutoRuleOutOn)`, effect removed, so no first move with it off; `/explore` is `ssr: false`, no hydration path). `scripts/e2e.mjs`: once-a-run fresh-on / stored-off / stored-on checks across reloads, and every round sets the switch through the menu.
 
@@ -334,7 +336,7 @@ Draft (S3; finalised after code review). New players (nothing stored) now start 
 - `docs/CLUE_MATCH.md:98`: added "a new profile starts with Auto rule-out on (02-menu-fresh-profile.png), its switch turns it off and on, and a stored "off" or "on" survives a reload;"
 - `CONTEXT.md:73`: "answers never rule anything out by themselves." → "an answer rules nothing out by itself: the player does, or Auto rule-out (on by default) does when a suspect's shown answer differs from the camera's."
 
-**Verification:** e2e 1479/1479 (was 1473; +3 once-a-run, +4 per-round, −1 replaced), typecheck, lint, unit 48/48, e2e:site 444/444, build. Artifact `/srv/critter-ai/agent-state/missions/auto-rule-out-default/final-e2e/` (`02-menu-fresh-profile.png` shows switch on; `COMMAND.txt` reproduces).
+**Verification** (final, on `6709766f`): e2e 1479/1479 (was 1473; +3 once-a-run, +4 per-round, −1 replaced), typecheck, lint, unit 48/48, e2e:site 444/444, build. Artifact `/srv/critter-ai/agent-state/missions/auto-rule-out-default/final-e2e/` (`02-menu-fresh-profile.png` shows switch on; `COMMAND.txt` reproduces).
 
 **For the owner:**
 - No production content build needed (no content change).
