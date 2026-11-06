@@ -223,6 +223,6 @@ SHOULD-CONSIDER:
 
 - 2026-11-06 06:38 UTC · Baseline: typecheck, lint, 48/48 unit, E2E 1473/1473 pass.
 - 2026-11-06 06:46 UTC · Architecture: `architect` wrote findings + target design (default `!== 'off'`, lazy `useState`, e2e once-a-run persistence block, 11 copy lines). Plan-only, no code; no checks needed.
-- 2026-11-06 06:52 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (`loadBoard()` must wait for the new document after `Page.reload`). Plan-only; no checks needed.
+- 2026-11-06 06:48 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (`loadBoard()` must wait for the new document after `Page.reload`). Plan-only; no checks needed.
 
 ## Summary
