@@ -215,7 +215,7 @@ Shared for every step:
   - The recommendation, and its line for section 1.
   - Done: section 2 complete; every quote linked.
 
-- [ ] S9 · Report sections 1, 3, 4, 5 and Method; `findings.csv` final.
+- [x] S9 · Report sections 1, 3, 4, 5 and Method; `findings.csv` final.
   - Resolve every remaining flag, or make it `unclear` with the reason.
   - `audit/table.py` writes section 3 from the CSV (findings only, wrong → unfair → unclear, then animal id).
   - Section 4 from s2-rules: the one-value rule, the bin edges, and the label/doc changes.
@@ -319,6 +319,7 @@ Skipped: research mission, no code.
 - S7: sheltering in caves reads as Caves (panda 60 unfair, beside devil 48's yes); underwater stream-bed rocks of a fully aquatic animal aren't Rocky places (hellbender 75 pass); a burrow under one big rock is `unclear` (59); place names with "coast" (46, 76) and "woodland" vs a forest no (66, as 31) are `unclear`. `swimmer` flags 44, 51, 54 pass. The 11 open systems-vs-habitat-class cross flags stay S9's.
 
 - S8: recommendation remove. Option C (keep, reworded) uses strict holders: IUCN Suitable arable/pasture/gardens/urban or IUCN text = the 9 "really" + 52 (plantations) + 56, 63 (IUCN text) = 12; `audit/s8_strict.ts` deals it (39/149 seed decks, 0 lost; its `today` run reproduces S2). Option B: no ready data; `tree_dweller` (11, 9 photos in a tree) is the best candidate but open tags are partial (34, 24 only `climber`; 56 none; `climber` includes rock-climbing turtles), so it needs a new 76-animal trait. Game-text quotes link to the repo content file.
+- S9: the 11 systems-vs-class flags: a Wetlands guide line ("rivers, lakes…") beside a Fresh water no is `unfair` (3, 25, 33, 51, 58, 64, 72); Coasts & sea yes beside Sea no (21) and On land for a river-only turtle (18) `unclear`; 2 passes (basks, nests on a sandbar), 17 passes pointing to its S6 `fully_aquatic` finding. New rule row `habitat:systems-vs-classes` (`unclear`). Section 4 recommends one edge rule, "an edge belongs to the upper bin" (matches 100 g and 5 years, which already read clearly), over the S2 rows' "half-open bins" shorthand. Findings themes for section 1 from `audit/s9_counts.py`.
 
 ## Log
 
@@ -332,5 +333,6 @@ Skipped: research mission, no code.
 - 2026-11-06 10:40 UTC: S6. text_scan.py over all 76 (394 leads; 217 for 1–38), animals 1–38 read in full: 532 text rows (462 pass, 60 no-record, 9 unfair, 1 unclear), 7 S1 tag cross flags closed (4 unfair, 3 pass). Findings mostly habitat no's the text contradicts (rocks 4, 11, 27; coast 13, 30; savanna 20; desert 32, 37; town 18; woodland 31). findings.csv 2,740 rows; open flags 14 (S9).
 - 2026-11-06 10:20 UTC: S7. animals 39–76 read in full (177 scan leads): 532 text rows (510 pass, 14 no-record, 2 unfair, 6 unclear; all habitat: rocks 49, 59; caves 60; forest 42, 62, 66; coast 46, 76), 3 S1 swimmer cross flags pass. findings.csv 3,272 rows; open flags 11 (S9, systems vs classes).
 - 2026-11-06 10:25 UTC: S8. Report section 2 written: holders table (20, IUCN rows + linked quotes), how a player answers (photos, kind lines, witness notes), guess-wrong cases both ways, round impact, removal touch list, options A/B/C with counts (tree photos `out/s8-tree-photos.png`, strict deal sim `out/s8-strict.json`), recommendation: remove. 18 F&T findings (13 unfair, 5 unclear). All repo links resolve; every quoted game line found in its content file.
+- 2026-11-06 10:31 UTC: S9. 11 open flags resolved (7 unfair, 2 unclear, 2 pass) + 1 rule row; findings.csv 3,273 rows, 0 open flags; 123 findings (1 wrong, 69 unfair, 53 unclear; 58 animals + 15 rule rows). Report sections 1, 3 (123-row table from `audit/table.py`), 4, 5 and Method written. Verification 1–3 pass (2 files in diff; repo links resolve).
 
 ## Summary
