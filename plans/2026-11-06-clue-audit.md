@@ -204,7 +204,7 @@ Shared for every step:
   - Then read `out/inventory.md` for 1–38 in full, not only the flags. Check each sentence against every answer the animal gives, including the "no"s on complete prefixes (a note "swims in rivers" with no wetlands is `unfair`).
   - Done: one `text` row per animal × 14 prefixes for 1–38; scan flags for 1–38 resolved.
 
-- [ ] S7 · Text against record, animals 39–76. As S6, using its scan output. Done: `text` rows for 39–76; no open `text` flags.
+- [x] S7 · Text against record, animals 39–76. As S6, using its scan output. Done: `text` rows for 39–76; no open `text` flags.
 
 - [ ] S8 · Report section 2, Farms & towns (from s2-*, s3-farms, findings).
   - The holders table, with the IUCN rows and quotes; how a player answers it, and the guess-wrong cases; the removal touch list; round impact.
@@ -316,6 +316,7 @@ Skipped: research mission, no code.
 - S5: default `source-value` rows quote the first source sentence naming the held value (`s5_rows.py`); all were read, 14 noisy quotes replaced by hand. Covering and birth pass on class when no source sentence describes them.
 - S5: the 21 open `system`/`habitat` cross flags from S1 aren't on S5's prefixes; S9 resolves them (or S6/S7 where they're text).
 - S6: a shown line saying the animal lives in a habitat it answers no to is `unfair`; threats, name/taxonomy words and what young or eggs do pass. Rocks: living/resting/climbing among rocks reads as Rocky places, stream-bed rocks for eggs, tadpoles or toes don't. Swimming isn't living in fresh water. S6 closed the 7 S1 cross flags on tags (`fully_aquatic` 10, 17 unfair; `coastal_dunes` 14, 32 unfair; `swimmer` 25, 28, 30 pass); the other 14 (systems vs habitat classes) stay S9's. A trait already found on note-value/source-value gets no second text finding; the text row points to it.
+- S7: sheltering in caves reads as Caves (panda 60 unfair, beside devil 48's yes); underwater stream-bed rocks of a fully aquatic animal aren't Rocky places (hellbender 75 pass); a burrow under one big rock is `unclear` (59); place names with "coast" (46, 76) and "woodland" vs a forest no (66, as 31) are `unclear`. `swimmer` flags 44, 51, 54 pass. The 11 open systems-vs-habitat-class cross flags stay S9's.
 
 ## Log
 
@@ -327,5 +328,6 @@ Skipped: research mission, no code.
 - 2026-11-06 09:57 UTC: S4. 228 cells judged against cited sources (+ADW): source-value 181 pass, 7 finding, 39 no-record (7 documented for the species by ADW), 1 couldnt-check; with note/straddle rows 30 findings (1 wrong, 15 unfair, 14 unclear); all 54 S1 flags on size/lifespan/young closed. findings.csv 1,828 rows. Sources cached: 65 ADW, 18 others; AmphibiaWeb/Britannica blocked.
 - 2026-11-06 10:09 UTC: S5. 380 cells (76 × diet, activity, social, covering, birth) judged against cited sources (+ADW/IUCN/Wikipedia): source-value 321 pass, 23 finding, 35 no-record, 1 couldnt-check; with note-value/cross rows 30 findings (18 unfair, 12 unclear); all 52 S1 flags on these prefixes closed. findings.csv 2,208 rows. Open flags left: 21 system/habitat cross (S9).
 - 2026-11-06 10:40 UTC: S6. text_scan.py over all 76 (394 leads; 217 for 1–38), animals 1–38 read in full: 532 text rows (462 pass, 60 no-record, 9 unfair, 1 unclear), 7 S1 tag cross flags closed (4 unfair, 3 pass). Findings mostly habitat no's the text contradicts (rocks 4, 11, 27; coast 13, 30; savanna 20; desert 32, 37; town 18; woodland 31). findings.csv 2,740 rows; open flags 14 (S9).
+- 2026-11-06 10:20 UTC: S7. animals 39–76 read in full (177 scan leads): 532 text rows (510 pass, 14 no-record, 2 unfair, 6 unclear; all habitat: rocks 49, 59; caves 60; forest 42, 62, 66; coast 46, 76), 3 S1 swimmer cross flags pass. findings.csv 3,272 rows; open flags 11 (S9, systems vs classes).
 
 ## Summary
