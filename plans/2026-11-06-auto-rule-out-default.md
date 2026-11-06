@@ -245,6 +245,6 @@ SHOULD-CONSIDER:
 
 - 2026-11-06 06:51 UTC · Astra review: APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (e2e: blocked storage + default reaching gameplay). Plan-only; no checks needed.
 
-- 2026-11-06 07:00 UTC · Revision: `architect` fixed Fable MUST-FIX (`loadBoard()` = `goto(seeded URL)`, no `Page.reload` in new block; CDP probe confirmed). Adopted Fable SC1/3/4/5; declined SC2, Astra SC1 (reasons in Revision notes). Plan-only; no checks needed.
+- 2026-11-06 06:56 UTC · Revision: `architect` fixed Fable MUST-FIX (`loadBoard()` = `goto(seeded URL)`, no `Page.reload` in new block; CDP probe confirmed). Adopted Fable SC1/3/4/5; declined SC2, Astra SC1 (reasons in Revision notes). Plan-only; no checks needed.
 
 ## Summary
