@@ -3,14 +3,14 @@ import LegalArticle from '../LegalArticle';
 
 export default function Terms() {
   return (
-    <LegalArticle title="Terms of Service" updated="October 29, 2026">
+    <LegalArticle title="Terms of Service" updated="November 6, 2026">
       <p>By playing Critter Connect you agree to these terms. They are short on purpose. Critter Connect is run by {OPERATOR}, the &ldquo;we&rdquo; in these terms.</p>
 
       <h2>The game</h2>
       <ul>
         <li>Critter Connect is free. It is for learning and fun, and comes as-is, without guarantees.</li>
         <li>We may change the game, reset scores, or take it offline at any time.</li>
-        <li>Animal facts come from the sources shown on each reveal card. We work to get them right, but check the source for anything important.</li>
+        <li>Animal facts come from the IUCN Red List and other trusted sources. We work to get them right, but for anything important, check the animal&apos;s Red List page, linked from your Field Journal.</li>
       </ul>
 
       <h2>Your account</h2>
