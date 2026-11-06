@@ -71,7 +71,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -189,6 +189,22 @@ There is no content change, so no production content build is needed. Teachers.t
 
 ## Architecture review (Fable)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+Checked every citation at `78b1c063`: `autoRuleOut.ts:1,5,9`; `useAnimalSession.ts:58-61,64,77-81,102,131,135,177,273-278`; `explore.tsx:4-7` (`ssr: false`, Next 16.3.6 pages router); `AnimalGame.tsx:198,263,406,516`; `AnimalSheets.tsx:410,414,446,612,711-712`; `e2e.mjs:84,196-199,235-238,258,849-865,1073,1146-1150,1246+,1392+`; `cdp.mjs:60-62` (mkdtemp profile), `:94-108`; `Teachers.tsx:64,96`; `CLUE_MATCH.md:54,96,98`; `CONTEXT.md:73`; `animalBoard.ts:429-430`; `take.mjs:44,158-165`. All findings are accurate. `!== 'off'` gives the brief's table exactly; the lazy `useState(isAutoRuleOutOn)` is correct with no SSR path and is the smallest change; a `?seed=` game is never saved (`:177` `replay` guard), so the reload steps re-deal round 1; the injected script writes only the how-to and slide-hint keys; the auto round is the last round and resets the switch to off, so resume and rise sections stay off. An rg over the repo (excluding plans and playtests) finds no copy the table misses. Design matches the brief's scope and definition of done.
+
+MUST-FIX:
+1. **`loadBoard()` after `Page.reload` must wait for the new document.** The design wraps `:236-238` only (waitFor `__cc` ready, `speed(4)`, photo sleep). `Page.reload` returns before the old document unloads, so the first `waitFor` poll can be satisfied by the *old* page's still-ready `__cc`, then `evaluate(speed(4))` runs on the dying context (throws "execution context destroyed", or is silently lost on the new page, which then plays at 1x and breaks later timing). The existing reloads already guard this (`:1261-1262`: `waitFor(() => document.readyState === 'complete')` first, as `goto` does at `:198`). Either put that wait in `loadBoard()`, or do the two reloads with `goto(<same seeded URL>)` and drop `Page.reload`. Flaky E2E is a real defect for a suite CI runs on every PR.
+
+MISSED: none.
+
+SHOULD-CONSIDER:
+1. `CONTEXT.md:73` target text is long for a glossary entry; "an answer rules nothing out by itself: the player does, or Auto rule-out (menu, on by default) does when it differs from the camera's" is shorter and as true.
+2. Name the new screenshot `02b-menu-fresh-profile.png` (or `03-`) so it sorts after `02-board.png` and the brief's "menu on a fresh profile" artifact is easy to spot; keep the existing numbering otherwise.
+3. Round 1's `autoSwitch(false)` after the once-a-run block is a no-op click-less open/close (0.6 s). Fine for DRY; just make the check's detail string include `before/after` so a failure says which.
+4. Release smoke: after closing how-to, `AnimalGame.tsx:264` sets the slide hint once; irrelevant to the switch but the screenshot may show the hint overlay. Open the Menu before any board tap, as planned.
+5. In the Summary, say `grid-marked.webp` now shows a non-default state (player-marked Okapi with an unmarked mismatching Chimpanzee), per F5; the other shots are consistent with either setting.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -207,5 +223,6 @@ There is no content change, so no production content build is needed. Teachers.t
 
 - 2026-11-06 06:38 UTC · Baseline: typecheck, lint, 48/48 unit, E2E 1473/1473 pass.
 - 2026-11-06 06:46 UTC · Architecture: `architect` wrote findings + target design (default `!== 'off'`, lazy `useState`, e2e once-a-run persistence block, 11 copy lines). Plan-only, no code; no checks needed.
+- 2026-11-06 06:52 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (`loadBoard()` must wait for the new document after `Page.reload`). Plan-only; no checks needed.
 
 ## Summary
