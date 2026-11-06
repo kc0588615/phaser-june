@@ -80,22 +80,34 @@ Out:
 
 ## Stages
 
-- [ ] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
+- [x] Architecture: skipped, research only (brief's decision rules)
+- [x] Fable review: skipped, research only
+- [x] Astra review: skipped, research only
+- [x] Revision: none needed
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
+On `9f764162` (origin/main `26b66aa4` + plan). `node_modules` already installed; no migrations (no migration history, live DB untouched).
+- `npm run typecheck`: exit 0. `npm run lint`: exit 0. `npm test`: 48/48 pass.
+- `npm run e2e:fresh`: 1479/1479 checks, 4 rounds (seed 7). Artifact `/srv/critter-ai/agent-state/missions/clue-audit/baseline-e2e/` (report.json, screenshots, logs, `COMMAND.txt`). Needs `CHROME_PATH=/srv/critter-ai/agent-state/missions/clue-audit/bin/chrome` (wrapper adding `--no-sandbox`; `/usr/bin/google-chrome` absent).
+
 ## Architecture
+
+Skipped: research only, no code (brief, Decision rules).
 
 ## Architecture review (Fable)
 
+Skipped: research only.
+
 ## Architecture review (Astra)
 
+Skipped: research only, brief says skip Astra.
+
 ## Revision notes
+
+None needed.
 
 ## Steps
 
@@ -103,10 +115,16 @@ Out:
 
 ## Code review (Astra)
 
+Skipped: research mission, no code.
+
 ## Release
 
 ## Decisions
 
+- Architecture, Fable, Astra (plan and code) and Revision stages skipped: brief says no architecture/code review stages, skip Astra.
+
 ## Log
+
+- 2026-11-06 08:10 UTC: Baseline. typecheck, lint, 48 unit, e2e 1479/1479 pass. Review stages marked skipped per brief.
 
 ## Summary
