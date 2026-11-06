@@ -2,7 +2,7 @@
 mission: clue-audit
 project: critter-connect
 branch: agent/clue-audit
-status: active
+status: done
 started: 2026-11-06 08:03 UTC
 ---
 
@@ -229,7 +229,7 @@ Shared for every step:
   - Run Verification 1–3.
   - Done: Verification 1–3 pass.
 
-- [ ] S10 · Final Verification (this is the "In a mission session" rule 7 unit). Run all of Verification, save `final-e2e`, and write the plan's Summary (paste `git diff --stat origin/main...HEAD`). In one commit, check S10 off and set `status: done`. Push. End `MISSION_CONTINUE` (release next).
+- [x] S10 · Final Verification (this is the "In a mission session" rule 7 unit). Run all of Verification, save `final-e2e`, and write the plan's Summary (paste `git diff --stat origin/main...HEAD`). In one commit, check S10 off and set `status: done`. Push. End `MISSION_CONTINUE` (release next).
 
 ## Verification
 
@@ -334,5 +334,20 @@ Skipped: research mission, no code.
 - 2026-11-06 10:20 UTC: S7. animals 39–76 read in full (177 scan leads): 532 text rows (510 pass, 14 no-record, 2 unfair, 6 unclear; all habitat: rocks 49, 59; caves 60; forest 42, 62, 66; coast 46, 76), 3 S1 swimmer cross flags pass. findings.csv 3,272 rows; open flags 11 (S9, systems vs classes).
 - 2026-11-06 10:25 UTC: S8. Report section 2 written: holders table (20, IUCN rows + linked quotes), how a player answers (photos, kind lines, witness notes), guess-wrong cases both ways, round impact, removal touch list, options A/B/C with counts (tree photos `out/s8-tree-photos.png`, strict deal sim `out/s8-strict.json`), recommendation: remove. 18 F&T findings (13 unfair, 5 unclear). All repo links resolve; every quoted game line found in its content file.
 - 2026-11-06 10:31 UTC: S9. 11 open flags resolved (7 unfair, 2 unclear, 2 pass) + 1 rule row; findings.csv 3,273 rows, 0 open flags; 123 findings (1 wrong, 69 unfair, 53 unclear; 58 animals + 15 rule rows). Report sections 1, 3 (123-row table from `audit/table.py`), 4, 5 and Method written. Verification 1–3 pass (2 files in diff; repo links resolve).
+- 2026-11-06 10:40 UTC: S10. Verification 1–5 pass: report sections present; CSV 76 animals, 0 missing, 0 open flags (1 wrong, 69 unfair, 53 unclear = section 1); diff = plan + report only; typecheck, lint, 48/48 unit; e2e 1479/1479 (seed 7). Artifact `STATE/final-e2e/`.
 
 ## Summary
+
+Research only; no game code or content changed. Report: `docs/research/2026-11-06-clue-audit.md`; all checks per animal: `/srv/critter-ai/agent-state/missions/clue-audit/findings.csv` (3,273 rows, passes included).
+
+- **Farms & towns:** recommend removing it. Only 9 of its 20 holders really live on farms or in towns per IUCN; the rest hold it for marginal, plantation, cut-forest or canal habitat. No photo shows it. Removing it loses no deal seed (it's in 25.5% of decks). Replacement and reworded-keep options with trade-offs are in section 2.
+- **Consistency:** 123 findings (1 wrong, 69 unfair, 53 unclear) on 58 animals plus 15 label/rule rows. The one wrong: maned wolf note "about 3 on average" vs ADW 2.
+- **Verification:** typecheck, lint, 48/48 unit pass; e2e 1479/1479 (seed 7). Artifact `/srv/critter-ai/agent-state/missions/clue-audit/final-e2e/` (report.json, screenshots, logs, `COMMAND.txt`).
+- **Release:** the deploy ships the same game. No production content build is needed.
+
+`git diff --stat origin/main...HEAD`:
+```
+ docs/research/2026-11-06-clue-audit.md | 381 +++++++++++++++++++++++++++++++++
+ plans/2026-11-06-clue-audit.md         | 338 +++++++++++++++++++++++++++++
+ 2 files changed, 719 insertions(+)
+```
