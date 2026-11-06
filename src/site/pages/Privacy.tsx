@@ -3,7 +3,7 @@ import LegalArticle from '../LegalArticle';
 
 export default function Privacy() {
   return (
-    <LegalArticle title="Privacy Policy" updated="September 26, 2026">
+    <LegalArticle title="Privacy Policy" updated="November 6, 2026">
       <p>
         Critter Connect is a free game about real animals. You can play without an account. This page explains what we
         keep if you do sign in, and what stays on your own device.
@@ -16,7 +16,7 @@ export default function Privacy() {
           Your Field Journal and a few settings (like whether you&apos;ve seen the how-to-play screen) are saved in your
           browser only. Clearing your browser data removes them.
         </li>
-        <li>Finished rounds are saved without any link to you, so we can see which puzzles are too easy or too hard.</li>
+        <li>The rounds you play aren&apos;t sent to us. Nothing about how you play is kept in our database.</li>
       </ul>
 
       <h2>If you sign in</h2>
@@ -26,8 +26,13 @@ export default function Privacy() {
           your name and profile picture if you sign in with Google. We never see your password.
         </li>
         <li>
-          Our database keeps an account ID from Clerk and your game results: which animal, which place, whether you found it,
-          moves, the questions you asked, points, and when you played. We use this to sync your Field Journal between devices.
+          Our database keeps an account ID from Clerk. New rounds aren&apos;t saved there: your Field Journal stays in your
+          browser, as it does without an account.
+        </li>
+        <li>
+          If you played before October 2026, our database still holds the game results saved then: which animal, which
+          place, whether you found it, moves, the questions you asked, points, and when you played. They are added to your
+          Field Journal when you sign in.
         </li>
       </ul>
 
