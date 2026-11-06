@@ -189,7 +189,7 @@ Shared for every step:
   - No-record animals: say whether the cited source documents the trait.
   - Done: 76 × 3 `source-value` rows; no open flag on these prefixes.
 
-- [ ] S5 · Source checks: diet, activity, social, covering, birth (all 76). Use S4's cache; fetch missing sections (`food_habits`, `behavior`).
+- [x] S5 · Source checks: diet, activity, social, covering, birth (all 76). Use S4's cache; fetch missing sections (`food_habits`, `behavior`).
   - Keyword hits in the cited sections against the held value:
     - nocturnal, diurnal, crepuscular, cathemeral;
     - solitary, pairs, herds, colonies;
@@ -312,6 +312,9 @@ Skipped: research mission, no code.
 - S4: size/young straddlers are `unfair` when under 2/3 of the source range sits in the held bin, else pass with the overlap noted (wild dog 18–36 kg, 67%, is the borderline pass). Young with a typical litter of 2 to 3 (tiger, cheetah) or an average in the other bin (maned wolf) is `unfair`. Lifespan: `long` animals whose note leads with a wild/typical figure inside 5–20 are `unfair` (tiger, okapi, Grévy's zebra, jaguar, panda, cheetah); `lifespan:short` has no holder, so short-side edges (dyeing frog wild 4–6) pass. Notes giving generation length, maturity or gestation are `unclear`.
 - S4: the plan said every straddler is `unfair`; minor ones (top or bottom value only) pass instead, because a careful player reading the note answers as the game does. Maned wolf's note "about 3 on average" is `wrong` (ADW, its cited source, gives 2).
 - S4: AmphibiaWeb unreachable (curl, Chrome, WebFetch time out) and Britannica 403 everywhere: search excerpts, ADW and Wikipedia used instead; Wallace's flying frog size `couldnt-check`.
+- S5: diet "Only plants" holders whose cited source names animal food are `unfair` (doc rule has no "only"); meat holders the source says eat mostly small invertebrates are `unfair` (2, 10), invertebrate-plus-vertebrate eaters pass; Pairs vs groups judged on the Pairs question's "pairs or small families" (42, 49, 61, 73 `unfair`). One finding per issue: it sits on `source-value` when the value is at issue, on `note-value` when only the note's wording misleads; the other row passes with a pointer.
+- S5: default `source-value` rows quote the first source sentence naming the held value (`s5_rows.py`); all were read, 14 noisy quotes replaced by hand. Covering and birth pass on class when no source sentence describes them.
+- S5: the 21 open `system`/`habitat` cross flags from S1 aren't on S5's prefixes; S9 resolves them (or S6/S7 where they're text).
 
 ## Log
 
@@ -321,5 +324,6 @@ Skipped: research mission, no code.
 - 2026-11-06 08:35 UTC: S2. trace (code 9 sites, 20 content files/45 kinds, 0 tests/docs/site; removal trap in isHandWrittenClue); deals: 141 seed decks, F&T dealt in 36 (25.5%; world 26.5%, NA 100%), 2nd most dealt tag; without it 0 seeds lost, 8 world frog seeds gain a set (68→76), 5 NA sets where only F&T splits the two sloths, 28 decks where it is the only split of a pair; rules: 21 rule rows (2 unfair, 12 unclear, 7 pass); 20 deal rows. findings.csv 1,116 rows.
 - 2026-11-06 08:59 UTC: S3. IUCN loaded for 76/76 (headless Chrome; turtles via URL taxon). Habitat: 67 exact, 7 text-supported extras, 1 unclear (giant otter marine), purple frog artificial unclear; systems 76 pass; taxonomy 304 pass. Holders: 9 really, 5 marginal only, 6 plantations/cut forest/canals only (8 unfair, 3 unclear); non-holders 4 unfair + 1 unclear. 481 rows upserted, findings.csv 1,597. `out/s3-farms.md`, photos viewed (none shows farms/towns).
 - 2026-11-06 09:57 UTC: S4. 228 cells judged against cited sources (+ADW): source-value 181 pass, 7 finding, 39 no-record (7 documented for the species by ADW), 1 couldnt-check; with note/straddle rows 30 findings (1 wrong, 15 unfair, 14 unclear); all 54 S1 flags on size/lifespan/young closed. findings.csv 1,828 rows. Sources cached: 65 ADW, 18 others; AmphibiaWeb/Britannica blocked.
+- 2026-11-06 10:09 UTC: S5. 380 cells (76 × diet, activity, social, covering, birth) judged against cited sources (+ADW/IUCN/Wikipedia): source-value 321 pass, 23 finding, 35 no-record, 1 couldnt-check; with note-value/cross rows 30 findings (18 unfair, 12 unclear); all 52 S1 flags on these prefixes closed. findings.csv 2,208 rows. Open flags left: 21 system/habitat cross (S9).
 
 ## Summary
