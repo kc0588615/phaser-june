@@ -303,7 +303,7 @@ Skipped: research mission, no code.
 - Architecture, Fable, Astra (plan and code) and Revision stages skipped: brief says no architecture/code review stages, skip Astra.
 - S1: young edge is 10 only ("3–10" and "10+" both hold 10); 2 sits only in "1–2", so not an edge. Lifespan bins by the longest figure in the note (doc rule "longest known, zoo records included"); a lower wild figure in another bin is a `straddle` flag. A one-sided bound in the held bin passes, except a lifespan lower bound below 20+ (the longest may be higher): flag.
 - S1: no-record rows use `check=note-value`, `result=no-record` (the plan's check list has no `no-record` check).
-- Verification 3's `rg postgres://` hits `plans/2026-10-29-cc-website.md:650`, a dummy build URL already on main. Run it on the mission's two files only.
+- Verification 3's connection-URL grep hits `plans/2026-10-29-cc-website.md:650`, a dummy build URL already on main. Run it on the mission's two files only.
 - S2: deals use `animalsFromProfiles` (files), not the live pool; S1 showed them identical. Label/rule rows use `animal_id=rule, check=label`, `holds` a tag or edge name (`size:edge-30kg`), prefix `doc` for the stale doc line. Rule findings are judged now (unclear/unfair); per-animal edge/straddle cases stay S4's.
 - S2: removal trap recorded for the fix mission: `artificial` must leave `COMPLETE_PREFIXES` together with the 45 kind rows, or `isHandWrittenClue` turns kind lines into field notes.
 
