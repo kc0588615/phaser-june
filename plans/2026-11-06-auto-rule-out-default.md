@@ -73,7 +73,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -110,7 +110,7 @@ Read on `agent/auto-rule-out-default` at `c6793a53` (= `origin/main` `094da493` 
 5. **Site shots:** none shows the menu or the switch. The gameplay shots were taken with the switch off (`scripts/shots/take.mjs` never sets the key, and the default was off). `grid-marked.webp` now shows a state the new default can't produce: camera "Large" ✗ NO, the Chimpanzee's scouted ✓ is still unmarked, and the Okapi was ruled out by hand ("You ruled out the Okapi"). With the switch on, the game would have marked both after the move.
    - `board-phone`, `hero-board` and `field-guide` are taken before any answer shows, so they are unaffected.
    - `witness-note` and `round-end` come after the careful player has marked everything the answers rule out, which is what Auto rule-out would mark anyway. Check them by eye for the Summary.
-   - Don't retake (per the brief).
+   - Don't retake (per the brief). The Summary names `grid-marked.webp` as the one shot showing a non-default state.
 6. **No other code assumes the default.** `npm test` (`tests/clueGame`, `tests/game`), `scripts/balance-044.ts` and `scripts/e2e-site.mjs` never reference the setting (rg). Plans mention it only in `plans/2026-11-01-site-shots-refresh.md:57,:144`, a historical record, so leave it.
 
 ### Target design
@@ -137,11 +137,11 @@ const [autoRuleOut, setAutoRuleOut] = useState(isAutoRuleOutOn); // client only 
 - **Hoist the helper.** Move `autoSwitch(on)` out of the round loop to just after the `screenshot` helper (`:218`), and use it everywhere (DRY). Two changes to it:
   - It opens the menu only if the switch isn't showing yet, so it also works on a menu already open for a screenshot.
   - It also returns `storedBefore` and `storedAfter`: `localStorage.getItem('critter-connect:auto-rule-out:v1')` before and after the click.
-- **Add a load helper.** A small `loadBoard()` wraps `:236-238` (waitFor board ready with 5 pins, `__cc.speed(4)`, photo wait). Use it at `:236` and after each reload below.
-- **New "once a run" block** right after the sound check (`:258`), on the seeded first load, before any move. A `?seed=` game is never saved (`useAnimalSession.ts:59`, `:177`), so a reload re-deals the same round 1.
+- **Add a load helper.** `loadBoard()` = `goto(<the seeded URL of :235>)` + `:236-238` (waitFor board ready with 5 pins, `__cc.speed(4)`, photo wait). It replaces `:235-238` and is the only way the block below reloads; no `Page.reload` there. `goto`'s `Page.navigate` replies only once the new document's response is in (probe: 409 ms against a 400 ms-delayed server; `Page.reload` replies in 6 ms), so its readyState wait (`:198`) and every later `evaluate` run on the new document. A same-URL navigation is a full new document: localStorage and the injected scripts (`:84-85`) carry over, like a reload.
+- **New "once a run" block** right after the sound check (`:258`), on the seeded first load, before any move. A `?seed=` game is never saved (`useAnimalSession.ts:59`, `:177`), so each `loadBoard()` re-deals the same round 1. Each check's detail is `JSON.stringify` of the `autoSwitch` result, as the existing checks do.
   1. Open the menu and `screenshot('02-menu-fresh-profile.png')`. Then `autoSwitch(false)`. Check: "a new profile (nothing stored) starts with Auto rule-out on, and its switch turns it off and stores 'off'". That means `storedBefore === null && before === 'true' && after === 'false' && storedAfter === 'off'`.
-  2. `Page.reload`, `loadBoard()`, `autoSwitch(true)`. Check: "a stored 'off' starts off after a reload, and the switch turns it back on". That means `storedBefore === 'off' && before === 'false' && after === 'true' && storedAfter === 'on'`.
-  3. `Page.reload`, `loadBoard()`, `autoSwitch(false)`. Check: "a stored 'on' starts on after a reload". That means `storedBefore === 'on' && before === 'true'`. It leaves the switch off, so round 1's pre-loop grid tests run as they did at baseline.
+  2. `loadBoard()`, `autoSwitch(true)`. Check: "a stored 'off' starts off after a reload, and the switch turns it back on". That means `storedBefore === 'off' && before === 'false' && after === 'true' && storedAfter === 'on'`.
+  3. `loadBoard()`, `autoSwitch(false)`. Check: "a stored 'on' starts on after a reload". That means `storedBefore === 'on' && before === 'true'`. It leaves the switch off, so round 1's pre-loop grid tests run as they did at baseline.
   - Cost: two board loads plus about 0.6 s per round, roughly 15-20 s on a 7-minute run.
 - **Every round sets it on purpose.** Replace `:862-865` with `const set = await autoSwitch(mode === 'auto')` and the check `round ${n}: Auto rule-out set ${on|off} through the menu for this round` (`set.after === String(mode === 'auto')`).
 - **Keep `:1146-1150`.** The auto round still turns the switch back off. Add a comment there: the resume and rise sections run with it off, and every non-auto round has set it off.
@@ -149,7 +149,7 @@ const [autoRuleOut, setAutoRuleOut] = useState(isAutoRuleOutOn); // client only 
 
 **Release smoke** (live, fresh profile; a one-off command, nothing committed):
 - Script: `node` + `scripts/cdp.mjs` (`startBrowser`/`openPage`) opens `https://play.critterconnect.org/explore/?place=continent:africa`.
-- A new player sees how-to-play first (`AnimalGame.tsx:263`): close it, then open the Menu. Read the `[role=switch]` "Auto rule-out" `aria-checked` (it must be `'true'`) and screenshot it into the mission folder.
+- A new player sees how-to-play first (`AnimalGame.tsx:263`): close it, then open the Menu before any board tap (the slide hint, `:264`, may show behind it). Read the `[role=switch]` "Auto rule-out" `aria-checked` (it must be `'true'`) and screenshot it into the mission folder.
 - Loading the page writes nothing to the DB.
 
 **Copy** (smallest true edit for a new player with default settings):
@@ -166,7 +166,7 @@ const [autoRuleOut, setAutoRuleOut] = useState(isAutoRuleOutOn); // client only 
 | `docs/CLUE_MATCH.md:54` | `(menu switch, off by default, kept on the device)` | `(menu switch, on by default, kept on the device; a stored "off" wins)` |
 | `docs/CLUE_MATCH.md:96` | `Round 4 turns on Auto rule-out, marks nobody itself, and checks each move … (never the mystery).` | `Each round sets Auto rule-out through the menu: on in round 4, which marks nobody itself and checks each move that exactly the animals a shown answer rules out are marked (never the mystery); off in the others.` |
 | `docs/CLUE_MATCH.md:98` (Once a run) | `sound starts off and the menu's button turns it on;` | add after it: `a new profile starts with Auto rule-out on (02-menu-fresh-profile.png), its switch turns it off and on, and a stored "off" or "on" survives a reload;` |
-| `CONTEXT.md:73` | `…; answers never rule anything out by themselves.` | `…; an answer rules nothing out by itself: the player rules a suspect out, or Auto rule-out (a menu setting, on by default) does once its shown answer differs from the camera's.` |
+| `CONTEXT.md:73` | `…; answers never rule anything out by themselves.` | `…; an answer rules nothing out by itself: the player does, or Auto rule-out (on by default) does when a suspect's shown answer differs from the camera's.` |
 
 There is no content change, so no production content build is needed. Teachers.tsx changes, so the Verification adds `npm run site:build` + `npm run e2e:site` to typecheck, lint, `npm run build`, `npm test` and `npm run e2e:fresh`.
 
@@ -178,6 +178,7 @@ There is no content change, so no production content build is needed. Teachers.t
 - **New key `v2`, or rewriting null to `'on'`:** forbidden by the brief and unnecessary, since null already means "no choice".
 - **Set the key via `addScriptToEvaluateOnNewDocument`:** it runs on every load, so it would overwrite the switch's choice and void the reload and fresh-profile checks.
 - **A second Chrome profile for the fresh check:** the run's own profile is already fresh at its first load, and a second launch adds cost.
+- **`Page.reload` + a readyState wait in `loadBoard()`:** also passed a 40-run probe, but only because Chrome holds `Runtime.evaluate` while a navigation is pending (`Page.reload` itself replies in 6 ms). `goto` is ordered by its own reply and keeps one load path.
 - **Do the persistence checks on the resume section's existing reloads:** they depend on the round count, and no existing load has 'on' stored.
 
 ### Risks
@@ -185,7 +186,7 @@ There is no content change, so no production content build is needed. Teachers.t
 - **Existing players who never touched the switch now get it on.** Intended: null means no choice.
 - **`docs/ANIMAL_BOARD_PAPER.md`** (`:27-29`, §4.5) argues the player makes every rule-out and that random play wins 0%. With the switch on by default, random play that scouts answers gets the look-alikes marked, and they wander off by themselves. Those claims now hold only with the switch off. The paper is a 044-0 design record and out of scope, so don't edit it; say so in the Summary for the owner.
 - **A future `npm run site:shots`** plays with the new default. `take.mjs`'s grid-marked trigger (the player's own slide, `:158-165`) may fire later or differently. That belongs to the owner's set-aside retake; mention it in the Summary.
-- **E2E block reloads:** call `loadBoard()` after each one (`speed(4)` is page state). Canceled photo requests are already ignored (`e2e.mjs:74`). CI's PR e2e runs the same block and adds no DB writes.
+- **E2E block reloads:** done only through `loadBoard()` (`goto`, so the new document is in before any `evaluate`; it re-applies `speed(4)`, which is page state). Canceled photo requests are already ignored (`e2e.mjs:74`). CI's PR e2e runs the same block and adds no DB writes.
 
 ## Architecture review (Fable)
 
@@ -217,6 +218,15 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+- **Fable MUST-FIX 1 (reload must wait for the new document): fixed.** `loadBoard()` now starts with `goto(<seeded URL>)` and replaces `:235-238`. The once-a-run block reloads only through it, with no `Page.reload`. Checked with a throwaway CDP probe (since deleted), using `scripts/cdp.mjs` against a local server delayed 400 ms. `Page.navigate` replied after 409 ms, so the new document is in when `goto` returns. `Page.reload` replied after 6 ms. `Page.reload` plus the readyState wait still saw the new document 40 times out of 40, because Chrome holds `Runtime.evaluate` while a navigation is pending. So the existing reloads (`:1261`, `:1320`, `:1357`, `:1372`) are sound, and they stay untouched.
+- Fable SC1 (shorter `CONTEXT.md:73`): adopted, row rewritten.
+- Fable SC2 (rename to `02b-…`): declined. `02b-marked.png` already uses that prefix, and `02-menu-fresh-profile.png` already sorts after `02-board*.png`.
+- Fable SC3 (before/after in the check detail): adopted. Every new check's detail is the `JSON.stringify`'d `autoSwitch` result.
+- Fable SC4 (release smoke: Menu before any board tap): adopted as one clause.
+- Fable SC5 (Summary on `grid-marked.webp`): adopted (F5).
+- Astra SC1, gameplay part: declined. The switch (`AnimalSheets.tsx:446`, `on={autoRuleOut}`) and the marking effect (`useAnimalSession.ts:276`) read the same `autoRuleOut` state. The fresh-profile check proves the default sets that state, and round 4 proves that state marks after every move. A default-gameplay move would repeat round 4's machinery and would disturb round 1's untouched pre-loop board.
+- Astra SC1, blocked storage: declined. It isn't in the DoD's E2E list, and the code under test is a single `catch { return true; }`. Emulating it means a throwing `localStorage` getter injected into every new document and then removed. It would also bring back how-to and the slide hint, and run every other storage reader in the app under a throw. That is beyond "one default, its tests and its copy". Code review covers that line.
+
 ## Steps
 
 ## Verification
@@ -234,5 +244,7 @@ SHOULD-CONSIDER:
 - 2026-11-06 06:48 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (`loadBoard()` must wait for the new document after `Page.reload`). Plan-only; no checks needed.
 
 - 2026-11-06 06:51 UTC · Astra review: APPROVE, no MUST-FIX; 1 SHOULD-CONSIDER (e2e: blocked storage + default reaching gameplay). Plan-only; no checks needed.
+
+- 2026-11-06 07:00 UTC · Revision: `architect` fixed Fable MUST-FIX (`loadBoard()` = `goto(seeded URL)`, no `Page.reload` in new block; CDP probe confirmed). Adopted Fable SC1/3/4/5; declined SC2, Astra SC1 (reasons in Revision notes). Plan-only; no checks needed.
 
 ## Summary
