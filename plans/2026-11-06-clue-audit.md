@@ -298,6 +298,14 @@ Skipped: research mission, no code.
 
 ## Release
 
+- Rebased: already on `origin/main` 26b66aa4 (no change). Full Verification re-run: 1–3 pass (2 files in diff), typecheck, lint, 48/48 unit, e2e 1479/1479 (seed 7); `STATE/final-e2e/` replaced.
+- PR #57 merged: merge commit `aea571d095f1e3b263b7780ee70cc522c68b81eb`.
+- Deploy last line: `deploy critter-connect: live at https://critterconnect.org` (deploy/check.sh 38 OK, 0 FAIL).
+- Smoke: `version.txt` = aea571d0; play `/`, `/explore/?seed=7`, `/api/places/`, critterconnect.org `/` all 200. Mission changed no live page (docs only).
+- Log: `/srv/critter-ai/agent-state/missions/clue-audit/release/deploy.log`
+
+Result: done
+
 ## Decisions
 
 - Architecture, Fable, Astra (plan and code) and Revision stages skipped: brief says no architecture/code review stages, skip Astra.
@@ -335,6 +343,7 @@ Skipped: research mission, no code.
 - 2026-11-06 10:25 UTC: S8. Report section 2 written: holders table (20, IUCN rows + linked quotes), how a player answers (photos, kind lines, witness notes), guess-wrong cases both ways, round impact, removal touch list, options A/B/C with counts (tree photos `out/s8-tree-photos.png`, strict deal sim `out/s8-strict.json`), recommendation: remove. 18 F&T findings (13 unfair, 5 unclear). All repo links resolve; every quoted game line found in its content file.
 - 2026-11-06 10:31 UTC: S9. 11 open flags resolved (7 unfair, 2 unclear, 2 pass) + 1 rule row; findings.csv 3,273 rows, 0 open flags; 123 findings (1 wrong, 69 unfair, 53 unclear; 58 animals + 15 rule rows). Report sections 1, 3 (123-row table from `audit/table.py`), 4, 5 and Method written. Verification 1–3 pass (2 files in diff; repo links resolve).
 - 2026-11-06 10:40 UTC: S10. Verification 1–5 pass: report sections present; CSV 76 animals, 0 missing, 0 open flags (1 wrong, 69 unfair, 53 unclear = section 1); diff = plan + report only; typecheck, lint, 48/48 unit; e2e 1479/1479 (seed 7). Artifact `STATE/final-e2e/`.
+- 2026-11-06 10:50 UTC: Release. Verification re-run pass (e2e 1479/1479); PR #57 merged (aea571d0); deployed, version.txt = aea571d0, smoke 200s.
 
 ## Summary
 
@@ -351,3 +360,4 @@ Research only; no game code or content changed. Report: `docs/research/2026-11-0
  plans/2026-11-06-clue-audit.md         | 338 +++++++++++++++++++++++++++++
  2 files changed, 719 insertions(+)
 ```
+- **Released:** PR #57 merged (aea571d0) and deployed; live version.txt = aea571d0, smoke pass.
