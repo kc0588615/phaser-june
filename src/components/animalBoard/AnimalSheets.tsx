@@ -407,7 +407,7 @@ export function GameMenu({ title, stats, soundOn, onSound, autoRuleOut, onAutoRu
   /** Where the trail stands ([label, value]); null while loading. */
   stats: Array<[string, string | number]> | null;
   soundOn: boolean; onSound: () => void;
-  /** Opt-in: the game rules out animals whose shown answer doesn't match the camera's. */
+  /** On by default: the game rules out animals whose shown answer doesn't match the camera's. */
   autoRuleOut: boolean; onAutoRuleOut: () => void;
   onJournal: () => void; onHelp: () => void; onClose: () => void;
 }) {
@@ -708,7 +708,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
     <>Your trail camera caught a blurry shot last night. Only the <b>{rules.suspects} animals</b> on the board live here, so it&apos;s one of them. Which one? In the grid, the top row, <b>On camera</b>, is what the camera found out; the rows under it are the {rules.suspects} animals. Try one:<CompareExample /></>,
     <>Swap gems to line up 3 or more. Each picture gem fills its <b>question</b> in the On camera row. A full question answers it: <b>yes</b> or <b>no</b>.</>,
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold a <b>?</b> to <b>highlight</b> it: that gem glows next to the animal&apos;s card on the board until you scout it. Hold a gem up top and every gem of it glows until its answer comes in. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
-    <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back).</>,
+    <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back). After each move, <b>Auto rule-out</b> rules out every animal with a shown answer that doesn&apos;t match; turn it off in the menu to do it all yourself.</>,
     <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it, unless Auto rule-out in the menu is on and it doesn&apos;t match). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
     <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round.</>,
     <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,

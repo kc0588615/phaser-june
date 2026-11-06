@@ -242,7 +242,7 @@ All E2E runs: `export CHROME_PATH=/srv/critter-ai/agent-state/missions/auto-rule
     - `:1146-1150`: keep; add the comment.
   - Verify: `npm run typecheck`, `npm run lint`, `npm run e2e:fresh`. All checks pass, expected **1479** (1473 − 1 replaced + 3 once-a-run + 4 per-round); explain any other count in the Log. The four round lines in the console match `baseline-e2e/e2e.log` (same seed; rounds 1-3 still off). Open `02-menu-fresh-profile.png`: the Auto rule-out switch shows on.
   - Artifact: copy the run's `report.json`, `*.png`, the console log (`e2e.log`) and `COMMAND.txt` (command + commit + seed) to `/srv/critter-ai/agent-state/missions/auto-rule-out-default/s1-e2e/`. Delete `baseline-e2e/` (disk rule; its numbers stay under Baseline).
-- [ ] S2. **Copy and docs** (text only; no behavior change). Exact text from the Copy table:
+- [x] S2. **Copy and docs** (text only; no behavior change). Exact text from the Copy table:
   - `src/components/animalBoard/AnimalSheets.tsx:410` (comment), `:711` (how-to step 4 sentence; `:712` unchanged).
   - `src/clueGame/animalBoard.ts:429` (comment).
   - `src/site/pages/Teachers.tsx:64`, `:96`.
@@ -301,5 +301,7 @@ The post-code-review final run (mission step 7) repeats 1-6 on the final commit 
 - 2026-11-06 06:59 UTC · Steps: `planner` wrote S1 (default + e2e), S2 (copy/docs), S3 (full Verification) and Verification/release smoke. Plan-only; no checks needed.
 
 - 2026-11-06 07:17 UTC · S1: default `!== 'off'` (blocked storage: on), lazy `useState(isAutoRuleOutOn)`, e2e hoisted `autoSwitch` + `loadBoard()` + once-a-run fresh/'off'/'on' checks + per-round set. typecheck, lint ok; e2e 1479/1479 (2nd run; 1st had 1 sparkle timing flake, see Decisions), round lines = baseline, `02-menu-fresh-profile.png` shows switch on. Artifact `s1-e2e/`; `baseline-e2e/` deleted.
+
+- 2026-11-06 07:20 UTC · S2: copy/docs per Copy table (AnimalSheets 410/711, animalBoard 429, Teachers 64/96, CLUE_MATCH 54/96/98, CONTEXT 73). Stale scan: only allowed leftovers. typecheck, lint ok; site:build ok, e2e:site 444/444; built teachers page has new line.
 
 ## Summary

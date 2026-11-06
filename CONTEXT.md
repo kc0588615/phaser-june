@@ -70,7 +70,7 @@ One of a round's 4 yes/no questions about the mystery animal's traits. Matching 
 _Avoid_: clue, order
 
 **Answer**:
-The reply to a question: yes or no. The mystery animal's answers fill in as questions complete; answers never rule anything out by themselves.
+The reply to a question: yes or no. The mystery animal's answers fill in as questions complete; an answer rules nothing out by itself: the player does, or Auto rule-out (on by default) does when a suspect's shown answer differs from the camera's.
 _Avoid_: clue, result
 
 **Trait**:

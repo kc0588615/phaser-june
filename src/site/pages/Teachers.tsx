@@ -61,7 +61,7 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
             <li>Five look-alike animals sit on the board. One of them was caught on camera.</li>
             <li>They have 30 moves. Four yes-or-no questions ask about the camera&apos;s animal; matching 20 of a question&apos;s gems answers it.</li>
             <li>Clearing a question&apos;s gems next to an animal&apos;s card scouts that animal&apos;s own answer.</li>
-            <li>The answers never rule anyone out by themselves. Students compare each animal&apos;s scouted answers with the camera&apos;s and rule out the ones that can&apos;t be it. A ruled-out animal wanders off the board, or clearing a gem next to it releases it at once.</li>
+            <li>Students compare each animal&apos;s scouted answers with the camera&apos;s and rule out the ones that can&apos;t be it. After each move, Auto rule-out (on unless it&apos;s turned off in the game&apos;s menu) rules out any animal whose scouted answer differs from the camera&apos;s. A ruled-out animal wanders off the board, or clearing a gem next to it releases it at once.</li>
             <li>Rule out the one caught on camera by mistake, and it escapes: the round is lost and costs a heart. A trail is 5 rounds with 3 hearts.</li>
             <li>The round-end card shows the family tree and the animal&apos;s field notes, and the grid above it replays the evidence.</li>
           </ul>
@@ -93,7 +93,7 @@ export default function Teachers({ shots, animals, classLinkScript }: PageProps)
         <div className="flex flex-col gap-m">
           <h2 id="class" className={H2}>Using it with a class</h2>
           <ol className={`flex list-decimal flex-col gap-s pl-l ${MEASURE}`}>
-            <li><strong className="font-heavy">Think aloud in pairs.</strong> One student plays; the other has to agree to every rule-out.</li>
+            <li><strong className="font-heavy">Think aloud in pairs.</strong> One student plays with Auto rule-out off (in the game&apos;s menu); the other has to agree to every rule-out.</li>
             <li><strong className="font-heavy">Debrief losses.</strong> After an escape, ask which answer or note was misread. The grid and the round-end card have everything needed.</li>
             <li><strong className="font-heavy">Share a seed.</strong> A class link gives everyone the same animals, so the class can compare strategies.</li>
             <li><strong className="font-heavy">Extend from the journal.</strong> Students pick an animal they found and research a trait the game simplified.</li>
