@@ -101,7 +101,7 @@ Out:
 ## Stages
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
-- [ ] Architecture: `architect` writes findings and the target design
+- [x] Architecture: `architect` writes findings and the target design
 - [ ] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
@@ -116,6 +116,276 @@ From `87e6689b` on `origin/main` `69f45fa6` (fetched 07:34 UTC; branch already o
 - Artifact: `/srv/critter-ai/agent-state/missions/moves-and-signs-design/baseline-e2e/` (report.json, screenshots, both logs). Repro: `CHROME_PATH=<that folder>/../chrome-nosandbox.sh npm run e2e:fresh` (seed 7).
 
 ## Architecture
+
+Architect, 2026-11-07, read on `origin/main` `69f45fa6` (rules `054-1`). Design only: every "build" item below goes into the build brief, not this branch.
+
+### Findings (ranked by impact on the design)
+
+**F1. "No record" is per prefix, and in the 044 game it means "not dealt", not "never ruled out".** The book holds prefix → set of tags (`questionMatch.ts:222-227`). `fullTable` skips a tag when any suspect has no set for its prefix (`animalBoard.ts:96-97`), else the answer is `has(tag)` (`:98`), so every other value of that prefix is "no". `ask` (`questionMatch.ts:480-505`) is the 041 game's: nothing outside `questionMatch.ts` calls it, `questionsFor` or `autoAsk`. The brief's "How answers work" note describes 041, not the board. Consequences:
+- A multi-value movement prefix is complete whether or not it sits in `COMPLETE_PREFIXES`. Every value must be settled for every holder, and one unsettled value can only be expressed by dropping the whole prefix for that animal.
+- A "no record" per value needs one prefix per move.
+- Each no-record shrinks coverage: a question is dealt only to sets where all 5 suspects hold a record. Unfairness turns into rarity.
+
+**F2. A yes/no trait needs its "no" stored but never asked. No mechanism exists for that today.** Every tag of an askable prefix becomes a question (`animalBoard.ts:89`). When two tags split a set the same way, the first one is kept, sorted by prefix and then `localeCompare` (`:90-92`, `:100-101`). With `climbs:yes`/`climbs:no`, the `no` tag sorts first. It would be dealt with its raw tag as the text (`questionMatch.ts:176-179`) and the ❓ face (`clueFaces.ts:30`). `birth:eggs/live` avoids this only because both values are real questions. **Fix (build):** one exported predicate in `questionMatch.ts`: a tag whose value is `no` records an answer and is never asked. `fullTable` uses it, and so does `questionsFor` for consistency. That is about 3 lines. The same rule covers the "none" sentinel that option A would need.
+
+**F3. Farms & towns: the code goes live before its content does.** The trap is exactly as the audit traced it. Every site is still at its line on `69f45fa6`:
+- `traits.ts:27` (`HABITAT_CLASSES`, spread into `COMPLETE_PREFIXES` at `:30`)
+- `questionMatch.ts:152,171,200`
+- `clueFaces.ts:15` (🏡)
+- `profiles.ts:93` and `:139-145`
+- `isHandWrittenClue` at `profiles.ts:290-295` and the reserved check at `:331`
+
+The audit's fix ("same change") isn't the same moment, though. The release deploys `origin/main`. The prod content build comes later, by the owner from WSL (`AGENTS.md:38`). In between, the live game reads the old rows with the new code:
+- If `artificial` has left `HABITAT_CLASSES`, the pool door (`questionMatchContent.ts:160`) calls the 45 `artificial:<kind>` rows hand-written. They become witness notes, for example "It also lives in plantations…", which 11 animals share.
+- The 20 `habitat:artificial` rows stay askable under the `habitat` prefix, showing the raw tag and ❓.
+
+**Fix:** the build mission removes the class from the 20 content files but keeps the constants, which are harmless once no row holds them. A one-session cleanup brief deletes the constants after the owner confirms the prod content build.
+
+The reverse gap matters too. If new rows meet old code (the owner builds before a deploy that failed), the old code doesn't reserve the new prefix, so the generated movement lines become witness notes. So the handoff says: content build only after a successful deploy.
+
+**F4. Signs are never hidden; plan 045 hides only guide lines.** Today's code:
+- `asked` is set from the dealt prefixes (`AnimalSheets.tsx:86`), and only guide lines are filtered by it (`:98-101`).
+- Signs (`:89`, `:208`) aren't filtered (plan 045:17: "photo, signs and other lines stay").
+
+Some signs already restate an answer: `fully_aquatic` on 62, 74 and 75 says "no" to "Lives on land?". A movement question would be restated by `climber` (11), `tree_dweller` (11), `burrower` (18), `swimmer` (9) and `glider` (1).
+
+Witness notes are affected too. A note's "fits N of 5" counts open tags (`animalBoard.ts:167-173`), and the audit found those tags written only where a note needed one. So a `climber` note that "fits 2" can sit beside 3 yeses in the movement column.
+
+**Fix (build):**
+- One map: open tag → the question tag it restates.
+- `GuideSigns` hides those signs while that question is dealt (045's rule, extended to signs).
+- `witnessNotes` skips a note that carries a hidden tag.
+- Signs that only hint (digging claws, webbed feet, hangs upside down) stay. They are the teaching link.
+
+**F5. A question's category is never shown during play.** Categories appear only as the field guide's headings (`AnimalSheets.tsx:33`). Order tiles, "Its answers" and the grid show a face and the question (`:211-250`). `CATEGORY_LABELS` is read only by the 041 log (`LogEntryText.tsx:58,76`). Sign chips are all one grey style (`CHIP`, `:41`). Plan 054 also weights pencils by category (`animalBoard.ts:433`), though a player can't see which category a question is in. Part 3 must add a category mark to signs, question tiles and witness notes. Only the guide headings exist to build on.
+
+**F6. "Sign → note" can't mean showing a suspect's own note.** Suspects' hand-written sentences are never shown in play, by design: a witness note would match one word for word (plan 044:25). Guide lines come only from generated clues (`questionMatchContent.ts:82,91`). The only notes on screen are the mystery's witness notes.
+
+Facts (`key_fact`, `life_description`, `diet_prey`, `diet_flora`, `threat` and behavior facts) carry no tags and never show in a round. So only 6 of the 12 note categories feed signs: morphology, behavior, diet, habitat, reproduction and geography. The 97 conservation clues are all untagged.
+
+How tags fall (checked against the content):
+- No tag appears in notes of two different guide sections on the same animal.
+- 19 tags do across animals.
+- Signs per animal: 2 to 13, median 7.
+
+`GUIDE_CATEGORY` (`questionMatchContent.ts:15-17`) already maps note categories to guide sections, except `geography` (Range lines are built at `:98-102`).
+
+**F7. Gem colours belong to slots, and the theme has one accent colour.**
+- `CLUE_GEMS` are positional (`animalBoard.ts:64`). The 043 category colours survive only in `GEM_OF`, for old log entries (`gems.ts:6`).
+- `dealClues` lets a deck hold two clues of one category: its score adds 1 per distinct category but doesn't require four (`:133`).
+- cc gives `color-1`, plus game-data colours such as `--color-notes` (`globals.css:352`). GUI.md forbids adding colours to finish a screen without naming the gap.
+- A category colour taken from the gem palette would clash with the slot colours on the same screen.
+
+So the category mark must be an icon plus a word. Colour by category is a rules change, and the build brief must state what it costs.
+
+**F8. Prefix order breaks ties.** The key order of `PREFIX_CATEGORY` (`questionMatch.ts:22-28`) sets `QUESTION_PREFIXES` (`animalBoard.ts:69`), and `fullTable` keeps the first question per split. A movement prefix keyed before `system` wins ties against Fresh water and On land. The deal runs must use the key position the build will use: in the habits group, after `social`.
+
+**F9. A missing face fails silently.** `clueFace` returns ❓ for an unknown tag, and `dealClues` drops any deck with two equal faces (`animalBoard.ts:131`). Two new tags without faces would never share a deck, and nothing would say so. Each new askable tag needs its own face. 🏡 stays taken until the cleanup.
+
+**F10. Movement sources don't cover the 76 evenly.** Habitats come from IUCN tables that cover all 76 (`CONTENT_SOURCES.md:24`); movement has no such source.
+- ADW has accounts for 65 animals (cached by clue-audit, `sources/adw/`), and its "Key Behaviors" keywords are incomplete.
+- Example: the tiger is tagged `cursorial` but not `natatorial`, while its text says "Tigers are excellent swimmers".
+- Across the 65 accounts: arboreal 11, fossorial 9, natatorial 7, scansorial 6.
+- IUCN text is cached for all 76 (`sources/iucn/*.pdf.txt`).
+
+So values come from reading the text, and a "no" must quote how the animal lives, never rest on a missing keyword. One rule conflict: `CONTENT_SOURCES.md:21` lets the higher tier win when sources disagree, but the brief says no record. The build must write the movement rule into `CONTENT_SOURCES.md`.
+
+**F11. `travelOf` is a guess built from incomplete tags.** It returns fly for bats and the glider, swim for `fully_aquatic`/`swimmer`, dig for `burrower`, and walk otherwise (`animalBoard.ts:199-205`). It sets the wander heading (`useAnimalSession.ts:199,269`), and the bot uses it the same way (`balance-044.ts:84`), so changing what it reads moves balance a little.
+
+**F12. Pencil weights are fixed by category.** Body is 1 ("seen in the photo"), Habitat 2, Habits 3 (`animalBoard.ts:433`, owner's pick in 054). A movement question in Habits that a player can check from the photo pays 3 per pencil. That's a cost to note, not something to change.
+
+**Fine as is:**
+- `checkProfile` fails loudly on a removed habitat class (`profiles.ts:318`).
+- The resume check restarts saved games whose rows changed (`useAnimalSession.ts:120-123`).
+- No schema change: tags live in `compare_tags`, and `clue_match_solves` stores no tags.
+- The e2e names no tag.
+
+One stale item: the site's field-guide shot shows the signs (`src/site/shots.ts:40`), so a part-3 change makes it out of date. A shots refresh is an option for the build.
+
+### Target design
+
+**1. The design doc** follows the five sections of the Definition of done. Evidence lives in `/srv/critter-ai/agent-state/missions/moves-and-signs-design/` as `research/`, `deals/`, `bot/`, `mockups/`, `patched/` (the throwaway copy) and `out/`.
+
+**2. Movement clue: the options and how each fits the engine.**
+
+| Option | Engine form | Research load | Where it breaks |
+|---|---|---|---|
+| A. Several moves as one prefix | Profile array `moves` (like `habitats`); `move` in `COMPLETE_PREFIXES`; a `move:none` sentinel for animals with no listed move (needs F2's rule) | Every value settled for all 76 (F1) | One unsettled value removes the animal from every move question |
+| B. One main way | `move` in `EXCLUSIVE_PREFIXES` | 76 judgments, rarely stated by sources | Multi-movers. Even the incomplete tags give two moves to 24, 30, 51, 54, 59 and 73 (jaguar climbs and swims, sloths climb and swim, giant otter swims and digs). This is `travelOf`'s model, which the audit showed failing |
+| C. Lives in trees only | One yes/no prefix | 76 judgments | "Lives in" needs a rule (sleeps? feeds?); the orangutan's and Andean bear's photos show the ground |
+| **D. One yes/no prefix per move** (better) | `climbs:yes\|no`, `digs:yes\|no` (and `swims:` if kept). Each is a `Sourced` trait in `profile.traits`, the existing interface: one value, a note, a source, left out when unknown (`profiles.ts:41-51,266-276`). Prefixes go in `EXCLUSIVE_PREFIXES`. `PREFIX_CATEGORY` → habits; the generated line's category `behavior` puts it in the guide's Habits section | 76 judgments per value; no record allowed per value | Needs F2's rule. C is D with one value |
+
+Values, each with a written rule in the doc:
+- **Kept as candidates:**
+  - **Climbs trees:** climbs trees to feed, rest, hunt or escape. Rocks don't count, so the pancake tortoise and big-headed turtle are judged separately.
+  - **Lives in trees:** the stricter variant, for D-with-one-value and for C. It is a subset of Climbs.
+  - **Digs burrows:** digs its own burrow or tunnel to live, sleep or hide in. Digging for food or using another animal's burrow (`borrowed_burrows`) doesn't count.
+  - **Swims:** strict: swims as part of daily life, to feed or travel. Crossing a river now and then doesn't count.
+- **Dropped:**
+  - Hops: about the same as "is it a frog". With 12 frogs and suspects picked relatives first (`pickSuspectSet`, `:145-157`), it rarely splits a set.
+  - Glides or flies: 2 holders (45, 5).
+  - Walks: nearly every land animal.
+  - Gallops, crawls: no rule a writer can apply.
+
+**Lean: D with Climbs trees and Digs burrows, in Habits.**
+- Both are natural questions for grades 6–12.
+- Both split sets of frogs, turtles and mammals.
+- Climbs can often be checked in the photo. Digs has hint signs (digging claws) and body cues.
+- Drop Swims unless the deal runs show it splitting sets that Fresh water and Sea don't: strict, it repeats the system questions; loose, it is near-universal and rarely stated.
+- Fall back to Lives in trees if Climbs has many yes-animals whose photos show the ground.
+- The research records all four values (one pass over the same sources), so the final choice rests on numbers.
+
+What D touches in the build:
+- `traits.ts`: `EXCLUSIVE_PREFIXES`.
+- `questionMatch.ts`:
+  - `PREFIX_CATEGORY` (key after `social`; F8)
+  - `QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL` for the `:yes` tags only (8 letters a line)
+  - F2's predicate
+- `clueFaces.ts`: one face per new tag, unique and no animal emoji.
+- `profiles.ts`:
+  - the `traits` type
+  - a yes line and a no line per trait ("It climbs trees." / "It doesn't climb trees."), because a no must be readable, unlike a missing habitat line
+  - the `trait()` calls
+  - `TRAIT_VALUES`
+- `CONTENT_SOURCES.md`: the traits table, the rules, the disagreement rule (F10).
+
+**`travelOf`:** lean yes, for dig only: `digs:yes` replaces `burrower`, and the rest stays. Required if the build drops `burrower` from content. Measured in the bot, since headings change.
+
+**Overlap:** for Swims, the share of sets where its row equals `system:freshwater`'s.
+
+**3. Farms & towns removal (folded in).** The touch points are the F3 list. Content: `artificial` and its 45 kinds leave the 20 holders' `habitats` (2, 6, 7, 11, 13, 23, 24, 25, 28, 32, 48, 49, 51, 52, 54, 58, 59, 72, 73, 74). `CONTENT_SOURCES.md:24,47` then says the class is skipped. The constants are deleted only in the cleanup brief (F3). Every movement measurement is taken against the deal without Farms & towns.
+
+**4. Research method (76 animals).**
+- **Rules first.** The written rule for each value is fixed before any batch starts, so all batches judge alike. Yes needs a quote that says so. No needs a quote describing how it lives in a way that rules the value out ("ground-dwelling", "fully aquatic", "shelters under rocks"). Silence is no record. Two sources that disagree: report both, leave the value out.
+- **Source order:**
+  1. Cached IUCN text (all 76) and ADW (65), both read-only from `clue-audit/sources/`.
+  2. The profile's own cited pages (`profile.sources`) and the other tier-2/3 sources in `sources.json`.
+  3. Wikipedia last (tier 4, checking its own cited source).
+  AmphibiaWeb wasn't reachable last time; frogs fall back to IUCN and ADW, otherwise no record.
+- **Photos:** one contact sheet of all 76 photos. Reuse clue-audit's cache (`sources/photos*`) and fetch the rest from `profile.photo.url`.
+- **CSV** (`research/moves.csv`): one row per animal and value, 304 rows. Columns:
+  - `animal_id`, `animal`, `value` (climbs_trees, lives_in_trees, digs_burrows, swims)
+  - `verdict` (yes, no, no-record)
+  - `quote`, `url`, `source_key`, `tier`
+  - `quote2`, `url2`, `tier2`, `disagree` (y/n)
+  - `photo_cue` (shows-yes, shows-no, neutral)
+  - `guide_cue` (shown lines that still show while the question is dealt, verbatim)
+  - `sign_cue` (hint tags, not restating ones)
+  - `hard` (y/n, with why), `checked_at`
+- **Batches:** 8, grouped by taxon so one researcher judges like animals alike: frogs and salamanders (15, as 2 batches), turtles and tortoises (11), primates, sloths, tree-kangaroo and bat (arboreal), carnivores (11), the diggers (pangolins, echidnas, armadillo, aardvark, golden mole, solenodon, bilby, marmot, pika, wombat, sengi), and the hoofed animals and elephants. Run at most 2–3 subagents at once, because of search rate limits (`CONTENT_SOURCES.md:78`).
+- **Coverage script:** prints 76 × 4 rows, no yes or no without a quote and link, and a reason on every no-record.
+- **"Hard" animals:** the ones a careful player would get wrong from what still shows while the question is dealt (photo, hint signs, other guide lines, witness notes). The question's own line is hidden then (045).
+
+**5. Balance method.**
+- **The patched copy:** `git archive HEAD src scripts db tests package.json tsconfig.json` into `patched/<variant>/`, with `node_modules` symlinked. Each variant = a patch file in `patches/` plus a content overlay. A script writes the researched values (leaving out no-records) into the copy's `db/content/animals/*.json`, never into the repo. The F2 predicate is in the patch.
+- **Variants:**
+  - base (today)
+  - −F&T
+  - −F&T + C (Lives in trees)
+  - −F&T + D (Climbs + Digs)
+  - −F&T + D + Swims
+- **Deal runs:** an adaptation of `clue-audit/audit/deals.ts` (copied, not imported). For the world and each continent with 12 or more animals (`MIN_PLACE_ANIMALS`), every seed goes through `pickSuspectSet` and then `dealClues`. Metrics per place and variant:
+  - seeds with a set (rounds gained or lost against −F&T)
+  - share of decks dealing each new tag
+  - sets and decks changed
+  - pairs in a dealt deck that only the new clue separates, and pairs only it separates in the whole table
+  - sets where a new question isn't dealt because a suspect has no record
+  - Swims rows equal to Fresh water's
+  - decks with two clues of one category (the cost of category gems, F7)
+- **Bot:** `scripts/balance-044.ts` runs in the copy: `--rounds 400 --seed 44 --places africa,asia,north-america,south-america`, default players. Then once more with `--knows size,covering,climbs`, the photo stand-in for Climbs.
+- **Outputs:** in `deals/` and `bot/`, each with its exact command.
+
+**6. Signs mapping.**
+
+Note categories → question categories, provisional:
+
+| Note categories | Question category |
+|---|---|
+| morphology | Body |
+| behavior, diet, diet_prey, diet_flora | Habits |
+| habitat | Habitat |
+| geography | Range |
+| reproduction, life_description | Life cycle |
+| key_fact, conservation, threat | none (untagged facts or threats, seen on the reveal card only) |
+
+The tag table (198 tags, `out/sign-map.csv`) has these columns:
+- `tag`, `uses`, `note_categories` (counts)
+- `category`, and the `rule` that set it
+- `restates` (the question tag it answers outright, or empty)
+- `hints` (the question prefix it is evidence for)
+- `action` (hide while dealt, drop, keep)
+
+How a tag's category is set:
+1. The majority of its notes' categories, via the table above.
+2. If tied, what the sign names: a body part → Body; an act or food → Habits; surroundings → Habitat; a named place → Range; eggs or young → Life cycle.
+
+The result is **one fixed category per tag**, so the same chip looks the same on every suspect. Witness notes take their mark from their tags. The build keeps the table as a code constant, and `checkProfile` fails on an open tag that isn't in it (fail fast for new animals).
+
+**Leak rules:**
+- "Restates" means the sign's words alone give a suspect's answer to the question.
+- Those signs are hidden while their question is dealt, and witness notes carrying them are skipped (F4).
+- The rule covers today's questions as well as the new ones. It changes plan 045's "signs stay", so the doc lists the affected tags as an owner choice.
+- Drop a tag from content only where it duplicates the new trait and serves no witness note. Otherwise hide it, which keeps the witness notes' tags.
+
+**7. Mockups.** Three options. Each shows one suspect's signs, field guide and "Its answers", with one cell scouted.
+- **Option 1, category marks:** one lucide icon plus the category word on sign chips, guide headings, answer rows, order tiles and witness notes. No new colour.
+- **Option 2, signs inside the guide:** chips move into the field guide's category rows, and "Its answers" is grouped under the same headings. The structure itself is the cue: no paging, but a longer sheet.
+- **Option 3, gems coloured by category again:** 043's `GEM_OF`. A rules change: decks would need four distinct categories (cost measured in §5), five data colours in both modes would have to pass the contrast check in `npm run lint`, and icons are still needed so colour isn't the only cue.
+
+"Tap a sign to see its note" becomes "tap a sign to scroll to its category in the guide", because of F6. Highlighting which suspects fit a witness note is rejected: plan 044 makes that the player's job.
+
+**Lean: option 1.** Smallest layout change, works with `GuideSigns` paging, no theme gap.
+
+**How they're made:** a throwaway copy of the app (like §5, with `.env.local` symlinked, not copied). The option is picked by a query parameter in the copy. The researched trait is injected at `animalsFromPool` in the copy, so a movement question can be dealt. The dev server runs on a free port in 3100–3102 (`ss -ltn` first). The copy must not finish a round, which would make `POST /solves` write to the live DB, so it blocks that POST.
+
+**Screenshots:**
+- 390×844, light and dark, saved as PNG.
+- Taken with Playwright's Chromium through `chrome-nosandbox.sh`, driven by the repo's CDP helper (`scripts/cdp.mjs`). The Playwright library isn't installed here.
+- Fallback: static HTML using `globals.css` tokens.
+
+One `graphical-audit` pass against GUI.md. Photo credits stay visible in the PNGs.
+
+**8. Build brief.** Sections from `/srv/critter-ai/ops/templates/mission-brief.md`: Goal, Why, Scope, Definition of done, Decision rules, Notes. It holds two briefs, in order:
+- **(a) Build, plan `055`, about 25 sessions, well under 60:**
+  - code from §2 (D) and F2
+  - the sign-category table, the leak hiding and the chosen link UI
+  - `travelOf` per the decision
+  - movement values for all 76 animals, from `research/moves.csv`
+  - F&T content removed (constants kept)
+  - the `CONTENT_SOURCES.md` rules
+  - `ANIMAL_RULES.version` `054-1` → `055-0`
+  - the bot rerun, with numbers recorded in plan 055
+  - optionally, a site shots refresh
+
+  Checks: `typecheck`, `lint`, `npm test` (the content test), `content -- preview`, `e2e:fresh`. The E2E plays `phaser_june_dev`, with content built there at final verification just before the PR runs. In that short window, other branches' CI sees movement rows their code doesn't know; that's stated as an accepted risk. The prod content build stays the owner's from WSL, after a successful deploy, as a handoff item (F3).
+- **(b) F&T cleanup, 1 session, started once the owner confirms the prod content build:** delete the F3 constants, and 🏡 is free again.
+
+**9. Risks and failure modes.**
+- Silence taken as no gives unfair nos. Mitigation: the evidence rule plus the coverage script.
+- Sources disagree: no record, with both reported.
+- Many no-records: the question is rarely dealt (F1), and §5 measures it.
+- Leaks through restating signs or witness notes (F4).
+- The deploy-before-content gap, both ways (F3).
+- Silent ❓ face collisions (F9).
+- Pencil weight 3 on a question a player can check in the photo (F12).
+- Old open tags kept or dropped: witness notes lose their tags, and `travelOf` changes (F11).
+- The mockup build writing solves to the live DB (blocked, §7).
+- Mockups drifting from the theme (a real-app copy, plus one audit pass).
+- Scope creep into the clue-audit's parts 2 and 3: noted where they touch (the Wetlands wording against Swims), not done.
+
+### Rejected alternatives
+- **A, one complete `move:` prefix:** every value must be settled for every holder (F1), and it needs a sentinel anyway.
+- **B, one main way:** breaks on multi-movers, "main" is unsourced, and it repeats `travelOf`'s failure.
+- **`habitat:trees` in the complete IUCN habitat prefix:** puts non-IUCN data in a one-source prefix, and all 76 animals would default to no.
+- **Value names chosen so yes sorts first** (`climbs:trees`/`climbs:never`): hidden coupling to `localeCompare`; F2's explicit rule instead.
+- **`travelOf` or the open tags as the trait:** a missing tag isn't a no (the audit).
+- **A new sixth category for movement:** `CHARGE_CATEGORIES`, `PENCIL_WEIGHT` and the guide sections would all grow, for 2 questions.
+- **Deleting the F&T constants in the build mission:** breaks the live game between the deploy and the content build (F3).
+- **A "generated" column on clue rows to defuse the trap:** a schema change for a one-time transition.
+- **Showing a suspect's own note on a sign tap:** plan 044 rules it out (word-for-word matching).
+- **Lighting up the suspects a witness note fits:** does the player's reasoning (044, "point, don't conclude").
+- **Each sign's category taken from its own note at runtime:** 19 tags would get different marks on different suspects.
+- **Category colours from the gem palette:** clash with the slot colours (F7).
 
 ## Architecture review (Fable)
 
@@ -138,5 +408,6 @@ From `87e6689b` on `origin/main` `69f45fa6` (fetched 07:34 UTC; branch already o
 ## Log
 
 - 2026-11-07 07:55 UTC · Baseline: on latest origin/main; typecheck/lint ok, unit 48/48, e2e 1512/1512 (2nd run; 1st 3 timing flakes). Artifact `baseline-e2e/`.
+- 2026-11-07 08:25 UTC · Architecture: architect wrote 12 findings + target design (lean: per-move yes/no traits Climbs trees + Digs burrows in Habits, F2 never-ask-`no` rule, F&T content removed w/ constants kept till cleanup brief, sign leak hiding, mockup option 1 category marks). Docs only; no code touched.
 
 ## Summary
