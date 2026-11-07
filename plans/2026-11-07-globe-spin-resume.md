@@ -276,6 +276,6 @@ SHOULD-CONSIDER:
 
 - 2026-11-07 08:03 UTC · Baseline: typecheck/lint ok, unit 48/48, e2e:fresh 1512/1512.
 - 2026-11-07 08:16 UTC · Architecture: architect wrote findings + design (`globeSpin.ts` attachGlobeSpin, originalEvent input detect, 3 s idle, zoom-scaled speed, dev-only `window.__globe`, e2e block 1b). Docs only; no checks needed.
-- 2026-11-07 08:30 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (add `movestart` to originalEvent filter; drop on-load ease-in assert from check 1). Docs only.
+- 2026-11-07 08:22 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (add `movestart` to originalEvent filter; drop on-load ease-in assert from check 1). Docs only.
 
 ## Summary
