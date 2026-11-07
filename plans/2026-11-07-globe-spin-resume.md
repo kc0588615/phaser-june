@@ -71,7 +71,7 @@ Out:
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
-- [ ] Steps: `planner` writes Steps and Verification
+- [x] Steps: `planner` writes Steps and Verification
 
 ## Baseline
 
@@ -394,7 +394,70 @@ SHOULD-CONSIDER:
 
 ## Steps
 
+Each step: one session, commit + push (pre-push hook runs typecheck + lint; fix, never skip). Every E2E run per Verification (prereqs, `CHROME_PATH`, one heavy job at a time, artifact copy rules). No unit tests (Architecture: "Unit test: none").
+
+- [ ] S1 · **Spin controller + Globe wiring + dev-only hook** (riskiest: touches the live globe, picking, markers).
+  - New `src/components/globe/globeSpin.ts` exactly per Architecture → Target design: `createGlobeSpin(map)` (no side effects) → `start` / `hold` / `stop`; constants table at starting values; private `spinRate`, `ease`, `pressed`; `pause` / `resumeLater` / `begin` / `step` (per-frame `reducedMotion()` from `@/game/motion`, `isMoving()` guard, `MAX_STEP_MS`, timestamp-delta step from `getCenter()`); input wiring table (map `touchstart`/`touchend`/`touchcancel` via live `touches` inside `getCanvasContainer()`, `mousedown`, capture-phase `window` `mouseup`, `wheel`, `movestart`/`move`/`moveend` with truthy `originalEvent`, `load`); every subscription in `subs`; `start()` throws if called twice.
+  - `src/components/globe/Globe.tsx`: the Delete / Add list only (drop `spinning`, `frame`, `stopSpin` + 3 listeners, `spin`, its `cancelAnimationFrame`, `spinning.current = false`, local `reducedMotion`, the `duration` ternary; add `spinRef`, create + `start()` right after `mapRef.current = map`, `load` just `markReady()`, `stop()` before `map.remove()`, hold effect before the outline effect, `window.__globe` set/delete gated `process.env.NODE_ENV !== 'production'` like `debugBridge.ts:51`). `GlobeScreen.tsx` unchanged.
+  - Check: `npm run typecheck`, `npm run lint`, `npm test` (48/48); `npm run build`, then `rg -l __globe .next/static` prints nothing and control `rg -l maplibregl-canvas .next/static` lists ≥1 file; `npm run e2e:fresh` passes all 1512 existing checks (globe list, `07-globe-found` markers, game) with `consoleErrors` and `failedRequests` empty. Copy run to `e2e-s1/`.
+- [ ] S2 · **E2E block "1b. The globe's spin", part 1: helpers + checks 1–6.** `scripts/e2e.mjs` only.
+  - Page helpers in the `addScriptToEvaluateOnNewDocument` block, pattern `__watchRows` (`:183-192`): `__watchGlobe`, `__stopWatchingGlobe` (samples + fps), `__globeRate(ms = 500)` (re-anchors per window; returns `degPerS`, `pxPerS`, `zoom`).
+  - Block top: mirror constants `IDLE_MS = 3000`, `EASE_MS = 1500`, `FULL_ZOOM = 1` with comment "mirror of src/components/globe/globeSpin.ts; change both" (e2e.mjs is plain Node, can't import the TS module). Idle windows written as `[IDLE_MS − 500, IDLE_MS + 4000]` ms (= [2.5, 7] s), so tuning moves them.
+  - Node helpers: lng unwrap across ±180; still (|Δlng| < 1e-6°) / momentum (`moving`) / spin (`!moving`, lng changing) classification; "wait until the spin returns" (ends at first spin sample); CDP input via `Input.dispatchTouchEvent` at the `section[aria-label="Globe"]` centre, `Input.dispatchMouseEvent`, `Input.dispatchKeyEvent` with `windowsVirtualKeyCode`; hold still 300 ms before any deterministic lift (only the fling releases moving).
+  - Checks 1–6 after `01-globe.png` (`:253`), names and pass rules per E2E design; measured numbers in `detail`. Check 5 stores deg/s₀, px/s₀ for check 9. Screenshots `01b-globe-held.png` (check 3), `01c-globe-spin-back.png` (check 5).
+  - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 6); report.json details show deg/s₀, px/s₀, idle gaps, key Δlng. Copy run to `e2e-s2/`, delete `e2e-s1/`.
+- [ ] S3 · **E2E part 2: checks 7–12.** `scripts/e2e.mjs` only, per E2E design.
+  - 7 pinch 60 → 240 px (zoom +≥1.5, still while held); 8 partial pinch release (`touchMove` listing finger 1 only; still for `IDLE_MS` + 1 s; lift → spin in idle window); 9 zoom-scaled speed (`__globeRate(500)` after the ease; deg/s ratio within ±30% of `2^−(z₁ − max(z₀, FULL_ZOOM))`, px/s ratio in [0.7, 1.4]); 10 pick a `ul button`, wait `!isMoving()`, still for `IDLE_MS + EASE_MS` + 1 s; 11 `button[aria-label="Back to all places"]` → spin in idle window; 12 mouse drag released on the header wordmark (x 40, 20 px above the section) → spin in idle window.
+  - Screenshot `01d-globe-zoomed-spin.png` (check 9).
+  - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 12); check 9 detail shows both ratios and z₀/z₁. Copy run to `e2e-s3/`, delete `e2e-s2/`.
+- [ ] S4 · **Reduced-motion checks, tuning, DoD captures, docs line.**
+  - `scripts/e2e.mjs`: checks 13–14 last in block 1b, per E2E design (`Emulation.setEmulatedMedia` reduce mid-spin → still 1 s from +300 ms; reload `/` → still 4.5 s, drag + release → still 5 s; then `setEmulatedMedia({ features: [] })` at once, before block 2).
+  - Tune by measurement: phone numbers from report.json (390×844 touch); desktop from a throwaway script kept in the mission folder (not committed) that imports `scripts/cdp.mjs`, sets 1280×800 non-mobile, mouse-drags, releases, saves frames every 250 ms for ~6 s, then repeats zoomed in at z≈4 and logs `__globe` deg/s and px/s. Its dev server: `NEXT_DIST_DIR=.next-e2e node_modules/.bin/next dev -p <free port>` (check `ss -ltn`; not 8080 or 3100–3102; never while an `e2e:fresh` runs; stop it after). Change constants in `globeSpin.ts` and the e2e mirror together, only if the numbers show a snap, a race or a crawl. Record final `SPIN_IDLE_MS`, `SPIN_EASE_MS`, `SPIN_DEG_PER_S`, `SPIN_FULL_ZOOM`, `SPIN_MAX_ZOOM` and why under **Decisions**.
+  - DoD captures to `/srv/critter-ai/agent-state/missions/globe-spin-resume/spin-shots/`: `01b`, `01c`, `01d` from the run (held → spin back → zoomed-in slow spin) plus the desktop frame series (`desktop-*.png`).
+  - `AGENTS.md` Globe bullet: one line adding `globeSpin.ts` (spin pauses on input, resumes after idle) and dev-only `window.__globe` (Architecture's optional docs line).
+  - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 14; game checks after block 1b unaffected). Copy run to `e2e-s4/`, delete `e2e-s3/`.
+- [ ] S5 · **Final verification:** `git fetch origin --prune`, note in Log whether `origin/main` moved (the Release unit rebases). Run the full Verification below, in order, on the final commit. Copy the E2E run to `/srv/critter-ai/agent-state/missions/globe-spin-resume/e2e-final/`, then delete the last `e2e-s*`. Write **Summary**: what changed (controller, Globe edits, keyboard-pan fix from finding 3a, picking flies per finding 6), final idle delay / speeds / zooms, the 14 E2E checks added, no unit test (speed measured in check 9), reduced motion now re-read every spinning frame (stricter than today's mount-time read; Fable SC4), artifact paths.
+
 ## Verification
+
+E2E-first. Failure modes are those in Architecture → Risks and failure modes; each maps to an E2E check there, and no part is tested in isolation, so there's no separate Failure modes section.
+
+**Prereqs**
+- Heavy jobs (build, E2E) one at a time. Before each, `pgrep -af 'e2e-fresh|scripts/e2e.mjs|next build'` shows no other run; wait if it does.
+- Every E2E run: `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh` (no `/usr/bin/google-chrome` here). `e2e:fresh` picks its own free port and `.next-e2e`, so it doesn't touch 8080.
+
+**Commands, in order, on the final commit**
+
+| # | Command | Passing looks like |
+|---|---|---|
+| 1 | `npm run typecheck` | exit 0 |
+| 2 | `npm run lint` | exit 0 (eslint `--max-warnings 0` + theme check) |
+| 3 | `npm test` | exit 0, 48/48 (no unit tests added) |
+| 4 | `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh npm run e2e:fresh` | exit 0; last line `1526/1526 checks passed. Artifact: e2e-artifacts/<run>/` (baseline 1512 + 14 in block 1b; any other count must be explained by the report); `report.json` has every check `ok`, `consoleErrors` and `failedRequests` empty |
+| 5 | `npm run build && rg -l __globe .next/static; echo rg=$?` | build exit 0; rg prints no files and `rg=1` |
+| 6 | `rg -l maplibregl-canvas .next/static` | ≥1 file (control: step 5 searched the real globe chunk) |
+
+**E2E scenarios (block 1b, 390×844 mobile touch) → Goal**
+
+| Goal behaviour | Checks |
+|---|---|
+| Spins on its own | 1 |
+| No spin while touching (drag, held finger, pinch, half-lifted pinch) | 2, 3, 7, 8 |
+| Momentum counts as input; idle pause then smooth ease-in, from where and at the zoom left | 4, 5 |
+| Spin never cancels player input (finding 3a/3b): drag, keys | 2, 6 |
+| Gentler when zoomed in (same on-screen speed) | 9 |
+| Holds while a place is picked; resumes after clearing | 10, 11 |
+| Mouse released off the globe still resumes | 12 |
+| Reduced motion: stops at once, never spins | 13, 14 |
+| Nothing else changes: picking, list, range tints, markers, game | the existing 1512 checks (`01-globe`, `07-globe-found`, rounds) |
+
+The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s, ratios, idle gaps and fps.
+
+**Artifact**
+- `e2e-artifacts/<run>/report.json` + PNGs (gitignored; newest 10 kept). Key shots: `01-globe.png`, `01b-globe-held.png`, `01c-globe-spin-back.png`, `01d-globe-zoomed-spin.png`.
+- Reproduce: `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh npm run e2e:fresh` (seed 7 default; same seed, same run).
+- Final copy: `/srv/critter-ai/agent-state/missions/globe-spin-resume/e2e-final/`. DoD captures: `.../spin-shots/` (S4).
+- Disk cap: at most two artifact folders in the mission folder. Intermediate runs go to `e2e-s<n>/`, deleting the previous `e2e-s*`; S5 deletes the last `e2e-s*` once `e2e-final/` is written, leaving `e2e-final/` and `spin-shots/`. Never delete those two.
 
 ## Code review (Astra)
 
@@ -409,5 +472,6 @@ SHOULD-CONSIDER:
 - 2026-11-07 08:22 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (add `movestart` to originalEvent filter; drop on-load ease-in assert from check 1). Docs only.
 - 2026-11-07 08:25 UTC · Astra review: APPROVE_WITH_CHANGES, 3 MUST-FIX (track contacts incl. partial pinch/off-canvas release; pause synchronously on user `movestart`, no spin writes while camera owned by other motion; split factory create/activate for CQS). Docs only.
 - 2026-11-07 08:39 UTC · Revision: architect resolved all 5 MUST-FIX (contact tracking via live touches + window mouseup, sync pause on user movestart + per-frame isMoving guard, createGlobeSpin/start/hold/stop CQS split, check 1 lng-only); e2e block now 14 checks. Docs only.
+- 2026-11-07 08:43 UTC · Steps: planner wrote S1–S5 (controller+Globe wiring, e2e block 1b in 3 parts incl. tuning/DoD shots, final verification) + Verification (target 1526 checks, build `rg __globe` empty). Docs only.
 
 ## Summary
