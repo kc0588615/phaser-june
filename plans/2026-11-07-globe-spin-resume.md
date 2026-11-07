@@ -417,6 +417,9 @@ Each step: one session, commit + push (pre-push hook runs typecheck + lint; fix,
   - `AGENTS.md` Globe bullet: one line adding `globeSpin.ts` (spin pauses on input, resumes after idle) and dev-only `window.__globe` (Architecture's optional docs line).
   - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 14; game checks after block 1b unaffected). Copy run to `e2e-s4/`, delete `e2e-s3/`.
 - [x] S5 · **Final verification:** `git fetch origin --prune`, note in Log whether `origin/main` moved (the Release unit rebases). Run the full Verification below, in order, on the final commit. Copy the E2E run to `/srv/critter-ai/agent-state/missions/globe-spin-resume/e2e-final/`, then delete the last `e2e-s*`. Write **Summary**: what changed (controller, Globe edits, keyboard-pan fix from finding 3a, picking flies per finding 6), final idle delay / speeds / zooms, the 14 E2E checks added, no unit test (speed measured in check 9), reduced motion now re-read every spinning frame (stricter than today's mount-time read; Fable SC4), artifact paths.
+- [ ] S6 · **Astra MUST-FIX 1: mouse released off the globe, then held still.** MapLibre's mouse pan ends only on a `mouseup` over the map (`mouse.ts:35`), so `_eventsInProgress.drag` keeps `isMoving()` true until the next mousemove, and the spin never returns. In `globeSpin.ts` `onMouseUp`, when the release target is outside `map.getCanvasContainer()`, forward it: dispatch a `mouseup` (same `button`, `clientX/Y`) on the canvas container so MapLibre's `dragEnd` runs and fires its `moveend`. Also (Astra SC, same path) clear `mouseDown` on window `blur` (released elsewhere after an alt-tab). `scripts/e2e.mjs` check 12: drop the 10 px `mouseMoved` after the release (Astra asked to test without it); the pass rule is unchanged. Check: typecheck, lint, `npm run e2e:fresh` 1526/1526. Copy the run to `e2e-s6/`.
+- [ ] S7 · **Astra MUST-FIX 2: `load` must not cancel a pending idle pause.** `load` → `begin()` → `pause()` clears the timer, so input released just before load spins at once. Set `timer = undefined` in `pause()`; on `load`, `loaded = true` then `begin()` only when no timer is pending. E2E: a new check in block 1b (after `goto /` and once `window.__globe` exists while `!__globe.loaded()`): tap the globe (touch start/end), and the first spin comes ≥ `IDLE_MS − 500` after the tap. If the map is already loaded at the tap, the detail says so and the check fails (it must not pass vacuously); then make it reliable (for example, delay the style request through CDP `Fetch`). Update the Verification count to 1527. Check: typecheck, lint, `npm run e2e:fresh` all pass. Copy the run to `e2e-s7/`, delete `e2e-s6/`.
+- [ ] S8 · **Re-run the final Verification** on the final commit (as S5: fetch, all 6 commands), replace `e2e-final/` with the new run, delete `e2e-s7/`, and update the **Summary** (the Astra fixes, the new check count, and the remaining SHOULD-CONSIDER: the fling check passes with `momentumMs: 0`, so inertia is only covered via the key-ease path; see the S2 decision). Then set `status: done`.
 
 ## Verification
 
@@ -461,6 +464,19 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
 
 ## Code review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. `src/components/globe/globeSpin.ts:64,88–91`: Drag outside the globe, release, then leave the mouse stationary: MapLibre retains its active drag state, so `isMoving()` prevents spin indefinitely. `scripts/e2e.mjs:473` masks this by injecting another mouse movement. Handle stationary releases and test without that extra movement.
+
+2. `src/components/globe/globeSpin.ts:108`: Loading unconditionally calls `begin()`, cancelling any pending idle delay. Input released shortly before map load therefore resumes spinning immediately. Reproduced with the exact controller in memory. Preserve the remaining three-second pause.
+
+SHOULD-CONSIDER:
+
+- `scripts/e2e.mjs:373–379`: Require observable inertia in the fling test. The final artifact passes with `momentumMs: 0`, leaving momentum handling unverified.
+- `src/components/globe/globeSpin.ts:110`: Recover pressed state after window blur. Alt-tabbing during a press and releasing elsewhere leaves `mouseDown` latched until another mouseup reaches the page.
+
 ## Release
 
 ## Decisions
@@ -478,6 +494,8 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
 - S4: constants kept at their starting values: `SPIN_IDLE_MS` 3000, `SPIN_EASE_MS` 1500, `SPIN_DEG_PER_S` 2.4, `SPIN_FULL_ZOOM` 1, `SPIN_MAX_ZOOM` 5 (`MAX_STEP_MS` 1000 from S3). Measured, no snap, race or crawl: phone (390×844 touch, e2e) 2.24°/s ≈ 6.8 px/s at z 1.1, 0.55°/s ≈ 6.8 px/s at z 3.1, rests 3.1–4.1 s, first spin step 1e-5° from rest; desktop (1280×800 mouse, `tools/desktop.mjs`) 2.21°/s ≈ 6.7 px/s at z 1.1, 0.275°/s ≈ 6.9 px/s at z 4.1, spin back ~3.5 s after release, easing in over the next frames. ~2.6 min a turn at the home zoom reads as calm; a pick holds the spin whatever zoom its `fitBounds` (maxZoom 5) lands on, so the z 5 cap only stops it when a player zooms right in, where even 6.8 px/s would scroll past small detail.
 - S4: the desktop capture's frames are ~1–1.5 s apart, not 250 ms (each 1280×800 SwiftShader screenshot takes ~1 s); the series still shows hold → ease-in → steady spin. Its dev server ran on :3150 and was stopped after.
 
+- Astra code review: both MUST-FIX accepted (verified in MapLibre 6.16 source: `ui/handler/mouse.ts:35`, `handler_manager.ts:405`; `globeSpin.ts:108`), so S6 and S7 were added. SC window blur folded into S6 (same latched-press path, one listener). SC fling inertia left for the owner: SwiftShader's 3–5 fps leaves MapLibre's 160 ms inertia buffer empty (S2 decision), so requiring momentum would make the check flaky here.
+
 ## Log
 
 - 2026-11-07 08:03 UTC · Baseline: typecheck/lint ok, unit 48/48, e2e:fresh 1512/1512.
@@ -491,6 +509,7 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
 - 2026-11-07 12:31 UTC · S3: e2e block 1b checks 7–12 (pinch, half-lifted pinch, zoomed speed, pick hold, back, off-globe mouse release); `MAX_STEP_MS` 250→1000 (Decisions). typecheck/lint ok; e2e:fresh 1524/1524, no console errors/failed requests; zoomed deg ratio 0.248 (want 0.25), px ratio 0.996, rests 3.2–3.8 s (`e2e-s3/`).
 - 2026-11-07 12:55 UTC · S4: checks 13–14 (reduced motion stops the spin at once; never spins after reload or drag), constants unchanged after phone + desktop measurement (Decisions), DoD shots in `spin-shots/`, AGENTS.md Globe line. typecheck/lint ok; e2e:fresh 1526/1526, no console errors/failed requests (`e2e-s4/`).
 - 2026-11-07 13:10 UTC · S5: final Verification on `e0ed36ca`: typecheck/lint ok, unit 48/48, e2e:fresh 1526/1526 (no console errors/failed requests), build ok, `rg __globe .next/static` rg=1, maplibre chunk present. `origin/main` moved during the session 69f45fa6 → 4418143d (PR #61, docs/plans only, no overlap; Release rebases). Artifact `e2e-final/`, `e2e-s4/` deleted.
+- 2026-11-07 13:35 UTC · Astra code review (`--code origin/main`): APPROVE_WITH_CHANGES, 2 MUST-FIX (off-map mouse release held still; load cancels the idle pause), both verified real in MapLibre source; added S6–S8. Docs only.
 
 ## Summary
 
