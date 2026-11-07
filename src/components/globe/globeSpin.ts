@@ -84,8 +84,17 @@ export function createGlobeSpin(map: MapLibreMap): GlobeSpin {
     touching = Array.from(event.originalEvent.touches).some(touch => container.contains(touch.target as Node));
     resumeLater();
   };
-  // MapLibre fires no map event for a mouse released off the canvas.
-  const onMouseUp = () => {
+  // MapLibre's mouse pan ends only on a mouseup over the map; released off it, its drag (and isMoving())
+  // would last until the next mouse move. So a release elsewhere is forwarded to the map, which ends the pan.
+  const onMouseUp = (event: MouseEvent) => {
+    if (!mouseDown) return;
+    mouseDown = false;
+    const container = map.getCanvasContainer();
+    if (!container.contains(event.target as Node)) container.dispatchEvent(new MouseEvent('mouseup', event));
+    resumeLater();
+  };
+  // Released after an alt-tab: no mouseup reaches the page. MapLibre ends its own handlers on blur.
+  const onBlur = () => {
     if (!mouseDown) return;
     mouseDown = false;
     resumeLater();
@@ -108,7 +117,11 @@ export function createGlobeSpin(map: MapLibreMap): GlobeSpin {
         map.on('load', () => { loaded = true; begin(); }),
       );
       window.addEventListener('mouseup', onMouseUp, true);
-      subs.push({ unsubscribe: () => window.removeEventListener('mouseup', onMouseUp, true) });
+      window.addEventListener('blur', onBlur);
+      subs.push({ unsubscribe: () => {
+        window.removeEventListener('mouseup', onMouseUp, true);
+        window.removeEventListener('blur', onBlur);
+      } });
     },
     hold(next) {
       if (next === held) return;

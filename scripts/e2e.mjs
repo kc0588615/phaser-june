@@ -456,8 +456,8 @@ async function main() {
     const backReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, backAt);
     check('back to all places lets the spin return after the pause', Boolean(backReturn) && inIdleWindow(backReturn.gap), JSON.stringify({ restMs: backReturn?.gap, window: IDLE_WINDOW }));
 
-    // Released off the globe, over the header: MapLibre fires no map event for it. Its drag ends only at the next
-    // mouse move with the button up (a player always moves on), so the mouse moves 10 px after the release.
+    // Released off the globe, over the header, then held still: MapLibre ends its pan only on a mouseup over the map,
+    // so the controller forwards the release; without that the drag stays active and the spin never returns.
     const off = [40, globeTop - 20];
     const offHit = await evaluate((x, y) => document.elementFromPoint(x, y)?.getAttribute('alt') ?? document.elementFromPoint(x, y)?.tagName ?? null, ...off);
     const beforeMouse = await globeView();
@@ -470,7 +470,6 @@ async function main() {
     const mouseDragged = dLng(beforeMouse.lng, (await globeView()).lng);
     await mouse('mouseReleased', ...off);
     const releasedAt = await pageNow();
-    await page('Input.dispatchMouseEvent', { type: 'mouseMoved', x: off[0] + 10, y: off[1], button: 'none', buttons: 0 });
     await watchGlobe();
     const mouseReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, releasedAt);
     check('a mouse drag released off the globe lets the spin return', Math.abs(mouseDragged) > 5 && Boolean(mouseReturn) && inIdleWindow(mouseReturn.gap), JSON.stringify({ dLng: mouseDragged.toFixed(1), releasedOn: offHit, restMs: mouseReturn?.gap, window: IDLE_WINDOW }));
