@@ -4,7 +4,29 @@ Design only (mission `moves-and-signs-design`). Nothing in the game changed. Rea
 
 ## 1. Summary
 
-Written in the next session (S17), once sections 4 and 5 are done.
+**Movement clue: add one yes/no question, "Does it live in trees?", in Habits, and remove Farms & towns** (option C, section 2). A player can check it from the photo for most animals (8 of its 10 yes-animals are shown in a tree), only 2 animals are hard to call, and only 5 have no record, so it's dealt in 18 of the 149 playable rounds, mostly in Asia. No round is lost. It's narrower than "how it gets around": the broader version (option D, "Climbs trees" and "Digs burrows") was researched and measured too, and is the second pick, but 16 animals are hard to call on it and its most common split rests on a fact no player could see.
+
+**Signs and categories: option 1, category marks** (section 4). One icon per question category on the sign chips, guide headings, "Its answers" rows, question tiles and witness notes; tap a sign to jump to its category in the guide. No new colour. And while a question is dealt, hide the signs and witness notes that would answer it: today about 1 sign in 7 can give a dealt answer away.
+
+**The build** (section 5, and the brief [`plans/2026-11-07-moves-and-signs-build-brief.md`](../../plans/2026-11-07-moves-and-signs-build-brief.md)): about 20–25 mission sessions, then a one-session cleanup after your production content build.
+
+**Your choices, with the mission's pick:**
+
+| Choice | Options | Pick | Why (section) |
+|---|---|---|---|
+| Movement clue | A several moves in one group · B one main way · **C Lives in trees** · D Climbs trees + Digs burrows | **C** | fairest: 2 hard animals against 16, 5 no-records against 47; dealt as often (18 vs 15 of 149) (§2) |
+| Swims | keep · **drop** | **drop** | never dealt: 44 of 76 have no record; where recorded it repeats "Fresh water" 81% of the time (§2) |
+| Tree value | **Lives in trees** · Climbs trees | **Lives in trees** | the photo shows it; Climbs trees has 26 no-records and 8 hard animals (§2). Comes with the C pick |
+| Pencil weight | **(a) Habits, 3 points** · (b) Body, 1 point · (c) a one-question override | **(a)** | "Body" would be the wrong word on its tile once categories show; extra points on an easy question aren't unfair (§2) |
+| Hide answering signs while a question is dealt (changes plan 045's "signs stay") | **yes** · no | **yes** | a sign like `tree_dweller` answers the question outright; costs a median of 1 sign per suspect (§4, rule 1) |
+| Skip witness notes that answer a dealt question | **yes** · no | **yes** | the note would hand over the mystery's answer; costs about a third of a note per round, more in North America (§4, rule 2) |
+| Link option | **1 category marks** · 2 signs inside the guide · 3 category gem colours | **1** | no new colour, smallest change; 2 lengthens every sheet by 208 px; 3 loses 98 of 149 rounds and fails light-mode contrast (§4) |
+| `travelOf` (which way a ruled-out card leaves) | unchanged · read `digs:yes` | **unchanged** under C; `digs:yes` if D | C has no dig trait; under D the bot can't tell the difference and 4 animals leave more truly (§2) |
+| Website screenshot refresh | in the build · **later** | **later** | the field-guide shot only lacks the new icons (§5) |
+
+**Already decided by you** (2026-11-07): Farms & towns goes (the clue audit's option A). The build removes it from the 20 content files but keeps its code constants until your production content build, because the deploy goes live before that build; a one-session cleanup removes them afterwards (§5).
+
+**Yours after the build:** the production content build (`npm run content -- build`) from WSL, only after the build's deploy has succeeded; the build mission will ask through the handoff file.
 
 ## 2. Movement clue
 
@@ -227,12 +249,197 @@ Under C, the 2 hard animals are both yes-animals a grade 6–12 player may know 
 
 ## 4. Signs and categories
 
-Written in the next session (S17).
+**Recommendation: option 1, category marks.** One small icon per question category (Body, Habits, Habitat, Range, Life cycle) on the sign chips, the field guide's headings, the "Its answers" rows, the question tiles and the witness notes, with the category word printed or read aloud beside it. Tapping a sign scrolls to its category in the guide. No new colour, the least layout change, and it works with the chips' paging beside the photo. And while a question is dealt, hide the signs and witness notes that would answer it (the leak rules below).
+
+### Where signs come from
+
+A sign chip is an open tag on one of the animal's hand-written notes (`clues[].tags` in `db/content/animals/*.json`). A suspect's own notes are never shown during play, by design (plan 044: a witness note would match one word for word), so "this sign came from this note" can't be shown on the suspect's sheet. What the game can show is the next link: **this sign → this kind of question.** The guide's headings already use the five question categories, so the link reuses them.
+
+Each note has a category. Only 6 of the 12 kinds of note carry tags, so only they make signs. Facts, life stories, conservation and threats are untagged and show only on the reveal card.
+
+| Note category | Notes | Tagged | Question category |
+|---|---|---|---|
+| morphology | 180 | 169 | Body |
+| behavior | 215 | 142 | Habits |
+| diet | 56 | 51 | Habits |
+| diet_prey, diet_flora | 13, 5 | 0 | Habits (no signs) |
+| habitat | 49 | 38 | Habitat |
+| geography | 20 | 2 | Range |
+| reproduction | 35 | 35 | Life cycle |
+| life_description | 70 | 0 | Life cycle (no signs) |
+| key_fact, conservation, threat | 211, 97, 76 | 0 | none |
+| **All 12** | **1027** | **437** | |
+
+### Every sign tag's category
+
+All 198 tags (519 uses) are mapped in [`sign-map.csv`](2026-11-07-moves-and-signs/sign-map.csv), plus the 7 new tags the build adds (below) and `can_swim`, which only a Swims build would add: 206 rows. Each row gives the tag, its uses and holders, the categories of its notes, its question category and the rule that set it, the questions its words answer and why, the trait it restates, and the holders it misleads.
+
+- **One fixed category per tag,** so a chip looks the same on every animal. It's the majority of its notes' categories, through the table above. 19 tags sit in notes of different categories on different animals; the majority settles 17. The 2 ties go by what the sign names (a body part → Body, an act or food → Habits, surroundings → Habitat, a place → Range, eggs or young → Life cycle): `leaf_litter` → Habitat (fallen leaves are surroundings), `one_island` → Range (where in the world).
+- **Counts** (the 198 content tags): Body 87, Habits 70, Habitat 22, Range 1, Life cycle 18. Range has almost no signs, because its notes are nearly all untagged.
+- **Witness notes** get one mark per distinct category of their tags, in guide order: 424 of the 437 tagged notes get one mark, 13 get two (for example `long_tail` + `climber`, Body and Habits), none three.
+
+### What a sign gives away
+
+A sign *answers* a question group when a careful grade 6–12 reader would take an answer to any question in it from the sign's words alone: a yes, a no by elimination, or a wrong answer. `reddish_fur` answers the whole covering group (yes to Fur, so no to Scales, Shell and the rest). `fully_aquatic` answers several groups (fresh water, wetlands, and no to living in trees). When in doubt, a sign answers: hiding a chip for one round costs little, a leak costs the round's fairness.
+
+A sign that only hints stays: `digging_claws` (the anteater digs for food, not a burrow), `webbed_feet` (the flying frog glides on them), `pouch` (the echidnas have one and lay eggs), `long_arms`, `trunk`, `large_eyes`. These are the teaching link: evidence to weigh, not an answer to copy.
+
+Of the 198 content tags, 79 (192 uses) answer at least one question group under either option; under C (Lives in trees) it's 74 (165 uses). The other 119 (124 under C) always show. Below, the tags hidden while each group is dealt (\* = a new tag the build adds):
+
+| Question group | Tags | Hidden while it's dealt |
+|---|---|---|
+| covering | 19 | `algae_fur`, `black_coat`, `cub_mane`, `flat_shell`, `furry_feet`, `giant_frog`, `giant_tortoise`, `giant_turtle`, `hair_like_frills`, `hinged_shell`, `mane`, `patchy_coat`, `reddish_fur`, `saddleback_shell`, `shell_spines`, `skin_folds`, `spiky_shell`, `sticky_skin`, `yellow_scales` |
+| size | 3 | `giant_frog`, `giant_tortoise`, `giant_turtle` |
+| diet | 15 | `ambush_hunter`, `bamboo_eater`, `bromeliad_eater`, `cecropia_leaves`, `eats_lichen`, `fish_eater`, `fruit_eater`, `grazer`, `leaf_eater`, `nectar_drinker`, `pack_hunter`, `raids_termite_mounds`, `rodent_hunter`, `scavenger`, `seed_spreader` |
+| activity | 2 | `basker`, `rock_basker` |
+| social | 3 | `coalitions`, `pack_hunter`, `shares_food` |
+| system (fresh water, sea, land) | 19 | `big_rivers`, `brackish_water`, `cold_streams`, `eggs_on_land`, `eggs_over_water`, `fast_streams`, `feathery_gills`, `flippers`, `forest_streams`, `fully_aquatic`, `giant_tortoise`, `giant_turtle`, `paddle_tail`, `sandy_bottoms`, `seasonal_streams`, `shallow_wetlands`, `snorkel_nose`, `swimmer`, `underwater_breathing` |
+| habitat | 29 | `above_tree_line`\*, `bamboo_forest`, `big_rivers`, `brackish_water`, `coastal_dunes`, `cold_streams`, `crevice_hider`, `fast_streams`, `feathery_gills`, `flippers`, `forest_floor`, `forest_streams`, `fully_aquatic`, `kopjes`, `leaf_litter`, `mountain_meadows`, `never_climbs`\*, `often_in_trees`\*, `paddle_tail`, `prairie_dog_towns`, `roosts_in_trees`\*, `sandy_bottoms`, `seasonal_streams`, `shallow_wetlands`, `snorkel_nose`, `spiny_forest`, `swimmer`, `tree_dweller`, `underwater_breathing` |
+| birth | 12 | `builds_nests`, `cub_mane`, `egg_guarding`, `eggs_on_land`, `eggs_over_water`, `foam_nest`, `giant_frog`, `giant_tortoise`, `giant_turtle`, `internal_fertilization`, `no_tadpoles`, `sucker_mouth_tadpoles` |
+| lifespan | 2 | `giant_tortoise`, `giant_turtle` |
+| **trees (C)** or **climbs (D)** | 12 | `above_tree_line`\*, `climber`, `climbing_tail`\*, `forest_floor`, `fully_aquatic`, `glider`, `hangs_upside_down`, `never_climbs`\*, `often_in_trees`\*, `rock_climber`\*, `roosts_in_trees`\*, `tree_dweller` |
+| digs (D only) | 6 | `borrowed_burrows`, `buries_itself`, `burrower`, `sand_swimmer`, `stays_underground`\*, `surfaces_to_breed` |
+| region, young | 0 | none |
+
+`town_dweller` answered only Farms & towns, so once that question is gone it answers nothing and always shows. A Swims question, if it were ever built, would hide 8 water tags and `can_swim` while dealt.
+
+### The leak rules
+
+Today (plan 045) the guide hides its line on a question while that question is dealt, but the signs and the witness notes stay. Since many signs give the answer away, the build adds:
+
+1. **A sign is hidden while any dealt question's group is one it answers** (the table above). This extends 045's rule to signs, for today's questions too, not only the new one. **An owner's choice,** because it changes 045's "signs stay". Cost (`STATE/deals/metrics.md`): a median of 1 sign per suspect (world 7 → 6); while "Lives in trees" is dealt, 5 → 4. No suspect is ever left without a sign under C (under D, one Asian suspect is).
+2. **A witness note is skipped when any of its tags is hidden by rule 1,** because it would hand over the mystery's answer to a dealt question, which only a full order should give. Example: the jaguar's note "It can climb trees to stay safe or to hunt." while a tree question is dealt. Cost: about a third of a note per round (world 2.28 → 1.95 under C). **North America feels it most:** its notes fall from 1.1 to 0.45 a round, and that, not the movement clue, is the bot's −3.9 moves left there (section 2, "Balance"). The mission's pick is to keep the rule: a note that answers the question is worse than one note fewer.
+3. **"Fits N of 5" follows the trait** for a tag that restates one (`tree_dweller` ⇒ "Lives in trees: yes"; under D `climber` and `burrower`): a suspect fits when its guide records the trait, not when it happens to carry the tag. So the count agrees with the guide lines the player can see in other rounds.
+4. **A tag that restates a trait must agree with it.** Where the research says otherwise, the note is retagged with what it actually says (table below), so no note loses its tags: 37 notes carry only movement tags and would stop being witness notes if those were dropped.
+5. **A note whose text answers the new question but carries no tag gets one** (table below), so rules 1–2 catch it.
+6. **Misleading signs** (their plain reading contradicts the holder's own answer) are hidden exactly when they could mislead, by rule 1. The build doesn't reword them; they're listed below for the clue audit's part 3.
+
+**Retags** (rule 4, `STATE/out/retags.csv`; the first 5 apply to C and D, the 6 `can_swim` rows only to a Swims build):
+
+| Animal | Note | Old tag | New tag | Why |
+|---|---|---|---|---|
+| 4 Big-headed Turtle | It is a poor swimmer but a good rock climber. | `climber` | `rock_climber` | the note is about rocks (ADW); its tree climbing rests on another source and shows as the trait line |
+| 15 Pancake Tortoise | It is a good climber: some have been found in cracks high up on tall boulders. | `climber` | `rock_climber` | boulders only; rocks don't count |
+| 59 Indian Pangolin | Its thick tail is almost as long as its body and helps it climb trees. | `climber` | `climbing_tail` | Climbs trees is no record (sources disagree); the note keeps its claim but no longer restates the trait |
+| 45 Livingstone's Flying Fox | It roosts in groups in the branches of big, old forest trees. | `tree_dweller` | `roosts_in_trees` | Lives in trees is no record; roosting is what the note says |
+| 71 Andean Bear | It is a great climber and spends lots of time in trees. | `tree_dweller` | `often_in_trees` | "lots of time" isn't most of its life: Lives in trees is no record |
+| 28, 30, 44, 53, 54, 70 (elephant, sloths, rhino, tapirs) | "It is a good swimmer…", "it can swim…" | `swimmer` | `can_swim` | Swims build only: the sources give ability, not daily life |
+
+**Note tags added** (rule 5, `STATE/out/note-tags.csv`; the first 19 apply to C and D, the last 4 only to a Swims build). Under C the 7 rows that add only a digging tag (`buries_itself`, `burrower`, `stays_underground`) answer nothing asked; they're kept because the measured C copy had them and they're true of their note.
+
+| Animal | Note | Tags now | Adds | Why |
+|---|---|---|---|---|
+| 2 Spiny Softshell Turtle | From October to April it rests buried on the bottom of rivers and lakes. | `winter_rest` | `buries_itself` | rests buried = digs |
+| 12 Spiny Hill Turtle | By day it hides buried in fallen leaves, where its brown shell blends in. | `leaf_litter` `camouflage` | `buries_itself` | Digs is no, but "hides buried" reads as digging, so it hides while Digs is dealt |
+| 26 Black-footed Ferret | In winter it may stay underground for up to a week. | none | `stays_underground` | Digs is no (prairie-dog burrows); "underground" reads as a digger |
+| 31 Northern Hairy-nosed Wombat | It grazes on native grasses near its burrows. | `grazer` | `burrower` | names its burrows |
+| 31 Northern Hairy-nosed Wombat | It lives in open eucalyptus woodland with deep, sandy soil for digging. | none | `burrower` | soil for digging |
+| 33 Ethiopian Wolf | It lives only on high mountain plateaus, above where trees can grow. | `high_mountains` | `above_tree_line` | no trees where it lives |
+| 37 Greater Bilby | Its pouch opens backward, so it doesn't fill with dirt when it digs. | `pouch` `backward_pouch` | `burrower` | when it digs |
+| 40 Sumatran Orangutan | It builds a nest of branches in the trees to sleep in each night. | `builds_nests` | `climber` | sleeps up in the trees |
+| 42 Vancouver Island Marmot | It digs its burrows under big rocks, and uses the rocks as lookouts. | none | `burrower` | digs its burrows |
+| 42 Vancouver Island Marmot | It lives in steep mountain meadows above the forest. | `mountain_meadows` | `above_tree_line` | above the forest |
+| 43 Goodfellow's Tree-kangaroo | Its long, golden-brown tail helps it balance in the trees. | `long_tail` | `climber` | in the trees |
+| 46 Golden-rumped Sengi | It builds several leaf nests on the forest floor and sleeps in a different one each night. | `builds_nests` | `forest_floor` | on the forest floor |
+| 46 Golden-rumped Sengi | It hunts through thick fallen leaves on the forest floor. | `leaf_litter` | `forest_floor` | on the forest floor |
+| 54 Brown-throated Sloth | It seldom walks on the ground, but it can swim well. | `swimmer` | `tree_dweller` | seldom on the ground |
+| 54 Brown-throated Sloth | It even lives in trees in town squares, city parks and cacao plantations. | `town_dweller` | `tree_dweller` | lives in trees |
+| 55 Giant Pangolin | Even though it lives in forests, it never climbs trees. | none | `never_climbs` | says it never climbs |
+| 56 Chimpanzee | Every night it builds a fresh nest of leafy branches in a tree to sleep in. | `builds_nests` | `climber` | sleeps in a tree |
+| 57 Aardvark | If it can't dig away from danger, it stands up on its back legs and tail and defends itself with its claws. | `stands_on_hind_legs` | `burrower` | digs away from danger |
+| 71 Andean Bear | It builds platforms, like nests, in fruit trees, where it feeds and sleeps. | `builds_nests` | `climber` | feeds and sleeps in trees |
+| 1, 2, 73, 74 (Swims only) | basking, diving, a swimming fin | | `swimmer` | Swims build only |
+
+**Content notes for the clue audit's part 3** (not fixed by this design or the build; rule 1 hides each while it could mislead):
+- *Misleading signs:* `fully_aquatic` on 10 and 17 (both also live on land), `yellow_scales` on 1 (a shell), `mane` on 53 (bare skin), `nectar_drinker` on 33 (eats only meat), `rock_basker` on 11 (active at night), `coalitions` on 58 (lives alone), `coastal_dunes` on 14 and 32 (no coast habitat), `swimmer` on six land-only animals (25, 28, 30, 44, 51, 54), `builds_nests` on five live-bearers (23, 40, 46, 56, 71), `giant_frog` on 11 (medium size), `hair_like_frills` on 7, `internal_fertilization` on 8 and `no_tadpoles` on 10 (both lay eggs), `seasonal_streams` on 20 and `snorkel_nose` on 28 (land only), `crevice_hider` on 75, `sand_swimmer` on 32, and under C `climber` on 51 and 60 (they climb but don't live in trees). The full list with reasons is the `misleads` column of `sign-map.csv`.
+- *Notes whose words answer today's questions without a tag* (they show while that question is dealt): 31 "open eucalyptus woodland" (reads as forest; it's savanna only), 37 "gallops across the desert" (no desert habitat), 42 "under big rocks" (rocky, true), 50 "in the Sahara" (desert, true), 55 "lives in forests" (true), 74 "a fin… along its tail" (reads as a water animal, true). The research read only the notes it needed, so there are probably more.
+
+### The three options
+
+All three were built into a throwaway copy of the game and shot at phone width (390 px), on the same round: the brown-throated sloth (54) as a suspect, South America seed 7, its "Climbs trees" answer scouted. The copy ran option D, because the C-or-D pick came after the shots; under C the same tile reads "Lives in trees" and nothing else changes. While Climbs is dealt, rule 1 hides 4 of the sloth's 10 signs there (`algae_fur`, `cecropia_leaves`, `hangs_upside_down`, `tree_dweller`); today's game would show all 10, and the last two answer the question outright. Mockup sources and every command: `STATE/mockups/README.md`; the theme audit: `STATE/mockups/audit.md`.
+
+**Today** (for comparison): grey chips beside the photo, all alike; the guide grouped by category, words only; "Its answers" and the question tiles carry no category.
+
+<table><tr><td><img src="2026-11-07-moves-and-signs/today-light.png" width="320" alt="Today's suspect sheet, light"></td><td><img src="2026-11-07-moves-and-signs/today-dark.png" width="320" alt="Today's suspect sheet, dark"></td></tr></table>
+
+**Option 1, category marks (recommended).** One icon per category: Body an eye (what you can see), Habits a paw print (what it does), Habitat trees, Range a map pin, Life cycle a baby. On sign chips, guide headings (icon + word), above each "Its answers" row (icon + word), before each question tile's label, and under each witness note. On the chips and tiles the word is in the screen-reader name rather than printed, since a word on every chip doubles its width. Tapping a chip scrolls to its guide row and outlines the heading for a moment.
+
+<table><tr><td><img src="2026-11-07-moves-and-signs/option-1-light.png" width="320" alt="Option 1, category marks, light"></td><td><img src="2026-11-07-moves-and-signs/option-1-dark.png" width="320" alt="Option 1, category marks, dark"></td></tr></table>
+
+**Option 2, signs inside the guide.** The chips leave the photo and sit under their category's row in the field guide; "Its answers" is grouped under the same headings. The structure itself is the link. Words only, no icon or colour.
+
+<table><tr><td><img src="2026-11-07-moves-and-signs/option-2-light.png" width="320" alt="Option 2, signs inside the guide, light"></td><td><img src="2026-11-07-moves-and-signs/option-2-dark.png" width="320" alt="Option 2, signs inside the guide, dark"></td></tr></table>
+
+**Option 3, gems coloured by category again** (plan 043's colours), with option 1's icons in a coloured disc. The shot shows the problem: this round deals Fur and Bare skin (both Body, two orange gems) and Mostly bugs and Climbs trees (both Habits, two yellow gems), and two clue gems of one colour can't be told apart on the board.
+
+<table><tr><td><img src="2026-11-07-moves-and-signs/option-3-light.png" width="320" alt="Option 3, category gem colours, light"></td><td><img src="2026-11-07-moves-and-signs/option-3-dark.png" width="320" alt="Option 3, category gem colours, dark"></td></tr></table>
+
+**Trade-offs:**
+
+| | Option 1: marks | Option 2: signs in the guide | Option 3: category gems |
+|---|---|---|---|
+| Reads for grades 6–12 | Good: the same icon on the chip, the heading and the tile; the word is on headings and answers | Best for the sign → category link (they're in one row); the tiles still don't say their category | Colour links gem, tile and chip at a glance, but needs the icons to make sense |
+| Colour never the only cue | Yes: no colour at all | Yes: no colour at all | Icons kept, so yes; but 12 light-mode contrast failures (the yellow is 1.3:1) |
+| Fits beside the photo | Chips grow to 24 px tap targets (WCAG 2.2), so the sloth's 6 signs page 1/2, as long lists already do; sheet +28 px | No paging ever, but the sheet is 208 px taller (1446 px) and the signs sit below the fold on a phone | Chips page (3 a page); sheet +33 px; a tile label clamps to "Climbs…" |
+| Leaks | Rules 1–2 apply as above | Same | Same |
+| Rules and theme cost | None | None | A deck rule of four distinct categories: about 72% of world decks hold two clues of one category; with the rule 98 of 149 playable rounds are lost, all 14 in South America (`STATE/deals/move-d-cats.md`). The theme has no orange or blue: at least 3 new game-data colours, plus a light-mode fix |
+| Build size | Smallest: one icon component, five touch points | Moves the chips and regroups the answers in the sheet | Option 1 plus the deck rule, the colours and their contrast checks |
+
+Option 3 is out: it costs two thirds of the rounds and breaks the theme. Option 2 makes the link most literal, but pushes the signs below the fold and lengthens every suspect sheet, and its question tiles still carry no category. Option 1 marks every place a category appears, adds no colour and changes the sheet least, so it's the pick. Not inspected: desktop widths, keyboard order and screen readers; witness-note marks were checked in the code, not shot.
 
 ## 5. What the build changes
 
-Written in the next session (S17).
+For the picks (C, Lives in trees; link option 1; leak rules 1–6; Farms & towns removed). The sizes come from the throwaway patches that were measured (`STATE/patches/move-c.patch`, about 40 lines of game code plus the generated sign table; `STATE/mockups/mock.patch`, about 160 lines for all three options together). Under D, the same files change, with two traits instead of one and `travelOf` reading `digs:yes`.
+
+**Game code** (`src/clueGame/`, pure rules):
+- `traits.ts`: `trees` in `EXCLUSIVE_PREFIXES`; the "never asked" value `no`, named once.
+- `questionMatch.ts`: `trees` in `PREFIX_CATEGORY` under Habits, keyed after `social`; `QUESTION_TEXT`, `SHORT_TEXT`, `COLUMN_LABEL` for `trees:yes` only; the never-asked predicate, also used by `questionsFor`.
+- `animalBoard.ts`: `fullTable` skips never-asked values; `witnessNotes` takes the dealt question groups (rules 2–3) from `newAnimalRound`; `ANIMAL_RULES.version` `054-1` → `055-0` (this drops saved games, as every rules change does). `travelOf` unchanged under C.
+- `clueFaces.ts`: the face for `trees:yes` (draft 🌲); `signPhrase` and `signsOf` move out to `signs.ts`.
+- `profiles.ts`: the `trees` trait in the profile type, its yes and no guide lines ("It lives in trees." / "It doesn't live in trees."), the `trait()` call (category `behavior`, so the line sits under Habits), `TRAIT_VALUES`; `checkProfile` calls `signProblems`.
+- **New** `signs.ts`: one entry per open tag (198 today plus the 7 new ones), each with its category, the question groups it answers and the trait it restates, from [`sign-map.csv`](2026-11-07-moves-and-signs/sign-map.csv); `signPhrase`, `signsOf(tags, asked)` (rule 1), `answersAsked`, and `signProblems` (a tag missing from the table, an answer that isn't an askable group, a restating tag that disagrees with its trait), so a new animal's new tag fails the content check.
+
+**Interface** (`src/components/animalBoard/`, option 1):
+- **New** `CategoryMark.tsx`: one lucide icon per category, with its word.
+- `AnimalSheets.tsx`: `GuideSigns` shows `signsOf(animal.tags, asked)`; chips carry the mark, 24 px tall, and tap to their guide row; guide headings, "Its answers" rows and witness notes carry the mark.
+- `EvidenceGrid.tsx`: the mark before each question tile's label.
+
+**Tests:** `tests/clueGame/animalBoard.test.ts`'s witness-fits test follows rule 3. The C copy passed all 48 unit tests; the D copies failed one ("no inseparable pair"), because Climbs trees splits the two poison frogs, which a D build would update.
+
+**Content** (`db/content/animals/*.json`), all 76 files touched:
+- **Lives in trees:** a sourced `trees` value for 71 animals (10 yes, 61 no), each with a plain note and the source in section 3; the 5 no-records are left out (13, 24, 45, 56, 71). Under D instead: `climbs` and `digs` for 71 animals (105 values).
+- **Farms & towns:** `artificial` and its 45 kinds leave the `habitats` of the 20 holders (2, 6, 7, 11, 13, 23, 24, 25, 28, 32, 48, 49, 51, 52, 54, 58, 59, 72, 73, 74). The constants (`HABITAT_CLASSES` in `traits.ts`, the `questionMatch.ts`, `clueFaces.ts` and `profiles.ts` entries) **stay** until the owner's production content build, so the live game doesn't misread the old rows between the deploy and that build (the clue audit's `isHandWrittenClue` trap). A one-session cleanup brief deletes them afterwards.
+- **Tags:** the 5 retags and 19 note tags in section 4, across 19 animals.
+
+**Docs:** `docs/CONTENT_SOURCES.md` gets the trait's row and rule (section 2), the evidence rule (a no needs a quote; two sources that disagree mean no record, not the higher tier), and says the artificial habitat class is skipped; `docs/DATABASE_ACCESS.md:202-203` is corrected (the dev copy's password isn't only in the VPS `.env.local`); the build's own plan, `plans/055-…`.
+
+**Checks:** `npm run typecheck`, `npm run lint`, `npm test`, `npm run content -- preview` (no database), then the content build, content check and E2E against the scrubbed dev copy `phaser_june_dev` only, never the live database, with a guard that stops on any other. The E2E must show a round whose grid has a `trees:yes` column. Then the balance bot again, with its numbers in plan 055. The production content build stays the owner's, from WSL, only after a successful deploy.
+
+**Size:** about 20–25 mission sessions for the build (most of it the 76 content files, the sign table and the option 1 interface), plus 1 for the cleanup. The build brief is [`plans/2026-11-07-moves-and-signs-build-brief.md`](../../plans/2026-11-07-moves-and-signs-build-brief.md).
+
+**Not in the build:** a refresh of the website's screenshots (`src/site/shots.ts:40` shows the sign chips, which gain icons). The shot stays true apart from the icons, so the mission's pick is to leave it for the next shots refresh.
 
 ## Method and coverage
 
-Written in the next session (S17).
+**Freshness.** Everything was read on `origin/main` `69f45fa6` (rules `054-1`), the newest game on 2026-11-07, after plans 053 and 054. The baseline E2E played 4 rounds on it, 1512 of 1512 checks passing (`STATE/baseline-e2e/`).
+
+**Research routes.** In order: the IUCN Red List text saved by the clue audit (all 76 animals), Animal Diversity Web (65 accounts saved by the audit, 3 fetched here), then the profiles' own sources and the other tier 2–3 sources in `db/content/sources.json` (San Diego Zoo Wildlife Alliance 27 pages, Smithsonian 10, conservation groups 19, papers and books 19, government 4, news 3), and Wikipedia last (70 pages, tier 4, checked against its own cited source where that could be fetched). Every page used is saved under `STATE/sources/`, and every yes or no quote was found word for word in its saved page (`STATE/tools/quotes.py`, 491 quotes, 0 misses). The 208 yes and no answers rest on ADW 122, IUCN 47, San Diego Zoo 9, papers 8, conservation groups 8, Wikipedia 5, news 4, Smithsonian 3, government 2. Researchers worked in taxon batches (amphibians, turtles, tree animals, carnivores, diggers, hoofed animals), so like animals were judged alike, then one pass read every value's yes and no rows side by side.
+
+**No records and why** (of 76 animals): Lives in trees 5, Climbs trees 26, Digs burrows 21, Swims 44. Most are silence: the sources say where an animal lives, not how it moves. Others are deliberate: "can swim" or "a good climber" is ability, not daily life (most of Swims's 44); a hollow scraped to sleep in isn't a burrow; and three disagreements (the Sunda pangolin on trees, the Indian pangolin on climbing, the hellbender on swimming), each quoted on both sides in `STATE/research/summary.md` and left as no record rather than settled by source tier.
+
+**What couldn't be checked, and why:**
+- AmphibiaWeb blocks automated readers, so the 15 amphibians rest on IUCN and ADW, and are no record where those are silent.
+- A few books and papers that Wikipedia cites couldn't be fetched (for example the Indian pangolin's Mahmood et al. 2014, and the book behind the Tasmanian devil's young climbing in trees); those claims weren't used alone.
+- Two animals have no photo in the game (19, 47), so their photo cue is "neutral". Every other photo cue is a judgment on the one photo the game shows.
+- "Hard to call" is the researchers' judgment of what a careful player would read; no real players were asked. A playtest of the built game would test it.
+- The balance bot doesn't read signs or photos; "knowing it on sight" was simulated by telling it the answer (`--knows`).
+- Not measured: "Lives in trees" together with "Digs burrows", and a suspect picker that keeps option 3's four-category rule.
+- The notes whose words answer today's questions without a tag (section 4) come from the notes the research happened to read, not a full survey of the 1027.
+- Mockups: phone width only. Desktop widths, keyboard order and screen readers weren't inspected; witness-note marks were checked in code, not shot.
+
+**Evidence** (`STATE` = `/srv/critter-ai/agent-state/missions/moves-and-signs-design/`):
+- `research/`: `rules.md` (the written rules, fixed before research), `moves.csv` (304 rows: 76 animals × 4 values, with quotes, links, cues and reasons), the batch CSVs, `summary.md`, `inventory.md` (each animal's guide lines, signs and notes), `photos/` (contact sheets).
+- `out/`: `sign-map.csv` (copied here as [`sign-map.csv`](2026-11-07-moves-and-signs/sign-map.csv)), `sign-map-changes.md`, `note-categories.csv`, `witness-marks.csv`, `retags.csv`, `note-tags.csv`, `restating-holders.csv`.
+- `deals/`: one file per variant plus `metrics.md`; `bot/`: one run per variant plus `summary.md`. Each file starts with its exact command and the copy's stamp.
+- `patches/` (each variant's change to a throwaway copy) and `tools/` (the scripts that build the copies, run the deals and check coverage), so any number here can be rebuilt.
+- `mockups/`: `README.md` (every command), `mock.patch` (the three options' interface), `audit.md` (the theme audit), `theme-option-3.txt` (option 3's contrast check).
