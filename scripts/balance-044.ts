@@ -4,9 +4,9 @@
 // gets the same deals and boards; same arguments, same numbers. Players may preview
 // a move's first clear (deterministic, and the game shows it); none sees future
 // refills or answers not yet earned, except the oracle, a diagnostic that knows the
-// mystery from the start. Plan 054: locker and scribbler pencil and Lock in.
+// mystery from the start. Plan 054: locker, autoguess and scribbler name early (scribbler pencils at random).
 //   node scripts/run-typescript.mjs scripts/balance-044.ts [--rounds 400] [--seed 44] [--places africa,asia]
-//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,novice,expert,reader,guesser,random,oracle,locker,scribbler]
+//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler]
 //     [--explain N]   (print round N's suspects, clue table and notes instead)
 //     [--scout on|off] [--knows size,covering]   (plan 045 scouting, on in the rules: suspects' answers start hidden
 //     and a move's clear next to an unmarked tile shows them; careful and reader know the --knows traits on sight,
@@ -18,9 +18,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, lockIn, lockInPick, mark, nameIt, newAnimalRound, newTrail,
-  pickSuspectSet, reportOf, rewardToy, scoreRound, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
-  type AnimalRound, type AnimalRules, type Pencil, type PhaseReport,
+  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameIt, newAnimalRound, newTrail,
+  pickSuspectSet, reportOf, rewardToy, scoreRound, shownMismatches, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
+  type AnimalRound, type AnimalRules, type PhaseReport,
 } from '../src/clueGame/animalBoard';
 import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
 import { makeBook, poolFor, type Book } from '../src/clueGame/questionMatch';
@@ -29,7 +29,7 @@ import type { ContinentKey } from '../src/clueGame/regions';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from '../src/game/BoardModel';
 import { hash32, mulberry32, shuffled } from '../src/lib/seededRng';
 
-type Player = 'careful' | 'novice' | 'expert' | 'reader' | 'guesser' | 'random' | 'oracle' | 'locker' | 'scribbler';
+type Player = 'careful' | 'novice' | 'expert' | 'reader' | 'guesser' | 'random' | 'oracle' | 'locker' | 'autoguess' | 'scribbler';
 /** Players who reason from the evidence (and aim, except reader). */
 const THINKERS: readonly Player[] = ['careful', 'novice', 'expert', 'reader', 'locker'];
 const PLAYER_NOTES: Record<Player, string> = {
@@ -39,8 +39,9 @@ const PLAYER_NOTES: Record<Player, string> = {
   reader: 'reasons and marks like careful, but moves at random: what board planning is worth',
   guesser: 'marks four suspects at random at the start, then aims at them: the blind floor',
   random: 'random moves, never marks (finds only by naming); names at random when moves run out (053: a right name finds it)',
-  locker: 'careful, and pencils every hidden cell it knows on sight (--knows), right; Locks in (054) as soon as its pencils leave one',
-  scribbler: 'random moves, never marks, pencils every hidden cell at random at the start; Locks in once its pencils and the shown answers leave one, else names at random at timeout',
+  locker: 'careful, and pencils every hidden cell it knows on sight (--knows), right; names it (054 bonus) as soon as only one is possible',
+  autoguess: 'random moves; Auto rule-out marks for it (shown mismatches); once one is marked, names one still in at random: the blind baseline with the switch on',
+  scribbler: 'autoguess, but pencils every hidden cell at random at the start: what random pencils add (054)',
   oracle: 'diagnostic: knows the mystery, marks the look-alikes at once, aims like careful: is a finish possible in the moves?',
 };
 
@@ -86,10 +87,19 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
   }
   if (player === 'oracle') for (const id of state.suspects) if (id !== state.mysteryId) markOut(id);
   if (player === 'scribbler') for (const id of state.suspects) for (const order of state.orders) pencil[`${id}:${order.tag}`] = rng() < 0.5 ? 'yes' : 'no';
-  /** Plan 054: the locker pencils what it knows on sight (always right); then either Locks in. */
-  const tryLock = () => {
-    if (player === 'locker') state.suspects.forEach((id, i) => { for (const order of state.orders) if (!order.seen[i] && knows(order.tag)) pencil[`${id}:${order.tag}`] = order.row[i] ? 'yes' : 'no'; });
-    if ((player === 'locker' || player === 'scribbler') && lockInPick(state, pencil as Pencil) !== null) state = lockIn(state, pencil);
+  /** Plan 054: name early. The locker pencils what it knows on sight (always right) and names once sure; autoguess and
+   * scribbler let Auto rule-out mark, then name one still in at random once any is marked. */
+  const tryName = () => {
+    if (player === 'locker') {
+      state.suspects.forEach((id, i) => { for (const order of state.orders) if (!order.seen[i] && knows(order.tag)) pencil[`${id}:${order.tag}`] = order.row[i] ? 'yes' : 'no'; });
+      const possible = stillPossible(book, state, knows);
+      if (possible.length === 1) state = nameIt(state, possible[0], pencil);
+    }
+    if (player === 'autoguess' || player === 'scribbler') {
+      for (const id of shownMismatches(state)) markOut(id);
+      const stillIn = state.suspects.filter(id => !state.marked.includes(id) && !state.released.includes(id));
+      if (stillIn.length < state.suspects.length) state = nameIt(state, stillIn[Math.floor(rng() * stillIn.length)], pencil);
+    }
   };
   let identifiedAt: number | null = null;
   let toys = 0;
@@ -120,7 +130,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
       for (const id of state.suspects) if (!possible.includes(id) && !state.released.includes(id) && !state.marked.includes(id)) markOut(id);
       if (identifiedAt === null && possible.length === 1) identifiedAt = state.movesUsed;
     }
-    tryLock();
+    tryName();
     if (state.status !== 'playing') break;
     let valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
     if (valid.length === 0) {
@@ -128,7 +138,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
       valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
       if (valid.length === 0) { stuck = true; break; }
     }
-    const move = player === 'random' || player === 'reader' || player === 'scribbler' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player, knows);
+    const move = player === 'random' || player === 'reader' || player === 'autoguess' || player === 'scribbler' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player, knows);
     resolve(board.nextPhase(move), true);
     // Plan 047: each marked tile tries one step, in order; each step settles (walk-off refill, cascades) before the next.
     if (rules.wander) {
@@ -144,12 +154,11 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
     state = endOfMove(state);
     if (state.status === 'playing' && !board.hasAnyValidMove()) board.shuffle();
   }
-  if (state.status === 'out-of-moves') tryLock();
   if (state.status === 'out-of-moves') {
     const left = reasons || player === 'oracle'
       ? stillPossible(book, state, knows)
       : state.suspects.filter(id => !state.released.includes(id));
-    state = nameIt(state, left[Math.floor(rng() * left.length)] ?? null);
+    state = nameIt(state, left[Math.floor(rng() * left.length)] ?? null, pencil);
   }
   return { state, identifiedAt, toys, stuck, blocked, walked, rewards, toyReleases };
 }
@@ -238,8 +247,8 @@ async function main() {
   if (explain === null) {
     console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}${rules.toyScout ? ', toy scouting' : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
-    console.log('\n| Place | Player | Found | ★★★ | Escaped | Ran out of moves | Named right at timeout (a find, 053) | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail | Locked in (054) | Lock-in finds | Pencil bonus at a lock-in find | Points a round (no streak) |');
-    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    console.log('\n| Place | Player | Found | ★★★ | Escaped | Ran out of moves | Named right at timeout (a find, 053) | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail | Named early (054) | Pencil bonus at a find | Points a round (no streak) |');
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   }
 
   const starLines: string[] = [];
@@ -311,9 +320,8 @@ async function main() {
         THINKERS.includes(player) ? pct(count(r => r.identifiedAt !== null && ranOut(r.state)), n) : '-',
         `${pct(finished, trails)} of ${trails}`,
         trails ? (trailFinds / trails).toFixed(1) : '-',
-        pct(count(r => r.state.lockedIn !== null), n),
-        pct(count(r => r.state.lockedIn !== null && r.state.status === 'found'), n),
-        avg(found.filter(r => r.state.lockedIn).map(r => r.state.lockedIn!.bonus)),
+        pct(count(r => r.state.named !== null && r.state.movesLeft > 0), n),
+        avg(found.filter(r => r.state.pencilBonus !== null).map(r => r.state.pencilBonus!)),
         avg(results.map(r => scoreRound(r.state, 0))),
       ].join(' | ') + (count(r => r.stuck) ? ` (stuck ${count(r => r.stuck)})` : '') + ' |');
       if (player === 'careful') {

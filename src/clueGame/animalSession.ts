@@ -2,7 +2,7 @@
 // streak. A pure reducer over the round rules in animalBoard.ts; the page owns the
 // RNG (it deals each round) and the board (it reports clears and releases).
 import {
-  applyPhase, endOfMove, lockIn, mark, nameIt, newTrail, scoreRound, starsFor, stillPossible, trailAfter, walkOff,
+  applyPhase, endOfMove, mark, nameIt, newTrail, scoreRound, starsFor, stillPossible, trailAfter, walkOff,
   type AnimalRound, type Heading, type PhaseReport, type Trail,
 } from '@/clueGame/animalBoard';
 import type { GemType } from '@/game/constants';
@@ -30,7 +30,7 @@ export interface AnimalSession {
   finds: number;
   /** Mystery ids in play order, so recent ones aren't repeated. */
   history: number[];
-  /** Plan 045: the player's own pencilled answers for hidden cells this round, by `${id}:${tag}`. Never read by the rules; kept once scouted, so the grid can show a guess was right or wrong. */
+  /** Plan 045: the player's own pencilled answers for hidden cells this round, by `${id}:${tag}`. Read by the rules only at a name (plan 054's bonus); kept once scouted, so the grid can show a guess was right or wrong. */
   pencil: Record<string, 'yes' | 'no'>;
   /** The player's own highlights this round (a long press: "this one matters"): cells by `${id}:${tag}`, question gems by `*:${tag}`. Never read by the rules; see `liveHighlights`. */
   highlight: string[];
@@ -53,8 +53,6 @@ export type AnimalAction =
   | { type: 'mark'; id: number; ruledOut: boolean; heading?: Heading }
   /** Plan 053: name the mystery (once; any time, or out of moves). `null`: skip, out of moves only. */
   | { type: 'name'; id: number | null }
-  /** Plan 054: name the one the pencil marks leave (`lockInPick`), with a pencil bonus on a find. */
-  | { type: 'lock-in' }
   | { type: 'pencil'; id: number; tag: string; value: 'yes' | 'no' | null }
   /** Toggle a cell's highlight (`id` null: the question's gem, its whole column). */
   | { type: 'highlight'; id: number | null; tag: string };
@@ -103,9 +101,7 @@ export function animalSessionReducer(session: AnimalSession | null, action: Anim
     case 'mark':
       return advance(session, mark(round, action.id, action.ruledOut, action.heading));
     case 'name':
-      return advance(session, nameIt(round, action.id));
-    case 'lock-in':
-      return advance(session, lockIn(round, session.pencil));
+      return advance(session, nameIt(round, action.id, session.pencil));
     case 'pencil': {
       if (round.status !== 'playing' || round.marked.includes(action.id)) return session;
       const pencil = { ...session.pencil };
@@ -145,7 +141,7 @@ export function liveHighlights(round: AnimalRound, highlight: readonly string[])
 export function animalDebugSummary(session: AnimalSession, seed: number) {
   const { round } = session;
   return {
-    seed, rulesVersion: round.rules.version, trailNo: session.trailNo, roundNo: session.roundNo, status: round.status, lostBy: round.lostBy, lockedIn: round.lockedIn,
+    seed, rulesVersion: round.rules.version, trailNo: session.trailNo, roundNo: session.roundNo, status: round.status, lostBy: round.lostBy, pencilBonus: round.pencilBonus,
     mysteryId: round.mysteryId, suspects: round.suspects, marked: round.marked, headings: round.headings, released: round.released,
     movesLeft: round.movesLeft, movesUsed: round.movesUsed, moves: round.rules.moves,
     orders: round.orders.map(order => ({ tag: order.tag, gem: order.gem, have: order.have, answer: order.answer, row: order.row, seen: order.seen })),

@@ -276,7 +276,6 @@ export function useAnimalSession() {
     for (const id of shownMismatches(session.round)) markSuspect(id, true);
   }, [autoRuleOut, session, board, markSuspect]);
   const name = useCallback((id: number | null) => dispatch({ type: 'name', id }), []);
-  const lockIn = useCallback(() => dispatch({ type: 'lock-in' }), []);
   const pencil = useCallback((id: number, tag: string, value: 'yes' | 'no' | null) => dispatch({ type: 'pencil', id, tag, value }), []);
   const highlight = useCallback((id: number | null, tag: string) => dispatch({ type: 'highlight', id, tag }), []);
   const nextRound = useCallback(() => {
@@ -292,6 +291,6 @@ export function useAnimalSession() {
     pool: content?.pool ?? null,
     place: content?.place ?? null,
     continent: content?.continent ?? null,
-    markSuspect, name, lockIn, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder,
+    markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder,
   };
 }

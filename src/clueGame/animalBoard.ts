@@ -9,7 +9,7 @@
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Plan 053: the player may name the mystery once a round, any time (even out
-// of moves): right is a find (one star), wrong loses the round. Plan 054: Lock in names it from the player's pencil marks, with a bonus. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
+// of moves): right is a find (one star), wrong loses the round. Plan 054: a right name also scores the player's pencil marks (a bonus, once an animal is ruled out). Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
 // by the balance bot (scripts/balance-044.ts) and, later, the game.
 import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
@@ -239,7 +239,7 @@ export type AnimalLogEntry =
   | { kind: 'escaped'; id: number }
   | { kind: 'found'; id: number }
   | { kind: 'out-of-moves' }
-  | { kind: 'named'; id: number; correct: boolean; lockedIn?: true };
+  | { kind: 'named'; id: number; correct: boolean };
 
 export interface AnimalRound {
   rules: AnimalRules;
@@ -262,8 +262,8 @@ export interface AnimalRound {
   lostBy: 'escaped' | 'out-of-moves' | 'wrong-name' | null;
   /** The player's one name this round (plan 053): right finds the mystery, wrong loses the round. */
   named: { id: number; correct: boolean } | null;
-  /** Plan 054: the name came from Lock in; `bonus` is the pencil bonus (0 unless found). */
-  lockedIn: { bonus: number } | null;
+  /** Plan 054: a right name's pencil bonus (`pencilBonus`); null when nothing was scored (a board find, a wrong name, nobody ruled out, no pencil counted). */
+  pencilBonus: number | null;
   log: AnimalLogEntry[];
 }
 
@@ -276,7 +276,7 @@ export function newAnimalRound(book: Book, rules: AnimalRules, { suspects, myste
     rules, place, suspects: sorted, mysteryId,
     orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null, seen: sorted.map(() => !rules.scout) })),
     notesLeft: witnessNotes(book, sorted, mysteryId), notes: [],
-    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, lockedIn: null, log: [],
+    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, pencilBonus: null, log: [],
   };
 }
 
@@ -399,61 +399,44 @@ export function mark(state: AnimalRound, id: number, ruledOut: boolean, heading?
   return { ...state, marked: ruledOut ? [...marked, id] : marked, headings };
 }
 
+/** Plan 054: the player's pencil marks for hidden cells, by `${id}:${tag}` (the session's `pencil`). */
+export type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
+
 /**
  * Plan 053: name the mystery, once, any time the round is undecided (out of moves too). A right name finds it, a wrong
  * one loses the round. Out of moves, `null` (skip) loses it. Ignored while a move's own end is pending (the mystery or
  * every look-alike already gone, decided at `endOfMove`), so a name never overrides what the board did.
+ * Plan 054: a right name also scores `pencil` (`pencilBonus`).
  */
-export function nameIt(state: AnimalRound, id: number | null, lockBonus?: number): AnimalRound {
+export function nameIt(state: AnimalRound, id: number | null, pencil: Pencil = {}): AnimalRound {
   if (state.status !== 'playing' && state.status !== 'out-of-moves') return state;
   if (state.status === 'playing' && (id === null || state.released.includes(state.mysteryId) || state.released.length === state.suspects.length - 1)) return state;
   if (id === null) return { ...state, status: 'lost', lostBy: 'out-of-moves' };
   if (!state.suspects.includes(id) || state.released.includes(id)) return state;
   const named = { id, correct: id === state.mysteryId };
-  // Plan 054: a Lock in (`lockBonus` given) pays its bonus only on a find.
-  const lockedIn = lockBonus === undefined ? null : { bonus: named.correct ? lockBonus : 0 };
-  const log = [...state.log, { kind: 'named' as const, ...named, ...(lockedIn && { lockedIn: true as const }) }];
+  const log = [...state.log, { kind: 'named' as const, ...named }];
   return named.correct
-    ? { ...state, status: 'found', named, lockedIn, log: [...log, { kind: 'found', id }] }
-    : { ...state, status: 'lost', lostBy: 'wrong-name', named, lockedIn, log };
-}
-
-/** Plan 054: the player's pencil marks for hidden cells, by `${id}:${tag}` (the session's `pencil`). */
-export type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
-
-/**
- * Plan 054: the one suspect Lock in would name, or null when the player's view leaves 0 or 2+. The view: unmarked,
- * unreleased suspects, each cell's shown answer or else its pencil mark, against the camera's shown answers. Reads only
- * what the player sees or wrote (never hidden answers), so pointing at it gives nothing away. Null too without a pencil
- * on another unreleased animal's hidden cell: with none it's only Name it.
- */
-export function lockInPick(state: AnimalRound, pencil: Pencil): number | null {
-  const left = state.suspects.filter((id, i) => !state.marked.includes(id) && !state.released.includes(id)
-    && state.orders.every(order => {
-      if (order.answer === null) return true;
-      const mark = pencil[`${id}:${order.tag}`];
-      const yes = order.seen[i] ? order.row[i] : mark ? mark === 'yes' : null;
-      return yes === null || yes === (order.answer === 'yes');
-    }));
-  if (left.length !== 1) return null;
-  const pencilled = state.suspects.some((id, i) => id !== left[0] && !state.released.includes(id)
-    && state.orders.some(order => !order.seen[i] && pencil[`${id}:${order.tag}`]));
-  return pencilled ? left[0] : null;
+    ? { ...state, status: 'found', named, pencilBonus: pencilBonus(state, pencil), log: [...log, { kind: 'found', id }] }
+    : { ...state, status: 'lost', lostBy: 'wrong-name', named, log };
 }
 
 /** Plan 054: how hard each category is to call from the photo and field guide (owner: fixed by category). */
-export const LOCK_IN_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
+export const PENCIL_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
 /** Plan 054: points per weight, and the cap either way (under board play's ★★★ lead over a find by name, plan 053; at -cap a find's star and bonus net 0, streak aside). */
-export const LOCK_IN_POINTS = { perWeight: 2, cap: 50 };
+export const PENCIL_POINTS = { perWeight: 2, cap: 50 };
 
 /**
- * Plan 054: the pencil bonus for a found Lock in. Counts each pencil on a cell still hidden at the lock in, on an
- * unreleased look-alike (the mystery's own cells would be free: its answers are the camera's). Right adds its category's
- * weight, wrong subtracts it (owner: random pencilling averages nothing). The net is multiplied by the distinct categories
- * pencilled, so spread raises the stake both ways. It may go below 0, down to -cap; capped so a lucky lock in can't
- * out-pay board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot, plan 054).
+ * Plan 054: the pencil bonus for a right name, once the player has ruled out (or released) at least one animal; null
+ * before that, or with no pencil counted. Counts each pencil on a cell still hidden at the name, on an unreleased
+ * look-alike (the mystery's own cells would be free: its answers are the camera's). Right adds its category's weight,
+ * wrong subtracts it (owner: random pencilling averages nothing). The net is multiplied by the distinct categories
+ * pencilled (spread raises the stake both ways) and by the animals still in, the named one too (owner: naming with more
+ * left is a bigger gamble, so it pays more). It may go below 0, down to -cap; capped so a lucky name can't out-pay
+ * board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot).
  */
-export function lockInBonus(state: AnimalRound, pencil: Pencil): number {
+export function pencilBonus(state: AnimalRound, pencil: Pencil): number | null {
+  const stillIn = state.suspects.filter(id => !state.marked.includes(id) && !state.released.includes(id)).length;
+  if (stillIn === state.suspects.length) return null;
   let net = 0;
   const kinds = new Set<ChargeCategory>();
   state.suspects.forEach((id, i) => {
@@ -462,18 +445,12 @@ export function lockInBonus(state: AnimalRound, pencil: Pencil): number {
       const mark = pencil[`${id}:${order.tag}`];
       if (!mark || order.seen[i]) continue;
       const category = PREFIX_CATEGORY[prefixOf(order.tag)];
-      const right = (mark === 'yes') === order.row[i];
-      net += right ? LOCK_IN_WEIGHT[category] : -LOCK_IN_WEIGHT[category];
+      net += (mark === 'yes') === order.row[i] ? PENCIL_WEIGHT[category] : -PENCIL_WEIGHT[category];
       kinds.add(category);
     }
   });
-  return Math.max(-LOCK_IN_POINTS.cap, Math.min(LOCK_IN_POINTS.cap, net * kinds.size * LOCK_IN_POINTS.perWeight));
-}
-
-/** Plan 054: name the mystery from the pencil marks (`lockInPick`); same stake as `nameIt`. Ignored unless it picks one. */
-export function lockIn(state: AnimalRound, pencil: Pencil): AnimalRound {
-  const id = lockInPick(state, pencil);
-  return id === null ? state : nameIt(state, id, lockInBonus(state, pencil));
+  if (kinds.size === 0) return null;
+  return Math.max(-PENCIL_POINTS.cap, Math.min(PENCIL_POINTS.cap, net * kinds.size * stillIn * PENCIL_POINTS.perWeight));
 }
 
 /**
@@ -513,7 +490,7 @@ export function starsFor(state: AnimalRound): number {
 export function scoreRound(state: AnimalRound, streak: number): number {
   const p = state.rules.points;
   if (state.status !== 'found') return 0;
-  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep) + (state.lockedIn?.bonus ?? 0);
+  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep) + (state.pencilBonus ?? 0);
 }
 
 // ---- The trail ----

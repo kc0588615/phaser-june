@@ -10,7 +10,7 @@ import Head from 'next/head';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Heart, Menu, NotebookPen, Pause } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
-import { lockInPick, type AnimalLogEntry } from '@/clueGame/animalBoard';
+import type { AnimalLogEntry } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { sightingPoint } from '@/clueGame/places';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
@@ -59,10 +59,7 @@ function LogText({ entry, nameOf, count, pencil = {} }: { entry: AnimalLogEntry;
     case 'escaped': return <span className="font-medium text-error">The {nameOf(entry.id)} was the one caught on camera. It escaped!</span>;
     case 'found': return <span className="font-medium text-color-1">Found it: the {nameOf(entry.id)}!</span>;
     case 'out-of-moves': return <span>Out of moves!</span>;
-    case 'named': {
-      const verb = entry.lockedIn ? 'locked in' : 'named';
-      return entry.correct ? <span>You {verb} the {nameOf(entry.id)}.</span> : <span className="font-medium text-error">You {verb} the {nameOf(entry.id)}. It wasn&apos;t the one caught on camera!</span>;
-    }
+    case 'named': return entry.correct ? <span>You named the {nameOf(entry.id)}.</span> : <span className="font-medium text-error">You named the {nameOf(entry.id)}. It wasn&apos;t the one caught on camera!</span>;
   }
 }
 
@@ -198,7 +195,7 @@ function StatusTicker({ now, nowKey, nowKind, facts, idle, keys = false }: { now
 }
 
 export function AnimalGame() {
-  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, lockIn, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder } = useAnimalSession();
+  const { session, loadError, seed, rules, recordedRound, pool, place, continent, markSuspect, name, nextRound, pencil, highlight, autoRuleOut, toggleAutoRuleOut, rowOrder, setRowOrder } = useAnimalSession();
   const { journal, records, record } = useJournal();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -310,12 +307,6 @@ export function AnimalGame() {
     const i = round?.orders.findIndex(order => order.tag === tag) ?? -1;
     return i >= 0 && round?.orders[i].answer !== null && (shown[i] ?? 0) >= size;
   }, [round, shown, size]);
-  // Plan 054: the one the player's pencil marks leave, from what they see and wrote: camera answers only once their
-  // gems land (never hidden answers). The rules re-check at lock in; mid-flight they may know more and ignore it.
-  const lockPick = useMemo(() => {
-    if (!round || !session || (round.status !== 'playing' && round.status !== 'out-of-moves')) return null;
-    return lockInPick({ ...round, orders: round.orders.map(order => (answerShown(order.tag) ? order : { ...order, answer: null })) }, session.pencil);
-  }, [round, session, answerShown]);
 
   // Sounds: an answer when its stamp lands; a find or an escape when it happens; a sparkle when a scouted guess was right.
   const heard = useRef({ roundNo: 0, logLength: 0, answers: new Set<string>() });
@@ -520,7 +511,7 @@ export function AnimalGame() {
 
       {/* Overlays animate in and out (src/lib/motion.ts); each needs its own key here. */}
       <AnimatePresence>
-        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardBox.top} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onName={() => { name(picked.id); setSheet(null); }} lockable={lockPick === picked.id} onLockIn={() => { lockIn(); setSheet(null); }} onShow={onShowGuide} onClose={() => setSheet(null)} />}
+        {session && round && picked && <SuspectSheet key="suspect" animal={picked} species={speciesById.get(picked.id)} round={round} top={boardBox.top} pencil={session.pencil} onPencil={(tag, value) => onPencil(picked.id, tag, value)} speciesById={speciesById} onMark={ruledOut => rule(picked.id, ruledOut)} onName={() => { name(picked.id); setSheet(null); }} onShow={onShowGuide} onClose={() => setSheet(null)} />}
         {!wide && round && sheet?.kind === 'notes' && <NotesSheet key="notes" round={round} onClose={() => setSheet(null)} />}
         {sheet?.kind === 'menu' && (
           <GameMenu
@@ -536,7 +527,7 @@ export function AnimalGame() {
             onClose={() => setSheet(null)}
           />
         )}
-        {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} lockable={lockPick} onLockIn={lockIn} />}
+        {round?.status === 'out-of-moves' && <OutOfMovesSheet key="out-of-moves" round={round} nameOf={nameOf} onName={name} />}
         {session && mystery && reviewing && (
           <RoundEndSheet key={`end-${session.roundNo}`} session={session} animal={mystery} species={speciesById.get(mystery.id)} box={boardBox} nameOf={nameOf} onNext={() => { nextRound(); board.current?.focus({ preventScroll: true }); }} />
         )}
