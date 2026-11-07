@@ -103,7 +103,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -411,6 +411,20 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **§8(a): make database isolation explicit.** Local content builds and E2E inherit production `DATABASE_URL`; only CI selects `phaser_june_dev`. Require an explicit dev-database override for both operations. Otherwise verification misses movement content or the build overwrites production content reserved for the owner.
+2. **F4/§6: one question tag cannot describe every answer a sign reveals.** `reddish_fur` answers `covering:fur` positively and other covering questions negatively. Exact-tag hiding leaves those answers exposed. Define suppression across affected prefixes/questions and share it between signs and witness-note selection.
+
+SHOULD-CONSIDER:
+
+1. Keep sign metadata and visibility rules in one pure domain module, shared by validation, gameplay and UI.
+2. Define how witness notes with differently categorized tags are marked; `long_tail` plus `climber` spans Body and Habits.
+3. Include witness-note filtering and the selected `travelOf` change in balance simulations; both affect gameplay.
+4. Before removing Farms & towns compatibility, account for cached pools: the endpoint permits 60 seconds fresh plus 600 seconds stale.
+
 ## Revision notes
 
 ## Steps
@@ -430,5 +444,6 @@ SHOULD-CONSIDER:
 - 2026-11-07 07:55 UTC · Baseline: on latest origin/main; typecheck/lint ok, unit 48/48, e2e 1512/1512 (2nd run; 1st 3 timing flakes). Artifact `baseline-e2e/`.
 - 2026-11-07 08:25 UTC · Architecture: architect wrote 12 findings + target design (lean: per-move yes/no traits Climbs trees + Digs burrows in Habits, F2 never-ask-`no` rule, F&T content removed w/ constants kept till cleanup brief, sign leak hiding, mockup option 1 category marks). Docs only; no code touched.
 - 2026-11-07 08:40 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (build brief must run content build + e2e on VPS against `phaser_june_dev`, not `.env.local` prod), 2 missed, 5 should-consider. Docs only.
+- 2026-11-07 09:30 UTC · Astra review: APPROVE_WITH_CHANGES, 2 MUST-FIX (explicit dev-DB override for content build + e2e; sign suppression must cover all answers a sign reveals across prefixes, shared with witness notes), 4 should-consider. Docs only.
 
 ## Summary
