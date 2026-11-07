@@ -570,7 +570,7 @@ Shared for every step:
   4. check the step off, add one Log line (UTC, counts, check result), commit, push. `git status --porcelain` is empty afterwards; if `next dev` touched `AGENTS.md` or `next-env.d.ts`, `git restore` them.
 - Write each tool only after reading its group under Failure modes; it must catch every case listed there.
 
-- [ ] S1 · Freshness and research setup.
+- [x] S1 · Freshness and research setup.
   - `git fetch origin --prune`.
     - If `origin/main` has moved past `69f45fa6`: rebase, then `git push --force-with-lease` (the brief asks for the rebase). Read the new plans (`055`+). Run `git diff --stat 69f45fa6 origin/main -- src db scripts tests` and re-check the F1–F13 line refs in the touched files. Record what moved under Decisions. If game code moved, run `CHROME_PATH=$STATE/chrome-nosandbox.sh npm run e2e:fresh` once into `STATE/s1-e2e/`, which replaces `baseline-e2e/`.
     - If it hasn't moved, Baseline's 4 rounds on `69f45fa6` count as the played round.
@@ -915,6 +915,7 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 ## Decisions
 
 - 2026-11-07 Baseline: `/usr/bin/google-chrome` absent and Playwright Chromium dies sandboxed (Ubuntu 24.04 userns); E2E uses `agent-state/missions/moves-and-signs-design/chrome-nosandbox.sh` (adds `--no-sandbox`) via `CHROME_PATH`. No repo change.
+- 2026-11-07 S1: `origin/main` still `69f45fa6` (fetched 08:45 UTC), no rebase; Baseline's 4 rounds count as the played round. `paths.sh` uses `grep -rnE` (no `rg` in non-interactive bash) and scans only this mission's files (`plans/2026-11-07-moves-and-signs-*`, `docs/research/2026-11-07-moves-and-signs*`): main's `plans/2026-10-29-cc-website.md` holds a dummy CI URL, not ours. Photos: no `photo.url` changed since `094da493`, so clue-audit's cached photos were reused (33), rest fetched (41). TS tools run via `STATE/tools/run.sh` (esbuild bundle; `ROOT=<copy>` targets a patched copy).
 
 ## Log
 
@@ -924,5 +925,6 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 - 2026-11-07 08:18 UTC · Astra review: APPROVE_WITH_CHANGES, 2 MUST-FIX (explicit dev-DB override for content build + e2e; sign suppression must cover all answers a sign reveals across prefixes, shared with witness notes), 4 should-consider. Docs only.
 - 2026-11-07 09:00 UTC · Revision: architect resolved 2 distinct MUST-FIX (F13 + §8(a) dev-DB override w/ `current_database()` guard for content build/check/e2e; F4/§6 per-prefix `answers` map in pure `src/clueGame/signs.ts` shared by checkProfile/GuideSigns/witnessNotes), Fable missed items, should-considers dispositioned. Docs only. Architect's masking `sed` leaked DB URLs into its transcript: handoff H9.
 - 2026-11-07 08:44 UTC · Steps: planner wrote S1–S19 (setup, deals/bot harness, sign map, 5 research batches by taxon covering ids 1–76, consolidation, movement patches, deals/bot runs, mockups ×3 light/dark, one graphical-audit, doc ×2, build brief(s), final freshness), Verification (8 checks; e2e only if game code moved since 69f45fa6) and Failure modes. Docs only; typecheck+lint 0.
+- 2026-11-07 08:50 UTC · S1: no rebase (origin/main 69f45fa6). STATE: rules.md (4 values, evidence rule, source order, 8 edge cases), moves.csv header, tools moves.py (init/upsert/coverage), quotes.py, inventory.ts+run.sh, photos.py, paths.sh. Check: coverage 304 missing rc=1; scratch rows caught all listed faults, ellipsis quote matched; inventory 76 blocks; 5 sheets viewed, 74 photos + 19/47 none; S4–S8 ids = 1–76. typecheck/lint 0, paths.sh empty.
 
 ## Summary
