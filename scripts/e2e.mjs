@@ -504,6 +504,29 @@ async function main() {
     await reduceMotion(false);
     check('with reduced motion the globe never spins', isStill(reducedLoad.samples) && reducedDragged < -10 && isStill(reducedAfter.samples), JSON.stringify({ loadSamples: reducedLoad.samples.length, dLng: reducedDragged.toFixed(1), afterSamples: reducedAfter.samples.length }));
 
+    // A tap while the map still loads: its idle pause outlives the load. The land data is held back so the tap
+    // comes first; if the map has loaded by the tap anyway, the check fails rather than pass without testing.
+    let heldLand = null;
+    browser.on(message => { if (message.sessionId === sessionId && message.method === 'Fetch.requestPaused') heldLand = message.params.requestId; });
+    await page('Fetch.enable', { patterns: [{ urlPattern: '*world-land.geojson*' }] });
+    await goto(`${BASE}/`);
+    await waitFor(() => Boolean(window.__globe), 'the globe after a reload', 30_000);
+    for (const end = Date.now() + 15_000; !heldLand && Date.now() < end;) await sleep(50);
+    await evaluate(() => { window.__globeLoadAt = null; window.__globe.once('load', () => { window.__globeLoadAt = performance.now(); }); });
+    await touch('touchStart', [[cx, cy]]);
+    await sleep(100);
+    await touch('touchEnd');
+    const tapAt = await pageNow();
+    const loadedAtTap = await evaluate(() => window.__globe.loaded());
+    await sleep(500);
+    if (heldLand) await page('Fetch.continueRequest', { requestId: heldLand });
+    await page('Fetch.disable');
+    await watchGlobe();
+    const loadReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 5000)).samples, tapAt);
+    const loadAt = await evaluate(() => window.__globeLoadAt);
+    const loadGap = loadAt === null ? null : Math.round(loadAt - tapAt);
+    check('a tap just before the globe loads keeps its idle pause', Boolean(heldLand) && !loadedAtTap && loadGap > 0 && Boolean(loadReturn) && inIdleWindow(loadReturn.gap), JSON.stringify({ landHeld: Boolean(heldLand), loadedAtTap, loadMsAfterTap: loadGap, restMs: loadReturn?.gap, window: IDLE_WINDOW }));
+
     // 2. The animal board for that continent (plan 044).
     // A ?seed= game is never saved, so each load deals the same round 1 afresh (localStorage carries over).
     const loadBoard = async () => {

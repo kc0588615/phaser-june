@@ -418,7 +418,7 @@ Each step: one session, commit + push (pre-push hook runs typecheck + lint; fix,
   - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 14; game checks after block 1b unaffected). Copy run to `e2e-s4/`, delete `e2e-s3/`.
 - [x] S5 · **Final verification:** `git fetch origin --prune`, note in Log whether `origin/main` moved (the Release unit rebases). Run the full Verification below, in order, on the final commit. Copy the E2E run to `/srv/critter-ai/agent-state/missions/globe-spin-resume/e2e-final/`, then delete the last `e2e-s*`. Write **Summary**: what changed (controller, Globe edits, keyboard-pan fix from finding 3a, picking flies per finding 6), final idle delay / speeds / zooms, the 14 E2E checks added, no unit test (speed measured in check 9), reduced motion now re-read every spinning frame (stricter than today's mount-time read; Fable SC4), artifact paths.
 - [x] S6 · **Astra MUST-FIX 1: mouse released off the globe, then held still.** MapLibre's mouse pan ends only on a `mouseup` over the map (`mouse.ts:35`), so `_eventsInProgress.drag` keeps `isMoving()` true until the next mousemove, and the spin never returns. In `globeSpin.ts` `onMouseUp`, when the release target is outside `map.getCanvasContainer()`, forward it: dispatch a `mouseup` (same `button`, `clientX/Y`) on the canvas container so MapLibre's `dragEnd` runs and fires its `moveend`. Also (Astra SC, same path) clear `mouseDown` on window `blur` (released elsewhere after an alt-tab). `scripts/e2e.mjs` check 12: drop the 10 px `mouseMoved` after the release (Astra asked to test without it); the pass rule is unchanged. Check: typecheck, lint, `npm run e2e:fresh` 1526/1526. Copy the run to `e2e-s6/`.
-- [ ] S7 · **Astra MUST-FIX 2: `load` must not cancel a pending idle pause.** `load` → `begin()` → `pause()` clears the timer, so input released just before load spins at once. Set `timer = undefined` in `pause()`; on `load`, `loaded = true` then `begin()` only when no timer is pending. E2E: a new check in block 1b (after `goto /` and once `window.__globe` exists while `!__globe.loaded()`): tap the globe (touch start/end), and the first spin comes ≥ `IDLE_MS − 500` after the tap. If the map is already loaded at the tap, the detail says so and the check fails (it must not pass vacuously); then make it reliable (for example, delay the style request through CDP `Fetch`). Update the Verification count to 1527. Check: typecheck, lint, `npm run e2e:fresh` all pass. Copy the run to `e2e-s7/`, delete `e2e-s6/`.
+- [x] S7 · **Astra MUST-FIX 2: `load` must not cancel a pending idle pause.** `load` → `begin()` → `pause()` clears the timer, so input released just before load spins at once. Set `timer = undefined` in `pause()`; on `load`, `loaded = true` then `begin()` only when no timer is pending. E2E: a new check in block 1b (after `goto /` and once `window.__globe` exists while `!__globe.loaded()`): tap the globe (touch start/end), and the first spin comes ≥ `IDLE_MS − 500` after the tap. If the map is already loaded at the tap, the detail says so and the check fails (it must not pass vacuously); then make it reliable (for example, delay the style request through CDP `Fetch`). Update the Verification count to 1527. Check: typecheck, lint, `npm run e2e:fresh` all pass. Copy the run to `e2e-s7/`, delete `e2e-s6/`.
 - [ ] S8 · **Re-run the final Verification** on the final commit (as S5: fetch, all 6 commands), replace `e2e-final/` with the new run, delete `e2e-s7/`, and update the **Summary** (the Astra fixes, the new check count, and the remaining SHOULD-CONSIDER: the fling check passes with `momentumMs: 0`, so inertia is only covered via the key-ease path; see the S2 decision). Then set `status: done`.
 
 ## Verification
@@ -436,7 +436,7 @@ E2E-first. Failure modes are those in Architecture → Risks and failure modes; 
 | 1 | `npm run typecheck` | exit 0 |
 | 2 | `npm run lint` | exit 0 (eslint `--max-warnings 0` + theme check) |
 | 3 | `npm test` | exit 0, 48/48 (no unit tests added) |
-| 4 | `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh npm run e2e:fresh` | exit 0; last line `1526/1526 checks passed. Artifact: e2e-artifacts/<run>/` (baseline 1512 + 14 in block 1b; any other count must be explained by the report); `report.json` has every check `ok`, `consoleErrors` and `failedRequests` empty |
+| 4 | `CHROME_PATH=/srv/critter-ai/agent-state/missions/globe-spin-resume/chrome-nosandbox.sh npm run e2e:fresh` | exit 0; last line `1527/1527 checks passed. Artifact: e2e-artifacts/<run>/` (baseline 1512 + 15 in block 1b; any other count must be explained by the report); `report.json` has every check `ok`, `consoleErrors` and `failedRequests` empty |
 | 5 | `npm run build && rg -l __globe .next/static; echo rg=$?` | build exit 0; rg prints no files and `rg=1` |
 | 6 | `rg -l maplibregl-canvas .next/static` | ≥1 file (control: step 5 searched the real globe chunk) |
 
@@ -452,6 +452,7 @@ E2E-first. Failure modes are those in Architecture → Risks and failure modes; 
 | Holds while a place is picked; resumes after clearing | 10, 11 |
 | Mouse released off the globe still resumes | 12 |
 | Reduced motion: stops at once, never spins | 13, 14 |
+| Input just before the map's load keeps its idle pause | 15 |
 | Nothing else changes: picking, list, range tints, markers, game | the existing 1512 checks (`01-globe`, `07-globe-found`, rounds) |
 
 The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s, ratios, idle gaps and fps.
@@ -496,6 +497,7 @@ SHOULD-CONSIDER:
 
 - Astra code review: both MUST-FIX accepted (verified in MapLibre 6.16 source: `ui/handler/mouse.ts:35`, `handler_manager.ts:405`; `globeSpin.ts:108`), so S6 and S7 were added. SC window blur folded into S6 (same latched-press path, one listener). SC fling inertia left for the owner: SwiftShader's 3–5 fps leaves MapLibre's 160 ms inertia buffer empty (S2 decision), so requiring momentum would make the check flaky here.
 - S6: the forwarded release is `new MouseEvent('mouseup', event)` on the canvas container (copies button, coords, modifiers; bubbles), sent only when the target is outside it, after `mouseDown = false` so the controller's own capture listener ignores it. Blur only clears `mouseDown` and re-arms the pause: MapLibre's handler manager already stops its handlers on window `blur` (`handler_manager.ts:436`).
+- S7: check 15 runs last in block 1b, after reduced motion is cleared, on a fresh `goto /`. CDP `Fetch` holds `world-land.geojson` (fetched by MapLibre's worker; the page's `Fetch` domain catches it) until 500 ms after the tap, so `load` lands ~0.9 s after it. Not mutation-run against the old code: there `load` → `begin()` would spin ~0.9 s after the tap, below the 2.5 s window floor.
 
 ## Log
 
@@ -512,6 +514,7 @@ SHOULD-CONSIDER:
 - 2026-11-07 13:10 UTC · S5: final Verification on `e0ed36ca`: typecheck/lint ok, unit 48/48, e2e:fresh 1526/1526 (no console errors/failed requests), build ok, `rg __globe .next/static` rg=1, maplibre chunk present. `origin/main` moved during the session 69f45fa6 → 4418143d (PR #61, docs/plans only, no overlap; Release rebases). Artifact `e2e-final/`, `e2e-s4/` deleted.
 - 2026-11-07 13:35 UTC · Astra code review (`--code origin/main`): APPROVE_WITH_CHANGES, 2 MUST-FIX (off-map mouse release held still; load cancels the idle pause), both verified real in MapLibre source; added S6–S8. Docs only.
 - 2026-11-07 14:00 UTC · S6: off-globe mouse release forwarded to the map (ends MapLibre's pan), window blur clears the press; check 12 no longer moves the mouse after release. typecheck/lint ok; e2e:fresh 1526/1526, no console errors/failed requests, check 12 rest 3.0 s (`e2e-s6/`).
+- 2026-11-07 14:25 UTC · S7: `pause()` clears `timer`; `load` begins only when no idle pause is pending. New check 15 (tap while the land data is held back; load 910 ms after tap, spin rest 3.4 s). typecheck/lint ok; e2e:fresh 1527/1527, no console errors/failed requests (`e2e-s7/`).
 
 ## Summary
 

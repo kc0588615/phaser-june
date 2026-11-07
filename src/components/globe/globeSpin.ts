@@ -51,6 +51,7 @@ export function createGlobeSpin(map: MapLibreMap): GlobeSpin {
   const pause = () => {
     cancelAnimationFrame(frame);
     clearTimeout(timer);
+    timer = undefined;
   };
 
   // Every kind of input calls this: stop now, count the idle pause from now.
@@ -114,7 +115,8 @@ export function createGlobeSpin(map: MapLibreMap): GlobeSpin {
         map.on('movestart', onMove),
         map.on('move', onMove),
         map.on('moveend', onMove),
-        map.on('load', () => { loaded = true; begin(); }),
+        // Input just before load already armed the idle pause: let it run out.
+        map.on('load', () => { loaded = true; if (timer === undefined) begin(); }),
       );
       window.addEventListener('mouseup', onMouseUp, true);
       window.addEventListener('blur', onBlur);
