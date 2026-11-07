@@ -102,7 +102,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -389,6 +389,26 @@ One `graphical-audit` pass against GUI.md. Photo credits stay visible in the PNG
 
 ## Architecture review (Fable)
 
+Fable, 2026-11-07, checked on `69f45fa6` / `c3ec885f`.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+Findings verified against the code and content. F1 (`animalBoard.ts:96-98`; `ask`/`questionsFor`/`autoAsk` have no callers outside `questionMatch.ts`), F2 (`:89-92`, `questionMatch.ts:176-179`, `clueFaces.ts:30`; `'climbs:no'.localeCompare('climbs:yes') < 0`), F3 (all 9 sites at their lines; `questionMatchContent.ts:160` calls `isHandWrittenClue` on live rows), F4 (`AnimalSheets.tsx:86,89,98-101,208`), F5–F9, F11 (`travelOf` `:199-205`, `balance-044.ts:84`), F12 (`PENCIL_WEIGHT` `:433`) are all correct. Content counts match: 76 animals, 198 tags / 519 uses, signs 2–13 (median 7), no tag in two guide sections on one animal, 19 across animals, 20 F&T holders as listed, two-move animals as listed, facts carry no tags (437 facts, 0 tagged). Clue-audit evidence exists where cited (`audit/deals.ts`, `sources/adw` 65, `sources/iucn` 76 `.pdf.txt`). Playwright is not in `node_modules`; `scripts/cdp.mjs` is. Every Definition-of-done item has a home in the target design (§1–§8). Leak rules are sound for suspects: guide lines come only from generated clues (`questionMatchContent.ts:82,91`), so suspects never show hand-written text, and signs are tag-derived. Deal and bot method mirrors `useAnimalSession` and the audit's `deals.ts`.
+
+MUST-FIX:
+1. **§8(a) checks: "The E2E plays `phaser_june_dev`" is true only in CI** (`.github/workflows/ci.yml:56`, `E2E_DATABASE_URL`). On this VPS `scripts/e2e-fresh.mjs:38` passes `process.env` through, so `npm run e2e:fresh` and `npm run content -- build` (`scripts/connect.ts:9-10`) read `.env.local`'s `DATABASE_URL`, which is the live `phaser_june` (its first-line comment is stale). As written, the build mission's local E2E would play old rows (movement never dealt, F&T still dealt), so the new question is never exercised before the PR, and a careless `content -- build` would write the prod rows that are the owner's. The build brief must say: on the VPS, run `content -- build` and `e2e:fresh` with `DATABASE_URL` overridden to `phaser_june_dev` (credentials per `docs/DATABASE_ACCESS.md:182-195`), never against `.env.local`'s URL; and name that as the check that proves the movement question is dealt.
+
+MISSED:
+- `fully_aquatic` is on 5 animals (10, 17, 62, 74, 75), not 3. On 10 (Suriname Toad, systems terrestrial+freshwater) and 17 (Pig-nosed Turtle, terrestrial+freshwater+marine) the sign contradicts the `system` answer rather than restating it, so a reader is misled, not leaked to. Hiding `fully_aquatic` while `system` is dealt (§6 rule) fixes both cases; the doc should list 10 and 17 as a content note for the audit's part 3, not fix them.
+- §5 patched copy: `git archive HEAD src scripts db tests package.json tsconfig.json` is enough for the bot and deals (`scripts/run-typescript.mjs` + `tsconfig.json` paths resolve `@/`); fine. But §7's app copy also needs `next.config.*`, `public/`, `postcss`/`eslint` configs and `src/styles`; say so, or copy the whole tree minus `node_modules`.
+
+SHOULD-CONSIDER:
+1. §6/F4 "witnessNotes skips a note that carries a hidden tag" throws away the teaching link the brief asks for (sign → note → question). Alternative with the same cost: when a note's tag restates a dealt trait, compute `fits` from the trait (`book.traits`) instead of `animal.tags`, so the note stays and its count agrees with the column. Give the owner both.
+2. F2's predicate: name the sentinel once (`:no`) and have `checkProfile` reject any hand-written tag ending in `:no`, so the never-ask rule can't be hit by accident later.
+3. §4 research CSV: add a column for hand-written notes whose *text* answers the new question but carry no restating tag (the audit found tags written only where needed). Those notes can appear as witness notes about the mystery; that's by design, but the hide/skip list in §6 is tag-based and will miss them, so the doc should say so.
+4. §2 D in Habits costs pencil weight 3 for a photo-checkable question (F12). Offer the owner the one-line alternative (`PENCIL_WEIGHT` per prefix override, or Climbs in Body) with its 054 trade-off, rather than only noting the cost.
+5. §8(a) "other branches' CI sees movement rows their code doesn't know": with old code, `climbs:yes` rows become witness notes ("It climbs trees.") and are not signs (`signsOf` drops colon tags), so the risk is cosmetic; say that, so the next mission doesn't re-investigate it.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -409,5 +429,6 @@ One `graphical-audit` pass against GUI.md. Photo credits stay visible in the PNG
 
 - 2026-11-07 07:55 UTC · Baseline: on latest origin/main; typecheck/lint ok, unit 48/48, e2e 1512/1512 (2nd run; 1st 3 timing flakes). Artifact `baseline-e2e/`.
 - 2026-11-07 08:25 UTC · Architecture: architect wrote 12 findings + target design (lean: per-move yes/no traits Climbs trees + Digs burrows in Habits, F2 never-ask-`no` rule, F&T content removed w/ constants kept till cleanup brief, sign leak hiding, mockup option 1 category marks). Docs only; no code touched.
+- 2026-11-07 08:40 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (build brief must run content build + e2e on VPS against `phaser_june_dev`, not `.env.local` prod), 2 missed, 5 should-consider. Docs only.
 
 ## Summary
