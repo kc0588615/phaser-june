@@ -69,7 +69,7 @@ Out:
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
-- [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
+- [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
@@ -260,6 +260,19 @@ SHOULD-CONSIDER:
 
 ## Architecture review (Astra)
 
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+
+1. **Contact state is missing.** `isMoving()` does not mean a finger remains down. A symmetric pinch can end when one finger lifts, allowing spin to resume beneath the remaining finger. The acknowledged off-canvas release also leaves spin stopped indefinitely. Track contacts independently, including input before map load, and handle release/cancellation outside the canvas.
+2. **Camera ownership transfers too late.** Checking `isMoving()` only when starting the loop cannot protect a keyboard animation that starts afterward. Waiting for `move` allows an already scheduled spin frame to cancel that animation. Pause synchronously on user `movestart`; prevent spin writes while another movement owns the camera.
+3. **The proposed factory violates explicit CQS rules.** `attachGlobeSpin()` registers listeners, starts animation, and returns a controller. AGENTS.md exempts framework APIs, not custom factories. Separate controller creation from its activation command.
+
+SHOULD-CONSIDER:
+
+1. Add E2E coverage for partial pinch release, off-canvas mouse release, keyboard input, and interaction during loading.
+2. Observe reduced-motion preference changes while spinning; checking only on resume can leave animation running indefinitely after the preference changes.
+
 ## Revision notes
 
 ## Steps
@@ -277,5 +290,6 @@ SHOULD-CONSIDER:
 - 2026-11-07 08:03 UTC · Baseline: typecheck/lint ok, unit 48/48, e2e:fresh 1512/1512.
 - 2026-11-07 08:16 UTC · Architecture: architect wrote findings + design (`globeSpin.ts` attachGlobeSpin, originalEvent input detect, 3 s idle, zoom-scaled speed, dev-only `window.__globe`, e2e block 1b). Docs only; no checks needed.
 - 2026-11-07 08:22 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (add `movestart` to originalEvent filter; drop on-load ease-in assert from check 1). Docs only.
+- 2026-11-07 08:25 UTC · Astra review: APPROVE_WITH_CHANGES, 3 MUST-FIX (track contacts incl. partial pinch/off-canvas release; pause synchronously on user `movestart`, no spin writes while camera owned by other motion; split factory create/activate for CQS). Docs only.
 
 ## Summary
