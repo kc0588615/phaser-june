@@ -444,6 +444,6 @@ SHOULD-CONSIDER:
 - 2026-11-07 07:55 UTC · Baseline: on latest origin/main; typecheck/lint ok, unit 48/48, e2e 1512/1512 (2nd run; 1st 3 timing flakes). Artifact `baseline-e2e/`.
 - 2026-11-07 08:25 UTC · Architecture: architect wrote 12 findings + target design (lean: per-move yes/no traits Climbs trees + Digs burrows in Habits, F2 never-ask-`no` rule, F&T content removed w/ constants kept till cleanup brief, sign leak hiding, mockup option 1 category marks). Docs only; no code touched.
 - 2026-11-07 08:40 UTC · Fable review: APPROVE_WITH_CHANGES, 1 MUST-FIX (build brief must run content build + e2e on VPS against `phaser_june_dev`, not `.env.local` prod), 2 missed, 5 should-consider. Docs only.
-- 2026-11-07 09:30 UTC · Astra review: APPROVE_WITH_CHANGES, 2 MUST-FIX (explicit dev-DB override for content build + e2e; sign suppression must cover all answers a sign reveals across prefixes, shared with witness notes), 4 should-consider. Docs only.
+- 2026-11-07 08:18 UTC · Astra review: APPROVE_WITH_CHANGES, 2 MUST-FIX (explicit dev-DB override for content build + e2e; sign suppression must cover all answers a sign reveals across prefixes, shared with witness notes), 4 should-consider. Docs only.
 
 ## Summary
