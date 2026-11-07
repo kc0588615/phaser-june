@@ -1508,7 +1508,7 @@ async function main() {
         const text = confirm?.innerText ?? '';
         [...(confirm?.querySelectorAll('button') ?? [])].find(other => other.textContent !== 'Back')?.click();
         await wait(500);
-        return { twoLeft, button: Boolean(button), text, tag, pencil: start.pencil, clue: window.__cc.clue() };
+        return { twoLeft, button: Boolean(button), text, tag, streak: start.streak, clue: window.__cc.clue() };
       }, scenario);
       check(`Lock in (${scenario}): hidden while 2 animals are left`, !lock.twoLeft, JSON.stringify({ twoLeft: lock.twoLeft }));
       check(`Lock in (${scenario}): shows in the last animal's field guide once the pencils leave one`, lock.button);
@@ -1520,11 +1520,14 @@ async function main() {
       }
       const expected = scenario === 'mixed' ? 0 : WEIGHT[CATEGORY[lock.tag.slice(0, lock.tag.indexOf(':'))]] * 2;
       check(`Lock in (${scenario}): finds it, one star, with the pencil bonus (${expected})`, state.status === 'found' && state.end?.stars === 1 && state.lockedIn?.bonus === expected, JSON.stringify({ status: state.status, stars: state.end?.stars, lockedIn: state.lockedIn, tag: lock.tag }));
+      // A find by name: the star's 50 plus streak, no moves left (plan 053), plus the bonus.
+      const streakPoints = Math.min(100, lock.streak * 10);
+      check(`Lock in (${scenario}): the bonus is in the round's points (50 + streak ${streakPoints} + ${expected})`, state.end?.points === 50 + streakPoints + expected, JSON.stringify({ points: state.end?.points, streak: lock.streak }));
       const card = await waitFor(() => {
         const sheet = document.querySelector('section[aria-labelledby="end-title"]');
         return sheet ? { text: sheet.innerText.replace(/\s+/g, ' '), bonus: sheet.querySelector('[data-lock-bonus]')?.getAttribute('data-lock-bonus') ?? null } : null;
       }, 'the round-end card', 10_000);
-      check(`Lock in (${scenario}): the round-end card says "Locked in!" and shows the bonus`, card.text.includes('Locked in!') && card.bonus === String(expected), JSON.stringify({ bonus: card.bonus, text: card.text.slice(0, 80) }));
+      check(`Lock in (${scenario}): the round-end card says "Locked in!" and shows the bonus`, /locked in!/i.test(card.text) && card.bonus === String(expected), JSON.stringify({ bonus: card.bonus, text: card.text.slice(0, 80) }));
       if (scenario === 'right') await screenshot('08-lock-in-end.png');
     }
 

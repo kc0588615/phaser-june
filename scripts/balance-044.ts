@@ -128,7 +128,7 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
       valid = neighborSwaps(board.width, board.height).filter(move => board.canSwap(move));
       if (valid.length === 0) { stuck = true; break; }
     }
-    const move = player === 'random' || player === 'reader' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player, knows);
+    const move = player === 'random' || player === 'reader' || player === 'scribbler' ? valid[Math.floor(rng() * valid.length)] : aim(book, state, board, scratch, valid, player, knows);
     resolve(board.nextPhase(move), true);
     // Plan 047: each marked tile tries one step, in order; each step settles (walk-off refill, cascades) before the next.
     if (rules.wander) {

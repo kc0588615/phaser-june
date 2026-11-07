@@ -285,8 +285,6 @@ export function AnimalGame() {
   const nameOf = useCallback((id: number) => session?.book.byId.get(id)?.name ?? 'animal', [session?.book]);
   const round = session?.round;
   const roundNo = session?.roundNo;
-  // Plan 054: the one the player's pencil marks leave, from what they see and wrote (never hidden answers).
-  const lockPick = round && session && (round.status === 'playing' || round.status === 'out-of-moves') ? lockInPick(round, session.pencil) : null;
   const { shown, landed: gemsLanded } = useShownOrders(round, roundNo);
   useEffect(() => { setSheet(null); setSelected(null); setHint(null); setBoardBusy(false); }, [roundNo]);
   useEffect(() => { EventBus.emit('clue-board-select', { id: selected }); }, [selected, roundNo]);
@@ -312,6 +310,12 @@ export function AnimalGame() {
     const i = round?.orders.findIndex(order => order.tag === tag) ?? -1;
     return i >= 0 && round?.orders[i].answer !== null && (shown[i] ?? 0) >= size;
   }, [round, shown, size]);
+  // Plan 054: the one the player's pencil marks leave, from what they see and wrote: camera answers only once their
+  // gems land (never hidden answers). The rules re-check at lock in; mid-flight they may know more and ignore it.
+  const lockPick = useMemo(() => {
+    if (!round || !session || (round.status !== 'playing' && round.status !== 'out-of-moves')) return null;
+    return lockInPick({ ...round, orders: round.orders.map(order => (answerShown(order.tag) ? order : { ...order, answer: null })) }, session.pencil);
+  }, [round, session, answerShown]);
 
   // Sounds: an answer when its stamp lands; a find or an escape when it happens; a sparkle when a scouted guess was right.
   const heard = useRef({ roundNo: 0, logLength: 0, answers: new Set<string>() });

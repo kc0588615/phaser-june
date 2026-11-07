@@ -443,7 +443,7 @@ export function lockInPick(state: AnimalRound, pencil: Pencil): number | null {
 
 /** Plan 054: how hard each category is to call from the photo and field guide (owner: fixed by category). */
 export const LOCK_IN_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
-/** Plan 054: points per weight, and the cap either way (under board play's ★★★ lead over a find by name, plan 053; at -cap a find still scores its star's 50). */
+/** Plan 054: points per weight, and the cap either way (under board play's ★★★ lead over a find by name, plan 053; at -cap a find's star and bonus net 0, streak aside). */
 export const LOCK_IN_POINTS = { perWeight: 2, cap: 50 };
 
 /**
