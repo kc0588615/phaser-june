@@ -1470,10 +1470,11 @@ async function main() {
     // `named`: right with 1 out (bonus = weight x 1 category x 4 still in x 2), right with 3 out (x 2 still in), right
     // and wrong pencils in one column (0), nobody out (no bonus), and a look-alike named (lost, no bonus). 'sharp':
     // every look-alike's first two questions pencilled right, 1 out: the bonus caps at 50, a second star, a Sharp eye
-    // badge on the card and in the journal.
+    // badge on the card and in the journal. 'taken back': 3 out, then 2 brought back before the name: the multiplier
+    // stays the fewest still in (2), not 4 (054-1). A single pencil never earns Sharp eye (it needs 4, 054-1).
     const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
     const WEIGHT = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
-    for (const [scenario, out] of [['right', 1], ['right, 3 out', 3], ['mixed', 1], ['nobody out', 0], ['wrong animal', 1], ['sharp', 1]]) {
+    for (const [scenario, out] of [['right', 1], ['right, 3 out', 3], ['mixed', 1], ['nobody out', 0], ['wrong animal', 1], ['sharp', 1], ['taken back', 3]]) {
       await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);
       await waitFor(boardReady, 'a fresh board', 60_000);
       await sleep(1500);
@@ -1496,6 +1497,7 @@ async function main() {
         else await pencil(others[0], truth(others[0]));
         if (scenario === 'mixed') await pencil(others[1], !truth(others[1]));
         for (const id of others.slice(0, out)) { window.__keyMark(id, true); await wait(250); }
+        if (scenario === 'taken back') for (const id of others.slice(1, 3)) { window.__keyMark(id, false); await wait(250); }
         await window.__holdPill(scenario === 'wrong animal' ? others[3] : mysteryId);
         document.querySelector('[role=dialog] button[data-name-it]')?.click();
         await wait(250);
@@ -1515,7 +1517,7 @@ async function main() {
       const weight = WEIGHT[CATEGORY[named.tag.slice(0, named.tag.indexOf(':'))]];
       // 'sharp': at least 4 look-alikes x 2 cells x weight 1, x 4 still in x 2: well over the cap.
       const expected = !scored ? null : scenario === 'sharp' ? 50 : scenario === 'mixed' ? 0 : Math.min(50, weight * (5 - out) * 2);
-      const sharp = expected !== null && expected >= 20 && scenario !== 'mixed';
+      const sharp = scenario === 'sharp';
       check(`pencil bonus (${scenario}): finds it, ${sharp ? 'two stars (Sharp eye)' : 'one star'}, bonus ${expected}`, state.status === 'found' && state.end?.stars === (sharp ? 2 : 1) && state.sharp === sharp && state.pencilBonus === expected, JSON.stringify({ status: state.status, stars: state.end?.stars, sharp: state.sharp, pencilBonus: state.pencilBonus, tag: named.tag }));
       // A find by name: the star's 50 plus streak, no moves left (plan 053), plus the bonus.
       const streakPoints = Math.min(100, named.streak * 10);

@@ -6,7 +6,7 @@
 // refills or answers not yet earned, except the oracle, a diagnostic that knows the
 // mystery from the start. Plan 054: locker, autoguess and scribbler name early (scribbler pencils at random).
 //   node scripts/run-typescript.mjs scripts/balance-044.ts [--rounds 400] [--seed 44] [--places africa,asia]
-//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler]
+//     [--moves 30] [--order 24] [--board 7] [--witness 0.03] [--stars 6,13] [--players careful,novice,expert,reader,guesser,random,oracle,locker,autoguess,scribbler,dabbler] [--dab 1]
 //     [--explain N]   (print round N's suspects, clue table and notes instead)
 //     [--scout on|off] [--knows size,covering]   (plan 045 scouting, on in the rules: suspects' answers start hidden
 //     and a move's clear next to an unmarked tile shows them; careful and reader know the --knows traits on sight,
@@ -18,18 +18,18 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
-  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameIt, newAnimalRound, newTrail,
+  ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, PENCIL_WEIGHT, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameIt, newAnimalRound, newTrail,
   pickSuspectSet, reportOf, rewardToy, scoreRound, sharpEye, shownMismatches, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
   type AnimalRound, type AnimalRules, type PhaseReport,
 } from '../src/clueGame/animalBoard';
 import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
-import { makeBook, poolFor, type Book } from '../src/clueGame/questionMatch';
+import { PREFIX_CATEGORY, makeBook, poolFor, type Book } from '../src/clueGame/questionMatch';
 import { animalsFromProfiles } from '../src/clueGame/questionMatchContent';
 import type { ContinentKey } from '../src/clueGame/regions';
 import { BoardModel, neighborSwaps, type Cell, type ExplodePhase, type Move, type Special } from '../src/game/BoardModel';
 import { hash32, mulberry32, shuffled } from '../src/lib/seededRng';
 
-type Player = 'careful' | 'novice' | 'expert' | 'reader' | 'guesser' | 'random' | 'oracle' | 'locker' | 'autoguess' | 'scribbler';
+type Player = 'careful' | 'novice' | 'expert' | 'reader' | 'guesser' | 'random' | 'oracle' | 'locker' | 'autoguess' | 'scribbler' | 'dabbler';
 /** Players who reason from the evidence (and aim, except reader). */
 const THINKERS: readonly Player[] = ['careful', 'novice', 'expert', 'reader', 'locker'];
 const PLAYER_NOTES: Record<Player, string> = {
@@ -42,6 +42,7 @@ const PLAYER_NOTES: Record<Player, string> = {
   locker: 'careful, and pencils every hidden cell it knows on sight (--knows), right; names it (054 bonus) as soon as only one is possible',
   autoguess: 'random moves; Auto rule-out marks for it (shown mismatches); once one is marked, names one still in at random: the blind baseline with the switch on',
   scribbler: 'autoguess, but pencils every hidden cell at random at the start: what random pencils add (054)',
+  dabbler: 'at the start, pencils --dab random cells in the highest-weight questions, rules out one animal, names one still in at random: farming Sharp eye (Codex, 054-1)',
   oracle: 'diagnostic: knows the mystery, marks the look-alikes at once, aims like careful: is a finish possible in the moves?',
 };
 
@@ -70,7 +71,7 @@ const toysOf = (board: BoardModel): Array<[Cell, Special]> =>
 /** How far a cell is from the nearest of these cells (steps up, down, left and right). */
 const distance = ([x, y]: Cell, cells: readonly Cell[]) => cells.reduce((best, [cx, cy]) => Math.min(best, Math.abs(cx - x) + Math.abs(cy - y)), 99);
 
-interface Options { knows: readonly string[] }
+interface Options { knows: readonly string[]; dab: number }
 
 function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardModel, deal: Deal, player: Player, rng: () => number, options: Options): Result {
   let state = newAnimalRound(book, rules, { suspects: deal.suspects, mysteryId: deal.mysteryId, place: deal.place });
@@ -87,6 +88,16 @@ function play(book: Book, rules: AnimalRules, board: BoardModel, scratch: BoardM
   }
   if (player === 'oracle') for (const id of state.suspects) if (id !== state.mysteryId) markOut(id);
   if (player === 'scribbler') for (const id of state.suspects) for (const order of state.orders) pencil[`${id}:${order.tag}`] = rng() < 0.5 ? 'yes' : 'no';
+  if (player === 'dabbler') {
+    const weight = (tag: string) => PENCIL_WEIGHT[PREFIX_CATEGORY[tag.slice(0, tag.indexOf(':'))]];
+    const cells = shuffled(state.suspects.flatMap(id => state.orders.map(order => `${id}:${order.tag}`)), rng)
+      .sort((a, b) => weight(b.slice(b.indexOf(':') + 1)) - weight(a.slice(a.indexOf(':') + 1)));
+    for (const key of cells.slice(0, options.dab)) pencil[key] = rng() < 0.5 ? 'yes' : 'no';
+    const first = Number(cells[0].slice(0, cells[0].indexOf(':')));
+    markOut(first);
+    const stillIn = state.suspects.filter(id => id !== first);
+    state = nameIt(state, stillIn[Math.floor(rng() * stillIn.length)], pencil);
+  }
   /** Plan 054: name early. The locker pencils what it knows on sight (always right) and names once sure; autoguess and
    * scribbler let Auto rule-out mark, then name one still in at random once any is marked. */
   const tryName = () => {
@@ -233,7 +244,7 @@ async function main() {
   rules.wanderToy = arg('toy', rules.wander ? 'on' : 'off') === 'on';
   rules.toyScout = arg('toyscout', ANIMAL_RULES.toyScout ? 'on' : 'off') === 'on';
   rules.doubleBonus = Number(arg('double', String(ANIMAL_RULES.doubleBonus)));
-  const options: Options = { knows: arg('knows', 'size,covering').split(',').filter(Boolean) };
+  const options: Options = { knows: arg('knows', 'size,covering').split(',').filter(Boolean), dab: Number(arg('dab', '1')) };
   const players = arg('players', 'careful,novice,expert,reader,guesser,random,oracle').split(',') as Player[];
   const dir = path.join(process.cwd(), 'db/content');
   const profiles = readdirSync(path.join(dir, 'animals')).filter(file => file.endsWith('.json')).sort()

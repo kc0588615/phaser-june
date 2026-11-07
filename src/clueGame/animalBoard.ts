@@ -56,7 +56,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '054-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
+  version: '054-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -266,6 +266,8 @@ export interface AnimalRound {
   pencilBonus: number | null;
   /** Plan 054: that name earned a Sharp eye (`sharpEye`). */
   sharp: boolean;
+  /** Plan 054-1: the fewest animals not ruled out (nor released) at any point this round; taking a mark back doesn't raise it. */
+  fewestIn: number;
   log: AnimalLogEntry[];
 }
 
@@ -278,7 +280,7 @@ export function newAnimalRound(book: Book, rules: AnimalRules, { suspects, myste
     rules, place, suspects: sorted, mysteryId,
     orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null, seen: sorted.map(() => !rules.scout) })),
     notesLeft: witnessNotes(book, sorted, mysteryId), notes: [],
-    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, pencilBonus: null, sharp: false, log: [],
+    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, pencilBonus: null, sharp: false, fewestIn: sorted.length, log: [],
   };
 }
 
@@ -398,7 +400,10 @@ export function mark(state: AnimalRound, id: number, ruledOut: boolean, heading?
   const headings = { ...state.headings };
   if (!ruledOut) delete headings[id];
   else if (heading) headings[id] = heading;
-  return { ...state, marked: ruledOut ? [...marked, id] : marked, headings };
+  const next = ruledOut ? [...marked, id] : marked;
+  // Plan 054-1: releases only take marked animals, so marks alone set the fewest still in.
+  const fewestIn = Math.min(state.fewestIn, state.suspects.filter(other => !next.includes(other) && !state.released.includes(other)).length);
+  return { ...state, marked: next, headings, fewestIn };
 }
 
 /** Plan 054: the player's pencil marks for hidden cells, by `${id}:${tag}` (the session's `pencil`). */
@@ -418,7 +423,7 @@ export function nameIt(state: AnimalRound, id: number | null, pencil: Pencil = {
   const named = { id, correct: id === state.mysteryId };
   const log = [...state.log, { kind: 'named' as const, ...named }];
   const scored = named.correct ? scorePencils(state, pencil) : null;
-  const sharp = scored !== null && scored.wrong === 0 && scored.bonus >= PENCIL_POINTS.sharpAt;
+  const sharp = scored !== null && scored.wrong === 0 && scored.counted >= PENCIL_POINTS.sharpPencils && scored.bonus >= PENCIL_POINTS.sharpAt;
   return named.correct
     ? { ...state, status: 'found', named, pencilBonus: scored?.bonus ?? null, sharp, log: [...log, { kind: 'found', id }] }
     : { ...state, status: 'lost', lostBy: 'wrong-name', named, log };
@@ -427,35 +432,37 @@ export function nameIt(state: AnimalRound, id: number | null, pencil: Pencil = {
 /** Plan 054: how hard each category is to call from the photo and field guide (owner: fixed by category). */
 export const PENCIL_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
 /** Plan 054: points per weight, and the cap either way (under board play's ★★★ lead over a find by name, plan 053; at -cap a find's star and bonus net 0, streak aside). */
-export const PENCIL_POINTS = { perWeight: 2, cap: 50, sharpAt: 20 };
+export const PENCIL_POINTS = { perWeight: 2, cap: 50, sharpAt: 20, sharpPencils: 4 };
 
 /**
- * Plan 054: a right name with a pencil bonus of `sharpAt` or more and no counted pencil wrong: a second star and a Sharp
- * eye badge in the journal (owner, 2026-11-07). No wrong pencil, because the bonus's swings let random pencilling reach
- * `sharpAt` on about half its finds (balance bot); all right almost never happens by chance.
+ * Plan 054: a right name with a pencil bonus of `sharpAt` or more from at least `sharpPencils` counted pencils, none wrong:
+ * a second star and a Sharp eye badge in the journal (owner, 2026-11-07). None wrong: the bonus's swings let random
+ * pencilling reach `sharpAt` on about half its finds. At least 4 (054-1, Codex): one coin-flip pencil in a weight-3
+ * category with 4 still in is ±24, so half of right names earned it; 4 all right by chance is 1 in 16.
  */
 export function sharpEye(state: AnimalRound): boolean {
   return state.status === 'found' && state.sharp;
 }
 
 /**
- * Plan 054: the pencil bonus for a right name, once the player has ruled out (or released) at least one animal; null
- * before that, or with no pencil counted. Counts each pencil on a cell still hidden at the name, on an unreleased
+ * Plan 054: the pencil bonus for a right name, once the player has ruled out at least one animal this round (054-1:
+ * ever, a mark taken back still counts); null before that, or with no pencil counted. Counts each pencil on a cell still hidden at the name, on an unreleased
  * look-alike (the mystery's own cells would be free: its answers are the camera's). Right adds its category's weight,
  * wrong subtracts it (owner: random pencilling averages nothing). The net is multiplied by the distinct categories
- * pencilled (spread raises the stake both ways) and by the animals still in, the named one too (owner: naming with more
- * left is a bigger gamble, so it pays more). It may go below 0, down to -cap; capped so a lucky name can't out-pay
+ * pencilled (spread raises the stake both ways) and by the fewest animals still in this round, the named one too (owner:
+ * naming with more left is a bigger gamble, so it pays more; 054-1: the fewest, so taking marks back can't raise it). It may go below 0, down to -cap; capped so a lucky name can't out-pay
  * board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot).
  */
 export function pencilBonus(state: AnimalRound, pencil: Pencil): number | null {
   return scorePencils(state, pencil)?.bonus ?? null;
 }
 
-/** `pencilBonus`, with how many counted pencils were wrong (Sharp eye needs none). */
-function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; wrong: number } | null {
-  const stillIn = state.suspects.filter(id => !state.marked.includes(id) && !state.released.includes(id)).length;
+/** `pencilBonus`, with how many pencils counted and how many were wrong (Sharp eye: enough, none wrong). */
+function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; counted: number; wrong: number } | null {
+  // 054-1: the fewest still in this round, not now (Codex: rule out four, take three back, and it paid x4).
+  const stillIn = state.fewestIn ?? state.suspects.length;
   if (stillIn === state.suspects.length) return null;
-  let net = 0, wrong = 0;
+  let net = 0, wrong = 0, counted = 0;
   const kinds = new Set<ChargeCategory>();
   state.suspects.forEach((id, i) => {
     if (id === state.mysteryId || state.released.includes(id)) return;
@@ -465,12 +472,13 @@ function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; wron
       const category = PREFIX_CATEGORY[prefixOf(order.tag)];
       const right = (mark === 'yes') === order.row[i];
       net += right ? PENCIL_WEIGHT[category] : -PENCIL_WEIGHT[category];
+      counted++;
       if (!right) wrong++;
       kinds.add(category);
     }
   });
   if (kinds.size === 0) return null;
-  return { bonus: Math.max(-PENCIL_POINTS.cap, Math.min(PENCIL_POINTS.cap, net * kinds.size * stillIn * PENCIL_POINTS.perWeight)), wrong };
+  return { bonus: Math.max(-PENCIL_POINTS.cap, Math.min(PENCIL_POINTS.cap, net * kinds.size * stillIn * PENCIL_POINTS.perWeight)), counted, wrong };
 }
 
 /**
