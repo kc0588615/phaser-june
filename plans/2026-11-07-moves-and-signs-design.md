@@ -910,6 +910,8 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 
 ## Code review (Astra)
 
+Skipped: design mission, no code (diff vs origin/main 69f45fa6 is only .md, .png, .csv: `git diff --name-only origin/main...HEAD | grep -vE '\.(md|png|csv)$'` empty).
+
 ## Release
 
 ## Decisions
@@ -961,5 +963,6 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 - 2026-11-07 12:36 UTC · S17: DOC §4 (note-category table, tag mapping summary + `IMG/sign-map.csv` 206 rows, hidden tags per prefix, leak rules 1–6 with costs, retags 11 + note tags 23 in full, part-3 content notes, 3 mockups light/dark with trade-offs, pick option 1), §5 (files, content 76 files, F&T constants kept, checks, size 20–25 sessions), Method and coverage, §1 Summary (9 owner choices, each with a pick). Check: 6 headings once each, 0 placeholders, `links.py` 14 relative links 0 problems (3 to BRIEF pending S18), §3 180 links in moves.csv, `table.py check` ok, sign-map.csv = out/ (206 rows), 8 PNGs referenced once each. typecheck/lint 0, paths.sh empty.
 - 2026-11-07 12:41 UTC · S18: `BRIEF` = owner's picks block + brief A `moves-and-signs-build` (plan 055, C default / D bracketed, files, 76-animal content from moves.csv, F&T content out + constants kept, `054-1` → `055-0`, guarded dev-DB block verbatim, dealt-proof `trees:yes`, bot rerun, docs fixes, CI risk, prod content handoff, Release deploy) + brief B `ft-cleanup` (1 session, after owner's prod build + 11 min). Check: 6 headings once per brief, no secret patterns, every named file on origin/main or marked new (signs.ts, CategoryMark.tsx, 055, 056), version `054-1` = main, 19 STATE paths exist, links.py DOC 14/0 (BRIEF now resolves) + BRIEF 2/0. typecheck/lint 0, paths.sh empty.
 - 2026-11-07 12:44 UTC · S19: origin/main still 69f45fa6 (merge-base ok, no rebase, no cited line moved; next plan 055, rules 054-1). Read DOC + BRIEF end to end; §1/§2/§5/brief numbers agree (18/149, 2 vs 16 hard, 5 vs 47 no-records, 71 = 10+61, D 105, 208 answers = source sum, 5 retags/19 note tags/19 animals, 20 F&T holders = 20 class + 45 kind tags, 206 sign rows, bot deltas). 1 fix: §2 NA notes "1.1 to 0.5" now gives C 1.09→0.45 / D 1.18→0.51 (matches §4, metrics.md). Spot-checked 24 file:line cites ok. typecheck/lint 0, paths.sh empty.
+- 2026-11-07 12:50 UTC · Code review (Astra): skipped, design mission with no code (diff = md/png/csv only, checked). Next: full Verification + Summary.
 
 ## Summary
