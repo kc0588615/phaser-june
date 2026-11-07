@@ -831,7 +831,7 @@ Research batches S4–S8, shared:
     - every existing file the brief names exists on `origin/main`, and new ones are marked new;
     - the version string matches `origin/main`.
 
-- [ ] S19 · Final freshness and consistency.
+- [x] S19 · Final freshness and consistency.
   - `git fetch origin --prune`. If `origin/main` has moved:
     - rebase and `git push --force-with-lease`;
     - run `git diff --stat <old> origin/main -- src db scripts tests docs/CONTENT_SOURCES.md docs/DATABASE_ACCESS.md`;
@@ -960,5 +960,6 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 - 2026-11-07 12:29 UTC · S16: DOC §2 (options A–D, rules, research counts, engine fit, balance table from deals/metrics.md + bot/summary.md, pick C) and §3 (76 rows × Lives/Climbs/Digs, quotes + 180 links, tell column, 19 hard cells listed) via `tools/table.py`; §1/§4/§5/Method headed, S17 fills. Check: table.py check ok (76 ids once, 180 links all in moves.csv), 5 §2 numbers traced (metrics.md ×3, bot/summary.md, research/summary.md). typecheck/lint 0, paths.sh empty.
 - 2026-11-07 12:36 UTC · S17: DOC §4 (note-category table, tag mapping summary + `IMG/sign-map.csv` 206 rows, hidden tags per prefix, leak rules 1–6 with costs, retags 11 + note tags 23 in full, part-3 content notes, 3 mockups light/dark with trade-offs, pick option 1), §5 (files, content 76 files, F&T constants kept, checks, size 20–25 sessions), Method and coverage, §1 Summary (9 owner choices, each with a pick). Check: 6 headings once each, 0 placeholders, `links.py` 14 relative links 0 problems (3 to BRIEF pending S18), §3 180 links in moves.csv, `table.py check` ok, sign-map.csv = out/ (206 rows), 8 PNGs referenced once each. typecheck/lint 0, paths.sh empty.
 - 2026-11-07 12:41 UTC · S18: `BRIEF` = owner's picks block + brief A `moves-and-signs-build` (plan 055, C default / D bracketed, files, 76-animal content from moves.csv, F&T content out + constants kept, `054-1` → `055-0`, guarded dev-DB block verbatim, dealt-proof `trees:yes`, bot rerun, docs fixes, CI risk, prod content handoff, Release deploy) + brief B `ft-cleanup` (1 session, after owner's prod build + 11 min). Check: 6 headings once per brief, no secret patterns, every named file on origin/main or marked new (signs.ts, CategoryMark.tsx, 055, 056), version `054-1` = main, 19 STATE paths exist, links.py DOC 14/0 (BRIEF now resolves) + BRIEF 2/0. typecheck/lint 0, paths.sh empty.
+- 2026-11-07 12:44 UTC · S19: origin/main still 69f45fa6 (merge-base ok, no rebase, no cited line moved; next plan 055, rules 054-1). Read DOC + BRIEF end to end; §1/§2/§5/brief numbers agree (18/149, 2 vs 16 hard, 5 vs 47 no-records, 71 = 10+61, D 105, 208 answers = source sum, 5 retags/19 note tags/19 animals, 20 F&T holders = 20 class + 45 kind tags, 206 sign rows, bot deltas). 1 fix: §2 NA notes "1.1 to 0.5" now gives C 1.09→0.45 / D 1.18→0.51 (matches §4, metrics.md). Spot-checked 24 file:line cites ok. typecheck/lint 0, paths.sh empty.
 
 ## Summary
