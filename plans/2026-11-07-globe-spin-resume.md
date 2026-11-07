@@ -70,7 +70,7 @@ Out:
 - [x] Architecture: `architect` writes findings and the target design
 - [x] Fable review: `architecture-reviewer`
 - [x] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
-- [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
+- [x] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
 
 ## Baseline
@@ -82,15 +82,15 @@ On `69f45fa6` (= `origin/main`), 2026-11-07 UTC. No migrations to run (live DB, 
 
 ## Architecture
 
-Read on `69f45fa6` (= `origin/main`). MapLibre `6.16.0`; line refs `ml:` are `node_modules/maplibre-gl/dist/maplibre-gl-dev.mjs`.
+Read on `69f45fa6` (= `origin/main`; still current at revision). MapLibre `6.16.0`; line refs `ml:` are `node_modules/maplibre-gl/dist/maplibre-gl-dev.mjs`. Revised once after both reviews (see Revision notes).
 
 ### Findings (ranked)
 
-1. **The spin never comes back (the bug).** `Globe.tsx:90,116-119,200`: `spinning` is a one-way flag. `mousedown`/`touchstart`/`wheel` and a pick set it false, and nothing sets it true again. Setting it back wouldn't help either: `spin` returns without rescheduling (`:124`), so the rAF chain is gone and there's no way to restart it. This breaks fail-fast/KISS: a boolean standing in for a state machine that has no resume path. **Fix:** a small spin controller with three commands, `pause` / `resumeLater` / `begin` (target design).
+1. **The spin never comes back (the bug).** `Globe.tsx:90,116-119,200`: `spinning` is a one-way flag. `mousedown`/`touchstart`/`wheel` and a pick set it false, and nothing sets it true again. Setting it back wouldn't help either: `spin` returns without rescheduling (`:124`), so the rAF chain is gone and there's no way to restart it. This breaks fail-fast/KISS: a boolean standing in for a state machine that has no resume path. **Fix:** a small spin controller. Creating it has no side effects, then `start` / `hold` / `stop` drive it, with internal `pause` / `resumeLater` / `begin` (target design).
 2. **Speed depends on frame rate and zoom.** `:126` adds `0.04°` per frame: 2.4°/s at 60 Hz, 4.8°/s on 120 Hz phones, slower when frames drop. It's also the same number of degrees at every zoom, but a degree spans `512·2^z/360` px at the view centre (globe radius `worldSize/(2π·cos lat)`, `ml:45034,45251`, so this holds at any latitude). At `fitBounds`' maxZoom 5 (`:202`) the ground slides about 15× faster on screen than at the opening view. **Fix:** step by the rAF timestamp delta, and scale degrees/s by `2^-zoom`.
 3. **The spin's own camera call cancels whatever else is moving the camera (a load-bearing constraint).** `setCenter` → `jumpTo` → `this.stop()` (`ml:56175,56369`) → `_stop` → `_stopHandlers()` (`ml:57020`) → `handlers.stop(false)` (`ml:58577,55738`). That resets every gesture handler and cancels any ease or flight. Today this is hidden only because down-events and a pick kill the spin first. Consequences:
    - **(a) Live bug.** Keyboard pan/zoom (canvas is `tabindex=0`, `ml:61482`; `KeyboardHandler` eases with `{ originalEvent: e }`, `ml:54626`) doesn't stop the spin. The next spin frame cancels the key's ease, so arrow keys barely move the globe while it spins.
-   - **(b) Constraint for any resume design.** A spin frame between `touchstart` and `dragstart` (pan activates only past `clickTolerance`, `ml:54269`) kills the drag. A frame during momentum or the pick's `fitBounds` flight cancels it. So the pause must happen synchronously on the raw down event, and a resume must never step while `map.isMoving()`.
+   - **(b) Constraint for any resume design.** A spin frame between `touchstart` and `dragstart` (pan activates only past `clickTolerance`, `ml:54269`) kills the drag. A frame during momentum or the pick's `fitBounds` flight cancels it. So every input must pause the spin synchronously, in the dispatch that starts it (down events, wheel, a key's `movestart`). A spin frame must never write while `map.isMoving()`, and no idle countdown may run while a finger or button is still down (`isMoving()` is false under a finger held still).
 4. **The spin is mixed into two unrelated effects (SRP).** It's set up inside the map-setup effect (`:99-100,116-130`), and the outline-data effect turns it off (`:200`). **Fix:** move it into its own module, with a one-line hold effect.
 5. **The reduced-motion helper is duplicated (DRY / established interfaces).** `Globe.tsx:70` re-implements `reducedMotion` from `src/game/motion.ts:2`, which `AnimalGame.tsx`/`useRowOrder.ts` already import. Its only other use, `duration: reducedMotion() ? 0 : 1600` (`:202`), repeats what MapLibre already does: `fitBounds` → `flyTo` → `easeTo` sets duration 0 for non-essential animations under `prefers-reduced-motion` (`ml:56359,56899,56446`). **Fix:** delete the local helper and the ternary; the spin module imports `@/game/motion`. Behaviour doesn't change.
 6. **Correction to the Brief's Notes:** picking *does* move the camera. `:202` `fitBounds` flies there (up to 1.6 s, maxZoom 5). So the hold must start before the flight (it does: same commit), and the spin can resume at zoom ≤ 5, which is why finding 2 matters.
@@ -102,13 +102,21 @@ Read on `69f45fa6` (= `origin/main`). MapLibre `6.16.0`; line refs `ml:` are `no
 
 ### Target design
 
-**Files:** new `src/components/globe/globeSpin.ts` (about 70 lines) and a small edit to `Globe.tsx`. `GlobeScreen.tsx` doesn't change, since `selected` already reaches `Globe`. Tests go in `scripts/e2e.mjs`. The only import from outside the folder is the existing `reducedMotion` from `@/game/motion` (unchanged).
+**Files:** new `src/components/globe/globeSpin.ts` (about 90 lines) and a small edit to `Globe.tsx`. `GlobeScreen.tsx` doesn't change, since `selected` already reaches `Globe`. Tests go in `scripts/e2e.mjs`. The only import from outside the folder is the existing `reducedMotion` from `@/game/motion` (unchanged).
 
-**`globeSpin.ts`**
+**`globeSpin.ts` interface.** Creating it is a query with no side effects; `start`, `hold` and `stop` are commands (CQS).
 
 ```ts
-export interface GlobeSpin { hold(held: boolean): void; remove(): void }
-export function attachGlobeSpin(map: MapLibreMap): GlobeSpin   // factory, like new Marker(); starts easing in at once
+export interface GlobeSpin {
+  /** Tracks input from now on and spins from the map's `load`. Call once, right after `new Map` (so before `load`); throws if called twice. */
+  start(): void;
+  /** Held (a place is picked): the globe stays still. Released: the idle pause, then the spin. */
+  hold(held: boolean): void;
+  /** Removes every listener, timer and frame. Final. */
+  stop(): void;
+}
+/** Builds the controller's closure only: no listeners, timers or frames until `start()`. */
+export function createGlobeSpin(map: MapLibreMap): GlobeSpin
 ```
 
 Module constants (starting values; the implementer tunes them by feel and records the final ones in the Summary):
@@ -122,121 +130,205 @@ Module constants (starting values; the implementer tunes them by feel and record
 | `SPIN_MAX_ZOOM` | 5 | Above this, no spin and no loop; same cut as MapLibre's example, and `fitBounds`' maxZoom |
 | `MAX_STEP_MS` | 250 | A stalled or backgrounded frame can't jump |
 
-Pure query, module-private:
+Queries (module-private, no side effects):
 
-```ts
-spinRate(zoom) = zoom > SPIN_MAX_ZOOM ? 0 : SPIN_DEG_PER_S * Math.min(1, 2 ** (SPIN_FULL_ZOOM - zoom))
-```
+- `spinRate(zoom) = zoom > SPIN_MAX_ZOOM ? 0 : SPIN_DEG_PER_S * Math.min(1, 2 ** (SPIN_FULL_ZOOM - zoom))`: the same on-screen px/s at every zoom from 1 to 5 (finding 2's math).
+- `ease(t) = t >= 1 ? 1 : t * t * (3 - 2 * t)`.
+- `pressed() = touching || mouseDown`.
 
-This gives the same on-screen px/s at every zoom from 1 to 5 (finding 2's math).
+State lives in the closure (no React refs):
 
-State is local to the closure: `held`, `timer`, `frame`, `startedAt`, `lastAt`. There are no React refs.
+| Name | Meaning |
+|---|---|
+| `loaded` | Set by the map's `load`. Nothing spins before it. |
+| `held` | A place is picked. |
+| `touching` | A finger that started on the globe is still down. |
+| `mouseDown` | A mouse button pressed on the globe is still down. |
+| `timer`, `frame` | The idle countdown and the spin's rAF. |
+| `startedAt`, `lastAt` | The current spin's first and latest frame times. |
+| `subs` | Every `Subscription` `start()` made. |
 
 **Commands**
 
-- **`pause()`:** `cancelAnimationFrame(frame)` and `clearTimeout(timer)`. Nothing runs afterwards: no rAF, so no MapLibre repaint.
-- **`resumeLater()`:** `pause()`, then `timer = setTimeout(begin, SPIN_IDLE_MS)`.
-- **`begin()`:** start the loop only if none of these apply:
-  - `held`;
-  - `reducedMotion()` (re-read on every resume, live `matchMedia`);
-  - `spinRate(zoom) === 0`;
-  - `map.isMoving()` (a held drag, momentum, the scroll-zoom finish timer, or the pick's flight; `ml:59862,55749`). In this case call `resumeLater()` and stay still.
-
-  Otherwise `frame = requestAnimationFrame(step)`.
+- **`pause()`:** `cancelAnimationFrame(frame)`, `clearTimeout(timer)`. Nothing runs afterwards: no rAF, so no MapLibre repaint.
+- **`resumeLater()`:** `pause()`, then, unless `pressed()`, `timer = setTimeout(begin, SPIN_IDLE_MS)`. This is the one command every kind of input calls.
+- **`begin()`:** `pause()` first, so a second call can't start a second loop. It then stays still if any of these apply: `!loaded`, `held`, `pressed()`, `reducedMotion()`, `spinRate(map.getZoom()) === 0`. Otherwise it clears `startedAt`/`lastAt` and sets `frame = requestAnimationFrame(step)`.
 - **`step(now)`:**
-  1. On the first frame, set `startedAt = lastAt = now`.
-  2. `dt = min(now − lastAt, MAX_STEP_MS)`.
-  3. `map.setCenter([lng + spinRate(zoom) · ease(now − startedAt) · dt/1000, lat])`, starting from `map.getCenter()`, so it begins exactly where the player left it. Zoom, bearing and pitch are untouched.
-  4. Reschedule.
+  1. If `reducedMotion()`: `pause()` and return. It's re-read every frame through the shared helper, so switching it on mid-spin stops the globe on the next frame.
+  2. If `map.isMoving()`: `resumeLater()` and return. The spin never writes while another movement owns the camera. Its own `setCenter` → `jumpTo` sets neither the camera's `_moving` nor any handler state (`ml:56368-56400`), so it never blocks itself.
+  3. On the first frame, `startedAt = lastAt = now`. Then `dt = min(now − lastAt, MAX_STEP_MS)` and `lastAt = now`.
+  4. `map.setCenter([lng + spinRate(zoom) · ease((now − startedAt) / SPIN_EASE_MS) · dt/1000, lat])`, from `map.getCenter()`, so it starts exactly where the player left it. Zoom, bearing and pitch are untouched.
+  5. `frame = requestAnimationFrame(step)`.
+- **`hold(next)`:** does nothing if `next === held`. Otherwise it sets `held`, then calls `pause()` when held or `resumeLater()` when released. While held, input still re-arms the timer, but `begin()` refuses. Clearing the pick re-arms a fresh 3 s.
+- **`start()`:** throws if `subs` isn't empty. It registers the wiring below. Each `map.on(…)` returns a MapLibre `Subscription` (`unsubscribe()`), which goes into `subs`. The window listener goes in as `{ unsubscribe: () => window.removeEventListener('mouseup', onMouseUp, true) }`.
+- **`stop()`:** `pause()`, unsubscribe everything, empty `subs`. No timer, rAF or listener outlives the map.
 
-**Input wiring.** Each listener is registered through a local `on(type, fn)` that records its `map.off`:
+**Input wiring** (registered by `start()`)
 
-| Events | Action | Why |
+| Source | Action | Why |
 |---|---|---|
-| `mousedown`, `touchstart` | `pause()` only | Synchronous, before any spin frame (finding 3b). No timer while a pointer is down, so a held-still press never gets spun under. |
-| `mouseup`, `touchcancel`, `touchend` when `originalEvent.touches.length === 0`, `wheel` | `resumeLater()` | Wheel has no end event. |
-| `move`, `moveend` with a truthy `originalEvent` | `resumeLater()` | Player input of every kind, including keyboard and pinch. |
+| Map `touchstart`, `touchend`, `touchcancel` | `touching` = whether any of `originalEvent.touches` has its `target` inside `map.getCanvasContainer()` (the same test as MapLibre's own `_getMapTouches`, `ml:55765`). Then `resumeLater()`. | This is the browser's live touch list, so lifting one finger of a pinch leaves `touching` true and nothing arms. `touchend`/`touchcancel` fire on a touch's start target even when it lifts off the canvas, so no release is missed and no touch ids are kept. |
+| Map `mousedown` | `mouseDown = true`, then `resumeLater()`. | |
+| `window` `mouseup`, capture phase | If `mouseDown`: `mouseDown = false`, then `resumeLater()`. | Catches a release anywhere, off the canvas included. MapLibre routes its document `mouseup` to handlers as `mouseupWindow` and fires no map event for it (`ml:55519-55523,55618-55625`; `MapEventHandler` has no `mouseupWindow`, `ml:53530`). Capture phase, so no `stopPropagation` can hide it. A release that never arrives (alt-tab mid-press) clears at the next `mouseup` anywhere on the page. |
+| Map `wheel` | `resumeLater()` | Wheel has no end event, and scroll zoom's movement starts only on a later render frame. |
+| Map `movestart`, `move`, `moveend` with a truthy `originalEvent` | `resumeLater()` | Player movement of every kind: drag, pinch, rotate/pitch, wheel zoom, keyboard, double-click/tap zoom, momentum. |
+| Map `load` | `loaded = true`, then `begin()` | The first spin. |
 
-The `move`/`moveend` filter covers drag, pinch, rotate/pitch, wheel zoom and keyboard, which all carry `originalEvent` (`ml:55949-56003`, `54907`, `54626`). It also covers **momentum**: inertia is `easeTo(…, { originalEvent })` (`ml:55996`), so every momentum frame re-arms the timer and the 3 s counts from the fling's `moveend`. The spin's own `setCenter` and the pick's `fitBounds` pass no `originalEvent`, so they never count as input. The window-level `mouseup` isn't forwarded as a map event (`ml:55515,55673`), but a mouse drag released off the canvas still ends with `dragend`/`moveend` carrying `originalEvent`.
+**Why the spin can't cancel a gesture or an animation** (finding 3b). There are two guards:
 
-**Handle**
+1. **Every input pauses synchronously, in the dispatch that starts it.**
+   - The map's `touchstart`, `mousedown` and `wheel` come from `MapEventHandler`, the first handler (`ml:55681`), inside MapLibre's DOM listener (`ml:55519-55560`).
+   - A key press, double-click or double-tap runs its `cameraAnimation` at the end of that same `handleEvent` (`ml:55561-55566`). Its `easeTo` → `_prepareEase` sets `_moving` and fires `movestart` with `{ originalEvent }` synchronously (`ml:54615-54626,56499-56505`).
 
-- `hold(next)` does nothing if `next === held`. Otherwise it sets `held`, then `pause()` when held, or `resumeLater()` when released. While held, input still re-arms the timer, but `begin()` refuses. Clearing the pick re-arms a fresh 3 s.
-- `remove()` runs `pause()` and all the recorded `off`s, so no timer or rAF outlives the map.
+   So a spin frame already queued for the coming frame is cancelled before it can run, whatever the rAF registration order.
+2. **`step`'s `isMoving()` check covers anything else that moves the camera:** the pick's flight if it ever runs unheld, a key repeat, or a future programmatic ease. `Map.isMoving()` is the camera's `_moving` or the handlers' events in progress or scroll zoom (`ml:59862,55755`).
+
+**Momentum and idle timing.** Inertia is `easeTo(…, { originalEvent })` (`ml:55996`), so its `movestart`/`move`/`moveend` re-arm the timer, and the 3 s count from the fling's `moveend`. Every handler-driven `move`/`moveend` carries the input event, scroll-zoom render frames included (`ml:55949-56003`). The spin's own `setCenter` and the pick's `fitBounds` pass no `originalEvent`, so they never count as input. The one gesture without it is shift-drag box zoom (`ml:53787`). Its mouse release arms the timer, and `step`'s `isMoving()` guard waits out its ease.
+
+**MapLibre events vs DOM.** Everything is MapLibre's own events, as the Brief's decision rules ask, except the one release MapLibre doesn't expose: a mouse let go off the canvas.
 
 **`Globe.tsx` changes**
 
-- Delete `spinning` (`:90`), `frame`, `stopSpin` and its 3 listeners, the `spin` loop (`:116-130`), `spinning.current = false` (`:200`), the local `reducedMotion` (`:70`), and the duration ternary (`:202`).
-- Add `spinRef = useRef<GlobeSpin | null>(null)`.
-- In `load`: `spinRef.current = attachGlobeSpin(map)`, then `markReady()`.
-- In the cleanup: `spinRef.current?.remove()` before `map.remove()`.
-- New effect, declared before the outline effect:
+- **Delete:**
+  - `spinning` (`:90`);
+  - `frame` and `spinning.current = !reducedMotion()` (`:99-100`);
+  - `stopSpin` and its 3 listeners, and the `spin` loop (`:116-130`);
+  - `cancelAnimationFrame(frame)` (`:140`);
+  - `spinning.current = false` (`:200`);
+  - the local `reducedMotion` (`:70`);
+  - the duration ternary (`:202`).
+- **Add** `spinRef = useRef<GlobeSpin | null>(null)`.
+- **Right after `mapRef.current = map`,** before the other `map.on` calls:
+
+  ```ts
+  if (process.env.NODE_ENV !== 'production') (window as unknown as { __globe?: MapLibreMap }).__globe = map;
+  const spin = createGlobeSpin(map);
+  spinRef.current = spin;
+  spin.start(); // input counts from now, so a finger put down while the map loads keeps it still
+  ```
+
+- **The `load` handler** just calls `markReady()`. The spin starts itself on `load`.
+- **In the cleanup, before `map.remove()`:**
+  - `spinRef.current?.stop(); spinRef.current = null;`;
+  - in dev only, delete `__globe` if it is this map (StrictMode/HMR).
+- **New effect,** declared before the outline effect (belt and braces; `step`'s `isMoving()` guard covers the flight too):
 
   ```ts
   // A picked place holds the globe still so its outline stays in view.
   useEffect(() => { spinRef.current?.hold(selected !== null); }, [selected, ready]);
   ```
 
-- **Test hook.** Right after `new maplibregl.Map`:
+- **Test hook.** `__globe` uses the same cast and gating as `debugBridge.ts:51,198`. Next inlines `NODE_ENV`, so the branch and the string are dropped from production bundles. Players never get it; `e2e:fresh` and CI run `next dev`, so tests do.
 
-  ```ts
-  if (process.env.NODE_ENV !== 'production') holder.__globe = map
-  ```
+**Data flow:**
+- Player input → MapLibre events (plus one window `mouseup`) → `resumeLater()` → after the idle pause, `begin` → rAF `setCenter`.
+- `load` → `begin`.
+- `selected` → hold effect → `hold()`.
 
-  where `holder = window as unknown as { __globe?: MapLibreMap }`, the same cast and gating as `debugBridge.ts:51,198`. Cleanup deletes it only if `holder.__globe === map` (StrictMode/HMR). Next inlines `NODE_ENV`, so the branch is dropped from production bundles. Players never get it; `e2e:fresh` and CI run `next dev`, so tests do.
-
-**Data flow:** player input → MapLibre events → controller (`pause`/`resumeLater`) → after idle, `begin` → rAF `setCenter`. `selected` → hold effect → `hold()`. The controller never touches React state, and `Globe` never touches spin internals.
+The controller never touches React state, and `Globe` never touches spin internals.
 
 **Unit test: none.** The speed law is measured on screen in E2E (below). The repo keeps `npm test` for failures a playtest can't see, and the owner prefers E2E. `spinRate` stays pure and module-private for readability only.
 
 ### E2E design (`scripts/e2e.mjs`, new block "1b. The globe's spin" after `01-globe.png`, `:253`)
 
-- **Sampler.** Add it to the existing `addScriptToEvaluateOnNewDocument` block, following the `__watchRows`/`__stopWatchingRows` pattern (`:183-192`). `window.__watchGlobe()` records one sample per rAF from `window.__globe`: `{ t, lng, zoom, moving: isMoving(), x: project(anchor).x }`, where `anchor` is the centre when watching began. `window.__stopWatchingGlobe()` returns the samples.
-- **How Node classifies samples:**
-  - momentum = samples with `moving`;
-  - spin = `!moving` with lng changing;
-  - steady rate = deg/s and px/s over a 1 s window after the ease.
-- **Input.** Real touch input through CDP `Input.dispatchTouchEvent` at the `section[aria-label="Globe"]` centre. Before lifting a deterministic gesture, hold still for 300 ms, so there's no inertia. Only the fling check releases while moving.
+**Helpers.** Add them to the existing `addScriptToEvaluateOnNewDocument` block, following the `__watchRows`/`__stopWatchingRows` pattern (`:183-192`):
 
-Checks, about 35 s in all (names as they go in `report.json`, details carry the measured numbers):
+- `window.__watchGlobe()` records one sample per rAF from `window.__globe`: `{ t, lng, zoom, moving: isMoving() }`. `window.__stopWatchingGlobe()` returns the samples and the fps.
+- `window.__globeRate(ms = 500)` returns `{ degPerS, pxPerS, zoom }` over one short window. It re-anchors at the window's start: the anchor is the centre then, and px/s comes from `project(anchor).x` at the start and the end. This keeps drift toward the limb to a few px.
+- In Node:
+  - unwrap lng across ±180 before comparing;
+  - **still** means |Δlng| < 1e-6°;
+  - **momentum** means samples with `moving`;
+  - **spin** means `!moving` with lng changing.
+- Waits for "the spin returns" poll, and end at the first spin sample.
 
-1. **The globe spins on load, easing in:** lng rises, and the mean velocity over the first 250 ms is under 40% of the steady velocity. Record px/s₀ and deg/s₀.
-2. **A drag moves the globe while it was spinning:** the centre shifts more than 10° against the finger. This catches finding 3b.
-3. **A finger holding the globe stops the spin:** after the drag, the finger stays down 1 s and lng is constant.
-4. **After a fling, the globe stays still about 3 s once its momentum ends, then spins again:** momentum samples exist, and the still gap between the momentum's end and the first spin sample is in [2.5, 4.5] s.
-5. **The spin returns from where the player left it, at their zoom, easing in:** the first spin sample is within one steady step of the rest lng, zoom is unchanged, and the early velocity is under 40% of steady.
-6. **A pinch zooms in and pauses the spin:** two touch points spread from 60 to 240 px; zoom rises by at least 1.5; still while the fingers hold.
-7. **Zoomed in, the spin is slower in degrees but about as fast on screen:** deg/s ÷ deg/s₀ within ±30% of `2^-Δz`, and px/s ÷ px/s₀ in [0.7, 1.4]. Ratios, not absolute values, so slow headless frame rates and CPU throttle don't matter.
-8. **A picked place holds the globe still:** click a `ul button`, wait for `!isMoving()` after the flight, and lng is constant for `SPIN_IDLE_MS + SPIN_EASE_MS + 1 s`.
-9. **Back to all places lets the spin return after the pause:** spin starts in [2.5, 6] s.
-10. **With reduced motion the globe never spins:**
-    - `Emulation.setEmulatedMedia({ features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })`, then reload `/`.
-    - Still for 4.5 s after load, and still for 5 s after a drag and release.
-    - Then `setEmulatedMedia({ features: [] })` immediately. Put this check last in the block, so the game run after it is unaffected.
+**Input:**
+- Touch is real input through CDP `Input.dispatchTouchEvent` at the `section[aria-label="Globe"]` centre.
+- Mouse is `Input.dispatchMouseEvent`; keys are `Input.dispatchKeyEvent` (`windowsVirtualKeyCode` set, since MapLibre reads `keyCode`).
+- Before lifting a deterministic gesture, hold still for 300 ms, so there's no inertia. Only the fling releases while moving.
 
-Screenshots `01b-globe-held.png`, `01c-globe-spin-back.png` and `01d-globe-zoomed-spin.png` serve as the DoD's before/after (copy them to the mission folder). Optional: a wheel check (`Input.dispatchMouseEvent` `mouseWheel`) for the desktop path. It uses the same `move`-with-`originalEvent` code path as the pinch, so it isn't required.
+**Checks,** in run order, about 60 s in all (names as they go in `report.json`; details carry the measured numbers):
+
+1. **The globe spins on its own:** within 10 s of the list showing, lng rises over 1 s. Records deg/s only. The ease-in isn't asserted here, because the test can't time the first spin frame (Fable MF2).
+2. **A drag moves the globe while it was spinning:** the finger moves 150 px right and holds. The centre's lng falls by more than 10° (the spin would raise it). This catches finding 3b.
+3. **A finger holding the globe keeps it still:** after the drag, the finger stays down for `SPIN_IDLE_MS` + 1 s and the globe is still. Then lift.
+4. **After a fling, the globe rests about 3 s once its momentum ends, then spins again:** momentum samples exist, and the still gap from the momentum's end to the first spin sample is in [2.5, 7] s.
+5. **The spin comes back where the player left it, at their zoom, easing in:**
+   - the first spin sample is within 0.05° of the rest lng;
+   - zoom is unchanged;
+   - the mean deg/s over its first 250 ms is under 40% of the steady deg/s₀.
+
+   deg/s₀ and px/s₀ come from `__globeRate(500)`, started `SPIN_EASE_MS` + 200 ms after the first spin sample. They're the baseline for check 9.
+6. **Arrow keys move the globe while it spins, then the spin returns:**
+   - focus the map canvas (`tabindex=0`), then press ArrowLeft (`keyDown`/`keyUp`) while it spins;
+   - within 1 s, lng falls by more than 5°: about 30° expected at z≈1.1, and the spin would raise it;
+   - then the spin returns in [2.5, 7] s after the key's ease ends.
+
+   This proves finding 3a's fix.
+7. **A pinch zooms in and holds the globe still:** two touch points spread from 60 to 240 px, then hold 300 ms + 1 s. Zoom rises by at least 1.5, and the globe is still while both fingers stay down.
+8. **Lifting one finger of a pinch keeps the globe still while the other stays down:**
+   - release finger 2 only, by sending `touchMove` with finger 1 alone (CDP releases points missing from the list; `touchEnd` must list none);
+   - finger 1 stays still for `SPIN_IDLE_MS` + 1 s, and the globe is still;
+   - lift finger 1: the spin returns in [2.5, 7] s.
+9. **Zoomed in, the spin is slower in degrees but about as fast on screen:** `__globeRate(500)` after the ease.
+   - deg/s ÷ deg/s₀ is within ±30% of `2^−(z₁ − max(z₀, SPIN_FULL_ZOOM))`;
+   - px/s ÷ px/s₀ is in [0.7, 1.4].
+
+   Ratios, not absolute values, so slow headless frame rates and CPU throttle don't matter.
+10. **A picked place holds the globe still:** click a `ul button`, wait for `!isMoving()` after the flight, and the globe is still for `SPIN_IDLE_MS + SPIN_EASE_MS + 1 s`.
+11. **Back to all places lets the spin return after the pause:** the spin starts in [2.5, 7] s.
+12. **A mouse drag released off the globe lets the spin return:**
+    - press at the globe's centre, move in steps to a non-interactive spot just outside the globe (the header's wordmark, at x 40, 20 px above the section), hold 300 ms, release there;
+    - the spin returns in [2.5, 7] s.
+
+    Without the window-level release the mouse would stay "down" and the spin would never return.
+13. **Turning reduced motion on stops the spin at once:** while it spins, `Emulation.setEmulatedMedia({ features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })`. Starting 300 ms later, the globe is still for 1 s.
+14. **With reduced motion the globe never spins:**
+    - reload `/` with the emulation still on;
+    - still for 4.5 s once `__globe` exists and the list shows;
+    - still for 5 s after a drag and release;
+    - then `setEmulatedMedia({ features: [] })` at once.
+
+    Checks 13–14 run last in the block, so the game run after them is unaffected.
+
+**Screenshots.** `01b-globe-held.png` (check 3), `01c-globe-spin-back.png` (check 5) and `01d-globe-zoomed-spin.png` (check 9) serve as the DoD's before/after (copy them to the mission folder).
+
+**Optional.** A wheel check (`mouseWheel`). It runs the same `wheel` + `move`-with-`originalEvent` path as the pinch, so it isn't required.
+
+**Not tested in E2E: input while the map loads.** There's no deterministic way to hold `load`: it waits for the land GeoJSON, which MapLibre fetches in its worker, out of the page's reliable CDP interception. The design covers it: input is tracked from `start()` right after `new Map`, nothing spins before `load`, and `begin` refuses while pressed.
 
 ### Risks and failure modes
 
-- **The spin cancels a gesture or flight (3b):** prevented by the synchronous pause on down events and the `isMoving()` guard in `begin()`. Checks 2, 4 and 8 fail loud if it comes back.
-- **The idle timer never fires because the spin's moves count as input:** prevented by the `originalEvent` filter. Checks 4 and 9.
-- **A MapLibre upgrade stops passing `originalEvent` on some gesture or inertia:** checks 4, 6 and 9 catch it.
-- **A press held still and released off the canvas without dragging** (inside a 1–3 px click tolerance) never arms the timer. That degrades to "stays still until the next touch", never to fighting the player. Accepted.
-- **Reduced motion switched on mid-spin** takes effect at the next pause or reload: `begin()` re-checks it. That's stricter than today, which reads it at mount. Accepted as KISS; no extra `matchMedia` listener.
-- **Low headless frame rate:** `MAX_STEP_MS` is 250, and the checks use ratios and wide windows. The sampler records fps in its details.
-- **Emulated reduced motion leaking into the game checks:** reset right after check 10, which runs last.
-- **`__globe` reaching production:** it's gated like `debugBridge`. Optional Verification: after `npm run build`, `rg -l __globe .next/static` finds nothing.
-- **Scope:** everything is in `src/components/globe/` plus `scripts/e2e.mjs`. Nothing else has to change. Optional docs line: add `globeSpin.ts` and the dev-only `window.__globe` to the AGENTS.md Globe bullet.
+- **The spin cancels a gesture, key press or flight (3a, 3b):** prevented by the synchronous pause on every input event and `step`'s `isMoving()` guard. Checks 2, 4, 6, 7 and 10 fail loud if it comes back.
+- **The idle timer arms under a finger (a held press, a half-lifted pinch):** `resumeLater` and `begin` both refuse while `pressed()`. Checks 3 and 8.
+- **A release the controller misses:**
+  - mouse let go off the canvas: the window `mouseup` in capture phase catches it (check 12);
+  - a mouse release lost to alt-tab: clears at the next `mouseup` anywhere;
+  - touch can't be missed: `touches` is the browser's live list, and `touchend`/`touchcancel` always reach the start target.
+- **Input before `load`:** tracked from right after `new Map`, with no spin before `load`. A finger put down during the dynamic import, before the map exists, isn't seen by MapLibre either, so there's no gesture to cancel. The globe may spin under that finger until the next touch. Accepted.
+- **The idle timer never fires because the spin's moves count as input:** prevented by the `originalEvent` filter. Checks 4 and 11.
+- **A MapLibre upgrade stops passing `originalEvent` on some gesture or inertia:** checks 4, 6, 7 and 11 catch it.
+- **Reduced motion switched on mid-spin:** stops on the next frame (check 13). It's one `matchMedia` call per spinning frame through the shared helper, which is negligible. Switching it off resumes after the next input or a reload. Both are stricter than today, which reads it once at mount; record this in the Summary (Fable SC4).
+- **A place picked before the map even exists:** `hold(true)` arrives with `ready`, so a frame or two of spin may run after `load`, before the flight starts in the same effect pass. Harmless.
+- **Low headless frame rate:** `MAX_STEP_MS` is 250, and the checks use ratios and wide windows. The sampler records fps.
+- **Emulated reduced motion leaking into the game checks:** reset right after check 14, which runs last.
+- **`__globe` reaching production:** gated like `debugBridge`. **Required Verification step** (Fable SC5): after `npm run build`, `rg -l __globe .next/static` finds nothing.
+- **Scope:** everything is in `src/components/globe/` plus `scripts/e2e.mjs`. Optional docs line: add `globeSpin.ts` and the dev-only `window.__globe` to the AGENTS.md Globe bullet.
 
 ### Rejected alternatives
 
-- **Copy MapLibre's example (an `easeTo` every second, chained on `moveend`, constant deg/s to z3, then fading to 0 at z5):** the on-screen speed still grows about 4× by z3, and the chained eases need their own guards against restarting themselves on `moveend`.
-- **Raw DOM `pointerdown`/`pointerup` on the container:** misses momentum, keyboard and gesture ends. The Brief's decision rules prefer MapLibre events.
-- **Counting `*start`/`*end` pairs:** more state, and easy to unbalance. `originalEvent` plus `isMoving()` covers every case without counters.
+- **Copy MapLibre's example** (an `easeTo` every second, chained on `moveend`, constant deg/s to z3, then fading to 0 at z5): the on-screen speed still grows about 4× by z3, and the chained eases need their own guards against restarting themselves on `moveend`.
+- **`attachGlobeSpin(map)`, which registers, starts and returns in one call** (the first design): breaks the owner's CQS rule (Astra MF3).
+- **Starting the controller on `load`:** misses a finger put down while the map loads (Astra MF1).
+- **A pointer-id set** (`pointerdown` on the container, window `pointerup`/`pointercancel`): one mechanism for all pointer types, but it keeps ids, needs a self-heal for a lost id (otherwise the original bug comes back), and bypasses MapLibre's events. The live `touches` list plus one mouse flag need neither.
+- **Counting `*start`/`*end` pairs:** more state, and easy to unbalance. `pressed()` plus `originalEvent` plus `isMoving()` covers every case without counters.
+- **A `change` listener on the reduced-motion query** (Astra SC2 as worded): needs a second copy of the query outside `@/game/motion`, or a new export there, outside scope. The per-frame re-read through the existing helper stops the spin just as fast.
+- **`map.once('remove', stop)`** (Fable SC3): `Globe` alone owns the map's lifecycle and stops the spin before `map.remove()`. A second cleanup path is duplication.
+- **E2E for input during loading** (part of Astra SC1): not deterministic (see the E2E design). The design covers it.
 - **A `data-center`/`data-zoom` attribute written every frame:** per-frame DOM writes in production just for a test. The dev-only map handle costs nothing in production.
 - **Reusing `window.__cc`:** it's the Phaser board's scene-bound bridge. Coupling the globe to it mixes concerns.
-- **A `useGlobeSpin` hook taking the map:** the map lives in a ref, which can't be read during render, so it would need a second state. Attaching on `load` is simpler.
-- **A unit test of `spinRate`:** E2E check 7 measures it as the player sees it.
+- **A `useGlobeSpin` hook taking the map:** the map lives in a ref, which can't be read during render, so it would need a second state. Creating and starting it right after `new Map` is simpler.
+- **A unit test of `spinRate`:** E2E check 9 measures it as the player sees it.
 
 ## Architecture review (Fable)
 
@@ -275,6 +367,31 @@ SHOULD-CONSIDER:
 
 ## Revision notes
 
+MUST-FIX, all resolved in `## Architecture`:
+- **Fable 1 (keyboard relies on rAF order):** `movestart` (with `originalEvent`) joins `move`/`moveend` → `resumeLater()`, which pauses synchronously inside the keydown. `step` also refuses to write while `map.isMoving()` (the key's `easeTo` sets `_moving` synchronously). New E2E check 6 (ArrowLeft while spinning).
+- **Fable 2 (check 1 flaky):** check 1 asserts only that lng rises. The ease-in is asserted in check 5, where the test controls t₀, and check 5 also takes the deg/s₀ and px/s₀ baseline.
+- **Astra 1 (no contact state):**
+  - `touching` is recomputed from the live `originalEvent.touches` (map `touchstart`/`touchend`/`touchcancel`, filtered as in MapLibre's `_getMapTouches`), so a half-lifted pinch stays "down";
+  - `mouseDown` is set by the map's `mousedown` and cleared by a capture-phase `window` `mouseup`, so an off-canvas release counts;
+  - `resumeLater`/`begin` refuse while `pressed()`;
+  - `start()` runs right after `new Map`, so input during load is tracked, and `loaded` blocks any spin before `load`;
+  - new E2E checks 8 (partial pinch) and 12 (off-canvas mouse release).
+- **Astra 2 (camera ownership too late):** synchronous pause on user `movestart`, plus `step`'s per-frame `isMoving()` guard, so the spin never writes while another movement owns the camera. MapLibre event order verified (`ml:55519-55566,56499-56505`).
+- **Astra 3 (CQS):** `createGlobeSpin(map)` only builds the closure. `start()` (registers and starts on `load`), `hold()` and `stop()` are commands. Subscriptions use MapLibre 6's `on()` → `Subscription`.
+
+SHOULD-CONSIDER:
+- **Accepted:**
+  - Fable SC1: idle windows are [2.5, 7] s throughout.
+  - Fable SC2: `__globeRate(500)` re-anchors per window.
+  - Fable SC4: Summary notes that reduced motion is now re-read live.
+  - Fable SC5: `rg -l __globe .next/static` after `npm run build` is a required Verification step.
+  - Astra SC1, in part: keyboard (check 6), partial pinch (check 8) and off-canvas mouse (check 12).
+  - Astra SC2, in spirit: reduced motion is re-read every spinning frame through `@/game/motion`, so the spin stops on the next frame (check 13).
+- **Rejected:**
+  - Fable SC3 (`once('remove')`): `Globe` solely owns the map lifecycle, and a second cleanup path is duplication.
+  - Astra SC1's load-time E2E: `load` can't be held deterministically (the worker fetches the land GeoJSON). The design covers it.
+  - Astra SC2's `change` listener: it would duplicate the media query outside `@/game/motion`. The per-frame re-read is as fast and DRY.
+
 ## Steps
 
 ## Verification
@@ -291,5 +408,6 @@ SHOULD-CONSIDER:
 - 2026-11-07 08:16 UTC · Architecture: architect wrote findings + design (`globeSpin.ts` attachGlobeSpin, originalEvent input detect, 3 s idle, zoom-scaled speed, dev-only `window.__globe`, e2e block 1b). Docs only; no checks needed.
 - 2026-11-07 08:22 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (add `movestart` to originalEvent filter; drop on-load ease-in assert from check 1). Docs only.
 - 2026-11-07 08:25 UTC · Astra review: APPROVE_WITH_CHANGES, 3 MUST-FIX (track contacts incl. partial pinch/off-canvas release; pause synchronously on user `movestart`, no spin writes while camera owned by other motion; split factory create/activate for CQS). Docs only.
+- 2026-11-07 08:39 UTC · Revision: architect resolved all 5 MUST-FIX (contact tracking via live touches + window mouseup, sync pause on user movestart + per-frame isMoving guard, createGlobeSpin/start/hold/stop CQS split, check 1 lng-only); e2e block now 14 checks. Docs only.
 
 ## Summary
