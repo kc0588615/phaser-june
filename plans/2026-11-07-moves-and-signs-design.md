@@ -976,7 +976,7 @@ Design only; the game is unchanged. The owner picks from the design doc's §1, t
 - **Build brief** `plans/2026-11-07-moves-and-signs-build-brief.md`: brief A (plan 055, rules `054-1` → `055-0`, 76 content files, F&T content out with constants kept, dev-DB guarded checks, ~20–25 sessions) and brief B (one-session F&T constants cleanup after the owner's prod content build). Prod content build stays the owner's, from WSL, after the build's deploy succeeds.
 - **Verification:** checks 1–7 pass (`agent-state/missions/moves-and-signs-design/final/verify.txt`). Game tree byte-identical to `69f45fa6`, so Baseline's e2e (1512/1512, `baseline-e2e/`) stands; typecheck/lint 0, tests 48/48. Not checkable: AmphibiaWeb (blocks bots; IUCN/ADW used instead); 3 open-source disagreements left as no record.
 - **Reviews:** architecture Fable APPROVE_WITH_CHANGES, Astra APPROVE_WITH_CHANGES (MUST-FIX resolved in Revision); code review skipped (no code).
-- **`git diff --stat origin/main...HEAD`** (docs only; the deploy ships the same game):
+- **`git diff --stat origin/main...HEAD`** at Verification, before this Summary was added (docs only; the deploy ships the same game):
   ```
   docs/research/2026-11-07-moves-and-signs.md        | 445
   docs/research/2026-11-07-moves-and-signs/*.png     | 8 files, Bin (0.54–0.76 MB each)
