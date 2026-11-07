@@ -475,6 +475,36 @@ async function main() {
     const mouseReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, releasedAt);
     check('a mouse drag released off the globe lets the spin return', Math.abs(mouseDragged) > 5 && Boolean(mouseReturn) && inIdleWindow(mouseReturn.gap), JSON.stringify({ dLng: mouseDragged.toFixed(1), releasedOn: offHit, restMs: mouseReturn?.gap, window: IDLE_WINDOW }));
 
+    // Reduced motion, last in the block: the emulation is cleared before the game.
+    const reduceMotion = on => page('Emulation.setEmulatedMedia', { features: on ? [{ name: 'prefers-reduced-motion', value: 'reduce' }] : [] });
+    const spinningBefore = Boolean(mouseReturn);
+    await reduceMotion(true);
+    await sleep(300);
+    await watchGlobe();
+    await sleep(1000);
+    const reduced = await stopWatchingGlobe();
+    check('turning reduced motion on stops the spin at once', spinningBefore && isStill(reduced.samples), JSON.stringify({ spinningBefore, samples: reduced.samples.length, fps: reduced.fps }));
+
+    await goto(`${BASE}/`);
+    await waitFor(() => Boolean(window.__globe) && document.querySelectorAll('ul button').length > 0, 'the globe after a reload', 30_000);
+    await watchGlobe();
+    await sleep(4500);
+    const reducedLoad = await stopWatchingGlobe();
+    const beforeReducedDrag = await globeView();
+    await touch('touchStart', [[cx, cy]]);
+    for (let x = 10; x <= 150; x += 10) {
+      await touch('touchMove', [[cx + x, cy]]);
+      await sleep(16);
+    }
+    await sleep(300);
+    await touch('touchEnd');
+    const reducedDragged = dLng(beforeReducedDrag.lng, (await globeView()).lng);
+    await watchGlobe();
+    await sleep(5000);
+    const reducedAfter = await stopWatchingGlobe();
+    await reduceMotion(false);
+    check('with reduced motion the globe never spins', isStill(reducedLoad.samples) && reducedDragged < -10 && isStill(reducedAfter.samples), JSON.stringify({ loadSamples: reducedLoad.samples.length, dLng: reducedDragged.toFixed(1), afterSamples: reducedAfter.samples.length }));
+
     // 2. The animal board for that continent (plan 044).
     // A ?seed= game is never saved, so each load deals the same round 1 afresh (localStorage carries over).
     const loadBoard = async () => {
