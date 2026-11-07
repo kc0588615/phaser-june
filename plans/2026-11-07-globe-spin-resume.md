@@ -68,7 +68,7 @@ Out:
 
 - [x] Baseline: install, migrate, run typecheck, lint, unit and E2E tests; record the results under Baseline
 - [x] Architecture: `architect` writes findings and the target design
-- [ ] Fable review: `architecture-reviewer`
+- [x] Fable review: `architecture-reviewer`
 - [ ] Astra review: `astra-review` (write "Skipped: <reason>" if it's unavailable)
 - [ ] Revision: `architect` resolves MUST-FIX items (check off as "none needed" if there are none)
 - [ ] Steps: `planner` writes Steps and Verification
@@ -240,6 +240,24 @@ Screenshots `01b-globe-held.png`, `01c-globe-spin-back.png` and `01d-globe-zoome
 
 ## Architecture review (Fable)
 
+Checked against `Globe.tsx`, `GlobeScreen.tsx`, `motion.ts`, `debugBridge.ts`, `scripts/e2e.mjs`, `e2e-fresh.mjs`, `ci.yml` and `maplibre-gl-dev.mjs` 6.16.0. The cited `ml:` lines hold: `setCenter`→`jumpTo`→`stop()`→`_stopHandlers`→`handlers.stop(false)` (resets every handler, clears inertia); `_fireEvents` passes `originalEvent` on `move`/`moveend` from the handler's event data (`mergeHandlerResult` uses `handlerResult.originalEvent || inputEvent`, so scroll-zoom render frames still carry `_lastWheelEvent`); inertia is `easeTo(…, { originalEvent: originalEndEvent })`; `Map.isMoving()` = camera `_moving` || handlers' `_eventsInProgress`/`scrollZoom.isZooming()`, so a held-still drag, momentum and the pick's flight all read true; `fitBounds`→`flyTo` falls back to `easeTo` with duration 0 under `browser.prefersReducedMotion` (a live `matchMedia` query), so finding 5's deletion is behaviour-neutral; `MapEventHandler` fires `touchstart/touchend/touchcancel/mousedown/mouseup/wheel` synchronously inside `handleEvent`, before any handler runs. Finding 6 (picking flies; the Brief's note is wrong) is correct. The design is small, in-scope, and the `__globe` gating matches `debugBridge.ts`; `e2e:fresh` and CI run `next dev`, so the hook exists where the tests run and nowhere else.
+
+VERDICT: APPROVE_WITH_CHANGES
+
+MUST-FIX:
+1. **Keyboard fix (finding 3a) rests on rAF registration order; add `movestart` to the `originalEvent` filter.** `KeyboardHandler` returns a `cameraAnimation`; `handleEvent` runs it → `easeTo` → `_prepareEase` fires only `movestart` synchronously (ml:56499-56505); the first `move` comes on MapLibre's next render frame (ml:56489). The spin loop is still live at that moment (no down event, no `wheel`). If the spin's `step` runs before MapLibre's render callback in that frame, `setCenter`→`stop()` cancels the ease and the key does nothing, which is the bug the finding says it fixes. Today it works only because `setCenter` inside `step` calls `triggerRepaint` before `step` reschedules itself, so MapLibre's callback is registered first. Fix: listen on `movestart`, `move`, `moveend` with truthy `originalEvent` → `resumeLater()`. One token in the table; no new state.
+2. **E2E check 1 ("spins on load, easing in") is flaky as designed.** `goto` resolves at `readyState === 'complete'`; the map is created after the dynamic import and `load` fires later still, so `__watchGlobe()` called from Node can't be timed to the first spin frame. If the loop has been running for a while when sampling starts, "mean velocity over the first 250 ms < 40% of steady" fails. Fix (KISS): check 1 asserts only that lng rises and records deg/s₀ and px/s₀; the ease-in is asserted once, in check 5, where the test controls t₀ (release → still → first spin sample). If the architect wants the on-load ease measured, the sampler must arm itself from the `addScriptToEvaluateOnNewDocument` script by polling for `window.__globe` and recording from `once('load')`, not from a Node call.
+
+MISSED:
+- Nothing that changes the design. Minor: `mouseup` and `dragend`/`moveend` both call `resumeLater()` after a mouse drag (double re-arm, harmless); `hold(true)` + the outline effect's `fitBounds` are in the same commit and `begin()`'s `isMoving()` guard covers the flight anyway, so the ordering note ("declared before the outline effect") is belt-and-braces, not load-bearing.
+
+SHOULD-CONSIDER:
+1. Check 4's window [2.5, 4.5] s: the lower edge is tight if a `begin()` lands while `isMoving()` is still true (scroll-zoom's finish timer, a late inertia frame) and re-arms another 3 s; [2.5, 7] loses nothing and removes a CI retry.
+2. Check 7's `project(anchor).x` sampling: after a 1 s window at z≈1 the anchor has moved ~7 px, and projecting a point that drifts toward the globe's limb is nonlinear. Re-anchor at the start of each measurement window (the design implies this; say it) and keep the window short.
+3. `remove()` could also be wired to `map.once('remove', …)` so the controller can't outlive a map removed by anyone other than `Globe`'s cleanup. Optional; today only `Globe` removes it.
+4. Record in the Summary that reduced motion is now re-read at every resume (stricter than today's mount-time read); it's a behaviour change in the player's favour, worth one line.
+5. The Optional Verification `rg -l __globe .next/static` after `npm run build` is cheap and proves the DoD's "don't ship a debug global"; make it a required step.
+
 ## Architecture review (Astra)
 
 ## Revision notes
@@ -258,5 +276,6 @@ Screenshots `01b-globe-held.png`, `01c-globe-spin-back.png` and `01d-globe-zoome
 
 - 2026-11-07 08:03 UTC · Baseline: typecheck/lint ok, unit 48/48, e2e:fresh 1512/1512.
 - 2026-11-07 08:16 UTC · Architecture: architect wrote findings + design (`globeSpin.ts` attachGlobeSpin, originalEvent input detect, 3 s idle, zoom-scaled speed, dev-only `window.__globe`, e2e block 1b). Docs only; no checks needed.
+- 2026-11-07 08:30 UTC · Fable review: APPROVE_WITH_CHANGES, 2 MUST-FIX (add `movestart` to originalEvent filter; drop on-load ease-in assert from check 1). Docs only.
 
 ## Summary
