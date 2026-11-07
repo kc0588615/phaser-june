@@ -914,6 +914,14 @@ Skipped: design mission, no code (diff vs origin/main 69f45fa6 is only .md, .png
 
 ## Release
 
+- Re-verify (origin/main still 69f45fa6, no rebase): checks 1–7 pass again, typecheck/lint 0, tests 48/48; CI check + e2e pass on PR #61. Output `STATE/final/release-verify.txt`.
+- Merge commit `4418143d` (PR #61, `gh pr merge --merge`).
+- Deploy: `deploy critter-connect: live at https://critterconnect.org` (log `STATE/final/deploy.log`).
+- Smoke: `version.txt` = `4418143d8d49309b59d66b071d13404dc085aa4c`; play.critterconnect.org/ 200, critterconnect.org/ 200. No game page changed.
+- No production content build needed.
+
+Result: done
+
 ## Decisions
 
 - 2026-11-07 Baseline: `/usr/bin/google-chrome` absent and Playwright Chromium dies sandboxed (Ubuntu 24.04 userns); E2E uses `agent-state/missions/moves-and-signs-design/chrome-nosandbox.sh` (adds `--no-sandbox`) via `CHROME_PATH`. No repo change.
@@ -965,6 +973,7 @@ Skipped: design mission, no code (diff vs origin/main 69f45fa6 is only .md, .png
 - 2026-11-07 12:44 UTC · S19: origin/main still 69f45fa6 (merge-base ok, no rebase, no cited line moved; next plan 055, rules 054-1). Read DOC + BRIEF end to end; §1/§2/§5/brief numbers agree (18/149, 2 vs 16 hard, 5 vs 47 no-records, 71 = 10+61, D 105, 208 answers = source sum, 5 retags/19 note tags/19 animals, 20 F&T holders = 20 class + 45 kind tags, 206 sign rows, bot deltas). 1 fix: §2 NA notes "1.1 to 0.5" now gives C 1.09→0.45 / D 1.18→0.51 (matches §4, metrics.md). Spot-checked 24 file:line cites ok. typecheck/lint 0, paths.sh empty.
 - 2026-11-07 12:50 UTC · Code review (Astra): skipped, design mission with no code (diff = md/png/csv only, checked). Next: full Verification + Summary.
 - 2026-11-07 13:00 UTC · Verification: 1–7 pass (origin/main 69f45fa6 ancestor; diff = 12 docs files, paths.sh empty, tree clean; 6 DOC headings, 2 briefs × 6 headings; coverage 304/0 problems, quotes 491/0 misses, §3 76 rows/180 links, signmap 0, sign-map.csv = out/, 8 PNGs 780 px each referenced once; links 0 problems; game tree = 69f45fa6 so Baseline e2e 1512/1512 stands; typecheck/lint 0, tests 48/48; evidence present, STATE 816M du (762M hardlinked node_modules, ~54M real)). Output `STATE/final/verify.txt`. Summary written, status done. Next: Release (deploy).
+- 2026-11-07 13:01 UTC · Release: PR #61 merged (`4418143d`), deployed, smoke ok (version = merge, both hosts 200).
 
 ## Summary
 
@@ -986,3 +995,4 @@ Design only; the game is unchanged. The owner picks from the design doc's §1, t
   12 files changed, 1768 insertions(+)
   ```
 - No production content build needed for this release.
+- **Release:** PR #61 merged as `4418143d`, deployed; live `version.txt` = merge, both hosts 200.
