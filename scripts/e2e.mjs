@@ -81,7 +81,7 @@ async function main() {
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v4', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v5', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
     // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
     await page('Page.addScriptToEvaluateOnNewDocument', { source: `
       window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
@@ -1152,7 +1152,8 @@ async function main() {
         const pickName = names.get(mode === 'idle' ? state.mysteryId : state.possible[0]);
         const named = await evaluate(async pickName => {
           const sheet = document.querySelector('[aria-label="Out of moves"]');
-          const buttons = [...(sheet?.querySelectorAll('button') ?? [])];
+          // The animals' own buttons, not Lock in (plan 054), whose label ends with a name too.
+          const buttons = [...(sheet?.querySelectorAll('button:not([data-lock-in])') ?? [])];
           (buttons.find(b => b.textContent.endsWith(pickName)) ?? buttons[0])?.click();
           await new Promise(resolve => setTimeout(resolve, 300));
           return { sheet: Boolean(sheet), clue: window.__cc.clue() };
@@ -1463,6 +1464,68 @@ async function main() {
       check(`the sort: a round ending with rows ${label}: the mystery's row rises without dropping`, rise.rose && rise.neverDown, JSON.stringify(rise));
       // 12 px: the last frame sampled comes just before the rise lands.
       check(`the sort: a round ending with rows ${label}: the mystery's row ends at the Camera row`, rise.matched && Math.abs(rise.end - rise.camera) <= 12, JSON.stringify(rise));
+    }
+
+    // Plan 054: Lock in, from the field guide. One pencil on a look-alike's first question, then every animal but one
+    // ruled out: right (one right pencil: the bonus is its category's weight x 1 category x 2), right with a wrong pencil
+    // in the same column (net 0: no bonus), and a look-alike left (the round is lost). Lock in hides while 2 are left.
+    const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
+    const WEIGHT = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
+    for (const scenario of ['right', 'mixed', 'wrong']) {
+      await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);
+      await waitFor(boardReady, 'a fresh board', 60_000);
+      await sleep(1500);
+      const lock = await evaluate(async scenario => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const close = async () => { [...document.querySelectorAll('[role=dialog] button')].find(button => button.getAttribute('aria-label') === 'Close')?.click(); await wait(250); };
+        const start = window.__cc.clue();
+        const { mysteryId, suspects, orders } = start;
+        const others = suspects.filter(id => id !== mysteryId);
+        const tag = orders[0].tag;
+        const truth = id => orders[0].row[suspects.indexOf(id)];
+        // A hidden cell's taps: one pencils yes, two pencil no.
+        const pencil = async (id, yes) => {
+          for (let tap = 0; tap < (yes ? 1 : 2); tap++) {
+            document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] td[data-tag="${tag}"] button`).click();
+            await wait(150);
+          }
+        };
+        await pencil(others[0], truth(others[0]));
+        if (scenario === 'mixed') await pencil(others[1], !truth(others[1]));
+        const target = scenario === 'wrong' ? others[3] : mysteryId;
+        const toMark = suspects.filter(id => id !== target);
+        for (const id of toMark.slice(0, -1)) { window.__keyMark(id, true); await wait(250); }
+        await window.__holdPill(target);
+        const twoLeft = Boolean(document.querySelector('[role=dialog] button[data-lock-in]'));
+        await close();
+        window.__keyMark(toMark.at(-1), true);
+        await wait(300);
+        await window.__holdPill(target);
+        const button = document.querySelector('[role=dialog] button[data-lock-in]');
+        button?.click();
+        await wait(250);
+        const confirm = document.querySelector('[role=dialog] [data-name-confirm="lock"]');
+        const text = confirm?.innerText ?? '';
+        [...(confirm?.querySelectorAll('button') ?? [])].find(other => other.textContent !== 'Back')?.click();
+        await wait(500);
+        return { twoLeft, button: Boolean(button), text, tag, pencil: start.pencil, clue: window.__cc.clue() };
+      }, scenario);
+      check(`Lock in (${scenario}): hidden while 2 animals are left`, !lock.twoLeft, JSON.stringify({ twoLeft: lock.twoLeft }));
+      check(`Lock in (${scenario}): shows in the last animal's field guide once the pencils leave one`, lock.button);
+      check(`Lock in (${scenario}): asks first, warning it's one try and wrong pencils take away`, /One try only/.test(lock.text) && /wrong one takes away/.test(lock.text), lock.text);
+      const state = lock.clue;
+      if (scenario === 'wrong') {
+        check('Lock in (wrong): a look-alike locked in loses the round, no bonus', state.status === 'lost' && state.lostBy === 'wrong-name' && state.lockedIn?.bonus === 0 && state.logTail.some(entry => entry.kind === 'named' && entry.lockedIn && !entry.correct), JSON.stringify({ status: state.status, lostBy: state.lostBy, lockedIn: state.lockedIn }));
+        continue;
+      }
+      const expected = scenario === 'mixed' ? 0 : WEIGHT[CATEGORY[lock.tag.slice(0, lock.tag.indexOf(':'))]] * 2;
+      check(`Lock in (${scenario}): finds it, one star, with the pencil bonus (${expected})`, state.status === 'found' && state.end?.stars === 1 && state.lockedIn?.bonus === expected, JSON.stringify({ status: state.status, stars: state.end?.stars, lockedIn: state.lockedIn, tag: lock.tag }));
+      const card = await waitFor(() => {
+        const sheet = document.querySelector('section[aria-labelledby="end-title"]');
+        return sheet ? { text: sheet.innerText.replace(/\s+/g, ' '), bonus: sheet.querySelector('[data-lock-bonus]')?.getAttribute('data-lock-bonus') ?? null } : null;
+      }, 'the round-end card', 10_000);
+      check(`Lock in (${scenario}): the round-end card says "Locked in!" and shows the bonus`, card.text.includes('Locked in!') && card.bonus === String(expected), JSON.stringify({ bonus: card.bonus, text: card.text.slice(0, 80) }));
+      if (scenario === 'right') await screenshot('08-lock-in-end.png');
     }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));

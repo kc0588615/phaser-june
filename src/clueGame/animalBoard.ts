@@ -239,7 +239,7 @@ export type AnimalLogEntry =
   | { kind: 'escaped'; id: number }
   | { kind: 'found'; id: number }
   | { kind: 'out-of-moves' }
-  | { kind: 'named'; id: number; correct: boolean };
+  | { kind: 'named'; id: number; correct: boolean; lockedIn?: true };
 
 export interface AnimalRound {
   rules: AnimalRules;
@@ -404,16 +404,18 @@ export function mark(state: AnimalRound, id: number, ruledOut: boolean, heading?
  * one loses the round. Out of moves, `null` (skip) loses it. Ignored while a move's own end is pending (the mystery or
  * every look-alike already gone, decided at `endOfMove`), so a name never overrides what the board did.
  */
-export function nameIt(state: AnimalRound, id: number | null): AnimalRound {
+export function nameIt(state: AnimalRound, id: number | null, lockBonus?: number): AnimalRound {
   if (state.status !== 'playing' && state.status !== 'out-of-moves') return state;
   if (state.status === 'playing' && (id === null || state.released.includes(state.mysteryId) || state.released.length === state.suspects.length - 1)) return state;
   if (id === null) return { ...state, status: 'lost', lostBy: 'out-of-moves' };
   if (!state.suspects.includes(id) || state.released.includes(id)) return state;
   const named = { id, correct: id === state.mysteryId };
-  const log = [...state.log, { kind: 'named' as const, ...named }];
+  // Plan 054: a Lock in (`lockBonus` given) pays its bonus only on a find.
+  const lockedIn = lockBonus === undefined ? null : { bonus: named.correct ? lockBonus : 0 };
+  const log = [...state.log, { kind: 'named' as const, ...named, ...(lockedIn && { lockedIn: true as const }) }];
   return named.correct
-    ? { ...state, status: 'found', named, log: [...log, { kind: 'found', id }] }
-    : { ...state, status: 'lost', lostBy: 'wrong-name', named, log };
+    ? { ...state, status: 'found', named, lockedIn, log: [...log, { kind: 'found', id }] }
+    : { ...state, status: 'lost', lostBy: 'wrong-name', named, lockedIn, log };
 }
 
 /** Plan 054: the player's pencil marks for hidden cells, by `${id}:${tag}` (the session's `pencil`). */
@@ -422,7 +424,8 @@ export type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
 /**
  * Plan 054: the one suspect Lock in would name, or null when the player's view leaves 0 or 2+. The view: unmarked,
  * unreleased suspects, each cell's shown answer or else its pencil mark, against the camera's shown answers. Reads only
- * what the player sees or wrote (never hidden answers), so pointing at it gives nothing away.
+ * what the player sees or wrote (never hidden answers), so pointing at it gives nothing away. Null too without a pencil
+ * on another unreleased animal's hidden cell: with none it's only Name it.
  */
 export function lockInPick(state: AnimalRound, pencil: Pencil): number | null {
   const left = state.suspects.filter((id, i) => !state.marked.includes(id) && !state.released.includes(id)
@@ -432,31 +435,45 @@ export function lockInPick(state: AnimalRound, pencil: Pencil): number | null {
       const yes = order.seen[i] ? order.row[i] : mark ? mark === 'yes' : null;
       return yes === null || yes === (order.answer === 'yes');
     }));
-  return left.length === 1 ? left[0] : null;
+  if (left.length !== 1) return null;
+  const pencilled = state.suspects.some((id, i) => id !== left[0] && !state.released.includes(id)
+    && state.orders.some(order => !order.seen[i] && pencil[`${id}:${order.tag}`]));
+  return pencilled ? left[0] : null;
 }
 
 /** Plan 054: how hard each category is to call from the photo and field guide (owner: fixed by category). */
 export const LOCK_IN_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
+/** Plan 054: points per weight, and the cap either way (under board play's ★★★ lead over a find by name, plan 053; at -cap a find still scores its star's 50). */
+export const LOCK_IN_POINTS = { perWeight: 2, cap: 50 };
 
 /**
- * Plan 054: the pencil bonus for a found Lock in. Every pencil mark on a still-hidden cell of an unreleased suspect counts:
- * right adds its category's weight, wrong subtracts it (owner: so pencilling at random averages nothing). More distinct
- * categories pencilled right pays more. Never below 0, and capped so a lucky lock in can't out-pay board play (plan 053).
+ * Plan 054: the pencil bonus for a found Lock in. Counts each pencil on a cell still hidden at the lock in, on an
+ * unreleased look-alike (the mystery's own cells would be free: its answers are the camera's). Right adds its category's
+ * weight, wrong subtracts it (owner: random pencilling averages nothing). The net is multiplied by the distinct categories
+ * pencilled, so spread raises the stake both ways. It may go below 0, down to -cap; capped so a lucky lock in can't
+ * out-pay board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot, plan 054).
  */
 export function lockInBonus(state: AnimalRound, pencil: Pencil): number {
-  // TODO(owner): the scoring. A cell: suspect index `i`, order `order`; hidden when `!order.seen[i]`; its truth is
-  // `order.row[i]`; its category is `PREFIX_CATEGORY[prefixOf(order.tag)]`.
-  void state; void pencil;
-  return 0;
+  let net = 0;
+  const kinds = new Set<ChargeCategory>();
+  state.suspects.forEach((id, i) => {
+    if (id === state.mysteryId || state.released.includes(id)) return;
+    for (const order of state.orders) {
+      const mark = pencil[`${id}:${order.tag}`];
+      if (!mark || order.seen[i]) continue;
+      const category = PREFIX_CATEGORY[prefixOf(order.tag)];
+      const right = (mark === 'yes') === order.row[i];
+      net += right ? LOCK_IN_WEIGHT[category] : -LOCK_IN_WEIGHT[category];
+      kinds.add(category);
+    }
+  });
+  return Math.max(-LOCK_IN_POINTS.cap, Math.min(LOCK_IN_POINTS.cap, net * kinds.size * LOCK_IN_POINTS.perWeight));
 }
 
 /** Plan 054: name the mystery from the pencil marks (`lockInPick`); same stake as `nameIt`. Ignored unless it picks one. */
 export function lockIn(state: AnimalRound, pencil: Pencil): AnimalRound {
   const id = lockInPick(state, pencil);
-  if (id === null) return state;
-  const named = nameIt(state, id);
-  if (named === state) return named;
-  return { ...named, lockedIn: { bonus: named.status === 'found' ? lockInBonus(state, pencil) : 0 } };
+  return id === null ? state : nameIt(state, id, lockInBonus(state, pencil));
 }
 
 /**

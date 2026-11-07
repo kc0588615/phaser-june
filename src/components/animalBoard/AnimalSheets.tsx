@@ -4,7 +4,7 @@
 // comparison on made-up answers, never the live round's). Players see the mystery as "the one caught on camera".
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
+import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, Lock, NotebookPen, Pause } from 'lucide-react';
 import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
 import type { AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
@@ -20,7 +20,7 @@ import { backdropMotion, dialogMotion, drawerUpMotion, SMALL, useOverlayPresence
 import { currentTheme, setTheme } from '@/lib/theme';
 import { SuspectPhoto, TrapCard } from './AnimalCard';
 
-export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v4';
+export const ANIMAL_HOW_TO_KEY = 'critter-connect:animal-board-how-to:v5';
 
 /** A section label inside a sheet (cc Menu label: XS, medium). */
 const LABEL = 'm-0 text-xs font-medium uppercase text-neutral-7';
@@ -40,7 +40,7 @@ const GUIDE_SWIPE_HINT_KEY = 'critter-connect:guide-swipe-hint:v1';
 const SIGN_PAGE_MS = 5000;
 const CHIP = 'rounded-xs bg-neutral-3 px-xs text-xs font-medium text-neutral-8';
 
-export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onName, onShow, onClose }: {
+export function SuspectSheet({ animal, species, speciesById, round, top, pencil, onPencil, onMark, onName, lockable, onLockIn, onShow, onClose }: {
   animal: Animal; species: PoolSpecies | undefined; speciesById: Map<number, PoolSpecies>; round: AnimalRound;
   /** The board's top edge (px from the viewport top): the drawer reaches up to it. */
   top: number;
@@ -50,6 +50,9 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
   onMark: (ruledOut: boolean) => void;
   /** Plan 053: name this animal as the one caught on camera (once a round; right finds it, wrong loses the round). */
   onName: () => void;
+  /** Plan 054: the player's pencil marks leave only this animal (`lockInPick`), so Lock in shows beside It's this one!. */
+  lockable: boolean;
+  onLockIn: () => void;
   /** Show another animal's guide: arrows, ←/→, a swipe (wrapping 5 -> 1), or its number. */
   onShow: (id: number) => void;
   onClose: () => void;
@@ -88,9 +91,9 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
   const marked = round.marked.includes(animal.id);
   const signs = useMemo(() => signsOf(animal.tags), [animal.tags]);
   const canMark = round.status === 'playing' && !released;
-  // Naming asks twice: one try, and a wrong one loses the round. A new animal's guide, or one ruled out from the grid, starts unasked.
-  const [confirming, setConfirming] = useState(false);
-  useEffect(() => setConfirming(false), [animal.id, marked]);
+  // Naming (or Lock in) asks twice: one try, and a wrong one loses the round. A new animal's guide, or one ruled out from the grid, starts unasked.
+  const [confirming, setConfirming] = useState<'name' | 'lock' | null>(null);
+  useEffect(() => setConfirming(null), [animal.id, marked, lockable]);
   const isSeen = (i: number) => round.orders[i].seen[index] || round.status !== 'playing';
   const guides = GUIDE.flatMap(([key, label]) => {
     const lines = animal.guide[key].filter(line => !line.tags.some(tag => asked.has(prefixOf(tag))));
@@ -142,27 +145,36 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       modeless
       top={top}
       footer={!canMark ? undefined : confirming ? (
-        <div className="flex flex-1 flex-col gap-xs" data-name-confirm>
-          <p className="m-0 text-s text-neutral-8" role="status"><b className="font-medium text-neutral-10">One try only.</b> Right, and you find it (★). Wrong, and the round is lost.</p>
+        <div className="flex flex-1 flex-col gap-xs" data-name-confirm={confirming}>
+          {confirming === 'lock'
+            ? <p className="m-0 text-s text-neutral-8" role="status"><b className="font-medium text-neutral-10">One try only.</b> Right, and you find it (★) plus a bonus for your pencil marks on the other animals: each right one adds, each wrong one takes away. Wrong, and the round is lost.</p>
+            : <p className="m-0 text-s text-neutral-8" role="status"><b className="font-medium text-neutral-10">One try only.</b> Right, and you find it (★). Wrong, and the round is lost.</p>}
           <div className="flex gap-xs">
             {/* Focus lands here: the button that opened the ask is gone. */}
-            <button type="button" onClick={() => setConfirming(false)} className="btn btn-outline flex-1" autoFocus>Back</button>
-            <button type="button" onClick={onName} className="btn btn-primary flex-1">Yes, it&apos;s this one</button>
+            <button type="button" onClick={() => setConfirming(null)} className="btn btn-outline flex-1" autoFocus>Back</button>
+            <button type="button" onClick={confirming === 'lock' ? onLockIn : onName} className="btn btn-primary flex-1">{confirming === 'lock' ? 'Yes, lock it in' : <>Yes, it&apos;s this one</>}</button>
           </div>
         </div>
       ) : (
-        <>
+        <div className="flex flex-1 flex-wrap gap-xs">
           <button type="button" onClick={() => { onMark(!marked); onClose(); }} className={`btn flex-1 ${marked ? 'btn-outline' : 'btn-danger'}`}>
             {!marked && <Ban className="h-5 w-5" aria-hidden="true" />}
             {marked ? 'Undo: not ruled out' : 'Rule out'}
           </button>
           {!marked && (
-            <button type="button" onClick={() => setConfirming(true)} className="btn btn-primary flex-1" data-name-it>
+            <button type="button" onClick={() => setConfirming('name')} className="btn btn-primary flex-1" data-name-it>
               <Camera className="h-5 w-5" aria-hidden="true" />
               It&apos;s this one!
             </button>
           )}
-        </>
+          {/* Its own row: three buttons don't fit a phone's width. */}
+          {!marked && lockable && (
+            <button type="button" onClick={() => setConfirming('lock')} className="btn btn-secondary basis-full" data-lock-in>
+              <Lock className="h-5 w-5" aria-hidden="true" />
+              Lock in my pencil marks
+            </button>
+          )}
+        </div>
       )}
     >
       {marked && !released && (
@@ -451,7 +463,8 @@ export function GameMenu({ title, stats, soundOn, onSound, autoRuleOut, onAutoRu
   );
 }
 
-export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound; nameOf: (id: number) => string; onName: (id: number | null) => void }) {
+/** `lockable`: the one the pencil marks leave (plan 054), or null. */
+export function OutOfMovesSheet({ round, nameOf, onName, lockable, onLockIn }: { round: AnimalRound; nameOf: (id: number) => string; onName: (id: number | null) => void; lockable: number | null; onLockIn: () => void }) {
   const left = round.suspects.filter(id => !round.released.includes(id));
   const presence = useOverlayPresence();
   return (
@@ -465,6 +478,12 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
             <p className="m-0 mt-xxs text-s text-neutral-7"><b className="font-medium text-neutral-10">Which one was it?</b> Name it right and you find it (★). Wrong, or skip, and you lose a heart.</p>
           </div>
         </div>
+        {lockable !== null && (
+          <button type="button" onClick={onLockIn} className="btn btn-secondary mt-m w-full" data-lock-in>
+            <Lock className="h-5 w-5" aria-hidden="true" />
+            Lock in my pencil marks: the {nameOf(lockable)}
+          </button>
+        )}
         <ul className="m-0 mt-m flex list-none flex-col gap-xs p-0" aria-label="Animals still on the board">
           {left.map(id => (
             <li key={id}>
@@ -484,7 +503,7 @@ export function OutOfMovesSheet({ round, nameOf, onName }: { round: AnimalRound;
 
 /** The round-end card's headline: how the round ended. */
 function endKicker({ round, end }: AnimalSession): string {
-  if (end?.outcome === 'found') return round.named ? 'Named it!' : 'Found it!';
+  if (end?.outcome === 'found') return round.lockedIn ? 'Locked in!' : round.named ? 'Named it!' : 'Found it!';
   return end?.lostBy === 'escaped' ? 'It escaped!' : end?.lostBy === 'wrong-name' ? 'Wrong animal' : 'Out of moves';
 }
 
@@ -582,8 +601,9 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
                 <span className="text-xl font-heavy [text-wrap:balance] [overflow-wrap:anywhere]">{animal.name}</span>
               </h2>
               <p className="m-0 text-m italic text-neutral-7" lang="la">{animal.scientificName}</p>
-              {guesses.length > 0 && <dl className="m-0 mt-xxs flex flex-col">
-                <Stat label="pencil guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />
+              {(guesses.length > 0 || (found && round.lockedIn)) && <dl className="m-0 mt-xxs flex flex-col">
+                {guesses.length > 0 && <Stat label="pencil guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
+                {found && round.lockedIn && <Stat label="pencil bonus (in the points)" value={round.lockedIn.bonus < 0 ? `−${-round.lockedIn.bonus}` : `+${round.lockedIn.bonus}`} data-lock-bonus={round.lockedIn.bonus} row />}
               </dl>}
             </div>
           </div>
@@ -597,7 +617,7 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
           {!found && (
             <p className={`${NOTICE} bg-error-transparent`}>
               <HeartCrack className="mt-xxs h-4 w-4 shrink-0 text-error" aria-hidden="true" />
-              <span>You lost a heart.{round.named && ` You named the ${nameOf(round.named.id)}.`}</span>
+              <span>You lost a heart.{round.named && ` You ${round.lockedIn ? 'locked in' : 'named'} the ${nameOf(round.named.id)}.`}</span>
             </p>
           )}
           {/* The key to the replay in the grid above: one row per kind of cell it shows. */}
@@ -662,7 +682,7 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
 }
 
 /** A number over its label (the trail total), or before it on one line (`row`, the round-end card). */
-function Stat({ label, value, row = false, ...rest }: { label: string; value: ReactNode; row?: boolean; 'data-guesses'?: string }) {
+function Stat({ label, value, row = false, ...rest }: { label: string; value: ReactNode; row?: boolean; 'data-guesses'?: string; 'data-lock-bonus'?: number }) {
   return (
     <div className={`flex ${row ? 'items-baseline gap-xxs' : 'flex-col'}`} {...rest}>
       <dt className={`${row ? 'text-s' : 'text-xs'} text-neutral-7`}>{label}</dt>
@@ -710,7 +730,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold a <b>?</b> to <b>highlight</b> it: that gem glows next to the animal&apos;s card on the board until you scout it. Hold a gem up top and every gem of it glows until its answer comes in. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
     <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back). After each move, <b>Auto rule-out</b> rules out every animal with a shown answer that doesn&apos;t match; turn it off in the menu to do it all yourself.</>,
     <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it, unless Auto rule-out in the menu is on and it doesn&apos;t match). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
-    <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round.</>,
+    <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round. Penciled the other animals until only one is left? <b>Lock in</b> your pencil marks instead, in its field guide: a right find adds a bonus for each right mark (harder kinds of questions count more, and so does calling more kinds), and each wrong mark takes some away.</>,
     <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,
     <>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</>,
   ];
