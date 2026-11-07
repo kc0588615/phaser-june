@@ -18,8 +18,8 @@ const SPIN_DEG_PER_S = 2.4;
 const SPIN_FULL_ZOOM = 1;
 /** Above this zoom, no spin and no loop. */
 const SPIN_MAX_ZOOM = 5;
-/** A stalled or backgrounded frame can't jump. */
-const MAX_STEP_MS = 250;
+/** A stalled or backgrounded frame can't jump far (at most ~2.4°); slow GPUs drawing a few fps still spin at full speed. */
+const MAX_STEP_MS = 1000;
 
 /** A degree spans 512·2^z/360 px at the view centre, so 2^-zoom keeps px/s constant. */
 const spinRate = (zoom: number) => zoom > SPIN_MAX_ZOOM ? 0 : SPIN_DEG_PER_S * Math.min(1, 2 ** (SPIN_FULL_ZOOM - zoom));

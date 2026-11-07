@@ -406,7 +406,7 @@ Each step: one session, commit + push (pre-push hook runs typecheck + lint; fix,
   - Node helpers: lng unwrap across ±180; still (|Δlng| < 1e-6°) / momentum (`moving`) / spin (`!moving`, lng changing) classification; "wait until the spin returns" (ends at first spin sample); CDP input via `Input.dispatchTouchEvent` at the `section[aria-label="Globe"]` centre, `Input.dispatchMouseEvent`, `Input.dispatchKeyEvent` with `windowsVirtualKeyCode`; hold still 300 ms before any deterministic lift (only the fling releases moving).
   - Checks 1–6 after `01-globe.png` (`:253`), names and pass rules per E2E design; measured numbers in `detail`. Check 5 stores deg/s₀, px/s₀ for check 9. Screenshots `01b-globe-held.png` (check 3), `01c-globe-spin-back.png` (check 5).
   - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 6); report.json details show deg/s₀, px/s₀, idle gaps, key Δlng. Copy run to `e2e-s2/`, delete `e2e-s1/`.
-- [ ] S3 · **E2E part 2: checks 7–12.** `scripts/e2e.mjs` only, per E2E design.
+- [x] S3 · **E2E part 2: checks 7–12.** `scripts/e2e.mjs` only, per E2E design.
   - 7 pinch 60 → 240 px (zoom +≥1.5, still while held); 8 partial pinch release (`touchMove` listing finger 1 only; still for `IDLE_MS` + 1 s; lift → spin in idle window); 9 zoom-scaled speed (`__globeRate(500)` after the ease; deg/s ratio within ±30% of `2^−(z₁ − max(z₀, FULL_ZOOM))`, px/s ratio in [0.7, 1.4]); 10 pick a `ul button`, wait `!isMoving()`, still for `IDLE_MS + EASE_MS` + 1 s; 11 `button[aria-label="Back to all places"]` → spin in idle window; 12 mouse drag released on the header wordmark (x 40, 20 px above the section) → spin in idle window.
   - Screenshot `01d-globe-zoomed-spin.png` (check 9).
   - Check: typecheck, lint, `npm run e2e:fresh` all pass (1512 + 12); check 9 detail shows both ratios and z₀/z₁. Copy run to `e2e-s3/`, delete `e2e-s2/`.
@@ -471,6 +471,10 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
   - Check 5: jump threshold 0.5° (not 0.05°): the eased first step at a few fps moves up to ~0.15°, and a snap lands somewhere else entirely. Baseline `__globeRate(1500)` (not 500), so it spans several frames.
 - S2 → S3/S4: frames above `MAX_STEP_MS` (250) are clipped, so measured headless deg/s is ~60–70% of nominal (1.5 vs 2.24 at z 1.1) and depends on fps. If check 9's ratios wobble from fps differences between zooms, raise `MAX_STEP_MS` (e.g. 1000: a stalled second still moves only ~2.4°) rather than widen the tolerances.
 - S2: the CDP mouse helper moves to S3 (its only user is check 12), so S2 ships no unused code.
+- S3: `MAX_STEP_MS` 250 → 1000 (as the S2 note foresaw). At 250, headless frames of ~300 ms were clipped harder at z 1.1 than z 3.1, so check 9's deg ratio read 0.38 vs 0.25 wanted. At 1000 it reads 0.2505 (px ratio 1.005), and headless deg/s₀ is 2.22 (nominal 2.24). A stall still moves at most 2.4°; real 60 Hz frames are never clipped.
+- S3: MapLibre 6's mouse pan ends on a `mouseup` over the map only (`handler.mouseup = dragEnd`, not `mouseupWindow`); released off the map, its drag stays active (`isMoving()` true) until the next mouse move with the button up (`buttonNoLongerPressed`). The architecture's "routes its document mouseup as mouseupWindow" holds for the event, not the pan. The capture `window` `mouseup` is still load-bearing: without it `mouseDown` stays true and the drag's `moveend` can't arm the timer. Check 12 moves the mouse 10 px (buttons up) after the release, as a player does; the spin returned 3.7 s later. The release spot (x 40, 20 px above the globe) lands on the header's subtitle `<p>`, not the wordmark; still non-interactive, so kept.
+- S3: two runs failed only game row-timing checks on `/explore` (6–7 each) while another mission's balance bot or headless Chrome shared the CPU; the globe block passed in both. Rerun on a quiet box per the S1 rule: all pass.
+- S3: `e2e.mjs` mirrors `FULL_ZOOM` (S2 had only `IDLE_MS`/`EASE_MS`); check 9 needs it.
 
 ## Log
 
@@ -482,5 +486,6 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
 - 2026-11-07 08:43 UTC · Steps: planner wrote S1–S5 (controller+Globe wiring, e2e block 1b in 3 parts incl. tuning/DoD shots, final verification) + Verification (target 1526 checks, build `rg __globe` empty). Docs only.
 - 2026-11-07 10:03 UTC · S1: `globeSpin.ts` (createGlobeSpin → start/hold/stop) + Globe wiring, dev-only `window.__globe`. typecheck/lint ok, unit 48/48, build ok, `rg __globe .next/static` empty (rg=1), controller chunk present; e2e:fresh 1512/1512, no console errors/failed requests (`e2e-s1/`).
 - 2026-11-07 10:40 UTC · S2: e2e block 1b checks 1–6 + page helpers (`__watchGlobe`, `__globeRate`), fps-robust per Decisions. typecheck/lint ok; e2e:fresh 1518/1518, no console errors/failed requests; deg/s₀ 1.53, px/s₀ 4.7, fling rest 3.0 s, key rest 4.3 s (`e2e-s2/`).
+- 2026-11-07 12:31 UTC · S3: e2e block 1b checks 7–12 (pinch, half-lifted pinch, zoomed speed, pick hold, back, off-globe mouse release); `MAX_STEP_MS` 250→1000 (Decisions). typecheck/lint ok; e2e:fresh 1524/1524, no console errors/failed requests; zoomed deg ratio 0.248 (want 0.25), px ratio 0.996, rests 3.2–3.8 s (`e2e-s3/`).
 
 ## Summary

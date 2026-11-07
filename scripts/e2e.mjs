@@ -288,7 +288,7 @@ async function main() {
     // 1b. The globe's spin (plan 2026-11-07-globe-spin-resume): input pauses it, it rests, then eases back in.
     // Real touches and keys through CDP at the globe's centre. A deterministic gesture holds still 300 ms before
     // lifting, so it leaves no momentum; only the fling lifts while moving.
-    const IDLE_MS = 3000, EASE_MS = 1500; // mirror of src/components/globe/globeSpin.ts; change both
+    const IDLE_MS = 3000, EASE_MS = 1500, FULL_ZOOM = 1; // mirror of src/components/globe/globeSpin.ts; change both
     const IDLE_WINDOW = [IDLE_MS - 500, IDLE_MS + 4000]; // the pause before the spin returns, as measured
     const STILL_DEG = 1e-6;
     const inIdleWindow = gap => gap >= IDLE_WINDOW[0] && gap <= IDLE_WINDOW[1];
@@ -329,13 +329,14 @@ async function main() {
       return { first: samples[i], rest: samples[i - 1], gap: Math.round(samples[i].t - Math.max(since, lastMoving?.t ?? -Infinity)) };
     };
     const touch = (type, points = []) => page('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) });
+    const mouse = (type, x, y) => page('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
     const key = async (keyName, keyCode) => {
       for (const type of ['keyDown', 'keyUp']) await page('Input.dispatchKeyEvent', { type, key: keyName, code: keyName, windowsVirtualKeyCode: keyCode });
     };
     await waitFor(() => Boolean(window.__globe), 'the globe (window.__globe; is this a dev build?)');
-    const [cx, cy] = await evaluate(() => {
+    const [cx, cy, globeTop] = await evaluate(() => {
       const box = document.querySelector('section[aria-label="Globe"]').getBoundingClientRect();
-      return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2)];
+      return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2), Math.round(box.top)];
     });
     const centreHit = await evaluate((x, y) => document.elementFromPoint(x, y)?.className ?? null, cx, cy);
 
@@ -401,6 +402,78 @@ async function main() {
     const keyed = dLng(beforeKey.lng, (await globeView()).lng);
     const keyReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, keyAt);
     check('arrow keys move the globe while it spins, then the spin returns', keyed < -5 && Boolean(keyReturn) && inIdleWindow(keyReturn.gap), JSON.stringify({ dLng: keyed.toFixed(1), restMs: keyReturn?.gap, window: IDLE_WINDOW }));
+
+    // Two fingers spread 60 -> 240 px apart (zoom +2), then hold still.
+    const beforePinch = await globeView();
+    await touch('touchStart', [[cx - 30, cy], [cx + 30, cy]]);
+    for (let half = 45; half <= 120; half += 15) {
+      await sleep(16);
+      await touch('touchMove', [[cx - half, cy], [cx + half, cy]]);
+    }
+    await sleep(300);
+    await watchGlobe();
+    await sleep(1000);
+    const pinchHeld = await stopWatchingGlobe();
+    const pinchZoom = (await globeView()).zoom - beforePinch.zoom;
+    check('a pinch zooms in and holds the globe still', pinchZoom >= 1.5 && isStill(pinchHeld.samples), JSON.stringify({ zoomFrom: beforePinch.zoom.toFixed(2), dZoom: pinchZoom.toFixed(2), samples: pinchHeld.samples.length, fps: pinchHeld.fps }));
+
+    // Lift finger 2 only: CDP releases the points a touchMove no longer lists.
+    await touch('touchMove', [[cx - 120, cy]]);
+    await watchGlobe();
+    await sleep(IDLE_MS + 1000);
+    const halfHeld = await stopWatchingGlobe();
+    await touch('touchEnd');
+    const liftedAt = await pageNow();
+    await watchGlobe();
+    const liftReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, liftedAt);
+    check('lifting one finger of a pinch keeps the globe still while the other stays down', isStill(halfHeld.samples) && Boolean(liftReturn) && inIdleWindow(liftReturn.gap), JSON.stringify({ heldMs: IDLE_MS + 1000, samples: halfHeld.samples.length, restMs: liftReturn?.gap, window: IDLE_WINDOW }));
+
+    // Ratios against check 5's baseline, so the headless frame rate cancels out.
+    let zoomRate = null;
+    if (liftReturn && baseRate) {
+      await sleep(Math.max(0, liftReturn.first.t + EASE_MS + 200 - await pageNow()));
+      zoomRate = await evaluate(() => window.__globeRate(1500));
+    }
+    await screenshot('01d-globe-zoomed-spin.png');
+    const zoomed = zoomRate && {
+      zoom0: baseRate.zoom, zoom1: zoomRate.zoom, degPerS1: zoomRate.degPerS, pxPerS1: zoomRate.pxPerS,
+      degRatio: zoomRate.degPerS / baseRate.degPerS, wantDegRatio: 2 ** -(zoomRate.zoom - Math.max(baseRate.zoom, FULL_ZOOM)),
+      pxRatio: zoomRate.pxPerS / baseRate.pxPerS,
+    };
+    check('zoomed in, the spin is slower in degrees but about as fast on screen', Boolean(zoomed) && Math.abs(zoomed.degRatio / zoomed.wantDegRatio - 1) <= 0.3 && zoomed.pxRatio >= 0.7 && zoomed.pxRatio <= 1.4, JSON.stringify(zoomed));
+
+    // Pick the continent to play: the globe flies to it, then holds still.
+    await evaluate(name => [...document.querySelectorAll('ul button')].find(button => button.textContent.includes(name)).click(), place.name);
+    await waitFor(() => !window.__globe.isMoving() && Boolean(document.querySelector('button[aria-label="Back to all places"]')), 'the pick\'s flight to end', 15_000);
+    await watchGlobe();
+    await sleep(IDLE_MS + EASE_MS + 1000);
+    const picked = await stopWatchingGlobe();
+    check('a picked place holds the globe still', isStill(picked.samples), JSON.stringify({ place: place.key, heldMs: IDLE_MS + EASE_MS + 1000, samples: picked.samples.length, zoom: picked.samples[0]?.zoom.toFixed(2) }));
+
+    const backAt = await pageNow();
+    await watchGlobe();
+    await evaluate(() => document.querySelector('button[aria-label="Back to all places"]').click());
+    const backReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, backAt);
+    check('back to all places lets the spin return after the pause', Boolean(backReturn) && inIdleWindow(backReturn.gap), JSON.stringify({ restMs: backReturn?.gap, window: IDLE_WINDOW }));
+
+    // Released off the globe, over the header: MapLibre fires no map event for it. Its drag ends only at the next
+    // mouse move with the button up (a player always moves on), so the mouse moves 10 px after the release.
+    const off = [40, globeTop - 20];
+    const offHit = await evaluate((x, y) => document.elementFromPoint(x, y)?.getAttribute('alt') ?? document.elementFromPoint(x, y)?.tagName ?? null, ...off);
+    const beforeMouse = await globeView();
+    await mouse('mousePressed', cx, cy);
+    for (let i = 1; i <= 10; i++) {
+      await mouse('mouseMoved', Math.round(cx + (off[0] - cx) * i / 10), Math.round(cy + (off[1] - cy) * i / 10));
+      await sleep(16);
+    }
+    await sleep(300);
+    const mouseDragged = dLng(beforeMouse.lng, (await globeView()).lng);
+    await mouse('mouseReleased', ...off);
+    const releasedAt = await pageNow();
+    await page('Input.dispatchMouseEvent', { type: 'mouseMoved', x: off[0] + 10, y: off[1], button: 'none', buttons: 0 });
+    await watchGlobe();
+    const mouseReturn = spinReturn((await untilSpin(IDLE_WINDOW[1] + 1000)).samples, releasedAt);
+    check('a mouse drag released off the globe lets the spin return', Math.abs(mouseDragged) > 5 && Boolean(mouseReturn) && inIdleWindow(mouseReturn.gap), JSON.stringify({ dLng: mouseDragged.toFixed(1), releasedOn: offHit, restMs: mouseReturn?.gap, window: IDLE_WINDOW }));
 
     // 2. The animal board for that continent (plan 044).
     // A ?seed= game is never saved, so each load deals the same round 1 afresh (localStorage carries over).
