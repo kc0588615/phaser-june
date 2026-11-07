@@ -602,7 +602,7 @@ Shared for every step:
     - the 5 sheets open (view each) and show 74 photos, with 19 and 47 marked "none";
     - the S4–S8 id lists join to exactly 1–76.
 
-- [ ] S2 · Patched-copy harness, with deals and the bot for `base` and `no-ft`.
+- [x] S2 · Patched-copy harness, with deals and the bot for `base` and `no-ft`.
   - `tools/copy.sh <variant>`:
     - `git archive HEAD src scripts db tests package.json tsconfig.json` into `patched/<variant>/`, with `node_modules` symlinked;
     - applies `patches/<variant>.patch`, then `tools/overlay.mjs <variant>` (content edits to the copy's `db/content/animals/*.json` only);
@@ -916,6 +916,7 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 
 - 2026-11-07 Baseline: `/usr/bin/google-chrome` absent and Playwright Chromium dies sandboxed (Ubuntu 24.04 userns); E2E uses `agent-state/missions/moves-and-signs-design/chrome-nosandbox.sh` (adds `--no-sandbox`) via `CHROME_PATH`. No repo change.
 - 2026-11-07 S1: `origin/main` still `69f45fa6` (fetched 08:45 UTC), no rebase; Baseline's 4 rounds count as the played round. `paths.sh` uses `grep -rnE` (no `rg` in non-interactive bash) and scans only this mission's files (`plans/2026-11-07-moves-and-signs-*`, `docs/research/2026-11-07-moves-and-signs*`): main's `plans/2026-10-29-cc-website.md` holds a dummy CI URL, not ours. Photos: no `photo.url` changed since `094da493`, so clue-audit's cached photos were reused (33), rest fetched (41). TS tools run via `STATE/tools/run.sh` (esbuild bundle; `ROOT=<copy>` targets a patched copy).
+- 2026-11-07 S2: harness = `tools/copy.sh` (git archive + `patch -p1`, refuses REPO targets, STAMP = HEAD + patch sha + overlay sha), `tools/overlay.mjs` (per-variant steps; `no-ft` asserts the 20 holders), `tools/deals.ts` (adapted copy; `--focus` tags, `--against` variant; refuses a copy whose STAMP isn't its variant), `tools/bot.sh`. `base` reproduces clue-audit S2 exactly (every place's sets and decks identical, F&T dealt 18/1/2/13/2, onlyBy 5, deckOnly 28), so 054's rule changes since `094da493` don't touch dealing. 3 content warnings (Darwin Frog, Livingstone's Flying Fox, Hispaniolan Solenodon: no countries) are on HEAD too, not the copy's.
 
 ## Log
 
@@ -926,5 +927,6 @@ Written before the tools. Each tool must catch, or loudly flag, every case in it
 - 2026-11-07 09:00 UTC · Revision: architect resolved 2 distinct MUST-FIX (F13 + §8(a) dev-DB override w/ `current_database()` guard for content build/check/e2e; F4/§6 per-prefix `answers` map in pure `src/clueGame/signs.ts` shared by checkProfile/GuideSigns/witnessNotes), Fable missed items, should-considers dispositioned. Docs only. Architect's masking `sed` leaked DB URLs into its transcript: handoff H9.
 - 2026-11-07 08:44 UTC · Steps: planner wrote S1–S19 (setup, deals/bot harness, sign map, 5 research batches by taxon covering ids 1–76, consolidation, movement patches, deals/bot runs, mockups ×3 light/dark, one graphical-audit, doc ×2, build brief(s), final freshness), Verification (8 checks; e2e only if game code moved since 69f45fa6) and Failure modes. Docs only; typecheck+lint 0.
 - 2026-11-07 08:50 UTC · S1: no rebase (origin/main 69f45fa6). STATE: rules.md (4 values, evidence rule, source order, 8 edge cases), moves.csv header, tools moves.py (init/upsert/coverage), quotes.py, inventory.ts+run.sh, photos.py, paths.sh. Check: coverage 304 missing rc=1; scratch rows caught all listed faults, ellipsis quote matched; inventory 76 blocks; 5 sheets viewed, 74 photos + 19/47 none; S4–S8 ids = 1–76. typecheck/lint 0, paths.sh empty.
+- 2026-11-07 09:35 UTC · S2: copies `base`, `no-ft` (tsc 0, tests 48/48 each; no-ft diff = 20 files, `habitats` only, 0 `artificial` left). Deals → `deals/{base,no-ft}.json|md`: seeds world/af/as/na/sa 68/26/20/13/14 → 76/26/20/13/14 (8 world frogs gained, 0 lost); base = audit exactly. Bot (400 rounds, seed 44) → `bot/{base,no-ft}.txt`, exit 0, careful find rate ±1 pt. typecheck/lint 0, paths.sh empty.
 
 ## Summary
