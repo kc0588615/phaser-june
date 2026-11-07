@@ -9,13 +9,13 @@
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Plan 053: the player may name the mystery once a round, any time (even out
-// of moves): right is a find (one star), wrong loses the round. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
+// of moves): right is a find (one star), wrong loses the round. Plan 054: a right name also scores the player's pencil marks (a bonus, once an animal is ruled out). Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
 // by the balance bot (scripts/balance-044.ts) and, later, the game.
 import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
 import {
   FAMILY_TREE_RANKS, PREFIX_CATEGORY, likeness, prefixOf, questionText, shortQuestionText,
-  type Animal, type Book, type FieldNote,
+  type Animal, type Book, type ChargeCategory, type FieldNote,
 } from '@/clueGame/questionMatch';
 import { clueFace } from '@/clueGame/clueFaces';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
@@ -56,7 +56,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '053-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
+  version: '054-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -262,6 +262,10 @@ export interface AnimalRound {
   lostBy: 'escaped' | 'out-of-moves' | 'wrong-name' | null;
   /** The player's one name this round (plan 053): right finds the mystery, wrong loses the round. */
   named: { id: number; correct: boolean } | null;
+  /** Plan 054: a right name's pencil bonus (`pencilBonus`); null when nothing was scored (a board find, a wrong name, nobody ruled out, no pencil counted). */
+  pencilBonus: number | null;
+  /** Plan 054: that name earned a Sharp eye (`sharpEye`). */
+  sharp: boolean;
   log: AnimalLogEntry[];
 }
 
@@ -274,7 +278,7 @@ export function newAnimalRound(book: Book, rules: AnimalRules, { suspects, myste
     rules, place, suspects: sorted, mysteryId,
     orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null, seen: sorted.map(() => !rules.scout) })),
     notesLeft: witnessNotes(book, sorted, mysteryId), notes: [],
-    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, log: [],
+    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, pencilBonus: null, sharp: false, log: [],
   };
 }
 
@@ -397,21 +401,76 @@ export function mark(state: AnimalRound, id: number, ruledOut: boolean, heading?
   return { ...state, marked: ruledOut ? [...marked, id] : marked, headings };
 }
 
+/** Plan 054: the player's pencil marks for hidden cells, by `${id}:${tag}` (the session's `pencil`). */
+export type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
+
 /**
  * Plan 053: name the mystery, once, any time the round is undecided (out of moves too). A right name finds it, a wrong
  * one loses the round. Out of moves, `null` (skip) loses it. Ignored while a move's own end is pending (the mystery or
  * every look-alike already gone, decided at `endOfMove`), so a name never overrides what the board did.
+ * Plan 054: a right name also scores `pencil` (`pencilBonus`).
  */
-export function nameIt(state: AnimalRound, id: number | null): AnimalRound {
+export function nameIt(state: AnimalRound, id: number | null, pencil: Pencil = {}): AnimalRound {
   if (state.status !== 'playing' && state.status !== 'out-of-moves') return state;
   if (state.status === 'playing' && (id === null || state.released.includes(state.mysteryId) || state.released.length === state.suspects.length - 1)) return state;
   if (id === null) return { ...state, status: 'lost', lostBy: 'out-of-moves' };
   if (!state.suspects.includes(id) || state.released.includes(id)) return state;
   const named = { id, correct: id === state.mysteryId };
   const log = [...state.log, { kind: 'named' as const, ...named }];
+  const scored = named.correct ? scorePencils(state, pencil) : null;
+  const sharp = scored !== null && scored.wrong === 0 && scored.bonus >= PENCIL_POINTS.sharpAt;
   return named.correct
-    ? { ...state, status: 'found', named, log: [...log, { kind: 'found', id }] }
+    ? { ...state, status: 'found', named, pencilBonus: scored?.bonus ?? null, sharp, log: [...log, { kind: 'found', id }] }
     : { ...state, status: 'lost', lostBy: 'wrong-name', named, log };
+}
+
+/** Plan 054: how hard each category is to call from the photo and field guide (owner: fixed by category). */
+export const PENCIL_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
+/** Plan 054: points per weight, and the cap either way (under board play's ★★★ lead over a find by name, plan 053; at -cap a find's star and bonus net 0, streak aside). */
+export const PENCIL_POINTS = { perWeight: 2, cap: 50, sharpAt: 20 };
+
+/**
+ * Plan 054: a right name with a pencil bonus of `sharpAt` or more and no counted pencil wrong: a second star and a Sharp
+ * eye badge in the journal (owner, 2026-11-07). No wrong pencil, because the bonus's swings let random pencilling reach
+ * `sharpAt` on about half its finds (balance bot); all right almost never happens by chance.
+ */
+export function sharpEye(state: AnimalRound): boolean {
+  return state.status === 'found' && state.sharp;
+}
+
+/**
+ * Plan 054: the pencil bonus for a right name, once the player has ruled out (or released) at least one animal; null
+ * before that, or with no pencil counted. Counts each pencil on a cell still hidden at the name, on an unreleased
+ * look-alike (the mystery's own cells would be free: its answers are the camera's). Right adds its category's weight,
+ * wrong subtracts it (owner: random pencilling averages nothing). The net is multiplied by the distinct categories
+ * pencilled (spread raises the stake both ways) and by the animals still in, the named one too (owner: naming with more
+ * left is a bigger gamble, so it pays more). It may go below 0, down to -cap; capped so a lucky name can't out-pay
+ * board play (plan 053). A floor at 0, or multiplying gains only, made random pencilling pay (balance bot).
+ */
+export function pencilBonus(state: AnimalRound, pencil: Pencil): number | null {
+  return scorePencils(state, pencil)?.bonus ?? null;
+}
+
+/** `pencilBonus`, with how many counted pencils were wrong (Sharp eye needs none). */
+function scorePencils(state: AnimalRound, pencil: Pencil): { bonus: number; wrong: number } | null {
+  const stillIn = state.suspects.filter(id => !state.marked.includes(id) && !state.released.includes(id)).length;
+  if (stillIn === state.suspects.length) return null;
+  let net = 0, wrong = 0;
+  const kinds = new Set<ChargeCategory>();
+  state.suspects.forEach((id, i) => {
+    if (id === state.mysteryId || state.released.includes(id)) return;
+    for (const order of state.orders) {
+      const mark = pencil[`${id}:${order.tag}`];
+      if (!mark || order.seen[i]) continue;
+      const category = PREFIX_CATEGORY[prefixOf(order.tag)];
+      const right = (mark === 'yes') === order.row[i];
+      net += right ? PENCIL_WEIGHT[category] : -PENCIL_WEIGHT[category];
+      if (!right) wrong++;
+      kinds.add(category);
+    }
+  });
+  if (kinds.size === 0) return null;
+  return { bonus: Math.max(-PENCIL_POINTS.cap, Math.min(PENCIL_POINTS.cap, net * kinds.size * stillIn * PENCIL_POINTS.perWeight)), wrong };
 }
 
 /**
@@ -439,10 +498,10 @@ export function shownMismatches(state: AnimalRound): number[] {
   return state.suspects.filter(id => !state.marked.includes(id) && !state.released.includes(id) && shownMismatch(state, id));
 }
 
-/** A find's stars by moves left; a find by name earns one (plan 053: a lucky early name mustn't pay like board play). */
+/** A find's stars by moves left; a find by name earns one (plan 053: a lucky early name mustn't pay like board play), two with a Sharp eye (054). */
 export function starsFor(state: AnimalRound): number {
   if (state.status !== 'found') return 0;
-  if (state.named) return 1;
+  if (state.named) return sharpEye(state) ? 2 : 1;
   const [two, three] = state.rules.starMoves;
   return 1 + (state.movesLeft >= two ? 1 : 0) + (state.movesLeft >= three ? 1 : 0);
 }
@@ -451,7 +510,7 @@ export function starsFor(state: AnimalRound): number {
 export function scoreRound(state: AnimalRound, streak: number): number {
   const p = state.rules.points;
   if (state.status !== 'found') return 0;
-  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep);
+  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep) + (state.pencilBonus ?? 0);
 }
 
 // ---- The trail ----

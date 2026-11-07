@@ -81,7 +81,7 @@ async function main() {
     await page('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await page('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     // A returning player: skip the how-to-play dialog.
-    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v4', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
+    await page('Page.addScriptToEvaluateOnNewDocument', { source: "try { localStorage.setItem('critter-connect:animal-board-how-to:v5', '1'); localStorage.setItem('critter-connect:slide-hint:v1', '1'); } catch {}" });
     // Plan 045: an animal's name in the grid takes a drag of its photo (rule out / back in) and a long press (its field guide).
     await page('Page.addScriptToEvaluateOnNewDocument', { source: `
       window.__pill = id => document.querySelector('table[aria-label="Evidence"] tr[data-suspect="' + id + '"] button[data-pill]');
@@ -262,7 +262,7 @@ async function main() {
     };
     await loadBoard();
     await screenshot('02-board.png');
-    const poolSpecies = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, { name: s.commonName, family: s.family, genus: s.genus }]))));
+    const poolSpecies = new Map((await evaluate(async () => (await (await fetch('/api/clue-game/pool/')).json()).species.map(s => [s.id, { name: s.commonName, scientificName: s.scientificName, family: s.family, genus: s.genus }]))));
     const names = new Map([...poolSpecies].map(([id, species]) => [id, species.name]));
     const sound = await evaluate(async () => {
       const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -1160,7 +1160,7 @@ async function main() {
         check(`round ${n}: out of moves, the name sheet shows`, named.sheet);
         state = named.clue;
         const right = state.logTail.some(entry => entry.kind === 'named' && entry.correct);
-        check(`round ${n}: out of moves, a right name finds it, with one star`, !right || (state.status === 'found' && state.end?.stars === 1), `${state.status} ${state.end?.stars}`);
+        check(`round ${n}: out of moves, a right name finds it, with one star (two with a Sharp eye, plan 054)`, !right || (state.status === 'found' && state.end?.stars === (state.sharp ? 2 : 1)), `${state.status} ${state.end?.stars} sharp ${state.sharp}`);
         check(`round ${n}: out of moves, a wrong name loses the round`, right || (state.status === 'lost' && state.lostBy === 'wrong-name'), `${state.status} ${state.lostBy}`);
       }
       const end = state.end;
@@ -1463,6 +1463,84 @@ async function main() {
       check(`the sort: a round ending with rows ${label}: the mystery's row rises without dropping`, rise.rose && rise.neverDown, JSON.stringify(rise));
       // 12 px: the last frame sampled comes just before the rise lands.
       check(`the sort: a round ending with rows ${label}: the mystery's row ends at the Camera row`, rise.matched && Math.abs(rise.end - rise.camera) <= 12, JSON.stringify(rise));
+    }
+
+    // Plan 054: a right name scores the pencil marks once an animal is ruled out. One pencil on a look-alike's first
+    // question (another look-alike's too, wrong, for 'mixed'), then `out` look-alikes ruled out and "It's this one!" on
+    // `named`: right with 1 out (bonus = weight x 1 category x 4 still in x 2), right with 3 out (x 2 still in), right
+    // and wrong pencils in one column (0), nobody out (no bonus), and a look-alike named (lost, no bonus). 'sharp':
+    // every look-alike's first two questions pencilled right, 1 out: the bonus caps at 50, a second star, a Sharp eye
+    // badge on the card and in the journal.
+    const CATEGORY = { size: 'body', covering: 'body', diet: 'habits', activity: 'habits', social: 'habits', system: 'habitat', habitat: 'habitat', region: 'range', birth: 'life', young: 'life', lifespan: 'life' };
+    const WEIGHT = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
+    for (const [scenario, out] of [['right', 1], ['right, 3 out', 3], ['mixed', 1], ['nobody out', 0], ['wrong animal', 1], ['sharp', 1]]) {
+      await goto(`${BASE}/explore/?seed=${SEED}&place=${encodeURIComponent(report.place.key)}`);
+      await waitFor(boardReady, 'a fresh board', 60_000);
+      await sleep(1500);
+      const named = await evaluate(async ({ scenario, out }) => {
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const start = window.__cc.clue();
+        const journalBefore = localStorage.getItem('clue-match:journal:v1');
+        const { mysteryId, suspects, orders } = start;
+        const others = suspects.filter(id => id !== mysteryId);
+        const tag = orders[0].tag;
+        const truth = (id, column = 0) => orders[column].row[suspects.indexOf(id)];
+        // A hidden cell's taps: one pencils yes, two pencil no.
+        const pencil = async (id, yes, column = 0) => {
+          for (let tap = 0; tap < (yes ? 1 : 2); tap++) {
+            document.querySelector(`table[aria-label="Evidence"] tr[data-suspect="${id}"] td[data-tag="${orders[column].tag}"] button`).click();
+            await wait(150);
+          }
+        };
+        if (scenario === 'sharp') { for (const id of others) for (const column of [0, 1]) await pencil(id, truth(id, column), column); }
+        else await pencil(others[0], truth(others[0]));
+        if (scenario === 'mixed') await pencil(others[1], !truth(others[1]));
+        for (const id of others.slice(0, out)) { window.__keyMark(id, true); await wait(250); }
+        await window.__holdPill(scenario === 'wrong animal' ? others[3] : mysteryId);
+        document.querySelector('[role=dialog] button[data-name-it]')?.click();
+        await wait(250);
+        const confirm = document.querySelector('[role=dialog] [data-name-confirm]');
+        const text = confirm?.innerText ?? '';
+        [...(confirm?.querySelectorAll('button') ?? [])].find(other => other.textContent !== 'Back')?.click();
+        await wait(500);
+        return { text, tag, streak: start.streak, clue: window.__cc.clue(), journalBefore };
+      }, { scenario, out });
+      const scored = out > 0;
+      check(`pencil bonus (${scenario}): the name's ask ${scored ? 'mentions' : "doesn't mention"} the pencil bonus`, /One try only/.test(named.text) && /pencil marks/.test(named.text) === scored, named.text);
+      const state = named.clue;
+      if (scenario === 'wrong animal') {
+        check('pencil bonus (wrong animal): a wrong name loses the round, no bonus', state.status === 'lost' && state.lostBy === 'wrong-name' && state.pencilBonus === null, JSON.stringify({ status: state.status, lostBy: state.lostBy, pencilBonus: state.pencilBonus }));
+        continue;
+      }
+      const weight = WEIGHT[CATEGORY[named.tag.slice(0, named.tag.indexOf(':'))]];
+      // 'sharp': at least 4 look-alikes x 2 cells x weight 1, x 4 still in x 2: well over the cap.
+      const expected = !scored ? null : scenario === 'sharp' ? 50 : scenario === 'mixed' ? 0 : Math.min(50, weight * (5 - out) * 2);
+      const sharp = expected !== null && expected >= 20 && scenario !== 'mixed';
+      check(`pencil bonus (${scenario}): finds it, ${sharp ? 'two stars (Sharp eye)' : 'one star'}, bonus ${expected}`, state.status === 'found' && state.end?.stars === (sharp ? 2 : 1) && state.sharp === sharp && state.pencilBonus === expected, JSON.stringify({ status: state.status, stars: state.end?.stars, sharp: state.sharp, pencilBonus: state.pencilBonus, tag: named.tag }));
+      // A find by name: the star's 50 plus streak, no moves left (plan 053), plus the bonus.
+      const streakPoints = Math.min(100, named.streak * 10);
+      check(`pencil bonus (${scenario}): in the round's points (${sharp ? 100 : 50} + streak ${streakPoints} + ${expected ?? 0})`, state.end?.points === (sharp ? 100 : 50) + streakPoints + (expected ?? 0), JSON.stringify({ points: state.end?.points, streak: named.streak }));
+      const card = await waitFor(() => {
+        const sheet = document.querySelector('section[aria-labelledby="end-title"]');
+        return sheet ? { bonus: sheet.querySelector('[data-pencil-bonus]')?.getAttribute('data-pencil-bonus') ?? null, sharp: Boolean(sheet.querySelector('[data-sharp-eye]')) } : null;
+      }, 'the round-end card', 10_000);
+      check(`pencil bonus (${scenario}): the round-end card ${scored ? 'shows the bonus' : 'shows no bonus'}${sharp ? ' and the Sharp eye' : ''}`, card.bonus === (expected === null ? null : String(expected)) && card.sharp === sharp, JSON.stringify(card));
+      const mystery = poolSpecies.get(state.mysteryId).scientificName;
+      const eyes = raw => JSON.parse(raw ?? '{}')[mystery]?.sharpEyes ?? 0;
+      const journalAfter = await evaluate(() => localStorage.getItem('clue-match:journal:v1'));
+      check(`pencil bonus (${scenario}): the journal ${sharp ? 'adds a Sharp eye badge' : 'adds no badge'} to that animal`, eyes(journalAfter) === eyes(named.journalBefore) + (sharp ? 1 : 0), JSON.stringify({ before: eyes(named.journalBefore), after: eyes(journalAfter) }));
+      if (scenario === 'sharp') {
+        const shown = await evaluate(async () => {
+          document.querySelector('button[aria-label="Menu"]')?.click();
+          await new Promise(resolve => setTimeout(resolve, 250));
+          [...document.querySelectorAll('[role=dialog] button')].find(b => b.textContent === 'Field journal')?.click();
+          await new Promise(resolve => setTimeout(resolve, 1200));
+          return Boolean(document.querySelector('[role=dialog] [data-sharp-eyes]'));
+        });
+        check('pencil bonus (sharp): the Field Journal shows the Sharp eye badge', shown);
+        await screenshot('09-journal-sharp-eye.png');
+      }
+      if (scenario === 'right') await screenshot('08-pencil-bonus-end.png');
     }
 
     check('no console errors', report.consoleErrors.length === 0, report.consoleErrors.slice(0, 3).join(' | '));
