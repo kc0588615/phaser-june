@@ -9,13 +9,13 @@
 // they travel and leave off it; the round is decided once the whole move settles.
 // Release every look-alike and the last one is found; release the mystery and it
 // escapes. Plan 053: the player may name the mystery once a round, any time (even out
-// of moves): right is a find (one star), wrong loses the round. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
+// of moves): right is a find (one star), wrong loses the round. Plan 054: Lock in names it from the player's pencil marks, with a bonus. Pure: no DOM, no Phaser, no randomness except the rng passed in. Shared
 // by the balance bot (scripts/balance-044.ts) and, later, the game.
 import type { Cell, ExplodePhase, Special } from '@/game/BoardModel';
 import type { GemType } from '@/game/constants';
 import {
   FAMILY_TREE_RANKS, PREFIX_CATEGORY, likeness, prefixOf, questionText, shortQuestionText,
-  type Animal, type Book, type FieldNote,
+  type Animal, type Book, type ChargeCategory, type FieldNote,
 } from '@/clueGame/questionMatch';
 import { clueFace } from '@/clueGame/clueFaces';
 import { REGIONS, type ContinentKey } from '@/clueGame/regions';
@@ -56,7 +56,7 @@ export interface AnimalRules {
  * but moves at random 78-84%). Star lines from careful's moves left at the find (045-0's; plan 047 may raise them).
  */
 export const ANIMAL_RULES: AnimalRules = {
-  version: '053-1', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
+  version: '054-0', suspects: 5, clues: 4, moves: 30, orderSize: 20, witnessChance: 0.03, starMoves: [8, 14], hearts: 3, trailRounds: 5, scout: true, wander: true, wanderToy: true, toyScout: true, doubleBonus: 2,
   points: { star: 50, moveLeft: 10, streakStep: 10, streakMax: 100 },
 };
 
@@ -262,6 +262,8 @@ export interface AnimalRound {
   lostBy: 'escaped' | 'out-of-moves' | 'wrong-name' | null;
   /** The player's one name this round (plan 053): right finds the mystery, wrong loses the round. */
   named: { id: number; correct: boolean } | null;
+  /** Plan 054: the name came from Lock in; `bonus` is the pencil bonus (0 unless found). */
+  lockedIn: { bonus: number } | null;
   log: AnimalLogEntry[];
 }
 
@@ -274,7 +276,7 @@ export function newAnimalRound(book: Book, rules: AnimalRules, { suspects, myste
     rules, place, suspects: sorted, mysteryId,
     orders: deck.map((clue, i) => ({ ...clue, gem: CLUE_GEMS[i], have: 0, answer: null, seen: sorted.map(() => !rules.scout) })),
     notesLeft: witnessNotes(book, sorted, mysteryId), notes: [],
-    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, log: [],
+    marked: [], headings: {}, released: [], movesLeft: rules.moves, movesUsed: 0, status: 'playing', lostBy: null, named: null, lockedIn: null, log: [],
   };
 }
 
@@ -414,6 +416,49 @@ export function nameIt(state: AnimalRound, id: number | null): AnimalRound {
     : { ...state, status: 'lost', lostBy: 'wrong-name', named, log };
 }
 
+/** Plan 054: the player's pencil marks for hidden cells, by `${id}:${tag}` (the session's `pencil`). */
+export type Pencil = Readonly<Record<string, 'yes' | 'no'>>;
+
+/**
+ * Plan 054: the one suspect Lock in would name, or null when the player's view leaves 0 or 2+. The view: unmarked,
+ * unreleased suspects, each cell's shown answer or else its pencil mark, against the camera's shown answers. Reads only
+ * what the player sees or wrote (never hidden answers), so pointing at it gives nothing away.
+ */
+export function lockInPick(state: AnimalRound, pencil: Pencil): number | null {
+  const left = state.suspects.filter((id, i) => !state.marked.includes(id) && !state.released.includes(id)
+    && state.orders.every(order => {
+      if (order.answer === null) return true;
+      const mark = pencil[`${id}:${order.tag}`];
+      const yes = order.seen[i] ? order.row[i] : mark ? mark === 'yes' : null;
+      return yes === null || yes === (order.answer === 'yes');
+    }));
+  return left.length === 1 ? left[0] : null;
+}
+
+/** Plan 054: how hard each category is to call from the photo and field guide (owner: fixed by category). */
+export const LOCK_IN_WEIGHT: Record<ChargeCategory, number> = { body: 1, habitat: 2, range: 2, habits: 3, life: 3 };
+
+/**
+ * Plan 054: the pencil bonus for a found Lock in. Every pencil mark on a still-hidden cell of an unreleased suspect counts:
+ * right adds its category's weight, wrong subtracts it (owner: so pencilling at random averages nothing). More distinct
+ * categories pencilled right pays more. Never below 0, and capped so a lucky lock in can't out-pay board play (plan 053).
+ */
+export function lockInBonus(state: AnimalRound, pencil: Pencil): number {
+  // TODO(owner): the scoring. A cell: suspect index `i`, order `order`; hidden when `!order.seen[i]`; its truth is
+  // `order.row[i]`; its category is `PREFIX_CATEGORY[prefixOf(order.tag)]`.
+  void state; void pencil;
+  return 0;
+}
+
+/** Plan 054: name the mystery from the pencil marks (`lockInPick`); same stake as `nameIt`. Ignored unless it picks one. */
+export function lockIn(state: AnimalRound, pencil: Pencil): AnimalRound {
+  const id = lockInPick(state, pencil);
+  if (id === null) return state;
+  const named = nameIt(state, id);
+  if (named === state) return named;
+  return { ...named, lockedIn: { bonus: named.status === 'found' ? lockInBonus(state, pencil) : 0 } };
+}
+
 /**
  * The suspects the answers and notes so far leave possible, released ones aside, judging only answers that show or that
  * `knows` (a clue tag the player knows without looking). A reasoning aid for the bot and the tests only: showing it to
@@ -451,7 +496,7 @@ export function starsFor(state: AnimalRound): number {
 export function scoreRound(state: AnimalRound, streak: number): number {
   const p = state.rules.points;
   if (state.status !== 'found') return 0;
-  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep);
+  return starsFor(state) * p.star + (state.named ? 0 : state.movesLeft * p.moveLeft) + Math.min(p.streakMax, streak * p.streakStep) + (state.lockedIn?.bonus ?? 0);
 }
 
 // ---- The trail ----
