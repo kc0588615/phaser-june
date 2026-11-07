@@ -396,7 +396,7 @@ SHOULD-CONSIDER:
 
 Each step: one session, commit + push (pre-push hook runs typecheck + lint; fix, never skip). Every E2E run per Verification (prereqs, `CHROME_PATH`, one heavy job at a time, artifact copy rules). No unit tests (Architecture: "Unit test: none").
 
-- [ ] S1 · **Spin controller + Globe wiring + dev-only hook** (riskiest: touches the live globe, picking, markers).
+- [x] S1 · **Spin controller + Globe wiring + dev-only hook** (riskiest: touches the live globe, picking, markers).
   - New `src/components/globe/globeSpin.ts` exactly per Architecture → Target design: `createGlobeSpin(map)` (no side effects) → `start` / `hold` / `stop`; constants table at starting values; private `spinRate`, `ease`, `pressed`; `pause` / `resumeLater` / `begin` / `step` (per-frame `reducedMotion()` from `@/game/motion`, `isMoving()` guard, `MAX_STEP_MS`, timestamp-delta step from `getCenter()`); input wiring table (map `touchstart`/`touchend`/`touchcancel` via live `touches` inside `getCanvasContainer()`, `mousedown`, capture-phase `window` `mouseup`, `wheel`, `movestart`/`move`/`moveend` with truthy `originalEvent`, `load`); every subscription in `subs`; `start()` throws if called twice.
   - `src/components/globe/Globe.tsx`: the Delete / Add list only (drop `spinning`, `frame`, `stopSpin` + 3 listeners, `spin`, its `cancelAnimationFrame`, `spinning.current = false`, local `reducedMotion`, the `duration` ternary; add `spinRef`, create + `start()` right after `mapRef.current = map`, `load` just `markReady()`, `stop()` before `map.remove()`, hold effect before the outline effect, `window.__globe` set/delete gated `process.env.NODE_ENV !== 'production'` like `debugBridge.ts:51`). `GlobeScreen.tsx` unchanged.
   - Check: `npm run typecheck`, `npm run lint`, `npm test` (48/48); `npm run build`, then `rg -l __globe .next/static` prints nothing and control `rg -l maplibregl-canvas .next/static` lists ≥1 file; `npm run e2e:fresh` passes all 1512 existing checks (globe list, `07-globe-found` markers, game) with `consoleErrors` and `failedRequests` empty. Copy run to `e2e-s1/`.
@@ -465,6 +465,8 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
 
 ## Decisions
 
+- S1: E2E failures caused by load from another mission's balance bot are rerun once the box is quiet, not treated as regressions (first S1 run: 1505/1512, 7 game row-timing checks on `/explore`, which the globe doesn't touch, while a 400-round bot held ~1 CPU; rerun on a quiet box: 1512/1512).
+
 ## Log
 
 - 2026-11-07 08:03 UTC · Baseline: typecheck/lint ok, unit 48/48, e2e:fresh 1512/1512.
@@ -473,5 +475,6 @@ The report's `detail` for checks 1, 4, 5, 6, 9 carries the measured deg/s, px/s,
 - 2026-11-07 08:25 UTC · Astra review: APPROVE_WITH_CHANGES, 3 MUST-FIX (track contacts incl. partial pinch/off-canvas release; pause synchronously on user `movestart`, no spin writes while camera owned by other motion; split factory create/activate for CQS). Docs only.
 - 2026-11-07 08:39 UTC · Revision: architect resolved all 5 MUST-FIX (contact tracking via live touches + window mouseup, sync pause on user movestart + per-frame isMoving guard, createGlobeSpin/start/hold/stop CQS split, check 1 lng-only); e2e block now 14 checks. Docs only.
 - 2026-11-07 08:43 UTC · Steps: planner wrote S1–S5 (controller+Globe wiring, e2e block 1b in 3 parts incl. tuning/DoD shots, final verification) + Verification (target 1526 checks, build `rg __globe` empty). Docs only.
+- 2026-11-07 10:03 UTC · S1: `globeSpin.ts` (createGlobeSpin → start/hold/stop) + Globe wiring, dev-only `window.__globe`. typecheck/lint ok, unit 48/48, build ok, `rg __globe .next/static` empty (rg=1), controller chunk present; e2e:fresh 1512/1512, no console errors/failed requests (`e2e-s1/`).
 
 ## Summary

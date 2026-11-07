@@ -2,12 +2,13 @@
 // the current list, the picked place's outline, and for each animal the player
 // found its range, tinted by animal group, with an emoji marker inside it. Ranges
 // stack, so the more found somewhere, the brighter it gets. Tapping a dot picks
-// that place; picking flies there.
+// that place; picking flies there. It spins slowly when idle (`globeSpin.ts`).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GeoJSONSource, Map as MapLibreMap, Marker, StyleSpecification } from 'maplibre-gl';
 import type { Place } from '@/clueGame/places';
 import { WORLD_LAND_GEOJSON_URL } from '@/clueGame/worldMap';
 import { getJson } from '@/lib/getJson';
+import { createGlobeSpin, type GlobeSpin } from './globeSpin';
 
 export interface GlobeAnimal {
   id: number;
@@ -67,8 +68,6 @@ const STYLE: StyleSpecification = {
   },
 };
 
-const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 function markerElement(animal: GlobeAnimal): HTMLElement {
   const element = document.createElement('div');
   element.className = 'pointer-events-none grid h-7 w-7 place-items-center rounded-full border-2 bg-neutral-1 text-s leading-none';
@@ -87,7 +86,7 @@ export function Globe({ places, selected, found, onPick }: {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const libRef = useRef<typeof import('maplibre-gl') | null>(null);
-  const spinning = useRef(true);
+  const spinRef = useRef<GlobeSpin | null>(null);
   const onPickRef = useRef(onPick);
   useEffect(() => { onPickRef.current = onPick; }, [onPick]);
   // True once the style has loaded, so the data effects below can draw.
@@ -96,8 +95,6 @@ export function Globe({ places, selected, found, onPick }: {
 
   useEffect(() => {
     let cancelled = false;
-    let frame = 0;
-    spinning.current = !reducedMotion();
     (async () => {
       const maplibregl = await import('maplibre-gl');
       if (cancelled || !container.current) return;
@@ -113,21 +110,12 @@ export function Globe({ places, selected, found, onPick }: {
         renderWorldCopies: false,
       });
       mapRef.current = map;
-      const stopSpin = () => { spinning.current = false; };
-      map.on('mousedown', stopSpin);
-      map.on('touchstart', stopSpin);
-      map.on('wheel', stopSpin);
-      map.on('load', () => {
-        markReady();
-        // A slow spin until the player touches the globe or picks a place.
-        const spin = () => {
-          if (!spinning.current || cancelled) return;
-          const center = map.getCenter();
-          map.setCenter([center.lng + 0.04, center.lat]);
-          frame = requestAnimationFrame(spin);
-        };
-        frame = requestAnimationFrame(spin);
-      });
+      // Dev-only test hook for e2e (dropped from production bundles, like debugBridge).
+      if (process.env.NODE_ENV !== 'production') (window as unknown as { __globe?: MapLibreMap }).__globe = map;
+      const spin = createGlobeSpin(map);
+      spinRef.current = spin;
+      spin.start(); // input counts from now, so a finger put down while the map loads keeps it still
+      map.on('load', markReady);
       map.on('click', 'places', event => {
         const key = event.features?.[0]?.properties?.key;
         if (typeof key === 'string') onPickRef.current(key);
@@ -137,7 +125,12 @@ export function Globe({ places, selected, found, onPick }: {
     })();
     return () => {
       cancelled = true;
-      cancelAnimationFrame(frame);
+      spinRef.current?.stop();
+      spinRef.current = null;
+      if (process.env.NODE_ENV !== 'production') {
+        const devWindow = window as unknown as { __globe?: MapLibreMap };
+        if (devWindow.__globe === mapRef.current) delete devWindow.__globe;
+      }
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -189,6 +182,9 @@ export function Globe({ places, selected, found, onPick }: {
     };
   }, [found, ready]);
 
+  // A picked place holds the globe still so its outline stays in view.
+  useEffect(() => { spinRef.current?.hold(selected !== null); }, [selected, ready]);
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !ready) return;
@@ -197,9 +193,8 @@ export function Globe({ places, selected, found, onPick }: {
       source?.setData(EMPTY);
       return;
     }
-    spinning.current = false;
     const [west, south, east, north] = selected.bbox;
-    map.fitBounds([[west, south], [east, north]], { padding: 40, maxZoom: 5, duration: reducedMotion() ? 0 : 1600 });
+    map.fitBounds([[west, south], [east, north]], { padding: 40, maxZoom: 5, duration: 1600 });
     let current = true;
     getJson<GeoJSON.Feature>(`/api/places/outline/?key=${encodeURIComponent(selected.key)}`)
       .catch(error => {
