@@ -60,9 +60,10 @@ export function useJournal(places?: readonly Place[]) {
     moves: number,
     session: { score: number; streak: number },
     sighting?: Sighting,
+    sharp = false,
   ) => {
     setJournal(previous => {
-      const next = recordSolve(previous, species, moves, new Date().toISOString(), sighting);
+      const next = recordSolve(previous, species, moves, new Date().toISOString(), sighting, sharp);
       save(JOURNAL_STORAGE_KEY, next);
       return next;
     });

@@ -141,7 +141,7 @@ export function liveHighlights(round: AnimalRound, highlight: readonly string[])
 export function animalDebugSummary(session: AnimalSession, seed: number) {
   const { round } = session;
   return {
-    seed, rulesVersion: round.rules.version, trailNo: session.trailNo, roundNo: session.roundNo, status: round.status, lostBy: round.lostBy, pencilBonus: round.pencilBonus,
+    seed, rulesVersion: round.rules.version, trailNo: session.trailNo, roundNo: session.roundNo, status: round.status, lostBy: round.lostBy, pencilBonus: round.pencilBonus, sharp: round.sharp,
     mysteryId: round.mysteryId, suspects: round.suspects, marked: round.marked, headings: round.headings, released: round.released,
     movesLeft: round.movesLeft, movesUsed: round.movesUsed, moves: round.rules.moves,
     orders: round.orders.map(order => ({ tag: order.tag, gem: order.gem, have: order.have, answer: order.answer, row: order.row, seen: order.seen })),

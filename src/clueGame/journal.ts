@@ -17,6 +17,8 @@ export interface JournalEntry {
   className?: string | null;
   /** Places it was found in from the globe, one per place. */
   sightings?: Sighting[];
+  /** Plan 054: Sharp eye badges, finds by name with a big pencil bonus. On this device only (the server keeps no badges). */
+  sharpEyes?: number;
 }
 
 /** Where on the globe an animal was found. */
@@ -35,8 +37,10 @@ export function recordSolve(
   moves: number,
   at: string,
   sighting?: Sighting,
+  sharp = false,
 ): Journal {
   const previous = journal[species.scientificName];
+  const sharpEyes = (previous?.sharpEyes ?? 0) + (sharp ? 1 : 0);
   const sightings = [...(previous?.sightings ?? []).filter(old => old.placeKey !== sighting?.placeKey), ...(sighting ? [sighting] : [])];
   return {
     ...journal,
@@ -49,6 +53,7 @@ export function recordSolve(
       lastSolvedAt: at,
       ...(species.className ?? previous?.className ? { className: species.className ?? previous?.className } : {}),
       ...(sightings.length ? { sightings } : {}),
+      ...(sharpEyes ? { sharpEyes } : {}),
     },
   };
 }
@@ -93,6 +98,7 @@ export function mergeServerJournal(journal: Journal, entries: readonly ServerJou
       lastSolvedAt: local && local.lastSolvedAt > entry.lastSolvedAt ? local.lastSolvedAt : entry.lastSolvedAt,
       ...(className ? { className } : {}),
       ...(sightings.length ? { sightings } : {}),
+      ...(local?.sharpEyes ? { sharpEyes: local.sharpEyes } : {}),
     };
   }
   return merged;
@@ -120,7 +126,13 @@ export function parseJournal(raw: string | null): Journal {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return Object.fromEntries(Object.entries(parsed).filter(([key, entry]) => isEntry(entry) && entry.scientificName === key)) as Journal;
+    return Object.fromEntries(Object.entries(parsed).filter(([key, entry]) => isEntry(entry) && entry.scientificName === key)
+      // A bad badge count drops the count, not the animal.
+      .map(([key, entry]: [string, JournalEntry]) => {
+        if (entry.sharpEyes === undefined || (Number.isInteger(entry.sharpEyes) && entry.sharpEyes > 0)) return [key, entry];
+        const { sharpEyes: _bad, ...rest } = entry;
+        return [key, rest];
+      })) as Journal;
   } catch {
     return {};
   }

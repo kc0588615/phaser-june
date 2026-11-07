@@ -10,7 +10,7 @@ import Head from 'next/head';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { Heart, Menu, NotebookPen, Pause } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
-import type { AnimalLogEntry } from '@/clueGame/animalBoard';
+import { sharpEye, type AnimalLogEntry } from '@/clueGame/animalBoard';
 import { clueFace } from '@/clueGame/clueFaces';
 import { sightingPoint } from '@/clueGame/places';
 import { CONTINENT_NAMES } from '@/clueGame/regions';
@@ -298,7 +298,7 @@ export function AnimalGame() {
     if (!species) return;
     const point = place ? sightingPoint(place, species.id) : null;
     const sighting = place && point ? { placeKey: place.key, placeName: place.name, lon: point[0], lat: point[1] } : undefined;
-    record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sighting);
+    record(species, done.movesUsed, { score: session.score, streak: session.bestStreak }, sighting, sharpEye(done));
   }, [session, end, speciesById, place, record, recordedRound]);
 
   // Which answers the grid shows: an order's answer stamps once its gems have landed.

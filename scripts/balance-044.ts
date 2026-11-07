@@ -19,7 +19,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   ANIMAL_RULES, BOARD_GEMS, HEADING_STEP, WITNESS_GEM, applyPhase, endOfMove, headingOf, mark, nameIt, newAnimalRound, newTrail,
-  pickSuspectSet, reportOf, rewardToy, scoreRound, shownMismatches, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
+  pickSuspectSet, reportOf, rewardToy, scoreRound, sharpEye, shownMismatches, starsFor, stillPossible, tileCells, trailAfter, trailFinished, travelOf, walkOff, walkers,
   type AnimalRound, type AnimalRules, type PhaseReport,
 } from '../src/clueGame/animalBoard';
 import type { AnimalProfile, ContentSource } from '../src/clueGame/profiles';
@@ -247,8 +247,8 @@ async function main() {
   if (explain === null) {
     console.log(`Plan 044 balance, rules ${rules.version}: ${rounds} rounds a place, ${rules.suspects} suspects, ${rules.moves} moves, order ${rules.orderSize}, ${size}x${size} board, witness gems ${rules.witnessChance}, setup seed ${setupSeed}${rules.scout ? `, scouting (careful and reader know ${options.knows.join(', ') || 'nothing'})` : ''}${rules.wander ? `, wander${rules.wanderToy ? ' with reward toys' : ''}` : ''}${rules.toyScout ? ', toy scouting' : ''}.`);
     for (const player of players) console.log(`- ${player}: ${PLAYER_NOTES[player]}`);
-    console.log('\n| Place | Player | Found | ★★★ | Escaped | Ran out of moves | Named right at timeout (a find, 053) | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail | Named early (054) | Pencil bonus at a find | Points a round (no streak) |');
-    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+    console.log('\n| Place | Player | Found | ★★★ | Escaped | Ran out of moves | Named right at timeout (a find, 053) | Identified | Moves left at find | Moves after identified | Orders filled | Notes | Answers seen | Toys | Toy releases | Walked off | Blocked steps | Reward toys | Out of moves once identified | Trail finished | Finds a trail | Named early (054) | Pencil bonus at a find | Sharp eye (2★ by name) | Points a round (no streak) |');
+    console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   }
 
   const starLines: string[] = [];
@@ -322,6 +322,7 @@ async function main() {
         trails ? (trailFinds / trails).toFixed(1) : '-',
         pct(count(r => r.state.named !== null && r.state.movesLeft > 0), n),
         avg(found.filter(r => r.state.pencilBonus !== null).map(r => r.state.pencilBonus!)),
+        pct(count(r => sharpEye(r.state)), n),
         avg(results.map(r => scoreRound(r.state, 0))),
       ].join(' | ') + (count(r => r.stuck) ? ` (stuck ${count(r => r.stuck)})` : '') + ' |');
       if (player === 'careful') {

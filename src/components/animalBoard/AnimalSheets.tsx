@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowUpRight, Ban, BookOpen, Camera, ChevronLeft, ChevronRight, CircleHelp, Gem, Globe2, HeartCrack, ListTree, NotebookPen, Pause } from 'lucide-react';
 import { animate, AnimatePresence, motion, useIsPresent, useMotionValue, useReducedMotion, type PanInfo } from 'motion/react';
-import type { AnimalRound } from '@/clueGame/animalBoard';
+import { PENCIL_POINTS, sharpEye, type AnimalRound } from '@/clueGame/animalBoard';
 import type { AnimalSession } from '@/clueGame/animalSession';
 import { clueFace, signsOf } from '@/clueGame/clueFaces';
 import type { PoolSpecies } from '@/clueGame/pool';
@@ -146,7 +146,7 @@ export function SuspectSheet({ animal, species, speciesById, round, top, pencil,
       top={top}
       footer={!canMark ? undefined : confirming ? (
         <div className="flex flex-1 flex-col gap-xs" data-name-confirm>
-          <p className="m-0 text-s text-neutral-8" role="status"><b className="font-medium text-neutral-10">One try only.</b> Right, and you find it (★){scored && ', plus a bonus for your pencil marks on the other animals: right ones add, wrong ones take away'}. Wrong, and the round is lost.</p>
+          <p className="m-0 text-s text-neutral-8" role="status"><b className="font-medium text-neutral-10">One try only.</b> Right, and you find it (★){scored && `, plus a bonus for your pencil marks on the other animals: right ones add, wrong ones take away (${PENCIL_POINTS.sharpAt} or more, none wrong: a second ★ and a Sharp eye badge)`}. Wrong, and the round is lost.</p>
           <div className="flex gap-xs">
             {/* Focus lands here: the button that opened the ask is gone. */}
             <button type="button" onClick={() => setConfirming(false)} className="btn btn-outline flex-1" autoFocus>Back</button>
@@ -589,6 +589,7 @@ export function RoundEndSheet({ session, animal, species, box, nameOf, onNext }:
                 {guesses.length > 0 && <Stat label="pencil guesses right" value={`${called}/${guesses.length}`} data-guesses={`${called}/${guesses.length}`} row />}
                 {round.pencilBonus !== null && <Stat label="pencil bonus (in the points)" value={round.pencilBonus < 0 ? `−${-round.pencilBonus}` : `+${round.pencilBonus}`} data-pencil-bonus={round.pencilBonus} row />}
               </dl>}
+              {sharpEye(round) && <p className="m-0 mt-xxs flex items-center gap-xs text-s font-medium" data-sharp-eye><span aria-hidden="true">🎯</span>Sharp eye! A badge for its journal page.</p>}
             </div>
           </div>
           <div className="flex items-start gap-xs text-neutral-7">
@@ -714,7 +715,7 @@ export function AnimalHowToPlay({ rules, seed, onClose }: { rules: AnimalRound['
     <>Each animal&apos;s own answers start hidden. <b>Scout</b> them: clear a gem next to an animal&apos;s card and its answer to that gem&apos;s question shows. Know it already? Tap a <b>?</b> to pencil your guess, then scout it to see if you called it. Hold a <b>?</b> to <b>highlight</b> it: that gem glows next to the animal&apos;s card on the board until you scout it. Hold a gem up top and every gem of it glows until its answer comes in. Hold an animal&apos;s picture to open its <b>field guide</b>, and pencil there as you read.</>,
     <>Compare down each column: an animal whose answer doesn&apos;t match the camera&apos;s isn&apos;t the one. To <b>rule an animal out</b>, drag its photo in the grid to the right, across its name (drag again to bring it back). After each move, <b>Auto rule-out</b> rules out every animal with a shown answer that doesn&apos;t match; turn it off in the menu to do it all yourself.</>,
     <>A ruled-out animal <b>wanders</b> a step toward the edge after each move and leaves the board there (bring it back to stop it, unless Auto rule-out in the menu is on and it doesn&apos;t match). Clear a gem next to it to release it now: your own match leaves a <b>line gem</b> in its place. Release every look-alike: the last one is your find. <b>Rule out the one caught on camera and it escapes!</b></>,
-    <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round. Once you&apos;ve ruled one out, a right name also scores your <b>pencil marks</b> on the other animals: each right one adds (harder kinds of questions more), each wrong one takes away, and calling more kinds, or naming it with more animals still in, multiplies it.</>,
+    <>Sure already? Open its field guide and tap <b>It&apos;s this one!</b> You get one try a round, even when the moves run out: right is a find worth ★, wrong loses the round. Once you&apos;ve ruled one out, a right name also scores your <b>pencil marks</b> on the other animals: each right one adds (harder kinds of questions more), each wrong one takes away, and calling more kinds, or naming it with more animals still in, multiplies it. A bonus of {PENCIL_POINTS.sharpAt} or more with no pencil wrong earns a second ★ and a 🎯 <b>Sharp eye</b> badge on that animal&apos;s journal page.</>,
     <>Glowing purple <b>witness gems</b> give a note about the camera&apos;s animal and how many of the {rules.suspects} share it.</>,
     <>{rules.moves} moves a round, {rules.trailRounds} rounds a trail, {rules.hearts} hearts. A lost round costs a heart.</>,
   ];

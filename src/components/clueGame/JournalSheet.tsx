@@ -54,6 +54,8 @@ export function JournalSheet({ pool, journal, records, onClose }: { pool: CluePo
                   </div>
                   <p className="m-0 ml-auto text-right font-data text-xs text-neutral-7">×{entry.timesSolved}<br />best {entry.bestMoves} move{entry.bestMoves === 1 ? '' : 's'}</p>
                 </div>
+                {/* Plan 054: finds by name with a big pencil bonus. */}
+                {entry.sharpEyes ? <p className="m-0 mt-xs flex items-center gap-xxs text-xs font-medium" data-sharp-eyes={entry.sharpEyes}><span aria-hidden="true">🎯</span>Sharp eye{entry.sharpEyes > 1 ? ` ×${entry.sharpEyes}` : ''}</p> : null}
                 <p className="m-0 mt-xs flex flex-wrap items-center gap-xs text-xs text-neutral-7">
                   {taxonomyLine(species)}
                   {status && <span className={`rounded-full px-xs py-xxs font-medium ${status.badge}`}>{status.label}</span>}
